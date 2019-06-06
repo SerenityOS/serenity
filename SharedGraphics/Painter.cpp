@@ -204,9 +204,9 @@ void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color
     }
 }
 
-void Painter::blit_scaled(const Point& position, const GraphicsBitmap& source, const Rect& src_rect, float hscale, float vscale)
+void Painter::blit_scaled(const Rect& dst_rect_raw, const GraphicsBitmap& source, const Rect& src_rect, float hscale, float vscale)
 {
-    auto dst_rect = Rect(position, src_rect.size()).translated(translation());
+    auto dst_rect = Rect(dst_rect_raw.location(), dst_rect_raw.size()).translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
     if (clipped_rect.is_empty())
         return;
