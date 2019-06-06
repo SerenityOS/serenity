@@ -15,6 +15,6 @@ int CElapsedTimer::elapsed() const
     struct timeval now;
     gettimeofday(&now, nullptr);
     struct timeval diff;
-    AK::timeval_sub(&now, &m_start_time, &diff);
+    timeval_sub(now, m_start_time, diff);
     return diff.tv_sec * 1000 + diff.tv_usec / 1000;
 }

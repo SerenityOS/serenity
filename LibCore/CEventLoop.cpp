@@ -191,7 +191,7 @@ void CEventLoop::wait_for_event(WaitMode mode)
         if (!s_timers->is_empty() && queued_events_is_empty) {
             gettimeofday(&now, nullptr);
             get_next_timer_expiration(timeout);
-            AK::timeval_sub(&timeout, &now, &timeout);
+            timeval_sub(timeout, now, timeout);
         } else {
             should_wait_forever = true;
         }
