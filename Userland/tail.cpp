@@ -96,6 +96,8 @@ int main(int argc, char *argv[])
             args_parser.print_usage();
             return -1;
         }
+    } else {
+    	line_count = 10;
     }
 
     CFile f(values[0]);
