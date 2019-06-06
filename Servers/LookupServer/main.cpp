@@ -4,6 +4,7 @@
 #include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
+#include <AK/StringBuilder.h>
 #include <Kernel/Net/IPv4.h>
 #include <LibCore/CConfigFile.h>
 #include <arpa/inet.h>
@@ -40,12 +41,13 @@ int main(int argc, char** argv)
     auto DNS_IP = config->read_entry("DNS", "IPAddress", "127.0.0.53");
 
     dbgprintf("LookupServer: Loading hosts from /etc/hosts:\n");
-    HashMap<String, IPv4Address> dns_custom_hostnames;
+    HashMap<String, String> dns_custom_hostnames;
     auto* file = fopen("/etc/hosts", "r");
     auto linebuf = ByteBuffer::create_uninitialized(256);
     while (fgets((char*)linebuf.pointer(), linebuf.size(), file)) {
         auto str_line = String::copy(linebuf);
         auto fields = str_line.split('\t');
+
         auto sections = fields[0].split('.');
         IPv4Address addr {
             (byte)atoi(sections[0].characters()),
@@ -57,8 +59,19 @@ int main(int argc, char** argv)
         while ((fields[1][len++]) != -123)
             ;
         auto name = fields[1].substring(0, len - 3);
-        dbgprintf("LookupServer: Hosts: %s\t%s\n", name.characters(), addr.to_string().characters());
-        dns_custom_hostnames.set(name, addr);
+
+        dns_custom_hostnames.set(name, addr.to_string());
+
+        IPv4Address addr2 {
+            (byte)atoi(sections[3].characters()),
+            (byte)atoi(sections[2].characters()),
+            (byte)atoi(sections[1].characters()),
+            (byte)atoi(sections[0].characters()),
+        };
+        auto sb = StringBuilder();
+        sb.append(addr2.to_string());
+        sb.append(".in-addr.arpa");
+        dns_custom_hostnames.set(sb.to_string(), name);
     }
 
     int server_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
@@ -131,9 +144,12 @@ int main(int argc, char** argv)
 
         Vector<String> responses;
 
+        for (auto& key : dns_custom_hostnames.keys()) {
+            dbgprintf("Known Hostname: %s\n", key.characters());
+        }
         if (dns_custom_hostnames.contains(hostname)) {
-            addresses.append(dns_custom_hostnames.get(hostname));
-            dbgprintf("LookupServer: Found preconfigured host (from /etc/hosts): %s\n", addresses[0].to_string().characters());
+            responses.append(dns_custom_hostnames.get(hostname));
+            dbgprintf("LookupServer: Found preconfigured host (from /etc/hosts): %s\n", responses[0].characters());
         } else if (!hostname.is_empty()) {
             bool did_timeout;
             int retries = 3;
