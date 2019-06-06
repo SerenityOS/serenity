@@ -24,7 +24,7 @@
 
 #define C_IN    1
 
-static Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP);
+static Vector<String> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP, unsigned short record_type);
 static String parse_dns_name(const byte*, int& offset, int max_offset);
 
 int main(int argc, char**argv)
@@ -98,19 +98,28 @@ int main(int argc, char**argv)
 
         client_buffer[nrecv] = '\0';
 
-        auto hostname = String(client_buffer, nrecv, Chomp);
+        char lookup_type = client_buffer[0];
+        if (lookup_type != 'L' && lookup_type != 'R') {
+            dbgprintf("LookupServer: Invalid lookup_type '%c'\n", lookup_type);
+            close(client_fd);
+            continue;
+        }
+        auto hostname = String(client_buffer + 1, nrecv - 1, Chomp);
         dbgprintf("LookupServer: Got request for '%s' (using IP %s)\n",
                   hostname.characters(),
                   DNS_IP.characters());
 
-        Vector<IPv4Address> addresses;
+        Vector<String> responses;
 
         if (!hostname.is_empty()) {
             bool did_timeout;
             int retries = 3;
             do {
                 did_timeout = false;
-                addresses = lookup(hostname, did_timeout, DNS_IP);
+                if (lookup_type == 'L')
+                    responses = lookup(hostname, did_timeout, DNS_IP, T_A);
+                else if (lookup_type == 'R')
+                    responses = lookup(hostname, did_timeout, DNS_IP, T_PTR);
                 if (!did_timeout)
                     break;
             } while (--retries);
@@ -121,15 +130,15 @@ int main(int argc, char**argv)
             }
         }
 
-        if (addresses.is_empty()) {
+        if (responses.is_empty()) {
             int nsent = write(client_fd, "Not found.\n", sizeof("Not found.\n"));
             if (nsent < 0)
                 perror("write");
             close(client_fd);
             continue;
         }
-        for (auto& address : addresses) {
-            auto line = String::format("%s\n", address.to_string().characters());
+        for (auto& response : responses) {
+            auto line = String::format("%s\n", response.characters());
             int nsent = write(client_fd, line.characters(), line.length());
             if (nsent < 0) {
                 perror("write");
@@ -147,10 +156,8 @@ static word get_next_id()
     return ++s_next_id;
 }
 
-Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP)
+Vector<String> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP, unsigned short record_type)
 {
-    // FIXME: First check if it's an IP address in a string!
-
     DNSPacket request_header;
     request_header.set_id(get_next_id());
     request_header.set_is_query();
@@ -170,7 +177,7 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout, const Stri
             stream << part;
         }
         stream << '\0';
-        stream << htons(T_A);
+        stream << htons(record_type);
         stream << htons(C_IN);
         stream.snip();
     }
@@ -249,22 +256,31 @@ Vector<IPv4Address> lookup(const String& hostname, bool& did_timeout, const Stri
     auto question = parse_dns_name((const byte*)response_header.payload(), offset, nrecv);
     offset += 4;
 
-    Vector<IPv4Address> addresses;
+    Vector<String> addresses;
 
     for (word i = 0; i < response_header.answer_count(); ++i) {
         auto& record = *(const DNSRecord*)(&((const byte*)response_header.payload())[offset]);
-        auto ipv4_address = IPv4Address((const byte*)record.data());
-        dbgprintf("LookupServer:     Answer #%u: (question: %s), type=%u, ttl=%u, length=%u, data=%s\n",
+        dbgprintf("LookupServer:     Answer #%u: (question: %s), type=%u, ttl=%u, length=%u, data=",
             i,
             question.characters(),
             record.type(),
             record.ttl(),
-            record.data_length(),
-            ipv4_address.to_string().characters());
+            record.data_length());
 
         offset += sizeof(DNSRecord) + record.data_length();
-        if (record.type() == T_A)
-            addresses.append(ipv4_address);
+        if (record.type() == T_PTR) {
+            int dummy = 0;
+            auto name = parse_dns_name((const byte*)record.data(), dummy, record.data_length());
+            dbgprintf("%s\n", name.characters());
+            addresses.append(name);
+        } else if (record.type() == T_A) {
+            auto ipv4_address = IPv4Address((const byte*)record.data());
+            dbgprintf("%s\n", ipv4_address.to_string().characters());
+            addresses.append(ipv4_address.to_string());
+        } else {
+            dbgprintf("(unimplemented)\n");
+            dbgprintf("LookupServer: FIXME: Handle record type %u\n", record.type());
+        }
         // FIXME: Parse some other record types perhaps?
     }
 
