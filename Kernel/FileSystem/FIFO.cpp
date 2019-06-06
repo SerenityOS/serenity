@@ -1,6 +1,8 @@
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/Lock.h>
+#include <Kernel/Process.h>
+#include <Kernel/Thread.h>
 #include <AK/StdLibExtras.h>
 #include <AK/HashTable.h>
 
@@ -107,8 +109,10 @@ ssize_t FIFO::read(FileDescriptor&, byte* buffer, ssize_t size)
 
 ssize_t FIFO::write(FileDescriptor&, const byte* buffer, ssize_t size)
 {
-    if (!m_readers)
+    if (!m_readers) {
+        current->process().send_signal(SIGPIPE, &current->process());
         return -EPIPE;
+    }
 #ifdef FIFO_DEBUG
     dbgprintf("fifo: write(%p, %u)\n", buffer, size);
 #endif
