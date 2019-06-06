@@ -88,7 +88,7 @@ bool FIFO::can_read(FileDescriptor&) const
 
 bool FIFO::can_write(FileDescriptor&) const
 {
-    return m_buffer.bytes_in_write_buffer() < 4096;
+    return m_buffer.bytes_in_write_buffer() < 4096 || !m_readers;
 }
 
 ssize_t FIFO::read(FileDescriptor&, byte* buffer, ssize_t size)
@@ -108,7 +108,7 @@ ssize_t FIFO::read(FileDescriptor&, byte* buffer, ssize_t size)
 ssize_t FIFO::write(FileDescriptor&, const byte* buffer, ssize_t size)
 {
     if (!m_readers)
-        return 0;
+        return -EPIPE;
 #ifdef FIFO_DEBUG
     dbgprintf("fifo: write(%p, %u)\n", buffer, size);
 #endif
