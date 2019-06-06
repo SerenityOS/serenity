@@ -68,12 +68,9 @@ Terminal::Terminal(int ptm_fd, RetainPtr<CConfigFile> config)
         m_config->read_num_entry("Window", "Height", 25));
 }
 
-Terminal::Line::Line(word columns)
-    : length(columns)
+Terminal::Line::Line(word length)
 {
-    characters = new byte[length];
-    attributes = new Attribute[length];
-    memset(characters, ' ', length);
+    set_length(length);
 }
 
 Terminal::Line::~Line()
@@ -82,20 +79,34 @@ Terminal::Line::~Line()
     delete[] attributes;
 }
 
+void Terminal::Line::set_length(word new_length)
+{
+    if (m_length == new_length)
+        return;
+    auto* new_characters = new byte[new_length];
+    auto* new_attributes = new Attribute[new_length];
+    memset(new_characters, ' ', new_length);
+    delete[] characters;
+    delete[] attributes;
+    characters = new_characters;
+    attributes = new_attributes;
+    m_length = new_length;
+}
+
 void Terminal::Line::clear(Attribute attribute)
 {
     if (dirty) {
-        memset(characters, ' ', length);
-        for (word i = 0; i < length; ++i)
+        memset(characters, ' ', m_length);
+        for (word i = 0; i < m_length; ++i)
             attributes[i] = attribute;
         return;
     }
-    for (unsigned i = 0; i < length; ++i) {
+    for (unsigned i = 0; i < m_length; ++i) {
         if (characters[i] != ' ')
             dirty = true;
         characters[i] = ' ';
     }
-    for (unsigned i = 0; i < length; ++i) {
+    for (unsigned i = 0; i < m_length; ++i) {
         if (attributes[i] != attribute)
             dirty = true;
         attributes[i] = attribute;
@@ -877,6 +888,9 @@ void Terminal::set_size(word columns, word rows)
         m_lines.resize(rows);
     }
 
+    for (int i = 0; i < rows; ++i)
+        m_lines[i]->set_length(columns);
+
     m_columns = columns;
     m_rows = rows;
 
@@ -927,11 +941,11 @@ Rect Terminal::row_rect(word row)
 
 bool Terminal::Line::has_only_one_background_color() const
 {
-    if (!length)
+    if (!m_length)
         return true;
     // FIXME: Cache this result?
     auto color = attributes[0].background_color;
-    for (size_t i = 1; i < length; ++i) {
+    for (size_t i = 1; i < m_length; ++i) {
         if (attributes[i].background_color != color)
             return false;
     }
