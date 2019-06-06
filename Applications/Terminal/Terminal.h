@@ -176,8 +176,8 @@ private:
     Vector<byte> m_intermediates;
     Vector<byte> m_xterm_param1;
     Vector<byte> m_xterm_param2;
+    Vector<bool> m_horizontal_tabs;
     byte m_final { 0 };
-    byte* m_horizontal_tabs { nullptr };
     bool m_belling { false };
 
     int m_pixel_width { 0 };

@@ -104,7 +104,6 @@ void Terminal::Line::clear(Attribute attribute)
 
 Terminal::~Terminal()
 {
-    free(m_horizontal_tabs);
 }
 
 void Terminal::clear()
@@ -889,9 +888,7 @@ void Terminal::set_size(word columns, word rows)
     m_saved_cursor_row = 0;
     m_saved_cursor_column = 0;
 
-    if (m_horizontal_tabs)
-        free(m_horizontal_tabs);
-    m_horizontal_tabs = static_cast<byte*>(malloc(columns));
+    m_horizontal_tabs.resize(columns);
     for (unsigned i = 0; i < columns; ++i)
         m_horizontal_tabs[i] = (i % 8) == 0;
     // Rightmost column is always last tab on line.
