@@ -424,14 +424,28 @@ static int run_command(const String& cmd)
 
 
     int wstatus = 0;
-    int rc;
+    int return_value = 0;
 
-    for (auto& child : children) {
+    for (int i = 0; i < children.size(); ++i) {
+        auto& child = children[i];
         do {
-            rc = waitpid(child, &wstatus, 0);
+            int rc = waitpid(child, &wstatus, 0);
             if (rc < 0 && errno != EINTR) {
-                perror("waitpid");
+                if (errno != ECHILD)
+                    perror("waitpid");
                 break;
+            }
+            if (WIFEXITED(wstatus)) {
+                if (WEXITSTATUS(wstatus) != 0)
+                    printf("Shell: Child %d exited with status %d\n", child, WEXITSTATUS(wstatus));
+                if (i == 0)
+                    return_value = WEXITSTATUS(wstatus);
+            } else {
+                if (WIFSIGNALED(wstatus)) {
+                    printf("Shell: Child %d exited due to signal '%s'\n", child, strsignal(WTERMSIG(wstatus)));
+                } else {
+                    printf("Shell: Child %d exited abnormally\n", child);
+                }
             }
         } while(errno == EINTR);
     }
@@ -439,22 +453,8 @@ static int run_command(const String& cmd)
     // FIXME: Should I really have to tcsetpgrp() after my child has exited?
     //        Is the terminal controlling pgrp really still the PGID of the dead process?
     tcsetpgrp(0, getpid());
-
     tcsetattr(0, TCSANOW, &trm);
-
-    if (WIFEXITED(wstatus)) {
-        if (WEXITSTATUS(wstatus) != 0)
-            printf("Exited with status %d\n", WEXITSTATUS(wstatus));
-        return WEXITSTATUS(wstatus);
-    } else {
-        if (WIFSIGNALED(wstatus)) {
-            puts(strsignal(WTERMSIG(wstatus)));
-        } else {
-            printf("Exited abnormally\n");
-            return 1;
-        }
-    }
-    return 0;
+    return return_value;
 }
 
 int main(int argc, char** argv)
