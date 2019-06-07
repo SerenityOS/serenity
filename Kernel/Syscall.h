@@ -3,6 +3,8 @@
 #include <AK/Types.h>
 #include <LibC/fd_set.h>
 
+extern "C" { struct timeval; }
+
 #define ENUMERATE_SYSCALLS                      \
     __ENUMERATE_SYSCALL(sleep)                  \
     __ENUMERATE_SYSCALL(yield)                  \
