@@ -1,13 +1,13 @@
 #include "FontEditor.h"
-#include "GlyphMapWidget.h"
 #include "GlyphEditorWidget.h"
-#include <LibGUI/GPainter.h>
+#include "GlyphMapWidget.h"
 #include <LibGUI/GButton.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GTextBox.h>
 #include <LibGUI/GCheckBox.h>
-#include <LibGUI/GSpinBox.h>
 #include <LibGUI/GGroupBox.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GSpinBox.h>
+#include <LibGUI/GTextBox.h>
 #include <stdlib.h>
 
 FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_font, GWidget* parent)
@@ -52,7 +52,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     auto* save_button = new GButton(this);
     save_button->set_text("Save");
     save_button->set_relative_rect({ 5, 300, 105, 20 });
-    save_button->on_click = [this] (GButton&) {
+    save_button->on_click = [this](GButton&) {
         dbgprintf("write to file: '%s'\n", m_path.characters());
         m_edited_font->write_to_file(m_path);
     };
@@ -60,7 +60,7 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
     auto* quit_button = new GButton(this);
     quit_button->set_text("Quit");
     quit_button->set_relative_rect({ 110, 300, 105, 20 });
-    quit_button->on_click = [] (GButton&) {
+    quit_button->on_click = [](GButton&) {
         exit(0);
     };
 
@@ -91,25 +91,25 @@ FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_
         demo_label_2->update();
     };
 
-    m_glyph_editor_widget->on_glyph_altered = [this, update_demo] (byte glyph) {
+    m_glyph_editor_widget->on_glyph_altered = [this, update_demo](byte glyph) {
         m_glyph_map_widget->update_glyph(glyph);
         update_demo();
     };
 
-    m_glyph_map_widget->on_glyph_selected = [this, info_label, width_spinbox] (byte glyph) {
+    m_glyph_map_widget->on_glyph_selected = [this, info_label, width_spinbox](byte glyph) {
         m_glyph_editor_widget->set_glyph(glyph);
         width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         info_label->set_text(String::format("0x%b (%c)", glyph, glyph));
     };
 
-    fixed_width_checkbox->on_checked = [this, width_spinbox, update_demo] (bool checked) {
+    fixed_width_checkbox->on_checked = [this, width_spinbox, update_demo](bool checked) {
         m_edited_font->set_fixed_width(checked);
         width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         m_glyph_editor_widget->update();
         update_demo();
     };
 
-    width_spinbox->on_change = [this, update_demo] (int value) {
+    width_spinbox->on_change = [this, update_demo](int value) {
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());

@@ -1,7 +1,7 @@
-#include <LibGUI/GApplication.h>
 #include <LibCore/CHttpRequest.h>
 #include <LibCore/CHttpResponse.h>
 #include <LibCore/CNetworkJob.h>
+#include <LibGUI/GApplication.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     request.set_path("/");
 
     auto job = request.schedule();
-    job->on_finish = [&job] (bool success) {
+    job->on_finish = [&job](bool success) {
         if (!success) {
             dbgprintf("on_finish: request failed :(\n");
             return;

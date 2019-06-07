@@ -1,13 +1,13 @@
 #include "IRCWindow.h"
-#include "IRCClient.h"
 #include "IRCChannel.h"
 #include "IRCChannelMemberListModel.h"
+#include "IRCClient.h"
 #include "IRCLogBufferModel.h"
 #include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GTableView.h>
-#include <LibGUI/GTextEditor.h>
-#include <LibGUI/GTextBox.h>
 #include <LibGUI/GSplitter.h>
+#include <LibGUI/GTableView.h>
+#include <LibGUI/GTextBox.h>
+#include <LibGUI/GTextEditor.h>
 
 IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name, GWidget* parent)
     : GWidget(parent)

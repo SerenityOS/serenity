@@ -1,20 +1,20 @@
-#include <LibCore/CTimer.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GToolBar.h>
-#include <LibGUI/GMenuBar.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GTabWidget.h>
-#include <LibGUI/GLabel.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <signal.h>
-#include "ProcessTableView.h"
-#include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
+#include "MemoryStatsWidget.h"
+#include "ProcessTableView.h"
+#include <LibCore/CTimer.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GGroupBox.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GMenuBar.h>
+#include <LibGUI/GTabWidget.h>
+#include <LibGUI/GToolBar.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
+#include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     cpu_graph->set_max(100);
     cpu_graph->set_text_color(Color::Green);
     cpu_graph->set_graph_color(Color::from_rgb(0x00bb00));
-    cpu_graph->text_formatter = [] (int value, int) {
+    cpu_graph->text_formatter = [](int value, int) {
         return String::format("%d%%", value);
     };
 
@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     auto* memory_graph = new GraphWidget(memory_graph_group_box);
     memory_graph->set_text_color(Color::Cyan);
     memory_graph->set_graph_color(Color::from_rgb(0x00bbbb));
-    memory_graph->text_formatter = [] (int value, int max) {
+    memory_graph->text_formatter = [](int value, int max) {
         return String::format("%d / %d KB", value, max);
     };
 
@@ -78,19 +78,19 @@ int main(int argc, char** argv)
         memory_stats_widget->refresh();
     });
 
-    auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view] (const GAction&) {
+    auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGKILL);
     });
 
-    auto stop_action = GAction::create("Stop process", GraphicsBitmap::load_from_file("/res/icons/stop16.png"), [process_table_view] (const GAction&) {
+    auto stop_action = GAction::create("Stop process", GraphicsBitmap::load_from_file("/res/icons/stop16.png"), [process_table_view](const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGSTOP);
     });
 
-    auto continue_action = GAction::create("Continue process", GraphicsBitmap::load_from_file("/res/icons/continue16.png"), [process_table_view] (const GAction&) {
+    auto continue_action = GAction::create("Continue process", GraphicsBitmap::load_from_file("/res/icons/continue16.png"), [process_table_view](const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGCONT);
@@ -102,7 +102,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Process Manager");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
     }));
@@ -115,25 +115,25 @@ int main(int argc, char** argv)
     menubar->add_menu(move(process_menu));
 
     auto frequency_menu = make<GMenu>("Frequency");
-    frequency_menu->add_action(GAction::create("0.25 sec", [refresh_timer] (auto&) {
+    frequency_menu->add_action(GAction::create("0.25 sec", [refresh_timer](auto&) {
         refresh_timer->restart(250);
     }));
-    frequency_menu->add_action(GAction::create("0.5 sec", [refresh_timer] (auto&) {
+    frequency_menu->add_action(GAction::create("0.5 sec", [refresh_timer](auto&) {
         refresh_timer->restart(500);
     }));
-    frequency_menu->add_action(GAction::create("1 sec", [refresh_timer] (auto&) {
+    frequency_menu->add_action(GAction::create("1 sec", [refresh_timer](auto&) {
         refresh_timer->restart(1000);
     }));
-    frequency_menu->add_action(GAction::create("3 sec", [refresh_timer] (auto&) {
+    frequency_menu->add_action(GAction::create("3 sec", [refresh_timer](auto&) {
         refresh_timer->restart(3000);
     }));
-    frequency_menu->add_action(GAction::create("5 sec", [refresh_timer] (auto&) {
+    frequency_menu->add_action(GAction::create("5 sec", [refresh_timer](auto&) {
         refresh_timer->restart(5000);
     }));
     menubar->add_menu(move(frequency_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [] (const GAction&) {
+    help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));

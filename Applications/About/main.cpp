@@ -1,10 +1,9 @@
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GButton.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GButton.h>
 #include <LibGUI/GDesktop.h>
-#include <stdio.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GWindow.h>
 #include <sys/utsname.h>
 
 int main(int argc, char** argv)
@@ -50,7 +49,7 @@ int main(int argc, char** argv)
     quit_button->set_text("Okay");
     quit_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     quit_button->set_preferred_size({ 100, 20 });
-    quit_button->on_click = [] (GButton&) {
+    quit_button->on_click = [](GButton&) {
         GApplication::the().quit(0);
     };
 

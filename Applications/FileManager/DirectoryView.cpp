@@ -1,8 +1,8 @@
 #include "DirectoryView.h"
-#include <LibGUI/GSortingProxyModel.h>
 #include <AK/FileSystemPath.h>
-#include <unistd.h>
+#include <LibGUI/GSortingProxyModel.h>
 #include <stdio.h>
+#include <unistd.h>
 
 void DirectoryView::handle_activation(const GModelIndex& index)
 {
@@ -58,28 +58,28 @@ DirectoryView::DirectoryView(GWidget* parent)
 
     m_item_view->set_model_column(GDirectoryModel::Column::Name);
 
-    m_item_view->on_model_notification = [this] (const GModelNotification& notification) {
+    m_item_view->on_model_notification = [this](const GModelNotification& notification) {
         if (notification.type() == GModelNotification::Type::ModelUpdated) {
             set_status_message(String::format("%d item%s (%u byte%s)",
-                                              model().row_count(),
-                                              model().row_count() != 1 ? "s" : "",
-                                              model().bytes_in_files(),
-                                              model().bytes_in_files() != 1 ? "s" : ""));
+                model().row_count(),
+                model().row_count() != 1 ? "s" : "",
+                model().bytes_in_files(),
+                model().bytes_in_files() != 1 ? "s" : ""));
 
             if (on_path_change)
                 on_path_change(model().path());
         }
     };
 
-    m_model->on_thumbnail_progress = [this] (int done, int total) {
+    m_model->on_thumbnail_progress = [this](int done, int total) {
         if (on_thumbnail_progress)
             on_thumbnail_progress(done, total);
     };
 
-    m_item_view->on_activation = [&] (const GModelIndex& index) {
+    m_item_view->on_activation = [&](const GModelIndex& index) {
         handle_activation(index);
     };
-    m_table_view->on_activation = [&] (auto& index) {
+    m_table_view->on_activation = [&](auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_table_view->model();
         handle_activation(filter_model.map_to_target(index));
     };

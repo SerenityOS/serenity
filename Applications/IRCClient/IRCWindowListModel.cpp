@@ -1,7 +1,7 @@
 #include "IRCWindowListModel.h"
-#include "IRCWindow.h"
-#include "IRCClient.h"
 #include "IRCChannel.h"
+#include "IRCClient.h"
+#include "IRCWindow.h"
 #include <stdio.h>
 #include <time.h>
 
@@ -27,7 +27,8 @@ int IRCWindowListModel::column_count(const GModelIndex&) const
 String IRCWindowListModel::column_name(int column) const
 {
     switch (column) {
-    case Column::Name: return "Name";
+    case Column::Name:
+        return "Name";
     }
     ASSERT_NOT_REACHED();
 }
@@ -35,7 +36,8 @@ String IRCWindowListModel::column_name(int column) const
 GModel::ColumnMetadata IRCWindowListModel::column_metadata(int column) const
 {
     switch (column) {
-    case Column::Name: return { 70, TextAlignment::CenterLeft };
+    case Column::Name:
+        return { 70, TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
 }
@@ -64,7 +66,7 @@ GVariant IRCWindowListModel::data(const GModelIndex& index, Role role) const
         }
         }
     }
-    return { };
+    return {};
 }
 
 void IRCWindowListModel::update()

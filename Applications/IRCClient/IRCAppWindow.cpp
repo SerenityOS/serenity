@@ -1,16 +1,16 @@
 #include "IRCAppWindow.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GStackWidget.h>
-#include <LibGUI/GTableView.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GToolBar.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GInputBox.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
-#include <LibGUI/GInputBox.h>
 #include <LibGUI/GSplitter.h>
+#include <LibGUI/GStackWidget.h>
+#include <LibGUI/GTableView.h>
+#include <LibGUI/GToolBar.h>
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -36,7 +36,7 @@ void IRCAppWindow::update_title()
 
 void IRCAppWindow::setup_client()
 {
-    m_client.aid_create_window = [this] (void* owner, IRCWindow::Type type, const String& name) {
+    m_client.aid_create_window = [this](void* owner, IRCWindow::Type type, const String& name) {
         return &create_window(owner, type, name);
     };
     m_client.aid_get_active_window = [this] {
@@ -45,7 +45,7 @@ void IRCAppWindow::setup_client()
     m_client.aid_update_window_list = [this] {
         m_window_list->model()->update();
     };
-    m_client.on_nickname_changed = [this] (const String&) {
+    m_client.on_nickname_changed = [this](const String&) {
         update_title();
     };
 
@@ -64,33 +64,33 @@ void IRCAppWindow::setup_client()
 
 void IRCAppWindow::setup_actions()
 {
-    m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&] (auto&) {
+    m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
         GInputBox input_box("Enter channel name:", "Join channel", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_join_action(input_box.text_value());
     });
 
-    m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [] (auto&) {
+    m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [](auto&) {
         printf("FIXME: Implement part action\n");
     });
 
-    m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&] (auto&) {
+    m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
         GInputBox input_box("Enter nickname:", "IRC WHOIS lookup", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_whois_action(input_box.text_value());
     });
 
-    m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&] (auto&) {
+    m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
         GInputBox input_box("Enter nickname:", "Open IRC query with...", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_open_query_action(input_box.text_value());
     });
 
-    m_close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [] (auto&) {
+    m_close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
         printf("FIXME: Implement close-query action\n");
     });
 
-    m_change_nick_action = GAction::create("Change nickname", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this] (auto&) {
+    m_change_nick_action = GAction::create("Change nickname", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
         GInputBox input_box("Enter nickname:", "Change nickname", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
             m_client.handle_change_nick_action(input_box.text_value());
@@ -101,7 +101,7 @@ void IRCAppWindow::setup_menus()
 {
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("IRC Client");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
         return;
@@ -120,7 +120,7 @@ void IRCAppWindow::setup_menus()
     menubar->add_menu(move(server_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [] (const GAction&) {
+    help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));
@@ -156,7 +156,7 @@ void IRCAppWindow::setup_widgets()
     m_window_list->set_activates_on_selection(true);
     m_window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_window_list->set_preferred_size({ 100, 0 });
-    m_window_list->on_activation = [this] (auto& index) {
+    m_window_list->on_activation = [this](auto& index) {
         auto& window = m_client.window_at(index.row());
         m_container->set_active_widget(&window);
         window.clear_unread_count();
