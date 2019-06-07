@@ -4,10 +4,10 @@
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
 
-Region::Region(const Range& range, String&& n, byte access, bool cow)
+Region::Region(const Range& range, const String& name, byte access, bool cow)
     : m_range(range)
     , m_vmo(VMObject::create_anonymous(size()))
-    , m_name(move(n))
+    , m_name(name)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
@@ -15,21 +15,21 @@ Region::Region(const Range& range, String&& n, byte access, bool cow)
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, RetainPtr<Inode>&& inode, String&& n, byte access)
+Region::Region(const Range& range, RetainPtr<Inode>&& inode, const String& name, byte access)
     : m_range(range)
     , m_vmo(VMObject::create_file_backed(move(inode)))
-    , m_name(move(n))
+    , m_name(name)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count()))
 {
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& n, byte access, bool cow)
+Region::Region(const Range& range, Retained<VMObject>&& vmo, size_t offset_in_vmo, const String& name, byte access, bool cow)
     : m_range(range)
     , m_offset_in_vmo(offset_in_vmo)
     , m_vmo(move(vmo))
-    , m_name(move(n))
+    , m_name(name)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {

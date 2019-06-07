@@ -15,7 +15,7 @@ public:
     static KResult unlink(const String& name);
     virtual ~SharedMemory() override;
 
-    String name() const { return m_name; }
+    const String& name() const { return m_name; }
     virtual KResult truncate(off_t) override;
     VMObject* vmo() { return m_vmo.ptr(); }
     const VMObject* vmo() const { return m_vmo.ptr(); }
