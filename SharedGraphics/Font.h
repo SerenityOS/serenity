@@ -1,15 +1,16 @@
 #pragma once
 
-#include <SharedGraphics/Rect.h>
-#include <AK/Retainable.h>
-#include <AK/RetainPtr.h>
 #include <AK/AKString.h>
 #include <AK/MappedFile.h>
+#include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
 #include <AK/Types.h>
+#include <SharedGraphics/Rect.h>
 
 // FIXME: Make a MutableGlyphBitmap buddy class for FontEditor instead?
 class GlyphBitmap {
     friend class Font;
+
 public:
     const unsigned* rows() const { return m_rows; }
     unsigned row(unsigned index) const { return m_rows[index]; }

@@ -3,16 +3,22 @@
 #include "Color.h"
 #include "Rect.h"
 #include "Size.h"
-#include <AK/Retainable.h>
-#include <AK/RetainPtr.h>
 #include <AK/AKString.h>
-#include <AK/StringView.h>
 #include <AK/MappedFile.h>
+#include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
+#include <AK/StringView.h>
 #include <SharedBuffer.h>
 
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
-    enum class Format { Invalid, RGB32, RGBA32, Indexed8 };
+    enum class Format
+    {
+        Invalid,
+        RGB32,
+        RGBA32,
+        Indexed8
+    };
 
     static Retained<GraphicsBitmap> create(Format, const Size&);
     static Retained<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);

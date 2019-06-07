@@ -7,8 +7,12 @@ struct WSAPI_Point;
 
 class Point {
 public:
-    Point() { }
-    Point(int x, int y) : m_x(x) , m_y(y) { }
+    Point() {}
+    Point(int x, int y)
+        : m_x(x)
+        , m_y(y)
+    {
+    }
     Point(const WSAPI_Point&);
 
     int x() const { return m_x; }

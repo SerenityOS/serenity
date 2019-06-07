@@ -1,11 +1,11 @@
+#include <AK/MappedFile.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/PNGLoader.h>
-#include <AK/MappedFile.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdio.h>
 
 Retained<GraphicsBitmap> GraphicsBitmap::create(Format format, const Size& size)
 {
@@ -83,7 +83,7 @@ GraphicsBitmap::~GraphicsBitmap()
         ASSERT(rc == 0);
     }
     m_data = nullptr;
-    delete [] m_palette;
+    delete[] m_palette;
 }
 
 void GraphicsBitmap::set_mmap_name(const StringView& name)

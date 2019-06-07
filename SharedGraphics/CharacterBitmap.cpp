@@ -14,4 +14,3 @@ Retained<CharacterBitmap> CharacterBitmap::create_from_ascii(const char* asciiDa
 {
     return adopt(*new CharacterBitmap(asciiData, width, height));
 }
-
