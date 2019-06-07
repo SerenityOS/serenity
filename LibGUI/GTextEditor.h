@@ -78,8 +78,7 @@ private:
 
 class GTextEditor : public GScrollableWidget {
 public:
-    enum Type
-    {
+    enum Type {
         MultiLine,
         SingleLine
     };

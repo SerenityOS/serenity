@@ -1,7 +1,6 @@
 #pragma once
 
-enum class TextAlignment
-{
+enum class TextAlignment {
     TopLeft,
     CenterLeft,
     Center,

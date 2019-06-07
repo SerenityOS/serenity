@@ -11,8 +11,7 @@ class GraphWidget;
 
 class ProcessModel final : public GModel {
 public:
-    enum Column
-    {
+    enum Column {
         Icon = 0,
         Name,
         CPU,

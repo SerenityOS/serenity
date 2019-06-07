@@ -3,8 +3,7 @@
 #include <Kernel/Net/IPv4.h>
 
 struct TCPFlags {
-    enum : word
-    {
+    enum : word {
         FIN = 0x01,
         SYN = 0x02,
         RST = 0x04,

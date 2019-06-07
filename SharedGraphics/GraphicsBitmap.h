@@ -12,8 +12,7 @@
 
 class GraphicsBitmap : public Retainable<GraphicsBitmap> {
 public:
-    enum class Format
-    {
+    enum class Format {
         Invalid,
         RGB32,
         RGBA32,

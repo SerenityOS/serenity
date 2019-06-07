@@ -7,8 +7,7 @@ class CNotifier;
 
 class CSocket : public CIODevice {
 public:
-    enum class Type
-    {
+    enum class Type {
         Invalid,
         TCP,
         UDP

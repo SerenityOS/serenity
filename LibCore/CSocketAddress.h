@@ -4,8 +4,7 @@
 
 class CSocketAddress {
 public:
-    enum class Type
-    {
+    enum class Type {
         Invalid,
         IPv4,
         Local

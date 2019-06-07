@@ -46,7 +46,7 @@ void GStackWidget::child_event(CChildEvent& event)
             GWidget* new_active_widget = nullptr;
             for_each_child_widget([&](auto& new_child) {
                 new_active_widget = &new_child;
-                return IterationDecision::Abort;
+                return IterationDecision::Break;
             });
             set_active_widget(new_active_widget);
         }

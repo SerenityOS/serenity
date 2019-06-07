@@ -10,8 +10,7 @@ class CObject;
 
 class GEvent : public CEvent {
 public:
-    enum Type
-    {
+    enum Type {
         Show = 1000,
         Hide,
         Paint,
@@ -218,8 +217,7 @@ public:
     }
 };
 
-enum GMouseButton : byte
-{
+enum GMouseButton : byte {
     None = 0,
     Left = 1,
     Right = 2,

@@ -25,7 +25,7 @@ public:
     void for_each_child(Callback callback)
     {
         for (auto* child : m_children) {
-            if (callback(*child) == IterationDecision::Abort)
+            if (callback(*child) == IterationDecision::Break)
                 return;
         }
     }

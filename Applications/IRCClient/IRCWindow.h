@@ -11,8 +11,7 @@ class GTextEditor;
 
 class IRCWindow : public GWidget {
 public:
-    enum Type
-    {
+    enum Type {
         Server,
         Channel,
         Query,

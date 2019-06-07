@@ -6,8 +6,7 @@
 
 namespace AK {
 
-enum ShouldChomp
-{
+enum ShouldChomp {
     NoChomp,
     Chomp
 };
@@ -40,8 +39,7 @@ public:
     }
 
 private:
-    enum ConstructTheEmptyStringImplTag
-    {
+    enum ConstructTheEmptyStringImplTag {
         ConstructTheEmptyStringImpl
     };
     explicit StringImpl(ConstructTheEmptyStringImplTag)
@@ -49,8 +47,7 @@ private:
     {
     }
 
-    enum ConstructWithInlineBufferTag
-    {
+    enum ConstructWithInlineBufferTag {
         ConstructWithInlineBuffer
     };
     StringImpl(ConstructWithInlineBufferTag, ssize_t length);

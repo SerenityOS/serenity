@@ -14,8 +14,7 @@
 
 #define IRC_DEBUG
 
-enum IRCNumeric
-{
+enum IRCNumeric {
     RPL_WHOISUSER = 311,
     RPL_WHOISSERVER = 312,
     RPL_WHOISOPERATOR = 313,
@@ -106,8 +105,7 @@ void IRCClient::process_line(ByteBuffer&& line)
     Vector<char, 32> prefix;
     Vector<char, 32> command;
     Vector<char, 256> current_parameter;
-    enum
-    {
+    enum {
         Start,
         InPrefix,
         InCommand,

@@ -17,23 +17,19 @@ class GLayout;
 class GMenu;
 class GWindow;
 
-enum class SizePolicy
-{
+enum class SizePolicy {
     Fixed,
     Fill
 };
-enum class Orientation
-{
+enum class Orientation {
     Horizontal,
     Vertical
 };
-enum class HorizontalDirection
-{
+enum class HorizontalDirection {
     Left,
     Right
 };
-enum class VerticalDirection
-{
+enum class VerticalDirection {
     Up,
     Down
 };

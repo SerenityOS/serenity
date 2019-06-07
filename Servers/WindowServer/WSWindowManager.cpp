@@ -389,7 +389,7 @@ void WSWindowManager::pick_new_active_window()
 {
     for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, [&](WSWindow& candidate) {
         set_active_window(&candidate);
-        return IterationDecision::Abort;
+        return IterationDecision::Break;
     });
 }
 
@@ -760,12 +760,12 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
             if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
                 hovered_window = &window;
                 start_window_drag(window, event);
-                return IterationDecision::Abort;
+                return IterationDecision::Break;
             }
             if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
                 hovered_window = &window;
                 start_window_resize(window, event);
-                return IterationDecision::Abort;
+                return IterationDecision::Break;
             }
         }
         // Well okay, let's see if we're hitting the frame or the window inside the frame.
@@ -778,13 +778,13 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
                 auto translated_event = event.translated(-window.position());
                 deliver_mouse_event(window, translated_event);
             }
-            return IterationDecision::Abort;
+            return IterationDecision::Break;
         }
 
         // We are hitting the frame, pass the event along to WSWindowFrame.
         window.frame().on_mouse_event(event.translated(-window_frame_rect.location()));
         event_window_with_frame = &window;
-        return IterationDecision::Abort;
+        return IterationDecision::Break;
     });
 
     if (event_window_with_frame != m_resize_candidate.ptr())
@@ -815,7 +815,7 @@ bool WSWindowManager::any_opaque_window_contains_rect(const Rect& rect)
         }
         if (window.frame().rect().contains(rect)) {
             found_containing_window = true;
-            return IterationDecision::Abort;
+            return IterationDecision::Break;
         }
         return IterationDecision::Continue;
     });
@@ -843,7 +843,7 @@ bool WSWindowManager::any_opaque_window_above_this_one_contains_rect(const WSWin
             return IterationDecision::Continue;
         if (window.frame().rect().contains(rect)) {
             found_containing_window = true;
-            return IterationDecision::Abort;
+            return IterationDecision::Break;
         }
         return IterationDecision::Continue;
     });
@@ -1056,7 +1056,7 @@ Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
     // Subtract taskbar window height if present
     const_cast<WSWindowManager*>(this)->for_each_visible_window_of_type_from_back_to_front(WSWindowType::Taskbar, [&rect](WSWindow& taskbar_window) {
         rect.set_height(rect.height() - taskbar_window.height());
-        return IterationDecision::Abort;
+        return IterationDecision::Break;
     });
 
     return rect;

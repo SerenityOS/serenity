@@ -10,8 +10,7 @@
 class Painter;
 class WSCursor;
 
-enum class WallpaperMode
-{
+enum class WallpaperMode {
     Simple,
     Tile,
     Center,

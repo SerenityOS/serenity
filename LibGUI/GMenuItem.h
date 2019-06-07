@@ -8,8 +8,7 @@ class GMenu;
 
 class GMenuItem {
 public:
-    enum Type
-    {
+    enum Type {
         Invalid,
         Action,
         Separator

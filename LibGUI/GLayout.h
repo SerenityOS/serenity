@@ -32,8 +32,7 @@ public:
 
 protected:
     struct Entry {
-        enum class Type
-        {
+        enum class Type {
             Invalid = 0,
             Widget,
             Layout,

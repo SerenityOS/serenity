@@ -3,19 +3,16 @@
 class Painter;
 class Rect;
 
-enum class ButtonStyle
-{
+enum class ButtonStyle {
     Normal,
     CoolBar
 };
-enum class FrameShadow
-{
+enum class FrameShadow {
     Plain,
     Raised,
     Sunken
 };
-enum class FrameShape
-{
+enum class FrameShape {
     NoFrame,
     Box,
     Container,

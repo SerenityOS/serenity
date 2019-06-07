@@ -5,16 +5,14 @@
 #include <Kernel/Net/MACAddress.h>
 
 struct ARPOperation {
-    enum : word
-    {
+    enum : word {
         Request = 1,
         Response = 2,
     };
 };
 
 struct ARPHardwareType {
-    enum : word
-    {
+    enum : word {
         Ethernet = 1,
     };
 };

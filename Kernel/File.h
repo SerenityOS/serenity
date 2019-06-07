@@ -5,8 +5,8 @@
 #include <AK/Retained.h>
 #include <AK/Types.h>
 #include <Kernel/KResult.h>
-#include <Kernel/VirtualAddress.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/VirtualAddress.h>
 
 class FileDescription;
 class Process;

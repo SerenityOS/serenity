@@ -8,8 +8,7 @@ class IRCWindow;
 
 class IRCWindowListModel final : public GModel {
 public:
-    enum Column
-    {
+    enum Column {
         Name,
     };
 

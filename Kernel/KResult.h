@@ -3,8 +3,7 @@
 #include <AK/Assertions.h>
 #include <LibC/errno_numbers.h>
 
-enum KSuccessTag
-{
+enum KSuccessTag {
     KSuccess
 };
 
