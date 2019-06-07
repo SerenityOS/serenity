@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <unistd.h>
 #include <AK/Assertions.h>
-#include <LibCore/CFile.h>
 #include <LibCore/CArgsParser.h>
+#include <LibCore/CFile.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 #define DEFAULT_LINE_COUNT 10
 
@@ -50,7 +50,7 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
 
     // FIXME: Reading char-by-char is only OK if CIODevice's read buffer
     // is smart enough to not read char-by-char. Fix it there, or fix it here :)
-    for(; pos >= 0; pos--) {
+    for (; pos >= 0; pos--) {
         file.seek(pos);
         const auto& ch = file.read(1);
         if (ch.is_empty()) {
@@ -74,7 +74,7 @@ static void exit_because_we_wanted_lines()
     exit(1);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     CArgsParser args_parser("tail");
 
@@ -98,7 +98,7 @@ int main(int argc, char *argv[])
             return 1;
         }
     } else {
-    	line_count = DEFAULT_LINE_COUNT;
+        line_count = DEFAULT_LINE_COUNT;
     }
 
     CFile f(values[0]);

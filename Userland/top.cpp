@@ -1,12 +1,12 @@
-#include <stdio.h>
-#include <unistd.h>
+#include <AK/AKString.h>
+#include <AK/HashMap.h>
+#include <AK/QuickSort.h>
+#include <AK/Vector.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <AK/HashMap.h>
-#include <AK/AKString.h>
-#include <AK/Vector.h>
-#include <AK/QuickSort.h>
+#include <unistd.h>
 
 static HashMap<unsigned, String>* s_usernames;
 
@@ -89,14 +89,14 @@ int main(int, char**)
 
         printf("\033[3J\033[H\033[2J");
         printf("\033[47;30m%6s  %3s  % 8s  % 8s  %6s  %6s  %4s  %s\033[K\033[0m\n",
-               "PID",
-               "PRI",
-               "USER",
-               "STATE",
-               "LINEAR",
-               "COMMIT",
-               "%CPU",
-               "NAME");
+            "PID",
+            "PRI",
+            "USER",
+            "STATE",
+            "LINEAR",
+            "COMMIT",
+            "%CPU",
+            "NAME");
         for (auto& it : current.map) {
             pid_t pid = it.key;
             if (pid == 0)
@@ -108,13 +108,12 @@ int main(int, char**)
             dword nsched_before = (*jt).value.nsched;
             dword nsched_diff = nsched_now - nsched_before;
             it.value.nsched_since_prev = nsched_diff;
-            it.value.cpu_percent = ((nsched_diff * 100)/ sum_diff);
-            it.value.cpu_percent_decimal = (((nsched_diff * 1000)/ sum_diff) % 10);
+            it.value.cpu_percent = ((nsched_diff * 100) / sum_diff);
+            it.value.cpu_percent_decimal = (((nsched_diff * 1000) / sum_diff) % 10);
             processes.append(&it.value);
         }
 
-
-        quick_sort(processes.begin(), processes.end(), [] (auto* p1, auto* p2) {
+        quick_sort(processes.begin(), processes.end(), [](auto* p1, auto* p2) {
             return p2->nsched_since_prev < p1->nsched_since_prev;
         });
 
@@ -128,8 +127,7 @@ int main(int, char**)
                 process->committed / 1024,
                 process->cpu_percent,
                 process->cpu_percent_decimal,
-                process->name.characters()
-            );
+                process->name.characters());
         }
         processes.clear_with_capacity();
         prev = move(current);

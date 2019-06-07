@@ -1,8 +1,8 @@
-#include <unistd.h>
-#include <stdio.h>
-#include <signal.h>
-#include <stdlib.h>
 #include <AK/AKString.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
 
 static void print_usage_and_exit()
 {
@@ -38,4 +38,3 @@ int main(int argc, char** argv)
         perror("kill");
     return 0;
 }
-

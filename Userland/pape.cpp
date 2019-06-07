@@ -1,18 +1,18 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <dirent.h>
 #include <AK/AKString.h>
+#include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
-#include <AK/FileSystemPath.h>
 #include <LibCore/CArgsParser.h>
 #include <LibCore/CDirIterator.h>
-#include <LibGUI/GDesktop.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GDesktop.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 static int handle_show_all()
 {
@@ -73,4 +73,3 @@ int main(int argc, char** argv)
 
     return handle_set_pape(values[0]);
 }
-

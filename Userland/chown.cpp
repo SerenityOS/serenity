@@ -1,10 +1,10 @@
-#include <unistd.h>
-#include <sys/stat.h>
+#include <AK/AKString.h>
 #include <stdio.h>
 #include <string.h>
-#include <AK/AKString.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     if (argc < 2) {
         printf("usage: chown <uid[:gid]> <path>\n");

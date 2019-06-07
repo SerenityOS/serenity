@@ -1,15 +1,15 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <errno.h>
-#include <string.h>
-#include <fcntl.h>
 #include <AK/AKString.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/CArgsParser.h>
 #include <LibCore/CDirIterator.h>
 #include <LibCore/CFile.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 
 static String read_var(const String& name)
 {
@@ -47,7 +47,6 @@ static void write_var(const String& name, const String& value)
         exit(1);
     }
 }
-
 
 static int handle_show_all()
 {
@@ -102,4 +101,3 @@ int main(int argc, char** argv)
     Vector<String> values = args.get_single_values();
     return handle_var(values[0]);
 }
-

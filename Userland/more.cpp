@@ -1,7 +1,7 @@
-#include <stdio.h>
-#include <unistd.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 static int key_fd;
 
@@ -16,8 +16,8 @@ void wait_for_key()
 
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
 
     key_fd = open(ttyname(1), O_RDONLY);
     if (key_fd < 0) {
@@ -36,10 +36,9 @@ int main(int argc, char** argv)
             break;
         printf(str);
         ++lines_printed;
-        if ((lines_printed % (ws.ws_row - 1)) == 0) { 
+        if ((lines_printed % (ws.ws_row - 1)) == 0) {
             wait_for_key();
         }
-
     }
 
     close(key_fd);

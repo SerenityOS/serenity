@@ -120,4 +120,3 @@ int main(int argc, char** argv)
 
     return (err_open || err_write) ? 1 : 0;
 }
-
