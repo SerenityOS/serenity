@@ -1207,8 +1207,16 @@ int Process::sys$setgid(gid_t gid)
 
 unsigned Process::sys$alarm(unsigned seconds)
 {
-    (void) seconds;
-    ASSERT_NOT_REACHED();
+    unsigned previous_alarm_remaining = 0;
+    if (m_alarm_deadline && m_alarm_deadline > g_uptime) {
+        previous_alarm_remaining = (m_alarm_deadline - g_uptime) / TICKS_PER_SECOND;
+    }
+    if (!seconds) {
+        m_alarm_deadline = 0;
+        return previous_alarm_remaining;
+    }
+    m_alarm_deadline = g_uptime + seconds * TICKS_PER_SECOND;
+    return previous_alarm_remaining;
 }
 
 int Process::sys$uname(utsname* buf)
