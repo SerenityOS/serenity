@@ -1,9 +1,9 @@
-#include <time.h>
+#include <Kernel/Syscall.h>
+#include <assert.h>
+#include <errno.h>
 #include <sys/time.h>
 #include <sys/times.h>
-#include <errno.h>
-#include <assert.h>
-#include <Kernel/Syscall.h>
+#include <time.h>
 
 extern "C" {
 
@@ -91,7 +91,7 @@ struct tm* gmtime(const time_t* t)
     return localtime(t);
 }
 
-char *asctime(const struct tm*)
+char* asctime(const struct tm*)
 {
     ASSERT_NOT_REACHED();
 }
@@ -117,5 +117,4 @@ clock_t clock()
     times(&tms);
     return tms.tms_utime + tms.tms_stime;
 }
-
 }

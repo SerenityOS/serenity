@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <errno.h>
 
 extern "C" {
 
@@ -56,6 +56,4 @@ in_addr_t inet_addr(const char* str)
         return INADDR_NONE;
     return tmp;
 }
-
 }
-

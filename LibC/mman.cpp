@@ -1,7 +1,7 @@
-#include <mman.h>
-#include <errno.h>
-#include <stdio.h>
 #include <Kernel/Syscall.h>
+#include <errno.h>
+#include <mman.h>
+#include <stdio.h>
 
 extern "C" {
 
@@ -50,5 +50,4 @@ int shm_unlink(const char* name)
     int rc = syscall(SC_unlink, name);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
 }

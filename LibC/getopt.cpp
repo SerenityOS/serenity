@@ -40,20 +40,20 @@
 #include <string.h>
 #include <unistd.h>
 
-int	opterr = 1; /* if error message should be printed */
+int opterr = 1; /* if error message should be printed */
 int optind = 1; /* index into parent argv vector */
 int optopt;     /* character checked for validity */
 int optreset;   /* reset getopt */
-char *optarg;   /* argument associated with option */
+char* optarg;   /* argument associated with option */
 
-#define	BADCH  (int)'?'
-#define	BADARG (int)':'
-#define	EMSG   ""
+#define BADCH (int)'?'
+#define BADARG (int)':'
+#define EMSG ""
 
 int getopt(int nargc, char* const nargv[], const char* ostr)
 {
     static const char* place = EMSG; /* option letter processing */
-    char *oli; /* option letter list index */
+    char* oli;                       /* option letter list index */
 
     ASSERT(nargv != NULL);
     ASSERT(ostr != NULL);
@@ -70,7 +70,7 @@ int getopt(int nargc, char* const nargv[], const char* ostr)
             place = EMSG;
             return -1;
         }
-    }					/* option letter okay? */
+    } /* option letter okay? */
     if ((optopt = (int)*place++) == (int)':' || !(oli = strchr(ostr, optopt))) {
         /*
          * if the user didn't specify '-' as an option,
@@ -88,8 +88,7 @@ int getopt(int nargc, char* const nargv[], const char* ostr)
         optarg = NULL;
         if (!*place)
             ++optind;
-    }
-    else { /* need an argument */
+    } else {        /* need an argument */
         if (*place) /* no white space */
             optarg = const_cast<char*>(place);
         else if (nargc <= ++optind) { /* no arg */
@@ -99,8 +98,7 @@ int getopt(int nargc, char* const nargv[], const char* ostr)
             if (opterr)
                 fprintf(stderr, "option requires an argument -- %c\n", optopt);
             return BADCH;
-        }
-        else /* white space */
+        } else /* white space */
             optarg = nargv[optind];
         place = EMSG;
         ++optind;

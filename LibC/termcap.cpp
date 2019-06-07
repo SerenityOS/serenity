@@ -1,9 +1,9 @@
-#include <termcap.h>
-#include <assert.h>
-#include <string.h>
-#include <stdio.h>
-#include <AK/HashMap.h>
 #include <AK/AKString.h>
+#include <AK/HashMap.h>
+#include <assert.h>
+#include <stdio.h>
+#include <string.h>
+#include <termcap.h>
 
 //#define TERMCAP_DEBUG
 
@@ -126,6 +126,4 @@ int tputs(const char* str, int affcnt, int (*putc)(int))
         putc(str[i]);
     return 0;
 }
-
 }
-

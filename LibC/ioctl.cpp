@@ -1,8 +1,8 @@
+#include <Kernel/Syscall.h>
 #include <errno.h>
 #include <stdarg.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
-#include <Kernel/Syscall.h>
 
 extern "C" {
 
@@ -14,6 +14,4 @@ int ioctl(int fd, unsigned request, ...)
     int rc = syscall(SC_ioctl, fd, request, arg);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
 }
-

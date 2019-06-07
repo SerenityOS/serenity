@@ -9,7 +9,6 @@
 #include <string.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <unistd.h>
 
 extern "C" {
 
@@ -39,7 +38,8 @@ int closedir(DIR* dirp)
     return rc;
 }
 
-struct [[gnu::packed]] sys_dirent {
+struct [[gnu::packed]] sys_dirent
+{
     ino_t ino;
     byte file_type;
     size_t namelen;
@@ -91,6 +91,4 @@ int dirfd(DIR* dirp)
     ASSERT(dirp);
     return dirp->fd;
 }
-
 }
-

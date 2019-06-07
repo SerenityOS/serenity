@@ -1,5 +1,5 @@
-#include <locale.h>
 #include <assert.h>
+#include <locale.h>
 #include <stdio.h>
 
 extern "C" {
@@ -20,5 +20,4 @@ struct lconv* localeconv()
 {
     return &default_locale;
 }
-
 }
