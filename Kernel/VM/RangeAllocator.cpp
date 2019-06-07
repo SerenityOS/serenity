@@ -4,7 +4,7 @@
 
 //#define VRA_DEBUG
 
-RangeAllocator::RangeAllocator(LinearAddress base, size_t size)
+RangeAllocator::RangeAllocator(VirtualAddress base, size_t size)
 {
     m_available_ranges.append({ base, size });
 #ifdef VRA_DEBUG
@@ -82,7 +82,7 @@ Range RangeAllocator::allocate_anywhere(size_t size)
     return {};
 }
 
-Range RangeAllocator::allocate_specific(LinearAddress base, size_t size)
+Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 {
     Range allocated_range(base, size);
     for (int i = 0; i < m_available_ranges.size(); ++i) {

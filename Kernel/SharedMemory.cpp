@@ -89,9 +89,9 @@ int SharedMemory::write(FileDescription&, const byte* data, int data_size)
     ASSERT_NOT_REACHED();
 }
 
-KResultOr<Region*> SharedMemory::mmap(Process& process, FileDescription&, LinearAddress laddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> SharedMemory::mmap(Process& process, FileDescription&, VirtualAddress vaddr, size_t offset, size_t size, int prot)
 {
     if (!vmo())
         return KResult(-ENODEV);
-    return process.allocate_region_with_vmo(laddr, size, *vmo(), offset, name(), prot);
+    return process.allocate_region_with_vmo(vaddr, size, *vmo(), offset, name(), prot);
 }

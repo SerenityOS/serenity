@@ -31,7 +31,7 @@ private:
     virtual String absolute_path(const FileDescription&) const override;
     virtual const char* class_name() const override { return "SharedMemory"; }
     virtual bool is_shared_memory() const override { return true; }
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, LinearAddress, size_t offset, size_t size, int prot) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress, size_t offset, size_t size, int prot) override;
 
     SharedMemory(const String& name, uid_t, gid_t, mode_t);
 

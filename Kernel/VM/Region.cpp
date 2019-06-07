@@ -75,7 +75,7 @@ Retained<Region> Region::clone()
             current->process().name().characters(),
             current->pid(),
             m_name.characters(),
-            laddr().get());
+            vaddr().get());
 #endif
         // Create a new region backed by the same VMObject.
         return adopt(*new Region(m_range, m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_access));
@@ -86,7 +86,7 @@ Retained<Region> Region::clone()
         current->process().name().characters(),
         current->pid(),
         m_name.characters(),
-        laddr().get());
+        vaddr().get());
 #endif
     // Set up a COW region. The parent (this) region becomes COW as well!
     m_cow_map.fill(true);
@@ -98,7 +98,7 @@ int Region::commit()
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at L%x\n", vmo().page_count(), this, &vmo(), laddr().get());
+    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at L%x\n", vmo().page_count(), this, &vmo(), vaddr().get());
 #endif
     for (size_t i = first_page_index(); i <= last_page_index(); ++i) {
         if (!vmo().physical_pages()[i].is_null())

@@ -12,7 +12,7 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
-#include <Kernel/LinearAddress.h>
+#include <Kernel/VirtualAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
@@ -52,8 +52,8 @@ public:
 
     void enter_process_paging_scope(Process&);
 
-    bool validate_user_read(const Process&, LinearAddress) const;
-    bool validate_user_write(const Process&, LinearAddress) const;
+    bool validate_user_read(const Process&, VirtualAddress) const;
+    bool validate_user_write(const Process&, VirtualAddress) const;
 
     enum class ShouldZeroFill
     {
@@ -71,10 +71,10 @@ public:
     int user_physical_pages_in_existence() const { return s_user_physical_pages_in_existence; }
     int super_physical_pages_in_existence() const { return s_super_physical_pages_in_existence; }
 
-    void map_for_kernel(LinearAddress, PhysicalAddress);
+    void map_for_kernel(VirtualAddress, PhysicalAddress);
 
     RetainPtr<Region> allocate_kernel_region(size_t, String&& name);
-    void map_region_at_address(PageDirectory&, Region&, LinearAddress, bool user_accessible);
+    void map_region_at_address(PageDirectory&, Region&, VirtualAddress, bool user_accessible);
 
 private:
     MemoryManager();
@@ -89,17 +89,17 @@ private:
 
     void initialize_paging();
     void flush_entire_tlb();
-    void flush_tlb(LinearAddress);
+    void flush_tlb(VirtualAddress);
 
     RetainPtr<PhysicalPage> allocate_page_table(PageDirectory&, unsigned index);
 
-    void map_protected(LinearAddress, size_t length);
+    void map_protected(VirtualAddress, size_t length);
 
-    void create_identity_mapping(PageDirectory&, LinearAddress, size_t length);
-    void remove_identity_mapping(PageDirectory&, LinearAddress, size_t);
+    void create_identity_mapping(PageDirectory&, VirtualAddress, size_t length);
+    void remove_identity_mapping(PageDirectory&, VirtualAddress, size_t);
 
-    static Region* region_from_laddr(Process&, LinearAddress);
-    static const Region* region_from_laddr(const Process&, LinearAddress);
+    static Region* region_from_vaddr(Process&, VirtualAddress);
+    static const Region* region_from_vaddr(const Process&, VirtualAddress);
 
     bool copy_on_write(Region&, unsigned page_index_in_region);
     bool page_in_from_inode(Region&, unsigned page_index_in_region);
@@ -215,12 +215,12 @@ private:
     static unsigned s_user_physical_pages_in_existence;
     static unsigned s_super_physical_pages_in_existence;
 
-    PageTableEntry ensure_pte(PageDirectory&, LinearAddress);
+    PageTableEntry ensure_pte(PageDirectory&, VirtualAddress);
 
     RetainPtr<PageDirectory> m_kernel_page_directory;
     dword* m_page_table_zero;
 
-    LinearAddress m_quickmap_addr;
+    VirtualAddress m_quickmap_addr;
 
     Vector<Retained<PhysicalPage>> m_free_physical_pages;
     Vector<Retained<PhysicalPage>> m_free_supervisor_physical_pages;

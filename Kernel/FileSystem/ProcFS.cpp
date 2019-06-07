@@ -227,8 +227,8 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
         if (region->is_writable())
             flags_builder.append('W');
         builder.appendf("%x -- %x    %x  %x   % 4s   %s\n",
-            region->laddr().get(),
-            region->laddr().offset(region->size() - 1).get(),
+            region->vaddr().get(),
+            region->vaddr().offset(region->size() - 1).get(),
             region->size(),
             region->amount_resident(),
             flags_builder.to_string().characters(),
@@ -263,8 +263,8 @@ ByteBuffer procfs$pid_vmo(InodeIdentifier identifier)
     builder.appendf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : process.regions()) {
         builder.appendf("%x -- %x    %x    %s\n",
-            region->laddr().get(),
-            region->laddr().offset(region->size() - 1).get(),
+            region->vaddr().get(),
+            region->vaddr().offset(region->size() - 1).get(),
             region->size(),
             region->name().characters());
         builder.appendf("VMO: %s \"%s\" @ %x(%u)\n",
@@ -300,7 +300,7 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
         builder.appendf("Thread %d:\n", thread.tid());
         Vector<RecognizedSymbol, 64> recognized_symbols;
         recognized_symbols.append({ thread.tss().eip, ksymbolicate(thread.tss().eip) });
-        for (dword* stack_ptr = (dword*)thread.frame_ptr(); process.validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)thread.frame_ptr(); process.validate_read_from_kernel(VirtualAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
         }

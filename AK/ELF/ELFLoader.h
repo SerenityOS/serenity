@@ -5,7 +5,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #if defined(KERNEL)
-#include <Kernel/LinearAddress.h>
+#include <Kernel/VirtualAddress.h>
 #endif
 #include <AK/ELF/ELFImage.h>
 
@@ -16,9 +16,9 @@ public:
 
     bool load();
 #if defined(KERNEL)
-    Function<void*(LinearAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
-    Function<void*(LinearAddress, size_t, size_t, size_t, bool r, bool w, bool x, const String&)> map_section_hook;
-    LinearAddress entry() const { return m_image.entry(); }
+    Function<void*(VirtualAddress, size_t, size_t, bool, bool, const String&)> alloc_section_hook;
+    Function<void*(VirtualAddress, size_t, size_t, size_t, bool r, bool w, bool x, const String&)> map_section_hook;
+    VirtualAddress entry() const { return m_image.entry(); }
 #endif
     char* symbol_ptr(const char* name);
 

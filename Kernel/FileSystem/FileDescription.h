@@ -8,7 +8,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/LinearAddress.h>
+#include <Kernel/VirtualAddress.h>
 #include <Kernel/Net/Socket.h>
 
 class File;
@@ -67,7 +67,7 @@ public:
     Custody* custody() { return m_custody.ptr(); }
     const Custody* custody() const { return m_custody.ptr(); }
 
-    KResultOr<Region*> mmap(Process&, LinearAddress, size_t offset, size_t, int prot);
+    KResultOr<Region*> mmap(Process&, VirtualAddress, size_t offset, size_t, int prot);
 
     bool is_blocking() const { return m_is_blocking; }
     void set_blocking(bool b) { m_is_blocking = b; }

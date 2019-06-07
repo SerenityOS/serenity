@@ -23,12 +23,12 @@ ssize_t InodeFile::write(FileDescription& descriptor, const byte* data, ssize_t 
     return m_inode->write_bytes(descriptor.offset(), count, data, &descriptor);
 }
 
-KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptor, LinearAddress preferred_laddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptor, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot)
 {
     ASSERT(offset == 0);
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
     InterruptDisabler disabler;
-    auto* region = process.allocate_file_backed_region(preferred_laddr, size, inode(), descriptor.absolute_path(), prot);
+    auto* region = process.allocate_file_backed_region(preferred_vaddr, size, inode(), descriptor.absolute_path(), prot);
     if (!region)
         return KResult(-ENOMEM);
     return region;

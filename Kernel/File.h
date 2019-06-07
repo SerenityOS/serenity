@@ -5,7 +5,7 @@
 #include <AK/Retained.h>
 #include <AK/Types.h>
 #include <Kernel/KResult.h>
-#include <Kernel/LinearAddress.h>
+#include <Kernel/VirtualAddress.h>
 #include <Kernel/UnixTypes.h>
 
 class FileDescription;
@@ -52,7 +52,7 @@ public:
     virtual ssize_t read(FileDescription&, byte*, ssize_t) = 0;
     virtual ssize_t write(FileDescription&, const byte*, ssize_t) = 0;
     virtual int ioctl(FileDescription&, unsigned request, unsigned arg);
-    virtual KResultOr<Region*> mmap(Process&, FileDescription&, LinearAddress preferred_laddr, size_t offset, size_t size, int prot);
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot);
 
     virtual String absolute_path(const FileDescription&) const = 0;
 
