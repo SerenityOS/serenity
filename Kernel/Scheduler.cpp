@@ -188,8 +188,13 @@ bool Scheduler::pick_next()
                 auto exit_status = Process::reap(process);
                 dbgprintf("reaped unparented process %s(%u), exit status: %u\n", name.characters(), pid, exit_status);
             }
+            return IterationDecision::Continue;
         }
-        return true;
+        if (process.m_alarm_deadline && g_uptime > process.m_alarm_deadline) {
+            process.m_alarm_deadline = 0;
+            process.send_signal(SIGALRM, nullptr);
+        }
+        return IterationDecision::Continue;
     });
 
     // Dispatch any pending signals.

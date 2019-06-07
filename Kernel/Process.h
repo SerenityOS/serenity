@@ -351,6 +351,8 @@ private:
     OwnPtr<ELFLoader> m_elf_loader;
 
     Lock m_big_lock { "Process" };
+
+    qword m_alarm_deadline { 0 };
 };
 
 class ProcessInspectionHandle {
@@ -396,7 +398,7 @@ inline void Process::for_each(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        if (!callback(*process))
+        if (callback(*process) == IterationDecision::Abort)
             break;
         process = next_process;
     }
