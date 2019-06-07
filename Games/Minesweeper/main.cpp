@@ -1,13 +1,13 @@
 #include "Field.h"
+#include <LibCore/CConfigFile.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GWindow.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GLabel.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GLabel.h>
-#include <LibCore/CConfigFile.h>
+#include <LibGUI/GWindow.h>
 
 int main(int argc, char** argv)
 {
@@ -58,33 +58,33 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Minesweeper");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
     auto game_menu = make<GMenu>("Game");
-    game_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [field] (const GAction&) {
+    game_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [field](const GAction&) {
         field->reset();
     }));
     game_menu->add_separator();
-    game_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [field] (const GAction&) {
+    game_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [field](const GAction&) {
         field->set_field_size(9, 9, 10);
     }));
-    game_menu->add_action(GAction::create("Intermediate", { Mod_Ctrl, Key_I }, [field] (const GAction&) {
+    game_menu->add_action(GAction::create("Intermediate", { Mod_Ctrl, Key_I }, [field](const GAction&) {
         field->set_field_size(16, 16, 40);
     }));
-    game_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [field] (const GAction&) {
+    game_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [field](const GAction&) {
         field->set_field_size(16, 30, 99);
     }));
-    game_menu->add_action(GAction::create("Madwoman", { Mod_Ctrl, Key_M }, [field] (const GAction&) {
+    game_menu->add_action(GAction::create("Madwoman", { Mod_Ctrl, Key_M }, [field](const GAction&) {
         field->set_field_size(32, 60, 350);
     }));
     menubar->add_menu(move(game_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [] (const GAction&) {
+    help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));

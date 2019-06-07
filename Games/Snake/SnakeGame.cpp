@@ -1,6 +1,6 @@
 #include "SnakeGame.h"
-#include <LibGUI/GPainter.h>
 #include <LibGUI/GFontDatabase.h>
+#include <LibGUI/GPainter.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <stdlib.h>
 #include <time.h>
@@ -198,7 +198,6 @@ void SnakeGame::paint_event(GPaintEvent& event)
         painter.fill_rect(right_side, Color::from_rgb(0x888800));
         painter.fill_rect(top_side, Color::from_rgb(0xcccc00));
         painter.fill_rect(bottom_side, Color::from_rgb(0x888800));
-
     }
 
     painter.draw_scaled_bitmap(cell_rect(m_fruit), *m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type]->rect());
