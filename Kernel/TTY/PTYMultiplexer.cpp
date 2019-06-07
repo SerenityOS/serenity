@@ -1,6 +1,6 @@
 #include "PTYMultiplexer.h"
 #include "MasterPTY.h"
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
@@ -28,7 +28,7 @@ PTYMultiplexer::~PTYMultiplexer()
 {
 }
 
-KResultOr<Retained<FileDescriptor>> PTYMultiplexer::open(int options)
+KResultOr<Retained<FileDescription>> PTYMultiplexer::open(int options)
 {
     UNUSED_PARAM(options);
     LOCKER(m_lock);
@@ -39,7 +39,7 @@ KResultOr<Retained<FileDescriptor>> PTYMultiplexer::open(int options)
 #ifdef PTMX_DEBUG
     dbgprintf("PTYMultiplexer::open: Vending master %u\n", master->index());
 #endif
-    return FileDescriptor::create(master.ptr());
+    return FileDescription::create(master.ptr());
 }
 
 void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)

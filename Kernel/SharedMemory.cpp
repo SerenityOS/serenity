@@ -68,12 +68,12 @@ KResult SharedMemory::truncate(int length)
     return KResult(-ENOTIMPL);
 }
 
-String SharedMemory::absolute_path(const FileDescriptor&) const
+String SharedMemory::absolute_path(const FileDescription&) const
 {
     return String::format("shm:%u", this);
 }
 
-int SharedMemory::read(FileDescriptor&, byte* buffer, int buffer_size)
+int SharedMemory::read(FileDescription&, byte* buffer, int buffer_size)
 {
     UNUSED_PARAM(buffer);
     UNUSED_PARAM(buffer_size);
@@ -81,7 +81,7 @@ int SharedMemory::read(FileDescriptor&, byte* buffer, int buffer_size)
     ASSERT_NOT_REACHED();
 }
 
-int SharedMemory::write(FileDescriptor&, const byte* data, int data_size)
+int SharedMemory::write(FileDescription&, const byte* data, int data_size)
 {
     UNUSED_PARAM(data);
     UNUSED_PARAM(data_size);
@@ -89,7 +89,7 @@ int SharedMemory::write(FileDescriptor&, const byte* data, int data_size)
     ASSERT_NOT_REACHED();
 }
 
-KResultOr<Region*> SharedMemory::mmap(Process& process, FileDescriptor&, LinearAddress laddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> SharedMemory::mmap(Process& process, FileDescription&, LinearAddress laddr, size_t offset, size_t size, int prot)
 {
     if (!vmo())
         return KResult(-ENODEV);

@@ -14,10 +14,10 @@ public:
     static PS2MouseDevice& the();
 
     // ^CharacterDevice
-    virtual bool can_read(FileDescriptor&) const override;
-    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) override;
-    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) override;
-    virtual bool can_write(FileDescriptor&) const override { return true; }
+    virtual bool can_read(FileDescription&) const override;
+    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
+    virtual bool can_write(FileDescription&) const override { return true; }
 
 private:
     // ^IRQHandler

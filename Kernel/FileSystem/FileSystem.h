@@ -19,7 +19,7 @@
 static const dword mepoch = 476763780;
 
 class Inode;
-class FileDescriptor;
+class FileDescription;
 class LocalSocket;
 class VMObject;
 

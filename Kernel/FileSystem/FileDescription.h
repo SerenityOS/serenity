@@ -19,13 +19,13 @@ class Region;
 class CharacterDevice;
 class SharedMemory;
 
-class FileDescriptor : public Retainable<FileDescriptor> {
+class FileDescription : public Retainable<FileDescription> {
 public:
-    static Retained<FileDescriptor> create(RetainPtr<Custody>&&);
-    static Retained<FileDescriptor> create(RetainPtr<File>&&, SocketRole = SocketRole::None);
-    ~FileDescriptor();
+    static Retained<FileDescription> create(RetainPtr<Custody>&&);
+    static Retained<FileDescription> create(RetainPtr<File>&&, SocketRole = SocketRole::None);
+    ~FileDescription();
 
-    Retained<FileDescriptor> clone();
+    Retained<FileDescription> clone();
 
     int close();
 
@@ -105,8 +105,8 @@ public:
 
 private:
     friend class VFS;
-    FileDescriptor(RetainPtr<File>&&, SocketRole = SocketRole::None);
-    FileDescriptor(FIFO&, FIFO::Direction);
+    FileDescription(RetainPtr<File>&&, SocketRole = SocketRole::None);
+    FileDescription(FIFO&, FIFO::Direction);
 
     RetainPtr<Custody> m_custody;
     RetainPtr<Inode> m_inode;

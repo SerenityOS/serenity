@@ -84,7 +84,7 @@ dword BXVGADevice::find_framebuffer_address()
     return framebuffer_address;
 }
 
-KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescriptor&, LinearAddress preferred_laddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, LinearAddress preferred_laddr, size_t offset, size_t size, int prot)
 {
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
@@ -104,7 +104,7 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescriptor&, LinearAd
     return region;
 }
 
-int BXVGADevice::ioctl(FileDescriptor&, unsigned request, unsigned arg)
+int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
     switch (request) {
     case BXVGA_DEV_IOCTL_SET_Y_OFFSET:
@@ -124,22 +124,22 @@ int BXVGADevice::ioctl(FileDescriptor&, unsigned request, unsigned arg)
     };
 }
 
-bool BXVGADevice::can_read(FileDescriptor&) const
+bool BXVGADevice::can_read(FileDescription&) const
 {
     ASSERT_NOT_REACHED();
 }
 
-bool BXVGADevice::can_write(FileDescriptor&) const
+bool BXVGADevice::can_write(FileDescription&) const
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BXVGADevice::read(FileDescriptor&, byte*, ssize_t)
+ssize_t BXVGADevice::read(FileDescription&, byte*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BXVGADevice::write(FileDescriptor&, const byte*, ssize_t)
+ssize_t BXVGADevice::write(FileDescription&, const byte*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }

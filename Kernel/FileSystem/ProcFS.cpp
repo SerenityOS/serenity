@@ -1,7 +1,7 @@
 #include "ProcFS.h"
 #include "Process.h"
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/VM/MemoryManager.h>
 #include "StdLib.h"
@@ -189,7 +189,7 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
         return { };
     StringBuilder builder;
     for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
-        auto* descriptor = process.file_descriptor(i);
+        auto* descriptor = process.file_description(i);
         if (!descriptor)
             continue;
         builder.appendf("% 3u %s\n", i, descriptor->absolute_path().characters());
@@ -204,7 +204,7 @@ ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
         return { };
     auto& process = handle->process();
     int fd = to_fd(identifier);
-    auto* descriptor = process.file_descriptor(fd);
+    auto* descriptor = process.file_description(fd);
     if (!descriptor)
         return { };
     return descriptor->absolute_path().to_byte_buffer();
@@ -835,7 +835,7 @@ InodeMetadata ProcFSInode::metadata() const
     return metadata;
 }
 
-ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescriptor* descriptor) const
+ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription* descriptor) const
 {
 #ifdef PROCFS_DEBUG
     dbgprintf("ProcFS: read_bytes %u\n", index());
@@ -941,7 +941,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
             return false;
         auto& process = handle->process();
         for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
-            auto* descriptor = process.file_descriptor(i);
+            auto* descriptor = process.file_description(i);
             if (!descriptor)
                 continue;
             char name[16];
@@ -1027,7 +1027,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
             {
                 InterruptDisabler disabler;
                 if (auto* process = Process::from_pid(to_pid(identifier())))
-                    fd_exists = process->file_descriptor(name_as_number);
+                    fd_exists = process->file_description(name_as_number);
 
             }
             if (fd_exists)
@@ -1041,7 +1041,7 @@ void ProcFSInode::flush_metadata()
 {
 }
 
-ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer, FileDescriptor*)
+ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer, FileDescription*)
 {
     auto* directory_entry = fs().get_directory_entry(identifier());
     if (!directory_entry || !directory_entry->write_callback)

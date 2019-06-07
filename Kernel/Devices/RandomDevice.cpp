@@ -26,12 +26,12 @@ static void mysrand(unsigned seed)
 }
 #endif
 
-bool RandomDevice::can_read(FileDescriptor&) const
+bool RandomDevice::can_read(FileDescription&) const
 {
     return true;
 }
 
-ssize_t RandomDevice::read(FileDescriptor&, byte* buffer, ssize_t size)
+ssize_t RandomDevice::read(FileDescription&, byte* buffer, ssize_t size)
 {
     const int range = 'z' - 'a';
     ssize_t nread = min(size, PAGE_SIZE);
@@ -42,7 +42,7 @@ ssize_t RandomDevice::read(FileDescriptor&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t RandomDevice::write(FileDescriptor&, const byte*, ssize_t size)
+ssize_t RandomDevice::write(FileDescription&, const byte*, ssize_t size)
 {
     // FIXME: Use input for entropy? I guess that could be a neat feature?
     return min(PAGE_SIZE, size);

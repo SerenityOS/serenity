@@ -23,10 +23,10 @@ public:
     void set_client(KeyboardClient* client) { m_client = client; }
 
     // ^CharacterDevice
-    virtual ssize_t read(FileDescriptor&, byte* buffer, ssize_t) override;
-    virtual bool can_read(FileDescriptor&) const override;
-    virtual ssize_t write(FileDescriptor&, const byte* buffer, ssize_t) override;
-    virtual bool can_write(FileDescriptor&) const override { return true; }
+    virtual ssize_t read(FileDescription&, byte* buffer, ssize_t) override;
+    virtual bool can_read(FileDescription&) const override;
+    virtual ssize_t write(FileDescription&, const byte* buffer, ssize_t) override;
+    virtual bool can_write(FileDescription&) const override { return true; }
 
 private:
     // ^IRQHandler

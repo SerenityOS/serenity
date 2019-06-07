@@ -10,11 +10,11 @@ CFile::CFile(const StringView& filename)
 
 CFile::~CFile()
 {
-    if (m_should_close_file_descriptor == ShouldCloseFileDescriptor::Yes && mode() != NotOpen)
+    if (m_should_close_file_descriptor == ShouldCloseFileDescription::Yes && mode() != NotOpen)
         close();
 }
 
-bool CFile::open(int fd, CIODevice::OpenMode mode, ShouldCloseFileDescriptor should_close)
+bool CFile::open(int fd, CIODevice::OpenMode mode, ShouldCloseFileDescription should_close)
 {
     set_fd(fd);
     set_mode(mode);

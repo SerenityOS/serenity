@@ -21,9 +21,9 @@ private:
     virtual ssize_t on_tty_write(const byte*, ssize_t) override;
 
     // ^CharacterDevice
-    virtual bool can_read(FileDescriptor&) const override;
-    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) override;
-    virtual bool can_write(FileDescriptor&) const override;
+    virtual bool can_read(FileDescription&) const override;
+    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
+    virtual bool can_write(FileDescription&) const override;
     virtual const char* class_name() const override { return "SlavePTY"; }
     virtual void close() override;
 

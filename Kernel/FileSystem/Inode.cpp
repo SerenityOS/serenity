@@ -28,7 +28,7 @@ void Inode::sync()
     }
 }
 
-ByteBuffer Inode::read_entire(FileDescriptor* descriptor) const
+ByteBuffer Inode::read_entire(FileDescription* descriptor) const
 {
     size_t initial_size = metadata().size ? metadata().size : 4096;
     StringBuilder builder(initial_size);

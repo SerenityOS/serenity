@@ -28,7 +28,7 @@
 
 class Custody;
 class Device;
-class FileDescriptor;
+class FileDescription;
 
 class VFS {
     AK_MAKE_ETERNAL
@@ -59,9 +59,9 @@ public:
     bool mount_root(Retained<FS>&&);
     bool mount(Retained<FS>&&, StringView path);
 
-    KResultOr<Retained<FileDescriptor>> open(RetainPtr<Device>&&, int options);
-    KResultOr<Retained<FileDescriptor>> open(StringView path, int options, mode_t mode, Custody& base);
-    KResultOr<Retained<FileDescriptor>> create(StringView path, int options, mode_t mode, Custody& base);
+    KResultOr<Retained<FileDescription>> open(RetainPtr<Device>&&, int options);
+    KResultOr<Retained<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
+    KResultOr<Retained<FileDescription>> create(StringView path, int options, mode_t mode, Custody& base);
     KResult mkdir(StringView path, mode_t mode, Custody& base);
     KResult link(StringView old_path, StringView new_path, Custody& base);
     KResult unlink(StringView path, Custody& base);
@@ -94,7 +94,7 @@ public:
     KResultOr<Retained<Custody>> resolve_path(StringView path, Custody& base, RetainPtr<Custody>* parent = nullptr, int options = 0);
 
 private:
-    friend class FileDescriptor;
+    friend class FileDescription;
 
     RetainPtr<Inode> get_inode(InodeIdentifier);
 

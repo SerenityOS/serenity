@@ -3,7 +3,7 @@
 #include "kmalloc.h"
 #include "StdLib.h"
 #include "i386.h"
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -190,7 +190,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     }
     if (offset & ~PAGE_MASK)
         return (void*)-EINVAL;
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return (void*)-EBADF;
     auto region_or_error = descriptor->mmap(*this, LinearAddress((dword)addr), offset, size, prot);
@@ -765,7 +765,7 @@ Process* Process::from_pid(pid_t pid)
     return nullptr;
 }
 
-FileDescriptor* Process::file_descriptor(int fd)
+FileDescription* Process::file_description(int fd)
 {
     if (fd < 0)
         return nullptr;
@@ -774,7 +774,7 @@ FileDescriptor* Process::file_descriptor(int fd)
     return nullptr;
 }
 
-const FileDescriptor* Process::file_descriptor(int fd) const
+const FileDescription* Process::file_description(int fd) const
 {
     if (fd < 0)
         return nullptr;
@@ -789,7 +789,7 @@ ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     return descriptor->get_dir_entries((byte*)buffer, size);
@@ -797,7 +797,7 @@ ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
 
 int Process::sys$lseek(int fd, off_t offset, int whence)
 {
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     return descriptor->seek(offset, whence);
@@ -809,7 +809,7 @@ int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_tty())
@@ -827,7 +827,7 @@ int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     auto* master_pty = descriptor->master_pty();
@@ -850,7 +850,7 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
 
     // FIXME: Return EINVAL if sum of iovecs is greater than INT_MAX
 
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
 
@@ -874,7 +874,7 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     return nwritten;
 }
 
-ssize_t Process::do_write(FileDescriptor& descriptor, const byte* data, int data_size)
+ssize_t Process::do_write(FileDescription& descriptor, const byte* data, int data_size)
 {
     ssize_t nwritten = 0;
     if (!descriptor.is_blocking()) {
@@ -931,7 +931,7 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 #ifdef DEBUG_IO
     dbgprintf("%s(%u): sys$write(%d, %p, %u)\n", name().characters(), pid(), fd, data, size);
 #endif
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     auto nwritten = do_write(*descriptor, data, size);
@@ -954,7 +954,7 @@ ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$read(%d, %p, %u)\n", name().characters(), pid(), fd, buffer, size);
 #endif
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     if (descriptor->is_blocking()) {
@@ -969,7 +969,7 @@ ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
 
 int Process::sys$close(int fd)
 {
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     int rc = descriptor->close();
@@ -1009,10 +1009,10 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
     (void) cmd;
     (void) arg;
     dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
-    // NOTE: The FD flags are not shared between FileDescriptor objects.
+    // NOTE: The FD flags are not shared between FileDescription objects.
     //       This means that dup() doesn't copy the FD_CLOEXEC flag!
     switch (cmd) {
     case F_DUPFD: {
@@ -1045,7 +1045,7 @@ int Process::sys$fstat(int fd, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     return descriptor->fstat(*statbuf);
@@ -1226,7 +1226,7 @@ int Process::sys$uname(utsname* buf)
 
 int Process::sys$isatty(int fd)
 {
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_tty())
@@ -1607,7 +1607,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 
 int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
 {
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     return descriptor->file().ioctl(*descriptor, request, arg);
@@ -1620,7 +1620,7 @@ int Process::sys$getdtablesize()
 
 int Process::sys$dup(int old_fd)
 {
-    auto* descriptor = file_descriptor(old_fd);
+    auto* descriptor = file_description(old_fd);
     if (!descriptor)
         return -EBADF;
     int new_fd = alloc_fd(0);
@@ -1632,7 +1632,7 @@ int Process::sys$dup(int old_fd)
 
 int Process::sys$dup2(int old_fd, int new_fd)
 {
-    auto* descriptor = file_descriptor(old_fd);
+    auto* descriptor = file_description(old_fd);
     if (!descriptor)
         return -EBADF;
     if (new_fd < 0 || new_fd >= m_max_open_file_descriptors)
@@ -1779,7 +1779,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             return 0;
         for (int fd = 0; fd < params->nfds; ++fd) {
             if (FD_ISSET(fd, fds)) {
-                if (!file_descriptor(fd))
+                if (!file_description(fd))
                     return -EBADF;
                 vector.append(fd);
             }
@@ -1806,7 +1806,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             return;
         FD_ZERO(fds);
         for (int fd : vector) {
-            if (auto* descriptor = file_descriptor(fd); descriptor && should_mark(*descriptor)) {
+            if (auto* descriptor = file_description(fd); descriptor && should_mark(*descriptor)) {
                 FD_SET(fd, fds);
                 ++marked_fd_count;
             }
@@ -1858,7 +1858,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     int fds_with_revents = 0;
 
     for (int i = 0; i < nfds; ++i) {
-        auto* descriptor = file_descriptor(fds[i].fd);
+        auto* descriptor = file_description(fds[i].fd);
         if (!descriptor) {
             fds[i].revents = POLLNVAL;
             continue;
@@ -1934,7 +1934,7 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
 
 int Process::sys$fchmod(int fd, mode_t mode)
 {
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     return descriptor->fchmod(mode);
@@ -1942,7 +1942,7 @@ int Process::sys$fchmod(int fd, mode_t mode)
 
 int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 {
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     return descriptor->chown(uid, gid);
@@ -2041,7 +2041,7 @@ int Process::sys$socket(int domain, int type, int protocol)
     auto result = Socket::create(domain, type, protocol);
     if (result.is_error())
         return result.error();
-    auto descriptor = FileDescriptor::create(*result.value());
+    auto descriptor = FileDescription::create(*result.value());
     unsigned flags = 0;
     if (type & SOCK_CLOEXEC)
         flags |= FD_CLOEXEC;
@@ -2055,7 +2055,7 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
 {
     if (!validate_read(address, address_length))
         return -EFAULT;
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_socket())
@@ -2066,7 +2066,7 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
 
 int Process::sys$listen(int sockfd, int backlog)
 {
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_socket())
@@ -2088,7 +2088,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     int accepted_socket_fd = alloc_fd();
     if (accepted_socket_fd < 0)
         return accepted_socket_fd;
-    auto* accepting_socket_descriptor = file_descriptor(accepting_socket_fd);
+    auto* accepting_socket_descriptor = file_description(accepting_socket_fd);
     if (!accepting_socket_descriptor)
         return -EBADF;
     if (!accepting_socket_descriptor->is_socket())
@@ -2102,7 +2102,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     ASSERT(accepted_socket);
     bool success = accepted_socket->get_local_address(address, address_size);
     ASSERT(success);
-    auto accepted_socket_descriptor = FileDescriptor::create(move(accepted_socket), SocketRole::Accepted);
+    auto accepted_socket_descriptor = FileDescription::create(move(accepted_socket), SocketRole::Accepted);
     // NOTE: The accepted socket inherits fd flags from the accepting socket.
     //       I'm not sure if this matches other systems but it makes sense to me.
     accepted_socket_descriptor->set_blocking(accepting_socket_descriptor->is_blocking());
@@ -2117,7 +2117,7 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_socket())
@@ -2151,7 +2151,7 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
         return -EFAULT;
     if (addr && !validate_read(addr, addr_length))
         return -EFAULT;
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_socket())
@@ -2183,7 +2183,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     } else if (addr) {
        return -EINVAL;
     }
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_socket())
@@ -2212,7 +2212,7 @@ int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
     if (!validate_write(addr, *addrlen))
         return -EFAULT;
 
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
 
@@ -2237,7 +2237,7 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
     if (!validate_write(addr, *addrlen))
         return -EFAULT;
 
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
 
@@ -2312,7 +2312,7 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
         return -EFAULT;
     if (!validate_write(value, *value_size))
         return -EFAULT;
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_socket())
@@ -2333,7 +2333,7 @@ int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
 
     if (!validate_read(value, value_size))
         return -EFAULT;
-    auto* descriptor = file_descriptor(sockfd);
+    auto* descriptor = file_description(sockfd);
     if (!descriptor)
         return -EBADF;
     if (!descriptor->is_socket())
@@ -2672,7 +2672,7 @@ int Process::sys$shm_open(const char* name, int flags, mode_t mode)
     auto shm_or_error = SharedMemory::open(String(name), flags, mode);
     if (shm_or_error.is_error())
         return shm_or_error.error();
-    auto descriptor = FileDescriptor::create(shm_or_error.value().ptr());
+    auto descriptor = FileDescription::create(shm_or_error.value().ptr());
     m_fds[fd].set(move(descriptor), FD_CLOEXEC);
     return fd;
 }
@@ -2686,7 +2686,7 @@ int Process::sys$shm_unlink(const char* name)
 
 int Process::sys$ftruncate(int fd, off_t length)
 {
-    auto* descriptor = file_descriptor(fd);
+    auto* descriptor = file_description(fd);
     if (!descriptor)
         return -EBADF;
     // FIXME: Check that fd is writable, otherwise EINVAL.
@@ -2704,7 +2704,7 @@ int Process::sys$systrace(pid_t pid)
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto descriptor = FileDescriptor::create(peer->ensure_tracer());
+    auto descriptor = FileDescription::create(peer->ensure_tracer());
     m_fds[fd].set(move(descriptor), 0);
     return fd;
 }
@@ -2716,13 +2716,13 @@ ProcessTracer& Process::ensure_tracer()
     return *m_tracer;
 }
 
-void Process::FileDescriptorAndFlags::clear()
+void Process::FileDescriptionAndFlags::clear()
 {
     descriptor = nullptr;
     flags = 0;
 }
 
-void Process::FileDescriptorAndFlags::set(Retained<FileDescriptor>&& d, dword f)
+void Process::FileDescriptionAndFlags::set(Retained<FileDescription>&& d, dword f)
 {
     descriptor = move(d);
     flags = f;

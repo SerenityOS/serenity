@@ -72,7 +72,7 @@ VFS_OBJS = \
     FileSystem/DiskBackedFileSystem.o \
     FileSystem/Ext2FileSystem.o \
     FileSystem/VirtualFileSystem.o \
-    FileSystem/FileDescriptor.o \
+    FileSystem/FileDescription.o \
     FileSystem/SyntheticFileSystem.o
 
 AK_OBJS = \

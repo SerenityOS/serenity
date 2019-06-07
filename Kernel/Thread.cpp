@@ -1,7 +1,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Process.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
 
@@ -129,7 +129,7 @@ void Thread::block(Thread::State new_state)
         process().big_lock().lock();
 }
 
-void Thread::block(Thread::State new_state, FileDescriptor& descriptor)
+void Thread::block(Thread::State new_state, FileDescription& descriptor)
 {
     m_blocked_descriptor = &descriptor;
     block(new_state);
@@ -512,7 +512,7 @@ Thread* Thread::clone(Process& process)
     return clone;
 }
 
-KResult Thread::wait_for_connect(FileDescriptor& descriptor)
+KResult Thread::wait_for_connect(FileDescription& descriptor)
 {
     ASSERT(descriptor.is_socket());
     auto& socket = *descriptor.socket();

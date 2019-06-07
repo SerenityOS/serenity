@@ -21,17 +21,17 @@ public:
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
-    virtual KResult connect(FileDescriptor&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
+    virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
     virtual bool get_local_address(sockaddr*, socklen_t*) override;
     virtual bool get_peer_address(sockaddr*, socklen_t*) override;
-    virtual void attach(FileDescriptor&) override;
-    virtual void detach(FileDescriptor&) override;
-    virtual bool can_read(FileDescriptor&) const override;
-    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) override;
-    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) override;
-    virtual bool can_write(FileDescriptor&) const override;
-    virtual ssize_t sendto(FileDescriptor&, const void*, size_t, int, const sockaddr*, socklen_t) override;
-    virtual ssize_t recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
+    virtual void attach(FileDescription&) override;
+    virtual void detach(FileDescription&) override;
+    virtual bool can_read(FileDescription&) const override;
+    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
+    virtual bool can_write(FileDescription&) const override;
+    virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
+    virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
     void did_receive(const IPv4Address& peer_address, word peer_port, ByteBuffer&&);
 
@@ -52,7 +52,7 @@ protected:
     virtual KResult protocol_bind() { return KSuccess; }
     virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
-    virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) { return KSuccess; }
+    virtual KResult protocol_connect(FileDescription&, ShouldBlock) { return KSuccess; }
     virtual int protocol_allocate_local_port() { return 0; }
     virtual bool protocol_is_disconnected() const { return false; }
 

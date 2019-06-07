@@ -148,7 +148,7 @@ NetworkOrdered<word> TCPSocket::compute_tcp_checksum(const IPv4Address& source, 
     return ~(checksum & 0xffff);
 }
 
-KResult TCPSocket::protocol_connect(FileDescriptor& descriptor, ShouldBlock should_block)
+KResult TCPSocket::protocol_connect(FileDescription& descriptor, ShouldBlock should_block)
 {
     auto* adapter = adapter_for_route_to(peer_address());
     if (!adapter)

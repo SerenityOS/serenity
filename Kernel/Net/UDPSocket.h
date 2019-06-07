@@ -18,7 +18,7 @@ private:
 
     virtual int protocol_receive(const ByteBuffer&, void* buffer, size_t buffer_size, int flags, sockaddr* addr, socklen_t* addr_length) override;
     virtual int protocol_send(const void*, int) override;
-    virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) override { return KSuccess; }
+    virtual KResult protocol_connect(FileDescription&, ShouldBlock) override { return KSuccess; }
     virtual int protocol_allocate_local_port() override;
     virtual KResult protocol_bind() override;
 };

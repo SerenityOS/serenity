@@ -14,16 +14,16 @@ public:
 
     virtual bool open(CIODevice::OpenMode) override;
 
-    enum class ShouldCloseFileDescriptor
+    enum class ShouldCloseFileDescription
     {
         No = 0,
         Yes
     };
-    bool open(int fd, CIODevice::OpenMode, ShouldCloseFileDescriptor);
+    bool open(int fd, CIODevice::OpenMode, ShouldCloseFileDescription);
 
     virtual const char* class_name() const override { return "CFile"; }
 
 private:
     String m_filename;
-    ShouldCloseFileDescriptor m_should_close_file_descriptor { ShouldCloseFileDescriptor::Yes };
+    ShouldCloseFileDescription m_should_close_file_descriptor { ShouldCloseFileDescription::Yes };
 };

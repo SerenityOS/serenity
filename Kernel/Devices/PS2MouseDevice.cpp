@@ -218,12 +218,12 @@ byte PS2MouseDevice::mouse_read()
     return IO::in8(0x60);
 }
 
-bool PS2MouseDevice::can_read(FileDescriptor&) const
+bool PS2MouseDevice::can_read(FileDescription&) const
 {
     return !m_queue.is_empty();
 }
 
-ssize_t PS2MouseDevice::read(FileDescriptor&, byte* buffer, ssize_t size)
+ssize_t PS2MouseDevice::read(FileDescription&, byte* buffer, ssize_t size)
 {
     ssize_t nread = 0;
     while (nread < size) {
@@ -239,7 +239,7 @@ ssize_t PS2MouseDevice::read(FileDescriptor&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t PS2MouseDevice::write(FileDescriptor&, const byte*, ssize_t)
+ssize_t PS2MouseDevice::write(FileDescription&, const byte*, ssize_t)
 {
     return 0;
 }
