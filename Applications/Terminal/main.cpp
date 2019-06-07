@@ -159,7 +159,7 @@ int main(int argc, char** argv)
     terminal.apply_size_increments_to_window(*window);
     window->show();
     window->set_icon_path("/res/icons/16x16/app-terminal.png");
-    terminal.set_should_beep(config->read_bool_entry("Window", "AudibleBeep", true));
+    terminal.set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
     WeakPtr<GWindow> settings_window;
 
