@@ -1,6 +1,6 @@
 #include "VBWidgetPropertyModel.h"
-#include "VBWidget.h"
 #include "VBProperty.h"
+#include "VBWidget.h"
 #include <SharedGraphics/Font.h>
 
 VBWidgetPropertyModel::VBWidgetPropertyModel(VBWidget& widget)
@@ -20,9 +20,12 @@ int VBWidgetPropertyModel::row_count(const GModelIndex&) const
 String VBWidgetPropertyModel::column_name(int column) const
 {
     switch (column) {
-    case Column::Name: return "Name";
-    case Column::Value: return "Value";
-    default: ASSERT_NOT_REACHED();
+    case Column::Name:
+        return "Name";
+    case Column::Value:
+        return "Value";
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
 
@@ -39,20 +42,24 @@ GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
     if (role == Role::Display) {
         auto& property = *m_widget.m_properties[index.row()];
         switch (index.column()) {
-        case Column::Name: return property.name();
-        case Column::Value: return property.value();
+        case Column::Name:
+            return property.name();
+        case Column::Value:
+            return property.value();
         }
         ASSERT_NOT_REACHED();
     }
     if (role == Role::ForegroundColor) {
         auto& property = *m_widget.m_properties[index.row()];
         switch (index.column()) {
-        case Column::Name: return Color::Black;
-        case Column::Value: return property.is_readonly() ? Color(Color::MidGray) : Color(Color::Black);
+        case Column::Name:
+            return Color::Black;
+        case Column::Value:
+            return property.is_readonly() ? Color(Color::MidGray) : Color(Color::Black);
         }
         ASSERT_NOT_REACHED();
     }
-    return { };
+    return {};
 }
 
 void VBWidgetPropertyModel::set_data(const GModelIndex& index, const GVariant& value)

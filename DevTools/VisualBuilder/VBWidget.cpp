@@ -1,6 +1,6 @@
+#include "VBWidget.h"
 #include "VBForm.h"
 #include "VBProperty.h"
-#include "VBWidget.h"
 #include "VBWidgetPropertyModel.h"
 #include "VBWidgetRegistry.h"
 #include <LibGUI/GButton.h>
@@ -79,7 +79,7 @@ Rect VBWidget::grabber_rect(Direction direction) const
 Direction VBWidget::grabber_at(const Point& position) const
 {
     Direction found_grabber = Direction::None;
-    for_each_direction([&] (Direction direction) {
+    for_each_direction([&](Direction direction) {
         if (grabber_rect(direction).contains(position))
             found_grabber = direction;
     });
@@ -100,11 +100,10 @@ void VBWidget::add_property(const String& name, Function<GVariant(const GWidget&
     prop.m_setter = move(setter);
 }
 
-#define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type) \
-    add_property(name, \
-        [] (auto& widget) -> GVariant { return ((const gclass&)widget).getter(); }, \
-        [] (auto& widget, auto& value) { ((gclass&)widget).setter(value.to_ ## variant_type()); } \
-    )
+#define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type)                \
+    add_property(name,                                                             \
+        [](auto& widget) -> GVariant { return ((const gclass&)widget).getter(); }, \
+        [](auto& widget, auto& value) { ((gclass&)widget).setter(value.to_##variant_type()); })
 
 void VBWidget::setup_properties()
 {

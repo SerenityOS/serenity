@@ -1,19 +1,19 @@
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GMenuBar.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GTableView.h>
 #include "VBForm.h"
+#include "VBPropertiesWindow.h"
 #include "VBWidget.h"
 #include "VBWidgetPropertyModel.h"
-#include "VBPropertiesWindow.h"
-#include <unistd.h>
-#include <stdio.h>
-#include <signal.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GButton.h>
+#include <LibGUI/GMenuBar.h>
+#include <LibGUI/GTableView.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
 
 static GWindow* make_toolbox_window();
 
@@ -24,23 +24,23 @@ int main(int argc, char** argv)
     auto* propbox = new VBPropertiesWindow;
 
     auto* form1 = new VBForm("Form1");
-    form1->on_widget_selected = [propbox] (VBWidget* widget) {
+    form1->on_widget_selected = [propbox](VBWidget* widget) {
         propbox->table_view().set_model(widget ? &widget->property_model() : nullptr);
     };
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Visual Builder");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
     auto file_menu = make<GMenu>("File");
-    file_menu->add_action(GAction::create("Dump Form", [&] (auto&) {
+    file_menu->add_action(GAction::create("Dump Form", [&](auto&) {
         form1->dump();
     }));
-    file_menu->add_action(GAction::create("Save Form...", { Mod_Ctrl, Key_S }, [form1] (auto&) {
+    file_menu->add_action(GAction::create("Save Form...", { Mod_Ctrl, Key_S }, [form1](auto&) {
         form1->write_to_file("/tmp/form.frm");
     }));
     menubar->add_menu(move(file_menu));
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(edit_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [] (const GAction&) {
+    help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));
@@ -87,7 +87,7 @@ GWindow* make_toolbox_window()
     label_button->set_button_style(ButtonStyle::CoolBar);
     label_button->set_tooltip("GLabel");
     label_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/label.png"));
-    label_button->on_click = [] (GButton&) {
+    label_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GLabel);
     };
@@ -96,7 +96,7 @@ GWindow* make_toolbox_window()
     button_button->set_button_style(ButtonStyle::CoolBar);
     button_button->set_tooltip("GButton");
     button_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/button.png"));
-    button_button->on_click = [] (GButton&) {
+    button_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GButton);
     };
@@ -104,7 +104,7 @@ GWindow* make_toolbox_window()
     spinbox_button->set_button_style(ButtonStyle::CoolBar);
     spinbox_button->set_tooltip("GSpinBox");
     spinbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/spinbox.png"));
-    spinbox_button->on_click = [] (GButton&) {
+    spinbox_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GSpinBox);
     };
@@ -112,7 +112,7 @@ GWindow* make_toolbox_window()
     editor_button->set_button_style(ButtonStyle::CoolBar);
     editor_button->set_tooltip("GTextEditor");
     editor_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/textbox.png"));
-    editor_button->on_click = [] (GButton&) {
+    editor_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GTextEditor);
     };
@@ -120,7 +120,7 @@ GWindow* make_toolbox_window()
     progress_bar_button->set_button_style(ButtonStyle::CoolBar);
     progress_bar_button->set_tooltip("GProgressBar");
     progress_bar_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/progressbar.png"));
-    progress_bar_button->on_click = [] (GButton&) {
+    progress_bar_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GProgressBar);
     };
@@ -128,7 +128,7 @@ GWindow* make_toolbox_window()
     slider_button->set_button_style(ButtonStyle::CoolBar);
     slider_button->set_tooltip("GSlider");
     slider_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/slider.png"));
-    slider_button->on_click = [] (GButton&) {
+    slider_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GSlider);
     };
@@ -136,7 +136,7 @@ GWindow* make_toolbox_window()
     checkbox_button->set_button_style(ButtonStyle::CoolBar);
     checkbox_button->set_tooltip("GCheckBox");
     checkbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/checkbox.png"));
-    checkbox_button->on_click = [] (GButton&) {
+    checkbox_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GCheckBox);
     };
@@ -144,7 +144,7 @@ GWindow* make_toolbox_window()
     radiobutton_button->set_button_style(ButtonStyle::CoolBar);
     radiobutton_button->set_tooltip("GRadioButton");
     radiobutton_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/filled-radio-circle.png"));
-    radiobutton_button->on_click = [] (GButton&) {
+    radiobutton_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GRadioButton);
     };
@@ -152,7 +152,7 @@ GWindow* make_toolbox_window()
     scrollbar_button->set_button_style(ButtonStyle::CoolBar);
     scrollbar_button->set_tooltip("GScrollBar");
     scrollbar_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/scrollbar.png"));
-    scrollbar_button->on_click = [] (GButton&) {
+    scrollbar_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GScrollBar);
     };
@@ -160,7 +160,7 @@ GWindow* make_toolbox_window()
     groupbox_button->set_button_style(ButtonStyle::CoolBar);
     groupbox_button->set_tooltip("GGroupBox");
     groupbox_button->set_icon(GraphicsBitmap::load_from_file("/res/icons/vbwidgets/groupbox.png"));
-    groupbox_button->on_click = [] (GButton&) {
+    groupbox_button->on_click = [](GButton&) {
         if (auto* form = VBForm::current())
             form->insert_widget(VBWidgetType::GGroupBox);
     };

@@ -1,11 +1,11 @@
 #include "VBForm.h"
-#include "VBWidget.h"
 #include "VBProperty.h"
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GMessageBox.h>
+#include "VBWidget.h"
 #include <LibCore/CFile.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GMessageBox.h>
+#include <LibGUI/GPainter.h>
 
 static VBForm* s_current;
 VBForm* VBForm::current()
@@ -39,15 +39,15 @@ VBForm::VBForm(const String& name, GWidget* parent)
     m_widgets.append(move(groupbox1));
 
     m_context_menu = make<GMenu>("Context menu");
-    m_context_menu->add_action(GAction::create("Move to front", [this] (auto&) {
+    m_context_menu->add_action(GAction::create("Move to front", [this](auto&) {
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_front();
     }));
-    m_context_menu->add_action(GAction::create("Move to back", [this] (auto&) {
+    m_context_menu->add_action(GAction::create("Move to back", [this](auto&) {
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_back();
     }));
-    m_context_menu->add_action(GAction::create("Delete", [this] (auto&) {
+    m_context_menu->add_action(GAction::create("Delete", [this](auto&) {
         delete_selected_widgets();
     }));
 }
@@ -88,7 +88,7 @@ void VBForm::second_paint_event(GPaintEvent& event)
 
     for (auto& widget : m_widgets) {
         if (widget->is_selected()) {
-            for_each_direction([&] (Direction direction) {
+            for_each_direction([&](Direction direction) {
                 painter.fill_rect(widget->grabber_rect(direction), Color::Black);
             });
         }
@@ -112,7 +112,7 @@ VBWidget* VBForm::widget_at(const Point& position)
 void VBForm::grabber_mousedown_event(GMouseEvent& event, Direction grabber)
 {
     m_transform_event_origin = event.position();
-    for_each_selected_widget([] (auto& widget) { widget.capture_transform_origin_rect(); });
+    for_each_selected_widget([](auto& widget) { widget.capture_transform_origin_rect(); });
     m_resize_direction = grabber;
 }
 
@@ -146,19 +146,19 @@ void VBForm::keydown_event(GKeyEvent& event)
         switch (event.key()) {
         case KeyCode::Key_Up:
             update();
-            for_each_selected_widget([this] (auto& widget) { widget.gwidget()->move_by(0, -m_grid_size); });
+            for_each_selected_widget([this](auto& widget) { widget.gwidget()->move_by(0, -m_grid_size); });
             break;
         case KeyCode::Key_Down:
             update();
-            for_each_selected_widget([this] (auto& widget) { widget.gwidget()->move_by(0, m_grid_size); });
+            for_each_selected_widget([this](auto& widget) { widget.gwidget()->move_by(0, m_grid_size); });
             break;
         case KeyCode::Key_Left:
             update();
-            for_each_selected_widget([this] (auto& widget) { widget.gwidget()->move_by(-m_grid_size, 0); });
+            for_each_selected_widget([this](auto& widget) { widget.gwidget()->move_by(-m_grid_size, 0); });
             break;
         case KeyCode::Key_Right:
             update();
-            for_each_selected_widget([this] (auto& widget) { widget.gwidget()->move_by(m_grid_size, 0); });
+            for_each_selected_widget([this](auto& widget) { widget.gwidget()->move_by(m_grid_size, 0); });
             break;
         }
         return;
@@ -197,7 +197,7 @@ void VBForm::mousedown_event(GMouseEvent& event)
 {
     if (m_resize_direction == Direction::None) {
         bool hit_grabber = false;
-        for_each_selected_widget([&] (auto& widget) {
+        for_each_selected_widget([&](auto& widget) {
             auto grabber = widget.grabber_at(event.position());
             if (grabber != Direction::None) {
                 hit_grabber = true;
@@ -220,7 +220,7 @@ void VBForm::mousedown_event(GMouseEvent& event)
             add_to_selection(*widget);
         else if (!m_selected_widgets.contains(widget))
             set_single_selected_widget(widget);
-        for_each_selected_widget([] (auto& widget) { widget.capture_transform_origin_rect(); });
+        for_each_selected_widget([](auto& widget) { widget.capture_transform_origin_rect(); });
         on_widget_selected(single_selected_widget());
     }
 }
@@ -231,7 +231,7 @@ void VBForm::mousemove_event(GMouseEvent& event)
         if (m_resize_direction == Direction::None) {
             update();
             auto delta = event.position() - m_transform_event_origin;
-            for_each_selected_widget([&] (auto& widget) {
+            for_each_selected_widget([&](auto& widget) {
                 auto new_rect = widget.transform_origin_rect().translated(delta);
                 new_rect.set_x(new_rect.x() - (new_rect.x() % m_grid_size));
                 new_rect.set_y(new_rect.y() - (new_rect.y() % m_grid_size));
@@ -287,7 +287,7 @@ void VBForm::mousemove_event(GMouseEvent& event)
         }
 
         update();
-        for_each_selected_widget([&] (auto& widget) {
+        for_each_selected_widget([&](auto& widget) {
             auto new_rect = widget.transform_origin_rect();
             Size minimum_size { 5, 5 };
             new_rect.set_x(new_rect.x() + change_x);
@@ -316,7 +316,7 @@ void VBForm::write_to_file(const String& path)
     int i = 0;
     for (auto& widget : m_widgets) {
         file.printf("[Widget %d]\n", i++);
-        widget->for_each_property([&] (auto& property) {
+        widget->for_each_property([&](auto& property) {
             file.printf("%s=%s\n", property.name().characters(), property.value().to_string().characters());
         });
         file.printf("\n");
@@ -331,7 +331,7 @@ void VBForm::dump()
     int i = 0;
     for (auto& widget : m_widgets) {
         dbgprintf("[Widget %d]\n", i++);
-        widget->for_each_property([] (auto& property) {
+        widget->for_each_property([](auto& property) {
             dbgprintf("%s=%s\n", property.name().characters(), property.value().to_string().characters());
         });
         dbgprintf("\n");
@@ -341,7 +341,7 @@ void VBForm::dump()
 void VBForm::mouseup_event(GMouseEvent& event)
 {
     if (event.button() == GMouseButton::Left) {
-        m_transform_event_origin = { };
+        m_transform_event_origin = {};
         m_resize_direction = Direction::None;
     }
 }
@@ -349,11 +349,11 @@ void VBForm::mouseup_event(GMouseEvent& event)
 void VBForm::delete_selected_widgets()
 {
     Vector<VBWidget*> to_delete;
-    for_each_selected_widget([&] (auto& widget) {
+    for_each_selected_widget([&](auto& widget) {
         to_delete.append(&widget);
     });
     for (auto& widget : to_delete)
-        m_widgets.remove_first_matching([&widget] (auto& entry) { return entry == widget; } );
+        m_widgets.remove_first_matching([&widget](auto& entry) { return entry == widget; });
     on_widget_selected(single_selected_widget());
 }
 
