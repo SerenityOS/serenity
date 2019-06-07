@@ -1,8 +1,8 @@
 #include "VBPropertiesWindow.h"
-#include <LibGUI/GWidget.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GTextBox.h>
+#include <LibGUI/GWidget.h>
 
 VBPropertiesWindow::VBPropertiesWindow()
 {
