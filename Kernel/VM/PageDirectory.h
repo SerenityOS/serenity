@@ -17,7 +17,7 @@ public:
     dword cr3() const { return m_directory_page->paddr().get(); }
     dword* entries() { return reinterpret_cast<dword*>(cr3()); }
 
-    void flush(LinearAddress);
+    void flush(VirtualAddress);
 
     RangeAllocator& range_allocator() { return m_range_allocator; }
 

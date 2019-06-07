@@ -258,9 +258,9 @@ InodeMetadata FileDescription::metadata() const
     return {};
 }
 
-KResultOr<Region*> FileDescription::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> FileDescription::mmap(Process& process, VirtualAddress vaddr, size_t offset, size_t size, int prot)
 {
-    return m_file->mmap(process, *this, laddr, offset, size, prot);
+    return m_file->mmap(process, *this, vaddr, offset, size, prot);
 }
 
 KResult FileDescription::truncate(off_t length)

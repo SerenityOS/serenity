@@ -34,21 +34,21 @@ bool ELFLoader::layout()
         if (program_header.type() != PT_LOAD)
             return;
 #ifdef ELFLOADER_DEBUG
-        kprintf("PH: L%x %u r:%u w:%u\n", program_header.laddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
+        kprintf("PH: L%x %u r:%u w:%u\n", program_header.vaddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
 #endif
         if (program_header.is_writable()) {
             alloc_section_hook(
-                program_header.laddr(),
+                program_header.vaddr(),
                 program_header.size_in_memory(),
                 program_header.alignment(),
                 program_header.is_readable(),
                 program_header.is_writable(),
                 String::format("elf-alloc-%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "")
             );
-            memcpy(program_header.laddr().as_ptr(), program_header.raw_data(), program_header.size_in_image());
+            memcpy(program_header.vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image());
         } else {
             map_section_hook(
-                program_header.laddr(),
+                program_header.vaddr(),
                 program_header.size_in_memory(),
                 program_header.alignment(),
                 program_header.offset(),

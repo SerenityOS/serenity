@@ -24,7 +24,7 @@ public:
     Region(const Range&, RetainPtr<Inode>&&, String&&, byte access);
     ~Region();
 
-    LinearAddress laddr() const { return m_range.base(); }
+    VirtualAddress vaddr() const { return m_range.base(); }
     size_t size() const { return m_range.size(); }
     bool is_readable() const { return m_access & Access::Read; }
     bool is_writable() const { return m_access & Access::Write; }
@@ -41,14 +41,14 @@ public:
 
     Retained<Region> clone();
 
-    bool contains(LinearAddress laddr) const
+    bool contains(VirtualAddress vaddr) const
     {
-        return m_range.contains(laddr);
+        return m_range.contains(vaddr);
     }
 
-    unsigned page_index_from_address(LinearAddress laddr) const
+    unsigned page_index_from_address(VirtualAddress vaddr) const
     {
-        return (laddr - m_range.base()).get() / PAGE_SIZE;
+        return (vaddr - m_range.base()).get() / PAGE_SIZE;
     }
 
     size_t first_page_index() const

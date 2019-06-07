@@ -57,7 +57,7 @@ public:
         dword type() const { return m_program_header.p_type; }
         dword flags() const { return m_program_header.p_flags; }
         dword offset() const { return m_program_header.p_offset; }
-        LinearAddress laddr() const { return LinearAddress(m_program_header.p_vaddr); }
+        VirtualAddress vaddr() const { return VirtualAddress(m_program_header.p_vaddr); }
         dword size_in_memory() const { return m_program_header.p_memsz; }
         dword size_in_image() const { return m_program_header.p_filesz; }
         dword alignment() const { return m_program_header.p_align; }
@@ -117,7 +117,7 @@ public:
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
 
-    LinearAddress entry() const { return LinearAddress(header().e_entry); }
+    VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
 
 private:
     bool parse_header();

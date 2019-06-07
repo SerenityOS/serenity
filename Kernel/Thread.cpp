@@ -63,9 +63,9 @@ Thread::Thread(Process& process)
     } else {
         // Ring3 processes need a separate stack for Ring0.
         m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid));
-        m_kernel_stack_base = m_kernel_stack_region->laddr().get();
+        m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_kernel_stack_region->laddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
+        m_tss.esp0 = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
     }
 
     // HACK: Ring2 SS in the TSS is the current PID.
@@ -332,8 +332,8 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
     if (signal == SIGCONT && state() == Stopped)
         set_state(Runnable);
 
-    auto handler_laddr = action.handler_or_sigaction;
-    if (handler_laddr.is_null()) {
+    auto handler_vaddr = action.handler_or_sigaction;
+    if (handler_vaddr.is_null()) {
         switch (default_signal_action(signal)) {
         case DefaultSignalAction::Stop:
             set_state(Stopped);
@@ -352,7 +352,7 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
         ASSERT_NOT_REACHED();
     }
 
-    if (handler_laddr.as_ptr() == SIG_IGN) {
+    if (handler_vaddr.as_ptr() == SIG_IGN) {
 #ifdef SIGNAL_DEBUG
         kprintf("%s(%u) ignored signal %u\n", process().name().characters(), pid(), signal);
 #endif
@@ -389,15 +389,15 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
 #endif
 
         if (!m_signal_stack_user_region) {
-            m_signal_stack_user_region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("User Signal Stack (Thread %d)", m_tid));
+            m_signal_stack_user_region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("User Signal Stack (Thread %d)", m_tid));
             ASSERT(m_signal_stack_user_region);
         }
         if (!m_kernel_stack_for_signal_handler_region)
             m_kernel_stack_for_signal_handler_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Signal Stack (Thread %d)", m_tid));
         m_tss.ss = 0x23;
-        m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get();
+        m_tss.esp = m_signal_stack_user_region->vaddr().offset(default_userspace_stack_size).get();
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_kernel_stack_for_signal_handler_region->laddr().offset(default_kernel_stack_size).get();
+        m_tss.esp0 = m_kernel_stack_for_signal_handler_region->vaddr().offset(default_kernel_stack_size).get();
 
         push_value_on_stack(0);
     } else {
@@ -427,7 +427,7 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
     m_tss.es = 0x23;
     m_tss.fs = 0x23;
     m_tss.gs = 0x23;
-    m_tss.eip = handler_laddr.get();
+    m_tss.eip = handler_vaddr.get();
 
     // FIXME: Should we worry about the stack being 16 byte aligned when entering a signal handler?
     push_value_on_stack(signal);
@@ -452,8 +452,8 @@ void Thread::set_default_signal_dispositions()
 {
     // FIXME: Set up all the right default actions. See signal(7).
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
-    m_signal_action_data[SIGCHLD].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
-    m_signal_action_data[SIGWINCH].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
+    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((dword)SIG_IGN);
+    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((dword)SIG_IGN);
 }
 
 void Thread::push_value_on_stack(dword value)
@@ -465,11 +465,11 @@ void Thread::push_value_on_stack(dword value)
 
 void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
 {
-    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, "Stack (Main thread)");
+    auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)");
     ASSERT(region);
-    m_tss.esp = region->laddr().offset(default_userspace_stack_size).get();
+    m_tss.esp = region->vaddr().offset(default_userspace_stack_size).get();
 
-    char* stack_base = (char*)region->laddr().get();
+    char* stack_base = (char*)region->vaddr().get();
     int argc = arguments.size();
     char** argv = (char**)stack_base;
     char** env = argv + arguments.size() + 1;
@@ -511,9 +511,9 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
 
 void Thread::make_userspace_stack_for_secondary_thread(void* argument)
 {
-    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
+    auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
     ASSERT(region);
-    m_tss.esp = region->laddr().offset(default_userspace_stack_size).get();
+    m_tss.esp = region->vaddr().offset(default_userspace_stack_size).get();
 
     // NOTE: The stack needs to be 16-byte aligned.
     push_value_on_stack((dword)argument);

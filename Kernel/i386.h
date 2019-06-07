@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/LinearAddress.h>
+#include <Kernel/VirtualAddress.h>
 #include <Kernel/kstdio.h>
 
 #define PAGE_SIZE 4096
@@ -194,13 +194,13 @@ struct PageFaultFlags {
 
 class PageFault {
 public:
-    PageFault(word code, LinearAddress laddr)
+    PageFault(word code, VirtualAddress vaddr)
         : m_code(code)
-        , m_laddr(laddr)
+        , m_vaddr(vaddr)
     {
     }
 
-    LinearAddress laddr() const { return m_laddr; }
+    VirtualAddress vaddr() const { return m_vaddr; }
     word code() const { return m_code; }
 
     bool is_not_present() const { return (m_code & 1) == PageFaultFlags::NotPresent; }
@@ -213,7 +213,7 @@ public:
 
 private:
     word m_code;
-    LinearAddress m_laddr;
+    VirtualAddress m_vaddr;
 };
 
 struct [[gnu::packed]] RegisterDump

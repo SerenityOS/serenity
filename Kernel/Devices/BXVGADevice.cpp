@@ -84,21 +84,21 @@ dword BXVGADevice::find_framebuffer_address()
     return framebuffer_address;
 }
 
-KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, LinearAddress preferred_laddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot)
 {
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
     auto vmo = VMObject::create_for_physical_range(framebuffer_address(), framebuffer_size_in_bytes());
     auto* region = process.allocate_region_with_vmo(
-        preferred_laddr,
+        preferred_vaddr,
         framebuffer_size_in_bytes(),
         move(vmo),
         0,
         "BXVGA Framebuffer",
         prot);
-    kprintf("BXVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with laddr L%x\n",
+    kprintf("BXVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with vaddr L%x\n",
         process.name().characters(), process.pid(),
-        region, region->size(), framebuffer_address().as_ptr(), region->laddr().get());
+        region, region->size(), framebuffer_address().as_ptr(), region->vaddr().get());
     ASSERT(region);
     return region;
 }

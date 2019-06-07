@@ -112,11 +112,11 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, byte irq)
     enable_bus_mastering(m_pci_address);
 
     m_mmio_base = PhysicalAddress(PCI::get_BAR0(m_pci_address));
-    MM.map_for_kernel(LinearAddress(m_mmio_base.get()), m_mmio_base);
-    MM.map_for_kernel(LinearAddress(m_mmio_base.offset(4096).get()), m_mmio_base.offset(4096));
-    MM.map_for_kernel(LinearAddress(m_mmio_base.offset(8192).get()), m_mmio_base.offset(8192));
-    MM.map_for_kernel(LinearAddress(m_mmio_base.offset(12288).get()), m_mmio_base.offset(12288));
-    MM.map_for_kernel(LinearAddress(m_mmio_base.offset(16384).get()), m_mmio_base.offset(16384));
+    MM.map_for_kernel(VirtualAddress(m_mmio_base.get()), m_mmio_base);
+    MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(4096).get()), m_mmio_base.offset(4096));
+    MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(8192).get()), m_mmio_base.offset(8192));
+    MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(12288).get()), m_mmio_base.offset(12288));
+    MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(16384).get()), m_mmio_base.offset(16384));
     m_use_mmio = true;
     m_io_base = PCI::get_BAR1(m_pci_address) & ~1;
     m_interrupt_line = PCI::get_interrupt_line(m_pci_address);

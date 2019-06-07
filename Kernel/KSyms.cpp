@@ -94,12 +94,12 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     int recognized_symbol_count = 0;
     if (use_ksyms) {
-        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(VirtualAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
         }
     } else {
-        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(VirtualAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (dword*)*stack_ptr : 0);
         }

@@ -72,13 +72,13 @@ bool Process::in_group(gid_t gid) const
     return m_gids.contains(gid);
 }
 
-Range Process::allocate_range(LinearAddress laddr, size_t size)
+Range Process::allocate_range(VirtualAddress vaddr, size_t size)
 {
-    laddr.mask(PAGE_MASK);
+    vaddr.mask(PAGE_MASK);
     size = PAGE_ROUND_UP(size);
-    if (laddr.is_null())
+    if (vaddr.is_null())
         return page_directory().range_allocator().allocate_anywhere(size);
-    return page_directory().range_allocator().allocate_specific(laddr, size);
+    return page_directory().range_allocator().allocate_specific(vaddr, size);
 }
 
 static unsigned prot_to_region_access_flags(int prot)
@@ -93,9 +93,9 @@ static unsigned prot_to_region_access_flags(int prot)
     return access;
 }
 
-Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name, int prot, bool commit)
+Region* Process::allocate_region(VirtualAddress vaddr, size_t size, String&& name, int prot, bool commit)
 {
-    auto range = allocate_range(laddr, size);
+    auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
     m_regions.append(adopt(*new Region(range, move(name), prot_to_region_access_flags(prot))));
@@ -105,9 +105,9 @@ Region* Process::allocate_region(LinearAddress laddr, size_t size, String&& name
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, RetainPtr<Inode>&& inode, String&& name, int prot)
+Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, RetainPtr<Inode>&& inode, String&& name, int prot)
 {
-    auto range = allocate_range(laddr, size);
+    auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
     m_regions.append(adopt(*new Region(range, move(inode), move(name), prot_to_region_access_flags(prot))));
@@ -115,9 +115,9 @@ Region* Process::allocate_file_backed_region(LinearAddress laddr, size_t size, R
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_region_with_vmo(LinearAddress laddr, size_t size, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& name, int prot)
+Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& name, int prot)
 {
-    auto range = allocate_range(laddr, size);
+    auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
     offset_in_vmo &= PAGE_MASK;
@@ -131,7 +131,7 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (m_regions[i] == &region) {
-            page_directory().range_allocator().deallocate({ region.laddr(), region.size() });
+            page_directory().range_allocator().deallocate({ region.vaddr(), region.size() });
             MM.unmap_region(region);
             m_regions.remove(i);
             return true;
@@ -140,11 +140,11 @@ bool Process::deallocate_region(Region& region)
     return false;
 }
 
-Region* Process::region_from_range(LinearAddress laddr, size_t size)
+Region* Process::region_from_range(VirtualAddress vaddr, size_t size)
 {
     size = PAGE_ROUND_UP(size);
     for (auto& region : m_regions) {
-        if (region->laddr() == laddr && region->size() == size)
+        if (region->vaddr() == vaddr && region->size() == size)
             return region.ptr();
     }
     return nullptr;
@@ -154,7 +154,7 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
     if (!validate_read_str(name))
         return -EFAULT;
-    auto* region = region_from_range(LinearAddress((dword)addr), size);
+    auto* region = region_from_range(VirtualAddress((dword)addr), size);
     if (!region)
         return -EINVAL;
     region->set_name(String(name));
@@ -179,21 +179,21 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     if ((dword)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
     if (flags & MAP_ANONYMOUS) {
-        auto* region = allocate_region(LinearAddress((dword)addr), size, "mmap", prot, false);
+        auto* region = allocate_region(VirtualAddress((dword)addr), size, "mmap", prot, false);
         if (!region)
             return (void*)-ENOMEM;
         if (flags & MAP_SHARED)
             region->set_shared(true);
         if (name)
             region->set_name(name);
-        return region->laddr().as_ptr();
+        return region->vaddr().as_ptr();
     }
     if (offset & ~PAGE_MASK)
         return (void*)-EINVAL;
     auto* descriptor = file_description(fd);
     if (!descriptor)
         return (void*)-EBADF;
-    auto region_or_error = descriptor->mmap(*this, LinearAddress((dword)addr), offset, size, prot);
+    auto region_or_error = descriptor->mmap(*this, VirtualAddress((dword)addr), offset, size, prot);
     if (region_or_error.is_error())
         return (void*)(int)region_or_error.error();
     auto region = region_or_error.value();
@@ -201,12 +201,12 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         region->set_shared(true);
     if (name)
         region->set_name(name);
-    return region->laddr().as_ptr();
+    return region->vaddr().as_ptr();
 }
 
 int Process::sys$munmap(void* addr, size_t size)
 {
-    auto* region = region_from_range(LinearAddress((dword)addr), size);
+    auto* region = region_from_range(VirtualAddress((dword)addr), size);
     if (!region)
         return -EINVAL;
     if (!deallocate_region(*region))
@@ -239,7 +239,7 @@ Process* Process::fork(RegisterDump& regs)
 
     for (auto& region : m_regions) {
 #ifdef FORK_DEBUG
-        dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name().characters(), region->laddr().get());
+        dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name().characters(), region->vaddr().get());
 #endif
         auto cloned_region = region->clone();
         child->m_regions.append(move(cloned_region));
@@ -334,7 +334,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     auto vmo = VMObject::create_file_backed(descriptor->inode());
     vmo->set_name(descriptor->absolute_path());
-    RetainPtr<Region> region = allocate_region_with_vmo(LinearAddress(), metadata.size, vmo.copy_ref(), 0, vmo->name(), PROT_READ);
+    RetainPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo.copy_ref(), 0, vmo->name(), PROT_READ);
     ASSERT(region);
 
     if (this != &current->process()) {
@@ -347,8 +347,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
         m_regions.append(*region);
-        loader = make<ELFLoader>(region->laddr().as_ptr());
-        loader->map_section_hook = [&](LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) {
+        loader = make<ELFLoader>(region->vaddr().as_ptr());
+        loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             int prot = 0;
@@ -358,10 +358,10 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            (void)allocate_region_with_vmo(laddr, size, vmo.copy_ref(), offset_in_image, String(name), prot);
-            return laddr.as_ptr();
+            (void)allocate_region_with_vmo(vaddr, size, vmo.copy_ref(), offset_in_image, String(name), prot);
+            return vaddr.as_ptr();
         };
-        loader->alloc_section_hook = [&](LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
+        loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             int prot = 0;
@@ -369,8 +369,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_READ;
             if (is_writable)
                 prot |= PROT_WRITE;
-            (void)allocate_region(laddr, size, String(name), prot);
-            return laddr.as_ptr();
+            (void)allocate_region(vaddr, size, String(name), prot);
+            return vaddr.as_ptr();
         };
         bool success = loader->load();
         if (!success || !loader->entry().get()) {
@@ -649,8 +649,8 @@ void Process::dump_regions()
     kprintf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : m_regions) {
         kprintf("%x -- %x    %x    %s\n",
-            region->laddr().get(),
-            region->laddr().offset(region->size() - 1).get(),
+            region->vaddr().get(),
+            region->vaddr().offset(region->size() - 1).get(),
             region->size(),
             region->name().characters());
     }
@@ -677,8 +677,8 @@ void Process::create_signal_trampolines_if_needed()
         return;
     // FIXME: This should be a global trampoline shared by all processes, not one created per process!
     // FIXME: Remap as read-only after setup.
-    auto* region = allocate_region(LinearAddress(), PAGE_SIZE, "Signal trampolines", PROT_READ | PROT_WRITE | PROT_EXEC);
-    m_return_to_ring3_from_signal_trampoline = region->laddr();
+    auto* region = allocate_region(VirtualAddress(), PAGE_SIZE, "Signal trampolines", PROT_READ | PROT_WRITE | PROT_EXEC);
+    m_return_to_ring3_from_signal_trampoline = region->vaddr();
     byte* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
     *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
     *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
@@ -698,7 +698,7 @@ void Process::create_signal_trampolines_if_needed()
     *code_ptr++ = 0x0f; // ud2
     *code_ptr++ = 0x0b;
 
-    m_return_to_ring0_from_signal_trampoline = LinearAddress((dword)code_ptr);
+    m_return_to_ring0_from_signal_trampoline = VirtualAddress((dword)code_ptr);
     *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
     *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
     *code_ptr++ = 0xb8; // mov eax, <dword>
@@ -1448,7 +1448,7 @@ enum class KernelMemoryCheckResult
     AccessDenied
 };
 
-static KernelMemoryCheckResult check_kernel_memory_access(LinearAddress laddr, bool is_write)
+static KernelMemoryCheckResult check_kernel_memory_access(VirtualAddress vaddr, bool is_write)
 {
     auto& sections = multiboot_info_ptr->u.elf_sec;
 
@@ -1457,7 +1457,7 @@ static KernelMemoryCheckResult check_kernel_memory_access(LinearAddress laddr, b
         auto& segment = kernel_program_headers[i];
         if (segment.p_type != PT_LOAD || !segment.p_vaddr || !segment.p_memsz)
             continue;
-        if (laddr.get() < segment.p_vaddr || laddr.get() > (segment.p_vaddr + segment.p_memsz))
+        if (vaddr.get() < segment.p_vaddr || vaddr.get() > (segment.p_vaddr + segment.p_memsz))
             continue;
         if (is_write && !(kernel_program_headers[i].p_flags & PF_W))
             return KernelMemoryCheckResult::AccessDenied;
@@ -1468,20 +1468,20 @@ static KernelMemoryCheckResult check_kernel_memory_access(LinearAddress laddr, b
     return KernelMemoryCheckResult::NotInsideKernelMemory;
 }
 
-bool Process::validate_read_from_kernel(LinearAddress laddr) const
+bool Process::validate_read_from_kernel(VirtualAddress vaddr) const
 {
-    if (laddr.is_null())
+    if (vaddr.is_null())
         return false;
     // We check extra carefully here since the first 4MB of the address space is identity-mapped.
     // This code allows access outside of the known used address ranges to get caught.
-    auto kmc_result = check_kernel_memory_access(laddr, false);
+    auto kmc_result = check_kernel_memory_access(vaddr, false);
     if (kmc_result == KernelMemoryCheckResult::AccessGranted)
         return true;
     if (kmc_result == KernelMemoryCheckResult::AccessDenied)
         return false;
-    if (is_kmalloc_address(laddr.as_ptr()))
+    if (is_kmalloc_address(vaddr.as_ptr()))
         return true;
-    return validate_read(laddr.as_ptr(), 1);
+    return validate_read(vaddr.as_ptr(), 1);
 }
 
 bool Process::validate_read_str(const char* str)
@@ -1494,8 +1494,8 @@ bool Process::validate_read_str(const char* str)
 bool Process::validate_read(const void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
-    LinearAddress first_address((dword)address);
-    LinearAddress last_address = first_address.offset(size - 1);
+    VirtualAddress first_address((dword)address);
+    VirtualAddress last_address = first_address.offset(size - 1);
     if (is_ring0()) {
         auto kmc_result = check_kernel_memory_access(first_address, false);
         if (kmc_result == KernelMemoryCheckResult::AccessGranted)
@@ -1518,8 +1518,8 @@ bool Process::validate_read(const void* address, ssize_t size) const
 bool Process::validate_write(void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
-    LinearAddress first_address((dword)address);
-    LinearAddress last_address = first_address.offset(size - 1);
+    VirtualAddress first_address((dword)address);
+    VirtualAddress last_address = first_address.offset(size - 1);
     if (is_ring0()) {
         if (is_kmalloc_address(address))
             return true;
@@ -1698,7 +1698,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
         old_act->sa_sigaction = (decltype(old_act->sa_sigaction))action.handler_or_sigaction.get();
     }
     action.flags = act->sa_flags;
-    action.handler_or_sigaction = LinearAddress((dword)act->sa_sigaction);
+    action.handler_or_sigaction = VirtualAddress((dword)act->sa_sigaction);
     return 0;
 }
 
@@ -2363,17 +2363,17 @@ struct SharedBuffer {
         if (m_pid1 == process.pid()) {
             ++m_pid1_retain_count;
             if (!m_pid1_region) {
-                m_pid1_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | (m_pid1_writable ? PROT_WRITE : 0));
+                m_pid1_region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | (m_pid1_writable ? PROT_WRITE : 0));
                 m_pid1_region->set_shared(true);
             }
-            return m_pid1_region->laddr().as_ptr();
+            return m_pid1_region->vaddr().as_ptr();
         } else if (m_pid2 == process.pid()) {
             ++m_pid2_retain_count;
             if (!m_pid2_region) {
-                m_pid2_region = process.allocate_region_with_vmo(LinearAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | (m_pid2_writable ? PROT_WRITE : 0));
+                m_pid2_region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | (m_pid2_writable ? PROT_WRITE : 0));
                 m_pid2_region->set_shared(true);
             }
-            return m_pid2_region->laddr().as_ptr();
+            return m_pid2_region->vaddr().as_ptr();
         }
         return nullptr;
     }
@@ -2499,9 +2499,9 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
     auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
     shared_buffer->m_shared_buffer_id = shared_buffer_id;
     ASSERT(shared_buffer->size() >= size);
-    shared_buffer->m_pid1_region = allocate_region_with_vmo(LinearAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | PROT_WRITE);
+    shared_buffer->m_pid1_region = allocate_region_with_vmo(VirtualAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | PROT_WRITE);
     shared_buffer->m_pid1_region->set_shared(true);
-    *buffer = shared_buffer->m_pid1_region->laddr().as_ptr();
+    *buffer = shared_buffer->m_pid1_region->vaddr().as_ptr();
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Created shared buffer %d (%u bytes, vmo is %u) for sharing with %d\n", name().characters(), pid(), shared_buffer_id, size, shared_buffer->size(), peer_pid);
 #endif

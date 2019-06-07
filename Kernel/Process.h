@@ -225,7 +225,7 @@ public:
     dword m_ticks_in_user_for_dead_children { 0 };
     dword m_ticks_in_kernel_for_dead_children { 0 };
 
-    bool validate_read_from_kernel(LinearAddress) const;
+    bool validate_read_from_kernel(VirtualAddress) const;
 
     bool validate_read(const void*, ssize_t) const;
     bool validate_write(void*, ssize_t) const;
@@ -250,9 +250,9 @@ public:
 
     bool is_superuser() const { return m_euid == 0; }
 
-    Region* allocate_region_with_vmo(LinearAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, String&& name, int prot);
-    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Inode>&&, String&& name, int prot);
-    Region* allocate_region(LinearAddress, size_t, String&& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
+    Region* allocate_region_with_vmo(VirtualAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, String&& name, int prot);
+    Region* allocate_file_backed_region(VirtualAddress, size_t, RetainPtr<Inode>&&, String&& name, int prot);
+    Region* allocate_region(VirtualAddress, size_t, String&& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
 
     void set_being_inspected(bool b) { m_being_inspected = b; }
@@ -277,7 +277,7 @@ private:
 
     Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Custody>&& cwd = nullptr, RetainPtr<Custody>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
-    Range allocate_range(LinearAddress, size_t);
+    Range allocate_range(VirtualAddress, size_t);
 
     int do_exec(String path, Vector<String> arguments, Vector<String> environment);
     ssize_t do_write(FileDescription&, const byte*, int data_size);
@@ -326,12 +326,12 @@ private:
 
     TTY* m_tty { nullptr };
 
-    Region* region_from_range(LinearAddress, size_t);
+    Region* region_from_range(VirtualAddress, size_t);
 
     Vector<Retained<Region>> m_regions;
 
-    LinearAddress m_return_to_ring3_from_signal_trampoline;
-    LinearAddress m_return_to_ring0_from_signal_trampoline;
+    VirtualAddress m_return_to_ring3_from_signal_trampoline;
+    VirtualAddress m_return_to_ring0_from_signal_trampoline;
 
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
