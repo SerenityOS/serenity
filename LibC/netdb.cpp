@@ -1,12 +1,13 @@
+#include <AK/AKString.h>
+#include <AK/Assertions.h>
+#include <AK/ScopeGuard.h>
+#include <Kernel/Net/IPv4.h>
+#include <arpa/inet.h>
 #include <netdb.h>
+#include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
 #include <unistd.h>
-#include <AK/Assertions.h>
-#include <AK/AKString.h>
-#include <Kernel/Net/IPv4.h>
 
 extern "C" {
 
@@ -73,11 +74,15 @@ hostent* gethostbyname(const char* name)
     if (fd < 0)
         return nullptr;
 
+    auto close_fd_on_exit = ScopeGuard([fd] {
+        dbgprintf("closing fd\n");
+        close(fd);
+    });
+
     auto line = String::format("L%s\n", name);
     int nsent = write(fd, line.characters(), line.length());
     if (nsent < 0) {
         perror("write");
-        close(fd);
         return nullptr;
     }
 
@@ -87,11 +92,9 @@ hostent* gethostbyname(const char* name)
     int nrecv = read(fd, buffer, sizeof(buffer) - 1);
     if (nrecv < 0) {
         perror("recv");
-        close(fd);
         return nullptr;
     }
     buffer[nrecv] = '\0';
-    close(fd);
 
     if (!memcmp(buffer, "Not found.", sizeof("Not found.") - 1))
         return nullptr;
@@ -129,18 +132,20 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
     if (fd < 0)
         return nullptr;
 
+    auto close_fd_on_exit = ScopeGuard([fd] {
+        close(fd);
+    });
+
     IPv4Address ipv4_address((const byte*)&((const in_addr*)addr)->s_addr);
 
     auto line = String::format("R%d.%d.%d.%d.in-addr.arpa\n",
         ipv4_address[3],
         ipv4_address[2],
         ipv4_address[1],
-        ipv4_address[0]
-    );
+        ipv4_address[0]);
     int nsent = write(fd, line.characters(), line.length());
     if (nsent < 0) {
         perror("write");
-        close(fd);
         return nullptr;
     }
 
@@ -150,7 +155,6 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
     int nrecv = read(fd, buffer, sizeof(buffer) - 1);
     if (nrecv < 0) {
         perror("recv");
-        close(fd);
         return nullptr;
     }
     if (nrecv > 1) {
@@ -158,7 +162,6 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         buffer[nrecv - 1] = '\0';
     }
     buffer[nrecv] = '\0';
-    close(fd);
 
     if (!memcmp(buffer, "Not found.", sizeof("Not found.") - 1))
         return nullptr;
@@ -175,5 +178,4 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
 
     return &__gethostbyaddr_buffer;
 }
-
 }
