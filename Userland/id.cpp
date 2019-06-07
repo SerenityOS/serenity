@@ -1,15 +1,15 @@
-#include <unistd.h>
-#include <stdio.h>
-#include <pwd.h>
-#include <grp.h>
 #include <alloca.h>
+#include <grp.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <unistd.h>
 
 extern "C" int main(int, char**);
 
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
     uid_t uid = getuid();
     gid_t gid = getgid();
 
@@ -40,4 +40,3 @@ int main(int argc, char** argv)
     printf("\n");
     return 0;
 }
-

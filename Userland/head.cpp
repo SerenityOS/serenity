@@ -1,7 +1,7 @@
+#include <LibCore/CArgsParser.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <LibCore/CArgsParser.h>
 
 int head(const String& filename, bool print_filename, int line_count);
 
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
 
     int rc = 0;
 
-    for (auto &file : files) {
+    for (auto& file : files) {
         if (head(file, print_filenames, line_count) != 0) {
             rc = 1;
         }

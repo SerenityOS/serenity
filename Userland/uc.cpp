@@ -18,9 +18,11 @@ int main(int argc, char** argv)
     if (fd < 0) {
         perror("socket");
         return 1;
-    } 
+    }
 
-    struct timeval timeout { 5, 0 };
+    struct timeval timeout {
+        5, 0
+    };
     int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (rc < 0) {
         perror("setsockopt");
@@ -41,12 +43,12 @@ int main(int argc, char** argv)
     char buffer[BUFSIZ];
     const char* msg = "Test message";
 
-    sendto(fd, (const char *)msg, strlen(msg), 0,(const struct sockaddr *)&dst_addr, sizeof(dst_addr));
+    sendto(fd, (const char*)msg, strlen(msg), 0, (const struct sockaddr*)&dst_addr, sizeof(dst_addr));
     printf("Message sent.\n");
 
     struct sockaddr_in src_addr;
     socklen_t src_addr_len = sizeof(src_addr);
-    ssize_t nrecv = recvfrom(fd, (char *)buffer, sizeof(buffer), 0, (struct sockaddr*)&src_addr, &src_addr_len);
+    ssize_t nrecv = recvfrom(fd, (char*)buffer, sizeof(buffer), 0, (struct sockaddr*)&src_addr, &src_addr_len);
     if (nrecv < 0) {
         perror("recvfrom");
         return 1;

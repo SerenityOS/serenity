@@ -1,9 +1,9 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <time.h>
-#include <pwd.h>
 #include <grp.h>
+#include <pwd.h>
+#include <stdio.h>
 #include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
@@ -62,8 +62,7 @@ int main(int argc, char** argv)
         st.st_mode & S_IWGRP ? 'w' : '-',
         st.st_mode & S_ISGID ? 's' : (st.st_mode & S_IXGRP ? 'x' : '-'),
         st.st_mode & S_IROTH ? 'r' : '-',
-        st.st_mode & S_IWOTH ? 'w' : '-'
-    );
+        st.st_mode & S_IWOTH ? 'w' : '-');
 
     if (st.st_mode & S_ISVTX)
         printf("t");
@@ -72,7 +71,7 @@ int main(int argc, char** argv)
 
     printf(")\n");
 
-    auto print_time = [] (time_t t) {
+    auto print_time = [](time_t t) {
         auto* tm = localtime(&t);
         printf("%4u-%02u-%02u %02u:%02u:%02u\n",
             tm->tm_year + 1900,

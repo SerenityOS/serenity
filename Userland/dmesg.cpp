@@ -1,13 +1,13 @@
+#include <LibCore/CFile.h>
+#include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <LibCore/CFile.h>
 
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
     CFile f("/proc/dmesg");
     if (!f.open(CIODevice::ReadOnly)) {
         fprintf(stderr, "open: failed to open /proc/dmesg: %s", f.error_string());

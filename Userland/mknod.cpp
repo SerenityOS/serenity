@@ -1,7 +1,7 @@
-#include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/stat.h>
+#include <unistd.h>
 
 inline constexpr unsigned encoded_device(unsigned major, unsigned minor)
 {

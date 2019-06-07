@@ -1,11 +1,11 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <string.h>
-#include <signal.h>
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 static int usage()
 {

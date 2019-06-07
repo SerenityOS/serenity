@@ -1,17 +1,17 @@
-#include <sys/socket.h>
-#include <sys/time.h>
 #include <arpa/inet.h>
-#include <netinet/ip_icmp.h>
+#include <netdb.h>
 #include <netinet/in.h>
+#include <netinet/ip_icmp.h>
 #include <stdio.h>
 #include <string.h>
-#include <unistd.h>
-#include <netdb.h>
+#include <sys/socket.h>
+#include <sys/time.h>
 #include <time.h>
+#include <unistd.h>
 
 uint16_t internet_checksum(const void* ptr, size_t count)
 {
-    uint32_t  checksum = 0;
+    uint32_t checksum = 0;
     auto* w = (const uint16_t*)ptr;
     while (count > 1) {
         checksum += ntohs(*w++);
@@ -47,7 +47,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    struct timeval timeout { 1, 0 };
+    struct timeval timeout {
+        1, 0
+    };
     int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (rc < 0) {
         perror("setsockopt");
@@ -131,8 +133,7 @@ int main(int argc, char** argv)
                 ntohs(pong_packet.header.un.echo.id),
                 ntohs(pong_packet.header.un.echo.sequence),
                 pong_packet.header.un.echo.sequence != ping_packet.header.un.echo.sequence ? "(!)" : "",
-                ms
-            );
+                ms);
 
             // If this was a response to an earlier packet, we still need to wait for the current one.
             if (pong_packet.header.un.echo.sequence != ping_packet.header.un.echo.sequence)

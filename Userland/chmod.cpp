@@ -1,9 +1,9 @@
-#include <unistd.h>
-#include <sys/stat.h>
 #include <stdio.h>
 #include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
-int main(int argc, char **argv)
+int main(int argc, char** argv)
 {
     if (argc != 3) {
         printf("usage: chmod <octal-mode> <path>\n");

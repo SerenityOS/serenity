@@ -1,8 +1,8 @@
-#include <netdb.h>
 #include <arpa/inet.h>
+#include <netdb.h>
 #include <netinet/in.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 int main(int argc, char** argv)
 {

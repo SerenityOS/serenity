@@ -1,11 +1,11 @@
-#include <SharedGraphics/PNGLoader.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GMenuBar.h>
-#include <LibGUI/GMenu.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GMenuBar.h>
+#include <LibGUI/GWindow.h>
+#include <SharedGraphics/PNGLoader.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("QuickShow");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
     }));
@@ -25,7 +25,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(file_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [] (const GAction&) {
+    help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));

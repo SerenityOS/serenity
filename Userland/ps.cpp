@@ -1,12 +1,12 @@
+#include <LibCore/CFile.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <LibCore/CFile.h>
 
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
 
     CFile f("/proc/summary");
     if (!f.open(CIODevice::ReadOnly)) {

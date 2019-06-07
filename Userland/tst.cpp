@@ -1,11 +1,11 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
+    (void)argc;
+    (void)argv;
 
     struct winsize ws;
     int rc = ioctl(0, TIOCGWINSZ, &ws);

@@ -1,7 +1,7 @@
-#include <unistd.h>
-#include <stdio.h>
-#include <signal.h>
 #include <AK/AKString.h>
+#include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
 
 void handle_sigint(int)
 {
@@ -29,4 +29,3 @@ int main(int argc, char** argv)
     }
     return 0;
 }
-

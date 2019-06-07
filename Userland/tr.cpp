@@ -1,6 +1,6 @@
+#include <AK/AKString.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
-#include <AK/AKString.h>
 #include <stdio.h>
 #include <stdlib.h>
 
