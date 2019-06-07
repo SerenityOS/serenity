@@ -1,9 +1,9 @@
+#include <SharedGraphics/CharacterBitmap.h>
+#include <SharedGraphics/Painter.h>
+#include <SharedGraphics/StylePainter.h>
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSWindowManager.h>
-#include <SharedGraphics/Painter.h>
-#include <SharedGraphics/StylePainter.h>
-#include <SharedGraphics/CharacterBitmap.h>
 
 WSButton::WSButton(WSWindowFrame& frame, Retained<CharacterBitmap>&& bitmap, Function<void(WSButton&)>&& on_click_handler)
     : on_click(move(on_click_handler))

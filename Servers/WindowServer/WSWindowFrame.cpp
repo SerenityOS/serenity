@@ -90,20 +90,20 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
     if (!s_unmaximize_button_bitmap)
         s_unmaximize_button_bitmap = &CharacterBitmap::create_from_ascii(s_unmaximize_button_bitmap_data, s_unmaximize_button_bitmap_width, s_unmaximize_button_bitmap_height).leak_ref();
 
-    m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this] (auto&) {
+    m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this](auto&) {
         WSEvent close_request(WSEvent::WindowCloseRequest);
         m_window.event(close_request);
     }));
 
     if (window.is_resizable()) {
-        auto button = make<WSButton>(*this, *s_maximize_button_bitmap, [this] (auto&) {
+        auto button = make<WSButton>(*this, *s_maximize_button_bitmap, [this](auto&) {
             m_window.set_maximized(!m_window.is_maximized());
         });
         m_maximize_button = button.ptr();
         m_buttons.append(move(button));
     }
 
-    m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this] (auto&) {
+    m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this](auto&) {
         m_window.set_minimized(true);
     }));
 }
@@ -159,7 +159,7 @@ void WSWindowFrame::paint(Painter& painter)
     auto titlebar_rect = title_bar_rect();
     auto titlebar_icon_rect = title_bar_icon_rect();
     auto titlebar_inner_rect = title_bar_text_rect();
-    Rect outer_rect = { { }, rect().size() };
+    Rect outer_rect = { {}, rect().size() };
 
     auto titlebar_title_rect = titlebar_inner_rect;
     titlebar_title_rect.set_width(Font::default_bold_font().width(window.title()));
@@ -221,9 +221,9 @@ static Rect frame_rect_for_window(WSWindow& window, const Rect& rect)
     switch (type) {
     case WSWindowType::Normal:
         return { rect.x() - 3,
-                 rect.y() - window_titlebar_height - 4 + offset,
-                 rect.width() + 6,
-                 rect.height() + 7 + window_titlebar_height - offset };
+            rect.y() - window_titlebar_height - 4 + offset,
+            rect.width() + 6,
+            rect.height() + 7 + window_titlebar_height - offset };
     default:
         return rect;
     }
@@ -248,7 +248,8 @@ void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect&
 {
     int window_button_width = 15;
     int window_button_height = 15;
-    int x = title_bar_text_rect().right() + 1;;
+    int x = title_bar_text_rect().right() + 1;
+    ;
     for (auto& button : m_buttons) {
         x -= window_button_width;
         Rect rect { x, 0, window_button_width, window_button_height };
@@ -297,7 +298,7 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
             { ResizeDirection::Left, ResizeDirection::None, ResizeDirection::Right },
             { ResizeDirection::DownLeft, ResizeDirection::Down, ResizeDirection::DownRight },
         };
-        Rect outer_rect = { { }, rect().size() };
+        Rect outer_rect = { {}, rect().size() };
         ASSERT(outer_rect.contains(event.position()));
         int window_relative_x = event.x() - outer_rect.x();
         int window_relative_y = event.y() - outer_rect.y();

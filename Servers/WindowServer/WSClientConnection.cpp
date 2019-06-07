@@ -355,7 +355,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& requ
 
 void WSClientConnection::handle_request(const WSAPISetWallpaperRequest& request)
 {
-    WSCompositor::the().set_wallpaper(request.wallpaper(), [&] (bool success) {
+    WSCompositor::the().set_wallpaper(request.wallpaper(), [&](bool success) {
         WSAPI_ServerMessage response;
         response.type = WSAPI_ServerMessage::Type::DidSetWallpaper;
         response.value = success;
@@ -564,7 +564,7 @@ void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& reques
     }
     auto& window = *(*it).value;
     for (int i = 0; i < request.rects().size(); ++i)
-        window.request_update(request.rects()[i].intersected({ { }, window.size() }));
+        window.request_update(request.rects()[i].intersected({ {}, window.size() }));
 }
 
 void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification& request)

@@ -1,7 +1,7 @@
+#include "WSScreen.h"
 #include "WSCompositor.h"
 #include "WSEvent.h"
 #include "WSEventLoop.h"
-#include "WSScreen.h"
 #include "WSWindowManager.h"
 #include <fcntl.h>
 #include <sys/ioctl.h>
@@ -39,7 +39,7 @@ void WSScreen::set_resolution(int width, int height)
         int width;
         int height;
     };
-    BXVGAResolution resolution { (int)width, (int)height};
+    BXVGAResolution resolution { (int)width, (int)height };
     int rc = ioctl(m_framebuffer_fd, 1985, (int)&resolution);
     ASSERT(rc == 0);
 
@@ -67,7 +67,7 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, int dz, unsigned buttons)
     unsigned prev_buttons = m_mouse_button_state;
     m_mouse_button_state = buttons;
     unsigned changed_buttons = prev_buttons ^ buttons;
-    auto post_mousedown_or_mouseup_if_needed = [&] (MouseButton button) {
+    auto post_mousedown_or_mouseup_if_needed = [&](MouseButton button) {
         if (!(changed_buttons & (unsigned)button))
             return;
         auto message = make<WSMouseEvent>(buttons & (unsigned)button ? WSEvent::MouseDown : WSEvent::MouseUp, m_cursor_location, buttons, button, m_modifiers);

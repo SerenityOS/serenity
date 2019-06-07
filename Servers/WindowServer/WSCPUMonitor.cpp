@@ -1,8 +1,8 @@
 #include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSWindowManager.h>
-#include <unistd.h>
 #include <stdio.h>
+#include <unistd.h>
 
 WSCPUMonitor::WSCPUMonitor()
     : m_proc_all("/proc/all")
@@ -10,7 +10,7 @@ WSCPUMonitor::WSCPUMonitor()
     if (!m_proc_all.open(CIODevice::OpenMode::ReadOnly))
         ASSERT_NOT_REACHED();
 
-    create_thread([] (void* context) -> int {
+    create_thread([](void* context) -> int {
         auto& monitor = *(WSCPUMonitor*)context;
         for (;;) {
             static unsigned last_busy;
@@ -27,7 +27,8 @@ WSCPUMonitor::WSCPUMonitor()
             monitor.m_dirty = true;
             sleep(1);
         }
-    }, this);
+    },
+        this);
 }
 
 void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
@@ -65,8 +66,7 @@ void WSCPUMonitor::paint(Painter& painter, const Rect& rect)
         painter.draw_line(
             { rect.x() + i, rect.bottom() },
             { rect.x() + i, (int)(rect.y() + (rect.height() - (cpu_usage * (float)rect.height()))) },
-            Color::from_rgb(0xaa6d4b)
-        );
+            Color::from_rgb(0xaa6d4b));
         ++i;
     }
 }

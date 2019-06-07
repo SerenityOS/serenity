@@ -1,16 +1,16 @@
 #include "WSMenu.h"
-#include "WSMenuItem.h"
-#include "WSWindow.h"
 #include "WSEvent.h"
 #include "WSEventLoop.h"
-#include "WSWindowManager.h"
+#include "WSMenuItem.h"
 #include "WSScreen.h"
-#include <WindowServer/WSAPITypes.h>
-#include <WindowServer/WSClientConnection.h>
+#include "WSWindow.h"
+#include "WSWindowManager.h"
 #include <SharedGraphics/CharacterBitmap.h>
+#include <SharedGraphics/Font.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/StylePainter.h>
-#include <SharedGraphics/Font.h>
+#include <WindowServer/WSAPITypes.h>
+#include <WindowServer/WSClientConnection.h>
 
 WSMenu::WSMenu(WSClientConnection* client, int menu_id, const String& name)
     : m_client(client)
@@ -115,7 +115,7 @@ void WSMenu::draw()
     ASSERT(menu_window()->backing_store());
     Painter painter(*menu_window()->backing_store());
 
-    Rect rect { { }, menu_window()->size() };
+    Rect rect { {}, menu_window()->size() };
     painter.fill_rect(rect.shrunken(6, 6), Color::LightGray);
     StylePainter::paint_window_frame(painter, rect);
     int width = this->width();
