@@ -78,6 +78,11 @@ GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     } else {
         set_preferred_size({ 0, 15 });
     }
+
+    m_automatic_scrolling_timer.set_interval(100);
+    m_automatic_scrolling_timer.on_timeout = [this] {
+        on_automatic_scrolling_timer_fired();
+    };
 }
 
 GScrollBar::~GScrollBar()
@@ -207,16 +212,30 @@ void GScrollBar::paint_event(GPaintEvent& event)
         StylePainter::paint_button(painter, scrubber_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber);
 }
 
+void GScrollBar::on_automatic_scrolling_timer_fired()
+{
+    if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement) {
+        set_value(value() - m_step);
+        return;
+    }
+    if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment) {
+        set_value(value() + m_step);
+        return;
+    }
+}
+
 void GScrollBar::mousedown_event(GMouseEvent& event)
 {
     if (event.button() != GMouseButton::Left)
         return;
     if (up_button_rect().contains(event.position())) {
-        set_value(value() - m_step);
+        m_automatic_scrolling_direction = AutomaticScrollingDirection::Decrement;
+        set_automatic_scrolling_active(true);
         return;
     }
     if (down_button_rect().contains(event.position())) {
-        set_value(value() + m_step);
+        m_automatic_scrolling_direction = AutomaticScrollingDirection::Increment;
+        set_automatic_scrolling_active(true);
         return;
     }
 #ifdef GUTTER_DOES_PAGEUP_PAGEDOWN
@@ -263,10 +282,22 @@ void GScrollBar::mouseup_event(GMouseEvent& event)
 {
     if (event.button() != GMouseButton::Left)
         return;
+    m_automatic_scrolling_direction = AutomaticScrollingDirection::None;
+    set_automatic_scrolling_active(false);
     if (!m_scrubbing)
         return;
     m_scrubbing = false;
     update();
+}
+
+void GScrollBar::set_automatic_scrolling_active(bool active)
+{
+    if (active) {
+        on_automatic_scrolling_timer_fired();
+        m_automatic_scrolling_timer.start();
+    } else {
+        m_automatic_scrolling_timer.stop();
+    }
 }
 
 void GScrollBar::mousemove_event(GMouseEvent& event)
@@ -282,8 +313,14 @@ void GScrollBar::mousemove_event(GMouseEvent& event)
         m_hovered_component = Component::Gutter;
     else
         m_hovered_component = Component::Invalid;
-    if (old_hovered_component != m_hovered_component)
+    if (old_hovered_component != m_hovered_component) {
         update();
+
+        if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement)
+            set_automatic_scrolling_active(m_hovered_component == Component::DecrementButton);
+        else if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment)
+            set_automatic_scrolling_active(m_hovered_component == Component::IncrementButton);
+    }
     if (!m_scrubbing)
         return;
     float delta = orientation() == Orientation::Vertical ? (event.y() - m_scrub_origin.y()) : (event.x() - m_scrub_origin.x());
