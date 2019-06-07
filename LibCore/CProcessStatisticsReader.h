@@ -11,8 +11,8 @@ struct CProcessStatistics {
     String username;
     uid_t uid;
     String priority;
-    size_t linear;
-    size_t physical;
+    size_t virtual_size;
+    size_t physical_size;
     unsigned syscalls;
 };
 

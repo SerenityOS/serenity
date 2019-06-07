@@ -74,13 +74,13 @@ void CProcessStatisticsReader::update_map(HashMap<pid_t, CProcessStatistics>& ma
         process.state = parts[7];
 
         process.name = parts[11];
-        process.linear = parts[12].to_uint(ok);
+        process.virtual_size = parts[12].to_uint(ok);
         if (!ok) {
-            fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid amount of linear address space used\n", parts[12].characters());
+            fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid amount of virtual address space used\n", parts[12].characters());
             return;
         }
 
-        process.physical = parts[13].to_uint(ok);
+        process.physical_size = parts[13].to_uint(ok);
         if (!ok) {
             fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid amount of physical address space used\n", parts[13].characters());
             return;

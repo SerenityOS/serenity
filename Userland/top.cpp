@@ -17,8 +17,8 @@ struct Process {
     String state;
     String user;
     String priority;
-    unsigned linear;
-    unsigned committed;
+    unsigned virtual_size;
+    unsigned physical_size;
     unsigned nsched_since_prev;
     unsigned cpu_percent;
     unsigned cpu_percent_decimal;
@@ -61,9 +61,9 @@ static Snapshot get_snapshot()
         process.priority = parts[16];
         process.state = parts[7];
         process.name = parts[11];
-        process.linear = parts[12].to_uint(ok);
+        process.virtual_size = parts[12].to_uint(ok);
         ASSERT(ok);
-        process.committed = parts[13].to_uint(ok);
+        process.physical_size = parts[13].to_uint(ok);
         ASSERT(ok);
         snapshot.map.set(pid, move(process));
     }
@@ -93,8 +93,8 @@ int main(int, char**)
             "PRI",
             "USER",
             "STATE",
-            "LINEAR",
-            "COMMIT",
+            "VIRT",
+            "PHYS",
             "%CPU",
             "NAME");
         for (auto& it : current.map) {
@@ -123,8 +123,8 @@ int main(int, char**)
                 process->priority[0],
                 process->user.characters(),
                 process->state.characters(),
-                process->linear / 1024,
-                process->committed / 1024,
+                process->virtual_size / 1024,
+                process->physical_size / 1024,
                 process->cpu_percent,
                 process->cpu_percent_decimal,
                 process->name.characters());
