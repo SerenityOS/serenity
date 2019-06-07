@@ -191,7 +191,7 @@ static bool handle_builtin(int argc, char** argv, int& retval)
 
 class FileDescriptionCollector {
 public:
-    FileDescriptionCollector() { }
+    FileDescriptionCollector() {}
     ~FileDescriptionCollector() { collect(); }
 
     void collect()
@@ -248,7 +248,7 @@ static Vector<String> process_arguments(const Vector<String>& args)
                     continue;
 
                 // And even if they are, skip . and ..
-                if (name == "."  || name == "..")
+                if (name == "." || name == "..")
                     continue;
 
                 if (name.matches(arg, String::CaseSensitivity::CaseSensitive))
@@ -308,50 +308,50 @@ static int run_command(const String& cmd)
         auto& subcommand = subcommands[i];
         for (auto& redirection : subcommand.redirections) {
             switch (redirection.type) {
-                case Redirection::Pipe: {
-                    int pipefd[2];
-                    int rc = pipe(pipefd);
-                    if (rc < 0) {
-                        perror("pipe");
-                        return 1;
-                    }
-                    subcommand.rewirings.append({ STDOUT_FILENO, pipefd[1] });
-                    auto& next_command = subcommands[i + 1];
-                    next_command.rewirings.append({ STDIN_FILENO, pipefd[0] });
-                    fds.add(pipefd[0]);
-                    fds.add(pipefd[1]);
-                    break;
+            case Redirection::Pipe: {
+                int pipefd[2];
+                int rc = pipe(pipefd);
+                if (rc < 0) {
+                    perror("pipe");
+                    return 1;
                 }
-                case Redirection::FileWriteAppend: {
-                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
-                    if (fd < 0) {
-                        perror("open");
-                        return 1;
-                    }
-                    subcommand.rewirings.append({ redirection.fd, fd });
-                    fds.add(fd);
-                    break;
+                subcommand.rewirings.append({ STDOUT_FILENO, pipefd[1] });
+                auto& next_command = subcommands[i + 1];
+                next_command.rewirings.append({ STDIN_FILENO, pipefd[0] });
+                fds.add(pipefd[0]);
+                fds.add(pipefd[1]);
+                break;
+            }
+            case Redirection::FileWriteAppend: {
+                int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+                if (fd < 0) {
+                    perror("open");
+                    return 1;
                 }
-                case Redirection::FileWrite: {
-                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-                    if (fd < 0) {
-                        perror("open");
-                        return 1;
-                    }
-                    subcommand.rewirings.append({ redirection.fd, fd });
-                    fds.add(fd);
-                    break;
+                subcommand.rewirings.append({ redirection.fd, fd });
+                fds.add(fd);
+                break;
+            }
+            case Redirection::FileWrite: {
+                int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                if (fd < 0) {
+                    perror("open");
+                    return 1;
                 }
-                case Redirection::FileRead: {
-                    int fd = open(redirection.path.characters(), O_RDONLY);
-                    if (fd < 0) {
-                        perror("open");
-                        return 1;
-                    }
-                    subcommand.rewirings.append({ redirection.fd, fd });
-                    fds.add(fd);
-                    break;
+                subcommand.rewirings.append({ redirection.fd, fd });
+                fds.add(fd);
+                break;
+            }
+            case Redirection::FileRead: {
+                int fd = open(redirection.path.characters(), O_RDONLY);
+                if (fd < 0) {
+                    perror("open");
+                    return 1;
                 }
+                subcommand.rewirings.append({ redirection.fd, fd });
+                fds.add(fd);
+                break;
+            }
             }
         }
     }
@@ -427,7 +427,6 @@ static int run_command(const String& cmd)
         dbgprintf("  %d\n", child);
 #endif
 
-
     int wstatus = 0;
     int return_value = 0;
 
@@ -452,7 +451,7 @@ static int run_command(const String& cmd)
                     printf("Shell: %s(%d) exited abnormally\n", child.name.characters(), child.pid);
                 }
             }
-        } while(errno == EINTR);
+        } while (errno == EINTR);
     }
 
     // FIXME: Should I really have to tcsetpgrp() after my child has exited?
