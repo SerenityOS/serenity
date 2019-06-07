@@ -2,7 +2,7 @@
 #include "IO.h"
 #include "PIC.h"
 #include "Scheduler.h"
-#include "i386.h"
+#include <Kernel/Arch/i386/CPU.h>
 
 #define IRQ_TIMER 0
 

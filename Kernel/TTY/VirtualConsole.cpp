@@ -1,9 +1,9 @@
 #include "VirtualConsole.h"
 #include "IO.h"
 #include "StdLib.h"
-#include "i386.h"
 #include "kmalloc.h"
 #include <AK/AKString.h>
+#include <Kernel/Arch/i386/CPU.h>
 
 static byte* s_vga_buffer;
 static VirtualConsole* s_consoles[6];

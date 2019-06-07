@@ -1,9 +1,9 @@
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Console.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessTracer.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Syscall.h>
-#include <Kernel/i386.h>
 
 extern "C" void syscall_trap_entry(RegisterDump&);
 extern "C" void syscall_trap_handler();

@@ -1,6 +1,6 @@
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/IO.h>
-#include <Kernel/i386.h>
 #include <Kernel/i8253.h>
 
 void PCSpeaker::tone_on(int frequency)

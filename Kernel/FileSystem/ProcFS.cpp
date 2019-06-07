@@ -4,8 +4,8 @@
 #include "Process.h"
 #include "Scheduler.h"
 #include "StdLib.h"
-#include "i386.h"
 #include <AK/StringBuilder.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>

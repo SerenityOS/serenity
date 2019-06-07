@@ -1,6 +1,6 @@
 #include "IRQHandler.h"
 #include "PIC.h"
-#include "i386.h"
+#include <Kernel/Arch/i386/CPU.h>
 
 IRQHandler::IRQHandler(byte irq)
     : m_irq_number(irq)
