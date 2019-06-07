@@ -8,7 +8,8 @@ namespace AK {
 template<typename T>
 class RetainPtr {
 public:
-    enum AdoptTag {
+    enum AdoptTag
+    {
         Adopt
     };
 
