@@ -49,10 +49,10 @@ private:
     int button_size() const { return 16; }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
     int button_height() const { return orientation() == Orientation::Horizontal ? height() : button_size(); }
-    Rect up_button_rect() const;
-    Rect down_button_rect() const;
-    Rect upper_gutter_rect() const;
-    Rect lower_gutter_rect() const;
+    Rect decrement_button_rect() const;
+    Rect increment_button_rect() const;
+    Rect decrement_gutter_rect() const;
+    Rect increment_gutter_rect() const;
     Rect scrubber_rect() const;
     int scrubber_size() const;
     int scrubbable_range_in_pixels() const;
