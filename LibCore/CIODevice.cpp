@@ -22,9 +22,9 @@ const char* CIODevice::error_string() const
 ByteBuffer CIODevice::read(int max_size)
 {
     if (m_fd < 0)
-        return { };
+        return {};
     if (!max_size)
-        return { };
+        return {};
     auto buffer = ByteBuffer::create_uninitialized(max_size);
     auto* buffer_ptr = (char*)buffer.pointer();
     int remaining_buffer_space = buffer.size();
@@ -42,11 +42,11 @@ ByteBuffer CIODevice::read(int max_size)
     int nread = ::read(m_fd, buffer_ptr, remaining_buffer_space);
     if (nread < 0) {
         set_error(errno);
-        return { };
+        return {};
     }
     if (nread == 0) {
         set_eof(true);
-        return { };
+        return {};
     }
     buffer.trim(nread);
     return buffer;
@@ -58,7 +58,9 @@ bool CIODevice::can_read_from_fd() const
     fd_set rfds;
     FD_ZERO(&rfds);
     FD_SET(m_fd, &rfds);
-    struct timeval timeout { 0, 0 };
+    struct timeval timeout {
+        0, 0
+    };
     int rc = select(m_fd + 1, &rfds, nullptr, nullptr, &timeout);
     if (rc < 0) {
         // NOTE: We don't set m_error here.
@@ -112,15 +114,15 @@ ByteBuffer CIODevice::read_all()
 ByteBuffer CIODevice::read_line(int max_size)
 {
     if (m_fd < 0)
-        return { };
+        return {};
     if (!max_size)
-        return { };
+        return {};
     if (!can_read_line())
-        return { };
+        return {};
     if (m_eof) {
         if (m_buffered_data.size() > max_size) {
             dbgprintf("CIODevice::read_line: At EOF but there's more than max_size(%d) buffered\n", max_size);
-            return { };
+            return {};
         }
         auto buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
         m_buffered_data.clear();
@@ -140,7 +142,7 @@ ByteBuffer CIODevice::read_line(int max_size)
             return line;
         }
     }
-    return { };
+    return {};
 }
 
 bool CIODevice::populate_read_buffer()
@@ -175,7 +177,7 @@ bool CIODevice::close()
     return true;
 }
 
-bool CIODevice::seek(signed_qword offset, SeekMode mode, off_t *pos)
+bool CIODevice::seek(signed_qword offset, SeekMode mode, off_t* pos)
 {
     int m = SEEK_SET;
     switch (mode) {
@@ -219,11 +221,12 @@ int CIODevice::printf(const char* format, ...)
     va_list ap;
     va_start(ap, format);
     // FIXME: We're not propagating write() failures to client here!
-    int ret = printf_internal([this] (char*&, char ch) {
+    int ret = printf_internal([this](char*&, char ch) {
         int rc = write((const byte*)&ch, 1);
         if (rc < 0)
             dbgprintf("CIODevice::printf: write: %s\n", strerror(errno));
-    }, nullptr, format, ap);
+    },
+        nullptr, format, ap);
     va_end(ap);
     return ret;
 }
