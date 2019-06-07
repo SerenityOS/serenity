@@ -14,12 +14,18 @@ ELFImage::~ELFImage()
 static const char* object_file_type_to_string(Elf32_Half type)
 {
     switch (type) {
-    case ET_NONE: return "None";
-    case ET_REL: return "Relocatable";
-    case ET_EXEC: return "Executable";
-    case ET_DYN: return "Shared object";
-    case ET_CORE: return "Core";
-    default: return "(?)";
+    case ET_NONE:
+        return "None";
+    case ET_REL:
+        return "Relocatable";
+    case ET_EXEC:
+        return "Executable";
+    case ET_DYN:
+        return "Shared object";
+    case ET_CORE:
+        return "Core";
+    default:
+        return "(?)";
     }
 }
 

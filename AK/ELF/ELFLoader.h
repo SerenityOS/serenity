@@ -5,7 +5,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #if defined(KERNEL)
-#include <Kernel/VirtualAddress.h>
+#    include <Kernel/VirtualAddress.h>
 #endif
 #include <AK/ELF/ELFImage.h>
 
@@ -34,7 +34,7 @@ private:
     char* area_for_section_name(const char*);
 
     struct PtrAndSize {
-        PtrAndSize() { }
+        PtrAndSize() {}
         PtrAndSize(char* p, unsigned s)
             : ptr(p)
             , size(s)
@@ -52,4 +52,3 @@ private:
     };
     mutable Vector<SortedSymbol> m_sorted_symbols;
 };
-
