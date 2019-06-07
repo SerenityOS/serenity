@@ -1,17 +1,17 @@
-#include <stdio.h>
-#include <stdarg.h>
-#include <sys/types.h>
-#include <string.h>
-#include <errno.h>
-#include <unistd.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <AK/printf.cpp>
+#include <AK/PrintfImplementation.h>
 #include <AK/StdLibExtras.h>
 #include <AK/ValueRestorer.h>
 #include <Kernel/Syscall.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <unistd.h>
 
 extern "C" {
 

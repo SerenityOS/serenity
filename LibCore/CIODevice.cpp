@@ -1,9 +1,9 @@
+#include <AK/PrintfImplementation.h>
 #include <LibCore/CIODevice.h>
 #include <stdio.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <unistd.h>
-#include <AK/printf.cpp>
 
 CIODevice::CIODevice(CObject* parent)
     : CObject(parent)
