@@ -1,5 +1,5 @@
-#include <LibGUI/GFontDatabase.h>
 #include <LibCore/CDirIterator.h>
+#include <LibGUI/GFontDatabase.h>
 #include <SharedGraphics/Font.h>
 #include <dirent.h>
 #include <stdio.h>

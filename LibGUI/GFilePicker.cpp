@@ -57,19 +57,19 @@ GFilePicker::GFilePicker(const StringView& path, CObject* parent)
         clear_preview();
     };
 
-    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this] (const GAction&) {
+    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const GAction&) {
         m_model->open(String::format("%s/..", m_model->path().characters()));
         clear_preview();
     });
     toolbar->add_action(*open_parent_directory_action);
 
-    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this] (const GAction&) {
+    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GAction&) {
         GInputBox input_box("Enter name:", "New directory", this);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
             auto new_dir_path = FileSystemPath(String::format("%s/%s",
-                m_model->path().characters(),
-                input_box.text_value().characters()
-            )).string();
+                                                   m_model->path().characters(),
+                                                   input_box.text_value().characters()))
+                                    .string();
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
                 GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, this);
@@ -96,7 +96,7 @@ GFilePicker::GFilePicker(const StringView& path, CObject* parent)
     filename_label->set_preferred_size({ 60, 0 });
     auto* filename_textbox = new GTextBox(filename_container);
 
-    m_view->on_activation = [this, filename_textbox] (auto& index) {
+    m_view->on_activation = [this, filename_textbox](auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
         const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
@@ -125,7 +125,7 @@ GFilePicker::GFilePicker(const StringView& path, CObject* parent)
     cancel_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     cancel_button->set_preferred_size({ 80, 0 });
     cancel_button->set_text("Cancel");
-    cancel_button->on_click = [this] (auto&) {
+    cancel_button->on_click = [this](auto&) {
         done(ExecCancel);
     };
 
@@ -133,7 +133,7 @@ GFilePicker::GFilePicker(const StringView& path, CObject* parent)
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size({ 80, 0 });
     ok_button->set_text("OK");
-    ok_button->on_click = [this, filename_textbox] (auto&) {
+    ok_button->on_click = [this, filename_textbox](auto&) {
         FileSystemPath path(String::format("%s/%s", m_model->path().characters(), filename_textbox->text().characters()));
         m_selected_file = path;
         done(ExecOK);

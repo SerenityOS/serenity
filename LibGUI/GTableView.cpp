@@ -1,13 +1,13 @@
-#include <LibGUI/GTableView.h>
+#include <AK/StringBuilder.h>
+#include <Kernel/KeyCode.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GMenu.h>
 #include <LibGUI/GModel.h>
-#include <LibGUI/GScrollBar.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GScrollBar.h>
+#include <LibGUI/GTableView.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GWindow.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GAction.h>
-#include <Kernel/KeyCode.h>
-#include <AK/StringBuilder.h>
 
 GTableView::GTableView(GWidget* parent)
     : GAbstractView(parent)
@@ -24,7 +24,7 @@ GTableView::~GTableView()
 void GTableView::update_content_size()
 {
     if (!model())
-        return set_content_size({ });
+        return set_content_size({});
 
     int content_width = 0;
     int column_count = model()->column_count();
@@ -80,9 +80,9 @@ int GTableView::column_width(int column_index) const
 Rect GTableView::header_rect(int column_index) const
 {
     if (!model())
-        return { };
+        return {};
     if (is_column_hidden(column_index))
-        return { };
+        return {};
     int x_offset = 0;
     for (int i = 0; i < column_index; ++i) {
         if (is_column_hidden(i))
@@ -100,7 +100,7 @@ Point GTableView::adjusted_position(const Point& position)
 Rect GTableView::column_resize_grabbable_rect(int column) const
 {
     if (!model())
-        return { };
+        return {};
     auto header_rect = this->header_rect(column);
     return { header_rect.right() - 1, header_rect.top(), 4, header_rect.height() };
 }
@@ -148,7 +148,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
             return;
         }
     }
-    model()->set_selected_index({ });
+    model()->set_selected_index({});
     update();
 }
 
@@ -427,7 +427,7 @@ GMenu& GTableView::ensure_header_context_menu()
         for (int column = 0; column < model()->column_count(); ++column) {
             auto& column_data = this->column_data(column);
             auto name = model()->column_name(column);
-            column_data.visibility_action = GAction::create(name, [this, column] (GAction& action) {
+            column_data.visibility_action = GAction::create(name, [this, column](GAction& action) {
                 action.set_checked(!action.is_checked());
                 set_column_hidden(column, !action.is_checked());
             });

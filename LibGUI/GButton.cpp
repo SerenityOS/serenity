@@ -1,9 +1,9 @@
 #include "GButton.h"
+#include <AK/StringBuilder.h>
+#include <Kernel/KeyCode.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/StylePainter.h>
-#include <AK/StringBuilder.h>
-#include <LibGUI/GAction.h>
-#include <Kernel/KeyCode.h>
 
 GButton::GButton(GWidget* parent)
     : GAbstractButton(parent)
@@ -18,7 +18,7 @@ GButton::GButton(const StringView& text, GWidget* parent)
 GButton::~GButton()
 {
     if (m_action)
-        m_action->unregister_button({ }, *this);
+        m_action->unregister_button({}, *this);
 }
 
 void GButton::paint_event(GPaintEvent& event)
@@ -67,7 +67,7 @@ void GButton::click()
 void GButton::set_action(GAction& action)
 {
     m_action = action.make_weak_ptr();
-    action.register_button({ }, *this);
+    action.register_button({}, *this);
     set_enabled(action.is_enabled());
     set_checkable(action.is_checkable());
     if (action.is_checkable())

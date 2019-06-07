@@ -1,9 +1,9 @@
-#include <LibGUI/GStatusBar.h>
-#include <LibGUI/GLabel.h>
 #include <LibGUI/GBoxLayout.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GResizeCorner.h>
+#include <LibGUI/GStatusBar.h>
+#include <SharedGraphics/StylePainter.h>
 
 GStatusBar::GStatusBar(GWidget* parent)
     : GWidget(parent)

@@ -1,6 +1,6 @@
+#include <LibGUI/GDesktop.h>
 #include <LibGUI/GDialog.h>
 #include <LibGUI/GEventLoop.h>
-#include <LibGUI/GDesktop.h>
 
 GDialog::GDialog(CObject* parent)
     : GWindow(parent)

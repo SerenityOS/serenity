@@ -1,8 +1,8 @@
+#include <Kernel/KeyCode.h>
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GModel.h>
-#include <LibGUI/GScrollBar.h>
 #include <LibGUI/GPainter.h>
-#include <Kernel/KeyCode.h>
+#include <LibGUI/GScrollBar.h>
 
 GItemView::GItemView(GWidget* parent)
     : GAbstractView(parent)
@@ -38,7 +38,7 @@ void GItemView::did_update_model()
 void GItemView::update_content_size()
 {
     if (!model())
-        return set_content_size({ });
+        return set_content_size({});
 
     m_visual_column_count = available_size().width() / effective_item_size().width();
     if (m_visual_column_count)
@@ -55,7 +55,7 @@ void GItemView::update_content_size()
 Rect GItemView::item_rect(int item_index) const
 {
     if (!m_visual_row_count || !m_visual_column_count)
-        return { };
+        return {};
     int visual_row_index = item_index / m_visual_column_count;
     int visual_column_index = item_index % m_visual_column_count;
     return {
@@ -79,7 +79,7 @@ void GItemView::mousedown_event(GMouseEvent& event)
                 return;
             }
         }
-        model()->set_selected_index({ });
+        model()->set_selected_index({});
         update();
     }
 }
@@ -100,7 +100,7 @@ void GItemView::paint_event(GPaintEvent& event)
 
     GPainter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
-    painter.add_clip_rect(event.rect());    
+    painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 

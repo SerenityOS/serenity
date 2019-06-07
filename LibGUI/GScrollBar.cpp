@@ -1,8 +1,8 @@
+#include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
-#include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <LibGUI/GPainter.h>
+#include <SharedGraphics/StylePainter.h>
 
 static const char* s_up_arrow_bitmap_data = {
     "         "
@@ -27,7 +27,6 @@ static const char* s_down_arrow_bitmap_data = {
     "    #    "
     "         "
 };
-
 
 static const char* s_left_arrow_bitmap_data = {
     "         "
@@ -146,7 +145,7 @@ Rect GScrollBar::increment_gutter_rect() const
 {
     auto scrubber_rect = this->scrubber_rect();
     if (orientation() == Orientation::Vertical)
-        return { 0, scrubber_rect.bottom() + 1, button_width(), height() - button_height() - scrubber_rect.bottom() - 1};
+        return { 0, scrubber_rect.bottom() + 1, button_width(), height() - button_height() - scrubber_rect.bottom() - 1 };
     else
         return { scrubber_rect.right() + 1, 0, width() - button_width() - scrubber_rect.right() - 1, button_width() };
 }
@@ -174,7 +173,7 @@ int GScrollBar::scrubber_size() const
 Rect GScrollBar::scrubber_rect() const
 {
     if (!has_scrubber())
-        return { };
+        return {};
     float x_or_y;
     if (m_value == m_min)
         x_or_y = button_size();
