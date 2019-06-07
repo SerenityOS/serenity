@@ -22,7 +22,7 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 
 ## Screenshot
 
-![Screenshot as of d727005](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-d727005.png)
+![Screenshot as of 191112e](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-191112e.png)
 
 ## Current features
 
