@@ -1,16 +1,17 @@
-#include <AK/Types.h>
 #include "i386.h"
 #include "Assertions.h"
-#include "Process.h"
-#include <Kernel/VM/MemoryManager.h>
 #include "IRQHandler.h"
 #include "PIC.h"
+#include "Process.h"
 #include "Scheduler.h"
+#include <AK/Types.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/VM/MemoryManager.h>
 
 //#define PAGE_FAULT_DEBUG
 
-struct [[gnu::packed]] DescriptorTablePointer {
+struct [[gnu::packed]] DescriptorTablePointer
+{
     word limit;
     void* address;
 };
@@ -55,71 +56,68 @@ asm(
     "    popw %es\n"
     "    popw %ds\n"
     "    popa\n"
-    "    iret\n"
-);
+    "    iret\n");
 
-#define EH_ENTRY(ec) \
-extern "C" void exception_ ## ec ## _handler(RegisterDumpWithExceptionCode&); \
-extern "C" void exception_ ## ec ## _entry(); \
-asm( \
-    ".globl exception_" # ec "_entry\n" \
-    "exception_" # ec "_entry: \n" \
-    "    pusha\n" \
-    "    pushw %ds\n" \
-    "    pushw %es\n" \
-    "    pushw %fs\n" \
-    "    pushw %gs\n" \
-    "    pushw %ss\n" \
-    "    pushw %ss\n" \
-    "    pushw %ss\n" \
-    "    pushw %ss\n" \
-    "    pushw %ss\n" \
-    "    popw %ds\n" \
-    "    popw %es\n" \
-    "    popw %fs\n" \
-    "    popw %gs\n" \
-    "    mov %esp, %eax\n" \
-    "    call exception_" # ec "_handler\n" \
-    "    popw %gs\n" \
-    "    popw %gs\n" \
-    "    popw %fs\n" \
-    "    popw %es\n" \
-    "    popw %ds\n" \
-    "    popa\n" \
-    "    add $0x4, %esp\n" \
-    "    iret\n" \
-);
+#define EH_ENTRY(ec)                                                          \
+    extern "C" void exception_##ec##_handler(RegisterDumpWithExceptionCode&); \
+    extern "C" void exception_##ec##_entry();                                 \
+    asm(                                                                      \
+        ".globl exception_" #ec "_entry\n"                                    \
+        "exception_" #ec "_entry: \n"                                         \
+        "    pusha\n"                                                         \
+        "    pushw %ds\n"                                                     \
+        "    pushw %es\n"                                                     \
+        "    pushw %fs\n"                                                     \
+        "    pushw %gs\n"                                                     \
+        "    pushw %ss\n"                                                     \
+        "    pushw %ss\n"                                                     \
+        "    pushw %ss\n"                                                     \
+        "    pushw %ss\n"                                                     \
+        "    pushw %ss\n"                                                     \
+        "    popw %ds\n"                                                      \
+        "    popw %es\n"                                                      \
+        "    popw %fs\n"                                                      \
+        "    popw %gs\n"                                                      \
+        "    mov %esp, %eax\n"                                                \
+        "    call exception_" #ec "_handler\n"                                \
+        "    popw %gs\n"                                                      \
+        "    popw %gs\n"                                                      \
+        "    popw %fs\n"                                                      \
+        "    popw %es\n"                                                      \
+        "    popw %ds\n"                                                      \
+        "    popa\n"                                                          \
+        "    add $0x4, %esp\n"                                                \
+        "    iret\n");
 
-#define EH_ENTRY_NO_CODE(ec) \
-extern "C" void exception_ ## ec ## _handler(RegisterDump&); \
-extern "C" void exception_ ## ec ## _entry(); \
-asm( \
-    ".globl exception_" # ec "_entry\n" \
-    "exception_" # ec "_entry: \n" \
-    "    pusha\n" \
-    "    pushw %ds\n" \
-    "    pushw %es\n" \
-    "    pushw %fs\n" \
-    "    pushw %gs\n" \
-    "    pushw %ss\n" \
-    "    pushw %ss\n" \
-    "    pushw %ss\n" \
-    "    pushw %ss\n" \
-    "    pushw %ss\n" \
-    "    popw %ds\n" \
-    "    popw %es\n" \
-    "    popw %fs\n" \
-    "    popw %gs\n" \
-    "    mov %esp, %eax\n" \
-    "    call exception_" # ec "_handler\n" \
-    "    popw %gs\n" \
-    "    popw %gs\n" \
-    "    popw %fs\n" \
-    "    popw %es\n" \
-    "    popw %ds\n" \
-    "    popa\n" \
-    "    iret\n" \
-);
+#define EH_ENTRY_NO_CODE(ec)                                 \
+    extern "C" void exception_##ec##_handler(RegisterDump&); \
+    extern "C" void exception_##ec##_entry();                \
+    asm(                                                     \
+        ".globl exception_" #ec "_entry\n"                   \
+        "exception_" #ec "_entry: \n"                        \
+        "    pusha\n"                                        \
+        "    pushw %ds\n"                                    \
+        "    pushw %es\n"                                    \
+        "    pushw %fs\n"                                    \
+        "    pushw %gs\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    popw %ds\n"                                     \
+        "    popw %es\n"                                     \
+        "    popw %fs\n"                                     \
+        "    popw %gs\n"                                     \
+        "    mov %esp, %eax\n"                               \
+        "    call exception_" #ec "_handler\n"               \
+        "    popw %gs\n"                                     \
+        "    popw %gs\n"                                     \
+        "    popw %fs\n"                                     \
+        "    popw %es\n"                                     \
+        "    popw %ds\n"                                     \
+        "    popa\n"                                         \
+        "    iret\n");
 
 template<typename DumpType>
 static void dump(const DumpType& regs)
@@ -158,7 +156,6 @@ static void dump(const DumpType& regs)
     }
 }
 
-
 // 6: Invalid Opcode
 EH_ENTRY_NO_CODE(6);
 void exception_6_handler(RegisterDump& regs)
@@ -171,8 +168,7 @@ void exception_6_handler(RegisterDump& regs)
     kprintf("%s Illegal instruction: %s(%u)\n",
         current->process().is_ring0() ? "Kernel" : "Process",
         current->process().name().characters(),
-        current->pid()
-    );
+        current->pid());
 
     dump(regs);
     dump_backtrace();
@@ -195,14 +191,15 @@ void exception_7_handler(RegisterDump& regs)
     if (g_last_fpu_thread == current)
         return;
     if (g_last_fpu_thread) {
-        asm volatile("fxsave %0":"=m"(g_last_fpu_thread->fpu_state()));
+        asm volatile("fxsave %0"
+                     : "=m"(g_last_fpu_thread->fpu_state()));
     } else {
         asm volatile("fnclex");
     }
     g_last_fpu_thread = current;
 
     if (current->has_used_fpu()) {
-        asm volatile("fxrstor %0"::"m"(current->fpu_state()));
+        asm volatile("fxrstor %0" ::"m"(current->fpu_state()));
     } else {
         asm volatile("fninit");
         current->set_has_used_fpu(true);
@@ -214,7 +211,6 @@ void exception_7_handler(RegisterDump& regs)
 #endif
 }
 
-
 // 0: Divide error
 EH_ENTRY_NO_CODE(0);
 void exception_0_handler(RegisterDump& regs)
@@ -222,8 +218,7 @@ void exception_0_handler(RegisterDump& regs)
     kprintf("%s Division by zero: %s(%u)\n",
         current->process().is_ring0() ? "Kernel" : "User",
         current->process().name().characters(),
-        current->pid()
-    );
+        current->pid());
 
     dump(regs);
 
@@ -234,7 +229,6 @@ void exception_0_handler(RegisterDump& regs)
 
     current->process().crash(SIGFPE);
 }
-
 
 // 13: General Protection Fault
 EH_ENTRY(13);
@@ -259,10 +253,12 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     ASSERT(current);
 
     dword faultAddress;
-    asm ("movl %%cr2, %%eax":"=a"(faultAddress));
+    asm("movl %%cr2, %%eax"
+        : "=a"(faultAddress));
 
     dword fault_page_directory;
-    asm ("movl %%cr3, %%eax":"=a"(fault_page_directory));
+    asm("movl %%cr3, %%eax"
+        : "=a"(fault_page_directory));
 
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s L%x\n",
@@ -299,17 +295,21 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     }
 }
 
-#define EH(i, msg) \
-    static void _exception ## i () \
-    { \
-        kprintf(msg"\n"); \
-        dword cr0, cr2, cr3, cr4; \
-        asm ("movl %%cr0, %%eax":"=a"(cr0)); \
-        asm ("movl %%cr2, %%eax":"=a"(cr2)); \
-        asm ("movl %%cr3, %%eax":"=a"(cr3)); \
-        asm ("movl %%cr4, %%eax":"=a"(cr4)); \
+#define EH(i, msg)                                                    \
+    static void _exception##i()                                       \
+    {                                                                 \
+        kprintf(msg "\n");                                            \
+        dword cr0, cr2, cr3, cr4;                                     \
+        asm("movl %%cr0, %%eax"                                       \
+            : "=a"(cr0));                                             \
+        asm("movl %%cr2, %%eax"                                       \
+            : "=a"(cr2));                                             \
+        asm("movl %%cr3, %%eax"                                       \
+            : "=a"(cr3));                                             \
+        asm("movl %%cr4, %%eax"                                       \
+            : "=a"(cr4));                                             \
         kprintf("CR0=%x CR2=%x CR3=%x CR4=%x\n", cr0, cr2, cr3, cr4); \
-        hang(); \
+        hang();                                                       \
     }
 
 EH(1, "Debug exception")
@@ -350,7 +350,8 @@ void flush_gdt()
 {
     s_gdtr.address = s_gdt;
     s_gdtr.limit = (s_gdt_length * 8) - 1;
-    asm("lgdt %0"::"m"(s_gdtr):"memory");
+    asm("lgdt %0" ::"m"(s_gdtr)
+        : "memory");
 }
 
 void gdt_init()
@@ -379,16 +380,13 @@ void gdt_init()
         "mov %%ax, %%es\n"
         "mov %%ax, %%fs\n"
         "mov %%ax, %%gs\n"
-        "mov %%ax, %%ss\n"
-        :: "a"(0x10)
-        : "memory"
-    );
+        "mov %%ax, %%ss\n" ::"a"(0x10)
+        : "memory");
 
     // Make sure CS points to the kernel code descriptor.
     asm volatile(
         "ljmpl $0x8, $sanity\n"
-        "sanity:\n"
-    );
+        "sanity:\n");
 }
 
 static void unimp_trap()
@@ -413,20 +411,20 @@ void unregister_irq_handler(byte irq, IRQHandler& handler)
 void register_interrupt_handler(byte index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((dword)(f) & 0xffff0000) | 0x8e00;
+    s_idt[index].high = ((dword)(f)&0xffff0000) | 0x8e00;
     flush_idt();
 }
 
 void register_user_callable_interrupt_handler(byte index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((dword)(f) & 0xffff0000) | 0xef00;
+    s_idt[index].high = ((dword)(f)&0xffff0000) | 0xef00;
     flush_idt();
 }
 
 void flush_idt()
 {
-    asm("lidt %0"::"m"(s_idtr));
+    asm("lidt %0" ::"m"(s_idtr));
 }
 
 /* If an 8259 gets cranky, it'll generate a spurious IRQ7.
@@ -438,8 +436,7 @@ extern "C" void irq7_handler();
 asm(
     ".globl irq7_handler \n"
     "irq7_handler: \n"
-    "   iret\n"
-);
+    "   iret\n");
 
 void idt_init()
 {
@@ -478,7 +475,7 @@ void idt_init()
 
 void load_task_register(word selector)
 {
-    asm("ltr %0"::"r"(selector));
+    asm("ltr %0" ::"r"(selector));
 }
 
 void handle_irq()
@@ -511,7 +508,8 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
     kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
     dump_backtrace();
     asm volatile("hlt");
-    for (;;);
+    for (;;)
+        ;
 }
 #endif
 
@@ -524,6 +522,5 @@ void sse_init()
         "mov %eax, %cr0\n"
         "mov %cr4, %eax\n"
         "orl $0x600, %eax\n"
-        "mov %eax, %cr4\n"
-    );
+        "mov %eax, %cr4\n");
 }

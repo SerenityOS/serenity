@@ -1,7 +1,7 @@
 #include "FullDevice.h"
-#include <LibC/errno_numbers.h>
 #include <AK/StdLibExtras.h>
 #include <AK/kstdio.h>
+#include <LibC/errno_numbers.h>
 
 FullDevice::FullDevice()
     : CharacterDevice(1, 7)
@@ -30,4 +30,3 @@ ssize_t FullDevice::write(FileDescription&, const byte*, ssize_t size)
         return 0;
     return -ENOSPC;
 }
-

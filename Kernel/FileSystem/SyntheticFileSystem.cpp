@@ -1,7 +1,7 @@
-#include <Kernel/FileSystem/SyntheticFileSystem.h>
-#include <Kernel/FileSystem/FileDescription.h>
-#include <LibC/errno_numbers.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/SyntheticFileSystem.h>
+#include <LibC/errno_numbers.h>
 
 //#define SYNTHFS_DEBUG
 
@@ -140,13 +140,13 @@ InodeIdentifier SynthFS::root_inode() const
 
 RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, off_t size, dev_t, int& error)
 {
-    (void) parentInode;
-    (void) name;
-    (void) mode;
-    (void) size;
-    (void) error;
+    (void)parentInode;
+    (void)name;
+    (void)mode;
+    (void)size;
+    (void)error;
     kprintf("FIXME: Implement SyntheticFileSystem::create_inode().\n");
-    return { };
+    return {};
 }
 
 RetainPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
@@ -166,7 +166,7 @@ RetainPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const
     LOCKER(m_lock);
     auto it = m_inodes.find(inode.index());
     if (it == m_inodes.end())
-        return { };
+        return {};
     return (*it).value;
 }
 
@@ -243,7 +243,7 @@ InodeIdentifier SynthFSInode::lookup(StringView name)
         if (child->m_name == name)
             return child->identifier();
     }
-    return { };
+    return {};
 }
 
 void SynthFSInode::flush_metadata()

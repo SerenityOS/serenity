@@ -1,11 +1,11 @@
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/FileSystem/Inode.h>
+#include "CMOS.h"
+#include "Process.h"
+#include "StdLib.h"
+#include "i386.h"
 #include <AK/Assertions.h>
 #include <AK/kstdio.h>
-#include "i386.h"
-#include "StdLib.h"
-#include "Process.h"
-#include "CMOS.h"
+#include <Kernel/FileSystem/Inode.h>
+#include <Kernel/VM/MemoryManager.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
@@ -96,12 +96,12 @@ void MemoryManager::initialize_paging()
     dbgprintf("MM: Installing page directory\n");
 #endif
 
-    asm volatile("movl %%eax, %%cr3"::"a"(kernel_page_directory().cr3()));
+    asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
     asm volatile(
         "movl %%cr0, %%eax\n"
         "orl $0x80000001, %%eax\n"
-        "movl %%eax, %%cr0\n"
-        :::"%eax", "memory");
+        "movl %%eax, %%cr0\n" ::
+            : "%eax", "memory");
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Paging initialized.\n");
@@ -302,7 +302,6 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
     return true;
 }
 
-
 bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_region)
 {
     ASSERT(region.page_directory());
@@ -416,7 +415,7 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page(ShouldZeroFill sho
     if (1 > m_free_physical_pages.size()) {
         kprintf("FUCK! No physical pages available.\n");
         ASSERT_NOT_REACHED();
-        return { };
+        return {};
     }
 #ifdef MM_DEBUG
     dbgprintf("MM: allocate_physical_page vending P%x (%u remaining)\n", m_free_physical_pages.last()->paddr().get(), m_free_physical_pages.size());
@@ -436,7 +435,7 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
     if (1 > m_free_supervisor_physical_pages.size()) {
         kprintf("FUCK! No physical pages available.\n");
         ASSERT_NOT_REACHED();
-        return { };
+        return {};
     }
 #ifdef MM_DEBUG
     dbgprintf("MM: allocate_supervisor_physical_page vending P%x (%u remaining)\n", m_free_supervisor_physical_pages.last()->paddr().get(), m_free_supervisor_physical_pages.size());
@@ -451,21 +450,24 @@ void MemoryManager::enter_process_paging_scope(Process& process)
     ASSERT(current);
     InterruptDisabler disabler;
     current->tss().cr3 = process.page_directory().cr3();
-    asm volatile("movl %%eax, %%cr3"::"a"(process.page_directory().cr3()):"memory");
+    asm volatile("movl %%eax, %%cr3" ::"a"(process.page_directory().cr3())
+                 : "memory");
 }
 
 void MemoryManager::flush_entire_tlb()
 {
     asm volatile(
         "mov %%cr3, %%eax\n"
-        "mov %%eax, %%cr3\n"
-        ::: "%eax", "memory"
-    );
+        "mov %%eax, %%cr3\n" ::
+            : "%eax", "memory");
 }
 
 void MemoryManager::flush_tlb(LinearAddress laddr)
 {
-    asm volatile("invlpg %0": :"m" (*(char*)laddr.get()) : "memory");
+    asm volatile("invlpg %0"
+                 :
+                 : "m"(*(char*)laddr.get())
+                 : "memory");
 }
 
 void MemoryManager::map_for_kernel(LinearAddress laddr, PhysicalAddress paddr)

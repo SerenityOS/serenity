@@ -1,7 +1,7 @@
-#include <Kernel/FileSystem/Inode.h>
 #include <AK/StringBuilder.h>
-#include <Kernel/VM/VMObject.h>
+#include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Net/LocalSocket.h>
+#include <Kernel/VM/VMObject.h>
 
 HashTable<Inode*>& all_inodes()
 {

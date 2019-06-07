@@ -1,16 +1,16 @@
 #include "PS2MouseDevice.h"
 #include "IO.h"
 
-#define IRQ_MOUSE                1
-#define I8042_BUFFER             0x60
-#define I8042_STATUS             0x64
-#define I8042_ACK                0xFA
-#define I8042_BUFFER_FULL        0x01
-#define I8042_WHICH_BUFFER       0x20
-#define I8042_MOUSE_BUFFER       0x20
-#define I8042_KEYBOARD_BUFFER    0x00
+#define IRQ_MOUSE 1
+#define I8042_BUFFER 0x60
+#define I8042_STATUS 0x64
+#define I8042_ACK 0xFA
+#define I8042_BUFFER_FULL 0x01
+#define I8042_WHICH_BUFFER 0x20
+#define I8042_MOUSE_BUFFER 0x20
+#define I8042_KEYBOARD_BUFFER 0x00
 
-#define PS2MOUSE_GET_DEVICE_ID   0xF2
+#define PS2MOUSE_GET_DEVICE_ID 0xF2
 #define PS2MOUSE_SET_SAMPLE_RATE 0xF3
 
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
@@ -54,8 +54,7 @@ void PS2MouseDevice::handle_irq()
                 m_data[2],
                 (m_data[0] & 1) ? "Left" : "",
                 (m_data[0] & 2) ? "Right" : "",
-                m_queue.size()
-            );
+                m_queue.size());
 #endif
             parse_data_packet();
         };

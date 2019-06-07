@@ -27,4 +27,3 @@ bool DiskDevice::write(DiskOffset offset, unsigned length, const byte* in)
     ASSERT(end_block <= 0xffffffff);
     return write_blocks(first_block, end_block - first_block, in);
 }
-

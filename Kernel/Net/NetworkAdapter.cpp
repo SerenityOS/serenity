@@ -1,10 +1,10 @@
-#include <Kernel/Net/NetworkAdapter.h>
-#include <Kernel/Net/EthernetFrameHeader.h>
-#include <Kernel/Net/EtherType.h>
-#include <Kernel/StdLib.h>
-#include <Kernel/kmalloc.h>
 #include <AK/HashTable.h>
 #include <Kernel/Lock.h>
+#include <Kernel/Net/EtherType.h>
+#include <Kernel/Net/EthernetFrameHeader.h>
+#include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/StdLib.h>
+#include <Kernel/kmalloc.h>
 
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {
@@ -81,7 +81,7 @@ ByteBuffer NetworkAdapter::dequeue_packet()
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())
-        return { };
+        return {};
     return m_packet_queue.take_first();
 }
 

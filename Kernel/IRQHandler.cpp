@@ -1,6 +1,6 @@
 #include "IRQHandler.h"
-#include "i386.h"
 #include "PIC.h"
+#include "i386.h"
 
 IRQHandler::IRQHandler(byte irq)
     : m_irq_number(irq)
@@ -22,4 +22,3 @@ void IRQHandler::disable_irq()
 {
     PIC::disable(m_irq_number);
 }
-

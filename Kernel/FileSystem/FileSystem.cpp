@@ -1,11 +1,11 @@
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
-#include <LibC/errno_numbers.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/Net/LocalSocket.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <LibC/errno_numbers.h>
 
 static dword s_lastFileSystemID;
 static HashMap<dword, FS*>* s_fs_map;
@@ -16,7 +16,6 @@ static HashMap<dword, FS*>& all_fses()
         s_fs_map = new HashMap<dword, FS*>();
     return *s_fs_map;
 }
-
 
 FS::FS()
     : m_fsid(++s_lastFileSystemID)

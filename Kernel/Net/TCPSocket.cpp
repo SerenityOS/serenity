@@ -1,9 +1,9 @@
-#include <Kernel/Net/TCPSocket.h>
-#include <Kernel/Net/TCP.h>
+#include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
+#include <Kernel/Net/TCP.h>
+#include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Process.h>
-#include <Kernel/Devices/RandomDevice.h>
 
 Lockable<HashMap<word, TCPSocket*>>& TCPSocket::sockets_by_port()
 {
@@ -20,13 +20,12 @@ TCPSocketHandle TCPSocket::from_port(word port)
         LOCKER(sockets_by_port().lock());
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end())
-            return { };
+            return {};
         socket = (*it).value;
         ASSERT(socket);
     }
     return { move(socket) };
 }
-
 
 TCPSocket::TCPSocket(int protocol)
     : IPv4Socket(SOCK_STREAM, protocol)
@@ -102,14 +101,14 @@ void TCPSocket::send_tcp_packet(word flags, const void* payload, int payload_siz
         tcp_packet.has_syn() ? "SYN" : "",
         tcp_packet.has_ack() ? "ACK" : "",
         tcp_packet.sequence_number(),
-        tcp_packet.ack_number()
-    );
+        tcp_packet.ack_number());
     adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::TCP, move(buffer));
 }
 
 NetworkOrdered<word> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, word payload_size)
 {
-    struct [[gnu::packed]] PseudoHeader {
+    struct [[gnu::packed]] PseudoHeader
+    {
         IPv4Address source;
         IPv4Address destination;
         byte zero;

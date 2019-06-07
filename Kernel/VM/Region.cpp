@@ -1,8 +1,8 @@
-#include <Kernel/VM/Region.h>
-#include <Kernel/VM/VMObject.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/Region.h>
+#include <Kernel/VM/VMObject.h>
 
 Region::Region(const Range& range, String&& n, byte access, bool cow)
     : m_range(range)
@@ -72,10 +72,10 @@ Retained<Region> Region::clone()
     if (m_shared || (is_readable() && !is_writable())) {
 #ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
-                  current->process().name().characters(),
-                  current->pid(),
-                  m_name.characters(),
-                  laddr().get());
+            current->process().name().characters(),
+            current->pid(),
+            m_name.characters(),
+            laddr().get());
 #endif
         // Create a new region backed by the same VMObject.
         return adopt(*new Region(m_range, m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_access));
@@ -83,10 +83,10 @@ Retained<Region> Region::clone()
 
 #ifdef MM_DEBUG
     dbgprintf("%s<%u> Region::clone(): cowing %s (L%x)\n",
-              current->process().name().characters(),
-              current->pid(),
-              m_name.characters(),
-              laddr().get());
+        current->process().name().characters(),
+        current->pid(),
+        m_name.characters(),
+        laddr().get());
 #endif
     // Set up a COW region. The parent (this) region becomes COW as well!
     m_cow_map.fill(true);

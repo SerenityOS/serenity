@@ -1,34 +1,34 @@
-#include <AK/Types.h>
-#include "kmalloc.h"
+#include "KSyms.h"
+#include "PIC.h"
+#include "Process.h"
+#include "RTC.h"
+#include "Scheduler.h"
 #include "i386.h"
 #include "i8253.h"
-#include <Kernel/Devices/KeyboardDevice.h>
-#include "Process.h"
-#include "PIC.h"
-#include <Kernel/Devices/IDEDiskDevice.h>
-#include <Kernel/Devices/MBRPartitionTable.h>
-#include <Kernel/Devices/DiskPartition.h>
-#include "KSyms.h"
-#include <Kernel/Devices/NullDevice.h>
-#include <Kernel/Devices/ZeroDevice.h>
-#include <Kernel/Devices/FullDevice.h>
-#include <Kernel/Devices/RandomDevice.h>
-#include <Kernel/FileSystem/Ext2FileSystem.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/FileSystem/ProcFS.h>
-#include "RTC.h"
-#include <Kernel/TTY/VirtualConsole.h>
-#include "Scheduler.h"
-#include <Kernel/Devices/PS2MouseDevice.h>
-#include <Kernel/TTY/PTYMultiplexer.h>
-#include <Kernel/FileSystem/DevPtsFS.h>
+#include "kmalloc.h"
+#include <AK/Types.h>
 #include <Kernel/Devices/BXVGADevice.h>
+#include <Kernel/Devices/DebugLogDevice.h>
+#include <Kernel/Devices/DiskPartition.h>
+#include <Kernel/Devices/FullDevice.h>
+#include <Kernel/Devices/IDEDiskDevice.h>
+#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Devices/MBRPartitionTable.h>
+#include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/PS2MouseDevice.h>
+#include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Devices/ZeroDevice.h>
+#include <Kernel/FileSystem/DevPtsFS.h>
+#include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KParams.h>
+#include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
-#include <Kernel/Devices/DebugLogDevice.h>
-#include <Kernel/Multiboot.h>
-#include <Kernel/KParams.h>
+#include <Kernel/TTY/PTYMultiplexer.h>
+#include <Kernel/TTY/VirtualConsole.h>
+#include <Kernel/VM/MemoryManager.h>
 
 //#define STRESS_TEST_SPAWNING
 
@@ -49,7 +49,7 @@ VFS* vfs;
 
     for (unsigned i = 0; i < 10000; ++i) {
         int error;
-        Process::create_user_process("/bin/true", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+        Process::create_user_process("/bin/true", (uid_t)100, (gid_t)100, (pid_t)0, error, {}, {}, tty0);
         dbgprintf("malloc stats: alloc:%u free:%u eternal:%u !delta:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal, sum_alloc - last_sum_alloc);
         last_sum_alloc = sum_alloc;
         sleep(60);
@@ -131,7 +131,7 @@ VFS* vfs;
 
     int error;
 
-    auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+    auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)100, (gid_t)100, (pid_t)0, error, {}, {}, tty0);
     if (error != 0) {
         dbgprintf("init_stage2: error spawning SystemServer: %d\n", error);
         hang();

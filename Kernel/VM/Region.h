@@ -10,6 +10,7 @@ class VMObject;
 
 class Region : public Retainable<Region> {
     friend class MemoryManager;
+
 public:
     enum Access
     {

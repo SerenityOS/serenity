@@ -1,29 +1,29 @@
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/IO.h>
 #include <Kernel/PCI.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/Process.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
-#define VBE_DISPI_IOPORT_INDEX           0x01CE
-#define VBE_DISPI_IOPORT_DATA            0x01CF
+#define VBE_DISPI_IOPORT_INDEX 0x01CE
+#define VBE_DISPI_IOPORT_DATA 0x01CF
 
-#define VBE_DISPI_INDEX_ID               0x0
-#define VBE_DISPI_INDEX_XRES             0x1
-#define VBE_DISPI_INDEX_YRES             0x2
-#define VBE_DISPI_INDEX_BPP              0x3
-#define VBE_DISPI_INDEX_ENABLE           0x4
-#define VBE_DISPI_INDEX_BANK             0x5
-#define VBE_DISPI_INDEX_VIRT_WIDTH       0x6
-#define VBE_DISPI_INDEX_VIRT_HEIGHT      0x7
-#define VBE_DISPI_INDEX_X_OFFSET         0x8
-#define VBE_DISPI_INDEX_Y_OFFSET         0x9
-#define VBE_DISPI_DISABLED               0x00
-#define VBE_DISPI_ENABLED                0x01
-#define VBE_DISPI_LFB_ENABLED            0x40
+#define VBE_DISPI_INDEX_ID 0x0
+#define VBE_DISPI_INDEX_XRES 0x1
+#define VBE_DISPI_INDEX_YRES 0x2
+#define VBE_DISPI_INDEX_BPP 0x3
+#define VBE_DISPI_INDEX_ENABLE 0x4
+#define VBE_DISPI_INDEX_BANK 0x5
+#define VBE_DISPI_INDEX_VIRT_WIDTH 0x6
+#define VBE_DISPI_INDEX_VIRT_HEIGHT 0x7
+#define VBE_DISPI_INDEX_X_OFFSET 0x8
+#define VBE_DISPI_INDEX_Y_OFFSET 0x9
+#define VBE_DISPI_DISABLED 0x00
+#define VBE_DISPI_ENABLED 0x01
+#define VBE_DISPI_LFB_ENABLED 0x40
 
-#define BXVGA_DEV_IOCTL_SET_Y_OFFSET     1982
-#define BXVGA_DEV_IOCTL_SET_RESOLUTION   1985
+#define BXVGA_DEV_IOCTL_SET_Y_OFFSET 1982
+#define BXVGA_DEV_IOCTL_SET_RESOLUTION 1985
 struct BXVGAResolution {
     int width;
     int height;
@@ -75,7 +75,7 @@ dword BXVGADevice::find_framebuffer_address()
     static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };
     static const PCI::ID virtualbox_vga_id = { 0x80ee, 0xbeef };
     dword framebuffer_address = 0;
-    PCI::enumerate_all([&framebuffer_address] (const PCI::Address& address, PCI::ID id) {
+    PCI::enumerate_all([&framebuffer_address](const PCI::Address& address, PCI::ID id) {
         if (id == bochs_vga_id || id == virtualbox_vga_id) {
             framebuffer_address = PCI::get_BAR0(address) & 0xfffffff0;
             kprintf("BXVGA: framebuffer @ P%x\n", framebuffer_address);
@@ -95,11 +95,10 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, LinearA
         move(vmo),
         0,
         "BXVGA Framebuffer",
-        prot
-    );
+        prot);
     kprintf("BXVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with laddr L%x\n",
-            process.name().characters(), process.pid(),
-            region, region->size(), framebuffer_address().as_ptr(), region->laddr().get());
+        process.name().characters(), process.pid(),
+        region, region->size(), framebuffer_address().as_ptr(), region->laddr().get());
     ASSERT(region);
     return region;
 }

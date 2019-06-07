@@ -4,8 +4,8 @@
 #include "i8253.h"
 #include <AK/TemporaryChange.h>
 #include <Kernel/Alarm.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Devices/PCSpeaker.h>
+#include <Kernel/FileSystem/FileDescription.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
@@ -72,7 +72,7 @@ bool Scheduler::pick_next()
     auto now_usec = now.tv_usec;
 
     // Check and unblock threads whose wait conditions have been met.
-    Thread::for_each_nonrunnable([&] (Thread& thread) {
+    Thread::for_each_nonrunnable([&](Thread& thread) {
         auto& process = thread.process();
 
         if (thread.state() == Thread::BlockedSleep) {
@@ -82,7 +82,7 @@ bool Scheduler::pick_next()
         }
 
         if (thread.state() == Thread::BlockedWait) {
-            process.for_each_child([&] (Process& child) {
+            process.for_each_child([&](Process& child) {
                 if (!child.is_dead())
                     return true;
                 if (thread.waitee_pid() == -1 || thread.waitee_pid() == child.pid()) {
@@ -180,7 +180,7 @@ bool Scheduler::pick_next()
         return IterationDecision::Continue;
     });
 
-    Process::for_each([&] (Process& process) {
+    Process::for_each([&](Process& process) {
         if (process.is_dead()) {
             if (current != &process.main_thread() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
                 auto name = process.name();
@@ -199,7 +199,7 @@ bool Scheduler::pick_next()
 
     // Dispatch any pending signals.
     // FIXME: Do we really need this to be a separate pass over the process list?
-    Thread::for_each_living([] (Thread& thread) {
+    Thread::for_each_living([](Thread& thread) {
         if (!thread.has_unmasked_pending_signals())
             return true;
         // FIXME: It would be nice if the Scheduler didn't have to worry about who is "current"
@@ -289,12 +289,12 @@ bool Scheduler::yield()
 {
     InterruptDisabler disabler;
     ASSERT(current);
-//    dbgprintf("%s(%u:%u) yield()\n", current->process().name().characters(), current->pid(), current->tid());
+    //    dbgprintf("%s(%u:%u) yield()\n", current->process().name().characters(), current->pid(), current->tid());
 
     if (!pick_next())
         return false;
 
-//    dbgprintf("yield() jumping to new process: sel=%x, %s(%u:%u)\n", current->far_ptr().selector, current->process().name().characters(), current->pid(), current->tid());
+    //    dbgprintf("yield() jumping to new process: sel=%x, %s(%u:%u)\n", current->far_ptr().selector, current->process().name().characters(), current->pid(), current->tid());
     switch_now();
     return true;
 }
@@ -312,9 +312,7 @@ void Scheduler::switch_now()
     descriptor.type = 9;
     flush_gdt();
     asm("sti\n"
-        "ljmp *(%%eax)\n"
-        ::"a"(&current->far_ptr())
-    );
+        "ljmp *(%%eax)\n" ::"a"(&current->far_ptr()));
 }
 
 bool Scheduler::context_switch(Thread& thread)
@@ -333,9 +331,9 @@ bool Scheduler::context_switch(Thread& thread)
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
         dbgprintf("Scheduler: %s(%u:%u) -> %s(%u:%u) %w:%x\n",
-                  current->process().name().characters(), current->process().pid(), current->tid(),
-                  thread.process().name().characters(), thread.process().pid(), thread.tid(),
-                  thread.tss().cs, thread.tss().eip);
+            current->process().name().characters(), current->process().pid(), current->tid(),
+            thread.process().name().characters(), thread.process().pid(), thread.tid(),
+            thread.tss().cs, thread.tss().eip);
 #endif
     }
 
@@ -456,6 +454,5 @@ void Scheduler::timer_tick(RegisterDump& regs)
     asm(
         "pushf\n"
         "orl $0x00004000, (%esp)\n"
-        "popf\n"
-    );
+        "popf\n");
 }

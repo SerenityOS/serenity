@@ -1,18 +1,17 @@
-#include <Kernel/Net/E1000NetworkAdapter.h>
-#include <Kernel/Net/EthernetFrameHeader.h>
+#include <Kernel/Lock.h>
 #include <Kernel/Net/ARP.h>
+#include <Kernel/Net/E1000NetworkAdapter.h>
+#include <Kernel/Net/EtherType.h>
+#include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
-#include <Kernel/Net/UDP.h>
-#include <Kernel/Net/TCP.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4Socket.h>
-#include <Kernel/Net/TCPSocket.h>
-#include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
+#include <Kernel/Net/TCP.h>
+#include <Kernel/Net/TCPSocket.h>
+#include <Kernel/Net/UDP.h>
+#include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
-#include <Kernel/Net/EtherType.h>
-#include <Kernel/Lock.h>
-
 
 //#define ETHERNET_DEBUG
 #define IPV4_DEBUG
@@ -36,7 +35,7 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 
 class CombinedPacketQueueAlarm : public Alarm {
 public:
-    CombinedPacketQueueAlarm() { }
+    CombinedPacketQueueAlarm() {}
 
     virtual bool is_ringing() const override
     {
@@ -61,7 +60,7 @@ void NetworkTask_main()
     if (adapter)
         adapter->set_ipv4_address(IPv4Address(192, 168, 5, 2));
 
-    auto dequeue_packet = [&] () -> ByteBuffer {
+    auto dequeue_packet = [&]() -> ByteBuffer {
         auto packet = LoopbackAdapter::the().dequeue_packet();
         if (!packet.is_null()) {
             dbgprintf("Receive loopback packet (%d bytes)\n", packet.size());
@@ -69,7 +68,7 @@ void NetworkTask_main()
         }
         if (adapter && adapter->has_queued_packets())
             return adapter->dequeue_packet();
-        return { };
+        return {};
     };
 
     CombinedPacketQueueAlarm queue_alarm;
@@ -91,8 +90,7 @@ void NetworkTask_main()
             eth.source().to_string().characters(),
             eth.destination().to_string().characters(),
             eth.ether_type(),
-            packet.size()
-        );
+            packet.size());
 #endif
 
         switch (eth.ether_type()) {
@@ -117,15 +115,13 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
     if (packet.hardware_type() != 1 || packet.hardware_address_length() != sizeof(MACAddress)) {
         kprintf("handle_arp: Hardware type not ethernet (%w, len=%u)\n",
             packet.hardware_type(),
-            packet.hardware_address_length()
-        );
+            packet.hardware_address_length());
         return;
     }
     if (packet.protocol_type() != EtherType::IPv4 || packet.protocol_address_length() != sizeof(IPv4Address)) {
         kprintf("handle_arp: Protocol type not IPv4 (%w, len=%u)\n",
             packet.hardware_type(),
-            packet.protocol_address_length()
-        );
+            packet.protocol_address_length());
         return;
     }
 
@@ -135,8 +131,7 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
         packet.sender_hardware_address().to_string().characters(),
         packet.sender_protocol_address().to_string().characters(),
         packet.target_hardware_address().to_string().characters(),
-        packet.target_protocol_address().to_string().characters()
-    );
+        packet.target_protocol_address().to_string().characters());
 #endif
 
     if (packet.operation() == ARPOperation::Request) {
@@ -144,7 +139,7 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
         if (auto* adapter = NetworkAdapter::from_ipv4_address(packet.target_protocol_address())) {
             // We do!
             kprintf("handle_arp: Responding to ARP request for my IPv4 address (%s)\n",
-                    adapter->ipv4_address().to_string().characters());
+                adapter->ipv4_address().to_string().characters());
             ARPPacket response;
             response.set_operation(ARPOperation::Response);
             response.set_target_hardware_address(packet.sender_hardware_address());
@@ -183,8 +178,7 @@ void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
 #ifdef IPV4_DEBUG
     kprintf("handle_ipv4: source=%s, target=%s\n",
         packet.source().to_string().characters(),
-        packet.destination().to_string().characters()
-    );
+        packet.destination().to_string().characters());
 #endif
 
     switch ((IPv4Protocol)packet.protocol()) {
@@ -210,8 +204,7 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
         ipv4_packet.source().to_string().characters(),
         ipv4_packet.destination().to_string().characters(),
         icmp_header.type(),
-        icmp_header.code()
-    );
+        icmp_header.code());
 #endif
 
     {
@@ -231,10 +224,9 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
     if (icmp_header.type() == ICMPType::EchoRequest) {
         auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
         kprintf("handle_icmp: EchoRequest from %s: id=%u, seq=%u\n",
-                ipv4_packet.source().to_string().characters(),
-                (word)request.identifier,
-                (word)request.sequence_number
-        );
+            ipv4_packet.source().to_string().characters(),
+            (word)request.identifier,
+            (word)request.sequence_number);
         size_t icmp_packet_size = ipv4_packet.payload_size();
         auto buffer = ByteBuffer::create_zeroed(icmp_packet_size);
         auto& response = *(ICMPEchoPacket*)buffer.pointer();
@@ -267,8 +259,7 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
         udp_packet.source_port(),
         ipv4_packet.destination().to_string().characters(),
         udp_packet.destination_port(),
-        udp_packet.length()
-    );
+        udp_packet.length());
 #endif
 
     auto socket = UDPSocket::from_port(udp_packet.destination_port());
@@ -308,8 +299,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         tcp_packet.has_syn() ? "SYN" : "",
         tcp_packet.has_ack() ? "ACK" : "",
         tcp_packet.window_size(),
-        payload_size
-    );
+        payload_size);
 #endif
 
     auto socket = TCPSocket::from_port(tcp_packet.destination_port());
@@ -350,12 +340,11 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
 
     socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
     kprintf("Got packet with ack_no=%u, seq_no=%u, payload_size=%u, acking it with new ack_no=%u, seq_no=%u\n",
-            tcp_packet.ack_number(),
-            tcp_packet.sequence_number(),
-            payload_size,
-            socket->ack_number(),
-            socket->sequence_number()
-            );
+        tcp_packet.ack_number(),
+        tcp_packet.sequence_number(),
+        payload_size,
+        socket->ack_number(),
+        socket->sequence_number());
     socket->send_tcp_packet(TCPFlags::ACK);
 
     if (payload_size != 0)

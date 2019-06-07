@@ -31,9 +31,9 @@ Retained<Custody> Custody::get_or_create(Custody* parent, const String& name, In
     if (RetainPtr<Custody> cached_custody = get_if_cached(parent, name)) {
         if (&cached_custody->inode() != &inode) {
             dbgprintf("WTF! cached custody for name '%s' has inode=%s, new inode=%s\n",
-                      name.characters(),
-                      cached_custody->inode().identifier().to_string().characters(),
-                      inode.identifier().to_string().characters());
+                name.characters(),
+                cached_custody->inode().identifier().to_string().characters(),
+                inode.identifier().to_string().characters());
         }
         ASSERT(&cached_custody->inode() == &inode);
         return *cached_custody;
@@ -83,4 +83,3 @@ void Custody::did_rename(Badge<VFS>, const String& name)
 {
     m_name = name;
 }
-

@@ -1,10 +1,10 @@
+#include <AK/HashTable.h>
+#include <AK/StdLibExtras.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
-#include <AK/StdLibExtras.h>
-#include <AK/HashTable.h>
 
 //#define FIFO_DEBUG
 
@@ -34,7 +34,7 @@ Retained<FileDescription> FIFO::open_direction(FIFO::Direction direction)
 {
     auto descriptor = FileDescription::create(this);
     attach(direction);
-    descriptor->set_fifo_direction({ }, direction);
+    descriptor->set_fifo_direction({}, direction);
     return descriptor;
 }
 
@@ -98,7 +98,7 @@ ssize_t FIFO::read(FileDescription&, byte* buffer, ssize_t size)
     if (!m_writers && m_buffer.is_empty())
         return 0;
 #ifdef FIFO_DEBUG
-    dbgprintf("fifo: read(%u)\n",size);
+    dbgprintf("fifo: read(%u)\n", size);
 #endif
     ssize_t nread = m_buffer.read(buffer, size);
 #ifdef FIFO_DEBUG

@@ -1,9 +1,9 @@
-#include <Kernel/Net/UDPSocket.h>
-#include <Kernel/Net/UDP.h>
-#include <Kernel/Net/NetworkAdapter.h>
-#include <Kernel/Process.h>
 #include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
+#include <Kernel/Net/UDP.h>
+#include <Kernel/Net/UDPSocket.h>
+#include <Kernel/Process.h>
 
 Lockable<HashMap<word, UDPSocket*>>& UDPSocket::sockets_by_port()
 {
@@ -20,13 +20,12 @@ UDPSocketHandle UDPSocket::from_port(word port)
         LOCKER(sockets_by_port().lock());
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end())
-            return { };
+            return {};
         socket = (*it).value;
         ASSERT(socket);
     }
     return { move(socket) };
 }
-
 
 UDPSocket::UDPSocket(int protocol)
     : IPv4Socket(SOCK_DGRAM, protocol)

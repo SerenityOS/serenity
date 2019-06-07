@@ -25,4 +25,3 @@ ssize_t DebugLogDevice::write(FileDescription&, const byte* data, ssize_t data_s
         IO::out8(0xe9, data[i]);
     return data_size;
 }
-
