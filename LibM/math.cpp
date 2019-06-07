@@ -95,30 +95,33 @@ double fabs(double value)
 {
     return value < 0 ? -value : value;
 }
-double log2(double )
+double log2(double)
 {
     ASSERT_NOT_REACHED();
 }
 
-float log2f(float ){
-    ASSERT_NOT_REACHED();
-
-}
-
-long double log2l(long double ){
+float log2f(float)
+{
     ASSERT_NOT_REACHED();
 }
 
-double frexp(double , int *){
+long double log2l(long double)
+{
     ASSERT_NOT_REACHED();
 }
 
-float frexpf(float , int *){
+double frexp(double, int*)
+{
     ASSERT_NOT_REACHED();
 }
 
-long double frexpl(long double , int *){
+float frexpf(float, int*)
+{
     ASSERT_NOT_REACHED();
+}
 
+long double frexpl(long double, int*)
+{
+    ASSERT_NOT_REACHED();
 }
 }
