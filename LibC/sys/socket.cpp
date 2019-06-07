@@ -1,8 +1,8 @@
-#include <sys/socket.h>
-#include <errno.h>
-#include <Kernel/Syscall.h>
 #include <AK/Assertions.h>
+#include <Kernel/Syscall.h>
+#include <errno.h>
 #include <stdio.h>
+#include <sys/socket.h>
 
 extern "C" {
 
@@ -85,5 +85,4 @@ int getpeername(int sockfd, struct sockaddr* addr, socklen_t* addrlen)
     int rc = syscall(SC_getpeername, sockfd, addr, addrlen);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
 }

@@ -1,6 +1,6 @@
-#include <strings.h>
 #include <assert.h>
 #include <ctype.h>
+#include <strings.h>
 
 extern "C" {
 
@@ -32,5 +32,4 @@ int strncasecmp(const char* s1, const char* s2, size_t n)
     } while (--n);
     return 0;
 }
-
 }

@@ -1,11 +1,11 @@
 #include <AK/Bitmap.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/Vector.h>
-#include <sys/mman.h>
-#include <stdlib.h>
 #include <assert.h>
-#include <stdio.h>
 #include <serenity.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sys/mman.h>
 
 // FIXME: Thread safety.
 
@@ -16,7 +16,7 @@
 #define FREE_SCRUB_BYTE 0x82
 #define MAGIC_PAGE_HEADER 0x42657274
 #define MAGIC_BIGALLOC_HEADER 0x42697267
-#define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE-1) & (~(PAGE_SIZE-1)))
+#define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
 static const size_t number_of_chunked_blocks_to_keep_around_per_size_class = 32;
 static const size_t number_of_big_blocks_to_keep_around_per_size_class = 8;
@@ -45,7 +45,8 @@ struct FreelistEntry {
     FreelistEntry* next;
 };
 
-struct ChunkedBlock : public CommonHeader, public InlineLinkedListNode<ChunkedBlock> {
+struct ChunkedBlock : public CommonHeader
+    , public InlineLinkedListNode<ChunkedBlock> {
     ChunkedBlock(size_t bytes_per_chunk)
     {
         m_magic = MAGIC_PAGE_HEADER;
@@ -59,7 +60,6 @@ struct ChunkedBlock : public CommonHeader, public InlineLinkedListNode<ChunkedBl
             else
                 entry->next = nullptr;
         }
-
     }
 
     ChunkedBlock* m_prev { nullptr };
@@ -309,6 +309,4 @@ void __malloc_init()
     if (getenv("LIBC_LOG_MALLOC"))
         s_log_malloc = true;
 }
-
 }
-

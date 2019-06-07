@@ -1,12 +1,12 @@
-#include <string.h>
-#include <errno.h>
-#include <stdio.h>
-#include <signal.h>
-#include <assert.h>
-#include <stdlib.h>
-#include <AK/Types.h>
-#include <AK/StdLibExtras.h>
 #include "ctype.h"
+#include <AK/StdLibExtras.h>
+#include <AK/Types.h>
+#include <assert.h>
+#include <errno.h>
+#include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
 extern "C" {
 
@@ -42,7 +42,7 @@ size_t strcspn(const char* s, const char* reject)
         do {
             if ((rc = *rp++) == c)
                 return p - 1 - s;
-        } while(rc);
+        } while (rc);
     }
 }
 
@@ -146,17 +146,14 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
             "rep movsl\n"
             : "=S"(src), "=D"(dest)
             : "S"(src), "D"(dest), "c"(dwords)
-            : "memory"
-        );
+            : "memory");
         n -= dwords * sizeof(dword);
         if (n == 0)
             return dest_ptr;
     }
     asm volatile(
-        "rep movsb\n"
-        :: "S"(src), "D"(dest), "c"(n)
-        : "memory"
-    );
+        "rep movsb\n" ::"S"(src), "D"(dest), "c"(n)
+        : "memory");
     return dest_ptr;
 }
 
@@ -173,38 +170,36 @@ void* memset(void* dest_ptr, int c, size_t n)
             "rep stosl\n"
             : "=D"(dest)
             : "D"(dest), "c"(dwords), "a"(expanded_c)
-            : "memory"
-        );
+            : "memory");
         n -= dwords * sizeof(dword);
         if (n == 0)
             return dest_ptr;
     }
     asm volatile(
         "rep stosb\n"
-        : "=D" (dest), "=c" (n)
-        : "0" (dest), "1" (n), "a" (c)
-        : "memory"
-    );
+        : "=D"(dest), "=c"(n)
+        : "0"(dest), "1"(n), "a"(c)
+        : "memory");
     return dest_ptr;
 }
-
 
 void* memmove(void* dest, const void* src, size_t n)
 {
     if (dest < src)
         return memcpy(dest, src, n);
 
-    byte *pd = (byte*)dest;
-    const byte *ps = (const byte*)src;
+    byte* pd = (byte*)dest;
+    const byte* ps = (const byte*)src;
     for (pd += n, ps += n; n--;)
         *--pd = *--ps;
     return dest;
 }
 
-char* strcpy(char* dest, const char *src)
+char* strcpy(char* dest, const char* src)
 {
     char* originalDest = dest;
-    while ((*dest++ = *src++) != '\0');
+    while ((*dest++ = *src++) != '\0')
+        ;
     return originalDest;
 }
 
@@ -213,7 +208,7 @@ char* strncpy(char* dest, const char* src, size_t n)
     size_t i;
     for (i = 0; i < n && src[i] != '\0'; ++i)
         dest[i] = src[i];
-    for ( ; i < n; ++i)
+    for (; i < n; ++i)
         dest[i] = '\0';
     return dest;
 }
@@ -242,7 +237,7 @@ void* memchr(const void* ptr, int c, size_t size)
 
 char* strrchr(const char* str, int ch)
 {
-    char *last = nullptr;
+    char* last = nullptr;
     char c;
     for (; (c = *str); ++str) {
         if (c == ch)
@@ -251,21 +246,21 @@ char* strrchr(const char* str, int ch)
     return last;
 }
 
-char* strcat(char *dest, const char *src)
+char* strcat(char* dest, const char* src)
 {
     size_t dest_length = strlen(dest);
     size_t i;
-    for (i = 0 ; src[i] != '\0' ; i++)
+    for (i = 0; src[i] != '\0'; i++)
         dest[dest_length + i] = src[i];
     dest[dest_length + i] = '\0';
     return dest;
 }
 
-char* strncat(char *dest, const char *src, size_t n)
+char* strncat(char* dest, const char* src, size_t n)
 {
     size_t dest_length = strlen(dest);
     size_t i;
-    for (i = 0 ; i < n && src[i] != '\0' ; i++)
+    for (i = 0; i < n && src[i] != '\0'; i++)
         dest[dest_length + i] = src[i];
     dest[dest_length + i] = '\0';
     return dest;
@@ -387,12 +382,12 @@ char* strstr(const char* haystack, const char* needle)
 char* strpbrk(const char* s, const char* accept)
 {
     while (*s)
-        if(strchr(accept, *s++))
+        if (strchr(accept, *s++))
             return const_cast<char*>(--s);
     return nullptr;
 }
 
-char *strtok(char* str, const char* delim)
+char* strtok(char* str, const char* delim)
 {
     (void)str;
     (void)delim;
@@ -409,10 +404,8 @@ size_t strxfrm(char* dest, const char* src, size_t n)
     size_t i;
     for (i = 0; i < n && src[i] != '\0'; ++i)
         dest[i] = src[i];
-    for ( ; i < n; ++i)
+    for (; i < n; ++i)
         dest[i] = '\0';
     return i;
 }
-
 }
-

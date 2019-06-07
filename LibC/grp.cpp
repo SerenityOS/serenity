@@ -1,9 +1,9 @@
+#include <AK/AKString.h>
 #include <grp.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/mman.h>
-#include <AK/AKString.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -138,5 +138,4 @@ int initgroups(const char* user, gid_t extra_gid)
         gids[count++] = extra_gid;
     return setgroups(count, gids);
 }
-
 }

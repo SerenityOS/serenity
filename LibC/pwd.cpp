@@ -1,9 +1,9 @@
+#include <AK/AKString.h>
 #include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
 #include <sys/mman.h>
-#include <AK/AKString.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -125,5 +125,4 @@ next_entry:
     strncpy(__pwdb_entry->shell_buffer, e_shell.characters(), PWDB_STR_MAX_LEN);
     return __pwdb_entry;
 }
-
 }

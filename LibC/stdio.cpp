@@ -11,7 +11,6 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <unistd.h>
 
 extern "C" {
 
@@ -573,6 +572,4 @@ FILE* tmpfile()
     dbgprintf("FIXME: Implement tmpfile()\n");
     ASSERT_NOT_REACHED();
 }
-
 }
-

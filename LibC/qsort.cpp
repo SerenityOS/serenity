@@ -35,16 +35,16 @@
 static char sccsid[] = "@(#)qsort.c	5.9 (Berkeley) 2/23/91";
 #endif /* LIBC_SCCS and not lint */
 
-#include <sys/types.h>
 #include <stdlib.h>
+#include <sys/types.h>
 
 static void insertion_sort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
 static void insertion_sort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg);
 
-void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
+void qsort(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
 {
-	if (nmemb <= 1)
-		return;
+    if (nmemb <= 1)
+        return;
 
     insertion_sort(bot, nmemb, size, compar);
 }
@@ -64,17 +64,18 @@ void insertion_sort(void* bot, size_t nmemb, size_t size, int (*compar)(const vo
     char *s1, *s2, *t1, *t2, *top;
     top = (char*)bot + nmemb * size;
     for (t1 = (char*)bot + size; t1 < top;) {
-		for (t2 = t1; (t2 -= size) >= bot && compar(t1, t2) < 0;);
-		if (t1 != (t2 += size)) {
-			for (cnt = size; cnt--; ++t1) {
-				ch = *t1;
-				for (s1 = s2 = t1; (s2 -= size) >= t2; s1 = s2)
-					*s1 = *s2;
-				*s1 = ch;
-			}
-		} else
-			t1 += size;
-	}
+        for (t2 = t1; (t2 -= size) >= bot && compar(t1, t2) < 0;)
+            ;
+        if (t1 != (t2 += size)) {
+            for (cnt = size; cnt--; ++t1) {
+                ch = *t1;
+                for (s1 = s2 = t1; (s2 -= size) >= t2; s1 = s2)
+                    *s1 = *s2;
+                *s1 = ch;
+            }
+        } else
+            t1 += size;
+    }
 }
 
 void insertion_sort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const void*, const void*, void*), void* arg)
@@ -84,7 +85,8 @@ void insertion_sort_r(void* bot, size_t nmemb, size_t size, int (*compar)(const 
     char *s1, *s2, *t1, *t2, *top;
     top = (char*)bot + nmemb * size;
     for (t1 = (char*)bot + size; t1 < top;) {
-        for (t2 = t1; (t2 -= size) >= bot && compar(t1, t2, arg) < 0;);
+        for (t2 = t1; (t2 -= size) >= bot && compar(t1, t2, arg) < 0;)
+            ;
         if (t1 != (t2 += size)) {
             for (cnt = size; cnt--; ++t1) {
                 ch = *t1;

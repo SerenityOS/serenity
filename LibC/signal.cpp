@@ -1,10 +1,10 @@
-#include <unistd.h>
+#include <Kernel/Syscall.h>
+#include <assert.h>
 #include <errno.h>
+#include <setjmp.h>
 #include <signal.h>
 #include <stdio.h>
-#include <setjmp.h>
-#include <assert.h>
-#include <Kernel/Syscall.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -160,5 +160,4 @@ int sigsuspend(const sigset_t*)
     dbgprintf("FIXME: Implement sigsuspend()\n");
     ASSERT_NOT_REACHED();
 }
-
 }

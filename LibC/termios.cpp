@@ -1,8 +1,8 @@
+#include <Kernel/Syscall.h>
 #include <assert.h>
 #include <errno.h>
-#include <termios.h>
 #include <sys/ioctl.h>
-#include <Kernel/Syscall.h>
+#include <termios.h>
 
 extern "C" {
 
@@ -27,8 +27,8 @@ int tcsetattr(int fd, int optional_actions, const struct termios* t)
 
 int tcflow(int fd, int action)
 {
-    (void) fd;
-    (void) action;
+    (void)fd;
+    (void)action;
     ASSERT_NOT_REACHED();
 }
 
@@ -48,6 +48,4 @@ speed_t cfgetospeed(const struct termios* tp)
 {
     return tp->c_ospeed;
 }
-
 }
-
