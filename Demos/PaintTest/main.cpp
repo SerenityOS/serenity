@@ -1,13 +1,16 @@
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 #include <SharedGraphics/PNGLoader.h>
 
 class TestWidget final : public GWidget {
 public:
-    TestWidget(GWidget* parent) : GWidget(parent) { }
-    virtual ~TestWidget() override { }
+    TestWidget(GWidget* parent)
+        : GWidget(parent)
+    {
+    }
+    virtual ~TestWidget() override {}
 
     void set_bitmap(RetainPtr<GraphicsBitmap>&& bitmap)
     {
