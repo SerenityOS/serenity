@@ -1,9 +1,9 @@
-#include <WindowServer/WSWindowSwitcher.h>
-#include <WindowServer/WSWindowManager.h>
-#include <WindowServer/WSEvent.h>
-#include <WindowServer/WSScreen.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/StylePainter.h>
+#include <WindowServer/WSEvent.h>
+#include <WindowServer/WSScreen.h>
+#include <WindowServer/WSWindowManager.h>
+#include <WindowServer/WSWindowSwitcher.h>
 
 static WSWindowSwitcher* s_the;
 
@@ -70,8 +70,8 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 void WSWindowSwitcher::draw()
 {
     Painter painter(*m_switcher_window->backing_store());
-    painter.fill_rect({ { }, m_rect.size() }, Color::LightGray);
-    painter.draw_rect({ { }, m_rect.size() }, Color::DarkGray);
+    painter.fill_rect({ {}, m_rect.size() }, Color::LightGray);
+    painter.draw_rect({ {}, m_rect.size() }, Color::DarkGray);
     for (int index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
         Rect item_rect {
@@ -116,14 +116,15 @@ void WSWindowSwitcher::refresh()
     m_selected_index = 0;
     int window_count = 0;
     int longest_title_width = 0;
-    wm.for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, [&] (WSWindow& window) {
+    wm.for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, [&](WSWindow& window) {
         ++window_count;
         longest_title_width = max(longest_title_width, wm.font().width(window.title()));
         if (selected_window == &window)
             m_selected_index = m_windows.size();
         m_windows.append(window.make_weak_ptr());
         return IterationDecision::Continue;
-    }, true);
+    },
+        true);
     if (m_windows.is_empty()) {
         hide();
         return;

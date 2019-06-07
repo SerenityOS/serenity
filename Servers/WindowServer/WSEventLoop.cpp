@@ -1,21 +1,21 @@
-#include <WindowServer/WSEventLoop.h>
-#include <WindowServer/WSEvent.h>
-#include <LibCore/CObject.h>
-#include <WindowServer/WSWindowManager.h>
-#include <WindowServer/WSScreen.h>
-#include <WindowServer/WSClientConnection.h>
-#include <WindowServer/WSAPITypes.h>
-#include <WindowServer/WSCursor.h>
 #include <Kernel/KeyCode.h>
 #include <Kernel/MousePacket.h>
-#include <sys/socket.h>
+#include <LibCore/CObject.h>
+#include <WindowServer/WSAPITypes.h>
+#include <WindowServer/WSClientConnection.h>
+#include <WindowServer/WSCursor.h>
+#include <WindowServer/WSEvent.h>
+#include <WindowServer/WSEventLoop.h>
+#include <WindowServer/WSScreen.h>
+#include <WindowServer/WSWindowManager.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
 #include <sys/select.h>
+#include <sys/socket.h>
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <stdio.h>
-#include <errno.h>
 
 //#define WSMESSAGELOOP_DEBUG
 
@@ -104,7 +104,7 @@ static Vector<Rect, 32> get_rects(const WSAPI_ClientMessage& message, const Byte
 {
     Vector<Rect, 32> rects;
     if (message.rect_count > (WSAPI_ClientMessage::max_inline_rect_count + extra_data.size() / sizeof(WSAPI_Rect))) {
-        return { };
+        return {};
     }
     for (int i = 0; i < min(WSAPI_ClientMessage::max_inline_rect_count, message.rect_count); ++i)
         rects.append(message.rects[i]);
@@ -217,19 +217,19 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         }
 
         post_event(client,
-                   make<WSAPICreateWindowRequest>(client_id,
-                                                  message.window.rect,
-                                                  String(message.text, message.text_length),
-                                                  message.window.has_alpha_channel,
-                                                  message.window.modal,
-                                                  message.window.resizable,
-                                                  message.window.fullscreen,
-                                                  message.window.show_titlebar,
-                                                  message.window.opacity,
-                                                  message.window.base_size,
-                                                  message.window.size_increment,
-                                                  ws_window_type,
-                                                  Color::from_rgba(message.window.background_color)));
+            make<WSAPICreateWindowRequest>(client_id,
+                message.window.rect,
+                String(message.text, message.text_length),
+                message.window.has_alpha_channel,
+                message.window.modal,
+                message.window.resizable,
+                message.window.fullscreen,
+                message.window.show_titlebar,
+                message.window.opacity,
+                message.window.base_size,
+                message.window.size_increment,
+                ws_window_type,
+                Color::from_rgba(message.window.background_color)));
         break;
     }
     case WSAPI_ClientMessage::Type::DestroyWindow:
@@ -320,7 +320,7 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
 
 void WSEventLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added)
 {
-    auto add_fd_to_set = [&max_fd_added] (int fd, auto& set) {
+    auto add_fd_to_set = [&max_fd_added](int fd, auto& set) {
         FD_SET(fd, &set);
         if (fd > max_fd_added)
             max_fd_added = fd;
@@ -328,7 +328,7 @@ void WSEventLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added
     add_fd_to_set(m_keyboard_fd, fds);
     add_fd_to_set(m_mouse_fd, fds);
     add_fd_to_set(m_server_fd, fds);
-    WSClientConnection::for_each_client([&] (WSClientConnection& client) {
+    WSClientConnection::for_each_client([&](WSClientConnection& client) {
         add_fd_to_set(client.fd(), fds);
     });
 }
@@ -341,7 +341,7 @@ void WSEventLoop::process_file_descriptors_after_select(const fd_set& fds)
         drain_keyboard();
     if (FD_ISSET(m_mouse_fd, &fds))
         drain_mouse();
-    WSClientConnection::for_each_client([&] (WSClientConnection& client) {
+    WSClientConnection::for_each_client([&](WSClientConnection& client) {
         if (FD_ISSET(client.fd(), &fds))
             drain_client(client);
     });

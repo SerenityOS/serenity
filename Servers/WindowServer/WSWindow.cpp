@@ -1,7 +1,7 @@
 #include "WSWindow.h"
-#include "WSWindowManager.h"
 #include "WSEvent.h"
 #include "WSEventLoop.h"
+#include "WSWindowManager.h"
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 
@@ -77,10 +77,14 @@ void WSWindow::set_rect(const Rect& rect)
 static WSAPI_MouseButton to_api(MouseButton button)
 {
     switch (button) {
-    case MouseButton::None: return WSAPI_MouseButton::NoButton;
-    case MouseButton::Left: return WSAPI_MouseButton::Left;
-    case MouseButton::Right: return WSAPI_MouseButton::Right;
-    case MouseButton::Middle: return WSAPI_MouseButton::Middle;
+    case MouseButton::None:
+        return WSAPI_MouseButton::NoButton;
+    case MouseButton::Left:
+        return WSAPI_MouseButton::Left;
+    case MouseButton::Right:
+        return WSAPI_MouseButton::Right;
+    case MouseButton::Middle:
+        return WSAPI_MouseButton::Middle;
     }
     ASSERT_NOT_REACHED();
 }
@@ -93,12 +97,23 @@ void WSWindow::handle_mouse_event(const WSMouseEvent& event)
     server_message.window_id = window_id();
 
     switch (event.type()) {
-    case WSEvent::MouseMove: server_message.type = WSAPI_ServerMessage::Type::MouseMove; break;
-    case WSEvent::MouseDown: server_message.type = WSAPI_ServerMessage::Type::MouseDown; break;
-    case WSEvent::MouseDoubleClick: server_message.type = WSAPI_ServerMessage::Type::MouseDoubleClick; break;
-    case WSEvent::MouseUp: server_message.type = WSAPI_ServerMessage::Type::MouseUp; break;
-    case WSEvent::MouseWheel: server_message.type = WSAPI_ServerMessage::Type::MouseWheel; break;
-    default: ASSERT_NOT_REACHED();
+    case WSEvent::MouseMove:
+        server_message.type = WSAPI_ServerMessage::Type::MouseMove;
+        break;
+    case WSEvent::MouseDown:
+        server_message.type = WSAPI_ServerMessage::Type::MouseDown;
+        break;
+    case WSEvent::MouseDoubleClick:
+        server_message.type = WSAPI_ServerMessage::Type::MouseDoubleClick;
+        break;
+    case WSEvent::MouseUp:
+        server_message.type = WSAPI_ServerMessage::Type::MouseUp;
+        break;
+    case WSEvent::MouseWheel:
+        server_message.type = WSAPI_ServerMessage::Type::MouseWheel;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
     }
 
     server_message.mouse.position = event.position();
@@ -134,7 +149,7 @@ void WSWindow::set_minimized(bool minimized)
         return;
     m_minimized = minimized;
     if (!minimized)
-        request_update({ { }, size() });
+        request_update({ {}, size() });
     invalidate();
     WSWindowManager::the().notify_minimization_state_changed(*this);
 }
@@ -291,7 +306,7 @@ void WSWindow::set_default_icon()
 void WSWindow::request_update(const Rect& rect)
 {
     if (m_pending_paint_rects.is_empty()) {
-        deferred_invoke([this] (auto&) {
+        deferred_invoke([this](auto&) {
             client()->post_paint_message(*this);
         });
     }
