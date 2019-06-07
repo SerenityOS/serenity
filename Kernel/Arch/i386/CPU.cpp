@@ -1,10 +1,10 @@
-#include "i386.h"
 #include "Assertions.h"
 #include "IRQHandler.h"
 #include "PIC.h"
 #include "Process.h"
 #include "Scheduler.h"
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/VM/MemoryManager.h>
 

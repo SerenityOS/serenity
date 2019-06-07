@@ -1,9 +1,9 @@
 #include "CMOS.h"
 #include "Process.h"
 #include "StdLib.h"
-#include "i386.h"
 #include <AK/Assertions.h>
 #include <AK/kstdio.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/VM/MemoryManager.h>
 

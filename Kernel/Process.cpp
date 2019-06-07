@@ -4,6 +4,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FIFO.h>
@@ -21,7 +22,6 @@
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/i386.h>
 #include <Kernel/i8253.h>
 #include <Kernel/kmalloc.h>
 #include <LibC/errno_numbers.h>
@@ -1441,8 +1441,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     return current->m_waitee_pid;
 }
 
-enum class KernelMemoryCheckResult
-{
+enum class KernelMemoryCheckResult {
     NotInsideKernelMemory,
     AccessGranted,
     AccessDenied

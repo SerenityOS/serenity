@@ -2,9 +2,9 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/i386.h>
 
 class Thread;
 extern Thread* current;

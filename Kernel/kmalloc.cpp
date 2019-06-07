@@ -5,11 +5,11 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/i386.h>
 #include <Kernel/kmalloc.h>
 
 #define SANITIZE_KMALLOC

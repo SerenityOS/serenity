@@ -3,10 +3,10 @@
 #include "Process.h"
 #include "RTC.h"
 #include "Scheduler.h"
-#include "i386.h"
 #include "i8253.h"
 #include "kmalloc.h"
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/DebugLogDevice.h>
 #include <Kernel/Devices/DiskPartition.h>

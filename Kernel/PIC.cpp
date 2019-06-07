@@ -1,8 +1,8 @@
 #include "PIC.h"
 #include "Assertions.h"
 #include "IO.h"
-#include "i386.h"
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 
 // The slave 8259 is connected to the master's IRQ2 line.
 // This is really only to enhance clarity.

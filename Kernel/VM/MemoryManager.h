@@ -1,6 +1,5 @@
 #pragma once
 
-#include "i386.h"
 #include <AK/AKString.h>
 #include <AK/Badge.h>
 #include <AK/Bitmap.h>
@@ -11,6 +10,7 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
