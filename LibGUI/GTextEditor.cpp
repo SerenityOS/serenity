@@ -22,6 +22,8 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     set_frame_thickness(2);
     set_scrollbars_enabled(is_multi_line());
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
+    // FIXME: Recompute vertical scrollbar step size on font change.
+    vertical_scrollbar().set_step(line_height());
     m_lines.append(make<Line>());
     m_cursor = { 0, 0 };
     create_actions();
