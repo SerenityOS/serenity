@@ -1,6 +1,6 @@
-#include "RTC.h"
-#include "CMOS.h"
 #include <AK/Assertions.h>
+#include <Kernel/CMOS.h>
+#include <Kernel/RTC.h>
 
 namespace RTC {
 

@@ -1,10 +1,10 @@
-#include "VirtualFileSystem.h"
-#include "FileSystem.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 
