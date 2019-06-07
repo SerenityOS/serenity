@@ -1,6 +1,6 @@
 #include "IRCChannel.h"
-#include "IRCClient.h"
 #include "IRCChannelMemberListModel.h"
+#include "IRCClient.h"
 #include <stdio.h>
 #include <time.h>
 
@@ -37,7 +37,7 @@ void IRCChannel::add_member(const String& name, char prefix)
 
 void IRCChannel::remove_member(const String& name)
 {
-    m_members.remove_first_matching([&] (auto& member) { return name == member.name; });
+    m_members.remove_first_matching([&](auto& member) { return name == member.name; });
 }
 
 void IRCChannel::add_message(char prefix, const String& name, const String& text, Color color)

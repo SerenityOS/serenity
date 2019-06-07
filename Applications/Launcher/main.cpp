@@ -1,16 +1,16 @@
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GButton.h>
+#include <LibCore/CConfigFile.h>
+#include <LibCore/CUserInfo.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
-#include <LibCore/CConfigFile.h>
-#include <sys/wait.h>
-#include <signal.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <LibGUI/GButton.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 #include <errno.h>
-#include <LibCore/CUserInfo.h>
+#include <signal.h>
+#include <stdio.h>
+#include <sys/wait.h>
+#include <unistd.h>
 
 static GWindow* make_launcher_window();
 
@@ -47,7 +47,7 @@ public:
         set_icon(GraphicsBitmap::load_from_file(icon_path));
         set_preferred_size({ 50, 50 });
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        on_click = [this] (GButton&) {
+        on_click = [this](GButton&) {
             pid_t child_pid = fork();
             if (!child_pid) {
                 int rc = execl(m_executable_path.characters(), m_executable_path.characters(), nullptr);
@@ -55,7 +55,8 @@ public:
                     perror("execl");
             }
         };
-    } virtual ~LauncherButton() { }
+    }
+    virtual ~LauncherButton() {}
 
 private:
     String m_executable_path;
@@ -78,9 +79,9 @@ GWindow* make_launcher_window()
 
     for (auto& group : config->groups()) {
         new LauncherButton(config->read_entry(group, "Name", group),
-                           config->read_entry(group, "Icon", ""),
-                           config->read_entry(group, "Path", ""),
-                           widget);
+            config->read_entry(group, "Icon", ""),
+            config->read_entry(group, "Path", ""),
+            widget);
     }
 
     return window;

@@ -1,11 +1,11 @@
 #include "TaskbarWindow.h"
 #include "TaskbarButton.h"
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GDesktop.h>
-#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GDesktop.h>
+#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GFrame.h>
+#include <LibGUI/GWindow.h>
 #include <WindowServer/WSAPITypes.h>
 #include <stdio.h>
 
@@ -19,7 +19,7 @@ TaskbarWindow::TaskbarWindow()
 
     on_screen_rect_change(GDesktop::the().rect());
 
-    GDesktop::the().on_rect_change = [this] (const Rect& rect) { on_screen_rect_change(rect); };
+    GDesktop::the().on_rect_change = [this](const Rect& rect) { on_screen_rect_change(rect); };
 
     auto* widget = new GFrame;
     widget->set_fill_with_background_color(true);
@@ -31,7 +31,7 @@ TaskbarWindow::TaskbarWindow()
     widget->set_frame_shadow(FrameShadow::Raised);
     set_main_widget(widget);
 
-    WindowList::the().aid_create_button = [this] (auto& identifier) {
+    WindowList::the().aid_create_button = [this](auto& identifier) {
         return create_button(identifier);
     };
 }
@@ -70,8 +70,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         auto& removed_event = static_cast<GWMWindowRemovedEvent&>(event);
         dbgprintf("WM_WindowRemoved: client_id=%d, window_id=%d\n",
             removed_event.client_id(),
-            removed_event.window_id()
-        );
+            removed_event.window_id());
 #endif
         WindowList::the().remove_window(identifier);
         update();
@@ -83,8 +82,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         dbgprintf("WM_WindowRectChanged: client_id=%d, window_id=%d, rect=%s\n",
             changed_event.client_id(),
             changed_event.window_id(),
-            changed_event.rect().to_string().characters()
-        );
+            changed_event.rect().to_string().characters());
 #endif
         break;
     }
@@ -94,8 +92,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         dbgprintf("WM_WindowIconChanged: client_id=%d, window_id=%d, icon_path=%s\n",
             changed_event.client_id(),
             changed_event.window_id(),
-            changed_event.icon_path().characters()
-        );
+            changed_event.icon_path().characters());
 #endif
         if (auto* window = WindowList::the().window(identifier)) {
             window->set_icon_path(changed_event.icon_path());
@@ -113,8 +110,7 @@ void TaskbarWindow::wm_event(GWMEvent& event)
             changed_event.title().characters(),
             changed_event.rect().to_string().characters(),
             changed_event.is_active(),
-            changed_event.is_minimized()
-        );
+            changed_event.is_minimized());
 #endif
         if (!should_include_window(changed_event.window_type()))
             break;

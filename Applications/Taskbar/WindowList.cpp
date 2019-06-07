@@ -1,6 +1,6 @@
 #include "WindowList.h"
-#include <WindowServer/WSAPITypes.h>
 #include <LibGUI/GEventLoop.h>
+#include <WindowServer/WSAPITypes.h>
 
 WindowList& WindowList::the()
 {
@@ -25,7 +25,7 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
         return *it->value;
     auto window = make<Window>(identifier);
     window->set_button(aid_create_button(identifier));
-    window->button()->on_click = [window = window.ptr(), identifier] (GButton&) {
+    window->button()->on_click = [window = window.ptr(), identifier](GButton&) {
         WSAPI_ClientMessage message;
         if (window->is_minimized() || !window->is_active()) {
             message.type = WSAPI_ClientMessage::Type::WM_SetActiveWindow;

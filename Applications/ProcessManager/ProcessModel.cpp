@@ -2,8 +2,8 @@
 #include "GraphWidget.h"
 #include <LibCore/CFile.h>
 #include <fcntl.h>
-#include <stdio.h>
 #include <pwd.h>
+#include <stdio.h>
 
 ProcessModel::ProcessModel(GraphWidget& graph)
     : m_graph(graph)
@@ -42,34 +42,56 @@ int ProcessModel::column_count(const GModelIndex&) const
 String ProcessModel::column_name(int column) const
 {
     switch (column) {
-    case Column::Icon: return "";
-    case Column::PID: return "PID";
-    case Column::State: return "State";
-    case Column::User: return "User";
-    case Column::Priority: return "Pr";
-    case Column::Linear: return "Linear";
-    case Column::Physical: return "Physical";
-    case Column::CPU: return "CPU";
-    case Column::Name: return "Name";
-    case Column::Syscalls: return "Syscalls";
-    default: ASSERT_NOT_REACHED();
+    case Column::Icon:
+        return "";
+    case Column::PID:
+        return "PID";
+    case Column::State:
+        return "State";
+    case Column::User:
+        return "User";
+    case Column::Priority:
+        return "Pr";
+    case Column::Linear:
+        return "Linear";
+    case Column::Physical:
+        return "Physical";
+    case Column::CPU:
+        return "CPU";
+    case Column::Name:
+        return "Name";
+    case Column::Syscalls:
+        return "Syscalls";
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
 
 GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
 {
     switch (column) {
-    case Column::Icon: return { 16, TextAlignment::CenterLeft };
-    case Column::PID: return { 32, TextAlignment::CenterRight };
-    case Column::State: return { 75, TextAlignment::CenterLeft };
-    case Column::Priority: return { 16, TextAlignment::CenterLeft };
-    case Column::User: return { 50, TextAlignment::CenterLeft };
-    case Column::Linear: return { 65, TextAlignment::CenterRight };
-    case Column::Physical: return { 65, TextAlignment::CenterRight };
-    case Column::CPU: return { 32, TextAlignment::CenterRight };
-    case Column::Name: return { 140, TextAlignment::CenterLeft };
-    case Column::Syscalls: return { 60, TextAlignment::CenterRight };
-    default: ASSERT_NOT_REACHED();
+    case Column::Icon:
+        return { 16, TextAlignment::CenterLeft };
+    case Column::PID:
+        return { 32, TextAlignment::CenterRight };
+    case Column::State:
+        return { 75, TextAlignment::CenterLeft };
+    case Column::Priority:
+        return { 16, TextAlignment::CenterLeft };
+    case Column::User:
+        return { 50, TextAlignment::CenterLeft };
+    case Column::Linear:
+        return { 65, TextAlignment::CenterRight };
+    case Column::Physical:
+        return { 65, TextAlignment::CenterRight };
+    case Column::CPU:
+        return { 32, TextAlignment::CenterRight };
+    case Column::Name:
+        return { 140, TextAlignment::CenterLeft };
+    case Column::Syscalls:
+        return { 60, TextAlignment::CenterRight };
+    default:
+        ASSERT_NOT_REACHED();
     }
 }
 
@@ -87,10 +109,14 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
 
     if (role == Role::Sort) {
         switch (index.column()) {
-        case Column::Icon: return 0;
-        case Column::PID: return process.current_state.pid;
-        case Column::State: return process.current_state.state;
-        case Column::User: return process.current_state.user;
+        case Column::Icon:
+            return 0;
+        case Column::PID:
+            return process.current_state.pid;
+        case Column::State:
+            return process.current_state.state;
+        case Column::User:
+            return process.current_state.user;
         case Column::Priority:
             if (process.current_state.priority == "Idle")
                 return 0;
@@ -102,23 +128,32 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
                 return 3;
             ASSERT_NOT_REACHED();
             return 3;
-        case Column::Linear: return (int)process.current_state.linear;
-        case Column::Physical: return (int)process.current_state.physical;
-        case Column::CPU: return process.current_state.cpu_percent;
-        case Column::Name: return process.current_state.name;
+        case Column::Linear:
+            return (int)process.current_state.linear;
+        case Column::Physical:
+            return (int)process.current_state.physical;
+        case Column::CPU:
+            return process.current_state.cpu_percent;
+        case Column::Name:
+            return process.current_state.name;
         // FIXME: GVariant with unsigned?
-        case Column::Syscalls: return (int)process.current_state.syscalls;
+        case Column::Syscalls:
+            return (int)process.current_state.syscalls;
         }
         ASSERT_NOT_REACHED();
-        return { };
+        return {};
     }
 
     if (role == Role::Display) {
         switch (index.column()) {
-        case Column::Icon: return *m_generic_process_icon;
-        case Column::PID: return process.current_state.pid;
-        case Column::State: return process.current_state.state;
-        case Column::User: return process.current_state.user;
+        case Column::Icon:
+            return *m_generic_process_icon;
+        case Column::PID:
+            return process.current_state.pid;
+        case Column::State:
+            return process.current_state.state;
+        case Column::User:
+            return process.current_state.user;
         case Column::Priority:
             if (process.current_state.priority == "Idle")
                 return String::empty();
@@ -129,16 +164,21 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             if (process.current_state.priority == "Normal")
                 return *m_normal_priority_icon;
             return process.current_state.priority;
-        case Column::Linear: return pretty_byte_size(process.current_state.linear);
-        case Column::Physical: return pretty_byte_size(process.current_state.physical);
-        case Column::CPU: return process.current_state.cpu_percent;
-        case Column::Name: return process.current_state.name;
+        case Column::Linear:
+            return pretty_byte_size(process.current_state.linear);
+        case Column::Physical:
+            return pretty_byte_size(process.current_state.physical);
+        case Column::CPU:
+            return process.current_state.cpu_percent;
+        case Column::Name:
+            return process.current_state.name;
         // FIXME: It's weird that GVariant doesn't support unsigned ints. Should it?
-        case Column::Syscalls: return (int)process.current_state.syscalls;
+        case Column::Syscalls:
+            return (int)process.current_state.syscalls;
         }
     }
 
-    return { };
+    return {};
 }
 
 void ProcessModel::update()
