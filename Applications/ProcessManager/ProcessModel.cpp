@@ -52,8 +52,8 @@ String ProcessModel::column_name(int column) const
         return "User";
     case Column::Priority:
         return "Pr";
-    case Column::Linear:
-        return "Linear";
+    case Column::Virtual:
+        return "Virtual";
     case Column::Physical:
         return "Physical";
     case Column::CPU:
@@ -80,7 +80,7 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
         return { 16, TextAlignment::CenterLeft };
     case Column::User:
         return { 50, TextAlignment::CenterLeft };
-    case Column::Linear:
+    case Column::Virtual:
         return { 65, TextAlignment::CenterRight };
     case Column::Physical:
         return { 65, TextAlignment::CenterRight };
@@ -128,10 +128,10 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
                 return 3;
             ASSERT_NOT_REACHED();
             return 3;
-        case Column::Linear:
-            return (int)process.current_state.linear;
+        case Column::Virtual:
+            return (int)process.current_state.virtual_size;
         case Column::Physical:
-            return (int)process.current_state.physical;
+            return (int)process.current_state.physical_size;
         case Column::CPU:
             return process.current_state.cpu_percent;
         case Column::Name:
@@ -164,10 +164,10 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             if (process.current_state.priority == "Normal")
                 return *m_normal_priority_icon;
             return process.current_state.priority;
-        case Column::Linear:
-            return pretty_byte_size(process.current_state.linear);
+        case Column::Virtual:
+            return pretty_byte_size(process.current_state.virtual_size);
         case Column::Physical:
-            return pretty_byte_size(process.current_state.physical);
+            return pretty_byte_size(process.current_state.physical_size);
         case Column::CPU:
             return process.current_state.cpu_percent;
         case Column::Name:
@@ -221,9 +221,9 @@ void ProcessModel::update()
         ASSERT(ok);
         state.state = parts[7];
         state.name = parts[11];
-        state.linear = parts[12].to_uint(ok);
+        state.virtual_size = parts[12].to_uint(ok);
         ASSERT(ok);
-        state.physical = parts[13].to_uint(ok);
+        state.physical_size = parts[13].to_uint(ok);
         ASSERT(ok);
         sum_nsched += nsched;
         {

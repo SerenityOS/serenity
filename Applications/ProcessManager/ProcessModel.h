@@ -20,7 +20,7 @@ public:
         Priority,
         User,
         PID,
-        Linear,
+        Virtual,
         Physical,
         Syscalls,
         __Count
@@ -48,8 +48,8 @@ private:
         String state;
         String user;
         String priority;
-        size_t linear;
-        size_t physical;
+        size_t virtual_size;
+        size_t physical_size;
         unsigned syscalls;
         float cpu_percent;
     };
