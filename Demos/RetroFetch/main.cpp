@@ -1,8 +1,8 @@
+#include <AK/Assertions.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <AK/Assertions.h>
 
 static void moveto(int row, int column)
 {
@@ -68,4 +68,3 @@ int main()
     printf("\033[u\n");
     return 0;
 }
-

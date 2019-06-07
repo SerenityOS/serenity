@@ -1,9 +1,9 @@
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GButton.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GButton.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 
 int main(int argc, char** argv)
 {
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     button->set_text("Good-bye");
     button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button->set_preferred_size({ 0, 20 });
-    button->on_click = [&] (GButton&) {
+    button->on_click = [&](GButton&) {
         app.quit();
     };
 
