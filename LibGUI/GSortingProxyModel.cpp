@@ -1,13 +1,13 @@
-#include <LibGUI/GSortingProxyModel.h>
 #include <AK/QuickSort.h>
-#include <stdlib.h>
+#include <LibGUI/GSortingProxyModel.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 GSortingProxyModel::GSortingProxyModel(Retained<GModel>&& target)
     : m_target(move(target))
     , m_key_column(-1)
 {
-    m_target->on_model_update = [this] (GModel&) {
+    m_target->on_model_update = [this](GModel&) {
         resort();
     };
 }
@@ -29,9 +29,9 @@ int GSortingProxyModel::column_count(const GModelIndex& index) const
 GModelIndex GSortingProxyModel::map_to_target(const GModelIndex& index) const
 {
     if (!index.is_valid())
-        return { };
+        return {};
     if (index.row() >= m_row_mappings.size() || index.column() >= column_count())
-        return { };
+        return {};
     return target().index(m_row_mappings[index.row()], index.column());
 }
 
@@ -82,7 +82,7 @@ void GSortingProxyModel::resort()
         did_update();
         return;
     }
-    quick_sort(m_row_mappings.begin(), m_row_mappings.end(), [&] (auto row1, auto row2) -> bool {
+    quick_sort(m_row_mappings.begin(), m_row_mappings.end(), [&](auto row1, auto row2) -> bool {
         auto data1 = target().data(target().index(row1, m_key_column), GModel::Role::Sort);
         auto data2 = target().data(target().index(row2, m_key_column), GModel::Role::Sort);
         if (data1 == data2)

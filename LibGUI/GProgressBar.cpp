@@ -1,6 +1,6 @@
-#include <LibGUI/GProgressBar.h>
-#include <LibGUI/GPainter.h>
 #include <AK/StringBuilder.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GProgressBar.h>
 
 GProgressBar::GProgressBar(GWidget* parent)
     : GFrame(parent)

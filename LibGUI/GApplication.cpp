@@ -1,10 +1,10 @@
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GEventLoop.h>
-#include <LibGUI/GMenuBar.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GWindow.h>
 #include <LibGUI/GLabel.h>
+#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GWindow.h>
 #include <WindowServer/WSAPITypes.h>
 
 static GApplication* s_the;

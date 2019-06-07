@@ -1,5 +1,5 @@
-#include <LibGUI/GSplitter.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GSplitter.h>
 #include <LibGUI/GWindow.h>
 
 GSplitter::GSplitter(Orientation orientation, GWidget* parent)
@@ -40,7 +40,7 @@ void GSplitter::mousedown_event(GMouseEvent& event)
     GWidget* first_resizee { nullptr };
     GWidget* second_resizee { nullptr };
     int fudge = layout()->spacing();
-    for_each_child_widget([&] (auto& child) {
+    for_each_child_widget([&](auto& child) {
         int child_start = m_orientation == Orientation::Horizontal ? child.relative_rect().left() : child.relative_rect().top();
         int child_end = m_orientation == Orientation::Horizontal ? child.relative_rect().right() : child.relative_rect().bottom();
         if (x_or_y > child_end && (x_or_y - fudge) <= child_end)
@@ -65,7 +65,8 @@ void GSplitter::mousemove_event(GMouseEvent& event)
     if (!m_first_resizee || !m_second_resizee) {
         // One or both of the resizees were deleted during an ongoing resize, screw this.
         m_resizing = false;
-        return;;
+        return;
+        ;
     }
     int minimum_size = 0;
     auto new_first_resizee_size = m_first_resizee_start_size;
@@ -112,5 +113,4 @@ void GSplitter::mouseup_event(GMouseEvent& event)
     m_resizing = false;
     if (!rect().contains(event.position()))
         window()->set_override_cursor(GStandardCursor::None);
-
 }

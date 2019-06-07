@@ -1,17 +1,17 @@
-#include <LibGUI/GTextEditor.h>
-#include <LibGUI/GScrollBar.h>
-#include <LibGUI/GFontDatabase.h>
-#include <LibGUI/GClipboard.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GAction.h>
-#include <Kernel/KeyCode.h>
 #include <AK/StringBuilder.h>
-#include <unistd.h>
+#include <Kernel/KeyCode.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GClipboard.h>
+#include <LibGUI/GFontDatabase.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GScrollBar.h>
+#include <LibGUI/GTextEditor.h>
+#include <LibGUI/GWindow.h>
+#include <ctype.h>
 #include <fcntl.h>
 #include <stdio.h>
-#include <ctype.h>
+#include <unistd.h>
 
 GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
@@ -35,29 +35,35 @@ GTextEditor::~GTextEditor()
 
 void GTextEditor::create_actions()
 {
-    m_undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&] (const GAction&) {
+    m_undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&](const GAction&) {
         // FIXME: Undo
-    }, this);
+    },
+        this);
 
-    m_redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&] (const GAction&) {
+    m_redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&](const GAction&) {
         // FIXME: Redo
-    }, this);
+    },
+        this);
 
-    m_cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&] (const GAction&) {
+    m_cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&](const GAction&) {
         cut();
-    }, this);
+    },
+        this);
 
-    m_copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&] (const GAction&) {
+    m_copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
         copy();
-    }, this);
+    },
+        this);
 
-    m_paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&] (const GAction&) {
+    m_paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
         paste();
-    }, this);
+    },
+        this);
 
-    m_delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&] (const GAction&) {
+    m_delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&](const GAction&) {
         do_delete();
-    }, this);
+    },
+        this);
 }
 
 void GTextEditor::set_text(const StringView& text)
@@ -69,7 +75,7 @@ void GTextEditor::set_text(const StringView& text)
     m_lines.clear();
     int start_of_current_line = 0;
 
-    auto add_line = [&] (int current_position) {
+    auto add_line = [&](int current_position) {
         int line_length = current_position - start_of_current_line;
         auto line = make<Line>();
         if (line_length)
@@ -189,7 +195,7 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
 
     if (event.modifiers() & Mod_Shift) {
         if (!has_selection())
-            m_selection.set(m_cursor, { });
+            m_selection.set(m_cursor, {});
     } else {
         m_selection.clear();
     }
@@ -200,7 +206,7 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
 
     if (!(event.modifiers() & Mod_Shift)) {
         if (!has_selection())
-            m_selection.set(m_cursor, { });
+            m_selection.set(m_cursor, {});
     }
 
     if (m_selection.start().is_valid() && m_selection.start() != m_cursor)
@@ -243,7 +249,7 @@ int GTextEditor::ruler_width() const
 Rect GTextEditor::ruler_content_rect(int line_index) const
 {
     if (!m_ruler_visible)
-        return { };
+        return {};
     return {
         0 - ruler_width() + horizontal_scrollbar().value(),
         line_index * line_height(),
@@ -263,7 +269,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
     painter.translate(frame_thickness(), frame_thickness());
 
-    Rect ruler_rect { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar()};
+    Rect ruler_rect { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar() };
 
     if (m_ruler_visible) {
         painter.fill_rect(ruler_rect, Color::LightGray);
@@ -289,8 +295,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                 String::format("%u", i),
                 is_current_line ? Font::default_bold_font() : font(),
                 TextAlignment::CenterRight,
-                is_current_line ? Color::DarkGray : Color::MidGray
-            );
+                is_current_line ? Color::DarkGray : Color::MidGray);
         }
     }
 
@@ -310,7 +315,8 @@ void GTextEditor::paint_event(GPaintEvent& event)
             int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
 
             int selection_left = content_x_for_position({ i, selection_start_column_on_line });
-            int selection_right = content_x_for_position({ i, selection_end_column_on_line });;
+            int selection_right = content_x_for_position({ i, selection_end_column_on_line });
+            ;
 
             Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
             painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
@@ -325,7 +331,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
 void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
 {
     if (event.shift() && !m_selection.is_valid()) {
-        m_selection.set(m_cursor, { });
+        m_selection.set(m_cursor, {});
         did_update_selection();
         update();
         return;
@@ -654,7 +660,7 @@ int GTextEditor::content_x_for_position(const GTextPosition& position) const
 Rect GTextEditor::cursor_content_rect() const
 {
     if (!m_cursor.is_valid())
-        return { };
+        return {};
     ASSERT(!m_lines.is_empty());
     ASSERT(m_cursor.column() <= (current_line().length() + 1));
 
@@ -662,7 +668,7 @@ Rect GTextEditor::cursor_content_rect() const
 
     if (is_single_line()) {
         Rect cursor_rect { cursor_x, 0, 1, font().glyph_height() + 2 };
-        cursor_rect.center_vertically_within({ { }, frame_inner_rect().size() });
+        cursor_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return cursor_rect;
     }
     return { cursor_x, m_cursor.line() * line_height(), 1, line_height() };
@@ -694,7 +700,7 @@ Rect GTextEditor::line_content_rect(int line_index) const
     auto& line = *m_lines[line_index];
     if (is_single_line()) {
         Rect line_rect = { content_x_for_position({ line_index, 0 }), 0, line.length() * glyph_width(), font().glyph_height() + 2 };
-        line_rect.center_vertically_within({ { }, frame_inner_rect().size() });
+        line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
     return {
@@ -887,7 +893,7 @@ void GTextEditor::clear()
 String GTextEditor::selected_text() const
 {
     if (!has_selection())
-        return { };
+        return {};
 
     auto selection = normalized_selection();
     StringBuilder builder;
@@ -1005,7 +1011,7 @@ void GTextEditor::did_change()
     update_content_size();
     if (!m_have_pending_change_notification) {
         m_have_pending_change_notification = true;
-        deferred_invoke([this] (auto&) {
+        deferred_invoke([this](auto&) {
             if (on_change)
                 on_change();
             m_have_pending_change_notification = false;

@@ -1,24 +1,23 @@
-#include <LibCore/CObject.h>
 #include "GEventLoop.h"
 #include "GEvent.h"
 #include "GWindow.h"
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GAction.h>
-#include <LibCore/CNotifier.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GDesktop.h>
-#include <LibGUI/GWidget.h>
-#include <LibC/unistd.h>
-#include <LibC/stdio.h>
+#include <LibC/errno.h>
 #include <LibC/fcntl.h>
+#include <LibC/stdio.h>
+#include <LibC/stdlib.h>
 #include <LibC/string.h>
-#include <LibC/time.h>
 #include <LibC/sys/select.h>
 #include <LibC/sys/socket.h>
 #include <LibC/sys/time.h>
-#include <LibC/errno.h>
-#include <LibC/string.h>
-#include <LibC/stdlib.h>
+#include <LibC/time.h>
+#include <LibC/unistd.h>
+#include <LibCore/CNotifier.h>
+#include <LibCore/CObject.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GApplication.h>
+#include <LibGUI/GDesktop.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GWidget.h>
 #include <sys/uio.h>
 
 //#define GEVENTLOOP_DEBUG
@@ -156,20 +155,42 @@ void GEventLoop::handle_mouse_event(const WSAPI_ServerMessage& event, GWindow& w
 #endif
     GMouseEvent::Type type;
     switch (event.type) {
-    case WSAPI_ServerMessage::Type::MouseMove: type = GEvent::MouseMove; break;
-    case WSAPI_ServerMessage::Type::MouseUp: type = GEvent::MouseUp; break;
-    case WSAPI_ServerMessage::Type::MouseDown: type = GEvent::MouseDown; break;
-    case WSAPI_ServerMessage::Type::MouseDoubleClick: type = GEvent::MouseDoubleClick; break;
-    case WSAPI_ServerMessage::Type::MouseWheel: type = GEvent::MouseWheel; break;
-    default: ASSERT_NOT_REACHED(); break;
+    case WSAPI_ServerMessage::Type::MouseMove:
+        type = GEvent::MouseMove;
+        break;
+    case WSAPI_ServerMessage::Type::MouseUp:
+        type = GEvent::MouseUp;
+        break;
+    case WSAPI_ServerMessage::Type::MouseDown:
+        type = GEvent::MouseDown;
+        break;
+    case WSAPI_ServerMessage::Type::MouseDoubleClick:
+        type = GEvent::MouseDoubleClick;
+        break;
+    case WSAPI_ServerMessage::Type::MouseWheel:
+        type = GEvent::MouseWheel;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+        break;
     }
     GMouseButton button { GMouseButton::None };
     switch (event.mouse.button) {
-    case WSAPI_MouseButton::NoButton: button = GMouseButton::None; break;
-    case WSAPI_MouseButton::Left: button = GMouseButton::Left; break;
-    case WSAPI_MouseButton::Right: button = GMouseButton::Right; break;
-    case WSAPI_MouseButton::Middle: button = GMouseButton::Middle; break;
-    default: ASSERT_NOT_REACHED(); break;
+    case WSAPI_MouseButton::NoButton:
+        button = GMouseButton::None;
+        break;
+    case WSAPI_MouseButton::Left:
+        button = GMouseButton::Left;
+        break;
+    case WSAPI_MouseButton::Right:
+        button = GMouseButton::Right;
+        break;
+    case WSAPI_MouseButton::Middle:
+        button = GMouseButton::Middle;
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+        break;
     }
     post_event(window, make<GMouseEvent>(type, event.mouse.position, event.mouse.buttons, button, event.mouse.modifiers, event.mouse.wheel_delta));
 }

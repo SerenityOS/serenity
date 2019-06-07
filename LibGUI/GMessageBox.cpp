@@ -1,7 +1,7 @@
-#include <LibGUI/GMessageBox.h>
 #include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GLabel.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GMessageBox.h>
 #include <stdio.h>
 
 void GMessageBox::show(const StringView& text, const StringView& title, Type type, CObject* parent)
@@ -73,7 +73,7 @@ void GMessageBox::build()
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     button->set_preferred_size({ 100, 20 });
     button->set_text("OK");
-    button->on_click = [this] (auto&) {
+    button->on_click = [this](auto&) {
         dbgprintf("GMessageBox: OK button clicked\n");
         done(0);
     };

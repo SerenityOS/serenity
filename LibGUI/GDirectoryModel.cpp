@@ -1,15 +1,15 @@
 #include "GDirectoryModel.h"
-#include <dirent.h>
-#include <stdio.h>
-#include <unistd.h>
-#include <grp.h>
-#include <pwd.h>
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <LibGUI/GPainter.h>
-#include <LibCore/CLock.h>
 #include <LibCore/CDirIterator.h>
+#include <LibCore/CLock.h>
+#include <LibGUI/GPainter.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <dirent.h>
+#include <grp.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <unistd.h>
 
 static CLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>& thumbnail_cache()
 {
@@ -94,13 +94,20 @@ int GDirectoryModel::column_count(const GModelIndex&) const
 String GDirectoryModel::column_name(int column) const
 {
     switch (column) {
-    case Column::Icon: return "";
-    case Column::Name: return "Name";
-    case Column::Size: return "Size";
-    case Column::Owner: return "Owner";
-    case Column::Group: return "Group";
-    case Column::Permissions: return "Mode";
-    case Column::Inode: return "Inode";
+    case Column::Icon:
+        return "";
+    case Column::Name:
+        return "Name";
+    case Column::Size:
+        return "Size";
+    case Column::Owner:
+        return "Owner";
+    case Column::Group:
+        return "Group";
+    case Column::Permissions:
+        return "Mode";
+    case Column::Inode:
+        return "Inode";
     }
     ASSERT_NOT_REACHED();
 }
@@ -108,13 +115,20 @@ String GDirectoryModel::column_name(int column) const
 GModel::ColumnMetadata GDirectoryModel::column_metadata(int column) const
 {
     switch (column) {
-    case Column::Icon: return { 16, TextAlignment::Center };
-    case Column::Name: return { 120, TextAlignment::CenterLeft };
-    case Column::Size: return { 80, TextAlignment::CenterRight };
-    case Column::Owner: return { 50, TextAlignment::CenterLeft };
-    case Column::Group: return { 50, TextAlignment::CenterLeft };
-    case Column::Permissions: return { 80, TextAlignment::CenterLeft };
-    case Column::Inode: return { 80, TextAlignment::CenterRight };
+    case Column::Icon:
+        return { 16, TextAlignment::Center };
+    case Column::Name:
+        return { 120, TextAlignment::CenterLeft };
+    case Column::Size:
+        return { 80, TextAlignment::CenterRight };
+    case Column::Owner:
+        return { 50, TextAlignment::CenterLeft };
+    case Column::Group:
+        return { 50, TextAlignment::CenterLeft };
+    case Column::Permissions:
+        return { 80, TextAlignment::CenterLeft };
+    case Column::Inode:
+        return { 80, TextAlignment::CenterRight };
     }
     ASSERT_NOT_REACHED();
 }
@@ -175,8 +189,7 @@ static String permission_string(mode_t mode)
         mode & S_IWGRP ? 'w' : '-',
         mode & S_ISGID ? 's' : (mode & S_IXGRP ? 'x' : '-'),
         mode & S_IROTH ? 'r' : '-',
-        mode & S_IWOTH ? 'w' : '-'
-    );
+        mode & S_IWOTH ? 'w' : '-');
 
     if (mode & S_ISVTX)
         builder.append("t");
@@ -207,31 +220,45 @@ GVariant GDirectoryModel::data(const GModelIndex& index, Role role) const
     auto& entry = this->entry(index.row());
     if (role == Role::Sort) {
         switch (index.column()) {
-        case Column::Icon: return entry.is_directory() ? 0 : 1;
-        case Column::Name: return entry.name;
-        case Column::Size: return (int)entry.size;
-        case Column::Owner: return name_for_uid(entry.uid);
-        case Column::Group: return name_for_gid(entry.gid);
-        case Column::Permissions: return permission_string(entry.mode);
-        case Column::Inode: return (int)entry.inode;
+        case Column::Icon:
+            return entry.is_directory() ? 0 : 1;
+        case Column::Name:
+            return entry.name;
+        case Column::Size:
+            return (int)entry.size;
+        case Column::Owner:
+            return name_for_uid(entry.uid);
+        case Column::Group:
+            return name_for_gid(entry.gid);
+        case Column::Permissions:
+            return permission_string(entry.mode);
+        case Column::Inode:
+            return (int)entry.inode;
         }
         ASSERT_NOT_REACHED();
     }
     if (role == Role::Display) {
         switch (index.column()) {
-        case Column::Icon: return icon_for(entry);
-        case Column::Name: return entry.name;
-        case Column::Size: return (int)entry.size;
-        case Column::Owner: return name_for_uid(entry.uid);
-        case Column::Group: return name_for_gid(entry.gid);
-        case Column::Permissions: return permission_string(entry.mode);
-        case Column::Inode: return (int)entry.inode;
+        case Column::Icon:
+            return icon_for(entry);
+        case Column::Name:
+            return entry.name;
+        case Column::Size:
+            return (int)entry.size;
+        case Column::Owner:
+            return name_for_uid(entry.uid);
+        case Column::Group:
+            return name_for_gid(entry.gid);
+        case Column::Permissions:
+            return permission_string(entry.mode);
+        case Column::Inode:
+            return (int)entry.inode;
         }
     }
     if (role == Role::Icon) {
         return icon_for(entry);
     }
-    return { };
+    return {};
 }
 
 void GDirectoryModel::update()

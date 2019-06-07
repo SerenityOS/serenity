@@ -29,7 +29,6 @@ GAction::GAction(const StringView& text, const GShortcut& shortcut, Function<voi
 {
 }
 
-
 GAction::GAction(const StringView& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : on_activation(move(on_activation_callback))
     , m_text(text)
@@ -99,10 +98,10 @@ void GAction::set_enabled(bool enabled)
     if (m_enabled == enabled)
         return;
     m_enabled = enabled;
-    for_each_toolbar_button([enabled] (GButton& button) {
+    for_each_toolbar_button([enabled](GButton& button) {
         button.set_enabled(enabled);
     });
-    for_each_menu_item([enabled] (GMenuItem& item) {
+    for_each_menu_item([enabled](GMenuItem& item) {
         item.set_enabled(enabled);
     });
 }
@@ -112,10 +111,10 @@ void GAction::set_checked(bool checked)
     if (m_checked == checked)
         return;
     m_checked = checked;
-    for_each_toolbar_button([checked] (GButton& button) {
+    for_each_toolbar_button([checked](GButton& button) {
         button.set_checked(checked);
     });
-    for_each_menu_item([checked] (GMenuItem& item) {
+    for_each_menu_item([checked](GMenuItem& item) {
         item.set_checked(checked);
     });
 }

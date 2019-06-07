@@ -1,5 +1,5 @@
-#include <LibGUI/GSpinBox.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
 
 GSpinBox::GSpinBox(GWidget* parent)
@@ -16,10 +16,10 @@ GSpinBox::GSpinBox(GWidget* parent)
     };
     m_increment_button = new GButton(this);
     m_increment_button->set_text("\xf6");
-    m_increment_button->on_click = [this] (GButton&) { set_value(m_value + 1); };
+    m_increment_button->on_click = [this](GButton&) { set_value(m_value + 1); };
     m_decrement_button = new GButton(this);
     m_decrement_button->set_text("\xf7");
-    m_decrement_button->on_click = [this] (GButton&) { set_value(m_value - 1); };
+    m_decrement_button->on_click = [this](GButton&) { set_value(m_value - 1); };
 }
 
 GSpinBox::~GSpinBox()

@@ -2,13 +2,13 @@
 #include "GEvent.h"
 #include "GEventLoop.h"
 #include "GWindow.h"
-#include <LibGUI/GLayout.h>
 #include <AK/Assertions.h>
-#include <SharedGraphics/GraphicsBitmap.h>
 #include <LibGUI/GAction.h>
-#include <LibGUI/GPainter.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GLayout.h>
 #include <LibGUI/GMenu.h>
+#include <LibGUI/GPainter.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 #include <unistd.h>
 
 GWidget::GWidget(GWidget* parent)
@@ -116,7 +116,7 @@ void GWidget::handle_paint_event(GPaintEvent& event)
 #endif
     }
     paint_event(event);
-    for_each_child_widget([&] (auto& child) {
+    for_each_child_widget([&](auto& child) {
         if (!child.is_visible())
             return IterationDecision::Continue;
         if (child.relative_rect().intersects(event.rect())) {
@@ -418,7 +418,7 @@ void GWidget::invalidate_layout()
     if (m_layout_dirty)
         return;
     m_layout_dirty = true;
-    deferred_invoke([this] (auto&) {
+    deferred_invoke([this](auto&) {
         m_layout_dirty = false;
         auto* w = window();
         if (!w)
@@ -472,7 +472,7 @@ void GWidget::move_to_front()
         return;
     if (parent->children().size() == 1)
         return;
-    parent->children().remove_first_matching([this] (auto& entry) {
+    parent->children().remove_first_matching([this](auto& entry) {
         return entry == this;
     });
     parent->children().append(this);
@@ -486,7 +486,7 @@ void GWidget::move_to_back()
         return;
     if (parent->children().size() == 1)
         return;
-    parent->children().remove_first_matching([this] (auto& entry) {
+    parent->children().remove_first_matching([this](auto& entry) {
         return entry == this;
     });
     parent->children().prepend(this);
