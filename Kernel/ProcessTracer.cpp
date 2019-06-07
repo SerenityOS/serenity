@@ -1,15 +1,13 @@
-#include <Kernel/ProcessTracer.h>
 #include <AK/kstdio.h>
+#include <Kernel/ProcessTracer.h>
 
 ProcessTracer::ProcessTracer(pid_t pid)
     : m_pid(pid)
 {
-
 }
 
 ProcessTracer::~ProcessTracer()
 {
-
 }
 
 void ProcessTracer::did_syscall(dword function, dword arg1, dword arg2, dword arg3, dword result)

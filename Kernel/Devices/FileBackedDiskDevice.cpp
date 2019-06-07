@@ -79,4 +79,3 @@ const char* FileBackedDiskDevice::class_name() const
 {
     return "FileBackedDiskDevice";
 }
-

@@ -1,12 +1,12 @@
 #include "VirtualFileSystem.h"
-#include <Kernel/FileSystem/FileDescription.h>
 #include "FileSystem.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <LibC/errno_numbers.h>
-#include <Kernel/Process.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Process.h>
+#include <LibC/errno_numbers.h>
 
 //#define VFS_DEBUG
 
@@ -104,7 +104,7 @@ bool VFS::is_vfs_root(InodeIdentifier inode) const
 
 void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
 {
-    dir_inode.traverse_as_directory([&] (const FS::DirectoryEntry& entry) {
+    dir_inode.traverse_as_directory([&](const FS::DirectoryEntry& entry) {
         InodeIdentifier resolved_inode;
         if (auto mount = find_mount_for_host(entry.inode))
             resolved_inode = mount->guest();
@@ -586,7 +586,7 @@ String VFS::Mount::absolute_path() const
 InodeIdentifier VFS::Mount::host() const
 {
     if (!m_host_custody)
-        return { };
+        return {};
     return m_host_custody->inode().identifier();
 }
 
@@ -702,11 +702,10 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
             // FIXME: We should limit the recursion here and return -ELOOP if it goes to deep.
             return resolve_path(
                 StringView(symlink_contents.pointer(),
-                symlink_contents.size()),
+                    symlink_contents.size()),
                 *current_parent,
                 parent_custody,
-                options
-            );
+                options);
         }
     }
     return custody_chain.last();

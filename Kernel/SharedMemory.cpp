@@ -1,8 +1,8 @@
-#include <Kernel/SharedMemory.h>
-#include <Kernel/VM/VMObject.h>
+#include <AK/HashMap.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Process.h>
-#include <AK/HashMap.h>
+#include <Kernel/SharedMemory.h>
+#include <Kernel/VM/VMObject.h>
 
 Lockable<HashMap<String, RetainPtr<SharedMemory>>>& shared_memories()
 {

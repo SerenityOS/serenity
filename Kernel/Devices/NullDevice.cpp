@@ -34,4 +34,3 @@ ssize_t NullDevice::write(FileDescription&, const byte*, ssize_t buffer_size)
 {
     return min(PAGE_SIZE, buffer_size);
 }
-

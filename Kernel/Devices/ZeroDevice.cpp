@@ -27,4 +27,3 @@ ssize_t ZeroDevice::write(FileDescription&, const byte*, ssize_t size)
 {
     return min(PAGE_SIZE, size);
 }
-

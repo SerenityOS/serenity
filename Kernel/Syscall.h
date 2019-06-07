@@ -108,7 +108,7 @@
     __ENUMERATE_SYSCALL(getpeername)            \
     __ENUMERATE_SYSCALL(sched_setparam)         \
     __ENUMERATE_SYSCALL(sched_getparam)         \
-    __ENUMERATE_SYSCALL(fchown)                 \
+    __ENUMERATE_SYSCALL(fchown)
 
 namespace Syscall {
 

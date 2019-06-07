@@ -179,7 +179,7 @@ ssize_t FileDescription::get_dir_entries(byte* buffer, ssize_t size)
 
     auto temp_buffer = ByteBuffer::create_uninitialized(size_to_allocate);
     BufferStream stream(temp_buffer);
-    VFS::the().traverse_directory_inode(*m_inode, [&stream] (auto& entry) {
+    VFS::the().traverse_directory_inode(*m_inode, [&stream](auto& entry) {
         stream << (dword)entry.inode.index();
         stream << (byte)entry.file_type;
         stream << (dword)entry.name_length;
@@ -255,7 +255,7 @@ InodeMetadata FileDescription::metadata() const
 {
     if (m_inode)
         return m_inode->metadata();
-    return { };
+    return {};
 }
 
 KResultOr<Region*> FileDescription::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size, int prot)

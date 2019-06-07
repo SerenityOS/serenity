@@ -1,17 +1,17 @@
-#include <AK/Types.h>
-#include "i386.h"
-#include "IO.h"
 #include "PIC.h"
 #include "Assertions.h"
+#include "IO.h"
+#include "i386.h"
+#include <AK/Types.h>
 
 // The slave 8259 is connected to the master's IRQ2 line.
 // This is really only to enhance clarity.
-#define SLAVE_INDEX     2
+#define SLAVE_INDEX 2
 
-#define PIC0_CTL        0x20
-#define PIC0_CMD        0x21
-#define PIC1_CTL        0xA0
-#define PIC1_CMD        0xA1
+#define PIC0_CTL 0x20
+#define PIC0_CMD 0x21
+#define PIC1_CTL 0xA0
+#define PIC1_CMD 0xA1
 
 #ifdef DEBUG_PIC
 static bool initialized;
@@ -74,7 +74,7 @@ void initialize()
 
     /* ICW4 (set x86 mode) */
     IO::out8(PIC0_CMD, 0x01);
-    IO::out8(PIC1_CMD, 0x01 );
+    IO::out8(PIC1_CMD, 0x01);
 
     // Mask -- start out with all IRQs disabled.
     IO::out8(PIC0_CMD, 0xff);

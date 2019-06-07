@@ -1,5 +1,5 @@
-#include <Kernel/TTY/TTY.h>
 #include "Process.h"
+#include <Kernel/TTY/TTY.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
@@ -80,7 +80,7 @@ void TTY::generate_signal(int signal)
         return;
     dbgprintf("%s: Send signal %d to everyone in pgrp %d\n", tty_name().characters(), signal, pgid());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
-    Process::for_each_in_pgrp(pgid(), [&] (auto& process) {
+    Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbgprintf("%s: Send signal %d to %d\n", tty_name().characters(), signal, process.pid());
         process.send_signal(signal, nullptr);
         return true;
@@ -94,21 +94,18 @@ void TTY::set_termios(const termios& t)
         tty_name().characters(),
         should_echo_input(),
         should_generate_signals(),
-        in_canonical_mode()
-    );
+        in_canonical_mode());
     dbgprintf("%s set_termios: ECHOE=%u, ECHOK=%u, ECHONL=%u\n",
-              tty_name().characters(),
-              (m_termios.c_lflag & ECHOE) != 0,
-              (m_termios.c_lflag & ECHOK) != 0,
-              (m_termios.c_lflag & ECHONL) != 0
-              );
+        tty_name().characters(),
+        (m_termios.c_lflag & ECHOE) != 0,
+        (m_termios.c_lflag & ECHOK) != 0,
+        (m_termios.c_lflag & ECHONL) != 0);
     dbgprintf("%s set_termios: ISTRIP=%u, ICRNL=%u, INLCR=%u, IGNCR=%u\n",
-              tty_name().characters(),
-              (m_termios.c_iflag & ISTRIP) != 0,
-              (m_termios.c_iflag & ICRNL) != 0,
-              (m_termios.c_iflag & INLCR) != 0,
-              (m_termios.c_iflag & IGNCR) != 0
-              );
+        tty_name().characters(),
+        (m_termios.c_iflag & ISTRIP) != 0,
+        (m_termios.c_iflag & ICRNL) != 0,
+        (m_termios.c_iflag & INLCR) != 0,
+        (m_termios.c_iflag & IGNCR) != 0);
 }
 
 int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)

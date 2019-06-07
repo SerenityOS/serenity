@@ -1,31 +1,31 @@
-#include <AK/Types.h>
 #include "Process.h"
-#include "kmalloc.h"
-#include "StdLib.h"
-#include "i386.h"
-#include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/Devices/NullDevice.h>
-#include <Kernel/VM/MemoryManager.h>
-#include "i8253.h"
-#include "RTC.h"
-#include <AK/StdLibExtras.h>
-#include <LibC/signal_numbers.h>
-#include <LibC/errno_numbers.h>
-#include "Syscall.h"
-#include "Scheduler.h"
-#include <Kernel/FileSystem/FIFO.h>
 #include "KSyms.h"
-#include <Kernel/Net/Socket.h>
-#include <Kernel/TTY/MasterPTY.h>
-#include <AK/ELF/exec_elf.h>
+#include "RTC.h"
+#include "Scheduler.h"
+#include "StdLib.h"
+#include "Syscall.h"
+#include "i386.h"
+#include "i8253.h"
+#include "kmalloc.h"
 #include <AK/ELF/ELFLoader.h>
+#include <AK/ELF/exec_elf.h>
+#include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
-#include <Kernel/SharedMemory.h>
-#include <Kernel/ProcessTracer.h>
+#include <AK/Types.h>
+#include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/FIFO.h>
+#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/Net/Socket.h>
+#include <Kernel/ProcessTracer.h>
+#include <Kernel/SharedMemory.h>
+#include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <LibC/errno_numbers.h>
+#include <LibC/signal_numbers.h>
 
 //#define DEBUG_POLL_SELECT
 //#define DEBUG_IO
@@ -299,14 +299,13 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     // FIXME(Thread): Kill any threads the moment we commit to the exec().
     if (thread_count() != 1) {
         dbgprintf("Gonna die because I have many threads! These are the threads:\n");
-        for_each_thread([] (Thread& thread) {
+        for_each_thread([](Thread& thread) {
             dbgprintf("Thread{%p}: TID=%d, PID=%d\n", &thread, thread.tid(), thread.pid());
             return IterationDecision::Continue;
         });
         ASSERT(thread_count() == 1);
         ASSERT_NOT_REACHED();
     }
-
 
     auto parts = path.split('/');
     if (parts.is_empty())
@@ -349,7 +348,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         auto old_regions = move(m_regions);
         m_regions.append(*region);
         loader = make<ELFLoader>(region->laddr().as_ptr());
-        loader->map_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) {
+        loader->map_section_hook = [&](LinearAddress laddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             int prot = 0;
@@ -359,10 +358,10 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            (void) allocate_region_with_vmo(laddr, size, vmo.copy_ref(), offset_in_image, String(name), prot);
+            (void)allocate_region_with_vmo(laddr, size, vmo.copy_ref(), offset_in_image, String(name), prot);
             return laddr.as_ptr();
         };
-        loader->alloc_section_hook = [&] (LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
+        loader->alloc_section_hook = [&](LinearAddress laddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             int prot = 0;
@@ -370,7 +369,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_READ;
             if (is_writable)
                 prot |= PROT_WRITE;
-            (void) allocate_region(laddr, size, String(name), prot);
+            (void)allocate_region(laddr, size, String(name), prot);
             return laddr.as_ptr();
         };
         bool success = loader->load();
@@ -406,7 +405,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         auto& daf = m_fds[i];
         if (daf.descriptor && daf.flags & FD_CLOEXEC) {
             daf.descriptor->close();
-            daf = { };
+            daf = {};
         }
     }
 
@@ -636,7 +635,7 @@ Process::~Process()
     m_main_thread = nullptr;
 
     Vector<Thread*, 16> my_threads;
-    for_each_thread([&my_threads] (auto& thread) {
+    for_each_thread([&my_threads](auto& thread) {
         my_threads.append(&thread);
         return IterationDecision::Continue;
     });
@@ -973,7 +972,7 @@ int Process::sys$close(int fd)
     if (!descriptor)
         return -EBADF;
     int rc = descriptor->close();
-    m_fds[fd] = { };
+    m_fds[fd] = {};
     return rc;
 }
 
@@ -1006,8 +1005,8 @@ int Process::sys$access(const char* pathname, int mode)
 
 int Process::sys$fcntl(int fd, int cmd, dword arg)
 {
-    (void) cmd;
-    (void) arg;
+    (void)cmd;
+    (void)arg;
     dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
     auto* descriptor = file_description(fd);
     if (!descriptor)
@@ -1183,7 +1182,7 @@ int Process::sys$killpg(int pgrp, int signum)
 {
     if (signum < 1 || signum >= 32)
         return -EINVAL;
-    (void) pgrp;
+    (void)pgrp;
     ASSERT_NOT_REACHED();
 }
 
@@ -1387,7 +1386,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
     dbgprintf("sys$waitpid(%d, %p, %d)\n", waitee, wstatus, options);
     // FIXME: Respect options
-    (void) options;
+    (void)options;
     if (wstatus)
         if (!validate_write_typed(wstatus))
             return -EFAULT;
@@ -1405,7 +1404,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         if (waitee == -1) {
             pid_t reaped_pid = 0;
             InterruptDisabler disabler;
-            for_each_child([&reaped_pid, &exit_status] (Process& process) {
+            for_each_child([&reaped_pid, &exit_status](Process& process) {
                 if (process.is_dead()) {
                     reaped_pid = process.pid();
                     exit_status = reap(process);
@@ -1442,8 +1441,8 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     return current->m_waitee_pid;
 }
 
-
-enum class KernelMemoryCheckResult {
+enum class KernelMemoryCheckResult
+{
     NotInsideKernelMemory,
     AccessGranted,
     AccessDenied
@@ -1556,7 +1555,7 @@ pid_t Process::sys$setsid()
 {
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
-    Process::for_each_in_pgrp(pid(), [&] (auto&) {
+    Process::for_each_in_pgrp(pid(), [&](auto&) {
         found_process_with_same_pgid_as_my_pid = true;
         return false;
     });
@@ -1781,7 +1780,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         current->m_select_has_timeout = false;
     }
 
-    auto transfer_fds = [&] (auto* fds, auto& vector) -> int {
+    auto transfer_fds = [&](auto* fds, auto& vector) -> int {
         vector.clear_with_capacity();
         if (!fds)
             return 0;
@@ -1809,7 +1808,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         current->block(Thread::State::BlockedSelect);
 
     int marked_fd_count = 0;
-    auto mark_fds = [&] (auto* fds, auto& vector, auto should_mark) {
+    auto mark_fds = [&](auto* fds, auto& vector, auto should_mark) {
         if (!fds)
             return;
         FD_ZERO(fds);
@@ -1820,8 +1819,8 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             }
         }
     };
-    mark_fds(params->readfds, current->m_select_read_fds, [] (auto& descriptor) { return descriptor.can_read(); });
-    mark_fds(params->writefds, current->m_select_write_fds, [] (auto& descriptor) { return descriptor.can_write(); });
+    mark_fds(params->readfds, current->m_select_read_fds, [](auto& descriptor) { return descriptor.can_read(); });
+    mark_fds(params->writefds, current->m_select_write_fds, [](auto& descriptor) { return descriptor.can_write(); });
     // FIXME: We should also mark params->exceptfds as appropriate.
     return marked_fd_count;
 }
@@ -1998,7 +1997,7 @@ void Process::die()
 
     {
         InterruptDisabler disabler;
-        for_each_thread([] (Thread& thread) {
+        for_each_thread([](Thread& thread) {
             if (thread.state() != Thread::State::Dead)
                 thread.set_state(Thread::State::Dying);
             return IterationDecision::Continue;
@@ -2189,7 +2188,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
         if (!validate_write(addr, *addr_length))
             return -EFAULT;
     } else if (addr) {
-       return -EINVAL;
+        return -EINVAL;
     }
     auto* descriptor = file_description(sockfd);
     if (!descriptor)
@@ -2504,7 +2503,7 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
     shared_buffer->m_pid1_region->set_shared(true);
     *buffer = shared_buffer->m_pid1_region->laddr().as_ptr();
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Created shared buffer %d (%u bytes, vmo is %u) for sharing with %d\n", name().characters(), pid(),shared_buffer_id, size, shared_buffer->size(), peer_pid);
+    kprintf("%s(%u): Created shared buffer %d (%u bytes, vmo is %u) for sharing with %d\n", name().characters(), pid(), shared_buffer_id, size, shared_buffer->size(), peer_pid);
 #endif
     shared_buffers().resource().set(shared_buffer_id, move(shared_buffer));
     return shared_buffer_id;
@@ -2573,10 +2572,14 @@ int Process::sys$get_shared_buffer_size(int shared_buffer_id)
 const char* to_string(Process::Priority priority)
 {
     switch (priority) {
-    case Process::IdlePriority: return "Idle";
-    case Process::LowPriority: return "Low";
-    case Process::NormalPriority: return "Normal";
-    case Process::HighPriority: return "High";
+    case Process::IdlePriority:
+        return "Idle";
+    case Process::LowPriority:
+        return "Low";
+    case Process::NormalPriority:
+        return "Normal";
+    case Process::HighPriority:
+        return "High";
     }
     kprintf("to_string(Process::Priority): Invalid priority: %u\n", priority);
     ASSERT_NOT_REACHED();
@@ -2602,14 +2605,14 @@ void Process::send_signal(byte signal, Process* sender)
 int Process::thread_count() const
 {
     int count = 0;
-    for_each_thread([&count] (auto&) {
+    for_each_thread([&count](auto&) {
         ++count;
         return IterationDecision::Continue;
     });
     return count;
 }
 
-int Process::sys$create_thread(int(*entry)(void*), void* argument)
+int Process::sys$create_thread(int (*entry)(void*), void* argument)
 {
     if (!validate_read((const void*)entry, sizeof(void*)))
         return -EFAULT;
@@ -2648,7 +2651,7 @@ int Process::sys$donate(int tid)
         return -EINVAL;
     InterruptDisabler disabler;
     Thread* beneficiary = nullptr;
-    for_each_thread([&] (Thread& thread) {
+    for_each_thread([&](Thread& thread) {
         if (thread.tid() == tid) {
             beneficiary = &thread;
             return IterationDecision::Abort;

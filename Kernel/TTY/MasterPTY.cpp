@@ -1,6 +1,6 @@
 #include "MasterPTY.h"
-#include "SlavePTY.h"
 #include "PTYMultiplexer.h"
+#include "SlavePTY.h"
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>

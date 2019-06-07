@@ -1,7 +1,7 @@
-#include <Kernel/VM/PageDirectory.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PageDirectory.h>
 
 static const dword userspace_range_base = 0x01000000;
 static const dword kernelspace_range_base = 0xc0000000;

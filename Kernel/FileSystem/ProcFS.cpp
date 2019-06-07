@@ -1,20 +1,21 @@
 #include "ProcFS.h"
+#include "Console.h"
+#include "KSyms.h"
 #include "Process.h"
+#include "Scheduler.h"
+#include "StdLib.h"
+#include "i386.h"
+#include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/VM/MemoryManager.h>
-#include "StdLib.h"
-#include "i386.h"
-#include "KSyms.h"
-#include "Console.h"
-#include "Scheduler.h"
 #include <Kernel/PCI.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/kmalloc.h>
-#include <AK/StringBuilder.h>
 #include <LibC/errno_numbers.h>
 
-enum ProcParentDirectory {
+enum ProcParentDirectory
+{
     PDI_AbstractRoot = 0,
     PDI_Root,
     PDI_Root_sys,
@@ -22,7 +23,8 @@ enum ProcParentDirectory {
     PDI_PID_fd,
 };
 
-enum ProcFileType {
+enum ProcFileType
+{
     FI_Invalid = 0,
 
     FI_Root = 1, // directory
@@ -41,7 +43,7 @@ enum ProcFileType {
     FI_Root_pci,
     FI_Root_uptime,
     FI_Root_self, // symlink
-    FI_Root_sys, // directory
+    FI_Root_sys,  // directory
     __FI_Root_End,
 
     FI_PID,
@@ -54,7 +56,7 @@ enum ProcFileType {
     FI_PID_fds,
     FI_PID_exe, // symlink
     FI_PID_cwd, // symlink
-    FI_PID_fd, // directory
+    FI_PID_fd,  // directory
     __FI_PID_End,
 
     FI_MaxStaticFileIndex,
@@ -183,10 +185,10 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
-        return { };
+        return {};
     auto& process = handle->process();
     if (process.number_of_open_file_descriptors() == 0)
-        return { };
+        return {};
     StringBuilder builder;
     for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
         auto* descriptor = process.file_description(i);
@@ -201,12 +203,12 @@ ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
-        return { };
+        return {};
     auto& process = handle->process();
     int fd = to_fd(identifier);
     auto* descriptor = process.file_description(fd);
     if (!descriptor)
-        return { };
+        return {};
     return descriptor->absolute_path().to_byte_buffer();
 }
 
@@ -214,7 +216,7 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
-        return { };
+        return {};
     auto& process = handle->process();
     StringBuilder builder;
     builder.appendf("BEGIN       END         SIZE      COMMIT     FLAGS  NAME\n");
@@ -238,7 +240,7 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
 ByteBuffer procfs$pci(InodeIdentifier)
 {
     StringBuilder builder;
-    PCI::enumerate_all([&builder] (PCI::Address address, PCI::ID id) {
+    PCI::enumerate_all([&builder](PCI::Address address, PCI::ID id) {
         builder.appendf("%b:%b.%b %w:%w\n", address.bus(), address.slot(), address.function(), id.vendor_id, id.device_id);
     });
     return builder.to_byte_buffer();
@@ -255,7 +257,7 @@ ByteBuffer procfs$pid_vmo(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
-        return { };
+        return {};
     auto& process = handle->process();
     StringBuilder builder;
     builder.appendf("BEGIN       END         SIZE        NAME\n");
@@ -275,8 +277,7 @@ ByteBuffer procfs$pid_vmo(InodeIdentifier identifier)
             builder.appendf("P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
                 region->should_cow(i) ? "!" : "",
-                physical_page ? physical_page->retain_count() : 0
-            );
+                physical_page ? physical_page->retain_count() : 0);
         }
         builder.appendf("\n");
     }
@@ -287,7 +288,7 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
-        return { };
+        return {};
     auto& process = handle->process();
     ProcessPagingScope paging_scope(process);
     struct RecognizedSymbol {
@@ -295,7 +296,7 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
         const KSym* ksym;
     };
     StringBuilder builder;
-    process.for_each_thread([&] (Thread& thread) {
+    process.for_each_thread([&](Thread& thread) {
         builder.appendf("Thread %d:\n", thread.tid());
         Vector<RecognizedSymbol, 64> recognized_symbols;
         recognized_symbols.append({ thread.tss().eip, ksymbolicate(thread.tss().eip) });
@@ -326,10 +327,10 @@ ByteBuffer procfs$pid_regs(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
-        return { };
+        return {};
     auto& process = handle->process();
     StringBuilder builder;
-    process.for_each_thread([&] (Thread& thread) {
+    process.for_each_thread([&](Thread& thread) {
         builder.appendf("Thread %d:\n", thread.tid());
         auto& tss = thread.tss();
         builder.appendf("eax: %x\n", tss.eax);
@@ -352,7 +353,7 @@ ByteBuffer procfs$pid_exe(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
-        return { };
+        return {};
     auto& process = handle->process();
     auto* custody = process.executable();
     ASSERT(custody);
@@ -363,7 +364,7 @@ ByteBuffer procfs$pid_cwd(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
-        return { };
+        return {};
     return handle->process().current_directory().absolute_path().to_byte_buffer();
 }
 
@@ -406,7 +407,7 @@ ByteBuffer procfs$mounts(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
     StringBuilder builder;
-    VFS::the().for_each_mount([&builder] (auto& mount) {
+    VFS::the().for_each_mount([&builder](auto& mount) {
         auto& fs = mount.guest_fs();
         builder.appendf("%s @ ", fs.class_name());
         if (!mount.host().is_valid())
@@ -425,7 +426,7 @@ ByteBuffer procfs$df(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
     StringBuilder builder;
-    VFS::the().for_each_mount([&builder] (auto& mount) {
+    VFS::the().for_each_mount([&builder](auto& mount) {
         auto& fs = mount.guest_fs();
         builder.appendf("%s,", fs.class_name());
         builder.appendf("%u,", fs.total_block_count());
@@ -444,7 +445,7 @@ ByteBuffer procfs$cpuinfo(InodeIdentifier)
     {
         CPUID cpuid(0);
         builder.appendf("cpuid:     ");
-        auto emit_dword = [&] (dword value) {
+        auto emit_dword = [&](dword value) {
             builder.appendf("%c%c%c%c",
                 value & 0xff,
                 (value >> 8) & 0xff,
@@ -486,7 +487,7 @@ ByteBuffer procfs$cpuinfo(InodeIdentifier)
         //        and verifying that the returned eax>=0x80000004.
         char buffer[48];
         dword* bufptr = reinterpret_cast<dword*>(buffer);
-        auto copy_brand_string_part_to_buffer = [&] (dword i) {
+        auto copy_brand_string_part_to_buffer = [&](dword i) {
             CPUID cpuid(0x80000002 + i);
             *bufptr++ = cpuid.eax();
             *bufptr++ = cpuid.ebx();
@@ -510,8 +511,7 @@ ByteBuffer procfs$kmalloc(InodeIdentifier)
         "free:         %u\n",
         kmalloc_sum_eternal,
         sum_alloc,
-        sum_free
-    );
+        sum_free);
     return builder.to_byte_buffer();
 }
 
@@ -551,8 +551,7 @@ ByteBuffer procfs$memstat(InodeIdentifier)
         MM.super_physical_pages_in_existence() - MM.m_free_supervisor_physical_pages.size(),
         MM.m_free_supervisor_physical_pages.size(),
         g_kmalloc_call_count,
-        g_kfree_call_count
-    );
+        g_kfree_call_count);
     return builder.to_byte_buffer();
 }
 
@@ -561,7 +560,7 @@ ByteBuffer procfs$all(InodeIdentifier)
     InterruptDisabler disabler;
     auto processes = Process::all_processes();
     StringBuilder builder(processes.size() * 80);
-    auto build_process_line = [&builder] (Process* process) {
+    auto build_process_line = [&builder](Process* process) {
         builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u,%u,%s,%u\n",
             process->pid(),
             process->main_thread().times_scheduled(), // FIXME(Thread): Bill all scheds to the process
@@ -580,8 +579,7 @@ ByteBuffer procfs$all(InodeIdentifier)
             process->amount_shared(),
             process->main_thread().ticks(), // FIXME(Thread): Bill all ticks to the process
             to_string(process->priority()),
-            process->syscall_count()
-        );
+            process->syscall_count());
     };
     build_process_line(Scheduler::colonel());
     for (auto* process : processes)
@@ -601,9 +599,10 @@ ByteBuffer procfs$inodes(InodeIdentifier)
 }
 
 struct SysVariableData final : public ProcFSInodeCustomData {
-    virtual ~SysVariableData() override { }
+    virtual ~SysVariableData() override {}
 
-    enum Type {
+    enum Type
+    {
         Invalid,
         Boolean,
         String,
@@ -617,7 +616,7 @@ static ByteBuffer read_sys_bool(InodeIdentifier inode_id)
 {
     auto inode_ptr = ProcFS::the().get_inode(inode_id);
     if (!inode_ptr)
-        return { };
+        return {};
     auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
     ASSERT(inode.custom_data());
     auto buffer = ByteBuffer::create_uninitialized(2);
@@ -637,7 +636,7 @@ static ssize_t write_sys_bool(InodeIdentifier inode_id, const ByteBuffer& data)
 {
     auto inode_ptr = ProcFS::the().get_inode(inode_id);
     if (!inode_ptr)
-        return { };
+        return {};
     auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
     ASSERT(inode.custom_data());
     if (data.is_empty() || !(data[0] == '0' || data[0] == '1'))
@@ -658,7 +657,7 @@ static ByteBuffer read_sys_string(InodeIdentifier inode_id)
 {
     auto inode_ptr = ProcFS::the().get_inode(inode_id);
     if (!inode_ptr)
-        return { };
+        return {};
     auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
     ASSERT(inode.custom_data());
     auto buffer = ByteBuffer::create_uninitialized(2);
@@ -674,7 +673,7 @@ static ssize_t write_sys_string(InodeIdentifier inode_id, const ByteBuffer& data
 {
     auto inode_ptr = ProcFS::the().get_inode(inode_id);
     if (!inode_ptr)
-        return { };
+        return {};
     auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
     ASSERT(inode.custom_data());
     auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
@@ -730,7 +729,7 @@ const char* ProcFS::class_name() const
 RetainPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, int&)
 {
     kprintf("FIXME: Implement ProcFS::create_inode()?\n");
-    return { };
+    return {};
 }
 
 RetainPtr<Inode> ProcFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
@@ -932,8 +931,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
                 callback({ entry.name, (int)strlen(entry.name), to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
             }
         }
-        }
-        break;
+    } break;
 
     case FI_PID_fd: {
         auto handle = ProcessInspectionHandle::from_pid(pid);
@@ -948,8 +946,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
             int name_length = ksprintf(name, "%u", i);
             callback({ name, name_length, to_identifier_with_fd(fsid(), pid, i), 0 });
         }
-        }
-        break;
+    } break;
     default:
         return true;
     }
@@ -988,7 +985,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
             if (process_exists)
                 return to_identifier(fsid(), PDI_Root, name_as_number, FI_PID);
         }
-        return { };
+        return {};
     }
 
     if (proc_file_type == FI_Root_sys) {
@@ -997,13 +994,13 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
             if (!strcmp(entry.name, name.characters()))
                 return sys_var_to_identifier(fsid(), i);
         }
-        return { };
+        return {};
     }
 
     if (proc_file_type == FI_PID) {
         auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier()));
         if (!handle)
-            return { };
+            return {};
         auto& process = handle->process();
         for (auto& entry : fs().m_entries) {
             if (entry.proc_file_type > __FI_PID_Start && entry.proc_file_type < __FI_PID_End) {
@@ -1016,7 +1013,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
                 }
             }
         }
-        return { };
+        return {};
     }
 
     if (proc_file_type == FI_PID_fd) {
@@ -1028,13 +1025,12 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
                 InterruptDisabler disabler;
                 if (auto* process = Process::from_pid(to_pid(identifier())))
                     fd_exists = process->file_description(name_as_number);
-
             }
             if (fd_exists)
                 return to_identifier_with_fd(fsid(), to_pid(identifier()), name_as_number);
         }
     }
-    return { };
+    return {};
 }
 
 void ProcFSInode::flush_metadata()
@@ -1075,7 +1071,7 @@ size_t ProcFSInode::directory_entry_count() const
 {
     ASSERT(is_directory());
     size_t count = 0;
-    traverse_as_directory([&count] (const FS::DirectoryEntry&) {
+    traverse_as_directory([&count](const FS::DirectoryEntry&) {
         ++count;
         return true;
     });
@@ -1099,7 +1095,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_all] = { "all", FI_Root_all, procfs$all };
     m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, procfs$memstat };
     m_entries[FI_Root_summary] = { "summary", FI_Root_summary, procfs$summary };
-    m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, procfs$cpuinfo};
+    m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, procfs$cpuinfo };
     m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, procfs$inodes };
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, procfs$self };

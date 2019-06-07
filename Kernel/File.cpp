@@ -28,4 +28,3 @@ KResultOr<Region*> File::mmap(Process&, FileDescription&, LinearAddress, size_t,
 {
     return KResult(-ENODEV);
 }
-

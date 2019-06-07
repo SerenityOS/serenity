@@ -1,9 +1,9 @@
 #include <Kernel/FileSystem/FileDescription.h>
-#include <Kernel/Net/Socket.h>
-#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/IPv4Socket.h>
-#include <Kernel/UnixTypes.h>
+#include <Kernel/Net/LocalSocket.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
+#include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
 KResultOr<Retained<Socket>> Socket::create(int domain, int type, int protocol)

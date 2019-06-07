@@ -47,4 +47,3 @@ ssize_t RandomDevice::write(FileDescription&, const byte*, ssize_t size)
     // FIXME: Use input for entropy? I guess that could be a neat feature?
     return min(PAGE_SIZE, size);
 }
-

@@ -8,7 +8,8 @@ Retained<DiskPartition> DiskPartition::create(Retained<DiskDevice>&& device, uns
 }
 
 DiskPartition::DiskPartition(Retained<DiskDevice>&& device, unsigned block_offset)
-    : m_device(move(device)), m_block_offset(block_offset)
+    : m_device(move(device))
+    , m_block_offset(block_offset)
 {
 }
 

@@ -1,7 +1,7 @@
-#include <Kernel/Thread.h>
-#include <Kernel/Scheduler.h>
-#include <Kernel/Process.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Process.h>
+#include <Kernel/Scheduler.h>
+#include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
 
@@ -145,24 +145,42 @@ void Thread::sleep(dword ticks)
 const char* to_string(Thread::State state)
 {
     switch (state) {
-    case Thread::Invalid: return "Invalid";
-    case Thread::Runnable: return "Runnable";
-    case Thread::Running: return "Running";
-    case Thread::Dying: return "Dying";
-    case Thread::Dead: return "Dead";
-    case Thread::Stopped: return "Stopped";
-    case Thread::Skip1SchedulerPass: return "Skip1";
-    case Thread::Skip0SchedulerPasses: return "Skip0";
-    case Thread::BlockedSleep: return "Sleep";
-    case Thread::BlockedWait: return "Wait";
-    case Thread::BlockedRead: return "Read";
-    case Thread::BlockedWrite: return "Write";
-    case Thread::BlockedSignal: return "Signal";
-    case Thread::BlockedSelect: return "Select";
-    case Thread::BlockedLurking: return "Lurking";
-    case Thread::BlockedConnect: return "Connect";
-    case Thread::BlockedReceive: return "Receive";
-    case Thread::BlockedSnoozing: return "Snoozing";
+    case Thread::Invalid:
+        return "Invalid";
+    case Thread::Runnable:
+        return "Runnable";
+    case Thread::Running:
+        return "Running";
+    case Thread::Dying:
+        return "Dying";
+    case Thread::Dead:
+        return "Dead";
+    case Thread::Stopped:
+        return "Stopped";
+    case Thread::Skip1SchedulerPass:
+        return "Skip1";
+    case Thread::Skip0SchedulerPasses:
+        return "Skip0";
+    case Thread::BlockedSleep:
+        return "Sleep";
+    case Thread::BlockedWait:
+        return "Wait";
+    case Thread::BlockedRead:
+        return "Read";
+    case Thread::BlockedWrite:
+        return "Write";
+    case Thread::BlockedSignal:
+        return "Signal";
+    case Thread::BlockedSelect:
+        return "Select";
+    case Thread::BlockedLurking:
+        return "Lurking";
+    case Thread::BlockedConnect:
+        return "Connect";
+    case Thread::BlockedReceive:
+        return "Receive";
+    case Thread::BlockedSnoozing:
+        return "Snoozing";
     }
     kprintf("to_string(Thread::State): Invalid state: %u\n", state);
     ASSERT_NOT_REACHED();
@@ -185,7 +203,7 @@ void Thread::finalize_dying_threads()
     Vector<Thread*, 32> dying_threads;
     {
         InterruptDisabler disabler;
-        for_each_in_state(Thread::State::Dying, [&] (Thread& thread) {
+        for_each_in_state(Thread::State::Dying, [&](Thread& thread) {
             dying_threads.append(&thread);
         });
     }
@@ -236,7 +254,8 @@ ShouldUnblockThread Thread::dispatch_one_pending_signal()
     return dispatch_signal(signal);
 }
 
-enum class DefaultSignalAction {
+enum class DefaultSignalAction
+{
     Terminate,
     Ignore,
     DumpCore,
@@ -490,7 +509,7 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
     push_value_on_stack(0);
 }
 
-void Thread::make_userspace_stack_for_secondary_thread(void *argument)
+void Thread::make_userspace_stack_for_secondary_thread(void* argument)
 {
     auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
     ASSERT(region);

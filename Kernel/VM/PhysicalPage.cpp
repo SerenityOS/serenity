@@ -1,5 +1,5 @@
-#include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/kmalloc.h>
 
 Retained<PhysicalPage> PhysicalPage::create_eternal(PhysicalAddress paddr, bool supervisor)

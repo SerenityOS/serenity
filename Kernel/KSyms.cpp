@@ -1,9 +1,9 @@
 #include "KSyms.h"
 #include "Process.h"
 #include "Scheduler.h"
-#include <Kernel/FileSystem/FileDescription.h>
 #include <AK/ELF/ELFLoader.h>
 #include <AK/TemporaryChange.h>
+#include <Kernel/FileSystem/FileDescription.h>
 
 static KSym* s_ksyms;
 dword ksym_lowest_address;
@@ -140,7 +140,8 @@ void dump_backtrace()
     }
     TemporaryChange change(in_dump_backtrace, true);
     dword ebp;
-    asm volatile("movl %%ebp, %%eax":"=a"(ebp));
+    asm volatile("movl %%ebp, %%eax"
+                 : "=a"(ebp));
     dump_backtrace_impl(ebp, ksyms_ready);
 }
 

@@ -1,5 +1,5 @@
-#include <Kernel/Net/Routing.h>
 #include <Kernel/Net/LoopbackAdapter.h>
+#include <Kernel/Net/Routing.h>
 
 NetworkAdapter* adapter_for_route_to(const IPv4Address& ipv4_address)
 {
