@@ -1,5 +1,5 @@
 #include "VirtualFileSystem.h"
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include "FileSystem.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
@@ -149,7 +149,7 @@ KResult VFS::stat(StringView path, int options, Custody& base, struct stat& stat
     return custody_or_error.value()->inode().metadata().stat(statbuf);
 }
 
-KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
+KResultOr<Retained<FileDescription>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
 {
     auto custody_or_error = resolve_path(path, base, nullptr, options);
     if (options & O_CREAT) {
@@ -194,7 +194,7 @@ KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode
     }
     if (should_truncate_file)
         inode.truncate(0);
-    return FileDescriptor::create(custody);
+    return FileDescription::create(custody);
 }
 
 KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
@@ -224,7 +224,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
     return KSuccess;
 }
 
-KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mode_t mode, Custody& base)
+KResultOr<Retained<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& base)
 {
     (void)options;
 
@@ -253,7 +253,7 @@ KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mo
         return KResult(error);
 
     auto new_custody = Custody::create(parent_custody, p.basename(), *new_file);
-    return FileDescriptor::create(*new_custody);
+    return FileDescription::create(*new_custody);
 }
 
 KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)

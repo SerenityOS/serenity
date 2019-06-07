@@ -16,7 +16,7 @@
 #include <LibC/signal_numbers.h>
 
 class ELFLoader;
-class FileDescriptor;
+class FileDescription;
 class PageDirectory;
 class Region;
 class VMObject;
@@ -87,8 +87,8 @@ public:
 
     bool in_group(gid_t) const;
 
-    FileDescriptor* file_descriptor(int fd);
-    const FileDescriptor* file_descriptor(int fd) const;
+    FileDescription* file_description(int fd);
+    const FileDescription* file_description(int fd) const;
 
     template<typename Callback>
     static void for_each(Callback);
@@ -280,7 +280,7 @@ private:
     Range allocate_range(LinearAddress, size_t);
 
     int do_exec(String path, Vector<String> arguments, Vector<String> environment);
-    ssize_t do_write(FileDescriptor&, const byte*, int data_size);
+    ssize_t do_write(FileDescription&, const byte*, int data_size);
 
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
@@ -306,17 +306,17 @@ private:
 
     Priority m_priority { NormalPriority };
 
-    struct FileDescriptorAndFlags {
+    struct FileDescriptionAndFlags {
         operator bool() const { return !!descriptor; }
         void clear();
-        void set(Retained<FileDescriptor>&& d, dword f = 0);
-        RetainPtr<FileDescriptor> descriptor;
+        void set(Retained<FileDescription>&& d, dword f = 0);
+        RetainPtr<FileDescription> descriptor;
         dword flags { 0 };
     };
-    Vector<FileDescriptorAndFlags> m_fds;
+    Vector<FileDescriptionAndFlags> m_fds;
     RingLevel m_ring { Ring0 };
 
-    int m_max_open_file_descriptors { 128 };
+    static const int m_max_open_file_descriptors { FD_SETSIZE };
 
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };

@@ -12,7 +12,7 @@
 #include <Kernel/i386.h>
 
 class Alarm;
-class FileDescriptor;
+class FileDescription;
 class Process;
 class Region;
 class Thread;
@@ -97,13 +97,13 @@ public:
 
     void sleep(dword ticks);
     void block(Thread::State);
-    void block(Thread::State, FileDescriptor&);
+    void block(Thread::State, FileDescription&);
     void unblock();
 
     void set_wakeup_time(qword t) { m_wakeup_time = t; }
     qword wakeup_time() const { return m_wakeup_time; }
     void snooze_until(Alarm&);
-    KResult wait_for_connect(FileDescriptor&);
+    KResult wait_for_connect(FileDescription&);
 
     const FarPtr& far_ptr() const { return m_far_ptr; }
 
@@ -181,7 +181,7 @@ private:
     RetainPtr<Region> m_kernel_stack_region;
     RetainPtr<Region> m_kernel_stack_for_signal_handler_region;
     pid_t m_waitee_pid { -1 };
-    RetainPtr<FileDescriptor> m_blocked_descriptor;
+    RetainPtr<FileDescription> m_blocked_descriptor;
     timeval m_select_timeout;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };

@@ -189,10 +189,10 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     return false;
 }
 
-class FileDescriptorCollector {
+class FileDescriptionCollector {
 public:
-    FileDescriptorCollector() { }
-    ~FileDescriptorCollector() { collect(); }
+    FileDescriptionCollector() { }
+    ~FileDescriptionCollector() { collect(); }
 
     void collect()
     {
@@ -302,7 +302,7 @@ static int run_command(const String& cmd)
     if (subcommands.is_empty())
         return 0;
 
-    FileDescriptorCollector fds;
+    FileDescriptionCollector fds;
 
     for (int i = 0; i < subcommands.size(); ++i) {
         auto& subcommand = subcommands[i];

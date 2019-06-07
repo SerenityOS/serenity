@@ -14,7 +14,7 @@ Device::~Device()
     VFS::the().unregister_device({}, *this);
 }
 
-String Device::absolute_path(const FileDescriptor&) const
+String Device::absolute_path(const FileDescription&) const
 {
     return String::format("device:%u,%u (%s)", m_major, m_minor, class_name());
 }

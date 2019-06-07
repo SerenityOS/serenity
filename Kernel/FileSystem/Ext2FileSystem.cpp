@@ -479,7 +479,7 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescriptor*) const
+ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription*) const
 {
     Locker inode_locker(m_lock);
     ASSERT(offset >= 0);
@@ -585,7 +585,7 @@ bool Ext2FSInode::resize(qword new_size)
     return true;
 }
 
-ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, FileDescriptor*)
+ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, FileDescription*)
 {
     ASSERT(offset >= 0);
     ASSERT(count >= 0);

@@ -4,7 +4,7 @@
 #include "i8253.h"
 #include <AK/TemporaryChange.h>
 #include <Kernel/Alarm.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Devices/PCSpeaker.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
