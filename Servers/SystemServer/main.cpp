@@ -1,12 +1,12 @@
+#include <AK/Assertions.h>
+#include <errno.h>
+#include <sched.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <sched.h>
-#include <AK/Assertions.h>
 
-void start_process(const char *prog, int prio)
+void start_process(const char* prog, int prio)
 {
     pid_t pid = 0;
 
@@ -47,14 +47,14 @@ void start_process(const char *prog, int prio)
     }
 }
 
-int main(int, char **)
+int main(int, char**)
 {
     int lowest_prio = sched_get_priority_min(SCHED_OTHER);
     int highest_prio = sched_get_priority_max(SCHED_OTHER);
     start_process("/bin/LookupServer", lowest_prio);
     start_process("/bin/WindowServer", highest_prio);
     start_process("/bin/Taskbar", highest_prio);
-    start_process("/bin/Terminal", highest_prio-1);
+    start_process("/bin/Terminal", highest_prio - 1);
     start_process("/bin/Launcher", highest_prio);
 
     while (1) {
