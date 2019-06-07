@@ -14,13 +14,15 @@ Roughly speaking, the goal is a marriage between the aesthetic of late-1990s pro
 
 If you like some of the same things, you are welcome to join the project. It would be great to one day change the above to say "this is a system by us, for us, based on the things we like." :^)
 
-I regularly post raw hacking sessions and demos on [my YouTube channel](https://www.youtube.com/channel/UC3ts8coMP645hZw9JSD3pqQ).
+I regularly post raw hacking sessions and demos on [my YouTube channel](https://www.youtube.com/c/AndreasKling/).
+
+Sometimes I write about about the system on [my github.io blog](https://awesomekling.github.io/).
 
 There's also a [Patreon](https://www.patreon.com/serenityos) if you would like to show some support that way.
 
 ## Screenshot
 
-![Screenshot as of d727005](https://raw.githubusercontent.com/awesomekling/serenity/master/Meta/screenshot-d727005.png)
+![Screenshot as of d727005](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-d727005.png)
 
 ## Current features
 
@@ -30,6 +32,7 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * IPv4 networking with ARP, TCP, UDP and ICMP
 * ext2 filesystem
 * Unix-like libc and userland
+* POSIX signals
 * Shell with pipes and I/O redirection
 * mmap()
 * /proc filesystem
@@ -43,17 +46,22 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * IRC client
 * DNS lookup
 * Desktop games: Minesweeper and Snake
+* Ports system (needs more packages!)
 * Other stuff I can't think of right now...
 
 ## How do I build and run this?
 
-Go into the Toolchain/ directory and run the **BuildIt.sh** script. Then source the **UseIt.sh** script to put the i686-pc-serenity toolchain in your $PATH.
+Make sure you have all the dependencies installed:
+
+```
+sudo apt install libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
+```
+
+Go into the Toolchain/ directory and run the **BuildIt.sh** script. Then ***source*** the **UseIt.sh** script to put the i686-pc-serenity toolchain in your $PATH.
 
 Once you've done both of those, go into the Kernel directory, then run
-**makeall.sh**, and if nothing breaks too much, take it for a spin by using
-**run**.
-
-Otherwise, see the older [step-by-step guide to building Serenity](https://github.com/awesomekling/serenity/blob/master/Meta/BuildInstructions.md)
+**./makeall.sh**, and if nothing breaks too much, take it for a spin by using
+**./run**.
 
 ## IRC
 
@@ -61,8 +69,13 @@ Come chat in `#serenityos` on the Freenode IRC network.
 
 ## Author
 
-* **Andreas Kling** - [awesomekling](https://github.com/awesomekling)
+* **Andreas Kling** - [awesomekling](https://twitter.com/awesomekling)
+
+## Contributors
+
 * **Robin Burchell** - [rburchell](https://github.com/rburchell)
+
+Feel free to append yourself here if you've made some sweet contributions. :)
 
 ## License
 
