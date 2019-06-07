@@ -13,8 +13,7 @@ class GPainter;
 class GWidget;
 class GWMEvent;
 
-enum class GStandardCursor
-{
+enum class GStandardCursor {
     None = 0,
     Arrow,
     IBeam,

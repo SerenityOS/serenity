@@ -14,8 +14,7 @@ public:
 
     virtual bool open(CIODevice::OpenMode) override;
 
-    enum class ShouldCloseFileDescription
-    {
+    enum class ShouldCloseFileDescription {
         No = 0,
         Yes
     };

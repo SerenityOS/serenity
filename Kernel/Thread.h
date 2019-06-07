@@ -6,9 +6,9 @@
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/KResult.h>
-#include <Kernel/VirtualAddress.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/Region.h>
+#include <Kernel/VirtualAddress.h>
 #include <Kernel/i386.h>
 
 class Alarm;
@@ -17,8 +17,7 @@ class Process;
 class Region;
 class Thread;
 
-enum class ShouldUnblockThread
-{
+enum class ShouldUnblockThread {
     No = 0,
     Yes
 };
@@ -54,8 +53,7 @@ public:
 
     void finalize();
 
-    enum State : byte
-    {
+    enum State : byte {
         Invalid = 0,
         Runnable,
         Running,
@@ -245,7 +243,7 @@ inline void Thread::for_each_runnable(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* thread = g_runnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
-        if (callback(*thread) == IterationDecision::Abort)
+        if (callback(*thread) == IterationDecision::Break)
             return;
         thread = next_thread;
     }
@@ -257,7 +255,7 @@ inline void Thread::for_each_nonrunnable(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* thread = g_nonrunnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
-        if (callback(*thread) == IterationDecision::Abort)
+        if (callback(*thread) == IterationDecision::Break)
             return;
         thread = next_thread;
     }

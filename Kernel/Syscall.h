@@ -3,7 +3,9 @@
 #include <AK/Types.h>
 #include <LibC/fd_set.h>
 
-extern "C" { struct timeval; }
+extern "C" {
+struct timeval;
+}
 
 #define ENUMERATE_SYSCALLS                      \
     __ENUMERATE_SYSCALL(sleep)                  \
@@ -114,8 +116,7 @@ extern "C" { struct timeval; }
 
 namespace Syscall {
 
-enum Function
-{
+enum Function {
 #undef __ENUMERATE_SYSCALL
 #define __ENUMERATE_SYSCALL(x) SC_##x,
     ENUMERATE_SYSCALLS

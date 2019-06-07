@@ -29,8 +29,7 @@ public:
 
     virtual const char* class_name() const override { return "GScrollBar"; }
 
-    enum Component
-    {
+    enum Component {
         Invalid,
         DecrementButton,
         IncrementButton,
@@ -72,8 +71,7 @@ private:
     Orientation m_orientation { Orientation::Vertical };
     Component m_hovered_component { Component::Invalid };
 
-    enum class AutomaticScrollingDirection
-    {
+    enum class AutomaticScrollingDirection {
         None = 0,
         Decrement,
         Increment,

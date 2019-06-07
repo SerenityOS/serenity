@@ -12,8 +12,7 @@ class Region : public Retainable<Region> {
     friend class MemoryManager;
 
 public:
-    enum Access
-    {
+    enum Access {
         Read = 1,
         Write = 2,
         Execute = 4,

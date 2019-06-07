@@ -9,16 +9,14 @@
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
 
-enum class SocketRole : byte
-{
+enum class SocketRole : byte {
     None,
     Listener,
     Accepted,
     Connected,
     Connecting
 };
-enum class ShouldBlock
-{
+enum class ShouldBlock {
     No = 0,
     Yes = 1
 };

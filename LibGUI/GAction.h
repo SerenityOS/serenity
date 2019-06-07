@@ -18,8 +18,7 @@ class GWidget;
 class GAction : public Retainable<GAction>
     , public Weakable<GAction> {
 public:
-    enum class ShortcutScope
-    {
+    enum class ShortcutScope {
         None,
         ApplicationGlobal,
         WidgetLocal,

@@ -5,8 +5,7 @@
 #include <AK/NetworkOrdered.h>
 #include <AK/Types.h>
 
-enum class IPv4Protocol : word
-{
+enum class IPv4Protocol : word {
     ICMP = 1,
     TCP = 6,
     UDP = 17,

@@ -21,8 +21,7 @@ public:
 
     int exec();
 
-    enum class WaitMode
-    {
+    enum class WaitMode {
         WaitForEvents,
         PollForEvents,
     };

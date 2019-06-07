@@ -1441,8 +1441,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     return current->m_waitee_pid;
 }
 
-enum class KernelMemoryCheckResult
-{
+enum class KernelMemoryCheckResult {
     NotInsideKernelMemory,
     AccessGranted,
     AccessDenied
@@ -2654,7 +2653,7 @@ int Process::sys$donate(int tid)
     for_each_thread([&](Thread& thread) {
         if (thread.tid() == tid) {
             beneficiary = &thread;
-            return IterationDecision::Abort;
+            return IterationDecision::Break;
         }
         return IterationDecision::Continue;
     });

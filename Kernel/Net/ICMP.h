@@ -4,8 +4,7 @@
 #include <Kernel/Net/MACAddress.h>
 
 struct ICMPType {
-    enum
-    {
+    enum {
         EchoReply = 0,
         EchoRequest = 8,
     };

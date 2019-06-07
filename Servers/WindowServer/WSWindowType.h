@@ -1,7 +1,6 @@
 #pragma once
 
-enum class WSWindowType
-{
+enum class WSWindowType {
     Invalid = 0,
     Normal,
     Menu,

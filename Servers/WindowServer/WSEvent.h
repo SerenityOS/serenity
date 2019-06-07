@@ -11,8 +11,7 @@
 
 class WSEvent : public CEvent {
 public:
-    enum Type
-    {
+    enum Type {
         Invalid = 2000,
         WM_DeferredCompose,
         WM_ClientDisconnected,
@@ -706,8 +705,7 @@ private:
     Vector<Rect, 32> m_rects;
 };
 
-enum class MouseButton : byte
-{
+enum class MouseButton : byte {
     None = 0,
     Left = 1,
     Right = 2,

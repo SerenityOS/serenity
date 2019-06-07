@@ -12,17 +12,16 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
-#include <Kernel/VirtualAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
+#include <Kernel/VirtualAddress.h>
 
 #define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
 class SynthFSInode;
 
-enum class PageFaultResponse
-{
+enum class PageFaultResponse {
     ShouldCrash,
     Continue,
 };
@@ -55,8 +54,7 @@ public:
     bool validate_user_read(const Process&, VirtualAddress) const;
     bool validate_user_write(const Process&, VirtualAddress) const;
 
-    enum class ShouldZeroFill
-    {
+    enum class ShouldZeroFill {
         No,
         Yes
     };
@@ -126,8 +124,7 @@ private:
         dword raw() const { return *m_pde; }
         dword* ptr() { return m_pde; }
 
-        enum Flags
-        {
+        enum Flags {
             Present = 1 << 0,
             ReadWrite = 1 << 1,
             UserSupervisor = 1 << 2,
@@ -177,8 +174,7 @@ private:
         dword raw() const { return *m_pte; }
         dword* ptr() { return m_pte; }
 
-        enum Flags
-        {
+        enum Flags {
             Present = 1 << 0,
             ReadWrite = 1 << 1,
             UserSupervisor = 1 << 2,

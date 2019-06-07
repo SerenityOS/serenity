@@ -71,8 +71,7 @@ private:
     template<typename Callback>
     void for_each_square(Callback);
 
-    enum class Face
-    {
+    enum class Face {
         Default,
         Good,
         Bad

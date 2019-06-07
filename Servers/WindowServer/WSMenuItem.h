@@ -8,8 +8,7 @@ class WSMenu;
 
 class WSMenuItem {
 public:
-    enum Type
-    {
+    enum Type {
         None,
         Text,
         Separator,

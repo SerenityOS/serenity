@@ -2,8 +2,7 @@
 
 #include <AK/Types.h>
 
-enum KeyCode : byte
-{
+enum KeyCode : byte {
     Key_Invalid = 0,
     Key_Escape,
     Key_Tab,
@@ -114,8 +113,7 @@ enum KeyCode : byte
     Key_Shift = Key_LeftShift,
 };
 
-enum KeyModifier
-{
+enum KeyModifier {
     Mod_None = 0x00,
     Mod_Alt = 0x01,
     Mod_Ctrl = 0x02,

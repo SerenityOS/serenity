@@ -49,8 +49,7 @@ union [[gnu::packed]] Descriptor
         dword high;
     };
 
-    enum Type
-    {
+    enum Type {
         Invalid = 0,
         AvailableTSS_16bit = 0x1,
         LDT = 0x2,
@@ -180,8 +179,7 @@ private:
 #define IRQ_VECTOR_BASE 0x50
 
 struct PageFaultFlags {
-    enum Flags
-    {
+    enum Flags {
         NotPresent = 0x00,
         ProtectionViolation = 0x01,
         Read = 0x00,

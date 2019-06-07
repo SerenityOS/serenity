@@ -38,8 +38,7 @@ public:
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
 
-    enum Priority
-    {
+    enum Priority {
         IdlePriority,
         FirstPriority = IdlePriority,
         LowPriority,
@@ -48,8 +47,7 @@ public:
         LastPriority = HighPriority,
     };
 
-    enum RingLevel
-    {
+    enum RingLevel {
         Ring0 = 0,
         Ring3 = 3,
     };
@@ -398,7 +396,7 @@ inline void Process::for_each(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        if (callback(*process) == IterationDecision::Abort)
+        if (callback(*process) == IterationDecision::Break)
             break;
         process = next_process;
     }
@@ -427,7 +425,7 @@ inline void Process::for_each_thread(Callback callback) const
     for (auto* thread = g_runnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->pid() == my_pid) {
-            if (callback(*thread) == IterationDecision::Abort)
+            if (callback(*thread) == IterationDecision::Break)
                 break;
         }
         thread = next_thread;
@@ -435,7 +433,7 @@ inline void Process::for_each_thread(Callback callback) const
     for (auto* thread = g_nonrunnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->pid() == my_pid) {
-            if (callback(*thread) == IterationDecision::Abort)
+            if (callback(*thread) == IterationDecision::Break)
                 break;
         }
         thread = next_thread;

@@ -18,8 +18,7 @@ public:
 private:
     void on_socket_connected();
 
-    enum class State
-    {
+    enum class State {
         InStatus,
         InHeaders,
         InBody,

@@ -1,7 +1,6 @@
 #pragma once
 
-enum class VBWidgetType
-{
+enum class VBWidgetType {
     None = 0,
     GWidget,
     GButton,

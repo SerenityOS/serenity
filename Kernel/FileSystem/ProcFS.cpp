@@ -14,8 +14,7 @@
 #include <Kernel/kmalloc.h>
 #include <LibC/errno_numbers.h>
 
-enum ProcParentDirectory
-{
+enum ProcParentDirectory {
     PDI_AbstractRoot = 0,
     PDI_Root,
     PDI_Root_sys,
@@ -23,8 +22,7 @@ enum ProcParentDirectory
     PDI_PID_fd,
 };
 
-enum ProcFileType
-{
+enum ProcFileType {
     FI_Invalid = 0,
 
     FI_Root = 1, // directory
@@ -601,8 +599,7 @@ ByteBuffer procfs$inodes(InodeIdentifier)
 struct SysVariableData final : public ProcFSInodeCustomData {
     virtual ~SysVariableData() override {}
 
-    enum Type
-    {
+    enum Type {
         Invalid,
         Boolean,
         String,

@@ -12,8 +12,7 @@ inline constexpr dword make_rgb(byte r, byte g, byte b)
 
 class Color {
 public:
-    enum NamedColor
-    {
+    enum NamedColor {
         Black,
         White,
         Red,

@@ -60,8 +60,7 @@ public:
     void grow(int size);
 
 private:
-    enum ConstructionMode
-    {
+    enum ConstructionMode {
         Uninitialized,
         Copy,
         Wrap,

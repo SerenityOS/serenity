@@ -254,8 +254,7 @@ ShouldUnblockThread Thread::dispatch_one_pending_signal()
     return dispatch_signal(signal);
 }
 
-enum class DefaultSignalAction
-{
+enum class DefaultSignalAction {
     Terminate,
     Ignore,
     DumpCore,

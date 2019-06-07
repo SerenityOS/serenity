@@ -7,8 +7,7 @@ class VBProperty;
 
 class VBWidgetPropertyModel : public GModel {
 public:
-    enum Column
-    {
+    enum Column {
         Name = 0,
         Value,
         __Count

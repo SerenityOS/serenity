@@ -29,8 +29,7 @@ class WSWindowSwitcher;
 class GraphicsBitmap;
 class WSButton;
 
-enum class ResizeDirection
-{
+enum class ResizeDirection {
     None,
     Left,
     UpLeft,
@@ -268,12 +267,12 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_
             do_highlight_window_at_end = true;
             continue;
         }
-        if (callback(*window) == IterationDecision::Abort)
-            return IterationDecision::Abort;
+        if (callback(*window) == IterationDecision::Break)
+            return IterationDecision::Break;
     }
     if (do_highlight_window_at_end) {
-        if (callback(*m_highlight_window) == IterationDecision::Abort)
-            return IterationDecision::Abort;
+        if (callback(*m_highlight_window) == IterationDecision::Break)
+            return IterationDecision::Break;
     }
     return IterationDecision::Continue;
 }
@@ -281,14 +280,14 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_
 template<typename Callback>
 IterationDecision WSWindowManager::for_each_visible_window_from_back_to_front(Callback callback)
 {
-    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Normal, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
-    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Taskbar, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
-    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Tooltip, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
-    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Menu, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
+    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Normal, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Taskbar, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Tooltip, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Menu, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
     return for_each_visible_window_of_type_from_back_to_front(WSWindowType::WindowSwitcher, callback);
 }
 
@@ -296,8 +295,8 @@ template<typename Callback>
 IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to_back(WSWindowType type, Callback callback, bool ignore_highlight)
 {
     if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
-        if (callback(*m_highlight_window) == IterationDecision::Abort)
-            return IterationDecision::Abort;
+        if (callback(*m_highlight_window) == IterationDecision::Break)
+            return IterationDecision::Break;
     }
 
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
@@ -309,8 +308,8 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to
             continue;
         if (!ignore_highlight && window == m_highlight_window)
             continue;
-        if (callback(*window) == IterationDecision::Abort)
-            return IterationDecision::Abort;
+        if (callback(*window) == IterationDecision::Break)
+            return IterationDecision::Break;
     }
     return IterationDecision::Continue;
 }
@@ -318,14 +317,14 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_front_to
 template<typename Callback>
 IterationDecision WSWindowManager::for_each_visible_window_from_front_to_back(Callback callback)
 {
-    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::WindowSwitcher, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
-    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Menu, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
-    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Taskbar, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
-    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Tooltip, callback) == IterationDecision::Abort)
-        return IterationDecision::Abort;
+    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::WindowSwitcher, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Menu, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Taskbar, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Tooltip, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
     return for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, callback);
 }
 
@@ -335,7 +334,7 @@ void WSWindowManager::for_each_window_listening_to_wm_events(Callback callback)
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->listens_to_wm_events())
             continue;
-        if (callback(*window) == IterationDecision::Abort)
+        if (callback(*window) == IterationDecision::Break)
             return;
     }
 }
@@ -344,7 +343,7 @@ template<typename Callback>
 void WSWindowManager::for_each_window(Callback callback)
 {
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
-        if (callback(*window) == IterationDecision::Abort)
+        if (callback(*window) == IterationDecision::Break)
             return;
     }
 }

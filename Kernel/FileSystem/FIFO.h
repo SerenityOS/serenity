@@ -8,8 +8,7 @@ class FileDescription;
 
 class FIFO final : public File {
 public:
-    enum class Direction : byte
-    {
+    enum class Direction : byte {
         Neither,
         Reader,
         Writer

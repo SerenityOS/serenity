@@ -9,8 +9,7 @@ class VirtualConsole final : public TTY
     , public ConsoleImplementation {
     AK_MAKE_ETERNAL
 public:
-    enum InitialContents
-    {
+    enum InitialContents {
         Cleared,
         AdoptCurrentVGABuffer
     };
@@ -73,8 +72,7 @@ private:
 
     void execute_escape_sequence(byte final);
 
-    enum EscapeState
-    {
+    enum EscapeState {
         Normal,
         ExpectBracket,
         ExpectParameter,

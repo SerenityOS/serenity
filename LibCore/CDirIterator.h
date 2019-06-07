@@ -5,8 +5,7 @@
 
 class CDirIterator {
 public:
-    enum Flags
-    {
+    enum Flags {
         NoFlags = 0x0,
         SkipDots = 0x1,
     };

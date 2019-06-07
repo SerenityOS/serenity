@@ -6,8 +6,7 @@ class GFileSystemModel : public GModel {
     friend class Node;
 
 public:
-    enum Mode
-    {
+    enum Mode {
         Invalid,
         DirectoriesOnly,
         FilesAndDirectories

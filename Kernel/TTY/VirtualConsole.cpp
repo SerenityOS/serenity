@@ -128,8 +128,7 @@ inline bool is_valid_final_character(byte ch)
     return ch >= 0x40 && ch <= 0x7e;
 }
 
-enum class VGAColor : byte
-{
+enum class VGAColor : byte {
     Black = 0,
     Blue,
     Green,
@@ -148,8 +147,7 @@ enum class VGAColor : byte
     White,
 };
 
-enum class ANSIColor : byte
-{
+enum class ANSIColor : byte {
     Black = 0,
     Red,
     Green,

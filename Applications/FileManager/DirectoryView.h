@@ -26,8 +26,7 @@ public:
     Function<void(const StringView&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
 
-    enum ViewMode
-    {
+    enum ViewMode {
         Invalid,
         List,
         Icon

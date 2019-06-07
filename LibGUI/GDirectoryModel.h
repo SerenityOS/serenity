@@ -11,8 +11,7 @@ public:
     static Retained<GDirectoryModel> create() { return adopt(*new GDirectoryModel); }
     virtual ~GDirectoryModel() override;
 
-    enum Column
-    {
+    enum Column {
         Icon = 0,
         Name,
         Size,

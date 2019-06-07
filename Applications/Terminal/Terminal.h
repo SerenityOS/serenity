@@ -98,8 +98,7 @@ private:
         byte foreground_color;
         byte background_color;
 
-        enum Flags
-        {
+        enum Flags {
             NoAttributes = 0x00,
             Bold = 0x01,
             Italic = 0x02,
@@ -160,8 +159,7 @@ private:
     void execute_escape_sequence(byte final);
     void execute_xterm_command();
 
-    enum EscapeState
-    {
+    enum EscapeState {
         Normal,
         ExpectBracket,
         ExpectParameter,

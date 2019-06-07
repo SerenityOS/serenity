@@ -9,8 +9,7 @@ class CObject;
 
 class CEvent {
 public:
-    enum Type
-    {
+    enum Type {
         Invalid = 0,
         Quit,
         Timer,

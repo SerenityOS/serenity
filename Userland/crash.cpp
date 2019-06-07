@@ -10,8 +10,7 @@ static void print_usage_and_exit()
 
 int main(int argc, char** argv)
 {
-    enum Mode
-    {
+    enum Mode {
         SegmentationViolation,
         DivisionByZero,
         IllegalInstruction,

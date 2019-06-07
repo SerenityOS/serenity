@@ -38,8 +38,7 @@ public:
     const Font& font() const { return *state().font; }
     void set_font(const Font& font) { state().font = &font; }
 
-    enum class DrawOp
-    {
+    enum class DrawOp {
         Copy,
         Xor
     };

@@ -7,8 +7,7 @@ class CNetworkResponse;
 
 class CNetworkJob : public CObject {
 public:
-    enum class Error
-    {
+    enum class Error {
         None,
         ConnectionFailed,
         TransmissionFailed,

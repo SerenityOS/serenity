@@ -11,8 +11,7 @@ struct GFileSystemModel::Node {
     String name;
     Node* parent { nullptr };
     Vector<Node*> children;
-    enum Type
-    {
+    enum Type {
         Unknown,
         Directory,
         File

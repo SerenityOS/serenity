@@ -5,8 +5,7 @@
 
 class GDialog : public GWindow {
 public:
-    enum ExecResult
-    {
+    enum ExecResult {
         ExecOK = 0,
         ExecCancel = 1,
         ExecAborted = 2

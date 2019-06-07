@@ -2,8 +2,7 @@
 
 #include <SharedGraphics/GraphicsBitmap.h>
 
-enum class WSStandardCursor
-{
+enum class WSStandardCursor {
     None = 0,
     Arrow,
     IBeam,

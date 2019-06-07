@@ -15,8 +15,7 @@ class VBForm;
 class VBProperty;
 class VBWidgetPropertyModel;
 
-enum class Direction
-{
+enum class Direction {
     None,
     Left,
     UpLeft,

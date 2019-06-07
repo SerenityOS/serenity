@@ -6,8 +6,7 @@
 
 class CIODevice : public CObject {
 public:
-    enum OpenMode
-    {
+    enum OpenMode {
         NotOpen = 0,
         ReadOnly = 1,
         WriteOnly = 2,
@@ -40,8 +39,7 @@ public:
 
     bool can_read() const;
 
-    enum class SeekMode
-    {
+    enum class SeekMode {
         SetPosition,
         FromCurrentPosition,
         FromEndPosition,

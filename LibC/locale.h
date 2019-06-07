@@ -4,8 +4,7 @@
 
 __BEGIN_DECLS
 
-enum
-{
+enum {
     LC_ALL,
     LC_NUMERIC,
     LC_CTYPE,

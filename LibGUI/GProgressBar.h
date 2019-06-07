@@ -19,8 +19,7 @@ public:
     String caption() const { return m_caption; }
     void set_caption(const StringView& caption) { m_caption = caption; }
 
-    enum Format
-    {
+    enum Format {
         NoText,
         Percentage,
         ValueSlashMax
