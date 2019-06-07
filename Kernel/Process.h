@@ -248,9 +248,9 @@ public:
 
     bool is_superuser() const { return m_euid == 0; }
 
-    Region* allocate_region_with_vmo(VirtualAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, String&& name, int prot);
-    Region* allocate_file_backed_region(VirtualAddress, size_t, RetainPtr<Inode>&&, String&& name, int prot);
-    Region* allocate_region(VirtualAddress, size_t, String&& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
+    Region* allocate_region_with_vmo(VirtualAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, const String& name, int prot);
+    Region* allocate_file_backed_region(VirtualAddress, size_t, RetainPtr<Inode>&&, const String& name, int prot);
+    Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
 
     void set_being_inspected(bool b) { m_being_inspected = b; }

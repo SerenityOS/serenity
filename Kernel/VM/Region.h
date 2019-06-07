@@ -18,9 +18,9 @@ public:
         Execute = 4,
     };
 
-    Region(const Range&, String&&, byte access, bool cow = false);
-    Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, String&&, byte access, bool cow = false);
-    Region(const Range&, RetainPtr<Inode>&&, String&&, byte access);
+    Region(const Range&, const String&, byte access, bool cow = false);
+    Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, const String&, byte access, bool cow = false);
+    Region(const Range&, RetainPtr<Inode>&&, const String&, byte access);
     ~Region();
 
     VirtualAddress vaddr() const { return m_range.base(); }
@@ -28,9 +28,9 @@ public:
     bool is_readable() const { return m_access & Access::Read; }
     bool is_writable() const { return m_access & Access::Write; }
     bool is_executable() const { return m_access & Access::Execute; }
-    String name() const { return m_name; }
+    const String& name() const { return m_name; }
 
-    void set_name(String&& name) { m_name = move(name); }
+    void set_name(const String& name) { m_name = name; }
 
     const VMObject& vmo() const { return *m_vmo; }
     VMObject& vmo() { return *m_vmo; }
