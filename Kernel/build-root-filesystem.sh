@@ -90,6 +90,7 @@ ln -s Snake mnt/bin/sn
 ln -s Taskbar mnt/bin/tb
 ln -s VisualBuilder mnt/bin/vb
 ln -s WidgetGallery mnt/bin/wg
+ln -s TextEditor mnt/bin/te
 echo "done"
 
 # Run local sync script, if it exists
