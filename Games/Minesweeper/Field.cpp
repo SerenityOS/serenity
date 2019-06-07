@@ -1,11 +1,11 @@
 #include "Field.h"
+#include <AK/HashTable.h>
+#include <LibCore/CConfigFile.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
-#include <LibCore/CConfigFile.h>
-#include <AK/HashTable.h>
-#include <unistd.h>
 #include <time.h>
+#include <unistd.h>
 
 class SquareButton final : public GButton {
 public:
@@ -50,7 +50,7 @@ public:
             }
         }
         if (event.button() == GMouseButton::Middle) {
-            m_square.field->for_each_square([] (auto& square) {
+            m_square.field->for_each_square([](auto& square) {
                 if (square.is_considering) {
                     square.is_considering = false;
                     square.button->set_icon(nullptr);
@@ -120,7 +120,7 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
     set_background_color(Color::LightGray);
     reset();
 
-    m_face_button.on_click = [this] (auto&) { reset(); };
+    m_face_button.on_click = [this](auto&) { reset(); };
     set_face(Face::Default);
 }
 
@@ -218,7 +218,7 @@ void Field::reset()
             if (!square.button) {
                 square.button = new SquareButton(this);
                 square.button->set_checkable(true);
-                square.button->on_click = [this, &square] (GButton&) {
+                square.button->on_click = [this, &square](GButton&) {
                     on_square_clicked(square);
                 };
                 square.button->on_right_click = [this, &square] {
@@ -244,7 +244,7 @@ void Field::reset()
         for (int c = 0; c < columns(); ++c) {
             auto& square = this->square(r, c);
             int number = 0;
-            square.for_each_neighbor([&number] (auto& neighbor) {
+            square.for_each_neighbor([&number](auto& neighbor) {
                 number += neighbor.has_mine;
             });
             square.number = number;
@@ -262,7 +262,7 @@ void Field::reset()
 void Field::flood_fill(Square& square)
 {
     on_square_clicked(square);
-    square.for_each_neighbor([this] (auto& neighbor) {
+    square.for_each_neighbor([this](auto& neighbor) {
         if (!neighbor.is_swept && !neighbor.has_mine && neighbor.number == 0)
             flood_fill(neighbor);
         if (!neighbor.has_mine && neighbor.number)
@@ -333,13 +333,13 @@ void Field::on_square_chorded(Square& square)
     if (!square.number)
         return;
     int adjacent_flags = 0;
-    square.for_each_neighbor([&] (auto& neighbor) {
+    square.for_each_neighbor([&](auto& neighbor) {
         if (neighbor.has_flag)
             ++adjacent_flags;
     });
     if (square.number != adjacent_flags)
         return;
-    square.for_each_neighbor([&] (auto& neighbor) {
+    square.for_each_neighbor([&](auto& neighbor) {
         if (neighbor.has_flag)
             return;
         on_square_clicked(neighbor);
@@ -396,7 +396,7 @@ void Field::win()
     m_timer.stop();
     set_greedy_for_hits(true);
     set_face(Face::Good);
-    for_each_square([&] (auto& square) {
+    for_each_square([&](auto& square) {
         if (!square.has_flag && square.has_mine)
             set_flag(square, true);
     });
@@ -435,7 +435,7 @@ void Field::set_chord_preview(Square& square, bool chord_preview)
     if (m_chord_preview == chord_preview)
         return;
     m_chord_preview = chord_preview;
-    square.for_each_neighbor([&] (auto& neighbor) {
+    square.for_each_neighbor([&](auto& neighbor) {
         neighbor.button->set_checked(false);
         if (!neighbor.has_flag && !neighbor.is_considering)
             neighbor.button->set_checked(chord_preview);
