@@ -1,11 +1,11 @@
-#include "Ext2FileSystem.h"
-#include "RTC.h"
-#include "UnixTypes.h"
-#include "ext2_fs.h"
 #include <AK/Bitmap.h>
 #include <AK/BufferStream.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/Process.h>
+#include <Kernel/RTC.h>
+#include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
 //#define EXT2_DEBUG

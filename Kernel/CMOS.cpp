@@ -1,5 +1,5 @@
-#include "CMOS.h"
-#include "IO.h"
+#include <Kernel/CMOS.h>
+#include <Kernel/IO.h>
 
 namespace CMOS {
 

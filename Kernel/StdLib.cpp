@@ -1,7 +1,7 @@
-#include "Assertions.h"
-#include "kmalloc.h"
+#include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
+#include <Kernel/kmalloc.h>
 
 extern "C" {
 

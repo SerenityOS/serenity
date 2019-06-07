@@ -1,12 +1,3 @@
-#include "Process.h"
-#include "KSyms.h"
-#include "RTC.h"
-#include "Scheduler.h"
-#include "StdLib.h"
-#include "Syscall.h"
-#include "i386.h"
-#include "i8253.h"
-#include "kmalloc.h"
 #include <AK/ELF/ELFLoader.h>
 #include <AK/ELF/exec_elf.h>
 #include <AK/StdLibExtras.h>
@@ -18,12 +9,21 @@
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
+#include <Kernel/Process.h>
 #include <Kernel/ProcessTracer.h>
+#include <Kernel/RTC.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/SharedMemory.h>
+#include <Kernel/StdLib.h>
+#include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/i386.h>
+#include <Kernel/i8253.h>
+#include <Kernel/kmalloc.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 
@@ -1441,7 +1441,8 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     return current->m_waitee_pid;
 }
 
-enum class KernelMemoryCheckResult {
+enum class KernelMemoryCheckResult
+{
     NotInsideKernelMemory,
     AccessGranted,
     AccessDenied
