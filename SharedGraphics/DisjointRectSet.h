@@ -5,9 +5,12 @@
 
 class DisjointRectSet {
 public:
-    DisjointRectSet() { }
-    ~DisjointRectSet() { }
-    DisjointRectSet(DisjointRectSet&& other) : m_rects(move(other.m_rects)) { }
+    DisjointRectSet() {}
+    ~DisjointRectSet() {}
+    DisjointRectSet(DisjointRectSet&& other)
+        : m_rects(move(other.m_rects))
+    {
+    }
 
     void add(const Rect&);
 
@@ -23,4 +26,3 @@ private:
 
     Vector<Rect, 32> m_rects;
 };
-

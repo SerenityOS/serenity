@@ -1,8 +1,8 @@
 #pragma once
 
 #include "Size.h"
-#include <AK/Retainable.h>
 #include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
 
 class CharacterBitmap : public Retainable<CharacterBitmap> {
 public:
@@ -22,4 +22,3 @@ private:
     const char* m_bits { nullptr };
     Size m_size;
 };
-

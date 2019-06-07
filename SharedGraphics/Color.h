@@ -12,7 +12,8 @@ inline constexpr dword make_rgb(byte r, byte g, byte b)
 
 class Color {
 public:
-    enum NamedColor {
+    enum NamedColor
+    {
         Black,
         White,
         Red,
@@ -33,10 +34,16 @@ public:
         MidMagenta,
     };
 
-    Color() { }
+    Color() {}
     Color(NamedColor);
-    Color(byte r, byte g, byte b) : m_value(0xff000000 | (r << 16) | (g << 8) | b) { }
-    Color(byte r, byte g, byte b, byte a) : m_value((a << 24) | (r << 16) | (g << 8) | b) { }
+    Color(byte r, byte g, byte b)
+        : m_value(0xff000000 | (r << 16) | (g << 8) | b)
+    {
+    }
+    Color(byte r, byte g, byte b, byte a)
+        : m_value((a << 24) | (r << 16) | (g << 8) | b)
+    {
+    }
 
     static Color from_rgb(unsigned rgb) { return Color(rgb | 0xff000000); }
     static Color from_rgba(unsigned rgba) { return Color(rgba); }
@@ -94,7 +101,10 @@ public:
     String to_string() const;
 
 private:
-    explicit Color(RGBA32 rgba) : m_value(rgba) { }
+    explicit Color(RGBA32 rgba)
+        : m_value(rgba)
+    {
+    }
 
     RGBA32 m_value { 0 };
 };

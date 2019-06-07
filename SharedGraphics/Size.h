@@ -6,8 +6,12 @@ struct WSAPI_Size;
 
 class Size {
 public:
-    Size() { }
-    Size(int w, int h) : m_width(w), m_height(h) { }
+    Size() {}
+    Size(int w, int h)
+        : m_width(w)
+        , m_height(h)
+    {
+    }
     Size(const WSAPI_Size&);
 
     bool is_null() const { return !m_width && !m_height; }
@@ -23,8 +27,7 @@ public:
 
     bool operator==(const Size& other) const
     {
-        return m_width == other.m_width &&
-               m_height == other.m_height;
+        return m_width == other.m_width && m_height == other.m_height;
     }
 
     bool operator!=(const Size& other) const
@@ -54,4 +57,3 @@ private:
     int m_width { 0 };
     int m_height { 0 };
 };
-

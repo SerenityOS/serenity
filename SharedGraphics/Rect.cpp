@@ -9,8 +9,8 @@ void Rect::intersect(const Rect& other)
     int b = min(bottom(), other.bottom());
 
     if (l > r || t > b) {
-        m_location = { };
-        m_size = { };
+        m_location = {};
+        m_size = {};
         return;
     }
 

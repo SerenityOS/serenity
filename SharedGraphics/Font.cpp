@@ -1,15 +1,16 @@
 #include "Font.h"
-#include <AK/kmalloc.h>
 #include <AK/BufferStream.h>
-#include <AK/StdLibExtras.h>
 #include <AK/MappedFile.h>
-#include <LibC/unistd.h>
-#include <LibC/stdio.h>
-#include <LibC/fcntl.h>
+#include <AK/StdLibExtras.h>
+#include <AK/kmalloc.h>
 #include <LibC/errno.h>
+#include <LibC/fcntl.h>
 #include <LibC/mman.h>
+#include <LibC/stdio.h>
+#include <LibC/unistd.h>
 
-struct [[gnu::packed]] FontFileHeader {
+struct [[gnu::packed]] FontFileHeader
+{
     char magic[4];
     byte glyph_width;
     byte glyph_height;

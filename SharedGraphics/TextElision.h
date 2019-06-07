@@ -1,7 +1,7 @@
 #pragma once
 
-enum class TextElision {
+enum class TextElision
+{
     None,
     Right,
 };
-
