@@ -84,7 +84,8 @@ public:
     {
     }
 
-    enum class CaseSensitivity {
+    enum class CaseSensitivity
+    {
         CaseInsensitive,
         CaseSensitive,
     };

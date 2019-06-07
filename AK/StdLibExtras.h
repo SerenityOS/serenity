@@ -271,14 +271,16 @@ struct RemovePointer<T* const volatile> {
 
 template<typename T, typename U>
 struct IsSame {
-    enum {
+    enum
+    {
         value = 0
     };
 };
 
 template<typename T>
 struct IsSame<T, T> {
-    enum {
+    enum
+    {
         value = 1
     };
 };
@@ -292,5 +294,5 @@ using AK::IsSame;
 using AK::max;
 using AK::min;
 using AK::move;
-using AK::swap;
 using AK::RemoveConst;
+using AK::swap;

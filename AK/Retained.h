@@ -34,7 +34,8 @@ inline void release_if_not_null(T* ptr)
 template<typename T>
 class CONSUMABLE(unconsumed) Retained {
 public:
-    enum AdoptTag {
+    enum AdoptTag
+    {
         Adopt
     };
 
