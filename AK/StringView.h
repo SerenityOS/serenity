@@ -38,8 +38,17 @@ public:
     Vector<StringView> split_view(char) const;
     unsigned to_uint(bool& ok) const;
 
-    bool operator==(const char* cstring) const { return !strcmp(m_characters, cstring); }
-    bool operator!=(const char* cstring) const { return strcmp(m_characters, cstring); }
+    bool operator==(const char* cstring) const
+    {
+        int other_length = strlen(cstring);
+        if (m_length != other_length)
+            return false;
+        return !memcmp(m_characters, cstring, m_length);
+    }
+    bool operator!=(const char* cstring) const
+    {
+        return !(*this == cstring);
+    }
 
     bool operator==(const String&) const;
 
