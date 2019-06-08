@@ -133,8 +133,10 @@ protected:
 private:
     virtual bool is_window() const override final { return true; }
 
+    void paint_keybinds();
+
     void find_keyboard_selectable();
-    void find_keyboard_selectable_children(GWidget* widget);
+    void find_keyboard_selectable_children(GWidget* widget, Vector<GWidget*> &potential_keybind_widgets);
     Retained<GraphicsBitmap> create_backing_bitmap(const Size&);
     void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);
     void flip(const Vector<Rect, 32>& dirty_rects);
@@ -167,6 +169,5 @@ private:
     bool m_keybind_mode { false };
     String m_entered_keybind;
     size_t m_max_keybind_length;
-    Vector<GWidget*> m_potential_keybind_widgets;
     HashMap<String, GWidget*> m_hashed_potential_keybind_widgets;
 };
