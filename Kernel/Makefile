@@ -38,6 +38,7 @@ KERNEL_OBJS = \
        Devices/BXVGADevice.o \
        PCI.o \
        Devices/PS2MouseDevice.o \
+       Devices/SerialDevice.o \
        Net/Socket.o \
        Net/LocalSocket.o \
        Net/IPv4Socket.o \
