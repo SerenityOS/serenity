@@ -3,8 +3,8 @@
 
 namespace AK {
 
-StringView::StringView(const AK::String& string)
-    : m_string(&string)
+StringView::StringView(const String& string)
+    : m_impl(string.impl())
     , m_characters(string.characters())
     , m_length(string.length())
 {
