@@ -24,6 +24,10 @@ mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
 mknod mnt/dev/tty3 c 4 3
+mknod mnt/dev/ttyS0 c 4 64
+mknod mnt/dev/ttyS1 c 4 65
+mknod mnt/dev/ttyS2 c 4 66
+mknod mnt/dev/ttyS3 c 4 67
 mknod mnt/dev/random c 1 8
 mknod mnt/dev/null c 1 3
 mknod mnt/dev/zero c 1 5

@@ -17,6 +17,7 @@
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
@@ -40,6 +41,10 @@ KeyboardDevice* keyboard;
 PS2MouseDevice* ps2mouse;
 DebugLogDevice* dev_debuglog;
 NullDevice* dev_null;
+SerialDevice* ttyS0;
+SerialDevice* ttyS1;
+SerialDevice* ttyS2;
+SerialDevice* ttyS3;
 VFS* vfs;
 
 #ifdef STRESS_TEST_SPAWNING
@@ -173,6 +178,10 @@ extern "C" [[noreturn]] void init()
     keyboard = new KeyboardDevice;
     ps2mouse = new PS2MouseDevice;
     dev_null = new NullDevice;
+    ttyS0 = new SerialDevice(SERIAL_COM1_ADDR, 64);
+    ttyS1 = new SerialDevice(SERIAL_COM2_ADDR, 65);
+    ttyS2 = new SerialDevice(SERIAL_COM3_ADDR, 66);
+    ttyS3 = new SerialDevice(SERIAL_COM4_ADDR, 67);
 
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
