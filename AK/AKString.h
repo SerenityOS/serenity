@@ -133,6 +133,20 @@ public:
     bool operator!=(const String& other) const { return !(*this == other); }
     bool operator<(const String&) const;
 
+    bool operator==(const char* cstring) const
+    {
+        if (is_null())
+            return !cstring;
+        if (!cstring)
+            return false;
+        return !strcmp(characters(), cstring);
+    }
+
+    bool operator!=(const char* cstring) const
+    {
+        return !(*this == cstring);
+    }
+
     String isolated_copy() const;
 
     static String empty();

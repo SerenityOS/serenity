@@ -29,6 +29,7 @@ public:
     }
     StringView(const AK::String& string);
 
+    bool is_null() const { return !m_characters; }
     bool is_empty() const { return m_length == 0; }
     const char* characters() const { return m_characters; }
     int length() const { return m_length; }
@@ -40,6 +41,10 @@ public:
 
     bool operator==(const char* cstring) const
     {
+        if (is_null())
+            return !cstring;
+        if (!cstring)
+            return false;
         int other_length = strlen(cstring);
         if (m_length != other_length)
             return false;
