@@ -38,8 +38,8 @@ public:
 
     String(const StringView& view)
     {
-        if (view.m_string)
-            *this = String(*view.m_string);
+        if (view.m_impl)
+            m_impl = *view.m_impl;
         else
             m_impl = StringImpl::create(view.characters(), view.length());
     }

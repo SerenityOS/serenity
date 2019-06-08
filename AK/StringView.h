@@ -5,6 +5,7 @@
 namespace AK {
 
 class String;
+class StringImpl;
 
 class StringView {
 public:
@@ -27,7 +28,7 @@ public:
                 ++m_length;
         }
     }
-    StringView(const AK::String& string);
+    StringView(const String& string);
 
     bool is_null() const { return !m_characters; }
     bool is_empty() const { return m_length == 0; }
@@ -59,7 +60,7 @@ public:
 
 private:
     friend class String;
-    const AK::String* m_string { nullptr };
+    const StringImpl* m_impl { nullptr };
     const char* m_characters { nullptr };
     int m_length { 0 };
 };
