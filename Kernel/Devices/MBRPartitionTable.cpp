@@ -53,9 +53,17 @@ RetainPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
     kprintf("MBRPartitionTable::partition: status=%#x offset=%#x\n", entry.status, entry.offset);
 #endif
 
-    if (entry.status == 0x00) {
+    if (entry.offset == 0x00) {
+#ifdef MBR_DEBUG
+    kprintf("MBRPartitionTable::partition: missing partition requested index=%d\n", index);
+#endif
+
         return nullptr;
     }
+
+#ifdef MBR_DEBUG
+    kprintf("MBRPartitionTable::partition: found partition index=%d type=%x\n", index, entry.type);
+#endif
 
     return DiskPartition::create(m_device.copy_ref(), entry.offset);
 }
