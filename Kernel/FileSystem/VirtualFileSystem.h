@@ -61,7 +61,7 @@ public:
 
     KResultOr<Retained<FileDescription>> open(RetainPtr<Device>&&, int options);
     KResultOr<Retained<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
-    KResultOr<Retained<FileDescription>> create(StringView path, int options, mode_t mode, Custody& base);
+    KResultOr<Retained<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody);
     KResult mkdir(StringView path, mode_t mode, Custody& base);
     KResult link(StringView old_path, StringView new_path, Custody& base);
     KResult unlink(StringView path, Custody& base);
