@@ -151,10 +151,16 @@ KResult VFS::stat(StringView path, int options, Custody& base, struct stat& stat
 
 KResultOr<Retained<FileDescription>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
 {
-    auto custody_or_error = resolve_path(path, base, nullptr, options);
+    RetainPtr<Custody> parent_custody;
+    auto custody_or_error = resolve_path(path, base, &parent_custody, options);
     if (options & O_CREAT) {
-        if (custody_or_error.is_error())
-            return create(path, options, mode, base);
+        if (!parent_custody)
+            return KResult(-ENOENT);
+        if (custody_or_error.is_error()) {
+            if (custody_or_error.error() != -ENOENT)
+                return custody_or_error.error();
+            return create(path, options, mode, *parent_custody);
+        }
         if (options & O_EXCL)
             return KResult(-EEXIST);
     }
@@ -224,7 +230,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
     return KSuccess;
 }
 
-KResultOr<Retained<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& base)
+KResultOr<Retained<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody)
 {
     (void)options;
 
@@ -233,18 +239,9 @@ KResultOr<Retained<FileDescription>> VFS::create(StringView path, int options, m
         mode |= 0100000;
     }
 
-    RetainPtr<Custody> parent_custody;
-    auto existing_custody_or_error = resolve_path(path, base, &parent_custody);
-    if (!existing_custody_or_error.is_error())
-        return KResult(-EEXIST);
-    if (!parent_custody)
-        return KResult(-ENOENT);
-    auto& parent_inode = parent_custody->inode();
-    if (existing_custody_or_error.error() != -ENOENT)
-        return existing_custody_or_error.error();
+    auto& parent_inode = parent_custody.inode();
     if (!parent_inode.metadata().may_write(current->process()))
         return KResult(-EACCES);
-
     FileSystemPath p(path);
     dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_inode.fsid(), parent_inode.index());
     int error;
@@ -252,7 +249,7 @@ KResultOr<Retained<FileDescription>> VFS::create(StringView path, int options, m
     if (!new_file)
         return KResult(error);
 
-    auto new_custody = Custody::create(parent_custody, p.basename(), *new_file);
+    auto new_custody = Custody::create(&parent_custody, p.basename(), *new_file);
     return FileDescription::create(*new_custody);
 }
 
