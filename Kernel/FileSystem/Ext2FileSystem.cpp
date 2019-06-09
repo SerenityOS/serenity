@@ -704,7 +704,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-KResult Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, mode_t mode)
+KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t mode)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
@@ -739,7 +739,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, mod
     return KSuccess;
 }
 
-KResult Ext2FSInode::remove_child(const String& name)
+KResult Ext2FSInode::remove_child(const StringView& name)
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG

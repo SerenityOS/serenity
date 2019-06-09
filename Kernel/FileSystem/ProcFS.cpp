@@ -1047,14 +1047,14 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer,
     return 0;
 }
 
-KResult ProcFSInode::add_child(InodeIdentifier child_id, const String& name, mode_t)
+KResult ProcFSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t)
 {
     (void)child_id;
     (void)name;
     return KResult(-EPERM);
 }
 
-KResult ProcFSInode::remove_child(const String& name)
+KResult ProcFSInode::remove_child(const StringView& name)
 {
     (void)name;
     return KResult(-EPERM);

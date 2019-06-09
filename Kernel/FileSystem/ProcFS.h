@@ -86,8 +86,8 @@ private:
     virtual InodeIdentifier lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* buffer, FileDescription*) override;
-    virtual KResult add_child(InodeIdentifier child_id, const String& name, mode_t) override;
-    virtual KResult remove_child(const String& name) override;
+    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) override;
+    virtual KResult remove_child(const StringView& name) override;
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;

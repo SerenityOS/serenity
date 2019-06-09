@@ -31,8 +31,8 @@ private:
     virtual InodeIdentifier lookup(StringView name) override;
     virtual void flush_metadata() override;
     virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescription*) override;
-    virtual KResult add_child(InodeIdentifier child_id, const String& name, mode_t) override;
-    virtual KResult remove_child(const String& name) override;
+    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) override;
+    virtual KResult remove_child(const StringView& name) override;
     virtual int set_atime(time_t) override;
     virtual int set_ctime(time_t) override;
     virtual int set_mtime(time_t) override;
