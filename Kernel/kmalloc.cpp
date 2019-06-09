@@ -23,11 +23,11 @@ struct [[gnu::packed]] allocation_t
 #define CHUNK_SIZE 32
 #define POOL_SIZE (1024 * 1024)
 
-#define ETERNAL_BASE_PHYSICAL 0x100000
-#define ETERNAL_RANGE_SIZE 0x100000
+#define ETERNAL_BASE_PHYSICAL (1 * MB)
+#define ETERNAL_RANGE_SIZE (2 * MB)
 
-#define BASE_PHYSICAL 0x200000
-#define RANGE_SIZE 0x100000
+#define BASE_PHYSICAL (3 * MB)
+#define RANGE_SIZE (1 * MB)
 
 static byte alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
