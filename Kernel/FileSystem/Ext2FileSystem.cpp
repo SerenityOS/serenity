@@ -881,7 +881,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex group_index, int c
     auto bitmap_block = read_block(bgd.bg_block_bitmap);
     int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
     auto block_bitmap = Bitmap::wrap(bitmap_block.pointer(), blocks_in_group);
-    BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group();
+    BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + 1;
     for (int i = 0; i < block_bitmap.size(); ++i) {
         if (!block_bitmap.get(i)) {
             blocks.append(first_block_in_group + i);
@@ -1041,7 +1041,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 #endif
     unsigned group_index = group_index_from_block_index(block_index);
     auto& bgd = group_descriptor(group_index);
-    BlockIndex index_in_group = block_index - ((group_index - 1) * blocks_per_group());
+    BlockIndex index_in_group = (block_index - 1) - ((group_index - 1) * blocks_per_group());
     unsigned bit_index = index_in_group % blocks_per_group();
 #ifdef EXT2_DEBUG
     dbgprintf("  index_in_group: %u\n", index_in_group);
