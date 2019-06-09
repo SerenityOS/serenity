@@ -262,14 +262,14 @@ ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer
     return 0;
 }
 
-KResult SynthFSInode::add_child(InodeIdentifier child_id, const String& name, mode_t)
+KResult SynthFSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t)
 {
     (void)child_id;
     (void)name;
     ASSERT_NOT_REACHED();
 }
 
-KResult SynthFSInode::remove_child(const String& name)
+KResult SynthFSInode::remove_child(const StringView& name)
 {
     (void)name;
     ASSERT_NOT_REACHED();
