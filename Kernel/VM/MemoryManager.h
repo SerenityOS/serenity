@@ -64,8 +64,6 @@ public:
 
     void remap_region(PageDirectory&, Region&);
 
-    size_t ram_size() const { return m_ram_size; }
-
     int user_physical_pages_in_existence() const { return s_user_physical_pages_in_existence; }
     int super_physical_pages_in_existence() const { return s_super_physical_pages_in_existence; }
 
@@ -214,7 +212,8 @@ private:
     PageTableEntry ensure_pte(PageDirectory&, VirtualAddress);
 
     RetainPtr<PageDirectory> m_kernel_page_directory;
-    dword* m_page_table_zero;
+    dword* m_page_table_zero { nullptr };
+    dword* m_page_table_one { nullptr };
 
     VirtualAddress m_quickmap_addr;
 
@@ -225,7 +224,6 @@ private:
     HashTable<Region*> m_user_regions;
     HashTable<Region*> m_kernel_regions;
 
-    size_t m_ram_size { 0 };
     bool m_quickmap_in_use { false };
 };
 

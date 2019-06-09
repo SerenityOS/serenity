@@ -5,6 +5,7 @@
 #include <AK/kstdio.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/Multiboot.h>
 #include <Kernel/VM/MemoryManager.h>
 
 //#define MM_DEBUG
@@ -21,18 +22,9 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager()
 {
-    // FIXME: This is not the best way to do memory map detection.
-    //        Rewrite to use BIOS int 15,e820 once we have VM86 support.
-    word base_memory = (CMOS::read(0x16) << 8) | CMOS::read(0x15);
-    word ext_memory = (CMOS::read(0x18) << 8) | CMOS::read(0x17);
-
-    kprintf("%u kB base memory\n", base_memory);
-    kprintf("%u kB extended memory\n", ext_memory);
-
-    m_ram_size = ext_memory * 1024;
-
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(0x4000));
     m_page_table_zero = (dword*)0x6000;
+    m_page_table_one = (dword*)0x7000;
 
     initialize_paging();
 
@@ -47,6 +39,7 @@ void MemoryManager::populate_page_directory(PageDirectory& page_directory)
 {
     page_directory.m_directory_page = allocate_supervisor_physical_page();
     page_directory.entries()[0] = kernel_page_directory().entries()[0];
+    page_directory.entries()[1] = kernel_page_directory().entries()[1];
     // Defer to the kernel page tables for 0xC0000000-0xFFFFFFFF
     for (int i = 768; i < 1024; ++i)
         page_directory.entries()[i] = kernel_page_directory().entries()[i];
@@ -57,6 +50,7 @@ void MemoryManager::initialize_paging()
     static_assert(sizeof(MemoryManager::PageDirectoryEntry) == 4);
     static_assert(sizeof(MemoryManager::PageTableEntry) == 4);
     memset(m_page_table_zero, 0, PAGE_SIZE);
+    memset(m_page_table_one, 0, PAGE_SIZE);
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
@@ -69,27 +63,48 @@ void MemoryManager::initialize_paging()
     map_protected(VirtualAddress(0), PAGE_SIZE);
 
 #ifdef MM_DEBUG
-    dbgprintf("MM: Identity map bottom 4MB\n");
+    dbgprintf("MM: Identity map bottom 5MB\n");
 #endif
-    // The bottom 4 MB (except for the null page) are identity mapped & supervisor only.
+    // The bottom 5 MB (except for the null page) are identity mapped & supervisor only.
     // Every process shares these mappings.
-    create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (4 * MB) - PAGE_SIZE);
+    create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (5 * MB) - PAGE_SIZE);
 
     // Basic memory map:
     // 0      -> 512 kB         Kernel code. Root page directory & PDE 0.
     // (last page before 1MB)   Used by quickmap_page().
-    // 1 MB   -> 2 MB           kmalloc_eternal() space.
-    // 2 MB   -> 3 MB           kmalloc() space.
-    // 3 MB   -> 4 MB           Supervisor physical pages (available for allocation!)
-    // 4 MB   -> 0xc0000000     Userspace physical pages (available for allocation!)
+    // 1 MB   -> 3 MB           kmalloc_eternal() space.
+    // 3 MB   -> 4 MB           kmalloc() space.
+    // 4 MB   -> 5 MB           Supervisor physical pages (available for allocation!)
+    // 5 MB   -> 0xc0000000     Userspace physical pages (available for allocation!)
     // 0xc0000000-0xffffffff    Kernel-only linear address space
 
-    for (size_t i = (2 * MB); i < (4 * MB); i += PAGE_SIZE)
-        m_free_supervisor_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(i), true));
+    for (auto* mmap = (multiboot_memory_map_t*)multiboot_info_ptr->mmap_addr; (unsigned long)mmap < multiboot_info_ptr->mmap_addr + multiboot_info_ptr->mmap_length; mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
+        kprintf("MM: Multiboot mmap: base_addr = 0x%x%08x, length = 0x%x%08x, type = 0x%x\n",
+            (dword)(mmap->addr >> 32),
+            (dword)(mmap->addr & 0xffffffff),
+            (dword)(mmap->len >> 32),
+            (dword)(mmap->len & 0xffffffff),
+            (dword)mmap->type);
 
-    dbgprintf("MM: 4MB-%uMB available for allocation\n", m_ram_size / 1048576);
-    for (size_t i = (4 * MB); i < m_ram_size; i += PAGE_SIZE)
-        m_free_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(i), false));
+        if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
+            continue;
+        // FIXME: Maybe make use of stuff below the 1MB mark?
+        if (mmap->addr < (1 * MB))
+            continue;
+
+        for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
+            if (page_base < (4 * MB)) {
+                // Skip over pages managed by kmalloc.
+                continue;
+            }
+
+            if (page_base < (5 * MB))
+                m_free_supervisor_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(page_base), true));
+            else
+                m_free_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(page_base), false));
+        }
+    }
+
     m_quickmap_addr = VirtualAddress((1 * MB) - PAGE_SIZE);
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
@@ -147,6 +162,12 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vad
         if (page_directory_index == 0) {
             ASSERT(&page_directory == m_kernel_page_directory);
             pde.set_page_table_base((dword)m_page_table_zero);
+            pde.set_user_allowed(false);
+            pde.set_present(true);
+            pde.set_writable(true);
+        } else if (page_directory_index == 1) {
+            ASSERT(&page_directory == m_kernel_page_directory);
+            pde.set_page_table_base((dword)m_page_table_one);
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);

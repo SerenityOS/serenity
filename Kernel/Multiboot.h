@@ -18,6 +18,20 @@ struct multiboot_elf_section_header_table {
 };
 typedef struct multiboot_elf_section_header_table multiboot_elf_section_header_table_t;
 
+#define MULTIBOOT_MEMORY_AVAILABLE 1
+#define MULTIBOOT_MEMORY_RESERVED 2
+#define MULTIBOOT_MEMORY_ACPI_RECLAIMABLE 3
+#define MULTIBOOT_MEMORY_NVS 4
+#define MULTIBOOT_MEMORY_BADRAM 5
+
+struct multiboot_mmap_entry {
+    dword size;
+    qword addr;
+    qword len;
+    dword type;
+} __attribute__((packed));
+typedef struct multiboot_mmap_entry multiboot_memory_map_t;
+
 struct multiboot_info {
     // Multiboot info version number.
     dword flags;
