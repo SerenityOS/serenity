@@ -761,7 +761,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
     ASSERT(is_directory());
 
     //#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Adding inode %u with name '%s' to directory %u\n", child_id.index(), name.characters(), index());
+    dbgprintf("Ext2FS: Adding inode %u with name '%s' and mode %o to directory %u\n", child_id.index(), name.characters(), mode, index());
     //#endif
 
     Vector<FS::DirectoryEntry> entries;
@@ -1150,7 +1150,7 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     }
 
     // Try adding it to the directory first, in case the name is already in use.
-    auto result = parent_inode->add_child({ fsid(), inode_id }, name, to_ext2_file_type(mode));
+    auto result = parent_inode->add_child({ fsid(), inode_id }, name, mode);
     if (result.is_error()) {
         error = result;
         return {};
