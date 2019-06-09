@@ -339,16 +339,21 @@ void GWindow::paint_keybinds() {
 
         for (auto& keypair: m_hashed_potential_keybind_widgets) {
             auto widget = keypair.value;
-            auto rect = Rect(widget->x()-5, widget->y()-5, 12, 12);
             bool could_be_keybind = true;
             for (size_t i = 0; i < m_entered_keybind.length(); i++) {
                 if (keypair.key.characters()[i] != m_entered_keybind.characters()[i]) {
                     could_be_keybind = false;
                 }
             }
+
             if (could_be_keybind) {
-                painter.draw_text(rect, keypair.key.characters(), TextAlignment::TopLeft, Color::Black);
-                painter.draw_text(rect, m_entered_keybind.characters(), TextAlignment::TopLeft, Color::Green);
+                auto rect = Rect(widget->x()-5, widget->y()-5, 4+Font::default_font().width(keypair.key), 16);
+                auto highlight_rect = Rect(widget->x()-3, widget->y()-5, 0, 16);
+
+                painter.fill_rect(rect, Color::LightGray);
+                painter.draw_rect(rect, Color::Black, false);
+                painter.draw_text(rect, keypair.key.characters(), TextAlignment::Center, Color::Black);
+                painter.draw_text(highlight_rect, m_entered_keybind.characters(), TextAlignment::CenterLeft, Color::MidGray);
             }
         }
     }
@@ -400,9 +405,6 @@ void GWindow::update(const Rect& a_rect)
 {
     if (!m_window_id)
         return;
-
-    //We probably shouldn't clear the buffer on updates
-    //find_keyboard_selectable();
 
     for (auto& pending_rect : m_pending_paint_event_rects) {
         if (pending_rect.contains(a_rect)) {
