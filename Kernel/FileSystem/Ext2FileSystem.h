@@ -43,6 +43,7 @@ private:
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(off_t) override;
 
+    bool write_directory(const Vector<FS::DirectoryEntry>&);
     void populate_lookup_cache() const;
     bool resize(qword);
 
@@ -103,8 +104,6 @@ private:
     Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
     bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
-    bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte file_type, int& error);
-    bool write_directory_inode(InodeIndex, Vector<DirectoryEntry>&&);
     bool get_inode_allocation_state(InodeIndex) const;
     bool set_inode_allocation_state(InodeIndex, bool);
     bool set_block_allocation_state(BlockIndex, bool);

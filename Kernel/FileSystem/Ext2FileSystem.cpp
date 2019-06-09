@@ -704,85 +704,10 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t mode)
+bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
 {
     LOCKER(m_lock);
-    ASSERT(is_directory());
-
-    //#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Adding inode %u with name '%s' to directory %u\n", child_id.index(), name.characters(), index());
-    //#endif
-
-    Vector<FS::DirectoryEntry> entries;
-    bool name_already_exists = false;
-    traverse_as_directory([&](auto& entry) {
-        if (!strcmp(entry.name, name.characters())) {
-            name_already_exists = true;
-            return false;
-        }
-        entries.append(entry);
-        return true;
-    });
-    if (name_already_exists) {
-        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), index());
-        return KResult(-EEXIST);
-    }
-
-    auto child_inode = fs().get_inode(child_id);
-    if (child_inode)
-        child_inode->increment_link_count();
-
-    entries.append({ name.characters(), name.length(), child_id, to_ext2_file_type(mode) });
-    bool success = fs().write_directory_inode(index(), move(entries));
-    if (success)
-        m_lookup_cache.set(name, child_id.index());
-    return KSuccess;
-}
-
-KResult Ext2FSInode::remove_child(const StringView& name)
-{
-    LOCKER(m_lock);
-#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FSInode::remove_child(%s) in inode %u\n", name.characters(), index());
-#endif
-    ASSERT(is_directory());
-
-    unsigned child_inode_index;
-    auto it = m_lookup_cache.find(name);
-    if (it == m_lookup_cache.end())
-        return KResult(-ENOENT);
-    child_inode_index = (*it).value;
-
-    InodeIdentifier child_id { fsid(), child_inode_index };
-
-    //#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Removing '%s' in directory %u\n", name.characters(), index());
-    //#endif
-
-    Vector<FS::DirectoryEntry> entries;
-    traverse_as_directory([&](auto& entry) {
-        if (strcmp(entry.name, name.characters()) != 0)
-            entries.append(entry);
-        return true;
-    });
-
-    bool success = fs().write_directory_inode(index(), move(entries));
-    if (!success) {
-        // FIXME: Plumb error from write_directory_inode().
-        return KResult(-EIO);
-    }
-
-    m_lookup_cache.remove(name);
-
-    auto child_inode = fs().get_inode(child_id);
-    child_inode->decrement_link_count();
-    return KSuccess;
-}
-
-bool Ext2FS::write_directory_inode(InodeIndex directory_inode_index, Vector<DirectoryEntry>&& entries)
-{
-    LOCKER(m_lock);
-    dbgprintf("Ext2FS: New directory inode %u contents to write:\n", directory_inode_index);
+    dbgprintf("Ext2FS: New directory inode %u contents to write:\n", index());
 
     int directory_size = 0;
     for (auto& entry : entries) {
@@ -790,8 +715,10 @@ bool Ext2FS::write_directory_inode(InodeIndex directory_inode_index, Vector<Dire
         directory_size += EXT2_DIR_REC_LEN(entry.name_length);
     }
 
-    int blocks_needed = ceil_div(directory_size, block_size());
-    int occupied_size = blocks_needed * block_size();
+    auto block_size = fs().block_size();
+
+    int blocks_needed = ceil_div(directory_size, block_size);
+    int occupied_size = blocks_needed * block_size;
 
     dbgprintf("Ext2FS: directory size: %u (occupied: %u)\n", directory_size, occupied_size);
 
@@ -824,9 +751,83 @@ bool Ext2FS::write_directory_inode(InodeIndex directory_inode_index, Vector<Dire
 
     stream.fill_to_end(0);
 
-    auto directory_inode = get_inode({ fsid(), directory_inode_index });
-    ssize_t nwritten = directory_inode->write_bytes(0, directory_data.size(), directory_data.pointer(), nullptr);
+    ssize_t nwritten = write_bytes(0, directory_data.size(), directory_data.pointer(), nullptr);
     return nwritten == directory_data.size();
+}
+
+KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t mode)
+{
+    LOCKER(m_lock);
+    ASSERT(is_directory());
+
+    //#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FS: Adding inode %u with name '%s' to directory %u\n", child_id.index(), name.characters(), index());
+    //#endif
+
+    Vector<FS::DirectoryEntry> entries;
+    bool name_already_exists = false;
+    traverse_as_directory([&](auto& entry) {
+        if (!strcmp(entry.name, name.characters())) {
+            name_already_exists = true;
+            return false;
+        }
+        entries.append(entry);
+        return true;
+    });
+    if (name_already_exists) {
+        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), index());
+        return KResult(-EEXIST);
+    }
+
+    auto child_inode = fs().get_inode(child_id);
+    if (child_inode)
+        child_inode->increment_link_count();
+
+    entries.append({ name.characters(), name.length(), child_id, to_ext2_file_type(mode) });
+    bool success = write_directory(entries);
+    if (success)
+        m_lookup_cache.set(name, child_id.index());
+    return KSuccess;
+}
+
+KResult Ext2FSInode::remove_child(const StringView& name)
+{
+    LOCKER(m_lock);
+#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FSInode::remove_child(%s) in inode %u\n", name.characters(), index());
+#endif
+    ASSERT(is_directory());
+
+    unsigned child_inode_index;
+    auto it = m_lookup_cache.find(name);
+    if (it == m_lookup_cache.end())
+        return KResult(-ENOENT);
+    child_inode_index = (*it).value;
+
+    InodeIdentifier child_id { fsid(), child_inode_index };
+
+    //#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FS: Removing '%s' in directory %u\n", name.characters(), index());
+    //#endif
+
+    Vector<FS::DirectoryEntry> entries;
+    traverse_as_directory([&](auto& entry) {
+        if (strcmp(entry.name, name.characters()) != 0)
+            entries.append(entry);
+        return true;
+    });
+
+    bool success = write_directory(entries);
+    if (!success) {
+        // FIXME: Plumb error from write_directory().
+        return KResult(-EIO);
+    }
+
+    m_lookup_cache.remove(name);
+
+    auto child_inode = fs().get_inode(child_id);
+    child_inode->decrement_link_count();
+    return KSuccess;
 }
 
 unsigned Ext2FS::inodes_per_block() const
@@ -1106,7 +1107,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
     entries.append({ ".", inode->identifier(), EXT2_FT_DIR });
     entries.append({ "..", parent_id, EXT2_FT_DIR });
 
-    bool success = write_directory_inode(inode->identifier().index(), move(entries));
+    bool success = static_cast<Ext2FSInode&>(*inode).write_directory(entries);
     ASSERT(success);
 
     auto parent_inode = get_inode(parent_id);
