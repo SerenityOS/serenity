@@ -14,7 +14,7 @@ PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
     MemoryManager::s_user_physical_pages_not_yet_used += size();
 }
 
-PhysicalAddress PhysicalRegion::next()
+PhysicalAddress PhysicalRegion::take_next_page()
 {
     ASSERT(!(m_next == m_upper));
 

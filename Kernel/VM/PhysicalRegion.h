@@ -14,10 +14,10 @@ public:
     static Retained<PhysicalRegion> create(PhysicalAddress lower, PhysicalAddress upper);
     ~PhysicalRegion() {}
 
-    bool is_empty() { return m_next == m_upper; }
-    int size() { return (m_upper.get() - m_next.get()) / PAGE_SIZE; }
+    bool is_empty() const { return m_next == m_upper; }
+    int size() const { return (m_upper.get() - m_next.get()) / PAGE_SIZE; }
 
-    PhysicalAddress next();
+    PhysicalAddress take_next_page();
 
 private:
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);

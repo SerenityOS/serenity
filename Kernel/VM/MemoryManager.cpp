@@ -446,9 +446,9 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page(ShouldZeroFill sho
     InterruptDisabler disabler;
 
     if (m_free_physical_pages.is_empty()) {
-        for (auto region : m_physical_regions) {
+        for (auto& region : m_physical_regions) {
             if (!region->is_empty()) {
-                m_free_physical_pages.append(PhysicalPage::create_eternal(region->next(), false));
+                m_free_physical_pages.append(PhysicalPage::create_eternal(region->take_next_page(), false));
             }
         }
     }
