@@ -91,3 +91,12 @@ void GraphicsBitmap::set_mmap_name(const StringView& name)
     ASSERT(m_needs_munmap);
     ::set_mmap_name(m_data, size_in_bytes(), name.characters());
 }
+
+void GraphicsBitmap::fill(Color color)
+{
+    ASSERT(m_format == GraphicsBitmap::Format::RGB32 || m_format == GraphicsBitmap::Format::RGBA32);
+    for (int y = 0; y < height(); ++y) {
+        auto* scanline = this->scanline(y);
+        fast_dword_fill(scanline, color.value(), width());
+    }
+}

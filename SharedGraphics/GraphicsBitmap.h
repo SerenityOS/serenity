@@ -39,6 +39,8 @@ public:
     size_t pitch() const { return m_pitch; }
     int shared_buffer_id() const { return m_shared_buffer ? m_shared_buffer->shared_buffer_id() : -1; }
 
+    void fill(Color);
+
     bool has_alpha_channel() const { return m_format == Format::RGBA32; }
     Format format() const { return m_format; }
 
