@@ -13,6 +13,7 @@
 
 static MemoryManager* s_the;
 unsigned MemoryManager::s_user_physical_pages_in_existence;
+unsigned MemoryManager::s_user_physical_pages_not_yet_used;
 unsigned MemoryManager::s_super_physical_pages_in_existence;
 
 MemoryManager& MM
@@ -92,16 +93,26 @@ void MemoryManager::initialize_paging()
         if (mmap->addr < (1 * MB))
             continue;
 
+        size_t region_lower = 0, region_upper = 0;
+
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             if (page_base < (4 * MB)) {
                 // Skip over pages managed by kmalloc.
                 continue;
             }
 
-            if (page_base < (5 * MB))
+            if (page_base < (5 * MB)) {
                 m_free_supervisor_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(page_base), true));
-            else
-                m_free_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(page_base), false));
+            } else {
+                if (page_base < region_lower || region_lower == 0)
+                    region_lower = page_base;
+                if (page_base > region_upper)
+                    region_upper = page_base;
+            }
+        }
+
+        if (region_lower != 0 && region_upper != 0) {
+            m_physical_regions.append(PhysicalRegion::create(PhysicalAddress(region_lower), PhysicalAddress(region_upper)));
         }
     }
 
@@ -433,14 +444,25 @@ RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& na
 RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill)
 {
     InterruptDisabler disabler;
-    if (1 > m_free_physical_pages.size()) {
-        kprintf("FUCK! No physical pages available.\n");
+
+    if (m_free_physical_pages.is_empty()) {
+        for (auto region : m_physical_regions) {
+            if (!region->is_empty()) {
+                m_free_physical_pages.append(PhysicalPage::create_eternal(region->next(), false));
+            }
+        }
+    }
+
+    if (m_free_physical_pages.is_empty()) {
+        kprintf("MM: no physical pages available even after attempting to fetch a new one\n");
         ASSERT_NOT_REACHED();
         return {};
     }
+
 #ifdef MM_DEBUG
     dbgprintf("MM: allocate_physical_page vending P%x (%u remaining)\n", m_free_physical_pages.last()->paddr().get(), m_free_physical_pages.size());
 #endif
+
     auto physical_page = m_free_physical_pages.take_last();
     if (should_zero_fill == ShouldZeroFill::Yes) {
         auto* ptr = (dword*)quickmap_page(*physical_page);

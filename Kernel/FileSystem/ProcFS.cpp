@@ -545,7 +545,7 @@ ByteBuffer procfs$memstat(InodeIdentifier)
         sum_alloc,
         sum_free,
         MM.user_physical_pages_in_existence() - MM.m_free_physical_pages.size(),
-        MM.m_free_physical_pages.size(),
+        MM.user_physical_pages_not_yet_used() + MM.m_free_physical_pages.size(),
         MM.super_physical_pages_in_existence() - MM.m_free_supervisor_physical_pages.size(),
         MM.m_free_supervisor_physical_pages.size(),
         g_kmalloc_call_count,

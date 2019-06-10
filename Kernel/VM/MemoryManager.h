@@ -13,6 +13,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
 #include <Kernel/VirtualAddress.h>
@@ -32,6 +33,7 @@ class MemoryManager {
     AK_MAKE_ETERNAL
     friend class PageDirectory;
     friend class PhysicalPage;
+    friend class PhysicalRegion;
     friend class Region;
     friend class VMObject;
     friend ByteBuffer procfs$mm(InodeIdentifier);
@@ -65,6 +67,7 @@ public:
     void remap_region(PageDirectory&, Region&);
 
     int user_physical_pages_in_existence() const { return s_user_physical_pages_in_existence; }
+    int user_physical_pages_not_yet_used() const { return s_user_physical_pages_not_yet_used; }
     int super_physical_pages_in_existence() const { return s_super_physical_pages_in_existence; }
 
     void map_for_kernel(VirtualAddress, PhysicalAddress);
@@ -207,6 +210,7 @@ private:
     };
 
     static unsigned s_user_physical_pages_in_existence;
+    static unsigned s_user_physical_pages_not_yet_used;
     static unsigned s_super_physical_pages_in_existence;
 
     PageTableEntry ensure_pte(PageDirectory&, VirtualAddress);
@@ -217,6 +221,7 @@ private:
 
     VirtualAddress m_quickmap_addr;
 
+    Vector<Retained<PhysicalRegion>> m_physical_regions;
     Vector<Retained<PhysicalPage>> m_free_physical_pages;
     Vector<Retained<PhysicalPage>> m_free_supervisor_physical_pages;
 
