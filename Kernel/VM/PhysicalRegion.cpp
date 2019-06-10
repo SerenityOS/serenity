@@ -9,7 +9,9 @@ Retained<PhysicalRegion> PhysicalRegion::create(PhysicalAddress lower, PhysicalA
 }
 
 PhysicalRegion::PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper)
-    : m_lower(lower), m_upper(upper), m_next(lower)
+    : m_lower(lower)
+    , m_upper(upper)
+    , m_next(lower)
 {
     MemoryManager::s_user_physical_pages_not_yet_used += size();
 }

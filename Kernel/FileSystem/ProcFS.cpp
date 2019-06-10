@@ -604,7 +604,7 @@ struct SysVariableData final : public ProcFSInodeCustomData {
         Boolean,
         String,
     };
-    Type type { Invalid };
+    Type type{ Invalid };
     Function<void()> notify_callback;
     void* address;
 };
@@ -842,7 +842,7 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileD
     auto* directory_entry = fs().get_directory_entry(identifier());
 
     Function<ByteBuffer(InodeIdentifier)> callback_tmp;
-    Function<ByteBuffer(InodeIdentifier)>* read_callback { nullptr };
+    Function<ByteBuffer(InodeIdentifier)>* read_callback{ nullptr };
     if (directory_entry) {
         read_callback = &directory_entry->read_callback;
     } else {

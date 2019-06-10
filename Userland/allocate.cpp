@@ -8,7 +8,9 @@ void usage(void)
     exit(1);
 }
 
-enum Unit { Bytes, KiloBytes, MegaBytes };
+enum Unit { Bytes,
+    KiloBytes,
+    MegaBytes };
 
 int main(int argc, char** argv)
 {
@@ -35,9 +37,14 @@ int main(int argc, char** argv)
     }
 
     switch (unit) {
-    case Bytes: break;
-    case KiloBytes: count *= 1024; break;
-    case MegaBytes: count *= 1024 * 1024; break;
+    case Bytes:
+        break;
+    case KiloBytes:
+        count *= 1024;
+        break;
+    case MegaBytes:
+        count *= 1024 * 1024;
+        break;
     }
 
     printf("allocating memory (%d bytes)...\n", count);

@@ -216,8 +216,8 @@ private:
     PageTableEntry ensure_pte(PageDirectory&, VirtualAddress);
 
     RetainPtr<PageDirectory> m_kernel_page_directory;
-    dword* m_page_table_zero { nullptr };
-    dword* m_page_table_one { nullptr };
+    dword* m_page_table_zero{ nullptr };
+    dword* m_page_table_one{ nullptr };
 
     VirtualAddress m_quickmap_addr;
 
@@ -229,7 +229,7 @@ private:
     HashTable<Region*> m_user_regions;
     HashTable<Region*> m_kernel_regions;
 
-    bool m_quickmap_in_use { false };
+    bool m_quickmap_in_use{ false };
 };
 
 struct ProcessPagingScope {
