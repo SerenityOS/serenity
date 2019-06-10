@@ -2,6 +2,7 @@ include ../../Makefile.common
 
 OBJS = \
     PaintableWidget.o \
+    PaletteWidget.o \
     main.o
 
 APP = PaintBrush
