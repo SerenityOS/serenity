@@ -71,6 +71,7 @@ cp ../Applications/ProcessManager/ProcessManager mnt/bin/ProcessManager
 cp ../Applications/Taskbar/Taskbar mnt/bin/Taskbar
 cp ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
+cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
@@ -95,6 +96,7 @@ ln -s Taskbar mnt/bin/tb
 ln -s VisualBuilder mnt/bin/vb
 ln -s WidgetGallery mnt/bin/wg
 ln -s TextEditor mnt/bin/te
+ln -s PaintBrush mnt/bin/pb
 echo "done"
 
 # Run local sync script, if it exists
