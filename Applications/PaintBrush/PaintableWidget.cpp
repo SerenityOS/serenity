@@ -30,10 +30,13 @@ void PaintableWidget::mousedown_event(GMouseEvent& event)
     GPainter painter(*m_bitmap);
     painter.set_pixel(event.position(), Color::Black);
     update({ event.position(), { 1, 1 } });
+    m_last_drawing_event_position = event.position();
 }
 
-void PaintableWidget::mouseup_event(GMouseEvent&)
+void PaintableWidget::mouseup_event(GMouseEvent& event)
 {
+    if (event.button() == GMouseButton::Left)
+        m_last_drawing_event_position = { -1, -1 };
 }
 
 void PaintableWidget::mousemove_event(GMouseEvent& event)
@@ -43,7 +46,15 @@ void PaintableWidget::mousemove_event(GMouseEvent& event)
 
     if (event.buttons() & GMouseButton::Left) {
         GPainter painter(*m_bitmap);
-        painter.set_pixel(event.position(), Color::Black);
-        update({ event.position(), { 1, 1 } });
+
+        if (m_last_drawing_event_position != Point(-1, -1)) {
+            painter.draw_line(m_last_drawing_event_position, event.position(), Color::Black);
+            update();
+        } else {
+            painter.set_pixel(event.position(), Color::Black);
+            update({ event.position(), { 1, 1 } });
+        }
+
+        m_last_drawing_event_position = event.position();
     }
 }

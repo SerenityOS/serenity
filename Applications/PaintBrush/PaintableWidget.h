@@ -15,5 +15,6 @@ private:
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
 
+    Point m_last_drawing_event_position { -1, -1 };
     RetainPtr<GraphicsBitmap> m_bitmap;
 };
