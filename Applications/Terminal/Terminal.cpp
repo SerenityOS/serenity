@@ -372,6 +372,15 @@ void Terminal::escape$G(const ParamVector& params)
     set_cursor(m_cursor_row, new_column);
 }
 
+void Terminal::escape$b(const ParamVector& params)
+{
+    if (params.size() < 1)
+        return;
+
+    for (unsigned i = 0; i < params[0]; ++i)
+        put_character_at(m_cursor_row, m_cursor_column++, m_last_char);
+}
+
 void Terminal::escape$d(const ParamVector& params)
 {
     int new_row = 1;
@@ -617,6 +626,9 @@ void Terminal::execute_escape_sequence(byte final)
     case 'X':
         escape$X(params);
         break;
+    case 'b':
+        escape$b(params);
+        break;
     case 'd':
         escape$d(params);
         break;
@@ -714,6 +726,8 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
     line.characters[column] = ch;
     line.attributes[column] = m_current_attribute;
     line.dirty = true;
+
+    m_last_char = ch;
 }
 
 void Terminal::on_char(byte ch)
