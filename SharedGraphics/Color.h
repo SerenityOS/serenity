@@ -95,6 +95,11 @@ public:
         return Color(min(255.0, red() * 1.2), min(255.0, green() * 1.2), min(255.0, blue() * 1.2), alpha());
     }
 
+    Color inverted() const
+    {
+        return Color(~red(), ~green(), ~blue());
+    }
+
     RGBA32 value() const { return m_value; }
 
     String to_string() const;
