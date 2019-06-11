@@ -21,21 +21,21 @@ PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_retu
     , m_supervisor(supervisor)
     , m_paddr(paddr)
 {
-    if (supervisor)
-        ++MemoryManager::s_super_physical_pages_in_existence;
-    else
-        ++MemoryManager::s_user_physical_pages_in_existence;
 }
 
 void PhysicalPage::return_to_freelist()
 {
     ASSERT((paddr().get() & ~PAGE_MASK) == 0);
+
     InterruptDisabler disabler;
+
     m_retain_count = 1;
+
     if (m_supervisor)
-        MM.m_free_supervisor_physical_pages.append(adopt(*this));
+        MM.deallocate_supervisor_physical_page(*this);
     else
-        MM.m_free_physical_pages.append(adopt(*this));
+        MM.deallocate_user_physical_page(*this);
+
 #ifdef MM_DEBUG
     dbgprintf("MM: P%x released to freelist\n", m_paddr.get());
 #endif

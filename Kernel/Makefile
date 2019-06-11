@@ -18,6 +18,7 @@ KERNEL_OBJS = \
        VM/VMObject.o \
        VM/PageDirectory.o \
        VM/PhysicalPage.o \
+       VM/PhysicalRegion.o \
        VM/RangeAllocator.o \
        Console.o \
        IRQHandler.o \

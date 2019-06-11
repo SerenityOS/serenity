@@ -387,8 +387,8 @@ ByteBuffer procfs$mm(InodeIdentifier)
             vmo->name().characters());
     }
     builder.appendf("VMO count: %u\n", MM.m_vmos.size());
-    builder.appendf("Free physical pages: %u\n", MM.m_free_physical_pages.size());
-    builder.appendf("Free supervisor physical pages: %u\n", MM.m_free_supervisor_physical_pages.size());
+    builder.appendf("Free physical pages: %u\n", MM.user_physical_pages() - MM.user_physical_pages_used());
+    builder.appendf("Free supervisor physical pages: %u\n", MM.super_physical_pages() - MM.super_physical_pages_used());
     return builder.to_byte_buffer();
 }
 
@@ -544,10 +544,10 @@ ByteBuffer procfs$memstat(InodeIdentifier)
         kmalloc_sum_eternal,
         sum_alloc,
         sum_free,
-        MM.user_physical_pages_in_existence() - MM.m_free_physical_pages.size(),
-        MM.m_free_physical_pages.size(),
-        MM.super_physical_pages_in_existence() - MM.m_free_supervisor_physical_pages.size(),
-        MM.m_free_supervisor_physical_pages.size(),
+        MM.user_physical_pages_used(),
+        MM.user_physical_pages() - MM.user_physical_pages_used(),
+        MM.super_physical_pages_used(),
+        MM.super_physical_pages() - MM.super_physical_pages_used(),
         g_kmalloc_call_count,
         g_kfree_call_count);
     return builder.to_byte_buffer();

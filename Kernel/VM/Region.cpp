@@ -103,7 +103,7 @@ int Region::commit()
     for (size_t i = first_page_index(); i <= last_page_index(); ++i) {
         if (!vmo().physical_pages()[i].is_null())
             continue;
-        auto physical_page = MM.allocate_physical_page(MemoryManager::ShouldZeroFill::Yes);
+        auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (!physical_page) {
             kprintf("MM: commit was unable to allocate a physical page\n");
             return -ENOMEM;
