@@ -20,6 +20,11 @@ public:
         return Bitmap(size, default_value);
     }
 
+    static Bitmap create()
+    {
+        return Bitmap();
+    }
+
     ~Bitmap()
     {
         if (m_owned)
@@ -45,12 +50,74 @@ public:
     byte* data() { return m_data; }
     const byte* data() const { return m_data; }
 
+    void grow(int size, bool default_value)
+    {
+        ASSERT(size > m_size);
+
+        auto previous_size_bytes = size_in_bytes();
+        auto previous_size = m_size;
+        auto previous_data = m_data;
+
+        m_size = size;
+        m_data = reinterpret_cast<byte*>(kmalloc(size_in_bytes()));
+
+        fill(default_value);
+
+        if (previous_data != nullptr) {
+            memcpy(m_data, previous_data, previous_size_bytes);
+
+            if ((previous_size % 8) != 0) {
+                if (default_value)
+                    m_data[previous_size_bytes - 1] |= (0xff >> (previous_size % 8));
+                else
+                    m_data[previous_size_bytes - 1] &= ~(0xff >> (previous_size % 8));
+            }
+
+            kfree(previous_data);
+        }
+    }
+
     void fill(bool value)
     {
         memset(m_data, value ? 0xff : 0x00, size_in_bytes());
     }
 
+    int find_first_set() const
+    {
+        int i = 0;
+        while (i < m_size / 8 && m_data[i] == 0x00)
+            i++;
+
+        int j = 0;
+        for (j = i * 8; j < m_size; j++)
+            if (get(j))
+                return j;
+
+        return -1;
+    }
+
+    int find_first_unset() const
+    {
+        int i = 0;
+        while (i < m_size / 8 && m_data[i] == 0xff)
+            i++;
+
+        int j = 0;
+        for (j = i * 8; j < m_size; j++)
+            if (!get(j))
+                return j;
+
+        return -1;
+    }
+
 private:
+    explicit Bitmap()
+        : m_size(0)
+        , m_owned(true)
+    {
+        m_data = nullptr;
+    }
+
     explicit Bitmap(int size, bool default_value)
         : m_size(size)
         , m_owned(true)
