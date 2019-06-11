@@ -6,7 +6,7 @@ PaintableWidget::PaintableWidget(GWidget* parent)
     : GWidget(parent)
 {
     set_fill_with_background_color(true);
-    set_background_color(Color::LightGray);
+    set_background_color(Color::DarkGray);
     m_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, { 600, 400 });
     m_bitmap->fill(Color::White);
 }
