@@ -21,6 +21,11 @@ public:
     dword page_base() const { return m_address & 0xfffff000; }
 
     bool operator==(const PhysicalAddress& other) const { return m_address == other.m_address; }
+    bool operator!=(const PhysicalAddress& other) const { return m_address != other.m_address; }
+    bool operator>(const PhysicalAddress& other) const { return m_address > other.m_address; }
+    bool operator>=(const PhysicalAddress& other) const { return m_address >= other.m_address; }
+    bool operator<(const PhysicalAddress& other) const { return m_address < other.m_address; }
+    bool operator<=(const PhysicalAddress& other) const { return m_address <= other.m_address; }
 
 private:
     dword m_address { 0 };
