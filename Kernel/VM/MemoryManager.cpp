@@ -12,9 +12,6 @@
 //#define PAGE_FAULT_DEBUG
 
 static MemoryManager* s_the;
-unsigned MemoryManager::s_user_physical_pages_in_existence;
-unsigned MemoryManager::s_user_physical_pages_not_yet_used;
-unsigned MemoryManager::s_super_physical_pages_in_existence;
 
 MemoryManager& MM
 {
@@ -79,6 +76,11 @@ void MemoryManager::initialize_paging()
     // 5 MB   -> 0xc0000000     Userspace physical pages (available for allocation!)
     // 0xc0000000-0xffffffff    Kernel-only linear address space
 
+#ifdef MM_DEBUG
+    dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
+#endif
+    m_quickmap_addr = VirtualAddress((1 * MB) - PAGE_SIZE);
+
     for (auto* mmap = (multiboot_memory_map_t*)multiboot_info_ptr->mmap_addr; (unsigned long)mmap < multiboot_info_ptr->mmap_addr + multiboot_info_ptr->mmap_length; mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
         kprintf("MM: Multiboot mmap: base_addr = 0x%x%08x, length = 0x%x%08x, type = 0x%x\n",
             (dword)(mmap->addr >> 32),
@@ -89,21 +91,82 @@ void MemoryManager::initialize_paging()
 
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
             continue;
+
         // FIXME: Maybe make use of stuff below the 1MB mark?
         if (mmap->addr < (1 * MB))
             continue;
 
+#ifdef MM_DEBUG
+        kprintf("MM: considering memory at %p - %p\n",
+            (dword)mmap->addr, (dword)(mmap->addr + mmap->len));
+#endif
+
+        int in_super = 0, in_user = 0;
         size_t region_lower = 0, region_upper = 0;
 
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
-            if (page_base < (4 * MB)) {
-                // Skip over pages managed by kmalloc.
-                continue;
-            }
+            if (page_base < 4 * MB) {
+                // nothing
+            } else if (page_base >= 4 * MB && page_base < 5 * MB) {
+                if (in_user) {
+#ifdef MM_DEBUG
+                    kprintf("MM: using %p - %p (%u pages; %uKB) for user\n",
+                        region_lower, region_upper,
+                        (region_upper - region_lower) / PAGE_SIZE,
+                        (region_upper - region_lower) / 1024);
+#endif
 
-            if (page_base < (5 * MB)) {
-                m_free_supervisor_physical_pages.append(PhysicalPage::create_eternal(PhysicalAddress(page_base), true));
+                    auto region = PhysicalRegion::create(
+                        PhysicalAddress(region_lower),
+                        PhysicalAddress(region_upper));
+
+                    m_user_physical_pages += region->size();
+                    m_user_physical_regions.append(region);
+
+                    in_user = 0;
+
+                    region_lower = 0;
+                    region_upper = 0;
+                }
+
+                if (!in_super) {
+                    kprintf("MM: entered super region @ %p\n", page_base);
+                    in_super = 1;
+                    in_user = 0;
+                }
+
+                if (page_base < region_lower || region_lower == 0)
+                    region_lower = page_base;
+                if (page_base > region_upper)
+                    region_upper = page_base;
             } else {
+                if (in_super) {
+#ifdef MM_DEBUG
+                    kprintf("MM: using %p - %p (%u pages; %uKB) for supervisor\n",
+                        region_lower, region_upper,
+                        (region_upper - region_lower) / PAGE_SIZE,
+                        (region_upper - region_lower) / 1024);
+#endif
+
+                    auto region = PhysicalRegion::create(
+                        PhysicalAddress(region_lower),
+                        PhysicalAddress(region_upper));
+
+                    m_super_physical_pages += region->size();
+                    m_super_physical_regions.append(region);
+
+                    in_super = 1;
+
+                    region_lower = 0;
+                    region_upper = 0;
+                }
+
+                if (!in_user) {
+                    kprintf("MM: entered user region @ %p\n", page_base);
+                    in_user = 1;
+                    in_super = 0;
+                }
+
                 if (page_base < region_lower || region_lower == 0)
                     region_lower = page_base;
                 if (page_base > region_upper)
@@ -111,14 +174,50 @@ void MemoryManager::initialize_paging()
             }
         }
 
-        if (region_lower != 0 && region_upper != 0) {
-            m_physical_regions.append(PhysicalRegion::create(PhysicalAddress(region_lower), PhysicalAddress(region_upper)));
+        if (in_user && region_lower != region_upper) {
+#ifdef MM_DEBUG
+            kprintf("MM: using remaining %p - %p (%u pages; %uKB) for user\n",
+                region_lower, region_upper,
+                (region_upper - region_lower) / PAGE_SIZE,
+                (region_upper - region_lower) / 1024);
+#endif
+
+            auto region = PhysicalRegion::create(
+                PhysicalAddress(region_lower),
+                PhysicalAddress(region_upper));
+
+            m_user_physical_pages += region->size();
+            m_user_physical_regions.append(region);
+
+            in_user = 0;
+
+            region_lower = 0;
+            region_upper = 0;
+        }
+
+        if (in_super && region_lower != region_upper) {
+#ifdef MM_DEBUG
+            kprintf("MM: using remaining %p - %p (%u pages; %uKB) for supervisor\n",
+                region_lower, region_upper,
+                (region_upper - region_lower) / PAGE_SIZE,
+                (region_upper - region_lower) / 1024);
+#endif
+
+            auto region = PhysicalRegion::create(
+                PhysicalAddress(region_lower),
+                PhysicalAddress(region_upper));
+
+            m_super_physical_pages += region->size();
+            m_super_physical_regions.append(region);
+
+            in_super = 1;
+
+            region_lower = 0;
+            region_upper = 0;
         }
     }
 
-    m_quickmap_addr = VirtualAddress((1 * MB) - PAGE_SIZE);
 #ifdef MM_DEBUG
-    dbgprintf("MM: Quickmap will use P%x\n", m_quickmap_addr.get());
     dbgprintf("MM: Installing page directory\n");
 #endif
 
@@ -293,7 +392,7 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
         remap_region_page(region, page_index_in_region, true);
         return true;
     }
-    auto physical_page = allocate_physical_page(ShouldZeroFill::Yes);
+    auto physical_page = allocate_user_physical_page(ShouldZeroFill::Yes);
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("      >> ZERO P%x\n", physical_page->paddr().get());
 #endif
@@ -320,7 +419,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
     dbgprintf("    >> It's a COW page and it's time to COW!\n");
 #endif
     auto physical_page_to_copy = move(vmo.physical_pages()[page_index_in_region]);
-    auto physical_page = allocate_physical_page(ShouldZeroFill::No);
+    auto physical_page = allocate_user_physical_page(ShouldZeroFill::No);
     byte* dest_ptr = quickmap_page(*physical_page);
     const byte* src_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
@@ -371,7 +470,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);
     }
     cli();
-    vmo_page = allocate_physical_page(ShouldZeroFill::No);
+    vmo_page = allocate_user_physical_page(ShouldZeroFill::No);
     if (vmo_page.is_null()) {
         kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
         return false;
@@ -441,51 +540,118 @@ RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& na
     return region;
 }
 
-RetainPtr<PhysicalPage> MemoryManager::allocate_physical_page(ShouldZeroFill should_zero_fill)
+void MemoryManager::deallocate_user_physical_page(PhysicalPage& page)
+{
+    for (auto& region : m_user_physical_regions) {
+        if (!region->owns_page(page)) {
+            kprintf(
+                "MM: deallocate_user_physical_page: %p not in %p -> %p\n",
+                page.paddr(), region->lower().get(), region->upper().get());
+            continue;
+        }
+
+        region->return_page(page);
+        m_user_physical_pages_used--;
+
+        return;
+    }
+
+    kprintf("MM: deallocate_user_physical_page couldn't figure out region for user page @ %p\n", page.paddr());
+    ASSERT_NOT_REACHED();
+}
+
+RetainPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
 {
     InterruptDisabler disabler;
 
-    if (m_free_physical_pages.is_empty()) {
-        for (auto& region : m_physical_regions) {
-            if (!region->is_empty()) {
-                m_free_physical_pages.append(PhysicalPage::create_eternal(region->take_next_page(), false));
-            }
-        }
+    RetainPtr<PhysicalPage> page = nullptr;
+
+    for (auto& region : m_user_physical_regions) {
+        auto addr = region->take_free_page();
+        if (addr.is_null())
+            continue;
+
+        page = PhysicalPage::create_eternal(addr, false);
     }
 
-    if (m_free_physical_pages.is_empty()) {
-        kprintf("MM: no physical pages available even after attempting to fetch a new one\n");
+    if (!page) {
+        if (m_user_physical_regions.is_empty()) {
+            kprintf("MM: no user physical regions available (?)\n");
+        }
+
+        kprintf("MM: no user physical pages available\n");
         ASSERT_NOT_REACHED();
         return {};
     }
 
 #ifdef MM_DEBUG
-    dbgprintf("MM: allocate_physical_page vending P%x (%u remaining)\n", m_free_physical_pages.last()->paddr().get(), m_free_physical_pages.size());
+    dbgprintf("MM: allocate_user_physical_page vending P%p\n", page->paddr().get());
 #endif
 
-    auto physical_page = m_free_physical_pages.take_last();
     if (should_zero_fill == ShouldZeroFill::Yes) {
-        auto* ptr = (dword*)quickmap_page(*physical_page);
+        auto* ptr = (dword*)quickmap_page(*page);
         fast_dword_fill(ptr, 0, PAGE_SIZE / sizeof(dword));
         unquickmap_page();
     }
-    return physical_page;
+
+    m_user_physical_pages_used++;
+
+    return page;
+}
+
+void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage& page)
+{
+    for (auto& region : m_super_physical_regions) {
+        if (!region->owns_page(page)) {
+            kprintf(
+                "MM: deallocate_supervisor_physical_page: %p not in %p -> %p\n",
+                page.paddr(), region->lower().get(), region->upper().get());
+            continue;
+        }
+
+        region->return_page(page);
+        m_super_physical_pages_used--;
+
+        return;
+    }
+
+    kprintf("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ %p\n", page.paddr());
+    ASSERT_NOT_REACHED();
 }
 
 RetainPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 {
     InterruptDisabler disabler;
-    if (1 > m_free_supervisor_physical_pages.size()) {
-        kprintf("FUCK! No physical pages available.\n");
+
+    RetainPtr<PhysicalPage> page = nullptr;
+
+    for (auto& region : m_super_physical_regions) {
+        auto addr = region->take_free_page();
+        if (addr.is_null())
+            continue;
+
+        page = PhysicalPage::create_eternal(addr, true);
+    }
+
+    if (!page) {
+        if (m_super_physical_regions.is_empty()) {
+            kprintf("MM: no super physical regions available (?)\n");
+        }
+
+        kprintf("MM: no super physical pages available\n");
         ASSERT_NOT_REACHED();
         return {};
     }
+
 #ifdef MM_DEBUG
-    dbgprintf("MM: allocate_supervisor_physical_page vending P%x (%u remaining)\n", m_free_supervisor_physical_pages.last()->paddr().get(), m_free_supervisor_physical_pages.size());
+    dbgprintf("MM: allocate_supervisor_physical_page vending P%p\n", page->paddr().get());
 #endif
-    auto physical_page = m_free_supervisor_physical_pages.take_last();
-    fast_dword_fill((dword*)physical_page->paddr().as_ptr(), 0, PAGE_SIZE / sizeof(dword));
-    return physical_page;
+
+    fast_dword_fill((dword*)page->paddr().as_ptr(), 0, PAGE_SIZE / sizeof(dword));
+
+    m_super_physical_pages_used++;
+
+    return page;
 }
 
 void MemoryManager::enter_process_paging_scope(Process& process)

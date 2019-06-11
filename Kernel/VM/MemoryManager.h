@@ -61,19 +61,22 @@ public:
         Yes
     };
 
-    RetainPtr<PhysicalPage> allocate_physical_page(ShouldZeroFill);
+    RetainPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill);
     RetainPtr<PhysicalPage> allocate_supervisor_physical_page();
+    void deallocate_user_physical_page(PhysicalPage&);
+    void deallocate_supervisor_physical_page(PhysicalPage&);
 
     void remap_region(PageDirectory&, Region&);
-
-    int user_physical_pages_in_existence() const { return s_user_physical_pages_in_existence; }
-    int user_physical_pages_not_yet_used() const { return s_user_physical_pages_not_yet_used; }
-    int super_physical_pages_in_existence() const { return s_super_physical_pages_in_existence; }
 
     void map_for_kernel(VirtualAddress, PhysicalAddress);
 
     RetainPtr<Region> allocate_kernel_region(size_t, String&& name);
     void map_region_at_address(PageDirectory&, Region&, VirtualAddress, bool user_accessible);
+
+    unsigned user_physical_pages() const { return m_user_physical_pages; }
+    unsigned user_physical_pages_used() const { return m_user_physical_pages_used; }
+    unsigned super_physical_pages() const { return m_super_physical_pages; }
+    unsigned super_physical_pages_used() const { return m_super_physical_pages_used; }
 
 private:
     MemoryManager();
@@ -209,10 +212,6 @@ private:
         dword* m_pte;
     };
 
-    static unsigned s_user_physical_pages_in_existence;
-    static unsigned s_user_physical_pages_not_yet_used;
-    static unsigned s_super_physical_pages_in_existence;
-
     PageTableEntry ensure_pte(PageDirectory&, VirtualAddress);
 
     RetainPtr<PageDirectory> m_kernel_page_directory;
@@ -221,9 +220,13 @@ private:
 
     VirtualAddress m_quickmap_addr;
 
-    Vector<Retained<PhysicalRegion>> m_physical_regions;
-    Vector<Retained<PhysicalPage>> m_free_physical_pages;
-    Vector<Retained<PhysicalPage>> m_free_supervisor_physical_pages;
+    unsigned m_user_physical_pages{ 0 };
+    unsigned m_user_physical_pages_used{ 0 };
+    unsigned m_super_physical_pages{ 0 };
+    unsigned m_super_physical_pages_used{ 0 };
+
+    Vector<Retained<PhysicalRegion>> m_user_physical_regions;
+    Vector<Retained<PhysicalRegion>> m_super_physical_regions;
 
     HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_user_regions;

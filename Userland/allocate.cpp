@@ -55,9 +55,9 @@ int main(int argc, char** argv)
     }
     printf("done.\n");
 
-    printf("writing to allocated memory...\n");
-    for (int i = 0; i < count; i++) {
-        ptr[i] = i % 255;
+    printf("writing one byte to each page of allocated memory...\n");
+    for (int i = 0; i < count; i += 4096) {
+        ptr[i] = 1;
     }
     printf("done.\n");
 

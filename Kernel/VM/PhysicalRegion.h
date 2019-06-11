@@ -1,28 +1,35 @@
 #pragma once
 
+#include <AK/Bitmap.h>
+#include <AK/Retainable.h>
 #include <AK/Retained.h>
-#include <Kernel/Assertions.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 
 class PhysicalRegion : public Retainable<PhysicalRegion> {
     AK_MAKE_ETERNAL
 
-    friend class MemoryManager;
-
 public:
     static Retained<PhysicalRegion> create(PhysicalAddress lower, PhysicalAddress upper);
     ~PhysicalRegion() {}
 
-    bool is_empty() const { return m_next == m_upper; }
-    int size() const { return (m_upper.get() - m_next.get()) / PAGE_SIZE; }
+    PhysicalAddress lower() { return m_lower; }
+    PhysicalAddress upper() { return m_upper; }
+    unsigned size() const { return m_pages; }
+    unsigned used() const { return m_used; }
+    unsigned free() const { return m_pages - m_used; }
+    bool owns_page(PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
 
-    PhysicalAddress take_next_page();
+    PhysicalAddress take_free_page();
+    void return_page_at(PhysicalAddress addr);
+    void return_page(PhysicalPage& page) { return_page_at(page.paddr()); }
 
 private:
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);
 
     PhysicalAddress m_lower;
     PhysicalAddress m_upper;
-    PhysicalAddress m_next;
+    unsigned m_pages{ 0 };
+    unsigned m_used{ 0 };
+    Bitmap m_mask;
 };

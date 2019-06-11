@@ -40,8 +40,8 @@ private:
 
     void return_to_freelist();
 
-    word m_retain_count { 1 };
-    bool m_may_return_to_freelist { true };
-    bool m_supervisor { false };
+    word m_retain_count{ 1 };
+    bool m_may_return_to_freelist{ true };
+    bool m_supervisor{ false };
     PhysicalAddress m_paddr;
 };
