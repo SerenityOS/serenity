@@ -63,6 +63,7 @@ private:
     void escape$M(const ParamVector&);
     void escape$G(const ParamVector&);
     void escape$X(const ParamVector&);
+    void escape$b(const ParamVector&);
     void escape$d(const ParamVector&);
     void escape$m(const ParamVector&);
     void escape$s(const ParamVector&);
@@ -204,4 +205,6 @@ private:
     CTimer m_cursor_blink_timer;
     CTimer m_visual_beep_timer;
     RetainPtr<CConfigFile> m_config;
+
+    byte m_last_char { 0 };
 };
