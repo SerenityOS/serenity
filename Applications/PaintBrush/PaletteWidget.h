@@ -16,6 +16,6 @@ public:
 
 private:
     PaintableWidget& m_paintable_widget;
-    GWidget* m_primary_color_widget { nullptr };
-    GWidget* m_secondary_color_widget { nullptr };
+    GFrame* m_primary_color_widget { nullptr };
+    GFrame* m_secondary_color_widget { nullptr };
 };

@@ -13,7 +13,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("PaintBrush");
-    window->set_rect(100, 100, 600, 432);
+    window->set_rect(100, 100, 600, 434);
 
     auto* main_widget = new GWidget(nullptr);
     window->set_main_widget(main_widget);
