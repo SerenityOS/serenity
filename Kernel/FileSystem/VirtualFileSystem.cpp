@@ -697,12 +697,28 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
                 return KResult(-ENOENT);
 
             // FIXME: We should limit the recursion here and return -ELOOP if it goes to deep.
-            return resolve_path(
+            auto symlink_target = resolve_path(
                 StringView(symlink_contents.pointer(),
                     symlink_contents.size()),
                 *current_parent,
                 parent_custody,
                 options);
+
+            if (symlink_target.is_error())
+                return symlink_target;
+
+            bool have_more_parts = i + 1 < parts.size();
+            if (i + 1 == parts.size() - 1 && parts[i + 1].is_empty())
+                have_more_parts = false;
+
+            if (!have_more_parts)
+                return symlink_target;
+
+            const char* remaining_path_chars = parts[i + 1].characters();
+            int remaining_path_length = path.length() - (remaining_path_chars - path.characters());
+            StringView remaining_path { remaining_path_chars, remaining_path_length };
+
+            return resolve_path(remaining_path, *symlink_target.value(), parent_custody, options);
         }
     }
     return custody_chain.last();
