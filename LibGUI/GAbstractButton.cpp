@@ -29,6 +29,20 @@ void GAbstractButton::set_checked(bool checked)
     if (m_checked == checked)
         return;
     m_checked = checked;
+
+    if (is_exclusive() && checked) {
+        parent_widget()->for_each_child_of_type<GAbstractButton>([&] (auto& sibling) {
+            if (!sibling.is_exclusive() || !sibling.is_checkable() || !sibling.is_checked())
+                return IterationDecision::Continue;
+            sibling.m_checked = false;
+            sibling.update();
+            if (sibling.on_checked)
+                sibling.on_checked(false);
+            return IterationDecision::Continue;
+        });
+        m_checked = true;
+    }
+
     update();
     if (on_checked)
         on_checked(checked);
