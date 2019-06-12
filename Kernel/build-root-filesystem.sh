@@ -75,6 +75,7 @@ cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
+cp ../Demos/Fire/Fire mnt/bin/Fire
 cp ../DevTools/VisualBuilder/VisualBuilder mnt/bin/VisualBuilder
 cp ../Games/Minesweeper/Minesweeper mnt/bin/Minesweeper
 cp ../Games/Snake/Snake mnt/bin/Snake
