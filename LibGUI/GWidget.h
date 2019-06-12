@@ -198,6 +198,7 @@ public:
     }
 
     virtual bool is_radio_button() const { return false; }
+    virtual bool is_abstract_button() const { return false; }
 
 private:
     virtual bool is_widget() const final { return true; }

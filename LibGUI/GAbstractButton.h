@@ -14,6 +14,9 @@ public:
     void set_text(const StringView&);
     const String& text() const { return m_text; }
 
+    bool is_exclusive() const { return m_exclusive; }
+    void set_exclusive(bool b) { m_exclusive = b; }
+
     bool is_checked() const { return m_checked; }
     void set_checked(bool);
 
@@ -42,9 +45,20 @@ protected:
     void paint_text(GPainter&, const Rect&, const Font&, TextAlignment);
 
 private:
+    virtual bool is_abstract_button() const final { return true; }
+
     String m_text;
     bool m_checked { false };
     bool m_checkable { false };
     bool m_hovered { false };
     bool m_being_pressed { false };
+    bool m_exclusive { false };
 };
+
+template<>
+inline bool is<GAbstractButton>(const CObject& object)
+{
+    if (!is<GWidget>(object))
+        return false;
+    return to<GWidget>(object).is_abstract_button();
+}

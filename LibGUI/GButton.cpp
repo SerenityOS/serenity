@@ -60,6 +60,8 @@ void GButton::click()
 {
     if (!is_enabled())
         return;
+    if (is_checkable())
+        set_checked(!is_checked());
     if (on_click)
         on_click(*this);
 }
