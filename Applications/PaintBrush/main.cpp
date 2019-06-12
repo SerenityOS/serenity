@@ -1,5 +1,6 @@
 #include "PaintableWidget.h"
 #include "PaletteWidget.h"
+#include "ToolboxWidget.h"
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -13,15 +14,21 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("PaintBrush");
-    window->set_rect(100, 100, 600, 434);
+    window->set_rect(100, 100, 640, 480);
 
-    auto* main_widget = new GWidget(nullptr);
-    window->set_main_widget(main_widget);
-    main_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    main_widget->layout()->set_spacing(0);
+    auto* horizontal_container = new GWidget(nullptr);
+    window->set_main_widget(horizontal_container);
+    horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    horizontal_container->layout()->set_spacing(0);
 
-    auto* paintable_widget = new PaintableWidget(main_widget);
-    auto* palette_widget = new PaletteWidget(*paintable_widget, main_widget);
+    auto* toolbox_widget = new ToolboxWidget(horizontal_container);
+
+    auto* vertical_container = new GWidget(horizontal_container);
+    vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    vertical_container->layout()->set_spacing(0);
+
+    auto* paintable_widget = new PaintableWidget(vertical_container);
+    auto* palette_widget = new PaletteWidget(*paintable_widget, vertical_container);
 
     window->show();
 
