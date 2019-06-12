@@ -533,6 +533,28 @@ void Terminal::escape$M(const ParamVector& params)
     }
 }
 
+void Terminal::escape$P(const ParamVector& params)
+{
+    int num = 1;
+    if (params.size() >= 1)
+        num = params[0];
+
+    if (num == 0)
+        num = 1;
+
+    auto& line = this->line(m_cursor_row);
+
+    // Move n characters of line to the left
+    for (int i = m_cursor_column; i < line.m_length - num; i++)
+        line.characters[i] = line.characters[i + num];
+
+    // Fill remainder of line with blanks
+    for (int i = line.m_length - num; i < line.m_length; i++)
+        line.characters[i] = ' ';
+
+    line.dirty = true;
+}
+
 void Terminal::execute_xterm_command()
 {
     m_final = '@';
@@ -610,6 +632,9 @@ void Terminal::execute_escape_sequence(byte final)
         break;
     case 'M':
         escape$M(params);
+        break;
+    case 'P':
+        escape$P(params);
         break;
     case 'S':
         escape$S(params);

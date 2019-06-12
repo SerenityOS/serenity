@@ -61,6 +61,7 @@ private:
     void escape$J(const ParamVector&);
     void escape$K(const ParamVector&);
     void escape$M(const ParamVector&);
+    void escape$P(const ParamVector&);
     void escape$G(const ParamVector&);
     void escape$X(const ParamVector&);
     void escape$b(const ParamVector&);
