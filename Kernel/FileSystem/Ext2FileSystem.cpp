@@ -767,7 +767,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
     Vector<FS::DirectoryEntry> entries;
     bool name_already_exists = false;
     traverse_as_directory([&](auto& entry) {
-        if (!strcmp(entry.name, name.characters())) {
+        if (name == entry.name) {
             name_already_exists = true;
             return false;
         }
@@ -812,7 +812,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
 
     Vector<FS::DirectoryEntry> entries;
     traverse_as_directory([&](auto& entry) {
-        if (strcmp(entry.name, name.characters()) != 0)
+        if (name != entry.name)
             entries.append(entry);
         return true;
     });

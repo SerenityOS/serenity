@@ -966,7 +966,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
             if (entry.name == nullptr)
                 continue;
             if (entry.proc_file_type > __FI_Root_Start && entry.proc_file_type < __FI_Root_End) {
-                if (!strcmp(entry.name, name.characters())) {
+                if (name == entry.name) {
                     return to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type);
                 }
             }
@@ -988,7 +988,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
     if (proc_file_type == FI_Root_sys) {
         for (int i = 0; i < fs().m_sys_entries.size(); ++i) {
             auto& entry = fs().m_sys_entries[i];
-            if (!strcmp(entry.name, name.characters()))
+            if (name == entry.name)
                 return sys_var_to_identifier(fsid(), i);
         }
         return {};
@@ -1005,7 +1005,7 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
                     continue;
                 if (entry.name == nullptr)
                     continue;
-                if (!strcmp(entry.name, name.characters())) {
+                if (name == entry.name) {
                     return to_identifier(fsid(), PDI_PID, to_pid(identifier()), (ProcFileType)entry.proc_file_type);
                 }
             }
