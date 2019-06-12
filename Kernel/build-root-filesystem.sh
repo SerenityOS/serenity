@@ -28,10 +28,10 @@ mknod mnt/dev/ttyS0 c 4 64
 mknod mnt/dev/ttyS1 c 4 65
 mknod mnt/dev/ttyS2 c 4 66
 mknod mnt/dev/ttyS3 c 4 67
-mknod mnt/dev/random c 1 8
-mknod mnt/dev/null c 1 3
-mknod mnt/dev/zero c 1 5
-mknod mnt/dev/full c 1 7
+mknod -m 666 mnt/dev/random c 1 8
+mknod -m 666 mnt/dev/null c 1 3
+mknod -m 666 mnt/dev/zero c 1 5
+mknod -m 666 mnt/dev/full c 1 7
 mknod -m 666 mnt/dev/debuglog c 1 18
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
