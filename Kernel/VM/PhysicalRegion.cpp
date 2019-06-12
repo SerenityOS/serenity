@@ -43,7 +43,18 @@ RetainPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
     if (m_used == m_pages)
         return nullptr;
 
+    // search from the last page we allocated
     for (unsigned page = m_last; page < m_pages; page++) {
+        if (!m_bitmap.get(page)) {
+            m_bitmap.set(page, true);
+            m_used++;
+            m_last = page + 1;
+            return PhysicalPage::create(m_lower.offset(page * PAGE_SIZE), supervisor);
+        }
+    }
+
+    // wrap back around to the start in case we missed something
+    for (unsigned page = 0; page < m_last; page++) {
         if (!m_bitmap.get(page)) {
             m_bitmap.set(page, true);
             m_used++;
