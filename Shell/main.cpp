@@ -2,6 +2,7 @@
 #include "LineEditor.h"
 #include "Parser.h"
 #include <AK/FileSystemPath.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/CDirIterator.h>
 #include <LibCore/CElapsedTimer.h>
 #include <errno.h>
@@ -219,42 +220,108 @@ struct CommandTimer {
     CElapsedTimer timer;
 };
 
+static bool is_glob(const StringView& s)
+{
+    for (int i = 0; i < s.length(); i++) {
+        char c = s.characters()[i];
+        if (c == '*' || c == '?')
+            return true;
+    }
+    return false;
+}
+
+static Vector<StringView> split_path(const StringView &path)
+{
+    Vector<StringView> parts;
+
+    ssize_t substart = 0;
+    for (ssize_t i = 0; i < path.length(); i++) {
+        char ch = path.characters()[i];
+        if (ch != '/')
+            continue;
+        ssize_t sublen = i - substart;
+        if (sublen != 0)
+            parts.append(path.substring_view(substart, sublen));
+        parts.append(path.substring_view(i, 1));
+        substart = i + 1;
+    }
+
+    ssize_t taillen = path.length() - substart;
+    if (taillen != 0)
+        parts.append(path.substring_view(substart, taillen));
+
+    return parts;
+}
+
+static Vector<String> expand_globs(const StringView& path, const StringView& base)
+{
+    auto parts = split_path(path);
+
+    StringBuilder builder;
+    builder.append(base);
+    Vector<String> res;
+
+    for (int i = 0; i < parts.size(); ++i) {
+        auto& part = parts[i];
+        if (!is_glob(part)) {
+            builder.append(part);
+            continue;
+        }
+
+        // Found a glob.
+        String new_base = builder.to_string();
+        StringView new_base_v = new_base;
+        if (new_base_v.is_empty())
+            new_base_v = ".";
+        CDirIterator di(new_base_v, CDirIterator::NoFlags);
+
+        if (di.has_error()) {
+            return res;
+        }
+
+        while (di.has_next()) {
+            String name = di.next_path();
+
+            // Dotfiles have to be explicitly requested
+            if (name[0] == '.' && part[0] != '.')
+                continue;
+
+            // And even if they are, skip . and ..
+            if (name == "." || name == "..")
+                continue;
+
+            if (name.matches(part, String::CaseSensitivity::CaseSensitive)) {
+
+                StringBuilder nested_base;
+                nested_base.append(new_base);
+                nested_base.append(name);
+
+                StringView remaining_path = path.substring_view_starting_after_substring(part);
+                Vector<String> nested_res = expand_globs(remaining_path, nested_base.to_string());
+                for (auto& s : nested_res)
+                    res.append(s);
+            }
+        }
+        return res;
+    }
+
+    // Found no globs.
+    String new_path = builder.to_string();
+    if (access(new_path.characters(), F_OK) == 0)
+        res.append(new_path);
+    return res;
+}
+
 static Vector<String> process_arguments(const Vector<String>& args)
 {
     Vector<String> argv_string;
     for (auto& arg : args) {
-        bool is_glob = false;
-        for (int i = 0; i < arg.length(); i++) {
-            char c = arg.characters()[i];
-            if (c == '*' || c == '?') {
-                is_glob = true;
-            }
-        }
-
-        if (is_glob == false) {
-            argv_string.append(arg.characters());
-        } else {
-            CDirIterator di(".", CDirIterator::NoFlags);
-            if (di.has_error()) {
-                fprintf(stderr, "CDirIterator: %s\n", di.error_string());
-                continue;
-            }
-
-            while (di.has_next()) {
-                String name = di.next_path();
-
-                // Dotfiles have to be explicitly requested
-                if (name[0] == '.' && arg[0] != '.')
-                    continue;
-
-                // And even if they are, skip . and ..
-                if (name == "." || name == "..")
-                    continue;
-
-                if (name.matches(arg, String::CaseSensitivity::CaseSensitive))
-                    argv_string.append(name);
-            }
-        }
+        auto expanded = expand_globs(arg, "");
+        if (expanded.is_empty())
+            argv_string.append(arg);
+        else
+            for (auto& path : expand_globs(arg, ""))
+                argv_string.append(path);
     }
 
     return argv_string;
