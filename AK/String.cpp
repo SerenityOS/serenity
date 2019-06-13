@@ -253,9 +253,11 @@ bool String::match_helper(const StringView& mask) const
         } else if ((mask_ptr < mask_end) && ((*mask_ptr == *string_ptr) || (*mask_ptr == '?'))) {
             mask_ptr++;
             string_ptr++;
-        } else {
+        } else if ((cp != nullptr) && (mp != nullptr)) {
             mask_ptr = mp;
             string_ptr = cp++;
+        } else {
+            break;
         }
     }
 
@@ -263,8 +265,8 @@ bool String::match_helper(const StringView& mask) const
     while ((mask_ptr < mask_end) && (*mask_ptr == '*'))
         mask_ptr++;
 
-    // If we 'ate' all of the mask then we match.
-    return mask_ptr == mask_end;
+    // If we 'ate' all of the mask and the string then we match.
+    return (mask_ptr == mask_end) && !*string_ptr;
 }
 
 }
