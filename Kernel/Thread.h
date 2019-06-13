@@ -179,7 +179,7 @@ private:
     RetainPtr<Region> m_kernel_stack_region;
     RetainPtr<Region> m_kernel_stack_for_signal_handler_region;
     pid_t m_waitee_pid { -1 };
-    RetainPtr<FileDescription> m_blocked_descriptor;
+    RetainPtr<FileDescription> m_blocked_description;
     timeval m_select_timeout;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };

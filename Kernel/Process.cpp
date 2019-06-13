@@ -190,10 +190,10 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     }
     if (offset & ~PAGE_MASK)
         return (void*)-EINVAL;
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return (void*)-EBADF;
-    auto region_or_error = descriptor->mmap(*this, VirtualAddress((dword)addr), offset, size, prot);
+    auto region_or_error = description->mmap(*this, VirtualAddress((dword)addr), offset, size, prot);
     if (region_or_error.is_error())
         return (void*)(int)region_or_error.error();
     auto region = region_or_error.value();
@@ -314,8 +314,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     auto result = VFS::the().open(path, 0, 0, current_directory());
     if (result.is_error())
         return result.error();
-    auto descriptor = result.value();
-    auto metadata = descriptor->metadata();
+    auto description = result.value();
+    auto metadata = description->metadata();
 
     if (!metadata.may_execute(m_euid, m_gids))
         return -EACCES;
@@ -332,8 +332,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 #endif
     ProcessPagingScope paging_scope(*this);
 
-    auto vmo = VMObject::create_file_backed(descriptor->inode());
-    vmo->set_name(descriptor->absolute_path());
+    auto vmo = VMObject::create_file_backed(description->inode());
+    vmo->set_name(description->absolute_path());
     RetainPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo.copy_ref(), 0, vmo->name(), PROT_READ);
     ASSERT(region);
 
@@ -388,7 +388,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     }
 
     m_elf_loader = move(loader);
-    m_executable = descriptor->custody();
+    m_executable = description->custody();
 
     if (metadata.is_setuid())
         m_euid = metadata.uid;
@@ -403,8 +403,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     for (int i = 0; i < m_fds.size(); ++i) {
         auto& daf = m_fds[i];
-        if (daf.descriptor && daf.flags & FD_CLOEXEC) {
-            daf.descriptor->close();
+        if (daf.description && daf.flags & FD_CLOEXEC) {
+            daf.description->close();
             daf = {};
         }
     }
@@ -605,12 +605,12 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
     if (fork_parent) {
         m_fds.resize(fork_parent->m_fds.size());
         for (int i = 0; i < fork_parent->m_fds.size(); ++i) {
-            if (!fork_parent->m_fds[i].descriptor)
+            if (!fork_parent->m_fds[i].description)
                 continue;
 #ifdef FORK_DEBUG
-            dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_fds[i].descriptor.ptr(), fork_parent->m_fds[i].descriptor->is_tty());
+            dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_fds[i].description.ptr(), fork_parent->m_fds[i].description->is_tty());
 #endif
-            m_fds[i].descriptor = fork_parent->m_fds[i].descriptor->clone();
+            m_fds[i].description = fork_parent->m_fds[i].description->clone();
             m_fds[i].flags = fork_parent->m_fds[i].flags;
         }
     } else {
@@ -769,7 +769,7 @@ FileDescription* Process::file_description(int fd)
     if (fd < 0)
         return nullptr;
     if (fd < m_fds.size())
-        return m_fds[fd].descriptor.ptr();
+        return m_fds[fd].description.ptr();
     return nullptr;
 }
 
@@ -778,7 +778,7 @@ const FileDescription* Process::file_description(int fd) const
     if (fd < 0)
         return nullptr;
     if (fd < m_fds.size())
-        return m_fds[fd].descriptor.ptr();
+        return m_fds[fd].description.ptr();
     return nullptr;
 }
 
@@ -788,18 +788,18 @@ ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    return descriptor->get_dir_entries((byte*)buffer, size);
+    return description->get_dir_entries((byte*)buffer, size);
 }
 
 int Process::sys$lseek(int fd, off_t offset, int whence)
 {
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    return descriptor->seek(offset, whence);
+    return description->seek(offset, whence);
 }
 
 int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
@@ -808,12 +808,12 @@ int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_tty())
+    if (!description->is_tty())
         return -ENOTTY;
-    auto tty_name = descriptor->tty()->tty_name();
+    auto tty_name = description->tty()->tty_name();
     if (size < tty_name.length() + 1)
         return -ERANGE;
     strcpy(buffer, tty_name.characters());
@@ -826,10 +826,10 @@ int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    auto* master_pty = descriptor->master_pty();
+    auto* master_pty = description->master_pty();
     if (!master_pty)
         return -ENOTTY;
     auto pts_name = master_pty->pts_name();
@@ -849,13 +849,13 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
 
     // FIXME: Return EINVAL if sum of iovecs is greater than INT_MAX
 
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
 
     int nwritten = 0;
     for (int i = 0; i < iov_count; ++i) {
-        int rc = do_write(*descriptor, (const byte*)iov[i].iov_base, iov[i].iov_len);
+        int rc = do_write(*description, (const byte*)iov[i].iov_base, iov[i].iov_len);
         if (rc < 0) {
             if (nwritten == 0)
                 return rc;
@@ -873,32 +873,32 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     return nwritten;
 }
 
-ssize_t Process::do_write(FileDescription& descriptor, const byte* data, int data_size)
+ssize_t Process::do_write(FileDescription& description, const byte* data, int data_size)
 {
     ssize_t nwritten = 0;
-    if (!descriptor.is_blocking()) {
-        if (!descriptor.can_write())
+    if (!description.is_blocking()) {
+        if (!description.can_write())
             return -EAGAIN;
     }
 
-    if (descriptor.should_append()) {
+    if (description.should_append()) {
 #ifdef IO_DEBUG
         dbgprintf("seeking to end (O_APPEND)\n");
 #endif
-        descriptor.seek(0, SEEK_END);
+        description.seek(0, SEEK_END);
     }
 
     while (nwritten < data_size) {
 #ifdef IO_DEBUG
         dbgprintf("while %u < %u\n", nwritten, size);
 #endif
-        if (!descriptor.can_write()) {
+        if (!description.can_write()) {
 #ifdef IO_DEBUG
             dbgprintf("block write on %d\n", fd);
 #endif
-            current->block(Thread::State::BlockedWrite, descriptor);
+            current->block(Thread::State::BlockedWrite, description);
         }
-        ssize_t rc = descriptor.write(data + nwritten, data_size - nwritten);
+        ssize_t rc = description.write(data + nwritten, data_size - nwritten);
 #ifdef IO_DEBUG
         dbgprintf("   -> write returned %d\n", rc);
 #endif
@@ -930,10 +930,10 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
 #ifdef DEBUG_IO
     dbgprintf("%s(%u): sys$write(%d, %p, %u)\n", name().characters(), pid(), fd, data, size);
 #endif
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    auto nwritten = do_write(*descriptor, data, size);
+    auto nwritten = do_write(*description, data, size);
     if (current->has_unmasked_pending_signals()) {
         current->block(Thread::State::BlockedSignal);
         if (nwritten == 0)
@@ -953,25 +953,25 @@ ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$read(%d, %p, %u)\n", name().characters(), pid(), fd, buffer, size);
 #endif
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    if (descriptor->is_blocking()) {
-        if (!descriptor->can_read()) {
-            current->block(Thread::State::BlockedRead, *descriptor);
+    if (description->is_blocking()) {
+        if (!description->can_read()) {
+            current->block(Thread::State::BlockedRead, *description);
             if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         }
     }
-    return descriptor->read(buffer, size);
+    return description->read(buffer, size);
 }
 
 int Process::sys$close(int fd)
 {
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    int rc = descriptor->close();
+    int rc = description->close();
     m_fds[fd] = {};
     return rc;
 }
@@ -1008,8 +1008,8 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
     (void)cmd;
     (void)arg;
     dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
     // NOTE: The FD flags are not shared between FileDescription objects.
     //       This means that dup() doesn't copy the FD_CLOEXEC flag!
@@ -1021,7 +1021,7 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
         int new_fd = alloc_fd(arg_fd);
         if (new_fd < 0)
             return new_fd;
-        m_fds[new_fd].set(*descriptor);
+        m_fds[new_fd].set(*description);
         break;
     }
     case F_GETFD:
@@ -1030,9 +1030,9 @@ int Process::sys$fcntl(int fd, int cmd, dword arg)
         m_fds[fd].flags = arg;
         break;
     case F_GETFL:
-        return descriptor->file_flags();
+        return description->file_flags();
     case F_SETFL:
-        descriptor->set_file_flags(arg);
+        description->set_file_flags(arg);
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -1044,10 +1044,10 @@ int Process::sys$fstat(int fd, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    return descriptor->fstat(*statbuf);
+    return description->fstat(*statbuf);
 }
 
 int Process::sys$lstat(const char* path, stat* statbuf)
@@ -1076,12 +1076,12 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     auto result = VFS::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory());
     if (result.is_error())
         return result.error();
-    auto descriptor = result.value();
+    auto description = result.value();
 
-    if (!descriptor->metadata().is_symlink())
+    if (!description->metadata().is_symlink())
         return -EINVAL;
 
-    auto contents = descriptor->read_entire_file();
+    auto contents = description->read_entire_file();
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
@@ -1118,8 +1118,8 @@ int Process::sys$getcwd(char* buffer, ssize_t size)
 int Process::number_of_open_file_descriptors() const
 {
     int count = 0;
-    for (auto& descriptor : m_fds) {
-        if (descriptor)
+    for (auto& description : m_fds) {
+        if (description)
             ++count;
     }
     return count;
@@ -1138,12 +1138,12 @@ int Process::sys$open(const char* path, int options, mode_t mode)
     auto result = VFS::the().open(path, options, mode & ~umask(), current_directory());
     if (result.is_error())
         return result.error();
-    auto descriptor = result.value();
-    if (options & O_DIRECTORY && !descriptor->is_directory())
+    auto description = result.value();
+    if (options & O_DIRECTORY && !description->is_directory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
-    descriptor->set_file_flags(options);
+    description->set_file_flags(options);
     dword fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
-    m_fds[fd].set(move(descriptor), fd_flags);
+    m_fds[fd].set(move(description), fd_flags);
     return fd;
 }
 
@@ -1233,10 +1233,10 @@ int Process::sys$uname(utsname* buf)
 
 int Process::sys$isatty(int fd)
 {
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_tty())
+    if (!description->is_tty())
         return -ENOTTY;
     return 1;
 }
@@ -1613,10 +1613,10 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 
 int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
 {
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    return descriptor->file().ioctl(*descriptor, request, arg);
+    return description->file().ioctl(*description, request, arg);
 }
 
 int Process::sys$getdtablesize()
@@ -1626,24 +1626,24 @@ int Process::sys$getdtablesize()
 
 int Process::sys$dup(int old_fd)
 {
-    auto* descriptor = file_description(old_fd);
-    if (!descriptor)
+    auto* description = file_description(old_fd);
+    if (!description)
         return -EBADF;
     int new_fd = alloc_fd(0);
     if (new_fd < 0)
         return new_fd;
-    m_fds[new_fd].set(*descriptor);
+    m_fds[new_fd].set(*description);
     return new_fd;
 }
 
 int Process::sys$dup2(int old_fd, int new_fd)
 {
-    auto* descriptor = file_description(old_fd);
-    if (!descriptor)
+    auto* description = file_description(old_fd);
+    if (!description)
         return -EBADF;
     if (new_fd < 0 || new_fd >= m_max_open_file_descriptors)
         return -EINVAL;
-    m_fds[new_fd].set(*descriptor);
+    m_fds[new_fd].set(*description);
     return new_fd;
 }
 
@@ -1812,14 +1812,14 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             return;
         FD_ZERO(fds);
         for (int fd : vector) {
-            if (auto* descriptor = file_description(fd); descriptor && should_mark(*descriptor)) {
+            if (auto* description = file_description(fd); description && should_mark(*description)) {
                 FD_SET(fd, fds);
                 ++marked_fd_count;
             }
         }
     };
-    mark_fds(params->readfds, current->m_select_read_fds, [](auto& descriptor) { return descriptor.can_read(); });
-    mark_fds(params->writefds, current->m_select_write_fds, [](auto& descriptor) { return descriptor.can_write(); });
+    mark_fds(params->readfds, current->m_select_read_fds, [](auto& description) { return description.can_read(); });
+    mark_fds(params->writefds, current->m_select_write_fds, [](auto& description) { return description.can_write(); });
     // FIXME: We should also mark params->exceptfds as appropriate.
     return marked_fd_count;
 }
@@ -1864,15 +1864,15 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     int fds_with_revents = 0;
 
     for (int i = 0; i < nfds; ++i) {
-        auto* descriptor = file_description(fds[i].fd);
-        if (!descriptor) {
+        auto* description = file_description(fds[i].fd);
+        if (!description) {
             fds[i].revents = POLLNVAL;
             continue;
         }
         fds[i].revents = 0;
-        if (fds[i].events & POLLIN && descriptor->can_read())
+        if (fds[i].events & POLLIN && description->can_read())
             fds[i].revents |= POLLIN;
-        if (fds[i].events & POLLOUT && descriptor->can_write())
+        if (fds[i].events & POLLOUT && description->can_write())
             fds[i].revents |= POLLOUT;
 
         if (fds[i].revents)
@@ -1940,18 +1940,18 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
 
 int Process::sys$fchmod(int fd, mode_t mode)
 {
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    return descriptor->fchmod(mode);
+    return description->fchmod(mode);
 }
 
 int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 {
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
-    return descriptor->chown(uid, gid);
+    return description->chown(uid, gid);
 }
 
 int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
@@ -2047,13 +2047,13 @@ int Process::sys$socket(int domain, int type, int protocol)
     auto result = Socket::create(domain, type, protocol);
     if (result.is_error())
         return result.error();
-    auto descriptor = FileDescription::create(*result.value());
+    auto description = FileDescription::create(*result.value());
     unsigned flags = 0;
     if (type & SOCK_CLOEXEC)
         flags |= FD_CLOEXEC;
     if (type & SOCK_NONBLOCK)
-        descriptor->set_blocking(false);
-    m_fds[fd].set(move(descriptor), flags);
+        description->set_blocking(false);
+    m_fds[fd].set(move(description), flags);
     return fd;
 }
 
@@ -2061,27 +2061,27 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
 {
     if (!validate_read(address, address_length))
         return -EFAULT;
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
-    auto& socket = *descriptor->socket();
+    auto& socket = *description->socket();
     return socket.bind(address, address_length);
 }
 
 int Process::sys$listen(int sockfd, int backlog)
 {
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
-    auto& socket = *descriptor->socket();
+    auto& socket = *description->socket();
     auto result = socket.listen(backlog);
     if (result.is_error())
         return result;
-    descriptor->set_socket_role(SocketRole::Listener);
+    description->set_socket_role(SocketRole::Listener);
     return 0;
 }
 
@@ -2094,25 +2094,25 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     int accepted_socket_fd = alloc_fd();
     if (accepted_socket_fd < 0)
         return accepted_socket_fd;
-    auto* accepting_socket_descriptor = file_description(accepting_socket_fd);
-    if (!accepting_socket_descriptor)
+    auto* accepting_socket_description = file_description(accepting_socket_fd);
+    if (!accepting_socket_description)
         return -EBADF;
-    if (!accepting_socket_descriptor->is_socket())
+    if (!accepting_socket_description->is_socket())
         return -ENOTSOCK;
-    auto& socket = *accepting_socket_descriptor->socket();
+    auto& socket = *accepting_socket_description->socket();
     if (!socket.can_accept()) {
-        ASSERT(!accepting_socket_descriptor->is_blocking());
+        ASSERT(!accepting_socket_description->is_blocking());
         return -EAGAIN;
     }
     auto accepted_socket = socket.accept();
     ASSERT(accepted_socket);
     bool success = accepted_socket->get_local_address(address, address_size);
     ASSERT(success);
-    auto accepted_socket_descriptor = FileDescription::create(move(accepted_socket), SocketRole::Accepted);
+    auto accepted_socket_description = FileDescription::create(move(accepted_socket), SocketRole::Accepted);
     // NOTE: The accepted socket inherits fd flags from the accepting socket.
     //       I'm not sure if this matches other systems but it makes sense to me.
-    accepted_socket_descriptor->set_blocking(accepting_socket_descriptor->is_blocking());
-    m_fds[accepted_socket_fd].set(move(accepted_socket_descriptor), m_fds[accepting_socket_fd].flags);
+    accepted_socket_description->set_blocking(accepting_socket_description->is_blocking());
+    m_fds[accepted_socket_fd].set(move(accepted_socket_description), m_fds[accepting_socket_fd].flags);
     return accepted_socket_fd;
 }
 
@@ -2123,21 +2123,21 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
-    if (descriptor->socket_role() == SocketRole::Connected)
+    if (description->socket_role() == SocketRole::Connected)
         return -EISCONN;
-    auto& socket = *descriptor->socket();
-    descriptor->set_socket_role(SocketRole::Connecting);
-    auto result = socket.connect(*descriptor, address, address_size, descriptor->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
+    auto& socket = *description->socket();
+    description->set_socket_role(SocketRole::Connecting);
+    auto result = socket.connect(*description, address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
     if (result.is_error()) {
-        descriptor->set_socket_role(SocketRole::None);
+        description->set_socket_role(SocketRole::None);
         return result;
     }
-    descriptor->set_socket_role(SocketRole::Connected);
+    description->set_socket_role(SocketRole::Connected);
     return 0;
 }
 
@@ -2157,14 +2157,14 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
         return -EFAULT;
     if (addr && !validate_read(addr, addr_length))
         return -EFAULT;
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
-    auto& socket = *descriptor->socket();
+    auto& socket = *description->socket();
     kprintf("sendto %p (%u), flags=%u, addr: %p (%u)\n", data, data_length, flags, addr, addr_length);
-    return socket.sendto(*descriptor, data, data_length, flags, addr, addr_length);
+    return socket.sendto(*description, data, data_length, flags, addr, addr_length);
 }
 
 ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
@@ -2189,20 +2189,20 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     } else if (addr) {
         return -EINVAL;
     }
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
-    auto& socket = *descriptor->socket();
+    auto& socket = *description->socket();
 
-    bool original_blocking = descriptor->is_blocking();
+    bool original_blocking = description->is_blocking();
     if (flags & MSG_DONTWAIT)
-        descriptor->set_blocking(false);
+        description->set_blocking(false);
 
-    auto nrecv = socket.recvfrom(*descriptor, buffer, buffer_length, flags, addr, addr_length);
+    auto nrecv = socket.recvfrom(*description, buffer, buffer_length, flags, addr, addr_length);
     if (flags & MSG_DONTWAIT)
-        descriptor->set_blocking(original_blocking);
+        description->set_blocking(original_blocking);
 
     return nrecv;
 }
@@ -2218,14 +2218,14 @@ int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
     if (!validate_write(addr, *addrlen))
         return -EFAULT;
 
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
 
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
 
-    auto& socket = *descriptor->socket();
+    auto& socket = *description->socket();
     if (!socket.get_local_address(addr, addrlen))
         return -EINVAL; // FIXME: Should this be another error? I'm not sure.
 
@@ -2243,14 +2243,14 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
     if (!validate_write(addr, *addrlen))
         return -EFAULT;
 
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
 
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
 
-    auto& socket = *descriptor->socket();
+    auto& socket = *description->socket();
 
     if (!socket.is_connected())
         return -ENOTCONN;
@@ -2318,12 +2318,12 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
         return -EFAULT;
     if (!validate_write(value, *value_size))
         return -EFAULT;
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
-    auto& socket = *descriptor->socket();
+    auto& socket = *description->socket();
     return socket.getsockopt(level, option, value, value_size);
 }
 
@@ -2339,12 +2339,12 @@ int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
 
     if (!validate_read(value, value_size))
         return -EFAULT;
-    auto* descriptor = file_description(sockfd);
-    if (!descriptor)
+    auto* description = file_description(sockfd);
+    if (!description)
         return -EBADF;
-    if (!descriptor->is_socket())
+    if (!description->is_socket())
         return -ENOTSOCK;
-    auto& socket = *descriptor->socket();
+    auto& socket = *description->socket();
     return socket.setsockopt(level, option, value, value_size);
 }
 
@@ -2682,8 +2682,8 @@ int Process::sys$shm_open(const char* name, int flags, mode_t mode)
     auto shm_or_error = SharedMemory::open(String(name), flags, mode);
     if (shm_or_error.is_error())
         return shm_or_error.error();
-    auto descriptor = FileDescription::create(shm_or_error.value().ptr());
-    m_fds[fd].set(move(descriptor), FD_CLOEXEC);
+    auto description = FileDescription::create(shm_or_error.value().ptr());
+    m_fds[fd].set(move(description), FD_CLOEXEC);
     return fd;
 }
 
@@ -2696,11 +2696,11 @@ int Process::sys$shm_unlink(const char* name)
 
 int Process::sys$ftruncate(int fd, off_t length)
 {
-    auto* descriptor = file_description(fd);
-    if (!descriptor)
+    auto* description = file_description(fd);
+    if (!description)
         return -EBADF;
     // FIXME: Check that fd is writable, otherwise EINVAL.
-    return descriptor->truncate(length);
+    return description->truncate(length);
 }
 
 int Process::sys$systrace(pid_t pid)
@@ -2714,8 +2714,8 @@ int Process::sys$systrace(pid_t pid)
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto descriptor = FileDescription::create(peer->ensure_tracer());
-    m_fds[fd].set(move(descriptor), 0);
+    auto description = FileDescription::create(peer->ensure_tracer());
+    m_fds[fd].set(move(description), 0);
     return fd;
 }
 
@@ -2728,13 +2728,13 @@ ProcessTracer& Process::ensure_tracer()
 
 void Process::FileDescriptionAndFlags::clear()
 {
-    descriptor = nullptr;
+    description = nullptr;
     flags = 0;
 }
 
 void Process::FileDescriptionAndFlags::set(Retained<FileDescription>&& d, dword f)
 {
-    descriptor = move(d);
+    description = move(d);
     flags = f;
 }
 

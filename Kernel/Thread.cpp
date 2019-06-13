@@ -99,7 +99,7 @@ Thread::~Thread()
 
 void Thread::unblock()
 {
-    m_blocked_descriptor = nullptr;
+    m_blocked_description = nullptr;
     if (current == this) {
         set_state(Thread::Running);
         return;
@@ -129,9 +129,9 @@ void Thread::block(Thread::State new_state)
         process().big_lock().lock();
 }
 
-void Thread::block(Thread::State new_state, FileDescription& descriptor)
+void Thread::block(Thread::State new_state, FileDescription& description)
 {
-    m_blocked_descriptor = &descriptor;
+    m_blocked_description = &description;
     block(new_state);
 }
 
@@ -192,7 +192,7 @@ void Thread::finalize()
     dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
     set_state(Thread::State::Dead);
 
-    m_blocked_descriptor = nullptr;
+    m_blocked_description = nullptr;
 
     if (this == &m_process.main_thread())
         m_process.finalize();
@@ -530,13 +530,13 @@ Thread* Thread::clone(Process& process)
     return clone;
 }
 
-KResult Thread::wait_for_connect(FileDescription& descriptor)
+KResult Thread::wait_for_connect(FileDescription& description)
 {
-    ASSERT(descriptor.is_socket());
-    auto& socket = *descriptor.socket();
+    ASSERT(description.is_socket());
+    auto& socket = *description.socket();
     if (socket.is_connected())
         return KSuccess;
-    block(Thread::State::BlockedConnect, descriptor);
+    block(Thread::State::BlockedConnect, description);
     Scheduler::yield();
     if (!socket.is_connected())
         return KResult(-ECONNREFUSED);

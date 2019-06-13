@@ -96,9 +96,9 @@ void MasterPTY::close()
     }
 }
 
-int MasterPTY::ioctl(FileDescription& descriptor, unsigned request, unsigned arg)
+int MasterPTY::ioctl(FileDescription& description, unsigned request, unsigned arg)
 {
     if (request == TIOCSWINSZ)
-        return m_slave->ioctl(descriptor, request, arg);
+        return m_slave->ioctl(description, request, arg);
     return -EINVAL;
 }

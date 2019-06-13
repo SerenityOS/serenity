@@ -46,18 +46,18 @@ bool SlavePTY::can_write(FileDescription&) const
     return m_master->can_write_from_slave();
 }
 
-bool SlavePTY::can_read(FileDescription& descriptor) const
+bool SlavePTY::can_read(FileDescription& description) const
 {
     if (m_master->is_closed())
         return true;
-    return TTY::can_read(descriptor);
+    return TTY::can_read(description);
 }
 
-ssize_t SlavePTY::read(FileDescription& descriptor, byte* buffer, ssize_t size)
+ssize_t SlavePTY::read(FileDescription& description, byte* buffer, ssize_t size)
 {
     if (m_master->is_closed())
         return 0;
-    return TTY::read(descriptor, buffer, size);
+    return TTY::read(description, buffer, size);
 }
 
 void SlavePTY::close()

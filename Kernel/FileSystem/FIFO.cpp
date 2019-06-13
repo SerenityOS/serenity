@@ -32,10 +32,10 @@ Retained<FIFO> FIFO::create(uid_t uid)
 
 Retained<FileDescription> FIFO::open_direction(FIFO::Direction direction)
 {
-    auto descriptor = FileDescription::create(this);
+    auto description = FileDescription::create(this);
     attach(direction);
-    descriptor->set_fifo_direction({}, direction);
-    return descriptor;
+    description->set_fifo_direction({}, direction);
+    return description;
 }
 
 FIFO::FIFO(uid_t uid)
