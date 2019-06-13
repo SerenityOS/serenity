@@ -650,9 +650,6 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
 
     for (int i = 0; i < parts.size(); ++i) {
         bool inode_was_root_at_head_of_loop = crumb_id.is_root_inode();
-        auto& part = parts[i];
-        if (part.is_empty())
-            break;
         auto crumb_inode = get_inode(crumb_id);
         if (!crumb_inode)
             return KResult(-EIO);
@@ -661,6 +658,11 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
             return KResult(-ENOTDIR);
         if (!metadata.may_execute(current->process()))
             return KResult(-EACCES);
+
+        auto& part = parts[i];
+        if (part.is_empty())
+          break;
+
         auto current_parent = custody_chain.last();
         crumb_id = crumb_inode->lookup(part);
         if (!crumb_id.is_valid())
