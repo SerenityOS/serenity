@@ -185,7 +185,7 @@ InodeMetadata SynthFSInode::metadata() const
     return m_metadata;
 }
 
-ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription* descriptor) const
+ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription* description) const
 {
     LOCKER(m_lock);
 #ifdef SYNTHFS_DEBUG
@@ -196,20 +196,20 @@ ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, File
 
     ByteBuffer generated_data;
     if (m_generator) {
-        if (!descriptor) {
+        if (!description) {
             generated_data = m_generator(const_cast<SynthFSInode&>(*this));
         } else {
-            if (!descriptor->generator_cache())
-                descriptor->generator_cache() = m_generator(const_cast<SynthFSInode&>(*this));
-            generated_data = descriptor->generator_cache();
+            if (!description->generator_cache())
+                description->generator_cache() = m_generator(const_cast<SynthFSInode&>(*this));
+            generated_data = description->generator_cache();
         }
     }
 
     auto* data = generated_data ? &generated_data : &m_data;
     ssize_t nread = min(static_cast<off_t>(data->size() - offset), static_cast<off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
-    if (nread == 0 && descriptor && descriptor->generator_cache())
-        descriptor->generator_cache().clear();
+    if (nread == 0 && description && description->generator_cache())
+        description->generator_cache().clear();
     return nread;
 }
 

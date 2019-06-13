@@ -305,10 +305,10 @@ private:
     Priority m_priority { NormalPriority };
 
     struct FileDescriptionAndFlags {
-        operator bool() const { return !!descriptor; }
+        operator bool() const { return !!description; }
         void clear();
         void set(Retained<FileDescription>&& d, dword f = 0);
-        RetainPtr<FileDescription> descriptor;
+        RetainPtr<FileDescription> description;
         dword flags { 0 };
     };
     Vector<FileDescriptionAndFlags> m_fds;

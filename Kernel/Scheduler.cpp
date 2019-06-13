@@ -96,34 +96,34 @@ bool Scheduler::pick_next()
         }
 
         if (thread.state() == Thread::BlockedRead) {
-            ASSERT(thread.m_blocked_descriptor);
+            ASSERT(thread.m_blocked_description);
             // FIXME: Block until the amount of data wanted is available.
-            if (thread.m_blocked_descriptor->can_read())
+            if (thread.m_blocked_description->can_read())
                 thread.unblock();
             return IterationDecision::Continue;
         }
 
         if (thread.state() == Thread::BlockedWrite) {
-            ASSERT(thread.m_blocked_descriptor != -1);
-            if (thread.m_blocked_descriptor->can_write())
+            ASSERT(thread.m_blocked_description != -1);
+            if (thread.m_blocked_description->can_write())
                 thread.unblock();
             return IterationDecision::Continue;
         }
 
         if (thread.state() == Thread::BlockedConnect) {
-            auto& descriptor = *thread.m_blocked_descriptor;
-            auto& socket = *descriptor.socket();
+            auto& description = *thread.m_blocked_description;
+            auto& socket = *description.socket();
             if (socket.is_connected())
                 thread.unblock();
             return IterationDecision::Continue;
         }
 
         if (thread.state() == Thread::BlockedReceive) {
-            auto& descriptor = *thread.m_blocked_descriptor;
-            auto& socket = *descriptor.socket();
+            auto& description = *thread.m_blocked_description;
+            auto& socket = *description.socket();
             // FIXME: Block until the amount of data wanted is available.
             bool timed_out = now_sec > socket.receive_deadline().tv_sec || (now_sec == socket.receive_deadline().tv_sec && now_usec >= socket.receive_deadline().tv_usec);
-            if (timed_out || descriptor.can_read()) {
+            if (timed_out || description.can_read()) {
                 thread.unblock();
                 return IterationDecision::Continue;
             }
@@ -138,13 +138,13 @@ bool Scheduler::pick_next()
                 }
             }
             for (int fd : thread.m_select_read_fds) {
-                if (process.m_fds[fd].descriptor->can_read()) {
+                if (process.m_fds[fd].description->can_read()) {
                     thread.unblock();
                     return IterationDecision::Continue;
                 }
             }
             for (int fd : thread.m_select_write_fds) {
-                if (process.m_fds[fd].descriptor->can_write()) {
+                if (process.m_fds[fd].description->can_write()) {
                     thread.unblock();
                     return IterationDecision::Continue;
                 }

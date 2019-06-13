@@ -17,9 +17,9 @@
 
 Retained<FileDescription> FileDescription::create(RetainPtr<Custody>&& custody)
 {
-    auto descriptor = adopt(*new FileDescription(InodeFile::create(custody->inode())));
-    descriptor->m_custody = move(custody);
-    return descriptor;
+    auto description = adopt(*new FileDescription(InodeFile::create(custody->inode())));
+    description->m_custody = move(custody);
+    return description;
 }
 
 Retained<FileDescription> FileDescription::create(RetainPtr<File>&& file, SocketRole role)
@@ -60,20 +60,20 @@ void FileDescription::set_socket_role(SocketRole role)
 
 Retained<FileDescription> FileDescription::clone()
 {
-    RetainPtr<FileDescription> descriptor;
+    RetainPtr<FileDescription> description;
     if (is_fifo()) {
-        descriptor = fifo()->open_direction(m_fifo_direction);
+        description = fifo()->open_direction(m_fifo_direction);
     } else {
-        descriptor = FileDescription::create(m_file.copy_ref(), m_socket_role);
-        descriptor->m_custody = m_custody.copy_ref();
-        descriptor->m_inode = m_inode.copy_ref();
+        description = FileDescription::create(m_file.copy_ref(), m_socket_role);
+        description->m_custody = m_custody.copy_ref();
+        description->m_inode = m_inode.copy_ref();
     }
-    ASSERT(descriptor);
-    descriptor->m_current_offset = m_current_offset;
-    descriptor->m_is_blocking = m_is_blocking;
-    descriptor->m_should_append = m_should_append;
-    descriptor->m_file_flags = m_file_flags;
-    return *descriptor;
+    ASSERT(description);
+    description->m_current_offset = m_current_offset;
+    description->m_is_blocking = m_is_blocking;
+    description->m_should_append = m_should_append;
+    description->m_file_flags = m_file_flags;
+    return *description;
 }
 
 KResult FileDescription::fstat(stat& buffer)

@@ -189,10 +189,10 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
         return {};
     StringBuilder builder;
     for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
-        auto* descriptor = process.file_description(i);
-        if (!descriptor)
+        auto* description = process.file_description(i);
+        if (!description)
             continue;
-        builder.appendf("% 3u %s\n", i, descriptor->absolute_path().characters());
+        builder.appendf("% 3u %s\n", i, description->absolute_path().characters());
     }
     return builder.to_byte_buffer();
 }
@@ -204,10 +204,10 @@ ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
         return {};
     auto& process = handle->process();
     int fd = to_fd(identifier);
-    auto* descriptor = process.file_description(fd);
-    if (!descriptor)
+    auto* description = process.file_description(fd);
+    if (!description)
         return {};
-    return descriptor->absolute_path().to_byte_buffer();
+    return description->absolute_path().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
@@ -831,7 +831,7 @@ InodeMetadata ProcFSInode::metadata() const
     return metadata;
 }
 
-ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription* descriptor) const
+ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription* description) const
 {
 #ifdef PROCFS_DEBUG
     dbgprintf("ProcFS: read_bytes %u\n", index());
@@ -855,19 +855,19 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileD
     ASSERT(read_callback);
 
     ByteBuffer generated_data;
-    if (!descriptor) {
+    if (!description) {
         generated_data = (*read_callback)(identifier());
     } else {
-        if (!descriptor->generator_cache())
-            descriptor->generator_cache() = (*read_callback)(identifier());
-        generated_data = descriptor->generator_cache();
+        if (!description->generator_cache())
+            description->generator_cache() = (*read_callback)(identifier());
+        generated_data = description->generator_cache();
     }
 
     auto& data = generated_data;
     ssize_t nread = min(static_cast<off_t>(data.size() - offset), static_cast<off_t>(count));
     memcpy(buffer, data.pointer() + offset, nread);
-    if (nread == 0 && descriptor && descriptor->generator_cache())
-        descriptor->generator_cache().clear();
+    if (nread == 0 && description && description->generator_cache())
+        description->generator_cache().clear();
     return nread;
 }
 
@@ -936,8 +936,8 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
             return false;
         auto& process = handle->process();
         for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
-            auto* descriptor = process.file_description(i);
-            if (!descriptor)
+            auto* description = process.file_description(i);
+            if (!description)
                 continue;
             char name[16];
             int name_length = ksprintf(name, "%u", i);
