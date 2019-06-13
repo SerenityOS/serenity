@@ -714,10 +714,7 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
             if (!have_more_parts)
                 return symlink_target;
 
-            const char* remaining_path_chars = parts[i + 1].characters();
-            int remaining_path_length = path.length() - (remaining_path_chars - path.characters());
-            StringView remaining_path { remaining_path_chars, remaining_path_length };
-
+            StringView remaining_path = path.substring_view_starting_from_substring(parts[i + 1]);
             return resolve_path(remaining_path, *symlink_target.value(), parent_custody, options);
         }
     }
