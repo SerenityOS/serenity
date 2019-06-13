@@ -11,6 +11,7 @@ public:
     }
 
     bool is_null() const { return m_address == 0; }
+    bool is_page_aligned() const { return (m_address & 0xfff) == 0; }
 
     VirtualAddress offset(dword o) const { return VirtualAddress(m_address + o); }
     dword get() const { return m_address; }

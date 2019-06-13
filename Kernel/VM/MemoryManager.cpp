@@ -74,7 +74,7 @@ void MemoryManager::initialize_paging()
     // 3 MB   -> 4 MB           kmalloc() space.
     // 4 MB   -> 5 MB           Supervisor physical pages (available for allocation!)
     // 5 MB   -> 0xc0000000     Userspace physical pages (available for allocation!)
-    // 0xc0000000-0xffffffff    Kernel-only linear address space
+    // 0xc0000000-0xffffffff    Kernel-only virtual address space
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
@@ -225,7 +225,7 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vad
 void MemoryManager::map_protected(VirtualAddress vaddr, size_t length)
 {
     InterruptDisabler disabler;
-    // FIXME: ASSERT(linearAddress is 4KB aligned);
+    ASSERT(vaddr.is_page_aligned());
     for (dword offset = 0; offset < length; offset += PAGE_SIZE) {
         auto pte_address = vaddr.offset(offset);
         auto pte = ensure_pte(kernel_page_directory(), pte_address);
