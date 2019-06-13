@@ -230,9 +230,10 @@ bool String::match_helper(const StringView& mask) const
 
     const char* string_ptr = characters();
     const char* mask_ptr = mask.characters();
+    const char* mask_end = mask_ptr + mask.length();
 
     // Match string against mask directly unless we hit a *
-    while ((*string_ptr) && (*mask_ptr != '*')) {
+    while ((*string_ptr) && (mask_ptr < mask_end) && (*mask_ptr != '*')) {
         if ((*mask_ptr != *string_ptr) && (*mask_ptr != '?'))
             return false;
         mask_ptr++;
@@ -243,13 +244,13 @@ bool String::match_helper(const StringView& mask) const
     const char* mp = nullptr;
 
     while (*string_ptr) {
-        if (*mask_ptr == '*') {
+        if ((mask_ptr < mask_end) && (*mask_ptr == '*')) {
             // If we have only a * left, there is no way to not match.
-            if (!*++mask_ptr)
+            if (++mask_ptr == mask_end)
                 return true;
             mp = mask_ptr;
             cp = string_ptr + 1;
-        } else if ((*mask_ptr == *string_ptr) || (*mask_ptr == '?')) {
+        } else if ((mask_ptr < mask_end) && ((*mask_ptr == *string_ptr) || (*mask_ptr == '?'))) {
             mask_ptr++;
             string_ptr++;
         } else {
@@ -259,11 +260,11 @@ bool String::match_helper(const StringView& mask) const
     }
 
     // Handle any trailing mask
-    while (*mask_ptr == '*')
+    while ((mask_ptr < mask_end) && (*mask_ptr == '*'))
         mask_ptr++;
 
     // If we 'ate' all of the mask then we match.
-    return !*mask_ptr;
+    return mask_ptr == mask_end;
 }
 
 }
