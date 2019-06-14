@@ -2,13 +2,6 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/kmalloc.h>
 
-Retained<PhysicalPage> PhysicalPage::create_eternal(PhysicalAddress paddr, bool supervisor)
-{
-    void* slot = kmalloc_eternal(sizeof(PhysicalPage));
-    new (slot) PhysicalPage(paddr, supervisor, false);
-    return adopt(*(PhysicalPage*)slot);
-}
-
 Retained<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
 {
     void* slot = kmalloc(sizeof(PhysicalPage));
