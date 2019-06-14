@@ -24,8 +24,7 @@ public:
         if (!--m_retain_count) {
             if (m_may_return_to_freelist)
                 move(*this).return_to_freelist();
-            else
-                delete this;
+            delete this;
         }
     }
 
