@@ -5,14 +5,14 @@
 Retained<PhysicalPage> PhysicalPage::create_eternal(PhysicalAddress paddr, bool supervisor)
 {
     void* slot = kmalloc_eternal(sizeof(PhysicalPage));
-    new (slot) PhysicalPage(paddr, supervisor);
+    new (slot) PhysicalPage(paddr, supervisor, false);
     return adopt(*(PhysicalPage*)slot);
 }
 
 Retained<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor)
 {
     void* slot = kmalloc(sizeof(PhysicalPage));
-    new (slot) PhysicalPage(paddr, supervisor, false);
+    new (slot) PhysicalPage(paddr, supervisor);
     return adopt(*(PhysicalPage*)slot);
 }
 
