@@ -102,6 +102,16 @@ public:
 
     RGBA32 value() const { return m_value; }
 
+    bool operator==(const Color& other) const
+    {
+        return m_value == other.m_value;
+    }
+
+    bool operator!=(const Color& other) const
+    {
+        return m_value != other.m_value;
+    }
+
     String to_string() const;
 
 private:
