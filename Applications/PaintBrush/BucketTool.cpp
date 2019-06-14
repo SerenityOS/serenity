@@ -15,21 +15,34 @@ BucketTool::~BucketTool()
 
 static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Color target_color, Color fill_color)
 {
-    SinglyLinkedList<Point> queue;
+    Vector<Point> queue;
+    queue.append(start_position);
+    int queue_pos = 0;
+    while (queue_pos != queue.size()) {
+        auto position = queue[queue_pos++];
 
-    queue.append(Point(start_position));
-    while (!queue.is_empty()) {
-        auto position = queue.take_first();
+        if (queue_pos > 4096) {
+            queue.shift_left(4096);
+            queue_pos = 0;
+        }
+
         if (!bitmap.rect().contains(position))
             continue;
         if (bitmap.get_pixel(position) != target_color)
             continue;
         bitmap.set_pixel(position, fill_color);
 
-        queue.append(position.translated(0, -1));
-        queue.append(position.translated(0, 1));
-        queue.append(position.translated(1, 0));
-        queue.append(position.translated(-1, 0));
+        if (position.x() != 0)
+            queue.append(position.translated(0, -1));
+
+        if (position.x() != bitmap.width() - 1)
+            queue.append(position.translated(0, 1));
+
+        if (position.y() != 0)
+            queue.append(position.translated(-1, 0));
+
+        if (position.y() != bitmap.height() - 1)
+            queue.append(position.translated(1, 0));
     }
 }
 
