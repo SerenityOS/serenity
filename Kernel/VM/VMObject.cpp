@@ -54,7 +54,7 @@ VMObject::VMObject(PhysicalAddress paddr, size_t size)
 {
     MM.register_vmo(*this);
     for (size_t i = 0; i < size; i += PAGE_SIZE) {
-        m_physical_pages.append(PhysicalPage::create(paddr.offset(i), false));
+        m_physical_pages.append(PhysicalPage::create(paddr.offset(i), false, false));
     }
     ASSERT(m_physical_pages.size() == page_count());
 }
