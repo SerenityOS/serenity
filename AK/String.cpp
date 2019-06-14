@@ -1,7 +1,7 @@
 #include "AKString.h"
 #include "StdLibExtras.h"
 #include "StringBuilder.h"
-#include <LibC/stdarg.h>
+#include <stdarg.h>
 
 namespace AK {
 
@@ -78,17 +78,17 @@ Vector<String> String::split_limit(const char separator, int limit) const
         return {};
 
     Vector<String> v;
-    ssize_t substart = 0;
-    for (ssize_t i = 0; i < length() && (v.size() + 1) != limit; ++i) {
+    int substart = 0;
+    for (int i = 0; i < length() && (v.size() + 1) != limit; ++i) {
         char ch = characters()[i];
         if (ch == separator) {
-            ssize_t sublen = i - substart;
+            int sublen = i - substart;
             if (sublen != 0)
                 v.append(substring(substart, sublen));
             substart = i + 1;
         }
     }
-    ssize_t taillen = length() - substart;
+    int taillen = length() - substart;
     if (taillen != 0)
         v.append(substring(substart, taillen));
     if (characters()[length() - 1] == separator)
@@ -102,17 +102,17 @@ Vector<StringView> String::split_view(const char separator) const
         return {};
 
     Vector<StringView> v;
-    ssize_t substart = 0;
-    for (ssize_t i = 0; i < length(); ++i) {
+    int substart = 0;
+    for (int i = 0; i < length(); ++i) {
         char ch = characters()[i];
         if (ch == separator) {
-            ssize_t sublen = i - substart;
+            int sublen = i - substart;
             if (sublen != 0)
                 v.append(substring_view(substart, sublen));
             substart = i + 1;
         }
     }
-    ssize_t taillen = length() - substart;
+    int taillen = length() - substart;
     if (taillen != 0)
         v.append(substring_view(substart, taillen));
     if (characters()[length() - 1] == separator)
@@ -131,7 +131,7 @@ int String::to_int(bool& ok) const
 {
     bool negative = false;
     int value = 0;
-    ssize_t i = 0;
+    int i = 0;
 
     if (is_null()) {
         ok = false;
@@ -158,7 +158,7 @@ int String::to_int(bool& ok) const
 unsigned String::to_uint(bool& ok) const
 {
     unsigned value = 0;
-    for (ssize_t i = 0; i < length(); ++i) {
+    for (int i = 0; i < length(); ++i) {
         if (characters()[i] < '0' || characters()[i] > '9') {
             ok = false;
             return 0;

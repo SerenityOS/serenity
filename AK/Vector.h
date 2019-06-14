@@ -4,6 +4,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/kmalloc.h>
 
+#ifndef __serenity__
+#include <new>
+#endif
+
 namespace AK {
 
 template<typename T, int inline_capacity = 0>
