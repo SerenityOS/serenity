@@ -25,7 +25,7 @@ public:
 
     RetainPtr<PhysicalPage> take_free_page(bool supervisor);
     void return_page_at(PhysicalAddress addr);
-    void return_page(PhysicalPage& page) { return_page_at(page.paddr()); }
+    void return_page(PhysicalPage&& page) { return_page_at(page.paddr()); }
 
 private:
     PhysicalRegion(PhysicalAddress lower, PhysicalAddress upper);

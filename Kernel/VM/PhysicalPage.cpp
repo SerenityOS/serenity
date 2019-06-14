@@ -23,7 +23,7 @@ PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_retu
 {
 }
 
-void PhysicalPage::return_to_freelist()
+void PhysicalPage::return_to_freelist() &&
 {
     ASSERT((paddr().get() & ~PAGE_MASK) == 0);
 
@@ -32,9 +32,9 @@ void PhysicalPage::return_to_freelist()
     m_retain_count = 1;
 
     if (m_supervisor)
-        MM.deallocate_supervisor_physical_page(*this);
+        MM.deallocate_supervisor_physical_page(move(*this));
     else
-        MM.deallocate_user_physical_page(*this);
+        MM.deallocate_user_physical_page(move(*this));
 
 #ifdef MM_DEBUG
     dbgprintf("MM: P%x released to freelist\n", m_paddr.get());

@@ -458,7 +458,7 @@ RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& na
     return region;
 }
 
-void MemoryManager::deallocate_user_physical_page(PhysicalPage& page)
+void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
 {
     for (auto& region : m_user_physical_regions) {
         if (!region->contains(page)) {
@@ -468,7 +468,7 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage& page)
             continue;
         }
 
-        region->return_page(page);
+        region->return_page(move(page));
         m_user_physical_pages_used--;
 
         return;
@@ -515,7 +515,7 @@ RetainPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFil
     return page;
 }
 
-void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage& page)
+void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
 {
     for (auto& region : m_super_physical_regions) {
         if (!region->contains(page)) {
@@ -525,7 +525,7 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage& page)
             continue;
         }
 
-        region->return_page(page);
+        region->return_page(move(page));
         m_super_physical_pages_used--;
 
         return;
