@@ -23,7 +23,7 @@ public:
         ASSERT(m_retain_count);
         if (!--m_retain_count) {
             if (m_may_return_to_freelist)
-                return_to_freelist();
+                move(*this).return_to_freelist();
             else
                 delete this;
         }
@@ -38,7 +38,7 @@ private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
     ~PhysicalPage() {}
 
-    void return_to_freelist();
+    void return_to_freelist() &&;
 
     word m_retain_count { 1 };
     bool m_may_return_to_freelist { true };
