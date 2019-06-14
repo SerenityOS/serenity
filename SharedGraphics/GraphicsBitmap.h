@@ -65,6 +65,32 @@ public:
         }
     }
 
+    Color get_pixel(const Point& position) const
+    {
+        return get_pixel(position.x(), position.y());
+    }
+
+    void set_pixel(int x, int y, Color color)
+    {
+        switch (m_format) {
+        case Format::RGB32:
+            scanline(y)[x] = color.value();
+            break;
+        case Format::RGBA32:
+            scanline(y)[x] = color.value();
+            break;
+        case Format::Indexed8:
+            ASSERT_NOT_REACHED();
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
+    void set_pixel(const Point& position, Color color)
+    {
+        set_pixel(position.x(), position.y(), color);
+    }
+
 private:
     GraphicsBitmap(Format, const Size&);
     GraphicsBitmap(Format, const Size&, RGBA32*);
