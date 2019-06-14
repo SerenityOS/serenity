@@ -9,10 +9,10 @@ Retained<PhysicalPage> PhysicalPage::create_eternal(PhysicalAddress paddr, bool 
     return adopt(*(PhysicalPage*)slot);
 }
 
-Retained<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor)
+Retained<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
 {
     void* slot = kmalloc(sizeof(PhysicalPage));
-    new (slot) PhysicalPage(paddr, supervisor);
+    new (slot) PhysicalPage(paddr, supervisor, may_return_to_freelist);
     return adopt(*(PhysicalPage*)slot);
 }
 
