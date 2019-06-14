@@ -116,7 +116,7 @@ void* kmalloc_impl(size_t size)
         }
         kprintf("Crashing active process %s(%u).\n", current->process().name().characters(), current->pid());
         current->process().crash();
-        return {};
+        ASSERT_NOT_REACHED();
     }
 
     size_t chunks_needed = real_size / CHUNK_SIZE;
@@ -175,7 +175,7 @@ void* kmalloc_impl(size_t size)
     }
     kprintf("Crashing active process %s(%u).\n", current->process().name().characters(), current->pid());
     current->process().crash();
-    return {};
+    ASSERT_NOT_REACHED();
 }
 
 void kfree(void* ptr)
