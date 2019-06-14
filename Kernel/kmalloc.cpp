@@ -107,9 +107,16 @@ void* kmalloc_impl(size_t size)
     size_t real_size = size + sizeof(allocation_t);
 
     if (sum_free < real_size) {
-        dump_backtrace();
-        kprintf("%s(%u) kmalloc(): PANIC! Out of memory (sucks, dude)\nsum_free=%u, real_size=%u\n", current->process().name().characters(), current->pid(), sum_free, real_size);
-        hang();
+        kprintf("%s(%u) kmalloc(): Uh-oh! Out of memory.\n", current->process().name().characters(), current->pid());
+        kprintf("sum_free=%u, real_size=%u\n", sum_free, real_size);
+        if (current->process().is_ring0()) {
+            kprintf("Out of memory: PANIC!\n");
+            dump_backtrace();
+            hang();
+        }
+        kprintf("Crashing active process %s(%u).\n", current->process().name().characters(), current->pid());
+        current->process().crash();
+        return {};
     }
 
     size_t chunks_needed = real_size / CHUNK_SIZE;
@@ -160,9 +167,15 @@ void* kmalloc_impl(size_t size)
         }
     }
 
-    kprintf("%s(%u) kmalloc(): PANIC! Out of memory (no suitable block for size %u)\n", current->process().name().characters(), current->pid(), size);
-    dump_backtrace();
-    hang();
+    kprintf("%s(%u) kmalloc(): Uh-oh! Out of memory (no suitable block for size %u)\n", current->process().name().characters(), current->pid(), size);
+    if (current->process().is_ring0()) {
+        kprintf("Out of memory: PANIC!\n");
+        dump_backtrace();
+        hang();
+    }
+    kprintf("Crashing active process %s(%u).\n", current->process().name().characters(), current->pid());
+    current->process().crash();
+    return {};
 }
 
 void kfree(void* ptr)
