@@ -63,8 +63,8 @@ public:
 
     RetainPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill);
     RetainPtr<PhysicalPage> allocate_supervisor_physical_page();
-    void deallocate_user_physical_page(PhysicalPage&);
-    void deallocate_supervisor_physical_page(PhysicalPage&);
+    void deallocate_user_physical_page(PhysicalPage&&);
+    void deallocate_supervisor_physical_page(PhysicalPage&&);
 
     void remap_region(PageDirectory&, Region&);
 
