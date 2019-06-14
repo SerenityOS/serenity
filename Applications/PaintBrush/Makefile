@@ -4,6 +4,9 @@ OBJS = \
     PaintableWidget.o \
     PaletteWidget.o \
     ToolboxWidget.o \
+    Tool.o \
+    PenTool.o \
+    BucketTool.o \
     main.o
 
 APP = PaintBrush

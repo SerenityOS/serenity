@@ -1,6 +1,24 @@
 #include "ToolboxWidget.h"
+#include "BucketTool.h"
+#include "PaintableWidget.h"
+#include "PenTool.h"
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
+
+class ToolButton final : public GButton {
+public:
+    ToolButton(const String& name, GWidget* parent, OwnPtr<Tool>&& tool)
+        : GButton(name, parent)
+        , m_tool(move(tool))
+    {
+    }
+
+    const Tool& tool() const { return *m_tool; }
+    Tool& tool() { return *m_tool; }
+
+private:
+    OwnPtr<Tool> m_tool;
+};
 
 ToolboxWidget::ToolboxWidget(GWidget* parent)
     : GFrame(parent)
@@ -18,17 +36,23 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto add_tool = [&] (const StringView& name) {
-        auto* button = new GButton(name, this);
+    auto add_tool = [&](const StringView& name, OwnPtr<Tool>&& tool) {
+        auto* button = new ToolButton(name, this, move(tool));
         button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         button->set_preferred_size({ 0, 32 });
         button->set_checkable(true);
         button->set_exclusive(true);
+
+        button->on_checked = [button](auto checked) {
+            if (checked)
+                PaintableWidget::the().set_tool(&button->tool());
+            else
+                PaintableWidget::the().set_tool(nullptr);
+        };
     };
 
-    add_tool("Pen");
-    add_tool("Buck");
-    add_tool("Pick");
+    add_tool("Pen", make<PenTool>());
+    add_tool("Buck", make<BucketTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()

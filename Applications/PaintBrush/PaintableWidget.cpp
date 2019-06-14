@@ -1,10 +1,20 @@
 #include "PaintableWidget.h"
+#include "Tool.h"
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/GraphicsBitmap.h>
+
+static PaintableWidget* s_the;
+
+PaintableWidget& PaintableWidget::the()
+{
+    return *s_the;
+}
 
 PaintableWidget::PaintableWidget(GWidget* parent)
     : GWidget(parent)
 {
+    ASSERT(!s_the);
+    s_the = this;
     set_fill_with_background_color(true);
     set_background_color(Color::MidGray);
     m_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, { 600, 400 });
@@ -33,37 +43,18 @@ Color PaintableWidget::color_for(const GMouseEvent& event)
 
 void PaintableWidget::mousedown_event(GMouseEvent& event)
 {
-    if (event.button() != GMouseButton::Left && event.button() != GMouseButton::Right)
-        return;
-
-    GPainter painter(*m_bitmap);
-    painter.set_pixel(event.position(), color_for(event));
-    update({ event.position(), { 1, 1 } });
-    m_last_drawing_event_position = event.position();
+    if (m_tool)
+        m_tool->on_mousedown(*this, event);
 }
 
 void PaintableWidget::mouseup_event(GMouseEvent& event)
 {
-    if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right)
-        m_last_drawing_event_position = { -1, -1 };
+    if (m_tool)
+        m_tool->on_mouseup(*this, event);
 }
 
 void PaintableWidget::mousemove_event(GMouseEvent& event)
 {
-    if (!rect().contains(event.position()))
-        return;
-
-    if (event.buttons() & GMouseButton::Left || event.buttons() & GMouseButton::Right) {
-        GPainter painter(*m_bitmap);
-
-        if (m_last_drawing_event_position != Point(-1, -1)) {
-            painter.draw_line(m_last_drawing_event_position, event.position(), color_for(event));
-            update();
-        } else {
-            painter.set_pixel(event.position(), color_for(event));
-            update({ event.position(), { 1, 1 } });
-        }
-
-        m_last_drawing_event_position = event.position();
-    }
+    if (m_tool)
+        m_tool->on_mousemove(*this, event);
 }
