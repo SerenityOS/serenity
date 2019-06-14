@@ -2,18 +2,18 @@
 
 #include "AKString.h"
 #include "Vector.h"
-#include <LibC/stdarg.h>
+#include <stdarg.h>
 
 namespace AK {
 
 class StringBuilder {
 public:
-    explicit StringBuilder(ssize_t initial_capacity = 16);
+    explicit StringBuilder(int initial_capacity = 16);
     ~StringBuilder() {}
 
     void append(const StringView&);
     void append(char);
-    void append(const char*, ssize_t);
+    void append(const char*, int);
     void appendf(const char*, ...);
     void appendvf(const char*, va_list);
 
@@ -21,10 +21,10 @@ public:
     ByteBuffer to_byte_buffer();
 
 private:
-    void will_append(ssize_t);
+    void will_append(int);
 
     ByteBuffer m_buffer;
-    ssize_t m_length { 0 };
+    int m_length { 0 };
 };
 
 }

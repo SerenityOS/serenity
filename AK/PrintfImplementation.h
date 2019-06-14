@@ -1,11 +1,15 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <LibC/stdarg.h>
+#include <stdarg.h>
 
 static constexpr const char* printf_hex_digits = "0123456789abcdef";
 
+#ifdef __serenity__
 extern "C" size_t strlen(const char*);
+#else
+#include <string.h>
+#endif
 
 template<typename PutChFunc, typename T>
 [[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, byte fields)
@@ -174,7 +178,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
+[[gnu::always_inline]] inline int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, va_list ap)
 {
     const char* p;
 

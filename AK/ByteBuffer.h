@@ -100,12 +100,12 @@ public:
         return *this;
     }
 
-    static ByteBuffer create_uninitialized(ssize_t size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
-    static ByteBuffer create_zeroed(ssize_t size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
-    static ByteBuffer copy(const void* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
-    static ByteBuffer wrap(const void* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
-    static ByteBuffer wrap(void* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
-    static ByteBuffer adopt(void* data, ssize_t size) { return ByteBuffer(ByteBufferImpl::adopt(data, size)); }
+    static ByteBuffer create_uninitialized(int size) { return ByteBuffer(ByteBufferImpl::create_uninitialized(size)); }
+    static ByteBuffer create_zeroed(int size) { return ByteBuffer(ByteBufferImpl::create_zeroed(size)); }
+    static ByteBuffer copy(const void* data, int size) { return ByteBuffer(ByteBufferImpl::copy(data, size)); }
+    static ByteBuffer wrap(const void* data, int size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
+    static ByteBuffer wrap(void* data, int size) { return ByteBuffer(ByteBufferImpl::wrap(data, size)); }
+    static ByteBuffer adopt(void* data, int size) { return ByteBuffer(ByteBufferImpl::adopt(data, size)); }
 
     ~ByteBuffer() { clear(); }
     void clear() { m_impl = nullptr; }
@@ -114,18 +114,18 @@ public:
     bool operator!() const { return is_null(); }
     bool is_null() const { return m_impl == nullptr; }
 
-    byte& operator[](ssize_t i)
+    byte& operator[](int i)
     {
         ASSERT(m_impl);
         return (*m_impl)[i];
     }
-    byte operator[](ssize_t i) const
+    byte operator[](int i) const
     {
         ASSERT(m_impl);
         return (*m_impl)[i];
     }
     bool is_empty() const { return !m_impl || m_impl->is_empty(); }
-    ssize_t size() const { return m_impl ? m_impl->size() : 0; }
+    int size() const { return m_impl ? m_impl->size() : 0; }
 
     byte* data() { return pointer(); }
     const byte* data() const { return pointer(); }
@@ -133,8 +133,8 @@ public:
     byte* pointer() { return m_impl ? m_impl->pointer() : nullptr; }
     const byte* pointer() const { return m_impl ? m_impl->pointer() : nullptr; }
 
-    byte* offset_pointer(ssize_t offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
-    const byte* offset_pointer(ssize_t offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
+    byte* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
+    const byte* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
 
     void* end_pointer() { return m_impl ? m_impl->end_pointer() : nullptr; }
     const void* end_pointer() const { return m_impl ? m_impl->end_pointer() : nullptr; }
@@ -147,13 +147,13 @@ public:
     }
 
     // NOTE: trim() does not reallocate.
-    void trim(ssize_t size)
+    void trim(int size)
     {
         if (m_impl)
             m_impl->trim(size);
     }
 
-    ByteBuffer slice(ssize_t offset, ssize_t size) const
+    ByteBuffer slice(int offset, int size) const
     {
         if (is_null())
             return {};
@@ -164,7 +164,7 @@ public:
         return copy(offset_pointer(offset), size);
     }
 
-    void grow(ssize_t size)
+    void grow(int size)
     {
         if (!m_impl)
             m_impl = ByteBufferImpl::create_uninitialized(size);
@@ -204,7 +204,7 @@ inline ByteBufferImpl::ByteBufferImpl(const void* data, int size, ConstructionMo
     m_owned = true;
 }
 
-inline ByteBufferImpl::ByteBufferImpl(void* data, ssize_t size, ConstructionMode mode)
+inline ByteBufferImpl::ByteBufferImpl(void* data, int size, ConstructionMode mode)
     : m_data(static_cast<byte*>(data))
     , m_size(size)
 {
@@ -215,7 +215,7 @@ inline ByteBufferImpl::ByteBufferImpl(void* data, ssize_t size, ConstructionMode
     }
 }
 
-inline void ByteBufferImpl::grow(ssize_t size)
+inline void ByteBufferImpl::grow(int size)
 {
     ASSERT(size > m_size);
     ASSERT(m_owned);

@@ -59,7 +59,7 @@ public:
     {
     }
 
-    String(const char* cstring, ssize_t length, ShouldChomp shouldChomp = NoChomp)
+    String(const char* cstring, int length, ShouldChomp shouldChomp = NoChomp)
         : m_impl(StringImpl::create(cstring, length, shouldChomp))
     {
     }
@@ -118,9 +118,9 @@ public:
 
     bool is_null() const { return !m_impl; }
     bool is_empty() const { return length() == 0; }
-    ssize_t length() const { return m_impl ? m_impl->length() : 0; }
+    int length() const { return m_impl ? m_impl->length() : 0; }
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
-    char operator[](ssize_t i) const
+    char operator[](int i) const
     {
         ASSERT(m_impl);
         return (*m_impl)[i];
