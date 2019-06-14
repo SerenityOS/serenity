@@ -9,7 +9,7 @@ static const dword kernelspace_range_base = 0xc0000000;
 PageDirectory::PageDirectory(PhysicalAddress paddr)
     : m_range_allocator(VirtualAddress(0xc0000000), 0x3f000000)
 {
-    m_directory_page = PhysicalPage::create_eternal(paddr, true);
+    m_directory_page = PhysicalPage::create(paddr, true, false);
 }
 
 PageDirectory::PageDirectory(const RangeAllocator* parent_range_allocator)
