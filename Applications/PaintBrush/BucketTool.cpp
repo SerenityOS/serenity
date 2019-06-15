@@ -21,23 +21,21 @@ static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Colo
     while (!queue.is_empty()) {
         auto position = queue.dequeue();
 
-        if (!bitmap.rect().contains(position))
-            continue;
         if (bitmap.get_pixel(position) != target_color)
             continue;
         bitmap.set_pixel(position, fill_color);
 
         if (position.x() != 0)
-            queue.enqueue(position.translated(0, -1));
-
-        if (position.x() != bitmap.width() - 1)
-            queue.enqueue(position.translated(0, 1));
-
-        if (position.y() != 0)
             queue.enqueue(position.translated(-1, 0));
 
-        if (position.y() != bitmap.height() - 1)
+        if (position.x() != bitmap.width() - 1)
             queue.enqueue(position.translated(1, 0));
+
+        if (position.y() != 0)
+            queue.enqueue(position.translated(0, -1));
+
+        if (position.y() != bitmap.height() - 1)
+            queue.enqueue(position.translated(0, 1));
     }
 }
 
