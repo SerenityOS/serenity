@@ -1,10 +1,18 @@
+#include <LibCore/CFile.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/Element.h>
 #include <LibHTML/Parser.h>
+#include <stdio.h>
 
-int main()
+int main(int argc, char** argv)
 {
-    String html = "<html><head><title>my page</title></head><body><h1>Hi there</h1><p>Hello World!</p></body></html>";
+    CFile f(argc == 1 ? "/home/anon/small.html" : argv[1]);
+    if (!f.open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Error: %s\n", f.error_string());
+        return 1;
+    }
+    String html = String::copy(f.read_all());
     auto doc = parse(html);
     dump_tree(doc);
+    return 0;
 }
