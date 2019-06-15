@@ -12,7 +12,11 @@ void dump_tree(Node& node)
     if (node.is_document()) {
         printf("*Document*\n");
     } else if (node.is_element()) {
-        printf("<%s>\n", static_cast<Element&>(node).tag_name().characters());
+        printf("<%s", static_cast<Element&>(node).tag_name().characters());
+        static_cast<Element&>(node).for_each_attribute([](auto& name, auto& value) {
+            printf(" %s=%s", name.characters(), value.characters());
+        });
+        printf(">\n");
     } else if (node.is_text()) {
         printf("\"%s\"\n", static_cast<Text&>(node).data().characters());
     }

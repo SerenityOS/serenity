@@ -11,6 +11,11 @@ public:
     {
     }
 
+    const String& name() const { return m_name; }
+    const String& value() const { return m_value; }
+
+    void set_value(const String& value) { m_value = value; }
+
 private:
     String m_name;
     String m_value;
@@ -23,7 +28,22 @@ public:
 
     const String& tag_name() const { return m_tag_name; }
 
+    String attribute(const String& name) const;
+    void set_attribute(const String& name, const String& value);
+
+    void set_attributes(Vector<Attribute>&&);
+
+    template<typename Callback>
+    void for_each_attribute(Callback callback)
+    {
+        for (auto& attribute : m_attributes)
+            callback(attribute.name(), attribute.value());
+    }
+
 private:
+    Attribute* find_attribute(const String& name);
+    const Attribute* find_attribute(const String& name) const;
+
     String m_tag_name;
     Vector<Attribute> m_attributes;
 };
