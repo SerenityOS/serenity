@@ -38,7 +38,7 @@ void dump_tree(const LayoutNode& node)
         printf("   ");
     printf("%s{%p}", node.class_name(), &node);
     if (node.is_text())
-        printf(" \"%s\"", static_cast<const LayoutText&>(node).node().data().characters());
+        printf(" \"%s\"", static_cast<const LayoutText&>(node).text().characters());
     printf("\n");
     ++indent;
     node.for_each_child([](auto& child) {
