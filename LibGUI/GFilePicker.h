@@ -7,7 +7,7 @@ class GLabel;
 
 class GFilePicker final : public GDialog {
 public:
-    GFilePicker(const String& path = "/", CObject* parent = nullptr);
+    GFilePicker(const StringView& path = "/", CObject* parent = nullptr);
     virtual ~GFilePicker() override;
 
     FileSystemPath selected_file() const { return m_selected_file; }

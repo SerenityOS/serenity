@@ -1,7 +1,7 @@
+#include <LibC/SharedBuffer.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GEventLoop.h>
 #include <WindowServer/WSAPITypes.h>
-#include <LibC/SharedBuffer.h>
 
 GClipboard& GClipboard::the()
 {
@@ -21,20 +21,20 @@ String GClipboard::data() const
     request.type = WSAPI_ClientMessage::Type::GetClipboardContents;
     auto response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidGetClipboardContents);
     if (response.clipboard.shared_buffer_id < 0)
-        return { };
+        return {};
     auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(response.clipboard.shared_buffer_id);
     if (!shared_buffer) {
         dbgprintf("GClipboard::data() failed to attach to the shared buffer\n");
-        return { };
+        return {};
     }
     if (response.clipboard.contents_size > shared_buffer->size()) {
         dbgprintf("GClipboard::data() clipping contents size is greater than shared buffer size\n");
-        return { };
+        return {};
     }
     return String((const char*)shared_buffer->data(), response.clipboard.contents_size);
 }
 
-void GClipboard::set_data(const String& data)
+void GClipboard::set_data(const StringView& data)
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::SetClipboardContents;

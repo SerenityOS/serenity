@@ -20,13 +20,13 @@ public:
 
 private:
     // ^CharacterDevice
-    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) override;
-    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) override;
-    virtual bool can_read(FileDescriptor&) const override;
-    virtual bool can_write(FileDescriptor&) const override;
+    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
+    virtual bool can_read(FileDescription&) const override;
+    virtual bool can_write(FileDescription&) const override;
     virtual void close() override;
     virtual bool is_master_pty() const override { return true; }
-    virtual int ioctl(FileDescriptor&, unsigned request, unsigned arg) override;
+    virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
     virtual const char* class_name() const override { return "MasterPTY"; }
 
     RetainPtr<SlavePTY> m_slave;

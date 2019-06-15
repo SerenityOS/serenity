@@ -252,4 +252,3 @@ String GVariant::to_string() const
     }
     ASSERT_NOT_REACHED();
 }
-

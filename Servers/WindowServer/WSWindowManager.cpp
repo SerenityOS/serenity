@@ -1,3 +1,4 @@
+#include "WSWindowManager.h"
 #include "WSCompositor.h"
 #include "WSEventLoop.h"
 #include "WSMenu.h"
@@ -5,7 +6,6 @@
 #include "WSMenuItem.h"
 #include "WSScreen.h"
 #include "WSWindow.h"
-#include "WSWindowManager.h"
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/CTimer.h>
@@ -43,8 +43,8 @@ WSWindowManager::WSWindowManager()
     reload_config(false);
 
     struct AppMenuItem {
-        const char *binary_name;
-        const char *description;
+        const char* binary_name;
+        const char* description;
     };
 
     Vector<AppMenuItem> apps;
@@ -65,10 +65,10 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About..."));
-        m_system_menu->on_item_activation = [this, apps] (WSMenuItem& item) {
+        m_system_menu->on_item_activation = [this, apps](WSMenuItem& item) {
             if (item.identifier() >= 1 && item.identifier() <= 1 + apps.size() - 1) {
                 if (fork() == 0) {
-                    const auto& bin = apps[item.identifier() -1].binary_name;
+                    const auto& bin = apps[item.identifier() - 1].binary_name;
                     execl(bin, bin, nullptr);
                     ASSERT_NOT_REACHED();
                 }
@@ -139,7 +139,7 @@ void WSWindowManager::reload_config(bool set_screen)
 
     if (set_screen)
         set_resolution(m_wm_config->read_num_entry("Screen", "Width", 1920),
-                       m_wm_config->read_num_entry("Screen", "Height", 1080));
+            m_wm_config->read_num_entry("Screen", "Height", 1080));
 
     m_arrow_cursor = get_cursor("Arrow", { 2, 2 });
     m_resize_horizontally_cursor = get_cursor("ResizeH");
@@ -199,18 +199,17 @@ void WSWindowManager::tick_clock()
 void WSWindowManager::set_resolution(int width, int height)
 {
     WSCompositor::the().set_resolution(width, height);
-    WSClientConnection::for_each_client([&] (WSClientConnection& client) {
+    WSClientConnection::for_each_client([&](WSClientConnection& client) {
         client.notify_about_new_screen_rect(WSScreen::the().rect());
     });
     if (m_wm_config) {
         dbgprintf("Saving resolution: %dx%d to config file at %s.\n", width, height,
-                  m_wm_config->file_name().characters());
+            m_wm_config->file_name().characters());
         m_wm_config->write_num_entry("Screen", "Width", width);
         m_wm_config->write_num_entry("Screen", "Height", height);
         m_wm_config->sync();
     }
 }
-
 
 int WSWindowManager::menubar_menu_margin() const
 {
@@ -238,7 +237,7 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 #endif
     Point next_menu_location { menubar_menu_margin() / 2, 0 };
     int index = 0;
-    for_each_active_menubar_menu([&] (WSMenu& menu) {
+    for_each_active_menubar_menu([&](WSMenu& menu) {
         int text_width = index == 1 ? Font::default_bold_font().width(menu.name()) : font().width(menu.name());
         menu.set_rect_in_menubar({ next_menu_location.x() - menubar_menu_margin() / 2, 0, text_width + menubar_menu_margin(), menubar_rect().height() - 1 });
         menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
@@ -263,7 +262,7 @@ void WSWindowManager::add_window(WSWindow& window)
         m_switcher.refresh();
 
     if (window.listens_to_wm_events()) {
-        for_each_window([&] (WSWindow& other_window) {
+        for_each_window([&](WSWindow& other_window) {
             if (&window != &other_window) {
                 tell_wm_listener_about_window(window, other_window);
                 tell_wm_listener_about_window_icon(window, other_window);
@@ -297,7 +296,7 @@ void WSWindowManager::remove_window(WSWindow& window)
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
-    for_each_window_listening_to_wm_events([&window] (WSWindow& listener) {
+    for_each_window_listening_to_wm_events([&window](WSWindow& listener) {
         if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (window.client())
@@ -332,7 +331,7 @@ void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSW
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
 {
-    for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
+    for_each_window_listening_to_wm_events([&](WSWindow& listener) {
         tell_wm_listener_about_window(listener, window);
         return IterationDecision::Continue;
     });
@@ -340,7 +339,7 @@ void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
 
 void WSWindowManager::tell_wm_listeners_window_icon_changed(WSWindow& window)
 {
-    for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
+    for_each_window_listening_to_wm_events([&](WSWindow& listener) {
         tell_wm_listener_about_window_icon(listener, window);
         return IterationDecision::Continue;
     });
@@ -348,7 +347,7 @@ void WSWindowManager::tell_wm_listeners_window_icon_changed(WSWindow& window)
 
 void WSWindowManager::tell_wm_listeners_window_rect_changed(WSWindow& window)
 {
-    for_each_window_listening_to_wm_events([&] (WSWindow& listener) {
+    for_each_window_listening_to_wm_events([&](WSWindow& listener) {
         tell_wm_listener_about_window_rect(listener, window);
         return IterationDecision::Continue;
     });
@@ -388,9 +387,9 @@ void WSWindowManager::notify_minimization_state_changed(WSWindow& window)
 
 void WSWindowManager::pick_new_active_window()
 {
-    for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, [&] (WSWindow& candidate) {
+    for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, [&](WSWindow& candidate) {
         set_active_window(&candidate);
-        return IterationDecision::Abort;
+        return IterationDecision::Break;
     });
 }
 
@@ -427,7 +426,7 @@ void WSWindowManager::close_current_menu()
 
 void WSWindowManager::handle_menubar_mouse_event(const WSMouseEvent& event)
 {
-    for_each_active_menubar_menu([&] (WSMenu& menu) {
+    for_each_active_menubar_menu([&](WSMenu& menu) {
         if (menu.rect_in_menubar().contains(event.position())) {
             handle_menu_mouse_event(menu, event);
             return false;
@@ -442,7 +441,8 @@ void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& ev
     printf("[WM] Begin dragging WSWindow{%p}\n", &window);
 #endif
     move_to_front_and_make_active(window);
-    m_drag_window = window.make_weak_ptr();;
+    m_drag_window = window.make_weak_ptr();
+    ;
     m_drag_origin = event.position();
     m_drag_window_origin = window.position();
     invalidate(window);
@@ -472,7 +472,8 @@ void WSWindowManager::start_window_resize(WSWindow& window, const Point& positio
     printf("[WM] Begin resizing WSWindow{%p}\n", &window);
 #endif
     m_resizing_mouse_button = button;
-    m_resize_window = window.make_weak_ptr();;
+    m_resize_window = window.make_weak_ptr();
+    ;
     m_resize_origin = position;
     m_resize_window_original_rect = window.rect();
 
@@ -501,11 +502,7 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
 #if defined(DOUBLECLICK_DEBUG)
                 dbgprintf("[WM] Click up became doubleclick!\n");
 #endif
-                if (m_drag_window->is_maximized()) {
-                    m_drag_window->set_maximized(false);
-                } else {
-                    m_drag_window->set_maximized(true);
-                }
+                m_drag_window->set_maximized(!m_drag_window->is_maximized());
             }
         }
         m_drag_window = nullptr;
@@ -616,8 +613,8 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
         return true;
 #ifdef RESIZE_DEBUG
     dbgprintf("[WM] Resizing [original: %s] now: %s\n",
-              m_resize_window_original_rect.to_string().characters(),
-              new_rect.to_string().characters());
+        m_resize_window_original_rect.to_string().characters(),
+        new_rect.to_string().characters());
 #endif
     m_resize_window->set_rect(new_rect);
     WSEventLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
@@ -632,9 +629,12 @@ void WSWindowManager::set_cursor_tracking_button(WSButton* button)
 CElapsedTimer& WSWindowManager::DoubleClickInfo::click_clock(MouseButton button)
 {
     switch (button) {
-    case MouseButton::Left: return m_left_click_clock;
-    case MouseButton::Right: return m_right_click_clock;
-    case MouseButton::Middle: return m_middle_click_clock;
+    case MouseButton::Left:
+        return m_left_click_clock;
+    case MouseButton::Right:
+        return m_right_click_clock;
+    case MouseButton::Middle:
+        return m_middle_click_clock;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -716,7 +716,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
     for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
         if (!window->global_cursor_tracking())
             continue;
-        ASSERT(window->is_visible()); // Maybe this should be supported? Idk. Let's catch it and think about it later.
+        ASSERT(window->is_visible());    // Maybe this should be supported? Idk. Let's catch it and think about it later.
         ASSERT(!window->is_minimized()); // Maybe this should also be supported? Idk.
         windows_who_received_mouse_event_due_to_cursor_tracking.set(window);
         auto translated_event = event.translated(-window->position());
@@ -746,7 +746,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
 
     WSWindow* event_window_with_frame = nullptr;
 
-    for_each_visible_window_from_front_to_back([&] (WSWindow& window) {
+    for_each_visible_window_from_front_to_back([&](WSWindow& window) {
         auto window_frame_rect = window.frame().rect();
         if (!window_frame_rect.contains(event.position()))
             return IterationDecision::Continue;
@@ -760,12 +760,12 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
             if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
                 hovered_window = &window;
                 start_window_drag(window, event);
-                return IterationDecision::Abort;
+                return IterationDecision::Break;
             }
             if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
                 hovered_window = &window;
                 start_window_resize(window, event);
-                return IterationDecision::Abort;
+                return IterationDecision::Break;
             }
         }
         // Well okay, let's see if we're hitting the frame or the window inside the frame.
@@ -778,13 +778,13 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
                 auto translated_event = event.translated(-window.position());
                 deliver_mouse_event(window, translated_event);
             }
-            return IterationDecision::Abort;
+            return IterationDecision::Break;
         }
 
         // We are hitting the frame, pass the event along to WSWindowFrame.
         window.frame().on_mouse_event(event.translated(-window_frame_rect.location()));
         event_window_with_frame = &window;
-        return IterationDecision::Abort;
+        return IterationDecision::Break;
     });
 
     if (event_window_with_frame != m_resize_candidate.ptr())
@@ -801,7 +801,7 @@ void WSWindowManager::clear_resize_candidate()
 bool WSWindowManager::any_opaque_window_contains_rect(const Rect& rect)
 {
     bool found_containing_window = false;
-    for_each_window([&] (WSWindow& window) {
+    for_each_window([&](WSWindow& window) {
         if (!window.is_visible())
             return IterationDecision::Continue;
         if (window.is_minimized())
@@ -815,7 +815,7 @@ bool WSWindowManager::any_opaque_window_contains_rect(const Rect& rect)
         }
         if (window.frame().rect().contains(rect)) {
             found_containing_window = true;
-            return IterationDecision::Abort;
+            return IterationDecision::Break;
         }
         return IterationDecision::Continue;
     });
@@ -826,7 +826,7 @@ bool WSWindowManager::any_opaque_window_above_this_one_contains_rect(const WSWin
 {
     bool found_containing_window = false;
     bool checking = false;
-    for_each_visible_window_from_back_to_front([&] (WSWindow& window) {
+    for_each_visible_window_from_back_to_front([&](WSWindow& window) {
         if (&window == &a_window) {
             checking = true;
             return IterationDecision::Continue;
@@ -843,7 +843,7 @@ bool WSWindowManager::any_opaque_window_above_this_one_contains_rect(const WSWin
             return IterationDecision::Continue;
         if (window.frame().rect().contains(rect)) {
             found_containing_window = true;
-            return IterationDecision::Abort;
+            return IterationDecision::Break;
         }
         return IterationDecision::Continue;
     });
@@ -853,7 +853,7 @@ bool WSWindowManager::any_opaque_window_above_this_one_contains_rect(const WSWin
 Rect WSWindowManager::menubar_rect() const
 {
     if (active_fullscreen_window())
-        return { };
+        return {};
     return { 0, 0, WSScreen::the().rect().width(), 18 };
 }
 
@@ -1054,9 +1054,9 @@ Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
     rect.set_height(rect.height() - menubar_rect().height());
 
     // Subtract taskbar window height if present
-    const_cast<WSWindowManager*>(this)->for_each_visible_window_of_type_from_back_to_front(WSWindowType::Taskbar, [&rect] (WSWindow& taskbar_window) {
+    const_cast<WSWindowManager*>(this)->for_each_visible_window_of_type_from_back_to_front(WSWindowType::Taskbar, [&rect](WSWindow& taskbar_window) {
         rect.set_height(rect.height() - taskbar_window.height());
-        return IterationDecision::Abort;
+        return IterationDecision::Break;
     });
 
     return rect;

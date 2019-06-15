@@ -10,7 +10,12 @@ static void print_usage_and_exit()
 
 int main(int argc, char** argv)
 {
-    enum Mode { SegmentationViolation, DivisionByZero, IllegalInstruction, Abort };
+    enum Mode {
+        SegmentationViolation,
+        DivisionByZero,
+        IllegalInstruction,
+        Abort
+    };
     Mode mode = SegmentationViolation;
 
     if (argc != 2)

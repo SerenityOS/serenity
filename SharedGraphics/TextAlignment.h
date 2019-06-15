@@ -1,6 +1,11 @@
 #pragma once
 
-enum class TextAlignment { TopLeft, CenterLeft, Center, CenterRight };
+enum class TextAlignment {
+    TopLeft,
+    CenterLeft,
+    Center,
+    CenterRight
+};
 
 inline bool is_right_text_alignment(TextAlignment alignment)
 {

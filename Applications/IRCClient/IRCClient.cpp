@@ -1,16 +1,16 @@
 #include "IRCClient.h"
 #include "IRCChannel.h"
-#include "IRCQuery.h"
 #include "IRCLogBuffer.h"
+#include "IRCQuery.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
 #include <LibCore/CNotifier.h>
-#include <sys/socket.h>
-#include <netinet/in.h>
 #include <arpa/inet.h>
-#include <unistd.h>
+#include <netinet/in.h>
 #include <stdio.h>
+#include <sys/socket.h>
 #include <time.h>
+#include <unistd.h>
 
 #define IRC_DEBUG
 
@@ -43,7 +43,7 @@ IRCClient::~IRCClient()
 {
 }
 
-void IRCClient::set_server(const String &hostname, int port)
+void IRCClient::set_server(const String& hostname, int port)
 {
     m_hostname = hostname;
     m_port = port;
@@ -112,7 +112,8 @@ void IRCClient::process_line(ByteBuffer&& line)
         InStartOfParameter,
         InParameter,
         InTrailingParameter,
-    } state = Start;
+    } state
+        = Start;
 
     for (int i = 0; i < line.size(); ++i) {
         char ch = line[i];
@@ -216,8 +217,7 @@ void IRCClient::handle(const Message& msg)
     printf("IRCClient::execute: prefix='%s', command='%s', arguments=%d\n",
         msg.prefix.characters(),
         msg.command.characters(),
-        msg.arguments.size()
-    );
+        msg.arguments.size());
 
     int i = 0;
     for (auto& arg : msg.arguments) {
@@ -231,16 +231,26 @@ void IRCClient::handle(const Message& msg)
 
     if (is_numeric) {
         switch (numeric) {
-        case RPL_WHOISCHANNELS: return handle_rpl_whoischannels(msg);
-        case RPL_ENDOFWHOIS: return handle_rpl_endofwhois(msg);
-        case RPL_WHOISOPERATOR: return handle_rpl_whoisoperator(msg);
-        case RPL_WHOISSERVER: return handle_rpl_whoisserver(msg);
-        case RPL_WHOISUSER: return handle_rpl_whoisuser(msg);
-        case RPL_WHOISIDLE: return handle_rpl_whoisidle(msg);
-        case RPL_TOPICWHOTIME: return handle_rpl_topicwhotime(msg);
-        case RPL_TOPIC: return handle_rpl_topic(msg);
-        case RPL_NAMREPLY: return handle_rpl_namreply(msg);
-        case RPL_ENDOFNAMES: return handle_rpl_endofnames(msg);
+        case RPL_WHOISCHANNELS:
+            return handle_rpl_whoischannels(msg);
+        case RPL_ENDOFWHOIS:
+            return handle_rpl_endofwhois(msg);
+        case RPL_WHOISOPERATOR:
+            return handle_rpl_whoisoperator(msg);
+        case RPL_WHOISSERVER:
+            return handle_rpl_whoisserver(msg);
+        case RPL_WHOISUSER:
+            return handle_rpl_whoisuser(msg);
+        case RPL_WHOISIDLE:
+            return handle_rpl_whoisidle(msg);
+        case RPL_TOPICWHOTIME:
+            return handle_rpl_topicwhotime(msg);
+        case RPL_TOPIC:
+            return handle_rpl_topic(msg);
+        case RPL_NAMREPLY:
+            return handle_rpl_namreply(msg);
+        case RPL_ENDOFNAMES:
+            return handle_rpl_endofnames(msg);
         }
     }
 
@@ -441,7 +451,7 @@ void IRCClient::handle_rpl_topic(const Message& msg)
         return;
     auto& channel_name = msg.arguments[1];
     auto& topic = msg.arguments[2];
-    ensure_channel(channel_name).handle_topic({ }, topic);
+    ensure_channel(channel_name).handle_topic({}, topic);
     // FIXME: Handle RPL_TOPICWHOTIME so we can know who set it and when.
 }
 
@@ -502,8 +512,7 @@ void IRCClient::handle_rpl_whoisuser(const Message& msg)
         nick.characters(),
         username.characters(),
         host.characters(),
-        realname.characters()
-    ));
+        realname.characters()));
 }
 
 void IRCClient::handle_rpl_whoisidle(const Message& msg)
@@ -541,8 +550,7 @@ void IRCClient::handle_rpl_topicwhotime(const Message& msg)
             tm->tm_mday,
             tm->tm_hour,
             tm->tm_min,
-            tm->tm_sec
-        );
+            tm->tm_sec);
     }
     ensure_channel(channel_name).add_message(String::format("*** (set by %s at %s)", nick.characters(), setat.characters()), Color::Blue);
 }

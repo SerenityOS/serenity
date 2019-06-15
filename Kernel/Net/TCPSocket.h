@@ -7,8 +7,7 @@ public:
     static Retained<TCPSocket> create(int protocol);
     virtual ~TCPSocket() override;
 
-    enum class State
-    {
+    enum class State {
         Disconnected,
         Connecting,
         Connected,
@@ -36,7 +35,7 @@ private:
 
     virtual int protocol_receive(const ByteBuffer&, void* buffer, size_t buffer_size, int flags, sockaddr* addr, socklen_t* addr_length) override;
     virtual int protocol_send(const void*, int) override;
-    virtual KResult protocol_connect(FileDescriptor&, ShouldBlock) override;
+    virtual KResult protocol_connect(FileDescription&, ShouldBlock) override;
     virtual int protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;
     virtual KResult protocol_bind() override;

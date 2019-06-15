@@ -2,16 +2,16 @@
 PORT_DIR=less
 INSTALLOPTS="DESTDIR=$SERENITY_ROOT/Root/"
 
-function fetch() {
+fetch() {
     run_fetch_web "http://ftp.gnu.org/gnu/less/less-530.tar.gz"
 }
-function configure() {
+configure() {
     run_configure_autotools
 }
-function build() {
+build() {
     run_make
 }
-function install() {
+install() {
     run_make_install
 }
-source ../.port_include.sh
+. ../.port_include.sh

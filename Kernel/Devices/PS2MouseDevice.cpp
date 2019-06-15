@@ -1,16 +1,16 @@
 #include "PS2MouseDevice.h"
 #include "IO.h"
 
-#define IRQ_MOUSE                1
-#define I8042_BUFFER             0x60
-#define I8042_STATUS             0x64
-#define I8042_ACK                0xFA
-#define I8042_BUFFER_FULL        0x01
-#define I8042_WHICH_BUFFER       0x20
-#define I8042_MOUSE_BUFFER       0x20
-#define I8042_KEYBOARD_BUFFER    0x00
+#define IRQ_MOUSE 1
+#define I8042_BUFFER 0x60
+#define I8042_STATUS 0x64
+#define I8042_ACK 0xFA
+#define I8042_BUFFER_FULL 0x01
+#define I8042_WHICH_BUFFER 0x20
+#define I8042_MOUSE_BUFFER 0x20
+#define I8042_KEYBOARD_BUFFER 0x00
 
-#define PS2MOUSE_GET_DEVICE_ID   0xF2
+#define PS2MOUSE_GET_DEVICE_ID 0xF2
 #define PS2MOUSE_SET_SAMPLE_RATE 0xF3
 
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
@@ -54,8 +54,7 @@ void PS2MouseDevice::handle_irq()
                 m_data[2],
                 (m_data[0] & 1) ? "Left" : "",
                 (m_data[0] & 2) ? "Right" : "",
-                m_queue.size()
-            );
+                m_queue.size());
 #endif
             parse_data_packet();
         };
@@ -218,12 +217,12 @@ byte PS2MouseDevice::mouse_read()
     return IO::in8(0x60);
 }
 
-bool PS2MouseDevice::can_read(FileDescriptor&) const
+bool PS2MouseDevice::can_read(FileDescription&) const
 {
     return !m_queue.is_empty();
 }
 
-ssize_t PS2MouseDevice::read(FileDescriptor&, byte* buffer, ssize_t size)
+ssize_t PS2MouseDevice::read(FileDescription&, byte* buffer, ssize_t size)
 {
     ssize_t nread = 0;
     while (nread < size) {
@@ -239,7 +238,7 @@ ssize_t PS2MouseDevice::read(FileDescriptor&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t PS2MouseDevice::write(FileDescriptor&, const byte*, ssize_t)
+ssize_t PS2MouseDevice::write(FileDescription&, const byte*, ssize_t)
 {
     return 0;
 }

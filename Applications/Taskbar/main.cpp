@@ -1,5 +1,5 @@
-#include <LibGUI/GApplication.h>
 #include "TaskbarWindow.h"
+#include <LibGUI/GApplication.h>
 
 int main(int argc, char** argv)
 {

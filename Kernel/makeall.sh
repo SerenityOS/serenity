@@ -28,6 +28,7 @@ build_targets="$build_targets ../Applications/About"
 build_targets="$build_targets ../Applications/IRCClient"
 build_targets="$build_targets ../Applications/Taskbar"
 build_targets="$build_targets ../Applications/Downloader"
+build_targets="$build_targets ../Applications/PaintBrush"
 build_targets="$build_targets ../DevTools/VisualBuilder"
 build_targets="$build_targets ../Games/Minesweeper"
 build_targets="$build_targets ../Games/Snake"
@@ -35,6 +36,7 @@ build_targets="$build_targets ../Shell"
 build_targets="$build_targets ../Demos/HelloWorld"
 build_targets="$build_targets ../Demos/RetroFetch"
 build_targets="$build_targets ../Demos/WidgetGallery"
+build_targets="$build_targets ../Demos/Fire"
 build_targets="$build_targets ." # the kernel
 
 for targ in $build_targets; do

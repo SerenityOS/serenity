@@ -3,18 +3,19 @@
  * just to get going. Don't ever let anyone see this shit. :^)
  */
 
+#include <AK/Assertions.h>
 #include <AK/Types.h>
-#include <Kernel/kmalloc.h>
-#include <Kernel/StdLib.h>
-#include <Kernel/i386.h>
+#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/KSyms.h>
-#include <AK/Assertions.h>
+#include <Kernel/StdLib.h>
+#include <Kernel/kmalloc.h>
 
 #define SANITIZE_KMALLOC
 
-struct [[gnu::packed]] allocation_t {
+struct [[gnu::packed]] allocation_t
+{
     size_t start;
     size_t nchunk;
 };
@@ -22,11 +23,11 @@ struct [[gnu::packed]] allocation_t {
 #define CHUNK_SIZE 32
 #define POOL_SIZE (1024 * 1024)
 
-#define ETERNAL_BASE_PHYSICAL 0x100000
-#define ETERNAL_RANGE_SIZE 0x100000
+#define ETERNAL_BASE_PHYSICAL (1 * MB)
+#define ETERNAL_RANGE_SIZE (2 * MB)
 
-#define BASE_PHYSICAL 0x200000
-#define RANGE_SIZE 0x100000
+#define BASE_PHYSICAL (3 * MB)
+#define RANGE_SIZE (1 * MB)
 
 static byte alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
@@ -51,7 +52,7 @@ bool is_kmalloc_address(const void* ptr)
 void kmalloc_init()
 {
     memset(&alloc_map, 0, sizeof(alloc_map));
-    memset((void *)BASE_PHYSICAL, 0, POOL_SIZE);
+    memset((void*)BASE_PHYSICAL, 0, POOL_SIZE);
 
     kmalloc_sum_eternal = 0;
     sum_alloc = 0;
@@ -126,7 +127,7 @@ void* kmalloc_impl(size_t size)
         }
         // FIXME: This scan can be optimized further with LZCNT.
         for (size_t j = 0; j < 8; ++j) {
-            if (!(alloc_map[i] & (1<<j))) {
+            if (!(alloc_map[i] & (1 << j))) {
                 if (chunks_here == 0) {
                     // Mark where potential allocation starts.
                     first_chunk = i * 8 + j;
@@ -135,8 +136,8 @@ void* kmalloc_impl(size_t size)
                 ++chunks_here;
 
                 if (chunks_here == chunks_needed) {
-                    auto* a = (allocation_t *)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
-                    byte *ptr = (byte *)a;
+                    auto* a = (allocation_t*)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
+                    byte* ptr = (byte*)a;
                     ptr += sizeof(allocation_t);
                     a->nchunk = chunks_needed;
                     a->start = first_chunk;
@@ -164,7 +165,7 @@ void* kmalloc_impl(size_t size)
     hang();
 }
 
-void kfree(void *ptr)
+void kfree(void* ptr)
 {
     if (!ptr)
         return;

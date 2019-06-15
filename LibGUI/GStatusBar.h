@@ -11,7 +11,7 @@ public:
     virtual ~GStatusBar() override;
 
     String text() const;
-    void set_text(const String&);
+    void set_text(const StringView&);
 
     virtual const char* class_name() const override { return "GStatusBar"; }
 

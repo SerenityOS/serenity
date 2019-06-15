@@ -1,10 +1,10 @@
+#include <AK/QuickSort.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/kstdio.h>
-#include <AK/QuickSort.h>
 
 //#define VRA_DEBUG
 
-RangeAllocator::RangeAllocator(LinearAddress base, size_t size)
+RangeAllocator::RangeAllocator(VirtualAddress base, size_t size)
 {
     m_available_ranges.append({ base, size });
 #ifdef VRA_DEBUG
@@ -33,7 +33,7 @@ Vector<Range, 2> Range::carve(const Range& taken)
 {
     Vector<Range, 2> parts;
     if (taken == *this)
-        return { };
+        return {};
     if (taken.base() > base())
         parts.append({ base(), taken.base().get() - base().get() });
     if (taken.end() < end())
@@ -79,10 +79,10 @@ Range RangeAllocator::allocate_anywhere(size_t size)
         return allocated_range;
     }
     kprintf("VRA: Failed to allocate anywhere: %u\n", size);
-    return { };
+    return {};
 }
 
-Range RangeAllocator::allocate_specific(LinearAddress base, size_t size)
+Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 {
     Range allocated_range(base, size);
     for (int i = 0; i < m_available_ranges.size(); ++i) {
@@ -101,7 +101,7 @@ Range RangeAllocator::allocate_specific(LinearAddress base, size_t size)
         return allocated_range;
     }
     kprintf("VRA: Failed to allocate specific range: %x(%u)\n", base.get(), size);
-    return { };
+    return {};
 }
 
 void RangeAllocator::deallocate(Range range)
@@ -121,7 +121,7 @@ void RangeAllocator::deallocate(Range range)
 
 sort_and_merge:
     // FIXME: We don't have to sort if we insert at the right position immediately.
-    quick_sort(m_available_ranges.begin(), m_available_ranges.end(), [] (auto& a, auto& b) {
+    quick_sort(m_available_ranges.begin(), m_available_ranges.end(), [](auto& a, auto& b) {
         return a.base() < b.base();
     });
 

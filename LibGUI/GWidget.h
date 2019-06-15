@@ -17,23 +17,19 @@ class GLayout;
 class GMenu;
 class GWindow;
 
-enum class SizePolicy
-{
+enum class SizePolicy {
     Fixed,
     Fill
 };
-enum class Orientation
-{
+enum class Orientation {
     Horizontal,
     Vertical
 };
-enum class HorizontalDirection
-{
+enum class HorizontalDirection {
     Left,
     Right
 };
-enum class VerticalDirection
-{
+enum class VerticalDirection {
     Up,
     Down
 };
@@ -56,7 +52,7 @@ public:
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }
-    void set_tooltip(const String& tooltip) { m_tooltip = tooltip; }
+    void set_tooltip(const StringView& tooltip) { m_tooltip = tooltip; }
 
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
@@ -203,6 +199,7 @@ public:
     }
 
     virtual bool is_radio_button() const { return false; }
+    virtual bool is_abstract_button() const { return false; }
 
 private:
     virtual bool is_widget() const final { return true; }

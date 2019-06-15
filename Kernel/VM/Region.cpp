@@ -1,13 +1,13 @@
-#include <Kernel/VM/Region.h>
-#include <Kernel/VM/VMObject.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/Region.h>
+#include <Kernel/VM/VMObject.h>
 
-Region::Region(const Range& range, String&& n, byte access, bool cow)
+Region::Region(const Range& range, const String& name, byte access, bool cow)
     : m_range(range)
     , m_vmo(VMObject::create_anonymous(size()))
-    , m_name(move(n))
+    , m_name(name)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
@@ -15,21 +15,21 @@ Region::Region(const Range& range, String&& n, byte access, bool cow)
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, RetainPtr<Inode>&& inode, String&& n, byte access)
+Region::Region(const Range& range, RetainPtr<Inode>&& inode, const String& name, byte access)
     : m_range(range)
     , m_vmo(VMObject::create_file_backed(move(inode)))
-    , m_name(move(n))
+    , m_name(name)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count()))
 {
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, Retained<VMObject>&& vmo, size_t offset_in_vmo, String&& n, byte access, bool cow)
+Region::Region(const Range& range, Retained<VMObject>&& vmo, size_t offset_in_vmo, const String& name, byte access, bool cow)
     : m_range(range)
     , m_offset_in_vmo(offset_in_vmo)
     , m_vmo(move(vmo))
-    , m_name(move(n))
+    , m_name(name)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
@@ -59,6 +59,7 @@ bool Region::page_in()
             bool success = MM.page_in_from_inode(*this, i);
             if (!success)
                 return false;
+            continue;
         }
         MM.remap_region_page(*this, i, true);
     }
@@ -71,10 +72,10 @@ Retained<Region> Region::clone()
     if (m_shared || (is_readable() && !is_writable())) {
 #ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
-                  current->process().name().characters(),
-                  current->pid(),
-                  m_name.characters(),
-                  laddr().get());
+            current->process().name().characters(),
+            current->pid(),
+            m_name.characters(),
+            vaddr().get());
 #endif
         // Create a new region backed by the same VMObject.
         return adopt(*new Region(m_range, m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_access));
@@ -82,10 +83,10 @@ Retained<Region> Region::clone()
 
 #ifdef MM_DEBUG
     dbgprintf("%s<%u> Region::clone(): cowing %s (L%x)\n",
-              current->process().name().characters(),
-              current->pid(),
-              m_name.characters(),
-              laddr().get());
+        current->process().name().characters(),
+        current->pid(),
+        m_name.characters(),
+        vaddr().get());
 #endif
     // Set up a COW region. The parent (this) region becomes COW as well!
     m_cow_map.fill(true);
@@ -97,12 +98,12 @@ int Region::commit()
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at L%x\n", vmo().page_count(), this, &vmo(), laddr().get());
+    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at L%x\n", vmo().page_count(), this, &vmo(), vaddr().get());
 #endif
     for (size_t i = first_page_index(); i <= last_page_index(); ++i) {
         if (!vmo().physical_pages()[i].is_null())
             continue;
-        auto physical_page = MM.allocate_physical_page(MemoryManager::ShouldZeroFill::Yes);
+        auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (!physical_page) {
             kprintf("MM: commit was unable to allocate a physical page\n");
             return -ENOMEM;

@@ -1,15 +1,13 @@
-#include <Kernel/ProcessTracer.h>
 #include <AK/kstdio.h>
+#include <Kernel/ProcessTracer.h>
 
 ProcessTracer::ProcessTracer(pid_t pid)
     : m_pid(pid)
 {
-
 }
 
 ProcessTracer::~ProcessTracer()
 {
-
 }
 
 void ProcessTracer::did_syscall(dword function, dword arg1, dword arg2, dword arg3, dword result)
@@ -18,7 +16,7 @@ void ProcessTracer::did_syscall(dword function, dword arg1, dword arg2, dword ar
     m_calls.enqueue(data);
 }
 
-int ProcessTracer::read(FileDescriptor&, byte* buffer, int buffer_size)
+int ProcessTracer::read(FileDescription&, byte* buffer, int buffer_size)
 {
     if (m_calls.is_empty())
         return 0;
@@ -29,7 +27,7 @@ int ProcessTracer::read(FileDescriptor&, byte* buffer, int buffer_size)
     return sizeof(data);
 }
 
-String ProcessTracer::absolute_path(FileDescriptor&) const
+String ProcessTracer::absolute_path(const FileDescription&) const
 {
     return String::format("tracer:%d", m_pid);
 }

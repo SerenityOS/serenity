@@ -1,5 +1,5 @@
-#include <LibGUI/GRadioButton.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GRadioButton.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
 static RetainPtr<GraphicsBitmap> s_unfilled_circle_bitmap;
@@ -7,7 +7,7 @@ static RetainPtr<GraphicsBitmap> s_filled_circle_bitmap;
 static RetainPtr<GraphicsBitmap> s_changing_filled_circle_bitmap;
 static RetainPtr<GraphicsBitmap> s_changing_unfilled_circle_bitmap;
 
-GRadioButton::GRadioButton(const String& text, GWidget* parent)
+GRadioButton::GRadioButton(const StringView& text, GWidget* parent)
     : GAbstractButton(text, parent)
 {
     if (!s_unfilled_circle_bitmap) {
@@ -55,7 +55,7 @@ void GRadioButton::for_each_in_group(Callback callback)
 {
     if (!parent())
         return;
-    parent()->for_each_child_of_type<GRadioButton>([&] (auto& child) {
+    parent()->for_each_child_of_type<GRadioButton>([&](auto& child) {
         return callback(static_cast<GRadioButton&>(child));
     });
 }
@@ -64,7 +64,7 @@ void GRadioButton::click()
 {
     if (!is_enabled())
         return;
-    for_each_in_group([this] (auto& button) {
+    for_each_in_group([this](auto& button) {
         if (&button != this)
             button.set_checked(false);
         return IterationDecision::Continue;

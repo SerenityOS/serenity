@@ -33,10 +33,16 @@ public:
         MidMagenta,
     };
 
-    Color() { }
+    Color() {}
     Color(NamedColor);
-    Color(byte r, byte g, byte b) : m_value(0xff000000 | (r << 16) | (g << 8) | b) { }
-    Color(byte r, byte g, byte b, byte a) : m_value((a << 24) | (r << 16) | (g << 8) | b) { }
+    Color(byte r, byte g, byte b)
+        : m_value(0xff000000 | (r << 16) | (g << 8) | b)
+    {
+    }
+    Color(byte r, byte g, byte b, byte a)
+        : m_value((a << 24) | (r << 16) | (g << 8) | b)
+    {
+    }
 
     static Color from_rgb(unsigned rgb) { return Color(rgb | 0xff000000); }
     static Color from_rgba(unsigned rgba) { return Color(rgba); }
@@ -89,12 +95,30 @@ public:
         return Color(min(255.0, red() * 1.2), min(255.0, green() * 1.2), min(255.0, blue() * 1.2), alpha());
     }
 
+    Color inverted() const
+    {
+        return Color(~red(), ~green(), ~blue());
+    }
+
     RGBA32 value() const { return m_value; }
+
+    bool operator==(const Color& other) const
+    {
+        return m_value == other.m_value;
+    }
+
+    bool operator!=(const Color& other) const
+    {
+        return m_value != other.m_value;
+    }
 
     String to_string() const;
 
 private:
-    explicit Color(RGBA32 rgba) : m_value(rgba) { }
+    explicit Color(RGBA32 rgba)
+        : m_value(rgba)
+    {
+    }
 
     RGBA32 m_value { 0 };
 };

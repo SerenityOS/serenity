@@ -1,11 +1,11 @@
-#include <stdio.h>
 #include <errno.h>
-#include <utime.h>
 #include <fcntl.h>
-#include <unistd.h>
+#include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <utime.h>
 
 static bool file_exists(const char* path)
 {
@@ -46,4 +46,3 @@ int main(int argc, char** argv)
     }
     return 0;
 }
-

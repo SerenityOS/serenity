@@ -3,9 +3,23 @@
 class Painter;
 class Rect;
 
-enum class ButtonStyle { Normal, CoolBar };
-enum class FrameShadow { Plain, Raised, Sunken };
-enum class FrameShape { NoFrame, Box, Container, Panel, VerticalLine, HorizontalLine };
+enum class ButtonStyle {
+    Normal,
+    CoolBar
+};
+enum class FrameShadow {
+    Plain,
+    Raised,
+    Sunken
+};
+enum class FrameShape {
+    NoFrame,
+    Box,
+    Container,
+    Panel,
+    VerticalLine,
+    HorizontalLine
+};
 
 class StylePainter {
 public:

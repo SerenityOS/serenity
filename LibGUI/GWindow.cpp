@@ -2,12 +2,12 @@
 #include "GEvent.h"
 #include "GEventLoop.h"
 #include "GWidget.h"
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <LibGUI/GPainter.h>
+#include <AK/HashMap.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
-#include <AK/HashMap.h>
+#include <LibGUI/GPainter.h>
+#include <SharedGraphics/GraphicsBitmap.h>
 
 //#define UPDATE_COALESCING_DEBUG
 
@@ -47,6 +47,17 @@ void GWindow::close()
     if (should_exit_event_loop_on_close())
         GEventLoop::current().quit(0);
     delete_later();
+}
+
+void GWindow::move_to_front()
+{
+    if (!m_window_id)
+        return;
+
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::MoveWindowToFront;
+    request.window_id = m_window_id;
+    GEventLoop::post_message_to_server(request);
 }
 
 void GWindow::show()
@@ -93,7 +104,7 @@ void GWindow::hide()
     m_front_bitmap = nullptr;
 }
 
-void GWindow::set_title(const String& title)
+void GWindow::set_title(const StringView& title)
 {
     m_title_when_windowless = title;
     if (!m_window_id)
@@ -224,7 +235,7 @@ void GWindow::event(CEvent& event)
         auto rect = rects.first();
         if (rect.is_empty() || created_new_backing_store) {
             rects.clear();
-            rects.append({ { }, paint_event.window_size() });
+            rects.append({ {}, paint_event.window_size() });
         }
 
         for (auto& rect : rects)
@@ -325,10 +336,10 @@ void GWindow::event(CEvent& event)
             m_back_bitmap = nullptr;
         if (!m_pending_paint_event_rects.is_empty()) {
             m_pending_paint_event_rects.clear_with_capacity();
-            m_pending_paint_event_rects.append({ { }, new_size });
+            m_pending_paint_event_rects.append({ {}, new_size });
         }
-        m_rect_when_windowless = { { }, new_size };
-        m_main_widget->set_relative_rect({ { }, new_size });
+        m_rect_when_windowless = { {}, new_size };
+        m_main_widget->set_relative_rect({ {}, new_size });
         return;
     }
 
@@ -421,7 +432,7 @@ void GWindow::update(const Rect& a_rect)
     }
 
     if (m_pending_paint_event_rects.is_empty()) {
-        deferred_invoke([this] (auto&) {
+        deferred_invoke([this](auto&) {
             auto rects = move(m_pending_paint_event_rects);
             if (rects.is_empty())
                 return;
@@ -452,7 +463,7 @@ void GWindow::set_main_widget(GWidget* widget)
         if (m_main_widget->vertical_size_policy() == SizePolicy::Fixed)
             new_window_rect.set_height(m_main_widget->preferred_size().height());
         set_rect(new_window_rect);
-        m_main_widget->set_relative_rect({ { }, new_window_rect.size() });
+        m_main_widget->set_relative_rect({ {}, new_window_rect.size() });
         m_main_widget->set_window(this);
         if (m_main_widget->accepts_focus())
             m_main_widget->set_focus(true);
@@ -597,7 +608,7 @@ void GWindow::wm_event(GWMEvent&)
 {
 }
 
-void GWindow::set_icon_path(const String& path)
+void GWindow::set_icon_path(const StringView& path)
 {
     if (m_icon_path == path)
         return;
@@ -625,14 +636,14 @@ void GWindow::start_wm_resize()
 Vector<GWidget*> GWindow::focusable_widgets() const
 {
     if (!m_main_widget)
-        return { };
+        return {};
 
     Vector<GWidget*> collected_widgets;
 
-    Function<void(GWidget&)> collect_focusable_widgets = [&] (GWidget& widget) {
+    Function<void(GWidget&)> collect_focusable_widgets = [&](GWidget& widget) {
         if (widget.accepts_focus())
             collected_widgets.append(&widget);
-        widget.for_each_child_widget([&] (auto& child) {
+        widget.for_each_child_widget([&](auto& child) {
             if (!child.is_visible())
                 return IterationDecision::Continue;
             if (!child.is_enabled())

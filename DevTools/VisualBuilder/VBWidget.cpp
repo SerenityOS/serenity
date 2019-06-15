@@ -1,18 +1,19 @@
 #include "VBWidget.h"
 #include "VBForm.h"
 #include "VBProperty.h"
-#include "VBWidgetRegistry.h"
 #include "VBWidgetPropertyModel.h"
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GLabel.h>
+#include "VBWidgetRegistry.h"
 #include <LibGUI/GButton.h>
+#include <LibGUI/GCheckBox.h>
+#include <LibGUI/GGroupBox.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GProgressBar.h>
+#include <LibGUI/GRadioButton.h>
 #include <LibGUI/GScrollBar.h>
+#include <LibGUI/GSlider.h>
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GProgressBar.h>
-#include <LibGUI/GSlider.h>
 
 VBWidget::VBWidget(VBWidgetType type, VBForm& form)
     : m_type(type)
@@ -78,7 +79,7 @@ Rect VBWidget::grabber_rect(Direction direction) const
 Direction VBWidget::grabber_at(const Point& position) const
 {
     Direction found_grabber = Direction::None;
-    for_each_direction([&] (Direction direction) {
+    for_each_direction([&](Direction direction) {
         if (grabber_rect(direction).contains(position))
             found_grabber = direction;
     });
@@ -99,11 +100,10 @@ void VBWidget::add_property(const String& name, Function<GVariant(const GWidget&
     prop.m_setter = move(setter);
 }
 
-#define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type) \
-    add_property(name, \
-        [] (auto& widget) -> GVariant { return ((const gclass&)widget).getter(); }, \
-        [] (auto& widget, auto& value) { ((gclass&)widget).setter(value.to_ ## variant_type()); } \
-    )
+#define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type)                \
+    add_property(name,                                                             \
+        [](auto& widget) -> GVariant { return ((const gclass&)widget).getter(); }, \
+        [](auto& widget, auto& value) { ((gclass&)widget).setter(value.to_##variant_type()); })
 
 void VBWidget::setup_properties()
 {
@@ -161,8 +161,13 @@ void VBWidget::setup_properties()
     }
 
     if (m_type == VBWidgetType::GCheckBox) {
-        VB_ADD_PROPERTY(GCheckBox, "caption", text, set_text, string);
+        VB_ADD_PROPERTY(GCheckBox, "text", text, set_text, string);
         VB_ADD_PROPERTY(GCheckBox, "checked", is_checked, set_checked, bool);
+    }
+
+    if (m_type == VBWidgetType::GRadioButton) {
+        VB_ADD_PROPERTY(GRadioButton, "text", text, set_text, string);
+        VB_ADD_PROPERTY(GRadioButton, "checked", is_checked, set_checked, bool);
     }
 }
 

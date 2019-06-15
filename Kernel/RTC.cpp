@@ -1,13 +1,13 @@
-#include "RTC.h"
-#include "CMOS.h"
 #include <AK/Assertions.h>
+#include <Kernel/CMOS.h>
+#include <Kernel/RTC.h>
 
 namespace RTC {
 
 static time_t s_boot_time;
 
 void initialize()
-{    
+{
     byte cmos_mode = CMOS::read(0x0b);
     cmos_mode |= 2; // 24 hour mode
     cmos_mode |= 4; // No BCD mode
@@ -116,12 +116,11 @@ time_t now()
     ASSERT(year >= 2018);
 
     return days_in_years_since_epoch(year - 1) * 86400
-         + days_in_months_since_start_of_year(month - 1, year) * 86400
-         + (day - 1) * 86400
-         + hour * 3600
-         + minute * 60
-         + second;
+        + days_in_months_since_start_of_year(month - 1, year) * 86400
+        + (day - 1) * 86400
+        + hour * 3600
+        + minute * 60
+        + second;
 }
 
 }
-

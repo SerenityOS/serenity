@@ -16,12 +16,13 @@
 #include <LibC/signal_numbers.h>
 
 class ELFLoader;
-class FileDescriptor;
+class FileDescription;
 class PageDirectory;
 class Region;
 class VMObject;
 class ProcessTracer;
 
+timeval kgettimeofday();
 void kgettimeofday(timeval&);
 
 class Process : public InlineLinkedListNode<Process>
@@ -37,8 +38,7 @@ public:
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
 
-    enum Priority
-    {
+    enum Priority {
         IdlePriority,
         FirstPriority = IdlePriority,
         LowPriority,
@@ -47,8 +47,7 @@ public:
         LastPriority = HighPriority,
     };
 
-    enum RingLevel
-    {
+    enum RingLevel {
         Ring0 = 0,
         Ring3 = 3,
     };
@@ -86,8 +85,8 @@ public:
 
     bool in_group(gid_t) const;
 
-    FileDescriptor* file_descriptor(int fd);
-    const FileDescriptor* file_descriptor(int fd) const;
+    FileDescription* file_description(int fd);
+    const FileDescription* file_description(int fd) const;
 
     template<typename Callback>
     static void for_each(Callback);
@@ -177,6 +176,7 @@ public:
     int sys$chmod(const char* pathname, mode_t);
     int sys$fchmod(int fd, mode_t);
     int sys$chown(const char* pathname, uid_t, gid_t);
+    int sys$fchown(int fd, uid_t, gid_t);
     int sys$socket(int domain, int type, int protocol);
     int sys$bind(int sockfd, const sockaddr* addr, socklen_t);
     int sys$listen(int sockfd, int backlog);
@@ -223,7 +223,7 @@ public:
     dword m_ticks_in_user_for_dead_children { 0 };
     dword m_ticks_in_kernel_for_dead_children { 0 };
 
-    bool validate_read_from_kernel(LinearAddress) const;
+    bool validate_read_from_kernel(VirtualAddress) const;
 
     bool validate_read(const void*, ssize_t) const;
     bool validate_write(void*, ssize_t) const;
@@ -248,9 +248,9 @@ public:
 
     bool is_superuser() const { return m_euid == 0; }
 
-    Region* allocate_region_with_vmo(LinearAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, String&& name, int prot);
-    Region* allocate_file_backed_region(LinearAddress, size_t, RetainPtr<Inode>&&, String&& name, int prot);
-    Region* allocate_region(LinearAddress, size_t, String&& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
+    Region* allocate_region_with_vmo(VirtualAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, const String& name, int prot);
+    Region* allocate_file_backed_region(VirtualAddress, size_t, RetainPtr<Inode>&&, const String& name, int prot);
+    Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
 
     void set_being_inspected(bool b) { m_being_inspected = b; }
@@ -275,10 +275,10 @@ private:
 
     Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Custody>&& cwd = nullptr, RetainPtr<Custody>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
-    Range allocate_range(LinearAddress, size_t);
+    Range allocate_range(VirtualAddress, size_t);
 
     int do_exec(String path, Vector<String> arguments, Vector<String> environment);
-    ssize_t do_write(FileDescriptor&, const byte*, int data_size);
+    ssize_t do_write(FileDescription&, const byte*, int data_size);
 
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
@@ -304,17 +304,17 @@ private:
 
     Priority m_priority { NormalPriority };
 
-    struct FileDescriptorAndFlags {
-        operator bool() const { return !!descriptor; }
+    struct FileDescriptionAndFlags {
+        operator bool() const { return !!description; }
         void clear();
-        void set(Retained<FileDescriptor>&& d, dword f = 0);
-        RetainPtr<FileDescriptor> descriptor;
+        void set(Retained<FileDescription>&& d, dword f = 0);
+        RetainPtr<FileDescription> description;
         dword flags { 0 };
     };
-    Vector<FileDescriptorAndFlags> m_fds;
+    Vector<FileDescriptionAndFlags> m_fds;
     RingLevel m_ring { Ring0 };
 
-    int m_max_open_file_descriptors { 128 };
+    static const int m_max_open_file_descriptors { FD_SETSIZE };
 
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
@@ -324,12 +324,12 @@ private:
 
     TTY* m_tty { nullptr };
 
-    Region* region_from_range(LinearAddress, size_t);
+    Region* region_from_range(VirtualAddress, size_t);
 
     Vector<Retained<Region>> m_regions;
 
-    LinearAddress m_return_to_ring3_from_signal_trampoline;
-    LinearAddress m_return_to_ring0_from_signal_trampoline;
+    VirtualAddress m_return_to_ring3_from_signal_trampoline;
+    VirtualAddress m_return_to_ring0_from_signal_trampoline;
 
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
@@ -349,6 +349,8 @@ private:
     OwnPtr<ELFLoader> m_elf_loader;
 
     Lock m_big_lock { "Process" };
+
+    qword m_alarm_deadline { 0 };
 };
 
 class ProcessInspectionHandle {
@@ -394,7 +396,7 @@ inline void Process::for_each(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        if (!callback(*process))
+        if (callback(*process) == IterationDecision::Break)
             break;
         process = next_process;
     }
@@ -423,7 +425,7 @@ inline void Process::for_each_thread(Callback callback) const
     for (auto* thread = g_runnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->pid() == my_pid) {
-            if (callback(*thread) == IterationDecision::Abort)
+            if (callback(*thread) == IterationDecision::Break)
                 break;
         }
         thread = next_thread;
@@ -431,7 +433,7 @@ inline void Process::for_each_thread(Callback callback) const
     for (auto* thread = g_nonrunnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->pid() == my_pid) {
-            if (callback(*thread) == IterationDecision::Abort)
+            if (callback(*thread) == IterationDecision::Break)
                 break;
         }
         thread = next_thread;

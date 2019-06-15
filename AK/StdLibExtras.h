@@ -292,4 +292,5 @@ using AK::IsSame;
 using AK::max;
 using AK::min;
 using AK::move;
+using AK::RemoveConst;
 using AK::swap;

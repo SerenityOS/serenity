@@ -12,13 +12,13 @@ public:
     bool is_dead() const { return m_dead; }
     void set_dead() { m_dead = true; }
 
-    virtual bool can_read(FileDescriptor&) const override { return !m_calls.is_empty() || m_dead; }
-    virtual int read(FileDescriptor&, byte*, int) override;
+    virtual bool can_read(FileDescription&) const override { return !m_calls.is_empty() || m_dead; }
+    virtual int read(FileDescription&, byte*, int) override;
 
-    virtual bool can_write(FileDescriptor&) const override { return true; }
-    virtual int write(FileDescriptor&, const byte*, int) override { return -EIO; }
+    virtual bool can_write(FileDescription&) const override { return true; }
+    virtual int write(FileDescription&, const byte*, int) override { return -EIO; }
 
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual String absolute_path(const FileDescription&) const override;
 
     void did_syscall(dword function, dword arg1, dword arg2, dword arg3, dword result);
     pid_t pid() const { return m_pid; }

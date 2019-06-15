@@ -1,8 +1,8 @@
+#include <Kernel/KeyCode.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/StylePainter.h>
-#include <Kernel/KeyCode.h>
 
 static const char* s_checked_bitmap_data = {
     "         "
@@ -27,7 +27,7 @@ GCheckBox::GCheckBox(GWidget* parent)
 {
 }
 
-GCheckBox::GCheckBox(const String& text, GWidget* parent)
+GCheckBox::GCheckBox(const StringView& text, GWidget* parent)
     : GAbstractButton(text, parent)
 {
 }

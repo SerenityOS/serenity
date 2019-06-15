@@ -1,10 +1,8 @@
+#include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
-#include <SharedGraphics/StylePainter.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <LibGUI/GPainter.h>
-
-//#define GUTTER_DOES_PAGEUP_PAGEDOWN
+#include <SharedGraphics/StylePainter.h>
 
 static const char* s_up_arrow_bitmap_data = {
     "         "
@@ -29,7 +27,6 @@ static const char* s_down_arrow_bitmap_data = {
     "    #    "
     "         "
 };
-
 
 static const char* s_left_arrow_bitmap_data = {
     "         "
@@ -78,6 +75,11 @@ GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     } else {
         set_preferred_size({ 0, 15 });
     }
+
+    m_automatic_scrolling_timer.set_interval(100);
+    m_automatic_scrolling_timer.on_timeout = [this] {
+        on_automatic_scrolling_timer_fired();
+    };
 }
 
 GScrollBar::~GScrollBar()
@@ -118,12 +120,12 @@ void GScrollBar::set_value(int value)
     update();
 }
 
-Rect GScrollBar::up_button_rect() const
+Rect GScrollBar::decrement_button_rect() const
 {
     return { 0, 0, button_width(), button_height() };
 }
 
-Rect GScrollBar::down_button_rect() const
+Rect GScrollBar::increment_button_rect() const
 {
     if (orientation() == Orientation::Vertical)
         return { 0, height() - button_height(), button_width(), button_height() };
@@ -131,7 +133,7 @@ Rect GScrollBar::down_button_rect() const
         return { width() - button_width(), 0, button_width(), button_height() };
 }
 
-Rect GScrollBar::upper_gutter_rect() const
+Rect GScrollBar::decrement_gutter_rect() const
 {
     if (orientation() == Orientation::Vertical)
         return { 0, button_height(), button_width(), scrubber_rect().top() - button_height() };
@@ -139,11 +141,11 @@ Rect GScrollBar::upper_gutter_rect() const
         return { button_width(), 0, scrubber_rect().x() - button_width(), button_height() };
 }
 
-Rect GScrollBar::lower_gutter_rect() const
+Rect GScrollBar::increment_gutter_rect() const
 {
     auto scrubber_rect = this->scrubber_rect();
     if (orientation() == Orientation::Vertical)
-        return { 0, scrubber_rect.bottom() + 1, button_width(), height() - button_height() - scrubber_rect.bottom() - 1};
+        return { 0, scrubber_rect.bottom() + 1, button_width(), height() - button_height() - scrubber_rect.bottom() - 1 };
     else
         return { scrubber_rect.right() + 1, 0, width() - button_width() - scrubber_rect.right() - 1, button_width() };
 }
@@ -171,7 +173,7 @@ int GScrollBar::scrubber_size() const
 Rect GScrollBar::scrubber_rect() const
 {
     if (!has_scrubber())
-        return { };
+        return {};
     float x_or_y;
     if (m_value == m_min)
         x_or_y = button_size();
@@ -197,38 +199,42 @@ void GScrollBar::paint_event(GPaintEvent& event)
 
     painter.fill_rect(rect(), Color::from_rgb(0xd6d2ce));
 
-    StylePainter::paint_button(painter, up_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::DecrementButton);
-    painter.draw_bitmap(up_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
+    StylePainter::paint_button(painter, decrement_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::DecrementButton);
+    painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
-    StylePainter::paint_button(painter, down_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
-    painter.draw_bitmap(down_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
+    StylePainter::paint_button(painter, increment_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
+    painter.draw_bitmap(increment_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
 
     if (has_scrubber())
         StylePainter::paint_button(painter, scrubber_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber);
+}
+
+void GScrollBar::on_automatic_scrolling_timer_fired()
+{
+    if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement) {
+        set_value(value() - m_step);
+        return;
+    }
+    if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment) {
+        set_value(value() + m_step);
+        return;
+    }
 }
 
 void GScrollBar::mousedown_event(GMouseEvent& event)
 {
     if (event.button() != GMouseButton::Left)
         return;
-    if (up_button_rect().contains(event.position())) {
-        set_value(value() - m_step);
+    if (decrement_button_rect().contains(event.position())) {
+        m_automatic_scrolling_direction = AutomaticScrollingDirection::Decrement;
+        set_automatic_scrolling_active(true);
         return;
     }
-    if (down_button_rect().contains(event.position())) {
-        set_value(value() + m_step);
+    if (increment_button_rect().contains(event.position())) {
+        m_automatic_scrolling_direction = AutomaticScrollingDirection::Increment;
+        set_automatic_scrolling_active(true);
         return;
     }
-#ifdef GUTTER_DOES_PAGEUP_PAGEDOWN
-    if (has_scrubber() && upper_gutter_rect().contains(event.position())) {
-        set_value(value() - m_big_step);
-        return;
-    }
-    if (has_scrubber() && lower_gutter_rect().contains(event.position())) {
-        set_value(value() + m_big_step);
-        return;
-    }
-#endif
     if (has_scrubber() && scrubber_rect().contains(event.position())) {
         m_scrubbing = true;
         m_scrub_start_value = value();
@@ -236,7 +242,7 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         update();
         return;
     }
-#ifndef GUTTER_DOES_PAGEUP_PAGEDOWN
+
     if (has_scrubber()) {
         float range_size = m_max - m_min;
         float available = scrubbable_range_in_pixels();
@@ -256,17 +262,28 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         m_scrub_start_value = value();
         m_scrub_origin = event.position();
     }
-#endif
 }
 
 void GScrollBar::mouseup_event(GMouseEvent& event)
 {
     if (event.button() != GMouseButton::Left)
         return;
+    m_automatic_scrolling_direction = AutomaticScrollingDirection::None;
+    set_automatic_scrolling_active(false);
     if (!m_scrubbing)
         return;
     m_scrubbing = false;
     update();
+}
+
+void GScrollBar::set_automatic_scrolling_active(bool active)
+{
+    if (active) {
+        on_automatic_scrolling_timer_fired();
+        m_automatic_scrolling_timer.start();
+    } else {
+        m_automatic_scrolling_timer.stop();
+    }
 }
 
 void GScrollBar::mousemove_event(GMouseEvent& event)
@@ -274,16 +291,22 @@ void GScrollBar::mousemove_event(GMouseEvent& event)
     auto old_hovered_component = m_hovered_component;
     if (scrubber_rect().contains(event.position()))
         m_hovered_component = Component::Scrubber;
-    else if (up_button_rect().contains(event.position()))
+    else if (decrement_button_rect().contains(event.position()))
         m_hovered_component = Component::DecrementButton;
-    else if (down_button_rect().contains(event.position()))
+    else if (increment_button_rect().contains(event.position()))
         m_hovered_component = Component::IncrementButton;
     else if (rect().contains(event.position()))
         m_hovered_component = Component::Gutter;
     else
         m_hovered_component = Component::Invalid;
-    if (old_hovered_component != m_hovered_component)
+    if (old_hovered_component != m_hovered_component) {
         update();
+
+        if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Decrement)
+            set_automatic_scrolling_active(m_hovered_component == Component::DecrementButton);
+        else if (m_automatic_scrolling_direction == AutomaticScrollingDirection::Increment)
+            set_automatic_scrolling_active(m_hovered_component == Component::IncrementButton);
+    }
     if (!m_scrubbing)
         return;
     float delta = orientation() == Orientation::Vertical ? (event.y() - m_scrub_origin.y()) : (event.x() - m_scrub_origin.x());

@@ -16,14 +16,14 @@ public:
     const Inode& inode() const { return *m_inode; }
     Inode& inode() { return *m_inode; }
 
-    virtual bool can_read(FileDescriptor&) const override { return true; }
-    virtual bool can_write(FileDescriptor&) const override { return true; }
+    virtual bool can_read(FileDescription&) const override { return true; }
+    virtual bool can_write(FileDescription&) const override { return true; }
 
-    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) override;
-    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) override;
-    virtual KResultOr<Region*> mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t size, int prot) override;
+    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot) override;
 
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual String absolute_path(const FileDescription&) const override;
 
     virtual KResult truncate(off_t) override;
 

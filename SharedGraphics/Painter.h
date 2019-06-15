@@ -4,9 +4,9 @@
 #include "Point.h"
 #include "Rect.h"
 #include "Size.h"
+#include <AK/AKString.h>
 #include <SharedGraphics/TextAlignment.h>
 #include <SharedGraphics/TextElision.h>
-#include <AK/AKString.h>
 
 class CharacterBitmap;
 class GlyphBitmap;
@@ -29,18 +29,19 @@ public:
     void blit_dimmed(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_tiled(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_offset(const Point&, const GraphicsBitmap&, const Rect& src_rect, const Point&);
-    void blit_scaled(const Point&, const GraphicsBitmap&, const Rect& src_rect, const Size&);
-    void draw_text(const Rect&, const char* text, int length, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const Rect&, const char* text, int length, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const Rect&, const String&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
-    void draw_text(const Rect&, const String&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
+    void blit_scaled(const Rect&, const GraphicsBitmap&, const Rect&, float, float);
+    void draw_text(const Rect&, const StringView&, const Font&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
+    void draw_text(const Rect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_glyph(const Point&, char, Color);
     void draw_glyph(const Point&, char, const Font&, Color);
 
     const Font& font() const { return *state().font; }
     void set_font(const Font& font) { state().font = &font; }
 
-    enum class DrawOp { Copy, Xor };
+    enum class DrawOp {
+        Copy,
+        Xor
+    };
     void set_draw_op(DrawOp op) { state().draw_op = op; }
     DrawOp draw_op() const { return state().draw_op; }
 
@@ -56,7 +57,11 @@ public:
     GraphicsBitmap* target() { return m_target.ptr(); }
 
     void save() { m_state_stack.append(m_state_stack.last()); }
-    void restore() { ASSERT(m_state_stack.size() > 1); m_state_stack.take_last(); }
+    void restore()
+    {
+        ASSERT(m_state_stack.size() > 1);
+        m_state_stack.take_last();
+    }
 
 protected:
     void set_pixel_with_draw_op(dword& pixel, const Color&);

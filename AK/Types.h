@@ -1,5 +1,7 @@
 #pragma once
 
+#include <AK/IterationDecision.h>
+
 #ifdef __serenity__
 typedef unsigned char byte;
 typedef unsigned short word;
@@ -47,11 +49,6 @@ typedef int64_t signed_qword;
 constexpr unsigned KB = 1024;
 constexpr unsigned MB = KB * KB;
 constexpr unsigned GB = KB * KB * KB;
-
-enum class IterationDecision {
-    Continue,
-    Abort
-};
 
 namespace std {
 typedef decltype(nullptr) nullptr_t;

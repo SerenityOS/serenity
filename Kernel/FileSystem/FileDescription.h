@@ -8,8 +8,8 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/LinearAddress.h>
 #include <Kernel/Net/Socket.h>
+#include <Kernel/VirtualAddress.h>
 
 class File;
 class TTY;
@@ -19,13 +19,13 @@ class Region;
 class CharacterDevice;
 class SharedMemory;
 
-class FileDescriptor : public Retainable<FileDescriptor> {
+class FileDescription : public Retainable<FileDescription> {
 public:
-    static Retained<FileDescriptor> create(RetainPtr<Custody>&&);
-    static Retained<FileDescriptor> create(RetainPtr<File>&&, SocketRole = SocketRole::None);
-    ~FileDescriptor();
+    static Retained<FileDescription> create(RetainPtr<Custody>&&);
+    static Retained<FileDescription> create(RetainPtr<File>&&, SocketRole = SocketRole::None);
+    ~FileDescription();
 
-    Retained<FileDescriptor> clone();
+    Retained<FileDescription> clone();
 
     int close();
 
@@ -43,7 +43,7 @@ public:
 
     ByteBuffer read_entire_file();
 
-    String absolute_path();
+    String absolute_path() const;
 
     bool is_directory() const;
 
@@ -67,7 +67,7 @@ public:
     Custody* custody() { return m_custody.ptr(); }
     const Custody* custody() const { return m_custody.ptr(); }
 
-    KResultOr<Region*> mmap(Process&, LinearAddress, size_t offset, size_t, int prot);
+    KResultOr<Region*> mmap(Process&, VirtualAddress, size_t offset, size_t, int prot);
 
     bool is_blocking() const { return m_is_blocking; }
     void set_blocking(bool b) { m_is_blocking = b; }
@@ -101,10 +101,12 @@ public:
 
     off_t offset() const { return m_current_offset; }
 
+    KResult chown(uid_t, gid_t);
+
 private:
     friend class VFS;
-    FileDescriptor(RetainPtr<File>&&, SocketRole = SocketRole::None);
-    FileDescriptor(FIFO&, FIFO::Direction);
+    FileDescription(RetainPtr<File>&&, SocketRole = SocketRole::None);
+    FileDescription(FIFO&, FIFO::Direction);
 
     RetainPtr<Custody> m_custody;
     RetainPtr<Inode> m_inode;

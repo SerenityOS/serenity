@@ -25,7 +25,8 @@ int IRCChannelMemberListModel::column_count(const GModelIndex&) const
 String IRCChannelMemberListModel::column_name(int column) const
 {
     switch (column) {
-    case Column::Name: return "Name";
+    case Column::Name:
+        return "Name";
     }
     ASSERT_NOT_REACHED();
 }
@@ -33,7 +34,8 @@ String IRCChannelMemberListModel::column_name(int column) const
 GModel::ColumnMetadata IRCChannelMemberListModel::column_metadata(int column) const
 {
     switch (column) {
-    case Column::Name: return { 70, TextAlignment::CenterLeft };
+    case Column::Name:
+        return { 70, TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
 }
@@ -42,10 +44,11 @@ GVariant IRCChannelMemberListModel::data(const GModelIndex& index, Role role) co
 {
     if (role == Role::Display) {
         switch (index.column()) {
-        case Column::Name: return m_channel.member_at(index.row());
+        case Column::Name:
+            return m_channel.member_at(index.row());
         }
     }
-    return { };
+    return {};
 }
 
 void IRCChannelMemberListModel::update()

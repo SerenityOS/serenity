@@ -1,81 +1,81 @@
 #include <Kernel/Devices/IDEDiskDevice.h>
 #include <Kernel/FileSystem/ProcFS.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/Process.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/IO.h>
 #include <Kernel/PIC.h>
+#include <Kernel/Process.h>
+#include <Kernel/StdLib.h>
+#include <Kernel/VM/MemoryManager.h>
 
 //#define DISK_DEBUG
 
 #define IRQ_FIXED_DISK 14
 
-#define ATA_SR_BSY     0x80
-#define ATA_SR_DRDY    0x40
-#define ATA_SR_DF      0x20
-#define ATA_SR_DSC     0x10
-#define ATA_SR_DRQ     0x08
-#define ATA_SR_CORR    0x04
-#define ATA_SR_IDX     0x02
-#define ATA_SR_ERR     0x01
+#define ATA_SR_BSY 0x80
+#define ATA_SR_DRDY 0x40
+#define ATA_SR_DF 0x20
+#define ATA_SR_DSC 0x10
+#define ATA_SR_DRQ 0x08
+#define ATA_SR_CORR 0x04
+#define ATA_SR_IDX 0x02
+#define ATA_SR_ERR 0x01
 
-#define ATA_ER_BBK      0x80
-#define ATA_ER_UNC      0x40
-#define ATA_ER_MC       0x20
-#define ATA_ER_IDNF     0x10
-#define ATA_ER_MCR      0x08
-#define ATA_ER_ABRT     0x04
-#define ATA_ER_TK0NF    0x02
-#define ATA_ER_AMNF     0x01
+#define ATA_ER_BBK 0x80
+#define ATA_ER_UNC 0x40
+#define ATA_ER_MC 0x20
+#define ATA_ER_IDNF 0x10
+#define ATA_ER_MCR 0x08
+#define ATA_ER_ABRT 0x04
+#define ATA_ER_TK0NF 0x02
+#define ATA_ER_AMNF 0x01
 
-#define ATA_CMD_READ_PIO          0x20
-#define ATA_CMD_READ_PIO_EXT      0x24
-#define ATA_CMD_READ_DMA          0xC8
-#define ATA_CMD_READ_DMA_EXT      0x25
-#define ATA_CMD_WRITE_PIO         0x30
-#define ATA_CMD_WRITE_PIO_EXT     0x34
-#define ATA_CMD_WRITE_DMA         0xCA
-#define ATA_CMD_WRITE_DMA_EXT     0x35
-#define ATA_CMD_CACHE_FLUSH       0xE7
-#define ATA_CMD_CACHE_FLUSH_EXT   0xEA
-#define ATA_CMD_PACKET            0xA0
-#define ATA_CMD_IDENTIFY_PACKET   0xA1
-#define ATA_CMD_IDENTIFY          0xEC
+#define ATA_CMD_READ_PIO 0x20
+#define ATA_CMD_READ_PIO_EXT 0x24
+#define ATA_CMD_READ_DMA 0xC8
+#define ATA_CMD_READ_DMA_EXT 0x25
+#define ATA_CMD_WRITE_PIO 0x30
+#define ATA_CMD_WRITE_PIO_EXT 0x34
+#define ATA_CMD_WRITE_DMA 0xCA
+#define ATA_CMD_WRITE_DMA_EXT 0x35
+#define ATA_CMD_CACHE_FLUSH 0xE7
+#define ATA_CMD_CACHE_FLUSH_EXT 0xEA
+#define ATA_CMD_PACKET 0xA0
+#define ATA_CMD_IDENTIFY_PACKET 0xA1
+#define ATA_CMD_IDENTIFY 0xEC
 
-#define ATAPI_CMD_READ            0xA8
-#define ATAPI_CMD_EJECT           0x1B
+#define ATAPI_CMD_READ 0xA8
+#define ATAPI_CMD_EJECT 0x1B
 
-#define ATA_IDENT_DEVICETYPE   0
-#define ATA_IDENT_CYLINDERS    2
-#define ATA_IDENT_HEADS        6
-#define ATA_IDENT_SECTORS      12
-#define ATA_IDENT_SERIAL       20
-#define ATA_IDENT_MODEL        54
+#define ATA_IDENT_DEVICETYPE 0
+#define ATA_IDENT_CYLINDERS 2
+#define ATA_IDENT_HEADS 6
+#define ATA_IDENT_SECTORS 12
+#define ATA_IDENT_SERIAL 20
+#define ATA_IDENT_MODEL 54
 #define ATA_IDENT_CAPABILITIES 98
-#define ATA_IDENT_FIELDVALID   106
-#define ATA_IDENT_MAX_LBA      120
-#define ATA_IDENT_COMMANDSETS  164
-#define ATA_IDENT_MAX_LBA_EXT  200
+#define ATA_IDENT_FIELDVALID 106
+#define ATA_IDENT_MAX_LBA 120
+#define ATA_IDENT_COMMANDSETS 164
+#define ATA_IDENT_MAX_LBA_EXT 200
 
-#define IDE_ATA            0x00
-#define IDE_ATAPI          0x01
+#define IDE_ATA 0x00
+#define IDE_ATAPI 0x01
 
-#define ATA_REG_DATA       0x00
-#define ATA_REG_ERROR      0x01
-#define ATA_REG_FEATURES   0x01
-#define ATA_REG_SECCOUNT0  0x02
-#define ATA_REG_LBA0       0x03
-#define ATA_REG_LBA1       0x04
-#define ATA_REG_LBA2       0x05
-#define ATA_REG_HDDEVSEL   0x06
-#define ATA_REG_COMMAND    0x07
-#define ATA_REG_STATUS     0x07
-#define ATA_REG_SECCOUNT1  0x08
-#define ATA_REG_LBA3       0x09
-#define ATA_REG_LBA4       0x0A
-#define ATA_REG_LBA5       0x0B
-#define ATA_REG_CONTROL    0x0C
-#define ATA_REG_ALTSTATUS  0x0C
+#define ATA_REG_DATA 0x00
+#define ATA_REG_ERROR 0x01
+#define ATA_REG_FEATURES 0x01
+#define ATA_REG_SECCOUNT0 0x02
+#define ATA_REG_LBA0 0x03
+#define ATA_REG_LBA1 0x04
+#define ATA_REG_LBA2 0x05
+#define ATA_REG_HDDEVSEL 0x06
+#define ATA_REG_COMMAND 0x07
+#define ATA_REG_STATUS 0x07
+#define ATA_REG_SECCOUNT1 0x08
+#define ATA_REG_LBA3 0x09
+#define ATA_REG_LBA4 0x0A
+#define ATA_REG_LBA5 0x0B
+#define ATA_REG_CONTROL 0x0C
+#define ATA_REG_ALTSTATUS 0x0C
 #define ATA_REG_DEVADDRESS 0x0D
 
 Retained<IDEDiskDevice> IDEDiskDevice::create()
@@ -137,14 +137,14 @@ bool IDEDiskDevice::write_block(unsigned index, const byte* data)
 static void print_ide_status(byte status)
 {
     kprintf("DRQ=%u BSY=%u DRDY=%u DSC=%u DF=%u CORR=%u IDX=%u ERR=%u\n",
-            (status & ATA_SR_DRQ) != 0,
-            (status & ATA_SR_BSY) != 0,
-            (status & ATA_SR_DRDY) != 0,
-            (status & ATA_SR_DSC) != 0,
-            (status & ATA_SR_DF) != 0,
-            (status & ATA_SR_CORR) != 0,
-            (status & ATA_SR_IDX) != 0,
-            (status & ATA_SR_ERR) != 0);
+        (status & ATA_SR_DRQ) != 0,
+        (status & ATA_SR_BSY) != 0,
+        (status & ATA_SR_DRDY) != 0,
+        (status & ATA_SR_DSC) != 0,
+        (status & ATA_SR_DF) != 0,
+        (status & ATA_SR_CORR) != 0,
+        (status & ATA_SR_IDX) != 0,
+        (status & ATA_SR_ERR) != 0);
 }
 
 bool IDEDiskDevice::wait_for_irq()
@@ -184,7 +184,7 @@ void IDEDiskDevice::initialize()
 {
     static const PCI::ID piix3_ide_id = { 0x8086, 0x7010 };
     static const PCI::ID piix4_ide_id = { 0x8086, 0x7111 };
-    PCI::enumerate_all([this] (const PCI::Address& address, PCI::ID id) {
+    PCI::enumerate_all([this](const PCI::Address& address, PCI::ID id) {
         if (id == piix3_ide_id || id == piix4_ide_id) {
             m_pci_address = address;
             kprintf("PIIX%u IDE device found!\n", id == piix3_ide_id ? 3 : 4);
@@ -199,7 +199,8 @@ void IDEDiskDevice::initialize()
 
     m_interrupted = false;
 
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+        ;
 
     enable_irq();
 
@@ -236,8 +237,7 @@ void IDEDiskDevice::initialize()
         bbuf.pointer() + 54,
         m_cylinders,
         m_heads,
-        m_sectors_per_track
-    );
+        m_sectors_per_track);
 
     // Let's try to set up DMA transfers.
     if (!m_pci_address.is_null()) {
@@ -260,8 +260,8 @@ bool IDEDiskDevice::read_sectors_with_dma(dword lba, word count, byte* outbuf)
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
     dbgprintf("%s(%u): IDEDiskDevice::read_sectors_with_dma (%u x%u) -> %p\n",
-            current->process().name().characters(),
-            current->pid(), lba, count, outbuf);
+        current->process().name().characters(),
+        current->pid(), lba, count, outbuf);
 #endif
 
     disable_irq();
@@ -286,7 +286,8 @@ bool IDEDiskDevice::read_sectors_with_dma(dword lba, word count, byte* outbuf)
     m_interrupted = false;
     enable_irq();
 
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+        ;
 
     bool is_slave = false;
 
@@ -337,13 +338,14 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
     dbgprintf("%s: Disk::read_sectors request (%u sector(s) @ %u)\n",
-            current->process().name().characters(),
-            count,
-            start_sector);
+        current->process().name().characters(),
+        count,
+        start_sector);
 #endif
     disable_irq();
 
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+        ;
 
 #ifdef DISK_DEBUG
     kprintf("IDEDiskDevice: Reading %u sector(s) @ LBA %u\n", count, start_sector);
@@ -356,7 +358,8 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
     IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
 
     IO::out8(0x3F6, 0x08);
-    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRDY));
+    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRDY))
+        ;
 
     IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_READ_PIO);
     m_interrupted = false;
@@ -381,8 +384,8 @@ bool IDEDiskDevice::write_sectors_with_dma(dword lba, word count, const byte* in
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
     dbgprintf("%s(%u): IDEDiskDevice::write_sectors_with_dma (%u x%u) <- %p\n",
-            current->process().name().characters(),
-            current->pid(), lba, count, inbuf);
+        current->process().name().characters(),
+        current->pid(), lba, count, inbuf);
 #endif
 
     disable_irq();
@@ -406,7 +409,8 @@ bool IDEDiskDevice::write_sectors_with_dma(dword lba, word count, const byte* in
     m_interrupted = false;
     enable_irq();
 
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+        ;
 
     bool is_slave = false;
 
@@ -455,14 +459,15 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
     dbgprintf("%s(%u): IDEDiskDevice::write_sectors request (%u sector(s) @ %u)\n",
-            current->process().name().characters(),
-            current->pid(),
-            count,
-            start_sector);
+        current->process().name().characters(),
+        current->pid(),
+        count,
+        start_sector);
 #endif
     disable_irq();
 
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+        ;
 
     //dbgprintf("IDEDiskDevice: Writing %u sector(s) @ LBA %u\n", count, start_sector);
 
@@ -476,7 +481,8 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
 
     IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_WRITE_PIO);
 
-    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRQ));
+    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRQ))
+        ;
 
     byte status = IO::in8(m_io_base + ATA_REG_STATUS);
     ASSERT(status & ATA_SR_DRQ);
@@ -488,7 +494,8 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
 
     disable_irq();
     IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_CACHE_FLUSH);
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY);
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+        ;
     m_interrupted = false;
     enable_irq();
     wait_for_irq();

@@ -1,7 +1,7 @@
 #include "AKString.h"
 #include "StdLibExtras.h"
 #include "StringBuilder.h"
-#include <LibC/stdarg.h>
+#include <stdarg.h>
 
 namespace AK {
 
@@ -69,21 +69,26 @@ StringView String::substring_view(int start, int length) const
 
 Vector<String> String::split(const char separator) const
 {
+    return split_limit(separator, 0);
+}
+
+Vector<String> String::split_limit(const char separator, int limit) const
+{
     if (is_empty())
         return {};
 
     Vector<String> v;
-    ssize_t substart = 0;
-    for (ssize_t i = 0; i < length(); ++i) {
+    int substart = 0;
+    for (int i = 0; i < length() && (v.size() + 1) != limit; ++i) {
         char ch = characters()[i];
         if (ch == separator) {
-            ssize_t sublen = i - substart;
+            int sublen = i - substart;
             if (sublen != 0)
                 v.append(substring(substart, sublen));
             substart = i + 1;
         }
     }
-    ssize_t taillen = length() - substart;
+    int taillen = length() - substart;
     if (taillen != 0)
         v.append(substring(substart, taillen));
     if (characters()[length() - 1] == separator)
@@ -97,21 +102,21 @@ Vector<StringView> String::split_view(const char separator) const
         return {};
 
     Vector<StringView> v;
-    ssize_t substart = 0;
-    for (ssize_t i = 0; i < length(); ++i) {
+    int substart = 0;
+    for (int i = 0; i < length(); ++i) {
         char ch = characters()[i];
         if (ch == separator) {
-            ssize_t sublen = i - substart;
+            int sublen = i - substart;
             if (sublen != 0)
                 v.append(substring_view(substart, sublen));
             substart = i + 1;
         }
     }
-    ssize_t taillen = length() - substart;
+    int taillen = length() - substart;
     if (taillen != 0)
         v.append(substring_view(substart, taillen));
     if (characters()[length() - 1] == separator)
-        v.append(empty().view());
+        v.append(empty());
     return v;
 }
 
@@ -126,7 +131,7 @@ int String::to_int(bool& ok) const
 {
     bool negative = false;
     int value = 0;
-    ssize_t i = 0;
+    int i = 0;
 
     if (is_null()) {
         ok = false;
@@ -153,7 +158,7 @@ int String::to_int(bool& ok) const
 unsigned String::to_uint(bool& ok) const
 {
     unsigned value = 0;
-    for (ssize_t i = 0; i < length(); ++i) {
+    for (int i = 0; i < length(); ++i) {
         if (characters()[i] < '0' || characters()[i] > '9') {
             ok = false;
             return 0;
@@ -175,7 +180,18 @@ String String::format(const char* fmt, ...)
     return builder.to_string();
 }
 
-bool String::ends_with(const String& str) const
+bool String::starts_with(const StringView& str) const
+{
+    if (str.is_empty())
+        return true;
+    if (is_empty())
+        return false;
+    if (str.length() > length())
+        return false;
+    return !memcmp(characters(), str.characters(), str.length());
+}
+
+bool String::ends_with(const StringView& str) const
 {
     if (str.is_empty())
         return true;
@@ -196,27 +212,28 @@ String String::repeated(char ch, int count)
     return *impl;
 }
 
-bool String::matches(const String& mask, CaseSensitivity case_sensitivity) const
+bool String::matches(const StringView& mask, CaseSensitivity case_sensitivity) const
 {
     if (case_sensitivity == CaseSensitivity::CaseInsensitive) {
         String this_lower = this->to_lowercase();
-        String mask_lower = mask.to_lowercase();
+        String mask_lower = String(mask).to_lowercase();
         return this_lower.match_helper(mask_lower);
     }
 
     return match_helper(mask);
 }
 
-bool String::match_helper(const String& mask) const
+bool String::match_helper(const StringView& mask) const
 {
-    if (is_null() || mask.is_null())
+    if (is_null())
         return false;
 
     const char* string_ptr = characters();
     const char* mask_ptr = mask.characters();
+    const char* mask_end = mask_ptr + mask.length();
 
     // Match string against mask directly unless we hit a *
-    while ((*string_ptr) && (*mask_ptr != '*')) {
+    while ((*string_ptr) && (mask_ptr < mask_end) && (*mask_ptr != '*')) {
         if ((*mask_ptr != *string_ptr) && (*mask_ptr != '?'))
             return false;
         mask_ptr++;
@@ -227,27 +244,29 @@ bool String::match_helper(const String& mask) const
     const char* mp = nullptr;
 
     while (*string_ptr) {
-        if (*mask_ptr == '*') {
+        if ((mask_ptr < mask_end) && (*mask_ptr == '*')) {
             // If we have only a * left, there is no way to not match.
-            if (!*++mask_ptr)
+            if (++mask_ptr == mask_end)
                 return true;
             mp = mask_ptr;
             cp = string_ptr + 1;
-        } else if ((*mask_ptr == *string_ptr) || (*mask_ptr == '?')) {
+        } else if ((mask_ptr < mask_end) && ((*mask_ptr == *string_ptr) || (*mask_ptr == '?'))) {
             mask_ptr++;
             string_ptr++;
-        } else {
+        } else if ((cp != nullptr) && (mp != nullptr)) {
             mask_ptr = mp;
             string_ptr = cp++;
+        } else {
+            break;
         }
     }
 
     // Handle any trailing mask
-    while (*mask_ptr == '*')
+    while ((mask_ptr < mask_end) && (*mask_ptr == '*'))
         mask_ptr++;
 
-    // If we 'ate' all of the mask then we match.
-    return !*mask_ptr;
+    // If we 'ate' all of the mask and the string then we match.
+    return (mask_ptr == mask_end) && !*string_ptr;
 }
 
 }

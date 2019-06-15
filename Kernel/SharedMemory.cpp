@@ -1,8 +1,8 @@
-#include <Kernel/SharedMemory.h>
-#include <Kernel/VM/VMObject.h>
+#include <AK/HashMap.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Process.h>
-#include <AK/HashMap.h>
+#include <Kernel/SharedMemory.h>
+#include <Kernel/VM/VMObject.h>
 
 Lockable<HashMap<String, RetainPtr<SharedMemory>>>& shared_memories()
 {
@@ -68,12 +68,12 @@ KResult SharedMemory::truncate(int length)
     return KResult(-ENOTIMPL);
 }
 
-String SharedMemory::absolute_path(FileDescriptor&) const
+String SharedMemory::absolute_path(const FileDescription&) const
 {
     return String::format("shm:%u", this);
 }
 
-int SharedMemory::read(FileDescriptor&, byte* buffer, int buffer_size)
+int SharedMemory::read(FileDescription&, byte* buffer, int buffer_size)
 {
     UNUSED_PARAM(buffer);
     UNUSED_PARAM(buffer_size);
@@ -81,7 +81,7 @@ int SharedMemory::read(FileDescriptor&, byte* buffer, int buffer_size)
     ASSERT_NOT_REACHED();
 }
 
-int SharedMemory::write(FileDescriptor&, const byte* data, int data_size)
+int SharedMemory::write(FileDescription&, const byte* data, int data_size)
 {
     UNUSED_PARAM(data);
     UNUSED_PARAM(data_size);
@@ -89,9 +89,9 @@ int SharedMemory::write(FileDescriptor&, const byte* data, int data_size)
     ASSERT_NOT_REACHED();
 }
 
-KResultOr<Region*> SharedMemory::mmap(Process& process, LinearAddress laddr, size_t offset, size_t size, int prot)
+KResultOr<Region*> SharedMemory::mmap(Process& process, FileDescription&, VirtualAddress vaddr, size_t offset, size_t size, int prot)
 {
     if (!vmo())
         return KResult(-ENODEV);
-    return process.allocate_region_with_vmo(laddr, size, *vmo(), offset, name(), prot);
+    return process.allocate_region_with_vmo(vaddr, size, *vmo(), offset, name(), prot);
 }

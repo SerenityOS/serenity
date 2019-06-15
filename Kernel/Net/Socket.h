@@ -9,21 +9,19 @@
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
 
-enum class SocketRole : byte
-{
+enum class SocketRole : byte {
     None,
     Listener,
     Accepted,
     Connected,
     Connecting
 };
-enum class ShouldBlock
-{
+enum class ShouldBlock {
     No = 0,
     Yes = 1
 };
 
-class FileDescriptor;
+class FileDescription;
 
 class Socket : public File {
 public:
@@ -40,15 +38,15 @@ public:
     KResult listen(int backlog);
 
     virtual KResult bind(const sockaddr*, socklen_t) = 0;
-    virtual KResult connect(FileDescriptor&, const sockaddr*, socklen_t, ShouldBlock) = 0;
+    virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock) = 0;
     virtual bool get_local_address(sockaddr*, socklen_t*) = 0;
     virtual bool get_peer_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
     virtual bool is_ipv4() const { return false; }
-    virtual void attach(FileDescriptor&) = 0;
-    virtual void detach(FileDescriptor&) = 0;
-    virtual ssize_t sendto(FileDescriptor&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
-    virtual ssize_t recvfrom(FileDescriptor&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
+    virtual void attach(FileDescription&) = 0;
+    virtual void detach(FileDescription&) = 0;
+    virtual ssize_t sendto(FileDescription&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
+    virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
     KResult setsockopt(int level, int option, const void*, socklen_t);
     KResult getsockopt(int level, int option, void*, socklen_t*);
@@ -62,7 +60,7 @@ public:
 
     Lock& lock() { return m_lock; }
 
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual String absolute_path(const FileDescription&) const override;
 
 protected:
     Socket(int domain, int type, int protocol);

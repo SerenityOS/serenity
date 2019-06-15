@@ -5,26 +5,25 @@
 #include <AK/OwnPtr.h>
 #include <AK/RetainPtr.h>
 #include <AK/Vector.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KResult.h>
-#include <Kernel/LinearAddress.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/Region.h>
-#include <Kernel/i386.h>
+#include <Kernel/VirtualAddress.h>
 
 class Alarm;
-class FileDescriptor;
+class FileDescription;
 class Process;
 class Region;
 class Thread;
 
-enum class ShouldUnblockThread
-{
+enum class ShouldUnblockThread {
     No = 0,
     Yes
 };
 
 struct SignalActionData {
-    LinearAddress handler_or_sigaction;
+    VirtualAddress handler_or_sigaction;
     dword mask { 0 };
     int flags { 0 };
 };
@@ -54,8 +53,7 @@ public:
 
     void finalize();
 
-    enum State : byte
-    {
+    enum State : byte {
         Invalid = 0,
         Runnable,
         Running,
@@ -97,13 +95,13 @@ public:
 
     void sleep(dword ticks);
     void block(Thread::State);
-    void block(Thread::State, FileDescriptor&);
+    void block(Thread::State, FileDescription&);
     void unblock();
 
     void set_wakeup_time(qword t) { m_wakeup_time = t; }
     qword wakeup_time() const { return m_wakeup_time; }
     void snooze_until(Alarm&);
-    KResult wait_for_connect(FileDescriptor&);
+    KResult wait_for_connect(FileDescription&);
 
     const FarPtr& far_ptr() const { return m_far_ptr; }
 
@@ -112,7 +110,7 @@ public:
     dword ticks_left() const { return m_ticks_left; }
 
     dword kernel_stack_base() const { return m_kernel_stack_base; }
-    dword kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->laddr().get() : 0; }
+    dword kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->vaddr().get() : 0; }
 
     void set_selector(word s) { m_far_ptr.selector = s; }
     void set_state(State);
@@ -181,7 +179,7 @@ private:
     RetainPtr<Region> m_kernel_stack_region;
     RetainPtr<Region> m_kernel_stack_for_signal_handler_region;
     pid_t m_waitee_pid { -1 };
-    RetainPtr<FileDescriptor> m_blocked_descriptor;
+    RetainPtr<FileDescription> m_blocked_description;
     timeval m_select_timeout;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };
@@ -245,7 +243,7 @@ inline void Thread::for_each_runnable(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* thread = g_runnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
-        if (callback(*thread) == IterationDecision::Abort)
+        if (callback(*thread) == IterationDecision::Break)
             return;
         thread = next_thread;
     }
@@ -257,7 +255,7 @@ inline void Thread::for_each_nonrunnable(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* thread = g_nonrunnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
-        if (callback(*thread) == IterationDecision::Abort)
+        if (callback(*thread) == IterationDecision::Break)
             return;
         thread = next_thread;
     }

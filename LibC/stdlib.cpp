@@ -18,7 +18,7 @@
 
 extern "C" {
 
-typedef void(*__atexit_handler)();
+typedef void (*__atexit_handler)();
 static int __atexit_handler_count = 0;
 static __atexit_handler __atexit_handlers[32];
 
@@ -40,7 +40,6 @@ int atexit(void (*handler)())
     __atexit_handlers[__atexit_handler_count++] = handler;
     return 0;
 }
-
 
 void abort()
 {
@@ -98,8 +97,8 @@ int unsetenv(const char* name)
         return 0; // not found: no failure.
 
     // Shuffle the existing array down by one.
-    memmove(&environ[skip], &environ[skip+1], ((environ_size-1)-skip) * sizeof(environ[0]));
-    environ[environ_size-1] = nullptr;
+    memmove(&environ[skip], &environ[skip + 1], ((environ_size - 1) - skip) * sizeof(environ[0]));
+    environ[environ_size - 1] = nullptr;
 
     free_environment_variable_if_needed(name);
     return 0;
@@ -143,7 +142,7 @@ int putenv(char* new_var)
 
     // At this point, we need to append the new var.
     // 2 here: one for the new var, one for the sentinel value.
-    char **new_environ = (char**)malloc((environ_size + 2) * sizeof(char*));
+    char** new_environ = (char**)malloc((environ_size + 2) * sizeof(char*));
     if (new_environ == nullptr) {
         errno = ENOMEM;
         return -1;
@@ -237,7 +236,7 @@ static unsigned long s_next_rand = 1;
 int rand()
 {
     s_next_rand = s_next_rand * 1103515245 + 12345;
-    return((unsigned)(s_next_rand/((RAND_MAX + 1) * 2)) % (RAND_MAX + 1));
+    return ((unsigned)(s_next_rand / ((RAND_MAX + 1) * 2)) % (RAND_MAX + 1));
 }
 
 void srand(unsigned seed)
@@ -302,7 +301,7 @@ char* mktemp(char* pattern)
     return pattern;
 }
 
-void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void *, const void *))
+void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
 {
     dbgprintf("FIXME(LibC): bsearch(%p, %p, %u, %u, %p)\n", key, base, nmemb, size, compar);
     ASSERT_NOT_REACHED();
@@ -347,8 +346,7 @@ long strtol(const char* str, char** endptr, int base)
         c = *s++;
     } else if (c == '+')
         c = *s++;
-    if ((base == 0 || base == 16) &&
-        c == '0' && (*s == 'x' || *s == 'X')) {
+    if ((base == 0 || base == 16) && c == '0' && (*s == 'x' || *s == 'X')) {
         c = s[1];
         s += 2;
         base = 16;
@@ -392,5 +390,4 @@ unsigned long strtoul(const char* str, char** endptr, int base)
     ASSERT(value >= 0);
     return value;
 }
-
 }

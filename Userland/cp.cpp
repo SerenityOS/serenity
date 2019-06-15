@@ -1,11 +1,11 @@
-#include <unistd.h>
-#include <fcntl.h>
+#include <AK/AKString.h>
+#include <AK/FileSystemPath.h>
+#include <AK/StringBuilder.h>
 #include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <sys/stat.h>
-#include <AK/AKString.h>
-#include <AK/StringBuilder.h>
-#include <AK/FileSystemPath.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {

@@ -1,24 +1,23 @@
-#include <AK/Types.h>
-#include "i386.h"
 #include "IO.h"
 #include "PIC.h"
+#include <AK/Assertions.h>
+#include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/TTY/VirtualConsole.h>
-#include <AK/Assertions.h>
 
 //#define KEYBOARD_DEBUG
 
-#define IRQ_KEYBOARD             1
-#define I8042_BUFFER             0x60
-#define I8042_STATUS             0x64
-#define I8042_ACK                0xFA
-#define I8042_BUFFER_FULL        0x01
-#define I8042_WHICH_BUFFER       0x20
-#define I8042_MOUSE_BUFFER       0x20
-#define I8042_KEYBOARD_BUFFER    0x00
+#define IRQ_KEYBOARD 1
+#define I8042_BUFFER 0x60
+#define I8042_STATUS 0x64
+#define I8042_ACK 0xFA
+#define I8042_BUFFER_FULL 0x01
+#define I8042_WHICH_BUFFER 0x20
+#define I8042_MOUSE_BUFFER 0x20
+#define I8042_KEYBOARD_BUFFER 0x00
 
-static char map[0x80] =
-{
+static char map[0x80] = {
     0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, '\t',
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0,
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
@@ -26,8 +25,7 @@ static char map[0x80] =
     0, 0, 0, ' '
 };
 
-static char shift_map[0x80] =
-{
+static char shift_map[0x80] = {
     0, '\033', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0x08, '\t',
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0,
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|',
@@ -35,24 +33,76 @@ static char shift_map[0x80] =
     0, 0, 0, ' '
 };
 
-static KeyCode unshifted_key_map[0x80] =
-{
-    Key_Invalid, Key_Escape,
-    Key_1, Key_2, Key_3, Key_4, Key_5, Key_6, Key_7, Key_8, Key_9, Key_0, Key_Minus, Key_Equal, Key_Backspace,
+static KeyCode unshifted_key_map[0x80] = {
+    Key_Invalid,
+    Key_Escape,
+    Key_1,
+    Key_2,
+    Key_3,
+    Key_4,
+    Key_5,
+    Key_6,
+    Key_7,
+    Key_8,
+    Key_9,
+    Key_0,
+    Key_Minus,
+    Key_Equal,
+    Key_Backspace,
     Key_Tab, //15
-    Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Y, Key_U, Key_I, Key_O, Key_P, Key_LeftBracket, Key_RightBracket,
-    Key_Return, // 28
+    Key_Q,
+    Key_W,
+    Key_E,
+    Key_R,
+    Key_T,
+    Key_Y,
+    Key_U,
+    Key_I,
+    Key_O,
+    Key_P,
+    Key_LeftBracket,
+    Key_RightBracket,
+    Key_Return,  // 28
     Key_Control, // 29
-    Key_A, Key_S, Key_D, Key_F, Key_G, Key_H, Key_J, Key_K, Key_L, Key_Semicolon, Key_Apostrophe, Key_Backtick,
+    Key_A,
+    Key_S,
+    Key_D,
+    Key_F,
+    Key_G,
+    Key_H,
+    Key_J,
+    Key_K,
+    Key_L,
+    Key_Semicolon,
+    Key_Apostrophe,
+    Key_Backtick,
     Key_LeftShift, // 42
     Key_Backslash,
-    Key_Z, Key_X, Key_C, Key_V, Key_B, Key_N, Key_M, Key_Comma, Key_Period, Key_Slash,
+    Key_Z,
+    Key_X,
+    Key_C,
+    Key_V,
+    Key_B,
+    Key_N,
+    Key_M,
+    Key_Comma,
+    Key_Period,
+    Key_Slash,
     Key_RightShift, // 54
     Key_Invalid,
-    Key_Alt, // 56
-    Key_Space, // 57
+    Key_Alt,     // 56
+    Key_Space,   // 57
     Key_Invalid, // 58
-    Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6, Key_F7, Key_F8, Key_F9, Key_F10,
+    Key_F1,
+    Key_F2,
+    Key_F3,
+    Key_F4,
+    Key_F5,
+    Key_F6,
+    Key_F7,
+    Key_F8,
+    Key_F9,
+    Key_F10,
     Key_Invalid,
     Key_Invalid, // 70
     Key_Home,
@@ -78,24 +128,76 @@ static KeyCode unshifted_key_map[0x80] =
     Key_Logo,
 };
 
-static KeyCode shifted_key_map[0x100] =
-{
-    Key_Invalid, Key_Escape,
-    Key_ExclamationPoint, Key_AtSign, Key_Hashtag, Key_Dollar, Key_Percent, Key_Circumflex, Key_Ampersand, Key_Asterisk, Key_LeftParen, Key_RightParen, Key_Underscore, Key_Plus, Key_Backspace,
+static KeyCode shifted_key_map[0x100] = {
+    Key_Invalid,
+    Key_Escape,
+    Key_ExclamationPoint,
+    Key_AtSign,
+    Key_Hashtag,
+    Key_Dollar,
+    Key_Percent,
+    Key_Circumflex,
+    Key_Ampersand,
+    Key_Asterisk,
+    Key_LeftParen,
+    Key_RightParen,
+    Key_Underscore,
+    Key_Plus,
+    Key_Backspace,
     Key_Tab,
-    Key_Q, Key_W, Key_E, Key_R, Key_T, Key_Y, Key_U, Key_I, Key_O, Key_P, Key_LeftBrace, Key_RightBrace,
+    Key_Q,
+    Key_W,
+    Key_E,
+    Key_R,
+    Key_T,
+    Key_Y,
+    Key_U,
+    Key_I,
+    Key_O,
+    Key_P,
+    Key_LeftBrace,
+    Key_RightBrace,
     Key_Return,
     Key_Control,
-    Key_A, Key_S, Key_D, Key_F, Key_G, Key_H, Key_J, Key_K, Key_L, Key_Colon, Key_DoubleQuote, Key_Tilde,
+    Key_A,
+    Key_S,
+    Key_D,
+    Key_F,
+    Key_G,
+    Key_H,
+    Key_J,
+    Key_K,
+    Key_L,
+    Key_Colon,
+    Key_DoubleQuote,
+    Key_Tilde,
     Key_LeftShift, // 42
     Key_Pipe,
-    Key_Z, Key_X, Key_C, Key_V, Key_B, Key_N, Key_M, Key_LessThan, Key_GreaterThan, Key_QuestionMark,
+    Key_Z,
+    Key_X,
+    Key_C,
+    Key_V,
+    Key_B,
+    Key_N,
+    Key_M,
+    Key_LessThan,
+    Key_GreaterThan,
+    Key_QuestionMark,
     Key_RightShift, // 54
     Key_Invalid,
     Key_Alt,
-    Key_Space, // 57
+    Key_Space,   // 57
     Key_Invalid, // 58
-    Key_F1, Key_F2, Key_F3, Key_F4, Key_F5, Key_F6, Key_F7, Key_F8, Key_F9, Key_F10,
+    Key_F1,
+    Key_F2,
+    Key_F3,
+    Key_F4,
+    Key_F5,
+    Key_F6,
+    Key_F7,
+    Key_F8,
+    Key_F9,
+    Key_F10,
     Key_Invalid,
     Key_Invalid, // 70
     Key_Home,
@@ -163,7 +265,8 @@ void KeyboardDevice::handle_irq()
             break;
         }
         switch (ch) {
-        case I8042_ACK: break;
+        case I8042_ACK:
+            break;
         default:
             if (m_modifiers & Mod_Alt) {
                 switch (map[ch]) {
@@ -208,12 +311,12 @@ KeyboardDevice::~KeyboardDevice()
 {
 }
 
-bool KeyboardDevice::can_read(FileDescriptor&) const
+bool KeyboardDevice::can_read(FileDescription&) const
 {
     return !m_queue.is_empty();
 }
 
-ssize_t KeyboardDevice::read(FileDescriptor&, byte* buffer, ssize_t size)
+ssize_t KeyboardDevice::read(FileDescription&, byte* buffer, ssize_t size)
 {
     ssize_t nread = 0;
     while (nread < size) {
@@ -229,7 +332,7 @@ ssize_t KeyboardDevice::read(FileDescriptor&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t KeyboardDevice::write(FileDescriptor&, const byte*, ssize_t)
+ssize_t KeyboardDevice::write(FileDescription&, const byte*, ssize_t)
 {
     return 0;
 }

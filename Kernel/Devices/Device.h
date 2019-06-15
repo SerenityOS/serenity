@@ -9,30 +9,6 @@
 // There are two main subclasses:
 //   - BlockDevice (random access)
 //   - CharacterDevice (sequential)
-//
-// The most important functions in Device are:
-//
-// class_name()
-//   - Used in the /proc filesystem to identify the type of Device.
-//
-// read() and write()
-//   - Implement reading and writing.
-//   - Return the number of bytes read/written, OR a negative error code.
-//
-// can_read() and can_write()
-//
-//   - Used to implement blocking I/O, and the select() and poll() syscalls.
-//   - Return true if read() or write() would succeed, respectively.
-//   - Note that can_read() should return true in EOF conditions,
-//     and a subsequent call to read() should return 0.
-//
-// ioctl()
-//
-//   - Optional. If unimplemented, ioctl() on the device will fail with -ENOTTY.
-//   - Can be overridden in subclasses to implement arbitrary functionality.
-//   - Subclasses should take care to validate incoming addresses before dereferencing.
-//
-
 #include <Kernel/File.h>
 #include <Kernel/UnixTypes.h>
 
@@ -43,7 +19,7 @@ public:
     unsigned major() const { return m_major; }
     unsigned minor() const { return m_minor; }
 
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual String absolute_path(const FileDescription&) const override;
 
     uid_t uid() const { return m_uid; }
     uid_t gid() const { return m_gid; }

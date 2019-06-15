@@ -11,8 +11,7 @@
 
 class WSEvent : public CEvent {
 public:
-    enum Type
-    {
+    enum Type {
         Invalid = 2000,
         WM_DeferredCompose,
         WM_ClientDisconnected,
@@ -64,6 +63,7 @@ public:
         APIGetWallpaperRequest,
         APISetWindowOverrideCursorRequest,
         APISetWindowHasAlphaChannelRequest,
+        APIMoveWindowToFrontRequest,
         WMAPISetActiveWindowRequest,
         WMAPISetWindowMinimizedRequest,
         WMAPIStartWindowResizeRequest,
@@ -460,6 +460,20 @@ private:
     int m_window_id { 0 };
 };
 
+class WSAPIMoveWindowToFrontRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPIMoveWindowToFrontRequest(int client_id, int window_id)
+        : WSAPIClientRequest(WSEvent::APIMoveWindowToFrontRequest, client_id)
+        , m_window_id(window_id)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+
+private:
+    int m_window_id { 0 };
+};
+
 class WSAPISetClipboardContentsRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetClipboardContentsRequest(int client_id, int shared_buffer_id, int size)
@@ -691,8 +705,7 @@ private:
     Vector<Rect, 32> m_rects;
 };
 
-enum class MouseButton : byte
-{
+enum class MouseButton : byte {
     None = 0,
     Left = 1,
     Right = 2,

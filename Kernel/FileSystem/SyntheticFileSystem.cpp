@@ -1,7 +1,7 @@
-#include <Kernel/FileSystem/SyntheticFileSystem.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
-#include <LibC/errno_numbers.h>
 #include <AK/StdLibExtras.h>
+#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/SyntheticFileSystem.h>
+#include <LibC/errno_numbers.h>
 
 //#define SYNTHFS_DEBUG
 
@@ -140,13 +140,13 @@ InodeIdentifier SynthFS::root_inode() const
 
 RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, off_t size, dev_t, int& error)
 {
-    (void) parentInode;
-    (void) name;
-    (void) mode;
-    (void) size;
-    (void) error;
+    (void)parentInode;
+    (void)name;
+    (void)mode;
+    (void)size;
+    (void)error;
     kprintf("FIXME: Implement SyntheticFileSystem::create_inode().\n");
-    return { };
+    return {};
 }
 
 RetainPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
@@ -161,18 +161,12 @@ auto SynthFS::generate_inode_index() -> InodeIndex
     return m_next_inode_index++;
 }
 
-RetainPtr<Inode> SynthFSInode::parent() const
-{
-    LOCKER(m_lock);
-    return fs().get_inode(m_parent);
-}
-
 RetainPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const
 {
     LOCKER(m_lock);
     auto it = m_inodes.find(inode.index());
     if (it == m_inodes.end())
-        return { };
+        return {};
     return (*it).value;
 }
 
@@ -191,7 +185,7 @@ InodeMetadata SynthFSInode::metadata() const
     return m_metadata;
 }
 
-ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescriptor* descriptor) const
+ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription* description) const
 {
     LOCKER(m_lock);
 #ifdef SYNTHFS_DEBUG
@@ -202,20 +196,20 @@ ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, File
 
     ByteBuffer generated_data;
     if (m_generator) {
-        if (!descriptor) {
+        if (!description) {
             generated_data = m_generator(const_cast<SynthFSInode&>(*this));
         } else {
-            if (!descriptor->generator_cache())
-                descriptor->generator_cache() = m_generator(const_cast<SynthFSInode&>(*this));
-            generated_data = descriptor->generator_cache();
+            if (!description->generator_cache())
+                description->generator_cache() = m_generator(const_cast<SynthFSInode&>(*this));
+            generated_data = description->generator_cache();
         }
     }
 
     auto* data = generated_data ? &generated_data : &m_data;
     ssize_t nread = min(static_cast<off_t>(data->size() - offset), static_cast<off_t>(count));
     memcpy(buffer, data->pointer() + offset, nread);
-    if (nread == 0 && descriptor && descriptor->generator_cache())
-        descriptor->generator_cache().clear();
+    if (nread == 0 && description && description->generator_cache())
+        description->generator_cache().clear();
     return nread;
 }
 
@@ -237,7 +231,7 @@ bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&
     return true;
 }
 
-InodeIdentifier SynthFSInode::lookup(const String& name)
+InodeIdentifier SynthFSInode::lookup(StringView name)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
@@ -249,25 +243,14 @@ InodeIdentifier SynthFSInode::lookup(const String& name)
         if (child->m_name == name)
             return child->identifier();
     }
-    return { };
-}
-
-String SynthFSInode::reverse_lookup(InodeIdentifier child_id)
-{
-    LOCKER(m_lock);
-    ASSERT(is_directory());
-    for (auto& child : m_children) {
-        if (child->identifier() == child_id)
-            return child->m_name;
-    }
-    return { };
+    return {};
 }
 
 void SynthFSInode::flush_metadata()
 {
 }
 
-ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer, FileDescriptor*)
+ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer, FileDescription*)
 {
     LOCKER(m_lock);
     if (!m_write_callback)
@@ -279,14 +262,14 @@ ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer
     return 0;
 }
 
-KResult SynthFSInode::add_child(InodeIdentifier child_id, const String& name, mode_t)
+KResult SynthFSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t)
 {
     (void)child_id;
     (void)name;
     ASSERT_NOT_REACHED();
 }
 
-KResult SynthFSInode::remove_child(const String& name)
+KResult SynthFSInode::remove_child(const StringView& name)
 {
     (void)name;
     ASSERT_NOT_REACHED();

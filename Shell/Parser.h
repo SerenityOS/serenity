@@ -4,13 +4,11 @@
 #include <AK/Vector.h>
 
 struct Redirection {
-    enum Type
-    {
+    enum Type {
         Pipe,
         FileWrite,
         FileWriteAppend,
         FileRead,
-        Rewire
     };
     Type type;
     int fd { -1 };
@@ -18,9 +16,15 @@ struct Redirection {
     String path {};
 };
 
+struct Rewiring {
+    int fd { -1 };
+    int rewire_fd { -1 };
+};
+
 struct Subcommand {
     Vector<String> args;
     Vector<Redirection> redirections;
+    Vector<Rewiring> rewirings;
 };
 
 class Parser {
@@ -39,8 +43,7 @@ private:
     void begin_redirect_read(int fd);
     void begin_redirect_write(int fd);
 
-    enum State
-    {
+    enum State {
         Free,
         InSingleQuotes,
         InDoubleQuotes,

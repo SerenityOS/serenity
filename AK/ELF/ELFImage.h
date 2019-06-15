@@ -1,9 +1,9 @@
 #pragma once
 
-#include <AK/OwnPtr.h>
-#include <AK/HashMap.h>
 #include <AK/AKString.h>
 #include <AK/ELF/exec_elf.h>
+#include <AK/HashMap.h>
+#include <AK/OwnPtr.h>
 
 class ELFImage {
 public:
@@ -27,7 +27,7 @@ public:
         {
         }
 
-        ~Symbol() { }
+        ~Symbol() {}
 
         const char* name() const { return m_image.table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
@@ -51,13 +51,13 @@ public:
             , m_program_header_index(program_header_index)
         {
         }
-        ~ProgramHeader() { }
+        ~ProgramHeader() {}
 
         unsigned index() const { return m_program_header_index; }
         dword type() const { return m_program_header.p_type; }
         dword flags() const { return m_program_header.p_flags; }
         dword offset() const { return m_program_header.p_offset; }
-        LinearAddress laddr() const { return LinearAddress(m_program_header.p_vaddr); }
+        VirtualAddress vaddr() const { return VirtualAddress(m_program_header.p_vaddr); }
         dword size_in_memory() const { return m_program_header.p_memsz; }
         dword size_in_image() const { return m_program_header.p_filesz; }
         dword alignment() const { return m_program_header.p_align; }
@@ -65,6 +65,7 @@ public:
         bool is_writable() const { return flags() & PF_W; }
         bool is_executable() const { return flags() & PF_X; }
         const char* raw_data() const { return m_image.raw_data(m_program_header.p_offset); }
+
     private:
         const ELFImage& m_image;
         const Elf32_Phdr& m_program_header;
@@ -79,7 +80,7 @@ public:
             , m_section_index(sectionIndex)
         {
         }
-        ~Section() { }
+        ~Section() {}
 
         const char* name() const { return m_image.section_header_table_string(m_section_header.sh_name); }
         unsigned type() const { return m_section_header.sh_type; }
@@ -109,15 +110,19 @@ public:
     const Section section(unsigned) const;
     const ProgramHeader program_header(unsigned const) const;
 
-    template<typename F> void for_each_section(F) const;
-    template<typename F> void for_each_section_of_type(unsigned, F) const;
-    template<typename F> void for_each_symbol(F) const;
-    template<typename F> void for_each_program_header(F) const;
+    template<typename F>
+    void for_each_section(F) const;
+    template<typename F>
+    void for_each_section_of_type(unsigned, F) const;
+    template<typename F>
+    void for_each_symbol(F) const;
+    template<typename F>
+    void for_each_program_header(F) const;
 
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
 
-    LinearAddress entry() const { return LinearAddress(header().e_entry); }
+    VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
 
 private:
     bool parse_header();
@@ -158,7 +163,7 @@ template<typename F>
 inline void ELFImage::for_each_symbol(F func) const
 {
     for (unsigned i = 0; i < symbol_count(); ++i) {
-        if (func(symbol(i)) == IterationDecision::Abort)
+        if (func(symbol(i)) == IterationDecision::Break)
             break;
     }
 }

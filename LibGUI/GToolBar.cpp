@@ -1,8 +1,8 @@
-#include <LibGUI/GToolBar.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
-#include <LibGUI/GAction.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GToolBar.h>
 
 GToolBar::GToolBar(GWidget* parent)
     : GWidget(parent)
@@ -32,7 +32,7 @@ void GToolBar::add_action(Retained<GAction>&& action)
         button->set_icon(item->action->icon());
     else
         button->set_text(item->action->text());
-    button->on_click = [raw_action_ptr] (const GButton&) {
+    button->on_click = [raw_action_ptr](const GButton&) {
         raw_action_ptr->activate();
     };
 
@@ -54,7 +54,7 @@ public:
         set_background_color(Color::White);
         set_preferred_size({ 8, 22 });
     }
-    virtual ~SeparatorWidget() override { }
+    virtual ~SeparatorWidget() override {}
 
     virtual void paint_event(GPaintEvent& event) override
     {

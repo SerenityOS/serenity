@@ -1,11 +1,11 @@
-#include "Scheduler.h"
-#include "Process.h"
-#include "RTC.h"
-#include "i8253.h"
 #include <AK/TemporaryChange.h>
 #include <Kernel/Alarm.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
 #include <Kernel/Devices/PCSpeaker.h>
+#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Process.h>
+#include <Kernel/RTC.h>
+#include <Kernel/Scheduler.h>
+#include <Kernel/i8253.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
@@ -72,7 +72,7 @@ bool Scheduler::pick_next()
     auto now_usec = now.tv_usec;
 
     // Check and unblock threads whose wait conditions have been met.
-    Thread::for_each_nonrunnable([&] (Thread& thread) {
+    Thread::for_each_nonrunnable([&](Thread& thread) {
         auto& process = thread.process();
 
         if (thread.state() == Thread::BlockedSleep) {
@@ -82,7 +82,7 @@ bool Scheduler::pick_next()
         }
 
         if (thread.state() == Thread::BlockedWait) {
-            process.for_each_child([&] (Process& child) {
+            process.for_each_child([&](Process& child) {
                 if (!child.is_dead())
                     return true;
                 if (thread.waitee_pid() == -1 || thread.waitee_pid() == child.pid()) {
@@ -96,34 +96,34 @@ bool Scheduler::pick_next()
         }
 
         if (thread.state() == Thread::BlockedRead) {
-            ASSERT(thread.m_blocked_descriptor);
+            ASSERT(thread.m_blocked_description);
             // FIXME: Block until the amount of data wanted is available.
-            if (thread.m_blocked_descriptor->can_read())
+            if (thread.m_blocked_description->can_read())
                 thread.unblock();
             return IterationDecision::Continue;
         }
 
         if (thread.state() == Thread::BlockedWrite) {
-            ASSERT(thread.m_blocked_descriptor != -1);
-            if (thread.m_blocked_descriptor->can_write())
+            ASSERT(thread.m_blocked_description != -1);
+            if (thread.m_blocked_description->can_write())
                 thread.unblock();
             return IterationDecision::Continue;
         }
 
         if (thread.state() == Thread::BlockedConnect) {
-            auto& descriptor = *thread.m_blocked_descriptor;
-            auto& socket = *descriptor.socket();
+            auto& description = *thread.m_blocked_description;
+            auto& socket = *description.socket();
             if (socket.is_connected())
                 thread.unblock();
             return IterationDecision::Continue;
         }
 
         if (thread.state() == Thread::BlockedReceive) {
-            auto& descriptor = *thread.m_blocked_descriptor;
-            auto& socket = *descriptor.socket();
+            auto& description = *thread.m_blocked_description;
+            auto& socket = *description.socket();
             // FIXME: Block until the amount of data wanted is available.
             bool timed_out = now_sec > socket.receive_deadline().tv_sec || (now_sec == socket.receive_deadline().tv_sec && now_usec >= socket.receive_deadline().tv_usec);
-            if (timed_out || descriptor.can_read()) {
+            if (timed_out || description.can_read()) {
                 thread.unblock();
                 return IterationDecision::Continue;
             }
@@ -138,13 +138,13 @@ bool Scheduler::pick_next()
                 }
             }
             for (int fd : thread.m_select_read_fds) {
-                if (process.m_fds[fd].descriptor->can_read()) {
+                if (process.m_fds[fd].description->can_read()) {
                     thread.unblock();
                     return IterationDecision::Continue;
                 }
             }
             for (int fd : thread.m_select_write_fds) {
-                if (process.m_fds[fd].descriptor->can_write()) {
+                if (process.m_fds[fd].description->can_write()) {
                     thread.unblock();
                     return IterationDecision::Continue;
                 }
@@ -180,7 +180,7 @@ bool Scheduler::pick_next()
         return IterationDecision::Continue;
     });
 
-    Process::for_each([&] (Process& process) {
+    Process::for_each([&](Process& process) {
         if (process.is_dead()) {
             if (current != &process.main_thread() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
                 auto name = process.name();
@@ -188,13 +188,18 @@ bool Scheduler::pick_next()
                 auto exit_status = Process::reap(process);
                 dbgprintf("reaped unparented process %s(%u), exit status: %u\n", name.characters(), pid, exit_status);
             }
+            return IterationDecision::Continue;
         }
-        return true;
+        if (process.m_alarm_deadline && g_uptime > process.m_alarm_deadline) {
+            process.m_alarm_deadline = 0;
+            process.send_signal(SIGALRM, nullptr);
+        }
+        return IterationDecision::Continue;
     });
 
     // Dispatch any pending signals.
     // FIXME: Do we really need this to be a separate pass over the process list?
-    Thread::for_each_living([] (Thread& thread) {
+    Thread::for_each_living([](Thread& thread) {
         if (!thread.has_unmasked_pending_signals())
             return true;
         // FIXME: It would be nice if the Scheduler didn't have to worry about who is "current"
@@ -284,12 +289,12 @@ bool Scheduler::yield()
 {
     InterruptDisabler disabler;
     ASSERT(current);
-//    dbgprintf("%s(%u:%u) yield()\n", current->process().name().characters(), current->pid(), current->tid());
+    //    dbgprintf("%s(%u:%u) yield()\n", current->process().name().characters(), current->pid(), current->tid());
 
     if (!pick_next())
         return false;
 
-//    dbgprintf("yield() jumping to new process: sel=%x, %s(%u:%u)\n", current->far_ptr().selector, current->process().name().characters(), current->pid(), current->tid());
+    //    dbgprintf("yield() jumping to new process: sel=%x, %s(%u:%u)\n", current->far_ptr().selector, current->process().name().characters(), current->pid(), current->tid());
     switch_now();
     return true;
 }
@@ -307,9 +312,7 @@ void Scheduler::switch_now()
     descriptor.type = 9;
     flush_gdt();
     asm("sti\n"
-        "ljmp *(%%eax)\n"
-        ::"a"(&current->far_ptr())
-    );
+        "ljmp *(%%eax)\n" ::"a"(&current->far_ptr()));
 }
 
 bool Scheduler::context_switch(Thread& thread)
@@ -328,9 +331,9 @@ bool Scheduler::context_switch(Thread& thread)
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
         dbgprintf("Scheduler: %s(%u:%u) -> %s(%u:%u) %w:%x\n",
-                  current->process().name().characters(), current->process().pid(), current->tid(),
-                  thread.process().name().characters(), thread.process().pid(), thread.tid(),
-                  thread.tss().cs, thread.tss().eip);
+            current->process().name().characters(), current->process().pid(), current->tid(),
+            thread.process().name().characters(), thread.process().pid(), thread.tid(),
+            thread.tss().cs, thread.tss().eip);
 #endif
     }
 
@@ -451,6 +454,5 @@ void Scheduler::timer_tick(RegisterDump& regs)
     asm(
         "pushf\n"
         "orl $0x00004000, (%esp)\n"
-        "popf\n"
-    );
+        "popf\n");
 }

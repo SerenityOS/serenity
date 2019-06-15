@@ -1,18 +1,18 @@
-#include <unistd.h>
-#include <string.h>
-#include <errno.h>
-#include <stdarg.h>
+#include <AK/AKString.h>
+#include <AK/Vector.h>
+#include <Kernel/Syscall.h>
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <grp.h>
 #include <pwd.h>
+#include <stdarg.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
-#include <fcntl.h>
-#include <Kernel/Syscall.h>
-#include <AK/Vector.h>
-#include <AK/AKString.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -25,6 +25,12 @@ int systrace(pid_t pid)
 int chown(const char* pathname, uid_t uid, gid_t gid)
 {
     int rc = syscall(SC_chown, pathname, uid, gid);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int fchown(int fd, uid_t uid, gid_t gid)
+{
+    int rc = syscall(SC_fchown, fd, uid, gid);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -219,7 +225,7 @@ int stat(const char* path, struct stat* statbuf)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int fstat(int fd, struct stat *statbuf)
+int fstat(int fd, struct stat* statbuf)
 {
     int rc = syscall(SC_fstat, fd, statbuf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -372,15 +378,15 @@ int mknod(const char* pathname, mode_t mode, dev_t dev)
 
 long fpathconf(int fd, int name)
 {
-    (void) fd;
-    (void) name;
+    (void)fd;
+    (void)name;
     ASSERT_NOT_REACHED();
 }
 
 long pathconf(const char* path, int name)
 {
-    (void) path;
-    (void) name;
+    (void)path;
+    (void)name;
     ASSERT_NOT_REACHED();
 }
 
@@ -445,7 +451,7 @@ char* getlogin()
     return nullptr;
 }
 
-int create_thread(int(*entry)(void*), void* argument)
+int create_thread(int (*entry)(void*), void* argument)
 {
     int rc = syscall(SC_create_thread, entry, argument);
     __RETURN_WITH_ERRNO(rc, rc, -1);
@@ -486,5 +492,4 @@ int fsync(int fd)
     dbgprintf("FIXME: Implement fsync()\n");
     return 0;
 }
-
 }

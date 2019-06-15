@@ -10,15 +10,38 @@
 
 namespace AK {
 
+// String is a convenience wrapper around StringImpl, suitable for passing
+// around as a value type. It's basically the same as passing around a
+// RetainPtr<StringImpl>, with a bit of syntactic sugar.
+//
+// Note that StringImpl is an immutable object that cannot shrink or grow.
+// Its allocation size is snugly tailored to the specific string it contains.
+// Copying a String is very efficient, since the internal StringImpl is
+// retainable and so copying only requires modifying the retain count.
+//
+// There are three main ways to construct a new String:
+//
+//     s = String("some literal");
+//
+//     s = String::format("%d little piggies", m_piggies);
+//
+//     StringBuilder builder;
+//     builder.append("abc");
+//     builder.append("123");
+//     s = builder.to_string();
+
 class String {
 public:
     ~String() {}
 
     String() {}
 
-    String(StringView view)
-        : m_impl(StringImpl::create(view.characters(), view.length()))
+    String(const StringView& view)
     {
+        if (view.m_impl)
+            m_impl = *view.m_impl;
+        else
+            m_impl = StringImpl::create(view.characters(), view.length());
     }
 
     String(const String& other)
@@ -36,7 +59,7 @@ public:
     {
     }
 
-    String(const char* cstring, ssize_t length, ShouldChomp shouldChomp = NoChomp)
+    String(const char* cstring, int length, ShouldChomp shouldChomp = NoChomp)
         : m_impl(StringImpl::create(cstring, length, shouldChomp))
     {
     }
@@ -67,7 +90,7 @@ public:
     };
 
     static String repeated(char, int count);
-    bool matches(const String& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
+    bool matches(const StringView& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     int to_int(bool& ok) const;
     unsigned to_uint(bool& ok) const;
@@ -86,6 +109,7 @@ public:
         return m_impl->to_uppercase();
     }
 
+    Vector<String> split_limit(char separator, int limit) const;
     Vector<String> split(char separator) const;
     String substring(int start, int length) const;
 
@@ -94,19 +118,34 @@ public:
 
     bool is_null() const { return !m_impl; }
     bool is_empty() const { return length() == 0; }
-    ssize_t length() const { return m_impl ? m_impl->length() : 0; }
+    int length() const { return m_impl ? m_impl->length() : 0; }
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
-    char operator[](ssize_t i) const
+    char operator[](int i) const
     {
         ASSERT(m_impl);
         return (*m_impl)[i];
     }
 
-    bool ends_with(const String&) const;
+    bool starts_with(const StringView&) const;
+    bool ends_with(const StringView&) const;
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
     bool operator<(const String&) const;
+
+    bool operator==(const char* cstring) const
+    {
+        if (is_null())
+            return !cstring;
+        if (!cstring)
+            return false;
+        return !strcmp(characters(), cstring);
+    }
+
+    bool operator!=(const char* cstring) const
+    {
+        return !(*this == cstring);
+    }
 
     String isolated_copy() const;
 
@@ -146,7 +185,7 @@ public:
     StringView view() const { return { characters(), length() }; }
 
 private:
-    bool match_helper(const String& mask) const;
+    bool match_helper(const StringView& mask) const;
     RetainPtr<StringImpl> m_impl;
 };
 

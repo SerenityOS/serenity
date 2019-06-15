@@ -10,27 +10,27 @@ class VMObject;
 
 class Region : public Retainable<Region> {
     friend class MemoryManager;
+
 public:
-    enum Access
-    {
+    enum Access {
         Read = 1,
         Write = 2,
         Execute = 4,
     };
 
-    Region(const Range&, String&&, byte access, bool cow = false);
-    Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, String&&, byte access, bool cow = false);
-    Region(const Range&, RetainPtr<Inode>&&, String&&, byte access);
+    Region(const Range&, const String&, byte access, bool cow = false);
+    Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, const String&, byte access, bool cow = false);
+    Region(const Range&, RetainPtr<Inode>&&, const String&, byte access);
     ~Region();
 
-    LinearAddress laddr() const { return m_range.base(); }
+    VirtualAddress vaddr() const { return m_range.base(); }
     size_t size() const { return m_range.size(); }
     bool is_readable() const { return m_access & Access::Read; }
     bool is_writable() const { return m_access & Access::Write; }
     bool is_executable() const { return m_access & Access::Execute; }
-    String name() const { return m_name; }
+    const String& name() const { return m_name; }
 
-    void set_name(String&& name) { m_name = move(name); }
+    void set_name(const String& name) { m_name = name; }
 
     const VMObject& vmo() const { return *m_vmo; }
     VMObject& vmo() { return *m_vmo; }
@@ -40,14 +40,14 @@ public:
 
     Retained<Region> clone();
 
-    bool contains(LinearAddress laddr) const
+    bool contains(VirtualAddress vaddr) const
     {
-        return m_range.contains(laddr);
+        return m_range.contains(vaddr);
     }
 
-    unsigned page_index_from_address(LinearAddress laddr) const
+    unsigned page_index_from_address(VirtualAddress vaddr) const
     {
-        return (laddr - m_range.base()).get() / PAGE_SIZE;
+        return (vaddr - m_range.base()).get() / PAGE_SIZE;
     }
 
     size_t first_page_index() const

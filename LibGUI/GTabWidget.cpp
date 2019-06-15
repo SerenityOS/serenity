@@ -1,6 +1,6 @@
-#include <LibGUI/GTabWidget.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GTabWidget.h>
 #include <SharedGraphics/StylePainter.h>
 
 GTabWidget::GTabWidget(GWidget* parent)
@@ -14,7 +14,7 @@ GTabWidget::~GTabWidget()
 {
 }
 
-void GTabWidget::add_widget(const String& title, GWidget* widget)
+void GTabWidget::add_widget(const StringView& title, GWidget* widget)
 {
     m_tabs.append({ title, widget });
     add_child(*widget);
@@ -61,9 +61,9 @@ void GTabWidget::child_event(CChildEvent& event)
     } else if (event.type() == GEvent::ChildRemoved) {
         if (m_active_widget == &child) {
             GWidget* new_active_widget = nullptr;
-            for_each_child_widget([&] (auto& new_child) {
+            for_each_child_widget([&](auto& new_child) {
                 new_active_widget = &new_child;
-                return IterationDecision::Abort;
+                return IterationDecision::Break;
             });
             set_active_widget(new_active_widget);
         }

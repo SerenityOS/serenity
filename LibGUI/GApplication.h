@@ -26,7 +26,7 @@ public:
     void register_global_shortcut_action(Badge<GAction>, GAction&);
     void unregister_global_shortcut_action(Badge<GAction>, GAction&);
 
-    void show_tooltip(const String&, const Point& screen_location);
+    void show_tooltip(const StringView&, const Point& screen_location);
     void hide_tooltip();
 
 private:

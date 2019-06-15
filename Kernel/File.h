@@ -5,29 +5,56 @@
 #include <AK/Retained.h>
 #include <AK/Types.h>
 #include <Kernel/KResult.h>
-#include <Kernel/LinearAddress.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/VirtualAddress.h>
 
-class FileDescriptor;
+class FileDescription;
 class Process;
 class Region;
+
+// File is the base class for anything that can be referenced by a FileDescription.
+//
+// The most important functions in File are:
+//
+// read() and write()
+//   - Implement reading and writing.
+//   - Return the number of bytes read/written, OR a negative error code.
+//
+// can_read() and can_write()
+//
+//   - Used to implement blocking I/O, and the select() and poll() syscalls.
+//   - Return true if read() or write() would succeed, respectively.
+//   - Note that can_read() should return true in EOF conditions,
+//     and a subsequent call to read() should return 0.
+//
+// ioctl()
+//
+//   - Optional. If unimplemented, ioctl() on this File will fail with -ENOTTY.
+//   - Can be overridden in subclasses to implement arbitrary functionality.
+//   - Subclasses should take care to validate incoming addresses before dereferencing.
+//
+// mmap()
+//
+//   - Optional. If unimplemented, mmap() on this File will fail with -ENODEV.
+//   - Called by mmap() when userspace wants to memory-map this File somewhere.
+//   - Should create a Region in the Process and return it if successful.
 
 class File : public Retainable<File> {
 public:
     virtual ~File();
 
-    virtual KResultOr<Retained<FileDescriptor>> open(int options);
+    virtual KResultOr<Retained<FileDescription>> open(int options);
     virtual void close();
 
-    virtual bool can_read(FileDescriptor&) const = 0;
-    virtual bool can_write(FileDescriptor&) const = 0;
+    virtual bool can_read(FileDescription&) const = 0;
+    virtual bool can_write(FileDescription&) const = 0;
 
-    virtual ssize_t read(FileDescriptor&, byte*, ssize_t) = 0;
-    virtual ssize_t write(FileDescriptor&, const byte*, ssize_t) = 0;
-    virtual int ioctl(FileDescriptor&, unsigned request, unsigned arg);
-    virtual KResultOr<Region*> mmap(Process&, LinearAddress preferred_laddr, size_t offset, size_t size, int prot);
+    virtual ssize_t read(FileDescription&, byte*, ssize_t) = 0;
+    virtual ssize_t write(FileDescription&, const byte*, ssize_t) = 0;
+    virtual int ioctl(FileDescription&, unsigned request, unsigned arg);
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot);
 
-    virtual String absolute_path(FileDescriptor&) const = 0;
+    virtual String absolute_path(const FileDescription&) const = 0;
 
     virtual KResult truncate(off_t) { return KResult(-EINVAL); }
 

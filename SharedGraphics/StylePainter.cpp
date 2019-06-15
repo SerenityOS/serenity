@@ -1,5 +1,5 @@
-#include <SharedGraphics/StylePainter.h>
 #include <LibGUI/GPainter.h>
+#include <SharedGraphics/StylePainter.h>
 
 void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool active, bool hovered, bool enabled)
 {
@@ -25,9 +25,21 @@ void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool act
     painter.set_pixel({ 1, 1 }, highlight_color2);
 
     // Right side
-    painter.draw_line({ rect.width() - 1, 2, }, { rect.width() - 1, rect.height() - 1 }, shadow_color2);
-    painter.draw_line({ rect.width() - 2, 2, }, { rect.width() - 2, rect.height() - 1 }, shadow_color1);
-    painter.set_pixel({ rect.width() - 2, 1, }, shadow_color2);
+    painter.draw_line({
+                          rect.width() - 1,
+                          2,
+                      },
+        { rect.width() - 1, rect.height() - 1 }, shadow_color2);
+    painter.draw_line({
+                          rect.width() - 2,
+                          2,
+                      },
+        { rect.width() - 2, rect.height() - 1 }, shadow_color1);
+    painter.set_pixel({
+                          rect.width() - 2,
+                          1,
+                      },
+        shadow_color2);
 }
 
 static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, bool checked, bool hovered, bool enabled)
@@ -52,11 +64,11 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, b
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 2, rect.height() - 2 }, button_color);
 
-        painter.draw_rect({ { }, rect.size() }, shadow_color2);
+        painter.draw_rect({ {}, rect.size() }, shadow_color2);
 
         // Sunken shadow
         painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, shadow_color1);
-        painter.draw_line({ 1, 2 }, {1, rect.height() - 2 }, shadow_color1);
+        painter.draw_line({ 1, 2 }, { 1, rect.height() - 2 }, shadow_color1);
     } else {
         // Base
         painter.fill_rect({ 1, 1, rect.width() - 3, rect.height() - 3 }, button_color);
@@ -96,7 +108,7 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
 
         // Sunken shadow
         painter.draw_line({ 1, 1 }, { rect.width() - 2, 1 }, shadow_color);
-        painter.draw_line({ 1, 2 }, {1, rect.height() - 2 }, shadow_color);
+        painter.draw_line({ 1, 2 }, { 1, rect.height() - 2 }, shadow_color);
 
         // Bottom highlight
         painter.draw_line({ rect.width() - 2, 1 }, { rect.width() - 2, rect.height() - 3 }, highlight_color);
@@ -214,4 +226,3 @@ void StylePainter::paint_window_frame(Painter& painter, const Rect& rect)
     painter.draw_line(rect.bottom_left().translated(1, -1), rect.bottom_right().translated(-1, -1), mid_shade);
     painter.draw_line(rect.bottom_left().translated(2, -2), rect.bottom_right().translated(-2, -2), base_color);
 }
-

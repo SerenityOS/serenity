@@ -1,9 +1,9 @@
 #include "VirtualConsole.h"
-#include "kmalloc.h"
-#include "i386.h"
 #include "IO.h"
 #include "StdLib.h"
+#include "kmalloc.h"
 #include <AK/AKString.h>
+#include <Kernel/Arch/i386/CPU.h>
 
 static byte* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
@@ -169,22 +169,38 @@ enum class ANSIColor : byte {
 static inline VGAColor ansi_color_to_vga(ANSIColor color)
 {
     switch (color) {
-    case ANSIColor::Black: return VGAColor::Black;
-    case ANSIColor::Red: return VGAColor::Red;
-    case ANSIColor::Brown: return VGAColor::Brown;
-    case ANSIColor::Blue: return VGAColor::Blue;
-    case ANSIColor::Magenta: return VGAColor::Magenta;
-    case ANSIColor::Green: return VGAColor::Green;
-    case ANSIColor::Cyan: return VGAColor::Cyan;
-    case ANSIColor::LightGray: return VGAColor::LightGray;
-    case ANSIColor::DarkGray: return VGAColor::DarkGray;
-    case ANSIColor::BrightRed: return VGAColor::BrightRed;
-    case ANSIColor::BrightGreen: return VGAColor::BrightGreen;
-    case ANSIColor::Yellow: return VGAColor::Yellow;
-    case ANSIColor::BrightBlue: return VGAColor::BrightBlue;
-    case ANSIColor::BrightMagenta: return VGAColor::BrightMagenta;
-    case ANSIColor::BrightCyan: return VGAColor::BrightCyan;
-    case ANSIColor::White: return VGAColor::White;
+    case ANSIColor::Black:
+        return VGAColor::Black;
+    case ANSIColor::Red:
+        return VGAColor::Red;
+    case ANSIColor::Brown:
+        return VGAColor::Brown;
+    case ANSIColor::Blue:
+        return VGAColor::Blue;
+    case ANSIColor::Magenta:
+        return VGAColor::Magenta;
+    case ANSIColor::Green:
+        return VGAColor::Green;
+    case ANSIColor::Cyan:
+        return VGAColor::Cyan;
+    case ANSIColor::LightGray:
+        return VGAColor::LightGray;
+    case ANSIColor::DarkGray:
+        return VGAColor::DarkGray;
+    case ANSIColor::BrightRed:
+        return VGAColor::BrightRed;
+    case ANSIColor::BrightGreen:
+        return VGAColor::BrightGreen;
+    case ANSIColor::Yellow:
+        return VGAColor::Yellow;
+    case ANSIColor::BrightBlue:
+        return VGAColor::BrightBlue;
+    case ANSIColor::BrightMagenta:
+        return VGAColor::BrightMagenta;
+    case ANSIColor::BrightCyan:
+        return VGAColor::BrightCyan;
+    case ANSIColor::White:
+        return VGAColor::White;
     }
     ASSERT_NOT_REACHED();
     return VGAColor::LightGray;
@@ -317,14 +333,29 @@ void VirtualConsole::execute_escape_sequence(byte final)
         params.append(value);
     }
     switch (final) {
-    case 'A': escape$A(params); break;
-    case 'D': escape$D(params); break;
-    case 'H': escape$H(params); break;
-    case 'J': escape$J(params); break;
-    case 'm': escape$m(params); break;
-    case 's': escape$s(params); break;
-    case 'u': escape$u(params); break;
-    default: break;
+    case 'A':
+        escape$A(params);
+        break;
+    case 'D':
+        escape$D(params);
+        break;
+    case 'H':
+        escape$H(params);
+        break;
+    case 'J':
+        escape$J(params);
+        break;
+    case 'm':
+        escape$m(params);
+        break;
+    case 's':
+        escape$s(params);
+        break;
+    case 'u':
+        escape$u(params);
+        break;
+    default:
+        break;
     }
 
     m_parameters.clear();

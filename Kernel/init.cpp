@@ -1,30 +1,35 @@
-#include <AK/Types.h>
-#include "kmalloc.h"
-#include "i386.h"
-#include "i8253.h"
-#include <Kernel/Devices/KeyboardDevice.h>
-#include "Process.h"
-#include "PIC.h"
-#include <Kernel/Devices/IDEDiskDevice.h>
 #include "KSyms.h"
-#include <Kernel/Devices/NullDevice.h>
-#include <Kernel/Devices/ZeroDevice.h>
-#include <Kernel/Devices/FullDevice.h>
-#include <Kernel/Devices/RandomDevice.h>
-#include <Kernel/FileSystem/Ext2FileSystem.h>
-#include <Kernel/FileSystem/VirtualFileSystem.h>
-#include <Kernel/VM/MemoryManager.h>
-#include <Kernel/FileSystem/ProcFS.h>
+#include "PIC.h"
+#include "Process.h"
 #include "RTC.h"
-#include <Kernel/TTY/VirtualConsole.h>
 #include "Scheduler.h"
-#include <Kernel/Devices/PS2MouseDevice.h>
-#include <Kernel/TTY/PTYMultiplexer.h>
-#include <Kernel/FileSystem/DevPtsFS.h>
+#include "i8253.h"
+#include "kmalloc.h"
+#include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/BXVGADevice.h>
+#include <Kernel/Devices/DebugLogDevice.h>
+#include <Kernel/Devices/DiskPartition.h>
+#include <Kernel/Devices/FullDevice.h>
+#include <Kernel/Devices/IDEDiskDevice.h>
+#include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Devices/MBRPartitionTable.h>
+#include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/PS2MouseDevice.h>
+#include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Devices/SerialDevice.h>
+#include <Kernel/Devices/ZeroDevice.h>
+#include <Kernel/FileSystem/DevPtsFS.h>
+#include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KParams.h>
+#include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
-#include <Kernel/Devices/DebugLogDevice.h>
+#include <Kernel/TTY/PTYMultiplexer.h>
+#include <Kernel/TTY/VirtualConsole.h>
+#include <Kernel/VM/MemoryManager.h>
 
 //#define STRESS_TEST_SPAWNING
 
@@ -36,6 +41,10 @@ KeyboardDevice* keyboard;
 PS2MouseDevice* ps2mouse;
 DebugLogDevice* dev_debuglog;
 NullDevice* dev_null;
+SerialDevice* ttyS0;
+SerialDevice* ttyS1;
+SerialDevice* ttyS2;
+SerialDevice* ttyS3;
 VFS* vfs;
 
 #ifdef STRESS_TEST_SPAWNING
@@ -45,7 +54,7 @@ VFS* vfs;
 
     for (unsigned i = 0; i < 10000; ++i) {
         int error;
-        Process::create_user_process("/bin/true", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+        Process::create_user_process("/bin/true", (uid_t)100, (gid_t)100, (pid_t)0, error, {}, {}, tty0);
         dbgprintf("malloc stats: alloc:%u free:%u eternal:%u !delta:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal, sum_alloc - last_sum_alloc);
         last_sum_alloc = sum_alloc;
         sleep(60);
@@ -64,9 +73,57 @@ VFS* vfs;
     auto dev_full = make<FullDevice>();
     auto dev_random = make<RandomDevice>();
     auto dev_ptmx = make<PTYMultiplexer>();
+
+    auto root = KParams::the().get("root");
+    if (root.is_empty()) {
+        root = "/dev/hda";
+    }
+
+    if (!root.starts_with("/dev/hda")) {
+        kprintf("init_stage2: root filesystem must be on the first IDE hard drive (/dev/hda)\n");
+        hang();
+    }
+
     auto dev_hd0 = IDEDiskDevice::create();
-    auto e2fs = Ext2FS::create(dev_hd0.copy_ref());
-    e2fs->initialize();
+
+    Retained<DiskDevice> root_dev = dev_hd0.copy_ref();
+
+    root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
+
+    if (root.length()) {
+        bool ok;
+        unsigned partition_number = root.to_uint(ok);
+
+        if (!ok) {
+            kprintf("init_stage2: couldn't parse partition number from root kernel parameter\n");
+            hang();
+        }
+
+        if (partition_number < 1 || partition_number > 4) {
+            kprintf("init_stage2: invalid partition number %d; expected 1 to 4\n", partition_number);
+            hang();
+        }
+
+        MBRPartitionTable mbr(root_dev.copy_ref());
+        if (!mbr.initialize()) {
+            kprintf("init_stage2: couldn't read MBR from disk\n");
+            hang();
+        }
+
+        auto partition = mbr.partition(partition_number);
+        if (!partition) {
+            kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+            hang();
+        }
+
+        root_dev = *partition;
+    }
+
+    auto e2fs = Ext2FS::create(root_dev.copy_ref());
+    if (!e2fs->initialize()) {
+        kprintf("init_stage2: couldn't open root filesystem\n");
+        hang();
+    }
 
     vfs->mount_root(e2fs.copy_ref());
 
@@ -79,9 +136,9 @@ VFS* vfs;
 
     int error;
 
-    auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)100, (gid_t)100, (pid_t)0, error, { }, { }, tty0);
+    auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)100, (gid_t)100, (pid_t)0, error, {}, {}, tty0);
     if (error != 0) {
-        dbgprintf("error spawning SystemServer: %d\n", error);
+        dbgprintf("init_stage2: error spawning SystemServer: %d\n", error);
         hang();
     }
     system_server_process->set_priority(Process::HighPriority);
@@ -94,14 +151,19 @@ VFS* vfs;
     ASSERT_NOT_REACHED();
 }
 
+extern "C" {
+multiboot_info_t* multiboot_info_ptr;
+}
+
 extern "C" [[noreturn]] void init()
 {
-    cli();
-
     sse_init();
 
     kmalloc_init();
     init_ksyms();
+
+    // must come after kmalloc_init because we use AK_MAKE_ETERNAL in KParams
+    new KParams(String(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline)));
 
     vfs = new VFS;
     dev_debuglog = new DebugLogDevice;
@@ -116,6 +178,10 @@ extern "C" [[noreturn]] void init()
     keyboard = new KeyboardDevice;
     ps2mouse = new PS2MouseDevice;
     dev_null = new NullDevice;
+    ttyS0 = new SerialDevice(SERIAL_COM1_ADDR, 64);
+    ttyS1 = new SerialDevice(SERIAL_COM2_ADDR, 65);
+    ttyS2 = new SerialDevice(SERIAL_COM3_ADDR, 66);
+    ttyS3 = new SerialDevice(SERIAL_COM4_ADDR, 67);
 
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);

@@ -80,6 +80,7 @@ private:
     void handle_request(const WSAPIPopupMenuRequest&);
     void handle_request(const WSAPIDismissMenuRequest&);
     void handle_request(const WSAPISetWindowHasAlphaChannelRequest&);
+    void handle_request(const WSAPIMoveWindowToFrontRequest&);
 
     void post_error(const String&);
 
@@ -104,7 +105,7 @@ void WSClientConnection::for_each_window_matching(Matching matching, Callback ca
 {
     for (auto& it : m_windows) {
         if (matching(*it.value)) {
-            if (callback(*it.value) == IterationDecision::Abort)
+            if (callback(*it.value) == IterationDecision::Break)
                 return;
         }
     }
@@ -114,7 +115,7 @@ template<typename Callback>
 void WSClientConnection::for_each_window(Callback callback)
 {
     for (auto& it : m_windows) {
-        if (callback(*it.value) == IterationDecision::Abort)
+        if (callback(*it.value) == IterationDecision::Break)
             return;
     }
 }

@@ -4,7 +4,7 @@ KERNEL_OBJS = \
        init.o \
        kmalloc.o \
        StdLib.o \
-       i386.o \
+       Arch/i386/CPU.o \
        Process.o \
        Thread.o \
        i8253.o \
@@ -18,6 +18,7 @@ KERNEL_OBJS = \
        VM/VMObject.o \
        VM/PageDirectory.o \
        VM/PhysicalPage.o \
+       VM/PhysicalRegion.o \
        VM/RangeAllocator.o \
        Console.o \
        IRQHandler.o \
@@ -32,11 +33,13 @@ KERNEL_OBJS = \
        Scheduler.o \
        DoubleBuffer.o \
        KSyms.o \
+       KParams.o \
        SharedMemory.o \
        FileSystem/DevPtsFS.o \
        Devices/BXVGADevice.o \
        PCI.o \
        Devices/PS2MouseDevice.o \
+       Devices/SerialDevice.o \
        Net/Socket.o \
        Net/LocalSocket.o \
        Net/IPv4Socket.o \
@@ -65,11 +68,13 @@ VFS_OBJS = \
     Devices/ZeroDevice.o \
     Devices/RandomDevice.o \
     Devices/DebugLogDevice.o \
+    Devices/DiskPartition.o \
+    Devices/MBRPartitionTable.o \
     FileSystem/FileSystem.o \
     FileSystem/DiskBackedFileSystem.o \
     FileSystem/Ext2FileSystem.o \
     FileSystem/VirtualFileSystem.o \
-    FileSystem/FileDescriptor.o \
+    FileSystem/FileDescription.o \
     FileSystem/SyntheticFileSystem.o
 
 AK_OBJS = \

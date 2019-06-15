@@ -28,14 +28,7 @@
 
 class Custody;
 class Device;
-class FileDescriptor;
-
-inline constexpr dword encoded_device(unsigned major, unsigned minor)
-{
-    return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
-}
-
-class VFS;
+class FileDescription;
 
 class VFS {
     AK_MAKE_ETERNAL
@@ -66,17 +59,18 @@ public:
     bool mount_root(Retained<FS>&&);
     bool mount(Retained<FS>&&, StringView path);
 
-    KResultOr<Retained<FileDescriptor>> open(RetainPtr<Device>&&, int options);
-    KResultOr<Retained<FileDescriptor>> open(StringView path, int options, mode_t mode, Custody& base);
-    KResultOr<Retained<FileDescriptor>> create(StringView path, int options, mode_t mode, Custody& base);
+    KResultOr<Retained<FileDescription>> open(RetainPtr<Device>&&, int options);
+    KResultOr<Retained<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
+    KResultOr<Retained<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody);
     KResult mkdir(StringView path, mode_t mode, Custody& base);
     KResult link(StringView old_path, StringView new_path, Custody& base);
     KResult unlink(StringView path, Custody& base);
     KResult symlink(StringView target, StringView linkpath, Custody& base);
     KResult rmdir(StringView path, Custody& base);
     KResult chmod(StringView path, mode_t, Custody& base);
-    KResult fchmod(Inode&, mode_t);
+    KResult chmod(Inode&, mode_t);
     KResult chown(StringView path, uid_t, gid_t, Custody& base);
+    KResult chown(Inode&, uid_t, gid_t);
     KResult access(StringView path, int mode, Custody& base);
     KResult stat(StringView path, int options, Custody& base, struct stat&);
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);
@@ -100,7 +94,7 @@ public:
     KResultOr<Retained<Custody>> resolve_path(StringView path, Custody& base, RetainPtr<Custody>* parent = nullptr, int options = 0);
 
 private:
-    friend class FileDescriptor;
+    friend class FileDescription;
 
     RetainPtr<Inode> get_inode(InodeIdentifier);
 

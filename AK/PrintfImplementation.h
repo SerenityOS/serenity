@@ -1,17 +1,15 @@
-typedef unsigned char byte;
-typedef unsigned short word;
-typedef unsigned int dword;
-typedef long long unsigned int qword;
+#pragma once
 
-[[gnu::always_inline]] inline size_t strlen(const char* str)
-{
-    size_t len = 0;
-    while (*(str++))
-        ++len;
-    return len;
-}
+#include <AK/Types.h>
+#include <stdarg.h>
 
-static constexpr const char* h = "0123456789abcdef";
+static constexpr const char* printf_hex_digits = "0123456789abcdef";
+
+#ifdef __serenity__
+extern "C" size_t strlen(const char*);
+#else
+#include <string.h>
+#endif
 
 template<typename PutChFunc, typename T>
 [[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, byte fields)
@@ -20,7 +18,7 @@ template<typename PutChFunc, typename T>
     byte shr_count = fields * 4;
     while (shr_count) {
         shr_count -= 4;
-        putch(bufptr, h[(number >> shr_count) & 0x0F]);
+        putch(bufptr, printf_hex_digits[(number >> shr_count) & 0x0F]);
         ++ret;
     }
     return ret;
@@ -180,7 +178,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, char*& ap)
+[[gnu::always_inline]] inline int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, va_list ap)
 {
     const char* p;
 

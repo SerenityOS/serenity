@@ -1,9 +1,9 @@
-#include "i386.h"
-#include "Process.h"
-#include "Syscall.h"
-#include "Console.h"
-#include "Scheduler.h"
+#include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Console.h>
+#include <Kernel/Process.h>
 #include <Kernel/ProcessTracer.h>
+#include <Kernel/Scheduler.h>
+#include <Kernel/Syscall.h>
 
 extern "C" void syscall_trap_entry(RegisterDump&);
 extern "C" void syscall_trap_handler();
@@ -34,8 +34,7 @@ asm(
     "    popw %es\n"
     "    popw %ds\n"
     "    popa\n"
-    "    iret\n"
-);
+    "    iret\n");
 
 namespace Syscall {
 
@@ -242,6 +241,8 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->process().sys$release_shared_buffer((int)arg1);
     case Syscall::SC_chown:
         return current->process().sys$chown((const char*)arg1, (uid_t)arg2, (gid_t)arg3);
+    case Syscall::SC_fchown:
+        return current->process().sys$fchown((int)arg1, (uid_t)arg2, (gid_t)arg3);
     case Syscall::SC_restore_signal_mask:
         return current->process().sys$restore_signal_mask((dword)arg1);
     case Syscall::SC_seal_shared_buffer:
@@ -257,7 +258,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_setsockopt:
         return current->process().sys$setsockopt((const SC_setsockopt_params*)arg1);
     case Syscall::SC_create_thread:
-        return current->process().sys$create_thread((int(*)(void*))arg1, (void*)arg2);
+        return current->process().sys$create_thread((int (*)(void*))arg1, (void*)arg2);
     case Syscall::SC_rename:
         return current->process().sys$rename((const char*)arg1, (const char*)arg2);
     case Syscall::SC_shm_open:
@@ -301,4 +302,3 @@ void syscall_trap_entry(RegisterDump& regs)
         tracer->did_syscall(function, arg1, arg2, arg3, regs.eax);
     current->process().big_lock().unlock();
 }
-

@@ -18,9 +18,11 @@ int main(int argc, char** argv)
     if (fd < 0) {
         perror("socket");
         return 1;
-    } 
+    }
 
-    struct timeval timeout { 3, 0 };
+    struct timeval timeout {
+        3, 0
+    };
     int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
     if (rc < 0) {
         perror("setsockopt");
@@ -38,7 +40,7 @@ int main(int argc, char** argv)
     dst_addr.sin_family = AF_INET;
     dst_addr.sin_port = htons(80);
     rc = inet_pton(AF_INET, addr_str, &dst_addr.sin_addr);
-    if (rc < 0) {
+    if (rc <= 0) {
         perror("inet_pton");
         return 1;
     }

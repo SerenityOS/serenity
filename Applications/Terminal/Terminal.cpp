@@ -1,19 +1,19 @@
 #include "Terminal.h"
 #include "XtermColors.h"
-#include <string.h>
-#include <errno.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <stdio.h>
 #include <AK/AKString.h>
-#include <AK/StringBuilder.h>
-#include <SharedGraphics/Font.h>
-#include <LibGUI/GPainter.h>
 #include <AK/StdLibExtras.h>
-#include <LibGUI/GApplication.h>
-#include <LibGUI/GWindow.h>
+#include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
+#include <LibGUI/GApplication.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GWindow.h>
+#include <SharedGraphics/Font.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 #include <sys/ioctl.h>
+#include <unistd.h>
 
 //#define TERMINAL_DEBUG
 byte Terminal::Attribute::default_foreground_color = 7;
@@ -30,8 +30,8 @@ Terminal::Terminal(int ptm_fd, RetainPtr<CConfigFile> config)
 
     dbgprintf("Terminal: Load config file from %s\n", m_config->file_name().characters());
     m_cursor_blink_timer.set_interval(m_config->read_num_entry("Text",
-                                                               "CursorBlinkInterval",
-                                                               500));
+        "CursorBlinkInterval",
+        500));
     m_cursor_blink_timer.on_timeout = [this] {
         m_cursor_blink_state = !m_cursor_blink_state;
         update_cursor();
@@ -43,7 +43,7 @@ Terminal::Terminal(int ptm_fd, RetainPtr<CConfigFile> config)
     else
         set_font(Font::load_from_file(font_entry));
 
-    m_notifier.on_ready_to_read = [this]{
+    m_notifier.on_ready_to_read = [this] {
         byte buffer[BUFSIZ];
         ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
         if (nread < 0) {
@@ -65,37 +65,48 @@ Terminal::Terminal(int ptm_fd, RetainPtr<CConfigFile> config)
     m_line_height = font().glyph_height() + m_line_spacing;
 
     set_size(m_config->read_num_entry("Window", "Width", 80),
-             m_config->read_num_entry("Window", "Height", 25));
+        m_config->read_num_entry("Window", "Height", 25));
 }
 
-Terminal::Line::Line(word columns)
-    : length(columns)
+Terminal::Line::Line(word length)
 {
-    characters = new byte[length];
-    attributes = new Attribute[length];
-    memset(characters, ' ', length);
+    set_length(length);
 }
 
 Terminal::Line::~Line()
 {
-    delete [] characters;
-    delete [] attributes;
+    delete[] characters;
+    delete[] attributes;
+}
+
+void Terminal::Line::set_length(word new_length)
+{
+    if (m_length == new_length)
+        return;
+    auto* new_characters = new byte[new_length];
+    auto* new_attributes = new Attribute[new_length];
+    memset(new_characters, ' ', new_length);
+    delete[] characters;
+    delete[] attributes;
+    characters = new_characters;
+    attributes = new_attributes;
+    m_length = new_length;
 }
 
 void Terminal::Line::clear(Attribute attribute)
 {
     if (dirty) {
-        memset(characters, ' ', length);
-        for (word i = 0 ; i < length; ++i)
+        memset(characters, ' ', m_length);
+        for (word i = 0; i < m_length; ++i)
             attributes[i] = attribute;
         return;
     }
-    for (unsigned i = 0 ; i < length; ++i) {
+    for (unsigned i = 0; i < m_length; ++i) {
         if (characters[i] != ' ')
             dirty = true;
         characters[i] = ' ';
     }
-    for (unsigned i = 0 ; i < length; ++i) {
+    for (unsigned i = 0; i < m_length; ++i) {
         if (attributes[i] != attribute)
             dirty = true;
         attributes[i] = attribute;
@@ -104,10 +115,6 @@ void Terminal::Line::clear(Attribute attribute)
 
 Terminal::~Terminal()
 {
-    for (int i = 0; i < m_rows; ++i)
-        delete m_lines[i];
-    delete [] m_lines;
-    free(m_horizontal_tabs);
 }
 
 void Terminal::clear()
@@ -135,6 +142,35 @@ inline bool is_valid_final_character(byte ch)
 static inline Color lookup_color(unsigned color)
 {
     return Color::from_rgb(xterm_colors[color]);
+}
+
+void Terminal::escape$h_l(bool should_set, bool question_param, const ParamVector& params)
+{
+    int mode = 2;
+    if (params.size() > 0) {
+        mode = params[0];
+    }
+    if (!question_param) {
+        switch (mode) {
+            // FIXME: implement *something* for this
+        default:
+            unimplemented_escape();
+            break;
+        }
+    } else {
+        switch (mode) {
+        case 25:
+            // Hide cursor command, but doesn't need to be run (for now, because
+            // we don't do inverse control codes anyways)
+            if (should_set)
+                dbgprintf("Terminal: Hide Cursor escapecode recieved. Not needed: ignored.\n");
+            else
+                dbgprintf("Terminal: Show Cursor escapecode recieved. Not needed: ignored.\n");
+            break;
+        default:
+            break;
+        }
+    }
 }
 
 void Terminal::escape$m(const ParamVector& params)
@@ -243,7 +279,7 @@ void Terminal::escape$t(const ParamVector& params)
 {
     if (params.size() < 1)
         return;
-    dbgprintf("FIXME: escape$t: Ps: %u\n", params[0]);
+    dbgprintf("FIXME: escape$t: Ps: %u (param count: %d)\n", params[0], params.size());
 }
 
 void Terminal::escape$r(const ParamVector& params)
@@ -254,7 +290,13 @@ void Terminal::escape$r(const ParamVector& params)
         top = params[0];
     if (params.size() >= 2)
         bottom = params[1];
-    dbgprintf("FIXME: escape$r: Set scrolling region: %u-%u\n", top, bottom);
+    if ((bottom - top) < 2 || bottom > m_rows || top < 0) {
+        dbgprintf("Error: escape$r: scrolling region invalid: %u-%u\n", top, bottom);
+        return;
+    }
+    m_scroll_region_top = top - 1;
+    m_scroll_region_bottom = bottom - 1;
+    set_cursor(0, 0);
 }
 
 void Terminal::escape$H(const ParamVector& params)
@@ -330,6 +372,15 @@ void Terminal::escape$G(const ParamVector& params)
     set_cursor(m_cursor_row, new_column);
 }
 
+void Terminal::escape$b(const ParamVector& params)
+{
+    if (params.size() < 1)
+        return;
+
+    for (unsigned i = 0; i < params[0]; ++i)
+        put_character_at(m_cursor_row, m_cursor_column++, m_last_char);
+}
+
 void Terminal::escape$d(const ParamVector& params)
 {
     int new_row = 1;
@@ -373,7 +424,10 @@ void Terminal::escape$K(const ParamVector& params)
         }
         break;
     case 2:
-        unimplemented_escape();
+        // Clear the complete line
+        for (int i = 0; i < m_columns; ++i) {
+            put_character_at(m_cursor_row, i, ' ');
+        }
         break;
     default:
         unimplemented_escape();
@@ -389,9 +443,8 @@ void Terminal::escape$J(const ParamVector& params)
     switch (mode) {
     case 0:
         // Clear from cursor to end of screen.
-        for (int i = m_cursor_column; i < m_columns; ++i) {
+        for (int i = m_cursor_column; i < m_columns; ++i)
             put_character_at(m_cursor_row, i, ' ');
-        }
         for (int row = m_cursor_row + 1; row < m_rows; ++row) {
             for (int column = 0; column < m_columns; ++column) {
                 put_character_at(row, column, ' ');
@@ -399,8 +452,14 @@ void Terminal::escape$J(const ParamVector& params)
         }
         break;
     case 1:
-        // FIXME: Clear from cursor to beginning of screen.
-        unimplemented_escape();
+        /// Clear from cursor to beginning of screen
+        for (int i = m_cursor_column - 1; i >= 0; --i)
+            put_character_at(m_cursor_row, i, ' ');
+        for (int row = m_cursor_row - 1; row >= 0; --row) {
+            for (int column = 0; column < m_columns; ++column) {
+                put_character_at(row, column, ' ');
+            }
+        }
         break;
     case 2:
         clear();
@@ -415,6 +474,42 @@ void Terminal::escape$J(const ParamVector& params)
     }
 }
 
+void Terminal::escape$S(const ParamVector& params)
+{
+    int count = 1;
+    if (params.size() >= 1)
+        count = params[0];
+
+    for (word i = 0; i < count; i++)
+        scroll_up();
+}
+
+void Terminal::escape$T(const ParamVector& params)
+{
+    int count = 1;
+    if (params.size() >= 1)
+        count = params[0];
+
+    for (word i = 0; i < count; i++)
+        scroll_down();
+}
+
+void Terminal::escape$L(const ParamVector& params)
+{
+    int count = 1;
+    if (params.size() >= 1)
+        count = params[0];
+    invalidate_cursor();
+    for (; count > 0; --count) {
+        m_lines.insert(m_cursor_row + m_scroll_region_top, make<Line>(m_columns));
+        if (m_scroll_region_bottom + 1 < m_lines.size())
+            m_lines.remove(m_scroll_region_bottom + 1);
+        else
+            m_lines.remove(m_lines.size() - 1);
+    }
+    m_need_full_flush = true;
+}
+
 void Terminal::escape$M(const ParamVector& params)
 {
     int count = 1;
@@ -426,12 +521,38 @@ void Terminal::escape$M(const ParamVector& params)
         return;
     }
 
-    int max_count = m_rows - m_cursor_row;
+    int max_count = m_rows - (m_scroll_region_top + m_cursor_row);
     count = min(count, max_count);
 
-    dbgprintf("Delete %d line(s) starting from %d\n", count, m_cursor_row);
-    // FIXME: Implement.
-    ASSERT_NOT_REACHED();
+    for (int c = count; c > 0; --c) {
+        m_lines.remove(m_cursor_row + m_scroll_region_top);
+        if (m_scroll_region_bottom < m_lines.size())
+            m_lines.insert(m_scroll_region_bottom, make<Line>(m_columns));
+        else
+            m_lines.append(make<Line>(m_columns));
+    }
+}
+
+void Terminal::escape$P(const ParamVector& params)
+{
+    int num = 1;
+    if (params.size() >= 1)
+        num = params[0];
+
+    if (num == 0)
+        num = 1;
+
+    auto& line = this->line(m_cursor_row);
+
+    // Move n characters of line to the left
+    for (int i = m_cursor_column; i < line.m_length - num; i++)
+        line.characters[i] = line.characters[i + num];
+
+    // Fill remainder of line with blanks
+    for (int i = line.m_length - num; i < line.m_length; i++)
+        line.characters[i] = ' ';
+
+    line.dirty = true;
 }
 
 void Terminal::execute_xterm_command()
@@ -457,41 +578,121 @@ void Terminal::execute_xterm_command()
 
 void Terminal::execute_escape_sequence(byte final)
 {
+    bool question_param = false;
     m_final = final;
-    auto paramparts = String::copy(m_parameters).split(';');
     ParamVector params;
+
+    if (m_parameters.size() > 0 && m_parameters[0] == '?') {
+        question_param = true;
+        m_parameters.remove(0);
+    }
+    auto paramparts = String::copy(m_parameters).split(';');
     for (auto& parampart : paramparts) {
         bool ok;
         unsigned value = parampart.to_uint(ok);
         if (!ok) {
+            // FIXME: Should we do something else?
             m_parameters.clear_with_capacity();
             m_intermediates.clear_with_capacity();
-            // FIXME: Should we do something else?
             return;
         }
         params.append(value);
     }
+
+#if defined(TERMINAL_DEBUG)
+    dbgprintf("Terminal::execute_escape_sequence: Handled final '%c'\n", final);
+    dbgprintf("Params: ");
+    for (auto& p : params) {
+        dbgprintf("%d ", p);
+    }
+    dbgprintf("\b\n");
+#endif
+
     switch (final) {
-    case 'A': escape$A(params); break;
-    case 'B': escape$B(params); break;
-    case 'C': escape$C(params); break;
-    case 'D': escape$D(params); break;
-    case 'H': escape$H(params); break;
-    case 'J': escape$J(params); break;
-    case 'K': escape$K(params); break;
-    case 'M': escape$M(params); break;
-    case 'G': escape$G(params); break;
-    case 'X': escape$X(params); break;
-    case 'd': escape$d(params); break;
-    case 'm': escape$m(params); break;
-    case 's': escape$s(params); break;
-    case 'u': escape$u(params); break;
-    case 't': escape$t(params); break;
-    case 'r': escape$r(params); break;
+    case 'A':
+        escape$A(params);
+        break;
+    case 'B':
+        escape$B(params);
+        break;
+    case 'C':
+        escape$C(params);
+        break;
+    case 'D':
+        escape$D(params);
+        break;
+    case 'H':
+        escape$H(params);
+        break;
+    case 'J':
+        escape$J(params);
+        break;
+    case 'K':
+        escape$K(params);
+        break;
+    case 'M':
+        escape$M(params);
+        break;
+    case 'P':
+        escape$P(params);
+        break;
+    case 'S':
+        escape$S(params);
+        break;
+    case 'T':
+        escape$T(params);
+        break;
+    case 'L':
+        escape$L(params);
+        break;
+    case 'G':
+        escape$G(params);
+        break;
+    case 'X':
+        escape$X(params);
+        break;
+    case 'b':
+        escape$b(params);
+        break;
+    case 'd':
+        escape$d(params);
+        break;
+    case 'm':
+        escape$m(params);
+        break;
+    case 's':
+        escape$s(params);
+        break;
+    case 'u':
+        escape$u(params);
+        break;
+    case 't':
+        escape$t(params);
+        break;
+    case 'r':
+        escape$r(params);
+        break;
+    case 'l':
+        escape$h_l(true, question_param, params);
+        break;
+    case 'h':
+        escape$h_l(false, question_param, params);
+        break;
     default:
         dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
         break;
     }
+
+#if defined(TERMINAL_DEBUG)
+    dbgprintf("\n");
+    for (auto& line : m_lines) {
+        dbgprintf("Terminal: Line: ");
+        for (int i = 0; i < line->length; i++) {
+            dbgprintf("%c", line->characters[i]);
+        }
+        dbgprintf("\n");
+    }
+#endif
 
     m_parameters.clear_with_capacity();
     m_intermediates.clear_with_capacity();
@@ -500,7 +701,7 @@ void Terminal::execute_escape_sequence(byte final)
 void Terminal::newline()
 {
     word new_row = m_cursor_row;
-    if (m_cursor_row == (rows() - 1)) {
+    if (m_cursor_row == m_scroll_region_bottom) {
         scroll_up();
     } else {
         ++new_row;
@@ -512,11 +713,17 @@ void Terminal::scroll_up()
 {
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
-    delete m_lines[0];
-    for (word row = 1; row < rows(); ++row)
-        m_lines[row - 1] = m_lines[row];
-    m_lines[m_rows - 1] = new Line(m_columns);
-    ++m_rows_to_scroll_backing_store;
+    m_lines.remove(m_scroll_region_top);
+    m_lines.insert(m_scroll_region_bottom, make<Line>(m_columns));
+    m_need_full_flush = true;
+}
+
+void Terminal::scroll_down()
+{
+    // NOTE: We have to invalidate the cursor first.
+    invalidate_cursor();
+    m_lines.remove(m_scroll_region_bottom);
+    m_lines.insert(m_scroll_region_top, make<Line>(m_columns));
     m_need_full_flush = true;
 }
 
@@ -531,7 +738,7 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
     invalidate_cursor();
     m_cursor_row = row;
     m_cursor_column = column;
-    if (column != columns() - 1)
+    if (column != columns() - 1u)
         m_stomp = false;
     invalidate_cursor();
 }
@@ -541,11 +748,11 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
     ASSERT(row < rows());
     ASSERT(column < columns());
     auto& line = this->line(row);
-    if ((line.characters[column] == ch) && (line.attributes[column] == m_current_attribute))
-        return;
     line.characters[column] = ch;
     line.attributes[column] = m_current_attribute;
     line.dirty = true;
+
+    m_last_char = ch;
 }
 
 void Terminal::on_char(byte ch)
@@ -628,7 +835,16 @@ void Terminal::on_char(byte ch)
         }
         return;
     case '\a':
-        sysbeep();
+        if (m_should_beep)
+            sysbeep();
+        else {
+            m_visual_beep_timer.restart(200);
+            m_visual_beep_timer.set_single_shot(true);
+            m_visual_beep_timer.on_timeout = [this] {
+                force_repaint();
+            };
+            force_repaint();
+        }
         return;
     case '\t': {
         for (unsigned i = m_cursor_column; i < columns(); ++i) {
@@ -700,31 +916,36 @@ void Terminal::set_size(word columns, word rows)
     if (columns == m_columns && rows == m_rows)
         return;
 
-    if (m_lines) {
-        for (size_t i = 0; i < m_rows; ++i)
-            delete m_lines[i];
-        delete m_lines;
+#if defined(TERMINAL_DEBUG)
+    dbgprintf("Terminal: RESIZE to: %d rows\n", rows);
+#endif
+
+    if (rows > m_rows) {
+        while (m_lines.size() < rows)
+            m_lines.append(make<Line>(columns));
+    } else {
+        m_lines.resize(rows);
     }
+
+    for (int i = 0; i < rows; ++i)
+        m_lines[i]->set_length(columns);
 
     m_columns = columns;
     m_rows = rows;
+
+    m_scroll_region_top = 0;
+    m_scroll_region_bottom = rows - 1;
 
     m_cursor_row = 0;
     m_cursor_column = 0;
     m_saved_cursor_row = 0;
     m_saved_cursor_column = 0;
 
-    if (m_horizontal_tabs)
-        free(m_horizontal_tabs);
-    m_horizontal_tabs = static_cast<byte*>(malloc(columns));
+    m_horizontal_tabs.resize(columns);
     for (unsigned i = 0; i < columns; ++i)
         m_horizontal_tabs[i] = (i % 8) == 0;
     // Rightmost column is always last tab on line.
     m_horizontal_tabs[columns - 1] = 1;
-
-    m_lines = new Line*[rows];
-    for (size_t i = 0; i < rows; ++i)
-        m_lines[i] = new Line(columns);
 
     m_pixel_width = (frame_thickness() * 2) + (m_inset * 2) + (m_columns * font().glyph_width('x'));
     m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (m_rows * (font().glyph_height() + m_line_spacing)) - m_line_spacing;
@@ -732,7 +953,6 @@ void Terminal::set_size(word columns, word rows)
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     set_preferred_size({ m_pixel_width, m_pixel_height });
 
-    m_rows_to_scroll_backing_store = 0;
     m_needs_background_fill = true;
     force_repaint();
 
@@ -760,11 +980,11 @@ Rect Terminal::row_rect(word row)
 
 bool Terminal::Line::has_only_one_background_color() const
 {
-    if (!length)
+    if (!m_length)
         return true;
     // FIXME: Cache this result?
     auto color = attributes[0].background_color;
-    for (size_t i = 1; i < length; ++i) {
+    for (size_t i = 1; i < m_length; ++i) {
         if (attributes[i].background_color != color)
             return false;
     }
@@ -816,6 +1036,11 @@ void Terminal::keydown_event(GKeyEvent& event)
     case KeyCode::Key_End:
         write(m_ptm_fd, "\033[F", 3);
         break;
+    case KeyCode::Key_RightShift:
+        // Prevent RightShift from being sent to whatever's running in the
+        // terminal. Prevents `~@` (null) character from being sent after every
+        // character entered with right shift.
+        break;
     default:
         write(m_ptm_fd, &ch, 1);
         break;
@@ -823,45 +1048,28 @@ void Terminal::keydown_event(GKeyEvent& event)
 }
 
 void Terminal::paint_event(GPaintEvent& event)
-{   
+{
     GFrame::paint_event(event);
 
     GPainter painter(*this);
 
-    if (m_needs_background_fill) {
-        m_needs_background_fill = false;
+    if (m_visual_beep_timer.is_active())
+        painter.fill_rect(frame_inner_rect(), Color::Red);
+    else
         painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(255 * m_opacity));
-    }
-
-    if (m_rows_to_scroll_backing_store && m_rows_to_scroll_backing_store < m_rows) {
-        int first_scanline = m_inset;
-        int second_scanline = m_inset + (m_rows_to_scroll_backing_store * m_line_height);
-        int num_rows_to_memcpy = m_rows - m_rows_to_scroll_backing_store;
-        int scanlines_to_copy = (num_rows_to_memcpy * m_line_height) - m_line_spacing;
-        memcpy(
-            painter.target()->scanline(first_scanline),
-            painter.target()->scanline(second_scanline),
-            scanlines_to_copy * painter.target()->pitch()
-        );
-        line(max(0, m_cursor_row - m_rows_to_scroll_backing_store)).dirty = true;
-    }
-    m_rows_to_scroll_backing_store = 0;
-
     invalidate_cursor();
 
     for (word row = 0; row < m_rows; ++row) {
         auto& line = this->line(row);
-        if (!line.dirty)
-            continue;
-        line.dirty = false;
         bool has_only_one_background_color = line.has_only_one_background_color();
-        if (has_only_one_background_color) {
+        if (m_visual_beep_timer.is_active())
+            painter.fill_rect(row_rect(row), Color::Red);
+        else if (has_only_one_background_color)
             painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(255 * m_opacity));
-        }
         for (word column = 0; column < m_columns; ++column) {
+            char ch = line.characters[column];
             bool should_reverse_fill_for_cursor = m_cursor_blink_state && m_in_active_window && row == m_cursor_row && column == m_cursor_column;
             auto& attribute = line.attributes[column];
-            char ch = line.characters[column];
             auto character_rect = glyph_rect(row, column);
             if (!has_only_one_background_color || should_reverse_fill_for_cursor) {
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
@@ -877,9 +1085,6 @@ void Terminal::paint_event(GPaintEvent& event)
         auto cell_rect = glyph_rect(m_cursor_row, m_cursor_column).inflated(0, m_line_spacing);
         painter.draw_rect(cell_rect, lookup_color(line(m_cursor_row).attributes[m_cursor_column].foreground_color));
     }
-
-    if (m_belling)
-        painter.draw_rect(frame_inner_rect(), Color::Red);
 }
 
 void Terminal::set_window_title(const String& title)

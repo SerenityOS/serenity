@@ -1,6 +1,6 @@
 #include "MasterPTY.h"
-#include "SlavePTY.h"
 #include "PTYMultiplexer.h"
+#include "SlavePTY.h"
 #include <Kernel/Process.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
@@ -31,14 +31,14 @@ String MasterPTY::pts_name() const
     return m_pts_name;
 }
 
-ssize_t MasterPTY::read(FileDescriptor&, byte* buffer, ssize_t size)
+ssize_t MasterPTY::read(FileDescription&, byte* buffer, ssize_t size)
 {
     if (!m_slave && m_buffer.is_empty())
         return 0;
     return m_buffer.read(buffer, size);
 }
 
-ssize_t MasterPTY::write(FileDescriptor&, const byte* buffer, ssize_t size)
+ssize_t MasterPTY::write(FileDescription&, const byte* buffer, ssize_t size)
 {
     if (!m_slave)
         return -EIO;
@@ -46,14 +46,14 @@ ssize_t MasterPTY::write(FileDescriptor&, const byte* buffer, ssize_t size)
     return size;
 }
 
-bool MasterPTY::can_read(FileDescriptor&) const
+bool MasterPTY::can_read(FileDescription&) const
 {
     if (!m_slave)
         return true;
     return !m_buffer.is_empty();
 }
 
-bool MasterPTY::can_write(FileDescriptor&) const
+bool MasterPTY::can_write(FileDescription&) const
 {
     return true;
 }
@@ -64,7 +64,7 @@ void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
     dbgprintf("MasterPTY(%u): slave closed, my retains: %u, slave retains: %u\n", m_index, retain_count(), m_slave->retain_count());
 #endif
     // +1 retain for my MasterPTY::m_slave
-    // +1 retain for FileDescriptor::m_device
+    // +1 retain for FileDescription::m_device
     if (m_slave->retain_count() == 2)
         m_slave = nullptr;
 }
@@ -88,7 +88,7 @@ void MasterPTY::close()
 {
     if (retain_count() == 2) {
         InterruptDisabler disabler;
-        // After the closing FileDescriptor dies, slave is the only thing keeping me alive.
+        // After the closing FileDescription dies, slave is the only thing keeping me alive.
         // From this point, let's consider ourselves closed.
         m_closed = true;
 
@@ -96,9 +96,9 @@ void MasterPTY::close()
     }
 }
 
-int MasterPTY::ioctl(FileDescriptor& descriptor, unsigned request, unsigned arg)
+int MasterPTY::ioctl(FileDescription& description, unsigned request, unsigned arg)
 {
     if (request == TIOCSWINSZ)
-        return m_slave->ioctl(descriptor, request, arg);
+        return m_slave->ioctl(description, request, arg);
     return -EINVAL;
 }

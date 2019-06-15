@@ -6,4 +6,3 @@ int main(int, char**)
     fflush(stdout);
     return 0;
 }
-

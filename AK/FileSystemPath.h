@@ -7,12 +7,12 @@ namespace AK {
 class FileSystemPath {
 public:
     FileSystemPath() {}
-    explicit FileSystemPath(const String&);
+    explicit FileSystemPath(const StringView&);
 
     bool is_valid() const { return m_is_valid; }
-    String string() const { return m_string; }
+    const String& string() const { return m_string; }
 
-    String basename() const { return m_basename; }
+    const String& basename() const { return m_basename; }
 
     const Vector<String>& parts() const { return m_parts; }
 

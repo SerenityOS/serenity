@@ -3,8 +3,7 @@
 #include <AK/Assertions.h>
 #include <LibC/errno_numbers.h>
 
-enum KSuccessTag
-{
+enum KSuccessTag {
     KSuccess
 };
 
@@ -54,7 +53,11 @@ public:
 
     KResultOr(KResultOr&& other)
     {
-        new (&m_storage) T(move(other.value()));
+        m_is_error = other.m_is_error;
+        if (m_is_error)
+            m_error = other.m_error;
+        else
+            new (&m_storage) T(move(other.value()));
         other.m_is_error = true;
         other.m_error = KSuccess;
     }

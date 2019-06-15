@@ -39,7 +39,7 @@ void DisjointRectSet::shatter()
             }
             output.append(r1);
         }
-next_pass:
+    next_pass:
         swap(output, m_rects);
-    } while(pass_had_intersections);
+    } while (pass_had_intersections);
 }

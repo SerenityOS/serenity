@@ -12,8 +12,7 @@
 class Font;
 class GAbstractView;
 
-enum class GSortOrder
-{
+enum class GSortOrder {
     None,
     Ascending,
     Descending
@@ -21,8 +20,7 @@ enum class GSortOrder
 
 class GModelNotification {
 public:
-    enum Type
-    {
+    enum Type {
         Invalid = 0,
         ModelUpdated,
     };
@@ -49,8 +47,7 @@ public:
         const Font* font { nullptr };
     };
 
-    enum class Role
-    {
+    enum class Role {
         Display,
         Sort,
         Custom,

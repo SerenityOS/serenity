@@ -1,8 +1,8 @@
 #include "LineEditor.h"
 #include "GlobalState.h"
+#include <ctype.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <ctype.h>
 
 LineEditor::LineEditor()
 {

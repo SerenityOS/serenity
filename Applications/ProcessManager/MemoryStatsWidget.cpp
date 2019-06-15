@@ -1,8 +1,8 @@
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
-#include <LibGUI/GPainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
+#include <LibGUI/GPainter.h>
 #include <SharedGraphics/StylePainter.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -21,7 +21,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
     layout()->set_margins({ 0, 8, 0, 0 });
     layout()->set_spacing(3);
 
-    auto build_widgets_for_label = [this] (const String& description) -> GLabel* {
+    auto build_widgets_for_label = [this](const String& description) -> GLabel* {
         auto* container = new GWidget(this);
         container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
         container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);

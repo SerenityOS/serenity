@@ -44,7 +44,8 @@ Rect GlyphMapWidget::get_outer_rect(byte glyph) const
         row * (font().glyph_height() + m_vertical_spacing) + 1,
         font().max_glyph_width() + m_horizontal_spacing,
         font().glyph_height() + m_horizontal_spacing
-    }.translated(frame_thickness(), frame_thickness());
+    }
+        .translated(frame_thickness(), frame_thickness());
 }
 
 void GlyphMapWidget::update_glyph(byte glyph)
@@ -71,8 +72,7 @@ void GlyphMapWidget::paint_event(GPaintEvent& event)
                 outer_rect.x() + m_horizontal_spacing / 2,
                 outer_rect.y() + m_vertical_spacing / 2,
                 font().max_glyph_width(),
-                font().glyph_height()
-            );
+                font().glyph_height());
             if (glyph == m_selected_glyph) {
                 painter.fill_rect(outer_rect, Color::from_rgb(0x84351a));
                 painter.draw_glyph(inner_rect.location(), glyph, Color::White);

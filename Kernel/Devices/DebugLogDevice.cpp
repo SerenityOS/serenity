@@ -19,10 +19,9 @@ DebugLogDevice::~DebugLogDevice()
 {
 }
 
-ssize_t DebugLogDevice::write(FileDescriptor&, const byte* data, ssize_t data_size)
+ssize_t DebugLogDevice::write(FileDescription&, const byte* data, ssize_t data_size)
 {
     for (int i = 0; i < data_size; ++i)
         IO::out8(0xe9, data[i]);
     return data_size;
 }
-

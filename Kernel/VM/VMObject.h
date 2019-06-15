@@ -30,7 +30,7 @@ public:
     const Inode* inode() const { return m_inode.ptr(); }
     size_t inode_offset() const { return m_inode_offset; }
 
-    String name() const { return m_name; }
+    const String& name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
 
     size_t page_count() const { return m_size / PAGE_SIZE; }

@@ -1,5 +1,5 @@
-#include <Kernel/TTY/TTY.h>
 #include "Process.h"
+#include <Kernel/TTY/TTY.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 #include <LibC/sys/ioctl_numbers.h>
@@ -24,12 +24,12 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-ssize_t TTY::read(FileDescriptor&, byte* buffer, ssize_t size)
+ssize_t TTY::read(FileDescription&, byte* buffer, ssize_t size)
 {
     return m_buffer.read(buffer, size);
 }
 
-ssize_t TTY::write(FileDescriptor&, const byte* buffer, ssize_t size)
+ssize_t TTY::write(FileDescription&, const byte* buffer, ssize_t size)
 {
 #ifdef TTY_DEBUG
     dbgprintf("TTY::write {%u} ", size);
@@ -42,12 +42,12 @@ ssize_t TTY::write(FileDescriptor&, const byte* buffer, ssize_t size)
     return size;
 }
 
-bool TTY::can_read(FileDescriptor&) const
+bool TTY::can_read(FileDescription&) const
 {
     return !m_buffer.is_empty();
 }
 
-bool TTY::can_write(FileDescriptor&) const
+bool TTY::can_write(FileDescription&) const
 {
     return true;
 }
@@ -65,6 +65,11 @@ void TTY::emit(byte ch)
             generate_signal(SIGQUIT);
             return;
         }
+        if (ch == m_termios.c_cc[VSUSP]) {
+            dbgprintf("%s: VSUSP pressed!\n", tty_name().characters());
+            generate_signal(SIGTSTP);
+            return;
+        }
     }
     m_buffer.write(&ch, 1);
 }
@@ -75,7 +80,7 @@ void TTY::generate_signal(int signal)
         return;
     dbgprintf("%s: Send signal %d to everyone in pgrp %d\n", tty_name().characters(), signal, pgid());
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
-    Process::for_each_in_pgrp(pgid(), [&] (auto& process) {
+    Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbgprintf("%s: Send signal %d to %d\n", tty_name().characters(), signal, process.pid());
         process.send_signal(signal, nullptr);
         return true;
@@ -89,24 +94,21 @@ void TTY::set_termios(const termios& t)
         tty_name().characters(),
         should_echo_input(),
         should_generate_signals(),
-        in_canonical_mode()
-    );
+        in_canonical_mode());
     dbgprintf("%s set_termios: ECHOE=%u, ECHOK=%u, ECHONL=%u\n",
-              tty_name().characters(),
-              (m_termios.c_lflag & ECHOE) != 0,
-              (m_termios.c_lflag & ECHOK) != 0,
-              (m_termios.c_lflag & ECHONL) != 0
-              );
+        tty_name().characters(),
+        (m_termios.c_lflag & ECHOE) != 0,
+        (m_termios.c_lflag & ECHOK) != 0,
+        (m_termios.c_lflag & ECHONL) != 0);
     dbgprintf("%s set_termios: ISTRIP=%u, ICRNL=%u, INLCR=%u, IGNCR=%u\n",
-              tty_name().characters(),
-              (m_termios.c_iflag & ISTRIP) != 0,
-              (m_termios.c_iflag & ICRNL) != 0,
-              (m_termios.c_iflag & INLCR) != 0,
-              (m_termios.c_iflag & IGNCR) != 0
-              );
+        tty_name().characters(),
+        (m_termios.c_iflag & ISTRIP) != 0,
+        (m_termios.c_iflag & ICRNL) != 0,
+        (m_termios.c_iflag & INLCR) != 0,
+        (m_termios.c_iflag & IGNCR) != 0);
 }
 
-int TTY::ioctl(FileDescriptor&, unsigned request, unsigned arg)
+int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
     auto& process = current->process();
     pid_t pgid;

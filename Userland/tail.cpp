@@ -1,16 +1,18 @@
-#include <stdio.h>
-#include <string.h>
-#include <stdlib.h>
-#include <errno.h>
-#include <unistd.h>
 #include <AK/Assertions.h>
-#include <LibCore/CFile.h>
 #include <LibCore/CArgsParser.h>
+#include <LibCore/CFile.h>
+#include <errno.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
+
+#define DEFAULT_LINE_COUNT 10
 
 int tail_from_pos(CFile& file, off_t startline, bool want_follow)
 {
     if (!file.seek(startline + 1))
-        return -1;
+        return 1;
 
     while (true) {
         const auto& b = file.read(4096);
@@ -26,9 +28,8 @@ int tail_from_pos(CFile& file, off_t startline, bool want_follow)
             }
         }
 
-        if (write(STDOUT_FILENO, b.pointer(), b.size()) < 0) {
-            return -1;
-        }
+        if (write(STDOUT_FILENO, b.pointer(), b.size()) < 0)
+            return 1;
     }
 
     return 0;
@@ -41,7 +42,7 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
     off_t pos = 0;
     if (!file.seek(0, CIODevice::SeekMode::FromEndPosition, &pos)) {
         fprintf(stderr, "Failed to find end of file: %s\n", file.error_string());
-        return -1;
+        return 1;
     }
 
     off_t end = pos;
@@ -49,7 +50,7 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
 
     // FIXME: Reading char-by-char is only OK if CIODevice's read buffer
     // is smart enough to not read char-by-char. Fix it there, or fix it here :)
-    for(; pos >= 0; pos--) {
+    for (; pos >= 0; pos--) {
         file.seek(pos);
         const auto& ch = file.read(1);
         if (ch.is_empty()) {
@@ -70,10 +71,10 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
 static void exit_because_we_wanted_lines()
 {
     fprintf(stderr, "Expected a line count after -n");
-    exit(-1);
+    exit(1);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, char* argv[])
 {
     CArgsParser args_parser("tail");
 
@@ -86,7 +87,7 @@ int main(int argc, char *argv[])
     Vector<String> values = args.get_single_values();
     if (values.size() != 1) {
         args_parser.print_usage();
-        return -1;
+        return 1;
     }
 
     int line_count = 0;
@@ -94,14 +95,16 @@ int main(int argc, char *argv[])
         line_count = strtol(args.get("n").characters(), NULL, 10);
         if (errno == EINVAL) {
             args_parser.print_usage();
-            return -1;
+            return 1;
         }
+    } else {
+        line_count = DEFAULT_LINE_COUNT;
     }
 
     CFile f(values[0]);
     if (!f.open(CIODevice::ReadOnly)) {
         fprintf(stderr, "Error opening file %s: %s\n", f.filename().characters(), strerror(errno));
-        exit(-1);
+        exit(1);
     }
 
     bool flag_follow = args.is_present("f");

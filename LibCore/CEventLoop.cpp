@@ -191,7 +191,7 @@ void CEventLoop::wait_for_event(WaitMode mode)
         if (!s_timers->is_empty() && queued_events_is_empty) {
             gettimeofday(&now, nullptr);
             get_next_timer_expiration(timeout);
-            AK::timeval_sub(&timeout, &now, &timeout);
+            timeval_sub(timeout, now, timeout);
         } else {
             should_wait_forever = true;
         }
@@ -199,8 +199,8 @@ void CEventLoop::wait_for_event(WaitMode mode)
         should_wait_forever = false;
     }
 
-    int rc = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
-    if (rc < 0) {
+    int marked_fd_count = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
+    if (marked_fd_count < 0) {
         ASSERT_NOT_REACHED();
     }
 
@@ -223,6 +223,9 @@ void CEventLoop::wait_for_event(WaitMode mode)
             ASSERT_NOT_REACHED();
         }
     }
+
+    if (!marked_fd_count)
+        return;
 
     for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {

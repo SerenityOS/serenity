@@ -1,5 +1,5 @@
-#include <LibGUI/GFontDatabase.h>
 #include <LibCore/CDirIterator.h>
+#include <LibGUI/GFontDatabase.h>
 #include <SharedGraphics/Font.h>
 #include <dirent.h>
 #include <stdio.h>
@@ -38,14 +38,14 @@ GFontDatabase::~GFontDatabase()
 {
 }
 
-void GFontDatabase::for_each_font(Function<void(const String&)> callback)
+void GFontDatabase::for_each_font(Function<void(const StringView&)> callback)
 {
     for (auto& it : m_name_to_metadata) {
         callback(it.key);
     }
 }
 
-void GFontDatabase::for_each_fixed_width_font(Function<void(const String&)> callback)
+void GFontDatabase::for_each_fixed_width_font(Function<void(const StringView&)> callback)
 {
     for (auto& it : m_name_to_metadata) {
         if (it.value.is_fixed_width)
@@ -53,7 +53,7 @@ void GFontDatabase::for_each_fixed_width_font(Function<void(const String&)> call
     }
 }
 
-RetainPtr<Font> GFontDatabase::get_by_name(const String& name)
+RetainPtr<Font> GFontDatabase::get_by_name(const StringView& name)
 {
     auto it = m_name_to_metadata.find(name);
     if (it == m_name_to_metadata.end())

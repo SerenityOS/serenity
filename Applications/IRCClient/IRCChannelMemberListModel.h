@@ -7,8 +7,7 @@ class IRCChannel;
 
 class IRCChannelMemberListModel final : public GModel {
 public:
-    enum Column
-    {
+    enum Column {
         Name
     };
     static Retained<IRCChannelMemberListModel> create(IRCChannel& channel) { return adopt(*new IRCChannelMemberListModel(channel)); }

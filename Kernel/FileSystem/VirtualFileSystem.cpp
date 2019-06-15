@@ -1,12 +1,12 @@
-#include "VirtualFileSystem.h"
-#include <Kernel/FileSystem/FileDescriptor.h>
-#include "FileSystem.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <LibC/errno_numbers.h>
-#include <Kernel/Process.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/FileSystem.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Process.h>
+#include <LibC/errno_numbers.h>
 
 //#define VFS_DEBUG
 
@@ -104,7 +104,7 @@ bool VFS::is_vfs_root(InodeIdentifier inode) const
 
 void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::DirectoryEntry&)> callback)
 {
-    dir_inode.traverse_as_directory([&] (const FS::DirectoryEntry& entry) {
+    dir_inode.traverse_as_directory([&](const FS::DirectoryEntry& entry) {
         InodeIdentifier resolved_inode;
         if (auto mount = find_mount_for_host(entry.inode))
             resolved_inode = mount->guest();
@@ -146,15 +146,21 @@ KResult VFS::stat(StringView path, int options, Custody& base, struct stat& stat
     auto custody_or_error = resolve_path(path, base, nullptr, options);
     if (custody_or_error.is_error())
         return custody_or_error.error();
-    return FileDescriptor::create(custody_or_error.value().ptr())->fstat(statbuf);
+    return custody_or_error.value()->inode().metadata().stat(statbuf);
 }
 
-KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
+KResultOr<Retained<FileDescription>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
 {
-    auto custody_or_error = resolve_path(path, base, nullptr, options);
+    RetainPtr<Custody> parent_custody;
+    auto custody_or_error = resolve_path(path, base, &parent_custody, options);
     if (options & O_CREAT) {
-        if (custody_or_error.is_error())
-            return create(path, options, mode, base);
+        if (!parent_custody)
+            return KResult(-ENOENT);
+        if (custody_or_error.is_error()) {
+            if (custody_or_error.error() != -ENOENT)
+                return custody_or_error.error();
+            return create(path, options, mode, *parent_custody);
+        }
         if (options & O_EXCL)
             return KResult(-EEXIST);
     }
@@ -194,7 +200,7 @@ KResultOr<Retained<FileDescriptor>> VFS::open(StringView path, int options, mode
     }
     if (should_truncate_file)
         inode.truncate(0);
-    return FileDescriptor::create(custody);
+    return FileDescription::create(custody);
 }
 
 KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
@@ -224,7 +230,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
     return KSuccess;
 }
 
-KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mode_t mode, Custody& base)
+KResultOr<Retained<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody)
 {
     (void)options;
 
@@ -233,18 +239,9 @@ KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mo
         mode |= 0100000;
     }
 
-    RetainPtr<Custody> parent_custody;
-    auto existing_custody_or_error = resolve_path(path, base, &parent_custody);
-    if (!existing_custody_or_error.is_error())
-        return KResult(-EEXIST);
-    if (!parent_custody)
-        return KResult(-ENOENT);
-    auto& parent_inode = parent_custody->inode();
-    if (existing_custody_or_error.error() != -ENOENT)
-        return existing_custody_or_error.error();
+    auto& parent_inode = parent_custody.inode();
     if (!parent_inode.metadata().may_write(current->process()))
         return KResult(-EACCES);
-
     FileSystemPath p(path);
     dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_inode.fsid(), parent_inode.index());
     int error;
@@ -252,8 +249,8 @@ KResultOr<Retained<FileDescriptor>> VFS::create(StringView path, int options, mo
     if (!new_file)
         return KResult(error);
 
-    auto new_custody = Custody::create(parent_custody, p.basename(), *new_file);
-    return FileDescriptor::create(*new_custody);
+    auto new_custody = Custody::create(&parent_custody, p.basename(), *new_file);
+    return FileDescription::create(*new_custody);
 }
 
 KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
@@ -317,7 +314,7 @@ KResultOr<Retained<Custody>> VFS::open_directory(StringView path, Custody& base)
     return custody;
 }
 
-KResult VFS::fchmod(Inode& inode, mode_t mode)
+KResult VFS::chmod(Inode& inode, mode_t mode)
 {
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
@@ -337,7 +334,7 @@ KResult VFS::chmod(StringView path, mode_t mode, Custody& base)
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
     auto& inode = custody.inode();
-    return fchmod(inode, mode);
+    return chmod(inode, mode);
 }
 
 KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
@@ -402,22 +399,18 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     return KSuccess;
 }
 
-KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
+KResult VFS::chown(Inode& inode, uid_t a_uid, gid_t a_gid)
 {
-    auto custody_or_error = resolve_path(path, base);
-    if (custody_or_error.is_error())
-        return custody_or_error.error();
-    auto& custody = *custody_or_error.value();
-    auto& inode = custody.inode();
-
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
 
-    if (current->process().euid() != inode.metadata().uid && !current->process().is_superuser())
+    auto metadata = inode.metadata();
+
+    if (current->process().euid() != metadata.uid && !current->process().is_superuser())
         return KResult(-EPERM);
 
-    uid_t new_uid = inode.metadata().uid;
-    gid_t new_gid = inode.metadata().gid;
+    uid_t new_uid = metadata.uid;
+    gid_t new_gid = metadata.gid;
 
     if (a_uid != (uid_t)-1) {
         if (current->process().euid() != a_uid && !current->process().is_superuser())
@@ -432,6 +425,16 @@ KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
 
     dbgprintf("VFS::chown(): inode %u:%u <- uid:%d, gid:%d\n", inode.fsid(), inode.index(), new_uid, new_gid);
     return inode.chown(new_uid, new_gid);
+}
+
+KResult VFS::chown(StringView path, uid_t a_uid, gid_t a_gid, Custody& base)
+{
+    auto custody_or_error = resolve_path(path, base);
+    if (custody_or_error.is_error())
+        return custody_or_error.error();
+    auto& custody = *custody_or_error.value();
+    auto& inode = custody.inode();
+    return chown(inode, a_uid, a_gid);
 }
 
 KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
@@ -580,7 +583,7 @@ String VFS::Mount::absolute_path() const
 InodeIdentifier VFS::Mount::host() const
 {
     if (!m_host_custody)
-        return { };
+        return {};
     return m_host_custody->inode().identifier();
 }
 
@@ -647,9 +650,6 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
 
     for (int i = 0; i < parts.size(); ++i) {
         bool inode_was_root_at_head_of_loop = crumb_id.is_root_inode();
-        auto& part = parts[i];
-        if (part.is_empty())
-            break;
         auto crumb_inode = get_inode(crumb_id);
         if (!crumb_inode)
             return KResult(-EIO);
@@ -658,6 +658,11 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
             return KResult(-ENOTDIR);
         if (!metadata.may_execute(current->process()))
             return KResult(-EACCES);
+
+        auto& part = parts[i];
+        if (part.is_empty())
+          break;
+
         auto current_parent = custody_chain.last();
         crumb_id = crumb_inode->lookup(part);
         if (!crumb_id.is_valid())
@@ -694,13 +699,25 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
                 return KResult(-ENOENT);
 
             // FIXME: We should limit the recursion here and return -ELOOP if it goes to deep.
-            return resolve_path(
+            auto symlink_target = resolve_path(
                 StringView(symlink_contents.pointer(),
-                symlink_contents.size()),
+                    symlink_contents.size()),
                 *current_parent,
                 parent_custody,
-                options
-            );
+                options);
+
+            if (symlink_target.is_error())
+                return symlink_target;
+
+            bool have_more_parts = i + 1 < parts.size();
+            if (i + 1 == parts.size() - 1 && parts[i + 1].is_empty())
+                have_more_parts = false;
+
+            if (!have_more_parts)
+                return symlink_target;
+
+            StringView remaining_path = path.substring_view_starting_from_substring(parts[i + 1]);
+            return resolve_path(remaining_path, *symlink_target.value(), parent_custody, options);
         }
     }
     return custody_chain.last();

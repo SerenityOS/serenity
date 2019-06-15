@@ -1,6 +1,6 @@
-#include <sys/times.h>
-#include <errno.h>
 #include <Kernel/Syscall.h>
+#include <errno.h>
+#include <sys/times.h>
 
 clock_t times(struct tms* buf)
 {

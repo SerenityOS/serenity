@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/i386.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/kstdio.h>
 
 #ifdef DEBUG

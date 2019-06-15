@@ -9,7 +9,7 @@ struct WSAPI_Rect;
 
 class Rect {
 public:
-    Rect() { }
+    Rect() {}
     Rect(int x, int y, int width, int height)
         : m_location(x, y)
         , m_size(width, height)

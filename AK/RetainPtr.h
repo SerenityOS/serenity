@@ -103,20 +103,41 @@ public:
         return *this;
     }
 
-    RetainPtr& operator=(T* ptr)
+    template<typename U>
+    RetainPtr& operator=(const Retained<U>& other)
     {
-        if (m_ptr != ptr)
+        if (m_ptr != other.ptr())
             release_if_not_null(m_ptr);
-        m_ptr = ptr;
+        m_ptr = const_cast<T*>(other.ptr());
+        ASSERT(m_ptr);
         retain_if_not_null(m_ptr);
         return *this;
     }
 
-    RetainPtr& operator=(T& object)
+    template<typename U>
+    RetainPtr& operator=(const RetainPtr<U>& other)
+    {
+        if (m_ptr != other.ptr())
+            release_if_not_null(m_ptr);
+        m_ptr = const_cast<T*>(other.ptr());
+        retain_if_not_null(m_ptr);
+        return *this;
+    }
+
+    RetainPtr& operator=(const T* ptr)
+    {
+        if (m_ptr != ptr)
+            release_if_not_null(m_ptr);
+        m_ptr = const_cast<T*>(ptr);
+        retain_if_not_null(m_ptr);
+        return *this;
+    }
+
+    RetainPtr& operator=(const T& object)
     {
         if (m_ptr != &object)
             release_if_not_null(m_ptr);
-        m_ptr = &object;
+        m_ptr = const_cast<T*>(&object);
         retain_if_not_null(m_ptr);
         return *this;
     }

@@ -11,4 +11,3 @@ WSMenuBar::WSMenuBar(WSClientConnection& client, int menubar_id)
 WSMenuBar::~WSMenuBar()
 {
 }
-

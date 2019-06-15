@@ -13,8 +13,7 @@ class GPainter;
 class GWidget;
 class GWMEvent;
 
-enum class GStandardCursor
-{
+enum class GStandardCursor {
     None = 0,
     Arrow,
     IBeam,
@@ -48,7 +47,7 @@ public:
     int window_id() const { return m_window_id; }
 
     String title() const;
-    void set_title(const String&);
+    void set_title(const StringView&);
 
     bool show_titlebar() const { return m_show_titlebar; };
     void set_show_titlebar(bool show) { m_show_titlebar = show; };
@@ -82,6 +81,7 @@ public:
     void show();
     void hide();
     void close();
+    void move_to_front();
 
     void start_wm_resize();
 
@@ -121,7 +121,7 @@ public:
     void set_override_cursor(GStandardCursor);
 
     String icon_path() const { return m_icon_path; }
-    void set_icon_path(const String&);
+    void set_icon_path(const StringView&);
 
     Vector<GWidget*> focusable_widgets() const;
 

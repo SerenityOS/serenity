@@ -1,16 +1,16 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <fcntl.h>
 #include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
     int fd = argc > 1 ? open(argv[1], O_RDONLY) : 0;
     if (fd == -1) {
-        printf("failed to open %s: %s\n", argv[1], strerror(errno));
+        fprintf(stderr, "Failed to open %s: %s\n", argv[1], strerror(errno));
         return 1;
     }
     for (;;) {
@@ -19,10 +19,15 @@ int main(int argc, char** argv)
         if (nread == 0)
             break;
         if (nread < 0) {
-            printf("read() error: %s\n", strerror(errno));
+            perror("read");
             return 2;
         }
-        write(1, buf, nread);
+        ssize_t nwritten = write(1, buf, nread);
+        if (nwritten < 0) {
+            perror("write");
+            return 3;
+        }
+        ASSERT(nwritten == nread);
     }
     return 0;
 }

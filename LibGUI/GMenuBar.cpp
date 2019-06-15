@@ -1,5 +1,5 @@
-#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GEventLoop.h>
+#include <LibGUI/GMenuBar.h>
 
 GMenuBar::GMenuBar()
 {

@@ -329,6 +329,18 @@ void WSClientConnection::handle_request(const WSAPIAddMenuSeparatorRequest& requ
     post_message(response);
 }
 
+void WSClientConnection::handle_request(const WSAPIMoveWindowToFrontRequest& request)
+{
+    int window_id = request.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        post_error("WSAPIMoveWindowToFrontRequest: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    WSWindowManager::the().move_to_front_and_make_active(window);
+}
+
 void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& request)
 {
     int window_id = request.window_id();
@@ -343,7 +355,7 @@ void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& requ
 
 void WSClientConnection::handle_request(const WSAPISetWallpaperRequest& request)
 {
-    WSCompositor::the().set_wallpaper(request.wallpaper(), [&] (bool success) {
+    WSCompositor::the().set_wallpaper(request.wallpaper(), [&](bool success) {
         WSAPI_ServerMessage response;
         response.type = WSAPI_ServerMessage::Type::DidSetWallpaper;
         response.value = success;
@@ -552,7 +564,7 @@ void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& reques
     }
     auto& window = *(*it).value;
     for (int i = 0; i < request.rects().size(); ++i)
-        window.request_update(request.rects()[i].intersected({ { }, window.size() }));
+        window.request_update(request.rects()[i].intersected({ {}, window.size() }));
 }
 
 void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification& request)
@@ -786,6 +798,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPIDismissMenuRequest&>(request));
     case WSEvent::APISetWindowHasAlphaChannelRequest:
         return handle_request(static_cast<const WSAPISetWindowHasAlphaChannelRequest&>(request));
+    case WSEvent::APIMoveWindowToFrontRequest:
+        return handle_request(static_cast<const WSAPIMoveWindowToFrontRequest&>(request));
     default:
         break;
     }

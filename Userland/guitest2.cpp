@@ -1,24 +1,24 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <string.h>
-#include <stdlib.h>
-#include <fcntl.h>
-#include <assert.h>
-#include <time.h>
 #include <Kernel/Syscall.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GButton.h>
-#include <LibGUI/GTextBox.h>
-#include <LibGUI/GBoxLayout.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GProgressBar.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GButton.h>
+#include <LibGUI/GCheckBox.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GProgressBar.h>
+#include <LibGUI/GTextBox.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
+#include <SharedGraphics/GraphicsBitmap.h>
+#include <assert.h>
+#include <errno.h>
+#include <fcntl.h>
 #include <signal.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
 
 static GWindow* make_launcher_window();
 static GWindow* make_progress_window();
@@ -69,7 +69,7 @@ GWindow* make_launcher_window()
     terminal_button->set_relative_rect({ 5, 20, 90, 20 });
     terminal_button->set_text("Terminal");
 
-    terminal_button->on_click = [label] (GButton&) {
+    terminal_button->on_click = [label](GButton&) {
         pid_t child_pid = fork();
         if (!child_pid) {
             execve("/bin/Terminal", nullptr, nullptr);
@@ -85,7 +85,7 @@ GWindow* make_launcher_window()
     guitest_button->set_relative_rect({ 5, 50, 90, 20 });
     guitest_button->set_text("guitest");
 
-    guitest_button->on_click = [label] (GButton&) {
+    guitest_button->on_click = [label](GButton&) {
         pid_t child_pid = fork();
         if (!child_pid) {
             execve("/bin/guitest", nullptr, nullptr);
@@ -120,7 +120,7 @@ GWindow* make_launcher_window()
     auto* close_button = new GButton(widget);
     close_button->set_relative_rect({ 5, 200, 90, 20 });
     close_button->set_text("Close");
-    close_button->on_click = [window] (GButton&) {
+    close_button->on_click = [window](GButton&) {
         window->close();
     };
 
@@ -169,7 +169,7 @@ static GWindow* make_frames_window()
     widget->layout()->set_margins({ 8, 8, 8, 8 });
     widget->layout()->set_spacing(8);
 
-    auto add_label = [widget] (const String& text, FrameShape shape, FrameShadow shadow) {
+    auto add_label = [widget](const String& text, FrameShape shape, FrameShadow shadow) {
         auto* label = new GLabel(text, widget);
         label->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
         label->set_frame_thickness(1);

@@ -1,14 +1,14 @@
-#include <dirent.h>
-#include <unistd.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include <string.h>
-#include <errno.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
+#include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Syscall.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 extern "C" {
 
@@ -38,7 +38,8 @@ int closedir(DIR* dirp)
     return rc;
 }
 
-struct [[gnu::packed]] sys_dirent {
+struct [[gnu::packed]] sys_dirent
+{
     ino_t ino;
     byte file_type;
     size_t namelen;
@@ -85,5 +86,9 @@ dirent* readdir(DIR* dirp)
     return &dirp->cur_ent;
 }
 
+int dirfd(DIR* dirp)
+{
+    ASSERT(dirp);
+    return dirp->fd;
 }
-
+}

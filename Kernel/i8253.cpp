@@ -1,8 +1,8 @@
 #include "i8253.h"
-#include "i386.h"
 #include "IO.h"
 #include "PIC.h"
 #include "Scheduler.h"
+#include <Kernel/Arch/i386/CPU.h>
 
 #define IRQ_TIMER 0
 
@@ -34,8 +34,7 @@ asm(
     "    popw %es\n"
     "    popw %ds\n"
     "    popa\n"
-    "    iret\n"
-);
+    "    iret\n");
 
 static dword s_ticks_this_second;
 static dword s_seconds_since_boot;

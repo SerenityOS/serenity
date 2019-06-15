@@ -1,7 +1,7 @@
-#include <Kernel/VM/VMObject.h>
-#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/VMObject.h>
 
 Retained<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode)
 {
@@ -54,11 +54,10 @@ VMObject::VMObject(PhysicalAddress paddr, size_t size)
 {
     MM.register_vmo(*this);
     for (size_t i = 0; i < size; i += PAGE_SIZE) {
-        m_physical_pages.append(PhysicalPage::create(paddr.offset(i), false));
+        m_physical_pages.append(PhysicalPage::create(paddr.offset(i), false, false));
     }
     ASSERT(m_physical_pages.size() == page_count());
 }
-
 
 VMObject::VMObject(RetainPtr<Inode>&& inode)
     : m_inode(move(inode))
@@ -113,7 +112,7 @@ void VMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size
     }
 
     // FIXME: Consolidate with inode_contents_changed() so we only do a single walk.
-    for_each_region([] (Region& region) {
+    for_each_region([](Region& region) {
         ASSERT(region.page_directory());
         MM.remap_region(*region.page_directory(), region);
     });
@@ -165,7 +164,7 @@ void VMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, 
 #endif
 
     // FIXME: Consolidate with inode_size_changed() so we only do a single walk.
-    for_each_region([] (Region& region) {
+    for_each_region([](Region& region) {
         ASSERT(region.page_directory());
         MM.remap_region(*region.page_directory(), region);
     });

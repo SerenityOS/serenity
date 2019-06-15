@@ -1,9 +1,9 @@
 #include "KSyms.h"
 #include "Process.h"
 #include "Scheduler.h"
-#include <Kernel/FileSystem/FileDescriptor.h>
 #include <AK/ELF/ELFLoader.h>
 #include <AK/TemporaryChange.h>
+#include <Kernel/FileSystem/FileDescription.h>
 
 static KSym* s_ksyms;
 dword ksym_lowest_address;
@@ -94,12 +94,12 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     int recognized_symbol_count = 0;
     if (use_ksyms) {
-        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(VirtualAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
         }
     } else {
-        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(LinearAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
+        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(VirtualAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
             dword retaddr = stack_ptr[1];
             dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (dword*)*stack_ptr : 0);
         }
@@ -140,7 +140,8 @@ void dump_backtrace()
     }
     TemporaryChange change(in_dump_backtrace, true);
     dword ebp;
-    asm volatile("movl %%ebp, %%eax":"=a"(ebp));
+    asm volatile("movl %%ebp, %%eax"
+                 : "=a"(ebp));
     dump_backtrace_impl(ebp, ksyms_ready);
 }
 
@@ -156,8 +157,8 @@ void load_ksyms()
 {
     auto result = VFS::the().open("/kernel.map", 0, 0, VFS::the().root_custody());
     ASSERT(!result.is_error());
-    auto descriptor = result.value();
-    auto buffer = descriptor->read_entire_file();
+    auto description = result.value();
+    auto buffer = description->read_entire_file();
     ASSERT(buffer);
     load_ksyms_from_data(buffer);
 }

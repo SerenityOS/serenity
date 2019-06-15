@@ -24,7 +24,7 @@ void GDesktop::did_receive_screen_rect(Badge<GEventLoop>, const Rect& rect)
         on_rect_change(rect);
 }
 
-bool GDesktop::set_wallpaper(const String& path)
+bool GDesktop::set_wallpaper(const StringView& path)
 {
     WSAPI_ClientMessage message;
     message.type = WSAPI_ClientMessage::Type::SetWallpaper;

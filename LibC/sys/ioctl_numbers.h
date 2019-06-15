@@ -1,7 +1,6 @@
 #pragma once
 
-enum IOCtlNumber
-{
+enum IOCtlNumber {
     TIOCGPGRP,
     TIOCSPGRP,
     TCGETS,

@@ -54,7 +54,7 @@ void GLayout::add_widget(GWidget& widget)
 
 void GLayout::remove_widget(GWidget& widget)
 {
-    m_entries.remove_first_matching([&] (auto& entry) {
+    m_entries.remove_first_matching([&](auto& entry) {
         return entry.widget == &widget;
     });
     if (m_owner)

@@ -1,6 +1,5 @@
 #pragma once
 
-#include "i386.h"
 #include <AK/AKString.h>
 #include <AK/Badge.h>
 #include <AK/Bitmap.h>
@@ -11,18 +10,19 @@
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
-#include <Kernel/LinearAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
+#include <Kernel/VirtualAddress.h>
 
 #define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
 class SynthFSInode;
 
-enum class PageFaultResponse
-{
+enum class PageFaultResponse {
     ShouldCrash,
     Continue,
 };
@@ -33,6 +33,7 @@ class MemoryManager {
     AK_MAKE_ETERNAL
     friend class PageDirectory;
     friend class PhysicalPage;
+    friend class PhysicalRegion;
     friend class Region;
     friend class VMObject;
     friend ByteBuffer procfs$mm(InodeIdentifier);
@@ -51,31 +52,31 @@ public:
     void populate_page_directory(PageDirectory&);
 
     void enter_process_paging_scope(Process&);
-    void enter_kernel_paging_scope();
 
-    bool validate_user_read(const Process&, LinearAddress) const;
-    bool validate_user_write(const Process&, LinearAddress) const;
+    bool validate_user_read(const Process&, VirtualAddress) const;
+    bool validate_user_write(const Process&, VirtualAddress) const;
 
-    enum class ShouldZeroFill
-    {
+    enum class ShouldZeroFill {
         No,
         Yes
     };
 
-    RetainPtr<PhysicalPage> allocate_physical_page(ShouldZeroFill);
+    RetainPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill);
     RetainPtr<PhysicalPage> allocate_supervisor_physical_page();
+    void deallocate_user_physical_page(PhysicalPage&&);
+    void deallocate_supervisor_physical_page(PhysicalPage&&);
 
     void remap_region(PageDirectory&, Region&);
 
-    size_t ram_size() const { return m_ram_size; }
-
-    int user_physical_pages_in_existence() const { return s_user_physical_pages_in_existence; }
-    int super_physical_pages_in_existence() const { return s_super_physical_pages_in_existence; }
-
-    void map_for_kernel(LinearAddress, PhysicalAddress);
+    void map_for_kernel(VirtualAddress, PhysicalAddress);
 
     RetainPtr<Region> allocate_kernel_region(size_t, String&& name);
-    void map_region_at_address(PageDirectory&, Region&, LinearAddress, bool user_accessible);
+    void map_region_at_address(PageDirectory&, Region&, VirtualAddress, bool user_accessible);
+
+    unsigned user_physical_pages() const { return m_user_physical_pages; }
+    unsigned user_physical_pages_used() const { return m_user_physical_pages_used; }
+    unsigned super_physical_pages() const { return m_super_physical_pages; }
+    unsigned super_physical_pages_used() const { return m_super_physical_pages_used; }
 
 private:
     MemoryManager();
@@ -90,17 +91,17 @@ private:
 
     void initialize_paging();
     void flush_entire_tlb();
-    void flush_tlb(LinearAddress);
+    void flush_tlb(VirtualAddress);
 
     RetainPtr<PhysicalPage> allocate_page_table(PageDirectory&, unsigned index);
 
-    void map_protected(LinearAddress, size_t length);
+    void map_protected(VirtualAddress, size_t length);
 
-    void create_identity_mapping(PageDirectory&, LinearAddress, size_t length);
-    void remove_identity_mapping(PageDirectory&, LinearAddress, size_t);
+    void create_identity_mapping(PageDirectory&, VirtualAddress, size_t length);
+    void remove_identity_mapping(PageDirectory&, VirtualAddress, size_t);
 
-    static Region* region_from_laddr(Process&, LinearAddress);
-    static const Region* region_from_laddr(const Process&, LinearAddress);
+    static Region* region_from_vaddr(Process&, VirtualAddress);
+    static const Region* region_from_vaddr(const Process&, VirtualAddress);
 
     bool copy_on_write(Region&, unsigned page_index_in_region);
     bool page_in_from_inode(Region&, unsigned page_index_in_region);
@@ -127,8 +128,7 @@ private:
         dword raw() const { return *m_pde; }
         dword* ptr() { return m_pde; }
 
-        enum Flags
-        {
+        enum Flags {
             Present = 1 << 0,
             ReadWrite = 1 << 1,
             UserSupervisor = 1 << 2,
@@ -178,8 +178,7 @@ private:
         dword raw() const { return *m_pte; }
         dword* ptr() { return m_pte; }
 
-        enum Flags
-        {
+        enum Flags {
             Present = 1 << 0,
             ReadWrite = 1 << 1,
             UserSupervisor = 1 << 2,
@@ -213,33 +212,30 @@ private:
         dword* m_pte;
     };
 
-    static unsigned s_user_physical_pages_in_existence;
-    static unsigned s_super_physical_pages_in_existence;
-
-    PageTableEntry ensure_pte(PageDirectory&, LinearAddress);
+    PageTableEntry ensure_pte(PageDirectory&, VirtualAddress);
 
     RetainPtr<PageDirectory> m_kernel_page_directory;
-    dword* m_page_table_zero;
+    dword* m_page_table_zero { nullptr };
+    dword* m_page_table_one { nullptr };
 
-    LinearAddress m_quickmap_addr;
+    VirtualAddress m_quickmap_addr;
 
-    Vector<Retained<PhysicalPage>> m_free_physical_pages;
-    Vector<Retained<PhysicalPage>> m_free_supervisor_physical_pages;
+    unsigned m_user_physical_pages { 0 };
+    unsigned m_user_physical_pages_used { 0 };
+    unsigned m_super_physical_pages { 0 };
+    unsigned m_super_physical_pages_used { 0 };
+
+    Vector<Retained<PhysicalRegion>> m_user_physical_regions {};
+    Vector<Retained<PhysicalRegion>> m_super_physical_regions {};
 
     HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_user_regions;
     HashTable<Region*> m_kernel_regions;
 
-    size_t m_ram_size { 0 };
     bool m_quickmap_in_use { false };
 };
 
 struct ProcessPagingScope {
     ProcessPagingScope(Process&);
     ~ProcessPagingScope();
-};
-
-struct KernelPagingScope {
-    KernelPagingScope();
-    ~KernelPagingScope();
 };

@@ -1,8 +1,8 @@
 #include "TaskbarButton.h"
-#include <WindowServer/WSAPITypes.h>
 #include <LibGUI/GAction.h>
-#include <LibGUI/GMenu.h>
 #include <LibGUI/GEventLoop.h>
+#include <LibGUI/GMenu.h>
+#include <WindowServer/WSAPITypes.h>
 
 static void set_window_minimized_state(const WindowIdentifier& identifier, bool minimized)
 {
@@ -34,13 +34,13 @@ GMenu& TaskbarButton::ensure_menu()
 {
     if (!m_menu) {
         m_menu = make<GMenu>("");
-        m_menu->add_action(GAction::create("Minimize", [this] (auto&) {
+        m_menu->add_action(GAction::create("Minimize", [this](auto&) {
             set_window_minimized_state(m_identifier, true);
         }));
-        m_menu->add_action(GAction::create("Unminimize", [this] (auto&) {
+        m_menu->add_action(GAction::create("Unminimize", [this](auto&) {
             set_window_minimized_state(m_identifier, false);
         }));
-        m_menu->add_action(GAction::create("Close", [this] (auto&) {
+        m_menu->add_action(GAction::create("Close", [this](auto&) {
             dbgprintf("FIXME: Close!\n");
         }));
     }

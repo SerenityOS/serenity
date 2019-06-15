@@ -1,8 +1,10 @@
-#include <Kernel/FileSystem/FIFO.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
-#include <Kernel/Lock.h>
-#include <AK/StdLibExtras.h>
 #include <AK/HashTable.h>
+#include <AK/StdLibExtras.h>
+#include <Kernel/FileSystem/FIFO.h>
+#include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/Lock.h>
+#include <Kernel/Process.h>
+#include <Kernel/Thread.h>
 
 //#define FIFO_DEBUG
 
@@ -28,12 +30,12 @@ Retained<FIFO> FIFO::create(uid_t uid)
     return adopt(*new FIFO(uid));
 }
 
-Retained<FileDescriptor> FIFO::open_direction(FIFO::Direction direction)
+Retained<FileDescription> FIFO::open_direction(FIFO::Direction direction)
 {
-    auto descriptor = FileDescriptor::create(this);
+    auto description = FileDescription::create(this);
     attach(direction);
-    descriptor->set_fifo_direction({ }, direction);
-    return descriptor;
+    description->set_fifo_direction({}, direction);
+    return description;
 }
 
 FIFO::FIFO(uid_t uid)
@@ -81,22 +83,22 @@ void FIFO::detach(Direction direction)
     }
 }
 
-bool FIFO::can_read(FileDescriptor&) const
+bool FIFO::can_read(FileDescription&) const
 {
     return !m_buffer.is_empty() || !m_writers;
 }
 
-bool FIFO::can_write(FileDescriptor&) const
+bool FIFO::can_write(FileDescription&) const
 {
-    return m_buffer.bytes_in_write_buffer() < 4096;
+    return m_buffer.bytes_in_write_buffer() < 4096 || !m_readers;
 }
 
-ssize_t FIFO::read(FileDescriptor&, byte* buffer, ssize_t size)
+ssize_t FIFO::read(FileDescription&, byte* buffer, ssize_t size)
 {
     if (!m_writers && m_buffer.is_empty())
         return 0;
 #ifdef FIFO_DEBUG
-    dbgprintf("fifo: read(%u)\n",size);
+    dbgprintf("fifo: read(%u)\n", size);
 #endif
     ssize_t nread = m_buffer.read(buffer, size);
 #ifdef FIFO_DEBUG
@@ -105,17 +107,19 @@ ssize_t FIFO::read(FileDescriptor&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t FIFO::write(FileDescriptor&, const byte* buffer, ssize_t size)
+ssize_t FIFO::write(FileDescription&, const byte* buffer, ssize_t size)
 {
-    if (!m_readers)
-        return 0;
+    if (!m_readers) {
+        current->process().send_signal(SIGPIPE, &current->process());
+        return -EPIPE;
+    }
 #ifdef FIFO_DEBUG
     dbgprintf("fifo: write(%p, %u)\n", buffer, size);
 #endif
     return m_buffer.write(buffer, size);
 }
 
-String FIFO::absolute_path(FileDescriptor&) const
+String FIFO::absolute_path(const FileDescription&) const
 {
     return String::format("fifo:%u", this);
 }

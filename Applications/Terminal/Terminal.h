@@ -26,6 +26,9 @@ public:
     void apply_size_increments_to_window(GWindow&);
 
     void set_opacity(float);
+    float opacity() { return m_opacity; };
+    bool should_beep() { return m_should_beep; }
+    void set_should_beep(bool sb) { m_should_beep = sb; };
 
     RetainPtr<CConfigFile> config() const { return m_config; }
 
@@ -39,6 +42,7 @@ private:
     virtual const char* class_name() const override { return "Terminal"; }
 
     void scroll_up();
+    void scroll_down();
     void newline();
     void set_cursor(unsigned row, unsigned column);
     void put_character_at(unsigned row, unsigned column, byte ch);
@@ -57,14 +61,20 @@ private:
     void escape$J(const ParamVector&);
     void escape$K(const ParamVector&);
     void escape$M(const ParamVector&);
+    void escape$P(const ParamVector&);
     void escape$G(const ParamVector&);
     void escape$X(const ParamVector&);
+    void escape$b(const ParamVector&);
     void escape$d(const ParamVector&);
     void escape$m(const ParamVector&);
     void escape$s(const ParamVector&);
     void escape$u(const ParamVector&);
     void escape$t(const ParamVector&);
     void escape$r(const ParamVector&);
+    void escape$S(const ParamVector&);
+    void escape$T(const ParamVector&);
+    void escape$L(const ParamVector&);
+    void escape$h_l(bool, bool, const ParamVector&);
 
     void clear();
 
@@ -118,10 +128,11 @@ private:
         ~Line();
         void clear(Attribute);
         bool has_only_one_background_color() const;
+        void set_length(word);
         byte* characters { nullptr };
         Attribute* attributes { nullptr };
         bool dirty { false };
-        word length { 0 };
+        word m_length { 0 };
     };
     Line& line(size_t index)
     {
@@ -129,7 +140,10 @@ private:
         return *m_lines[index];
     }
 
-    Line** m_lines { nullptr };
+    Vector<OwnPtr<Line>> m_lines;
+
+    int m_scroll_region_top { 0 };
+    int m_scroll_region_bottom { 0 };
 
     word m_columns { 0 };
     word m_rows { 0 };
@@ -140,13 +154,14 @@ private:
     byte m_saved_cursor_column { 0 };
     bool m_stomp { false };
 
+    bool m_should_beep { false };
+
     Attribute m_current_attribute;
 
     void execute_escape_sequence(byte final);
     void execute_xterm_command();
 
-    enum EscapeState
-    {
+    enum EscapeState {
         Normal,
         ExpectBracket,
         ExpectParameter,
@@ -162,13 +177,12 @@ private:
     Vector<byte> m_intermediates;
     Vector<byte> m_xterm_param1;
     Vector<byte> m_xterm_param2;
+    Vector<bool> m_horizontal_tabs;
     byte m_final { 0 };
-    byte* m_horizontal_tabs { nullptr };
     bool m_belling { false };
 
     int m_pixel_width { 0 };
     int m_pixel_height { 0 };
-    int m_rows_to_scroll_backing_store { 0 };
 
     int m_inset { 2 };
     int m_line_spacing { 4 };
@@ -190,5 +204,8 @@ private:
     int m_glyph_width { 0 };
 
     CTimer m_cursor_blink_timer;
+    CTimer m_visual_beep_timer;
     RetainPtr<CConfigFile> m_config;
+
+    byte m_last_char { 0 };
 };

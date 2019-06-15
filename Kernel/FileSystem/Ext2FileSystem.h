@@ -25,16 +25,14 @@ public:
 
 private:
     // ^Inode
-    virtual ssize_t read_bytes(off_t, ssize_t, byte* buffer, FileDescriptor*) const override;
+    virtual ssize_t read_bytes(off_t, ssize_t, byte* buffer, FileDescription*) const override;
     virtual InodeMetadata metadata() const override;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const override;
-    virtual InodeIdentifier lookup(const String& name) override;
-    virtual String reverse_lookup(InodeIdentifier) override;
+    virtual InodeIdentifier lookup(StringView name) override;
     virtual void flush_metadata() override;
-    virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescriptor*) override;
-    virtual KResult add_child(InodeIdentifier child_id, const String& name, mode_t) override;
-    virtual KResult remove_child(const String& name) override;
-    virtual RetainPtr<Inode> parent() const override;
+    virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescription*) override;
+    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) override;
+    virtual KResult remove_child(const StringView& name) override;
     virtual int set_atime(time_t) override;
     virtual int set_ctime(time_t) override;
     virtual int set_mtime(time_t) override;
@@ -45,6 +43,7 @@ private:
     virtual KResult chown(uid_t, gid_t) override;
     virtual KResult truncate(off_t) override;
 
+    bool write_directory(const Vector<FS::DirectoryEntry>&);
     void populate_lookup_cache() const;
     bool resize(qword);
 
@@ -55,7 +54,6 @@ private:
     mutable Vector<unsigned> m_block_list;
     mutable HashMap<String, unsigned> m_lookup_cache;
     ext2_inode m_raw_inode;
-    mutable InodeIdentifier m_parent_id;
 };
 
 class Ext2FS final : public DiskBackedFS {
@@ -106,8 +104,6 @@ private:
     Vector<BlockIndex> block_list_for_inode(const ext2_inode&, bool include_block_list_blocks = false) const;
     bool write_block_list_for_inode(InodeIndex, ext2_inode&, const Vector<BlockIndex>&);
 
-    bool add_inode_to_directory(InodeIndex parent, InodeIndex child, const String& name, byte file_type, int& error);
-    bool write_directory_inode(InodeIndex, Vector<DirectoryEntry>&&);
     bool get_inode_allocation_state(InodeIndex) const;
     bool set_inode_allocation_state(InodeIndex, bool);
     bool set_block_allocation_state(BlockIndex, bool);

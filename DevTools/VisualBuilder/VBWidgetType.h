@@ -1,7 +1,6 @@
 #pragma once
 
-enum class VBWidgetType
-{
+enum class VBWidgetType {
     None = 0,
     GWidget,
     GButton,
@@ -10,6 +9,7 @@ enum class VBWidgetType
     GTextEditor,
     GProgressBar,
     GCheckBox,
+    GRadioButton,
     GScrollBar,
     GGroupBox,
     GSlider,

@@ -1,12 +1,12 @@
-#include "Ext2FileSystem.h"
-#include "ext2_fs.h"
-#include "UnixTypes.h"
-#include "RTC.h"
 #include <AK/Bitmap.h>
-#include <AK/StdLibExtras.h>
 #include <AK/BufferStream.h>
-#include <LibC/errno_numbers.h>
+#include <AK/StdLibExtras.h>
+#include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/Process.h>
+#include <Kernel/RTC.h>
+#include <Kernel/UnixTypes.h>
+#include <LibC/errno_numbers.h>
 
 //#define EXT2_DEBUG
 
@@ -162,10 +162,10 @@ ByteBuffer Ext2FS::read_block_containing_inode(unsigned inode, unsigned& block_i
     auto& super_block = this->super_block();
 
     if (inode != EXT2_ROOT_INO && inode < EXT2_FIRST_INO(&super_block))
-        return { };
+        return {};
 
     if (inode > super_block.s_inodes_count)
-        return { };
+        return {};
 
     auto& bgd = group_descriptor(group_index_from_inode(inode));
 
@@ -314,7 +314,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
     if (!blocks_remaining)
         return list;
 
-    auto process_block_array = [&] (unsigned array_block_index, auto&& callback) {
+    auto process_block_array = [&](unsigned array_block_index, auto&& callback) {
         if (include_block_list_blocks)
             callback(array_block_index);
         auto array_block = read_block(array_block_index);
@@ -331,15 +331,15 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
         }
     };
 
-    process_block_array(e2inode.i_block[EXT2_IND_BLOCK], [&] (unsigned entry) {
+    process_block_array(e2inode.i_block[EXT2_IND_BLOCK], [&](unsigned entry) {
         list.unchecked_append(entry);
     });
 
     if (!blocks_remaining)
         return list;
 
-    process_block_array(e2inode.i_block[EXT2_DIND_BLOCK], [&] (unsigned entry) {
-        process_block_array(entry, [&] (unsigned entry) {
+    process_block_array(e2inode.i_block[EXT2_DIND_BLOCK], [&](unsigned entry) {
+        process_block_array(entry, [&](unsigned entry) {
             list.unchecked_append(entry);
         });
     });
@@ -347,9 +347,9 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
     if (!blocks_remaining)
         return list;
 
-    process_block_array(e2inode.i_block[EXT2_TIND_BLOCK], [&] (unsigned entry) {
-        process_block_array(entry, [&] (unsigned entry) {
-            process_block_array(entry, [&] (unsigned entry) {
+    process_block_array(e2inode.i_block[EXT2_TIND_BLOCK], [&](unsigned entry) {
+        process_block_array(entry, [&](unsigned entry) {
+            process_block_array(entry, [&](unsigned entry) {
                 list.unchecked_append(entry);
             });
         });
@@ -468,7 +468,7 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     unsigned offset;
     auto block = read_block_containing_inode(inode.index(), block_index, offset);
     if (!block)
-        return { };
+        return {};
 
     auto it = m_inode_cache.find(inode.index());
     if (it != m_inode_cache.end())
@@ -479,7 +479,7 @@ RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescriptor*) const
+ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription*) const
 {
     Locker inode_locker(m_lock);
     ASSERT(offset >= 0);
@@ -585,7 +585,7 @@ bool Ext2FSInode::resize(qword new_size)
     return true;
 }
 
-ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, FileDescriptor*)
+ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const byte* data, FileDescription*)
 {
     ASSERT(offset >= 0);
     ASSERT(count >= 0);
@@ -704,85 +704,10 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     return true;
 }
 
-KResult Ext2FSInode::add_child(InodeIdentifier child_id, const String& name, mode_t mode)
+bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
 {
     LOCKER(m_lock);
-    ASSERT(is_directory());
-
-//#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Adding inode %u with name '%s' to directory %u\n", child_id.index(), name.characters(), index());
-//#endif
-
-    Vector<FS::DirectoryEntry> entries;
-    bool name_already_exists = false;
-    traverse_as_directory([&] (auto& entry) {
-        if (!strcmp(entry.name, name.characters())) {
-            name_already_exists = true;
-            return false;
-        }
-        entries.append(entry);
-        return true;
-    });
-    if (name_already_exists) {
-        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), index());
-        return KResult(-EEXIST);
-    }
-
-    auto child_inode = fs().get_inode(child_id);
-    if (child_inode)
-        child_inode->increment_link_count();
-
-    entries.append({ name.characters(), name.length(), child_id, to_ext2_file_type(mode) });
-    bool success = fs().write_directory_inode(index(), move(entries));
-    if (success)
-        m_lookup_cache.set(name, child_id.index());
-    return KSuccess;
-}
-
-KResult Ext2FSInode::remove_child(const String& name)
-{
-    LOCKER(m_lock);
-#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FSInode::remove_child(%s) in inode %u\n", name.characters(), index());
-#endif
-    ASSERT(is_directory());
-
-    unsigned child_inode_index;
-    auto it = m_lookup_cache.find(name);
-    if (it == m_lookup_cache.end())
-        return KResult(-ENOENT);
-    child_inode_index = (*it).value;
-
-    InodeIdentifier child_id { fsid(), child_inode_index };
-
-//#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Removing '%s' in directory %u\n", name.characters(), index());
-//#endif
-
-    Vector<FS::DirectoryEntry> entries;
-    traverse_as_directory([&] (auto& entry) {
-        if (strcmp(entry.name, name.characters()) != 0)
-            entries.append(entry);
-        return true;
-    });
-
-    bool success = fs().write_directory_inode(index(), move(entries));
-    if (!success) {
-        // FIXME: Plumb error from write_directory_inode().
-        return KResult(-EIO);
-    }
-
-    m_lookup_cache.remove(name);
-
-    auto child_inode = fs().get_inode(child_id);
-    child_inode->decrement_link_count();
-    return KSuccess;
-}
-
-bool Ext2FS::write_directory_inode(InodeIndex directory_inode_index, Vector<DirectoryEntry>&& entries)
-{
-    LOCKER(m_lock);
-    dbgprintf("Ext2FS: New directory inode %u contents to write:\n", directory_inode_index);
+    dbgprintf("Ext2FS: New directory inode %u contents to write:\n", index());
 
     int directory_size = 0;
     for (auto& entry : entries) {
@@ -790,8 +715,10 @@ bool Ext2FS::write_directory_inode(InodeIndex directory_inode_index, Vector<Dire
         directory_size += EXT2_DIR_REC_LEN(entry.name_length);
     }
 
-    int blocks_needed = ceil_div(directory_size, block_size());
-    int occupied_size = blocks_needed * block_size();
+    auto block_size = fs().block_size();
+
+    int blocks_needed = ceil_div(directory_size, block_size);
+    int occupied_size = blocks_needed * block_size;
 
     dbgprintf("Ext2FS: directory size: %u (occupied: %u)\n", directory_size, occupied_size);
 
@@ -824,9 +751,83 @@ bool Ext2FS::write_directory_inode(InodeIndex directory_inode_index, Vector<Dire
 
     stream.fill_to_end(0);
 
-    auto directory_inode = get_inode({ fsid(), directory_inode_index });
-    ssize_t nwritten = directory_inode->write_bytes(0, directory_data.size(), directory_data.pointer(), nullptr);
+    ssize_t nwritten = write_bytes(0, directory_data.size(), directory_data.pointer(), nullptr);
     return nwritten == directory_data.size();
+}
+
+KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t mode)
+{
+    LOCKER(m_lock);
+    ASSERT(is_directory());
+
+    //#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FS: Adding inode %u with name '%s' and mode %o to directory %u\n", child_id.index(), name.characters(), mode, index());
+    //#endif
+
+    Vector<FS::DirectoryEntry> entries;
+    bool name_already_exists = false;
+    traverse_as_directory([&](auto& entry) {
+        if (name == entry.name) {
+            name_already_exists = true;
+            return false;
+        }
+        entries.append(entry);
+        return true;
+    });
+    if (name_already_exists) {
+        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), index());
+        return KResult(-EEXIST);
+    }
+
+    auto child_inode = fs().get_inode(child_id);
+    if (child_inode)
+        child_inode->increment_link_count();
+
+    entries.append({ name.characters(), name.length(), child_id, to_ext2_file_type(mode) });
+    bool success = write_directory(entries);
+    if (success)
+        m_lookup_cache.set(name, child_id.index());
+    return KSuccess;
+}
+
+KResult Ext2FSInode::remove_child(const StringView& name)
+{
+    LOCKER(m_lock);
+#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FSInode::remove_child(%s) in inode %u\n", name.characters(), index());
+#endif
+    ASSERT(is_directory());
+
+    unsigned child_inode_index;
+    auto it = m_lookup_cache.find(name);
+    if (it == m_lookup_cache.end())
+        return KResult(-ENOENT);
+    child_inode_index = (*it).value;
+
+    InodeIdentifier child_id { fsid(), child_inode_index };
+
+    //#ifdef EXT2_DEBUG
+    dbgprintf("Ext2FS: Removing '%s' in directory %u\n", name.characters(), index());
+    //#endif
+
+    Vector<FS::DirectoryEntry> entries;
+    traverse_as_directory([&](auto& entry) {
+        if (name != entry.name)
+            entries.append(entry);
+        return true;
+    });
+
+    bool success = write_directory(entries);
+    if (!success) {
+        // FIXME: Plumb error from write_directory().
+        return KResult(-EIO);
+    }
+
+    m_lookup_cache.remove(name);
+
+    auto child_inode = fs().get_inode(child_id);
+    child_inode->decrement_link_count();
+    return KSuccess;
 }
 
 unsigned Ext2FS::inodes_per_block() const
@@ -842,7 +843,6 @@ unsigned Ext2FS::inodes_per_group() const
 unsigned Ext2FS::inode_size() const
 {
     return EXT2_INODE_SIZE(&super_block());
-
 }
 unsigned Ext2FS::blocks_per_group() const
 {
@@ -868,12 +868,12 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex group_index, int c
     LOCKER(m_lock);
     dbgprintf("Ext2FS: allocate_blocks(group: %u, count: %u)\n", group_index, count);
     if (count == 0)
-        return { };
+        return {};
 
     auto& bgd = group_descriptor(group_index);
     if (bgd.bg_free_blocks_count < count) {
         kprintf("Ext2FS: allocate_blocks can't allocate out of group %u, wanted %u but only %u available\n", group_index, count, bgd.bg_free_blocks_count);
-        return { };
+        return {};
     }
 
     // FIXME: Implement a scan that finds consecutive blocks if possible.
@@ -881,7 +881,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex group_index, int c
     auto bitmap_block = read_block(bgd.bg_block_bitmap);
     int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
     auto block_bitmap = Bitmap::wrap(bitmap_block.pointer(), blocks_in_group);
-    BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group();
+    BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + 1;
     for (int i = 0; i < block_bitmap.size(); ++i) {
         if (!block_bitmap.get(i)) {
             blocks.append(first_block_in_group + i);
@@ -910,7 +910,7 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 
     unsigned group_index = 0;
 
-    auto is_suitable_group = [this, needed_blocks] (GroupIndex group_index) {
+    auto is_suitable_group = [this, needed_blocks](GroupIndex group_index) {
         auto& bgd = group_descriptor(group_index);
         return bgd.bg_free_inodes_count && bgd.bg_free_blocks_count >= needed_blocks;
     };
@@ -1041,7 +1041,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 #endif
     unsigned group_index = group_index_from_block_index(block_index);
     auto& bgd = group_descriptor(group_index);
-    BlockIndex index_in_group = block_index - ((group_index - 1) * blocks_per_group());
+    BlockIndex index_in_group = (block_index - 1) - ((group_index - 1) * blocks_per_group());
     unsigned bit_index = index_in_group % blocks_per_group();
 #ifdef EXT2_DEBUG
     dbgprintf("  index_in_group: %u\n", index_in_group);
@@ -1107,7 +1107,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
     entries.append({ ".", inode->identifier(), EXT2_FT_DIR });
     entries.append({ "..", parent_id, EXT2_FT_DIR });
 
-    bool success = write_directory_inode(inode->identifier().index(), move(entries));
+    bool success = static_cast<Ext2FSInode&>(*inode).write_directory(entries);
     ASSERT(success);
 
     auto parent_inode = get_inode(parent_id);
@@ -1138,7 +1138,7 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     if (!inode_id) {
         kprintf("Ext2FS: create_inode: allocate_inode failed\n");
         error = -ENOSPC;
-        return { };
+        return {};
     }
 
     auto needed_blocks = ceil_div(size, block_size());
@@ -1146,14 +1146,14 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     if (blocks.size() != needed_blocks) {
         kprintf("Ext2FS: create_inode: allocate_blocks failed\n");
         error = -ENOSPC;
-        return { };
+        return {};
     }
 
     // Try adding it to the directory first, in case the name is already in use.
-    auto result = parent_inode->add_child({ fsid(), inode_id }, name, to_ext2_file_type(mode));
+    auto result = parent_inode->add_child({ fsid(), inode_id }, name, mode);
     if (result.is_error()) {
         error = result;
-        return { };
+        return {};
     }
 
     // Looks like we're good, time to update the inode bitmap and group+global inode counters.
@@ -1204,36 +1204,6 @@ RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& n
     return get_inode({ fsid(), inode_id });
 }
 
-RetainPtr<Inode> Ext2FSInode::parent() const
-{
-    LOCKER(m_lock);
-    if (m_parent_id.is_valid())
-        return fs().get_inode(m_parent_id);
-
-    unsigned group_index = fs().group_index_from_inode(index());
-    unsigned first_inode_in_group = fs().inodes_per_group() * (group_index - 1);
-
-    Vector<Retained<Ext2FSInode>> directories_in_group;
-
-    for (unsigned i = 0; i < fs().inodes_per_group(); ++i) {
-        auto group_member = fs().get_inode({ fsid(), first_inode_in_group + i });
-        if (!group_member)
-            continue;
-        if (group_member->is_directory())
-            directories_in_group.append(*group_member);
-    }
-
-    for (auto& directory : directories_in_group) {
-        if (!directory->reverse_lookup(identifier()).is_null()) {
-            m_parent_id = directory->identifier();
-            break;
-        }
-    }
-
-    ASSERT(m_parent_id.is_valid());
-    return fs().get_inode(m_parent_id);
-}
-
 void Ext2FSInode::populate_lookup_cache() const
 {
     LOCKER(m_lock);
@@ -1241,7 +1211,7 @@ void Ext2FSInode::populate_lookup_cache() const
         return;
     HashMap<String, unsigned> children;
 
-    traverse_as_directory([&children] (auto& entry) {
+    traverse_as_directory([&children](auto& entry) {
         children.set(String(entry.name, entry.name_length), entry.inode.index());
         return true;
     });
@@ -1251,7 +1221,7 @@ void Ext2FSInode::populate_lookup_cache() const
     m_lookup_cache = move(children);
 }
 
-InodeIdentifier Ext2FSInode::lookup(const String& name)
+InodeIdentifier Ext2FSInode::lookup(StringView name)
 {
     ASSERT(is_directory());
     populate_lookup_cache();
@@ -1259,20 +1229,7 @@ InodeIdentifier Ext2FSInode::lookup(const String& name)
     auto it = m_lookup_cache.find(name);
     if (it != m_lookup_cache.end())
         return { fsid(), (*it).value };
-    return { };
-}
-
-String Ext2FSInode::reverse_lookup(InodeIdentifier child_id)
-{
-    ASSERT(is_directory());
-    ASSERT(child_id.fsid() == fsid());
-    populate_lookup_cache();
-    LOCKER(m_lock);
-    for (auto it : m_lookup_cache) {
-        if (it.value == child_id.index())
-            return it.key;
-    }
-    return { };
+    return {};
 }
 
 void Ext2FSInode::one_retain_left()

@@ -1,13 +1,13 @@
 #include "Painter.h"
 #include "Font.h"
 #include "GraphicsBitmap.h"
-#include <SharedGraphics/CharacterBitmap.h>
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
-#include <unistd.h>
-#include <stdio.h>
+#include <SharedGraphics/CharacterBitmap.h>
 #include <math.h>
+#include <stdio.h>
+#include <unistd.h>
 
 #pragma GCC optimize("O3")
 
@@ -89,7 +89,7 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
     RGBA32* dst = m_target->scanline(clipped_rect.top()) + clipped_rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
-    float increment = (1.0/((rect.width())/255.0));
+    float increment = (1.0 / ((rect.width()) / 255.0));
 
     int r2 = gradient_start.red();
     int g2 = gradient_start.green();
@@ -104,8 +104,8 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
             dst[j] = Color(
                 r1 / 255.0 * c + r2 / 255.0 * (255 - c),
                 g1 / 255.0 * c + g2 / 255.0 * (255 - c),
-                b1 / 255.0 * c + b2 / 255.0 * (255 - c)
-            ).value();
+                b1 / 255.0 * c + b2 / 255.0 * (255 - c))
+                         .value();
             c += increment;
         }
         dst += dst_skip;
@@ -204,6 +204,36 @@ void Painter::draw_bitmap(const Point& p, const GlyphBitmap& bitmap, Color color
     }
 }
 
+void Painter::blit_scaled(const Rect& dst_rect_raw, const GraphicsBitmap& source, const Rect& src_rect, float hscale, float vscale)
+{
+    auto dst_rect = Rect(dst_rect_raw.location(), dst_rect_raw.size()).translated(translation());
+    auto clipped_rect = dst_rect.intersected(clip_rect());
+    if (clipped_rect.is_empty())
+        return;
+    const int first_row = (clipped_rect.top() - dst_rect.top());
+    const int last_row = (clipped_rect.bottom() - dst_rect.top());
+    const int first_column = (clipped_rect.left() - dst_rect.left());
+    RGBA32* dst = m_target->scanline(clipped_rect.y()) + clipped_rect.x();
+    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
+
+    int x_start = first_column + src_rect.left();
+    for (int row = first_row; row <= last_row; ++row) {
+        int sr = (row + src_rect.top()) * vscale;
+        if (sr >= source.size().height() || sr < 0) {
+            dst += dst_skip;
+            continue;
+        }
+        const RGBA32* sl = source.scanline(sr);
+        for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
+            int sx = x * hscale;
+            if (sx < source.size().width() && sx >= 0)
+                dst[x - x_start] = sl[sx];
+        }
+        dst += dst_skip;
+    }
+    return;
+}
+
 void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& source, const Rect& src_rect, float opacity)
 {
     ASSERT(!m_target->has_alpha_channel());
@@ -289,7 +319,7 @@ void Painter::blit_tiled(const Point& position, const GraphicsBitmap& source, co
         int x_start = first_column + src_rect.left();
         for (int row = first_row; row <= last_row; ++row) {
             const RGBA32* sl = source.scanline((row + src_rect.top())
-                                               % source.size().height());
+                % source.size().height());
             for (int x = x_start; x < clipped_rect.width() + x_start; ++x) {
                 dst[x - x_start] = sl[x % source.size().width()];
             }
@@ -302,9 +332,9 @@ void Painter::blit_tiled(const Point& position, const GraphicsBitmap& source, co
 }
 
 void Painter::blit_offset(const Point& position,
-                          const GraphicsBitmap& source,
-                          const Rect& src_rect,
-                          const Point& offset)
+    const GraphicsBitmap& source,
+    const Rect& src_rect,
+    const Point& offset)
 {
     auto dst_rect = Rect(position, src_rect.size()).translated(translation());
     auto clipped_rect = dst_rect.intersected(clip_rect());
@@ -483,17 +513,33 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
 
     if (source.has_alpha_channel()) {
         switch (source.format()) {
-        case GraphicsBitmap::Format::RGB32: do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>); break;
-        case GraphicsBitmap::Format::RGBA32: do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>); break;
-        case GraphicsBitmap::Format::Indexed8: do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Indexed8>); break;
-        default: do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Invalid>); break;
+        case GraphicsBitmap::Format::RGB32:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
+            break;
+        case GraphicsBitmap::Format::RGBA32:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
+            break;
+        case GraphicsBitmap::Format::Indexed8:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Indexed8>);
+            break;
+        default:
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Invalid>);
+            break;
         }
     } else {
         switch (source.format()) {
-        case GraphicsBitmap::Format::RGB32: do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>); break;
-        case GraphicsBitmap::Format::RGBA32: do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>); break;
-        case GraphicsBitmap::Format::Indexed8: do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Indexed8>); break;
-        default: do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Invalid>); break;
+        case GraphicsBitmap::Format::RGB32:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
+            break;
+        case GraphicsBitmap::Format::RGBA32:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
+            break;
+        case GraphicsBitmap::Format::Indexed8:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Indexed8>);
+            break;
+        default:
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Invalid>);
+            break;
         }
     }
 }
@@ -508,18 +554,24 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
     draw_bitmap(point, font.glyph_bitmap(ch), color);
 }
 
-void Painter::draw_text(const Rect& rect, const char* text, int length, const Font& font, TextAlignment alignment, Color color, TextElision elision)
+void Painter::draw_text(const Rect& rect, const StringView& text, TextAlignment alignment, Color color, TextElision elision)
 {
+    draw_text(rect, text, font(), alignment, color, elision);
+}
+
+void Painter::draw_text(const Rect& rect, const StringView& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
+{
+    StringView final_text(text);
     String elided_text;
     if (elision == TextElision::Right) {
-        int text_width = font.width(text, length);
-        if (font.width(text, length) > rect.width()) {
+        int text_width = font.width(final_text);
+        if (font.width(final_text) > rect.width()) {
             int glyph_spacing = font.glyph_spacing();
             int new_length = 0;
             int new_width = font.width("...");
             if (new_width < text_width) {
-                for (int i = 0; i < length; ++i) {
-                    int glyph_width = font.glyph_width(text[i]);
+                for (int i = 0; i < final_text.length(); ++i) {
+                    int glyph_width = font.glyph_width(final_text.characters()[i]);
                     // NOTE: Glyph spacing should not be added after the last glyph on the line,
                     //       but since we are here because the last glyph does not actually fit on the line,
                     //       we don't have to worry about spacing.
@@ -530,11 +582,10 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
                     new_width += glyph_width + glyph_spacing;
                 }
                 StringBuilder builder;
-                builder.append(text, new_length);
+                builder.append(StringView(final_text.characters(), new_length));
                 builder.append("...");
                 elided_text = builder.to_string();
-                text = elided_text.characters();
-                length = elided_text.length();
+                final_text = elided_text;
             }
         }
     }
@@ -546,10 +597,10 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
     } else if (alignment == TextAlignment::CenterLeft) {
         point = { rect.x(), rect.center().y() - (font.glyph_height() / 2) };
     } else if (alignment == TextAlignment::CenterRight) {
-        int text_width = font.width(text);
+        int text_width = font.width(final_text);
         point = { rect.right() - text_width, rect.center().y() - (font.glyph_height() / 2) };
     } else if (alignment == TextAlignment::Center) {
-        int text_width = font.width(text);
+        int text_width = font.width(final_text);
         point = rect.center();
         point.move_by(-(text_width / 2), -(font.glyph_height() / 2));
     } else {
@@ -557,8 +608,8 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
     }
 
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
-    for (ssize_t i = 0; i < length; ++i) {
-        char ch = text[i];
+    for (ssize_t i = 0; i < final_text.length(); ++i) {
+        char ch = final_text.characters()[i];
         if (ch == ' ') {
             point.move_by(space_width, 0);
             continue;
@@ -566,21 +617,6 @@ void Painter::draw_text(const Rect& rect, const char* text, int length, const Fo
         draw_glyph(point, ch, font, color);
         point.move_by(font.glyph_width(ch) + font.glyph_spacing(), 0);
     }
-}
-
-void Painter::draw_text(const Rect& rect, const String& text, TextAlignment alignment, Color color, TextElision elision)
-{
-    draw_text(rect, text.characters(), text.length(), alignment, color, elision);
-}
-
-void Painter::draw_text(const Rect& rect, const String& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
-{
-    draw_text(rect, text.characters(), text.length(), font, alignment, color, elision);
-}
-
-void Painter::draw_text(const Rect& rect, const char* text, int length, TextAlignment alignment, Color color, TextElision elision)
-{
-    draw_text(rect, text, length, font(), alignment, color, elision);
 }
 
 void Painter::set_pixel(const Point& p, Color color)

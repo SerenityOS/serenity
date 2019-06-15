@@ -1,11 +1,11 @@
+#include <AK/MappedFile.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/PNGLoader.h>
-#include <AK/MappedFile.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <errno.h>
-#include <stdio.h>
 
 Retained<GraphicsBitmap> GraphicsBitmap::create(Format format, const Size& size)
 {
@@ -29,12 +29,12 @@ Retained<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Siz
     return adopt(*new GraphicsBitmap(format, size, data));
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const String& path)
+RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const StringView& path)
 {
     return load_png(path);
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const String& path, const Size& size)
+RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const StringView& path, const Size& size)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -83,11 +83,20 @@ GraphicsBitmap::~GraphicsBitmap()
         ASSERT(rc == 0);
     }
     m_data = nullptr;
-    delete [] m_palette;
+    delete[] m_palette;
 }
 
-void GraphicsBitmap::set_mmap_name(const String& name)
+void GraphicsBitmap::set_mmap_name(const StringView& name)
 {
     ASSERT(m_needs_munmap);
     ::set_mmap_name(m_data, size_in_bytes(), name.characters());
+}
+
+void GraphicsBitmap::fill(Color color)
+{
+    ASSERT(m_format == GraphicsBitmap::Format::RGB32 || m_format == GraphicsBitmap::Format::RGBA32);
+    for (int y = 0; y < height(); ++y) {
+        auto* scanline = this->scanline(y);
+        fast_dword_fill(scanline, color.value(), width());
+    }
 }

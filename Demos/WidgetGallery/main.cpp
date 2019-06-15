@@ -1,18 +1,18 @@
+#include <LibCore/CTimer.h>
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GButton.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GButton.h>
 #include <LibGUI/GCheckBox.h>
-#include <LibGUI/GRadioButton.h>
-#include <LibGUI/GTextBox.h>
+#include <LibGUI/GGroupBox.h>
+#include <LibGUI/GLabel.h>
 #include <LibGUI/GProgressBar.h>
+#include <LibGUI/GRadioButton.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GSlider.h>
 #include <LibGUI/GSpinBox.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibCore/CTimer.h>
+#include <LibGUI/GTextBox.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 
 int main(int argc, char** argv)
 {

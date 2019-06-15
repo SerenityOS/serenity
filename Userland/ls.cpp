@@ -1,16 +1,18 @@
-#include <stdio.h>
-#include <unistd.h>
-#include <dirent.h>
-#include <errno.h>
-#include <string.h>
-#include <getopt.h>
-#include <time.h>
-#include <fcntl.h>
-#include <sys/ioctl.h>
-#include <sys/stat.h>
 #include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <LibCore/CDirIterator.h>
+#include <dirent.h>
+#include <errno.h>
+#include <fcntl.h>
+#include <getopt.h>
+#include <grp.h>
+#include <pwd.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/ioctl.h>
+#include <sys/stat.h>
+#include <time.h>
+#include <unistd.h>
 
 static int do_file_system_object_long(const char* path);
 static int do_file_system_object_short(const char* path);
@@ -19,10 +21,11 @@ static bool flag_colorize = true;
 static bool flag_long = false;
 static bool flag_show_dotfiles = false;
 static bool flag_show_inode = false;
+static bool flag_print_numeric = false;
 
 int main(int argc, char** argv)
 {
-    static const char* valid_option_characters = "laiG";
+    static const char* valid_option_characters = "laiGn";
     int opt;
     while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
         switch (opt) {
@@ -38,13 +41,17 @@ int main(int argc, char** argv)
         case 'i':
             flag_show_inode = true;
             break;
+        case 'n':
+            flag_print_numeric = true;
+            break;
+
         default:
             fprintf(stderr, "usage: ls [-%s] [paths...]\n", valid_option_characters);
             return 1;
         }
     }
 
-    auto do_file_system_object = [&] (const char* path) {
+    auto do_file_system_object = [&](const char* path) {
         if (flag_long)
             return do_file_system_object_long(path);
         return do_file_system_object_short(path);
@@ -53,7 +60,7 @@ int main(int argc, char** argv)
     int status;
     if (optind >= argc) {
         status = do_file_system_object(".");
-    } else if (optind+1 >= argc) {
+    } else if (optind + 1 >= argc) {
         status = do_file_system_object(argv[optind]);
     } else {
         for (; optind < argc; ++optind) {
@@ -112,7 +119,8 @@ int print_name(struct stat& st, const char* name, const char* path_for_link_reso
     return nprinted;
 }
 
-bool print_filesystem_object(const char* path, const char* name) {
+bool print_filesystem_object(const char* path, const char* name)
+{
     struct stat st;
     int rc = lstat(path, &st);
     if (rc == -1) {
@@ -148,18 +156,28 @@ bool print_filesystem_object(const char* path, const char* name) {
         st.st_mode & S_IWGRP ? 'w' : '-',
         st.st_mode & S_ISGID ? 's' : (st.st_mode & S_IXGRP ? 'x' : '-'),
         st.st_mode & S_IROTH ? 'r' : '-',
-        st.st_mode & S_IWOTH ? 'w' : '-'
-    );
+        st.st_mode & S_IWOTH ? 'w' : '-');
 
     if (st.st_mode & S_ISVTX)
         printf("t");
     else
         printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
 
-    printf(" %4u %4u", st.st_uid, st.st_gid);
+    passwd* pwd = getpwuid(st.st_uid);
+    group* grp = getgrgid(st.st_gid);
+    if (!flag_print_numeric && pwd) {
+        printf(" %5s", pwd->pw_name);
+    } else {
+        printf(" %5u", st.st_uid);
+    }
+    if (!flag_print_numeric && grp) {
+        printf(" %5s", grp->gr_name);
+    } else {
+        printf(" %5u", st.st_gid);
+    }
 
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
-        printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
+        printf(" %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
     else
         printf(" %10u ", st.st_size);
 
@@ -203,8 +221,8 @@ int do_file_system_object_long(const char* path)
     return 0;
 }
 
-
-bool print_filesystem_object_short(const char *path, const char *name, int *nprinted) {
+bool print_filesystem_object_short(const char* path, const char* name, int* nprinted)
+{
     struct stat st;
     int rc = lstat(path, &st);
     if (rc == -1) {

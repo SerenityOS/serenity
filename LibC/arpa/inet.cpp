@@ -1,7 +1,7 @@
 #include <arpa/inet.h>
+#include <errno.h>
 #include <netinet/in.h>
 #include <stdio.h>
-#include <errno.h>
 
 extern "C" {
 
@@ -29,7 +29,7 @@ int inet_pton(int af, const char* src, void* dst)
     int count = sscanf(src, "%u.%u.%u.%u", &a, &b, &c, &d);
     if (count != 4) {
         errno = EINVAL;
-        return -1;
+        return 0;
     }
     union {
         struct {
@@ -45,7 +45,7 @@ int inet_pton(int af, const char* src, void* dst)
     u.c = c;
     u.d = d;
     *(uint32_t*)dst = u.l;
-    return 0;
+    return 1;
 }
 
 in_addr_t inet_addr(const char* str)
@@ -56,6 +56,4 @@ in_addr_t inet_addr(const char* str)
         return INADDR_NONE;
     return tmp;
 }
-
 }
-

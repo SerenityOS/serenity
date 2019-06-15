@@ -1,8 +1,8 @@
 #include "IRCLogBufferModel.h"
 #include "IRCLogBuffer.h"
+#include <SharedGraphics/Font.h>
 #include <stdio.h>
 #include <time.h>
-#include <SharedGraphics/Font.h>
 
 IRCLogBufferModel::IRCLogBufferModel(Retained<IRCLogBuffer>&& log_buffer)
     : m_log_buffer(move(log_buffer))
@@ -26,9 +26,12 @@ int IRCLogBufferModel::column_count(const GModelIndex&) const
 String IRCLogBufferModel::column_name(int column) const
 {
     switch (column) {
-    case Column::Timestamp: return "Time";
-    case Column::Name: return "Name";
-    case Column::Text: return "Text";
+    case Column::Timestamp:
+        return "Time";
+    case Column::Name:
+        return "Name";
+    case Column::Text:
+        return "Text";
     }
     ASSERT_NOT_REACHED();
 }
@@ -36,9 +39,12 @@ String IRCLogBufferModel::column_name(int column) const
 GModel::ColumnMetadata IRCLogBufferModel::column_metadata(int column) const
 {
     switch (column) {
-    case Column::Timestamp: return { 60, TextAlignment::CenterLeft };
-    case Column::Name: return { 70, TextAlignment::CenterRight, &Font::default_bold_font() };
-    case Column::Text: return { 800, TextAlignment::CenterLeft };
+    case Column::Timestamp:
+        return { 60, TextAlignment::CenterLeft };
+    case Column::Name:
+        return { 70, TextAlignment::CenterRight, &Font::default_bold_font() };
+    case Column::Text:
+        return { 800, TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
 }
@@ -56,7 +62,8 @@ GVariant IRCLogBufferModel::data(const GModelIndex& index, Role role) const
             if (entry.sender.is_empty())
                 return String::empty();
             return String::format("<%c%s>", entry.prefix ? entry.prefix : ' ', entry.sender.characters());
-        case Column::Text: return entry.text;
+        case Column::Text:
+            return entry.text;
         }
     }
     if (role == Role::ForegroundColor) {
@@ -65,7 +72,7 @@ GVariant IRCLogBufferModel::data(const GModelIndex& index, Role role) const
         if (index.column() == Column::Text)
             return m_log_buffer->at(index.row()).color;
     }
-    return { };
+    return {};
 }
 
 void IRCLogBufferModel::update()

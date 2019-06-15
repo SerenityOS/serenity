@@ -4,6 +4,10 @@
 #include <AK/StdLibExtras.h>
 #include <AK/kmalloc.h>
 
+#ifndef __serenity__
+#include <new>
+#endif
+
 namespace AK {
 
 template<typename T, int inline_capacity = 0>
@@ -292,6 +296,19 @@ public:
             kfree(m_outline_buffer);
         m_outline_buffer = new_buffer;
         m_capacity = new_capacity;
+    }
+
+    void shift_left(int count)
+    {
+        ASSERT(count <= m_size);
+        if (count == m_size) {
+            clear();
+            return;
+        }
+        for (int i = 0; i < m_size - count; ++i) {
+            at(i) = move(at(i + count));
+        }
+        m_size -= count;
     }
 
     void resize(int new_size)

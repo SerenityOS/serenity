@@ -3,6 +3,10 @@
 #include <AK/Types.h>
 #include <LibC/fd_set.h>
 
+extern "C" {
+struct timeval;
+}
+
 #define ENUMERATE_SYSCALLS                      \
     __ENUMERATE_SYSCALL(sleep)                  \
     __ENUMERATE_SYSCALL(yield)                  \
@@ -106,13 +110,13 @@
     __ENUMERATE_SYSCALL(beep)                   \
     __ENUMERATE_SYSCALL(getsockname)            \
     __ENUMERATE_SYSCALL(getpeername)            \
-    __ENUMERATE_SYSCALL(sched_setparam)          \
-    __ENUMERATE_SYSCALL(sched_getparam)
+    __ENUMERATE_SYSCALL(sched_setparam)         \
+    __ENUMERATE_SYSCALL(sched_getparam)         \
+    __ENUMERATE_SYSCALL(fchown)
 
 namespace Syscall {
 
-enum Function
-{
+enum Function {
 #undef __ENUMERATE_SYSCALL
 #define __ENUMERATE_SYSCALL(x) SC_##x,
     ENUMERATE_SYSCALLS

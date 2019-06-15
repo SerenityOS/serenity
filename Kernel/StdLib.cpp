@@ -1,18 +1,11 @@
+#include <AK/Assertions.h>
 #include <AK/Types.h>
-#include "Assertions.h"
-#include "kmalloc.h"
-#include <AK/StdLibExtras.h>
-#include <AK/Types.h>
+#include <Kernel/kmalloc.h>
 
 extern "C" {
 
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
-#ifndef KERNEL
-    if (n >= 1024)
-        return mmx_memcpy(dest_ptr, src_ptr, n);
-#endif
-
     size_t dest = (size_t)dest_ptr;
     size_t src = (size_t)src_ptr;
     // FIXME: Support starting at an unaligned address.
@@ -22,17 +15,14 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
             "rep movsl\n"
             : "=S"(src), "=D"(dest)
             : "S"(src), "D"(dest), "c"(size_ts)
-            : "memory"
-        );
+            : "memory");
         n -= size_ts * sizeof(size_t);
         if (n == 0)
             return dest_ptr;
     }
     asm volatile(
-        "rep movsb\n"
-        :: "S"(src), "D"(dest), "c"(n)
-        : "memory"
-    );
+        "rep movsb\n" ::"S"(src), "D"(dest), "c"(n)
+        : "memory");
     return dest_ptr;
 }
 
@@ -41,18 +31,19 @@ void* memmove(void* dest, const void* src, size_t n)
     if (dest < src)
         return memcpy(dest, src, n);
 
-    byte *pd = (byte*)dest;
-    const byte *ps = (const byte*)src;
+    byte* pd = (byte*)dest;
+    const byte* ps = (const byte*)src;
     for (pd += n, ps += n; n--;)
         *--pd = *--ps;
     return dest;
 }
 
-char* strcpy(char* dest, const char *src)
+char* strcpy(char* dest, const char* src)
 {
     auto* dest_ptr = dest;
     auto* src_ptr = src;
-    while ((*dest_ptr++ = *src_ptr++) != '\0');
+    while ((*dest_ptr++ = *src_ptr++) != '\0')
+        ;
     return dest;
 }
 
@@ -61,7 +52,7 @@ char* strncpy(char* dest, const char* src, size_t n)
     size_t i;
     for (i = 0; i < n && src[i] != '\0'; ++i)
         dest[i] = src[i];
-    for ( ; i < n; ++i)
+    for (; i < n; ++i)
         dest[i] = '\0';
     return dest;
 }
@@ -79,24 +70,22 @@ void* memset(void* dest_ptr, int c, size_t n)
             "rep stosl\n"
             : "=D"(dest)
             : "D"(dest), "c"(size_ts), "a"(expanded_c)
-            : "memory"
-        );
+            : "memory");
         n -= size_ts * sizeof(size_t);
         if (n == 0)
             return dest_ptr;
     }
     asm volatile(
         "rep stosb\n"
-        : "=D" (dest), "=c" (n)
-        : "0" (dest), "1" (n), "a" (c)
-        : "memory"
-    );
+        : "=D"(dest), "=c"(n)
+        : "0"(dest), "1"(n), "a"(c)
+        : "memory");
     return dest_ptr;
 }
 
 char* strrchr(const char* str, int ch)
 {
-    char *last = nullptr;
+    char* last = nullptr;
     char c;
     for (; (c = *str); ++str) {
         if (c == ch)
@@ -113,7 +102,7 @@ size_t strlen(const char* str)
     return len;
 }
 
-int strcmp(const char *s1, const char *s2)
+int strcmp(const char* s1, const char* s2)
 {
     for (; *s1 == *s2; ++s1, ++s2) {
         if (*s1 == 0)
@@ -122,7 +111,7 @@ int strcmp(const char *s1, const char *s2)
     return *(const byte*)s1 < *(const byte*)s2 ? -1 : 1;
 }
 
-char* strdup(const char *str)
+char* strdup(const char* str)
 {
     size_t len = strlen(str);
     char* new_str = (char*)kmalloc(len + 1);
@@ -145,5 +134,4 @@ int memcmp(const void* v1, const void* v2, size_t n)
 {
     ASSERT_NOT_REACHED();
 }
-
 }

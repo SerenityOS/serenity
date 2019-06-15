@@ -1,12 +1,12 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
+#include <AK/StringView.h>
 #include <LibCore/CObject.h>
 
 class CIODevice : public CObject {
 public:
-    enum OpenMode
-    {
+    enum OpenMode {
         NotOpen = 0,
         ReadOnly = 1,
         WriteOnly = 2,
@@ -32,14 +32,14 @@ public:
     ByteBuffer read_all();
 
     bool write(const byte*, int size);
+    bool write(const AK::StringView& v) { return write((const byte*)v.characters(), v.length()); }
 
     // FIXME: I would like this to be const but currently it needs to call populate_read_buffer().
     bool can_read_line();
 
     bool can_read() const;
 
-    enum class SeekMode
-    {
+    enum class SeekMode {
         SetPosition,
         FromCurrentPosition,
         FromEndPosition,

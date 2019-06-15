@@ -1,7 +1,7 @@
-#include <Kernel/FileSystem/Inode.h>
 #include <AK/StringBuilder.h>
-#include <Kernel/VM/VMObject.h>
+#include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Net/LocalSocket.h>
+#include <Kernel/VM/VMObject.h>
 
 HashTable<Inode*>& all_inodes()
 {
@@ -28,7 +28,7 @@ void Inode::sync()
     }
 }
 
-ByteBuffer Inode::read_entire(FileDescriptor* descriptor) const
+ByteBuffer Inode::read_entire(FileDescription* descriptor) const
 {
     size_t initial_size = metadata().size ? metadata().size : 4096;
     StringBuilder builder(initial_size);

@@ -1,9 +1,9 @@
+#include <Kernel/KeyCode.h>
 #include <LibGUI/GAbstractView.h>
 #include <LibGUI/GModel.h>
-#include <LibGUI/GScrollBar.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GScrollBar.h>
 #include <LibGUI/GTextBox.h>
-#include <Kernel/KeyCode.h>
 
 GAbstractView::GAbstractView(GWidget* parent)
     : GScrollableWidget(parent)
@@ -84,7 +84,7 @@ void GAbstractView::begin_editing(const GModelIndex& index)
 
 void GAbstractView::stop_editing()
 {
-    m_edit_index = { };
+    m_edit_index = {};
     delete m_edit_widget;
     m_edit_widget = nullptr;
 }

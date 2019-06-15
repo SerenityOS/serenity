@@ -1,9 +1,9 @@
-#include <Kernel/FileSystem/FileDescriptor.h>
-#include <Kernel/Net/Socket.h>
-#include <Kernel/Net/LocalSocket.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/IPv4Socket.h>
-#include <Kernel/UnixTypes.h>
+#include <Kernel/Net/LocalSocket.h>
+#include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
+#include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
 KResultOr<Retained<Socket>> Socket::create(int domain, int type, int protocol)
@@ -142,7 +142,7 @@ static const char* to_string(SocketRole role)
     }
 }
 
-String Socket::absolute_path(FileDescriptor& descriptor) const
+String Socket::absolute_path(const FileDescription& description) const
 {
-    return String::format("socket:%x (role: %s)", this, to_string(descriptor.socket_role()));
+    return String::format("socket:%x (role: %s)", this, to_string(description.socket_role()));
 }

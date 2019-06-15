@@ -1,5 +1,5 @@
-#include <LibGUI/GResizeCorner.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GResizeCorner.h>
 #include <LibGUI/GWindow.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <WindowServer/WSAPITypes.h>

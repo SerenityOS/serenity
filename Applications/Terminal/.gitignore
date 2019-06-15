@@ -1,3 +1,4 @@
 *.o
 *.d
 Terminal
+compile_commands.json

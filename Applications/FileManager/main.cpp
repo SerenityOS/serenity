@@ -1,25 +1,25 @@
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GBoxLayout.h>
+#include "DirectoryView.h"
+#include <AK/FileSystemPath.h>
+#include <LibCore/CUserInfo.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GFileSystemModel.h>
+#include <LibGUI/GInputBox.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GMenuBar.h>
+#include <LibGUI/GMessageBox.h>
+#include <LibGUI/GProgressBar.h>
+#include <LibGUI/GSplitter.h>
 #include <LibGUI/GStatusBar.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GToolBar.h>
-#include <LibGUI/GMenuBar.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GLabel.h>
-#include <LibGUI/GInputBox.h>
-#include <LibGUI/GMessageBox.h>
-#include <LibGUI/GProgressBar.h>
 #include <LibGUI/GTreeView.h>
-#include <LibGUI/GFileSystemModel.h>
-#include <LibGUI/GSplitter.h>
-#include <LibCore/CUserInfo.h>
-#include <AK/FileSystemPath.h>
-#include <unistd.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 #include <signal.h>
 #include <stdio.h>
-#include "DirectoryView.h"
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
@@ -76,24 +76,24 @@ int main(int argc, char** argv)
         directory_view->open(location_textbox->text());
     };
 
-    file_system_model->on_selection_changed = [&] (auto& index) {
+    file_system_model->on_selection_changed = [&](auto& index) {
         auto path = file_system_model->path(index);
         if (directory_view->path() == path)
             return;
         directory_view->open(path);
     };
 
-    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [directory_view] (const GAction&) {
+    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [directory_view](const GAction&) {
         directory_view->open_parent_directory();
     });
 
-    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&] (const GAction&) {
+    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GAction&) {
         GInputBox input_box("Enter name:", "New directory", window);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
             auto new_dir_path = FileSystemPath(String::format("%s/%s",
-                directory_view->path().characters(),
-                input_box.text_value().characters()
-            )).string();
+                                                   directory_view->path().characters(),
+                                                   input_box.text_value().characters()))
+                                    .string();
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
                 GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, window);
@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     RetainPtr<GAction> view_as_table_action;
     RetainPtr<GAction> view_as_icons_action;
 
-    view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&] (const GAction&) {
+    view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::List);
         view_as_icons_action->set_checked(false);
         view_as_table_action->set_checked(true);
@@ -114,7 +114,7 @@ int main(int argc, char** argv)
     view_as_table_action->set_checkable(true);
     view_as_table_action->set_checked(false);
 
-    view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&] (const GAction&) {
+    view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
         view_as_table_action->set_checked(false);
         view_as_icons_action->set_checked(true);
@@ -122,20 +122,20 @@ int main(int argc, char** argv)
     view_as_icons_action->set_checkable(true);
     view_as_icons_action->set_checked(true);
 
-    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [] (const GAction&) {
+    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [](const GAction&) {
         dbgprintf("'Copy' action activated!\n");
     });
 
-    auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [] (const GAction&) {
+    auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
         dbgprintf("'Delete' action activated!\n");
     });
 
-    auto go_back_action = GAction::create("Go Back", GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [directory_view] (const GAction&) {
+    auto go_back_action = GAction::create("Go Back", GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [directory_view](const GAction&) {
         dbgprintf("'Go Back' action activated!\n");
         directory_view->open_previous_directory();
     });
 
-    auto go_forward_action = GAction::create("Go Forward", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [directory_view] (const GAction&) {
+    auto go_forward_action = GAction::create("Go Forward", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [directory_view](const GAction&) {
         dbgprintf("'Go Forward' action activated!\n");
         directory_view->open_next_directory();
     });
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("File Manager");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
     }));
@@ -167,7 +167,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(go_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [] (const GAction&) {
+    help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));
@@ -187,7 +187,7 @@ int main(int argc, char** argv)
     main_toolbar->add_action(*view_as_icons_action);
     main_toolbar->add_action(*view_as_table_action);
 
-    directory_view->on_path_change = [window, location_textbox, &file_system_model, tree_view, &go_forward_action, &go_back_action, directory_view] (const String& new_path) {
+    directory_view->on_path_change = [window, location_textbox, &file_system_model, tree_view, &go_forward_action, &go_back_action, directory_view](const String& new_path) {
         window->set_title(String::format("File Manager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
         file_system_model->set_selected_index(file_system_model->index(new_path));
@@ -195,15 +195,15 @@ int main(int argc, char** argv)
         tree_view->update();
 
         go_forward_action->set_enabled(directory_view->path_history_position()
-                                       < directory_view->path_history_size() - 1);
+            < directory_view->path_history_size() - 1);
         go_back_action->set_enabled(directory_view->path_history_position() > 0);
     };
 
-    directory_view->on_status_message = [statusbar] (String message) {
-        statusbar->set_text(move(message));
+    directory_view->on_status_message = [statusbar](const StringView& message) {
+        statusbar->set_text(message);
     };
 
-    directory_view->on_thumbnail_progress = [&] (int done, int total) {
+    directory_view->on_thumbnail_progress = [&](int done, int total) {
         if (done == total) {
             progressbar->set_visible(false);
             return;

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <LibCore/CTimer.h>
 #include <LibGUI/GWidget.h>
 
 class GScrollBar final : public GWidget {
@@ -28,8 +29,7 @@ public:
 
     virtual const char* class_name() const override { return "GScrollBar"; }
 
-    enum Component
-    {
+    enum Component {
         Invalid,
         DecrementButton,
         IncrementButton,
@@ -48,13 +48,15 @@ private:
     int button_size() const { return 16; }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
     int button_height() const { return orientation() == Orientation::Horizontal ? height() : button_size(); }
-    Rect up_button_rect() const;
-    Rect down_button_rect() const;
-    Rect upper_gutter_rect() const;
-    Rect lower_gutter_rect() const;
+    Rect decrement_button_rect() const;
+    Rect increment_button_rect() const;
+    Rect decrement_gutter_rect() const;
+    Rect increment_gutter_rect() const;
     Rect scrubber_rect() const;
     int scrubber_size() const;
     int scrubbable_range_in_pixels() const;
+    void on_automatic_scrolling_timer_fired();
+    void set_automatic_scrolling_active(bool);
 
     int m_min { 0 };
     int m_max { 0 };
@@ -68,4 +70,13 @@ private:
 
     Orientation m_orientation { Orientation::Vertical };
     Component m_hovered_component { Component::Invalid };
+
+    enum class AutomaticScrollingDirection {
+        None = 0,
+        Decrement,
+        Increment,
+    };
+
+    AutomaticScrollingDirection m_automatic_scrolling_direction { AutomaticScrollingDirection::None };
+    CTimer m_automatic_scrolling_timer;
 };

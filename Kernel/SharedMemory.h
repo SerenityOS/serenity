@@ -15,7 +15,7 @@ public:
     static KResult unlink(const String& name);
     virtual ~SharedMemory() override;
 
-    String name() const { return m_name; }
+    const String& name() const { return m_name; }
     virtual KResult truncate(off_t) override;
     VMObject* vmo() { return m_vmo.ptr(); }
     const VMObject* vmo() const { return m_vmo.ptr(); }
@@ -24,14 +24,14 @@ public:
 
 private:
     // ^File
-    virtual bool can_read(FileDescriptor&) const override { return true; }
-    virtual bool can_write(FileDescriptor&) const override { return true; }
-    virtual int read(FileDescriptor&, byte*, int) override;
-    virtual int write(FileDescriptor&, const byte*, int) override;
-    virtual String absolute_path(FileDescriptor&) const override;
+    virtual bool can_read(FileDescription&) const override { return true; }
+    virtual bool can_write(FileDescription&) const override { return true; }
+    virtual int read(FileDescription&, byte*, int) override;
+    virtual int write(FileDescription&, const byte*, int) override;
+    virtual String absolute_path(const FileDescription&) const override;
     virtual const char* class_name() const override { return "SharedMemory"; }
     virtual bool is_shared_memory() const override { return true; }
-    virtual KResultOr<Region*> mmap(Process&, LinearAddress, size_t offset, size_t size, int prot) override;
+    virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress, size_t offset, size_t size, int prot) override;
 
     SharedMemory(const String& name, uid_t, gid_t, mode_t);
 

@@ -2,6 +2,7 @@
 #include "LineEditor.h"
 #include "Parser.h"
 #include <AK/FileSystemPath.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/CDirIterator.h>
 #include <LibCore/CElapsedTimer.h>
 #include <errno.h>
@@ -189,10 +190,10 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     return false;
 }
 
-class FileDescriptorCollector {
+class FileDescriptionCollector {
 public:
-    FileDescriptorCollector() { }
-    ~FileDescriptorCollector() { collect(); }
+    FileDescriptionCollector() {}
+    ~FileDescriptionCollector() { collect(); }
 
     void collect()
     {
@@ -219,42 +220,108 @@ struct CommandTimer {
     CElapsedTimer timer;
 };
 
+static bool is_glob(const StringView& s)
+{
+    for (int i = 0; i < s.length(); i++) {
+        char c = s.characters()[i];
+        if (c == '*' || c == '?')
+            return true;
+    }
+    return false;
+}
+
+static Vector<StringView> split_path(const StringView &path)
+{
+    Vector<StringView> parts;
+
+    ssize_t substart = 0;
+    for (ssize_t i = 0; i < path.length(); i++) {
+        char ch = path.characters()[i];
+        if (ch != '/')
+            continue;
+        ssize_t sublen = i - substart;
+        if (sublen != 0)
+            parts.append(path.substring_view(substart, sublen));
+        parts.append(path.substring_view(i, 1));
+        substart = i + 1;
+    }
+
+    ssize_t taillen = path.length() - substart;
+    if (taillen != 0)
+        parts.append(path.substring_view(substart, taillen));
+
+    return parts;
+}
+
+static Vector<String> expand_globs(const StringView& path, const StringView& base)
+{
+    auto parts = split_path(path);
+
+    StringBuilder builder;
+    builder.append(base);
+    Vector<String> res;
+
+    for (int i = 0; i < parts.size(); ++i) {
+        auto& part = parts[i];
+        if (!is_glob(part)) {
+            builder.append(part);
+            continue;
+        }
+
+        // Found a glob.
+        String new_base = builder.to_string();
+        StringView new_base_v = new_base;
+        if (new_base_v.is_empty())
+            new_base_v = ".";
+        CDirIterator di(new_base_v, CDirIterator::NoFlags);
+
+        if (di.has_error()) {
+            return res;
+        }
+
+        while (di.has_next()) {
+            String name = di.next_path();
+
+            // Dotfiles have to be explicitly requested
+            if (name[0] == '.' && part[0] != '.')
+                continue;
+
+            // And even if they are, skip . and ..
+            if (name == "." || name == "..")
+                continue;
+
+            if (name.matches(part, String::CaseSensitivity::CaseSensitive)) {
+
+                StringBuilder nested_base;
+                nested_base.append(new_base);
+                nested_base.append(name);
+
+                StringView remaining_path = path.substring_view_starting_after_substring(part);
+                Vector<String> nested_res = expand_globs(remaining_path, nested_base.to_string());
+                for (auto& s : nested_res)
+                    res.append(s);
+            }
+        }
+        return res;
+    }
+
+    // Found no globs.
+    String new_path = builder.to_string();
+    if (access(new_path.characters(), F_OK) == 0)
+        res.append(new_path);
+    return res;
+}
+
 static Vector<String> process_arguments(const Vector<String>& args)
 {
     Vector<String> argv_string;
     for (auto& arg : args) {
-        bool is_glob = false;
-        for (int i = 0; i < arg.length(); i++) {
-            char c = arg.characters()[i];
-            if (c == '*' || c == '?') {
-                is_glob = true;
-            }
-        }
-
-        if (is_glob == false) {
-            argv_string.append(arg.characters());
-        } else {
-            CDirIterator di(".", CDirIterator::NoFlags);
-            if (di.has_error()) {
-                fprintf(stderr, "CDirIterator: %s\n", di.error_string());
-                continue;
-            }
-
-            while (di.has_next()) {
-                String name = di.next_path();
-
-                // Dotfiles have to be explicitly requested
-                if (name[0] == '.' && arg[0] != '.')
-                    continue;
-
-                // And even if they are, skip . and ..
-                if (name == "."  || name == "..")
-                    continue;
-
-                if (name.matches(arg, String::CaseSensitivity::CaseSensitive))
-                    argv_string.append(name);
-            }
-        }
+        auto expanded = expand_globs(arg, "");
+        if (expanded.is_empty())
+            argv_string.append(arg);
+        else
+            for (auto& path : expand_globs(arg, ""))
+                argv_string.append(path);
     }
 
     return argv_string;
@@ -302,58 +369,56 @@ static int run_command(const String& cmd)
     if (subcommands.is_empty())
         return 0;
 
-    FileDescriptorCollector fds;
+    FileDescriptionCollector fds;
 
     for (int i = 0; i < subcommands.size(); ++i) {
         auto& subcommand = subcommands[i];
         for (auto& redirection : subcommand.redirections) {
             switch (redirection.type) {
-                case Redirection::Pipe: {
-                    int pipefd[2];
-                    int rc = pipe(pipefd);
-                    if (rc < 0) {
-                        perror("pipe");
-                        return 1;
-                    }
-                    subcommand.redirections.append({ Redirection::Rewire, STDOUT_FILENO, pipefd[1] });
-                    auto& next_command = subcommands[i + 1];
-                    next_command.redirections.append({ Redirection::Rewire, STDIN_FILENO, pipefd[0] });
-                    fds.add(pipefd[0]);
-                    fds.add(pipefd[1]);
-                    break;
+            case Redirection::Pipe: {
+                int pipefd[2];
+                int rc = pipe(pipefd);
+                if (rc < 0) {
+                    perror("pipe");
+                    return 1;
                 }
-                case Redirection::FileWriteAppend: {
-                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
-                    if (fd < 0) {
-                        perror("open");
-                        return 1;
-                    }
-                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
-                    fds.add(fd);
-                    break;
+                subcommand.rewirings.append({ STDOUT_FILENO, pipefd[1] });
+                auto& next_command = subcommands[i + 1];
+                next_command.rewirings.append({ STDIN_FILENO, pipefd[0] });
+                fds.add(pipefd[0]);
+                fds.add(pipefd[1]);
+                break;
+            }
+            case Redirection::FileWriteAppend: {
+                int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+                if (fd < 0) {
+                    perror("open");
+                    return 1;
                 }
-                case Redirection::FileWrite: {
-                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-                    if (fd < 0) {
-                        perror("open");
-                        return 1;
-                    }
-                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
-                    fds.add(fd);
-                    break;
+                subcommand.rewirings.append({ redirection.fd, fd });
+                fds.add(fd);
+                break;
+            }
+            case Redirection::FileWrite: {
+                int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                if (fd < 0) {
+                    perror("open");
+                    return 1;
                 }
-                case Redirection::FileRead: {
-                    int fd = open(redirection.path.characters(), O_RDONLY);
-                    if (fd < 0) {
-                        perror("open");
-                        return 1;
-                    }
-                    subcommand.redirections.append({ Redirection::Rewire, redirection.fd, fd });
-                    fds.add(fd);
-                    break;
+                subcommand.rewirings.append({ redirection.fd, fd });
+                fds.add(fd);
+                break;
+            }
+            case Redirection::FileRead: {
+                int fd = open(redirection.path.characters(), O_RDONLY);
+                if (fd < 0) {
+                    perror("open");
+                    return 1;
                 }
-                case Redirection::Rewire:
-                    break; // ignore
+                subcommand.rewirings.append({ redirection.fd, fd });
+                fds.add(fd);
+                break;
+            }
             }
         }
     }
@@ -361,7 +426,12 @@ static int run_command(const String& cmd)
     struct termios trm;
     tcgetattr(0, &trm);
 
-    Vector<pid_t> children;
+    struct SpawnedProcess {
+        String name;
+        pid_t pid;
+    };
+
+    Vector<SpawnedProcess> children;
 
     CommandTimer timer;
 
@@ -390,16 +460,14 @@ static int run_command(const String& cmd)
         if (!child) {
             setpgid(0, 0);
             tcsetpgrp(0, getpid());
-            for (auto& redirection : subcommand.redirections) {
-                if (redirection.type == Redirection::Rewire) {
-#ifdef SH_DEBUGsh
-                    dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), redirection.rewire_fd, redirection.fd);
+            for (auto& rewiring : subcommand.rewirings) {
+#ifdef SH_DEBUG
+                dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), redirection.rewire_fd, redirection.fd);
 #endif
-                    int rc = dup2(redirection.rewire_fd, redirection.fd);
-                    if (rc < 0) {
-                        perror("dup2");
-                        return 1;
-                    }
+                int rc = dup2(rewiring.rewire_fd, rewiring.fd);
+                if (rc < 0) {
+                    perror("dup2");
+                    return 1;
                 }
             }
 
@@ -412,7 +480,7 @@ static int run_command(const String& cmd)
             }
             ASSERT_NOT_REACHED();
         }
-        children.append(child);
+        children.append({ argv[0], child });
     }
 
 #ifdef SH_DEBUG
@@ -426,39 +494,38 @@ static int run_command(const String& cmd)
         dbgprintf("  %d\n", child);
 #endif
 
-
     int wstatus = 0;
-    int rc;
+    int return_value = 0;
 
-    for (auto& child : children) {
+    for (int i = 0; i < children.size(); ++i) {
+        auto& child = children[i];
         do {
-            rc = waitpid(child, &wstatus, 0);
+            int rc = waitpid(child.pid, &wstatus, 0);
             if (rc < 0 && errno != EINTR) {
-                perror("waitpid");
+                if (errno != ECHILD)
+                    perror("waitpid");
                 break;
             }
-        } while(errno == EINTR);
+            if (WIFEXITED(wstatus)) {
+                if (WEXITSTATUS(wstatus) != 0)
+                    printf("Shell: %s(%d) exited with status %d\n", child.name.characters(), child.pid, WEXITSTATUS(wstatus));
+                if (i == 0)
+                    return_value = WEXITSTATUS(wstatus);
+            } else {
+                if (WIFSIGNALED(wstatus)) {
+                    printf("Shell: %s(%d) exited due to signal '%s'\n", child.name.characters(), child.pid, strsignal(WTERMSIG(wstatus)));
+                } else {
+                    printf("Shell: %s(%d) exited abnormally\n", child.name.characters(), child.pid);
+                }
+            }
+        } while (errno == EINTR);
     }
 
     // FIXME: Should I really have to tcsetpgrp() after my child has exited?
     //        Is the terminal controlling pgrp really still the PGID of the dead process?
     tcsetpgrp(0, getpid());
-
     tcsetattr(0, TCSANOW, &trm);
-
-    if (WIFEXITED(wstatus)) {
-        if (WEXITSTATUS(wstatus) != 0)
-            printf("Exited with status %d\n", WEXITSTATUS(wstatus));
-        return WEXITSTATUS(wstatus);
-    } else {
-        if (WIFSIGNALED(wstatus)) {
-            puts(strsignal(WTERMSIG(wstatus)));
-        } else {
-            printf("Exited abnormally\n");
-            return 1;
-        }
-    }
-    return 0;
+    return return_value;
 }
 
 int main(int argc, char** argv)

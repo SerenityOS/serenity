@@ -1,15 +1,15 @@
-#include <SharedGraphics/PNGLoader.h>
-#include <AK/NetworkOrdered.h>
-#include <AK/MappedFile.h>
 #include <AK/FileSystemPath.h>
+#include <AK/MappedFile.h>
+#include <AK/NetworkOrdered.h>
+#include <SharedGraphics/PNGLoader.h>
+#include <SharedGraphics/puff.c>
+#include <fcntl.h>
+#include <serenity.h>
+#include <stdio.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
 #include <unistd.h>
-#include <stdio.h>
-#include <fcntl.h>
-#include <string.h>
-#include <SharedGraphics/puff.c>
-#include <serenity.h>
 
 //#define PNG_STOPWATCH_DEBUG
 
@@ -101,7 +101,7 @@ private:
 static RetainPtr<GraphicsBitmap> load_png_impl(const byte*, int);
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
-RetainPtr<GraphicsBitmap> load_png(const String& path)
+RetainPtr<GraphicsBitmap> load_png(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -125,7 +125,8 @@ RetainPtr<GraphicsBitmap> load_png(const String& path)
     return c;
 }
 
-union [[gnu::packed]] Pixel {
+union [[gnu::packed]] Pixel
+{
     RGBA32 rgba { 0 };
     byte v[4];
     struct {
@@ -186,7 +187,8 @@ template<bool has_alpha, byte filter_type>
             auto& x = pixels[i];
             swap(x.r, x.b);
             Pixel a;
-            if (i != 0) a = pixels[i - 1];
+            if (i != 0)
+                a = pixels[i - 1];
             const Pixel& b = pixels_y_minus_1[i];
             x.v[0] = x.v[0] + ((a.v[0] + b.v[0]) / 2);
             x.v[1] = x.v[1] + ((a.v[1] + b.v[1]) / 2);
@@ -222,32 +224,37 @@ template<bool has_alpha, byte filter_type>
 {
     {
 #ifdef PNG_STOPWATCH_DEBUG
-    Stopwatch sw("load_png_impl: unfilter: unpack");
+        Stopwatch sw("load_png_impl: unfilter: unpack");
 #endif
-    // First unpack the scanlines to RGBA:
-    switch (context.color_type) {
-    case 2:
-        for (int y = 0; y < context.height; ++y) {
-            struct [[gnu::packed]] Triplet { byte r; byte g; byte b; };
-            auto* triplets = (Triplet*)context.scanlines[y].data.pointer();
-            for (int i = 0; i < context.width; ++i) {
-                auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                pixel.r = triplets[i].r;
-                pixel.g = triplets[i].g;
-                pixel.b = triplets[i].b;
-                pixel.a = 0xff;
+        // First unpack the scanlines to RGBA:
+        switch (context.color_type) {
+        case 2:
+            for (int y = 0; y < context.height; ++y) {
+                struct [[gnu::packed]] Triplet
+                {
+                    byte r;
+                    byte g;
+                    byte b;
+                };
+                auto* triplets = (Triplet*)context.scanlines[y].data.pointer();
+                for (int i = 0; i < context.width; ++i) {
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    pixel.r = triplets[i].r;
+                    pixel.g = triplets[i].g;
+                    pixel.b = triplets[i].b;
+                    pixel.a = 0xff;
+                }
             }
+            break;
+        case 6:
+            for (int y = 0; y < context.height; ++y) {
+                memcpy(context.bitmap->scanline(y), context.scanlines[y].data.pointer(), context.scanlines[y].data.size());
+            }
+            break;
+        default:
+            ASSERT_NOT_REACHED();
+            break;
         }
-        break;
-    case 6:
-        for (int y = 0; y < context.height; ++y) {
-            memcpy(context.bitmap->scanline(y), context.scanlines[y].data.pointer(), context.scanlines[y].data.size());
-        }
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-        break;
-    }
     }
 
     auto dummy_scanline = ByteBuffer::create_zeroed(context.width * sizeof(RGBA32));
@@ -405,7 +412,7 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
 #endif
 
     context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
-    context.decompression_buffer = (byte*)mmap(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+    context.decompression_buffer = (byte*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
     return true;
 }
 

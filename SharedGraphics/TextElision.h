@@ -4,4 +4,3 @@ enum class TextElision {
     None,
     Right,
 };
-

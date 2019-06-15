@@ -19,7 +19,7 @@ void Parser::commit_subcommand()
 {
     if (m_tokens.is_empty())
         return;
-    m_subcommands.append({ move(m_tokens), move(m_redirections) });
+    m_subcommands.append({ move(m_tokens), move(m_redirections), {} });
 }
 
 void Parser::do_pipe()
@@ -52,7 +52,7 @@ Vector<Subcommand> Parser::parse()
                 commit_token();
                 if (m_tokens.is_empty()) {
                     fprintf(stderr, "Syntax error: Nothing before pipe (|)\n");
-                    return { };
+                    return {};
                 }
                 do_pipe();
                 break;
@@ -110,7 +110,7 @@ Vector<Subcommand> Parser::parse()
                 commit_token();
                 if (m_tokens.is_empty()) {
                     fprintf(stderr, "Syntax error: Nothing before pipe (|)\n");
-                    return { };
+                    return {};
                 }
                 do_pipe();
                 m_state = State::Free;
@@ -145,7 +145,7 @@ Vector<Subcommand> Parser::parse()
         for (auto& redirection : m_subcommands.last().redirections) {
             if (redirection.type == Redirection::Pipe) {
                 fprintf(stderr, "Syntax error: Nothing after last pipe (|)\n");
-                return { };
+                return {};
             }
         }
     }

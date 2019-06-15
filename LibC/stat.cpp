@@ -1,8 +1,8 @@
-#include <sys/stat.h>
-#include <errno.h>
-#include <assert.h>
-#include <stdio.h>
 #include <Kernel/Syscall.h>
+#include <assert.h>
+#include <errno.h>
+#include <stdio.h>
+#include <sys/stat.h>
 
 extern "C" {
 
@@ -28,6 +28,4 @@ int fchmod(int fd, mode_t mode)
     int rc = syscall(SC_fchmod, fd, mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
 }
-

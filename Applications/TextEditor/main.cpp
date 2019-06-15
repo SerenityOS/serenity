@@ -1,21 +1,21 @@
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GBoxLayout.h>
+#include <AK/StringBuilder.h>
+#include <LibCore/CFile.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GFilePicker.h>
+#include <LibGUI/GFontDatabase.h>
+#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GStatusBar.h>
-#include <LibGUI/GToolBar.h>
-#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GTextEditor.h>
-#include <LibGUI/GAction.h>
-#include <LibGUI/GFontDatabase.h>
-#include <LibCore/CFile.h>
-#include <AK/StringBuilder.h>
-#include <unistd.h>
-#include <stdio.h>
-#include <signal.h>
+#include <LibGUI/GToolBar.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 #include <fcntl.h>
+#include <signal.h>
+#include <stdio.h>
+#include <unistd.h>
 
 void open_sesame(GWindow& window, GTextEditor& editor, const String& path)
 {
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
         open_sesame(*window, *text_editor, path);
     }
 
-    auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [] (const GAction&) {
+    auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [](const GAction&) {
         dbgprintf("FIXME: Implement File/New\n");
     });
 
@@ -69,14 +69,14 @@ int main(int argc, char** argv)
         }
     });
 
-    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&] (const GAction&) {
+    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GAction&) {
         dbgprintf("Writing document to '%s'\n", path.characters());
         text_editor->write_to_file(path);
     });
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Text Editor");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [] (const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
     }));
@@ -99,8 +99,8 @@ int main(int argc, char** argv)
     menubar->add_menu(move(edit_menu));
 
     auto font_menu = make<GMenu>("Font");
-    GFontDatabase::the().for_each_fixed_width_font([&] (const String& font_name) {
-        font_menu->add_action(GAction::create(font_name, [text_editor] (const GAction& action) {
+    GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
+        font_menu->add_action(GAction::create(font_name, [text_editor](const GAction& action) {
             text_editor->set_font(GFontDatabase::the().get_by_name(action.text()));
             text_editor->update();
         }));
@@ -108,7 +108,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(font_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [] (const GAction&) {
+    help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
     menubar->add_menu(move(help_menu));

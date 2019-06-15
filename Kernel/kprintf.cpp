@@ -1,10 +1,10 @@
-#include <Kernel/kstdio.h>
+#include <AK/PrintfImplementation.h>
+#include <AK/Types.h>
 #include <Kernel/Console.h>
 #include <Kernel/IO.h>
-#include <LibC/stdarg.h>
 #include <Kernel/Process.h>
-#include <AK/Types.h>
-#include <AK/printf.cpp>
+#include <Kernel/kstdio.h>
+#include <LibC/stdarg.h>
 
 static void console_putch(char*&, char ch)
 {

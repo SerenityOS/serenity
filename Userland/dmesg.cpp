@@ -1,31 +1,20 @@
+#include <LibCore/CFile.h>
+#include <assert.h>
+#include <fcntl.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <fcntl.h>
-#include <assert.h>
 
 int main(int argc, char** argv)
 {
-    (void) argc;
-    (void) argv;
-    int fd = open("/proc/dmesg", O_RDONLY);
-    if (fd < 0) {
-        perror("open /proc/dmesg");
+    (void)argc;
+    (void)argv;
+    CFile f("/proc/dmesg");
+    if (!f.open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "open: failed to open /proc/dmesg: %s", f.error_string());
         return 1;
     }
-    for (;;) {
-        char buffer[BUFSIZ];
-        ssize_t nread = read(fd, buffer, sizeof(buffer));
-        if (nread < 0) {
-            perror("read");
-            return 1;
-        }
-        if (nread == 0) {
-            break;
-        }
-        ssize_t nwritten = write(1, buffer, nread);
-        assert(nwritten == nread);
-    }
-    int rc = close(fd);
-    assert(rc == 0);
+    const auto& b = f.read_all();
+    for (auto i = 0; i < b.size(); ++i)
+        putchar(b[i]);
     return 0;
 }

@@ -28,10 +28,10 @@
  * SUCH DAMAGE.
  *
  */
-#include <stdio.h>
-#include <stdarg.h>
-#include <string.h>
 #include <ctype.h>
+#include <stdarg.h>
+#include <stdio.h>
+#include <string.h>
 
 static const char* determine_base(const char* p, int& base)
 {
@@ -119,31 +119,32 @@ int atob(unsigned int* vp, const char* p, int base)
 
 #define ISSPACE " \t\n\r\f\v"
 
-int vsscanf(const char *buf, const char *s, va_list ap)
+int vsscanf(const char* buf, const char* s, va_list ap)
 {
     int base = 10;
-    char *t;
+    char* t;
     char tmp[BUFSIZ];
     bool noassign = false;
     int count = 0;
     int width = 0;
 
     while (*s && *buf) {
-        while (isspace (*s))
+        while (isspace(*s))
             s++;
         if (*s == '%') {
             s++;
             for (; *s; s++) {
-                if (strchr ("dibouxcsefg%", *s))
+                if (strchr("dibouxcsefg%", *s))
                     break;
                 if (*s == '*')
                     noassign = true;
                 else if (*s >= '1' && *s <= '9') {
                     const char* tc;
-                    for (tc = s; isdigit(*s); s++);
-                    strncpy (tmp, tc, s - tc);
+                    for (tc = s; isdigit(*s); s++)
+                        ;
+                    strncpy(tmp, tc, s - tc);
                     tmp[s - tc] = '\0';
-                    atob ((uint32_t*)&width, tmp, 10);
+                    atob((uint32_t*)&width, tmp, 10);
                     s--;
                 }
             }
@@ -180,7 +181,7 @@ int vsscanf(const char *buf, const char *s, va_list ap)
                     if (isspace(*(s + 1)) || *(s + 1) == 0) {
                         width = strcspn(buf, ISSPACE);
                     } else {
-                        auto* p = strchr(buf, *(s+1));
+                        auto* p = strchr(buf, *(s + 1));
                         if (p)
                             width = p - buf;
                         else {
@@ -204,7 +205,7 @@ int vsscanf(const char *buf, const char *s, va_list ap)
             ++s;
         } else {
             while (isspace(*buf))
-            buf++;
+                buf++;
             if (*s != *buf)
                 break;
             else {

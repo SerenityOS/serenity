@@ -1,7 +1,7 @@
-#include <LibGUI/GAction.h>
-#include <LibGUI/GMenu.h>
-#include <LibGUI/GEventLoop.h>
 #include <AK/HashMap.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GMenu.h>
 
 //#define GMENU_DEBUG
 
@@ -21,7 +21,7 @@ GMenu* GMenu::from_menu_id(int menu_id)
     return (*it).value;
 }
 
-GMenu::GMenu(const String& name)
+GMenu::GMenu(const StringView& name)
     : m_name(name)
 {
 }
@@ -81,8 +81,8 @@ int GMenu::realize_menu()
     ASSERT(m_menu_id > 0);
     for (int i = 0; i < m_items.size(); ++i) {
         auto& item = *m_items[i];
-        item.set_menu_id({ }, m_menu_id);
-        item.set_identifier({ }, i);
+        item.set_menu_id({}, m_menu_id);
+        item.set_identifier({}, i);
         if (item.type() == GMenuItem::Separator) {
             WSAPI_ClientMessage request;
             request.type = WSAPI_ClientMessage::Type::AddMenuSeparator;

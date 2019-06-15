@@ -1,7 +1,7 @@
-#include <Kernel/Thread.h>
-#include <Kernel/Scheduler.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
-#include <Kernel/FileSystem/FileDescriptor.h>
+#include <Kernel/Scheduler.h>
+#include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
 
@@ -63,9 +63,9 @@ Thread::Thread(Process& process)
     } else {
         // Ring3 processes need a separate stack for Ring0.
         m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid));
-        m_kernel_stack_base = m_kernel_stack_region->laddr().get();
+        m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_kernel_stack_region->laddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
+        m_tss.esp0 = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
     }
 
     // HACK: Ring2 SS in the TSS is the current PID.
@@ -99,7 +99,7 @@ Thread::~Thread()
 
 void Thread::unblock()
 {
-    m_blocked_descriptor = nullptr;
+    m_blocked_description = nullptr;
     if (current == this) {
         set_state(Thread::Running);
         return;
@@ -129,9 +129,9 @@ void Thread::block(Thread::State new_state)
         process().big_lock().lock();
 }
 
-void Thread::block(Thread::State new_state, FileDescriptor& descriptor)
+void Thread::block(Thread::State new_state, FileDescription& description)
 {
-    m_blocked_descriptor = &descriptor;
+    m_blocked_description = &description;
     block(new_state);
 }
 
@@ -145,24 +145,42 @@ void Thread::sleep(dword ticks)
 const char* to_string(Thread::State state)
 {
     switch (state) {
-    case Thread::Invalid: return "Invalid";
-    case Thread::Runnable: return "Runnable";
-    case Thread::Running: return "Running";
-    case Thread::Dying: return "Dying";
-    case Thread::Dead: return "Dead";
-    case Thread::Stopped: return "Stopped";
-    case Thread::Skip1SchedulerPass: return "Skip1";
-    case Thread::Skip0SchedulerPasses: return "Skip0";
-    case Thread::BlockedSleep: return "Sleep";
-    case Thread::BlockedWait: return "Wait";
-    case Thread::BlockedRead: return "Read";
-    case Thread::BlockedWrite: return "Write";
-    case Thread::BlockedSignal: return "Signal";
-    case Thread::BlockedSelect: return "Select";
-    case Thread::BlockedLurking: return "Lurking";
-    case Thread::BlockedConnect: return "Connect";
-    case Thread::BlockedReceive: return "Receive";
-    case Thread::BlockedSnoozing: return "Snoozing";
+    case Thread::Invalid:
+        return "Invalid";
+    case Thread::Runnable:
+        return "Runnable";
+    case Thread::Running:
+        return "Running";
+    case Thread::Dying:
+        return "Dying";
+    case Thread::Dead:
+        return "Dead";
+    case Thread::Stopped:
+        return "Stopped";
+    case Thread::Skip1SchedulerPass:
+        return "Skip1";
+    case Thread::Skip0SchedulerPasses:
+        return "Skip0";
+    case Thread::BlockedSleep:
+        return "Sleep";
+    case Thread::BlockedWait:
+        return "Wait";
+    case Thread::BlockedRead:
+        return "Read";
+    case Thread::BlockedWrite:
+        return "Write";
+    case Thread::BlockedSignal:
+        return "Signal";
+    case Thread::BlockedSelect:
+        return "Select";
+    case Thread::BlockedLurking:
+        return "Lurking";
+    case Thread::BlockedConnect:
+        return "Connect";
+    case Thread::BlockedReceive:
+        return "Receive";
+    case Thread::BlockedSnoozing:
+        return "Snoozing";
     }
     kprintf("to_string(Thread::State): Invalid state: %u\n", state);
     ASSERT_NOT_REACHED();
@@ -174,7 +192,7 @@ void Thread::finalize()
     dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
     set_state(Thread::State::Dead);
 
-    m_blocked_descriptor = nullptr;
+    m_blocked_description = nullptr;
 
     if (this == &m_process.main_thread())
         m_process.finalize();
@@ -185,7 +203,7 @@ void Thread::finalize_dying_threads()
     Vector<Thread*, 32> dying_threads;
     {
         InterruptDisabler disabler;
-        for_each_in_state(Thread::State::Dying, [&] (Thread& thread) {
+        for_each_in_state(Thread::State::Dying, [&](Thread& thread) {
             dying_threads.append(&thread);
         });
     }
@@ -313,8 +331,8 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
     if (signal == SIGCONT && state() == Stopped)
         set_state(Runnable);
 
-    auto handler_laddr = action.handler_or_sigaction;
-    if (handler_laddr.is_null()) {
+    auto handler_vaddr = action.handler_or_sigaction;
+    if (handler_vaddr.is_null()) {
         switch (default_signal_action(signal)) {
         case DefaultSignalAction::Stop:
             set_state(Stopped);
@@ -333,7 +351,7 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
         ASSERT_NOT_REACHED();
     }
 
-    if (handler_laddr.as_ptr() == SIG_IGN) {
+    if (handler_vaddr.as_ptr() == SIG_IGN) {
 #ifdef SIGNAL_DEBUG
         kprintf("%s(%u) ignored signal %u\n", process().name().characters(), pid(), signal);
 #endif
@@ -370,15 +388,15 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
 #endif
 
         if (!m_signal_stack_user_region) {
-            m_signal_stack_user_region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("User Signal Stack (Thread %d)", m_tid));
+            m_signal_stack_user_region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("User Signal Stack (Thread %d)", m_tid));
             ASSERT(m_signal_stack_user_region);
         }
         if (!m_kernel_stack_for_signal_handler_region)
             m_kernel_stack_for_signal_handler_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Signal Stack (Thread %d)", m_tid));
         m_tss.ss = 0x23;
-        m_tss.esp = m_signal_stack_user_region->laddr().offset(default_userspace_stack_size).get();
+        m_tss.esp = m_signal_stack_user_region->vaddr().offset(default_userspace_stack_size).get();
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_kernel_stack_for_signal_handler_region->laddr().offset(default_kernel_stack_size).get();
+        m_tss.esp0 = m_kernel_stack_for_signal_handler_region->vaddr().offset(default_kernel_stack_size).get();
 
         push_value_on_stack(0);
     } else {
@@ -408,7 +426,7 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
     m_tss.es = 0x23;
     m_tss.fs = 0x23;
     m_tss.gs = 0x23;
-    m_tss.eip = handler_laddr.get();
+    m_tss.eip = handler_vaddr.get();
 
     // FIXME: Should we worry about the stack being 16 byte aligned when entering a signal handler?
     push_value_on_stack(signal);
@@ -433,8 +451,8 @@ void Thread::set_default_signal_dispositions()
 {
     // FIXME: Set up all the right default actions. See signal(7).
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
-    m_signal_action_data[SIGCHLD].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
-    m_signal_action_data[SIGWINCH].handler_or_sigaction = LinearAddress((dword)SIG_IGN);
+    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((dword)SIG_IGN);
+    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((dword)SIG_IGN);
 }
 
 void Thread::push_value_on_stack(dword value)
@@ -446,11 +464,11 @@ void Thread::push_value_on_stack(dword value)
 
 void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
 {
-    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, "Stack (Main thread)");
+    auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)");
     ASSERT(region);
-    m_tss.esp = region->laddr().offset(default_userspace_stack_size).get();
+    m_tss.esp = region->vaddr().offset(default_userspace_stack_size).get();
 
-    char* stack_base = (char*)region->laddr().get();
+    char* stack_base = (char*)region->vaddr().get();
     int argc = arguments.size();
     char** argv = (char**)stack_base;
     char** env = argv + arguments.size() + 1;
@@ -490,11 +508,11 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
     push_value_on_stack(0);
 }
 
-void Thread::make_userspace_stack_for_secondary_thread(void *argument)
+void Thread::make_userspace_stack_for_secondary_thread(void* argument)
 {
-    auto* region = m_process.allocate_region(LinearAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
+    auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
     ASSERT(region);
-    m_tss.esp = region->laddr().offset(default_userspace_stack_size).get();
+    m_tss.esp = region->vaddr().offset(default_userspace_stack_size).get();
 
     // NOTE: The stack needs to be 16-byte aligned.
     push_value_on_stack((dword)argument);
@@ -512,13 +530,13 @@ Thread* Thread::clone(Process& process)
     return clone;
 }
 
-KResult Thread::wait_for_connect(FileDescriptor& descriptor)
+KResult Thread::wait_for_connect(FileDescription& description)
 {
-    ASSERT(descriptor.is_socket());
-    auto& socket = *descriptor.socket();
+    ASSERT(description.is_socket());
+    auto& socket = *description.socket();
     if (socket.is_connected())
         return KSuccess;
-    block(Thread::State::BlockedConnect, descriptor);
+    block(Thread::State::BlockedConnect, description);
     Scheduler::yield();
     if (!socket.is_connected())
         return KResult(-ECONNREFUSED);

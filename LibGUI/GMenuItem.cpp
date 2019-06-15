@@ -1,6 +1,6 @@
-#include <LibGUI/GMenuItem.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GEventLoop.h>
+#include <LibGUI/GMenuItem.h>
 #include <WindowServer/WSAPITypes.h>
 
 GMenuItem::GMenuItem(unsigned menu_id, Type type)
@@ -14,7 +14,7 @@ GMenuItem::GMenuItem(unsigned menu_id, Retained<GAction>&& action)
     , m_menu_id(menu_id)
     , m_action(move(action))
 {
-    m_action->register_menu_item({ }, *this);
+    m_action->register_menu_item({}, *this);
     m_enabled = m_action->is_enabled();
     m_checkable = m_action->is_checkable();
     if (m_checkable)
@@ -24,7 +24,7 @@ GMenuItem::GMenuItem(unsigned menu_id, Retained<GAction>&& action)
 GMenuItem::~GMenuItem()
 {
     if (m_action)
-        m_action->unregister_menu_item({ }, *this);
+        m_action->unregister_menu_item({}, *this);
 }
 
 void GMenuItem::set_enabled(bool enabled)

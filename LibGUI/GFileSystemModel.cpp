@@ -1,17 +1,21 @@
-#include <LibGUI/GFileSystemModel.h>
-#include <LibCore/CDirIterator.h>
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
-#include <sys/stat.h>
+#include <LibCore/CDirIterator.h>
+#include <LibGUI/GFileSystemModel.h>
 #include <dirent.h>
-#include <unistd.h>
 #include <stdio.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 struct GFileSystemModel::Node {
     String name;
     Node* parent { nullptr };
     Vector<Node*> children;
-    enum Type { Unknown, Directory, File };
+    enum Type {
+        Unknown,
+        Directory,
+        File
+    };
     Type type { Unknown };
 
     bool has_traversed { false };
@@ -92,7 +96,7 @@ struct GFileSystemModel::Node {
     }
 };
 
-GModelIndex GFileSystemModel::index(const String& path) const
+GModelIndex GFileSystemModel::index(const StringView& path) const
 {
     FileSystemPath canonical_path(path);
     const Node* node = m_root;
@@ -111,21 +115,21 @@ GModelIndex GFileSystemModel::index(const String& path) const
             }
         }
         if (!found)
-            return { };
+            return {};
     }
-    return { };
+    return {};
 }
 
 String GFileSystemModel::path(const GModelIndex& index) const
 {
     if (!index.is_valid())
-        return { };
+        return {};
     auto& node = *(Node*)index.internal_data();
     node.reify_if_needed(*this);
     return node.full_path(*this);
 }
 
-GFileSystemModel::GFileSystemModel(const String& root_path, Mode mode)
+GFileSystemModel::GFileSystemModel(const StringView& root_path, Mode mode)
     : m_root_path(FileSystemPath(root_path).string())
     , m_mode(mode)
 {
@@ -172,11 +176,11 @@ GModelIndex GFileSystemModel::index(int row, int column, const GModelIndex& pare
 GModelIndex GFileSystemModel::parent_index(const GModelIndex& index) const
 {
     if (!index.is_valid())
-        return { };
+        return {};
     auto& node = *(const Node*)index.internal_data();
     if (!node.parent) {
         ASSERT(&node == m_root);
-        return { };
+        return {};
     }
     return node.parent->index(*this);
 }
@@ -184,7 +188,7 @@ GModelIndex GFileSystemModel::parent_index(const GModelIndex& index) const
 GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
 {
     if (!index.is_valid())
-        return { };
+        return {};
     auto& node = *(const Node*)index.internal_data();
     if (role == GModel::Role::Display)
         return node.name;
@@ -196,7 +200,7 @@ GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
         }
         return m_file_icon;
     }
-    return { };
+    return {};
 }
 
 int GFileSystemModel::column_count(const GModelIndex&) const

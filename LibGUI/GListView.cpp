@@ -1,7 +1,7 @@
-#include <LibGUI/GListView.h>
-#include <LibGUI/GScrollBar.h>
-#include <LibGUI/GPainter.h>
 #include <Kernel/KeyCode.h>
+#include <LibGUI/GListView.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GScrollBar.h>
 
 GListView::GListView(GWidget* parent)
     : GAbstractView(parent)
@@ -18,7 +18,7 @@ GListView::~GListView()
 void GListView::update_content_size()
 {
     if (!model())
-        return set_content_size({ });
+        return set_content_size({});
 
     int content_width = 0;
     for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
@@ -76,7 +76,7 @@ void GListView::mousedown_event(GMouseEvent& event)
         update();
         return;
     }
-    model()->set_selected_index({ });
+    model()->set_selected_index({});
     update();
 }
 

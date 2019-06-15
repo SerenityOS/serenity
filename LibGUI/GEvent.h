@@ -10,8 +10,7 @@ class CObject;
 
 class GEvent : public CEvent {
 public:
-    enum Type
-    {
+    enum Type {
         Show = 1000,
         Hide,
         Paint,
@@ -82,7 +81,7 @@ public:
 
 class GWMWindowStateChangedEvent : public GWMEvent {
 public:
-    GWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, GWindowType window_type, bool is_minimized)
+    GWMWindowStateChangedEvent(int client_id, int window_id, const StringView& title, const Rect& rect, bool is_active, GWindowType window_type, bool is_minimized)
         : GWMEvent(GEvent::Type::WM_WindowStateChanged, client_id, window_id)
         , m_title(title)
         , m_rect(rect)
@@ -122,7 +121,7 @@ private:
 
 class GWMWindowIconChangedEvent : public GWMEvent {
 public:
-    GWMWindowIconChangedEvent(int client_id, int window_id, const String& icon_path)
+    GWMWindowIconChangedEvent(int client_id, int window_id, const StringView& icon_path)
         : GWMEvent(GEvent::Type::WM_WindowIconChanged, client_id, window_id)
         , m_icon_path(icon_path)
     {
@@ -218,8 +217,7 @@ public:
     }
 };
 
-enum GMouseButton : byte
-{
+enum GMouseButton : byte {
     None = 0,
     Left = 1,
     Right = 2,
