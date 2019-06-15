@@ -1,5 +1,6 @@
 #include "BucketTool.h"
 #include "PaintableWidget.h"
+#include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/GraphicsBitmap.h>
@@ -15,16 +16,10 @@ BucketTool::~BucketTool()
 
 static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Color target_color, Color fill_color)
 {
-    Vector<Point> queue;
-    queue.append(start_position);
-    int queue_pos = 0;
-    while (queue_pos != queue.size()) {
-        auto position = queue[queue_pos++];
-
-        if (queue_pos > 4096) {
-            queue.shift_left(4096);
-            queue_pos = 0;
-        }
+    Queue<Point> queue;
+    queue.enqueue(Point(start_position));
+    while (!queue.is_empty()) {
+        auto position = queue.dequeue();
 
         if (!bitmap.rect().contains(position))
             continue;
@@ -33,16 +28,16 @@ static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Colo
         bitmap.set_pixel(position, fill_color);
 
         if (position.x() != 0)
-            queue.append(position.translated(0, -1));
+            queue.enqueue(position.translated(0, -1));
 
         if (position.x() != bitmap.width() - 1)
-            queue.append(position.translated(0, 1));
+            queue.enqueue(position.translated(0, 1));
 
         if (position.y() != 0)
-            queue.append(position.translated(-1, 0));
+            queue.enqueue(position.translated(-1, 0));
 
         if (position.y() != bitmap.height() - 1)
-            queue.append(position.translated(1, 0));
+            queue.enqueue(position.translated(1, 0));
     }
 }
 
