@@ -1,4 +1,4 @@
-#include <LibHTML/LayoutNode.h>
+#include <LibHTML/Layout/LayoutNode.h>
 
 LayoutNode::LayoutNode(const Node* node)
     : m_node(node)

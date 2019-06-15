@@ -1,6 +1,6 @@
-#include <LibHTML/Element.h>
-#include <LibHTML/Parser.h>
-#include <LibHTML/Text.h>
+#include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/Text.h>
+#include <LibHTML/Parser/Parser.h>
 #include <ctype.h>
 #include <stdio.h>
 

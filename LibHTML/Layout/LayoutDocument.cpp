@@ -1,4 +1,4 @@
-#include <LibHTML/LayoutDocument.h>
+#include <LibHTML/Layout/LayoutDocument.h>
 
 LayoutDocument::LayoutDocument(const Document& document)
     : LayoutNode(&document)

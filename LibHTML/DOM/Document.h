@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
-#include <LibHTML/ParentNode.h>
+#include <LibHTML/DOM/ParentNode.h>
 
 class LayoutNode;
 

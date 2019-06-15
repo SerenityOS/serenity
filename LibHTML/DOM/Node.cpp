@@ -1,5 +1,5 @@
-#include <LibHTML/Node.h>
-#include <LibHTML/LayoutNode.h>
+#include <LibHTML/DOM/Node.h>
+#include <LibHTML/Layout/LayoutNode.h>
 
 Node::Node(NodeType type)
     : m_type(type)

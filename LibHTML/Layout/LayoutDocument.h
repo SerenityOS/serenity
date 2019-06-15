@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibHTML/LayoutNode.h>
-#include <LibHTML/Document.h>
+#include <LibHTML/Layout/LayoutNode.h>
+#include <LibHTML/DOM/Document.h>
 
 class LayoutDocument : public LayoutNode {
 public:

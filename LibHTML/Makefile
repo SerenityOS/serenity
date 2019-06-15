@@ -1,17 +1,17 @@
 include ../Makefile.common
 
 LIBHTML_OBJS = \
-    Node.o \
-    ParentNode.o \
-    Element.o \
-    Document.o \
-    Text.o \
-    Parser.o \
-    LayoutNode.o \
-    LayoutText.o \
-    LayoutBlock.o \
-    LayoutInline.o \
-    LayoutDocument.o \
+    DOM/Node.o \
+    DOM/ParentNode.o \
+    DOM/Element.o \
+    DOM/Document.o \
+    DOM/Text.o \
+    Parser/Parser.o \
+    Layout/LayoutNode.o \
+    Layout/LayoutText.o \
+    Layout/LayoutBlock.o \
+    Layout/LayoutInline.o \
+    Layout/LayoutDocument.o \
     Dump.o
 
 TEST_OBJS = test.o

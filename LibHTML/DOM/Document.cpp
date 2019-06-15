@@ -1,6 +1,6 @@
-#include <LibHTML/Document.h>
-#include <LibHTML/Element.h>
-#include <LibHTML/LayoutDocument.h>
+#include <LibHTML/DOM/Document.h>
+#include <LibHTML/DOM/Element.h>
+#include <LibHTML/Layout/LayoutDocument.h>
 #include <stdio.h>
 
 Document::Document()

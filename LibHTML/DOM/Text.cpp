@@ -1,5 +1,5 @@
-#include <LibHTML/Text.h>
-#include <LibHTML/LayoutText.h>
+#include <LibHTML/DOM/Text.h>
+#include <LibHTML/Layout/LayoutText.h>
 
 Text::Text(const String& data)
     : Node(NodeType::TEXT_NODE)

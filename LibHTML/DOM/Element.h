@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibHTML/ParentNode.h>
+#include <LibHTML/DOM/ParentNode.h>
 #include <AK/AKString.h>
 
 class Attribute {
