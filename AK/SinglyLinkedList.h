@@ -9,7 +9,7 @@ class SinglyLinkedList {
 private:
     struct Node {
         explicit Node(T&& v)
-            : value(v)
+            : value(move(v))
         {
         }
         T value;
@@ -66,7 +66,7 @@ public:
     {
         ASSERT(m_head);
         auto* prev_head = m_head;
-        T value = first();
+        T value = move(first());
         if (m_tail == m_head)
             m_tail = nullptr;
         m_head = m_head->next;
