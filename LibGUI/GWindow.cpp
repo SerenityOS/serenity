@@ -296,6 +296,11 @@ void GWindow::event(CEvent& event)
     }
 
     if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
+        if (event.type() == GEvent::WindowBecameInactive && m_keybind_mode) {
+          m_keybind_mode = false;
+          update();
+        }
+
         m_is_active = event.type() == GEvent::WindowBecameActive;
         if (m_main_widget)
             m_main_widget->event(event);
