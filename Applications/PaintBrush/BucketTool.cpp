@@ -16,14 +16,16 @@ BucketTool::~BucketTool()
 
 static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Color target_color, Color fill_color)
 {
+    ASSERT(bitmap.format() == GraphicsBitmap::Format::RGB32);
+
     Queue<Point> queue;
     queue.enqueue(Point(start_position));
     while (!queue.is_empty()) {
         auto position = queue.dequeue();
 
-        if (bitmap.get_pixel(position) != target_color)
+        if (bitmap.get_pixel<GraphicsBitmap::Format::RGB32>(position.x(), position.y()) != target_color)
             continue;
-        bitmap.set_pixel(position, fill_color);
+        bitmap.set_pixel<GraphicsBitmap::Format::RGB32>(position.x(), position.y(), fill_color);
 
         if (position.x() != 0)
             queue.enqueue(position.translated(-1, 0));

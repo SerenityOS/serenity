@@ -51,40 +51,26 @@ public:
     Color palette_color(byte index) const { return Color::from_rgba(m_palette[index]); }
     void set_palette_color(byte index, Color color) { m_palette[index] = color.value(); }
 
+    template<Format>
     Color get_pixel(int x, int y) const
     {
-        switch (m_format) {
-        case Format::RGB32:
-            return Color::from_rgb(scanline(y)[x]);
-        case Format::RGBA32:
-            return Color::from_rgba(scanline(y)[x]);
-        case Format::Indexed8:
-            return Color::from_rgba(m_palette[bits(y)[x]]);
-        default:
-            ASSERT_NOT_REACHED();
-        }
+        ASSERT_NOT_REACHED();
     }
+
+    Color get_pixel(int x, int y) const;
 
     Color get_pixel(const Point& position) const
     {
         return get_pixel(position.x(), position.y());
     }
 
-    void set_pixel(int x, int y, Color color)
+    template<Format>
+    void set_pixel(int x, int y, Color)
     {
-        switch (m_format) {
-        case Format::RGB32:
-            scanline(y)[x] = color.value();
-            break;
-        case Format::RGBA32:
-            scanline(y)[x] = color.value();
-            break;
-        case Format::Indexed8:
-            ASSERT_NOT_REACHED();
-        default:
-            ASSERT_NOT_REACHED();
-        }
+        ASSERT_NOT_REACHED();
     }
+
+    void set_pixel(int x, int y, Color);
 
     void set_pixel(const Point& position, Color color)
     {
@@ -125,4 +111,64 @@ inline const byte* GraphicsBitmap::bits(int y) const
 inline byte* GraphicsBitmap::bits(int y)
 {
     return reinterpret_cast<byte*>(scanline(y));
+}
+
+template<>
+inline Color GraphicsBitmap::get_pixel<GraphicsBitmap::Format::RGB32>(int x, int y) const
+{
+    return Color::from_rgb(scanline(y)[x]);
+}
+
+template<>
+inline Color GraphicsBitmap::get_pixel<GraphicsBitmap::Format::RGBA32>(int x, int y) const
+{
+    return Color::from_rgba(scanline(y)[x]);
+}
+
+template<>
+inline Color GraphicsBitmap::get_pixel<GraphicsBitmap::Format::Indexed8>(int x, int y) const
+{
+    return Color::from_rgba(m_palette[bits(y)[x]]);
+}
+
+inline Color GraphicsBitmap::get_pixel(int x, int y) const
+{
+    switch (m_format) {
+    case Format::RGB32:
+        return get_pixel<Format::RGB32>(x, y);
+    case Format::RGBA32:
+        return get_pixel<Format::RGBA32>(x, y);
+    case Format::Indexed8:
+        return get_pixel<Format::Indexed8>(x, y);
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+template<>
+inline void GraphicsBitmap::set_pixel<GraphicsBitmap::Format::RGB32>(int x, int y, Color color)
+{
+    scanline(y)[x] = color.value();
+}
+
+template<>
+inline void GraphicsBitmap::set_pixel<GraphicsBitmap::Format::RGBA32>(int x, int y, Color color)
+{
+    scanline(y)[x] = color.value();
+}
+
+inline void GraphicsBitmap::set_pixel(int x, int y, Color color)
+{
+    switch (m_format) {
+    case Format::RGB32:
+        set_pixel<Format::RGB32>(x, y, color);
+        break;
+    case Format::RGBA32:
+        set_pixel<Format::RGBA32>(x, y, color);
+        break;
+    case Format::Indexed8:
+        ASSERT_NOT_REACHED();
+    default:
+        ASSERT_NOT_REACHED();
+    }
 }
