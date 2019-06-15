@@ -34,11 +34,13 @@ public:
     void set_attributes(Vector<Attribute>&&);
 
     template<typename Callback>
-    void for_each_attribute(Callback callback)
+    void for_each_attribute(Callback callback) const
     {
         for (auto& attribute : m_attributes)
             callback(attribute.name(), attribute.value());
     }
+
+    virtual RetainPtr<LayoutNode> create_layout_node() override;
 
 private:
     Attribute* find_attribute(const String& name);
