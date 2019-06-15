@@ -83,6 +83,7 @@ cp ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
 cp ../Servers/SystemServer/SystemServer mnt/bin/SystemServer
 cp ../Servers/WindowServer/WindowServer mnt/bin/WindowServer
 cp ../Shell/Shell mnt/bin/Shell
+cp ../LibHTML/tho mnt/bin/tho
 echo "done"
 
 echo -n "installing shortcuts... "
