@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibHTML/LayoutNode.h>
+#include <LibHTML/Layout/LayoutNode.h>
 
 class Element;
 

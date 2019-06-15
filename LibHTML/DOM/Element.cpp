@@ -1,6 +1,6 @@
-#include <LibHTML/Element.h>
-#include <LibHTML/LayoutBlock.h>
-#include <LibHTML/LayoutInline.h>
+#include <LibHTML/DOM/Element.h>
+#include <LibHTML/Layout/LayoutBlock.h>
+#include <LibHTML/Layout/LayoutInline.h>
 
 Element::Element(const String& tag_name)
     : ParentNode(NodeType::ELEMENT_NODE)

@@ -1,7 +1,6 @@
 #include <LibCore/CFile.h>
 #include <LibHTML/Dump.h>
-#include <LibHTML/Element.h>
-#include <LibHTML/Parser.h>
+#include <LibHTML/Parser/Parser.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

@@ -1,4 +1,4 @@
-#include <LibHTML/LayoutText.h>
+#include <LibHTML/Layout/LayoutText.h>
 #include <ctype.h>
 
 LayoutText::LayoutText(const Text& text)

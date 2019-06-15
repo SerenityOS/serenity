@@ -1,4 +1,4 @@
-#include <LibHTML/ParentNode.h>
+#include <LibHTML/DOM/ParentNode.h>
 
 void ParentNode::append_child(Retained<Node> node)
 {

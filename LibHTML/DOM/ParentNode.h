@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibHTML/Node.h>
+#include <LibHTML/DOM/Node.h>
 
 class ParentNode : public Node {
 public:

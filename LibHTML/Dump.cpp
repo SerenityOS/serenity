@@ -1,9 +1,9 @@
-#include <LibHTML/Document.h>
+#include <LibHTML/DOM/Document.h>
+#include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/Text.h>
 #include <LibHTML/Dump.h>
-#include <LibHTML/Element.h>
-#include <LibHTML/LayoutNode.h>
-#include <LibHTML/LayoutText.h>
-#include <LibHTML/Text.h>
+#include <LibHTML/Layout/LayoutNode.h>
+#include <LibHTML/Layout/LayoutText.h>
 #include <stdio.h>
 
 void dump_tree(const Node& node)

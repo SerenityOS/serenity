@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
-#include <LibHTML/Node.h>
+#include <LibHTML/DOM/Node.h>
 
 class Text final : public Node {
 public:

@@ -1,5 +1,5 @@
-#include <LibHTML/Element.h>
-#include <LibHTML/LayoutBlock.h>
+#include <LibHTML/DOM/Element.h>
+#include <LibHTML/Layout/LayoutBlock.h>
 
 LayoutBlock::LayoutBlock(Element& element)
     : LayoutNode(&element)
