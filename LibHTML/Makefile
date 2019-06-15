@@ -7,6 +7,11 @@ LIBHTML_OBJS = \
     Document.o \
     Text.o \
     Parser.o \
+    LayoutNode.o \
+    LayoutText.o \
+    LayoutBlock.o \
+    LayoutInline.o \
+    LayoutDocument.o \
     Dump.o
 
 TEST_OBJS = test.o

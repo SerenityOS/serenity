@@ -1,4 +1,6 @@
 #include <LibHTML/Element.h>
+#include <LibHTML/LayoutBlock.h>
+#include <LibHTML/LayoutInline.h>
 
 Element::Element(const String& tag_name)
     : ParentNode(NodeType::ELEMENT_NODE)
@@ -46,4 +48,19 @@ void Element::set_attribute(const String& name, const String& value)
 void Element::set_attributes(Vector<Attribute>&& attributes)
 {
     m_attributes = move(attributes);
+}
+
+RetainPtr<LayoutNode> Element::create_layout_node()
+{
+    if (m_tag_name == "html")
+        return adopt(*new LayoutBlock(*this));
+    if (m_tag_name == "body")
+        return adopt(*new LayoutBlock(*this));
+    if (m_tag_name == "h1")
+        return adopt(*new LayoutBlock(*this));
+    if (m_tag_name == "p")
+        return adopt(*new LayoutBlock(*this));
+    if (m_tag_name == "b")
+        return adopt(*new LayoutInline(*this));
+    return nullptr;
 }

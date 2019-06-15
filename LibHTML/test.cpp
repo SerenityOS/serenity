@@ -14,5 +14,9 @@ int main(int argc, char** argv)
     String html = String::copy(f.read_all());
     auto doc = parse(html);
     dump_tree(doc);
+
+    doc->build_layout_tree();
+    ASSERT(doc->layout_node());
+    dump_tree(*doc->layout_node());
     return 0;
 }
