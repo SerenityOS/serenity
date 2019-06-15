@@ -44,16 +44,10 @@ public:
     {
         m_ptr->retain();
     }
-    RETURN_TYPESTATE(unconsumed)
-    Retained(T& object)
-        : m_ptr(&object)
-    {
-        m_ptr->retain();
-    }
     template<typename U>
     RETURN_TYPESTATE(unconsumed)
-    Retained(U& object)
-        : m_ptr(&static_cast<T&>(object))
+    Retained(const U& object)
+        : m_ptr(&const_cast<T&>(static_cast<const T&>(object)))
     {
         m_ptr->retain();
     }
@@ -198,6 +192,19 @@ public:
     {
         ASSERT(m_ptr);
         return m_ptr;
+    }
+
+    CALLABLE_WHEN(unconsumed)
+    operator T&()
+    {
+        ASSERT(m_ptr);
+        return *m_ptr;
+    }
+    CALLABLE_WHEN(unconsumed)
+    operator const T&() const
+    {
+        ASSERT(m_ptr);
+        return *m_ptr;
     }
 
 private:
