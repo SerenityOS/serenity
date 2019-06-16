@@ -32,6 +32,7 @@ public:
     unsigned fsid() const { return m_fsid; }
     static FS* from_fsid(dword);
     static void sync();
+    static void lock_all();
 
     virtual bool initialize() = 0;
     virtual const char* class_name() const = 0;
