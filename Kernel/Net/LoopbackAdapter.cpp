@@ -10,6 +10,7 @@ LoopbackAdapter& LoopbackAdapter::the()
 
 LoopbackAdapter::LoopbackAdapter()
 {
+    set_interface_name("loop");
     set_ipv4_address({ 127, 0, 0, 1 });
 }
 
