@@ -9,6 +9,7 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KParams.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -41,6 +42,7 @@ enum ProcFileType {
     FI_Root_dmesg,
     FI_Root_pci,
     FI_Root_uptime,
+    FI_Root_cmdline,
     FI_Root_netadapters,
     FI_Root_self, // symlink
     FI_Root_sys,  // directory
@@ -250,6 +252,13 @@ ByteBuffer procfs$uptime(InodeIdentifier)
 {
     StringBuilder builder;
     builder.appendf("%u\n", (dword)(g_uptime / 1000));
+    return builder.to_byte_buffer();
+}
+
+ByteBuffer procfs$cmdline(InodeIdentifier)
+{
+    StringBuilder builder;
+    builder.appendf("%s\n", KParams::the().cmdline().characters());
     return builder.to_byte_buffer();
 }
 
@@ -1113,6 +1122,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_self] = { "self", FI_Root_self, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, procfs$pci };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, procfs$uptime };
+    m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, procfs$cmdline };
     m_entries[FI_Root_netadapters] = { "netadapters", FI_Root_netadapters, procfs$netadapters };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
 
