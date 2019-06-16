@@ -1,7 +1,6 @@
 #pragma once
 
 #include <LibGUI/GWidget.h>
-
 class Tool;
 
 class PaintableWidget final : public GWidget {
@@ -19,8 +18,8 @@ public:
     void set_primary_color(Color color) { m_primary_color = color; }
     void set_secondary_color(Color color) { m_secondary_color = color; }
 
-    void set_tool(Tool* tool) { m_tool = tool; }
-    Tool* tool() { return m_tool; }
+    void set_tool(Tool* tool);
+    Tool* tool();
 
     Color color_for(const GMouseEvent&);
 

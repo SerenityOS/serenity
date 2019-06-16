@@ -1,5 +1,6 @@
 #include "ToolboxWidget.h"
 #include "BucketTool.h"
+#include "SprayTool.h"
 #include "PaintableWidget.h"
 #include "PenTool.h"
 #include <LibGUI/GBoxLayout.h>
@@ -57,6 +58,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
 
     add_tool("Pen", "pen", make<PenTool>());
     add_tool("Bucket Fill", "bucket", make<BucketTool>());
+    add_tool("Spray", "", make<SprayTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()

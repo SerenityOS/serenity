@@ -7,7 +7,7 @@ public:
     BucketTool();
     virtual ~BucketTool() override;
 
-    virtual void on_mousedown(PaintableWidget&, GMouseEvent&) override;
+    virtual void on_mousedown(GMouseEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "BucketTool"; }
