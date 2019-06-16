@@ -18,6 +18,9 @@ static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Colo
 {
     ASSERT(bitmap.format() == GraphicsBitmap::Format::RGB32);
 
+    if (target_color == fill_color)
+        return;
+
     Queue<Point> queue;
     queue.enqueue(Point(start_position));
     while (!queue.is_empty()) {
