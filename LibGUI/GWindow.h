@@ -2,14 +2,12 @@
 
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
-#include <AK/StringBuilder.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibGUI/GWindowType.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <SharedGraphics/Rect.h>
 
-class GPainter;
 class GWidget;
 class GWMEvent;
 
@@ -168,6 +166,6 @@ private:
     bool m_show_titlebar { true };
     bool m_keybind_mode { false };
     String m_entered_keybind;
-    size_t m_max_keybind_length;
+    size_t m_max_keybind_length { 0 };
     HashMap<String, GWidget*> m_hashed_potential_keybind_widgets;
 };
