@@ -3,6 +3,7 @@
 #include "GEventLoop.h"
 #include "GWidget.h"
 #include <AK/HashMap.h>
+#include <AK/StringBuilder.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
@@ -350,27 +351,26 @@ void GWindow::event(CEvent& event)
 }
 
 void GWindow::paint_keybinds() {
-    if (m_keybind_mode) {
-        GPainter painter(*m_main_widget);
+    if (!m_keybind_mode) return;
+    GPainter painter(*m_main_widget);
 
-        for (auto& keypair: m_hashed_potential_keybind_widgets) {
-            auto widget = keypair.value;
-            bool could_be_keybind = true;
-            for (size_t i = 0; i < m_entered_keybind.length(); i++) {
-                if (keypair.key.characters()[i] != m_entered_keybind.characters()[i]) {
-                    could_be_keybind = false;
-                }
+    for (auto& keypair: m_hashed_potential_keybind_widgets) {
+        auto widget = keypair.value;
+        bool could_be_keybind = true;
+        for (size_t i = 0; i < m_entered_keybind.length(); i++) {
+            if (keypair.key.characters()[i] != m_entered_keybind.characters()[i]) {
+                could_be_keybind = false;
             }
+        }
 
-            if (could_be_keybind) {
-                auto rect = Rect(widget->x()-5, widget->y()-5, 4+Font::default_font().width(keypair.key), 16);
-                auto highlight_rect = Rect(widget->x()-3, widget->y()-5, 0, 16);
+        if (could_be_keybind) {
+            auto rect = Rect(widget->x()-5, widget->y()-5, 4+Font::default_font().width(keypair.key), 16);
+            auto highlight_rect = Rect(widget->x()-3, widget->y()-5, 0, 16);
 
-                painter.fill_rect(rect, Color::LightGray);
-                painter.draw_rect(rect, Color::Black, false);
-                painter.draw_text(rect, keypair.key.characters(), TextAlignment::Center, Color::Black);
-                painter.draw_text(highlight_rect, m_entered_keybind.characters(), TextAlignment::CenterLeft, Color::MidGray);
-            }
+            painter.fill_rect(rect, Color::LightGray);
+            painter.draw_rect(rect, Color::Black, false);
+            painter.draw_text(rect, keypair.key.characters(), TextAlignment::Center, Color::Black);
+            painter.draw_text(highlight_rect, m_entered_keybind.characters(), TextAlignment::CenterLeft, Color::MidGray);
         }
     }
 }
