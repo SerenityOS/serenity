@@ -61,15 +61,12 @@ void ColorDialog::build()
          spinbox->set_value(initial_value);
 
          spinbox->on_change = [=](auto value) {
-             dbgprintf("on_change, component=%d, value=%d\n", component, value);
              if (component == Red)
                 m_color.set_red(value);
              if (component == Green)
                 m_color.set_green(value);
              if (component == Blue)
                 m_color.set_blue(value);
-
-             dbgprintf("m_color is now: %s\n", m_color.to_string().characters());
 
              preview_widget->set_background_color(m_color);
              preview_widget->update();
