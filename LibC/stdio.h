@@ -57,6 +57,8 @@ int fileno(FILE*);
 int fgetc(FILE*);
 int getc(FILE*);
 int getchar();
+ssize_t getdelim(char**, size_t*, int, FILE*);
+ssize_t getline(char**, size_t*, FILE*);
 int ungetc(int c, FILE*);
 int remove(const char* pathname);
 FILE* fdopen(int fd, const char* mode);
