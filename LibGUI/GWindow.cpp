@@ -288,10 +288,9 @@ void GWindow::event(CEvent& event)
                 auto found_widget = m_hashed_potential_keybind_widgets.find(m_entered_keybind);
                 if (found_widget != m_hashed_potential_keybind_widgets.end()) {
                     m_keybind_mode = false;
-                    const auto& point = Point();
-                    auto event = make<GMouseEvent>(GEvent::MouseDown, point, 0, GMouseButton::Left, 0, 0);
+                    auto event = make<GMouseEvent>(GEvent::MouseDown, Point(), 0, GMouseButton::Left, 0, 0);
                     found_widget->value->event(*event);
-                    event = make<GMouseEvent>(GEvent::MouseUp, point, 0, GMouseButton::Left, 0, 0);
+                    event = make<GMouseEvent>(GEvent::MouseUp, Point(), 0, GMouseButton::Left, 0, 0);
                     found_widget->value->event(*event);
                 } else if (m_entered_keybind.length() >= m_max_keybind_length) {
                     m_keybind_mode = false;
