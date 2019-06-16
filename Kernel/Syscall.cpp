@@ -1,6 +1,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Console.h>
 #include <Kernel/Process.h>
+#include <Kernel/IO.h>
 #include <Kernel/ProcessTracer.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Syscall.h>
@@ -281,6 +282,15 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
         return current->process().sys$sched_setparam((pid_t)arg1, (struct sched_param*)arg2);
     case Syscall::SC_sched_getparam:
         return current->process().sys$sched_setparam((pid_t)arg1, (struct sched_param*)arg2);
+    case Syscall::SC_halt: {
+        dbgprintf("<%u> halting! acquiring locks...\n");
+        FS::lock_all();
+        dbgprintf("<%u> halting! syncing...\n");
+        FS::sync();
+        dbgprintf("<%u> halting! bye, friends...\n");
+        IO::out16(0x604, 0x2000);
+        break;
+    }
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         return -ENOSYS;

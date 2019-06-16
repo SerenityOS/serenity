@@ -68,3 +68,11 @@ void FS::sync()
     for (auto fs : fses)
         fs->flush_writes();
 }
+
+void FS::lock_all()
+{
+    for (auto& it : all_fses()) {
+        it.value->m_lock.lock();
+    }
+}
+
