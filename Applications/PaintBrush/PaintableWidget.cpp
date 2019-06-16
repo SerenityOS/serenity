@@ -32,6 +32,20 @@ void PaintableWidget::paint_event(GPaintEvent& event)
     painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
 }
 
+void PaintableWidget::set_tool(Tool* tool)
+{
+    if (m_tool)
+        m_tool->clear();
+    m_tool = tool;
+    if (m_tool)
+        m_tool->setup(*this);
+}
+
+Tool* PaintableWidget::tool()
+{
+    return m_tool;
+}
+
 Color PaintableWidget::color_for(const GMouseEvent& event)
 {
     if (event.buttons() & GMouseButton::Left)
@@ -44,17 +58,17 @@ Color PaintableWidget::color_for(const GMouseEvent& event)
 void PaintableWidget::mousedown_event(GMouseEvent& event)
 {
     if (m_tool)
-        m_tool->on_mousedown(*this, event);
+        m_tool->on_mousedown(event);
 }
 
 void PaintableWidget::mouseup_event(GMouseEvent& event)
 {
     if (m_tool)
-        m_tool->on_mouseup(*this, event);
+        m_tool->on_mouseup(event);
 }
 
 void PaintableWidget::mousemove_event(GMouseEvent& event)
 {
     if (m_tool)
-        m_tool->on_mousemove(*this, event);
+        m_tool->on_mousemove(event);
 }

@@ -1,7 +1,7 @@
 #pragma once
 
+#include "PaintableWidget.h"
 class GMouseEvent;
-class PaintableWidget;
 
 class Tool {
 public:
@@ -9,10 +9,14 @@ public:
 
     virtual const char* class_name() const = 0;
 
-    virtual void on_mousedown(PaintableWidget&, GMouseEvent&) { }
-    virtual void on_mousemove(PaintableWidget&, GMouseEvent&) { }
-    virtual void on_mouseup(PaintableWidget&, GMouseEvent&) { }
+    virtual void on_mousedown(GMouseEvent&) { }
+    virtual void on_mousemove(GMouseEvent&) { }
+    virtual void on_mouseup(GMouseEvent&) { }
+
+    void clear() { m_widget = nullptr; }
+    void setup(PaintableWidget& widget) { m_widget = widget.make_weak_ptr(); }
 
 protected:
     Tool();
+    WeakPtr<PaintableWidget> m_widget;
 };

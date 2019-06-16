@@ -8,9 +8,9 @@ public:
     PenTool();
     virtual ~PenTool() override;
 
-    virtual void on_mousedown(PaintableWidget&, GMouseEvent&) override;
-    virtual void on_mousemove(PaintableWidget&, GMouseEvent&) override;
-    virtual void on_mouseup(PaintableWidget&, GMouseEvent&) override;
+    virtual void on_mousedown(GMouseEvent&) override;
+    virtual void on_mousemove(GMouseEvent&) override;
+    virtual void on_mouseup(GMouseEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "PenTool"; }
