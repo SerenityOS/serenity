@@ -66,8 +66,9 @@ void GButton::click()
         on_click(*this);
 }
 
-bool GButton::accepts_keyboard_select() const {
-  return is_enabled();
+bool GButton::accepts_keyboard_select() const
+{
+    return is_enabled();
 }
 
 void GButton::set_action(GAction& action)
