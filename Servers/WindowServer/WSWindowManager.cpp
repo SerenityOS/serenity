@@ -65,6 +65,8 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About..."));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
         m_system_menu->on_item_activation = [this, apps](WSMenuItem& item) {
             if (item.identifier() >= 1 && item.identifier() <= 1 + apps.size() - 1) {
                 if (fork() == 0) {
@@ -77,10 +79,15 @@ WSWindowManager::WSWindowManager()
             case 100:
                 reload_config(true);
                 break;
-            }
-            if (item.identifier() == 200) {
+            case 200:
                 if (fork() == 0) {
                     execl("/bin/About", "/bin/About", nullptr);
+                    ASSERT_NOT_REACHED();
+                }
+                return;
+            case 300:
+                if (fork() == 0) {
+                    execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
                     ASSERT_NOT_REACHED();
                 }
                 return;
