@@ -58,6 +58,24 @@ public:
         m_value |= value << 24;
     }
 
+    void set_red(byte value)
+    {
+        m_value &= 0xff00ffff;
+        m_value |= value << 16;
+    }
+
+    void set_green(byte value)
+    {
+        m_value &= 0xffff00ff;
+        m_value |= value << 8;
+    }
+
+    void set_blue(byte value)
+    {
+        m_value &= 0xffffff00;
+        m_value |= value;
+    }
+
     Color with_alpha(byte alpha)
     {
         return Color((m_value & 0x00ffffff) | alpha << 24);
