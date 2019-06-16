@@ -5,6 +5,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <LibCore/CFile.h>
 
 void start_process(const char* prog, int prio)
 {
@@ -47,6 +48,30 @@ void start_process(const char* prog, int prio)
     }
 }
 
+static void check_for_test_mode()
+{
+    CFile f("/proc/cmdline");
+    if (!f.open(CIODevice::ReadOnly)) {
+        dbgprintf("Failed to read command line: %s\n", f.error_string());
+        ASSERT(false);
+    }
+    const String cmd = String::copy(f.read_all());
+    dbgprintf("Read command line: %s\n", cmd.characters());
+    if (cmd.matches("*testmode=1*")) {
+        // Eventually, we should run a test binary and wait for it to finish
+        // before shutting down. But this is good enough for now.
+        dbgprintf("Waiting for testmode shutdown...\n");
+        sleep(5);
+        dbgprintf("Shutting down due to testmode...\n");
+        if (fork() == 0) {
+            execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
+            ASSERT_NOT_REACHED();
+        }
+    } else {
+        dbgprintf("Continuing normally\n");
+    }
+}
+
 int main(int, char**)
 {
     int lowest_prio = sched_get_priority_min(SCHED_OTHER);
@@ -56,6 +81,9 @@ int main(int, char**)
     start_process("/bin/Taskbar", highest_prio);
     start_process("/bin/Terminal", highest_prio - 1);
     start_process("/bin/Launcher", highest_prio);
+
+    // This won't return if we're in test mode.
+    check_for_test_mode();
 
     while (1) {
         sleep(1);
