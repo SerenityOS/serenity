@@ -2,6 +2,7 @@
 
 #include <AK/Retained.h>
 #include <AK/Vector.h>
+#include <LibHTML/Layout/LayoutStyle.h>
 #include <SharedGraphics/Rect.h>
 
 class Node;
@@ -16,6 +17,9 @@ public:
 
     const Rect& rect() const { return m_rect; }
     void set_rect(const Rect& rect) { m_rect = rect; }
+
+    LayoutStyle& style() { return m_style; }
+    const LayoutStyle& style() const { return m_style; }
 
     bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }
@@ -55,5 +59,6 @@ private:
     LayoutNode* m_last_child { nullptr };
     LayoutNode* m_next_sibling { nullptr };
     LayoutNode* m_previous_sibling { nullptr };
+    LayoutStyle m_style;
     Rect m_rect;
 };
