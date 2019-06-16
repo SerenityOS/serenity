@@ -2,15 +2,37 @@
 #include <LibM/math.h>
 
 extern "C" {
-
-double cos(double)
+double trunc(double x)
 {
-    ASSERT_NOT_REACHED();
+    return (int)x;
 }
 
-double sin(double)
+double cos(double angle)
 {
-    ASSERT_NOT_REACHED();
+    return sin(angle + M_PI_2);
+}
+
+double ampsin(double angle)
+{
+    double looped_angle = fmod(M_PI + angle, M_TAU);
+    double looped_angle_squared = looped_angle * looped_angle;
+
+    double quadratic_term;
+    if (looped_angle_squared > 0) {
+        quadratic_term = -looped_angle_squared;
+    } else {
+        quadratic_term = looped_angle_squared;
+    }
+
+    double linear_term = M_PI * looped_angle;
+
+    return quadratic_term * linear_term;
+}
+
+double sin(double angle)
+{
+    double vertical_scaling = M_PI_2 * M_PI_2;
+    return ampsin(angle) / vertical_scaling;
 }
 
 double pow(double x, double y)
@@ -31,9 +53,9 @@ double tanh(double)
     ASSERT_NOT_REACHED();
 }
 
-double tan(double)
+double tan(double angle)
 {
-    ASSERT_NOT_REACHED();
+    return ampsin(angle) / ampsin(M_PI_2 + angle);
 }
 
 double sqrt(double)
@@ -56,9 +78,9 @@ double log(double)
     ASSERT_NOT_REACHED();
 }
 
-double fmod(double, double)
+double fmod(double index, double period)
 {
-    ASSERT_NOT_REACHED();
+    return index - trunc(index / period) * period;
 }
 
 double exp(double)
