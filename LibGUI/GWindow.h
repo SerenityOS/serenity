@@ -134,7 +134,7 @@ private:
     void paint_keybinds();
 
     void find_keyboard_selectable();
-    void find_keyboard_selectable_children(GWidget* widget, Vector<GWidget*> &potential_keybind_widgets);
+    void find_keyboard_selectable_children(GWidget* widget, Vector<GWidget*>& potential_keybind_widgets);
     Retained<GraphicsBitmap> create_backing_bitmap(const Size&);
     void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);
     void flip(const Vector<Rect, 32>& dirty_rects);
