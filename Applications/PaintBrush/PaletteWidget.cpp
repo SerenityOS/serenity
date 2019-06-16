@@ -1,4 +1,5 @@
 #include "PaletteWidget.h"
+#include "ColorDialog.h"
 #include "PaintableWidget.h"
 #include <LibGUI/GBoxLayout.h>
 
@@ -20,6 +21,16 @@ public:
 
     virtual void mousedown_event(GMouseEvent& event) override
     {
+        if (event.modifiers() & KeyModifier::Mod_Ctrl && event.button() == GMouseButton::Left) {
+            ColorDialog dialog(m_color, window());
+            if (dialog.exec() == GDialog::ExecOK) {
+                m_color = dialog.color();
+                set_background_color(m_color);
+                update();
+            }
+            return;
+        }
+
         if (event.button() == GMouseButton::Left)
             m_palette_widget.set_primary_color(m_color);
         else if (event.button() == GMouseButton::Right)
@@ -75,7 +86,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     bottom_color_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     bottom_color_container->layout()->set_spacing(1);
 
-    auto add_color_widget = [&] (GWidget* container, Color color) {
+    auto add_color_widget = [&](GWidget* container, Color color) {
         auto* color_widget = new ColorWidget(color, *this, container);
         color_widget->set_fill_with_background_color(true);
         color_widget->set_background_color(color);
