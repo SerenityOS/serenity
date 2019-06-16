@@ -107,6 +107,9 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, byte irq)
     , m_pci_address(pci_address)
 {
     s_the = this;
+
+    set_interface_name("e1k");
+
     kprintf("E1000: Found at PCI address %b:%b:%b\n", pci_address.bus(), pci_address.slot(), pci_address.function());
 
     enable_bus_mastering(m_pci_address);

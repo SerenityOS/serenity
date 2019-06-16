@@ -14,6 +14,13 @@ static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
     return *table;
 }
 
+void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)
+{
+    LOCKER(all_adapters().lock());
+    for (auto& it : all_adapters().resource())
+        callback(*it);
+}
+
 NetworkAdapter* NetworkAdapter::from_ipv4_address(const IPv4Address& address)
 {
     LOCKER(all_adapters().lock());
@@ -88,6 +95,12 @@ ByteBuffer NetworkAdapter::dequeue_packet()
 void NetworkAdapter::set_ipv4_address(const IPv4Address& address)
 {
     m_ipv4_address = address;
+}
+
+void NetworkAdapter::set_interface_name(const StringView& basename)
+{
+    // FIXME: Find a unique name for this interface, starting with $basename.
+    m_name = String::format("%s0", basename.characters());
 }
 
 bool PacketQueueAlarm::is_ringing() const
