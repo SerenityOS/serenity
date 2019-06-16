@@ -1,5 +1,6 @@
 #include <LibCore/CFile.h>
 #include <LibHTML/Dump.h>
+#include <LibHTML/Frame.h>
 #include <LibHTML/Parser/Parser.h>
 #include <stdio.h>
 
@@ -16,6 +17,12 @@ int main(int argc, char** argv)
 
     doc->build_layout_tree();
     ASSERT(doc->layout_node());
+    dump_tree(*doc->layout_node());
+
+    auto frame = make<Frame>();
+    frame->set_document(doc);
+    frame->layout();
+
     dump_tree(*doc->layout_node());
     return 0;
 }

@@ -8,3 +8,9 @@ LayoutDocument::LayoutDocument(const Document& document)
 LayoutDocument::~LayoutDocument()
 {
 }
+
+void LayoutDocument::layout()
+{
+    rect().set_width(style().size().width());
+    LayoutNode::layout();
+}
