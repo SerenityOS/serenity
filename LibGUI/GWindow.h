@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/HashMap.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibGUI/GWindowType.h>
@@ -130,6 +131,10 @@ protected:
 private:
     virtual bool is_window() const override final { return true; }
 
+    void paint_keybinds();
+
+    void find_keyboard_selectable();
+    void find_keyboard_selectable_children(GWidget* widget, Vector<GWidget*>& potential_keybind_widgets);
     Retained<GraphicsBitmap> create_backing_bitmap(const Size&);
     void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);
     void flip(const Vector<Rect, 32>& dirty_rects);
@@ -159,4 +164,8 @@ private:
     bool m_resizable { true };
     bool m_fullscreen { false };
     bool m_show_titlebar { true };
+    bool m_keybind_mode { false };
+    String m_entered_keybind;
+    size_t m_max_keybind_length { 0 };
+    HashMap<String, GWidget*> m_hashed_potential_keybind_widgets;
 };
