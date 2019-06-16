@@ -12,6 +12,7 @@ LIBHTML_OBJS = \
     Layout/LayoutBlock.o \
     Layout/LayoutInline.o \
     Layout/LayoutDocument.o \
+    Layout/LayoutStyle.o \
     Dump.o
 
 TEST_OBJS = test.o
