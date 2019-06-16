@@ -1,6 +1,7 @@
 #pragma once
 
 #include <SharedGraphics/Color.h>
+#include <SharedGraphics/Size.h>
 
 struct Box {
     int top { 0 };
@@ -32,6 +33,9 @@ public:
 
     FontStyle font_style() const { return m_font_style; }
 
+    const Size& size() const { return m_size; }
+    Size& size() { return m_size; }
+
 private:
     Color m_text_color;
     Color m_background_color;
@@ -39,6 +43,8 @@ private:
     Box m_offset;
     Box m_margin;
     Box m_padding;
+
+    Size m_size;
 
     FontStyle m_font_style { FontStyle::Normal };
 };

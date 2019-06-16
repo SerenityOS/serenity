@@ -16,6 +16,7 @@ public:
     int retain_count() const { return m_retain_count; }
 
     const Rect& rect() const { return m_rect; }
+    Rect& rect() { return m_rect; }
     void set_rect(const Rect& rect) { m_rect = rect; }
 
     LayoutStyle& style() { return m_style; }
@@ -45,8 +46,17 @@ public:
             callback(*node);
     }
 
+    template<typename Callback>
+    inline void for_each_child(Callback callback)
+    {
+        for (auto* node = first_child(); node; node = node->next_sibling())
+            callback(*node);
+    }
+
     virtual const char* class_name() const { return "LayoutNode"; }
     virtual bool is_text() const { return false; }
+
+    virtual void layout();
 
 protected:
     explicit LayoutNode(const Node*);

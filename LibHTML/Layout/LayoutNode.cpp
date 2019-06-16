@@ -31,3 +31,10 @@ void LayoutNode::append_child(Retained<LayoutNode> node)
     if (!m_first_child)
         m_first_child = m_last_child;
 }
+
+void LayoutNode::layout()
+{
+    for_each_child([](auto& child) {
+        child.layout();
+    });
+}
