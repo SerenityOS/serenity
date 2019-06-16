@@ -2,6 +2,7 @@
 
 #include <AK/Retained.h>
 #include <AK/Vector.h>
+#include <SharedGraphics/Rect.h>
 
 class Node;
 
@@ -13,6 +14,10 @@ public:
     void release();
     int retain_count() const { return m_retain_count; }
 
+    const Rect& rect() const { return m_rect; }
+    void set_rect(const Rect& rect) { m_rect = rect; }
+
+    bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }
 
     LayoutNode* next_sibling() { return m_next_sibling; }
@@ -50,5 +55,5 @@ private:
     LayoutNode* m_last_child { nullptr };
     LayoutNode* m_next_sibling { nullptr };
     LayoutNode* m_previous_sibling { nullptr };
+    Rect m_rect;
 };
-
