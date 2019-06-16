@@ -6,6 +6,7 @@ GSpinBox::GSpinBox(GWidget* parent)
     : GWidget(parent)
 {
     m_editor = new GTextEditor(GTextEditor::Type::SingleLine, this);
+    m_editor->set_text("0");
     m_editor->on_change = [this] {
         bool ok;
         int value = m_editor->text().to_uint(ok);
