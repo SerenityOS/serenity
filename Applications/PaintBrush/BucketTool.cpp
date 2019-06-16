@@ -44,15 +44,15 @@ static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Colo
     }
 }
 
-void BucketTool::on_mousedown(PaintableWidget& paintable_widget, GMouseEvent& event)
+void BucketTool::on_mousedown(GMouseEvent& event)
 {
-    if (!paintable_widget.rect().contains(event.position()))
+    if (!m_widget->rect().contains(event.position()))
         return;
 
-    GPainter painter(paintable_widget.bitmap());
-    auto target_color = paintable_widget.bitmap().get_pixel(event.x(), event.y());
+    GPainter painter(m_widget->bitmap());
+    auto target_color = m_widget->bitmap().get_pixel(event.x(), event.y());
 
-    flood_fill(paintable_widget.bitmap(), event.position(), target_color, paintable_widget.color_for(event));
+    flood_fill(m_widget->bitmap(), event.position(), target_color, m_widget->color_for(event));
 
-    paintable_widget.update();
+    m_widget->update();
 }

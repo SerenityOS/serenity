@@ -8,6 +8,7 @@ OBJS = \
     PenTool.o \
     BucketTool.o \
     ColorDialog.o \
+    SprayTool.o \
     main.o
 
 APP = PaintBrush
