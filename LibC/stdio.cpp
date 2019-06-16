@@ -155,6 +155,50 @@ int getchar()
     return getc(stdin);
 }
 
+ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
+{
+    char *ptr, *eptr;
+    if (*lineptr == nullptr || *n == 0) {
+        *n = BUFSIZ;
+        if ((*lineptr = static_cast<char*>(malloc(*n))) == nullptr) {
+            return -1;
+        }
+    }
+
+    for (ptr = *lineptr, eptr = *lineptr + *n;;) {
+        int c = fgetc(stream);
+        if (c == -1) {
+            if (feof(stream)) {
+                return ptr == *lineptr ? -1 : ptr - *lineptr;
+            } else {
+                return -1;
+            }
+        }
+        *ptr++ = c;
+        if (c == delim) {
+            *ptr = '\0';
+            return ptr - *lineptr;
+        }
+        if (ptr + 2 >= eptr) {
+            char *nbuf;
+            size_t nbuf_sz = *n * 2;
+            ssize_t d = ptr - *lineptr;
+            if ((nbuf = static_cast<char*>(realloc(*lineptr, nbuf_sz))) == nullptr) {
+                return -1;
+            }
+            *lineptr = nbuf;
+            *n = nbuf_sz;
+            eptr = nbuf + nbuf_sz;
+            ptr = nbuf + d;
+        }
+    }
+}
+
+ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+{
+    return getdelim(lineptr, n, '\n', stream);
+}
+
 int ungetc(int c, FILE* stream)
 {
     ASSERT(stream);
