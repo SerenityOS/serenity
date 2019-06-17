@@ -4,6 +4,8 @@
 #include <AK/HashMap.h>
 #include <AK/JsonValue.h>
 
+namespace AK {
+
 class JsonObject {
 public:
     JsonObject() { }
@@ -39,7 +41,12 @@ public:
     }
 
     String to_string() const;
+    void to_string(StringBuilder&) const;
 
 private:
     HashMap<String, JsonValue> m_members;
 };
+
+}
+
+using AK::JsonObject;

@@ -1,6 +1,9 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/StringBuilder.h>
+
+namespace AK {
 
 JsonValue::JsonValue(Type type)
     : m_type(type)
@@ -116,25 +119,43 @@ void JsonValue::clear()
     m_value.as_string = nullptr;
 }
 
-String JsonValue::to_string() const
+void JsonValue::to_string(StringBuilder& builder) const
 {
     switch (m_type) {
     case Type::String:
-        return String::format("\"%s\"", m_value.as_string->characters());
+        builder.appendf("\"%s\"", m_value.as_string->characters());
+        break;
     case Type::Array:
-        return m_value.as_array->to_string();
+        m_value.as_array->to_string(builder);
+        break;
     case Type::Object:
-        return m_value.as_object->to_string();
+        m_value.as_object->to_string(builder);
+        break;
     case Type::Bool:
-        return m_value.as_bool ? "true" : "false";
+        builder.append(m_value.as_bool ? "true" : "false");
+        break;
     case Type::Double:
-        return String::format("%g", m_value.as_double);
+        builder.appendf("%g", m_value.as_double);
+        break;
     case Type::Int:
-        return String::format("%d", m_value.as_int);
+        builder.appendf("%d", m_value.as_int);
+        break;
     case Type::Undefined:
-        return "undefined";
+        builder.append("undefined");
+        break;
     case Type::Null:
-        return "null";
+        builder.append("null");
+        break;
+    default:
+        ASSERT_NOT_REACHED();
     }
-    ASSERT_NOT_REACHED();
+}
+
+String JsonValue::to_string() const
+{
+    StringBuilder builder;
+    to_string(builder);
+    return builder.to_string();
+}
+
 }

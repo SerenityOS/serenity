@@ -2,8 +2,11 @@
 
 #include <AK/AKString.h>
 
+namespace AK {
+
 class JsonArray;
 class JsonObject;
+class StringBuilder;
 
 class JsonValue {
 public:
@@ -35,6 +38,7 @@ public:
     JsonValue(const JsonObject&);
 
     String to_string() const;
+    void to_string(StringBuilder&) const;
 
 private:
     void clear();
@@ -51,3 +55,7 @@ private:
         bool as_bool;
     } m_value;
 };
+
+}
+
+using AK::JsonValue;
