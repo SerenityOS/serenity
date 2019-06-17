@@ -1,0 +1,45 @@
+#pragma once
+
+#include <AK/AKString.h>
+#include <AK/HashMap.h>
+#include <AK/JsonValue.h>
+
+class JsonObject {
+public:
+    JsonObject() { }
+    ~JsonObject() { }
+
+    JsonObject(const JsonObject& other)
+    {
+        for (auto& it : other.m_members)
+            m_members.set(it.key, it.value);
+    }
+
+    int size() const { return m_members.size(); }
+    bool is_empty() const { return m_members.is_empty(); }
+
+    JsonValue get(const String& key) const
+    {
+        auto it = m_members.find(key);
+        if (it == m_members.end())
+            return JsonValue(JsonValue::Type::Undefined);
+        return (*it).value;
+    }
+
+    void set(const String& key, const JsonValue& value)
+    {
+        m_members.set(key, value);
+    }
+
+    template<typename Callback>
+    void for_each_member(Callback callback) const
+    {
+        for (auto& it : m_members)
+            callback(it.key, it.value);
+    }
+
+    String to_string() const;
+
+private:
+    HashMap<String, JsonValue> m_members;
+};
