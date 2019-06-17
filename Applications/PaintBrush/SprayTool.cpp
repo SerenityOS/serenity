@@ -5,6 +5,7 @@
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <stdio.h>
+#include <LibM/math.h>
 
 SprayTool::SprayTool()
 {
@@ -29,12 +30,12 @@ void SprayTool::paint_it()
     auto& bitmap = m_widget->bitmap();
     ASSERT(bitmap.format() == GraphicsBitmap::Format::RGB32);
     m_widget->update();
-    const double radius = 15;
+    const double base_radius = 15;
     for (int i = 0; i < 100 + (nrand() * 800); i++) {
-        const int minX = m_last_pos.x() - radius;
-        const int minY = m_last_pos.y() - radius;
-        const int xpos = minX + (radius * 2 * nrand());
-        const int ypos = minY + (radius * 2 * nrand());
+        double radius = base_radius * nrand();
+        double angle = 2 * M_PI * nrand();
+        const int xpos = m_last_pos.x() + radius * cos(angle);
+        const int ypos = m_last_pos.y() - radius * sin(angle);
         if (xpos < 0 || xpos >= bitmap.width())
             continue;
         if (ypos < 0 || ypos >= bitmap.height())
