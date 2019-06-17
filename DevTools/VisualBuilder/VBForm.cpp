@@ -1,6 +1,8 @@
 #include "VBForm.h"
 #include "VBProperty.h"
 #include "VBWidget.h"
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
 #include <LibCore/CFile.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
@@ -310,17 +312,24 @@ void VBForm::write_to_file(const String& path)
         GMessageBox::show(String::format("Could not open '%s' for writing", path.characters()), "Error", GMessageBox::Type::Error, window());
         return;
     }
-    file.printf("[Form]\n");
-    file.printf("Name=%s\n", m_name.characters());
-    file.printf("\n");
-    int i = 0;
+
+    JsonObject form_object;
+    form_object.set("name", m_name);
+    JsonArray widget_array;
     for (auto& widget : m_widgets) {
-        file.printf("[Widget %d]\n", i++);
+        JsonObject widget_object;
         widget->for_each_property([&](auto& property) {
-            file.printf("%s=%s\n", property.name().characters(), property.value().to_string().characters());
+            if (property.value().is_bool())
+                widget_object.set(property.name(), property.value().to_bool());
+            else if (property.value().is_int())
+                widget_object.set(property.name(), property.value().to_int());
+            else
+                widget_object.set(property.name(), property.value().to_string());
         });
-        file.printf("\n");
+        widget_array.append(widget_object);
     }
+    form_object.set("widgets", widget_array);
+    file.write(form_object.to_string());
 }
 
 void VBForm::dump()
