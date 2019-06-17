@@ -1,15 +1,24 @@
 #include <AK/JsonArray.h>
 #include <AK/StringBuilder.h>
 
-String JsonArray::to_string() const
+namespace AK {
+
+void JsonArray::to_string(StringBuilder& builder) const
 {
-    StringBuilder builder;
     builder.append('[');
     for (int i = 0; i < m_values.size(); ++i) {
-        builder.append(m_values[i].to_string());
+        m_values[i].to_string(builder);
         if (i != size() - 1)
             builder.append(',');
     }
     builder.append(']');
+}
+
+String JsonArray::to_string() const
+{
+    StringBuilder builder;
+    to_string(builder);
     return builder.to_string();
+}
+
 }

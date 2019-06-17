@@ -3,6 +3,8 @@
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
 
+namespace AK {
+
 class JsonArray {
 public:
     JsonArray() {}
@@ -18,7 +20,12 @@ public:
     void append(const JsonValue& value) { m_values.append(value); }
 
     String to_string() const;
+    void to_string(StringBuilder&) const;
 
 private:
     Vector<JsonValue> m_values;
 };
+
+}
+
+using AK::JsonArray;
