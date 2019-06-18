@@ -65,6 +65,17 @@ JsonValue::JsonValue(int value)
     m_value.as_int = value;
 }
 
+JsonValue::JsonValue(unsigned value)
+{
+    if (value > INT32_MAX) {
+        m_type = Type::Double;
+        m_value.as_double = value;
+    } else {
+        m_type = Type::Int;
+        m_value.as_int = (int)value;
+    }
+}
+
 JsonValue::JsonValue(double value)
     : m_type(Type::Double)
 {
