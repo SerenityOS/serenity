@@ -31,6 +31,7 @@ public:
     JsonValue& operator=(JsonValue&&);
 
     JsonValue(int);
+    JsonValue(unsigned);
     JsonValue(double);
     JsonValue(bool);
     JsonValue(const String&);
@@ -39,6 +40,13 @@ public:
 
     String to_string() const;
     void to_string(StringBuilder&) const;
+
+    String as_string() const
+    {
+        if (m_type == Type::String)
+           return *m_value.as_string;
+        return { };
+    }
 
 private:
     void clear();
