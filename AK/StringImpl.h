@@ -1,8 +1,9 @@
 #pragma once
 
-#include "RetainPtr.h"
-#include "Retainable.h"
-#include "Types.h"
+#include <AK/RetainPtr.h>
+#include <AK/Retainable.h>
+#include <AK/Types.h>
+#include <AK/kmalloc.h>
 
 namespace AK {
 
@@ -18,6 +19,11 @@ public:
     static RetainPtr<StringImpl> create(const char* cstring, ssize_t length, ShouldChomp = NoChomp);
     Retained<StringImpl> to_lowercase() const;
     Retained<StringImpl> to_uppercase() const;
+
+    void operator delete(void* ptr)
+    {
+        kfree(ptr);
+    }
 
     static StringImpl& the_empty_stringimpl();
 
