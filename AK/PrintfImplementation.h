@@ -243,6 +243,7 @@ template<typename PutChFunc>
                 break;
 
 #ifndef KERNEL
+            case 'g':
             case 'f':
                 // FIXME: Print as float!
                 ret += print_number(putch, bufptr, (int)va_arg(ap, double), leftPad, zeroPad, fieldWidth);
