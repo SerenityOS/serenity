@@ -136,17 +136,17 @@ void JsonValue::clear()
     m_value.as_string = nullptr;
 }
 
-void JsonValue::to_string(StringBuilder& builder) const
+void JsonValue::serialize(StringBuilder& builder) const
 {
     switch (m_type) {
     case Type::String:
         builder.appendf("\"%s\"", m_value.as_string->characters());
         break;
     case Type::Array:
-        m_value.as_array->to_string(builder);
+        m_value.as_array->serialize(builder);
         break;
     case Type::Object:
-        m_value.as_object->to_string(builder);
+        m_value.as_object->serialize(builder);
         break;
     case Type::Bool:
         builder.append(m_value.as_bool ? "true" : "false");
@@ -168,10 +168,10 @@ void JsonValue::to_string(StringBuilder& builder) const
     }
 }
 
-String JsonValue::to_string() const
+String JsonValue::serialized() const
 {
     StringBuilder builder;
-    to_string(builder);
+    serialize(builder);
     return builder.to_string();
 }
 

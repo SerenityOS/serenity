@@ -19,8 +19,8 @@ public:
     void clear() { m_values.clear(); }
     void append(const JsonValue& value) { m_values.append(value); }
 
-    String to_string() const;
-    void to_string(StringBuilder&) const;
+    String serialized() const;
+    void serialize(StringBuilder&) const;
 
 private:
     Vector<JsonValue> m_values;

@@ -40,8 +40,8 @@ public:
             callback(it.key, it.value);
     }
 
-    String to_string() const;
-    void to_string(StringBuilder&) const;
+    String serialized() const;
+    void serialize(StringBuilder&) const;
 
 private:
     HashMap<String, JsonValue> m_members;

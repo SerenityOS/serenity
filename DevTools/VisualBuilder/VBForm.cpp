@@ -329,7 +329,7 @@ void VBForm::write_to_file(const String& path)
         widget_array.append(widget_object);
     }
     form_object.set("widgets", widget_array);
-    file.write(form_object.to_string());
+    file.write(form_object.serialized());
 }
 
 void VBForm::dump()
