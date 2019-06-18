@@ -107,6 +107,16 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
+[[gnu::always_inline]] inline int print_signed_qword(PutChFunc putch, char*& bufptr, signed_qword number, bool leftPad, bool zeroPad, dword fieldWidth)
+{
+    if (number < 0) {
+        putch(bufptr, '-');
+        return print_qword(putch, bufptr, 0 - number, leftPad, zeroPad, fieldWidth) + 1;
+    }
+    return print_qword(putch, bufptr, number, leftPad, zeroPad, fieldWidth);
+}
+
+template<typename PutChFunc>
 [[gnu::always_inline]] inline int print_octal_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
 {
     dword divisor = 134217728;
@@ -246,7 +256,7 @@ template<typename PutChFunc>
             case 'g':
             case 'f':
                 // FIXME: Print as float!
-                ret += print_number(putch, bufptr, (int)va_arg(ap, double), leftPad, zeroPad, fieldWidth);
+                ret += print_signed_qword(putch, bufptr, (qword)va_arg(ap, double), leftPad, zeroPad, fieldWidth);
                 break;
 #endif
 
