@@ -199,7 +199,6 @@ private:
     Color m_highlight_window_border_color2;
     Color m_highlight_window_title_color;
 
-    HashTable<WSWindow*> m_windows;
     InlineLinkedList<WSWindow> m_windows_in_order;
 
     struct DoubleClickInfo {
