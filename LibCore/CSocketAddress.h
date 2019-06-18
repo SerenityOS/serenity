@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/Net/IPv4.h>
+#include <AK/IPv4Address.h>
 
 class CSocketAddress {
 public:
