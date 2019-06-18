@@ -34,6 +34,7 @@ public:
     JsonValue(unsigned);
     JsonValue(double);
     JsonValue(bool);
+    JsonValue(const char*);
     JsonValue(const String&);
     JsonValue(const JsonArray&);
     JsonValue(const JsonObject&);

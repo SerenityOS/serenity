@@ -76,6 +76,11 @@ JsonValue::JsonValue(unsigned value)
     }
 }
 
+JsonValue::JsonValue(const char* cstring)
+    : JsonValue(String(cstring))
+{
+}
+
 JsonValue::JsonValue(double value)
     : m_type(Type::Double)
 {
