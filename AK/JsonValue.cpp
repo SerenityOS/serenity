@@ -53,6 +53,7 @@ JsonValue::JsonValue(JsonValue&& other)
 JsonValue& JsonValue::operator=(JsonValue&& other)
 {
     if (this != &other) {
+        clear();
         m_type = exchange(other.m_type, Type::Undefined);
         m_value.as_string = exchange(other.m_value.as_string, nullptr);
     }
