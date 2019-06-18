@@ -6,7 +6,7 @@
 #    include <assert.h>
 #    ifndef __serenity__
 #        define ASSERT assert
-#        define ASSERT_NOT_REACHED assert(false)
+#        define ASSERT_NOT_REACHED() assert(false)
 #    endif
 #endif
 
