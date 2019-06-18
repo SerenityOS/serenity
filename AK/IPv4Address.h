@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/NetworkOrdered.h>
 
 namespace AK {
 
@@ -21,6 +22,10 @@ public:
         m_data[1] = b;
         m_data[2] = c;
         m_data[3] = d;
+    }
+    IPv4Address(NetworkOrdered<dword> address)
+        : m_data_as_dword(address)
+    {
     }
 
     byte operator[](int i) const
@@ -55,4 +60,3 @@ struct Traits<IPv4Address> {
 }
 
 using AK::IPv4Address;
-
