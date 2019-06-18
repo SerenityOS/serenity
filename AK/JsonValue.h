@@ -39,8 +39,8 @@ public:
     JsonValue(const JsonArray&);
     JsonValue(const JsonObject&);
 
-    String to_string() const;
-    void to_string(StringBuilder&) const;
+    String serialized() const;
+    void serialize(StringBuilder&) const;
 
     String as_string() const
     {

@@ -3,21 +3,21 @@
 
 namespace AK {
 
-void JsonArray::to_string(StringBuilder& builder) const
+void JsonArray::serialize(StringBuilder& builder) const
 {
     builder.append('[');
     for (int i = 0; i < m_values.size(); ++i) {
-        m_values[i].to_string(builder);
+        m_values[i].serialize(builder);
         if (i != size() - 1)
             builder.append(',');
     }
     builder.append(']');
 }
 
-String JsonArray::to_string() const
+String JsonArray::serialized() const
 {
     StringBuilder builder;
-    to_string(builder);
+    serialize(builder);
     return builder.to_string();
 }
 
