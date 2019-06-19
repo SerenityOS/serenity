@@ -5,6 +5,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/CDirIterator.h>
 #include <LibCore/CElapsedTimer.h>
+#include <LibCore/CFile.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -528,6 +529,43 @@ static int run_command(const String& cmd)
     return return_value;
 }
 
+CFile get_history_file()
+{
+    StringBuilder sb;
+    sb.append(g.home);
+    sb.append("/.history");
+    CFile f(sb.to_string());
+    if (!f.open(CIODevice::ReadWrite)) {
+        fprintf(stderr, "Error opening file '%s': '%s'\n", f.filename().characters(), f.error_string());
+        exit(1);
+    }
+    return f;
+}
+
+void load_history()
+{
+    CFile history_file = get_history_file();
+    while (history_file.can_read_line()) {
+        const auto&b = history_file.read_line(1024);
+        // skip the newline and terminating bytes
+        editor.add_to_history(String(reinterpret_cast<const char*>(b.pointer()), b.size() - 2));
+    }
+}
+
+void save_history()
+{
+    CFile history_file = get_history_file();
+    for (const auto& line : editor.history()) {
+        history_file.write(line);
+        history_file.write("\n");
+    }
+}
+
+void handle_sighup(int)
+{
+    save_history();
+}
+
 int main(int argc, char** argv)
 {
     g.uid = getuid();
@@ -541,6 +579,15 @@ int main(int argc, char** argv)
         sa.sa_flags = 0;
         sa.sa_mask = 0;
         int rc = sigaction(SIGINT, &sa, nullptr);
+        assert(rc == 0);
+    }
+
+    {
+        struct sigaction sa;
+        sa.sa_handler = handle_sighup;
+        sa.sa_flags = 0;
+        sa.sa_mask = 0;
+        int rc = sigaction(SIGHUP, &sa, nullptr);
         assert(rc == 0);
     }
 
@@ -572,6 +619,9 @@ int main(int argc, char** argv)
         g.cwd = cwd;
         free(cwd);
     }
+
+    load_history();
+    atexit(save_history);
 
     for (;;) {
         prompt();
