@@ -49,6 +49,26 @@ public:
         return { };
     }
 
+    Type type() const { return m_type; }
+
+    bool is_null() const { return m_type == Type::Null; }
+    bool is_undefined() const { return m_type == Type::Undefined; }
+    bool is_string() const { return m_type == Type::String; }
+    bool is_int() const { return m_type == Type::Int; }
+    bool is_double() const { return m_type == Type::Double; }
+    bool is_array() const { return m_type == Type::Array; }
+    bool is_object() const { return m_type == Type::Object; }
+    bool is_number() const { return m_type == Type::Int || m_type == Type::Double; }
+
+    dword to_dword(dword default_value = 0) const
+    {
+        if (!is_number())
+            return default_value;
+        if (type() == Type::Int)
+            return (dword)m_value.as_int;
+        return (dword)m_value.as_double;
+    }
+
 private:
     void clear();
     void copy_from(const JsonValue&);
