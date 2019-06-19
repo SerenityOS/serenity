@@ -2,6 +2,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/Vector.h>
 #include <assert.h>
+#include <mallocdefs.h>
 #include <serenity.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,8 +13,6 @@
 //#define MALLOC_DEBUG
 #define RECYCLE_BIG_ALLOCATIONS
 
-#define MALLOC_SCRUB_BYTE 0x85
-#define FREE_SCRUB_BYTE 0x82
 #define MAGIC_PAGE_HEADER 0x42657274
 #define MAGIC_BIGALLOC_HEADER 0x42697267
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))

@@ -4,17 +4,22 @@
 
 static void print_usage_and_exit()
 {
-    printf("usage: crash -[sdia]\n");
+    printf("usage: crash -[sdiamfMF]\n");
     exit(0);
 }
 
+#pragma GCC optimize("O0")
 int main(int argc, char** argv)
 {
     enum Mode {
         SegmentationViolation,
         DivisionByZero,
         IllegalInstruction,
-        Abort
+        Abort,
+        WriteToUninitializedMallocMemory,
+        WriteToFreedMemory,
+        ReadFromUninitializedMallocMemory,
+        ReadFromFreedMemory,
     };
     Mode mode = SegmentationViolation;
 
@@ -29,6 +34,14 @@ int main(int argc, char** argv)
         mode = IllegalInstruction;
     else if (String(argv[1]) == "-a")
         mode = Abort;
+    else if (String(argv[1]) == "-m")
+        mode = ReadFromUninitializedMallocMemory;
+    else if (String(argv[1]) == "-f")
+        mode = ReadFromFreedMemory;
+    else if (String(argv[1]) == "-M")
+        mode = WriteToUninitializedMallocMemory;
+    else if (String(argv[1]) == "-F")
+        mode = WriteToFreedMemory;
     else
         print_usage_and_exit();
 
@@ -52,6 +65,32 @@ int main(int argc, char** argv)
 
     if (mode == Abort) {
         abort();
+        ASSERT_NOT_REACHED();
+    }
+
+    if (mode == ReadFromUninitializedMallocMemory) {
+        auto* uninitialized_memory = (volatile dword**)malloc(1024);
+        volatile auto x = uninitialized_memory[0][0];
+        ASSERT_NOT_REACHED();
+    }
+
+    if (mode == ReadFromFreedMemory) {
+        auto* uninitialized_memory = (volatile dword**)malloc(1024);
+        free(uninitialized_memory);
+        volatile auto x = uninitialized_memory[4][0];
+        ASSERT_NOT_REACHED();
+    }
+
+    if (mode == WriteToUninitializedMallocMemory) {
+        auto* uninitialized_memory = (volatile dword**)malloc(1024);
+        uninitialized_memory[4][0] = 1;
+        ASSERT_NOT_REACHED();
+    }
+
+    if (mode == WriteToFreedMemory) {
+        auto* uninitialized_memory = (volatile dword**)malloc(1024);
+        free(uninitialized_memory);
+        uninitialized_memory[4][0] = 1;
         ASSERT_NOT_REACHED();
     }
 
