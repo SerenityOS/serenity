@@ -53,3 +53,13 @@ constexpr unsigned GB = KB * KB * KB;
 namespace std {
 typedef decltype(nullptr) nullptr_t;
 }
+
+static constexpr dword explode_byte(byte b)
+{
+    return b << 24 | b << 16 | b << 8 | b;
+}
+
+static_assert(explode_byte(0xff) == 0xffffffff);
+static_assert(explode_byte(0x80) == 0x80808080);
+static_assert(explode_byte(0x7f) == 0x7f7f7f7f);
+static_assert(explode_byte(0) == 0);

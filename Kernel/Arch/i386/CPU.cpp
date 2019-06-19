@@ -7,6 +7,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <LibC/mallocdefs.h>
 
 //#define PAGE_FAULT_DEBUG
 
@@ -254,9 +255,9 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
 {
     ASSERT(current);
 
-    dword faultAddress;
+    dword fault_address;
     asm("movl %%cr2, %%eax"
-        : "=a"(faultAddress));
+        : "=a"(fault_address));
 
     dword fault_page_directory;
     asm("movl %%cr3, %%eax"
@@ -270,22 +271,33 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
         regs.exception_code & 1 ? "PV" : "NP",
         fault_page_directory,
         regs.exception_code & 2 ? "write" : "read",
-        faultAddress);
+        fault_address);
 #endif
 
 #ifdef PAGE_FAULT_DEBUG
     dump(regs);
 #endif
 
-    auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(faultAddress)));
+    auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
 
     if (response == PageFaultResponse::ShouldCrash) {
-        kprintf("%s(%u:%u) unrecoverable page fault, %s vaddr=%p\n",
+        dbgprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s address %p\033[0m\n",
             current->process().name().characters(),
             current->pid(),
             current->tid(),
-            regs.exception_code & 2 ? "write" : "read",
-            faultAddress);
+            regs.exception_code & 2 ? "write to" : "read from",
+            fault_address);
+
+        dword malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
+        dword free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
+        if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
+            dbgprintf("\033[33;1mNote: Address %p looks like it may be uninitialized malloc() memory\033[0m\n", fault_address);
+        } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
+            dbgprintf("\033[33;1mNote: Address %p looks like it may be recently free()'d memory\033[0m\n", fault_address);
+        } else if (fault_address < 4096) {
+            dbgprintf("\033[33;1mNote: Address %p looks like a possible nullptr dereference\033[0m\n", fault_address);
+        }
+
         dump(regs);
         current->process().crash(SIGSEGV, regs.eip);
     } else if (response == PageFaultResponse::Continue) {
