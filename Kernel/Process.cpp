@@ -740,11 +740,13 @@ void Process::sys$sigreturn()
     ASSERT_NOT_REACHED();
 }
 
-void Process::crash(int signal)
+void Process::crash(int signal, dword eip)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!is_dead());
 
+    if (m_elf_loader && ksyms_ready)
+        dbgprintf("\033[31;1m%p  %s\033[0m\n", eip, m_elf_loader->symbolicate(eip).characters());
     dump_backtrace();
 
     m_termination_signal = signal;

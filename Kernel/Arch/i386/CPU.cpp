@@ -171,14 +171,14 @@ void exception_6_handler(RegisterDump& regs)
         current->pid());
 
     dump(regs);
-    dump_backtrace();
 
     if (current->process().is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
+        dump_backtrace();
         hang();
     }
 
-    current->process().crash(SIGILL);
+    current->process().crash(SIGILL, regs.eip);
 }
 
 // 7: FPU not available exception
@@ -224,10 +224,11 @@ void exception_0_handler(RegisterDump& regs)
 
     if (current->process().is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
+        dump_backtrace();
         hang();
     }
 
-    current->process().crash(SIGFPE);
+    current->process().crash(SIGFPE, regs.eip);
 }
 
 // 13: General Protection Fault
@@ -240,10 +241,11 @@ void exception_13_handler(RegisterDumpWithExceptionCode& regs)
 
     if (current->process().is_ring0()) {
         kprintf("Oh shit, we've crashed in ring 0 :(\n");
+        dump_backtrace();
         hang();
     }
 
-    current->process().crash();
+    current->process().crash(SIGSEGV, regs.eip);
 }
 
 // 14: Page Fault
@@ -285,7 +287,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             regs.exception_code & 2 ? "write" : "read",
             faultAddress);
         dump(regs);
-        current->process().crash();
+        current->process().crash(SIGSEGV, regs.eip);
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("Continuing after resolved page fault\n");

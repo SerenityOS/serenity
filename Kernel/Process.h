@@ -204,7 +204,7 @@ public:
 
     static void initialize();
 
-    [[noreturn]] void crash(int signal = SIGSEGV);
+    [[noreturn]] void crash(int signal, dword eip);
     [[nodiscard]] static int reap(Process&);
 
     const TTY* tty() const { return m_tty; }
