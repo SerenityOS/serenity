@@ -14,9 +14,9 @@ enum ShouldChomp {
 
 class StringImpl : public Retainable<StringImpl> {
 public:
-    static Retained<StringImpl> create_uninitialized(ssize_t length, char*& buffer);
+    static Retained<StringImpl> create_uninitialized(int length, char*& buffer);
     static RetainPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
-    static RetainPtr<StringImpl> create(const char* cstring, ssize_t length, ShouldChomp = NoChomp);
+    static RetainPtr<StringImpl> create(const char* cstring, int length, ShouldChomp = NoChomp);
     Retained<StringImpl> to_lowercase() const;
     Retained<StringImpl> to_uppercase() const;
 
@@ -29,17 +29,17 @@ public:
 
     ~StringImpl();
 
-    ssize_t length() const { return m_length; }
-    const char* characters() const { return m_characters; }
-    char operator[](ssize_t i) const
+    int length() const { return m_length; }
+    const char* characters() const { return &m_inline_buffer[0]; }
+    char operator[](int i) const
     {
         ASSERT(i >= 0 && i < m_length);
-        return m_characters[i];
+        return characters()[i];
     }
 
     unsigned hash() const
     {
-        if (!m_hasHash)
+        if (!m_has_hash)
             compute_hash();
         return m_hash;
     }
@@ -49,21 +49,20 @@ private:
         ConstructTheEmptyStringImpl
     };
     explicit StringImpl(ConstructTheEmptyStringImplTag)
-        : m_characters("")
     {
+        m_inline_buffer[0] = '\0';
     }
 
     enum ConstructWithInlineBufferTag {
         ConstructWithInlineBuffer
     };
-    StringImpl(ConstructWithInlineBufferTag, ssize_t length);
+    StringImpl(ConstructWithInlineBufferTag, int length);
 
     void compute_hash() const;
 
-    ssize_t m_length { 0 };
-    mutable bool m_hasHash { false };
-    const char* m_characters { nullptr };
+    int m_length { 0 };
     mutable unsigned m_hash { 0 };
+    mutable bool m_has_hash { false };
     char m_inline_buffer[0];
 };
 
