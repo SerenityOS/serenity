@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/Net/IPv4.h>
 #include <LibCore/CConfigFile.h>
+#include <LibCore/CFile.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -25,8 +26,48 @@
 
 #define C_IN 1
 
+static HashMap<String, String> dns_custom_hostnames;
+
 static Vector<String> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP, unsigned short record_type);
 static String parse_dns_name(const byte*, int& offset, int max_offset);
+
+static void load_etc_hosts()
+{
+    dbgprintf("LookupServer: Loading hosts from /etc/hosts\n");
+    CFile file("/etc/hosts");
+    if (!file.open(CIODevice::ReadOnly))
+        return;
+    while (!file.eof()) {
+        auto line = file.read_line(1024);
+        if (line.is_empty())
+            break;
+        auto str_line = String((const char*)line.pointer(), line.size() - 1, Chomp);
+        auto fields = str_line.split('\t');
+
+        auto sections = fields[0].split('.');
+        IPv4Address addr {
+            (byte)atoi(sections[0].characters()),
+            (byte)atoi(sections[1].characters()),
+            (byte)atoi(sections[2].characters()),
+            (byte)atoi(sections[3].characters()),
+        };
+
+        auto name = fields[1];
+        dns_custom_hostnames.set(name, addr.to_string());
+
+        IPv4Address reverse_addr {
+            (byte)atoi(sections[3].characters()),
+            (byte)atoi(sections[2].characters()),
+            (byte)atoi(sections[1].characters()),
+            (byte)atoi(sections[0].characters()),
+        };
+        StringBuilder builder;
+        builder.append(reverse_addr.to_string());
+        builder.append(".in-addr.arpa");
+        dns_custom_hostnames.set(builder.to_string(), name);
+    }
+
+}
 
 int main(int argc, char** argv)
 {
@@ -40,39 +81,7 @@ int main(int argc, char** argv)
         config->file_name().characters());
     auto DNS_IP = config->read_entry("DNS", "IPAddress", "127.0.0.53");
 
-    dbgprintf("LookupServer: Loading hosts from /etc/hosts:\n");
-    HashMap<String, String> dns_custom_hostnames;
-    auto* file = fopen("/etc/hosts", "r");
-    auto linebuf = ByteBuffer::create_uninitialized(256);
-    while (fgets((char*)linebuf.pointer(), linebuf.size(), file)) {
-        auto str_line = String::copy(linebuf);
-        auto fields = str_line.split('\t');
-
-        auto sections = fields[0].split('.');
-        IPv4Address addr {
-            (byte)atoi(sections[0].characters()),
-            (byte)atoi(sections[1].characters()),
-            (byte)atoi(sections[2].characters()),
-            (byte)atoi(sections[3].characters()),
-        };
-        int len = 0;
-        while ((fields[1][len++]) != -123)
-            ;
-        auto name = fields[1].substring(0, len - 3);
-
-        dns_custom_hostnames.set(name, addr.to_string());
-
-        IPv4Address addr2 {
-            (byte)atoi(sections[3].characters()),
-            (byte)atoi(sections[2].characters()),
-            (byte)atoi(sections[1].characters()),
-            (byte)atoi(sections[0].characters()),
-        };
-        auto sb = StringBuilder();
-        sb.append(addr2.to_string());
-        sb.append(".in-addr.arpa");
-        dns_custom_hostnames.set(sb.to_string(), name);
-    }
+    load_etc_hosts();
 
     int server_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
     if (server_fd < 0) {
@@ -145,7 +154,7 @@ int main(int argc, char** argv)
         Vector<String> responses;
 
         for (auto& key : dns_custom_hostnames.keys()) {
-            dbgprintf("Known Hostname: %s\n", key.characters());
+            dbgprintf("Known hostname: '%s'\n", key.characters());
         }
         if (dns_custom_hostnames.contains(hostname)) {
             responses.append(dns_custom_hostnames.get(hostname));
