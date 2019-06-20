@@ -9,3 +9,10 @@ LayoutBlock::LayoutBlock(Element& element)
 LayoutBlock::~LayoutBlock()
 {
 }
+
+void LayoutBlock::layout()
+{
+    LayoutNode::layout();
+
+
+}

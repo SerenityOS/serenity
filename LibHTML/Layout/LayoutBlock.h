@@ -11,5 +11,7 @@ public:
 
     virtual const char* class_name() const override { return "LayoutBlock"; }
 
+    virtual void layout() override;
+
 private:
 };
