@@ -25,6 +25,8 @@ public:
     bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }
 
+    const LayoutNode* parent_layout_node() const { return m_parent_node; }
+
     LayoutNode* next_sibling() { return m_next_sibling; }
     LayoutNode* previous_sibling() { return m_previous_sibling; }
     LayoutNode* first_child() { return m_first_child; }
@@ -33,6 +35,8 @@ public:
     const LayoutNode* previous_sibling() const { return m_previous_sibling; }
     const LayoutNode* first_child() const { return m_first_child; }
     const LayoutNode* last_child() const { return m_last_child; }
+
+    bool has_children() const { return m_first_child; }
 
     void append_child(Retained<LayoutNode>);
 

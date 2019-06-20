@@ -26,3 +26,14 @@ const String& LayoutText::text() const
         return one_space;
     return node().data();
 }
+
+void LayoutText::compute_runs()
+{
+
+}
+
+void LayoutText::layout()
+{
+    ASSERT(!has_children());
+    compute_runs();
+}
