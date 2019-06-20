@@ -6,6 +6,11 @@ LIBHTML_OBJS = \
     DOM/Element.o \
     DOM/Document.o \
     DOM/Text.o \
+    CSS/Selector.o \
+    CSS/StyleSheet.o \
+    CSS/StyleRule.o \
+    CSS/StyleDeclaration.o \
+    CSS/StyleValue.o \
     Parser/Parser.o \
     Layout/LayoutNode.o \
     Layout/LayoutText.o \
