@@ -58,7 +58,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
 
     add_tool("Pen", "pen", make<PenTool>());
     add_tool("Bucket Fill", "bucket", make<BucketTool>());
-    add_tool("Spray", "", make<SprayTool>());
+    add_tool("Spray", "spray", make<SprayTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()
