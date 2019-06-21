@@ -1,0 +1,38 @@
+html {
+    display: inline;
+    font-family: Katica;
+}
+
+head, link, meta, script, style, title {
+    display: none;
+}
+
+body {
+    display: block;
+    margin: 8;
+}
+
+h1 {
+    display: block;
+    font-family: Pebbleton;
+    font-weight: bold;
+}
+
+pre {
+    display: block;
+    font-family: Csilla;
+}
+
+u, ins {
+    text-decoration: underline;
+}
+
+strong, b {
+    font-family: KaticaBold;
+}
+
+p {
+    display: block;
+    margin-bottom: 8;
+    margin-top: 8;
+}
