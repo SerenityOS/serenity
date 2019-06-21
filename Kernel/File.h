@@ -2,7 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/Retainable.h>
-#include <AK/Retained.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>

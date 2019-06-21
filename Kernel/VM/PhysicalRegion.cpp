@@ -1,6 +1,6 @@
 #include <AK/Bitmap.h>
-#include <AK/Retained.h>
-#include <AK/RetainPtr.h>
+#include <AK/NonnullRefPtr.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>

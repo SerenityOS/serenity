@@ -3,7 +3,7 @@
 #include "IRCLogBuffer.h"
 #include <AK/AKString.h>
 #include <AK/CircularQueue.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Retainable.h>
 #include <AK/Vector.h>
 

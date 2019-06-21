@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/Retained.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
 #include <SharedGraphics/Rect.h>
 

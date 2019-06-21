@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/Retained.h>
+#include <AK/NonnullRefPtr.h>
 #include <Kernel/Assertions.h>
 #include <Kernel/PhysicalAddress.h>
 

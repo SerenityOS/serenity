@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Vector.h>
 
 enum class NodeType : unsigned {

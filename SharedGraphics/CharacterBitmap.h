@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Size.h"
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Retainable.h>
 
 class CharacterBitmap : public RefCounted<CharacterBitmap> {

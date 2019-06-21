@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <Kernel/Devices/DiskDevice.h>
 
 class DiskPartition final : public DiskDevice {

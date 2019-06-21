@@ -2,7 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/CircularQueue.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Retainable.h>
 #include <SharedGraphics/Color.h>
 

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <LibCore/CObject.h>
 #include <LibCore/CTimer.h>
 #include <SharedGraphics/DisjointRectSet.h>
