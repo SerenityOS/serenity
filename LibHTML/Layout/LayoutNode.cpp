@@ -9,13 +9,13 @@ LayoutNode::~LayoutNode()
 {
 }
 
-void LayoutNode::retain()
+void LayoutNode::ref()
 {
     ASSERT(m_retain_count);
     ++m_retain_count;
 }
 
-void LayoutNode::release()
+void LayoutNode::deref()
 {
     ASSERT(m_retain_count);
     if (!--m_retain_count)

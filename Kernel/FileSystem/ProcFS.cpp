@@ -293,13 +293,13 @@ ByteBuffer procfs$pid_vmo(InodeIdentifier identifier)
             region->vmo().is_anonymous() ? "anonymous" : "file-backed",
             region->vmo().name().characters(),
             &region->vmo(),
-            region->vmo().retain_count());
+            region->vmo().ref_count());
         for (size_t i = 0; i < region->vmo().page_count(); ++i) {
             auto& physical_page = region->vmo().physical_pages()[i];
             builder.appendf("P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
                 region->should_cow(i) ? "!" : "",
-                physical_page ? physical_page->retain_count() : 0);
+                physical_page ? physical_page->ref_count() : 0);
         }
         builder.appendf("\n");
     }
@@ -406,7 +406,7 @@ ByteBuffer procfs$mm(InodeIdentifier)
         builder.appendf("VMO: %p %s(%u): p:%4u %s\n",
             vmo,
             vmo->is_anonymous() ? "anon" : "file",
-            vmo->retain_count(),
+            vmo->ref_count(),
             vmo->page_count(),
             vmo->name().characters());
     }
@@ -615,7 +615,7 @@ ByteBuffer procfs$inodes(InodeIdentifier)
     StringBuilder builder;
     for (auto it : all_inodes()) {
         RetainPtr<Inode> inode = *it;
-        builder.appendf("Inode{K%x} %02u:%08u (%u)\n", inode.ptr(), inode->fsid(), inode->index(), inode->retain_count());
+        builder.appendf("Inode{K%x} %02u:%08u (%u)\n", inode.ptr(), inode->fsid(), inode->index(), inode->ref_count());
     }
     return builder.to_byte_buffer();
 }

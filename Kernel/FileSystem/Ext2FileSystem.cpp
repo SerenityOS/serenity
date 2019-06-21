@@ -1232,7 +1232,7 @@ InodeIdentifier Ext2FSInode::lookup(StringView name)
     return {};
 }
 
-void Ext2FSInode::one_retain_left()
+void Ext2FSInode::one_ref_left()
 {
     // FIXME: I would like to not live forever, but uncached Ext2FS is fucking painful right now.
 }

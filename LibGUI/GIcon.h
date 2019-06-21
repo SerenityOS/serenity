@@ -3,7 +3,7 @@
 #include <AK/HashMap.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
-class GIconImpl : public Retainable<GIconImpl> {
+class GIconImpl : public RefCounted<GIconImpl> {
 public:
     static Retained<GIconImpl> create() { return adopt(*new GIconImpl); }
     ~GIconImpl() {}

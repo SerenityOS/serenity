@@ -6,7 +6,7 @@
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 
-class PhysicalRegion : public Retainable<PhysicalRegion> {
+class PhysicalRegion : public RefCounted<PhysicalRegion> {
     AK_MAKE_ETERNAL
 
 public:

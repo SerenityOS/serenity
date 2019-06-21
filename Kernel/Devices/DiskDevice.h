@@ -6,7 +6,7 @@
 // FIXME: Support 64-bit DiskOffset
 typedef dword DiskOffset;
 
-class DiskDevice : public Retainable<DiskDevice> {
+class DiskDevice : public RefCounted<DiskDevice> {
 public:
     virtual ~DiskDevice();
 

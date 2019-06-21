@@ -40,7 +40,7 @@ private:
     Size m_size;
 };
 
-class Font : public Retainable<Font> {
+class Font : public RefCounted<Font> {
 public:
     static Font& default_font();
     static Font& default_bold_font();

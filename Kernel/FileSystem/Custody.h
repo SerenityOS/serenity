@@ -10,7 +10,7 @@ class VFS;
 
 // FIXME: Custody needs some locking.
 
-class Custody : public Retainable<Custody> {
+class Custody : public RefCounted<Custody> {
 public:
     static Custody* get_if_cached(Custody* parent, const String& name);
     static Retained<Custody> get_or_create(Custody* parent, const String& name, Inode&);

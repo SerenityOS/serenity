@@ -14,13 +14,13 @@ void GVariant::clear()
 {
     switch (m_type) {
     case Type::String:
-        AK::release_if_not_null(m_value.as_string);
+        AK::deref_if_not_null(m_value.as_string);
         break;
     case Type::Bitmap:
-        AK::release_if_not_null(m_value.as_bitmap);
+        AK::deref_if_not_null(m_value.as_bitmap);
         break;
     case Type::Icon:
-        AK::release_if_not_null(m_value.as_icon);
+        AK::deref_if_not_null(m_value.as_icon);
         break;
     default:
         break;
@@ -51,21 +51,21 @@ GVariant::GVariant(const String& value)
     : m_type(Type::String)
 {
     m_value.as_string = const_cast<StringImpl*>(value.impl());
-    AK::retain_if_not_null(m_value.as_string);
+    AK::ref_if_not_null(m_value.as_string);
 }
 
 GVariant::GVariant(const GraphicsBitmap& value)
     : m_type(Type::Bitmap)
 {
     m_value.as_bitmap = const_cast<GraphicsBitmap*>(&value);
-    AK::retain_if_not_null(m_value.as_bitmap);
+    AK::ref_if_not_null(m_value.as_bitmap);
 }
 
 GVariant::GVariant(const GIcon& value)
     : m_type(Type::Icon)
 {
     m_value.as_icon = &const_cast<GIconImpl&>(value.impl());
-    AK::retain_if_not_null(m_value.as_icon);
+    AK::ref_if_not_null(m_value.as_icon);
 }
 
 GVariant::GVariant(Color color)
@@ -133,15 +133,15 @@ void GVariant::copy_from(const GVariant& other)
         break;
     case Type::String:
         m_value.as_string = other.m_value.as_string;
-        AK::retain_if_not_null(m_value.as_bitmap);
+        AK::ref_if_not_null(m_value.as_bitmap);
         break;
     case Type::Bitmap:
         m_value.as_bitmap = other.m_value.as_bitmap;
-        AK::retain_if_not_null(m_value.as_bitmap);
+        AK::ref_if_not_null(m_value.as_bitmap);
         break;
     case Type::Icon:
         m_value.as_icon = other.m_value.as_icon;
-        AK::retain_if_not_null(m_value.as_icon);
+        AK::ref_if_not_null(m_value.as_icon);
         break;
     case Type::Color:
         m_value.as_color = other.m_value.as_color;

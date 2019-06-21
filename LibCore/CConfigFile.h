@@ -7,7 +7,7 @@
 #include <AK/Vector.h>
 #include <SharedGraphics/Color.h>
 
-class CConfigFile : public Retainable<CConfigFile> {
+class CConfigFile : public RefCounted<CConfigFile> {
 public:
     static Retained<CConfigFile> get_for_app(const String& app_name);
     static Retained<CConfigFile> get_for_system(const String& app_name);

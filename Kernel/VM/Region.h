@@ -8,7 +8,7 @@
 class Inode;
 class VMObject;
 
-class Region : public Retainable<Region> {
+class Region : public RefCounted<Region> {
     friend class MemoryManager;
 
 public:

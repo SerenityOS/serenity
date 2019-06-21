@@ -3,7 +3,7 @@
 #include <AK/RetainPtr.h>
 #include <AK/Retainable.h>
 
-class SharedBuffer : public Retainable<SharedBuffer> {
+class SharedBuffer : public RefCounted<SharedBuffer> {
 public:
     static RetainPtr<SharedBuffer> create(pid_t peer, int);
     static RetainPtr<SharedBuffer> create_from_shared_buffer_id(int);

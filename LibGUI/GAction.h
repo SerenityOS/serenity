@@ -15,7 +15,7 @@ class GButton;
 class GMenuItem;
 class GWidget;
 
-class GAction : public Retainable<GAction>
+class GAction : public RefCounted<GAction>
     , public Weakable<GAction> {
 public:
     enum class ShortcutScope {

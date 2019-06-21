@@ -4,7 +4,7 @@
 #include <AK/RetainPtr.h>
 #include <AK/Retainable.h>
 
-class CharacterBitmap : public Retainable<CharacterBitmap> {
+class CharacterBitmap : public RefCounted<CharacterBitmap> {
 public:
     static Retained<CharacterBitmap> create_from_ascii(const char* asciiData, unsigned width, unsigned height);
     ~CharacterBitmap();

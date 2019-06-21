@@ -3,7 +3,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Retainable.h>
 
-class CNetworkResponse : public Retainable<CNetworkResponse> {
+class CNetworkResponse : public RefCounted<CNetworkResponse> {
 public:
     virtual ~CNetworkResponse();
 

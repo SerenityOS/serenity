@@ -2,7 +2,7 @@
 
 #include <AK/Retainable.h>
 
-class StyleValue : public Retainable<StyleValue> {
+class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();
 

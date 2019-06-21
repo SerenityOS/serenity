@@ -10,7 +10,7 @@
 class IRCClient;
 class IRCWindow;
 
-class IRCQuery : public Retainable<IRCQuery> {
+class IRCQuery : public RefCounted<IRCQuery> {
 public:
     static Retained<IRCQuery> create(IRCClient&, const String& name);
     ~IRCQuery();

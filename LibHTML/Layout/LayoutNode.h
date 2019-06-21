@@ -11,9 +11,9 @@ class LayoutNode {
 public:
     virtual ~LayoutNode();
 
-    void retain();
-    void release();
-    int retain_count() const { return m_retain_count; }
+    void ref();
+    void deref();
+    int ref_count() const { return m_retain_count; }
 
     const Rect& rect() const { return m_rect; }
     Rect& rect() { return m_rect; }

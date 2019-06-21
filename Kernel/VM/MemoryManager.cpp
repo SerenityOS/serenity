@@ -324,7 +324,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
     auto& vmo = region.vmo();
-    if (vmo.physical_pages()[page_index_in_region]->retain_count() == 1) {
+    if (vmo.physical_pages()[page_index_in_region]->ref_count() == 1) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
 #endif
