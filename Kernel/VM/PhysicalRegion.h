@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>

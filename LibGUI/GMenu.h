@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <LibGUI/GMenuItem.h>

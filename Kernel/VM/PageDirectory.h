@@ -2,7 +2,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/RangeAllocator.h>
 

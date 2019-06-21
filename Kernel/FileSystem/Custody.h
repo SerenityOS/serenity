@@ -3,7 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/Badge.h>
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 
 class Inode;
 class VFS;

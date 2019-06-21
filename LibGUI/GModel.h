@@ -4,7 +4,7 @@
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <LibGUI/GModelIndex.h>
 #include <LibGUI/GVariant.h>
 #include <SharedGraphics/TextAlignment.h>

@@ -3,7 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <SharedGraphics/Color.h>
 

@@ -3,7 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/Badge.h>
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>

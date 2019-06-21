@@ -4,7 +4,7 @@
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>

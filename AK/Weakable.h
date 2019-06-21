@@ -2,7 +2,7 @@
 
 #include "Assertions.h"
 #include "RefPtr.h"
-#include "Retainable.h"
+#include "RefCounted.h"
 
 namespace AK {
 
