@@ -104,5 +104,41 @@ void WSMenuBarKeeper::refresh()
 
 void WSMenuBarKeeper::event(CEvent& event)
 {
+    if (event.type() == WSEvent::MouseMove || event.type() == WSEvent::MouseUp || event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseWheel) {
+        auto& mouse_event = static_cast<WSMouseEvent&>(event);
+        WSWindowManager::the().for_each_active_menubar_menu([&](WSMenu& menu) {
+            if (menu.rect_in_menubar().contains(mouse_event.position())) {
+                handle_menu_mouse_event(menu, mouse_event);
+                return false;
+            }
+            return true;
+        });
+    }
     return CObject::event(event);
+}
+
+void WSMenuBarKeeper::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
+{
+    auto& wm = WSWindowManager::the();
+    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && wm.current_menu() && (wm.current_menu()->menubar() || wm.current_menu() == wm.system_menu());
+    bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
+    bool should_open_menu = &menu != wm.current_menu() && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
+
+    if (should_open_menu) {
+        if (wm.current_menu() == &menu)
+            return;
+        wm.close_current_menu();
+        if (!menu.is_empty()) {
+            auto& menu_window = menu.ensure_menu_window();
+            menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
+            menu_window.set_visible(true);
+        }
+        wm.set_current_menu(&menu);
+        refresh();
+        return;
+    }
+    if (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left) {
+        wm.close_current_menu();
+        return;
+    }
 }

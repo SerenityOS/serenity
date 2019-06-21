@@ -19,6 +19,8 @@ private:
     WSWindow& window() { return *m_window; }
     const WSWindow& window() const { return *m_window; }
 
+    void handle_menu_mouse_event(WSMenu&, const WSMouseEvent&);
+
     void draw();
     void tick_clock();
 
