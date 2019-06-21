@@ -12,34 +12,27 @@ double cos(double angle)
     return sin(angle + M_PI_2);
 }
 
-static double sin_helper(double a)
+double ampsin(double angle)
 {
-    double a3 = a * a * a;
-    double a5 = a3 * a * a;
-    return a - a3 / 6.0 + a5 / 120.0;
-}
+    double looped_angle = fmod(M_PI + angle, M_TAU) - M_PI;
+    double looped_angle_squared = looped_angle * looped_angle;
 
-static double cos_helper(double a)
-{
-    double a2 = a * a;
-    double a4 = a2 * a2;
-    return 1 - a2 / 2.0 + a4 / 24.0;
+    double quadratic_term;
+    if (looped_angle > 0) {
+        quadratic_term = -looped_angle_squared;
+    } else {
+        quadratic_term = looped_angle_squared;
+    }
+
+    double linear_term = M_PI * looped_angle;
+
+    return quadratic_term + linear_term;
 }
 
 double sin(double angle)
 {
-    double a = fmod(angle, M_TAU);
-    if (a < 0)
-        a += M_TAU;
-    if (a <= M_PI_2 * 0.5)
-        return sin_helper(a);
-    if (a <= M_PI_2)
-        return cos_helper(M_PI_2 - a);
-    if (a <= M_PI_2 * 1.5)
-        return cos_helper(a - M_PI_2);
-    if (a <= M_PI)
-        return sin_helper(M_PI - a);
-    return -sin(angle - M_PI);
+    double vertical_scaling = M_PI_2 * M_PI_2;
+    return ampsin(angle) / vertical_scaling;
 }
 
 double pow(double x, double y)
@@ -62,7 +55,7 @@ double tanh(double)
 
 double tan(double angle)
 {
-    return sin(angle) / cos(angle);
+    return ampsin(angle) / ampsin(M_PI_2 + angle);
 }
 
 double sqrt(double)
