@@ -25,26 +25,26 @@ There is a make<T>() helper that creates a new object and returns it wrapped in 
 
 
 ----
-## RetainPtr<T> and Retained<T>
+## RefPtr<T> and NonnullRefPtr<T>
 
-RetainPtr is used for multiple-owner objects. An object held by a RetainPtr is owned together by every pointer pointing to that object.
+RefPtr is used for multiple-owner objects. An object held by a RefPtr is owned together by every pointer pointing to that object.
 
-Shared ownership is implemented via retain counting (or "reference counting", as some people call it.)
+Shared ownership is implemented via reference counting.
 
-Retained<T> is a special variant of RetainPtr with one additional property: it cannot be null. Retained is suitable as a return type from functions that are guaranteed to never return null, and as an argument type where the argument may not be null. In other words, if RetainPtr is "\*", then Retained is "&".
+NonnullRefPtr<T> is a special variant of RefPtr with one additional property: it cannot be null. NonnullRefPtr is suitable as a return type from functions that are guaranteed to never return null, and as an argument type where the argument may not be null. In other words, if RefPtr is "\*", then NonnullRefPtr is "&".
 
-Objects can only be held by RetainPtr if they meet certain criteria. Specifically, they need to implement the functions `retain()` and `release()`.
+Objects can only be held by RefPtr if they meet certain criteria. Specifically, they need to implement the functions `ref()` and `deref()`.
 
-To make a class T retainable, you can simply make it inherit from Retainable<T>. This will add all the necessary pieces to T.
+To make a class T reference counted, you can simply make it inherit from RefCounted<T>. This will add all the necessary pieces to T.
 
-**Note:** When constructing a Retainable-derived class, the retain count starts out at 1 (since 0 would mean that the object has no owners and should be deleted.) The object must therefore be "adopted" by someone who takes responsibility of that 1. This is done through the global `adopt()` function:
+**Note:** When constructing a RefCounted-derived class, the reference count starts out at 1 (since 0 would mean that the object has no owners and should be deleted.) The object must therefore be "adopted" by someone who takes responsibility of that 1. This is done through the global `adopt()` function:
 
-    class Bar : public Retainable<Bar> {
+    class Bar : public RefCounted<Bar> {
         ...
     };
 
-    RetainPtr<Bar> our_object = adopt(*new Bar);
-    RetainPtr<Bar> another_owner = our_object;
+    RefPtr<Bar> our_object = adopt(*new Bar);
+    RefPtr<Bar> another_owner = our_object;
 
 In the above example, the Bar object will only be deleted once both "our\_object" and "another\_owner" are gone.
 
