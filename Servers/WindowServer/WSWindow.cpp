@@ -314,3 +314,34 @@ void WSWindow::request_update(const Rect& rect)
     }
     m_pending_paint_rects.add(rect);
 }
+
+void WSWindow::popup_window_menu(const Point& position)
+{
+    if (!m_window_menu) {
+        m_window_menu = make<WSMenu>(nullptr, -1, "(Window Menu)");
+        m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 1, "Minimize"));
+        m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 2, "Unminimize"));
+        m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 3, "Close"));
+
+        m_window_menu->on_item_activation = [&](auto& item) {
+            switch (item.identifier()) {
+            case 1:
+                set_minimized(true);
+                break;
+            case 2:
+                set_minimized(false);
+                break;
+            case 3:
+                request_close();
+                break;
+            }
+        };
+    }
+    m_window_menu->popup(position);
+}
+
+void WSWindow::request_close()
+{
+    WSEvent close_request(WSEvent::WindowCloseRequest);
+    event(close_request);
+}

@@ -91,8 +91,7 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
         s_unmaximize_button_bitmap = &CharacterBitmap::create_from_ascii(s_unmaximize_button_bitmap_data, s_unmaximize_button_bitmap_width, s_unmaximize_button_bitmap_height).leak_ref();
 
     m_buttons.append(make<WSButton>(*this, *s_close_button_bitmap, [this](auto&) {
-        WSEvent close_request(WSEvent::WindowCloseRequest);
-        m_window.event(close_request);
+        m_window.request_close();
     }));
 
     if (window.is_resizable()) {
@@ -270,6 +269,11 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
     auto& wm = WSWindowManager::the();
     if (m_window.type() != WSWindowType::Normal)
         return;
+
+    if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left && title_bar_icon_rect().contains(event.position())) {
+        m_window.popup_window_menu(event.position().translated(rect().location()));
+        return;
+    }
 
     // This is slightly hackish, but expand the title bar rect by one pixel downwards,
     // so that mouse events between the title bar and window contents don't act like

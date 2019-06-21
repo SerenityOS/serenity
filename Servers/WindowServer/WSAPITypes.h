@@ -222,6 +222,7 @@ struct WSAPI_ClientMessage {
         WM_SetActiveWindow,
         WM_SetWindowMinimized,
         WM_StartWindowResize,
+        WM_PopupWindowMenu,
         PopupMenu,
         DismissMenu,
         SetWindowIcon,
@@ -251,6 +252,7 @@ struct WSAPI_ClientMessage {
             int client_id;
             int window_id;
             bool minimized;
+            WSAPI_Point position;
         } wm;
         struct {
             int menubar_id;

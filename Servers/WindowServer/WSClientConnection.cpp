@@ -695,6 +695,22 @@ void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& req
     WSWindowManager::the().move_to_front_and_make_active(window);
 }
 
+void WSClientConnection::handle_request(const WSWMAPIPopupWindowMenuRequest& request)
+{
+    auto* client = WSClientConnection::from_client_id(request.target_client_id());
+    if (!client) {
+        post_error("WSWMAPIPopupWindowMenuRequest: Bad client ID");
+        return;
+    }
+    auto it = client->m_windows.find(request.target_window_id());
+    if (it == client->m_windows.end()) {
+        post_error("WSWMAPIPopupWindowMenuRequest: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    window.popup_window_menu(request.position());
+}
+
 void WSClientConnection::handle_request(const WSWMAPIStartWindowResizeRequest& request)
 {
     auto* client = WSClientConnection::from_client_id(request.target_client_id());
@@ -792,6 +808,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSWMAPISetWindowMinimizedRequest&>(request));
     case WSEvent::WMAPIStartWindowResizeRequest:
         return handle_request(static_cast<const WSWMAPIStartWindowResizeRequest&>(request));
+    case WSEvent::WMAPIPopupWindowMenuRequest:
+        return handle_request(static_cast<const WSWMAPIPopupWindowMenuRequest&>(request));
     case WSEvent::APIPopupMenuRequest:
         return handle_request(static_cast<const WSAPIPopupMenuRequest&>(request));
     case WSEvent::APIDismissMenuRequest:
