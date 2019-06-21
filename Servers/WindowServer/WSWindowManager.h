@@ -1,6 +1,5 @@
 #pragma once
 
-#include "WSMenuBar.h"
 #include <AK/HashMap.h>
 #include <AK/HashTable.h>
 #include <AK/InlineLinkedList.h>
@@ -11,9 +10,10 @@
 #include <SharedGraphics/DisjointRectSet.h>
 #include <SharedGraphics/Painter.h>
 #include <SharedGraphics/Rect.h>
-#include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>
+#include <WindowServer/WSMenuBar.h>
+#include <WindowServer/WSMenuBarKeeper.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WSWindowType.h>
@@ -131,6 +131,14 @@ public:
     const WSWindow* active_fullscreen_window() const { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
     WSWindow* active_fullscreen_window() { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
 
+    template<typename Callback>
+    void for_each_active_menubar_menu(Callback callback)
+    {
+        callback(*m_system_menu);
+        if (m_current_menubar)
+            m_current_menubar->for_each_menu(callback);
+    }
+
 private:
     Retained<WSCursor> get_cursor(const String& name);
     Retained<WSCursor> get_cursor(const String& name, const Point& hotspot);
@@ -159,18 +167,9 @@ private:
     template<typename Callback>
     void for_each_window(Callback);
 
-    template<typename Callback>
-    void for_each_active_menubar_menu(Callback callback)
-    {
-        callback(*m_system_menu);
-        if (m_current_menubar)
-            m_current_menubar->for_each_menu(callback);
-    }
-
     void close_current_menu();
     virtual void event(CEvent&) override;
     void paint_window_frame(const WSWindow&);
-    void tick_clock();
     void tell_wm_listener_about_window(WSWindow& listener, WSWindow&);
     void tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow&);
     void tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow&);
@@ -241,12 +240,10 @@ private:
     WeakPtr<WSMenu> m_current_menu;
 
     WSWindowSwitcher m_switcher;
+    WSMenuBarKeeper m_menubar_keeper;
 
-    String m_username;
     WeakPtr<WSButton> m_cursor_tracking_button;
     WeakPtr<WSButton> m_hovered_button;
-
-    WSCPUMonitor m_cpu_monitor;
 
     RetainPtr<CConfigFile> m_wm_config;
 };
@@ -285,6 +282,8 @@ IterationDecision WSWindowManager::for_each_visible_window_from_back_to_front(Ca
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Tooltip, callback) == IterationDecision::Break)
         return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Menubar, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Menu, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     return for_each_visible_window_of_type_from_back_to_front(WSWindowType::WindowSwitcher, callback);
@@ -319,6 +318,8 @@ IterationDecision WSWindowManager::for_each_visible_window_from_front_to_back(Ca
     if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::WindowSwitcher, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Menu, callback) == IterationDecision::Break)
+        return IterationDecision::Break;
+    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Menubar, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Taskbar, callback) == IterationDecision::Break)
         return IterationDecision::Break;
