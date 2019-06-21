@@ -5,7 +5,7 @@
 
 class StyleDeclaration : public RefCounted<StyleDeclaration> {
 public:
-    NonnullRefPtr<StyleDeclaration> create(const String& property_name, NonnullRefPtr<StyleValue>&& value)
+    static NonnullRefPtr<StyleDeclaration> create(const String& property_name, NonnullRefPtr<StyleValue>&& value)
     {
         return adopt(*new StyleDeclaration(property_name, move(value)));
     }

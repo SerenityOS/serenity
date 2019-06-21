@@ -1,3 +1,4 @@
+#include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
@@ -64,4 +65,9 @@ void dump_tree(const LayoutNode& layout_node)
         dump_tree(child);
     });
     --indent;
+}
+
+void dump_sheet(const StyleSheet& sheet)
+{
+    printf("StyleSheet{%p}: %d rule(s)\n", &sheet, sheet.rules().size());
 }

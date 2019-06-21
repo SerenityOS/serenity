@@ -11,7 +11,9 @@ LIBHTML_OBJS = \
     CSS/StyleRule.o \
     CSS/StyleDeclaration.o \
     CSS/StyleValue.o \
-    Parser/Parser.o \
+    CSS/DefaultStyleSheetSource.o \
+    Parser/HTMLParser.o \
+    Parser/CSSParser.o \
     Layout/LayoutNode.o \
     Layout/LayoutText.o \
     Layout/LayoutBlock.o \
@@ -20,6 +22,9 @@ LIBHTML_OBJS = \
     Layout/LayoutStyle.o \
     Frame.o \
     Dump.o
+
+GENERATED_SOURCES = \
+    CSS/DefaultStyleSheetSource.cpp
 
 TEST_OBJS = test.o
 TEST_PROGRAM = tho
@@ -30,6 +35,9 @@ LIBRARY = libhtml.a
 DEFINES += -DUSERLAND
 
 all: $(LIBRARY) $(TEST_PROGRAM)
+
+CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSource.sh
+	@echo "GENERATE $@"; Scripts/GenerateStyleSheetSource.sh default_stylesheet_source $< > $@
 
 $(TEST_PROGRAM): $(TEST_OBJS) $(LIBRARY)
 	$(LD) -o $@ $(LDFLAGS) -L. $(TEST_OBJS) -lhtml -lgui -lcore -lc
@@ -43,7 +51,7 @@ $(LIBRARY): $(LIBHTML_OBJS)
 -include $(OBJS:%.o=%.d)
 
 clean:
-	@echo "CLEAN"; rm -f $(TEST_PROGRAM) $(LIBRARY) $(OBJS) *.d
+	@echo "CLEAN"; rm -f $(TEST_PROGRAM) $(LIBRARY) $(OBJS) *.d $(GENERATED_SOURCES)
 
 install: $(LIBRARY)
 	mkdir -p ../Root/usr/include/LibHTML

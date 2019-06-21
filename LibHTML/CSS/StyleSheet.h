@@ -5,7 +5,7 @@
 
 class StyleSheet : public RefCounted<StyleSheet> {
 public:
-    NonnullRefPtr<StyleSheet> create(Vector<NonnullRefPtr<StyleRule>>&& rules)
+    static NonnullRefPtr<StyleSheet> create(Vector<NonnullRefPtr<StyleRule>>&& rules)
     {
         return adopt(*new StyleSheet(move(rules)));
     }

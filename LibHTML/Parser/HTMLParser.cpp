@@ -1,6 +1,6 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
-#include <LibHTML/Parser/Parser.h>
+#include <LibHTML/Parser/HTMLParser.h>
 #include <ctype.h>
 #include <stdio.h>
 
@@ -32,7 +32,7 @@ static bool is_self_closing_tag(const String& tag_name)
         || tag_name == "wbr";
 }
 
-NonnullRefPtr<Document> parse(const String& html)
+NonnullRefPtr<Document> parse_html(const String& html)
 {
     Vector<NonnullRefPtr<ParentNode>> node_stack;
 
