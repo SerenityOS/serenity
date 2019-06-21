@@ -2032,7 +2032,7 @@ size_t Process::amount_shared() const
 {
     // FIXME: This will double count if multiple regions use the same physical page.
     // FIXME: It doesn't work at the moment, since it relies on PhysicalPage retain counts,
-    //        and each PhysicalPage is only retained by its VMObject. This needs to be refactored
+    //        and each PhysicalPage is only reffed by its VMObject. This needs to be refactored
     //        so that every Region contributes +1 retain to each of its PhysicalPages.
     size_t amount = 0;
     for (auto& region : m_regions) {
@@ -2417,8 +2417,8 @@ struct SharedBuffer {
 
     pid_t pid1() const { return m_pid1; }
     pid_t pid2() const { return m_pid2; }
-    unsigned pid1_retain_count() const { return m_pid1_retain_count; }
-    unsigned pid2_retain_count() const { return m_pid2_retain_count; }
+    unsigned pid1_ref_count() const { return m_pid1_retain_count; }
+    unsigned pid2_ref_count() const { return m_pid2_retain_count; }
     size_t size() const { return m_vmo->size(); }
     void destroy_if_unused();
 

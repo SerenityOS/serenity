@@ -23,7 +23,7 @@ class FileDescription;
 class LocalSocket;
 class VMObject;
 
-class FS : public Retainable<FS> {
+class FS : public RefCounted<FS> {
     friend class Inode;
 
 public:

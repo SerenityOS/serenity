@@ -10,7 +10,7 @@
 #include <AK/StringView.h>
 #include <SharedBuffer.h>
 
-class GraphicsBitmap : public Retainable<GraphicsBitmap> {
+class GraphicsBitmap : public RefCounted<GraphicsBitmap> {
 public:
     enum class Format {
         Invalid,

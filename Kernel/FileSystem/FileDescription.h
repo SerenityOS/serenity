@@ -19,7 +19,7 @@ class Region;
 class CharacterDevice;
 class SharedMemory;
 
-class FileDescription : public Retainable<FileDescription> {
+class FileDescription : public RefCounted<FileDescription> {
 public:
     static Retained<FileDescription> create(RetainPtr<Custody>&&);
     static Retained<FileDescription> create(RetainPtr<File>&&, SocketRole = SocketRole::None);

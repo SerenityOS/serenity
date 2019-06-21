@@ -12,7 +12,7 @@ template<typename T>
 class WeakPtr;
 
 template<typename T>
-class WeakLink : public Retainable<WeakLink<T>> {
+class WeakLink : public RefCounted<WeakLink<T>> {
     friend class Weakable<T>;
 
 public:

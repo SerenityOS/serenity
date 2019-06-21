@@ -16,22 +16,22 @@ public:
     RetainPtr(const T* ptr)
         : m_ptr(const_cast<T*>(ptr))
     {
-        retain_if_not_null(m_ptr);
+        ref_if_not_null(m_ptr);
     }
     RetainPtr(T* ptr)
         : m_ptr(ptr)
     {
-        retain_if_not_null(m_ptr);
+        ref_if_not_null(m_ptr);
     }
     RetainPtr(T& object)
         : m_ptr(&object)
     {
-        m_ptr->retain();
+        m_ptr->ref();
     }
     RetainPtr(const T& object)
         : m_ptr(const_cast<T*>(&object))
     {
-        m_ptr->retain();
+        m_ptr->ref();
     }
     RetainPtr(AdoptTag, T& object)
         : m_ptr(&object)
@@ -79,7 +79,7 @@ public:
     RetainPtr& operator=(RetainPtr&& other)
     {
         if (this != &other) {
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
             m_ptr = other.leak_ref();
         }
         return *this;
@@ -89,7 +89,7 @@ public:
     RetainPtr& operator=(RetainPtr<U>&& other)
     {
         if (this != static_cast<void*>(&other)) {
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
             m_ptr = other.leak_ref();
         }
         return *this;
@@ -98,7 +98,7 @@ public:
     template<typename U>
     RetainPtr& operator=(Retained<U>&& other)
     {
-        release_if_not_null(m_ptr);
+        deref_if_not_null(m_ptr);
         m_ptr = &other.leak_ref();
         return *this;
     }
@@ -107,10 +107,10 @@ public:
     RetainPtr& operator=(const Retained<U>& other)
     {
         if (m_ptr != other.ptr())
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
         m_ptr = const_cast<T*>(other.ptr());
         ASSERT(m_ptr);
-        retain_if_not_null(m_ptr);
+        ref_if_not_null(m_ptr);
         return *this;
     }
 
@@ -118,27 +118,27 @@ public:
     RetainPtr& operator=(const RetainPtr<U>& other)
     {
         if (m_ptr != other.ptr())
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
         m_ptr = const_cast<T*>(other.ptr());
-        retain_if_not_null(m_ptr);
+        ref_if_not_null(m_ptr);
         return *this;
     }
 
     RetainPtr& operator=(const T* ptr)
     {
         if (m_ptr != ptr)
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
         m_ptr = const_cast<T*>(ptr);
-        retain_if_not_null(m_ptr);
+        ref_if_not_null(m_ptr);
         return *this;
     }
 
     RetainPtr& operator=(const T& object)
     {
         if (m_ptr != &object)
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
         m_ptr = const_cast<T*>(&object);
-        retain_if_not_null(m_ptr);
+        ref_if_not_null(m_ptr);
         return *this;
     }
 
@@ -155,7 +155,7 @@ public:
 
     void clear()
     {
-        release_if_not_null(m_ptr);
+        deref_if_not_null(m_ptr);
         m_ptr = nullptr;
     }
 

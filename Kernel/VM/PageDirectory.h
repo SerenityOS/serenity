@@ -6,7 +6,7 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/RangeAllocator.h>
 
-class PageDirectory : public Retainable<PageDirectory> {
+class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:

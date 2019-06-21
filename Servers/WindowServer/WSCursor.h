@@ -12,7 +12,7 @@ enum class WSStandardCursor {
     ResizeDiagonalBLTR,
 };
 
-class WSCursor : public Retainable<WSCursor> {
+class WSCursor : public RefCounted<WSCursor> {
 public:
     static Retained<WSCursor> create(Retained<GraphicsBitmap>&&, const Point& hotspot);
     static Retained<WSCursor> create(Retained<GraphicsBitmap>&&);

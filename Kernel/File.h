@@ -39,7 +39,7 @@ class Region;
 //   - Called by mmap() when userspace wants to memory-map this File somewhere.
 //   - Should create a Region in the Process and return it if successful.
 
-class File : public Retainable<File> {
+class File : public RefCounted<File> {
 public:
     virtual ~File();
 

@@ -8,7 +8,7 @@
 
 class IRCLogBufferModel;
 
-class IRCLogBuffer : public Retainable<IRCLogBuffer> {
+class IRCLogBuffer : public RefCounted<IRCLogBuffer> {
 public:
     static Retained<IRCLogBuffer> create();
     ~IRCLogBuffer();

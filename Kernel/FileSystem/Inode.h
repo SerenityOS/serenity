@@ -14,14 +14,14 @@ class FileDescription;
 class LocalSocket;
 class VMObject;
 
-class Inode : public Retainable<Inode> {
+class Inode : public RefCounted<Inode> {
     friend class VFS;
     friend class FS;
 
 public:
     virtual ~Inode();
 
-    virtual void one_retain_left() {}
+    virtual void one_ref_left() {}
 
     FS& fs() { return m_fs; }
     const FS& fs() const { return m_fs; }

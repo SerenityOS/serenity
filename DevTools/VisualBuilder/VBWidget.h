@@ -39,7 +39,7 @@ inline void for_each_direction(Callback callback)
     callback(Direction::DownLeft);
 }
 
-class VBWidget : public Retainable<VBWidget>
+class VBWidget : public RefCounted<VBWidget>
     , public Weakable<VBWidget> {
     friend class VBWidgetPropertyModel;
 

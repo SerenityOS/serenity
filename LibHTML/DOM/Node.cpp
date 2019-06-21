@@ -10,13 +10,13 @@ Node::~Node()
 {
 }
 
-void Node::retain()
+void Node::ref()
 {
     ASSERT(m_retain_count);
     ++m_retain_count;
 }
 
-void Node::release()
+void Node::deref()
 {
     ASSERT(m_retain_count);
     if (!--m_retain_count)

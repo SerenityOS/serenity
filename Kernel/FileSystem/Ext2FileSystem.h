@@ -21,7 +21,7 @@ public:
     bool is_symlink() const { return ::is_symlink(m_raw_inode.i_mode); }
 
     // ^Inode (Retainable magic)
-    virtual void one_retain_left() override;
+    virtual void one_ref_left() override;
 
 private:
     // ^Inode

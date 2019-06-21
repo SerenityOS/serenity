@@ -13,7 +13,7 @@
 class Inode;
 class PhysicalPage;
 
-class VMObject : public Retainable<VMObject>
+class VMObject : public RefCounted<VMObject>
     , public Weakable<VMObject> {
     friend class MemoryManager;
 

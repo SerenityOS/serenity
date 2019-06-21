@@ -18,17 +18,17 @@
 namespace AK {
 
 template<typename T>
-inline void retain_if_not_null(T* ptr)
+inline void ref_if_not_null(T* ptr)
 {
     if (ptr)
-        ptr->retain();
+        ptr->ref();
 }
 
 template<typename T>
-inline void release_if_not_null(T* ptr)
+inline void deref_if_not_null(T* ptr)
 {
     if (ptr)
-        ptr->release();
+        ptr->deref();
 }
 
 template<typename T>
@@ -42,14 +42,14 @@ public:
     Retained(const T& object)
         : m_ptr(const_cast<T*>(&object))
     {
-        m_ptr->retain();
+        m_ptr->ref();
     }
     template<typename U>
     RETURN_TYPESTATE(unconsumed)
     Retained(const U& object)
         : m_ptr(&const_cast<T&>(static_cast<const T&>(object)))
     {
-        m_ptr->retain();
+        m_ptr->ref();
     }
     RETURN_TYPESTATE(unconsumed)
     Retained(AdoptTag, T& object)
@@ -85,7 +85,7 @@ public:
     }
     ~Retained()
     {
-        release_if_not_null(m_ptr);
+        deref_if_not_null(m_ptr);
         m_ptr = nullptr;
 #ifdef SANITIZE_PTRS
         if constexpr (sizeof(T*) == 8)
@@ -99,7 +99,7 @@ public:
     Retained& operator=(Retained&& other)
     {
         if (this != &other) {
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
             m_ptr = &other.leak_ref();
         }
         return *this;
@@ -110,7 +110,7 @@ public:
     Retained& operator=(Retained<U>&& other)
     {
         if (this != static_cast<void*>(&other)) {
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
             m_ptr = &other.leak_ref();
         }
         return *this;
@@ -120,9 +120,9 @@ public:
     Retained& operator=(T& object)
     {
         if (m_ptr != &object)
-            release_if_not_null(m_ptr);
+            deref_if_not_null(m_ptr);
         m_ptr = &object;
-        m_ptr->retain();
+        m_ptr->ref();
         return *this;
     }
 

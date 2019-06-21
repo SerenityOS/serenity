@@ -18,9 +18,9 @@ class Node {
 public:
     virtual ~Node();
 
-    void retain();
-    void release();
-    int retain_count() const { return m_retain_count; }
+    void ref();
+    void deref();
+    int ref_count() const { return m_retain_count; }
 
     ParentNode* parent_node() { return m_parent_node; }
     const ParentNode* parent_node() const { return m_parent_node; }

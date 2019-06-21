@@ -18,61 +18,61 @@ constexpr auto call_will_be_destroyed_if_present(...) -> FalseType
 }
 
 template<class T>
-constexpr auto call_one_retain_left_if_present(T* object) -> decltype(object->one_retain_left(), TrueType {})
+constexpr auto call_one_ref_left_if_present(T* object) -> decltype(object->one_ref_left(), TrueType {})
 {
-    object->one_retain_left();
+    object->one_ref_left();
     return {};
 }
 
-constexpr auto call_one_retain_left_if_present(...) -> FalseType
+constexpr auto call_one_ref_left_if_present(...) -> FalseType
 {
     return {};
 }
 
-class RetainableBase {
+class RefCountedBase {
 public:
-    void retain()
+    void ref()
     {
-        ASSERT(m_retain_count);
-        ++m_retain_count;
+        ASSERT(m_ref_count);
+        ++m_ref_count;
     }
 
-    int retain_count() const
+    int ref_count() const
     {
-        return m_retain_count;
+        return m_ref_count;
     }
 
 protected:
-    RetainableBase() {}
-    ~RetainableBase()
+    RefCountedBase() {}
+    ~RefCountedBase()
     {
-        ASSERT(!m_retain_count);
+        ASSERT(!m_ref_count);
     }
 
-    void release_base()
+    void deref_base()
     {
-        ASSERT(m_retain_count);
-        --m_retain_count;
+        ASSERT(m_ref_count);
+        --m_ref_count;
     }
 
-    int m_retain_count { 1 };
+    int m_ref_count { 1 };
 };
 
 template<typename T>
-class Retainable : public RetainableBase {
+class RefCounted : public RefCountedBase {
 public:
-    void release()
+    void deref()
     {
-        release_base();
-        if (m_retain_count == 0) {
+        deref_base();
+        if (m_ref_count == 0) {
             call_will_be_destroyed_if_present(static_cast<T*>(this));
             delete static_cast<T*>(this);
-        } else if (m_retain_count == 1) {
-            call_one_retain_left_if_present(static_cast<T*>(this));
+        } else if (m_ref_count == 1) {
+            call_one_ref_left_if_present(static_cast<T*>(this));
         }
     }
 };
 
 }
 
-using AK::Retainable;
+using AK::RefCounted;

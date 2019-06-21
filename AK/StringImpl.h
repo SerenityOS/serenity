@@ -12,7 +12,7 @@ enum ShouldChomp {
     Chomp
 };
 
-class StringImpl : public Retainable<StringImpl> {
+class StringImpl : public RefCounted<StringImpl> {
 public:
     static Retained<StringImpl> create_uninitialized(int length, char*& buffer);
     static RetainPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);

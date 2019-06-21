@@ -39,7 +39,7 @@ private:
     GModelIndex m_index;
 };
 
-class GModel : public Retainable<GModel> {
+class GModel : public RefCounted<GModel> {
 public:
     struct ColumnMetadata {
         int preferred_width { 0 };

@@ -11,7 +11,7 @@ class IRCClient;
 class IRCChannelMemberListModel;
 class IRCWindow;
 
-class IRCChannel : public Retainable<IRCChannel> {
+class IRCChannel : public RefCounted<IRCChannel> {
 public:
     static Retained<IRCChannel> create(IRCClient&, const String&);
     ~IRCChannel();

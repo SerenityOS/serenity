@@ -12,13 +12,13 @@ class PhysicalPage {
 public:
     PhysicalAddress paddr() const { return m_paddr; }
 
-    void retain()
+    void ref()
     {
         ASSERT(m_retain_count);
         ++m_retain_count;
     }
 
-    void release()
+    void deref()
     {
         ASSERT(m_retain_count);
         if (!--m_retain_count) {
@@ -30,7 +30,7 @@ public:
 
     static Retained<PhysicalPage> create(PhysicalAddress, bool supervisor, bool may_return_to_freelist = true);
 
-    word retain_count() const { return m_retain_count; }
+    word ref_count() const { return m_retain_count; }
 
 private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);

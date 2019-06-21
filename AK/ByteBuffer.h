@@ -8,7 +8,7 @@
 
 namespace AK {
 
-class ByteBufferImpl : public Retainable<ByteBufferImpl> {
+class ByteBufferImpl : public RefCounted<ByteBufferImpl> {
 public:
     static Retained<ByteBufferImpl> create_uninitialized(int size);
     static Retained<ByteBufferImpl> create_zeroed(int);

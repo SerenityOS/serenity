@@ -129,7 +129,7 @@ size_t Region::amount_shared() const
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
         auto& physical_page = m_vmo->physical_pages()[first_page_index() + i];
-        if (physical_page && physical_page->retain_count() > 1)
+        if (physical_page && physical_page->ref_count() > 1)
             bytes += PAGE_SIZE;
     }
     return bytes;
