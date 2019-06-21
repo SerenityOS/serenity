@@ -312,6 +312,9 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
     case WSAPI_ClientMessage::Type::WM_StartWindowResize:
         post_event(client, make<WSWMAPIStartWindowResizeRequest>(client_id, message.wm.client_id, message.wm.window_id));
         break;
+    case WSAPI_ClientMessage::Type::WM_PopupWindowMenu:
+        post_event(client, make<WSWMAPIPopupWindowMenuRequest>(client_id, message.wm.client_id, message.wm.window_id, message.wm.position));
+        break;
     case WSAPI_ClientMessage::Type::MoveWindowToFront:
         post_event(client, make<WSAPIMoveWindowToFrontRequest>(client_id, message.window_id));
         break;

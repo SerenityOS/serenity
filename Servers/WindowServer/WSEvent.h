@@ -67,6 +67,7 @@ public:
         WMAPISetActiveWindowRequest,
         WMAPISetWindowMinimizedRequest,
         WMAPIStartWindowResizeRequest,
+        WMAPIPopupWindowMenuRequest,
         APIPopupMenuRequest,
         APIDismissMenuRequest,
         __End_API_Client_Requests,
@@ -127,6 +128,26 @@ public:
 private:
     int m_target_client_id;
     int m_target_window_id;
+};
+
+class WSWMAPIPopupWindowMenuRequest : public WSAPIClientRequest {
+public:
+    WSWMAPIPopupWindowMenuRequest(int client_id, int target_client_id, int target_window_id, const Point& position)
+        : WSAPIClientRequest(WSEvent::WMAPIPopupWindowMenuRequest, client_id)
+        , m_target_client_id(target_client_id)
+        , m_target_window_id(target_window_id)
+        , m_position(position)
+    {
+    }
+
+    int target_client_id() const { return m_target_client_id; }
+    int target_window_id() const { return m_target_window_id; }
+    Point position() const { return m_position; }
+
+private:
+    int m_target_client_id;
+    int m_target_window_id;
+    Point m_position;
 };
 
 class WSWMAPISetActiveWindowRequest : public WSAPIClientRequest {

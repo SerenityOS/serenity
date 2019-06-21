@@ -11,8 +11,5 @@ public:
 private:
     virtual void context_menu_event(GContextMenuEvent&) override;
 
-    GMenu& ensure_menu();
-
     WindowIdentifier m_identifier;
-    OwnPtr<GMenu> m_menu;
 };
