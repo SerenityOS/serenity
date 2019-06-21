@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/Retained.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Types.h>
 
 namespace AK {

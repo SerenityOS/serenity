@@ -5,7 +5,7 @@
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/Retainable.h>
-#include <AK/Retained.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibGUI/GShortcut.h>

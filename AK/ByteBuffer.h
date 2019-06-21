@@ -2,7 +2,7 @@
 
 #include "StdLibExtras.h"
 #include "Types.h"
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Retainable.h>
 #include <AK/kmalloc.h>
 

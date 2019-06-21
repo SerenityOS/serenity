@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/DiskDevice.h>
 #include <stdio.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Retainable.h>
 
 class SharedBuffer : public RefCounted<SharedBuffer> {

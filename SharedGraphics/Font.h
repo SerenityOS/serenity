@@ -2,7 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/MappedFile.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Retainable.h>
 #include <AK/Types.h>
 #include <SharedGraphics/Rect.h>

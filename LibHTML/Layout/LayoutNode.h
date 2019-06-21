@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/Retained.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
 #include <LibHTML/Layout/LayoutStyle.h>
 #include <SharedGraphics/Rect.h>

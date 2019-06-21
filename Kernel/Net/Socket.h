@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/HashTable.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Retainable.h>
 #include <AK/Vector.h>
 #include <Kernel/File.h>

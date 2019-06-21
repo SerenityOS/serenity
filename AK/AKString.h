@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/StringImpl.h>
 #include <AK/StringView.h>
 #include <AK/Traits.h>

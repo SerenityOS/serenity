@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/Devices/DiskDevice.h>
 #include <Kernel/Devices/DiskPartition.h>

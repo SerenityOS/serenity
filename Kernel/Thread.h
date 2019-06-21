@@ -3,7 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/OwnPtr.h>
-#include <AK/RetainPtr.h>
+#include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KResult.h>
