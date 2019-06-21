@@ -3,7 +3,7 @@
 #include "VBWidgetType.h"
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
 #include <SharedGraphics/Rect.h>

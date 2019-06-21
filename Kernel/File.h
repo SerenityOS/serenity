@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Types.h>
 #include <Kernel/KResult.h>

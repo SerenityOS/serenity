@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/ByteBuffer.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 
 class CNetworkResponse : public RefCounted<CNetworkResponse> {
 public:

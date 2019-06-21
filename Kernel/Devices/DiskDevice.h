@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/Types.h>
 
 // FIXME: Support 64-bit DiskOffset

@@ -20,7 +20,7 @@ public:
     size_t size() const { return m_raw_inode.i_size; }
     bool is_symlink() const { return ::is_symlink(m_raw_inode.i_mode); }
 
-    // ^Inode (Retainable magic)
+    // ^Inode (RefCounted magic)
     virtual void one_ref_left() override;
 
 private:

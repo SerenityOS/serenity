@@ -2,7 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/Function.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>

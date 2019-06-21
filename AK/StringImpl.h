@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
 

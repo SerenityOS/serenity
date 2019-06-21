@@ -9,7 +9,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <AK/kstdio.h>
 #include <Kernel/Devices/DiskDevice.h>

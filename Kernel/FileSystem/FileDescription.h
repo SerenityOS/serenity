@@ -3,7 +3,7 @@
 #include <AK/Badge.h>
 #include <AK/ByteBuffer.h>
 #include <AK/CircularQueue.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>

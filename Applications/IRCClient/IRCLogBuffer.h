@@ -3,7 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/CircularQueue.h>
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <SharedGraphics/Color.h>
 
 class IRCLogBufferModel;

@@ -6,7 +6,7 @@
 #include <AK/AKString.h>
 #include <AK/MappedFile.h>
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/StringView.h>
 #include <SharedBuffer.h>
 

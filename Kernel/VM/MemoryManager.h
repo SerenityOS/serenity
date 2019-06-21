@@ -6,7 +6,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/HashTable.h>
 #include <AK/RefPtr.h>
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>

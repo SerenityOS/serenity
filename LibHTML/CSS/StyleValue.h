@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/Retainable.h>
+#include <AK/RefCounted.h>
 
 class StyleValue : public RefCounted<StyleValue> {
 public:
