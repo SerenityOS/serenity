@@ -36,7 +36,7 @@ void WSClipboard::clear()
     m_contents_size = 0;
 }
 
-void WSClipboard::set_data(Retained<SharedBuffer>&& data, int contents_size)
+void WSClipboard::set_data(NonnullRefPtr<SharedBuffer>&& data, int contents_size)
 {
     dbgprintf("WSClipboard::set_data <- %p (%u bytes)\n", data->data(), contents_size);
     m_shared_buffer = move(data);

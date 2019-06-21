@@ -12,7 +12,7 @@ public:
         FilesAndDirectories
     };
 
-    static Retained<GFileSystemModel> create(const StringView& root_path = "/", Mode mode = Mode::FilesAndDirectories)
+    static NonnullRefPtr<GFileSystemModel> create(const StringView& root_path = "/", Mode mode = Mode::FilesAndDirectories)
     {
         return adopt(*new GFileSystemModel(root_path, mode));
     }

@@ -17,7 +17,7 @@ GLabel::~GLabel()
 {
 }
 
-void GLabel::set_icon(RetainPtr<GraphicsBitmap>&& icon)
+void GLabel::set_icon(RefPtr<GraphicsBitmap>&& icon)
 {
     m_icon = move(icon);
 }

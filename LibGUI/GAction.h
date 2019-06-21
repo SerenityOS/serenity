@@ -23,23 +23,23 @@ public:
         ApplicationGlobal,
         WidgetLocal,
     };
-    static Retained<GAction> create(const StringView& text, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, move(callback), widget));
     }
-    static Retained<GAction> create(const StringView& text, const StringView& custom_data, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, const StringView& custom_data, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, custom_data, move(callback), widget));
     }
-    static Retained<GAction> create(const StringView& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, move(icon), move(callback), widget));
     }
-    static Retained<GAction> create(const StringView& text, const GShortcut& shortcut, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, const GShortcut& shortcut, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, shortcut, move(callback), widget));
     }
-    static Retained<GAction> create(const StringView& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
+    static NonnullRefPtr<GAction> create(const StringView& text, const GShortcut& shortcut, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> callback, GWidget* widget = nullptr)
     {
         return adopt(*new GAction(text, shortcut, move(icon), move(callback), widget));
     }
@@ -78,8 +78,8 @@ public:
 private:
     GAction(const StringView& text, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
     GAction(const StringView& text, const GShortcut&, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const StringView& text, const GShortcut&, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
-    GAction(const StringView& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
+    GAction(const StringView& text, const GShortcut&, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
+    GAction(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
     GAction(const StringView& text, const StringView& custom_data = StringView(), Function<void(GAction&)> = nullptr, GWidget* = nullptr);
 
     template<typename Callback>
@@ -89,7 +89,7 @@ private:
 
     String m_text;
     String m_custom_data;
-    RetainPtr<GraphicsBitmap> m_icon;
+    RefPtr<GraphicsBitmap> m_icon;
     GShortcut m_shortcut;
     bool m_enabled { true };
     bool m_checkable { false };

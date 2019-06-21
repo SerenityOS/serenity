@@ -174,7 +174,7 @@ ProcFS& ProcFS::the()
     return *s_the;
 }
 
-Retained<ProcFS> ProcFS::create()
+NonnullRefPtr<ProcFS> ProcFS::create()
 {
     return adopt(*new ProcFS);
 }
@@ -614,7 +614,7 @@ ByteBuffer procfs$inodes(InodeIdentifier)
     extern HashTable<Inode*>& all_inodes();
     StringBuilder builder;
     for (auto it : all_inodes()) {
-        RetainPtr<Inode> inode = *it;
+        RefPtr<Inode> inode = *it;
         builder.appendf("Inode{K%x} %02u:%08u (%u)\n", inode.ptr(), inode->fsid(), inode->index(), inode->ref_count());
     }
     return builder.to_byte_buffer();
@@ -747,13 +747,13 @@ const char* ProcFS::class_name() const
     return "ProcFS";
 }
 
-RetainPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, int&)
+RefPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, int&)
 {
     kprintf("FIXME: Implement ProcFS::create_inode()?\n");
     return {};
 }
 
-RetainPtr<Inode> ProcFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
+RefPtr<Inode> ProcFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
 {
     error = -EROFS;
     return nullptr;
@@ -764,7 +764,7 @@ InodeIdentifier ProcFS::root_inode() const
     return { fsid(), FI_Root };
 }
 
-RetainPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
+RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
 {
 #ifdef PROCFS_DEBUG
     dbgprintf("ProcFS::get_inode(%u)\n", inode_id.index());

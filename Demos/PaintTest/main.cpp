@@ -12,7 +12,7 @@ public:
     }
     virtual ~TestWidget() override {}
 
-    void set_bitmap(RetainPtr<GraphicsBitmap>&& bitmap)
+    void set_bitmap(RefPtr<GraphicsBitmap>&& bitmap)
     {
         m_bitmap = move(bitmap);
         update();
@@ -31,7 +31,7 @@ private:
         painter.blit_tiled({ 160, 160, 160, 160 }, *m_bitmap, m_bitmap->rect());
     }
 
-    RetainPtr<GraphicsBitmap> m_bitmap;
+    RefPtr<GraphicsBitmap> m_bitmap;
 };
 
 int main(int argc, char** argv)

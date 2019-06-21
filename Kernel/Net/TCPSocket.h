@@ -4,7 +4,7 @@
 
 class TCPSocket final : public IPv4Socket {
 public:
-    static Retained<TCPSocket> create(int protocol);
+    static NonnullRefPtr<TCPSocket> create(int protocol);
     virtual ~TCPSocket() override;
 
     enum class State {
@@ -49,7 +49,7 @@ class TCPSocketHandle : public SocketHandle {
 public:
     TCPSocketHandle() {}
 
-    TCPSocketHandle(RetainPtr<TCPSocket>&& socket)
+    TCPSocketHandle(RefPtr<TCPSocket>&& socket)
         : SocketHandle(move(socket))
     {
     }

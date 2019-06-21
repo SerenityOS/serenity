@@ -7,7 +7,7 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-Retained<GraphicsBitmap> GraphicsBitmap::create(Format format, const Size& size)
+NonnullRefPtr<GraphicsBitmap> GraphicsBitmap::create(Format format, const Size& size)
 {
     return adopt(*new GraphicsBitmap(format, size));
 }
@@ -24,17 +24,17 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
     m_needs_munmap = true;
 }
 
-Retained<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
+NonnullRefPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
 {
     return adopt(*new GraphicsBitmap(format, size, data));
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const StringView& path)
+RefPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const StringView& path)
 {
     return load_png(path);
 }
 
-RetainPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const StringView& path, const Size& size)
+RefPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const StringView& path, const Size& size)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -61,12 +61,12 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, MappedFile&& map
     ASSERT(format != Format::Indexed8);
 }
 
-Retained<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(Format format, Retained<SharedBuffer>&& shared_buffer, const Size& size)
+NonnullRefPtr<GraphicsBitmap> GraphicsBitmap::create_with_shared_buffer(Format format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const Size& size)
 {
     return adopt(*new GraphicsBitmap(format, move(shared_buffer), size));
 }
 
-GraphicsBitmap::GraphicsBitmap(Format format, Retained<SharedBuffer>&& shared_buffer, const Size& size)
+GraphicsBitmap::GraphicsBitmap(Format format, NonnullRefPtr<SharedBuffer>&& shared_buffer, const Size& size)
     : m_size(size)
     , m_data((RGBA32*)shared_buffer->data())
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))

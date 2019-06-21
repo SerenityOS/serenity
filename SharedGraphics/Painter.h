@@ -80,7 +80,7 @@ protected:
     const State& state() const { return m_state_stack.last(); }
 
     Rect m_clip_origin;
-    Retained<GraphicsBitmap> m_target;
+    NonnullRefPtr<GraphicsBitmap> m_target;
     Vector<State, 4> m_state_stack;
 };
 

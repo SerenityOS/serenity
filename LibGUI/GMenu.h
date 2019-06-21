@@ -18,7 +18,7 @@ public:
 
     GAction* action_at(int);
 
-    void add_action(Retained<GAction>);
+    void add_action(NonnullRefPtr<GAction>);
     void add_separator();
 
     void popup(const Point& screen_position);

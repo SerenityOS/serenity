@@ -38,7 +38,7 @@ public:
 
     bool has_children() const { return m_first_child; }
 
-    void append_child(Retained<LayoutNode>);
+    void append_child(NonnullRefPtr<LayoutNode>);
 
     void set_next_sibling(LayoutNode* node) { m_next_sibling = node; }
     void set_previous_sibling(LayoutNode* node) { m_previous_sibling = node; }

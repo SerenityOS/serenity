@@ -31,12 +31,12 @@ static byte to_ext2_file_type(mode_t mode)
     return EXT2_FT_UNKNOWN;
 }
 
-Retained<Ext2FS> Ext2FS::create(Retained<DiskDevice>&& device)
+NonnullRefPtr<Ext2FS> Ext2FS::create(NonnullRefPtr<DiskDevice>&& device)
 {
     return adopt(*new Ext2FS(move(device)));
 }
 
-Ext2FS::Ext2FS(Retained<DiskDevice>&& device)
+Ext2FS::Ext2FS(NonnullRefPtr<DiskDevice>&& device)
     : DiskBackedFS(move(device))
 {
 }
@@ -448,7 +448,7 @@ void Ext2FSInode::flush_metadata()
     set_metadata_dirty(false);
 }
 
-RetainPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
+RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
 {
     LOCKER(m_lock);
     ASSERT(inode.fsid() == fsid());
@@ -1085,7 +1085,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     return true;
 }
 
-RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, int& error)
+RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, int& error)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
@@ -1125,7 +1125,7 @@ RetainPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const Strin
     return inode;
 }
 
-RetainPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, int& error)
+RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, int& error)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());

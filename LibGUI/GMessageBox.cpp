@@ -23,7 +23,7 @@ GMessageBox::~GMessageBox()
 {
 }
 
-RetainPtr<GraphicsBitmap> GMessageBox::icon() const
+RefPtr<GraphicsBitmap> GMessageBox::icon() const
 {
     switch (m_type) {
     case Type::Information:

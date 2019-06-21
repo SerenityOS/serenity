@@ -28,7 +28,7 @@ PTYMultiplexer::~PTYMultiplexer()
 {
 }
 
-KResultOr<Retained<FileDescription>> PTYMultiplexer::open(int options)
+KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
 {
     UNUSED_PARAM(options);
     LOCKER(m_lock);

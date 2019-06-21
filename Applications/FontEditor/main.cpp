@@ -7,7 +7,7 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    RetainPtr<Font> edited_font;
+    RefPtr<Font> edited_font;
     String path;
 
     if (argc == 2) {

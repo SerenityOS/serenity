@@ -4,15 +4,15 @@
 #include <Kernel/SharedMemory.h>
 #include <Kernel/VM/VMObject.h>
 
-Lockable<HashMap<String, RetainPtr<SharedMemory>>>& shared_memories()
+Lockable<HashMap<String, RefPtr<SharedMemory>>>& shared_memories()
 {
-    static Lockable<HashMap<String, RetainPtr<SharedMemory>>>* map;
+    static Lockable<HashMap<String, RefPtr<SharedMemory>>>* map;
     if (!map)
-        map = new Lockable<HashMap<String, RetainPtr<SharedMemory>>>;
+        map = new Lockable<HashMap<String, RefPtr<SharedMemory>>>;
     return *map;
 }
 
-KResultOr<Retained<SharedMemory>> SharedMemory::open(const String& name, int flags, mode_t mode)
+KResultOr<NonnullRefPtr<SharedMemory>> SharedMemory::open(const String& name, int flags, mode_t mode)
 {
     UNUSED_PARAM(flags);
     LOCKER(shared_memories().lock());

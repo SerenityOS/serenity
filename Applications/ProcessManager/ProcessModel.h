@@ -25,7 +25,7 @@ public:
         __Count
     };
 
-    static Retained<ProcessModel> create(GraphWidget& graph) { return adopt(*new ProcessModel(graph)); }
+    static NonnullRefPtr<ProcessModel> create(GraphWidget& graph) { return adopt(*new ProcessModel(graph)); }
     virtual ~ProcessModel() override;
 
     virtual int row_count(const GModelIndex&) const override;
@@ -61,9 +61,9 @@ private:
     HashMap<uid_t, String> m_usernames;
     HashMap<pid_t, OwnPtr<Process>> m_processes;
     Vector<pid_t> m_pids;
-    RetainPtr<GraphicsBitmap> m_generic_process_icon;
-    RetainPtr<GraphicsBitmap> m_high_priority_icon;
-    RetainPtr<GraphicsBitmap> m_low_priority_icon;
-    RetainPtr<GraphicsBitmap> m_normal_priority_icon;
+    RefPtr<GraphicsBitmap> m_generic_process_icon;
+    RefPtr<GraphicsBitmap> m_high_priority_icon;
+    RefPtr<GraphicsBitmap> m_low_priority_icon;
+    RefPtr<GraphicsBitmap> m_normal_priority_icon;
     CFile m_proc_all;
 };

@@ -19,8 +19,8 @@ public:
     };
 
     Region(const Range&, const String&, byte access, bool cow = false);
-    Region(const Range&, Retained<VMObject>&&, size_t offset_in_vmo, const String&, byte access, bool cow = false);
-    Region(const Range&, RetainPtr<Inode>&&, const String&, byte access);
+    Region(const Range&, NonnullRefPtr<VMObject>&&, size_t offset_in_vmo, const String&, byte access, bool cow = false);
+    Region(const Range&, RefPtr<Inode>&&, const String&, byte access);
     ~Region();
 
     VirtualAddress vaddr() const { return m_range.base(); }
@@ -38,7 +38,7 @@ public:
     bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }
 
-    Retained<Region> clone();
+    NonnullRefPtr<Region> clone();
 
     bool contains(VirtualAddress vaddr) const
     {
@@ -97,10 +97,10 @@ public:
     }
 
 private:
-    RetainPtr<PageDirectory> m_page_directory;
+    RefPtr<PageDirectory> m_page_directory;
     Range m_range;
     size_t m_offset_in_vmo { 0 };
-    Retained<VMObject> m_vmo;
+    NonnullRefPtr<VMObject> m_vmo;
     String m_name;
     byte m_access { 0 };
     bool m_shared { false };

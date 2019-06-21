@@ -10,7 +10,7 @@ CNetworkJob::~CNetworkJob()
 {
 }
 
-void CNetworkJob::did_finish(Retained<CNetworkResponse>&& response)
+void CNetworkJob::did_finish(NonnullRefPtr<CNetworkResponse>&& response)
 {
     m_response = move(response);
     printf("%s{%p} job did_finish!\n", class_name(), this);

@@ -371,7 +371,7 @@ void GWidget::set_focus(bool focus)
     }
 }
 
-void GWidget::set_font(RetainPtr<Font>&& font)
+void GWidget::set_font(RefPtr<Font>&& font)
 {
     if (!font)
         m_font = Font::default_font();

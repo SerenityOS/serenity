@@ -12,7 +12,7 @@ class WSWindowFrame;
 
 class WSButton : public Weakable<WSButton> {
 public:
-    WSButton(WSWindowFrame&, Retained<CharacterBitmap>&&, Function<void(WSButton&)>&& on_click_handler);
+    WSButton(WSWindowFrame&, NonnullRefPtr<CharacterBitmap>&&, Function<void(WSButton&)>&& on_click_handler);
     ~WSButton();
 
     Rect relative_rect() const { return m_relative_rect; }
@@ -34,7 +34,7 @@ public:
 private:
     WSWindowFrame& m_frame;
     Rect m_relative_rect;
-    Retained<CharacterBitmap> m_bitmap;
+    NonnullRefPtr<CharacterBitmap> m_bitmap;
     bool m_pressed { false };
     bool m_visible { true };
     bool m_hovered { false };

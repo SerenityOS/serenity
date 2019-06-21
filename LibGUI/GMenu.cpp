@@ -31,7 +31,7 @@ GMenu::~GMenu()
     unrealize_menu();
 }
 
-void GMenu::add_action(Retained<GAction> action)
+void GMenu::add_action(NonnullRefPtr<GAction> action)
 {
     m_items.append(make<GMenuItem>(m_menu_id, move(action)));
 #ifdef GMENU_DEBUG

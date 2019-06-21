@@ -52,7 +52,7 @@ public:
     WSWindowManager();
     virtual ~WSWindowManager() override;
 
-    RetainPtr<CConfigFile> wm_config() const { return m_wm_config; }
+    RefPtr<CConfigFile> wm_config() const { return m_wm_config; }
     void reload_config(bool);
 
     void add_window(WSWindow&);
@@ -142,8 +142,8 @@ public:
     }
 
 private:
-    Retained<WSCursor> get_cursor(const String& name);
-    Retained<WSCursor> get_cursor(const String& name, const Point& hotspot);
+    NonnullRefPtr<WSCursor> get_cursor(const String& name);
+    NonnullRefPtr<WSCursor> get_cursor(const String& name, const Point& hotspot);
 
     void process_mouse_event(WSMouseEvent&, WSWindow*& hovered_window);
     void process_event_for_doubleclick(WSWindow& window, WSMouseEvent& event);
@@ -175,14 +175,14 @@ private:
     void tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
 
-    RetainPtr<WSCursor> m_arrow_cursor;
-    RetainPtr<WSCursor> m_resize_horizontally_cursor;
-    RetainPtr<WSCursor> m_resize_vertically_cursor;
-    RetainPtr<WSCursor> m_resize_diagonally_tlbr_cursor;
-    RetainPtr<WSCursor> m_resize_diagonally_bltr_cursor;
-    RetainPtr<WSCursor> m_i_beam_cursor;
-    RetainPtr<WSCursor> m_disallowed_cursor;
-    RetainPtr<WSCursor> m_move_cursor;
+    RefPtr<WSCursor> m_arrow_cursor;
+    RefPtr<WSCursor> m_resize_horizontally_cursor;
+    RefPtr<WSCursor> m_resize_vertically_cursor;
+    RefPtr<WSCursor> m_resize_diagonally_tlbr_cursor;
+    RefPtr<WSCursor> m_resize_diagonally_bltr_cursor;
+    RefPtr<WSCursor> m_i_beam_cursor;
+    RefPtr<WSCursor> m_disallowed_cursor;
+    RefPtr<WSCursor> m_move_cursor;
 
     Color m_background_color;
     Color m_active_window_border_color;
@@ -245,7 +245,7 @@ private:
     WeakPtr<WSButton> m_cursor_tracking_button;
     WeakPtr<WSButton> m_hovered_button;
 
-    RetainPtr<CConfigFile> m_wm_config;
+    RefPtr<CConfigFile> m_wm_config;
 };
 
 template<typename Callback>

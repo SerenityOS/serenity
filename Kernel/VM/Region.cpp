@@ -15,7 +15,7 @@ Region::Region(const Range& range, const String& name, byte access, bool cow)
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, RetainPtr<Inode>&& inode, const String& name, byte access)
+Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, byte access)
     : m_range(range)
     , m_vmo(VMObject::create_file_backed(move(inode)))
     , m_name(name)
@@ -25,7 +25,7 @@ Region::Region(const Range& range, RetainPtr<Inode>&& inode, const String& name,
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, Retained<VMObject>&& vmo, size_t offset_in_vmo, const String& name, byte access, bool cow)
+Region::Region(const Range& range, NonnullRefPtr<VMObject>&& vmo, size_t offset_in_vmo, const String& name, byte access, bool cow)
     : m_range(range)
     , m_offset_in_vmo(offset_in_vmo)
     , m_vmo(move(vmo))
@@ -66,7 +66,7 @@ bool Region::page_in()
     return true;
 }
 
-Retained<Region> Region::clone()
+NonnullRefPtr<Region> Region::clone()
 {
     ASSERT(current);
     if (m_shared || (is_readable() && !is_writable())) {

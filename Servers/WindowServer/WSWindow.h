@@ -102,7 +102,7 @@ public:
     virtual void event(CEvent&) override;
 
     GraphicsBitmap* backing_store() { return m_backing_store.ptr(); }
-    void set_backing_store(RetainPtr<GraphicsBitmap>&& backing_store)
+    void set_backing_store(RefPtr<GraphicsBitmap>&& backing_store)
     {
         m_last_backing_store = move(m_backing_store);
         m_backing_store = move(backing_store);
@@ -129,7 +129,7 @@ public:
 
     const GraphicsBitmap& icon() const { return *m_icon; }
     String icon_path() const { return m_icon_path; }
-    void set_icon(const String& path, Retained<GraphicsBitmap>&& icon)
+    void set_icon(const String& path, NonnullRefPtr<GraphicsBitmap>&& icon)
     {
         m_icon_path = path;
         m_icon = move(icon);
@@ -137,7 +137,7 @@ public:
     void set_default_icon();
 
     const WSCursor* override_cursor() const { return m_override_cursor.ptr(); }
-    void set_override_cursor(RetainPtr<WSCursor>&& cursor) { m_override_cursor = move(cursor); }
+    void set_override_cursor(RefPtr<WSCursor>&& cursor) { m_override_cursor = move(cursor); }
 
     void request_update(const Rect&);
     DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
@@ -166,15 +166,15 @@ private:
     bool m_maximized { false };
     bool m_fullscreen { false };
     bool m_show_titlebar { true };
-    RetainPtr<GraphicsBitmap> m_backing_store;
-    RetainPtr<GraphicsBitmap> m_last_backing_store;
+    RefPtr<GraphicsBitmap> m_backing_store;
+    RefPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };
     float m_opacity { 1 };
     Size m_size_increment;
     Size m_base_size;
-    Retained<GraphicsBitmap> m_icon;
+    NonnullRefPtr<GraphicsBitmap> m_icon;
     String m_icon_path;
-    RetainPtr<WSCursor> m_override_cursor;
+    RefPtr<WSCursor> m_override_cursor;
     WSWindowFrame m_frame;
     Color m_background_color { Color::LightGray };
     unsigned m_wm_event_mask { 0 };

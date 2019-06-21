@@ -29,7 +29,7 @@ private:
     virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
     virtual const char* class_name() const override { return "MasterPTY"; }
 
-    RetainPtr<SlavePTY> m_slave;
+    RefPtr<SlavePTY> m_slave;
     unsigned m_index;
     bool m_closed { false };
     DoubleBuffer m_buffer;

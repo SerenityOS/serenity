@@ -105,7 +105,7 @@ Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, RetainPtr<Inode>&& inode, const String& name, int prot)
+Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, RefPtr<Inode>&& inode, const String& name, int prot)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
@@ -115,7 +115,7 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
     return m_regions.last().ptr();
 }
 
-Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, Retained<VMObject>&& vmo, size_t offset_in_vmo, const String& name, int prot)
+Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject>&& vmo, size_t offset_in_vmo, const String& name, int prot)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
@@ -334,7 +334,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     auto vmo = VMObject::create_file_backed(description->inode());
     vmo->set_name(description->absolute_path());
-    RetainPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo.copy_ref(), 0, vmo->name(), PROT_READ);
+    RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo.copy_ref(), 0, vmo->name(), PROT_READ);
     ASSERT(region);
 
     if (this != &current->process()) {
@@ -516,7 +516,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     if (arguments.is_empty()) {
         arguments.append(parts.last());
     }
-    RetainPtr<Custody> cwd;
+    RefPtr<Custody> cwd;
     {
         InterruptDisabler disabler;
         if (auto* parent = Process::from_pid(parent_pid))
@@ -562,7 +562,7 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
     return process;
 }
 
-Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RetainPtr<Custody>&& cwd, RetainPtr<Custody>&& executable, TTY* tty, Process* fork_parent)
+Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody>&& cwd, RefPtr<Custody>&& executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
@@ -2445,7 +2445,7 @@ struct SharedBuffer {
     Region* m_pid2_region { nullptr };
     bool m_pid1_writable { false };
     bool m_pid2_writable { false };
-    Retained<VMObject> m_vmo;
+    NonnullRefPtr<VMObject> m_vmo;
 };
 
 static int s_next_shared_buffer_id;
@@ -2734,7 +2734,7 @@ void Process::FileDescriptionAndFlags::clear()
     flags = 0;
 }
 
-void Process::FileDescriptionAndFlags::set(Retained<FileDescription>&& d, dword f)
+void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& d, dword f)
 {
     description = move(d);
     flags = f;

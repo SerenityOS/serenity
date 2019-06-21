@@ -9,7 +9,7 @@ GMenuItem::GMenuItem(unsigned menu_id, Type type)
 {
 }
 
-GMenuItem::GMenuItem(unsigned menu_id, Retained<GAction>&& action)
+GMenuItem::GMenuItem(unsigned menu_id, NonnullRefPtr<GAction>&& action)
     : m_type(Action)
     , m_menu_id(menu_id)
     , m_action(move(action))

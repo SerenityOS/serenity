@@ -85,6 +85,6 @@ private:
     FS& m_fs;
     unsigned m_index { 0 };
     WeakPtr<VMObject> m_vmo;
-    RetainPtr<LocalSocket> m_socket;
+    RefPtr<LocalSocket> m_socket;
     bool m_metadata_dirty { false };
 };

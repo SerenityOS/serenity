@@ -6,7 +6,7 @@
 
 class ProcessTracer : public File {
 public:
-    static Retained<ProcessTracer> create(pid_t pid) { return adopt(*new ProcessTracer(pid)); }
+    static NonnullRefPtr<ProcessTracer> create(pid_t pid) { return adopt(*new ProcessTracer(pid)); }
     virtual ~ProcessTracer() override;
 
     bool is_dead() const { return m_dead; }

@@ -17,11 +17,11 @@ public:
     int size() const;
 
     void clear();
-    void set_data(Retained<SharedBuffer>&&, int contents_size);
+    void set_data(NonnullRefPtr<SharedBuffer>&&, int contents_size);
 
 private:
     WSClipboard();
 
-    RetainPtr<SharedBuffer> m_shared_buffer;
+    RefPtr<SharedBuffer> m_shared_buffer;
     int m_contents_size { 0 };
 };

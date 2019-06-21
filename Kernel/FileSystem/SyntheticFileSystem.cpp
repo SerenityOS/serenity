@@ -5,7 +5,7 @@
 
 //#define SYNTHFS_DEBUG
 
-Retained<SynthFS> SynthFS::create()
+NonnullRefPtr<SynthFS> SynthFS::create()
 {
     return adopt(*new SynthFS);
 }
@@ -33,7 +33,7 @@ bool SynthFS::initialize()
     return true;
 }
 
-Retained<SynthFSInode> SynthFS::create_directory(String&& name)
+NonnullRefPtr<SynthFSInode> SynthFS::create_directory(String&& name)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_name = move(name);
@@ -45,7 +45,7 @@ Retained<SynthFSInode> SynthFS::create_directory(String&& name)
     return file;
 }
 
-Retained<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, mode_t mode)
+NonnullRefPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_data = contents;
@@ -58,7 +58,7 @@ Retained<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& con
     return file;
 }
 
-Retained<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& generator, mode_t mode)
+NonnullRefPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& generator, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_generator = move(generator);
@@ -71,7 +71,7 @@ Retained<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<By
     return file;
 }
 
-Retained<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback, mode_t mode)
+NonnullRefPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& read_callback, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&& write_callback, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
     file->m_generator = move(read_callback);
@@ -85,7 +85,7 @@ Retained<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<By
     return file;
 }
 
-InodeIdentifier SynthFS::add_file(RetainPtr<SynthFSInode>&& file, InodeIndex parent)
+InodeIdentifier SynthFS::add_file(RefPtr<SynthFSInode>&& file, InodeIndex parent)
 {
     LOCKER(m_lock);
     ASSERT(file);
@@ -138,7 +138,7 @@ InodeIdentifier SynthFS::root_inode() const
     return { fsid(), 1 };
 }
 
-RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, off_t size, dev_t, int& error)
+RefPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String& name, mode_t mode, off_t size, dev_t, int& error)
 {
     (void)parentInode;
     (void)name;
@@ -149,7 +149,7 @@ RetainPtr<Inode> SynthFS::create_inode(InodeIdentifier parentInode, const String
     return {};
 }
 
-RetainPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
+RefPtr<Inode> SynthFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
 {
     error = -EROFS;
     return nullptr;
@@ -161,7 +161,7 @@ auto SynthFS::generate_inode_index() -> InodeIndex
     return m_next_inode_index++;
 }
 
-RetainPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const
+RefPtr<Inode> SynthFS::get_inode(InodeIdentifier inode) const
 {
     LOCKER(m_lock);
     auto it = m_inodes.find(inode.index());

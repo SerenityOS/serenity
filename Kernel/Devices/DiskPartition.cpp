@@ -2,12 +2,12 @@
 
 // #define OFFD_DEBUG
 
-Retained<DiskPartition> DiskPartition::create(Retained<DiskDevice>&& device, unsigned block_offset)
+NonnullRefPtr<DiskPartition> DiskPartition::create(NonnullRefPtr<DiskDevice>&& device, unsigned block_offset)
 {
     return adopt(*new DiskPartition(move(device), block_offset));
 }
 
-DiskPartition::DiskPartition(Retained<DiskDevice>&& device, unsigned block_offset)
+DiskPartition::DiskPartition(NonnullRefPtr<DiskDevice>&& device, unsigned block_offset)
     : m_device(move(device))
     , m_block_offset(block_offset)
 {

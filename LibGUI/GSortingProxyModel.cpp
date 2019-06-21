@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-GSortingProxyModel::GSortingProxyModel(Retained<GModel>&& target)
+GSortingProxyModel::GSortingProxyModel(NonnullRefPtr<GModel>&& target)
     : m_target(move(target))
     , m_key_column(-1)
 {

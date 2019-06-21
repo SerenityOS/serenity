@@ -13,5 +13,5 @@ public:
 
 public:
     String m_property_name;
-    RetainPtr<StyleValue> m_value;
+    RefPtr<StyleValue> m_value;
 };

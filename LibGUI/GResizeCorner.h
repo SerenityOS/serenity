@@ -14,5 +14,5 @@ protected:
     virtual void leave_event(CEvent&) override;
 
 private:
-    RetainPtr<GraphicsBitmap> m_bitmap;
+    RefPtr<GraphicsBitmap> m_bitmap;
 };

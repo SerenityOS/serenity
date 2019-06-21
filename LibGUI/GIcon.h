@@ -5,22 +5,22 @@
 
 class GIconImpl : public RefCounted<GIconImpl> {
 public:
-    static Retained<GIconImpl> create() { return adopt(*new GIconImpl); }
+    static NonnullRefPtr<GIconImpl> create() { return adopt(*new GIconImpl); }
     ~GIconImpl() {}
 
     const GraphicsBitmap* bitmap_for_size(int) const;
-    void set_bitmap_for_size(int, RetainPtr<GraphicsBitmap>&&);
+    void set_bitmap_for_size(int, RefPtr<GraphicsBitmap>&&);
 
 private:
     GIconImpl() {}
-    HashMap<int, RetainPtr<GraphicsBitmap>> m_bitmaps;
+    HashMap<int, RefPtr<GraphicsBitmap>> m_bitmaps;
 };
 
 class GIcon {
 public:
     GIcon();
-    explicit GIcon(RetainPtr<GraphicsBitmap>&&);
-    explicit GIcon(RetainPtr<GraphicsBitmap>&&, RetainPtr<GraphicsBitmap>&&);
+    explicit GIcon(RefPtr<GraphicsBitmap>&&);
+    explicit GIcon(RefPtr<GraphicsBitmap>&&, RefPtr<GraphicsBitmap>&&);
     explicit GIcon(const GIconImpl&);
     GIcon(const GIcon&);
     ~GIcon() {}
@@ -34,10 +34,10 @@ public:
     }
 
     const GraphicsBitmap* bitmap_for_size(int size) const { return m_impl->bitmap_for_size(size); }
-    void set_bitmap_for_size(int size, RetainPtr<GraphicsBitmap>&& bitmap) { m_impl->set_bitmap_for_size(size, move(bitmap)); }
+    void set_bitmap_for_size(int size, RefPtr<GraphicsBitmap>&& bitmap) { m_impl->set_bitmap_for_size(size, move(bitmap)); }
 
     const GIconImpl& impl() const { return *m_impl; }
 
 private:
-    Retained<GIconImpl> m_impl;
+    NonnullRefPtr<GIconImpl> m_impl;
 };

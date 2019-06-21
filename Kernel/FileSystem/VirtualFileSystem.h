@@ -35,7 +35,7 @@ class VFS {
 public:
     class Mount {
     public:
-        Mount(RetainPtr<Custody>&&, Retained<FS>&&);
+        Mount(RefPtr<Custody>&&, NonnullRefPtr<FS>&&);
 
         InodeIdentifier host() const;
         InodeIdentifier guest() const { return m_guest; }
@@ -47,8 +47,8 @@ public:
     private:
         InodeIdentifier m_host;
         InodeIdentifier m_guest;
-        Retained<FS> m_guest_fs;
-        RetainPtr<Custody> m_host_custody;
+        NonnullRefPtr<FS> m_guest_fs;
+        RefPtr<Custody> m_host_custody;
     };
 
     [[gnu::pure]] static VFS& the();
@@ -56,12 +56,12 @@ public:
     VFS();
     ~VFS();
 
-    bool mount_root(Retained<FS>&&);
-    bool mount(Retained<FS>&&, StringView path);
+    bool mount_root(NonnullRefPtr<FS>&&);
+    bool mount(NonnullRefPtr<FS>&&, StringView path);
 
-    KResultOr<Retained<FileDescription>> open(RetainPtr<Device>&&, int options);
-    KResultOr<Retained<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
-    KResultOr<Retained<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody);
+    KResultOr<NonnullRefPtr<FileDescription>> open(RefPtr<Device>&&, int options);
+    KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
+    KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody);
     KResult mkdir(StringView path, mode_t mode, Custody& base);
     KResult link(StringView old_path, StringView new_path, Custody& base);
     KResult unlink(StringView path, Custody& base);
@@ -76,7 +76,7 @@ public:
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);
     KResult rename(StringView oldpath, StringView newpath, Custody& base);
     KResult mknod(StringView path, mode_t, dev_t, Custody& base);
-    KResultOr<Retained<Custody>> open_directory(StringView path, Custody& base);
+    KResultOr<NonnullRefPtr<Custody>> open_directory(StringView path, Custody& base);
 
     void register_device(Badge<Device>, Device&);
     void unregister_device(Badge<Device>, Device&);
@@ -91,12 +91,12 @@ public:
     Device* get_device(unsigned major, unsigned minor);
 
     Custody& root_custody();
-    KResultOr<Retained<Custody>> resolve_path(StringView path, Custody& base, RetainPtr<Custody>* parent = nullptr, int options = 0);
+    KResultOr<NonnullRefPtr<Custody>> resolve_path(StringView path, Custody& base, RefPtr<Custody>* parent = nullptr, int options = 0);
 
 private:
     friend class FileDescription;
 
-    RetainPtr<Inode> get_inode(InodeIdentifier);
+    RefPtr<Inode> get_inode(InodeIdentifier);
 
     bool is_vfs_root(InodeIdentifier) const;
 
@@ -105,9 +105,9 @@ private:
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);
 
-    RetainPtr<Inode> m_root_inode;
+    RefPtr<Inode> m_root_inode;
     Vector<OwnPtr<Mount>> m_mounts;
     HashMap<dword, Device*> m_devices;
 
-    RetainPtr<Custody> m_root_custody;
+    RefPtr<Custody> m_root_custody;
 };

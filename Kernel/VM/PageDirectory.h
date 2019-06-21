@@ -10,8 +10,8 @@ class PageDirectory : public RefCounted<PageDirectory> {
     friend class MemoryManager;
 
 public:
-    static Retained<PageDirectory> create_for_userspace(const RangeAllocator* parent_range_allocator = nullptr) { return adopt(*new PageDirectory(parent_range_allocator)); }
-    static Retained<PageDirectory> create_at_fixed_address(PhysicalAddress paddr) { return adopt(*new PageDirectory(paddr)); }
+    static NonnullRefPtr<PageDirectory> create_for_userspace(const RangeAllocator* parent_range_allocator = nullptr) { return adopt(*new PageDirectory(parent_range_allocator)); }
+    static NonnullRefPtr<PageDirectory> create_at_fixed_address(PhysicalAddress paddr) { return adopt(*new PageDirectory(paddr)); }
     ~PageDirectory();
 
     dword cr3() const { return m_directory_page->paddr().get(); }
@@ -26,6 +26,6 @@ private:
     explicit PageDirectory(PhysicalAddress);
 
     RangeAllocator m_range_allocator;
-    RetainPtr<PhysicalPage> m_directory_page;
-    HashMap<unsigned, RetainPtr<PhysicalPage>> m_physical_pages;
+    RefPtr<PhysicalPage> m_directory_page;
+    HashMap<unsigned, RefPtr<PhysicalPage>> m_physical_pages;
 };

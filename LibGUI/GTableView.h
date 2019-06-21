@@ -60,7 +60,7 @@ private:
         int width { 0 };
         bool has_initialized_width { false };
         bool visibility { true };
-        RetainPtr<GAction> visibility_action;
+        RefPtr<GAction> visibility_action;
     };
     ColumnData& column_data(int column) const;
 

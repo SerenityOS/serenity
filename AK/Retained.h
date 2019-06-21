@@ -32,58 +32,58 @@ inline void deref_if_not_null(T* ptr)
 }
 
 template<typename T>
-class CONSUMABLE(unconsumed) Retained {
+class CONSUMABLE(unconsumed) NonnullRefPtr {
 public:
     enum AdoptTag {
         Adopt
     };
 
     RETURN_TYPESTATE(unconsumed)
-    Retained(const T& object)
+    NonnullRefPtr(const T& object)
         : m_ptr(const_cast<T*>(&object))
     {
         m_ptr->ref();
     }
     template<typename U>
     RETURN_TYPESTATE(unconsumed)
-    Retained(const U& object)
+    NonnullRefPtr(const U& object)
         : m_ptr(&const_cast<T&>(static_cast<const T&>(object)))
     {
         m_ptr->ref();
     }
     RETURN_TYPESTATE(unconsumed)
-    Retained(AdoptTag, T& object)
+    NonnullRefPtr(AdoptTag, T& object)
         : m_ptr(&object)
     {
     }
     RETURN_TYPESTATE(unconsumed)
-    Retained(Retained& other)
+    NonnullRefPtr(NonnullRefPtr& other)
         : m_ptr(&other.copy_ref().leak_ref())
     {
     }
     RETURN_TYPESTATE(unconsumed)
-    Retained(Retained&& other)
+    NonnullRefPtr(NonnullRefPtr&& other)
         : m_ptr(&other.leak_ref())
     {
     }
     template<typename U>
     RETURN_TYPESTATE(unconsumed)
-    Retained(Retained<U>&& other)
+    NonnullRefPtr(NonnullRefPtr<U>&& other)
         : m_ptr(static_cast<T*>(&other.leak_ref()))
     {
     }
     RETURN_TYPESTATE(unconsumed)
-    Retained(const Retained& other)
-        : m_ptr(&const_cast<Retained&>(other).copy_ref().leak_ref())
+    NonnullRefPtr(const NonnullRefPtr& other)
+        : m_ptr(&const_cast<NonnullRefPtr&>(other).copy_ref().leak_ref())
     {
     }
     template<typename U>
     RETURN_TYPESTATE(unconsumed)
-    Retained(const Retained<U>& other)
-        : m_ptr(&const_cast<Retained<U>&>(other).copy_ref().leak_ref())
+    NonnullRefPtr(const NonnullRefPtr<U>& other)
+        : m_ptr(&const_cast<NonnullRefPtr<U>&>(other).copy_ref().leak_ref())
     {
     }
-    ~Retained()
+    ~NonnullRefPtr()
     {
         deref_if_not_null(m_ptr);
         m_ptr = nullptr;
@@ -96,7 +96,7 @@ public:
     }
 
     CALLABLE_WHEN(unconsumed)
-    Retained& operator=(Retained&& other)
+    NonnullRefPtr& operator=(NonnullRefPtr&& other)
     {
         if (this != &other) {
             deref_if_not_null(m_ptr);
@@ -107,7 +107,7 @@ public:
 
     template<typename U>
     CALLABLE_WHEN(unconsumed)
-    Retained& operator=(Retained<U>&& other)
+    NonnullRefPtr& operator=(NonnullRefPtr<U>&& other)
     {
         if (this != static_cast<void*>(&other)) {
             deref_if_not_null(m_ptr);
@@ -117,7 +117,7 @@ public:
     }
 
     CALLABLE_WHEN(unconsumed)
-    Retained& operator=(T& object)
+    NonnullRefPtr& operator=(T& object)
     {
         if (m_ptr != &object)
             deref_if_not_null(m_ptr);
@@ -127,9 +127,9 @@ public:
     }
 
     CALLABLE_WHEN(unconsumed)
-    Retained copy_ref() const
+    NonnullRefPtr copy_ref() const
     {
-        return Retained(*m_ptr);
+        return NonnullRefPtr(*m_ptr);
     }
 
     CALLABLE_WHEN(unconsumed)
@@ -208,18 +208,18 @@ public:
     }
 
 private:
-    Retained() {}
+    NonnullRefPtr() {}
 
     T* m_ptr { nullptr };
 };
 
 template<typename T>
-inline Retained<T> adopt(T& object)
+inline NonnullRefPtr<T> adopt(T& object)
 {
-    return Retained<T>(Retained<T>::Adopt, object);
+    return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, object);
 }
 
 }
 
 using AK::adopt;
-using AK::Retained;
+using AK::NonnullRefPtr;

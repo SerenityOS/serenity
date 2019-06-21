@@ -135,12 +135,12 @@ private:
 
     void collect_keyboard_activation_targets();
 
-    Retained<GraphicsBitmap> create_backing_bitmap(const Size&);
+    NonnullRefPtr<GraphicsBitmap> create_backing_bitmap(const Size&);
     void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);
     void flip(const Vector<Rect, 32>& dirty_rects);
 
-    RetainPtr<GraphicsBitmap> m_front_bitmap;
-    RetainPtr<GraphicsBitmap> m_back_bitmap;
+    RefPtr<GraphicsBitmap> m_front_bitmap;
+    RefPtr<GraphicsBitmap> m_back_bitmap;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
     GWidget* m_main_widget { nullptr };

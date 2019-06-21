@@ -120,14 +120,14 @@ private:
 
     String m_nickname;
     OwnPtr<CNotifier> m_notifier;
-    HashMap<String, RetainPtr<IRCChannel>> m_channels;
-    HashMap<String, RetainPtr<IRCQuery>> m_queries;
+    HashMap<String, RefPtr<IRCChannel>> m_channels;
+    HashMap<String, RefPtr<IRCQuery>> m_queries;
 
     Vector<IRCWindow*> m_windows;
 
     IRCWindow* m_server_subwindow { nullptr };
 
-    Retained<IRCWindowListModel> m_client_window_list_model;
-    Retained<IRCLogBuffer> m_log;
-    Retained<CConfigFile> m_config;
+    NonnullRefPtr<IRCWindowListModel> m_client_window_list_model;
+    NonnullRefPtr<IRCLogBuffer> m_log;
+    NonnullRefPtr<CConfigFile> m_config;
 };

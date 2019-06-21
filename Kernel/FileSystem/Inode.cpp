@@ -13,7 +13,7 @@ HashTable<Inode*>& all_inodes()
 
 void Inode::sync()
 {
-    Vector<Retained<Inode>, 32> inodes;
+    Vector<NonnullRefPtr<Inode>, 32> inodes;
     {
         InterruptDisabler disabler;
         for (auto* inode : all_inodes()) {

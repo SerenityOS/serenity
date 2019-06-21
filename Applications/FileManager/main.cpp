@@ -103,8 +103,8 @@ int main(int argc, char** argv)
         }
     });
 
-    RetainPtr<GAction> view_as_table_action;
-    RetainPtr<GAction> view_as_icons_action;
+    RefPtr<GAction> view_as_table_action;
+    RefPtr<GAction> view_as_icons_action;
 
     view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::List);

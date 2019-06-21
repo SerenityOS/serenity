@@ -98,7 +98,7 @@ private:
     int m_next_menu_id { 20000 };
     int m_next_window_id { 1982 };
 
-    RetainPtr<SharedBuffer> m_last_sent_clipboard_content;
+    RefPtr<SharedBuffer> m_last_sent_clipboard_content;
 };
 
 template<typename Matching, typename Callback>

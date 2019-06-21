@@ -15,7 +15,7 @@ GAbstractView::~GAbstractView()
     delete m_edit_widget;
 }
 
-void GAbstractView::set_model(RetainPtr<GModel>&& model)
+void GAbstractView::set_model(RefPtr<GModel>&& model)
 {
     if (model == m_model)
         return;

@@ -23,12 +23,12 @@ void Node::deref()
         delete this;
 }
 
-RetainPtr<LayoutNode> Node::create_layout_node()
+RefPtr<LayoutNode> Node::create_layout_node()
 {
     return nullptr;
 }
 
-void Node::set_layout_node(Retained<LayoutNode> layout_node)
+void Node::set_layout_node(NonnullRefPtr<LayoutNode> layout_node)
 {
     m_layout_node = move(layout_node);
 }

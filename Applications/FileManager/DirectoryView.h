@@ -44,7 +44,7 @@ private:
 
     ViewMode m_view_mode { Invalid };
 
-    Retained<GDirectoryModel> m_model;
+    NonnullRefPtr<GDirectoryModel> m_model;
     int m_path_history_position { 0 };
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);

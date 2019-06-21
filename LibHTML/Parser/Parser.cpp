@@ -4,7 +4,7 @@
 #include <ctype.h>
 #include <stdio.h>
 
-static Retained<Element> create_element(const String& tag_name)
+static NonnullRefPtr<Element> create_element(const String& tag_name)
 {
     return adopt(*new Element(tag_name));
 }
@@ -32,9 +32,9 @@ static bool is_self_closing_tag(const String& tag_name)
         || tag_name == "wbr";
 }
 
-Retained<Document> parse(const String& html)
+NonnullRefPtr<Document> parse(const String& html)
 {
-    Vector<Retained<ParentNode>> node_stack;
+    Vector<NonnullRefPtr<ParentNode>> node_stack;
 
     auto doc = adopt(*new Document);
     node_stack.append(doc);

@@ -36,7 +36,7 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-bool VFS::mount(Retained<FS>&& file_system, StringView path)
+bool VFS::mount(NonnullRefPtr<FS>&& file_system, StringView path)
 {
     auto result = resolve_path(path, root_custody());
     if (result.is_error()) {
@@ -53,7 +53,7 @@ bool VFS::mount(Retained<FS>&& file_system, StringView path)
     return true;
 }
 
-bool VFS::mount_root(Retained<FS>&& file_system)
+bool VFS::mount_root(NonnullRefPtr<FS>&& file_system)
 {
     if (m_root_inode) {
         kprintf("VFS: mount_root can't mount another root\n");
@@ -149,9 +149,9 @@ KResult VFS::stat(StringView path, int options, Custody& base, struct stat& stat
     return custody_or_error.value()->inode().metadata().stat(statbuf);
 }
 
-KResultOr<Retained<FileDescription>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
+KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
 {
-    RetainPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto custody_or_error = resolve_path(path, base, &parent_custody, options);
     if (options & O_CREAT) {
         if (!parent_custody)
@@ -208,7 +208,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
     if (!is_regular_file(mode) && !is_block_device(mode) && !is_character_device(mode) && !is_fifo(mode) && !is_socket(mode))
         return KResult(-EINVAL);
 
-    RetainPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto existing_file_or_error = resolve_path(path, base, &parent_custody);
     if (!existing_file_or_error.is_error())
         return KResult(-EEXIST);
@@ -230,7 +230,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
     return KSuccess;
 }
 
-KResultOr<Retained<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody)
+KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody)
 {
     (void)options;
 
@@ -255,7 +255,7 @@ KResultOr<Retained<FileDescription>> VFS::create(StringView path, int options, m
 
 KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
 {
-    RetainPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto result = resolve_path(path, base, &parent_custody);
     if (!result.is_error())
         return KResult(-EEXIST);
@@ -300,7 +300,7 @@ KResult VFS::access(StringView path, int mode, Custody& base)
     return KSuccess;
 }
 
-KResultOr<Retained<Custody>> VFS::open_directory(StringView path, Custody& base)
+KResultOr<NonnullRefPtr<Custody>> VFS::open_directory(StringView path, Custody& base)
 {
     auto inode_or_error = resolve_path(path, base);
     if (inode_or_error.is_error())
@@ -339,14 +339,14 @@ KResult VFS::chmod(StringView path, mode_t mode, Custody& base)
 
 KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
 {
-    RetainPtr<Custody> old_parent_custody;
+    RefPtr<Custody> old_parent_custody;
     auto old_custody_or_error = resolve_path(old_path, base, &old_parent_custody);
     if (old_custody_or_error.is_error())
         return old_custody_or_error.error();
     auto& old_custody = *old_custody_or_error.value();
     auto& old_inode = old_custody.inode();
 
-    RetainPtr<Custody> new_parent_custody;
+    RefPtr<Custody> new_parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &new_parent_custody);
     if (new_custody_or_error.is_error()) {
         if (new_custody_or_error.error() != -ENOENT)
@@ -445,7 +445,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
     auto& old_custody = *old_custody_or_error.value();
     auto& old_inode = old_custody.inode();
 
-    RetainPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto new_custody_or_error = resolve_path(new_path, base, &parent_custody);
     if (!new_custody_or_error.is_error())
         return KResult(-EEXIST);
@@ -469,7 +469,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
 
 KResult VFS::unlink(StringView path, Custody& base)
 {
-    RetainPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto custody_or_error = resolve_path(path, base, &parent_custody);
     if (custody_or_error.is_error())
         return custody_or_error.error();
@@ -498,7 +498,7 @@ KResult VFS::unlink(StringView path, Custody& base)
 
 KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
 {
-    RetainPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto existing_custody_or_error = resolve_path(linkpath, base, &parent_custody);
     if (!existing_custody_or_error.is_error())
         return KResult(-EEXIST);
@@ -524,7 +524,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
 
 KResult VFS::rmdir(StringView path, Custody& base)
 {
-    RetainPtr<Custody> parent_custody;
+    RefPtr<Custody> parent_custody;
     auto custody_or_error = resolve_path(path, base, &parent_custody);
     if (custody_or_error.is_error())
         return KResult(custody_or_error.error());
@@ -559,14 +559,14 @@ KResult VFS::rmdir(StringView path, Custody& base)
     return parent_inode.remove_child(FileSystemPath(path).basename());
 }
 
-RetainPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
+RefPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
 {
     if (!inode_id.is_valid())
         return nullptr;
     return inode_id.fs()->get_inode(inode_id);
 }
 
-VFS::Mount::Mount(RetainPtr<Custody>&& host_custody, Retained<FS>&& guest_fs)
+VFS::Mount::Mount(RefPtr<Custody>&& host_custody, NonnullRefPtr<FS>&& guest_fs)
     : m_guest(guest_fs->root_inode())
     , m_guest_fs(move(guest_fs))
     , m_host_custody(move(host_custody))
@@ -624,7 +624,7 @@ Custody& VFS::root_custody()
     return *m_root_custody;
 }
 
-KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, RetainPtr<Custody>* parent_custody, int options)
+KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* parent_custody, int options)
 {
     if (path.is_empty())
         return KResult(-EINVAL);
@@ -632,7 +632,7 @@ KResultOr<Retained<Custody>> VFS::resolve_path(StringView path, Custody& base, R
     auto parts = path.split_view('/');
     InodeIdentifier crumb_id;
 
-    Vector<Retained<Custody>, 32> custody_chain;
+    Vector<NonnullRefPtr<Custody>, 32> custody_chain;
 
     if (path[0] == '/') {
         custody_chain.append(root_custody());

@@ -69,7 +69,7 @@ public:
     void set_stat_label(GLabel* l) { stats = l; };
 
 private:
-    RetainPtr<GraphicsBitmap> bitmap;
+    RefPtr<GraphicsBitmap> bitmap;
     GLabel* stats;
 
     virtual void paint_event(GPaintEvent&) override;

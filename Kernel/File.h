@@ -43,7 +43,7 @@ class File : public RefCounted<File> {
 public:
     virtual ~File();
 
-    virtual KResultOr<Retained<FileDescription>> open(int options);
+    virtual KResultOr<NonnullRefPtr<FileDescription>> open(int options);
     virtual void close();
 
     virtual bool can_read(FileDescription&) const = 0;

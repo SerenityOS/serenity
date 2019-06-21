@@ -81,7 +81,7 @@ void MemoryManager::initialize_paging()
 #endif
     m_quickmap_addr = VirtualAddress((1 * MB) - PAGE_SIZE);
 
-    RetainPtr<PhysicalRegion> region = nullptr;
+    RefPtr<PhysicalRegion> region = nullptr;
     bool region_is_super = false;
 
     for (auto* mmap = (multiboot_memory_map_t*)multiboot_info_ptr->mmap_addr; (unsigned long)mmap < multiboot_info_ptr->mmap_addr + multiboot_info_ptr->mmap_length; mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
@@ -151,7 +151,7 @@ void MemoryManager::initialize_paging()
 #endif
 }
 
-RetainPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_directory, unsigned index)
+RefPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_directory, unsigned index)
 {
     ASSERT(!page_directory.m_physical_pages.contains(index));
     auto physical_page = allocate_supervisor_physical_page();
@@ -444,7 +444,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return PageFaultResponse::ShouldCrash;
 }
 
-RetainPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& name)
+RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& name)
 {
     InterruptDisabler disabler;
 
@@ -478,11 +478,11 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
     ASSERT_NOT_REACHED();
 }
 
-RetainPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
+RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
 {
     InterruptDisabler disabler;
 
-    RetainPtr<PhysicalPage> page = nullptr;
+    RefPtr<PhysicalPage> page = nullptr;
 
     for (auto& region : m_user_physical_regions) {
         page = region->take_free_page(false);
@@ -535,11 +535,11 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
     ASSERT_NOT_REACHED();
 }
 
-RetainPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
+RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 {
     InterruptDisabler disabler;
 
-    RetainPtr<PhysicalPage> page = nullptr;
+    RefPtr<PhysicalPage> page = nullptr;
 
     for (auto& region : m_super_physical_regions) {
         page = region->take_free_page(true);

@@ -13,7 +13,7 @@ public:
     explicit GAbstractView(GWidget* parent);
     virtual ~GAbstractView() override;
 
-    void set_model(RetainPtr<GModel>&&);
+    void set_model(RefPtr<GModel>&&);
     GModel* model() { return m_model.ptr(); }
     const GModel* model() const { return m_model.ptr(); }
 
@@ -48,6 +48,6 @@ protected:
     Rect m_edit_widget_content_rect;
 
 private:
-    RetainPtr<GModel> m_model;
+    RefPtr<GModel> m_model;
     bool m_activates_on_selection { false };
 };

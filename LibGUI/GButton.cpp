@@ -81,7 +81,7 @@ void GButton::set_action(GAction& action)
         set_checked(action.is_checked());
 }
 
-void GButton::set_icon(RetainPtr<GraphicsBitmap>&& icon)
+void GButton::set_icon(RefPtr<GraphicsBitmap>&& icon)
 {
     if (m_icon == icon)
         return;

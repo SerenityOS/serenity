@@ -211,7 +211,7 @@ public:
     void set_tty(TTY* tty) { m_tty = tty; }
 
     size_t region_count() const { return m_regions.size(); }
-    const Vector<Retained<Region>>& regions() const { return m_regions; }
+    const Vector<NonnullRefPtr<Region>>& regions() const { return m_regions; }
     void dump_regions();
 
     ProcessTracer* tracer() { return m_tracer.ptr(); }
@@ -248,8 +248,8 @@ public:
 
     bool is_superuser() const { return m_euid == 0; }
 
-    Region* allocate_region_with_vmo(VirtualAddress, size_t, Retained<VMObject>&&, size_t offset_in_vmo, const String& name, int prot);
-    Region* allocate_file_backed_region(VirtualAddress, size_t, RetainPtr<Inode>&&, const String& name, int prot);
+    Region* allocate_region_with_vmo(VirtualAddress, size_t, NonnullRefPtr<VMObject>&&, size_t offset_in_vmo, const String& name, int prot);
+    Region* allocate_file_backed_region(VirtualAddress, size_t, RefPtr<Inode>&&, const String& name, int prot);
     Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
 
@@ -273,7 +273,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RetainPtr<Custody>&& cwd = nullptr, RetainPtr<Custody>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody>&& cwd = nullptr, RefPtr<Custody>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     Range allocate_range(VirtualAddress, size_t);
 
@@ -287,7 +287,7 @@ private:
 
     Thread* m_main_thread { nullptr };
 
-    RetainPtr<PageDirectory> m_page_directory;
+    RefPtr<PageDirectory> m_page_directory;
 
     Process* m_prev { nullptr };
     Process* m_next { nullptr };
@@ -307,8 +307,8 @@ private:
     struct FileDescriptionAndFlags {
         operator bool() const { return !!description; }
         void clear();
-        void set(Retained<FileDescription>&& d, dword f = 0);
-        RetainPtr<FileDescription> description;
+        void set(NonnullRefPtr<FileDescription>&& d, dword f = 0);
+        RefPtr<FileDescription> description;
         dword flags { 0 };
     };
     Vector<FileDescriptionAndFlags> m_fds;
@@ -319,14 +319,14 @@ private:
     byte m_termination_status { 0 };
     byte m_termination_signal { 0 };
 
-    RetainPtr<Custody> m_executable;
-    RetainPtr<Custody> m_cwd;
+    RefPtr<Custody> m_executable;
+    RefPtr<Custody> m_cwd;
 
     TTY* m_tty { nullptr };
 
     Region* region_from_range(VirtualAddress, size_t);
 
-    Vector<Retained<Region>> m_regions;
+    Vector<NonnullRefPtr<Region>> m_regions;
 
     VirtualAddress m_return_to_ring3_from_signal_trampoline;
     VirtualAddress m_return_to_ring0_from_signal_trampoline;
@@ -345,7 +345,7 @@ private:
 
     unsigned m_syscall_count { 0 };
 
-    RetainPtr<ProcessTracer> m_tracer;
+    RefPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
 
     Lock m_big_lock { "Process" };

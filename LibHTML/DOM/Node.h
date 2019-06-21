@@ -41,12 +41,12 @@ public:
     void set_next_sibling(Node* node) { m_next_sibling = node; }
     void set_previous_sibling(Node* node) { m_previous_sibling = node; }
 
-    virtual RetainPtr<LayoutNode> create_layout_node();
+    virtual RefPtr<LayoutNode> create_layout_node();
 
     const LayoutNode* layout_node() const { return m_layout_node; }
     LayoutNode* layout_node() { return m_layout_node; }
 
-    void set_layout_node(Retained<LayoutNode>);
+    void set_layout_node(NonnullRefPtr<LayoutNode>);
 
 protected:
     explicit Node(NodeType);
@@ -56,5 +56,5 @@ protected:
     ParentNode* m_parent_node { nullptr };
     Node* m_next_sibling { nullptr };
     Node* m_previous_sibling { nullptr };
-    RetainPtr<LayoutNode> m_layout_node;
+    RefPtr<LayoutNode> m_layout_node;
 };

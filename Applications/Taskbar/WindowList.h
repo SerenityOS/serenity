@@ -55,7 +55,7 @@ private:
     Rect m_rect;
     GButton* m_button { nullptr };
     String m_icon_path;
-    RetainPtr<GraphicsBitmap> m_icon;
+    RefPtr<GraphicsBitmap> m_icon;
     bool m_active { false };
     bool m_minimized { false };
 };

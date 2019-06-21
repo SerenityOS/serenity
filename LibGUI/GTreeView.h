@@ -37,6 +37,6 @@ private:
 
     mutable HashMap<void*, OwnPtr<MetadataForIndex>> m_view_metadata;
 
-    RetainPtr<GraphicsBitmap> m_expand_bitmap;
-    RetainPtr<GraphicsBitmap> m_collapse_bitmap;
+    RefPtr<GraphicsBitmap> m_expand_bitmap;
+    RefPtr<GraphicsBitmap> m_collapse_bitmap;
 };

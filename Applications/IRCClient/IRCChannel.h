@@ -13,7 +13,7 @@ class IRCWindow;
 
 class IRCChannel : public RefCounted<IRCChannel> {
 public:
-    static Retained<IRCChannel> create(IRCClient&, const String&);
+    static NonnullRefPtr<IRCChannel> create(IRCClient&, const String&);
     ~IRCChannel();
 
     bool is_open() const { return m_open; }
@@ -64,7 +64,7 @@ private:
     Vector<Member> m_members;
     bool m_open { false };
 
-    Retained<IRCLogBuffer> m_log;
-    Retained<IRCChannelMemberListModel> m_member_model;
+    NonnullRefPtr<IRCLogBuffer> m_log;
+    NonnullRefPtr<IRCChannelMemberListModel> m_member_model;
     IRCWindow* m_window { nullptr };
 };

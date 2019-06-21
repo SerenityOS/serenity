@@ -221,11 +221,11 @@ private:
     int m_horizontal_content_padding { 2 };
     GTextRange m_selection;
     OwnPtr<GMenu> m_context_menu;
-    RetainPtr<GAction> m_undo_action;
-    RetainPtr<GAction> m_redo_action;
-    RetainPtr<GAction> m_cut_action;
-    RetainPtr<GAction> m_copy_action;
-    RetainPtr<GAction> m_paste_action;
-    RetainPtr<GAction> m_delete_action;
+    RefPtr<GAction> m_undo_action;
+    RefPtr<GAction> m_redo_action;
+    RefPtr<GAction> m_cut_action;
+    RefPtr<GAction> m_copy_action;
+    RefPtr<GAction> m_paste_action;
+    RefPtr<GAction> m_delete_action;
     CElapsedTimer m_triple_click_timer;
 };

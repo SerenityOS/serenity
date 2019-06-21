@@ -53,7 +53,7 @@ void GFontDatabase::for_each_fixed_width_font(Function<void(const StringView&)> 
     }
 }
 
-RetainPtr<Font> GFontDatabase::get_by_name(const StringView& name)
+RefPtr<Font> GFontDatabase::get_by_name(const StringView& name)
 {
     auto it = m_name_to_metadata.find(name);
     if (it == m_name_to_metadata.end())

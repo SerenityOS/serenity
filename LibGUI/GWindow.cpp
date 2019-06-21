@@ -593,7 +593,7 @@ void GWindow::flip(const Vector<Rect, 32>& dirty_rects)
         painter.blit(dirty_rect.location(), *m_front_bitmap, dirty_rect);
 }
 
-Retained<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
+NonnullRefPtr<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
 {
     ASSERT(GEventLoop::server_pid());
     ASSERT(!size.is_empty());

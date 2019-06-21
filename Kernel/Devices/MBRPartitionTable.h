@@ -31,14 +31,14 @@ class MBRPartitionTable {
     AK_MAKE_ETERNAL
 
 public:
-    MBRPartitionTable(Retained<DiskDevice>&& device);
+    MBRPartitionTable(NonnullRefPtr<DiskDevice>&& device);
     ~MBRPartitionTable();
 
     bool initialize();
-    RetainPtr<DiskPartition> partition(unsigned index);
+    RefPtr<DiskPartition> partition(unsigned index);
 
 private:
-    Retained<DiskDevice> m_device;
+    NonnullRefPtr<DiskDevice> m_device;
 
     ByteBuffer read_header() const;
     const MBRPartitionHeader& header() const;

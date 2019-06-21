@@ -20,7 +20,7 @@ public:
 
 private:
     void build();
-    RetainPtr<GraphicsBitmap> icon() const;
+    RefPtr<GraphicsBitmap> icon() const;
 
     String m_text;
     Type m_type { Type::None };

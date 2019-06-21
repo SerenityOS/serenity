@@ -36,7 +36,7 @@ void Document::build_layout_tree()
     create_layout_tree_for_node(*this);
 }
 
-RetainPtr<LayoutNode> Document::create_layout_node()
+RefPtr<LayoutNode> Document::create_layout_node()
 {
     return adopt(*new LayoutDocument(*this));
 }

@@ -44,7 +44,7 @@ class VBWidget : public RefCounted<VBWidget>
     friend class VBWidgetPropertyModel;
 
 public:
-    static Retained<VBWidget> create(VBWidgetType type, VBForm& form) { return adopt(*new VBWidget(type, form)); }
+    static NonnullRefPtr<VBWidget> create(VBWidgetType type, VBForm& form) { return adopt(*new VBWidget(type, form)); }
     ~VBWidget();
 
     bool is_selected() const;
@@ -80,6 +80,6 @@ private:
     VBForm& m_form;
     GWidget* m_gwidget { nullptr };
     Vector<OwnPtr<VBProperty>> m_properties;
-    Retained<VBWidgetPropertyModel> m_property_model;
+    NonnullRefPtr<VBWidgetPropertyModel> m_property_model;
     Rect m_transform_origin_rect;
 };

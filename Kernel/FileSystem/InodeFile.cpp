@@ -4,7 +4,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Process.h>
 
-InodeFile::InodeFile(Retained<Inode>&& inode)
+InodeFile::InodeFile(NonnullRefPtr<Inode>&& inode)
     : m_inode(move(inode))
 {
 }

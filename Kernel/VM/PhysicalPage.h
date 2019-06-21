@@ -28,7 +28,7 @@ public:
         }
     }
 
-    static Retained<PhysicalPage> create(PhysicalAddress, bool supervisor, bool may_return_to_freelist = true);
+    static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, bool supervisor, bool may_return_to_freelist = true);
 
     word ref_count() const { return m_retain_count; }
 

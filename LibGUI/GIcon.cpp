@@ -15,7 +15,7 @@ GIcon::GIcon(const GIcon& other)
 {
 }
 
-GIcon::GIcon(RetainPtr<GraphicsBitmap>&& bitmap)
+GIcon::GIcon(RefPtr<GraphicsBitmap>&& bitmap)
     : GIcon()
 {
     if (bitmap) {
@@ -25,7 +25,7 @@ GIcon::GIcon(RetainPtr<GraphicsBitmap>&& bitmap)
     }
 }
 
-GIcon::GIcon(RetainPtr<GraphicsBitmap>&& bitmap1, RetainPtr<GraphicsBitmap>&& bitmap2)
+GIcon::GIcon(RefPtr<GraphicsBitmap>&& bitmap1, RefPtr<GraphicsBitmap>&& bitmap2)
     : GIcon(move(bitmap1))
 {
     if (bitmap2) {
@@ -53,7 +53,7 @@ const GraphicsBitmap* GIconImpl::bitmap_for_size(int size) const
     return best_fit;
 }
 
-void GIconImpl::set_bitmap_for_size(int size, RetainPtr<GraphicsBitmap>&& bitmap)
+void GIconImpl::set_bitmap_for_size(int size, RefPtr<GraphicsBitmap>&& bitmap)
 {
     if (!bitmap) {
         m_bitmaps.remove(size);

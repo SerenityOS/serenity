@@ -60,7 +60,7 @@ static inline int allocation_size_for_stringimpl(int length)
     return sizeof(StringImpl) + (sizeof(char) * length) + sizeof(char);
 }
 
-Retained<StringImpl> StringImpl::create_uninitialized(int length, char*& buffer)
+NonnullRefPtr<StringImpl> StringImpl::create_uninitialized(int length, char*& buffer)
 {
     ASSERT(length);
     void* slot = kmalloc(allocation_size_for_stringimpl(length));
@@ -71,7 +71,7 @@ Retained<StringImpl> StringImpl::create_uninitialized(int length, char*& buffer)
     return new_stringimpl;
 }
 
-RetainPtr<StringImpl> StringImpl::create(const char* cstring, int length, ShouldChomp should_chomp)
+RefPtr<StringImpl> StringImpl::create(const char* cstring, int length, ShouldChomp should_chomp)
 {
     if (!cstring)
         return nullptr;
@@ -99,7 +99,7 @@ RetainPtr<StringImpl> StringImpl::create(const char* cstring, int length, Should
     return new_stringimpl;
 }
 
-RetainPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp shouldChomp)
+RefPtr<StringImpl> StringImpl::create(const char* cstring, ShouldChomp shouldChomp)
 {
     if (!cstring)
         return nullptr;
@@ -131,7 +131,7 @@ static inline char to_ascii_uppercase(char c)
     return c;
 }
 
-Retained<StringImpl> StringImpl::to_lowercase() const
+NonnullRefPtr<StringImpl> StringImpl::to_lowercase() const
 {
     for (int i = 0; i < m_length; ++i) {
         if (!is_ascii_lowercase(characters()[i]))
@@ -147,7 +147,7 @@ slow_path:
     return lowercased;
 }
 
-Retained<StringImpl> StringImpl::to_uppercase() const
+NonnullRefPtr<StringImpl> StringImpl::to_uppercase() const
 {
     for (int i = 0; i < m_length; ++i) {
         if (!is_ascii_uppercase(characters()[i]))

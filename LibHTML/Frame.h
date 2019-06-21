@@ -16,6 +16,6 @@ public:
     void layout();
 
 private:
-    RetainPtr<Document> m_document;
+    RefPtr<Document> m_document;
     Size m_size;
 };

@@ -14,7 +14,7 @@ class Font;
 
 class Terminal final : public GFrame {
 public:
-    explicit Terminal(int ptm_fd, RetainPtr<CConfigFile> config);
+    explicit Terminal(int ptm_fd, RefPtr<CConfigFile> config);
     virtual ~Terminal() override;
 
     void create_window();
@@ -30,7 +30,7 @@ public:
     bool should_beep() { return m_should_beep; }
     void set_should_beep(bool sb) { m_should_beep = sb; };
 
-    RetainPtr<CConfigFile> config() const { return m_config; }
+    RefPtr<CConfigFile> config() const { return m_config; }
 
 private:
     typedef Vector<unsigned, 4> ParamVector;
@@ -205,7 +205,7 @@ private:
 
     CTimer m_cursor_blink_timer;
     CTimer m_visual_beep_timer;
-    RetainPtr<CConfigFile> m_config;
+    RefPtr<CConfigFile> m_config;
 
     byte m_last_char { 0 };
 };

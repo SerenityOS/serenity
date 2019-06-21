@@ -4,7 +4,7 @@
 
 class ParentNode : public Node {
 public:
-    void append_child(Retained<Node>);
+    void append_child(NonnullRefPtr<Node>);
 
     Node* first_child() { return m_first_child; }
     Node* last_child() { return m_last_child; }

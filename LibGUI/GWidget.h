@@ -161,7 +161,7 @@ public:
     bool fill_with_background_color() const { return m_fill_with_background_color; }
 
     const Font& font() const { return *m_font; }
-    void set_font(RetainPtr<Font>&&);
+    void set_font(RefPtr<Font>&&);
 
     void set_global_cursor_tracking(bool);
     bool global_cursor_tracking() const;
@@ -221,7 +221,7 @@ private:
     Rect m_relative_rect;
     Color m_background_color;
     Color m_foreground_color;
-    RetainPtr<Font> m_font;
+    RefPtr<Font> m_font;
     String m_tooltip;
 
     SizePolicy m_horizontal_size_policy { SizePolicy::Fill };

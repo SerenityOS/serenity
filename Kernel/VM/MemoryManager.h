@@ -61,8 +61,8 @@ public:
         Yes
     };
 
-    RetainPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill);
-    RetainPtr<PhysicalPage> allocate_supervisor_physical_page();
+    RefPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill);
+    RefPtr<PhysicalPage> allocate_supervisor_physical_page();
     void deallocate_user_physical_page(PhysicalPage&&);
     void deallocate_supervisor_physical_page(PhysicalPage&&);
 
@@ -70,7 +70,7 @@ public:
 
     void map_for_kernel(VirtualAddress, PhysicalAddress);
 
-    RetainPtr<Region> allocate_kernel_region(size_t, String&& name);
+    RefPtr<Region> allocate_kernel_region(size_t, String&& name);
     void map_region_at_address(PageDirectory&, Region&, VirtualAddress, bool user_accessible);
 
     unsigned user_physical_pages() const { return m_user_physical_pages; }
@@ -93,7 +93,7 @@ private:
     void flush_entire_tlb();
     void flush_tlb(VirtualAddress);
 
-    RetainPtr<PhysicalPage> allocate_page_table(PageDirectory&, unsigned index);
+    RefPtr<PhysicalPage> allocate_page_table(PageDirectory&, unsigned index);
 
     void map_protected(VirtualAddress, size_t length);
 
@@ -214,7 +214,7 @@ private:
 
     PageTableEntry ensure_pte(PageDirectory&, VirtualAddress);
 
-    RetainPtr<PageDirectory> m_kernel_page_directory;
+    RefPtr<PageDirectory> m_kernel_page_directory;
     dword* m_page_table_zero { nullptr };
     dword* m_page_table_one { nullptr };
 
@@ -225,8 +225,8 @@ private:
     unsigned m_super_physical_pages { 0 };
     unsigned m_super_physical_pages_used { 0 };
 
-    Vector<Retained<PhysicalRegion>> m_user_physical_regions {};
-    Vector<Retained<PhysicalRegion>> m_super_physical_regions {};
+    Vector<NonnullRefPtr<PhysicalRegion>> m_user_physical_regions {};
+    Vector<NonnullRefPtr<PhysicalRegion>> m_super_physical_regions {};
 
     HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_user_regions;

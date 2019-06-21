@@ -3,5 +3,5 @@
 #include <AK/Retained.h>
 #include <LibHTML/DOM/Document.h>
 
-Retained<Document> parse(const String& html);
+NonnullRefPtr<Document> parse(const String& html);
 

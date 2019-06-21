@@ -16,7 +16,7 @@ GAction::GAction(const StringView& text, Function<void(GAction&)> on_activation_
 {
 }
 
-GAction::GAction(const StringView& text, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
+GAction::GAction(const StringView& text, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : on_activation(move(on_activation_callback))
     , m_text(text)
     , m_icon(move(icon))
@@ -29,7 +29,7 @@ GAction::GAction(const StringView& text, const GShortcut& shortcut, Function<voi
 {
 }
 
-GAction::GAction(const StringView& text, const GShortcut& shortcut, RetainPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
+GAction::GAction(const StringView& text, const GShortcut& shortcut, RefPtr<GraphicsBitmap>&& icon, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : on_activation(move(on_activation_callback))
     , m_text(text)
     , m_icon(move(icon))

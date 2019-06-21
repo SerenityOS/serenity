@@ -15,7 +15,7 @@ public:
     explicit GButton(GWidget* parent);
     virtual ~GButton() override;
 
-    void set_icon(RetainPtr<GraphicsBitmap>&&);
+    void set_icon(RefPtr<GraphicsBitmap>&&);
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
     GraphicsBitmap* icon() { return m_icon.ptr(); }
 
@@ -39,7 +39,7 @@ protected:
     virtual void paint_event(GPaintEvent&) override;
 
 private:
-    RetainPtr<GraphicsBitmap> m_icon;
+    RefPtr<GraphicsBitmap> m_icon;
     ButtonStyle m_button_style { ButtonStyle::Normal };
     TextAlignment m_text_alignment { TextAlignment::Center };
     WeakPtr<GAction> m_action;

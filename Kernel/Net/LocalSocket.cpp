@@ -7,7 +7,7 @@
 
 //#define DEBUG_LOCAL_SOCKET
 
-Retained<LocalSocket> LocalSocket::create(int type)
+NonnullRefPtr<LocalSocket> LocalSocket::create(int type)
 {
     return adopt(*new LocalSocket(type));
 }

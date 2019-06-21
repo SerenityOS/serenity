@@ -7,7 +7,7 @@
 class CHttpResponse : public CNetworkResponse {
 public:
     virtual ~CHttpResponse() override;
-    static Retained<CHttpResponse> create(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
+    static NonnullRefPtr<CHttpResponse> create(int code, HashMap<String, String>&& headers, ByteBuffer&& payload)
     {
         return adopt(*new CHttpResponse(code, move(headers), move(payload)));
     }

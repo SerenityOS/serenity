@@ -9,7 +9,7 @@ public:
     explicit GToolBar(GWidget* parent);
     virtual ~GToolBar() override;
 
-    void add_action(Retained<GAction>&&);
+    void add_action(NonnullRefPtr<GAction>&&);
     void add_separator();
 
     bool has_frame() const { return m_has_frame; }
@@ -27,7 +27,7 @@ private:
             Action
         };
         Type type { Invalid };
-        RetainPtr<GAction> action;
+        RefPtr<GAction> action;
     };
     Vector<OwnPtr<Item>> m_items;
     bool m_has_frame { true };

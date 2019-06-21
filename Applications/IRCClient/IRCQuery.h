@@ -12,7 +12,7 @@ class IRCWindow;
 
 class IRCQuery : public RefCounted<IRCQuery> {
 public:
-    static Retained<IRCQuery> create(IRCClient&, const String& name);
+    static NonnullRefPtr<IRCQuery> create(IRCClient&, const String& name);
     ~IRCQuery();
 
     String name() const { return m_name; }
@@ -35,5 +35,5 @@ private:
     String m_name;
     IRCWindow* m_window { nullptr };
 
-    Retained<IRCLogBuffer> m_log;
+    NonnullRefPtr<IRCLogBuffer> m_log;
 };

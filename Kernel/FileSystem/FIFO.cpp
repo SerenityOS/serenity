@@ -16,7 +16,7 @@ Lockable<HashTable<FIFO*>>& all_fifos()
     return *s_table;
 }
 
-RetainPtr<FIFO> FIFO::from_fifo_id(dword id)
+RefPtr<FIFO> FIFO::from_fifo_id(dword id)
 {
     auto* ptr = reinterpret_cast<FIFO*>(id);
     LOCKER(all_fifos().lock());
@@ -25,12 +25,12 @@ RetainPtr<FIFO> FIFO::from_fifo_id(dword id)
     return ptr;
 }
 
-Retained<FIFO> FIFO::create(uid_t uid)
+NonnullRefPtr<FIFO> FIFO::create(uid_t uid)
 {
     return adopt(*new FIFO(uid));
 }
 
-Retained<FileDescription> FIFO::open_direction(FIFO::Direction direction)
+NonnullRefPtr<FileDescription> FIFO::open_direction(FIFO::Direction direction)
 {
     auto description = FileDescription::create(this);
     attach(direction);

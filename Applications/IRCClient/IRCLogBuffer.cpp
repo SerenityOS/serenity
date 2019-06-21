@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <time.h>
 
-Retained<IRCLogBuffer> IRCLogBuffer::create()
+NonnullRefPtr<IRCLogBuffer> IRCLogBuffer::create()
 {
     return adopt(*new IRCLogBuffer);
 }

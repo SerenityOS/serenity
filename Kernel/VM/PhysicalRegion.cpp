@@ -6,7 +6,7 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PhysicalRegion.h>
 
-Retained<PhysicalRegion> PhysicalRegion::create(PhysicalAddress lower, PhysicalAddress upper)
+NonnullRefPtr<PhysicalRegion> PhysicalRegion::create(PhysicalAddress lower, PhysicalAddress upper)
 {
     return adopt(*new PhysicalRegion(lower, upper));
 }
@@ -36,7 +36,7 @@ unsigned PhysicalRegion::finalize_capacity()
     return size();
 }
 
-RetainPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
+RefPtr<PhysicalPage> PhysicalRegion::take_free_page(bool supervisor)
 {
     ASSERT(m_pages);
 

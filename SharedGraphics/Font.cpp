@@ -53,7 +53,7 @@ Font& Font::default_bold_font()
     return *s_default_bold_font;
 }
 
-RetainPtr<Font> Font::clone() const
+RefPtr<Font> Font::clone() const
 {
     size_t bytes_per_glyph = sizeof(dword) * glyph_height();
     // FIXME: This is leaked!
@@ -93,7 +93,7 @@ Font::~Font()
 {
 }
 
-RetainPtr<Font> Font::load_from_memory(const byte* data)
+RefPtr<Font> Font::load_from_memory(const byte* data)
 {
     auto& header = *reinterpret_cast<const FontFileHeader*>(data);
     if (memcmp(header.magic, "!Fnt", 4)) {
@@ -114,7 +114,7 @@ RetainPtr<Font> Font::load_from_memory(const byte* data)
     return adopt(*new Font(String(header.name), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height));
 }
 
-RetainPtr<Font> Font::load_from_file(const StringView& path)
+RefPtr<Font> Font::load_from_file(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())

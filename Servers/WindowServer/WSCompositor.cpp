@@ -117,7 +117,7 @@ void WSCompositor::compose()
             return IterationDecision::Continue;
         PainterStateSaver saver(*m_back_painter);
         m_back_painter->add_clip_rect(window.frame().rect());
-        RetainPtr<GraphicsBitmap> backing_store = window.backing_store();
+        RefPtr<GraphicsBitmap> backing_store = window.backing_store();
         for (auto& dirty_rect : dirty_rects.rects()) {
             if (wm.any_opaque_window_above_this_one_contains_rect(window, dirty_rect))
                 continue;
@@ -226,7 +226,7 @@ bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& call
 {
     struct Context {
         String path;
-        RetainPtr<GraphicsBitmap> bitmap;
+        RefPtr<GraphicsBitmap> bitmap;
         Function<void(bool)> callback;
     };
     auto context = make<Context>();
@@ -254,7 +254,7 @@ bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& call
     return true;
 }
 
-void WSCompositor::finish_setting_wallpaper(const String& path, Retained<GraphicsBitmap>&& bitmap)
+void WSCompositor::finish_setting_wallpaper(const String& path, NonnullRefPtr<GraphicsBitmap>&& bitmap)
 {
     m_wallpaper_path = path;
     m_wallpaper = move(bitmap);

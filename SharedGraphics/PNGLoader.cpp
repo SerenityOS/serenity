@@ -42,7 +42,7 @@ struct PNGLoadingContext {
     bool has_seen_zlib_header { false };
     bool has_alpha() const { return color_type & 4; }
     Vector<Scanline> scanlines;
-    RetainPtr<GraphicsBitmap> bitmap;
+    RefPtr<GraphicsBitmap> bitmap;
     byte* decompression_buffer { nullptr };
     int decompression_buffer_size { 0 };
     Vector<byte> compressed_data;
@@ -98,10 +98,10 @@ private:
     int m_size_remaining;
 };
 
-static RetainPtr<GraphicsBitmap> load_png_impl(const byte*, int);
+static RefPtr<GraphicsBitmap> load_png_impl(const byte*, int);
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
-RetainPtr<GraphicsBitmap> load_png(const StringView& path)
+RefPtr<GraphicsBitmap> load_png(const StringView& path)
 {
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
@@ -302,7 +302,7 @@ template<bool has_alpha, byte filter_type>
     }
 }
 
-static RetainPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
+static RefPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
 {
 #ifdef PNG_STOPWATCH_DEBUG
     Stopwatch sw("load_png_impl: total");

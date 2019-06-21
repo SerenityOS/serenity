@@ -13,8 +13,8 @@ class VFS;
 class Custody : public RefCounted<Custody> {
 public:
     static Custody* get_if_cached(Custody* parent, const String& name);
-    static Retained<Custody> get_or_create(Custody* parent, const String& name, Inode&);
-    static Retained<Custody> create(Custody* parent, const String& name, Inode& inode)
+    static NonnullRefPtr<Custody> get_or_create(Custody* parent, const String& name, Inode&);
+    static NonnullRefPtr<Custody> create(Custody* parent, const String& name, Inode& inode)
     {
         return adopt(*new Custody(parent, name, inode));
     }
@@ -38,9 +38,9 @@ public:
 private:
     Custody(Custody* parent, const String& name, Inode&);
 
-    RetainPtr<Custody> m_parent;
+    RefPtr<Custody> m_parent;
     String m_name;
-    Retained<Inode> m_inode;
+    NonnullRefPtr<Inode> m_inode;
     bool m_deleted { false };
     bool m_mounted_on { false };
 };

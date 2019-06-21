@@ -6,7 +6,7 @@
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
-KResultOr<Retained<Socket>> Socket::create(int domain, int type, int protocol)
+KResultOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
 {
     (void)protocol;
     switch (domain) {
@@ -41,7 +41,7 @@ KResult Socket::listen(int backlog)
     return KSuccess;
 }
 
-RetainPtr<Socket> Socket::accept()
+RefPtr<Socket> Socket::accept()
 {
     LOCKER(m_lock);
     if (m_pending.is_empty())

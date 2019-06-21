@@ -10,7 +10,7 @@ public:
     enum Column {
         Name
     };
-    static Retained<IRCChannelMemberListModel> create(IRCChannel& channel) { return adopt(*new IRCChannelMemberListModel(channel)); }
+    static NonnullRefPtr<IRCChannelMemberListModel> create(IRCChannel& channel) { return adopt(*new IRCChannelMemberListModel(channel)); }
     virtual ~IRCChannelMemberListModel() override;
 
     virtual int row_count(const GModelIndex&) const override;

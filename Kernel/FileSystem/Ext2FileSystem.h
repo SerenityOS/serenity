@@ -60,7 +60,7 @@ class Ext2FS final : public DiskBackedFS {
     friend class Ext2FSInode;
 
 public:
-    static Retained<Ext2FS> create(Retained<DiskDevice>&&);
+    static NonnullRefPtr<Ext2FS> create(NonnullRefPtr<DiskDevice>&&);
     virtual ~Ext2FS() override;
     virtual bool initialize() override;
 
@@ -73,7 +73,7 @@ private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;
     typedef unsigned InodeIndex;
-    explicit Ext2FS(Retained<DiskDevice>&&);
+    explicit Ext2FS(NonnullRefPtr<DiskDevice>&&);
 
     const ext2_super_block& super_block() const;
     const ext2_group_desc& group_descriptor(unsigned groupIndex) const;
@@ -92,9 +92,9 @@ private:
 
     virtual const char* class_name() const override;
     virtual InodeIdentifier root_inode() const override;
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, int& error) override;
-    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
-    virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
+    virtual RefPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, int& error) override;
+    virtual RefPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
+    virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
     InodeIndex allocate_inode(GroupIndex preferred_group, off_t expected_size);
     Vector<BlockIndex> allocate_blocks(GroupIndex, int count);
@@ -126,7 +126,7 @@ private:
     mutable ByteBuffer m_cached_super_block;
     mutable ByteBuffer m_cached_group_descriptor_table;
 
-    mutable HashMap<BlockIndex, RetainPtr<Ext2FSInode>> m_inode_cache;
+    mutable HashMap<BlockIndex, RefPtr<Ext2FSInode>> m_inode_cache;
 };
 
 inline Ext2FS& Ext2FSInode::fs()
