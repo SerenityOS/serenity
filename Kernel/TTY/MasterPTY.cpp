@@ -63,8 +63,8 @@ void MasterPTY::notify_slave_closed(Badge<SlavePTY>)
 #ifdef MASTERPTY_DEBUG
     dbgprintf("MasterPTY(%u): slave closed, my retains: %u, slave retains: %u\n", m_index, ref_count(), m_slave->ref_count());
 #endif
-    // +1 retain for my MasterPTY::m_slave
-    // +1 retain for FileDescription::m_device
+    // +1 ref for my MasterPTY::m_slave
+    // +1 ref for FileDescription::m_device
     if (m_slave->ref_count() == 2)
         m_slave = nullptr;
 }

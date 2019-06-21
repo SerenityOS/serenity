@@ -491,7 +491,7 @@ void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
         response.clipboard.contents_size = WSClipboard::the().size();
 
         // FIXME: This is a workaround for the fact that SharedBuffers will go away if neither side is retaining them.
-        //        After we respond to GetClipboardContents, we have to wait for the client to retain the buffer on his side.
+        //        After we respond to GetClipboardContents, we have to wait for the client to ref the buffer on his side.
         m_last_sent_clipboard_content = move(shared_buffer);
     }
     post_message(response);

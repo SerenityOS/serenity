@@ -17,7 +17,7 @@ namespace AK {
 // Note that StringImpl is an immutable object that cannot shrink or grow.
 // Its allocation size is snugly tailored to the specific string it contains.
 // Copying a String is very efficient, since the internal StringImpl is
-// retainable and so copying only requires modifying the retain count.
+// retainable and so copying only requires modifying the ref count.
 //
 // There are three main ways to construct a new String:
 //

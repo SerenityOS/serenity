@@ -2031,9 +2031,9 @@ size_t Process::amount_resident() const
 size_t Process::amount_shared() const
 {
     // FIXME: This will double count if multiple regions use the same physical page.
-    // FIXME: It doesn't work at the moment, since it relies on PhysicalPage retain counts,
+    // FIXME: It doesn't work at the moment, since it relies on PhysicalPage ref counts,
     //        and each PhysicalPage is only reffed by its VMObject. This needs to be refactored
-    //        so that every Region contributes +1 retain to each of its PhysicalPages.
+    //        so that every Region contributes +1 ref to each of its PhysicalPages.
     size_t amount = 0;
     for (auto& region : m_regions) {
         amount += region->amount_shared();
