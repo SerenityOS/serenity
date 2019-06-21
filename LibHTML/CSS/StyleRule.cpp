@@ -4,5 +4,8 @@ StyleRule::StyleRule(Vector<Selector>&& selectors, Vector<NonnullRefPtr<StyleDec
     : m_selectors(move(selectors))
     , m_declarations(move(declarations))
 {
+}
 
+StyleRule::~StyleRule()
+{
 }

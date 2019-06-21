@@ -1,7 +1,8 @@
 #include <LibCore/CFile.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/Frame.h>
-#include <LibHTML/Parser/Parser.h>
+#include <LibHTML/Parser/CSSParser.h>
+#include <LibHTML/Parser/HTMLParser.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -11,8 +12,15 @@ int main(int argc, char** argv)
         fprintf(stderr, "Error: %s\n", f.error_string());
         return 1;
     }
+
+    extern const char default_stylesheet_source[];
+    String css = default_stylesheet_source;
+
+    auto sheet = parse_css(css);
+    dump_sheet(sheet);
+
     String html = String::copy(f.read_all());
-    auto doc = parse(html);
+    auto doc = parse_html(html);
     dump_tree(doc);
 
     doc->build_layout_tree();
