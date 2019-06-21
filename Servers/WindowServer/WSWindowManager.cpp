@@ -38,8 +38,6 @@ WSWindowManager::WSWindowManager()
 {
     s_the = this;
 
-    m_username = getlogin();
-
     reload_config(false);
 
     struct AppMenuItem {
@@ -101,15 +99,7 @@ WSWindowManager::WSWindowManager()
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
-    new CTimer(300, [this] {
-        static time_t last_update_time;
-        time_t now = time(nullptr);
-        if (now != last_update_time || m_cpu_monitor.is_dirty()) {
-            tick_clock();
-            last_update_time = now;
-            m_cpu_monitor.set_dirty(false);
-        }
-    });
+    m_menubar_keeper.setup();
 
     invalidate();
     WSCompositor::the().compose();
@@ -198,11 +188,6 @@ const Font& WSWindowManager::app_menu_font() const
     return Font::default_bold_font();
 }
 
-void WSWindowManager::tick_clock()
-{
-    invalidate(menubar_rect());
-}
-
 void WSWindowManager::set_resolution(int width, int height)
 {
     WSCompositor::the().set_resolution(width, height);
@@ -252,7 +237,7 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
         ++index;
         return true;
     });
-    invalidate(menubar_rect());
+    m_menubar_keeper.refresh();
 }
 
 void WSWindowManager::add_window(WSWindow& window)
@@ -416,6 +401,7 @@ void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& 
             menu_window.set_visible(true);
         }
         m_current_menu = menu.make_weak_ptr();
+        m_menubar_keeper.refresh();
         return;
     }
     if (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left) {
@@ -429,6 +415,7 @@ void WSWindowManager::close_current_menu()
     if (m_current_menu && m_current_menu->menu_window())
         m_current_menu->menu_window()->set_visible(false);
     m_current_menu = nullptr;
+    m_menubar_keeper.refresh();
 }
 
 void WSWindowManager::handle_menubar_mouse_event(const WSMouseEvent& event)
@@ -1004,7 +991,7 @@ void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& clie
 {
     if (active_client() == &client)
         set_current_menubar(client.app_menubar());
-    invalidate(menubar_rect());
+    m_menubar_keeper.refresh();
 }
 
 const WSCursor& WSWindowManager::active_cursor() const

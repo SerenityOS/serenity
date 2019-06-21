@@ -159,7 +159,6 @@ void WSCompositor::compose()
         });
 
         draw_geometry_label();
-        draw_menubar();
     }
 
     draw_cursor();
@@ -331,60 +330,4 @@ void WSCompositor::draw_cursor()
         swap(inner_color, outer_color);
     m_back_painter->blit(cursor_rect.location(), wm.active_cursor().bitmap(), wm.active_cursor().rect());
     m_last_cursor_rect = cursor_rect;
-}
-
-void WSCompositor::draw_menubar()
-{
-    auto& wm = WSWindowManager::the();
-    auto menubar_rect = wm.menubar_rect();
-
-    m_back_painter->fill_rect(menubar_rect, Color::LightGray);
-    m_back_painter->draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, Color::MidGray);
-    int index = 0;
-    wm.for_each_active_menubar_menu([&](WSMenu& menu) {
-        Color text_color = Color::Black;
-        if (&menu == wm.current_menu()) {
-            m_back_painter->fill_rect(menu.rect_in_menubar(), wm.menu_selection_color());
-            text_color = Color::White;
-        }
-        m_back_painter->draw_text(
-            menu.text_rect_in_menubar(),
-            menu.name(),
-            index == 1 ? wm.app_menu_font() : wm.menu_font(),
-            TextAlignment::CenterLeft,
-            text_color);
-        ++index;
-        return true;
-    });
-
-    int username_width = Font::default_bold_font().width(wm.m_username);
-    Rect username_rect {
-        menubar_rect.right() - wm.menubar_menu_margin() / 2 - Font::default_bold_font().width(wm.m_username),
-        menubar_rect.y(),
-        username_width,
-        menubar_rect.height()
-    };
-    m_back_painter->draw_text(username_rect, wm.m_username, Font::default_bold_font(), TextAlignment::CenterRight, Color::Black);
-
-    time_t now = time(nullptr);
-    auto* tm = localtime(&now);
-    auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u",
-        tm->tm_year + 1900,
-        tm->tm_mon + 1,
-        tm->tm_mday,
-        tm->tm_hour,
-        tm->tm_min,
-        tm->tm_sec);
-    int time_width = wm.font().width(time_text);
-    Rect time_rect {
-        username_rect.left() - wm.menubar_menu_margin() / 2 - time_width,
-        menubar_rect.y(),
-        time_width,
-        menubar_rect.height()
-    };
-
-    m_back_painter->draw_text(time_rect, time_text, wm.font(), TextAlignment::CenterRight, Color::Black);
-
-    Rect cpu_rect { time_rect.right() - wm.font().width(time_text) - wm.m_cpu_monitor.capacity() - 10, time_rect.y() + 1, wm.m_cpu_monitor.capacity(), time_rect.height() - 2 };
-    wm.m_cpu_monitor.paint(*m_back_painter, cpu_rect);
 }

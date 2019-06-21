@@ -206,6 +206,9 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         case WSAPI_WindowType::Tooltip:
             ws_window_type = WSWindowType::Tooltip;
             break;
+        case WSAPI_WindowType::Menubar:
+            ws_window_type = WSWindowType::Menubar;
+            break;
         case WSAPI_WindowType::Invalid:
             break; // handled below
         }
