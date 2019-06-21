@@ -78,7 +78,7 @@
 #define ATA_REG_ALTSTATUS 0x0C
 #define ATA_REG_DEVADDRESS 0x0D
 
-Retained<IDEDiskDevice> IDEDiskDevice::create()
+NonnullRefPtr<IDEDiskDevice> IDEDiskDevice::create()
 {
     return adopt(*new IDEDiskDevice);
 }

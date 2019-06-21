@@ -23,7 +23,7 @@ Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
     return *s_table;
 }
 
-Retained<IPv4Socket> IPv4Socket::create(int type, int protocol)
+NonnullRefPtr<IPv4Socket> IPv4Socket::create(int type, int protocol)
 {
     if (type == SOCK_STREAM)
         return TCPSocket::create(protocol);

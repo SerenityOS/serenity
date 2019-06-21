@@ -109,7 +109,7 @@ WSWindowManager::~WSWindowManager()
 {
 }
 
-Retained<WSCursor> WSWindowManager::get_cursor(const String& name, const Point& hotspot)
+NonnullRefPtr<WSCursor> WSWindowManager::get_cursor(const String& name, const Point& hotspot)
 {
     auto path = m_wm_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
     auto gb = GraphicsBitmap::load_from_file(path);
@@ -118,7 +118,7 @@ Retained<WSCursor> WSWindowManager::get_cursor(const String& name, const Point& 
     return WSCursor::create(*GraphicsBitmap::load_from_file("/res/cursors/arrow.png"));
 }
 
-Retained<WSCursor> WSWindowManager::get_cursor(const String& name)
+NonnullRefPtr<WSCursor> WSWindowManager::get_cursor(const String& name)
 {
     auto path = m_wm_config->read_entry("Cursor", name, "/res/cursors/arrow.png");
     auto gb = GraphicsBitmap::load_from_file(path);

@@ -18,7 +18,7 @@ IRCChannel::~IRCChannel()
 {
 }
 
-Retained<IRCChannel> IRCChannel::create(IRCClient& client, const String& name)
+NonnullRefPtr<IRCChannel> IRCChannel::create(IRCClient& client, const String& name)
 {
     return adopt(*new IRCChannel(client, name));
 }

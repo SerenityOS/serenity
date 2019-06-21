@@ -54,10 +54,10 @@ public:
         byte file_type { 0 };
     };
 
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, int& error) = 0;
-    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) = 0;
+    virtual RefPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, int& error) = 0;
+    virtual RefPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) = 0;
 
-    virtual RetainPtr<Inode> get_inode(InodeIdentifier) const = 0;
+    virtual RefPtr<Inode> get_inode(InodeIdentifier) const = 0;
 
     virtual void flush_writes() {}
 

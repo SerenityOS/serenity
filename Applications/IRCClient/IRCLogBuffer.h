@@ -10,7 +10,7 @@ class IRCLogBufferModel;
 
 class IRCLogBuffer : public RefCounted<IRCLogBuffer> {
 public:
-    static Retained<IRCLogBuffer> create();
+    static NonnullRefPtr<IRCLogBuffer> create();
     ~IRCLogBuffer();
 
     struct Message {
@@ -32,6 +32,6 @@ public:
 
 private:
     IRCLogBuffer();
-    Retained<IRCLogBufferModel> m_model;
+    NonnullRefPtr<IRCLogBufferModel> m_model;
     CircularQueue<Message, 1000> m_messages;
 };

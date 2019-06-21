@@ -9,7 +9,7 @@ File::~File()
 {
 }
 
-KResultOr<Retained<FileDescription>> File::open(int options)
+KResultOr<NonnullRefPtr<FileDescription>> File::open(int options)
 {
     UNUSED_PARAM(options);
     return FileDescription::create(this);

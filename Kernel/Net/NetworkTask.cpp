@@ -209,7 +209,7 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
 
     {
         LOCKER(IPv4Socket::all_sockets().lock());
-        for (RetainPtr<IPv4Socket> socket : IPv4Socket::all_sockets().resource()) {
+        for (RefPtr<IPv4Socket> socket : IPv4Socket::all_sockets().resource()) {
             LOCKER(socket->lock());
             if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
                 continue;

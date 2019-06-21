@@ -6,7 +6,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-Retained<CConfigFile> CConfigFile::get_for_app(const String& app_name)
+NonnullRefPtr<CConfigFile> CConfigFile::get_for_app(const String& app_name)
 {
     String home_path = get_current_user_home_path();
     if (home_path == "/")
@@ -15,7 +15,7 @@ Retained<CConfigFile> CConfigFile::get_for_app(const String& app_name)
     return adopt(*new CConfigFile(path));
 }
 
-Retained<CConfigFile> CConfigFile::get_for_system(const String& app_name)
+NonnullRefPtr<CConfigFile> CConfigFile::get_for_system(const String& app_name)
 {
     auto path = String::format("/etc/%s.ini", app_name.characters());
     return adopt(*new CConfigFile(path));

@@ -10,7 +10,7 @@
 #include <LibGUI/GTextBox.h>
 #include <stdlib.h>
 
-FontEditorWidget::FontEditorWidget(const String& path, RetainPtr<Font>&& edited_font, GWidget* parent)
+FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_font, GWidget* parent)
     : GWidget(parent)
     , m_edited_font(move(edited_font))
 {

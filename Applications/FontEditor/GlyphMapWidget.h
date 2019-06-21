@@ -30,7 +30,7 @@ private:
 
     Rect get_outer_rect(byte glyph) const;
 
-    RetainPtr<Font> m_font;
+    RefPtr<Font> m_font;
     int m_rows { 8 };
     int m_horizontal_spacing { 2 };
     int m_vertical_spacing { 2 };

@@ -11,7 +11,7 @@ class VMObject;
 
 class SharedMemory : public File {
 public:
-    static KResultOr<Retained<SharedMemory>> open(const String& name, int flags, mode_t);
+    static KResultOr<NonnullRefPtr<SharedMemory>> open(const String& name, int flags, mode_t);
     static KResult unlink(const String& name);
     virtual ~SharedMemory() override;
 
@@ -39,5 +39,5 @@ private:
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
     mode_t m_mode { 0 };
-    RetainPtr<VMObject> m_vmo;
+    RefPtr<VMObject> m_vmo;
 };

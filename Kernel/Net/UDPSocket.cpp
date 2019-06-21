@@ -15,7 +15,7 @@ Lockable<HashMap<word, UDPSocket*>>& UDPSocket::sockets_by_port()
 
 UDPSocketHandle UDPSocket::from_port(word port)
 {
-    RetainPtr<UDPSocket> socket;
+    RefPtr<UDPSocket> socket;
     {
         LOCKER(sockets_by_port().lock());
         auto it = sockets_by_port().resource().find(port);
@@ -38,7 +38,7 @@ UDPSocket::~UDPSocket()
     sockets_by_port().resource().remove(local_port());
 }
 
-Retained<UDPSocket> UDPSocket::create(int protocol)
+NonnullRefPtr<UDPSocket> UDPSocket::create(int protocol)
 {
     return adopt(*new UDPSocket(protocol));
 }

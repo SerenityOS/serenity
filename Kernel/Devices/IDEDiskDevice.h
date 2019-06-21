@@ -18,7 +18,7 @@ class IDEDiskDevice final : public IRQHandler
     , public DiskDevice {
     AK_MAKE_ETERNAL
 public:
-    static Retained<IDEDiskDevice> create();
+    static NonnullRefPtr<IDEDiskDevice> create();
     virtual ~IDEDiskDevice() override;
 
     // ^DiskDevice
@@ -55,7 +55,7 @@ private:
 
     PCI::Address m_pci_address;
     PhysicalRegionDescriptor m_prdt;
-    RetainPtr<PhysicalPage> m_dma_buffer_page;
+    RefPtr<PhysicalPage> m_dma_buffer_page;
     word m_bus_master_base { 0 };
     Lockable<bool> m_dma_enabled;
 };

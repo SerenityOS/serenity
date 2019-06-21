@@ -43,7 +43,7 @@ private:
     void draw_cursor();
     void draw_geometry_label();
     void draw_menubar();
-    void finish_setting_wallpaper(const String& path, Retained<GraphicsBitmap>&&);
+    void finish_setting_wallpaper(const String& path, NonnullRefPtr<GraphicsBitmap>&&);
 
     unsigned m_compose_count { 0 };
     unsigned m_flush_count { 0 };
@@ -52,8 +52,8 @@ private:
     bool m_flash_flush { false };
     bool m_buffers_are_flipped { false };
 
-    RetainPtr<GraphicsBitmap> m_front_bitmap;
-    RetainPtr<GraphicsBitmap> m_back_bitmap;
+    RefPtr<GraphicsBitmap> m_front_bitmap;
+    RefPtr<GraphicsBitmap> m_back_bitmap;
     OwnPtr<Painter> m_back_painter;
     OwnPtr<Painter> m_front_painter;
 
@@ -64,5 +64,5 @@ private:
 
     String m_wallpaper_path;
     WallpaperMode m_wallpaper_mode { WallpaperMode::Unchecked };
-    RetainPtr<GraphicsBitmap> m_wallpaper;
+    RefPtr<GraphicsBitmap> m_wallpaper;
 };

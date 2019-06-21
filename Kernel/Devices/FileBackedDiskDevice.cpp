@@ -7,7 +7,7 @@
 //#define FBBD_DEBUG
 #define IGNORE_FILE_LENGTH // Useful for e.g /dev/hda2
 
-RetainPtr<FileBackedDiskDevice> FileBackedDiskDevice::create(String&& image_path, unsigned block_size)
+RefPtr<FileBackedDiskDevice> FileBackedDiskDevice::create(String&& image_path, unsigned block_size)
 {
     return adopt(*new FileBackedDiskDevice(move(image_path), block_size));
 }

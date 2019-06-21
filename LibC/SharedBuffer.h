@@ -5,8 +5,8 @@
 
 class SharedBuffer : public RefCounted<SharedBuffer> {
 public:
-    static RetainPtr<SharedBuffer> create(pid_t peer, int);
-    static RetainPtr<SharedBuffer> create_from_shared_buffer_id(int);
+    static RefPtr<SharedBuffer> create(pid_t peer, int);
+    static RefPtr<SharedBuffer> create_from_shared_buffer_id(int);
     ~SharedBuffer();
 
     int shared_buffer_id() const { return m_shared_buffer_id; }

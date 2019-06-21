@@ -6,7 +6,7 @@ class Inode;
 
 class InodeFile final : public File {
 public:
-    static Retained<InodeFile> create(Retained<Inode>&& inode)
+    static NonnullRefPtr<InodeFile> create(NonnullRefPtr<Inode>&& inode)
     {
         return adopt(*new InodeFile(move(inode)));
     }
@@ -33,6 +33,6 @@ public:
     virtual bool is_inode() const override { return true; }
 
 private:
-    explicit InodeFile(Retained<Inode>&&);
-    Retained<Inode> m_inode;
+    explicit InodeFile(NonnullRefPtr<Inode>&&);
+    NonnullRefPtr<Inode> m_inode;
 };

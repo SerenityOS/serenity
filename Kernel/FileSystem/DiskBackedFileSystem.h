@@ -15,7 +15,7 @@ public:
     virtual void flush_writes() override;
 
 protected:
-    explicit DiskBackedFS(Retained<DiskDevice>&&);
+    explicit DiskBackedFS(NonnullRefPtr<DiskDevice>&&);
 
     void set_block_size(unsigned);
 
@@ -27,7 +27,7 @@ protected:
 
 private:
     int m_block_size { 0 };
-    Retained<DiskDevice> m_device;
+    NonnullRefPtr<DiskDevice> m_device;
 
     HashMap<unsigned, ByteBuffer> m_write_cache;
 };

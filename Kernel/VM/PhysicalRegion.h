@@ -10,7 +10,7 @@ class PhysicalRegion : public RefCounted<PhysicalRegion> {
     AK_MAKE_ETERNAL
 
 public:
-    static Retained<PhysicalRegion> create(PhysicalAddress lower, PhysicalAddress upper);
+    static NonnullRefPtr<PhysicalRegion> create(PhysicalAddress lower, PhysicalAddress upper);
     ~PhysicalRegion() {}
 
     void expand(PhysicalAddress lower, PhysicalAddress upper);
@@ -23,7 +23,7 @@ public:
     unsigned free() const { return m_pages - m_used; }
     bool contains(PhysicalPage& page) const { return page.paddr() >= m_lower && page.paddr() <= m_upper; }
 
-    RetainPtr<PhysicalPage> take_free_page(bool supervisor);
+    RefPtr<PhysicalPage> take_free_page(bool supervisor);
     void return_page_at(PhysicalAddress addr);
     void return_page(PhysicalPage&& page) { return_page_at(page.paddr()); }
 

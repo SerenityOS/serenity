@@ -24,7 +24,7 @@ private:
 
     void draw_at_mouse(const GMouseEvent&);
 
-    RetainPtr<Font> m_font;
+    RefPtr<Font> m_font;
     byte m_glyph { 0 };
     int m_scale { 10 };
 };

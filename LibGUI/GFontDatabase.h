@@ -16,7 +16,7 @@ class GFontDatabase {
 public:
     static GFontDatabase& the();
 
-    RetainPtr<Font> get_by_name(const StringView&);
+    RefPtr<Font> get_by_name(const StringView&);
     void for_each_font(Function<void(const StringView&)>);
     void for_each_fixed_width_font(Function<void(const StringView&)>);
 

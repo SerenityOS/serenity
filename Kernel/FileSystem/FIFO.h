@@ -14,14 +14,14 @@ public:
         Writer
     };
 
-    static RetainPtr<FIFO> from_fifo_id(dword);
+    static RefPtr<FIFO> from_fifo_id(dword);
 
-    static Retained<FIFO> create(uid_t);
+    static NonnullRefPtr<FIFO> create(uid_t);
     virtual ~FIFO() override;
 
     uid_t uid() const { return m_uid; }
 
-    Retained<FileDescription> open_direction(Direction);
+    NonnullRefPtr<FileDescription> open_direction(Direction);
 
     void attach(Direction);
     void detach(Direction);

@@ -10,7 +10,7 @@ public:
     Document();
     virtual ~Document() override;
 
-    virtual RetainPtr<LayoutNode> create_layout_node() override;
+    virtual RefPtr<LayoutNode> create_layout_node() override;
 
     void build_layout_tree();
 

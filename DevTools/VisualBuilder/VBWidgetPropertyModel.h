@@ -13,7 +13,7 @@ public:
         __Count
     };
 
-    static Retained<VBWidgetPropertyModel> create(VBWidget& widget) { return adopt(*new VBWidgetPropertyModel(widget)); }
+    static NonnullRefPtr<VBWidgetPropertyModel> create(VBWidget& widget) { return adopt(*new VBWidgetPropertyModel(widget)); }
     virtual ~VBWidgetPropertyModel() override;
 
     virtual int row_count(const GModelIndex&) const override;

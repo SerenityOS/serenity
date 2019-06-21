@@ -6,7 +6,7 @@ class UDPSocketHandle;
 
 class UDPSocket final : public IPv4Socket {
 public:
-    static Retained<UDPSocket> create(int protocol);
+    static NonnullRefPtr<UDPSocket> create(int protocol);
     virtual ~UDPSocket() override;
 
     static UDPSocketHandle from_port(word);
@@ -27,7 +27,7 @@ class UDPSocketHandle : public SocketHandle {
 public:
     UDPSocketHandle() {}
 
-    UDPSocketHandle(RetainPtr<UDPSocket>&& socket)
+    UDPSocketHandle(RefPtr<UDPSocket>&& socket)
         : SocketHandle(move(socket))
     {
     }

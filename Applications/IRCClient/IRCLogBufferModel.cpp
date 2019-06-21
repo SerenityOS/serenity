@@ -4,7 +4,7 @@
 #include <stdio.h>
 #include <time.h>
 
-IRCLogBufferModel::IRCLogBufferModel(Retained<IRCLogBuffer>&& log_buffer)
+IRCLogBufferModel::IRCLogBufferModel(NonnullRefPtr<IRCLogBuffer>&& log_buffer)
     : m_log_buffer(move(log_buffer))
 {
 }

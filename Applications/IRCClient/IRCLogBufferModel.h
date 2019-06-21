@@ -13,7 +13,7 @@ public:
         __Count,
     };
 
-    static Retained<IRCLogBufferModel> create(Retained<IRCLogBuffer>&& log_buffer) { return adopt(*new IRCLogBufferModel(move(log_buffer))); }
+    static NonnullRefPtr<IRCLogBufferModel> create(NonnullRefPtr<IRCLogBuffer>&& log_buffer) { return adopt(*new IRCLogBufferModel(move(log_buffer))); }
     virtual ~IRCLogBufferModel() override;
 
     virtual int row_count(const GModelIndex&) const override;
@@ -24,7 +24,7 @@ public:
     virtual void update() override;
 
 private:
-    explicit IRCLogBufferModel(Retained<IRCLogBuffer>&&);
+    explicit IRCLogBufferModel(NonnullRefPtr<IRCLogBuffer>&&);
 
-    Retained<IRCLogBuffer> m_log_buffer;
+    NonnullRefPtr<IRCLogBuffer> m_log_buffer;
 };

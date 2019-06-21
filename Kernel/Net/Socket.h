@@ -25,7 +25,7 @@ class FileDescription;
 
 class Socket : public File {
 public:
-    static KResultOr<Retained<Socket>> create(int domain, int type, int protocol);
+    static KResultOr<NonnullRefPtr<Socket>> create(int domain, int type, int protocol);
     virtual ~Socket() override;
 
     int domain() const { return m_domain; }
@@ -33,7 +33,7 @@ public:
     int protocol() const { return m_protocol; }
 
     bool can_accept() const { return !m_pending.is_empty(); }
-    RetainPtr<Socket> accept();
+    RefPtr<Socket> accept();
     bool is_connected() const { return m_connected; }
     KResult listen(int backlog);
 
@@ -89,14 +89,14 @@ private:
     timeval m_receive_deadline { 0, 0 };
     timeval m_send_deadline { 0, 0 };
 
-    Vector<RetainPtr<Socket>> m_pending;
+    Vector<RefPtr<Socket>> m_pending;
 };
 
 class SocketHandle {
 public:
     SocketHandle() {}
 
-    SocketHandle(RetainPtr<Socket>&& socket)
+    SocketHandle(RefPtr<Socket>&& socket)
         : m_socket(move(socket))
     {
         if (m_socket)
@@ -126,5 +126,5 @@ public:
     const Socket& socket() const { return *m_socket; }
 
 private:
-    RetainPtr<Socket> m_socket;
+    RefPtr<Socket> m_socket;
 };

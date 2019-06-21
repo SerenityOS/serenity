@@ -7,7 +7,7 @@ class FileDescription;
 
 class LocalSocket final : public Socket {
 public:
-    static Retained<LocalSocket> create(int type);
+    static NonnullRefPtr<LocalSocket> create(int type);
     virtual ~LocalSocket() override;
 
     virtual KResult bind(const sockaddr*, socklen_t) override;
@@ -28,7 +28,7 @@ private:
     virtual bool is_local() const override { return true; }
     bool has_attached_peer(const FileDescription&) const;
 
-    RetainPtr<FileDescription> m_file;
+    RefPtr<FileDescription> m_file;
 
     bool m_bound { false };
     int m_accepted_fds_open { 0 };

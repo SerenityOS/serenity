@@ -3,7 +3,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-RetainPtr<SharedBuffer> SharedBuffer::create(pid_t peer, int size)
+RefPtr<SharedBuffer> SharedBuffer::create(pid_t peer, int size)
 {
     void* data;
     int shared_buffer_id = create_shared_buffer(peer, size, &data);
@@ -14,7 +14,7 @@ RetainPtr<SharedBuffer> SharedBuffer::create(pid_t peer, int size)
     return adopt(*new SharedBuffer(shared_buffer_id, size, data));
 }
 
-RetainPtr<SharedBuffer> SharedBuffer::create_from_shared_buffer_id(int shared_buffer_id)
+RefPtr<SharedBuffer> SharedBuffer::create_from_shared_buffer_id(int shared_buffer_id)
 {
     void* data = get_shared_buffer(shared_buffer_id);
     if (data == (void*)-1) {

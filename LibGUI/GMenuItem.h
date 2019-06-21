@@ -15,7 +15,7 @@ public:
     };
 
     GMenuItem(unsigned menu_id, Type);
-    GMenuItem(unsigned menu_id, Retained<GAction>&&);
+    GMenuItem(unsigned menu_id, NonnullRefPtr<GAction>&&);
     ~GMenuItem();
 
     Type type() const { return m_type; }
@@ -45,5 +45,5 @@ private:
     bool m_enabled { true };
     bool m_checkable { false };
     bool m_checked { false };
-    RetainPtr<GAction> m_action;
+    RefPtr<GAction> m_action;
 };

@@ -8,7 +8,7 @@
 
 class FileBackedDiskDevice final : public DiskDevice {
 public:
-    static RetainPtr<FileBackedDiskDevice> create(String&& image_path, unsigned block_size);
+    static RefPtr<FileBackedDiskDevice> create(String&& image_path, unsigned block_size);
     virtual ~FileBackedDiskDevice() override;
 
     bool is_valid() const { return m_file; }

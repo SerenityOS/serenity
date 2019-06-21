@@ -21,11 +21,11 @@ class SharedMemory;
 
 class FileDescription : public RefCounted<FileDescription> {
 public:
-    static Retained<FileDescription> create(RetainPtr<Custody>&&);
-    static Retained<FileDescription> create(RetainPtr<File>&&, SocketRole = SocketRole::None);
+    static NonnullRefPtr<FileDescription> create(RefPtr<Custody>&&);
+    static NonnullRefPtr<FileDescription> create(RefPtr<File>&&, SocketRole = SocketRole::None);
     ~FileDescription();
 
-    Retained<FileDescription> clone();
+    NonnullRefPtr<FileDescription> clone();
 
     int close();
 
@@ -92,7 +92,7 @@ public:
 
     ByteBuffer& generator_cache() { return m_generator_cache; }
 
-    void set_original_inode(Badge<VFS>, Retained<Inode>&& inode) { m_inode = move(inode); }
+    void set_original_inode(Badge<VFS>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
 
     SocketRole socket_role() const { return m_socket_role; }
     void set_socket_role(SocketRole);
@@ -105,12 +105,12 @@ public:
 
 private:
     friend class VFS;
-    FileDescription(RetainPtr<File>&&, SocketRole = SocketRole::None);
+    FileDescription(RefPtr<File>&&, SocketRole = SocketRole::None);
     FileDescription(FIFO&, FIFO::Direction);
 
-    RetainPtr<Custody> m_custody;
-    RetainPtr<Inode> m_inode;
-    RetainPtr<File> m_file;
+    RefPtr<Custody> m_custody;
+    RefPtr<Inode> m_inode;
+    RefPtr<File> m_file;
 
     off_t m_current_offset { 0 };
 

@@ -47,9 +47,9 @@ public:
 
     static Font& default_fixed_width_font();
 
-    RetainPtr<Font> clone() const;
+    RefPtr<Font> clone() const;
 
-    static RetainPtr<Font> load_from_file(const StringView& path);
+    static RefPtr<Font> load_from_file(const StringView& path);
     bool write_to_file(const StringView& path);
 
     ~Font();
@@ -78,7 +78,7 @@ public:
 private:
     Font(const StringView& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height);
 
-    static RetainPtr<Font> load_from_memory(const byte*);
+    static RefPtr<Font> load_from_memory(const byte*);
 
     String m_name;
 

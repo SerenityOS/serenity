@@ -6,65 +6,65 @@
 namespace AK {
 
 template<typename T>
-class RetainPtr {
+class RefPtr {
 public:
     enum AdoptTag {
         Adopt
     };
 
-    RetainPtr() {}
-    RetainPtr(const T* ptr)
+    RefPtr() {}
+    RefPtr(const T* ptr)
         : m_ptr(const_cast<T*>(ptr))
     {
         ref_if_not_null(m_ptr);
     }
-    RetainPtr(T* ptr)
+    RefPtr(T* ptr)
         : m_ptr(ptr)
     {
         ref_if_not_null(m_ptr);
     }
-    RetainPtr(T& object)
+    RefPtr(T& object)
         : m_ptr(&object)
     {
         m_ptr->ref();
     }
-    RetainPtr(const T& object)
+    RefPtr(const T& object)
         : m_ptr(const_cast<T*>(&object))
     {
         m_ptr->ref();
     }
-    RetainPtr(AdoptTag, T& object)
+    RefPtr(AdoptTag, T& object)
         : m_ptr(&object)
     {
     }
-    RetainPtr(RetainPtr& other)
+    RefPtr(RefPtr& other)
         : m_ptr(other.copy_ref().leak_ref())
     {
     }
-    RetainPtr(RetainPtr&& other)
+    RefPtr(RefPtr&& other)
         : m_ptr(other.leak_ref())
     {
     }
     template<typename U>
-    RetainPtr(Retained<U>&& other)
+    RefPtr(NonnullRefPtr<U>&& other)
         : m_ptr(static_cast<T*>(&other.leak_ref()))
     {
     }
     template<typename U>
-    RetainPtr(RetainPtr<U>&& other)
+    RefPtr(RefPtr<U>&& other)
         : m_ptr(static_cast<T*>(other.leak_ref()))
     {
     }
-    RetainPtr(const RetainPtr& other)
-        : m_ptr(const_cast<RetainPtr&>(other).copy_ref().leak_ref())
+    RefPtr(const RefPtr& other)
+        : m_ptr(const_cast<RefPtr&>(other).copy_ref().leak_ref())
     {
     }
     template<typename U>
-    RetainPtr(const RetainPtr<U>& other)
-        : m_ptr(const_cast<RetainPtr<U>&>(other).copy_ref().leak_ref())
+    RefPtr(const RefPtr<U>& other)
+        : m_ptr(const_cast<RefPtr<U>&>(other).copy_ref().leak_ref())
     {
     }
-    ~RetainPtr()
+    ~RefPtr()
     {
         clear();
 #ifdef SANITIZE_PTRS
@@ -74,9 +74,9 @@ public:
             m_ptr = (T*)(0xe0e0e0e0);
 #endif
     }
-    RetainPtr(std::nullptr_t) {}
+    RefPtr(std::nullptr_t) {}
 
-    RetainPtr& operator=(RetainPtr&& other)
+    RefPtr& operator=(RefPtr&& other)
     {
         if (this != &other) {
             deref_if_not_null(m_ptr);
@@ -86,7 +86,7 @@ public:
     }
 
     template<typename U>
-    RetainPtr& operator=(RetainPtr<U>&& other)
+    RefPtr& operator=(RefPtr<U>&& other)
     {
         if (this != static_cast<void*>(&other)) {
             deref_if_not_null(m_ptr);
@@ -96,7 +96,7 @@ public:
     }
 
     template<typename U>
-    RetainPtr& operator=(Retained<U>&& other)
+    RefPtr& operator=(NonnullRefPtr<U>&& other)
     {
         deref_if_not_null(m_ptr);
         m_ptr = &other.leak_ref();
@@ -104,7 +104,7 @@ public:
     }
 
     template<typename U>
-    RetainPtr& operator=(const Retained<U>& other)
+    RefPtr& operator=(const NonnullRefPtr<U>& other)
     {
         if (m_ptr != other.ptr())
             deref_if_not_null(m_ptr);
@@ -115,7 +115,7 @@ public:
     }
 
     template<typename U>
-    RetainPtr& operator=(const RetainPtr<U>& other)
+    RefPtr& operator=(const RefPtr<U>& other)
     {
         if (m_ptr != other.ptr())
             deref_if_not_null(m_ptr);
@@ -124,7 +124,7 @@ public:
         return *this;
     }
 
-    RetainPtr& operator=(const T* ptr)
+    RefPtr& operator=(const T* ptr)
     {
         if (m_ptr != ptr)
             deref_if_not_null(m_ptr);
@@ -133,7 +133,7 @@ public:
         return *this;
     }
 
-    RetainPtr& operator=(const T& object)
+    RefPtr& operator=(const T& object)
     {
         if (m_ptr != &object)
             deref_if_not_null(m_ptr);
@@ -142,15 +142,15 @@ public:
         return *this;
     }
 
-    RetainPtr& operator=(std::nullptr_t)
+    RefPtr& operator=(std::nullptr_t)
     {
         clear();
         return *this;
     }
 
-    RetainPtr copy_ref() const
+    RefPtr copy_ref() const
     {
-        return RetainPtr(m_ptr);
+        return RefPtr(m_ptr);
     }
 
     void clear()
@@ -185,11 +185,11 @@ public:
     bool operator==(std::nullptr_t) const { return !m_ptr; }
     bool operator!=(std::nullptr_t) const { return m_ptr; }
 
-    bool operator==(const RetainPtr& other) const { return m_ptr == other.m_ptr; }
-    bool operator!=(const RetainPtr& other) const { return m_ptr != other.m_ptr; }
+    bool operator==(const RefPtr& other) const { return m_ptr == other.m_ptr; }
+    bool operator!=(const RefPtr& other) const { return m_ptr != other.m_ptr; }
 
-    bool operator==(RetainPtr& other) { return m_ptr == other.m_ptr; }
-    bool operator!=(RetainPtr& other) { return m_ptr != other.m_ptr; }
+    bool operator==(RefPtr& other) { return m_ptr == other.m_ptr; }
+    bool operator!=(RefPtr& other) { return m_ptr != other.m_ptr; }
 
     bool operator==(const T* other) const { return m_ptr == other; }
     bool operator!=(const T* other) const { return m_ptr != other; }
@@ -205,4 +205,4 @@ private:
 
 }
 
-using AK::RetainPtr;
+using AK::RefPtr;

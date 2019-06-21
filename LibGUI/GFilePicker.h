@@ -19,7 +19,7 @@ private:
     void clear_preview();
 
     GTableView* m_view { nullptr };
-    Retained<GDirectoryModel> m_model;
+    NonnullRefPtr<GDirectoryModel> m_model;
     FileSystemPath m_selected_file;
 
     GLabel* m_preview_image_label { nullptr };

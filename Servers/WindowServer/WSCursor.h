@@ -14,9 +14,9 @@ enum class WSStandardCursor {
 
 class WSCursor : public RefCounted<WSCursor> {
 public:
-    static Retained<WSCursor> create(Retained<GraphicsBitmap>&&, const Point& hotspot);
-    static Retained<WSCursor> create(Retained<GraphicsBitmap>&&);
-    static RetainPtr<WSCursor> create(WSStandardCursor);
+    static NonnullRefPtr<WSCursor> create(NonnullRefPtr<GraphicsBitmap>&&, const Point& hotspot);
+    static NonnullRefPtr<WSCursor> create(NonnullRefPtr<GraphicsBitmap>&&);
+    static RefPtr<WSCursor> create(WSStandardCursor);
     ~WSCursor();
 
     Point hotspot() const { return m_hotspot; }
@@ -26,8 +26,8 @@ public:
     Size size() const { return m_bitmap->size(); }
 
 private:
-    WSCursor(Retained<GraphicsBitmap>&&, const Point&);
+    WSCursor(NonnullRefPtr<GraphicsBitmap>&&, const Point&);
 
-    RetainPtr<GraphicsBitmap> m_bitmap;
+    RefPtr<GraphicsBitmap> m_bitmap;
     Point m_hotspot;
 };

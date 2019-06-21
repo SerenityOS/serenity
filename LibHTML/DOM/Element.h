@@ -40,7 +40,7 @@ public:
             callback(attribute.name(), attribute.value());
     }
 
-    virtual RetainPtr<LayoutNode> create_layout_node() override;
+    virtual RefPtr<LayoutNode> create_layout_node() override;
 
 private:
     Attribute* find_attribute(const String& name);

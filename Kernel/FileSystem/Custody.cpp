@@ -26,9 +26,9 @@ Custody* Custody::get_if_cached(Custody* parent, const String& name)
     return nullptr;
 }
 
-Retained<Custody> Custody::get_or_create(Custody* parent, const String& name, Inode& inode)
+NonnullRefPtr<Custody> Custody::get_or_create(Custody* parent, const String& name, Inode& inode)
 {
-    if (RetainPtr<Custody> cached_custody = get_if_cached(parent, name)) {
+    if (RefPtr<Custody> cached_custody = get_if_cached(parent, name)) {
         if (&cached_custody->inode() != &inode) {
             dbgprintf("WTF! cached custody for name '%s' has inode=%s, new inode=%s\n",
                 name.characters(),

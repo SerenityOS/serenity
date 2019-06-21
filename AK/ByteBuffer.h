@@ -10,12 +10,12 @@ namespace AK {
 
 class ByteBufferImpl : public RefCounted<ByteBufferImpl> {
 public:
-    static Retained<ByteBufferImpl> create_uninitialized(int size);
-    static Retained<ByteBufferImpl> create_zeroed(int);
-    static Retained<ByteBufferImpl> copy(const void*, int);
-    static Retained<ByteBufferImpl> wrap(void*, int);
-    static Retained<ByteBufferImpl> wrap(const void*, int);
-    static Retained<ByteBufferImpl> adopt(void*, int);
+    static NonnullRefPtr<ByteBufferImpl> create_uninitialized(int size);
+    static NonnullRefPtr<ByteBufferImpl> create_zeroed(int);
+    static NonnullRefPtr<ByteBufferImpl> copy(const void*, int);
+    static NonnullRefPtr<ByteBufferImpl> wrap(void*, int);
+    static NonnullRefPtr<ByteBufferImpl> wrap(const void*, int);
+    static NonnullRefPtr<ByteBufferImpl> adopt(void*, int);
 
     ~ByteBufferImpl() { clear(); }
 
@@ -180,12 +180,12 @@ public:
     }
 
 private:
-    explicit ByteBuffer(RetainPtr<ByteBufferImpl>&& impl)
+    explicit ByteBuffer(RefPtr<ByteBufferImpl>&& impl)
         : m_impl(move(impl))
     {
     }
 
-    RetainPtr<ByteBufferImpl> m_impl;
+    RefPtr<ByteBufferImpl> m_impl;
 };
 
 inline ByteBufferImpl::ByteBufferImpl(int size)
@@ -227,34 +227,34 @@ inline void ByteBufferImpl::grow(int size)
     kfree(old_data);
 }
 
-inline Retained<ByteBufferImpl> ByteBufferImpl::create_uninitialized(int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_uninitialized(int size)
 {
     return ::adopt(*new ByteBufferImpl(size));
 }
 
-inline Retained<ByteBufferImpl> ByteBufferImpl::create_zeroed(int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(int size)
 {
     auto buffer = ::adopt(*new ByteBufferImpl(size));
     memset(buffer->pointer(), 0, size);
     return buffer;
 }
 
-inline Retained<ByteBufferImpl> ByteBufferImpl::copy(const void* data, int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::copy(const void* data, int size)
 {
     return ::adopt(*new ByteBufferImpl(data, size, Copy));
 }
 
-inline Retained<ByteBufferImpl> ByteBufferImpl::wrap(void* data, int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(void* data, int size)
 {
     return ::adopt(*new ByteBufferImpl(data, size, Wrap));
 }
 
-inline Retained<ByteBufferImpl> ByteBufferImpl::wrap(const void* data, int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(const void* data, int size)
 {
     return ::adopt(*new ByteBufferImpl(const_cast<void*>(data), size, Wrap));
 }
 
-inline Retained<ByteBufferImpl> ByteBufferImpl::adopt(void* data, int size)
+inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::adopt(void* data, int size)
 {
     return ::adopt(*new ByteBufferImpl(data, size, Adopt));
 }

@@ -16,7 +16,7 @@ IRCQuery::~IRCQuery()
 {
 }
 
-Retained<IRCQuery> IRCQuery::create(IRCClient& client, const String& name)
+NonnullRefPtr<IRCQuery> IRCQuery::create(IRCClient& client, const String& name)
 {
     return adopt(*new IRCQuery(client, name));
 }

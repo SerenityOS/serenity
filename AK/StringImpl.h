@@ -14,11 +14,11 @@ enum ShouldChomp {
 
 class StringImpl : public RefCounted<StringImpl> {
 public:
-    static Retained<StringImpl> create_uninitialized(int length, char*& buffer);
-    static RetainPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
-    static RetainPtr<StringImpl> create(const char* cstring, int length, ShouldChomp = NoChomp);
-    Retained<StringImpl> to_lowercase() const;
-    Retained<StringImpl> to_uppercase() const;
+    static NonnullRefPtr<StringImpl> create_uninitialized(int length, char*& buffer);
+    static RefPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl> create(const char* cstring, int length, ShouldChomp = NoChomp);
+    NonnullRefPtr<StringImpl> to_lowercase() const;
+    NonnullRefPtr<StringImpl> to_uppercase() const;
 
     void operator delete(void* ptr)
     {

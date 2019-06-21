@@ -22,7 +22,7 @@ void LayoutNode::deref()
         delete this;
 }
 
-void LayoutNode::append_child(Retained<LayoutNode> node)
+void LayoutNode::append_child(NonnullRefPtr<LayoutNode> node)
 {
     if (m_last_child)
         m_last_child->set_next_sibling(node.ptr());

@@ -50,7 +50,7 @@ void Element::set_attributes(Vector<Attribute>&& attributes)
     m_attributes = move(attributes);
 }
 
-RetainPtr<LayoutNode> Element::create_layout_node()
+RefPtr<LayoutNode> Element::create_layout_node()
 {
     if (m_tag_name == "html")
         return adopt(*new LayoutBlock(*this));

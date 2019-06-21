@@ -14,7 +14,7 @@ public:
     String text() const { return m_text; }
     void set_text(const StringView&);
 
-    void set_icon(RetainPtr<GraphicsBitmap>&&);
+    void set_icon(RefPtr<GraphicsBitmap>&&);
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
     GraphicsBitmap* icon() { return m_icon.ptr(); }
 
@@ -32,7 +32,7 @@ private:
     virtual void paint_event(GPaintEvent&) override;
 
     String m_text;
-    RetainPtr<GraphicsBitmap> m_icon;
+    RefPtr<GraphicsBitmap> m_icon;
     TextAlignment m_text_alignment { TextAlignment::Center };
     bool m_should_stretch_icon { false };
 };

@@ -45,7 +45,7 @@ protected:
     }
 
 private:
-    RetainPtr<WeakLink<T>> m_link;
+    RefPtr<WeakLink<T>> m_link;
 };
 
 }

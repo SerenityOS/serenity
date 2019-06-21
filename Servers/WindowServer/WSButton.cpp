@@ -5,7 +5,7 @@
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSWindowManager.h>
 
-WSButton::WSButton(WSWindowFrame& frame, Retained<CharacterBitmap>&& bitmap, Function<void(WSButton&)>&& on_click_handler)
+WSButton::WSButton(WSWindowFrame& frame, NonnullRefPtr<CharacterBitmap>&& bitmap, Function<void(WSButton&)>&& on_click_handler)
     : on_click(move(on_click_handler))
     , m_frame(frame)
     , m_bitmap(move(bitmap))

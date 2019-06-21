@@ -11,11 +11,11 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static CLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>& thumbnail_cache()
+static CLockable<HashMap<String, RefPtr<GraphicsBitmap>>>& thumbnail_cache()
 {
-    static CLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>* s_map;
+    static CLockable<HashMap<String, RefPtr<GraphicsBitmap>>>* s_map;
     if (!s_map)
-        s_map = new CLockable<HashMap<String, RetainPtr<GraphicsBitmap>>>();
+        s_map = new CLockable<HashMap<String, RefPtr<GraphicsBitmap>>>();
     return *s_map;
 }
 

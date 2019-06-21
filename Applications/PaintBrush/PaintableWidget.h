@@ -32,7 +32,7 @@ private:
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
 
-    RetainPtr<GraphicsBitmap> m_bitmap;
+    RefPtr<GraphicsBitmap> m_bitmap;
 
     Color m_primary_color { Color::Black };
     Color m_secondary_color { Color::White };

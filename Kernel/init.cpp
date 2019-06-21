@@ -86,7 +86,7 @@ VFS* vfs;
 
     auto dev_hd0 = IDEDiskDevice::create();
 
-    Retained<DiskDevice> root_dev = dev_hd0.copy_ref();
+    NonnullRefPtr<DiskDevice> root_dev = dev_hd0.copy_ref();
 
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
 
@@ -199,7 +199,7 @@ extern "C" [[noreturn]] void init()
 
     auto e1000 = E1000NetworkAdapter::autodetect();
 
-    Retained<ProcFS> new_procfs = ProcFS::create();
+    NonnullRefPtr<ProcFS> new_procfs = ProcFS::create();
     new_procfs->initialize();
 
     auto devptsfs = DevPtsFS::create();

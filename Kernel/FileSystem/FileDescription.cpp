@@ -15,19 +15,19 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
-Retained<FileDescription> FileDescription::create(RetainPtr<Custody>&& custody)
+NonnullRefPtr<FileDescription> FileDescription::create(RefPtr<Custody>&& custody)
 {
     auto description = adopt(*new FileDescription(InodeFile::create(custody->inode())));
     description->m_custody = move(custody);
     return description;
 }
 
-Retained<FileDescription> FileDescription::create(RetainPtr<File>&& file, SocketRole role)
+NonnullRefPtr<FileDescription> FileDescription::create(RefPtr<File>&& file, SocketRole role)
 {
     return adopt(*new FileDescription(move(file), role));
 }
 
-FileDescription::FileDescription(RetainPtr<File>&& file, SocketRole role)
+FileDescription::FileDescription(RefPtr<File>&& file, SocketRole role)
     : m_file(move(file))
 {
     if (m_file->is_inode())
@@ -58,9 +58,9 @@ void FileDescription::set_socket_role(SocketRole role)
     socket()->attach(*this);
 }
 
-Retained<FileDescription> FileDescription::clone()
+NonnullRefPtr<FileDescription> FileDescription::clone()
 {
-    RetainPtr<FileDescription> description;
+    RefPtr<FileDescription> description;
     if (is_fifo()) {
         description = fifo()->open_direction(m_fifo_direction);
     } else {

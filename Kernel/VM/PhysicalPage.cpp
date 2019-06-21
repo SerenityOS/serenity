@@ -2,7 +2,7 @@
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/kmalloc.h>
 
-Retained<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
+NonnullRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
 {
     void* slot = kmalloc(sizeof(PhysicalPage));
     new (slot) PhysicalPage(paddr, supervisor, may_return_to_freelist);

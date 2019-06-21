@@ -3,7 +3,7 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/VMObject.h>
 
-Retained<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode)
+NonnullRefPtr<VMObject> VMObject::create_file_backed(RefPtr<Inode>&& inode)
 {
     InterruptDisabler disabler;
     if (inode->vmo())
@@ -13,13 +13,13 @@ Retained<VMObject> VMObject::create_file_backed(RetainPtr<Inode>&& inode)
     return vmo;
 }
 
-Retained<VMObject> VMObject::create_anonymous(size_t size)
+NonnullRefPtr<VMObject> VMObject::create_anonymous(size_t size)
 {
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     return adopt(*new VMObject(size));
 }
 
-Retained<VMObject> VMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
+NonnullRefPtr<VMObject> VMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     auto vmo = adopt(*new VMObject(paddr, size));
@@ -27,7 +27,7 @@ Retained<VMObject> VMObject::create_for_physical_range(PhysicalAddress paddr, si
     return vmo;
 }
 
-Retained<VMObject> VMObject::clone()
+NonnullRefPtr<VMObject> VMObject::clone()
 {
     return adopt(*new VMObject(*this));
 }
@@ -59,7 +59,7 @@ VMObject::VMObject(PhysicalAddress paddr, size_t size)
     ASSERT(m_physical_pages.size() == page_count());
 }
 
-VMObject::VMObject(RetainPtr<Inode>&& inode)
+VMObject::VMObject(RefPtr<Inode>&& inode)
     : m_inode(move(inode))
 {
     ASSERT(m_inode);

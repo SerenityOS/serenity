@@ -19,7 +19,7 @@
 byte Terminal::Attribute::default_foreground_color = 7;
 byte Terminal::Attribute::default_background_color = 0;
 
-Terminal::Terminal(int ptm_fd, RetainPtr<CConfigFile> config)
+Terminal::Terminal(int ptm_fd, RefPtr<CConfigFile> config)
     : m_ptm_fd(ptm_fd)
     , m_notifier(ptm_fd, CNotifier::Read)
     , m_config(config)

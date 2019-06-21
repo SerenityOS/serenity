@@ -16,16 +16,16 @@ public:
     [[gnu::pure]] static ProcFS& the();
 
     virtual ~ProcFS() override;
-    static Retained<ProcFS> create();
+    static NonnullRefPtr<ProcFS> create();
 
     virtual bool initialize() override;
     virtual const char* class_name() const override;
 
     virtual InodeIdentifier root_inode() const override;
-    virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
+    virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, int& error) override;
-    virtual RetainPtr<Inode> create_directory(InodeIdentifier parent_id, const String& name, mode_t, int& error) override;
+    virtual RefPtr<Inode> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, int& error) override;
+    virtual RefPtr<Inode> create_directory(InodeIdentifier parent_id, const String& name, mode_t, int& error) override;
 
     void add_sys_file(String&&, Function<ByteBuffer(ProcFSInode&)>&& read_callback, Function<ssize_t(ProcFSInode&, const ByteBuffer&)>&& write_callback);
     void add_sys_bool(String&&, Lockable<bool>&, Function<void()>&& notify_callback = nullptr);
@@ -36,7 +36,7 @@ private:
 
     struct ProcFSDirectoryEntry {
         ProcFSDirectoryEntry() {}
-        ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, Function<ByteBuffer(InodeIdentifier)>&& a_read_callback = nullptr, Function<ssize_t(InodeIdentifier, const ByteBuffer&)>&& a_write_callback = nullptr, RetainPtr<ProcFSInode>&& a_inode = nullptr)
+        ProcFSDirectoryEntry(const char* a_name, unsigned a_proc_file_type, Function<ByteBuffer(InodeIdentifier)>&& a_read_callback = nullptr, Function<ssize_t(InodeIdentifier, const ByteBuffer&)>&& a_write_callback = nullptr, RefPtr<ProcFSInode>&& a_inode = nullptr)
             : name(a_name)
             , proc_file_type(a_proc_file_type)
             , read_callback(move(a_read_callback))
@@ -49,7 +49,7 @@ private:
         unsigned proc_file_type { 0 };
         Function<ByteBuffer(InodeIdentifier)> read_callback;
         Function<ssize_t(InodeIdentifier, const ByteBuffer&)> write_callback;
-        RetainPtr<ProcFSInode> inode;
+        RefPtr<ProcFSInode> inode;
         InodeIdentifier identifier(unsigned fsid) const;
     };
 
@@ -60,7 +60,7 @@ private:
 
     mutable Lock m_inodes_lock;
     mutable HashMap<unsigned, ProcFSInode*> m_inodes;
-    RetainPtr<ProcFSInode> m_root_inode;
+    RefPtr<ProcFSInode> m_root_inode;
     Lockable<bool> m_kmalloc_stack_helper;
 };
 

@@ -8,7 +8,7 @@ class GDirectoryModel final : public GModel {
     friend int thumbnail_thread(void*);
 
 public:
-    static Retained<GDirectoryModel> create() { return adopt(*new GDirectoryModel); }
+    static NonnullRefPtr<GDirectoryModel> create() { return adopt(*new GDirectoryModel); }
     virtual ~GDirectoryModel() override;
 
     enum Column {
@@ -42,7 +42,7 @@ public:
         uid_t uid { 0 };
         uid_t gid { 0 };
         ino_t inode { 0 };
-        mutable RetainPtr<GraphicsBitmap> thumbnail;
+        mutable RefPtr<GraphicsBitmap> thumbnail;
         bool is_directory() const { return S_ISDIR(mode); }
         bool is_executable() const { return mode & S_IXUSR; }
         String full_path(const GDirectoryModel& model) const { return String::format("%s/%s", model.path().characters(), name.characters()); }

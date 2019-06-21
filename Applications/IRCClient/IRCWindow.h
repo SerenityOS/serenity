@@ -49,6 +49,6 @@ private:
     String m_name;
     GTableView* m_table_view { nullptr };
     GTextEditor* m_text_editor { nullptr };
-    RetainPtr<IRCLogBuffer> m_log_buffer;
+    RefPtr<IRCLogBuffer> m_log_buffer;
     int m_unread_count { 0 };
 };

@@ -58,7 +58,7 @@ void FS::sync()
 {
     Inode::sync();
 
-    Vector<Retained<FS>, 32> fses;
+    Vector<NonnullRefPtr<FS>, 32> fses;
     {
         InterruptDisabler disabler;
         for (auto& it : all_fses())

@@ -10,14 +10,14 @@ class SynthFSInode;
 class SynthFS : public FS {
 public:
     virtual ~SynthFS() override;
-    static Retained<SynthFS> create();
+    static NonnullRefPtr<SynthFS> create();
 
     virtual bool initialize() override;
     virtual const char* class_name() const override;
     virtual InodeIdentifier root_inode() const override;
-    virtual RetainPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, int& error) override;
-    virtual RetainPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
-    virtual RetainPtr<Inode> get_inode(InodeIdentifier) const override;
+    virtual RefPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, int& error) override;
+    virtual RefPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
+    virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
 protected:
     typedef unsigned InodeIndex;
@@ -27,17 +27,17 @@ protected:
 
     SynthFS();
 
-    Retained<SynthFSInode> create_directory(String&& name);
-    Retained<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, mode_t = 0010644);
-    Retained<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, mode_t = 0100644);
-    Retained<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&&, mode_t = 0100644);
+    NonnullRefPtr<SynthFSInode> create_directory(String&& name);
+    NonnullRefPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, mode_t = 0010644);
+    NonnullRefPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, mode_t = 0100644);
+    NonnullRefPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&&, mode_t = 0100644);
 
-    InodeIdentifier add_file(RetainPtr<SynthFSInode>&&, InodeIndex parent = RootInodeIndex);
+    InodeIdentifier add_file(RefPtr<SynthFSInode>&&, InodeIndex parent = RootInodeIndex);
     bool remove_file(InodeIndex);
 
 private:
     InodeIndex m_next_inode_index { 2 };
-    HashMap<InodeIndex, RetainPtr<SynthFSInode>> m_inodes;
+    HashMap<InodeIndex, RefPtr<SynthFSInode>> m_inodes;
 };
 
 struct SynthFSInodeCustomData {

@@ -50,12 +50,12 @@ public:
     bool operator==(const OwnPtr<T>& other) const { return ptr() == other.ptr(); }
 
 private:
-    WeakPtr(RetainPtr<WeakLink<T>>&& link)
+    WeakPtr(RefPtr<WeakLink<T>>&& link)
         : m_link(move(link))
     {
     }
 
-    RetainPtr<WeakLink<T>> m_link;
+    RefPtr<WeakLink<T>> m_link;
 };
 
 template<typename T>

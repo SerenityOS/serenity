@@ -12,7 +12,7 @@ namespace AK {
 
 // String is a convenience wrapper around StringImpl, suitable for passing
 // around as a value type. It's basically the same as passing around a
-// RetainPtr<StringImpl>, with a bit of syntactic sugar.
+// RefPtr<StringImpl>, with a bit of syntactic sugar.
 //
 // Note that StringImpl is an immutable object that cannot shrink or grow.
 // Its allocation size is snugly tailored to the specific string it contains.
@@ -74,12 +74,12 @@ public:
     {
     }
 
-    String(RetainPtr<StringImpl>&& impl)
+    String(RefPtr<StringImpl>&& impl)
         : m_impl(move(impl))
     {
     }
 
-    String(Retained<StringImpl>&& impl)
+    String(NonnullRefPtr<StringImpl>&& impl)
         : m_impl(move(impl))
     {
     }
@@ -186,7 +186,7 @@ public:
 
 private:
     bool match_helper(const StringView& mask) const;
-    RetainPtr<StringImpl> m_impl;
+    RefPtr<StringImpl> m_impl;
 };
 
 inline bool StringView::operator==(const String& string) const

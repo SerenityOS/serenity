@@ -3,7 +3,7 @@
 
 #define MBR_DEBUG
 
-MBRPartitionTable::MBRPartitionTable(Retained<DiskDevice>&& device)
+MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<DiskDevice>&& device)
     : m_device(move(device))
 {
 }
@@ -37,7 +37,7 @@ bool MBRPartitionTable::initialize()
     return true;
 }
 
-RetainPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
+RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
 {
     ASSERT(index >= 1 && index <= 4);
 

@@ -1,6 +1,6 @@
 #include <LibHTML/DOM/ParentNode.h>
 
-void ParentNode::append_child(Retained<Node> node)
+void ParentNode::append_child(NonnullRefPtr<Node> node)
 {
     if (m_last_child)
         m_last_child->set_next_sibling(node.ptr());

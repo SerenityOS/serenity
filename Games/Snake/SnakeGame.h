@@ -59,5 +59,5 @@ private:
     unsigned m_high_score { 0 };
     String m_high_score_text;
 
-    Vector<Retained<GraphicsBitmap>> m_fruit_bitmaps;
+    Vector<NonnullRefPtr<GraphicsBitmap>> m_fruit_bitmaps;
 };

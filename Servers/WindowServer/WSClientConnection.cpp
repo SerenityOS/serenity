@@ -483,7 +483,7 @@ void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
         // FIXME: Optimize case where an app is copy/pasting within itself.
         //        We can just reuse the SharedBuffer then, since it will have the same peer PID.
         //        It would be even nicer if a SharedBuffer could have an arbitrary number of clients..
-        RetainPtr<SharedBuffer> shared_buffer = SharedBuffer::create(m_pid, WSClipboard::the().size());
+        RefPtr<SharedBuffer> shared_buffer = SharedBuffer::create(m_pid, WSClipboard::the().size());
         ASSERT(shared_buffer);
         memcpy(shared_buffer->data(), WSClipboard::the().data(), WSClipboard::the().size());
         shared_buffer->seal();

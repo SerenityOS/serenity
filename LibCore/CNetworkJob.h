@@ -28,10 +28,10 @@ public:
 
 protected:
     CNetworkJob();
-    void did_finish(Retained<CNetworkResponse>&&);
+    void did_finish(NonnullRefPtr<CNetworkResponse>&&);
     void did_fail(Error);
 
 private:
-    RetainPtr<CNetworkResponse> m_response;
+    RefPtr<CNetworkResponse> m_response;
     Error m_error { Error::None };
 };

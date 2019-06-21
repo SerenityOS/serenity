@@ -45,7 +45,7 @@ Lockable<InlineLRUCache<BlockIdentifier, CachedBlock>>& block_cache()
     return *s_cache;
 }
 
-DiskBackedFS::DiskBackedFS(Retained<DiskDevice>&& device)
+DiskBackedFS::DiskBackedFS(NonnullRefPtr<DiskDevice>&& device)
     : m_device(move(device))
 {
 }

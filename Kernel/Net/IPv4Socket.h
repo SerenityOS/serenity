@@ -15,7 +15,7 @@ class TCPSocket;
 
 class IPv4Socket : public Socket {
 public:
-    static Retained<IPv4Socket> create(int type, int protocol);
+    static NonnullRefPtr<IPv4Socket> create(int type, int protocol);
     virtual ~IPv4Socket() override;
 
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
@@ -88,7 +88,7 @@ class IPv4SocketHandle : public SocketHandle {
 public:
     IPv4SocketHandle() {}
 
-    IPv4SocketHandle(RetainPtr<IPv4Socket>&& socket)
+    IPv4SocketHandle(RefPtr<IPv4Socket>&& socket)
         : SocketHandle(move(socket))
     {
     }

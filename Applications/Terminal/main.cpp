@@ -81,7 +81,7 @@ static void make_shell(int ptm_fd)
     }
 }
 
-GWindow* create_settings_window(Terminal& terminal, RetainPtr<CConfigFile> config)
+GWindow* create_settings_window(Terminal& terminal, RefPtr<CConfigFile> config)
 {
     auto* window = new GWindow;
     window->set_title("Terminal Settings");
@@ -149,7 +149,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
     window->set_should_exit_event_loop_on_close(true);
 
-    RetainPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
+    RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
     Terminal terminal(ptm_fd, config);
     window->set_has_alpha_channel(true);
     window->set_main_widget(&terminal);

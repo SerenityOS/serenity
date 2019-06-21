@@ -19,11 +19,11 @@ public:
         Indexed8
     };
 
-    static Retained<GraphicsBitmap> create(Format, const Size&);
-    static Retained<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
-    static RetainPtr<GraphicsBitmap> load_from_file(const StringView& path);
-    static RetainPtr<GraphicsBitmap> load_from_file(Format, const StringView& path, const Size&);
-    static Retained<GraphicsBitmap> create_with_shared_buffer(Format, Retained<SharedBuffer>&&, const Size&);
+    static NonnullRefPtr<GraphicsBitmap> create(Format, const Size&);
+    static NonnullRefPtr<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
+    static RefPtr<GraphicsBitmap> load_from_file(const StringView& path);
+    static RefPtr<GraphicsBitmap> load_from_file(Format, const StringView& path, const Size&);
+    static NonnullRefPtr<GraphicsBitmap> create_with_shared_buffer(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
     ~GraphicsBitmap();
 
     RGBA32* scanline(int y);
@@ -81,7 +81,7 @@ private:
     GraphicsBitmap(Format, const Size&);
     GraphicsBitmap(Format, const Size&, RGBA32*);
     GraphicsBitmap(Format, const Size&, MappedFile&&);
-    GraphicsBitmap(Format, Retained<SharedBuffer>&&, const Size&);
+    GraphicsBitmap(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
 
     Size m_size;
     RGBA32* m_data { nullptr };
@@ -90,7 +90,7 @@ private:
     Format m_format { Format::Invalid };
     bool m_needs_munmap { false };
     MappedFile m_mapped_file;
-    RetainPtr<SharedBuffer> m_shared_buffer;
+    RefPtr<SharedBuffer> m_shared_buffer;
 };
 
 inline RGBA32* GraphicsBitmap::scanline(int y)
