@@ -29,7 +29,7 @@ public:
     virtual void click() = 0;
     virtual const char* class_name() const override { return "GAbstractButton"; }
     virtual bool accepts_focus() const override { return true; }
-    virtual bool accepts_keyboard_select() const { return true; }
+    virtual bool supports_keyboard_activation() const { return true; }
 
 protected:
     explicit GAbstractButton(GWidget* parent);

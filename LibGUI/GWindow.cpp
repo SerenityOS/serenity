@@ -271,7 +271,7 @@ void GWindow::event(CEvent& event)
                 m_keybind_mode = false;
             } else {
                 m_keybind_mode = true;
-                find_keyboard_selectable();
+                collect_keyboard_activation_targets();
                 m_entered_keybind = "";
             }
             update();
@@ -285,8 +285,8 @@ void GWindow::event(CEvent& event)
                 builder.append(keyevent.text());
                 m_entered_keybind = builder.to_string();
 
-                auto found_widget = m_hashed_potential_keybind_widgets.find(m_entered_keybind);
-                if (found_widget != m_hashed_potential_keybind_widgets.end()) {
+                auto found_widget = m_keyboard_activation_targets.find(m_entered_keybind);
+                if (found_widget != m_keyboard_activation_targets.end()) {
                     m_keybind_mode = false;
                     auto event = make<GMouseEvent>(GEvent::MouseDown, Point(), 0, GMouseButton::Left, 0, 0);
                     found_widget->value->event(*event);
@@ -355,64 +355,68 @@ void GWindow::paint_keybinds()
         return;
     GPainter painter(*m_main_widget);
 
-    for (auto& keypair : m_hashed_potential_keybind_widgets) {
-        auto widget = keypair.value;
+    for (auto& keypair : m_keyboard_activation_targets) {
+        if (!keypair.value)
+            continue;
+        auto& widget = *keypair.value;
         bool could_be_keybind = true;
-        for (size_t i = 0; i < m_entered_keybind.length(); i++) {
+        for (int i = 0; i < m_entered_keybind.length(); ++i) {
             if (keypair.key.characters()[i] != m_entered_keybind.characters()[i]) {
                 could_be_keybind = false;
+                break;
             }
         }
 
         if (could_be_keybind) {
-            auto rect = Rect(widget->x() - 5, widget->y() - 5, 4 + Font::default_font().width(keypair.key), 16);
-            auto highlight_rect = Rect(widget->x() - 3, widget->y() - 5, 0, 16);
+            Rect rect { widget.x() - 5, widget.y() - 5, 4 + Font::default_font().width(keypair.key), 16 };
+            Rect highlight_rect { widget.x() - 3, widget.y() - 5, 0, 16 };
 
             painter.fill_rect(rect, Color::LightGray);
-            painter.draw_rect(rect, Color::Black, false);
+            painter.draw_rect(rect, Color::Black);
             painter.draw_text(rect, keypair.key.characters(), TextAlignment::Center, Color::Black);
             painter.draw_text(highlight_rect, m_entered_keybind.characters(), TextAlignment::CenterLeft, Color::MidGray);
         }
     }
 }
 
-void GWindow::find_keyboard_selectable()
+static void collect_keyboard_activation_targets_impl(GWidget& widget, Vector<GWidget*>& targets)
 {
-    Vector<GWidget*> potential_keybind_widgets;
-    m_hashed_potential_keybind_widgets.clear();
-    find_keyboard_selectable_children(m_main_widget, potential_keybind_widgets);
+    widget.for_each_child_widget([&](auto& child) {
+        if (child.supports_keyboard_activation()) {
+            targets.append(&child);
+            collect_keyboard_activation_targets_impl(child, targets);
+        }
+        return IterationDecision::Continue;
+    });
+}
 
-    m_max_keybind_length = ceil_div(potential_keybind_widgets.size(), ('z' - 'a'));
+void GWindow::collect_keyboard_activation_targets()
+{
+    m_keyboard_activation_targets.clear();
+    if (!m_main_widget)
+        return;
+
+    Vector<GWidget*> targets;
+    collect_keyboard_activation_targets_impl(*m_main_widget, targets);
+
+    m_max_keybind_length = ceil_div(targets.size(), ('z' - 'a'));
     size_t buffer_length = m_max_keybind_length + 1;
     char keybind_buffer[buffer_length];
-    for (size_t i = 0; i < buffer_length - 1; i++) {
+    for (size_t i = 0; i < buffer_length - 1; ++i)
         keybind_buffer[i] = 'a';
-    }
     keybind_buffer[buffer_length - 1] = '\0';
 
-    for (auto& widget : potential_keybind_widgets) {
-        m_hashed_potential_keybind_widgets.set(String(keybind_buffer), widget);
-
-        for (size_t i = 0; i < buffer_length - 1; i++) {
+    for (auto& widget : targets) {
+        m_keyboard_activation_targets.set(String(keybind_buffer), widget->make_weak_ptr());
+        for (size_t i = 0; i < buffer_length - 1; ++i) {
             if (keybind_buffer[i] >= 'z') {
                 keybind_buffer[i] = 'a';
             } else {
-                keybind_buffer[i]++;
+                ++keybind_buffer[i];
                 break;
             }
         }
     }
-}
-
-void GWindow::find_keyboard_selectable_children(GWidget* widget, Vector<GWidget*>& potential_keybind_widgets)
-{
-    widget->for_each_child_widget([&](auto& child) {
-        if (child.accepts_keyboard_select()) {
-            potential_keybind_widgets.append(&child);
-            find_keyboard_selectable_children(&child, potential_keybind_widgets);
-        }
-        return IterationDecision::Continue;
-    });
 }
 
 bool GWindow::is_visible() const
