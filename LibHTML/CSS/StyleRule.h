@@ -4,12 +4,18 @@
 #include <LibHTML/CSS/Selector.h>
 #include <LibHTML/CSS/StyleDeclaration.h>
 
-class StyleRule {
+class StyleRule : public RefCounted<StyleRule> {
 public:
-    StyleRule();
+    NonnullRefPtr<StyleRule> create(Vector<Selector>&& selectors, Vector<NonnullRefPtr<StyleDeclaration>>&& declarations)
+    {
+        return adopt(*new StyleRule(move(selectors), move(declarations)));
+    }
+
     ~StyleRule();
 
 private:
+    StyleRule(Vector<Selector>&&, Vector<NonnullRefPtr<StyleDeclaration>>&&);
+
     Vector<Selector> m_selectors;
-    Vector<StyleDeclaration> m_declarations;
+    Vector<NonnullRefPtr<StyleDeclaration>> m_declarations;
 };

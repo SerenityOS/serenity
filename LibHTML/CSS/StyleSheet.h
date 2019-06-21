@@ -3,13 +3,19 @@
 #include <AK/Vector.h>
 #include <LibHTML/CSS/StyleRule.h>
 
-class StyleSheet {
+class StyleSheet : public RefCounted<StyleSheet> {
 public:
-    StyleSheet();
+    NonnullRefPtr<StyleSheet> create(Vector<NonnullRefPtr<StyleRule>>&& rules)
+    {
+        return adopt(*new StyleSheet(move(rules)));
+    }
+
     ~StyleSheet();
 
-    const Vector<StyleRule>& rules() const { return m_rules; }
+    const Vector<NonnullRefPtr<StyleRule>>& rules() const { return m_rules; }
 
 private:
-    Vector<StyleRule> m_rules;
+    explicit StyleSheet(Vector<NonnullRefPtr<StyleRule>>&&);
+
+    Vector<NonnullRefPtr<StyleRule>> m_rules;
 };
