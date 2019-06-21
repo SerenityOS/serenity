@@ -80,6 +80,7 @@ public:
     void set_current_menubar(WSMenuBar*);
     WSMenu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(WSMenu*);
+    WSMenu* system_menu() { return m_system_menu.ptr(); }
 
     const WSCursor& active_cursor() const;
     const WSCursor& arrow_cursor() const { return *m_arrow_cursor; }
@@ -106,6 +107,7 @@ public:
     void close_menubar(WSMenuBar&);
     Color menu_selection_color() const { return m_menu_selection_color; }
     int menubar_menu_margin() const;
+    void close_current_menu();
 
     void set_resolution(int width, int height);
 
@@ -149,7 +151,6 @@ private:
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& hovered_window);
     bool process_ongoing_window_drag(WSMouseEvent&, WSWindow*& hovered_window);
     void handle_menu_mouse_event(WSMenu&, const WSMouseEvent&);
-    void handle_menubar_mouse_event(const WSMouseEvent&);
     void handle_close_button_mouse_event(WSWindow&, const WSMouseEvent&);
     void start_window_drag(WSWindow&, const WSMouseEvent&);
     void handle_client_request(const WSAPIClientRequest&);
@@ -167,7 +168,6 @@ private:
     template<typename Callback>
     void for_each_window(Callback);
 
-    void close_current_menu();
     virtual void event(CEvent&) override;
     void paint_window_frame(const WSWindow&);
     void tell_wm_listener_about_window(WSWindow& listener, WSWindow&);

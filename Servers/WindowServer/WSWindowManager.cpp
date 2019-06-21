@@ -385,48 +385,12 @@ void WSWindowManager::pick_new_active_window()
     });
 }
 
-void WSWindowManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
-{
-    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && m_current_menu && (m_current_menu->menubar() || m_current_menu == m_system_menu);
-    bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
-    bool should_open_menu = &menu != current_menu() && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
-
-    if (should_open_menu) {
-        if (current_menu() == &menu)
-            return;
-        close_current_menu();
-        if (!menu.is_empty()) {
-            auto& menu_window = menu.ensure_menu_window();
-            menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
-            menu_window.set_visible(true);
-        }
-        m_current_menu = menu.make_weak_ptr();
-        m_menubar_keeper.refresh();
-        return;
-    }
-    if (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left) {
-        close_current_menu();
-        return;
-    }
-}
-
 void WSWindowManager::close_current_menu()
 {
     if (m_current_menu && m_current_menu->menu_window())
         m_current_menu->menu_window()->set_visible(false);
     m_current_menu = nullptr;
     m_menubar_keeper.refresh();
-}
-
-void WSWindowManager::handle_menubar_mouse_event(const WSMouseEvent& event)
-{
-    for_each_active_menubar_menu([&](WSMenu& menu) {
-        if (menu.rect_in_menubar().contains(event.position())) {
-            handle_menu_mouse_event(menu, event);
-            return false;
-        }
-        return true;
-    });
 }
 
 void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& event)
@@ -718,10 +682,9 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
     }
 
     if (menubar_rect().contains(event.position())) {
-        handle_menubar_mouse_event(event);
+        m_menubar_keeper.event(event);
         return;
     }
-
     if (m_current_menu && m_current_menu->menu_window()) {
         auto& window = *m_current_menu->menu_window();
         bool event_is_inside_current_menu = window.rect().contains(event.position());
