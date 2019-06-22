@@ -47,6 +47,11 @@ GVariant::GVariant(bool value)
     m_value.as_bool = value;
 }
 
+GVariant::GVariant(const char* cstring)
+    : GVariant(String(cstring))
+{
+}
+
 GVariant::GVariant(const String& value)
     : m_type(Type::String)
 {

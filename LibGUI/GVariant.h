@@ -10,6 +10,7 @@ public:
     GVariant(bool);
     GVariant(float);
     GVariant(int);
+    GVariant(const char*);
     GVariant(const String&);
     GVariant(const GraphicsBitmap&);
     GVariant(const GIcon&);
