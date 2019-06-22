@@ -74,7 +74,7 @@ void ColorDialog::build()
          return spinbox;
     };
 
-    auto* red_spin = make_spinbox(Red, m_color.red());
-    auto* green_spin = make_spinbox(Green, m_color.green());
-    auto* blue_spin = make_spinbox(Blue, m_color.blue());
+    make_spinbox(Red, m_color.red());
+    make_spinbox(Green, m_color.green());
+    make_spinbox(Blue, m_color.blue());
 }
