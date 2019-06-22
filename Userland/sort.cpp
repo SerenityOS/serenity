@@ -6,6 +6,9 @@
 
 int main(int argc, char** argv)
 {
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+
     Vector<String> lines;
 
     for (;;) {

@@ -57,7 +57,7 @@ int main(int argc, char** argv)
         return do_file_system_object_short(path);
     };
 
-    int status;
+    int status = 0;
     if (optind >= argc) {
         status = do_file_system_object(".");
     } else if (optind + 1 >= argc) {

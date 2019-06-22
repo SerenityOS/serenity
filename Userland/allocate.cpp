@@ -13,7 +13,7 @@ enum Unit { Bytes, KiloBytes, MegaBytes };
 
 int main(int argc, char** argv)
 {
-    unsigned count = 50;
+    int count = 50;
     Unit unit = MegaBytes;
 
     if (argc >= 2) {
