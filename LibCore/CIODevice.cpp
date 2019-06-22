@@ -29,8 +29,9 @@ ByteBuffer CIODevice::read(int max_size)
     auto buffer = ByteBuffer::create_uninitialized(max_size);
     auto* buffer_ptr = (char*)buffer.pointer();
     int remaining_buffer_space = buffer.size();
+    int taken_from_buffered = 0;
     if (!m_buffered_data.is_empty()) {
-        int taken_from_buffered = min(remaining_buffer_space, m_buffered_data.size());
+        taken_from_buffered = min(remaining_buffer_space, m_buffered_data.size());
         memcpy(buffer_ptr, m_buffered_data.data(), taken_from_buffered);
         Vector<byte> new_buffered_data;
         new_buffered_data.append(m_buffered_data.data() + taken_from_buffered, m_buffered_data.size() - taken_from_buffered);
@@ -42,14 +43,22 @@ ByteBuffer CIODevice::read(int max_size)
         return buffer;
     int nread = ::read(m_fd, buffer_ptr, remaining_buffer_space);
     if (nread < 0) {
+        if (taken_from_buffered) {
+            buffer.trim(taken_from_buffered);
+            return buffer;
+        }
         set_error(errno);
         return {};
     }
     if (nread == 0) {
         set_eof(true);
+        if (taken_from_buffered) {
+            buffer.trim(taken_from_buffered);
+            return buffer;
+        }
         return {};
     }
-    buffer.trim(nread);
+    buffer.trim(taken_from_buffered + nread);
     return buffer;
 }
 
