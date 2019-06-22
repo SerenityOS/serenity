@@ -32,8 +32,10 @@ public:
     void set_action(GAction&);
 
     virtual const char* class_name() const override { return "GButton"; }
-    virtual bool accepts_focus() const override { return true; }
-    virtual bool supports_keyboard_activation() const;
+    virtual bool accepts_focus() const override { return m_focusable; }
+    virtual bool supports_keyboard_activation() const override;
+
+    void set_focusable(bool b) { m_focusable = b; }
 
 protected:
     virtual void paint_event(GPaintEvent&) override;
@@ -43,4 +45,5 @@ private:
     ButtonStyle m_button_style { ButtonStyle::Normal };
     TextAlignment m_text_alignment { TextAlignment::Center };
     WeakPtr<GAction> m_action;
+    bool m_focusable { true };
 };
