@@ -127,6 +127,7 @@ public:
     void paste();
     void do_delete();
     void delete_current_line();
+    void select_all();
 
     Function<void()> on_change;
     Function<void()> on_return_pressed;
