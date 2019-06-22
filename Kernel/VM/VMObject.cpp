@@ -98,16 +98,16 @@ void VMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size
 
     InterruptDisabler disabler;
 
-    size_t old_page_count = page_count();
+    auto old_page_count = page_count();
     m_size = new_size;
 
     if (page_count() > old_page_count) {
         // Add null pages and let the fault handler page these in when that day comes.
-        for (size_t i = old_page_count; i < page_count(); ++i)
+        for (auto i = old_page_count; i < page_count(); ++i)
             m_physical_pages.append(nullptr);
     } else {
         // Prune the no-longer valid pages. I'm not sure this is actually correct behavior.
-        for (size_t i = page_count(); i < old_page_count; ++i)
+        for (auto i = page_count(); i < old_page_count; ++i)
             m_physical_pages.take_last();
     }
 

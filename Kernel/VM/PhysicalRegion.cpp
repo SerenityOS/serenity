@@ -78,10 +78,11 @@ void PhysicalRegion::return_page_at(PhysicalAddress addr)
 
     int local_offset = addr.get() - m_lower.get();
     ASSERT(local_offset >= 0);
-    ASSERT(local_offset < m_pages * PAGE_SIZE);
+    ASSERT(local_offset < (int)(m_pages * PAGE_SIZE));
 
-    auto page = local_offset / PAGE_SIZE;
-    if (page < m_last) m_last = page;
+    auto page = (unsigned)local_offset / PAGE_SIZE;
+    if (page < m_last)
+        m_last = page;
 
     m_bitmap.set(page, false);
     m_used--;

@@ -294,7 +294,7 @@ ByteBuffer procfs$pid_vmo(InodeIdentifier identifier)
             region->vmo().name().characters(),
             &region->vmo(),
             region->vmo().ref_count());
-        for (size_t i = 0; i < region->vmo().page_count(); ++i) {
+        for (int i = 0; i < region->vmo().page_count(); ++i) {
             auto& physical_page = region->vmo().physical_pages()[i];
             builder.appendf("P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,

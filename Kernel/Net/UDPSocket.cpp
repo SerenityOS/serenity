@@ -43,10 +43,9 @@ NonnullRefPtr<UDPSocket> UDPSocket::create(int protocol)
     return adopt(*new UDPSocket(protocol));
 }
 
-int UDPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags, sockaddr* addr, socklen_t* addr_length)
+int UDPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
 {
     (void)flags;
-    (void)addr_length;
     ASSERT(!packet_buffer.is_null());
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
     auto& udp_packet = *static_cast<const UDPPacket*>(ipv4_packet.payload());

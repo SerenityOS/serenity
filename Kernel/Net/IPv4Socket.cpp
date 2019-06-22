@@ -246,7 +246,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         return ipv4_packet.payload_size();
     }
 
-    return protocol_receive(packet.data, buffer, buffer_length, flags, addr, addr_length);
+    return protocol_receive(packet.data, buffer, buffer_length, flags);
 }
 
 void IPv4Socket::did_receive(const IPv4Address& source_address, word source_port, ByteBuffer&& packet)
