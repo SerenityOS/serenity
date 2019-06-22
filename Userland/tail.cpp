@@ -82,7 +82,7 @@ int main(int argc, char* argv[])
     args_parser.add_arg("n", "lines", "fetch the specified number of lines");
     args_parser.add_required_single_value("file");
 
-    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, argv);
 
     Vector<String> values = args.get_single_values();
     if (values.size() != 1) {

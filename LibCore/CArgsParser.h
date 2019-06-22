@@ -30,7 +30,7 @@ class CArgsParser {
 public:
     CArgsParser(const String& program_name);
 
-    CArgsParserResult parse(const int argc, const char** argv);
+    CArgsParserResult parse(int argc, char** argv);
 
     void add_required_arg(const String& name, const String& description);
     void add_required_arg(const String& name, const String& value_name, const String& description);
@@ -53,7 +53,7 @@ private:
         bool required;
     };
 
-    int parse_next_param(const int index, const char** argv, const int params_left, CArgsParserResult& res);
+    int parse_next_param(int index, char** argv, const int params_left, CArgsParserResult& res);
     bool is_param_valid(const String& param_name);
     bool check_required_args(const CArgsParserResult& res);
 

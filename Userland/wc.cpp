@@ -5,9 +5,9 @@
 #include <ctype.h>
 #include <stdio.h>
 
-bool output_chars = false;
-bool output_words = false;
-bool output_lines = false;
+static bool output_chars = false;
+static bool output_words = false;
+static bool output_lines = false;
 
 struct Count {
     String file;
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     args_parser.add_arg("c", "Include bytes in count");
     args_parser.add_arg("m", "Include chars in count");
     args_parser.add_arg("w", "Include words in count");
-    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, (char**)argv);
 
     if (args.is_present("l")) {
         output_lines = true;

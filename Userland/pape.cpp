@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     args_parser.add_arg("c", "show current wallpaper");
     args_parser.add_single_value("name");
 
-    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, argv);
 
     if (args.is_present("a"))
         return handle_show_all();

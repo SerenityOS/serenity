@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     args_parser.add_arg("r", "Delete directory recursively.");
     args_parser.add_required_single_value("path");
 
-    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, argv);
     Vector<String> values = args.get_single_values();
     if (values.size() == 0) {
         args_parser.print_usage();

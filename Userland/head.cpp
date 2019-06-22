@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     args_parser.add_arg("q", "Never print filenames");
     args_parser.add_arg("v", "Always print filenames");
 
-    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, argv);
 
     int line_count = 0;
     if (args.is_present("n")) {

@@ -56,7 +56,6 @@ static int handle_show_all()
         return 1;
     }
 
-    char pathbuf[PATH_MAX];
     while (di.has_next()) {
         String variable_name = di.next_path();
         printf("%s = %s\n", variable_name.characters(), read_var(variable_name).characters());
@@ -89,7 +88,7 @@ int main(int argc, char** argv)
     args_parser.add_arg("a", "show all variables");
     args_parser.add_single_value("variable=[value]");
 
-    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, argv);
 
     if (args.is_present("a")) {
         return handle_show_all();

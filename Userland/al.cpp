@@ -1,11 +1,15 @@
+#include <AK/StdLibExtras.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
 
 static volatile bool got_alarm = false;
 
-int main(int c, char** v)
+int main(int argc, char** argv)
 {
+    UNUSED_PARAM(argc);
+    UNUSED_PARAM(argv);
+
     unsigned ret = alarm(5);
     printf("alarm() with no alarm set: %u\n", ret);
     ret = alarm(2);
