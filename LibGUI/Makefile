@@ -60,6 +60,7 @@ LIBGUI_OBJS = \
     GRadioButton.o \
     GAbstractButton.o \
     GListView.o \
+    GComboBox.o \
     GWindow.o
 
 OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
