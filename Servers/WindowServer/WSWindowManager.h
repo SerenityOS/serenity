@@ -215,7 +215,7 @@ private:
         CElapsedTimer m_middle_click_clock;
     };
     DoubleClickInfo m_double_click_info;
-    unsigned int m_double_click_speed;
+    int m_double_click_speed { 0 };
 
     WeakPtr<WSWindow> m_active_window;
     WeakPtr<WSWindow> m_hovered_window;

@@ -82,11 +82,11 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message, const 
     struct iovec iov[2];
     int iov_count = 1;
 
-    iov[0].iov_base = (void*)&message;
+    iov[0].iov_base = const_cast<WSAPI_ServerMessage*>(&message);
     iov[0].iov_len = sizeof(message);
 
     if (!extra_data.is_empty()) {
-        iov[1].iov_base = (void*)extra_data.data();
+        iov[1].iov_base = const_cast<byte*>(extra_data.data());
         iov[1].iov_len = extra_data.size();
         ++iov_count;
     }
@@ -110,7 +110,7 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message, const 
         }
     }
 
-    ASSERT(nwritten == sizeof(message) + extra_data.size());
+    ASSERT(nwritten == (int)(sizeof(message) + extra_data.size()));
 }
 
 void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
