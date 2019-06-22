@@ -34,6 +34,9 @@ public:
     void scroll_to_top();
     void scroll_to_bottom();
 
+    int width_occupied_by_vertical_scrollbar() const;
+    int height_occupied_by_horizontal_scrollbar() const;
+
     virtual const char* class_name() const override { return "GScrollableWidget"; }
 
 protected:
@@ -44,8 +47,6 @@ protected:
     void set_content_size(const Size&);
     void set_size_occupied_by_fixed_elements(const Size&);
 
-    int width_occupied_by_vertical_scrollbar() const;
-    int height_occupied_by_horizontal_scrollbar() const;
 
 private:
     void update_scrollbar_ranges();
