@@ -78,6 +78,9 @@ void CHttpJob::on_socket_connected()
             continue;
         }
         ASSERT(m_state == State::InBody);
+        while (!m_socket->can_read())
+            usleep(1);
+        ASSERT(m_socket->can_read());
         auto payload = m_socket->receive(PAGE_SIZE);
         if (!payload) {
             if (m_socket->eof()) {
@@ -87,6 +90,12 @@ void CHttpJob::on_socket_connected()
             return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
         }
         buffer.append(payload.pointer(), payload.size());
+
+        bool ok;
+        if (buffer.size() >= m_headers.get("Content-Length").to_int(ok) && ok) {
+            m_state = State::Finished;
+            break;
+        }
     }
 
     auto response = CHttpResponse::create(m_code, move(m_headers), ByteBuffer::copy(buffer.data(), buffer.size()));
