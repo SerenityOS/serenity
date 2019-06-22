@@ -55,6 +55,7 @@ int main(int argc, char** argv)
         volatile int lala = 10;
         volatile int zero = 0;
         volatile int test = lala / zero;
+        (void)test;
         ASSERT_NOT_REACHED();
     }
 
@@ -71,6 +72,7 @@ int main(int argc, char** argv)
     if (mode == ReadFromUninitializedMallocMemory) {
         auto* uninitialized_memory = (volatile dword**)malloc(1024);
         volatile auto x = uninitialized_memory[0][0];
+        (void)x;
         ASSERT_NOT_REACHED();
     }
 
@@ -78,6 +80,7 @@ int main(int argc, char** argv)
         auto* uninitialized_memory = (volatile dword**)malloc(1024);
         free(uninitialized_memory);
         volatile auto x = uninitialized_memory[4][0];
+        (void)x;
         ASSERT_NOT_REACHED();
     }
 

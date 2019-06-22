@@ -68,12 +68,6 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
     return pos;
 }
 
-static void exit_because_we_wanted_lines()
-{
-    fprintf(stderr, "Expected a line count after -n");
-    exit(1);
-}
-
 int main(int argc, char* argv[])
 {
     CArgsParser args_parser("tail");
@@ -108,8 +102,6 @@ int main(int argc, char* argv[])
     }
 
     bool flag_follow = args.is_present("f");
-    bool o_arg = args.is_present("o");
-
     auto pos = find_seek_pos(f, line_count);
     return tail_from_pos(f, pos, flag_follow);
 }
