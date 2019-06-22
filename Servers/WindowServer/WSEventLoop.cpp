@@ -103,14 +103,14 @@ void WSEventLoop::drain_keyboard()
 static Vector<Rect, 32> get_rects(const WSAPI_ClientMessage& message, const ByteBuffer& extra_data)
 {
     Vector<Rect, 32> rects;
-    if (message.rect_count > (WSAPI_ClientMessage::max_inline_rect_count + extra_data.size() / sizeof(WSAPI_Rect))) {
+    if (message.rect_count > (int)(WSAPI_ClientMessage::max_inline_rect_count + extra_data.size() / sizeof(WSAPI_Rect))) {
         return {};
     }
     for (int i = 0; i < min(WSAPI_ClientMessage::max_inline_rect_count, message.rect_count); ++i)
         rects.append(message.rects[i]);
     if (!extra_data.is_empty()) {
         auto* extra_rects = reinterpret_cast<const WSAPI_Rect*>(extra_data.data());
-        for (int i = 0; i < (extra_data.size() / sizeof(WSAPI_Rect)); ++i)
+        for (int i = 0; i < (int)(extra_data.size() / sizeof(WSAPI_Rect)); ++i)
             rects.append(extra_rects[i]);
     }
     return rects;
@@ -378,8 +378,10 @@ void WSEventLoop::drain_client(WSClientConnection& client)
             extra_data = ByteBuffer::create_uninitialized(message.extra_size);
             // FIXME: We should allow this to time out. Maybe use a socket timeout?
             int extra_nread = read(client.fd(), extra_data.data(), extra_data.size());
-            if (extra_nread != message.extra_size) {
+            if (extra_nread != (int)message.extra_size) {
                 dbgprintf("extra_nread(%d) != extra_size(%d)\n", extra_nread, extra_data.size());
+                if (extra_nread < 0)
+                    perror("read");
                 return client.did_misbehave();
             }
         }

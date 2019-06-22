@@ -66,7 +66,7 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
         m_system_menu->on_item_activation = [this, apps](WSMenuItem& item) {
-            if (item.identifier() >= 1 && item.identifier() <= 1 + apps.size() - 1) {
+            if (item.identifier() >= 1 && item.identifier() <= 1u + apps.size() - 1) {
                 if (fork() == 0) {
                     const auto& bin = apps[item.identifier() - 1].binary_name;
                     execl(bin, bin, nullptr);

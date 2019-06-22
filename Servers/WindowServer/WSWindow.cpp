@@ -234,7 +234,7 @@ void WSWindow::event(CEvent& event)
         server_message.wm.is_active = changed_event.is_active();
         server_message.wm.is_minimized = changed_event.is_minimized();
         server_message.wm.window_type = to_api(changed_event.window_type());
-        ASSERT(changed_event.title().length() < sizeof(server_message.text));
+        ASSERT(changed_event.title().length() < (int)sizeof(server_message.text));
         memcpy(server_message.text, changed_event.title().characters(), changed_event.title().length());
         server_message.text_length = changed_event.title().length();
         server_message.wm.rect = changed_event.rect();
@@ -246,7 +246,7 @@ void WSWindow::event(CEvent& event)
         server_message.type = WSAPI_ServerMessage::Type::WM_WindowIconChanged;
         server_message.wm.client_id = changed_event.client_id();
         server_message.wm.window_id = changed_event.window_id();
-        ASSERT(changed_event.icon_path().length() < sizeof(server_message.text));
+        ASSERT(changed_event.icon_path().length() < (int)sizeof(server_message.text));
         memcpy(server_message.text, changed_event.icon_path().characters(), changed_event.icon_path().length());
         server_message.text_length = changed_event.icon_path().length();
         break;
