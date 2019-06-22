@@ -196,7 +196,7 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
         auto* description = process.file_description(i);
         if (!description)
             continue;
-        builder.appendf("% 3u %s\n", i, description->absolute_path().characters());
+        builder.appendf("%-3u %s\n", i, description->absolute_path().characters());
     }
     return builder.to_byte_buffer();
 }
@@ -228,7 +228,7 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
             flags_builder.append('R');
         if (region->is_writable())
             flags_builder.append('W');
-        builder.appendf("%x -- %x    %x  %x   % 4s   %s\n",
+        builder.appendf("%x -- %x    %x  %x   %-4s   %s\n",
             region->vaddr().get(),
             region->vaddr().offset(region->size() - 1).get(),
             region->size(),
@@ -544,7 +544,7 @@ ByteBuffer procfs$summary(InodeIdentifier)
     StringBuilder builder;
     builder.appendf("PID TPG PGP SID  OWNER  STATE      PPID NSCHED     FDS  TTY  NAME\n");
     for (auto* process : processes) {
-        builder.appendf("% 3u % 3u % 3u % 3u  % 4u   % 8s   % 3u  % 9u  % 3u  % 4s  %s\n",
+        builder.appendf("%-3u %-3u %-3u %-3u  %-4u   %-8s   %-3u  %-9u  %-3u  %-4s  %s\n",
             process->pid(),
             process->tty() ? process->tty()->pgid() : 0,
             process->pgid(),

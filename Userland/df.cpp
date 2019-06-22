@@ -45,7 +45,7 @@ int main(int, char**)
         (void)total_inode_count;
         (void)free_inode_count;
 
-        printf("% 10s", fs.characters());
+        printf("%-10s", fs.characters());
         printf("%10u  ", total_block_count);
         printf("%10u   ", total_block_count - free_block_count);
         printf("%10u   ", free_block_count);
