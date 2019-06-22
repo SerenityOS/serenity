@@ -196,7 +196,7 @@ template<typename PutChFunc>
     char* bufptr = buffer;
 
     for (p = fmt; *p; ++p) {
-        bool leftPad = false;
+        bool left_pad = false;
         bool zeroPad = false;
         unsigned fieldWidth = 0;
         unsigned long_qualifiers = 0;
@@ -204,8 +204,8 @@ template<typename PutChFunc>
         if (*p == '%' && *(p + 1)) {
         one_more:
             ++p;
-            if (*p == ' ') {
-                leftPad = true;
+            if (*p == '-') {
+                left_pad = true;
                 if (*(p + 1))
                     goto one_more;
             }
@@ -233,19 +233,19 @@ template<typename PutChFunc>
             switch (*p) {
             case 's': {
                 const char* sp = va_arg(ap, const char*);
-                ret += print_string(putch, bufptr, sp ? sp : "(null)", leftPad, fieldWidth);
+                ret += print_string(putch, bufptr, sp ? sp : "(null)", left_pad, fieldWidth);
             } break;
 
             case 'd':
-                ret += print_signed_number(putch, bufptr, va_arg(ap, int), leftPad, zeroPad, fieldWidth);
+                ret += print_signed_number(putch, bufptr, va_arg(ap, int), left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'u':
-                ret += print_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
+                ret += print_number(putch, bufptr, va_arg(ap, dword), left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'Q':
-                ret += print_qword(putch, bufptr, va_arg(ap, qword), leftPad, zeroPad, fieldWidth);
+                ret += print_qword(putch, bufptr, va_arg(ap, qword), left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'q':
@@ -256,7 +256,7 @@ template<typename PutChFunc>
             case 'g':
             case 'f':
                 // FIXME: Print as float!
-                ret += print_signed_qword(putch, bufptr, (qword)va_arg(ap, double), leftPad, zeroPad, fieldWidth);
+                ret += print_signed_qword(putch, bufptr, (qword)va_arg(ap, double), left_pad, zeroPad, fieldWidth);
                 break;
 #endif
 
@@ -265,7 +265,7 @@ template<typename PutChFunc>
                     putch(bufptr, '0');
                     ++ret;
                 }
-                ret += print_octal_number(putch, bufptr, va_arg(ap, dword), leftPad, zeroPad, fieldWidth);
+                ret += print_octal_number(putch, bufptr, va_arg(ap, dword), left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'x':

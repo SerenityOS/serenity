@@ -231,13 +231,13 @@ bool Scheduler::pick_next()
     dbgprintf("Non-runnables:\n");
     for (auto* thread = g_nonrunnable_threads->head(); thread; thread = thread->next()) {
         auto* process = &thread->process();
-        dbgprintf("[K%x] % 12s %s(%u:%u) @ %w:%x\n", process, to_string(thread->state()), process->name().characters(), process->pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
+        dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", process, to_string(thread->state()), process->name().characters(), process->pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
     }
 
     dbgprintf("Runnables:\n");
     for (auto* thread = g_runnable_threads->head(); thread; thread = thread->next()) {
         auto* process = &thread->process();
-        dbgprintf("[K%x] % 12s %s(%u:%u) @ %w:%x\n", process, to_string(thread->state()), process->name().characters(), process->pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
+        dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", process, to_string(thread->state()), process->name().characters(), process->pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
     }
 #endif
 
