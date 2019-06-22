@@ -27,7 +27,7 @@ static_assert(sizeof(PNG_IHDR) == 13);
 
 struct Scanline {
     byte filter { 0 };
-    ByteBuffer data;
+    ByteBuffer data { };
 };
 
 struct PNGLoadingContext {
@@ -61,9 +61,9 @@ public:
     template<typename T>
     bool read(T& value)
     {
-        if (m_size_remaining < sizeof(T))
+        if (m_size_remaining < (int)sizeof(T))
             return false;
-        value = *((NetworkOrdered<T>*)m_data_ptr);
+        value = *((const NetworkOrdered<T>*)m_data_ptr);
         m_data_ptr += sizeof(T);
         m_size_remaining -= sizeof(T);
         return true;
@@ -383,7 +383,7 @@ static RefPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
 
 static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
 {
-    if (data.size() < sizeof(PNG_IHDR))
+    if (data.size() < (int)sizeof(PNG_IHDR))
         return false;
     auto& ihdr = *(const PNG_IHDR*)data.pointer();
     context.width = ihdr.width;

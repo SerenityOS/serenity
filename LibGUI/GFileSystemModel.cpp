@@ -23,10 +23,10 @@ struct GFileSystemModel::Node {
     GModelIndex index(const GFileSystemModel& model) const
     {
         if (!parent)
-            return model.create_index(0, 0, (void*)this);
+            return model.create_index(0, 0, const_cast<Node*>(this));
         for (int row = 0; row < parent->children.size(); ++row) {
             if (parent->children[row] == this)
-                return model.create_index(row, 0, (void*)this);
+                return model.create_index(row, 0, const_cast<Node*>(this));
         }
         ASSERT_NOT_REACHED();
     }

@@ -367,7 +367,11 @@ bool GEventLoop::drain_messages_from_server()
         if (message.extra_size) {
             extra_data = ByteBuffer::create_uninitialized(message.extra_size);
             int extra_nread = read(s_windowserver_fd, extra_data.data(), extra_data.size());
-            ASSERT(extra_nread == message.extra_size);
+            if (extra_nread < 0) {
+                perror("read");
+                ASSERT_NOT_REACHED();
+            }
+            ASSERT((size_t)extra_nread == message.extra_size);
         }
         m_unprocessed_bundles.append({ move(message), move(extra_data) });
     }
@@ -380,17 +384,21 @@ bool GEventLoop::post_message_to_server(const WSAPI_ClientMessage& message, cons
 
     struct iovec iov[2];
     int iov_count = 1;
-    iov[0].iov_base = (void*)&message;
+    iov[0].iov_base = const_cast<WSAPI_ClientMessage*>(&message);
     iov[0].iov_len = sizeof(message);
 
     if (!extra_data.is_empty()) {
-        iov[1].iov_base = (void*)extra_data.data();
+        iov[1].iov_base = const_cast<byte*>(extra_data.data());
         iov[1].iov_len = extra_data.size();
         ++iov_count;
     }
 
     int nwritten = writev(s_windowserver_fd, iov, iov_count);
-    ASSERT(nwritten == sizeof(message) + extra_data.size());
+    if (nwritten < 0) {
+        perror("writev");
+        ASSERT_NOT_REACHED();
+    }
+    ASSERT((size_t)nwritten == sizeof(message) + extra_data.size());
 
     return true;
 }
