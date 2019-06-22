@@ -72,3 +72,21 @@ void PaintableWidget::mousemove_event(GMouseEvent& event)
     if (m_tool)
         m_tool->on_mousemove(event);
 }
+
+void PaintableWidget::set_primary_color(Color color)
+{
+    if (m_primary_color == color)
+        return;
+    m_primary_color = color;
+    if (on_primary_color_change)
+        on_primary_color_change(color);
+}
+
+void PaintableWidget::set_secondary_color(Color color)
+{
+    if (m_secondary_color == color)
+        return;
+    m_secondary_color = color;
+    if (on_secondary_color_change)
+        on_secondary_color_change(color);
+}
