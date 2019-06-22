@@ -6,6 +6,22 @@
 #include <Kernel/kstdio.h>
 #include <LibC/stdarg.h>
 
+static void color_on()
+{
+    IO::out8(0xe9, 0x1b);
+    IO::out8(0xe9, '[');
+    IO::out8(0xe9, '3');
+    IO::out8(0xe9, '6');
+    IO::out8(0xe9, 'm');
+}
+
+static void color_off()
+{
+    IO::out8(0xe9, 0x1b);
+    IO::out8(0xe9, '[');
+    IO::out8(0xe9, '0');
+    IO::out8(0xe9, 'm');
+}
 static void console_putch(char*&, char ch)
 {
     if (!current) {
@@ -17,10 +33,12 @@ static void console_putch(char*&, char ch)
 
 int kprintf(const char* fmt, ...)
 {
+    color_on();
     va_list ap;
     va_start(ap, fmt);
     int ret = printf_internal(console_putch, nullptr, fmt, ap);
     va_end(ap);
+    color_off();
     return ret;
 }
 
@@ -44,11 +62,14 @@ static void debugger_putch(char*&, char ch)
     IO::out8(0xe9, ch);
 }
 
+
 extern "C" int dbgprintf(const char* fmt, ...)
 {
+    color_on();
     va_list ap;
     va_start(ap, fmt);
     int ret = printf_internal(debugger_putch, nullptr, fmt, ap);
     va_end(ap);
+    color_off();
     return ret;
 }
