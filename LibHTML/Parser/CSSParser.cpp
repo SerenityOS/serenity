@@ -80,7 +80,6 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
 
     auto parse_declaration = [&] {
         consume_whitespace();
-
     };
 
     auto parse_declarations = [&] {

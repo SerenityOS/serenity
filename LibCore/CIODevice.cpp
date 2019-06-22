@@ -1,5 +1,6 @@
 #include <AK/PrintfImplementation.h>
 #include <LibCore/CIODevice.h>
+#include <errno.h>
 #include <stdio.h>
 #include <sys/select.h>
 #include <sys/time.h>
