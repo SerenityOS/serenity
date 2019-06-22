@@ -35,3 +35,5 @@ private:
     RefPtr<CNetworkResponse> m_response;
     Error m_error { Error::None };
 };
+
+const char* to_string(CNetworkJob::Error);
