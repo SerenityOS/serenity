@@ -47,7 +47,8 @@ void GWindow::close()
 {
     if (should_exit_event_loop_on_close())
         GEventLoop::current().quit(0);
-    delete_later();
+    if (should_destroy_on_close())
+        delete_later();
 }
 
 void GWindow::move_to_front()
@@ -421,7 +422,7 @@ void GWindow::collect_keyboard_activation_targets()
 
 bool GWindow::is_visible() const
 {
-    return false;
+    return m_window_id != 0;
 }
 
 void GWindow::update(const Rect& a_rect)
