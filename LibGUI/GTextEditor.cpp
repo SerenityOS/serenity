@@ -344,6 +344,16 @@ void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
     }
 }
 
+void GTextEditor::select_all()
+{
+    GTextPosition start_of_document { 0, 0 };
+    GTextPosition end_of_document { line_count() - 1, m_lines[line_count() - 1]->length() };
+    m_selection.set(start_of_document, end_of_document);
+    did_update_selection();
+    set_cursor(end_of_document);
+    update();
+}
+
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
     if (is_single_line() && event.key() == KeyCode::Key_Tab)
@@ -485,12 +495,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.modifiers() == Mod_Ctrl && event.key() == KeyCode::Key_A) {
-        GTextPosition start_of_document { 0, 0 };
-        GTextPosition end_of_document { line_count() - 1, m_lines[line_count() - 1]->length() };
-        m_selection.set(start_of_document, end_of_document);
-        did_update_selection();
-        set_cursor(end_of_document);
-        update();
+        select_all();
         return;
     }
 
