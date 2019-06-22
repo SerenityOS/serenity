@@ -168,7 +168,7 @@ void* malloc(size_t size)
 
     if (!block) {
         char buffer[64];
-        snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%u)", good_size);
+        snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu)", good_size);
         block = (ChunkedBlock*)os_alloc(PAGE_SIZE, buffer);
         new (block) ChunkedBlock(good_size);
         allocator->usable_blocks.append(block);

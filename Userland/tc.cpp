@@ -80,7 +80,7 @@ int main(int argc, char** argv)
         printf("\033[36;1m%s\033[0m", buffer);
     }
 
-    printf("(%u bytes received)\n", total_recv);
+    printf("(%zu bytes received)\n", total_recv);
     rc = close(fd);
     if (rc < 0) {
         perror("close");
