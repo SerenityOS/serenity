@@ -73,6 +73,14 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     m_primary_color_widget->set_fill_with_background_color(true);
     set_primary_color(paintable_widget.primary_color());
 
+    paintable_widget.on_primary_color_change = [this](Color color) {
+        set_primary_color(color);
+    };
+
+    paintable_widget.on_secondary_color_change = [this](Color color) {
+        set_secondary_color(color);
+    };
+
     auto* color_container = new GWidget(this);
     color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 32);
     color_container->set_layout(make<GBoxLayout>(Orientation::Vertical));

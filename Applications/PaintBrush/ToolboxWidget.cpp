@@ -3,6 +3,7 @@
 #include "SprayTool.h"
 #include "PaintableWidget.h"
 #include "PenTool.h"
+#include "PickerTool.h"
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <SharedGraphics/PNGLoader.h>
@@ -59,6 +60,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
     add_tool("Pen", "pen", make<PenTool>());
     add_tool("Bucket Fill", "bucket", make<BucketTool>());
     add_tool("Spray", "spray", make<SprayTool>());
+    add_tool("Color Picker", "picker", make<PickerTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()

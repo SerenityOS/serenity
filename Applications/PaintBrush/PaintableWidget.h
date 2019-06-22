@@ -15,8 +15,8 @@ public:
     Color primary_color() const { return m_primary_color; }
     Color secondary_color() const { return m_secondary_color; }
 
-    void set_primary_color(Color color) { m_primary_color = color; }
-    void set_secondary_color(Color color) { m_secondary_color = color; }
+    void set_primary_color(Color);
+    void set_secondary_color(Color);
 
     void set_tool(Tool* tool);
     Tool* tool();
@@ -25,6 +25,9 @@ public:
 
     GraphicsBitmap& bitmap() { return *m_bitmap; }
     const GraphicsBitmap& bitmap() const { return *m_bitmap; }
+
+    Function<void(Color)> on_primary_color_change;
+    Function<void(Color)> on_secondary_color_change;
 
 private:
     virtual void paint_event(GPaintEvent&) override;
