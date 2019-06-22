@@ -5,14 +5,14 @@
 
 class Selector {
 public:
-    Selector();
-    ~Selector();
-
     struct Component {
         enum class Type { Invalid, TagName, Id, Class };
         Type type { Type::Invalid };
         String value;
     };
+
+    explicit Selector(Vector<Component>&&);
+    ~Selector();
 
     const Vector<Component>& components() const { return m_components; }
 
