@@ -53,7 +53,7 @@ int execve(const char* filename, char* const argv[], char* const envp[])
 
 int execvpe(const char* filename, char* const argv[], char* const envp[])
 {
-    int rc = execve(filename, argv, environ);
+    int rc = execve(filename, argv, envp);
     if (rc < 0 && errno != ENOENT) {
         fprintf(stderr, "execvpe() failed on first with %s\n", strerror(errno));
         return rc;
@@ -64,7 +64,7 @@ int execvpe(const char* filename, char* const argv[], char* const envp[])
     auto parts = path.split(':');
     for (auto& part : parts) {
         auto candidate = String::format("%s/%s", part.characters(), filename);
-        int rc = execve(candidate.characters(), argv, environ);
+        int rc = execve(candidate.characters(), argv, envp);
         if (rc < 0 && errno != ENOENT) {
             printf("execvpe() failed on attempt (%s) with %s\n", candidate.characters(), strerror(errno));
             return rc;
