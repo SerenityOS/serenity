@@ -44,16 +44,17 @@ int atexit(void (*handler)())
 void abort()
 {
     raise(SIGABRT);
+    ASSERT_NOT_REACHED();
 }
 
-static HashTable<char*> s_malloced_environment_variables;
+static HashTable<const char*> s_malloced_environment_variables;
 
 static void free_environment_variable_if_needed(const char* var)
 {
-    if (!s_malloced_environment_variables.contains((char*)var))
+    if (!s_malloced_environment_variables.contains(var))
         return;
-    free((void*)var);
-    s_malloced_environment_variables.remove((char*)var);
+    free(const_cast<char*>(var));
+    s_malloced_environment_variables.remove(var);
 }
 
 char* getenv(const char* name)
@@ -78,13 +79,13 @@ int unsetenv(const char* name)
 {
     auto new_var_len = strlen(name);
     size_t environ_size = 0;
-    size_t skip = -1;
+    int skip = -1;
 
     for (; environ[environ_size]; ++environ_size) {
         char* old_var = environ[environ_size];
         char* old_eq = strchr(old_var, '=');
         ASSERT(old_eq);
-        auto old_var_len = old_eq - old_var;
+        size_t old_var_len = old_eq - old_var;
 
         if (new_var_len != old_var_len)
             continue; // can't match
@@ -123,7 +124,7 @@ int putenv(char* new_var)
         return unsetenv(new_var);
 
     auto new_var_len = new_eq - new_var;
-    size_t environ_size = 0;
+    int environ_size = 0;
     for (; environ[environ_size]; ++environ_size) {
         char* old_var = environ[environ_size];
         char* old_eq = strchr(old_var, '=');
@@ -148,7 +149,7 @@ int putenv(char* new_var)
         return -1;
     }
 
-    for (size_t i = 0; environ[i]; ++i) {
+    for (int i = 0; environ[i]; ++i) {
         new_environ[i] = environ[i];
     }
 
