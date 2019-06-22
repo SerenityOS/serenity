@@ -44,6 +44,8 @@ void GAbstractView::did_update_selection()
 {
     if (!model() || model()->selected_index() != m_edit_index)
         stop_editing();
+    if (model() && on_selection && model()->selected_index().is_valid())
+        on_selection(model()->selected_index());
 }
 
 void GAbstractView::did_scroll()
