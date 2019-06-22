@@ -106,10 +106,6 @@ GWidget* VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GW
         property->set_readonly(true);
         properties.append(move(property));
     };
-    auto add_property = [&](const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter) {
-        auto property = make<VBProperty>(widget, name, move(getter), move(setter));
-        properties.append(move(property));
-    };
     add_readonly_property("class", to_class_name(type));
     return gwidget;
 }
