@@ -29,14 +29,17 @@ int main(int argc, char** argv)
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto* checkbox1 = new GCheckBox("GCheckBox 1", main_widget);
+    (void)checkbox1;
     auto* checkbox2 = new GCheckBox("GCheckBox 2", main_widget);
     checkbox2->set_enabled(false);
 
     auto* radio1 = new GRadioButton("GRadioButton 1", main_widget);
+    (void)radio1;
     auto* radio2 = new GRadioButton("GRadioButton 2", main_widget);
     radio2->set_enabled(false);
 
     auto* button1 = new GButton("GButton 1", main_widget);
+    (void)button1;
     auto* button2 = new GButton("GButton 2", main_widget);
     button2->set_enabled(false);
 
@@ -48,6 +51,7 @@ int main(int argc, char** argv)
     });
 
     auto* label1 = new GLabel("GLabel 1", main_widget);
+    (void)label1;
     auto* label2 = new GLabel("GLabel 2", main_widget);
     label2->set_enabled(false);
 
@@ -58,10 +62,12 @@ int main(int argc, char** argv)
     textbox2->set_enabled(false);
 
     auto* spinbox1 = new GSpinBox(main_widget);
+    (void)spinbox1;
     auto* spinbox2 = new GSpinBox(main_widget);
     spinbox2->set_enabled(false);
 
     auto* slider1 = new GSlider(main_widget);
+    (void)slider1;
     auto* slider2 = new GSlider(main_widget);
     slider2->set_enabled(false);
 
