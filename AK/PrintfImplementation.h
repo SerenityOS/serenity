@@ -200,6 +200,8 @@ template<typename PutChFunc>
         bool zeroPad = false;
         unsigned fieldWidth = 0;
         unsigned long_qualifiers = 0;
+        bool size_qualifier = false;
+        (void)size_qualifier;
         bool alternate_form = 0;
         if (*p == '%' && *(p + 1)) {
         one_more:
@@ -222,6 +224,11 @@ template<typename PutChFunc>
             }
             if (*p == 'l') {
                 ++long_qualifiers;
+                if (*(p + 1))
+                    goto one_more;
+            }
+            if (*p == 'z') {
+                size_qualifier = true;
                 if (*(p + 1))
                     goto one_more;
             }
