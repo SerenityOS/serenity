@@ -107,7 +107,7 @@ RefPtr<Font> Font::load_from_memory(const byte* data)
 
     size_t bytes_per_glyph = sizeof(unsigned) * header.glyph_height;
 
-    auto* rows = (unsigned*)(data + sizeof(FontFileHeader));
+    auto* rows = const_cast<unsigned*>((const unsigned*)(data + sizeof(FontFileHeader)));
     byte* widths = nullptr;
     if (header.is_variable_width)
         widths = (byte*)(rows) + 256 * bytes_per_glyph;

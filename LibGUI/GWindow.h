@@ -170,6 +170,6 @@ private:
     bool m_show_titlebar { true };
     bool m_keybind_mode { false };
     String m_entered_keybind;
-    size_t m_max_keybind_length { 0 };
+    int m_max_keybind_length { 0 };
     HashMap<String, WeakPtr<GWidget>> m_keyboard_activation_targets;
 };
