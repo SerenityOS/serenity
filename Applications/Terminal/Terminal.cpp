@@ -290,7 +290,7 @@ void Terminal::escape$r(const ParamVector& params)
         top = params[0];
     if (params.size() >= 2)
         bottom = params[1];
-    if ((bottom - top) < 2 || bottom > m_rows || top < 0) {
+    if ((bottom - top) < 2 || bottom > m_rows) {
         dbgprintf("Error: escape$r: scrolling region invalid: %u-%u\n", top, bottom);
         return;
     }
