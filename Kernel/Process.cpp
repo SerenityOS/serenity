@@ -2499,7 +2499,7 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
     int shared_buffer_id = ++s_next_shared_buffer_id;
     auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
     shared_buffer->m_shared_buffer_id = shared_buffer_id;
-    ASSERT(shared_buffer->size() >= size);
+    ASSERT((int)shared_buffer->size() >= size);
     shared_buffer->m_pid1_region = allocate_region_with_vmo(VirtualAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | PROT_WRITE);
     shared_buffer->m_pid1_region->set_shared(true);
     *buffer = shared_buffer->m_pid1_region->vaddr().as_ptr();

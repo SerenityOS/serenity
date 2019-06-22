@@ -33,7 +33,7 @@ public:
     const String& name() const { return m_name; }
     void set_name(const String& name) { m_name = name; }
 
-    size_t page_count() const { return m_size / PAGE_SIZE; }
+    int page_count() const { return m_size / PAGE_SIZE; }
     const Vector<RefPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
     Vector<RefPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 

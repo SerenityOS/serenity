@@ -17,7 +17,7 @@ public:
 protected:
     explicit DiskBackedFS(NonnullRefPtr<DiskDevice>&&);
 
-    void set_block_size(unsigned);
+    void set_block_size(int);
 
     ByteBuffer read_block(unsigned index) const;
     ByteBuffer read_blocks(unsigned index, unsigned count) const;

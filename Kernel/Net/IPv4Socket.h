@@ -50,7 +50,7 @@ protected:
     int allocate_local_port_if_needed();
 
     virtual KResult protocol_bind() { return KSuccess; }
-    virtual int protocol_receive(const ByteBuffer&, void*, size_t, int, sockaddr*, socklen_t*) { return -ENOTIMPL; }
+    virtual int protocol_receive(const ByteBuffer&, void*, size_t, int) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) { return KSuccess; }
     virtual int protocol_allocate_local_port() { return 0; }
