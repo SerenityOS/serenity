@@ -32,6 +32,7 @@ public:
     bool activates_on_selection() const { return m_activates_on_selection; }
 
     Function<void(const GModelIndex&)> on_activation;
+    Function<void(const GModelIndex&)> on_selection;
     Function<void(const GModelNotification&)> on_model_notification;
 
     virtual const char* class_name() const override { return "GAbstractView"; }
