@@ -73,7 +73,7 @@ void GComboBox::open()
         longest_item_width = max(longest_item_width, m_list_view->font().width(item_text));
     }
     Size size {
-        max(width(), longest_item_width + m_list_view->width_occupied_by_vertical_scrollbar()) + m_list_view->frame_thickness() * 2 + m_list_view->horizontal_padding(),
+        max(width(), longest_item_width + m_list_view->width_occupied_by_vertical_scrollbar() + m_list_view->frame_thickness() * 2 + m_list_view->horizontal_padding()),
         model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
     };
 
