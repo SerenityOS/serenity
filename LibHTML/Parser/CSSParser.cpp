@@ -16,7 +16,7 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
 
     struct CurrentRule {
         Vector<Selector> selectors;
-        Vector<StyleDeclaration> declarations;
+        Vector<NonnullRefPtr<StyleDeclaration>> declarations;
     };
 
     CurrentRule current_rule;
@@ -25,8 +25,8 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
     int index = 0;
 
     auto peek = [&]() -> char {
-        if (index + 1 < css.length())
-            return css[index + 1];
+        if (index < css.length())
+            return css[index];
         return 0;
     };
 
@@ -62,8 +62,12 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
         while (is_valid_selector_char(peek()))
             buffer.append(consume_one());
 
+        ASSERT(!buffer.is_null());
+
+        auto component_string = String::copy(buffer);
+
         Vector<Selector::Component> components;
-        components.append({ type, String::copy(buffer) });
+        components.append({ type, component_string });
         buffer.clear();
         current_rule.selectors.append(Selector(move(components)));
     };
@@ -71,20 +75,46 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
     auto parse_selector_list = [&] {
         for (;;) {
             parse_selector();
-            if (peek() == ',')
+            consume_whitespace();
+            if (peek() == ',') {
+                consume_one();
                 continue;
+            }
             if (peek() == '{')
                 break;
         }
     };
 
+    auto is_valid_property_name_char = [](char ch) {
+        return !isspace(ch) && ch != ':';
+    };
+
+    auto is_valid_property_value_char = [](char ch) {
+        return !isspace(ch) && ch != ';';
+    };
+
     auto parse_declaration = [&] {
         consume_whitespace();
+        buffer.clear();
+        while (is_valid_property_name_char(peek()))
+            buffer.append(consume_one());
+        auto property_name = String::copy(buffer);
+        buffer.clear();
+        consume_whitespace();
+        consume_specific(':');
+        consume_whitespace();
+        while (is_valid_property_value_char(peek()))
+            buffer.append(consume_one());
+        auto property_value = String::copy(buffer);
+        buffer.clear();
+        consume_specific(';');
+        current_rule.declarations.append(StyleDeclaration::create(property_name, StyleValue::parse(property_value)));
     };
 
     auto parse_declarations = [&] {
         for (;;) {
             parse_declaration();
+            consume_whitespace();
             if (peek() == '}')
                 break;
         }
@@ -95,6 +125,7 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
         consume_specific('{');
         parse_declarations();
         consume_specific('}');
+        rules.append(StyleRule::create(move(current_rule.selectors), move(current_rule.declarations)));
     };
 
     while (index < css.length()) {
