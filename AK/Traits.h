@@ -31,7 +31,7 @@ template<typename T>
 struct Traits<T*> {
     static unsigned hash(const T* p)
     {
-        return int_hash((dword)p);
+        return int_hash((unsigned)(__PTRDIFF_TYPE__)p);
     }
     static void dump(const T* p) { kprintf("%p", p); }
 };

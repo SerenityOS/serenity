@@ -1,0 +1,45 @@
+LIBHTML_OBJS = \
+    DOM/Node.o \
+    DOM/ParentNode.o \
+    DOM/Element.o \
+    DOM/Document.o \
+    DOM/Text.o \
+    CSS/Selector.o \
+    CSS/StyleSheet.o \
+    CSS/StyleRule.o \
+    CSS/StyleDeclaration.o \
+    CSS/StyleValue.o \
+    CSS/DefaultStyleSheetSource.o \
+    Parser/HTMLParser.o \
+    Parser/CSSParser.o \
+    Layout/LayoutNode.o \
+    Layout/LayoutText.o \
+    Layout/LayoutBlock.o \
+    Layout/LayoutInline.o \
+    Layout/LayoutDocument.o \
+    Layout/LayoutStyle.o \
+    Frame.o \
+    Dump.o
+
+GENERATED_SOURCES = \
+    CSS/DefaultStyleSheetSource.cpp
+
+TEST_OBJS = test.o
+TEST_PROGRAM = tho
+
+OBJS = $(EXTRA_OBJS) $(LIBHTML_OBJS) $(TEST_OBJS)
+
+LIBRARY = libhtml.a
+DEFINES += -DUSERLAND
+
+CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSource.sh
+	@echo "GENERATE $@"; Scripts/GenerateStyleSheetSource.sh default_stylesheet_source $< > $@
+
+.cpp.o:
+	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
+
+-include $(OBJS:%.o=%.d)
+
+clean:
+	@echo "CLEAN"; rm -f $(TEST_PROGRAM) $(LIBRARY) $(OBJS) *.d $(GENERATED_SOURCES)
+

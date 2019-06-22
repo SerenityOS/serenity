@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef __serenity__
+
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <unistd.h>
@@ -109,3 +111,15 @@ private:
     T m_resource;
     CLock m_lock;
 };
+
+#else
+
+class CLock {
+public:
+    CLock() { }
+    ~CLock() { }
+};
+
+#define LOCKER(x)
+
+#endif

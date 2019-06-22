@@ -1,0 +1,20 @@
+all: tho
+
+CXXFLAGS = -W -Wall -O -g -I. -I../ -std=c++17
+
+EXTRA_OBJS = \
+    ../AK/StringImpl.o \
+    ../AK/String.o \
+    ../AK/StringBuilder.o \
+    ../AK/StringView.o \
+    ../LibCore/CEventLoop.o \
+    ../LibCore/CObject.o \
+    ../LibCore/CEvent.o \
+    ../LibCore/CIODevice.o \
+    ../LibCore/CFile.o 
+
+include Makefile.shared
+
+tho: $(OBJS)
+	$(CXX) -o $@ $(LDFLAGS) $(OBJS)
+

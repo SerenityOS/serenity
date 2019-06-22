@@ -1,4 +1,5 @@
 #include <AK/Assertions.h>
+#include <AK/kstdio.h>
 #include <LibCore/CEvent.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CObject.h>

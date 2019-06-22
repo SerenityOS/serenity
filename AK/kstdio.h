@@ -5,4 +5,5 @@
 #else
 #include <stdio.h>
 #define kprintf printf
+#define dbgprintf printf
 #endif
