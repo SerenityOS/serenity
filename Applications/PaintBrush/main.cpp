@@ -21,14 +21,14 @@ int main(int argc, char** argv)
     horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     horizontal_container->layout()->set_spacing(0);
 
-    auto* toolbox_widget = new ToolboxWidget(horizontal_container);
+    new ToolboxWidget(horizontal_container);
 
     auto* vertical_container = new GWidget(horizontal_container);
     vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     vertical_container->layout()->set_spacing(0);
 
     auto* paintable_widget = new PaintableWidget(vertical_container);
-    auto* palette_widget = new PaletteWidget(*paintable_widget, vertical_container);
+    new PaletteWidget(*paintable_widget, vertical_container);
 
     window->show();
 
