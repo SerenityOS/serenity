@@ -39,7 +39,7 @@ CArgsParser::CArgsParser(const String& program_name)
 {
 }
 
-CArgsParserResult CArgsParser::parse(const int argc, const char** argv)
+CArgsParserResult CArgsParser::parse(int argc, char** argv)
 {
     CArgsParserResult res;
 
@@ -57,7 +57,7 @@ CArgsParserResult CArgsParser::parse(const int argc, const char** argv)
     return res;
 }
 
-int CArgsParser::parse_next_param(const int index, const char** argv, const int params_left, CArgsParserResult& res)
+int CArgsParser::parse_next_param(int index, char** argv, const int params_left, CArgsParserResult& res)
 {
     if (params_left == 0)
         return 0;

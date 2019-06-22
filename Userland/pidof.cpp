@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     args_parser.add_arg("s", "Single shot - this instructs the program to only return one pid");
     args_parser.add_arg("o", "pid", "Tells pidof to omit processes with that pid. The special pid %PPID can be used to name the parent process of the pidof program.");
 
-    CArgsParserResult args = args_parser.parse(argc, (const char**)argv);
+    CArgsParserResult args = args_parser.parse(argc, argv);
 
     bool s_arg = args.is_present("s");
     bool o_arg = args.is_present("o");

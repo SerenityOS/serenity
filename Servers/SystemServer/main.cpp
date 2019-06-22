@@ -34,7 +34,7 @@ void start_process(const char* prog, int prio)
             ASSERT(ret == 0);
 
             char* progv[256];
-            progv[0] = (char*)prog;
+            progv[0] = const_cast<char*>(prog);
             progv[1] = nullptr;
             ret = execv(prog, progv);
             if (ret < 0) {
