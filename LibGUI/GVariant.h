@@ -199,3 +199,5 @@ private:
 
     Type m_type { Type::Invalid };
 };
+
+const char* to_string(GVariant::Type);
