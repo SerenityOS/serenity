@@ -10,6 +10,7 @@ public:
     enum Column {
         Name = 0,
         Value,
+        Type,
         __Count
     };
 

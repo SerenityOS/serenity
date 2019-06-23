@@ -41,7 +41,11 @@ GComboBox::GComboBox(GWidget* parent)
         auto new_value = model()->data(index).to_string();
         m_editor->set_text(new_value);
         m_editor->select_all();
-        m_list_window->hide();
+        close();
+        deferred_invoke([this](auto&) {
+            if (on_change)
+                on_change(m_editor->text());
+        });
     };
 }
 
@@ -61,6 +65,11 @@ void GComboBox::resize_event(GResizeEvent& event)
 void GComboBox::set_model(NonnullRefPtr<GModel> model)
 {
     m_list_view->set_model(move(model));
+}
+
+void GComboBox::select_all()
+{
+    m_editor->select_all();
 }
 
 void GComboBox::open()
@@ -99,4 +108,11 @@ String GComboBox::text() const
 void GComboBox::set_text(const String& text)
 {
     m_editor->set_text(text);
+}
+
+void GComboBox::set_only_allow_values_from_model(bool b)
+{
+    if (m_only_allow_values_from_model == b)
+        return;
+    m_editor->set_readonly(m_only_allow_values_from_model);
 }
