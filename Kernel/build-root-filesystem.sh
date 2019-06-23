@@ -72,6 +72,7 @@ cp ../Applications/Taskbar/Taskbar mnt/bin/Taskbar
 cp ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
 cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
+cp ../Applications/QuickShow/QuickShow mnt/bin/QuickShow
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
@@ -99,6 +100,7 @@ ln -s VisualBuilder mnt/bin/vb
 ln -s WidgetGallery mnt/bin/wg
 ln -s TextEditor mnt/bin/te
 ln -s PaintBrush mnt/bin/pb
+ln -s QuickShow mnt/bin/qs
 echo "done"
 
 # Run local sync script, if it exists

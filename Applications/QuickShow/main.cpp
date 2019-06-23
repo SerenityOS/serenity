@@ -1,3 +1,4 @@
+#include "QSWidget.h"
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -51,23 +52,20 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
 
+    auto update_window_title = [&](int scale) {
+        window->set_title(String::format("QuickShow: %s %s %d%%", path, bitmap->size().to_string().characters(), scale));
+    };
+
     window->set_double_buffering_enabled(false);
-    window->set_title(String::format("QuickShow: %s %s", path, bitmap->size().to_string().characters()));
+    update_window_title(100);
     window->set_rect(200, 200, bitmap->width(), bitmap->height());
 
-    auto* widget = new GWidget;
+    auto* widget = new QSWidget(nullptr);
+    widget->on_scale_change = [&](int scale) {
+        update_window_title(scale);
+    };
+    widget->set_bitmap(*bitmap);
     window->set_main_widget(widget);
-
-    if (bitmap->has_alpha_channel()) {
-        widget->set_background_color(Color::White);
-        widget->set_fill_with_background_color(true);
-    }
-
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-
-    auto* label = new GLabel(widget);
-    label->set_icon(move(bitmap));
-    label->set_should_stretch_icon(true);
 
     window->set_should_exit_event_loop_on_close(true);
     window->show();
