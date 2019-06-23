@@ -359,6 +359,12 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (is_single_line() && event.key() == KeyCode::Key_Tab)
         return GWidget::keydown_event(event);
 
+    if (is_single_line() && event.key() == KeyCode::Key_Return) {
+        if (on_return_pressed)
+            on_return_pressed();
+        return;
+    }
+
     if (event.key() == KeyCode::Key_Escape) {
         if (on_escape_pressed)
             on_escape_pressed();
@@ -600,11 +606,6 @@ void GTextEditor::insert_at_cursor(char ch)
     bool at_head = m_cursor.column() == 0;
     bool at_tail = m_cursor.column() == current_line().length();
     if (ch == '\n') {
-        if (is_single_line()) {
-            if (on_return_pressed)
-                on_return_pressed();
-            return;
-        }
         if (at_tail || at_head) {
             String new_line_contents;
             if (m_automatic_indentation_enabled && at_tail) {
