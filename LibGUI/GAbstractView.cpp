@@ -1,6 +1,7 @@
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GAbstractView.h>
 #include <LibGUI/GModel.h>
+#include <LibGUI/GModelEditingDelegate.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GTextBox.h>
@@ -71,15 +72,21 @@ void GAbstractView::begin_editing(const GModelIndex& index)
     if (m_edit_widget)
         delete m_edit_widget;
     m_edit_index = index;
-    m_edit_widget = new GTextBox(this);
+
+    ASSERT(aid_create_editing_delegate);
+    m_editing_delegate = aid_create_editing_delegate(index);
+    m_editing_delegate->bind(*model(), index);
+    m_editing_delegate->set_value(model()->data(index, GModel::Role::Display));
+    m_edit_widget = m_editing_delegate->widget();
+    add_child(*m_edit_widget);
     m_edit_widget->move_to_back();
-    m_edit_widget->set_text(model()->data(index, GModel::Role::Display).to_string());
     m_edit_widget_content_rect = content_rect(index).translated(frame_thickness(), frame_thickness());
     update_edit_widget_position();
     m_edit_widget->set_focus(true);
-    m_edit_widget->on_return_pressed = [this] {
+    m_editing_delegate->will_begin_editing();
+    m_editing_delegate->on_commit = [this] {
         ASSERT(model());
-        model()->set_data(m_edit_index, m_edit_widget->text());
+        model()->set_data(m_edit_index, m_editing_delegate->value());
         stop_editing();
     };
 }

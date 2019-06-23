@@ -4,7 +4,7 @@
 #include <LibGUI/GModel.h>
 #include <LibGUI/GScrollableWidget.h>
 
-class GTextBox;
+class GModelEditingDelegate;
 
 class GAbstractView : public GScrollableWidget {
     friend class GModel;
@@ -35,6 +35,8 @@ public:
     Function<void(const GModelIndex&)> on_selection;
     Function<void(const GModelNotification&)> on_model_notification;
 
+    Function<OwnPtr<GModelEditingDelegate>(const GModelIndex&)> aid_create_editing_delegate;
+
     virtual const char* class_name() const override { return "GAbstractView"; }
 
 protected:
@@ -45,10 +47,11 @@ protected:
 
     bool m_editable { false };
     GModelIndex m_edit_index;
-    GTextBox* m_edit_widget { nullptr };
+    GWidget* m_edit_widget { nullptr };
     Rect m_edit_widget_content_rect;
 
 private:
     RefPtr<GModel> m_model;
+    OwnPtr<GModelEditingDelegate> m_editing_delegate;
     bool m_activates_on_selection { false };
 };

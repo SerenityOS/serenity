@@ -24,6 +24,8 @@ String VBWidgetPropertyModel::column_name(int column) const
         return "Name";
     case Column::Value:
         return "Value";
+    case Column::Type:
+        return "Type";
     default:
         ASSERT_NOT_REACHED();
     }
@@ -39,6 +41,12 @@ GModel::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) const
 
 GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
 {
+    if (role == Role::Custom) {
+        auto& property = *m_widget.m_properties[index.row()];
+        if (index.column() == Column::Type)
+            return (int)property.value().type();
+        return {};
+    }
     if (role == Role::Display) {
         auto& property = *m_widget.m_properties[index.row()];
         switch (index.column()) {
@@ -46,6 +54,8 @@ GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
             return property.name();
         case Column::Value:
             return property.value();
+        case Column::Type:
+            return to_string(property.value().type());
         }
         ASSERT_NOT_REACHED();
     }
@@ -54,6 +64,8 @@ GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
         switch (index.column()) {
         case Column::Name:
             return Color::Black;
+        case Column::Type:
+            return Color::Blue;
         case Column::Value:
             return property.is_readonly() ? Color(Color::MidGray) : Color(Color::Black);
         }
