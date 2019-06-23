@@ -12,6 +12,7 @@ public:
     virtual ~GComboBox() override;
 
     String text() const;
+    void set_text(const String&);
 
     void open();
     void close();
@@ -21,6 +22,7 @@ public:
     void set_model(NonnullRefPtr<GModel>);
 
     Function<void(const String&)> on_change;
+    Function<void()> on_return_pressed;
 
     virtual const char* class_name() const override { return "GComboBox"; }
 
