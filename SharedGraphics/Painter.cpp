@@ -636,7 +636,16 @@ void Painter::set_pixel(const Point& p, Color color)
         pixel ^= color.value();
 }
 
-void Painter::draw_line(const Point& p1, const Point& p2, Color color)
+void Painter::draw_pixel(const Point& position, Color color, int thickness)
+{
+    ASSERT(draw_op() == DrawOp::Copy);
+    if (thickness == 1)
+        return set_pixel_with_draw_op(m_target->scanline(position.y())[position.x()], color);
+    Rect rect { position.translated(-(thickness / 2), -(thickness / 2)), { thickness, thickness } };
+    fill_rect(rect, color);
+}
+
+void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thickness)
 {
     auto clip_rect = this->clip_rect();
 
@@ -660,7 +669,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
         int min_y = max(point1.y(), clip_rect.top());
         int max_y = min(point2.y(), clip_rect.bottom());
         for (int y = min_y; y <= max_y; ++y)
-            set_pixel_with_draw_op(m_target->scanline(y)[x], color);
+            draw_pixel({ x, y }, color, thickness);
         return;
     }
 
@@ -677,13 +686,8 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
             return;
         int min_x = max(point1.x(), clip_rect.left());
         int max_x = min(point2.x(), clip_rect.right());
-        auto* pixels = m_target->scanline(point1.y());
-        if (draw_op() == DrawOp::Copy) {
-            fast_dword_fill(pixels + min_x, color.value(), max_x - min_x + 1);
-        } else {
-            for (int x = min_x; x <= max_x; ++x)
-                set_pixel_with_draw_op(pixels[x], color);
-        }
+        for (int x = min_x; x <= max_x; ++x)
+            draw_pixel({ x, y }, color, thickness);
         return;
     }
 
@@ -709,7 +713,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
         int y = point1.y();
         for (int x = point1.x(); x <= point2.x(); ++x) {
             if (clip_rect.contains(x, y))
-                m_target->scanline(y)[x] = color.value();
+                draw_pixel({ x, y }, color, thickness);
             error += delta_error;
             if (error >= 0.5) {
                 y = (double)y + y_step;
@@ -722,7 +726,7 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color)
         int x = point1.x();
         for (int y = point1.y(); y <= point2.y(); ++y) {
             if (clip_rect.contains(x, y))
-                m_target->scanline(y)[x] = color.value();
+                draw_pixel({ x, y }, color, thickness);
             error += delta_error;
             if (error >= 0.5) {
                 x = (double)x + x_step;
