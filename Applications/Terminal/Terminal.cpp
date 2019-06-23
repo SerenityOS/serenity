@@ -1185,6 +1185,14 @@ BufferPosition Terminal::buffer_position_at(const Point& position) const
     auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     int row = adjusted_position.y() / m_line_height;
     int column = adjusted_position.x() / font().glyph_width('x');
+    if (row < 0)
+        row = 0;
+    if (column < m_columns)
+        column = 0;
+    if (row >= m_rows)
+        row = m_rows - 1;
+    if (column >= m_columns)
+        column = m_columns - 1;
     return { row, column };
 }
 
