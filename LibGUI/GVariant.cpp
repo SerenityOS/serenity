@@ -1,5 +1,23 @@
 #include <LibGUI/GVariant.h>
 
+const char* to_string(GVariant::Type type)
+{
+    switch (type) {
+    case GVariant::Type::Invalid: return "Invalid";
+    case GVariant::Type::Bool: return "Bool";
+    case GVariant::Type::Int: return "Int";
+    case GVariant::Type::Float: return "Float";
+    case GVariant::Type::String: return "String";
+    case GVariant::Type::Bitmap: return "Bitmap";
+    case GVariant::Type::Color: return "Color";
+    case GVariant::Type::Icon: return "Icon";
+    case GVariant::Type::Point: return "Point";
+    case GVariant::Type::Size: return "Size";
+    case GVariant::Type::Rect: return "Rect";
+    }
+    ASSERT_NOT_REACHED();
+}
+
 GVariant::GVariant()
 {
     m_value.as_string = nullptr;
