@@ -12,6 +12,7 @@ public:
     virtual void on_mousedown(GMouseEvent&) { }
     virtual void on_mousemove(GMouseEvent&) { }
     virtual void on_mouseup(GMouseEvent&) { }
+    virtual void on_contextmenu(GContextMenuEvent&) { }
 
     void clear() { m_widget = nullptr; }
     void setup(PaintableWidget& widget) { m_widget = widget.make_weak_ptr(); }

@@ -23,7 +23,7 @@ public:
     void draw_bitmap(const Point&, const CharacterBitmap&, Color = Color());
     void draw_bitmap(const Point&, const GlyphBitmap&, Color = Color());
     void set_pixel(const Point&, Color);
-    void draw_line(const Point&, const Point&, Color);
+    void draw_line(const Point&, const Point&, Color, int thickness = 1);
     void draw_scaled_bitmap(const Rect& dst_rect, const GraphicsBitmap&, const Rect& src_rect);
     void blit(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity = 1.0f);
     void blit_dimmed(const Point&, const GraphicsBitmap&, const Rect& src_rect);
@@ -68,6 +68,7 @@ protected:
     void fill_rect_with_draw_op(const Rect&, Color);
     void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
+    void draw_pixel(const Point&, Color, int thickness = 1);
 
     struct State {
         const Font* font;
