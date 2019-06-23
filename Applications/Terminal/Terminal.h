@@ -12,6 +12,49 @@
 
 class Font;
 
+class BufferPosition {
+public:
+    BufferPosition() {}
+    BufferPosition(int row, int column)
+        : m_row(row)
+        , m_column(column)
+    {
+    }
+
+    bool is_valid() const { return m_row >= 0 && m_column >= 0; }
+    int row() const { return m_row; }
+    int column() const { return m_column; }
+
+    bool operator<(const BufferPosition& other) const
+    {
+        return m_row < other.m_row || (m_row == other.m_row && m_column < other.m_column);
+    }
+
+    bool operator<=(const BufferPosition& other) const
+    {
+        return *this < other || *this == other;
+    }
+
+    bool operator>=(const BufferPosition& other) const
+    {
+        return !(*this < other);
+    }
+
+    bool operator==(const BufferPosition& other) const
+    {
+        return m_row == other.m_row && m_column == other.m_column;
+    }
+
+    bool operator!=(const BufferPosition& other) const
+    {
+        return !(*this == other);
+    }
+
+private:
+    int m_row { -1 };
+    int m_column { -1 };
+};
+
 class Terminal final : public GFrame {
 public:
     explicit Terminal(int ptm_fd, RefPtr<CConfigFile> config);
@@ -32,6 +75,13 @@ public:
 
     RefPtr<CConfigFile> config() const { return m_config; }
 
+    bool has_selection() const;
+    bool selection_contains(const BufferPosition&) const;
+    String selected_text() const;
+    BufferPosition buffer_position_at(const Point&) const;
+    BufferPosition normalized_selection_start() const;
+    BufferPosition normalized_selection_end() const;
+
 private:
     typedef Vector<unsigned, 4> ParamVector;
 
@@ -39,6 +89,9 @@ private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
+    virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
     virtual const char* class_name() const override { return "Terminal"; }
 
     void scroll_up();
@@ -139,8 +192,16 @@ private:
         ASSERT(index < m_rows);
         return *m_lines[index];
     }
+    const Line& line(size_t index) const
+    {
+        ASSERT(index < m_rows);
+        return *m_lines[index];
+    }
 
     Vector<OwnPtr<Line>> m_lines;
+
+    BufferPosition m_selection_start;
+    BufferPosition m_selection_end;
 
     int m_scroll_region_top { 0 };
     int m_scroll_region_bottom { 0 };

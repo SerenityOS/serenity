@@ -5,6 +5,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GClipboard.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWindow.h>
 #include <SharedGraphics/Font.h>
@@ -1068,16 +1069,17 @@ void Terminal::paint_event(GPaintEvent& event)
             painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(255 * m_opacity));
         for (word column = 0; column < m_columns; ++column) {
             char ch = line.characters[column];
-            bool should_reverse_fill_for_cursor = m_cursor_blink_state && m_in_active_window && row == m_cursor_row && column == m_cursor_column;
+            bool should_reverse_fill_for_cursor_or_selection = (m_cursor_blink_state && m_in_active_window && row == m_cursor_row && column == m_cursor_column)
+                || selection_contains({ row, column });
             auto& attribute = line.attributes[column];
             auto character_rect = glyph_rect(row, column);
-            if (!has_only_one_background_color || should_reverse_fill_for_cursor) {
+            if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
-                painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor ? attribute.foreground_color : attribute.background_color).with_alpha(255 * m_opacity));
+                painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(255 * m_opacity));
             }
             if (ch == ' ')
                 continue;
-            painter.draw_glyph(character_rect.location(), ch, lookup_color(should_reverse_fill_for_cursor ? attribute.background_color : attribute.foreground_color));
+            painter.draw_glyph(character_rect.location(), ch, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
         }
     }
 
@@ -1149,4 +1151,93 @@ void Terminal::set_opacity(float opacity)
     window()->set_has_alpha_channel(opacity < 1);
     m_opacity = opacity;
     force_repaint();
+}
+
+BufferPosition Terminal::normalized_selection_start() const
+{
+    if (m_selection_start < m_selection_end)
+        return m_selection_start;
+    return m_selection_end;
+}
+
+BufferPosition Terminal::normalized_selection_end() const
+{
+    if (m_selection_start < m_selection_end)
+        return m_selection_end;
+    return m_selection_start;
+}
+
+bool Terminal::has_selection() const
+{
+     return m_selection_start.is_valid() && m_selection_end.is_valid();
+}
+
+bool Terminal::selection_contains(const BufferPosition& position) const
+{
+    if (!has_selection())
+        return false;
+
+    return position >= normalized_selection_start() && position <= normalized_selection_end();
+}
+
+BufferPosition Terminal::buffer_position_at(const Point& position) const
+{
+    auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
+    int row = adjusted_position.y() / m_line_height;
+    int column = adjusted_position.x() / font().glyph_width('x');
+    return { row, column };
+}
+
+void Terminal::mousedown_event(GMouseEvent& event)
+{
+    if (event.button() == GMouseButton::Left) {
+        m_selection_start = buffer_position_at(event.position());
+        m_selection_end = {};
+        update();
+    } else if (event.button() == GMouseButton::Right) {
+        auto text = GClipboard::the().data();
+        if (text.is_empty())
+            return;
+        int nwritten = write(m_ptm_fd, text.characters(), text.length());
+        if (nwritten < 0) {
+            perror("write");
+            ASSERT_NOT_REACHED();
+        }
+    }
+}
+
+void Terminal::mousemove_event(GMouseEvent& event)
+{
+    if (!(event.buttons() & GMouseButton::Left))
+        return;
+
+    auto old_selection_end = m_selection_end;
+    m_selection_end = buffer_position_at(event.position());
+    if (old_selection_end != m_selection_end)
+        update();
+}
+
+void Terminal::mouseup_event(GMouseEvent& event)
+{
+    if (event.button() != GMouseButton::Left)
+        return;
+    if (!has_selection())
+        return;
+    GClipboard::the().set_data(selected_text());
+}
+
+String Terminal::selected_text() const
+{
+    StringBuilder builder;
+    auto start = normalized_selection_start();
+    auto end = normalized_selection_end();
+
+    for (int row = start.row(); row <= end.row(); ++row) {
+        int first_column = row == start.row() ? start.column() : 0;
+        int last_column = row == end.row() ? end.column() : m_columns - 1;
+        for (int column = first_column; column <= last_column; ++column)
+            builder.append(line(row).characters[column]);
+    }
+
+    return builder.to_string();
 }
