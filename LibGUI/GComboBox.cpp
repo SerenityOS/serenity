@@ -13,6 +13,10 @@ GComboBox::GComboBox(GWidget* parent)
         if (on_change)
             on_change(m_editor->text());
     };
+    m_editor->on_return_pressed = [this] {
+        if (on_return_pressed)
+            on_return_pressed();
+    };
     m_open_button = new GButton(this);
     m_open_button->set_focusable(false);
     m_open_button->set_text("\xf7");
@@ -84,9 +88,15 @@ void GComboBox::open()
 void GComboBox::close()
 {
     m_list_window->hide();
+    m_editor->set_focus(true);
 }
 
 String GComboBox::text() const
 {
     return m_editor->text();
+}
+
+void GComboBox::set_text(const String& text)
+{
+    m_editor->set_text(text);
 }
