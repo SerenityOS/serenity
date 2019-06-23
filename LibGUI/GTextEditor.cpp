@@ -1014,6 +1014,7 @@ void GTextEditor::leave_event(CEvent&)
 
 void GTextEditor::did_change()
 {
+    ASSERT(!is_readonly());
     update_content_size();
     if (!m_have_pending_change_notification) {
         m_have_pending_change_notification = true;
