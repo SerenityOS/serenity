@@ -11,12 +11,6 @@ public:
     JsonObject() { }
     ~JsonObject() { }
 
-    JsonObject(const JsonObject& other)
-    {
-        for (auto& it : other.m_members)
-            m_members.set(it.key, it.value);
-    }
-
     int size() const { return m_members.size(); }
     bool is_empty() const { return m_members.is_empty(); }
 
