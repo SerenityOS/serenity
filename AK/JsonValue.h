@@ -21,6 +21,8 @@ public:
         Object,
     };
 
+    static JsonValue from_string(const StringView&);
+
     explicit JsonValue(Type = Type::Null);
     ~JsonValue() { clear(); }
 
