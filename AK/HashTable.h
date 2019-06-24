@@ -22,7 +22,23 @@ private:
 
 public:
     HashTable() {}
-    explicit HashTable(HashTable&& other)
+    HashTable(const HashTable& other)
+    {
+        ensure_capacity(other.size());
+        for (auto& it : other)
+            set(it);
+    }
+    HashTable& operator=(const HashTable& other)
+    {
+        if (this != &other) {
+            clear();
+            ensure_capacity(other.size());
+            for (auto& it : other)
+                set(it);
+        }
+        return *this;
+    }
+    HashTable(HashTable&& other)
         : m_buckets(other.m_buckets)
         , m_size(other.m_size)
         , m_capacity(other.m_capacity)
