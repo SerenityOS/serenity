@@ -22,6 +22,13 @@ public:
     String serialized() const;
     void serialize(StringBuilder&) const;
 
+    template<typename Callback>
+    void for_each(Callback callback) const
+    {
+        for (auto& value : m_values)
+            callback(value);
+    }
+
 private:
     Vector<JsonValue> m_values;
 };
