@@ -95,7 +95,27 @@ public:
 #endif
     }
 
-    CALLABLE_WHEN(unconsumed)
+    NonnullRefPtr& operator=(const NonnullRefPtr& other)
+    {
+        if (m_ptr != other.m_ptr) {
+            deref_if_not_null(m_ptr);
+            m_ptr = const_cast<T*>(other.ptr());
+            m_ptr->ref();
+        }
+        return *this;
+    }
+
+    template<typename U>
+    NonnullRefPtr& operator=(const NonnullRefPtr<U>& other)
+    {
+        if (m_ptr != other.m_ptr) {
+            deref_if_not_null(m_ptr);
+            m_ptr = const_cast<T*>(static_cast<const T*>(other.ptr()));
+            m_ptr->ref();
+        }
+        return *this;
+    }
+
     NonnullRefPtr& operator=(NonnullRefPtr&& other)
     {
         if (this != &other) {
@@ -106,7 +126,6 @@ public:
     }
 
     template<typename U>
-    CALLABLE_WHEN(unconsumed)
     NonnullRefPtr& operator=(NonnullRefPtr<U>&& other)
     {
         if (this != static_cast<void*>(&other)) {
@@ -116,7 +135,6 @@ public:
         return *this;
     }
 
-    CALLABLE_WHEN(unconsumed)
     NonnullRefPtr& operator=(T& object)
     {
         if (m_ptr != &object)
@@ -208,7 +226,7 @@ public:
     }
 
 private:
-    NonnullRefPtr() {}
+    NonnullRefPtr() = delete;
 
     T* m_ptr { nullptr };
 };
