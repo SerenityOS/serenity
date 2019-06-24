@@ -74,14 +74,16 @@ public:
     }
     RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(const NonnullRefPtr& other)
-        : m_ptr(&const_cast<NonnullRefPtr&>(other).copy_ref().leak_ref())
+        : m_ptr(const_cast<T*>(other.ptr()))
     {
+        m_ptr->ref();
     }
     template<typename U>
     RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(const NonnullRefPtr<U>& other)
-        : m_ptr(&const_cast<NonnullRefPtr<U>&>(other).copy_ref().leak_ref())
+        : m_ptr(const_cast<T*>(static_cast<const T*>((other.ptr()))))
     {
+        m_ptr->ref();
     }
     ~NonnullRefPtr()
     {
