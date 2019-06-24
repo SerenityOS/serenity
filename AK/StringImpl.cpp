@@ -76,7 +76,7 @@ RefPtr<StringImpl> StringImpl::create(const char* cstring, int length, ShouldCho
     if (!cstring)
         return nullptr;
 
-    if (!*cstring)
+    if (!length || !*cstring)
         return the_empty_stringimpl();
 
     if (should_chomp) {
