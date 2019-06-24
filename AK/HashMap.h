@@ -34,19 +34,6 @@ private:
 public:
     HashMap() {}
 
-    HashMap(HashMap&& other)
-        : m_table(move(other.m_table))
-    {
-    }
-
-    HashMap& operator=(HashMap&& other)
-    {
-        if (this != &other) {
-            m_table = move(other.m_table);
-        }
-        return *this;
-    }
-
     bool is_empty() const { return m_table.is_empty(); }
     int size() const { return m_table.size(); }
     int capacity() const { return m_table.capacity(); }
