@@ -10,6 +10,7 @@ AK_OBJS = \
     ../AK/JsonValue.o \
     ../AK/JsonArray.o \
     ../AK/JsonObject.o \
+    ../AK/JsonParser.o \
     ../AK/MappedFile.o
 
 LIBC_OBJS = \
