@@ -66,7 +66,7 @@ private:
     char m_inline_buffer[0];
 };
 
-inline dword string_hash(const char* characters, int length)
+inline constexpr dword string_hash(const char* characters, int length)
 {
     dword hash = 0;
     for (int i = 0; i < length; ++i) {

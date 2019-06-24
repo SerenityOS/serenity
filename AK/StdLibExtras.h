@@ -47,19 +47,19 @@ inline constexpr dword round_up_to_power_of_two(dword value, dword power_of_two)
 namespace AK {
 
 template<typename T>
-inline T min(const T& a, const T& b)
+inline constexpr T min(const T& a, const T& b)
 {
     return a < b ? a : b;
 }
 
 template<typename T>
-inline T max(const T& a, const T& b)
+inline constexpr T max(const T& a, const T& b)
 {
     return a < b ? b : a;
 }
 
 template<typename T, typename U>
-static inline T ceil_div(T a, U b)
+inline constexpr T ceil_div(T a, U b)
 {
     static_assert(sizeof(T) == sizeof(U));
     T result = a / b;
