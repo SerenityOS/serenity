@@ -44,6 +44,13 @@ public:
     String serialized() const;
     void serialize(StringBuilder&) const;
 
+    String to_string(const String& default_value = {}) const
+    {
+        if (is_string())
+            return as_string();
+        return default_value;
+    }
+
     String as_string() const
     {
         ASSERT(is_string());
