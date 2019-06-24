@@ -46,9 +46,20 @@ public:
 
     String as_string() const
     {
-        if (m_type == Type::String)
-           return *m_value.as_string;
-        return { };
+        ASSERT(is_string());
+        return *m_value.as_string;
+    }
+
+    const JsonObject& as_object() const
+    {
+        ASSERT(is_object());
+        return *m_value.as_object;
+    }
+
+    const JsonArray& as_array() const
+    {
+        ASSERT(is_array());
+        return *m_value.as_array;
     }
 
     Type type() const { return m_type; }
