@@ -23,6 +23,8 @@ public:
 
     Color color_for(const GMouseEvent&);
 
+    void set_bitmap(const GraphicsBitmap&);
+
     GraphicsBitmap& bitmap() { return *m_bitmap; }
     const GraphicsBitmap& bitmap() const { return *m_bitmap; }
 

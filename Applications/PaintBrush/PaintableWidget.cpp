@@ -90,3 +90,9 @@ void PaintableWidget::set_secondary_color(Color color)
     if (on_secondary_color_change)
         on_secondary_color_change(color);
 }
+
+void PaintableWidget::set_bitmap(const GraphicsBitmap& bitmap)
+{
+    m_bitmap = bitmap;
+    update();
+}
