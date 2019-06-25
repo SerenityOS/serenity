@@ -4,9 +4,12 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GFilePicker.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GMessageBox.h>
 #include <LibGUI/GWindow.h>
+#include <SharedGraphics/PNGLoader.h>
 
 int main(int argc, char** argv)
 {
@@ -41,6 +44,19 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto file_menu = make<GMenu>("File");
+    file_menu->add_action(GAction::create("Open...", { Mod_Ctrl, Key_O }, [&](auto&) {
+        GFilePicker picker;
+        if (picker.exec() == GFilePicker::ExecOK) {
+            auto filename = picker.selected_file().string();
+            auto bitmap = load_png(filename);
+            if (!bitmap) {
+                GMessageBox msgbox(String::format("Failed to load '%s'", filename.characters()), "Open failed", GMessageBox::Type::Error, window);
+                msgbox.exec();
+                return;
+            }
+            paintable_widget->set_bitmap(*bitmap);
+        }
+    }));
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
