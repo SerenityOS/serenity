@@ -10,19 +10,6 @@ Node::~Node()
 {
 }
 
-void Node::ref()
-{
-    ASSERT(m_retain_count);
-    ++m_retain_count;
-}
-
-void Node::deref()
-{
-    ASSERT(m_retain_count);
-    if (!--m_retain_count)
-        delete this;
-}
-
 RefPtr<LayoutNode> Node::create_layout_node()
 {
     return nullptr;
