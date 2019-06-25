@@ -157,16 +157,16 @@ static void dump(const DumpType& regs)
     }
 }
 
-// 6: Invalid Opcode
-EH_ENTRY_NO_CODE(6);
-void exception_6_handler(RegisterDump& regs)
+template<typename RegisterDumpType>
+static void handle_crash(RegisterDumpType& regs, const char* description, int signal)
 {
     if (!current) {
-        kprintf("#UD with !current\n");
+        kprintf("%s with !current\n", description);
         hang();
     }
 
-    kprintf("%s Illegal instruction: %s(%u)\n",
+    kprintf("CRASH: %s %s: %s(%u)\n",
+        description,
         current->process().is_ring0() ? "Kernel" : "Process",
         current->process().name().characters(),
         current->pid());
@@ -179,7 +179,25 @@ void exception_6_handler(RegisterDump& regs)
         hang();
     }
 
-    current->process().crash(SIGILL, regs.eip);
+    current->process().crash(signal, regs.eip);
+}
+
+EH_ENTRY_NO_CODE(6);
+void exception_6_handler(RegisterDump& regs)
+{
+    handle_crash(regs, "Illegal instruction", SIGILL);
+}
+
+EH_ENTRY_NO_CODE(0);
+void exception_0_handler(RegisterDump& regs)
+{
+    handle_crash(regs, "Division by zero", SIGFPE);
+}
+
+EH_ENTRY(13);
+void exception_13_handler(RegisterDumpWithExceptionCode& regs)
+{
+    handle_crash(regs, "General protection fault", SIGSEGV);
 }
 
 // 7: FPU not available exception
@@ -210,43 +228,6 @@ void exception_7_handler(RegisterDump& regs)
     kprintf("%s FPU not available exception: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "Process", current->pid(), current->process().name().characters());
     dump(regs);
 #endif
-}
-
-// 0: Divide error
-EH_ENTRY_NO_CODE(0);
-void exception_0_handler(RegisterDump& regs)
-{
-    kprintf("%s Division by zero: %s(%u)\n",
-        current->process().is_ring0() ? "Kernel" : "User",
-        current->process().name().characters(),
-        current->pid());
-
-    dump(regs);
-
-    if (current->process().is_ring0()) {
-        kprintf("Oh shit, we've crashed in ring 0 :(\n");
-        dump_backtrace();
-        hang();
-    }
-
-    current->process().crash(SIGFPE, regs.eip);
-}
-
-// 13: General Protection Fault
-EH_ENTRY(13);
-void exception_13_handler(RegisterDumpWithExceptionCode& regs)
-{
-    kprintf("%s GPF: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "User", current->pid(), current->process().name().characters());
-
-    dump(regs);
-
-    if (current->process().is_ring0()) {
-        kprintf("Oh shit, we've crashed in ring 0 :(\n");
-        dump_backtrace();
-        hang();
-    }
-
-    current->process().crash(SIGSEGV, regs.eip);
 }
 
 // 14: Page Fault
@@ -298,8 +279,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             dbgprintf("\033[33;1mNote: Address %p looks like a possible nullptr dereference\033[0m\n", fault_address);
         }
 
-        dump(regs);
-        current->process().crash(SIGSEGV, regs.eip);
+        handle_crash(regs, "Page Fault", SIGSEGV);
     } else if (response == PageFaultResponse::Continue) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("Continuing after resolved page fault\n");
