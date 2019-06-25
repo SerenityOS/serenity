@@ -54,9 +54,44 @@ void JsonParser::consume_specific(char expected_ch)
 String JsonParser::consume_quoted_string()
 {
     consume_specific('"');
-    auto string = extract_while([](char ch) { return ch != '"'; });
+    StringBuilder builder;
+    for (;;) {
+        char ch = peek();
+        if (ch == '"')
+            break;
+        if (ch != '\\') {
+            builder.append(consume());
+            continue;
+        }
+        consume();
+        char escaped_ch = consume();
+        switch (escaped_ch) {
+        case 'n':
+            builder.append('\n');
+            break;
+        case 'r':
+            builder.append('\n');
+            break;
+        case 't':
+            builder.append('\t');
+            break;
+        case 'b':
+            builder.append('\b');
+            break;
+        case 'f':
+            builder.append('\f');
+            break;
+        case 'u':
+            // FIXME: Implement \uXXXX
+            ASSERT_NOT_REACHED();
+            break;
+        default:
+            builder.append(escaped_ch);
+            break;
+        }
+    }
     consume_specific('"');
-    return string;
+    return builder.to_string();
 }
 
 JsonValue JsonParser::parse_object()
