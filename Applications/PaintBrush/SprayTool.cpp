@@ -28,7 +28,7 @@ void SprayTool::paint_it()
 {
     GPainter painter(m_widget->bitmap());
     auto& bitmap = m_widget->bitmap();
-    ASSERT(bitmap.format() == GraphicsBitmap::Format::RGB32);
+    ASSERT(bitmap.bpp() == 32);
     m_widget->update();
     const double base_radius = 15;
     for (int i = 0; i < 100 + (nrand() * 800); i++) {

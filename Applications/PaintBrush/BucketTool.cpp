@@ -16,7 +16,7 @@ BucketTool::~BucketTool()
 
 static void flood_fill(GraphicsBitmap& bitmap, const Point& start_position, Color target_color, Color fill_color)
 {
-    ASSERT(bitmap.format() == GraphicsBitmap::Format::RGB32);
+    ASSERT(bitmap.bpp() == 32);
 
     if (target_color == fill_color)
         return;
