@@ -5,8 +5,8 @@
 #include "Size.h"
 #include <AK/AKString.h>
 #include <AK/MappedFile.h>
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <SharedBuffer.h>
 
@@ -38,6 +38,21 @@ public:
     int height() const { return m_size.height(); }
     size_t pitch() const { return m_pitch; }
     int shared_buffer_id() const { return m_shared_buffer ? m_shared_buffer->shared_buffer_id() : -1; }
+
+    unsigned bpp() const
+    {
+        switch (m_format) {
+        case Format::Indexed8:
+            return 8;
+        case Format::RGB32:
+        case Format::RGBA32:
+            return 32;
+        case Format::Invalid:
+            return 0;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
 
     void fill(Color);
 
