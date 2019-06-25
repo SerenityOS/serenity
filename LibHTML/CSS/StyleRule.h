@@ -13,6 +13,16 @@ public:
 
     ~StyleRule();
 
+    const Vector<Selector>& selectors() const { return m_selectors; }
+    const Vector<NonnullRefPtr<StyleDeclaration>>& declarations() const { return m_declarations; }
+
+    template<typename C>
+    void for_each_declaration(C callback) const
+    {
+        for (auto& declaration : m_declarations)
+            callback(*declaration);
+    }
+
 private:
     StyleRule(Vector<Selector>&&, Vector<NonnullRefPtr<StyleDeclaration>>&&);
 
