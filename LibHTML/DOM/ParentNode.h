@@ -4,13 +4,6 @@
 
 class ParentNode : public Node {
 public:
-    void append_child(NonnullRefPtr<Node>);
-
-    Node* first_child() { return m_first_child; }
-    Node* last_child() { return m_last_child; }
-    const Node* first_child() const { return m_first_child; }
-    const Node* last_child() const { return m_last_child; }
-
     template<typename F> void for_each_child(F) const;
     template<typename F> void for_each_child(F);
 
@@ -19,10 +12,6 @@ protected:
         : Node(type)
     {
     }
-
-private:
-    Node* m_first_child { nullptr };
-    Node* m_last_child { nullptr };
 };
 
 template<typename Callback>

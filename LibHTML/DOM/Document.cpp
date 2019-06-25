@@ -21,8 +21,8 @@ static void create_layout_tree_for_node(Node& node)
             printf("created layout node for <%s>, parent is %p, parent ln is %p\n", static_cast<const Element&>(node).tag_name().characters(), node.parent_node(), node.parent_node()->layout_node());
         }
 #endif
-        if (node.parent_node() && node.parent_node()->layout_node())
-            node.parent_node()->layout_node()->append_child(*layout_node);
+        if (node.parent() && node.parent()->layout_node())
+            node.parent()->layout_node()->append_child(*layout_node);
     }
     if (node.is_parent_node()) {
         static_cast<ParentNode&>(node).for_each_child([&](auto& child) {
