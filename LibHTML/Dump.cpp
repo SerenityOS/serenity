@@ -70,4 +70,33 @@ void dump_tree(const LayoutNode& layout_node)
 void dump_sheet(const StyleSheet& sheet)
 {
     printf("StyleSheet{%p}: %d rule(s)\n", &sheet, sheet.rules().size());
+
+    for (auto& rule : sheet.rules()) {
+        printf("Rule:\n");
+        for (auto& selector : rule->selectors()) {
+            printf("  Selector:\n");
+            for (auto& component : selector.components()) {
+                const char* type_description = "Unknown";
+                switch (component.type) {
+                case Selector::Component::Type::Invalid:
+                    type_description = "Invalid";
+                    break;
+                case Selector::Component::Type::Id:
+                    type_description = "Id";
+                    break;
+                case Selector::Component::Type::Class:
+                    type_description = "Class";
+                    break;
+                case Selector::Component::Type::TagName:
+                    type_description = "TagName";
+                    break;
+                }
+                printf("    %s:%s", type_description, component.value.characters());
+            }
+        }
+        printf("  Declarations:\n");
+        rule->for_each_declaration([](auto& declaration) {
+            printf("    '%s': '%s'\n", declaration.property_name().characters(), declaration.value().to_string().characters());
+        });
+    }
 }

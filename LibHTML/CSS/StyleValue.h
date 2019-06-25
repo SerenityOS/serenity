@@ -20,6 +20,8 @@ public:
 
     Type type() const { return m_type; }
 
+    virtual String to_string() const = 0;
+
 protected:
     explicit StyleValue(Type);
 
@@ -36,7 +38,7 @@ public:
     {
     }
 
-    String to_string() const { return m_string; }
+    String to_string() const override { return m_string; }
 
 private:
     String m_string;
