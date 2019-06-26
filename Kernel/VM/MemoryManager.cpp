@@ -21,8 +21,8 @@ MemoryManager& MM
 MemoryManager::MemoryManager()
 {
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(0x4000));
-    m_page_table_zero = (dword*)0x6000;
-    m_page_table_one = (dword*)0x7000;
+    m_page_table_zero = (PageTableEntry*)0x6000;
+    m_page_table_one = (PageTableEntry*)0x7000;
 
     initialize_paging();
 
@@ -36,17 +36,15 @@ MemoryManager::~MemoryManager()
 void MemoryManager::populate_page_directory(PageDirectory& page_directory)
 {
     page_directory.m_directory_page = allocate_supervisor_physical_page();
-    page_directory.entries()[0] = kernel_page_directory().entries()[0];
-    page_directory.entries()[1] = kernel_page_directory().entries()[1];
+    page_directory.entries()[0].copy_from({}, kernel_page_directory().entries()[0]);
+    page_directory.entries()[1].copy_from({}, kernel_page_directory().entries()[1]);
     // Defer to the kernel page tables for 0xC0000000-0xFFFFFFFF
     for (int i = 768; i < 1024; ++i)
-        page_directory.entries()[i] = kernel_page_directory().entries()[i];
+        page_directory.entries()[i].copy_from({}, kernel_page_directory().entries()[i]);
 }
 
 void MemoryManager::initialize_paging()
 {
-    static_assert(sizeof(MemoryManager::PageDirectoryEntry) == 4);
-    static_assert(sizeof(MemoryManager::PageTableEntry) == 4);
     memset(m_page_table_zero, 0, PAGE_SIZE);
     memset(m_page_table_one, 0, PAGE_SIZE);
 
@@ -167,7 +165,7 @@ void MemoryManager::remove_identity_mapping(PageDirectory& page_directory, Virtu
     // FIXME: ASSERT(vaddr is 4KB aligned);
     for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
         auto pte_address = vaddr.offset(offset);
-        auto pte = ensure_pte(page_directory, pte_address);
+        auto& pte = ensure_pte(page_directory, pte_address);
         pte.set_physical_page_base(0);
         pte.set_user_allowed(false);
         pte.set_present(true);
@@ -176,13 +174,13 @@ void MemoryManager::remove_identity_mapping(PageDirectory& page_directory, Virtu
     }
 }
 
-auto MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr) -> PageTableEntry
+PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
     dword page_directory_index = (vaddr.get() >> 22) & 0x3ff;
     dword page_table_index = (vaddr.get() >> 12) & 0x3ff;
 
-    PageDirectoryEntry pde = PageDirectoryEntry(&page_directory.entries()[page_directory_index]);
+    PageDirectoryEntry& pde = page_directory.entries()[page_directory_index];
     if (!pde.is_present()) {
 #ifdef MM_DEBUG
         dbgprintf("MM: PDE %u not present (requested for L%x), allocating\n", page_directory_index, vaddr.get());
@@ -219,7 +217,7 @@ auto MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vad
             page_directory.m_physical_pages.set(page_directory_index, move(page_table));
         }
     }
-    return PageTableEntry(&pde.page_table_base()[page_table_index]);
+    return pde.page_table_base()[page_table_index];
 }
 
 void MemoryManager::map_protected(VirtualAddress vaddr, size_t length)
@@ -228,7 +226,7 @@ void MemoryManager::map_protected(VirtualAddress vaddr, size_t length)
     ASSERT(vaddr.is_page_aligned());
     for (dword offset = 0; offset < length; offset += PAGE_SIZE) {
         auto pte_address = vaddr.offset(offset);
-        auto pte = ensure_pte(kernel_page_directory(), pte_address);
+        auto& pte = ensure_pte(kernel_page_directory(), pte_address);
         pte.set_physical_page_base(pte_address.get());
         pte.set_user_allowed(false);
         pte.set_present(false);
@@ -243,7 +241,7 @@ void MemoryManager::create_identity_mapping(PageDirectory& page_directory, Virtu
     ASSERT((vaddr.get() & ~PAGE_MASK) == 0);
     for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
         auto pte_address = vaddr.offset(offset);
-        auto pte = ensure_pte(page_directory, pte_address);
+        auto& pte = ensure_pte(page_directory, pte_address);
         pte.set_physical_page_base(pte_address.get());
         pte.set_user_allowed(false);
         pte.set_present(true);
@@ -595,7 +593,7 @@ void MemoryManager::flush_tlb(VirtualAddress vaddr)
 
 void MemoryManager::map_for_kernel(VirtualAddress vaddr, PhysicalAddress paddr)
 {
-    auto pte = ensure_pte(kernel_page_directory(), vaddr);
+    auto& pte = ensure_pte(kernel_page_directory(), vaddr);
     pte.set_physical_page_base(paddr.get());
     pte.set_present(true);
     pte.set_writable(true);
@@ -609,7 +607,7 @@ byte* MemoryManager::quickmap_page(PhysicalPage& physical_page)
     ASSERT(!m_quickmap_in_use);
     m_quickmap_in_use = true;
     auto page_vaddr = m_quickmap_addr;
-    auto pte = ensure_pte(kernel_page_directory(), page_vaddr);
+    auto& pte = ensure_pte(kernel_page_directory(), page_vaddr);
     pte.set_physical_page_base(physical_page.paddr().get());
     pte.set_present(true);
     pte.set_writable(true);
@@ -627,7 +625,7 @@ void MemoryManager::unquickmap_page()
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(m_quickmap_in_use);
     auto page_vaddr = m_quickmap_addr;
-    auto pte = ensure_pte(kernel_page_directory(), page_vaddr);
+    auto& pte = ensure_pte(kernel_page_directory(), page_vaddr);
 #ifdef MM_DEBUG
     auto old_physical_address = pte.physical_page_base();
 #endif
@@ -646,7 +644,7 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
     ASSERT(region.page_directory());
     InterruptDisabler disabler;
     auto page_vaddr = region.vaddr().offset(page_index_in_region * PAGE_SIZE);
-    auto pte = ensure_pte(*region.page_directory(), page_vaddr);
+    auto& pte = ensure_pte(*region.page_directory(), page_vaddr);
     auto& physical_page = region.vmo().physical_pages()[page_index_in_region];
     ASSERT(physical_page);
     pte.set_physical_page_base(physical_page->paddr().get());
@@ -681,7 +679,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
 #endif
     for (size_t i = 0; i < region.page_count(); ++i) {
         auto page_vaddr = vaddr.offset(i * PAGE_SIZE);
-        auto pte = ensure_pte(page_directory, page_vaddr);
+        auto& pte = ensure_pte(page_directory, page_vaddr);
         auto& physical_page = vmo.physical_pages()[region.first_page_index() + i];
         if (physical_page) {
             pte.set_physical_page_base(physical_page->paddr().get());
@@ -712,7 +710,7 @@ bool MemoryManager::unmap_region(Region& region)
     InterruptDisabler disabler;
     for (size_t i = 0; i < region.page_count(); ++i) {
         auto vaddr = region.vaddr().offset(i * PAGE_SIZE);
-        auto pte = ensure_pte(*region.page_directory(), vaddr);
+        auto& pte = ensure_pte(*region.page_directory(), vaddr);
         pte.set_physical_page_base(0);
         pte.set_present(false);
         pte.set_writable(false);
