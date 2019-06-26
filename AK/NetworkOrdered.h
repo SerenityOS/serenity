@@ -3,18 +3,16 @@
 #include <AK/Types.h>
 
 template<typename T>
-[[gnu::always_inline]] inline T convert_between_host_and_network(T host_value)
+[[gnu::always_inline]] inline T convert_between_host_and_network(T value)
 {
-    if constexpr (sizeof(T) == 4) {
-        auto* s = (byte*)&host_value;
-        return (dword)(s[0] << 24 | s[1] << 16 | s[2] << 8 | s[3]);
-    }
-    if constexpr (sizeof(T) == 2) {
-        auto* s = (byte*)&host_value;
-        return (word)(s[0] << 8 | s[1]);
-    }
+    if constexpr (sizeof(T) == 8)
+        return __builtin_bswap64(value);
+    if constexpr (sizeof(T) == 4)
+        return __builtin_bswap32(value);
+    if constexpr (sizeof(T) == 2)
+        return __builtin_bswap16(value);
     if constexpr (sizeof(T) == 1)
-        return host_value;
+        return value;
 }
 
 template<typename T>
