@@ -1,5 +1,6 @@
 #pragma once
 
+#include <endian.h>
 #include <sys/cdefs.h>
 #include <sys/socket.h>
 
@@ -10,26 +11,28 @@ __BEGIN_DECLS
 const char* inet_ntop(int af, const void* src, char* dst, socklen_t);
 int inet_pton(int af, const char* src, void* dst);
 
-static inline uint16_t htons(uint16_t hs)
+inline uint16_t htons(uint16_t value)
 {
-    uint8_t* s = (uint8_t*)&hs;
-    return (uint16_t)(s[0] << 8 | s[1]);
+#if BYTE_ORDER == LITTLE_ENDIAN
+    return __builtin_bswap16(value);
+#else
+    return value;
+#endif
 }
 
-static inline uint16_t ntohs(uint16_t ns)
+inline uint16_t ntohs(uint16_t value)
 {
-    return htons(ns);
+    return htons(value);
 }
 
-static inline uint32_t htonl(uint32_t hs)
+inline uint32_t htonl(uint32_t value)
 {
-    uint8_t* s = (uint8_t*)&hs;
-    return (uint32_t)(s[0] << 24 | s[1] << 16 | s[2] << 8 | s[3]);
+    return __builtin_bswap32(value);
 }
 
-static inline uint32_t ntohl(uint32_t ns)
+inline uint32_t ntohl(uint32_t value)
 {
-    return htonl(ns);
+    return htonl(value);
 }
 
 __END_DECLS
