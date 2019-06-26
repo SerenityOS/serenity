@@ -21,25 +21,10 @@ template<typename T>
 class [[gnu::packed]] NetworkOrdered
 {
 public:
-    NetworkOrdered()
-        : m_network_value(0)
-    {
-    }
-
+    NetworkOrdered() {}
     NetworkOrdered(const T& host_value)
         : m_network_value(convert_between_host_and_network(host_value))
     {
-    }
-
-    NetworkOrdered(const NetworkOrdered& other)
-        : m_network_value(other.m_network_value)
-    {
-    }
-
-    NetworkOrdered& operator=(const NetworkOrdered& other)
-    {
-        m_network_value = other.m_network_value;
-        return *this;
     }
 
     operator T() const { return convert_between_host_and_network(m_network_value); }
