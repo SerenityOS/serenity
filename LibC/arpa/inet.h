@@ -27,7 +27,11 @@ inline uint16_t ntohs(uint16_t value)
 
 inline uint32_t htonl(uint32_t value)
 {
+#if BYTE_ORDER == LITTLE_ENDIAN
     return __builtin_bswap32(value);
+#else
+    return value;
+#endif
 }
 
 inline uint32_t ntohl(uint32_t value)
