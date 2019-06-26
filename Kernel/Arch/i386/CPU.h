@@ -1,10 +1,15 @@
 #pragma once
 
+#include <AK/Badge.h>
+#include <AK/Noncopyable.h>
 #include <Kernel/VirtualAddress.h>
 #include <Kernel/kstdio.h>
 
 #define PAGE_SIZE 4096
 #define PAGE_MASK 0xfffff000
+
+class MemoryManager;
+class PageTableEntry;
 
 struct [[gnu::packed]] TSS32
 {
@@ -78,6 +83,106 @@ union [[gnu::packed]] Descriptor
         limit_hi = ((dword)l >> 16) & 0xff;
     }
 };
+
+class PageDirectoryEntry {
+    AK_MAKE_NONCOPYABLE(PageDirectoryEntry);
+
+public:
+    PageTableEntry* page_table_base() { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
+    void set_page_table_base(dword value)
+    {
+        m_raw &= 0xfff;
+        m_raw |= value & 0xfffff000;
+    }
+
+    dword raw() const { return m_raw; }
+    void copy_from(Badge<MemoryManager>, const PageDirectoryEntry& other) { m_raw = other.m_raw; }
+
+    enum Flags {
+        Present = 1 << 0,
+        ReadWrite = 1 << 1,
+        UserSupervisor = 1 << 2,
+        WriteThrough = 1 << 3,
+        CacheDisabled = 1 << 4,
+    };
+
+    bool is_present() const { return raw() & Present; }
+    void set_present(bool b) { set_bit(Present, b); }
+
+    bool is_user_allowed() const { return raw() & UserSupervisor; }
+    void set_user_allowed(bool b) { set_bit(UserSupervisor, b); }
+
+    bool is_writable() const { return raw() & ReadWrite; }
+    void set_writable(bool b) { set_bit(ReadWrite, b); }
+
+    bool is_write_through() const { return raw() & WriteThrough; }
+    void set_write_through(bool b) { set_bit(WriteThrough, b); }
+
+    bool is_cache_disabled() const { return raw() & CacheDisabled; }
+    void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
+
+    void set_bit(byte bit, bool value)
+    {
+        if (value)
+            m_raw |= bit;
+        else
+            m_raw &= ~bit;
+    }
+
+private:
+    dword m_raw;
+};
+
+class PageTableEntry {
+    AK_MAKE_NONCOPYABLE(PageTableEntry);
+
+public:
+    void* physical_page_base() { return reinterpret_cast<void*>(m_raw & 0xfffff000u); }
+    void set_physical_page_base(dword value)
+    {
+        m_raw &= 0xfff;
+        m_raw |= value & 0xfffff000;
+    }
+
+    dword raw() const { return m_raw; }
+
+    enum Flags {
+        Present = 1 << 0,
+        ReadWrite = 1 << 1,
+        UserSupervisor = 1 << 2,
+        WriteThrough = 1 << 3,
+        CacheDisabled = 1 << 4,
+    };
+
+    bool is_present() const { return raw() & Present; }
+    void set_present(bool b) { set_bit(Present, b); }
+
+    bool is_user_allowed() const { return raw() & UserSupervisor; }
+    void set_user_allowed(bool b) { set_bit(UserSupervisor, b); }
+
+    bool is_writable() const { return raw() & ReadWrite; }
+    void set_writable(bool b) { set_bit(ReadWrite, b); }
+
+    bool is_write_through() const { return raw() & WriteThrough; }
+    void set_write_through(bool b) { set_bit(WriteThrough, b); }
+
+    bool is_cache_disabled() const { return raw() & CacheDisabled; }
+    void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
+
+    void set_bit(byte bit, bool value)
+    {
+        if (value)
+            m_raw |= bit;
+        else
+            m_raw &= ~bit;
+    }
+
+private:
+    dword m_raw;
+};
+
+static_assert(sizeof(PageDirectoryEntry) == 4);
+static_assert(sizeof(PageTableEntry) == 4);
 
 class IRQHandler;
 
