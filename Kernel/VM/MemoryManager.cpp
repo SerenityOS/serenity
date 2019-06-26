@@ -405,6 +405,14 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     dbgprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.vaddr().get());
 #endif
     ASSERT(fault.vaddr() != m_quickmap_addr);
+    if (fault.is_not_present() && fault.vaddr().get() >= 0xc0000000) {
+        dword page_directory_index = (fault.vaddr().get() >> 22) & 0x3ff;
+        if (kernel_page_directory().entries()[page_directory_index].is_present()) {
+            current->process().page_directory().entries()[page_directory_index].copy_from({}, kernel_page_directory().entries()[page_directory_index]);
+            dbgprintf("NP(kernel): copying new kernel mapping for L%x into process\n", fault.vaddr().get());
+            return PageFaultResponse::Continue;
+        }
+    }
     auto* region = region_from_vaddr(current->process(), fault.vaddr());
     if (!region) {
         kprintf("NP(error) fault at invalid address L%x\n", fault.vaddr().get());
