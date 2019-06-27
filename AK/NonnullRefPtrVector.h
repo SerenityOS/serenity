@@ -10,6 +10,10 @@ class NonnullRefPtrVector : public Vector<NonnullRefPtr<T>, inline_capacity> {
     typedef Vector<NonnullRefPtr<T>> Base;
 
 public:
+    NonnullRefPtrVector()
+    {
+    }
+
     NonnullRefPtrVector(Vector<NonnullRefPtr<T>>&& other)
         : Base(static_cast<Base&&>(other))
     {
