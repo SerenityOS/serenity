@@ -10,6 +10,86 @@
 
 namespace AK {
 
+template<typename T, int inline_capacity> class Vector;
+
+template<typename VectorType, typename ElementType>
+class VectorIterator {
+public:
+    bool operator!=(const VectorIterator& other) { return m_index != other.m_index; }
+    bool operator==(const VectorIterator& other) { return m_index == other.m_index; }
+    bool operator<(const VectorIterator& other) { return m_index < other.m_index; }
+    bool operator>(const VectorIterator& other) { return m_index > other.m_index; }
+    bool operator>=(const VectorIterator& other) { return m_index >= other.m_index; }
+    VectorIterator& operator++()
+    {
+        ++m_index;
+        return *this;
+    }
+    VectorIterator& operator--()
+    {
+        --m_index;
+        return *this;
+    }
+    VectorIterator operator-(int value) { return { m_vector, m_index - value }; }
+    VectorIterator operator+(int value) { return { m_vector, m_index + value }; }
+    VectorIterator& operator=(const VectorIterator& other)
+    {
+        m_index = other.m_index;
+        return *this;
+    }
+    ElementType& operator*() { return m_vector[m_index]; }
+    int operator-(const VectorIterator& other) { return m_index - other.m_index; }
+
+private:
+    friend VectorType;
+    VectorIterator(VectorType& vector, int index)
+        : m_vector(vector)
+        , m_index(index)
+    {
+    }
+    VectorType& m_vector;
+    int m_index { 0 };
+};
+
+template<typename VectorType, typename ElementType>
+class ConstVectorIterator {
+public:
+    bool operator!=(const ConstVectorIterator& other) { return m_index != other.m_index; }
+    bool operator==(const ConstVectorIterator& other) { return m_index == other.m_index; }
+    bool operator<(const ConstVectorIterator& other) { return m_index < other.m_index; }
+    bool operator>(const ConstVectorIterator& other) { return m_index > other.m_index; }
+    bool operator>=(const ConstVectorIterator& other) { return m_index >= other.m_index; }
+    ConstVectorIterator& operator++()
+    {
+        ++m_index;
+        return *this;
+    }
+    ConstVectorIterator& operator--()
+    {
+        --m_index;
+        return *this;
+    }
+    ConstVectorIterator operator-(int value) { return { m_vector, m_index - value }; }
+    ConstVectorIterator operator+(int value) { return { m_vector, m_index + value }; }
+    ConstVectorIterator& operator=(const ConstVectorIterator& other)
+    {
+        m_index = other.m_index;
+        return *this;
+    }
+    const ElementType& operator*() const { return m_vector[m_index]; }
+    int operator-(const ConstVectorIterator& other) { return m_index - other.m_index; }
+
+private:
+    friend VectorType;
+    ConstVectorIterator(const VectorType& vector, const int index)
+        : m_vector(vector)
+        , m_index(index)
+    {
+    }
+    const VectorType& m_vector;
+    int m_index { 0 };
+};
+
 template<typename T, int inline_capacity = 0>
 class Vector {
 public:
@@ -332,85 +412,11 @@ public:
         m_size = new_size;
     }
 
-    class Iterator {
-    public:
-        bool operator!=(const Iterator& other) { return m_index != other.m_index; }
-        bool operator==(const Iterator& other) { return m_index == other.m_index; }
-        bool operator<(const Iterator& other) { return m_index < other.m_index; }
-        bool operator>(const Iterator& other) { return m_index > other.m_index; }
-        bool operator>=(const Iterator& other) { return m_index >= other.m_index; }
-        Iterator& operator++()
-        {
-            ++m_index;
-            return *this;
-        }
-        Iterator& operator--()
-        {
-            --m_index;
-            return *this;
-        }
-        Iterator operator-(int value) { return { m_vector, m_index - value }; }
-        Iterator operator+(int value) { return { m_vector, m_index + value }; }
-        Iterator& operator=(const Iterator& other)
-        {
-            m_index = other.m_index;
-            return *this;
-        }
-        T& operator*() { return m_vector[m_index]; }
-        int operator-(const Iterator& other) { return m_index - other.m_index; }
-
-    private:
-        friend class Vector;
-        Iterator(Vector& vector, int index)
-            : m_vector(vector)
-            , m_index(index)
-        {
-        }
-        Vector& m_vector;
-        int m_index { 0 };
-    };
-
+    using Iterator = VectorIterator<Vector, T>;
     Iterator begin() { return Iterator(*this, 0); }
     Iterator end() { return Iterator(*this, size()); }
 
-    class ConstIterator {
-    public:
-        bool operator!=(const ConstIterator& other) { return m_index != other.m_index; }
-        bool operator==(const ConstIterator& other) { return m_index == other.m_index; }
-        bool operator<(const ConstIterator& other) { return m_index < other.m_index; }
-        bool operator>(const ConstIterator& other) { return m_index > other.m_index; }
-        bool operator>=(const ConstIterator& other) { return m_index >= other.m_index; }
-        ConstIterator& operator++()
-        {
-            ++m_index;
-            return *this;
-        }
-        ConstIterator& operator--()
-        {
-            --m_index;
-            return *this;
-        }
-        ConstIterator operator-(int value) { return { m_vector, m_index - value }; }
-        ConstIterator operator+(int value) { return { m_vector, m_index + value }; }
-        ConstIterator& operator=(const ConstIterator& other)
-        {
-            m_index = other.m_index;
-            return *this;
-        }
-        const T& operator*() const { return m_vector[m_index]; }
-        int operator-(const ConstIterator& other) { return m_index - other.m_index; }
-
-    private:
-        friend class Vector;
-        ConstIterator(const Vector& vector, const int index)
-            : m_vector(vector)
-            , m_index(index)
-        {
-        }
-        const Vector& m_vector;
-        int m_index { 0 };
-    };
-
+    using ConstIterator = ConstVectorIterator<Vector, T>;
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
