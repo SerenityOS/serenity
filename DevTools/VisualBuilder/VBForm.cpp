@@ -89,9 +89,9 @@ void VBForm::second_paint_event(GPaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     for (auto& widget : m_widgets) {
-        if (widget->is_selected()) {
-            for_each_direction([&](Direction direction) {
-                painter.fill_rect(widget->grabber_rect(direction), Color::Black);
+        if (widget.is_selected()) {
+            for_each_direction([&](auto direction) {
+                painter.fill_rect(widget.grabber_rect(direction), Color::Black);
             });
         }
     }
@@ -128,19 +128,19 @@ void VBForm::keydown_event(GKeyEvent& event)
         if (m_widgets.is_empty())
             return;
         if (m_selected_widgets.is_empty()) {
-            set_single_selected_widget(m_widgets.first());
+            set_single_selected_widget(&m_widgets.first());
             update();
             return;
         }
         int selected_widget_index = 0;
         for (; selected_widget_index < m_widgets.size(); ++selected_widget_index) {
-            if (m_widgets[selected_widget_index] == *m_selected_widgets.begin())
+            if (&m_widgets[selected_widget_index] == *m_selected_widgets.begin())
                 break;
         }
         ++selected_widget_index;
         if (selected_widget_index == m_widgets.size())
             selected_widget_index = 0;
-        set_single_selected_widget(m_widgets[selected_widget_index]);
+        set_single_selected_widget(&m_widgets[selected_widget_index]);
         update();
         return;
     }
@@ -318,7 +318,7 @@ void VBForm::write_to_file(const String& path)
     JsonArray widget_array;
     for (auto& widget : m_widgets) {
         JsonObject widget_object;
-        widget->for_each_property([&](auto& property) {
+        widget.for_each_property([&](auto& property) {
             if (property.value().is_bool())
                 widget_object.set(property.name(), property.value().to_bool());
             else if (property.value().is_int())
@@ -340,7 +340,7 @@ void VBForm::dump()
     int i = 0;
     for (auto& widget : m_widgets) {
         dbgprintf("[Widget %d]\n", i++);
-        widget->for_each_property([](auto& property) {
+        widget.for_each_property([](auto& property) {
             dbgprintf("%s=%s\n", property.name().characters(), property.value().to_string().characters());
         });
         dbgprintf("\n");
