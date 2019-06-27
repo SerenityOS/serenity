@@ -1,7 +1,7 @@
 #pragma once
 
 #include "VBWidget.h"
-#include <AK/Vector.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/GWidget.h>
 
 class VBForm : public GWidget {
@@ -52,7 +52,7 @@ private:
     String m_name;
     int m_grid_size { 5 };
     bool m_should_snap_to_grid { true };
-    Vector<NonnullRefPtr<VBWidget>> m_widgets;
+    NonnullRefPtrVector<VBWidget> m_widgets;
     HashMap<GWidget*, VBWidget*> m_gwidget_map;
     HashTable<VBWidget*> m_selected_widgets;
     Point m_transform_event_origin;
