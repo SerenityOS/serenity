@@ -2,6 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
@@ -211,7 +212,7 @@ public:
     void set_tty(TTY* tty) { m_tty = tty; }
 
     size_t region_count() const { return m_regions.size(); }
-    const Vector<NonnullRefPtr<Region>>& regions() const { return m_regions; }
+    const NonnullRefPtrVector<Region>& regions() const { return m_regions; }
     void dump_regions();
 
     ProcessTracer* tracer() { return m_tracer.ptr(); }
@@ -326,7 +327,7 @@ private:
 
     Region* region_from_range(VirtualAddress, size_t);
 
-    Vector<NonnullRefPtr<Region>> m_regions;
+    NonnullRefPtrVector<Region> m_regions;
 
     VirtualAddress m_return_to_ring3_from_signal_trampoline;
     VirtualAddress m_return_to_ring0_from_signal_trampoline;

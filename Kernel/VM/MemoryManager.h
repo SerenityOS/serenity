@@ -5,6 +5,7 @@
 #include <AK/Bitmap.h>
 #include <AK/ByteBuffer.h>
 #include <AK/HashTable.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
@@ -125,8 +126,8 @@ private:
     unsigned m_super_physical_pages { 0 };
     unsigned m_super_physical_pages_used { 0 };
 
-    Vector<NonnullRefPtr<PhysicalRegion>> m_user_physical_regions {};
-    Vector<NonnullRefPtr<PhysicalRegion>> m_super_physical_regions {};
+    NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
+    NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;
 
     HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_user_regions;

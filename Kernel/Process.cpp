@@ -99,10 +99,10 @@ Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String
     if (!range.is_valid())
         return nullptr;
     m_regions.append(adopt(*new Region(range, move(name), prot_to_region_access_flags(prot))));
-    MM.map_region(*this, *m_regions.last());
+    MM.map_region(*this, m_regions.last());
     if (commit)
-        m_regions.last()->commit();
-    return m_regions.last().ptr();
+        m_regions.last().commit();
+    return &m_regions.last();
 }
 
 Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, RefPtr<Inode>&& inode, const String& name, int prot)
@@ -111,8 +111,8 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
     if (!range.is_valid())
         return nullptr;
     m_regions.append(adopt(*new Region(range, move(inode), name, prot_to_region_access_flags(prot))));
-    MM.map_region(*this, *m_regions.last());
-    return m_regions.last().ptr();
+    MM.map_region(*this, m_regions.last());
+    return &m_regions.last();
 }
 
 Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject>&& vmo, size_t offset_in_vmo, const String& name, int prot)
@@ -122,15 +122,15 @@ Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, Non
         return nullptr;
     offset_in_vmo &= PAGE_MASK;
     m_regions.append(adopt(*new Region(range, move(vmo), offset_in_vmo, name, prot_to_region_access_flags(prot))));
-    MM.map_region(*this, *m_regions.last());
-    return m_regions.last().ptr();
+    MM.map_region(*this, m_regions.last());
+    return &m_regions.last();
 }
 
 bool Process::deallocate_region(Region& region)
 {
     InterruptDisabler disabler;
     for (int i = 0; i < m_regions.size(); ++i) {
-        if (m_regions[i] == &region) {
+        if (&m_regions[i] == &region) {
             page_directory().range_allocator().deallocate({ region.vaddr(), region.size() });
             MM.unmap_region(region);
             m_regions.remove(i);
@@ -144,8 +144,8 @@ Region* Process::region_from_range(VirtualAddress vaddr, size_t size)
 {
     size = PAGE_ROUND_UP(size);
     for (auto& region : m_regions) {
-        if (region->vaddr() == vaddr && region->size() == size)
-            return region.ptr();
+        if (region.vaddr() == vaddr && region.size() == size)
+            return &region;
     }
     return nullptr;
 }
@@ -241,9 +241,9 @@ Process* Process::fork(RegisterDump& regs)
 #ifdef FORK_DEBUG
         dbgprintf("fork: cloning Region{%p} \"%s\" L%x\n", region.ptr(), region->name().characters(), region->vaddr().get());
 #endif
-        auto cloned_region = region->clone();
+        auto cloned_region = region.clone();
         child->m_regions.append(move(cloned_region));
-        MM.map_region(*child, *child->m_regions.last());
+        MM.map_region(*child, child->m_regions.last());
     }
 
     for (auto gid : m_gids)
@@ -649,10 +649,10 @@ void Process::dump_regions()
     kprintf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : m_regions) {
         kprintf("%x -- %x    %x    %s\n",
-            region->vaddr().get(),
-            region->vaddr().offset(region->size() - 1).get(),
-            region->size(),
-            region->name().characters());
+            region.vaddr().get(),
+            region.vaddr().offset(region.size() - 1).get(),
+            region.size(),
+            region.name().characters());
     }
 }
 
@@ -2013,7 +2013,7 @@ size_t Process::amount_virtual() const
 {
     size_t amount = 0;
     for (auto& region : m_regions) {
-        amount += region->size();
+        amount += region.size();
     }
     return amount;
 }
@@ -2023,7 +2023,7 @@ size_t Process::amount_resident() const
     // FIXME: This will double count if multiple regions use the same physical page.
     size_t amount = 0;
     for (auto& region : m_regions) {
-        amount += region->amount_resident();
+        amount += region.amount_resident();
     }
     return amount;
 }
@@ -2036,7 +2036,7 @@ size_t Process::amount_shared() const
     //        so that every Region contributes +1 ref to each of its PhysicalPages.
     size_t amount = 0;
     for (auto& region : m_regions) {
-        amount += region->amount_shared();
+        amount += region.amount_shared();
     }
     return amount;
 }

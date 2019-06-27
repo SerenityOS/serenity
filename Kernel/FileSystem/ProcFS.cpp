@@ -224,17 +224,17 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
     builder.appendf("BEGIN       END         SIZE      COMMIT     FLAGS  NAME\n");
     for (auto& region : process.regions()) {
         StringBuilder flags_builder;
-        if (region->is_readable())
+        if (region.is_readable())
             flags_builder.append('R');
-        if (region->is_writable())
+        if (region.is_writable())
             flags_builder.append('W');
         builder.appendf("%x -- %x    %x  %x   %-4s   %s\n",
-            region->vaddr().get(),
-            region->vaddr().offset(region->size() - 1).get(),
-            region->size(),
-            region->amount_resident(),
+            region.vaddr().get(),
+            region.vaddr().offset(region.size() - 1).get(),
+            region.size(),
+            region.amount_resident(),
             flags_builder.to_string().characters(),
-            region->name().characters());
+            region.name().characters());
     }
     return builder.to_byte_buffer();
 }
@@ -285,20 +285,20 @@ ByteBuffer procfs$pid_vmo(InodeIdentifier identifier)
     builder.appendf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : process.regions()) {
         builder.appendf("%x -- %x    %x    %s\n",
-            region->vaddr().get(),
-            region->vaddr().offset(region->size() - 1).get(),
-            region->size(),
-            region->name().characters());
+            region.vaddr().get(),
+            region.vaddr().offset(region.size() - 1).get(),
+            region.size(),
+            region.name().characters());
         builder.appendf("VMO: %s \"%s\" @ %x(%u)\n",
-            region->vmo().is_anonymous() ? "anonymous" : "file-backed",
-            region->vmo().name().characters(),
-            &region->vmo(),
-            region->vmo().ref_count());
-        for (int i = 0; i < region->vmo().page_count(); ++i) {
-            auto& physical_page = region->vmo().physical_pages()[i];
+            region.vmo().is_anonymous() ? "anonymous" : "file-backed",
+            region.vmo().name().characters(),
+            &region.vmo(),
+            region.vmo().ref_count());
+        for (int i = 0; i < region.vmo().page_count(); ++i) {
+            auto& physical_page = region.vmo().physical_pages()[i];
             builder.appendf("P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
-                region->should_cow(i) ? "!" : "",
+                region.should_cow(i) ? "!" : "",
                 physical_page ? physical_page->ref_count() : 0);
         }
         builder.appendf("\n");
