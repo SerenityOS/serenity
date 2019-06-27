@@ -200,7 +200,7 @@ void SnakeGame::paint_event(GPaintEvent& event)
         painter.fill_rect(bottom_side, Color::from_rgb(0x888800));
     }
 
-    painter.draw_scaled_bitmap(cell_rect(m_fruit), *m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type]->rect());
+    painter.draw_scaled_bitmap(cell_rect(m_fruit), m_fruit_bitmaps[m_fruit_type], m_fruit_bitmaps[m_fruit_type].rect());
 
     painter.draw_text(high_score_rect(), m_high_score_text, TextAlignment::TopLeft, Color::from_rgb(0xfafae0));
     painter.draw_text(score_rect(), m_score_text, TextAlignment::TopLeft, Color::White);
