@@ -2,6 +2,10 @@
 #include <AK/QuickSort.h>
 #include <AK/kstdio.h>
 
+#ifdef KERNEL
+#include <Kernel/VM/MemoryManager.h>
+#endif
+
 //#define ELFLOADER_DEBUG
 
 ELFLoader::ELFLoader(const byte* buffer)
@@ -79,6 +83,24 @@ char* ELFLoader::symbol_ptr(const char* name)
 
 String ELFLoader::symbolicate(dword address) const
 {
+    SortedSymbol* sorted_symbols = nullptr;
+#ifdef KERNEL
+    if (!m_sorted_symbols_region) {
+        m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_image.symbol_count() * sizeof(SortedSymbol)), "Sorted symbols");
+        sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
+        dbgprintf("sorted_symbols: %p\n", sorted_symbols);
+        size_t index = 0;
+        m_image.for_each_symbol([&](auto& symbol) {
+            sorted_symbols[index++] = { symbol.value(), symbol.name() };
+            return IterationDecision::Continue;
+        });
+        quick_sort(sorted_symbols, sorted_symbols + m_image.symbol_count(), [](auto& a, auto& b) {
+            return a.address < b.address;
+        });
+    } else {
+        sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
+    }
+#else
     if (m_sorted_symbols.is_empty()) {
         m_sorted_symbols.ensure_capacity(m_image.symbol_count());
         m_image.for_each_symbol([this](auto& symbol) {
@@ -89,12 +111,14 @@ String ELFLoader::symbolicate(dword address) const
             return a.address < b.address;
         });
     }
+    sorted_symbols = m_sorted_symbols.data();
+#endif
 
-    for (int i = 0; i < m_sorted_symbols.size(); ++i) {
-        if (m_sorted_symbols[i].address > address) {
+    for (size_t i = 0; i < m_image.symbol_count(); ++i) {
+        if (sorted_symbols[i].address > address) {
             if (i == 0)
                 return "!!";
-            auto& symbol = m_sorted_symbols[i - 1];
+            auto& symbol = sorted_symbols[i - 1];
             return String::format("%s +%u", symbol.name, address - symbol.address);
         }
     }
