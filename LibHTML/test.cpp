@@ -2,6 +2,7 @@
 #include <LibHTML/Dump.h>
 #include <LibHTML/Frame.h>
 #include <LibHTML/Parser/CSSParser.h>
+#include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/Parser/HTMLParser.h>
 #include <stdio.h>
 
@@ -22,6 +23,11 @@ int main(int argc, char** argv)
     String html = String::copy(f.read_all());
     auto doc = parse_html(html);
     dump_tree(doc);
+
+    StyleResolver resolver(*doc);
+    resolver.add_sheet(*sheet);
+
+    auto doc_style = resolver.resolve_document_style(*doc);
 
     doc->build_layout_tree();
     ASSERT(doc->layout_node());
