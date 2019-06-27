@@ -29,7 +29,7 @@ public:
     Iterator begin() { return Iterator(*this, 0); }
     Iterator end() { return Iterator(*this, size()); }
 
-    using ConstIterator = ConstVectorIterator<NonnullRefPtrVector, T>;
+    using ConstIterator = VectorIterator<const NonnullRefPtrVector, const T>;
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
