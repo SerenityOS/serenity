@@ -50,6 +50,19 @@ void Element::set_attributes(Vector<Attribute>&& attributes)
     m_attributes = move(attributes);
 }
 
+bool Element::has_class(const StringView& class_name) const
+{
+    auto value = attribute("class");
+    if (value.is_empty())
+        return false;
+    auto parts = value.split_view(' ');
+    for (auto& part : parts) {
+        if (part == class_name)
+            return true;
+    }
+    return false;
+}
+
 RefPtr<LayoutNode> Element::create_layout_node()
 {
     if (m_tag_name == "html")
