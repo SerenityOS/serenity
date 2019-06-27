@@ -632,7 +632,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
     auto parts = path.split_view('/');
     InodeIdentifier crumb_id;
 
-    Vector<NonnullRefPtr<Custody>, 32> custody_chain;
+    NonnullRefPtrVector<Custody, 32> custody_chain;
 
     if (path[0] == '/') {
         custody_chain.append(root_custody());
@@ -661,9 +661,9 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
 
         auto& part = parts[i];
         if (part.is_empty())
-          break;
+            break;
 
-        auto current_parent = custody_chain.last();
+        auto& current_parent = custody_chain.last();
         crumb_id = crumb_inode->lookup(part);
         if (!crumb_id.is_valid())
             return KResult(-ENOENT);
@@ -678,7 +678,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         crumb_inode = get_inode(crumb_id);
         ASSERT(crumb_inode);
 
-        custody_chain.append(Custody::get_or_create(custody_chain.last().ptr(), part, *crumb_inode));
+        custody_chain.append(Custody::get_or_create(&custody_chain.last(), part, *crumb_inode));
 
         metadata = crumb_inode->metadata();
         if (metadata.is_directory()) {
@@ -702,7 +702,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
             auto symlink_target = resolve_path(
                 StringView(symlink_contents.pointer(),
                     symlink_contents.size()),
-                *current_parent,
+                current_parent,
                 parent_custody,
                 options);
 
