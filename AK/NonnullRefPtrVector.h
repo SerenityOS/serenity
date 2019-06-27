@@ -20,6 +20,15 @@ public:
     }
 
     using Base::size;
+
+    using Iterator = VectorIterator<NonnullRefPtrVector, T>;
+    Iterator begin() { return Iterator(*this, 0); }
+    Iterator end() { return Iterator(*this, size()); }
+
+    using ConstIterator = ConstVectorIterator<NonnullRefPtrVector, T>;
+    ConstIterator begin() const { return ConstIterator(*this, 0); }
+    ConstIterator end() const { return ConstIterator(*this, size()); }
+
     T& at(int index) { return *Base::at(index); }
     const T& at(int index) const { return *Base::at(index); }
     T& operator[](int index) { return at(index); }
