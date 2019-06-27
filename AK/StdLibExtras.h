@@ -130,7 +130,7 @@ struct RemoveVolatile {
     typedef T Type;
 };
 template<class T>
-struct RemoveVolatile<const T> {
+struct RemoveVolatile<volatile T> {
     typedef T Type;
 };
 template<class T>
