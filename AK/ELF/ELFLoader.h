@@ -4,10 +4,12 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
-#if defined(KERNEL)
-#    include <Kernel/VirtualAddress.h>
-#endif
 #include <AK/ELF/ELFImage.h>
+
+#ifdef KERNEL
+#include <Kernel/VirtualAddress.h>
+class Region;
+#endif
 
 class ELFLoader {
 public:
@@ -50,5 +52,9 @@ private:
         dword address;
         const char* name;
     };
+#ifdef KERNEL
+    mutable RefPtr<Region> m_sorted_symbols_region;
+#else
     mutable Vector<SortedSymbol> m_sorted_symbols;
+#endif
 };
