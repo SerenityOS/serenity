@@ -5,7 +5,7 @@
 
 NonnullRefPtr<StyleSheet> parse_css(const String& css)
 {
-    Vector<NonnullRefPtr<StyleRule>> rules;
+    NonnullRefPtrVector<StyleRule> rules;
 
     enum class State {
         Free,
@@ -16,7 +16,7 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
 
     struct CurrentRule {
         Vector<Selector> selectors;
-        Vector<NonnullRefPtr<StyleDeclaration>> declarations;
+        NonnullRefPtrVector<StyleDeclaration> declarations;
     };
 
     CurrentRule current_rule;
