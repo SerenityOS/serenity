@@ -9,6 +9,7 @@ LIBHTML_OBJS = \
     CSS/StyleRule.o \
     CSS/StyleDeclaration.o \
     CSS/StyleValue.o \
+    CSS/StyledNode.o \
     CSS/DefaultStyleSheetSource.o \
     Parser/HTMLParser.o \
     Parser/CSSParser.o \
