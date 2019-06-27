@@ -23,6 +23,14 @@ int main()
         ++loop_counter;
     }
 
+    number_to_string.remove(1);
+    EXPECT_EQ(number_to_string.size(), 2);
+    EXPECT(number_to_string.find(1) == number_to_string.end());
+
+    number_to_string.remove(3);
+    EXPECT_EQ(number_to_string.size(), 1);
+    EXPECT(number_to_string.find(3) == number_to_string.end());
+
     EXPECT_EQ(loop_counter, 3);
     return 0;
 }

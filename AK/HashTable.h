@@ -1,10 +1,10 @@
 #pragma once
 
-#include "Assertions.h"
-#include "DoublyLinkedList.h"
-#include "StdLibExtras.h"
-#include "Traits.h"
-#include "kstdio.h"
+#include <AK/Assertions.h>
+#include <AK/SinglyLinkedList.h>
+#include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
+#include <AK/kstdio.h>
 
 namespace AK {
 
@@ -75,7 +75,7 @@ private:
 template<typename T, typename TraitsForT>
 class HashTable {
 private:
-    using Bucket = DoublyLinkedList<T>;
+    using Bucket = SinglyLinkedList<T>;
 
 public:
     HashTable() {}
@@ -136,12 +136,12 @@ public:
 
     void dump() const;
 
-    using Iterator = HashTableIterator<HashTable, T, typename DoublyLinkedList<T>::Iterator>;
+    using Iterator = HashTableIterator<HashTable, T, typename SinglyLinkedList<T>::Iterator>;
     friend Iterator;
     Iterator begin() { return Iterator(*this, is_empty()); }
     Iterator end() { return Iterator(*this, true); }
 
-    using ConstIterator = HashTableIterator<const HashTable, const T, typename DoublyLinkedList<T>::ConstIterator>;
+    using ConstIterator = HashTableIterator<const HashTable, const T, typename SinglyLinkedList<T>::ConstIterator>;
     friend ConstIterator;
     ConstIterator begin() const { return ConstIterator(*this, is_empty()); }
     ConstIterator end() const { return ConstIterator(*this, true); }
