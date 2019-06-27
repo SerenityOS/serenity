@@ -7,7 +7,7 @@ namespace AK {
 
 template<typename T, int inline_capacity = 0>
 class NonnullRefPtrVector : public Vector<NonnullRefPtr<T>, inline_capacity> {
-    typedef Vector<NonnullRefPtr<T>> Base;
+    typedef Vector<NonnullRefPtr<T>, inline_capacity> Base;
 
 public:
     NonnullRefPtrVector()
