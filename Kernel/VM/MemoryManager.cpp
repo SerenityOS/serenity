@@ -79,7 +79,7 @@ void MemoryManager::initialize_paging()
 #endif
     m_quickmap_addr = VirtualAddress((1 * MB) - PAGE_SIZE);
 
-    RefPtr<PhysicalRegion> region = nullptr;
+    RefPtr<PhysicalRegion> region;
     bool region_is_super = false;
 
     for (auto* mmap = (multiboot_memory_map_t*)multiboot_info_ptr->mmap_addr; (unsigned long)mmap < multiboot_info_ptr->mmap_addr + multiboot_info_ptr->mmap_length; mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
@@ -118,7 +118,7 @@ void MemoryManager::initialize_paging()
             } else {
                 if (region.is_null() || region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
                     m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
-                    region = m_user_physical_regions.last();
+                    region = &m_user_physical_regions.last();
                     region_is_super = false;
                 } else {
                     region->expand(region->lower(), addr);
@@ -128,10 +128,10 @@ void MemoryManager::initialize_paging()
     }
 
     for (auto& region : m_super_physical_regions)
-        m_super_physical_pages += region->finalize_capacity();
+        m_super_physical_pages += region.finalize_capacity();
 
     for (auto& region : m_user_physical_regions)
-        m_user_physical_pages += region->finalize_capacity();
+        m_user_physical_pages += region.finalize_capacity();
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Installing page directory\n");
@@ -268,8 +268,8 @@ Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
 
     // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
     for (auto& region : process.m_regions) {
-        if (region->contains(vaddr))
-            return region.ptr();
+        if (region.contains(vaddr))
+            return &region;
     }
     dbgprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), vaddr.get(), process.page_directory().cr3());
     return nullptr;
@@ -286,8 +286,8 @@ const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAd
 
     // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
     for (auto& region : process.m_regions) {
-        if (region->contains(vaddr))
-            return region.ptr();
+        if (region.contains(vaddr))
+            return &region;
     }
     dbgprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), vaddr.get(), process.page_directory().cr3());
     return nullptr;
@@ -467,15 +467,15 @@ RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& name)
 void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
 {
     for (auto& region : m_user_physical_regions) {
-        if (!region->contains(page)) {
+        if (!region.contains(page)) {
             kprintf(
                 "MM: deallocate_user_physical_page: %p not in %p -> %p\n",
-                page.paddr(), region->lower().get(), region->upper().get());
+                page.paddr(), region.lower().get(), region.upper().get());
             continue;
         }
 
-        region->return_page(move(page));
-        m_user_physical_pages_used--;
+        region.return_page(move(page));
+        --m_user_physical_pages_used;
 
         return;
     }
@@ -487,11 +487,10 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
 RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
 {
     InterruptDisabler disabler;
-
-    RefPtr<PhysicalPage> page = nullptr;
+    RefPtr<PhysicalPage> page;
 
     for (auto& region : m_user_physical_regions) {
-        page = region->take_free_page(false);
+        page = region.take_free_page(false);
         if (page.is_null())
             continue;
     }
@@ -516,24 +515,22 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
         unquickmap_page();
     }
 
-    m_user_physical_pages_used++;
-
+    ++m_user_physical_pages_used;
     return page;
 }
 
 void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
 {
     for (auto& region : m_super_physical_regions) {
-        if (!region->contains(page)) {
+        if (!region.contains(page)) {
             kprintf(
                 "MM: deallocate_supervisor_physical_page: %p not in %p -> %p\n",
-                page.paddr(), region->lower().get(), region->upper().get());
+                page.paddr(), region.lower().get(), region.upper().get());
             continue;
         }
 
-        region->return_page(move(page));
-        m_super_physical_pages_used--;
-
+        region.return_page(move(page));
+        --m_super_physical_pages_used;
         return;
     }
 
@@ -544,11 +541,10 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
 RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 {
     InterruptDisabler disabler;
-
-    RefPtr<PhysicalPage> page = nullptr;
+    RefPtr<PhysicalPage> page;
 
     for (auto& region : m_super_physical_regions) {
-        page = region->take_free_page(true);
+        page = region.take_free_page(true);
         if (page.is_null())
             continue;
     }
@@ -568,9 +564,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
 #endif
 
     fast_dword_fill((dword*)page->paddr().as_ptr(), 0, PAGE_SIZE / sizeof(dword));
-
-    m_super_physical_pages_used++;
-
+    ++m_super_physical_pages_used;
     return page;
 }
 
