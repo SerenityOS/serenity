@@ -73,7 +73,7 @@ void dump_sheet(const StyleSheet& sheet)
 
     for (auto& rule : sheet.rules()) {
         printf("Rule:\n");
-        for (auto& selector : rule->selectors()) {
+        for (auto& selector : rule.selectors()) {
             printf("  Selector:\n");
             for (auto& component : selector.components()) {
                 const char* type_description = "Unknown";
@@ -95,7 +95,7 @@ void dump_sheet(const StyleSheet& sheet)
             }
         }
         printf("  Declarations:\n");
-        rule->for_each_declaration([](auto& declaration) {
+        rule.for_each_declaration([](auto& declaration) {
             printf("    '%s': '%s'\n", declaration.property_name().characters(), declaration.value().to_string().characters());
         });
     }

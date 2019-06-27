@@ -1,6 +1,6 @@
 #include <LibHTML/CSS/StyleSheet.h>
 
-StyleSheet::StyleSheet(Vector<NonnullRefPtr<StyleRule>>&& rules)
+StyleSheet::StyleSheet(NonnullRefPtrVector<StyleRule>&& rules)
     : m_rules(move(rules))
 {
 }

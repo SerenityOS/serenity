@@ -1,21 +1,21 @@
 #pragma once
 
-#include <AK/Vector.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <LibHTML/CSS/StyleRule.h>
 
 class StyleSheet : public RefCounted<StyleSheet> {
 public:
-    static NonnullRefPtr<StyleSheet> create(Vector<NonnullRefPtr<StyleRule>>&& rules)
+    static NonnullRefPtr<StyleSheet> create(NonnullRefPtrVector<StyleRule>&& rules)
     {
         return adopt(*new StyleSheet(move(rules)));
     }
 
     ~StyleSheet();
 
-    const Vector<NonnullRefPtr<StyleRule>>& rules() const { return m_rules; }
+    const NonnullRefPtrVector<StyleRule>& rules() const { return m_rules; }
 
 private:
-    explicit StyleSheet(Vector<NonnullRefPtr<StyleRule>>&&);
+    explicit StyleSheet(NonnullRefPtrVector<StyleRule>&&);
 
-    Vector<NonnullRefPtr<StyleRule>> m_rules;
+    NonnullRefPtrVector<StyleRule> m_rules;
 };
