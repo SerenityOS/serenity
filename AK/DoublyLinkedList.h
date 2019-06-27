@@ -5,6 +5,30 @@
 
 namespace AK {
 
+template<typename ListType, typename ElementType>
+class DoublyLinkedListIterator {
+public:
+    bool operator!=(const DoublyLinkedListIterator& other) const { return m_node != other.m_node; }
+    bool operator==(const DoublyLinkedListIterator& other) const { return m_node == other.m_node; }
+    DoublyLinkedListIterator& operator++()
+    {
+        m_node = m_node->next;
+        return *this;
+    }
+    ElementType& operator*() { return m_node->value; }
+    ElementType* operator->() { return &m_node->value; }
+    bool is_end() const { return !m_node; }
+    static DoublyLinkedListIterator universal_end() { return DoublyLinkedListIterator(nullptr); }
+
+private:
+    friend ListType;
+    explicit DoublyLinkedListIterator(typename ListType::Node* node)
+        : m_node(node)
+    {
+    }
+    typename ListType::Node* m_node;
+};
+
 template<typename T>
 class DoublyLinkedList {
 private:
@@ -79,55 +103,13 @@ public:
         return false;
     }
 
-    class Iterator {
-    public:
-        bool operator!=(const Iterator& other) const { return m_node != other.m_node; }
-        bool operator==(const Iterator& other) const { return m_node == other.m_node; }
-        Iterator& operator++()
-        {
-            m_node = m_node->next;
-            return *this;
-        }
-        T& operator*() { return m_node->value; }
-        T* operator->() { return &m_node->value; }
-        bool is_end() const { return !m_node; }
-        static Iterator universal_end() { return Iterator(nullptr); }
-
-    private:
-        friend class DoublyLinkedList;
-        explicit Iterator(DoublyLinkedList::Node* node)
-            : m_node(node)
-        {
-        }
-        DoublyLinkedList::Node* m_node;
-    };
-
+    using Iterator = DoublyLinkedListIterator<DoublyLinkedList, T>;
+    friend Iterator;
     Iterator begin() { return Iterator(m_head); }
     Iterator end() { return Iterator::universal_end(); }
 
-    class ConstIterator {
-    public:
-        bool operator!=(const ConstIterator& other) const { return m_node != other.m_node; }
-        bool operator==(const ConstIterator& other) const { return m_node == other.m_node; }
-        ConstIterator& operator++()
-        {
-            m_node = m_node->next;
-            return *this;
-        }
-        const T& operator*() const { return m_node->value; }
-        const T* operator->() const { return &m_node->value; }
-        bool is_end() const { return !m_node; }
-        static ConstIterator universal_end() { return ConstIterator(nullptr); }
-
-    private:
-        friend class DoublyLinkedList;
-        explicit ConstIterator(const DoublyLinkedList::Node* node)
-            : m_node(node)
-        {
-        }
-        const DoublyLinkedList::Node* m_node;
-    };
-
+    using ConstIterator = DoublyLinkedListIterator<const DoublyLinkedList, const T>;
+    friend ConstIterator;
     ConstIterator begin() const { return ConstIterator(m_head); }
     ConstIterator end() const { return ConstIterator::universal_end(); }
 
@@ -171,8 +153,6 @@ public:
     }
 
 private:
-    friend class Iterator;
-
     void append_node(Node* node)
     {
         if (!m_head) {
