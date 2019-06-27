@@ -51,45 +51,6 @@ private:
     int m_index { 0 };
 };
 
-template<typename VectorType, typename ElementType>
-class ConstVectorIterator {
-public:
-    bool operator!=(const ConstVectorIterator& other) { return m_index != other.m_index; }
-    bool operator==(const ConstVectorIterator& other) { return m_index == other.m_index; }
-    bool operator<(const ConstVectorIterator& other) { return m_index < other.m_index; }
-    bool operator>(const ConstVectorIterator& other) { return m_index > other.m_index; }
-    bool operator>=(const ConstVectorIterator& other) { return m_index >= other.m_index; }
-    ConstVectorIterator& operator++()
-    {
-        ++m_index;
-        return *this;
-    }
-    ConstVectorIterator& operator--()
-    {
-        --m_index;
-        return *this;
-    }
-    ConstVectorIterator operator-(int value) { return { m_vector, m_index - value }; }
-    ConstVectorIterator operator+(int value) { return { m_vector, m_index + value }; }
-    ConstVectorIterator& operator=(const ConstVectorIterator& other)
-    {
-        m_index = other.m_index;
-        return *this;
-    }
-    const ElementType& operator*() const { return m_vector[m_index]; }
-    int operator-(const ConstVectorIterator& other) { return m_index - other.m_index; }
-
-private:
-    friend VectorType;
-    ConstVectorIterator(const VectorType& vector, const int index)
-        : m_vector(vector)
-        , m_index(index)
-    {
-    }
-    const VectorType& m_vector;
-    int m_index { 0 };
-};
-
 template<typename T, int inline_capacity = 0>
 class Vector {
 public:
@@ -416,7 +377,7 @@ public:
     Iterator begin() { return Iterator(*this, 0); }
     Iterator end() { return Iterator(*this, size()); }
 
-    using ConstIterator = ConstVectorIterator<Vector, T>;
+    using ConstIterator = VectorIterator<const Vector, const T>;
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 

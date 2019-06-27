@@ -1,2 +1,5 @@
 TestString
 TestQueue
+TestVector
+*.d
+*.o
