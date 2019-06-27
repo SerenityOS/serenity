@@ -1,3 +1,4 @@
+#include <AK/NonnullRefPtrVector.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Parser/HTMLParser.h>
@@ -34,7 +35,7 @@ static bool is_self_closing_tag(const String& tag_name)
 
 NonnullRefPtr<Document> parse_html(const String& html)
 {
-    Vector<NonnullRefPtr<ParentNode>> node_stack;
+    NonnullRefPtrVector<ParentNode> node_stack;
 
     auto doc = adopt(*new Document);
     node_stack.append(doc);
@@ -76,7 +77,7 @@ NonnullRefPtr<Document> parse_html(const String& html)
         if (state == State::Free && !text_buffer.is_empty()) {
             auto text_node = adopt(*new Text(String::copy(text_buffer)));
             text_buffer.clear();
-            node_stack.last()->append_child(text_node);
+            node_stack.last().append_child(text_node);
         }
         state = new_state;
         text_buffer.clear();
@@ -93,7 +94,7 @@ NonnullRefPtr<Document> parse_html(const String& html)
         new_element->set_attributes(move(attributes));
         node_stack.append(new_element);
         if (node_stack.size() != 1)
-            node_stack[node_stack.size() - 2]->append_child(new_element);
+            node_stack[node_stack.size() - 2].append_child(new_element);
 
         if (is_self_closing_tag(new_element->tag_name()))
             close_tag();
