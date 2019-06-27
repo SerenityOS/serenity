@@ -1,3 +1,4 @@
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Net/LocalSocket.h>
@@ -13,7 +14,7 @@ HashTable<Inode*>& all_inodes()
 
 void Inode::sync()
 {
-    Vector<NonnullRefPtr<Inode>, 32> inodes;
+    NonnullRefPtrVector<Inode, 32> inodes;
     {
         InterruptDisabler disabler;
         for (auto* inode : all_inodes()) {
@@ -23,8 +24,8 @@ void Inode::sync()
     }
 
     for (auto& inode : inodes) {
-        ASSERT(inode->is_metadata_dirty());
-        inode->flush_metadata();
+        ASSERT(inode.is_metadata_dirty());
+        inode.flush_metadata();
     }
 }
 

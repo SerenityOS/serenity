@@ -58,15 +58,15 @@ void FS::sync()
 {
     Inode::sync();
 
-    Vector<NonnullRefPtr<FS>, 32> fses;
+    NonnullRefPtrVector<FS, 32> fses;
     {
         InterruptDisabler disabler;
         for (auto& it : all_fses())
             fses.append(*it.value);
     }
 
-    for (auto fs : fses)
-        fs->flush_writes();
+    for (auto& fs : fses)
+        fs.flush_writes();
 }
 
 void FS::lock_all()
