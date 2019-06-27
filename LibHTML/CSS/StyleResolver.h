@@ -6,6 +6,7 @@
 
 class Document;
 class Element;
+class StyleRule;
 class StyleSheet;
 
 class StyleResolver {
@@ -20,6 +21,9 @@ public:
 
     OwnPtr<LayoutStyle> resolve_element_style(const Element&);
     OwnPtr<LayoutStyle> resolve_document_style(const Document&);
+
+    NonnullRefPtrVector<StyleRule> collect_matching_rules(const Element&) const;
+
 
 private:
     Document& m_document;

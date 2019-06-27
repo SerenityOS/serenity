@@ -40,6 +40,8 @@ public:
             callback(attribute.name(), attribute.value());
     }
 
+    bool has_class(const StringView&) const;
+
     virtual RefPtr<LayoutNode> create_layout_node() override;
 
 private:
