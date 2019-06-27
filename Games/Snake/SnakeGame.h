@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/GWidget.h>
 
 class SnakeGame : public GWidget {
@@ -59,5 +60,5 @@ private:
     unsigned m_high_score { 0 };
     String m_high_score_text;
 
-    Vector<NonnullRefPtr<GraphicsBitmap>> m_fruit_bitmaps;
+    NonnullRefPtrVector<GraphicsBitmap> m_fruit_bitmaps;
 };
