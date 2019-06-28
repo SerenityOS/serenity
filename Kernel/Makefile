@@ -92,7 +92,7 @@ OBJS = $(CXX_OBJS) Boot/boot.ao
 
 KERNEL = kernel
 CXXFLAGS += -ffreestanding -mregparm=3 -mno-80387 -mno-mmx -mno-sse -mno-sse2
-CXXFLAGS += -nostdinc++ -nostdlib -nostdinc
+CXXFLAGS += -nostdlib
 DEFINES += -DKERNEL
 LDFLAGS += -Ttext 0x10000 -Wl,-T linker.ld -nostdlib
 

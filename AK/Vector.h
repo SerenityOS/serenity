@@ -3,6 +3,7 @@
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/kmalloc.h>
+#include <initializer_list>
 
 #ifndef __serenity__
 #include <new>
@@ -62,6 +63,13 @@ public:
     ~Vector()
     {
         clear();
+    }
+
+    Vector(std::initializer_list<T> list)
+    {
+        ensure_capacity(list.size());
+        for (auto& item : list)
+            unchecked_append(item);
     }
 
     Vector(Vector&& other)
