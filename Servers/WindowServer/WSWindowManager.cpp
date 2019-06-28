@@ -45,56 +45,55 @@ WSWindowManager::WSWindowManager()
         const char* description;
     };
 
-    Vector<AppMenuItem> apps;
-    apps.append({ "/bin/Terminal", "Open Terminal..." });
-    apps.append({ "/bin/FileManager", "Open FileManager..." });
-    apps.append({ "/bin/ProcessManager", "Open ProcessManager..." });
+    Vector<AppMenuItem> apps = {
+        { "/bin/Terminal", "Open Terminal..." },
+        { "/bin/FileManager", "Open FileManager..." },
+        { "/bin/ProcessManager", "Open ProcessManager..." }
+    };
 
-    {
-        byte system_menu_name[] = { 0xf8, 0 };
-        m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
+    byte system_menu_name[] = { 0xf8, 0 };
+    m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
 
-        int appIndex = 1;
-        for (const auto& app : apps) {
-            m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, appIndex++, app.description));
-        }
-
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About..."));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
-        m_system_menu->on_item_activation = [this, apps](WSMenuItem& item) {
-            if (item.identifier() >= 1 && item.identifier() <= 1u + apps.size() - 1) {
-                if (fork() == 0) {
-                    const auto& bin = apps[item.identifier() - 1].binary_name;
-                    execl(bin, bin, nullptr);
-                    ASSERT_NOT_REACHED();
-                }
-            }
-            switch (item.identifier()) {
-            case 100:
-                reload_config(true);
-                break;
-            case 200:
-                if (fork() == 0) {
-                    execl("/bin/About", "/bin/About", nullptr);
-                    ASSERT_NOT_REACHED();
-                }
-                return;
-            case 300:
-                if (fork() == 0) {
-                    execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
-                    ASSERT_NOT_REACHED();
-                }
-                return;
-            }
-#ifdef DEBUG_MENUS
-            dbgprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
-#endif
-        };
+    int appIndex = 1;
+    for (const auto& app : apps) {
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, appIndex++, app.description));
     }
+
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About..."));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
+    m_system_menu->on_item_activation = [this, apps](WSMenuItem& item) {
+        if (item.identifier() >= 1 && item.identifier() <= 1u + apps.size() - 1) {
+            if (fork() == 0) {
+                const auto& bin = apps[item.identifier() - 1].binary_name;
+                execl(bin, bin, nullptr);
+                ASSERT_NOT_REACHED();
+            }
+        }
+        switch (item.identifier()) {
+        case 100:
+            reload_config(true);
+            break;
+        case 200:
+            if (fork() == 0) {
+                execl("/bin/About", "/bin/About", nullptr);
+                ASSERT_NOT_REACHED();
+            }
+            return;
+        case 300:
+            if (fork() == 0) {
+                execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
+                ASSERT_NOT_REACHED();
+            }
+            return;
+        }
+#ifdef DEBUG_MENUS
+        dbgprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
+#endif
+    };
 
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
