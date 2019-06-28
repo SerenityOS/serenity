@@ -1010,41 +1010,58 @@ void Terminal::event(CEvent& event)
 
 void Terminal::keydown_event(GKeyEvent& event)
 {
-    char ch = !event.text().is_empty() ? event.text()[0] : 0;
-    if (event.ctrl()) {
-        if (ch >= 'a' && ch <= 'z') {
-            ch = ch - 'a' + 1;
-        } else if (ch == '\\') {
-            ch = 0x1c;
-        }
-    }
     switch (event.key()) {
     case KeyCode::Key_Up:
         write(m_ptm_fd, "\033[A", 3);
-        break;
+        return;
     case KeyCode::Key_Down:
         write(m_ptm_fd, "\033[B", 3);
-        break;
+        return;
     case KeyCode::Key_Right:
         write(m_ptm_fd, "\033[C", 3);
-        break;
+        return;
     case KeyCode::Key_Left:
         write(m_ptm_fd, "\033[D", 3);
-        break;
+        return;
+    case KeyCode::Key_Insert:
+        write(m_ptm_fd, "\033[2~", 4);
+        return;
+    case KeyCode::Key_Delete:
+        write(m_ptm_fd, "\033[3~", 4);
+        return;
     case KeyCode::Key_Home:
         write(m_ptm_fd, "\033[H", 3);
-        break;
+        return;
     case KeyCode::Key_End:
         write(m_ptm_fd, "\033[F", 3);
-        break;
-    case KeyCode::Key_RightShift:
-        // Prevent RightShift from being sent to whatever's running in the
-        // terminal. Prevents `~@` (null) character from being sent after every
-        // character entered with right shift.
-        break;
+        return;
+    case KeyCode::Key_PageUp:
+        write(m_ptm_fd, "\033[5~", 4);
+        return;
+    case KeyCode::Key_PageDown:
+        write(m_ptm_fd, "\033[6~", 4);
+        return;
     default:
-        write(m_ptm_fd, &ch, 1);
         break;
+    }
+
+    // Key event was not one of the above special cases,
+    // attempt to treat it as a character...
+    char ch = !event.text().is_empty() ? event.text()[0] : 0;
+    if (ch) {
+        if (event.ctrl()) {
+            if (ch >= 'a' && ch <= 'z') {
+                ch = ch - 'a' + 1;
+            } else if (ch == '\\') {
+                ch = 0x1c;
+            }
+        }
+
+        // ALT modifier sends escape prefix
+        if (event.alt())
+            write(m_ptm_fd, "\033", 1);
+
+        write(m_ptm_fd, &ch, 1);
     }
 }
 
