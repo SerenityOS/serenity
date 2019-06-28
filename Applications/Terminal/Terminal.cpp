@@ -1010,6 +1010,11 @@ void Terminal::event(CEvent& event)
 
 void Terminal::keydown_event(GKeyEvent& event)
 {
+    // Reset timer so cursor doesn't blink while typing.
+    m_cursor_blink_timer.stop();
+    m_cursor_blink_state = true;
+    m_cursor_blink_timer.start();
+
     switch (event.key()) {
     case KeyCode::Key_Up:
         write(m_ptm_fd, "\033[A", 3);
