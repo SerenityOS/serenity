@@ -3,7 +3,13 @@
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/kmalloc.h>
+
+// NOTE: We can't include <initializer_list> during the toolchain bootstrap,
+//       since it's part of libstdc++, and libstdc++ depends on LibC.
+//       For this reason, we don't support Vector(initializer_list) in LibC.
+#ifndef SERENITY_LIBC_BUILD
 #include <initializer_list>
+#endif
 
 #ifndef __serenity__
 #include <new>
@@ -65,12 +71,14 @@ public:
         clear();
     }
 
+#ifndef SERENITY_LIBC_BUILD
     Vector(std::initializer_list<T> list)
     {
         ensure_capacity(list.size());
         for (auto& item : list)
             unchecked_append(item);
     }
+#endif
 
     Vector(Vector&& other)
         : m_size(other.m_size)

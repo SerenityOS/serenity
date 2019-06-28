@@ -58,7 +58,7 @@ ASM_OBJS = setjmp.ao crti.ao crtn.ao
 CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
 
 LIBRARY = libc.a
-DEFINES += -DUSERLAND
+DEFINES += -DUSERLAND -DSERENITY_LIBC_BUILD
 
 all: $(LIBRARY) startfiles
 
