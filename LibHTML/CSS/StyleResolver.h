@@ -2,12 +2,13 @@
 
 #include <AK/OwnPtr.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <LibHTML/Layout/LayoutStyle.h>
 
 class Document;
 class Element;
+class ParentNode;
 class StyleRule;
 class StyleSheet;
+class StyledNode;
 
 class StyleResolver {
 public:
@@ -19,8 +20,8 @@ public:
 
     void add_sheet(const StyleSheet& sheet) { m_sheets.append(sheet); }
 
-    OwnPtr<LayoutStyle> resolve_element_style(const Element&);
-    OwnPtr<LayoutStyle> resolve_document_style(const Document&);
+    NonnullRefPtr<StyledNode> create_styled_node(const Element&);
+    NonnullRefPtr<StyledNode> create_styled_node(const Document&);
 
     NonnullRefPtrVector<StyleRule> collect_matching_rules(const Element&) const;
 

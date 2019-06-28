@@ -1,5 +1,7 @@
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/CSS/StyleSheet.h>
+#include <LibHTML/CSS/StyledNode.h>
+#include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Dump.h>
 #include <stdio.h>
@@ -51,15 +53,19 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
     return matching_rules;
 }
 
-OwnPtr<LayoutStyle> StyleResolver::resolve_document_style(const Document& document)
+NonnullRefPtr<StyledNode> StyleResolver::create_styled_node(const Document& document)
 {
-    UNUSED_PARAM(document);
-    return make<LayoutStyle>();
+    return StyledNode::create(document);
 }
 
-OwnPtr<LayoutStyle> StyleResolver::resolve_element_style(const Element& element)
+NonnullRefPtr<StyledNode> StyleResolver::create_styled_node(const Element& element)
 {
-    auto style = make<LayoutStyle>();
+    auto style = StyledNode::create(element);
     auto matching_rules = collect_matching_rules(element);
+    for (auto& rule : matching_rules) {
+        for (auto& declaration : rule.declarations()) {
+            style->set_property(declaration.property_name(), declaration.value());
+        }
+    }
     return style;
 }
