@@ -68,7 +68,7 @@ public:
 
     void apply_size_increments_to_window(GWindow&);
 
-    void set_opacity(float);
+    void set_opacity(byte);
     float opacity() { return m_opacity; };
     bool should_beep() { return m_should_beep; }
     void set_should_beep(bool sb) { m_should_beep = sb; };
@@ -258,7 +258,7 @@ private:
 
     CNotifier m_notifier;
 
-    float m_opacity { 1 };
+    byte m_opacity { 255 };
     bool m_needs_background_fill { true };
     bool m_cursor_blink_state { true };
 
