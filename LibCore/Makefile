@@ -11,6 +11,7 @@ OBJS = \
     CHttpRequest.o \
     CHttpResponse.o \
     CHttpJob.o \
+    CProcess.o \
     CNetworkJob.o \
     CNetworkResponse.o \
     CObject.o \

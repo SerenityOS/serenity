@@ -9,6 +9,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/CTimer.h>
+#include <LibCore/CProcess.h>
 #include <SharedGraphics/CharacterBitmap.h>
 #include <SharedGraphics/Font.h>
 #include <SharedGraphics/PNGLoader.h>
@@ -18,10 +19,7 @@
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>
-#include <errno.h>
 #include <stdio.h>
-#include <time.h>
-#include <unistd.h>
 
 //#define DEBUG_COUNTERS
 //#define RESIZE_DEBUG
@@ -67,28 +65,21 @@ WSWindowManager::WSWindowManager()
         m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
         m_system_menu->on_item_activation = [this, apps](WSMenuItem& item) {
             if (item.identifier() >= 1 && item.identifier() <= 1u + apps.size() - 1) {
-                if (fork() == 0) {
-                    const auto& bin = apps[item.identifier() - 1].binary_name;
-                    execl(bin, bin, nullptr);
-                    ASSERT_NOT_REACHED();
-                }
+                CProcess::start_detached(apps[item.identifier() - 1].binary_name);
             }
             switch (item.identifier()) {
             case 100:
                 reload_config(true);
                 break;
             case 200:
-                if (fork() == 0) {
-                    execl("/bin/About", "/bin/About", nullptr);
-                    ASSERT_NOT_REACHED();
-                }
+                CProcess::start_detached("/bin/About");
                 return;
-            case 300:
-                if (fork() == 0) {
-                    execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
-                    ASSERT_NOT_REACHED();
-                }
+            case 300: {
+                Vector<StringView> args;
+                args.append("-n");
+                CProcess::start_detached("/bin/shutdown", args);
                 return;
+            }
             }
 #ifdef DEBUG_MENUS
             dbgprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());

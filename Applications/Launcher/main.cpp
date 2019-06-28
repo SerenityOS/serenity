@@ -1,33 +1,20 @@
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CUserInfo.h>
+#include <LibCore/CProcess.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 #include <SharedGraphics/GraphicsBitmap.h>
-#include <errno.h>
-#include <signal.h>
-#include <stdio.h>
-#include <sys/wait.h>
 #include <unistd.h>
 
 static GWindow* make_launcher_window();
-
-void handle_sigchld(int)
-{
-    dbgprintf("Launcher(%d) Got SIGCHLD\n", getpid());
-    int pid = waitpid(-1, nullptr, 0);
-    dbgprintf("Launcher(%d) waitpid() returned %d\n", getpid(), pid);
-    ASSERT(pid > 0);
-}
 
 int main(int argc, char** argv)
 {
     chdir(get_current_user_home_path());
     GApplication app(argc, argv);
-
-    signal(SIGCHLD, handle_sigchld);
 
     auto* launcher_window = make_launcher_window();
     launcher_window->set_should_exit_event_loop_on_close(true);
@@ -48,12 +35,7 @@ public:
         set_preferred_size({ 50, 50 });
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         on_click = [this](GButton&) {
-            pid_t child_pid = fork();
-            if (!child_pid) {
-                int rc = execl(m_executable_path.characters(), m_executable_path.characters(), nullptr);
-                if (rc < 0)
-                    perror("execl");
-            }
+            CProcess::start_detached(m_executable_path);
         };
     }
     virtual ~LauncherButton() {}
