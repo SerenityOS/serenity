@@ -3,6 +3,7 @@
 #include <LibHTML/Frame.h>
 #include <LibHTML/Parser/CSSParser.h>
 #include <LibHTML/CSS/StyleResolver.h>
+#include <LibHTML/CSS/StyledNode.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Parser/HTMLParser.h>
 #include <stdio.h>
@@ -28,18 +29,29 @@ int main(int argc, char** argv)
     StyleResolver resolver(*doc);
     resolver.add_sheet(*sheet);
 
-    auto doc_style = resolver.resolve_document_style(*doc);
-
-    Function<void(const ParentNode&)> resolve_style = [&](const ParentNode& node) {
-        node.for_each_child([&](const Node& child) {
+    Function<RefPtr<StyledNode>(const Node&, StyledNode*)> resolve_style = [&](const Node& node, StyledNode* parent_styled_node) -> RefPtr<StyledNode> {
+        auto styled_node = [&]() -> RefPtr<StyledNode> {
+            if (node.is_element())
+                return resolver.create_styled_node(static_cast<const Element&>(node));
+            if (node.is_document())
+                return resolver.create_styled_node(static_cast<const Document&>(node));
+            return nullptr;
+        }();
+        if (!styled_node)
+            return nullptr;
+        if (parent_styled_node)
+            parent_styled_node->append_child(*styled_node);
+        static_cast<const ParentNode&>(node).for_each_child([&](const Node& child) {
             if (!child.is_element())
                 return;
-            auto style = resolver.resolve_element_style(static_cast<const Element&>(node));
-            printf("Resolved LayoutStyle{%p} for Element{%p}\n", style.ptr(), &node);
-            resolve_style(static_cast<const Element&>(child));
+            auto styled_child_node = resolve_style(static_cast<const Element&>(child), styled_node.ptr());
+            printf("Created StyledNode{%p} for Element{%p}\n", styled_child_node.ptr(), &node);
         });
+        return styled_node;
     };
-    resolve_style(*doc);
+    auto styled_root = resolve_style(*doc, nullptr);
+
+    dump_tree(*styled_root);
 
     doc->build_layout_tree();
     ASSERT(doc->layout_node());

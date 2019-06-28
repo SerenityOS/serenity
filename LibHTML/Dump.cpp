@@ -1,4 +1,5 @@
 #include <LibHTML/CSS/StyleSheet.h>
+#include <LibHTML/CSS/StyledNode.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
@@ -62,6 +63,38 @@ void dump_tree(const LayoutNode& layout_node)
     printf("\n");
     ++indent;
     layout_node.for_each_child([](auto& child) {
+        dump_tree(child);
+    });
+    --indent;
+}
+
+void dump_tree(const StyledNode& styled_node)
+{
+    static int indent = 0;
+    for (int i = 0; i < indent; ++i)
+        printf("    ");
+
+    String tag_name;
+    auto& node = *styled_node.node();
+    if (node.is_text())
+        tag_name = "#text";
+    else if (node.is_document())
+        tag_name = "#document";
+    else if (node.is_element())
+        tag_name = static_cast<const Element&>(node).tag_name();
+    else
+        tag_name = "???";
+
+    printf("%s", tag_name.characters());
+    printf("\n");
+
+    styled_node.for_each_property([&](auto& key, auto& value) {
+        for (int i = 0; i < indent; ++i)
+            printf("    ");
+        printf("  (%s: %s)\n", key.characters(), value.to_string().characters());
+    });
+    ++indent;
+    styled_node.for_each_child([](auto& child) {
         dump_tree(child);
     });
     --indent;
