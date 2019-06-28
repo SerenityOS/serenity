@@ -3,6 +3,8 @@
 #include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GAction.h>
+#include <LibGUI/GMenu.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <stdio.h>
 #include <LibM/math.h>
@@ -30,7 +32,8 @@ void SprayTool::paint_it()
     auto& bitmap = m_widget->bitmap();
     ASSERT(bitmap.bpp() == 32);
     m_widget->update();
-    const double base_radius = 15;
+    const double minimal_radius = 10;
+    const double base_radius = minimal_radius * m_thickness;
     for (int i = 0; i < 100 + (nrand() * 800); i++) {
         double radius = base_radius * nrand();
         double angle = 2 * M_PI * nrand();
@@ -68,3 +71,24 @@ void SprayTool::on_mouseup(GMouseEvent&)
 {
     m_timer.stop();
 }
+
+void SprayTool::on_contextmenu(GContextMenuEvent& event)
+{
+    if (!m_context_menu) {
+        m_context_menu = make<GMenu>("SprayTool Context Menu");
+        m_context_menu->add_action(GAction::create("1", [this](auto&) {
+            m_thickness = 1;
+        }));
+        m_context_menu->add_action(GAction::create("2", [this](auto&) {
+            m_thickness = 2;
+        }));
+        m_context_menu->add_action(GAction::create("3", [this](auto&) {
+            m_thickness = 3;
+        }));
+        m_context_menu->add_action(GAction::create("4", [this](auto&) {
+            m_thickness = 4;
+        }));
+    }
+    m_context_menu->popup(event.screen_position());
+}
+

@@ -4,6 +4,8 @@
 #include <LibGUI/GPainter.h>
 #include <LibCore/CTimer.h>
 
+class GMenu;
+
 class SprayTool final : public Tool {
 public:
     SprayTool();
@@ -12,6 +14,7 @@ public:
     virtual void on_mousedown(GMouseEvent&) override;
     virtual void on_mouseup(GMouseEvent&) override;
     virtual void on_mousemove(GMouseEvent&) override;
+    virtual void on_contextmenu(GContextMenuEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "SprayTool"; }
@@ -19,4 +22,6 @@ private:
     CTimer m_timer;
     Point m_last_pos;
     Color m_color;
+    OwnPtr<GMenu> m_context_menu;
+    int m_thickness { 1 };
 };
