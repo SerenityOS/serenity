@@ -6,6 +6,7 @@ OBJS = \
     ToolboxWidget.o \
     Tool.o \
     PenTool.o \
+    EraseTool.o \
     BucketTool.o \
     ColorDialog.o \
     SprayTool.o \
