@@ -220,6 +220,7 @@ private:
     WeakPtr<WSWindow> m_active_window;
     WeakPtr<WSWindow> m_hovered_window;
     WeakPtr<WSWindow> m_highlight_window;
+    WeakPtr<WSWindow> m_active_input_window;
 
     WeakPtr<WSWindow> m_drag_window;
     Point m_drag_origin;

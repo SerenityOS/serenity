@@ -703,27 +703,42 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
 
     WSWindow* event_window_with_frame = nullptr;
 
-    for_each_visible_window_from_front_to_back([&](WSWindow& window) {
-        auto window_frame_rect = window.frame().rect();
-        if (!window_frame_rect.contains(event.position()))
-            return IterationDecision::Continue;
+    if (m_active_input_window) {
+        // At this point, we have delivered the start of an input sequence to a
+        // client application. We must keep delivering to that client
+        // application until the input sequence is done.
+        //
+        // This prevents e.g. dragging on one window out of the bounds starting
+        // a drag in that other unrelated window, and other silly shennanigans.
+        auto translated_event = event.translated(-m_active_input_window->position());
+        deliver_mouse_event(*m_active_input_window, translated_event);
+        if (event.type() == WSEvent::MouseUp && event.buttons() == 0) {
+            m_active_input_window = nullptr;
+        }
+    } else {
+        for_each_visible_window_from_front_to_back([&](WSWindow& window) {
+            auto window_frame_rect = window.frame().rect();
+            if (!window_frame_rect.contains(event.position()))
+                return IterationDecision::Continue;
 
-        if (&window != m_resize_candidate.ptr())
-            clear_resize_candidate();
+            if (&window != m_resize_candidate.ptr())
+                clear_resize_candidate();
 
-        // First check if we should initiate a drag or resize (Logo+LMB or Logo+RMB).
-        // In those cases, the event is swallowed by the window manager.
-        if (window.type() == WSWindowType::Normal) {
-            if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
-                hovered_window = &window;
-                start_window_drag(window, event);
-                return IterationDecision::Break;
+            // First check if we should initiate a drag or resize (Logo+LMB or Logo+RMB).
+            // In those cases, the event is swallowed by the window manager.
+            if (window.type() == WSWindowType::Normal) {
+                if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
+                    hovered_window = &window;
+                    start_window_drag(window, event);
+                    return IterationDecision::Break;
+                }
+                if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
+                    hovered_window = &window;
+                    start_window_resize(window, event);
+                    return IterationDecision::Break;
+                }
             }
-            if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
-                hovered_window = &window;
-                start_window_resize(window, event);
-                return IterationDecision::Break;
-            }
+
             if (m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseWheel) {
                 float opacity_change = -event.wheel_delta() * 0.05f;
                 float new_opacity = window.opacity() + opacity_change;
@@ -735,25 +750,29 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
                 window.invalidate();
                 return IterationDecision::Break;
             }
-        }
-        // Well okay, let's see if we're hitting the frame or the window inside the frame.
-        if (window.rect().contains(event.position())) {
-            if (window.type() == WSWindowType::Normal && event.type() == WSEvent::MouseDown)
-                move_to_front_and_make_active(window);
 
-            hovered_window = &window;
-            if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window)) {
-                auto translated_event = event.translated(-window.position());
-                deliver_mouse_event(window, translated_event);
+            // Well okay, let's see if we're hitting the frame or the window inside the frame.
+            if (window.rect().contains(event.position())) {
+                if (window.type() == WSWindowType::Normal && event.type() == WSEvent::MouseDown)
+                    move_to_front_and_make_active(window);
+
+                hovered_window = &window;
+                if (!window.global_cursor_tracking() && !windows_who_received_mouse_event_due_to_cursor_tracking.contains(&window)) {
+                    auto translated_event = event.translated(-window.position());
+                    deliver_mouse_event(window, translated_event);
+                    if (event.type() == WSEvent::MouseDown) {
+                        m_active_input_window = window.make_weak_ptr();
+                    }
+                }
+                return IterationDecision::Break;
             }
-            return IterationDecision::Break;
-        }
 
-        // We are hitting the frame, pass the event along to WSWindowFrame.
-        window.frame().on_mouse_event(event.translated(-window_frame_rect.location()));
-        event_window_with_frame = &window;
-        return IterationDecision::Break;
-    });
+            // We are hitting the frame, pass the event along to WSWindowFrame.
+            window.frame().on_mouse_event(event.translated(-window_frame_rect.location()));
+            event_window_with_frame = &window;
+            return IterationDecision::Break;
+        });
+    }
 
     if (event_window_with_frame != m_resize_candidate.ptr())
         clear_resize_candidate();
