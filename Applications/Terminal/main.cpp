@@ -119,12 +119,11 @@ GWindow* create_settings_window(Terminal& terminal, RefPtr<CConfigFile> config)
     slider->set_background_color(Color::LightGray);
 
     slider->on_value_changed = [&terminal, &config](int value) {
-        float opacity = value / 100.0;
-        terminal.set_opacity(opacity);
+        terminal.set_opacity(value);
     };
 
-    slider->set_range(0, 100);
-    slider->set_value(terminal.opacity() * 100.0);
+    slider->set_range(0, 255);
+    slider->set_value(terminal.opacity());
 
     return window;
 }
@@ -162,7 +161,7 @@ int main(int argc, char** argv)
     WeakPtr<GWindow> settings_window;
 
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
-    terminal.set_opacity((float)new_opacity / 255.0);
+    terminal.set_opacity(new_opacity);
 
     auto menubar = make<GMenuBar>();
 

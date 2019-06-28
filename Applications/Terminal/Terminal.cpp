@@ -1057,7 +1057,7 @@ void Terminal::paint_event(GPaintEvent& event)
     if (m_visual_beep_timer.is_active())
         painter.fill_rect(frame_inner_rect(), Color::Red);
     else
-        painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(255 * m_opacity));
+        painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(m_opacity));
     invalidate_cursor();
 
     for (word row = 0; row < m_rows; ++row) {
@@ -1066,7 +1066,7 @@ void Terminal::paint_event(GPaintEvent& event)
         if (m_visual_beep_timer.is_active())
             painter.fill_rect(row_rect(row), Color::Red);
         else if (has_only_one_background_color)
-            painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(255 * m_opacity));
+            painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
         for (word column = 0; column < m_columns; ++column) {
             char ch = line.characters[column];
             bool should_reverse_fill_for_cursor_or_selection = (m_cursor_blink_state && m_in_active_window && row == m_cursor_row && column == m_cursor_column)
@@ -1075,7 +1075,7 @@ void Terminal::paint_event(GPaintEvent& event)
             auto character_rect = glyph_rect(row, column);
             if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
-                painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(255 * m_opacity));
+                painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
             }
             if (ch == ' ')
                 continue;
@@ -1144,12 +1144,13 @@ void Terminal::update_cursor()
     flush_dirty_lines();
 }
 
-void Terminal::set_opacity(float opacity)
+void Terminal::set_opacity(byte new_opacity)
 {
-    if (m_opacity == opacity)
+    if (m_opacity == new_opacity)
         return;
-    window()->set_has_alpha_channel(opacity < 1);
-    m_opacity = opacity;
+
+    window()->set_has_alpha_channel(new_opacity < 255);
+    m_opacity = new_opacity;
     force_repaint();
 }
 
