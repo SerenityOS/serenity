@@ -10,8 +10,3 @@ Text::Text(const String& data)
 Text::~Text()
 {
 }
-
-RefPtr<LayoutNode> Text::create_layout_node()
-{
-    return adopt(*new LayoutText(*this));
-}

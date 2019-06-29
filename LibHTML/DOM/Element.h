@@ -42,8 +42,6 @@ public:
 
     bool has_class(const StringView&) const;
 
-    virtual RefPtr<LayoutNode> create_layout_node() override;
-
 private:
     Attribute* find_attribute(const String& name);
     const Attribute* find_attribute(const String& name) const;

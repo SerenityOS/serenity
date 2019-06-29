@@ -18,8 +18,6 @@ public:
     Document& document() { return m_document; }
     const Document& document() const { return m_document; }
 
-    void add_sheet(const StyleSheet& sheet) { m_sheets.append(sheet); }
-
     NonnullRefPtr<StyledNode> create_styled_node(const Element&);
     NonnullRefPtr<StyledNode> create_styled_node(const Document&);
 
@@ -28,6 +26,4 @@ public:
 
 private:
     Document& m_document;
-
-    NonnullRefPtrVector<StyleSheet> m_sheets;
 };

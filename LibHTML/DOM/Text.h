@@ -10,8 +10,6 @@ public:
 
     const String& data() const { return m_data; }
 
-    virtual RefPtr<LayoutNode> create_layout_node() override;
-
 private:
     String m_data;
 };
