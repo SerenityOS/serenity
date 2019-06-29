@@ -68,6 +68,10 @@ int main(int argc, char** argv)
 
     propbox->show();
 
+    if (argc == 2) {
+        form1->load_from_file(argv[1]);
+    }
+
     return app.exec();
 }
 

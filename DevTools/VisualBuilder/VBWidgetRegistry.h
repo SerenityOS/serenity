@@ -20,3 +20,6 @@ public:
 
     static GWidget* build_gwidget(VBWidget&, VBWidgetType, GWidget* parent, Vector<OwnPtr<VBProperty>>&);
 };
+
+String to_class_name(VBWidgetType);
+VBWidgetType widget_type_from_class_name(const StringView&);

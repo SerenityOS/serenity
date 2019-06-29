@@ -1,6 +1,7 @@
 #include "VBForm.h"
 #include "VBProperty.h"
 #include "VBWidget.h"
+#include "VBWidgetRegistry.h"
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <LibCore/CFile.h>
@@ -23,22 +24,6 @@ VBForm::VBForm(const String& name, GWidget* parent)
     set_fill_with_background_color(true);
     set_background_color(Color::LightGray);
     set_greedy_for_hits(true);
-
-    auto box1 = VBWidget::create(VBWidgetType::GSpinBox, *this);
-    box1->set_rect({ 10, 10, 81, 21 });
-    m_widgets.append(move(box1));
-
-    auto box2 = VBWidget::create(VBWidgetType::GTextEditor, *this);
-    box2->set_rect({ 100, 100, 161, 161 });
-    m_widgets.append(move(box2));
-
-    auto button1 = VBWidget::create(VBWidgetType::GButton, *this);
-    button1->set_rect({ 200, 50, 81, 21 });
-    m_widgets.append(move(button1));
-
-    auto groupbox1 = VBWidget::create(VBWidgetType::GGroupBox, *this);
-    groupbox1->set_rect({ 300, 150, 161, 51 });
-    m_widgets.append(move(groupbox1));
 
     m_context_menu = make<GMenu>("Context menu");
     m_context_menu->add_action(GAction::create("Move to front", [this](auto&) {
@@ -303,6 +288,41 @@ void VBForm::mousemove_event(GMouseEvent& event)
             widget.set_rect(new_rect);
         });
     }
+}
+
+void VBForm::load_from_file(const String& path)
+{
+    CFile file(path);
+    if (!file.open(CIODevice::ReadOnly)) {
+        GMessageBox::show(String::format("Could not open '%s' for reading", path.characters()), "Error", GMessageBox::Type::Error, window());
+        return;
+    }
+
+    auto file_contents = file.read_all();
+    auto form_json = JsonValue::from_string(file_contents);
+
+    if (!form_json.is_object()) {
+        GMessageBox::show(String::format("Could not parse '%s'", path.characters()), "Error", GMessageBox::Type::Error, window());
+        return;
+    }
+
+    m_name = form_json.as_object().get("name").to_string();
+    auto widgets = form_json.as_object().get("widgets").as_array();
+
+    widgets.for_each([&](const JsonValue& widget_value) {
+        auto& widget_object = widget_value.as_object();
+        auto widget_class = widget_object.get("class").as_string();
+        auto widget_type = widget_type_from_class_name(widget_class);
+        auto vbwidget = VBWidget::create(widget_type, *this);
+        widget_object.for_each_member([&](auto& property_name, const JsonValue& property_value) {
+            (void)property_name;
+            (void)property_value;
+            VBProperty& property = vbwidget->property(property_name);
+            dbgprintf("Set property %s.%s to '%s'\n", widget_class.characters(), property_name.characters(), property_value.serialized().characters());
+            property.set_value(property_value);
+        });
+        m_widgets.append(vbwidget);
+    });
 }
 
 void VBForm::write_to_file(const String& path)
