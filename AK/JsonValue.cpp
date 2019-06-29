@@ -31,8 +31,9 @@ void JsonValue::copy_from(const JsonValue& other)
     m_type = other.m_type;
     switch (m_type) {
     case Type::String:
+        ASSERT(!m_value.as_string);
         m_value.as_string = other.m_value.as_string;
-        AK::ref_if_not_null(m_value.as_string);
+        m_value.as_string->ref();
         break;
     case Type::Object:
         m_value.as_object = new JsonObject(*other.m_value.as_object);
@@ -105,7 +106,7 @@ JsonValue::JsonValue(const String& value)
     } else {
         m_type = Type::String;
         m_value.as_string = const_cast<StringImpl*>(value.impl());
-        AK::ref_if_not_null(m_value.as_string);
+        m_value.as_string->ref();
     }
 }
 
@@ -125,7 +126,7 @@ void JsonValue::clear()
 {
     switch (m_type) {
     case Type::String:
-        AK::deref_if_not_null(m_value.as_string);
+        m_value.as_string->deref();
         break;
     case Type::Object:
         delete m_value.as_object;
