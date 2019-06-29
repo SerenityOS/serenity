@@ -62,18 +62,3 @@ bool Element::has_class(const StringView& class_name) const
     }
     return false;
 }
-
-RefPtr<LayoutNode> Element::create_layout_node()
-{
-    if (m_tag_name == "html")
-        return adopt(*new LayoutBlock(*this));
-    if (m_tag_name == "body")
-        return adopt(*new LayoutBlock(*this));
-    if (m_tag_name == "h1")
-        return adopt(*new LayoutBlock(*this));
-    if (m_tag_name == "p")
-        return adopt(*new LayoutBlock(*this));
-    if (m_tag_name == "b")
-        return adopt(*new LayoutInline(*this));
-    return nullptr;
-}

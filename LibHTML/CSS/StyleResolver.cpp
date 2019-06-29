@@ -36,7 +36,7 @@ static bool matches(const Selector& selector, const Element& element)
 NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Element& element) const
 {
     NonnullRefPtrVector<StyleRule> matching_rules;
-    for (auto& sheet : m_sheets) {
+    for (auto& sheet : document().stylesheets()) {
         for (auto& rule : sheet.rules()) {
             for (auto& selector : rule.selectors()) {
                 if (matches(selector, element)) {

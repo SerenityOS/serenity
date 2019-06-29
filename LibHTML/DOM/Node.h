@@ -12,7 +12,6 @@ enum class NodeType : unsigned {
     DOCUMENT_NODE = 9,
 };
 
-class LayoutNode;
 class ParentNode;
 
 class Node : public TreeNode<Node> {
@@ -25,16 +24,8 @@ public:
     bool is_document() const { return type() == NodeType::DOCUMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document(); }
 
-    virtual RefPtr<LayoutNode> create_layout_node();
-
-    const LayoutNode* layout_node() const { return m_layout_node; }
-    LayoutNode* layout_node() { return m_layout_node; }
-
-    void set_layout_node(NonnullRefPtr<LayoutNode>);
-
 protected:
     explicit Node(NodeType);
 
     NodeType m_type { NodeType::INVALID };
-    RefPtr<LayoutNode> m_layout_node;
 };

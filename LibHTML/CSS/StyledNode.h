@@ -8,6 +8,12 @@
 
 class Node;
 
+enum class Display {
+    None,
+    Block,
+    Inline,
+};
+
 class StyledNode : public TreeNode<StyledNode> {
 public:
     static NonnullRefPtr<StyledNode> create(const Node& node)
@@ -43,6 +49,8 @@ public:
     {
         m_property_values.set(name, move(value));
     }
+
+    Display display() const;
 
 protected:
     explicit StyledNode(const Node*);

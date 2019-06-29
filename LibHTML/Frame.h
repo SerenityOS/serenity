@@ -16,6 +16,8 @@ public:
     void layout();
 
 private:
+    RefPtr<StyledNode> generate_style_tree();
+
     RefPtr<Document> m_document;
     Size m_size;
 };
