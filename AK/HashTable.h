@@ -203,7 +203,7 @@ void HashTable<T, TraitsForT>::set(const T& value)
     auto& bucket = lookup(value);
     for (auto& e : bucket) {
         if (e == value) {
-            e = move(value);
+            e = value;
             return;
         }
     }
