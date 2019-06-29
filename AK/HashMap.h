@@ -13,15 +13,11 @@ private:
     struct Entry {
         K key;
         V value;
-
-        bool operator==(const Entry& other) const
-        {
-            return key == other.key;
-        }
     };
 
     struct EntryTraits {
         static unsigned hash(const Entry& entry) { return Traits<K>::hash(entry.key); }
+        static bool equals(const Entry& a, const Entry& b) { return a.key == b.key; }
         static void dump(const Entry& entry)
         {
             kprintf("key=");

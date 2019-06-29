@@ -15,7 +15,7 @@ struct BlockIdentifier {
 namespace AK {
 
 template<>
-struct Traits<BlockIdentifier> {
+struct Traits<BlockIdentifier> : public GenericTraits<BlockIdentifier> {
     static unsigned hash(const BlockIdentifier& block_id) { return pair_int_hash(block_id.fsid, block_id.index); }
     static void dump(const BlockIdentifier& block_id) { kprintf("[block %02u:%08u]", block_id.fsid, block_id.index); }
 };

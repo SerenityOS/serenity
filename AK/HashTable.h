@@ -181,7 +181,7 @@ void HashTable<T, TraitsForT>::set(T&& value)
         rehash(1);
     auto& bucket = lookup(value);
     for (auto& e : bucket) {
-        if (e == value) {
+        if (TraitsForT::equals(e, value)) {
             e = move(value);
             return;
         }
@@ -202,7 +202,7 @@ void HashTable<T, TraitsForT>::set(const T& value)
         rehash(1);
     auto& bucket = lookup(value);
     for (auto& e : bucket) {
-        if (e == value) {
+        if (TraitsForT::equals(e, value)) {
             e = value;
             return;
         }
@@ -267,7 +267,7 @@ bool HashTable<T, TraitsForT>::contains(const T& value) const
         return false;
     auto& bucket = lookup(value);
     for (auto& e : bucket) {
-        if (e == value)
+        if (TraitsForT::equals(e, value))
             return true;
     }
     return false;
@@ -280,7 +280,7 @@ auto HashTable<T, TraitsForT>::find(const T& value) -> Iterator
         return end();
     int bucket_index;
     auto& bucket = lookup(value, &bucket_index);
-    auto bucket_iterator = bucket.find(value);
+    auto bucket_iterator = bucket.template find<TraitsForT>(value);
     if (bucket_iterator != bucket.end())
         return Iterator(*this, false, bucket_iterator, bucket_index);
     return end();
@@ -293,7 +293,7 @@ auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
         return end();
     int bucket_index;
     const auto& bucket = lookup(value, &bucket_index);
-    auto bucket_iterator = bucket.find(value);
+    auto bucket_iterator = bucket.template find<TraitsForT>(value);
     if (bucket_iterator != bucket.end())
         return ConstIterator(*this, false, bucket_iterator, bucket_index);
     return end();

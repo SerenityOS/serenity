@@ -169,6 +169,30 @@ public:
         return end();
     }
 
+    template<typename Traits>
+    ConstIterator find(const T& value) const
+    {
+        Node* prev = nullptr;
+        for (auto* node = m_head; node; node = node->next) {
+            if (Traits::equals(node->value, value))
+                return ConstIterator(node, prev);
+            prev = node;
+        }
+        return end();
+    }
+
+    template<typename Traits>
+    Iterator find(const T& value)
+    {
+        Node* prev = nullptr;
+        for (auto* node = m_head; node; node = node->next) {
+            if (Traits::equals(node->value, value))
+                return Iterator(node, prev);
+            prev = node;
+        }
+        return end();
+    }
+
     void remove(Iterator iterator)
     {
         ASSERT(!iterator.is_end());

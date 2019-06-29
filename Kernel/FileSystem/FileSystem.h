@@ -89,7 +89,7 @@ inline bool InodeIdentifier::is_root_inode() const
 namespace AK {
 
 template<>
-struct Traits<InodeIdentifier> {
+struct Traits<InodeIdentifier> : public GenericTraits<InodeIdentifier> {
     static unsigned hash(const InodeIdentifier& inode) { return pair_int_hash(inode.fsid(), inode.index()); }
     static void dump(const InodeIdentifier& inode) { kprintf("%02u:%08u", inode.fsid(), inode.index()); }
 };
