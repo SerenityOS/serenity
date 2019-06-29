@@ -10,6 +10,12 @@ StringView::StringView(const String& string)
 {
 }
 
+StringView::StringView(const ByteBuffer& buffer)
+    : m_characters((const char*)buffer.data())
+    , m_length(buffer.size())
+{
+}
+
 Vector<StringView> StringView::split_view(const char separator) const
 {
     if (is_empty())
