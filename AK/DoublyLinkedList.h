@@ -1,7 +1,8 @@
 #pragma once
 
-#include "StdLibExtras.h"
 #include <AK/Assertions.h>
+#include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
 
 namespace AK {
 
@@ -116,7 +117,7 @@ public:
     ConstIterator find(const T& value) const
     {
         for (auto* node = m_head; node; node = node->next) {
-            if (node->value == value)
+            if (Traits<T>::equals(node->value, value))
                 return ConstIterator(node);
         }
         return end();
@@ -125,7 +126,7 @@ public:
     Iterator find(const T& value)
     {
         for (auto* node = m_head; node; node = node->next) {
-            if (node->value == value)
+            if (Traits<T>::equals(node->value, value))
                 return Iterator(node);
         }
         return end();

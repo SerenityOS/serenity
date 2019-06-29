@@ -32,7 +32,7 @@ private:
 namespace AK {
 
 template<>
-struct Traits<GShortcut> {
+struct Traits<GShortcut> : public GenericTraits<GShortcut> {
     static unsigned hash(const GShortcut& shortcut)
     {
         return pair_int_hash(shortcut.modifiers(), shortcut.key());
