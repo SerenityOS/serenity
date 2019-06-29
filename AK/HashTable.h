@@ -146,8 +146,42 @@ public:
     ConstIterator begin() const { return ConstIterator(*this, is_empty()); }
     ConstIterator end() const { return ConstIterator(*this, true); }
 
-    Iterator find(const T&);
-    ConstIterator find(const T&) const;
+
+    template<typename Finder>
+    Iterator find(unsigned hash, Finder finder)
+    {
+        if (is_empty())
+            return end();
+        int bucket_index;
+        auto& bucket = lookup_with_hash(hash, &bucket_index);
+        auto bucket_iterator = bucket.find(finder);
+        if (bucket_iterator != bucket.end())
+            return Iterator(*this, false, bucket_iterator, bucket_index);
+        return end();
+    }
+
+    template<typename Finder>
+    ConstIterator find(unsigned hash, Finder finder) const
+    {
+        if (is_empty())
+            return end();
+        int bucket_index;
+        auto& bucket = lookup_with_hash(hash, &bucket_index);
+        auto bucket_iterator = bucket.find(finder);
+        if (bucket_iterator != bucket.end())
+            return ConstIterator(*this, false, bucket_iterator, bucket_index);
+        return end();
+    }
+
+    Iterator find(const T& value)
+    {
+        return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
+    }
+
+    ConstIterator find(const T& value) const
+    {
+        return find(TraitsForT::hash(value), [&](auto& other) { return TraitsForT::equals(value, other); });
+    }
 
     void remove(const T& value)
     {
@@ -161,6 +195,21 @@ public:
 private:
     Bucket& lookup(const T&, int* bucket_index = nullptr);
     const Bucket& lookup(const T&, int* bucket_index = nullptr) const;
+
+    Bucket& lookup_with_hash(unsigned hash, int* bucket_index)
+    {
+        if (bucket_index)
+            *bucket_index = hash % m_capacity;
+        return m_buckets[hash % m_capacity];
+    }
+
+    const Bucket& lookup_with_hash(unsigned hash, int* bucket_index) const
+    {
+        if (bucket_index)
+            *bucket_index = hash % m_capacity;
+        return m_buckets[hash % m_capacity];
+    }
+
     void rehash(int capacity);
     void insert(const T&);
     void insert(T&&);
@@ -271,32 +320,6 @@ bool HashTable<T, TraitsForT>::contains(const T& value) const
             return true;
     }
     return false;
-}
-
-template<typename T, typename TraitsForT>
-auto HashTable<T, TraitsForT>::find(const T& value) -> Iterator
-{
-    if (is_empty())
-        return end();
-    int bucket_index;
-    auto& bucket = lookup(value, &bucket_index);
-    auto bucket_iterator = bucket.template find<TraitsForT>(value);
-    if (bucket_iterator != bucket.end())
-        return Iterator(*this, false, bucket_iterator, bucket_index);
-    return end();
-}
-
-template<typename T, typename TraitsForT>
-auto HashTable<T, TraitsForT>::find(const T& value) const -> ConstIterator
-{
-    if (is_empty())
-        return end();
-    int bucket_index;
-    const auto& bucket = lookup(value, &bucket_index);
-    auto bucket_iterator = bucket.template find<TraitsForT>(value);
-    if (bucket_iterator != bucket.end())
-        return ConstIterator(*this, false, bucket_iterator, bucket_index);
-    return end();
 }
 
 template<typename T, typename TraitsForT>

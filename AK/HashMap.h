@@ -37,7 +37,12 @@ public:
 
     void set(const K& key, const V& value) { m_table.set({ key, value }); }
     void set(const K& key, V&& value) { m_table.set({ key, move(value) }); }
-    void remove(const K& key) { m_table.remove({ key, V() }); }
+    void remove(const K& key)
+    {
+        auto it = find(key);
+        if (it != end())
+            m_table.remove(it);
+    }
     void remove_one_randomly() { m_table.remove(m_table.begin()); }
 
     typedef HashTable<Entry, EntryTraits> HashTableType;
@@ -46,11 +51,11 @@ public:
 
     IteratorType begin() { return m_table.begin(); }
     IteratorType end() { return m_table.end(); }
-    IteratorType find(const K& key) { return m_table.find({ key, V() }); }
+    IteratorType find(const K& key) { return m_table.find(Traits<K>::hash(key), [&](auto& entry) { return key == entry.key; }); }
 
     ConstIteratorType begin() const { return m_table.begin(); }
     ConstIteratorType end() const { return m_table.end(); }
-    ConstIteratorType find(const K& key) const { return m_table.find({ key, V() }); }
+    ConstIteratorType find(const K& key) const { return m_table.find(Traits<K>::hash(key), [&](auto& entry) { return key == entry.key; }); }
 
     void ensure_capacity(int capacity) { m_table.ensure_capacity(capacity); }
 

@@ -147,50 +147,38 @@ public:
     ConstIterator begin() const { return ConstIterator(m_head); }
     ConstIterator end() const { return ConstIterator::universal_end(); }
 
-    ConstIterator find(const T& value) const
+    template<typename Finder>
+    ConstIterator find(Finder finder) const
     {
         Node* prev = nullptr;
         for (auto* node = m_head; node; node = node->next) {
-            if (node->value == value)
+            if (finder(node->value))
                 return ConstIterator(node, prev);
             prev = node;
         }
         return end();
     }
 
-    Iterator find(const T& value)
+    template<typename Finder>
+    Iterator find(Finder finder)
     {
         Node* prev = nullptr;
         for (auto* node = m_head; node; node = node->next) {
-            if (node->value == value)
+            if (finder(node->value))
                 return Iterator(node, prev);
             prev = node;
         }
         return end();
     }
 
-    template<typename Traits>
     ConstIterator find(const T& value) const
     {
-        Node* prev = nullptr;
-        for (auto* node = m_head; node; node = node->next) {
-            if (Traits::equals(node->value, value))
-                return ConstIterator(node, prev);
-            prev = node;
-        }
-        return end();
+        return find([&](auto& other) { return value == other; });
     }
 
-    template<typename Traits>
     Iterator find(const T& value)
     {
-        Node* prev = nullptr;
-        for (auto* node = m_head; node; node = node->next) {
-            if (Traits::equals(node->value, value))
-                return Iterator(node, prev);
-            prev = node;
-        }
-        return end();
+        return find([&](auto& other) { return value == other; });
     }
 
     void remove(Iterator iterator)
