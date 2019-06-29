@@ -4,6 +4,9 @@
 #include "Process.h"
 #include "Scheduler.h"
 #include "StdLib.h"
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -581,32 +584,33 @@ ByteBuffer procfs$all(InodeIdentifier)
 {
     InterruptDisabler disabler;
     auto processes = Process::all_processes();
+    JsonArray array;
     StringBuilder builder(processes.size() * 80);
-    auto build_process_line = [&builder](Process* process) {
-        builder.appendf("%u,%u,%u,%u,%u,%u,%u,%s,%u,%u,%s,%s,%u,%u,%u,%u,%s,%u\n",
-            process->pid(),
-            process->main_thread().times_scheduled(), // FIXME(Thread): Bill all scheds to the process
-            process->tty() ? process->tty()->pgid() : 0,
-            process->pgid(),
-            process->sid(),
-            process->uid(),
-            process->gid(),
-            to_string(process->state()),
-            process->ppid(),
-            process->number_of_open_file_descriptors(),
-            process->tty() ? process->tty()->tty_name().characters() : "notty",
-            process->name().characters(),
-            process->amount_virtual(),
-            process->amount_resident(),
-            process->amount_shared(),
-            process->main_thread().ticks(), // FIXME(Thread): Bill all ticks to the process
-            to_string(process->priority()),
-            process->syscall_count());
+    auto build_process = [&](const Process& process) {
+        JsonObject process_object;
+        process_object.set("pid", process.pid());
+        process_object.set("times_scheduled", process.main_thread().times_scheduled());
+        process_object.set("pgid", process.tty() ? process.tty()->pgid() : 0);
+        process_object.set("sid", process.sid());
+        process_object.set("uid", process.uid());
+        process_object.set("gid", process.gid());
+        process_object.set("state", to_string(process.state()));
+        process_object.set("ppid", process.ppid());
+        process_object.set("nfds", process.number_of_open_file_descriptors());
+        process_object.set("name", process.name());
+        process_object.set("tty", process.tty() ? process.tty()->tty_name() : "notty");
+        process_object.set("amount_virtual", process.amount_virtual());
+        process_object.set("amount_resident", process.amount_resident());
+        process_object.set("amount_shared", process.amount_shared());
+        process_object.set("ticks", process.main_thread().ticks());
+        process_object.set("priority", to_string(process.priority()));
+        process_object.set("syscall_count", process.syscall_count());
+        array.append(process_object);
     };
-    build_process_line(Scheduler::colonel());
+    build_process(*Scheduler::colonel());
     for (auto* process : processes)
-        build_process_line(process);
-    return builder.to_byte_buffer();
+        build_process(*process);
+    return array.serialized().to_byte_buffer();
 }
 
 ByteBuffer procfs$inodes(InodeIdentifier)

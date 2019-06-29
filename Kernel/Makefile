@@ -84,6 +84,10 @@ AK_OBJS = \
     ../AK/StringView.o \
     ../AK/FileSystemPath.o \
     ../AK/StdLibExtras.o \
+    ../AK/JsonObject.o \
+    ../AK/JsonValue.o \
+    ../AK/JsonArray.o \
+    ../AK/JsonParser.o \
     ../AK/ELF/ELFImage.o \
     ../AK/ELF/ELFLoader.o
 

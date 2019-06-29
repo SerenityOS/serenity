@@ -1,3 +1,6 @@
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSWindowManager.h>
@@ -37,25 +40,17 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
     idle = 0;
 
     m_proc_all.seek(0);
-    for (;;) {
-        auto line = m_proc_all.read_line(BUFSIZ);
-        if (line.is_null())
-            break;
-        auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);
-        auto parts = chomped.split_view(',');
-        if (parts.size() < 18)
-            break;
-        bool ok;
-        pid_t pid = parts[0].to_uint(ok);
-        ASSERT(ok);
-        unsigned nsched = parts[1].to_uint(ok);
-        ASSERT(ok);
-
+    auto file_contents = m_proc_all.read_all();
+    auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
+    json.as_array().for_each([&](auto& value) {
+        const JsonObject& process_object = value.as_object();
+        pid_t pid = process_object.get("pid").to_dword();
+        unsigned nsched = process_object.get("times_scheduled").to_dword();
         if (pid == 0)
             idle += nsched;
         else
             busy += nsched;
-    }
+    });
 }
 
 void WSCPUMonitor::paint(Painter& painter, const Rect& rect)

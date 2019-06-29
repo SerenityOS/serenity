@@ -68,15 +68,15 @@ JsonValue::JsonValue(int value)
     m_value.as_int = value;
 }
 
-JsonValue::JsonValue(unsigned value)
+JsonValue::JsonValue(long unsigned value)
+    : JsonValue((unsigned)value)
 {
-    if (value > INT32_MAX) {
-        m_type = Type::Double;
-        m_value.as_double = value;
-    } else {
-        m_type = Type::Int;
-        m_value.as_int = (int)value;
-    }
+}
+
+JsonValue::JsonValue(unsigned value)
+    : m_type(Type::UnsignedInt)
+{
+    m_value.as_uint = value;
 }
 
 JsonValue::JsonValue(const char* cstring)
@@ -84,11 +84,13 @@ JsonValue::JsonValue(const char* cstring)
 {
 }
 
+#ifndef KERNEL
 JsonValue::JsonValue(double value)
     : m_type(Type::Double)
 {
     m_value.as_double = value;
 }
+#endif
 
 JsonValue::JsonValue(bool value)
     : m_type(Type::Bool)
@@ -153,11 +155,16 @@ void JsonValue::serialize(StringBuilder& builder) const
     case Type::Bool:
         builder.append(m_value.as_bool ? "true" : "false");
         break;
+#ifndef KERNEL
     case Type::Double:
         builder.appendf("%g", m_value.as_double);
         break;
+#endif
     case Type::Int:
         builder.appendf("%d", m_value.as_int);
+        break;
+    case Type::UnsignedInt:
+        builder.appendf("%u", m_value.as_uint);
         break;
     case Type::Undefined:
         builder.append("undefined");

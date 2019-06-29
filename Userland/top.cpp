@@ -1,7 +1,11 @@
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
+#include <LibCore/CFile.h>
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -31,44 +35,33 @@ struct Snapshot {
 
 static Snapshot get_snapshot()
 {
-    Snapshot snapshot;
-
-    FILE* fp = fopen("/proc/all", "r");
-    if (!fp) {
-        perror("failed to open /proc/all");
+    CFile file("/proc/all");
+    if (!file.open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Failed to open /proc/all: %s\n", file.error_string());
         exit(1);
     }
-    for (;;) {
-        char buf[4096];
-        char* ptr = fgets(buf, sizeof(buf), fp);
-        if (!ptr)
-            break;
-        auto parts = String(buf, Chomp).split(',');
-        if (parts.size() < 17)
-            break;
-        bool ok;
-        pid_t pid = parts[0].to_uint(ok);
-        ASSERT(ok);
-        unsigned nsched = parts[1].to_uint(ok);
-        ASSERT(ok);
+
+    Snapshot snapshot;
+
+    auto file_contents = file.read_all();
+    auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
+    json.as_array().for_each([&](auto& value) {
+        const JsonObject& process_object = value.as_object();
+        pid_t pid = process_object.get("pid").to_dword();
+        unsigned nsched = process_object.get("times_scheduled").to_dword();
         snapshot.sum_nsched += nsched;
         Process process;
         process.pid = pid;
         process.nsched = nsched;
-        unsigned uid = parts[5].to_uint(ok);
-        ASSERT(ok);
+        unsigned uid = process_object.get("uid").to_dword();
         process.user = s_usernames->get(uid);
-        process.priority = parts[16];
-        process.state = parts[7];
-        process.name = parts[11];
-        process.virtual_size = parts[12].to_uint(ok);
-        ASSERT(ok);
-        process.physical_size = parts[13].to_uint(ok);
-        ASSERT(ok);
+        process.priority = process_object.get("priority").to_string();
+        process.state = process_object.get("state").to_string();
+        process.name = process_object.get("name").to_string();
+        process.virtual_size = process_object.get("amount_virtual").to_dword();
+        process.physical_size = process_object.get("amount_resident").to_dword();
         snapshot.map.set(pid, move(process));
-    }
-    int rc = fclose(fp);
-    ASSERT(rc == 0);
+    });
     return snapshot;
 }
 

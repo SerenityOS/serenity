@@ -1,5 +1,8 @@
 #include "ProcessModel.h"
 #include "GraphWidget.h"
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <LibCore/CFile.h>
 #include <fcntl.h>
 #include <pwd.h>
@@ -191,24 +194,16 @@ void ProcessModel::update()
 
     HashTable<pid_t> live_pids;
     unsigned sum_nsched = 0;
-    for (;;) {
-        auto line = m_proc_all.read_line(1024);
-        if (line.is_empty())
-            break;
-        auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);
-        auto parts = chomped.split_view(',');
-        if (parts.size() < 18)
-            break;
-        bool ok;
-        pid_t pid = parts[0].to_uint(ok);
-        ASSERT(ok);
-        unsigned nsched = parts[1].to_uint(ok);
-        ASSERT(ok);
+    auto file_contents = m_proc_all.read_all();
+    auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
+    json.as_array().for_each([&](auto& value) {
+        const JsonObject& process_object = value.as_object();
+        pid_t pid = process_object.get("pid").to_dword();
+        unsigned nsched = process_object.get("times_scheduled").to_dword();
         ProcessState state;
         state.pid = pid;
         state.nsched = nsched;
-        unsigned uid = parts[5].to_uint(ok);
-        ASSERT(ok);
+        unsigned uid = process_object.get("uid").to_dword();
         {
             auto it = m_usernames.find((uid_t)uid);
             if (it != m_usernames.end())
@@ -216,15 +211,12 @@ void ProcessModel::update()
             else
                 state.user = String::format("%u", uid);
         }
-        state.priority = parts[16];
-        state.syscalls = parts[17].to_uint(ok);
-        ASSERT(ok);
-        state.state = parts[7];
-        state.name = parts[11];
-        state.virtual_size = parts[12].to_uint(ok);
-        ASSERT(ok);
-        state.physical_size = parts[13].to_uint(ok);
-        ASSERT(ok);
+        state.priority = process_object.get("priority").to_string();
+        state.syscalls = process_object.get("syscall_count").to_dword();
+        state.state = process_object.get("state").to_string();
+        state.name = process_object.get("name").to_string();
+        state.virtual_size = process_object.get("amount_virtual").to_dword();
+        state.physical_size = process_object.get("amount_resident").to_dword();
         sum_nsched += nsched;
         {
             auto it = m_processes.find(pid);
@@ -237,7 +229,7 @@ void ProcessModel::update()
         (*it).value->current_state = state;
 
         live_pids.set(pid);
-    }
+    });
 
     m_pids.clear();
     float total_cpu_percent = 0;
