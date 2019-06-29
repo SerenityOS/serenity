@@ -1,6 +1,8 @@
-#include "CProcessStatisticsReader.h"
-#include "CFile.h"
-
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
+#include <LibCore/CFile.h>
+#include <LibCore/CProcessStatisticsReader.h>
 #include <pwd.h>
 #include <stdio.h>
 
@@ -27,67 +29,23 @@ void CProcessStatisticsReader::update_map(HashMap<pid_t, CProcessStatistics>& ma
         return;
     }
 
-    for (;;) {
-        auto line = file.read_line(1024);
-
-        if (line.is_empty())
-            break;
-
-        auto chomped = String((const char*)line.pointer(), line.size() - 1, Chomp);
-        auto parts = chomped.split_view(',');
-
-        if (parts.size() < 18)
-            break;
-
-        bool ok = false;
+    auto file_contents = file.read_all();
+    auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
+    json.as_array().for_each([&](auto& value) {
+        const JsonObject& process_object = value.as_object();
         CProcessStatistics process;
-
-        process.pid = parts[0].to_uint(ok);
-        if (!ok) {
-            fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid pid\n", parts[0].characters());
-            return;
-        }
-
-        process.nsched = parts[1].to_uint(ok);
-        if (!ok) {
-            fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid nsched value\n", parts[1].characters());
-            return;
-        }
-
-        uid_t uid = parts[5].to_uint(ok);
-        if (!ok) {
-            fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid uid value\n", parts[5].characters());
-            return;
-        }
-
-        process.uid = uid;
-        process.username = get_username_from_uid(uid);
-
-        process.priority = parts[16];
-
-        process.syscalls = parts[17].to_uint(ok);
-        if (!ok) {
-            fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid syscalls count value\n", parts[17].characters());
-            return;
-        }
-
-        process.state = parts[7];
-
-        process.name = parts[11];
-        process.virtual_size = parts[12].to_uint(ok);
-        if (!ok) {
-            fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid amount of virtual address space used\n", parts[12].characters());
-            return;
-        }
-
-        process.physical_size = parts[13].to_uint(ok);
-        if (!ok) {
-            fprintf(stderr, "CProcessHelper : couldn't convert %s to a valid amount of physical address space used\n", parts[13].characters());
-            return;
-        }
-
+        process.pid = process_object.get("pid").to_dword();
+        process.nsched = process_object.get("times_scheduled").to_dword();
+        process.uid = process_object.get("uid").to_dword();
+        process.username = get_username_from_uid(process.uid);
+        process.priority = process_object.get("priority").to_string();
+        process.syscalls = process_object.get("syscall_count").to_dword();
+        process.state = process_object.get("state").to_string();
+        process.name = process_object.get("name").to_string();
+        process.virtual_size = process_object.get("amount_virtual").to_dword();
+        process.physical_size = process_object.get("amount_resident").to_dword();
         map.set(process.pid, process);
-    }
+    });
 }
 
 String CProcessStatisticsReader::get_username_from_uid(const uid_t uid)
