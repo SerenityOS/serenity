@@ -57,6 +57,24 @@ public:
         return default_value;
     }
 
+    int as_int() const
+    {
+        ASSERT(is_int());
+        return m_value.as_int;
+    }
+
+    int as_uint() const
+    {
+        ASSERT(is_uint());
+        return m_value.as_uint;
+    }
+
+    int as_bool() const
+    {
+        ASSERT(is_bool());
+        return m_value.as_bool;
+    }
+
     String as_string() const
     {
         ASSERT(is_string());
@@ -79,6 +97,7 @@ public:
 
     bool is_null() const { return m_type == Type::Null; }
     bool is_undefined() const { return m_type == Type::Undefined; }
+    bool is_bool() const { return m_type == Type::Bool; }
     bool is_string() const { return m_type == Type::String; }
     bool is_int() const { return m_type == Type::Int; }
     bool is_uint() const { return m_type == Type::UnsignedInt; }
