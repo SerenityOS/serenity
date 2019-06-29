@@ -723,6 +723,17 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
                 start_window_resize(window, event);
                 return IterationDecision::Break;
             }
+            if (m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseWheel) {
+                float opacity_change = -event.wheel_delta() * 0.05f;
+                float new_opacity = window.opacity() + opacity_change;
+                if (new_opacity < 0.05f)
+                    new_opacity = 0.05f;
+                if (new_opacity > 1.0f)
+                    new_opacity = 1.0f;
+                window.set_opacity(new_opacity);
+                window.invalidate();
+                return IterationDecision::Break;
+            }
         }
         // Well okay, let's see if we're hitting the frame or the window inside the frame.
         if (window.rect().contains(event.position())) {
