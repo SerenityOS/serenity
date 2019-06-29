@@ -11,7 +11,7 @@
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
 
-static String to_class_name(VBWidgetType type)
+String to_class_name(VBWidgetType type)
 {
     switch (type) {
     case VBWidgetType::GWidget:
@@ -39,6 +39,33 @@ static String to_class_name(VBWidgetType type)
     default:
         ASSERT_NOT_REACHED();
     }
+}
+
+VBWidgetType widget_type_from_class_name(const StringView& name)
+{
+    if (name == "GWidget")
+        return VBWidgetType::GWidget;
+    if (name == "GButton")
+        return VBWidgetType::GButton;
+    if (name == "GLabel")
+        return VBWidgetType::GLabel;
+    if (name == "GSpinBox")
+        return VBWidgetType::GSpinBox;
+    if (name == "GTextEditor")
+        return VBWidgetType::GTextEditor;
+    if (name == "GProgressBar")
+        return VBWidgetType::GProgressBar;
+    if (name == "GCheckBox")
+        return VBWidgetType::GCheckBox;
+    if (name == "GRadioButton")
+        return VBWidgetType::GRadioButton;
+    if (name == "GScrollBar")
+        return VBWidgetType::GScrollBar;
+    if (name == "GGroupBox")
+        return VBWidgetType::GGroupBox;
+    if (name == "GSlider")
+        return VBWidgetType::GSlider;
+    ASSERT_NOT_REACHED();
 }
 
 static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
