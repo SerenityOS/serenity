@@ -1,3 +1,4 @@
+#include <AK/JsonValue.h>
 #include <LibGUI/GVariant.h>
 
 const char* to_string(GVariant::Type type)
@@ -75,6 +76,42 @@ GVariant::GVariant(const String& value)
 {
     m_value.as_string = const_cast<StringImpl*>(value.impl());
     AK::ref_if_not_null(m_value.as_string);
+}
+
+GVariant::GVariant(const JsonValue& value)
+{
+    if (value.is_null()) {
+        m_value.as_string = nullptr;
+        return;
+    }
+
+    if (value.is_int()) {
+        m_type = Type::Int;
+        m_value.as_int = value.as_int();
+        return;
+    }
+
+    if (value.is_uint()) {
+        ASSERT(value.as_uint() < INT32_MAX);
+        m_type = Type::Int;
+        m_value.as_int = value.as_uint();
+        return;
+    }
+
+    if (value.is_string()) {
+        m_type = Type::String;
+        m_value.as_string = value.as_string().impl();
+        m_value.as_string->ref();
+        return;
+    }
+
+    if (value.is_bool()) {
+        m_type = Type::Bool;
+        m_value.as_bool = value.as_bool();
+        return;
+    }
+
+    ASSERT_NOT_REACHED();
 }
 
 GVariant::GVariant(const GraphicsBitmap& value)
@@ -209,7 +246,7 @@ bool GVariant::operator==(const GVariant& other) const
     case Type::Rect:
         return as_rect() == other.as_rect();
     case Type::Invalid:
-        break;
+        return true;
     }
     ASSERT_NOT_REACHED();
 }

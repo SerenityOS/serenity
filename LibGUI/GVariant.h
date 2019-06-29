@@ -4,6 +4,10 @@
 #include <LibGUI/GIcon.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
+namespace AK {
+class JsonValue;
+}
+
 class GVariant {
 public:
     GVariant();
@@ -17,6 +21,7 @@ public:
     GVariant(const Point&);
     GVariant(const Size&);
     GVariant(const Rect&);
+    GVariant(const AK::JsonValue&);
     GVariant(Color);
 
     GVariant(const GVariant&);
