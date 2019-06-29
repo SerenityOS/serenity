@@ -14,7 +14,10 @@ public:
         Undefined,
         Null,
         Int,
+        UnsignedInt,
+#ifndef KERNEL
         Double,
+#endif
         Bool,
         String,
         Array,
@@ -34,7 +37,10 @@ public:
 
     JsonValue(int);
     JsonValue(unsigned);
+    JsonValue(long unsigned);
+#ifndef KERNEL
     JsonValue(double);
+#endif
     JsonValue(bool);
     JsonValue(const char*);
     JsonValue(const String&);
@@ -75,18 +81,36 @@ public:
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_string() const { return m_type == Type::String; }
     bool is_int() const { return m_type == Type::Int; }
+    bool is_uint() const { return m_type == Type::UnsignedInt; }
+#ifndef KERNEL
     bool is_double() const { return m_type == Type::Double; }
+#endif
     bool is_array() const { return m_type == Type::Array; }
     bool is_object() const { return m_type == Type::Object; }
-    bool is_number() const { return m_type == Type::Int || m_type == Type::Double; }
+    bool is_number() const
+    {
+        if (m_type == Type::Int || m_type == Type::UnsignedInt)
+            return true;
+#ifdef KERNEL
+        return false;
+#else
+        return m_type == Type::Double;
+#endif
+    }
 
     dword to_dword(dword default_value = 0) const
     {
         if (!is_number())
             return default_value;
+#ifdef KERNEL
+        return (dword)m_value.as_int;
+#else
         if (type() == Type::Int)
             return (dword)m_value.as_int;
+        if (type() == Type::UnsignedInt)
+            return m_value.as_uint;
         return (dword)m_value.as_double;
+#endif
     }
 
 private:
@@ -99,8 +123,11 @@ private:
         StringImpl* as_string { nullptr };
         JsonArray* as_array;
         JsonObject* as_object;
+#ifndef KERNEL
         double as_double;
+#endif
         int as_int;
+        unsigned int as_uint;
         bool as_bool;
     } m_value;
 };

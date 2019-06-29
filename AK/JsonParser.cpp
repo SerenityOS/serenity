@@ -146,7 +146,9 @@ JsonValue JsonParser::parse_number()
 {
     auto number_string = extract_while([](char ch) { return ch == '-' || (ch >= '0' && ch <= '9'); });
     bool ok;
-    auto value = JsonValue(number_string.to_int(ok));
+    auto value = JsonValue(number_string.to_uint(ok));
+    if (!ok)
+        value = JsonValue(number_string.to_int(ok));
     ASSERT(ok);
     return value;
 }
