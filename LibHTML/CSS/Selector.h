@@ -2,11 +2,17 @@
 
 #include <AK/AKString.h>
 #include <AK/Vector.h>
+#include <LibHTML/CSS/Specificity.h>
 
 class Selector {
 public:
     struct Component {
-        enum class Type { Invalid, TagName, Id, Class };
+        enum class Type {
+            Invalid,
+            TagName,
+            Id,
+            Class
+        };
         Type type { Type::Invalid };
         String value;
     };
@@ -15,6 +21,8 @@ public:
     ~Selector();
 
     const Vector<Component>& components() const { return m_components; }
+
+    Specificity specificity() const;
 
 private:
     Vector<Component> m_components;
