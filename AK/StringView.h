@@ -4,6 +4,7 @@
 
 namespace AK {
 
+class ByteBuffer;
 class String;
 class StringImpl;
 
@@ -28,7 +29,9 @@ public:
                 ++m_length;
         }
     }
-    StringView(const String& string);
+
+    StringView(const ByteBuffer&);
+    StringView(const String&);
 
     bool is_null() const { return !m_characters; }
     bool is_empty() const { return m_length == 0; }
