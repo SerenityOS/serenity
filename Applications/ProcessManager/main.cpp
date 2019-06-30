@@ -109,10 +109,19 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto process_menu = make<GMenu>("Process");
-    process_menu->add_action(kill_action.copy_ref());
-    process_menu->add_action(stop_action.copy_ref());
-    process_menu->add_action(continue_action.copy_ref());
+    process_menu->add_action(kill_action);
+    process_menu->add_action(stop_action);
+    process_menu->add_action(continue_action);
     menubar->add_menu(move(process_menu));
+
+    auto process_context_menu = make<GMenu>("Process context menu");
+    process_context_menu->add_action(kill_action);
+    process_context_menu->add_action(stop_action);
+    process_context_menu->add_action(continue_action);
+    process_table_view->on_context_menu_request = [&](const GModelIndex& index, const GContextMenuEvent& event) {
+        (void) index;
+        process_context_menu->popup(event.screen_position());
+    };
 
     auto frequency_menu = make<GMenu>("Frequency");
     frequency_menu->add_action(GAction::create("0.25 sec", [refresh_timer](auto&) {
