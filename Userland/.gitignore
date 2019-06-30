@@ -1,9 +1,0 @@
-# Ignore all files without extension
-*
-!*.*
-!*/
-!Makefile
-
-*.o
-*.d
-compile_commands.json

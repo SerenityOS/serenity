@@ -1,11 +1,4 @@
-*.o
-*.d
-Boot/boot.ao
-kernel
 kernel.map
-_fs_contents
 sync-local.sh
 *.pcap
 eth_null*
-_disk_image
-compile_commmands.json
