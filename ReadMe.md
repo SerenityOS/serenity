@@ -8,7 +8,7 @@ Graphical Unix-like operating system for x86 computers.
 
 *I always wondered what it would be like to write my own operating system, but I never took it seriously. Until now.*
 
-Serenity is a love letter to '90s user interfaces, with a custom Unix-like core. It flatters with sincerity by stealing beautiful ideas from various other systems.
+Serenity is a love letter to '90s user interfaces with a custom Unix-like core. It flatters with sincerity by stealing beautiful ideas from various other systems.
 
 Roughly speaking, the goal is a marriage between the aesthetic of late-1990s productivity software and the power-user accessibility of late-2000s \*nix. This is a system by me, for me, based on the things I like.
 
@@ -38,12 +38,14 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * /proc filesystem
 * Local sockets
 * Pseudoterminals (with /dev/pts filesystem)
-* Event loop library (LibCore)
+* JSON framework
+* Low-level utility library (LibCore)
 * High-level GUI library (LibGUI)
 * Visual GUI design tool
 * PNG format support
 * Text editor
 * IRC client
+* Simple painting application
 * DNS lookup
 * Desktop games: Minesweeper and Snake
 * Ports system (needs more packages!)
