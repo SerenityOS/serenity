@@ -143,7 +143,7 @@ void GTreeView::paint_event(GPaintEvent& event)
         if (!rect.intersects(visible_content_rect))
             return IterationDecision::Continue;
 #ifdef DEBUG_ITEM_RECTS
-        painter.fill_rect(rect, Color::LightGray);
+        painter.fill_rect(rect, Color::WarmGray);
 #endif
 
         Color background_color = Color::from_rgb(0xffffff);

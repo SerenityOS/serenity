@@ -272,7 +272,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
     Rect ruler_rect { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar() };
 
     if (m_ruler_visible) {
-        painter.fill_rect(ruler_rect, Color::LightGray);
+        painter.fill_rect(ruler_rect, Color::WarmGray);
         painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color::DarkGray);
     }
 

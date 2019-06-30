@@ -24,6 +24,7 @@ public:
         DarkGray,
         MidGray,
         LightGray,
+        WarmGray,
         DarkGreen,
         DarkBlue,
         DarkRed,

@@ -372,7 +372,7 @@ void GWindow::paint_keybinds()
             Rect rect { widget.x() - 5, widget.y() - 5, 4 + Font::default_font().width(keypair.key), 16 };
             Rect highlight_rect { widget.x() - 3, widget.y() - 5, 0, 16 };
 
-            painter.fill_rect(rect, Color::LightGray);
+            painter.fill_rect(rect, Color::WarmGray);
             painter.draw_rect(rect, Color::Black);
             painter.draw_text(rect, keypair.key.characters(), TextAlignment::Center, Color::Black);
             painter.draw_text(highlight_rect, m_entered_keybind.characters(), TextAlignment::CenterLeft, Color::MidGray);

@@ -38,7 +38,7 @@ void WSMenuBarKeeper::draw()
 
     Painter painter(*window().backing_store());
 
-    painter.fill_rect(menubar_rect, Color::LightGray);
+    painter.fill_rect(menubar_rect, Color::WarmGray);
     painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, Color::MidGray);
     int index = 0;
     wm.for_each_active_menubar_menu([&](WSMenu& menu) {

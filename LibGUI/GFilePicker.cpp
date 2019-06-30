@@ -23,7 +23,7 @@ GFilePicker::GFilePicker(const StringView& path, CObject* parent)
     horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     horizontal_container->set_fill_with_background_color(true);
-    horizontal_container->set_background_color(Color::LightGray);
+    horizontal_container->set_background_color(Color::WarmGray);
 
     auto* vertical_container = new GWidget(horizontal_container);
     vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));

@@ -176,7 +176,7 @@ private:
     String m_icon_path;
     RefPtr<WSCursor> m_override_cursor;
     WSWindowFrame m_frame;
-    Color m_background_color { Color::LightGray };
+    Color m_background_color { Color::WarmGray };
     unsigned m_wm_event_mask { 0 };
     DisjointRectSet m_pending_paint_rects;
     Rect m_unmaximized_rect;

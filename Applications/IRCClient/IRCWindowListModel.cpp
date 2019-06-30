@@ -61,7 +61,7 @@ GVariant IRCWindowListModel::data(const GModelIndex& index, Role role) const
             if (window.unread_count())
                 return Color(Color::Red);
             if (!window.channel().is_open())
-                return Color(Color::LightGray);
+                return Color(Color::WarmGray);
             return Color(Color::Black);
         }
         }

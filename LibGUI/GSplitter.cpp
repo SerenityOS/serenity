@@ -8,7 +8,7 @@ GSplitter::GSplitter(Orientation orientation, GWidget* parent)
 {
     set_layout(make<GBoxLayout>(orientation));
     set_fill_with_background_color(true);
-    set_background_color(Color::LightGray);
+    set_background_color(Color::WarmGray);
     layout()->set_spacing(4);
 }
 
@@ -25,7 +25,7 @@ void GSplitter::enter_event(CEvent&)
 
 void GSplitter::leave_event(CEvent&)
 {
-    set_background_color(Color::LightGray);
+    set_background_color(Color::WarmGray);
     if (!m_resizing)
         window()->set_override_cursor(GStandardCursor::None);
     update();

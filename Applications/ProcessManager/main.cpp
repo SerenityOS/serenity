@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     auto* keeper = new GWidget;
     keeper->set_layout(make<GBoxLayout>(Orientation::Vertical));
     keeper->set_fill_with_background_color(true);
-    keeper->set_background_color(Color::LightGray);
+    keeper->set_background_color(Color::WarmGray);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto* tabwidget = new GTabWidget(keeper);
@@ -33,7 +33,7 @@ int main(int argc, char** argv)
 
     auto* graphs_container = new GWidget;
     graphs_container->set_fill_with_background_color(true);
-    graphs_container->set_background_color(Color::LightGray);
+    graphs_container->set_background_color(Color::WarmGray);
     graphs_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     graphs_container->layout()->set_margins({ 4, 4, 4, 4 });
 
