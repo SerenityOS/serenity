@@ -30,7 +30,7 @@ public:
     bool is_column_hidden(int) const;
     void set_column_hidden(int, bool);
 
-    Point adjusted_position(const Point&);
+    Point adjusted_position(const Point&) const;
 
     virtual Rect content_rect(const GModelIndex&) const override;
 
@@ -46,6 +46,8 @@ private:
     virtual void keydown_event(GKeyEvent&) override;
     virtual void leave_event(CEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
+
+    GModelIndex index_at_event_position(const Point&) const;
 
     Rect content_rect(int row, int column) const;
     void paint_headers(Painter&);

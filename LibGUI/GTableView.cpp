@@ -92,7 +92,7 @@ Rect GTableView::header_rect(int column_index) const
     return { x_offset, 0, column_width(column_index) + horizontal_padding() * 2, header_height() };
 }
 
-Point GTableView::adjusted_position(const Point& position)
+Point GTableView::adjusted_position(const Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
@@ -136,20 +136,26 @@ void GTableView::mousedown_event(GMouseEvent& event)
         return;
     }
 
-    auto adjusted_position = this->adjusted_position(event.position());
+    model()->set_selected_index(index_at_event_position(event.position()));
+    update();
+}
+
+GModelIndex GTableView::index_at_event_position(const Point& position) const
+{
+    if (!model())
+        return {};
+
+    auto adjusted_position = this->adjusted_position(position);
     for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
         if (!row_rect(row).contains(adjusted_position))
             continue;
         for (int column = 0, column_count = model()->column_count(); column < column_count; ++column) {
             if (!content_rect(row, column).contains(adjusted_position))
                 continue;
-            model()->set_selected_index(model()->index(row, column));
-            update();
-            return;
+            return model()->index(row, column);
         }
     }
-    model()->set_selected_index({});
-    update();
+    return {};
 }
 
 void GTableView::mousemove_event(GMouseEvent& event)
@@ -448,7 +454,16 @@ void GTableView::context_menu_event(GContextMenuEvent& event)
         ensure_header_context_menu().popup(event.screen_position());
         return;
     }
-    dbgprintf("GTableView::context_menu_event(): FIXME: Implement for table rows.\n");
+
+    auto index = index_at_event_position(event.position());
+    if (!index.is_valid())
+        return;
+    dbgprintf("context menu requested for index (%d,%d) '%s'\n", index.row(), index.column(), model()->data(index).to_string().characters());
+
+    model()->set_selected_index(index);
+    update();
+    if (on_context_menu_request)
+        on_context_menu_request(index, event);
 }
 
 void GTableView::leave_event(CEvent&)
