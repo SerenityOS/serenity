@@ -329,7 +329,7 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     ASSERT_NOT_REACHED();
 }
 
-long my_strtol(const char* str, char** endptr, int base)
+long strtol(const char* str, char** endptr, int base)
 {
     int sign = 1;
     while (isspace(*str))
