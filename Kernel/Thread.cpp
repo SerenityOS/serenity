@@ -568,6 +568,7 @@ bool Thread::is_thread(void* ptr)
 
 void Thread::set_thread_list(InlineLinkedList<Thread>* thread_list)
 {
+    ASSERT_INTERRUPTS_DISABLED();
     ASSERT(pid() != 0);
     if (m_thread_list == thread_list)
         return;
@@ -580,6 +581,7 @@ void Thread::set_thread_list(InlineLinkedList<Thread>* thread_list)
 
 void Thread::set_state(State new_state)
 {
+    InterruptDisabler disabler;
     m_state = new_state;
     if (m_process.pid() != 0)
         set_thread_list(thread_list_for_state(new_state));
