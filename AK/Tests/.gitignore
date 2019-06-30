@@ -1,7 +1,0 @@
-TestString
-TestQueue
-TestVector
-TestHashMap
-TestJSON
-*.d
-*.o
