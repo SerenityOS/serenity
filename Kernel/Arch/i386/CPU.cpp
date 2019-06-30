@@ -165,7 +165,7 @@ static void handle_crash(RegisterDumpType& regs, const char* description, int si
         hang();
     }
 
-    kprintf("CRASH: %s %s: %s(%u)\n",
+    kprintf("\033[31;1mCRASH: %s %s: %s(%u)\033[0m\n",
         description,
         current->process().is_ring0() ? "Kernel" : "Process",
         current->process().name().characters(),
@@ -262,7 +262,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
 
     if (response == PageFaultResponse::ShouldCrash) {
-        dbgprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s address %p\033[0m\n",
+        kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s address %p\033[0m\n",
             current->process().name().characters(),
             current->pid(),
             current->tid(),
@@ -272,11 +272,11 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
         dword malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
         dword free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
-            dbgprintf("\033[33;1mNote: Address %p looks like it may be uninitialized malloc() memory\033[0m\n", fault_address);
+            kprintf("\033[33;1mNote: Address %p looks like it may be uninitialized malloc() memory\033[0m\n", fault_address);
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
-            dbgprintf("\033[33;1mNote: Address %p looks like it may be recently free()'d memory\033[0m\n", fault_address);
+            kprintf("\033[33;1mNote: Address %p looks like it may be recently free()'d memory\033[0m\n", fault_address);
         } else if (fault_address < 4096) {
-            dbgprintf("\033[33;1mNote: Address %p looks like a possible nullptr dereference\033[0m\n", fault_address);
+            kprintf("\033[33;1mNote: Address %p looks like a possible nullptr dereference\033[0m\n", fault_address);
         }
 
         handle_crash(regs, "Page Fault", SIGSEGV);
