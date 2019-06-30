@@ -23,7 +23,7 @@ private:
     {
         GPainter painter(*this);
 
-        painter.fill_rect(rect(), Color::LightGray);
+        painter.fill_rect(rect(), Color::WarmGray);
 
         painter.blit_tiled({ 0, 0, 160, 160 }, *m_bitmap, m_bitmap->rect());
 

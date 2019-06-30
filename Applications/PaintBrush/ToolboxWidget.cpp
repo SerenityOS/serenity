@@ -33,7 +33,7 @@ private:
 ToolboxWidget::ToolboxWidget(GWidget* parent)
     : GFrame(parent)
 {
-    set_background_color(Color::LightGray);
+    set_background_color(Color::WarmGray);
     set_fill_with_background_color(true);
 
     set_frame_thickness(1);

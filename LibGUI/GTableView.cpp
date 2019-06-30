@@ -282,7 +282,7 @@ void GTableView::paint_event(GPaintEvent& event)
 void GTableView::paint_headers(Painter& painter)
 {
     int exposed_width = max(content_size().width(), width());
-    painter.fill_rect({ 0, 0, exposed_width, header_height() }, Color::LightGray);
+    painter.fill_rect({ 0, 0, exposed_width, header_height() }, Color::WarmGray);
     painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
     painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::MidGray);
     int x_offset = 0;

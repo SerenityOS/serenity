@@ -64,6 +64,9 @@ Color::Color(NamedColor named)
     case DarkRed:
         rgb = { 128, 0, 0 };
         break;
+    case WarmGray:
+        rgb = { 212, 208, 200 };
+        break;
     default:
         ASSERT_NOT_REACHED();
         break;

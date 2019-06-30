@@ -70,7 +70,7 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 void WSWindowSwitcher::draw()
 {
     Painter painter(*m_switcher_window->backing_store());
-    painter.fill_rect({ {}, m_rect.size() }, Color::LightGray);
+    painter.fill_rect({ {}, m_rect.size() }, Color::WarmGray);
     painter.draw_rect({ {}, m_rect.size() }, Color::DarkGray);
     for (int index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
@@ -85,7 +85,7 @@ void WSWindowSwitcher::draw()
         if (index == m_selected_index) {
             painter.fill_rect(item_rect, Color::from_rgb(0x84351a));
             text_color = Color::White;
-            rect_text_color = Color::LightGray;
+            rect_text_color = Color::WarmGray;
         } else {
             text_color = Color::Black;
             rect_text_color = Color::MidGray;
@@ -97,7 +97,7 @@ void WSWindowSwitcher::draw()
             StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), FrameShape::Container, FrameShadow::Sunken, 2);
         }
         Rect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
-        painter.fill_rect(icon_rect, Color::LightGray);
+        painter.fill_rect(icon_rect, Color::WarmGray);
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WSWindowManager::the().window_title_font(), TextAlignment::CenterLeft, text_color);
         painter.draw_text(item_rect, window.rect().to_string(), TextAlignment::CenterRight, rect_text_color);

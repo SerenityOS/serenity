@@ -116,7 +116,7 @@ GWindow* create_settings_window(Terminal& terminal, RefPtr<CConfigFile> config)
     slider_container->set_preferred_size({ 100, 50 });
     auto* slider = new GSlider(slider_container);
     slider->set_fill_with_background_color(true);
-    slider->set_background_color(Color::LightGray);
+    slider->set_background_color(Color::WarmGray);
 
     slider->on_value_changed = [&terminal, &config](int value) {
         terminal.set_opacity(value);

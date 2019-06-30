@@ -116,7 +116,7 @@ void WSMenu::draw()
     Painter painter(*menu_window()->backing_store());
 
     Rect rect { {}, menu_window()->size() };
-    painter.fill_rect(rect.shrunken(6, 6), Color::LightGray);
+    painter.fill_rect(rect.shrunken(6, 6), Color::WarmGray);
     StylePainter::paint_window_frame(painter, rect);
     int width = this->width();
 

@@ -314,7 +314,7 @@ void WSCompositor::draw_geometry_label()
     }
     auto geometry_label_rect = Rect { 0, 0, wm.font().width(geometry_string) + 16, wm.font().glyph_height() + 10 };
     geometry_label_rect.center_within(window_being_moved_or_resized->rect());
-    m_back_painter->fill_rect(geometry_label_rect, Color::LightGray);
+    m_back_painter->fill_rect(geometry_label_rect, Color::WarmGray);
     m_back_painter->draw_rect(geometry_label_rect, Color::DarkGray);
     m_back_painter->draw_text(geometry_label_rect, geometry_string, TextAlignment::Center);
     m_last_geometry_label_rect = geometry_label_rect;

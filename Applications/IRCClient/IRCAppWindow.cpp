@@ -133,7 +133,7 @@ void IRCAppWindow::setup_widgets()
     auto* widget = new GWidget(nullptr);
     set_main_widget(widget);
     widget->set_fill_with_background_color(true);
-    widget->set_background_color(Color::LightGray);
+    widget->set_background_color(Color::WarmGray);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_margins({ 4, 4, 4, 4 });
 

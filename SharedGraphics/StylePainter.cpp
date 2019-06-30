@@ -3,7 +3,7 @@
 
 void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool active, bool hovered, bool enabled)
 {
-    Color base_color = Color::from_rgb(0xc0c0c0);
+    Color base_color = Color::WarmGray;
     Color highlight_color2 = Color::from_rgb(0xdfdfdf);
     Color shadow_color1 = Color::from_rgb(0x808080);
     Color shadow_color2 = Color::from_rgb(0x404040);
@@ -44,7 +44,7 @@ void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool act
 
 static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, bool checked, bool hovered, bool enabled)
 {
-    Color button_color = Color::from_rgb(0xc0c0c0);
+    Color button_color = Color::WarmGray;
     Color highlight_color2 = Color::from_rgb(0xdfdfdf);
     Color shadow_color1 = Color::from_rgb(0x808080);
     Color shadow_color2 = Color::from_rgb(0x404040);
@@ -92,7 +92,7 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
     if (button_style == ButtonStyle::Normal)
         return paint_button_new(painter, rect, pressed, checked, hovered, enabled);
 
-    Color button_color = checked ? Color::from_rgb(0xd6d2ce) : Color::LightGray;
+    Color button_color = checked ? Color::from_rgb(0xd6d2ce) : Color::WarmGray;
     Color highlight_color = Color::White;
     Color shadow_color = Color(96, 96, 96);
 
@@ -129,8 +129,8 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
 
 void StylePainter::paint_surface(Painter& painter, const Rect& rect, bool paint_vertical_lines, bool paint_top_line)
 {
-    painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, Color::LightGray);
-    painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? Color::White : Color::LightGray);
+    painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, Color::WarmGray);
+    painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? Color::White : Color::WarmGray);
     painter.draw_line(rect.bottom_left(), rect.bottom_right(), Color::MidGray);
     if (paint_vertical_lines) {
         painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), Color::White);
@@ -176,7 +176,7 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
         Color top_left_color;
         Color bottom_right_color;
         Color dark_shade = Color::from_rgb(0x404040);
-        Color light_shade = Color::from_rgb(0xc0c0c0);
+        Color light_shade = Color::WarmGray;
         if (shadow == FrameShadow::Raised) {
             dark_shade = Color::from_rgb(0x808080);
             top_left_color = light_shade;
@@ -207,7 +207,7 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
 
 void StylePainter::paint_window_frame(Painter& painter, const Rect& rect)
 {
-    Color base_color = Color::from_rgb(0xc0c0c0);
+    Color base_color = Color::WarmGray;
     Color dark_shade = Color::from_rgb(0x404040);
     Color mid_shade = Color::from_rgb(0x808080);
     Color light_shade = Color::from_rgb(0xffffff);
