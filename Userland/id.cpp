@@ -32,7 +32,7 @@ int main(int argc, char** argv)
             break;
 
         default:
-            fprintf(stderr, "usage: ls [-%s] [paths...]\n", valid_option_characters);
+            fprintf(stderr, "usage: id [-%s]\n", valid_option_characters);
             return 1;
         }
     }
