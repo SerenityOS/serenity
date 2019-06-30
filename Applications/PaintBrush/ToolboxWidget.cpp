@@ -67,7 +67,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
     add_tool("Bucket Fill", "bucket", make<BucketTool>());
     add_tool("Spray", "spray", make<SprayTool>());
     add_tool("Color Picker", "picker", make<PickerTool>());
-    add_tool("Erase", "", make<EraseTool>());
+    add_tool("Erase", "eraser", make<EraseTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()
