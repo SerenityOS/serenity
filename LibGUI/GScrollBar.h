@@ -45,7 +45,8 @@ private:
     virtual void leave_event(CEvent&) override;
     virtual void change_event(GEvent&) override;
 
-    int button_size() const { return 16; }
+    int default_button_size() const { return 16; }
+    int button_size() const { return length(orientation()) <= (default_button_size() * 2) ? length(orientation()) / 2 : default_button_size(); }
     int button_width() const { return orientation() == Orientation::Vertical ? width() : button_size(); }
     int button_height() const { return orientation() == Orientation::Horizontal ? height() : button_size(); }
     Rect decrement_button_rect() const;

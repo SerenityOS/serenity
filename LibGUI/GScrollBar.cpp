@@ -165,20 +165,20 @@ bool GScrollBar::has_scrubber() const
 
 int GScrollBar::scrubber_size() const
 {
-    int pixel_range = (orientation() == Orientation::Vertical ? height() : width()) - button_size() * 2;
+    int pixel_range = length(orientation()) - button_size() * 2;
     int value_range = m_max - m_min;
     return ::max(pixel_range - value_range, button_size());
 }
 
 Rect GScrollBar::scrubber_rect() const
 {
-    if (!has_scrubber())
+    if (!has_scrubber() || length(orientation()) <= (button_size() * 2) + scrubber_size())
         return {};
     float x_or_y;
     if (m_value == m_min)
         x_or_y = button_size();
     else if (m_value == m_max)
-        x_or_y = ((orientation() == Orientation::Vertical ? height() : width()) - button_size() - scrubber_size()) + 1;
+        x_or_y = (length(orientation()) - button_size() - scrubber_size()) + 1;
     else {
         float range_size = m_max - m_min;
         float available = scrubbable_range_in_pixels();
@@ -200,10 +200,12 @@ void GScrollBar::paint_event(GPaintEvent& event)
     painter.fill_rect(rect(), Color::from_rgb(0xd6d2ce));
 
     StylePainter::paint_button(painter, decrement_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::DecrementButton);
-    painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
-
     StylePainter::paint_button(painter, increment_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
-    painter.draw_bitmap(increment_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
+
+    if (length(orientation()) > default_button_size()) {
+        painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
+        painter.draw_bitmap(increment_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
+    }
 
     if (has_scrubber())
         StylePainter::paint_button(painter, scrubber_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber);
