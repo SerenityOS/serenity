@@ -9,7 +9,8 @@ QSWidget::QSWidget(GWidget* parent)
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
 
-    set_background_color(Color::White);
+    set_fill_with_background_color(true);
+    set_background_color(Color::Black);
 }
 
 QSWidget::~QSWidget()
