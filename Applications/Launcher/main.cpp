@@ -68,13 +68,14 @@ GWindow* make_launcher_window()
 
     auto* window = new GWindow;
     window->set_title("Launcher");
-    window->set_rect(50, 50, 50, config->groups().size() * 55 + 15);
+    window->set_rect(50, 50, 50, config->groups().size() * 50);
     window->set_show_titlebar(false);
 
     auto* widget = new GWidget;
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    widget->layout()->set_margins({ 5, 5, 5, 5 });
+    widget->layout()->set_spacing(0);
+    widget->layout()->set_margins({ 5, 0, 5, 0 });
     window->set_main_widget(widget);
 
     for (auto& group : config->groups()) {
