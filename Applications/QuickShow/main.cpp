@@ -56,7 +56,7 @@ int main(int argc, char** argv)
         window->set_title(String::format("QuickShow: %s %s %d%%", path, bitmap->size().to_string().characters(), scale));
     };
 
-    window->set_double_buffering_enabled(false);
+    window->set_double_buffering_enabled(true);
     update_window_title(100);
     window->set_rect(200, 200, bitmap->width(), bitmap->height());
 
