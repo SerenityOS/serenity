@@ -49,15 +49,29 @@ int main(int argc, char** argv)
 
     {
         auto config = CConfigFile::get_for_app("Minesweeper");
+        bool single_chording = config->read_num_entry("Minesweeper", "SingleChording", false);
         int mine_count = config->read_num_entry("Game", "MineCount", 10);
         int rows = config->read_num_entry("Game", "Rows", 9);
         int columns = config->read_num_entry("Game", "Columns", 9);
         field->set_field_size(rows, columns, mine_count);
+        field->set_single_chording(single_chording);
     }
 
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Minesweeper");
+
+    RefPtr<GAction> chord_toggler_action;
+    chord_toggler_action = GAction::create("Single-click chording", [&](const GAction&) {
+        bool toggled = !field->is_single_chording();
+        field->set_single_chording(toggled);
+        chord_toggler_action->set_checked(toggled);
+    });
+    chord_toggler_action->set_checkable(true);
+    chord_toggler_action->set_checked(field->is_single_chording());
+    app_menu->add_action(*chord_toggler_action);
+    app_menu->add_separator();
+
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
