@@ -3,6 +3,24 @@
 #include <AK/IterationDecision.h>
 
 #ifdef __serenity__
+typedef unsigned char u8;
+typedef unsigned short u16;
+typedef unsigned int u32;
+typedef unsigned long long int u64;
+static_assert(sizeof(u8) == 1);
+static_assert(sizeof(u16) == 2);
+static_assert(sizeof(u32) == 4);
+static_assert(sizeof(u64) == 8);
+
+typedef signed char i8;
+typedef signed short i16;
+typedef signed int i32;
+typedef signed long long int i64;
+static_assert(sizeof(i8) == 1);
+static_assert(sizeof(i16) == 2);
+static_assert(sizeof(i32) == 4);
+static_assert(sizeof(i64) == 8);
+
 typedef unsigned char byte;
 typedef unsigned short word;
 typedef unsigned int dword;
@@ -34,6 +52,16 @@ typedef signed_qword int64_t;
 #else
 #    include <stdint.h>
 #    include <sys/types.h>
+
+typedef uint8_t u8;
+typedef uint16_t u16;
+typedef uint32_t u32;
+typedef uint64_t u64;
+
+typedef int8_t i8;
+typedef int16_t i16;
+typedef int32_t i32;
+typedef int64_t i64;
 
 typedef uint8_t byte;
 typedef uint16_t word;
