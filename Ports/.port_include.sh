@@ -68,7 +68,7 @@ run_patch() {
 }
 
 run_configure_cmake() {
-    run_command cmake -DCMAKE_TOOLCHAIN_FILE="$SERENITY_ROOT/Toolchain/CMakeToolchain.txt" .
+    run_command cmake -DCMAKE_TOOLCHAIN_FILE="$SERENITY_ROOT/Toolchain/CMakeToolchain.txt" $CMAKEOPTS .
 }
 
 run_configure_autotools() {
