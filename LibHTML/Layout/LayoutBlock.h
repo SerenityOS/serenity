@@ -14,4 +14,8 @@ public:
     virtual void layout() override;
 
 private:
+    virtual bool is_block() const override { return true; }
+
+    void compute_width();
+    void compute_height();
 };

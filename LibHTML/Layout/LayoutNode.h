@@ -7,6 +7,7 @@
 #include <SharedGraphics/Rect.h>
 
 class Node;
+class LayoutBlock;
 
 class LayoutNode : public TreeNode<LayoutNode> {
 public:
@@ -38,8 +39,11 @@ public:
 
     virtual const char* class_name() const { return "LayoutNode"; }
     virtual bool is_text() const { return false; }
+    virtual bool is_block() const { return false; }
 
     virtual void layout();
+
+    const LayoutBlock* containing_block() const;
 
 protected:
     explicit LayoutNode(const Node*);
