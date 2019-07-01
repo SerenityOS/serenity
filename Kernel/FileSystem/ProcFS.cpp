@@ -450,18 +450,19 @@ ByteBuffer procfs$mounts(InodeIdentifier)
 ByteBuffer procfs$df(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
-    StringBuilder builder;
-    VFS::the().for_each_mount([&builder](auto& mount) {
+    JsonArray json;
+    VFS::the().for_each_mount([&json](auto& mount) {
         auto& fs = mount.guest_fs();
-        builder.appendf("%s,", fs.class_name());
-        builder.appendf("%u,", fs.total_block_count());
-        builder.appendf("%u,", fs.free_block_count());
-        builder.appendf("%u,", fs.total_inode_count());
-        builder.appendf("%u,", fs.free_inode_count());
-        builder.append(mount.absolute_path());
-        builder.append('\n');
+        JsonObject fs_object;
+        fs_object.set("class_name", fs.class_name());
+        fs_object.set("total_block_count", fs.total_block_count());
+        fs_object.set("free_block_count", fs.free_block_count());
+        fs_object.set("total_inode_count", fs.total_inode_count());
+        fs_object.set("free_inode_count", fs.free_inode_count());
+        fs_object.set("mount_point", mount.absolute_path());
+        json.append(fs_object);
     });
-    return builder.to_byte_buffer();
+    return json.serialized().to_byte_buffer();
 }
 
 ByteBuffer procfs$cpuinfo(InodeIdentifier)
