@@ -2,6 +2,9 @@
 
 set -e
 
+# HACK: Get rid of old "qs" binaries still lying around from before it was renamed.
+rm -f ../Userland/qs
+
 die() {
     echo "die: $@"
     exit 1
