@@ -36,7 +36,7 @@ class Field final : public GFrame {
     friend class SquareLabel;
 
 public:
-    Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent);
+    Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent, Function<void(Size)> on_size_changed);
     virtual ~Field() override;
 
     int rows() const { return m_rows; }
@@ -49,8 +49,6 @@ public:
     void set_single_chording(bool new_val);
 
     void reset();
-
-    Function<void()> on_size_changed;
 
 private:
     virtual void paint_event(GPaintEvent&) override;
@@ -80,9 +78,9 @@ private:
     };
     void set_face(Face);
 
-    int m_rows { 9 };
-    int m_columns { 9 };
-    int m_mine_count { 10 };
+    int m_rows { 0 };
+    int m_columns { 0 };
+    int m_mine_count { 0 };
     int m_unswept_empties { 0 };
     Vector<OwnPtr<Square>> m_squares;
     RefPtr<GraphicsBitmap> m_mine_bitmap;
@@ -103,4 +101,5 @@ private:
     bool m_chord_preview { false };
     bool m_first_click { true };
     bool m_single_chording { true };
+    Function<void(Size)> m_on_size_changed;
 };
