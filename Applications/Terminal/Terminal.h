@@ -160,7 +160,10 @@ private:
             Underline = 0x04,
             Negative = 0x08,
             Blink = 0x10,
+            Touched = 0x20,
         };
+
+        bool is_untouched() const { return !(flags & Touched); }
 
         // TODO: it would be really nice if we had a helper for enums that
         // exposed bit ops for class enums...
