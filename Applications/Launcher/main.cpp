@@ -65,24 +65,27 @@ private:
 GWindow* make_launcher_window()
 {
     auto config = CConfigFile::get_for_app("Launcher");
+    auto vertical = config->read_bool_entry("Launcher", "vertical", true);
 
     auto* window = new GWindow;
     window->set_title("Launcher");
-    window->set_rect(50, 50, 50, config->groups().size() * 50);
+    int launcher_size = config->groups().size() * 50;
+    window->set_rect(50, 50, vertical ? 50 : launcher_size, vertical ? launcher_size : 50);
     window->set_show_titlebar(false);
 
     auto* widget = new GWidget;
     widget->set_fill_with_background_color(true);
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    widget->set_layout(make<GBoxLayout>(vertical ? Orientation::Vertical : Orientation::Horizontal));
     widget->layout()->set_spacing(0);
     widget->layout()->set_margins({ 5, 0, 5, 0 });
     window->set_main_widget(widget);
 
     for (auto& group : config->groups()) {
-        new LauncherButton(config->read_entry(group, "Name", group),
-            config->read_entry(group, "Icon", ""),
-            config->read_entry(group, "Path", ""),
-            widget);
+        if (group != "Launcher")
+            new LauncherButton(config->read_entry(group, "Name", group),
+                config->read_entry(group, "Icon", ""),
+                config->read_entry(group, "Path", ""),
+                widget);
     }
 
     return window;
