@@ -5,6 +5,7 @@
 #include <LibHTML/Dump.h>
 #include <LibHTML/Frame.h>
 #include <LibHTML/Layout/LayoutBlock.h>
+#include <LibHTML/Layout/LayoutDocument.h>
 #include <LibHTML/Layout/LayoutInline.h>
 #include <stdio.h>
 
@@ -59,6 +60,8 @@ void Frame::layout()
     auto styled_root = generate_style_tree();
 
     auto create_layout_node = [](const StyledNode& styled_node) -> RefPtr<LayoutNode> {
+        if (styled_node.node() && styled_node.node()->is_document())
+            return adopt(*new LayoutDocument(static_cast<const Document&>(*styled_node.node())));
         switch (styled_node.display()) {
         case Display::None:
             return nullptr;
