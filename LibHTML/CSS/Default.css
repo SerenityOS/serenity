@@ -9,7 +9,10 @@ head, link, meta, script, style, title {
 
 body {
     display: block;
-    margin: 8;
+    margin-left: 8;
+    margin-top: 8;
+    margin-right: 8;
+    margin-bottom: 8;
 }
 
 h1 {
