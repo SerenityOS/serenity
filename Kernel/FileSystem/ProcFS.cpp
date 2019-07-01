@@ -566,18 +566,17 @@ ByteBuffer procfs$summary(InodeIdentifier)
 ByteBuffer procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
-    StringBuilder builder(128);
-    builder.appendf("%u,%u,%u,%u,%u,%u,%u,%u,%u\n",
-        kmalloc_sum_eternal,
-        sum_alloc,
-        sum_free,
-        MM.user_physical_pages_used(),
-        MM.user_physical_pages() - MM.user_physical_pages_used(),
-        MM.super_physical_pages_used(),
-        MM.super_physical_pages() - MM.super_physical_pages_used(),
-        g_kmalloc_call_count,
-        g_kfree_call_count);
-    return builder.to_byte_buffer();
+    JsonObject json;
+    json.set("kmalloc_allocated", sum_alloc);
+    json.set("kmalloc_available", sum_free);
+    json.set("kmalloc_eternal_allocated", kmalloc_sum_eternal);
+    json.set("user_physical_allocated", MM.user_physical_pages_used());
+    json.set("user_physical_available", MM.user_physical_pages());
+    json.set("super_physical_allocated", MM.super_physical_pages_used());
+    json.set("super_physical_available", MM.super_physical_pages());
+    json.set("kmalloc_call_count", g_kmalloc_call_count);
+    json.set("kfree_call_count", g_kfree_call_count);
+    return json.serialized().to_byte_buffer();
 }
 
 ByteBuffer procfs$all(InodeIdentifier)
