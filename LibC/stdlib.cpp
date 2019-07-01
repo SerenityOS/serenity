@@ -331,58 +331,44 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
 
 long strtol(const char* str, char** endptr, int base)
 {
-    const char* s = str;
-    unsigned long acc;
-    int c;
-    unsigned long cutoff;
-    int neg = 0;
-    int any;
-    int cutlim;
-
-    do {
-        c = *s++;
-    } while (isspace(c));
-    if (c == '-') {
-        neg = 1;
-        c = *s++;
-    } else if (c == '+')
-        c = *s++;
-    if ((base == 0 || base == 16) && c == '0' && (*s == 'x' || *s == 'X')) {
-        c = s[1];
-        s += 2;
-        base = 16;
+    int sign = 1;
+    while (isspace(*str))
+        str++;
+    if (*str == '-' || *str == '+') {
+        if (*str == '-')
+            sign = -1;
+        str++;
     }
-    if (base == 0)
-        base = c == '0' ? 8 : 10;
-
-    cutoff = neg ? -(unsigned long)LONG_MIN : LONG_MAX;
-    cutlim = cutoff % (unsigned long)base;
-    cutoff /= (unsigned long)base;
-    for (acc = 0, any = 0;; c = *s++) {
-        if (isdigit(c))
-            c -= '0';
-        else if (isalpha(c))
-            c -= isupper(c) ? 'A' - 10 : 'a' - 10;
-        else
-            break;
-        if (c >= base)
-            break;
-        if (any < 0 || acc > cutoff || (acc == cutoff && c > cutlim))
-            any = -1;
-        else {
-            any = 1;
-            acc *= base;
-            acc += c;
+    if (base == 0 || base == 16) {
+        if (base == 0)
+            base = 10;
+        if (*str == '0') {
+            str++;
+            if (*str == 'X' || *str == 'x') {
+                str++;
+                base = 16;
+            } else if (base != 16) {
+                base = 8;
+            }
         }
     }
-    if (any < 0) {
-        acc = neg ? LONG_MIN : LONG_MAX;
-        errno = ERANGE;
-    } else if (neg)
-        acc = -acc;
-    if (endptr)
-        *endptr = const_cast<char*>((any ? s - 1 : str));
-    return acc;
+    const char* estr = str + strlen(str) - 1;
+    long track = 1;
+    long num = 0;
+    while (estr >= str) {
+        if ((*estr >= '0' && *estr <= '9') || (base > 10 && (*estr >= 'A' && *estr <= 'Z'))) {
+            int digit_value = *estr - '0';
+            if (*estr >= 'A' && *estr <= 'Z')
+                digit_value = 10 + (*estr - 'A');
+            num += (track *= base) / base * digit_value;
+        } else {
+            if (endptr != NULL)
+                *endptr = estr;
+            return 0;
+        };
+        estr--;
+    }
+    return num * sign;
 }
 
 unsigned long strtoul(const char* str, char** endptr, int base)
