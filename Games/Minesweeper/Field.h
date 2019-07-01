@@ -43,8 +43,10 @@ public:
     int columns() const { return m_columns; }
     int mine_count() const { return m_mine_count; }
     int square_size() const { return 15; }
+    bool is_single_chording() const { return m_single_chording; }
 
     void set_field_size(int rows, int columns, int mine_count);
+    void set_single_chording(bool new_val);
 
     void reset();
 
@@ -100,4 +102,5 @@ private:
     Face m_face { Face::Default };
     bool m_chord_preview { false };
     bool m_first_click { true };
+    bool m_single_chording { true };
 };
