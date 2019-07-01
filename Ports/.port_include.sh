@@ -46,7 +46,7 @@ run_fetch_web() {
         run_command_nocd rm -rf "$PORT_DIR"
     fi
     file=$(basename "$1")
-    run_command_nocd curl "$1" -o "$file"
+    run_command_nocd curl -L "$1" -o "$file"
     mkdir "$PORT_DIR"
 
     # may need to make strip-components configurable, as I bet some sick person
