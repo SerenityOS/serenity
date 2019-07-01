@@ -1,9 +1,9 @@
 #pragma once
 
-#include <LibHTML/Layout/LayoutNode.h>
+#include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/DOM/Document.h>
 
-class LayoutDocument final : public LayoutNode {
+class LayoutDocument final : public LayoutBlock {
 public:
     explicit LayoutDocument(const Document&);
     virtual ~LayoutDocument() override;

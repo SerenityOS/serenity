@@ -12,7 +12,19 @@ LayoutBlock::~LayoutBlock()
 
 void LayoutBlock::layout()
 {
+    compute_width();
+
     LayoutNode::layout();
 
+    compute_height();
+}
+
+void LayoutBlock::compute_width()
+{
+
+}
+
+void LayoutBlock::compute_height()
+{
 
 }
