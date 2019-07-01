@@ -59,11 +59,13 @@ Make sure you have all the dependencies installed:
 sudo apt install libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
 ```
 
-Go into the Toolchain/ directory and run the **BuildIt.sh** script. Then ***source*** the **UseIt.sh** script to put the i686-pc-serenity toolchain in your $PATH.
+Go into the `Toolchain/` directory and run the **BuildIt.sh** script. Then ***source*** the **UseIt.sh** script to put the `i686-pc-serenity` toolchain in your `$PATH`.
 
-Once you've done both of those, go into the Kernel directory, then run
+Once you've done both of those, go into the `Kernel/` directory, then run
 **./makeall.sh**, and if nothing breaks too much, take it for a spin by using
 **./run**.
+
+Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply rerun **./makeall.sh** in the `Kernel/` directory and you'll be good to **./run** again.
 
 ## IRC
 
