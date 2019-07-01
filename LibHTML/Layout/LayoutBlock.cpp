@@ -21,10 +21,8 @@ void LayoutBlock::layout()
 
 void LayoutBlock::compute_width()
 {
-
 }
 
 void LayoutBlock::compute_height()
 {
-
 }
