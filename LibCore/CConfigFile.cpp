@@ -150,6 +150,10 @@ void CConfigFile::write_num_entry(const String& group, const String& key, int va
 {
     write_entry(group, key, String::format("%d", value));
 }
+void CConfigFile::write_bool_entry(const String& group, const String& key, bool value)
+{
+    write_entry(group, key, value ? "1" : "0");
+}
 void CConfigFile::write_color_entry(const String& group, const String& key, Color value)
 {
     write_entry(group, key, String::format("%d,%d,%d,%d", value.red(), value.green(), value.blue(), value.alpha()));
