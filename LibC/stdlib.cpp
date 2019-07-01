@@ -363,7 +363,7 @@ long strtol(const char* str, char** endptr, int base)
             num += (track *= base) / base * digit_value;
         } else {
             if (endptr != NULL)
-                *endptr = estr;
+                *endptr = const_cast<char*>(estr);
             return 0;
         };
         estr--;
