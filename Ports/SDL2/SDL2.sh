@@ -4,6 +4,7 @@ fetch() {
     run_fetch_git "https://github.com/SerenityOS/SDL"
 }
 configure() {
+    CMAKEOPTS="-DPULSEAUDIO=OFF"
     run_configure_cmake
 }
 build() {
