@@ -92,11 +92,12 @@ public:
     bool m_chord { false };
 };
 
-Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent)
+Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent, Function<void(Size)> on_size_changed)
     : GFrame(parent)
     , m_face_button(face_button)
     , m_flag_label(flag_label)
     , m_time_label(time_label)
+    , m_on_size_changed(move(on_size_changed))
 {
     srand(time(nullptr));
     m_timer.on_timeout = [this] {
@@ -123,6 +124,16 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
 
     m_face_button.on_click = [this](auto&) { reset(); };
     set_face(Face::Default);
+
+    {
+        auto config = CConfigFile::get_for_app("Minesweeper");
+        bool single_chording = config->read_num_entry("Minesweeper", "SingleChording", false);
+        int mine_count = config->read_num_entry("Game", "MineCount", 10);
+        int rows = config->read_num_entry("Game", "Rows", 9);
+        int columns = config->read_num_entry("Game", "Columns", 9);
+        set_field_size(rows, columns, mine_count);
+        set_single_chording(single_chording);
+    }
 }
 
 Field::~Field()
@@ -458,8 +469,7 @@ void Field::set_field_size(int rows, int columns, int mine_count)
     m_mine_count = mine_count;
     set_preferred_size({ frame_thickness() * 2 + m_columns * square_size(), frame_thickness() * 2 + m_rows * square_size() });
     reset();
-    if (on_size_changed)
-        on_size_changed();
+    m_on_size_changed(preferred_size());
 }
 
 void Field::set_single_chording(bool enabled) {

@@ -39,23 +39,10 @@ int main(int argc, char** argv)
     auto* time_icon_label = new GLabel(container);
     time_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/timer.png"));
     auto* time_label = new GLabel(container);
-    auto* field = new Field(*flag_label, *time_label, *face_button, widget);
-
-    field->on_size_changed = [&] {
-        auto size = field->preferred_size();
+    auto* field = new Field(*flag_label, *time_label, *face_button, widget, [&](Size size) {
         size.set_height(size.height() + container->preferred_size().height());
         window->resize(size);
-    };
-
-    {
-        auto config = CConfigFile::get_for_app("Minesweeper");
-        bool single_chording = config->read_num_entry("Minesweeper", "SingleChording", false);
-        int mine_count = config->read_num_entry("Game", "MineCount", 10);
-        int rows = config->read_num_entry("Game", "Rows", 9);
-        int columns = config->read_num_entry("Game", "Columns", 9);
-        field->set_field_size(rows, columns, mine_count);
-        field->set_single_chording(single_chording);
-    }
+    });
 
     auto menubar = make<GMenuBar>();
 
