@@ -751,6 +751,7 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
     auto& line = this->line(row);
     line.characters[column] = ch;
     line.attributes[column] = m_current_attribute;
+    line.attributes[column].flags |= Attribute::Touched;
     line.dirty = true;
 
     m_last_char = ch;
@@ -1266,8 +1267,17 @@ String Terminal::selected_text() const
     for (int row = start.row(); row <= end.row(); ++row) {
         int first_column = row == start.row() ? start.column() : 0;
         int last_column = row == end.row() ? end.column() : m_columns - 1;
-        for (int column = first_column; column <= last_column; ++column)
-            builder.append(line(row).characters[column]);
+        for (int column = first_column; column <= last_column; ++column) {
+            auto& line = this->line(row);
+            if (line.attributes[column].is_untouched()) {
+                builder.append('\n');
+                break;
+            }
+            builder.append(line.characters[column]);
+            if (column == line.m_length - 1) {
+                builder.append('\n');
+            }
+        }
     }
 
     return builder.to_string();
