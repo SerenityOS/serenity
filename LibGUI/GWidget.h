@@ -94,6 +94,7 @@ public:
     int y() const { return m_relative_rect.y(); }
     int width() const { return m_relative_rect.width(); }
     int height() const { return m_relative_rect.height(); }
+    int length(Orientation orientation) const { return orientation == Orientation::Vertical ? height() : width(); }
 
     Rect rect() const { return { 0, 0, width(), height() }; }
     Size size() const { return m_relative_rect.size(); }
