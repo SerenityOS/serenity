@@ -69,7 +69,7 @@ GWindow* make_launcher_window()
 
     auto* window = new GWindow;
     window->set_title("Launcher");
-    int launcher_size = config->groups().size() * 50;
+    int launcher_size = (config->groups().size() - 1) * 50;
     window->set_rect(50, 50, vertical ? 50 : launcher_size, vertical ? launcher_size : 50);
     window->set_show_titlebar(false);
 
