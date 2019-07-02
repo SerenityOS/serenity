@@ -65,7 +65,7 @@ private:
 GWindow* make_launcher_window()
 {
     auto config = CConfigFile::get_for_app("Launcher");
-    auto vertical = config->read_bool_entry("Launcher", "vertical", true);
+    auto vertical = config->read_bool_entry("Launcher", "Vertical", true);
 
     auto* window = new GWindow;
     window->set_title("Launcher");
