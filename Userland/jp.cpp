@@ -15,7 +15,7 @@ int main(int argc, char** argv)
 {
     if (argc != 2) {
         fprintf(stderr, "usage: jp <file>\n");
-        return 1;
+        return 0;
     }
     CFile file(argv[1]);
     if (!file.open(CIODevice::ReadOnly)) {
