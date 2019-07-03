@@ -2,7 +2,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
-#include <LibHTML/Layout/LayoutStyle.h>
+#include <LibHTML/Layout/ComputedStyle.h>
 #include <LibHTML/TreeNode.h>
 #include <SharedGraphics/Rect.h>
 
@@ -18,8 +18,8 @@ public:
     Rect& rect() { return m_rect; }
     void set_rect(const Rect& rect) { m_rect = rect; }
 
-    LayoutStyle& style() { return m_style; }
-    const LayoutStyle& style() const { return m_style; }
+    ComputedStyle& style() { return m_style; }
+    const ComputedStyle& style() const { return m_style; }
 
     bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }
@@ -53,6 +53,6 @@ private:
     const Node* m_node { nullptr };
     NonnullRefPtr<StyledNode> m_styled_node;
 
-    LayoutStyle m_style;
+    ComputedStyle m_style;
     Rect m_rect;
 };
