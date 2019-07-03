@@ -61,5 +61,5 @@ done
 (cd ../SharedGraphics && ./install.sh)
 (cd ../AK && ./install.sh)
 
-sudo ./sync.sh
+sudo -E ./build-image-qemu.sh
 
