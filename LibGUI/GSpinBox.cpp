@@ -13,7 +13,7 @@ GSpinBox::GSpinBox(GWidget* parent)
         if (ok)
             set_value(value);
         else
-            m_editor->set_text(String::format("%d", m_value));
+            m_editor->set_text(String::number(m_value));
     };
     m_increment_button = new GButton(this);
     m_increment_button->set_focusable(false);
@@ -38,7 +38,7 @@ void GSpinBox::set_value(int value)
     if (m_value == value)
         return;
     m_value = value;
-    m_editor->set_text(String::format("%d", value));
+    m_editor->set_text(String::number(value));
     update();
     if (on_change)
         on_change(value);

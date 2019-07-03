@@ -54,5 +54,5 @@ String CProcessStatisticsReader::get_username_from_uid(const uid_t uid)
     if (it != m_usernames.end())
         return (*it).value;
     else
-        return String::format("%u", uid);
+        return String::number(uid);
 }

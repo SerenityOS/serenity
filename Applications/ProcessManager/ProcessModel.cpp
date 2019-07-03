@@ -207,9 +207,9 @@ void ProcessModel::update()
         {
             auto it = m_usernames.find((uid_t)uid);
             if (it != m_usernames.end())
-                state.user = String::format("%s", (*it).value.characters());
+                state.user = (*it).value;
             else
-                state.user = String::format("%u", uid);
+                state.user = String::number(uid);
         }
         state.priority = process_object.get("priority").to_string();
         state.syscalls = process_object.get("syscall_count").to_dword();

@@ -202,7 +202,7 @@ String GDirectoryModel::name_for_uid(uid_t uid) const
 {
     auto it = m_user_names.find(uid);
     if (it == m_user_names.end())
-        return String::format("%u", uid);
+        return String::number(uid);
     return (*it).value;
 }
 
@@ -210,7 +210,7 @@ String GDirectoryModel::name_for_gid(uid_t gid) const
 {
     auto it = m_user_names.find(gid);
     if (it == m_user_names.end())
-        return String::format("%u", gid);
+        return String::number(gid);
     return (*it).value;
 }
 

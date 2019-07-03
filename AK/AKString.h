@@ -181,6 +181,8 @@ public:
     }
 
     static String format(const char*, ...);
+    static String number(unsigned);
+    static String number(int);
 
     StringView view() const { return { characters(), length() }; }
 

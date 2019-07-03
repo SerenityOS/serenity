@@ -289,7 +289,7 @@ String GVariant::to_string() const
     case Type::Bool:
         return as_bool() ? "true" : "false";
     case Type::Int:
-        return String::format("%d", as_int());
+        return String::number(as_int());
     case Type::Float:
         return String::format("%f", (double)as_float());
     case Type::String:
