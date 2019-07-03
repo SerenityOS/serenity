@@ -61,14 +61,14 @@ void Frame::layout()
 
     auto create_layout_node = [](const StyledNode& styled_node) -> RefPtr<LayoutNode> {
         if (styled_node.node() && styled_node.node()->is_document())
-            return adopt(*new LayoutDocument(static_cast<const Document&>(*styled_node.node())));
+            return adopt(*new LayoutDocument(static_cast<const Document&>(*styled_node.node()), styled_node));
         switch (styled_node.display()) {
         case Display::None:
             return nullptr;
         case Display::Block:
-            return adopt(*new LayoutBlock(*styled_node.node()));
+            return adopt(*new LayoutBlock(*styled_node.node(), styled_node));
         case Display::Inline:
-            return adopt(*new LayoutInline(*styled_node.node()));
+            return adopt(*new LayoutInline(*styled_node.node(), styled_node));
         default:
             ASSERT_NOT_REACHED();
         }

@@ -6,7 +6,7 @@ class Element;
 
 class LayoutInline : public LayoutNode {
 public:
-    explicit LayoutInline(const Node&);
+    LayoutInline(const Node&, const StyledNode&);
     virtual ~LayoutInline() override;
 
     virtual const char* class_name() const override { return "LayoutInline"; }

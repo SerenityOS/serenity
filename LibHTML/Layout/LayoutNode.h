@@ -8,6 +8,7 @@
 
 class Node;
 class LayoutBlock;
+class StyledNode;
 
 class LayoutNode : public TreeNode<LayoutNode> {
 public:
@@ -46,10 +47,11 @@ public:
     const LayoutBlock* containing_block() const;
 
 protected:
-    explicit LayoutNode(const Node*);
+    explicit LayoutNode(const Node*, const StyledNode&);
 
 private:
     const Node* m_node { nullptr };
+    NonnullRefPtr<StyledNode> m_styled_node;
 
     LayoutStyle m_style;
     Rect m_rect;

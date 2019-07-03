@@ -1,7 +1,7 @@
 #include <LibHTML/Layout/LayoutDocument.h>
 
-LayoutDocument::LayoutDocument(const Document& document)
-    : LayoutBlock(document)
+LayoutDocument::LayoutDocument(const Document& document, const StyledNode& styled_node)
+    : LayoutBlock(document, styled_node)
 {
 }
 
