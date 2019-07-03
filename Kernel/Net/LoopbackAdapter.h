@@ -9,7 +9,7 @@ public:
 
     virtual ~LoopbackAdapter() override;
 
-    virtual void send_raw(const byte*, int) override;
+    virtual void send_raw(const u8*, int) override;
     virtual const char* class_name() const override { return "LoopbackAdapter"; }
 
 private:

@@ -50,7 +50,7 @@ VFS* vfs;
 #ifdef STRESS_TEST_SPAWNING
 [[noreturn]] static void spawn_stress()
 {
-    dword last_sum_alloc = sum_alloc;
+    u32 last_sum_alloc = sum_alloc;
 
     for (unsigned i = 0; i < 10000; ++i) {
         int error;

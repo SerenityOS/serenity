@@ -186,9 +186,9 @@ void WSCompositor::flush(const Rect& a_rect)
     size_t pitch = m_back_bitmap->pitch();
 
     for (int y = 0; y < rect.height(); ++y) {
-        fast_dword_copy(back_ptr, front_ptr, rect.width());
-        front_ptr = (const RGBA32*)((const byte*)front_ptr + pitch);
-        back_ptr = (RGBA32*)((byte*)back_ptr + pitch);
+        fast_u32_copy(back_ptr, front_ptr, rect.width());
+        front_ptr = (const RGBA32*)((const u8*)front_ptr + pitch);
+        back_ptr = (RGBA32*)((u8*)back_ptr + pitch);
     }
 }
 

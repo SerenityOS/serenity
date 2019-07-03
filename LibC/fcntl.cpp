@@ -10,7 +10,7 @@ int fcntl(int fd, int cmd, ...)
 {
     va_list ap;
     va_start(ap, cmd);
-    dword extra_arg = va_arg(ap, dword);
+    u32 extra_arg = va_arg(ap, u32);
     int rc = syscall(SC_fcntl, fd, cmd, extra_arg);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

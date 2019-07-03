@@ -5,15 +5,15 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Process.h>
 
-Lockable<HashMap<word, TCPSocket*>>& TCPSocket::sockets_by_port()
+Lockable<HashMap<u16, TCPSocket*>>& TCPSocket::sockets_by_port()
 {
-    static Lockable<HashMap<word, TCPSocket*>>* s_map;
+    static Lockable<HashMap<u16, TCPSocket*>>* s_map;
     if (!s_map)
-        s_map = new Lockable<HashMap<word, TCPSocket*>>;
+        s_map = new Lockable<HashMap<u16, TCPSocket*>>;
     return *s_map;
 }
 
-TCPSocketHandle TCPSocket::from_port(word port)
+TCPSocketHandle TCPSocket::from_port(u16 port)
 {
     RefPtr<TCPSocket> socket;
     {
@@ -65,7 +65,7 @@ int TCPSocket::protocol_send(const void* data, int data_length)
     return data_length;
 }
 
-void TCPSocket::send_tcp_packet(word flags, const void* payload, int payload_size)
+void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size)
 {
     // FIXME: Maybe the socket should be bound to an adapter instead of looking it up every time?
     auto* adapter = adapter_for_route_to(peer_address());
@@ -78,7 +78,7 @@ void TCPSocket::send_tcp_packet(word flags, const void* payload, int payload_siz
     tcp_packet.set_destination_port(peer_port());
     tcp_packet.set_window_size(1024);
     tcp_packet.set_sequence_number(m_sequence_number);
-    tcp_packet.set_data_offset(sizeof(TCPPacket) / sizeof(dword));
+    tcp_packet.set_data_offset(sizeof(TCPPacket) / sizeof(u32));
     tcp_packet.set_flags(flags);
 
     if (flags & TCPFlags::ACK)
@@ -104,41 +104,41 @@ void TCPSocket::send_tcp_packet(word flags, const void* payload, int payload_siz
     adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::TCP, move(buffer));
 }
 
-NetworkOrdered<word> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, word payload_size)
+NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, u16 payload_size)
 {
     struct [[gnu::packed]] PseudoHeader
     {
         IPv4Address source;
         IPv4Address destination;
-        byte zero;
-        byte protocol;
-        NetworkOrdered<word> payload_size;
+        u8 zero;
+        u8 protocol;
+        NetworkOrdered<u16> payload_size;
     };
 
-    PseudoHeader pseudo_header { source, destination, 0, (byte)IPv4Protocol::TCP, sizeof(TCPPacket) + payload_size };
+    PseudoHeader pseudo_header { source, destination, 0, (u8)IPv4Protocol::TCP, sizeof(TCPPacket) + payload_size };
 
-    dword checksum = 0;
-    auto* w = (const NetworkOrdered<word>*)&pseudo_header;
-    for (size_t i = 0; i < sizeof(pseudo_header) / sizeof(word); ++i) {
+    u32 checksum = 0;
+    auto* w = (const NetworkOrdered<u16>*)&pseudo_header;
+    for (size_t i = 0; i < sizeof(pseudo_header) / sizeof(u16); ++i) {
         checksum += w[i];
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
-    w = (const NetworkOrdered<word>*)&packet;
-    for (size_t i = 0; i < sizeof(packet) / sizeof(word); ++i) {
+    w = (const NetworkOrdered<u16>*)&packet;
+    for (size_t i = 0; i < sizeof(packet) / sizeof(u16); ++i) {
         checksum += w[i];
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     ASSERT(packet.data_offset() * 4 == sizeof(TCPPacket));
-    w = (const NetworkOrdered<word>*)packet.payload();
-    for (size_t i = 0; i < payload_size / sizeof(word); ++i) {
+    w = (const NetworkOrdered<u16>*)packet.payload();
+    for (size_t i = 0; i < payload_size / sizeof(u16); ++i) {
         checksum += w[i];
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
     }
     if (payload_size & 1) {
-        word expanded_byte = ((const byte*)packet.payload())[payload_size - 1] << 8;
+        u16 expanded_byte = ((const u8*)packet.payload())[payload_size - 1] << 8;
         checksum += expanded_byte;
         if (checksum > 0xffff)
             checksum = (checksum >> 16) + (checksum & 0xffff);
@@ -171,13 +171,13 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
 
 int TCPSocket::protocol_allocate_local_port()
 {
-    static const word first_ephemeral_port = 32768;
-    static const word last_ephemeral_port = 60999;
-    static const word ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
-    word first_scan_port = first_ephemeral_port + RandomDevice::random_value() % ephemeral_port_range_size;
+    static const u16 first_ephemeral_port = 32768;
+    static const u16 last_ephemeral_port = 60999;
+    static const u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
+    u16 first_scan_port = first_ephemeral_port + RandomDevice::random_value() % ephemeral_port_range_size;
 
     LOCKER(sockets_by_port().lock());
-    for (word port = first_scan_port;;) {
+    for (u16 port = first_scan_port;;) {
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end()) {
             set_local_port(port);

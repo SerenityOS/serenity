@@ -26,7 +26,7 @@
 namespace PIT {
 
 void initialize();
-dword ticks_this_second();
-dword seconds_since_boot();
+u32 ticks_this_second();
+u32 seconds_since_boot();
 
 }

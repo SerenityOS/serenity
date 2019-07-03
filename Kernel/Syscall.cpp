@@ -51,7 +51,7 @@ int sync()
     return 0;
 }
 
-static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, dword arg3)
+static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
     current->process().did_syscall();
 
@@ -87,11 +87,11 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_open:
         return current->process().sys$open((const char*)arg1, (int)arg2, (mode_t)arg3);
     case Syscall::SC_write:
-        return current->process().sys$write((int)arg1, (const byte*)arg2, (ssize_t)arg3);
+        return current->process().sys$write((int)arg1, (const u8*)arg2, (ssize_t)arg3);
     case Syscall::SC_close:
         return current->process().sys$close((int)arg1);
     case Syscall::SC_read:
-        return current->process().sys$read((int)arg1, (byte*)arg2, (ssize_t)arg3);
+        return current->process().sys$read((int)arg1, (u8*)arg2, (ssize_t)arg3);
     case Syscall::SC_lseek:
         return current->process().sys$lseek((int)arg1, (off_t)arg2, (int)arg3);
     case Syscall::SC_kill:
@@ -107,7 +107,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_waitpid:
         return current->process().sys$waitpid((pid_t)arg1, (int*)arg2, (int)arg3);
     case Syscall::SC_mmap:
-        return (dword)current->process().sys$mmap((const SC_mmap_params*)arg1);
+        return (u32)current->process().sys$mmap((const SC_mmap_params*)arg1);
     case Syscall::SC_select:
         return current->process().sys$select((const SC_select_params*)arg1);
     case Syscall::SC_poll:
@@ -197,7 +197,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_access:
         return current->process().sys$access((const char*)arg1, (int)arg2);
     case Syscall::SC_fcntl:
-        return current->process().sys$fcntl((int)arg1, (int)arg2, (dword)arg3);
+        return current->process().sys$fcntl((int)arg1, (int)arg2, (u32)arg3);
     case Syscall::SC_ioctl:
         return current->process().sys$ioctl((int)arg1, (unsigned)arg2, (unsigned)arg3);
     case Syscall::SC_fstat:
@@ -217,7 +217,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_symlink:
         return current->process().sys$symlink((const char*)arg1, (const char*)arg2);
     case Syscall::SC_read_tsc:
-        return current->process().sys$read_tsc((dword*)arg1, (dword*)arg2);
+        return current->process().sys$read_tsc((u32*)arg1, (u32*)arg2);
     case Syscall::SC_rmdir:
         return current->process().sys$rmdir((const char*)arg1);
     case Syscall::SC_chmod:
@@ -237,7 +237,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_create_shared_buffer:
         return current->process().sys$create_shared_buffer((pid_t)arg1, (size_t)arg2, (void**)arg3);
     case Syscall::SC_get_shared_buffer:
-        return (dword)current->process().sys$get_shared_buffer((int)arg1);
+        return (u32)current->process().sys$get_shared_buffer((int)arg1);
     case Syscall::SC_release_shared_buffer:
         return current->process().sys$release_shared_buffer((int)arg1);
     case Syscall::SC_chown:
@@ -245,7 +245,7 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
     case Syscall::SC_fchown:
         return current->process().sys$fchown((int)arg1, (uid_t)arg2, (gid_t)arg3);
     case Syscall::SC_restore_signal_mask:
-        return current->process().sys$restore_signal_mask((dword)arg1);
+        return current->process().sys$restore_signal_mask((u32)arg1);
     case Syscall::SC_seal_shared_buffer:
         return current->process().sys$seal_shared_buffer((int)arg1);
     case Syscall::SC_get_shared_buffer_size:
@@ -303,10 +303,10 @@ static dword handle(RegisterDump& regs, dword function, dword arg1, dword arg2, 
 void syscall_trap_entry(RegisterDump& regs)
 {
     current->process().big_lock().lock();
-    dword function = regs.eax;
-    dword arg1 = regs.edx;
-    dword arg2 = regs.ecx;
-    dword arg3 = regs.ebx;
+    u32 function = regs.eax;
+    u32 arg1 = regs.edx;
+    u32 arg2 = regs.ecx;
+    u32 arg3 = regs.ebx;
     regs.eax = Syscall::handle(regs, function, arg1, arg2, arg3);
     if (auto* tracer = current->process().tracer())
         tracer->did_syscall(function, arg1, arg2, arg3, regs.eax);

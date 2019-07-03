@@ -117,18 +117,18 @@ public:
 #endif
     }
 
-    dword to_dword(dword default_value = 0) const
+    u32 to_u32(u32 default_value = 0) const
     {
         if (!is_number())
             return default_value;
 #ifdef KERNEL
-        return (dword)m_value.as_int;
+        return (u32)m_value.as_int;
 #else
         if (type() == Type::Int)
-            return (dword)m_value.as_int;
+            return (u32)m_value.as_int;
         if (type() == Type::UnsignedInt)
             return m_value.as_uint;
-        return (dword)m_value.as_double;
+        return (u32)m_value.as_double;
 #endif
     }
 

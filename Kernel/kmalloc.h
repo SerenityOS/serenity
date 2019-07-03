@@ -18,8 +18,8 @@ extern volatile size_t sum_alloc;
 extern volatile size_t sum_free;
 extern volatile size_t kmalloc_sum_eternal;
 extern volatile size_t kmalloc_sum_page_aligned;
-extern dword g_kmalloc_call_count;
-extern dword g_kfree_call_count;
+extern u32 g_kmalloc_call_count;
+extern u32 g_kfree_call_count;
 extern bool g_dump_kmalloc_stacks;
 
 inline void* operator new(size_t, void* p) { return p; }

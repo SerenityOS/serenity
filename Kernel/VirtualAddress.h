@@ -5,7 +5,7 @@
 class VirtualAddress {
 public:
     VirtualAddress() {}
-    explicit VirtualAddress(dword address)
+    explicit VirtualAddress(u32 address)
         : m_address(address)
     {
     }
@@ -13,10 +13,10 @@ public:
     bool is_null() const { return m_address == 0; }
     bool is_page_aligned() const { return (m_address & 0xfff) == 0; }
 
-    VirtualAddress offset(dword o) const { return VirtualAddress(m_address + o); }
-    dword get() const { return m_address; }
-    void set(dword address) { m_address = address; }
-    void mask(dword m) { m_address &= m; }
+    VirtualAddress offset(u32 o) const { return VirtualAddress(m_address + o); }
+    u32 get() const { return m_address; }
+    void set(u32 address) { m_address = address; }
+    void mask(u32 m) { m_address &= m; }
 
     bool operator<=(const VirtualAddress& other) const { return m_address <= other.m_address; }
     bool operator>=(const VirtualAddress& other) const { return m_address >= other.m_address; }
@@ -25,13 +25,13 @@ public:
     bool operator==(const VirtualAddress& other) const { return m_address == other.m_address; }
     bool operator!=(const VirtualAddress& other) const { return m_address != other.m_address; }
 
-    byte* as_ptr() { return reinterpret_cast<byte*>(m_address); }
-    const byte* as_ptr() const { return reinterpret_cast<const byte*>(m_address); }
+    u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
+    const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
-    dword page_base() const { return m_address & 0xfffff000; }
+    u32 page_base() const { return m_address & 0xfffff000; }
 
 private:
-    dword m_address { 0 };
+    u32 m_address { 0 };
 };
 
 inline VirtualAddress operator-(const VirtualAddress& a, const VirtualAddress& b)

@@ -24,7 +24,7 @@ enum class ShouldUnblockThread {
 
 struct SignalActionData {
     VirtualAddress handler_or_sigaction;
-    dword mask { 0 };
+    u32 mask { 0 };
     int flags { 0 };
 };
 
@@ -53,7 +53,7 @@ public:
 
     void finalize();
 
-    enum State : byte {
+    enum State : u8 {
         Invalid = 0,
         Runnable,
         Running,
@@ -75,7 +75,7 @@ public:
     };
 
     void did_schedule() { ++m_times_scheduled; }
-    dword times_scheduled() const { return m_times_scheduled; }
+    u32 times_scheduled() const { return m_times_scheduled; }
 
     bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const
@@ -84,50 +84,50 @@ public:
     }
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
-    dword frame_ptr() const { return m_tss.ebp; }
-    dword stack_ptr() const { return m_tss.esp; }
+    u32 frame_ptr() const { return m_tss.ebp; }
+    u32 stack_ptr() const { return m_tss.esp; }
 
-    word selector() const { return m_far_ptr.selector; }
+    u16 selector() const { return m_far_ptr.selector; }
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
-    dword ticks() const { return m_ticks; }
+    u32 ticks() const { return m_ticks; }
     pid_t waitee_pid() const { return m_waitee_pid; }
 
-    void sleep(dword ticks);
+    void sleep(u32 ticks);
     void block(Thread::State);
     void block(Thread::State, FileDescription&);
     void unblock();
 
-    void set_wakeup_time(qword t) { m_wakeup_time = t; }
-    qword wakeup_time() const { return m_wakeup_time; }
+    void set_wakeup_time(u64 t) { m_wakeup_time = t; }
+    u64 wakeup_time() const { return m_wakeup_time; }
     void snooze_until(Alarm&);
     KResult wait_for_connect(FileDescription&);
 
     const FarPtr& far_ptr() const { return m_far_ptr; }
 
     bool tick();
-    void set_ticks_left(dword t) { m_ticks_left = t; }
-    dword ticks_left() const { return m_ticks_left; }
+    void set_ticks_left(u32 t) { m_ticks_left = t; }
+    u32 ticks_left() const { return m_ticks_left; }
 
-    dword kernel_stack_base() const { return m_kernel_stack_base; }
-    dword kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->vaddr().get() : 0; }
+    u32 kernel_stack_base() const { return m_kernel_stack_base; }
+    u32 kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->vaddr().get() : 0; }
 
-    void set_selector(word s) { m_far_ptr.selector = s; }
+    void set_selector(u16 s) { m_far_ptr.selector = s; }
     void set_state(State);
 
-    void send_signal(byte signal, Process* sender);
+    void send_signal(u8 signal, Process* sender);
 
     ShouldUnblockThread dispatch_one_pending_signal();
-    ShouldUnblockThread dispatch_signal(byte signal);
+    ShouldUnblockThread dispatch_signal(u8 signal);
     bool has_unmasked_pending_signals() const;
-    void terminate_due_to_signal(byte signal);
+    void terminate_due_to_signal(u8 signal);
 
     FPUState& fpu_state() { return *m_fpu_state; }
     bool has_used_fpu() const { return m_has_used_fpu; }
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
 
     void set_default_signal_dispositions();
-    void push_value_on_stack(dword);
+    void push_value_on_stack(u32);
     void make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
     void make_userspace_stack_for_secondary_thread(void* argument);
 
@@ -169,13 +169,13 @@ private:
     TSS32 m_tss;
     OwnPtr<TSS32> m_tss_to_resume_kernel;
     FarPtr m_far_ptr;
-    dword m_ticks { 0 };
-    dword m_ticks_left { 0 };
-    qword m_wakeup_time { 0 };
-    dword m_times_scheduled { 0 };
-    dword m_pending_signals { 0 };
-    dword m_signal_mask { 0 };
-    dword m_kernel_stack_base { 0 };
+    u32 m_ticks { 0 };
+    u32 m_ticks_left { 0 };
+    u64 m_wakeup_time { 0 };
+    u32 m_times_scheduled { 0 };
+    u32 m_pending_signals { 0 };
+    u32 m_signal_mask { 0 };
+    u32 m_kernel_stack_base { 0 };
     RefPtr<Region> m_kernel_stack_region;
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
     pid_t m_waitee_pid { -1 };

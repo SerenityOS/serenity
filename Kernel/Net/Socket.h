@@ -9,7 +9,7 @@
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
 
-enum class SocketRole : byte {
+enum class SocketRole : u8 {
     None,
     Listener,
     Accepted,

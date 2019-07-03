@@ -10,8 +10,8 @@
 
 struct PhysicalRegionDescriptor {
     PhysicalAddress offset;
-    word size { 0 };
-    word end_of_table { 0 };
+    u16 size { 0 };
+    u16 end_of_table { 0 };
 };
 
 class IDEDiskDevice final : public IRQHandler
@@ -23,10 +23,10 @@ public:
 
     // ^DiskDevice
     virtual unsigned block_size() const override;
-    virtual bool read_block(unsigned index, byte*) const override;
-    virtual bool write_block(unsigned index, const byte*) override;
-    virtual bool read_blocks(unsigned index, word count, byte*) override;
-    virtual bool write_blocks(unsigned index, word count, const byte*) override;
+    virtual bool read_block(unsigned index, u8*) const override;
+    virtual bool write_block(unsigned index, const u8*) override;
+    virtual bool read_blocks(unsigned index, u16 count, u8*) override;
+    virtual bool write_blocks(unsigned index, u16 count, const u8*) override;
 
 protected:
     IDEDiskDevice();
@@ -40,22 +40,22 @@ private:
 
     void initialize();
     bool wait_for_irq();
-    bool read_sectors_with_dma(dword lba, word count, byte*);
-    bool write_sectors_with_dma(dword lba, word count, const byte*);
-    bool read_sectors(dword lba, word count, byte* buffer);
-    bool write_sectors(dword lba, word count, const byte* data);
+    bool read_sectors_with_dma(u32 lba, u16 count, u8*);
+    bool write_sectors_with_dma(u32 lba, u16 count, const u8*);
+    bool read_sectors(u32 lba, u16 count, u8* buffer);
+    bool write_sectors(u32 lba, u16 count, const u8* data);
 
     Lock m_lock { "IDEDiskDevice" };
-    word m_cylinders { 0 };
-    word m_heads { 0 };
-    word m_sectors_per_track { 0 };
-    word m_io_base { 0 };
+    u16 m_cylinders { 0 };
+    u16 m_heads { 0 };
+    u16 m_sectors_per_track { 0 };
+    u16 m_io_base { 0 };
     volatile bool m_interrupted { false };
-    volatile byte m_device_error { 0 };
+    volatile u8 m_device_error { 0 };
 
     PCI::Address m_pci_address;
     PhysicalRegionDescriptor m_prdt;
     RefPtr<PhysicalPage> m_dma_buffer_page;
-    word m_bus_master_base { 0 };
+    u16 m_bus_master_base { 0 };
     Lockable<bool> m_dma_enabled;
 };

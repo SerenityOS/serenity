@@ -27,21 +27,21 @@ public:
     virtual void attach(FileDescription&) override;
     virtual void detach(FileDescription&) override;
     virtual bool can_read(FileDescription&) const override;
-    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
-    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
+    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
     virtual bool can_write(FileDescription&) const override;
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
-    void did_receive(const IPv4Address& peer_address, word peer_port, ByteBuffer&&);
+    void did_receive(const IPv4Address& peer_address, u16 peer_port, ByteBuffer&&);
 
     const IPv4Address& local_address() const;
-    word local_port() const { return m_local_port; }
-    void set_local_port(word port) { m_local_port = port; }
+    u16 local_port() const { return m_local_port; }
+    void set_local_port(u16 port) { m_local_port = port; }
 
     const IPv4Address& peer_address() const { return m_peer_address; }
-    word peer_port() const { return m_peer_port; }
-    void set_peer_port(word port) { m_peer_port = port; }
+    u16 peer_port() const { return m_peer_port; }
+    void set_peer_port(u16 port) { m_peer_port = port; }
 
 protected:
     IPv4Socket(int type, int protocol);
@@ -70,16 +70,16 @@ private:
 
     struct ReceivedPacket {
         IPv4Address peer_address;
-        word peer_port;
+        u16 peer_port;
         ByteBuffer data;
     };
 
     SinglyLinkedList<ReceivedPacket> m_receive_queue;
 
-    word m_local_port { 0 };
-    word m_peer_port { 0 };
+    u16 m_local_port { 0 };
+    u16 m_peer_port { 0 };
 
-    dword m_bytes_received { 0 };
+    u32 m_bytes_received { 0 };
 
     bool m_can_read { false };
 };

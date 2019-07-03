@@ -193,9 +193,9 @@ struct SC_setsockopt_params {
 void initialize();
 int sync();
 
-inline dword invoke(Function function)
+inline u32 invoke(Function function)
 {
-    dword result;
+    u32 result;
     asm volatile("int $0x82"
                  : "=a"(result)
                  : "a"(function)
@@ -204,34 +204,34 @@ inline dword invoke(Function function)
 }
 
 template<typename T1>
-inline dword invoke(Function function, T1 arg1)
+inline u32 invoke(Function function, T1 arg1)
 {
-    dword result;
+    u32 result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((dword)arg1)
+                 : "a"(function), "d"((u32)arg1)
                  : "memory");
     return result;
 }
 
 template<typename T1, typename T2>
-inline dword invoke(Function function, T1 arg1, T2 arg2)
+inline u32 invoke(Function function, T1 arg1, T2 arg2)
 {
-    dword result;
+    u32 result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((dword)arg1), "c"((dword)arg2)
+                 : "a"(function), "d"((u32)arg1), "c"((u32)arg2)
                  : "memory");
     return result;
 }
 
 template<typename T1, typename T2, typename T3>
-inline dword invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
+inline u32 invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 {
-    dword result;
+    u32 result;
     asm volatile("int $0x82"
                  : "=a"(result)
-                 : "a"(function), "d"((dword)arg1), "c"((dword)arg2), "b"((dword)arg3)
+                 : "a"(function), "d"((u32)arg1), "c"((u32)arg2), "b"((u32)arg3)
                  : "memory");
     return result;
 }

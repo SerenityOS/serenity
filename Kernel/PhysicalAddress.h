@@ -1,24 +1,26 @@
 #pragma once
 
+#include <AK/Types.h>
+
 class PhysicalAddress {
 public:
     PhysicalAddress() {}
-    explicit PhysicalAddress(dword address)
+    explicit PhysicalAddress(u32 address)
         : m_address(address)
     {
     }
 
-    PhysicalAddress offset(dword o) const { return PhysicalAddress(m_address + o); }
-    dword get() const { return m_address; }
-    void set(dword address) { m_address = address; }
-    void mask(dword m) { m_address &= m; }
+    PhysicalAddress offset(u32 o) const { return PhysicalAddress(m_address + o); }
+    u32 get() const { return m_address; }
+    void set(u32 address) { m_address = address; }
+    void mask(u32 m) { m_address &= m; }
 
     bool is_null() const { return m_address == 0; }
 
-    byte* as_ptr() { return reinterpret_cast<byte*>(m_address); }
-    const byte* as_ptr() const { return reinterpret_cast<const byte*>(m_address); }
+    u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
+    const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
-    dword page_base() const { return m_address & 0xfffff000; }
+    u32 page_base() const { return m_address & 0xfffff000; }
 
     bool operator==(const PhysicalAddress& other) const { return m_address == other.m_address; }
     bool operator!=(const PhysicalAddress& other) const { return m_address != other.m_address; }
@@ -28,5 +30,5 @@ public:
     bool operator<=(const PhysicalAddress& other) const { return m_address <= other.m_address; }
 
 private:
-    dword m_address { 0 };
+    u32 m_address { 0 };
 };

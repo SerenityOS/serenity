@@ -61,14 +61,14 @@ public:
     virtual ~Terminal() override;
 
     void create_window();
-    void on_char(byte);
+    void on_char(u8);
 
     void flush_dirty_lines();
     void force_repaint();
 
     void apply_size_increments_to_window(GWindow&);
 
-    void set_opacity(byte);
+    void set_opacity(u8);
     float opacity() { return m_opacity; };
     bool should_beep() { return m_should_beep; }
     void set_should_beep(bool sb) { m_should_beep = sb; };
@@ -98,7 +98,7 @@ private:
     void scroll_down();
     void newline();
     void set_cursor(unsigned row, unsigned column);
-    void put_character_at(unsigned row, unsigned column, byte ch);
+    void put_character_at(unsigned row, unsigned column, u8 ch);
     void invalidate_cursor();
     void set_window_title(const String&);
 
@@ -131,18 +131,18 @@ private:
 
     void clear();
 
-    void set_size(word columns, word rows);
-    word columns() const { return m_columns; }
-    word rows() const { return m_rows; }
-    Rect glyph_rect(word row, word column);
-    Rect row_rect(word row);
+    void set_size(u16 columns, u16 rows);
+    u16 columns() const { return m_columns; }
+    u16 rows() const { return m_rows; }
+    Rect glyph_rect(u16 row, u16 column);
+    Rect row_rect(u16 row);
     void update_cursor();
 
     struct Attribute {
         Attribute() { reset(); }
 
-        static byte default_foreground_color;
-        static byte default_background_color;
+        static u8 default_foreground_color;
+        static u8 default_background_color;
 
         void reset()
         {
@@ -150,8 +150,8 @@ private:
             background_color = default_background_color;
             flags = Flags::NoAttributes;
         }
-        byte foreground_color;
-        byte background_color;
+        u8 foreground_color;
+        u8 background_color;
 
         enum Flags {
             NoAttributes = 0x00,
@@ -180,15 +180,15 @@ private:
     };
 
     struct Line {
-        explicit Line(word columns);
+        explicit Line(u16 columns);
         ~Line();
         void clear(Attribute);
         bool has_only_one_background_color() const;
-        void set_length(word);
-        byte* characters { nullptr };
+        void set_length(u16);
+        u8* characters { nullptr };
         Attribute* attributes { nullptr };
         bool dirty { false };
-        word m_length { 0 };
+        u16 m_length { 0 };
     };
     Line& line(size_t index)
     {
@@ -209,20 +209,20 @@ private:
     int m_scroll_region_top { 0 };
     int m_scroll_region_bottom { 0 };
 
-    word m_columns { 0 };
-    word m_rows { 0 };
+    u16 m_columns { 0 };
+    u16 m_rows { 0 };
 
-    byte m_cursor_row { 0 };
-    byte m_cursor_column { 0 };
-    byte m_saved_cursor_row { 0 };
-    byte m_saved_cursor_column { 0 };
+    u8 m_cursor_row { 0 };
+    u8 m_cursor_column { 0 };
+    u8 m_saved_cursor_row { 0 };
+    u8 m_saved_cursor_column { 0 };
     bool m_stomp { false };
 
     bool m_should_beep { false };
 
     Attribute m_current_attribute;
 
-    void execute_escape_sequence(byte final);
+    void execute_escape_sequence(u8 final);
     void execute_xterm_command();
 
     enum EscapeState {
@@ -237,12 +237,12 @@ private:
         ExpectXtermFinal,
     };
     EscapeState m_escape_state { Normal };
-    Vector<byte> m_parameters;
-    Vector<byte> m_intermediates;
-    Vector<byte> m_xterm_param1;
-    Vector<byte> m_xterm_param2;
+    Vector<u8> m_parameters;
+    Vector<u8> m_intermediates;
+    Vector<u8> m_xterm_param1;
+    Vector<u8> m_xterm_param2;
     Vector<bool> m_horizontal_tabs;
-    byte m_final { 0 };
+    u8 m_final { 0 };
     bool m_belling { false };
 
     int m_pixel_width { 0 };
@@ -261,7 +261,7 @@ private:
 
     CNotifier m_notifier;
 
-    byte m_opacity { 255 };
+    u8 m_opacity { 255 };
     bool m_needs_background_fill { true };
     bool m_cursor_blink_state { true };
 
@@ -271,5 +271,5 @@ private:
     CTimer m_visual_beep_timer;
     RefPtr<CConfigFile> m_config;
 
-    byte m_last_char { 0 };
+    u8 m_last_char { 0 };
 };

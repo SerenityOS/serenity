@@ -30,8 +30,8 @@ public:
     int close();
 
     off_t seek(off_t, int whence);
-    ssize_t read(byte*, ssize_t);
-    ssize_t write(const byte* data, ssize_t);
+    ssize_t read(u8*, ssize_t);
+    ssize_t write(const u8* data, ssize_t);
     KResult fstat(stat&);
 
     KResult fchmod(mode_t);
@@ -39,7 +39,7 @@ public:
     bool can_read();
     bool can_write();
 
-    ssize_t get_dir_entries(byte* buffer, ssize_t);
+    ssize_t get_dir_entries(u8* buffer, ssize_t);
 
     ByteBuffer read_entire_file();
 
@@ -74,8 +74,8 @@ public:
     bool should_append() const { return m_should_append; }
     void set_should_append(bool s) { m_should_append = s; }
 
-    dword file_flags() const { return m_file_flags; }
-    void set_file_flags(dword);
+    u32 file_flags() const { return m_file_flags; }
+    void set_file_flags(u32);
 
     bool is_socket() const;
     Socket* socket();
@@ -116,7 +116,7 @@ private:
 
     ByteBuffer m_generator_cache;
 
-    dword m_file_flags { 0 };
+    u32 m_file_flags { 0 };
 
     bool m_is_blocking { true };
     bool m_should_append { false };

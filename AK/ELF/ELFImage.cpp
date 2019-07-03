@@ -1,7 +1,7 @@
 #include "ELFImage.h"
 #include <AK/kstdio.h>
 
-ELFImage::ELFImage(const byte* buffer)
+ELFImage::ELFImage(const u8* buffer)
     : m_buffer(buffer)
 {
     m_valid = parse();

@@ -31,8 +31,8 @@ void* memmove(void* dest, const void* src, size_t n)
     if (dest < src)
         return memcpy(dest, src, n);
 
-    byte* pd = (byte*)dest;
-    const byte* ps = (const byte*)src;
+    u8* pd = (u8*)dest;
+    const u8* ps = (const u8*)src;
     for (pd += n, ps += n; n--;)
         *--pd = *--ps;
     return dest;
@@ -63,7 +63,7 @@ void* memset(void* dest_ptr, int c, size_t n)
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && n >= 12) {
         size_t size_ts = n / sizeof(size_t);
-        size_t expanded_c = (byte)c;
+        size_t expanded_c = (u8)c;
         expanded_c |= expanded_c << 8;
         expanded_c |= expanded_c << 16;
         asm volatile(
@@ -108,7 +108,7 @@ int strcmp(const char* s1, const char* s2)
         if (*s1 == 0)
             return 0;
     }
-    return *(const byte*)s1 < *(const byte*)s2 ? -1 : 1;
+    return *(const u8*)s1 < *(const u8*)s2 ? -1 : 1;
 }
 
 char* strdup(const char* str)
@@ -121,8 +121,8 @@ char* strdup(const char* str)
 
 int memcmp(const void* v1, const void* v2, size_t n)
 {
-    auto* s1 = (const byte*)v1;
-    auto* s2 = (const byte*)v2;
+    auto* s1 = (const u8*)v1;
+    auto* s2 = (const u8*)v2;
     while (n-- > 0) {
         if (*s1++ != *s2++)
             return s1[-1] < s2[-1] ? -1 : 1;

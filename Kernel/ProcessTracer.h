@@ -13,14 +13,14 @@ public:
     void set_dead() { m_dead = true; }
 
     virtual bool can_read(FileDescription&) const override { return !m_calls.is_empty() || m_dead; }
-    virtual int read(FileDescription&, byte*, int) override;
+    virtual int read(FileDescription&, u8*, int) override;
 
     virtual bool can_write(FileDescription&) const override { return true; }
-    virtual int write(FileDescription&, const byte*, int) override { return -EIO; }
+    virtual int write(FileDescription&, const u8*, int) override { return -EIO; }
 
     virtual String absolute_path(const FileDescription&) const override;
 
-    void did_syscall(dword function, dword arg1, dword arg2, dword arg3, dword result);
+    void did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result);
     pid_t pid() const { return m_pid; }
 
 private:
@@ -28,11 +28,11 @@ private:
     explicit ProcessTracer(pid_t);
 
     struct CallData {
-        dword function;
-        dword arg1;
-        dword arg2;
-        dword arg3;
-        dword result;
+        u32 function;
+        u32 arg1;
+        u32 arg2;
+        u32 arg3;
+        u32 result;
     };
 
     pid_t m_pid;

@@ -81,7 +81,7 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
         return KResult(-EINVAL);
 
     auto& ia = *(const sockaddr_in*)address;
-    m_local_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
+    m_local_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
     m_local_port = ntohs(ia.sin_port);
 
     dbgprintf("IPv4Socket::bind %s{%p} to port %u\n", class_name(), this, m_local_port);
@@ -98,7 +98,7 @@ KResult IPv4Socket::connect(FileDescription& description, const sockaddr* addres
         return KResult(-EINVAL);
 
     auto& ia = *(const sockaddr_in*)address;
-    m_peer_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
+    m_peer_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
     m_peer_port = ntohs(ia.sin_port);
 
     return protocol_connect(description, should_block);
@@ -123,12 +123,12 @@ bool IPv4Socket::can_read(FileDescription& description) const
     return m_can_read;
 }
 
-ssize_t IPv4Socket::read(FileDescription& description, byte* buffer, ssize_t size)
+ssize_t IPv4Socket::read(FileDescription& description, u8* buffer, ssize_t size)
 {
     return recvfrom(description, buffer, size, 0, nullptr, 0);
 }
 
-ssize_t IPv4Socket::write(FileDescription& description, const byte* data, ssize_t size)
+ssize_t IPv4Socket::write(FileDescription& description, const u8* data, ssize_t size)
 {
     return sendto(description, data, size, 0, nullptr, 0);
 }
@@ -145,7 +145,7 @@ int IPv4Socket::allocate_local_port_if_needed()
     int port = protocol_allocate_local_port();
     if (port < 0)
         return port;
-    m_local_port = (word)port;
+    m_local_port = (u16)port;
     return port;
 }
 
@@ -162,7 +162,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
         }
 
         auto& ia = *(const sockaddr_in*)addr;
-        m_peer_address = IPv4Address((const byte*)&ia.sin_addr.s_addr);
+        m_peer_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
         m_peer_port = ntohs(ia.sin_port);
     }
 
@@ -249,7 +249,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
     return protocol_receive(packet.data, buffer, buffer_length, flags);
 }
 
-void IPv4Socket::did_receive(const IPv4Address& source_address, word source_port, ByteBuffer&& packet)
+void IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, ByteBuffer&& packet)
 {
     LOCKER(lock());
     auto packet_size = packet.size();

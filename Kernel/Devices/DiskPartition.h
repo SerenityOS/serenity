@@ -9,10 +9,10 @@ public:
     virtual ~DiskPartition();
 
     virtual unsigned block_size() const override;
-    virtual bool read_block(unsigned index, byte* out) const override;
-    virtual bool write_block(unsigned index, const byte*) override;
-    virtual bool read_blocks(unsigned index, word count, byte*) override;
-    virtual bool write_blocks(unsigned index, word count, const byte*) override;
+    virtual bool read_block(unsigned index, u8* out) const override;
+    virtual bool write_block(unsigned index, const u8*) override;
+    virtual bool read_blocks(unsigned index, u16 count, u8*) override;
+    virtual bool write_blocks(unsigned index, u16 count, const u8*) override;
 
 private:
     virtual const char* class_name() const override;

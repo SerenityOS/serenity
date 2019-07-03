@@ -7,7 +7,7 @@
 
 class ELFImage {
 public:
-    explicit ELFImage(const byte*);
+    explicit ELFImage(const u8*);
     ~ELFImage();
     void dump();
     bool is_valid() const { return m_valid; }
@@ -54,13 +54,13 @@ public:
         ~ProgramHeader() {}
 
         unsigned index() const { return m_program_header_index; }
-        dword type() const { return m_program_header.p_type; }
-        dword flags() const { return m_program_header.p_flags; }
-        dword offset() const { return m_program_header.p_offset; }
+        u32 type() const { return m_program_header.p_type; }
+        u32 flags() const { return m_program_header.p_flags; }
+        u32 offset() const { return m_program_header.p_offset; }
         VirtualAddress vaddr() const { return VirtualAddress(m_program_header.p_vaddr); }
-        dword size_in_memory() const { return m_program_header.p_memsz; }
-        dword size_in_image() const { return m_program_header.p_filesz; }
-        dword alignment() const { return m_program_header.p_align; }
+        u32 size_in_memory() const { return m_program_header.p_memsz; }
+        u32 size_in_image() const { return m_program_header.p_filesz; }
+        u32 alignment() const { return m_program_header.p_align; }
         bool is_readable() const { return flags() & PF_R; }
         bool is_writable() const { return flags() & PF_W; }
         bool is_executable() const { return flags() & PF_X; }
@@ -88,10 +88,10 @@ public:
         unsigned size() const { return m_section_header.sh_size; }
         unsigned entry_size() const { return m_section_header.sh_entsize; }
         unsigned entry_count() const { return !entry_size() ? 0 : size() / entry_size(); }
-        dword address() const { return m_section_header.sh_addr; }
+        u32 address() const { return m_section_header.sh_addr; }
         const char* raw_data() const { return m_image.raw_data(m_section_header.sh_offset); }
         bool is_undefined() const { return m_section_index == SHN_UNDEF; }
-        dword flags() const { return m_section_header.sh_flags; }
+        u32 flags() const { return m_section_header.sh_flags; }
         bool is_writable() const { return flags() & SHF_WRITE; }
         bool is_executable() const { return flags() & PF_X; }
 
@@ -134,7 +134,7 @@ private:
     const char* section_header_table_string(unsigned offset) const;
     const char* section_index_to_string(unsigned index);
 
-    const byte* m_buffer { nullptr };
+    const u8* m_buffer { nullptr };
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };

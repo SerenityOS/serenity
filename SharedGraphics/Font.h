@@ -54,13 +54,13 @@ public:
 
     ~Font();
 
-    GlyphBitmap glyph_bitmap(char ch) const { return GlyphBitmap(&m_rows[(byte)ch * m_glyph_height], { glyph_width(ch), m_glyph_height }); }
+    GlyphBitmap glyph_bitmap(char ch) const { return GlyphBitmap(&m_rows[(u8)ch * m_glyph_height], { glyph_width(ch), m_glyph_height }); }
 
-    byte glyph_width(char ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[(byte)ch]; }
-    byte glyph_height() const { return m_glyph_height; }
-    byte min_glyph_width() const { return m_min_glyph_width; }
-    byte max_glyph_width() const { return m_max_glyph_width; }
-    byte glyph_spacing() const { return m_fixed_width ? 0 : 1; }
+    u8 glyph_width(char ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[(u8)ch]; }
+    u8 glyph_height() const { return m_glyph_height; }
+    u8 min_glyph_width() const { return m_min_glyph_width; }
+    u8 max_glyph_width() const { return m_max_glyph_width; }
+    u8 glyph_spacing() const { return m_fixed_width ? 0 : 1; }
     int width(const StringView& string) const;
 
     String name() const { return m_name; }
@@ -69,27 +69,27 @@ public:
     bool is_fixed_width() const { return m_fixed_width; }
     void set_fixed_width(bool b) { m_fixed_width = b; }
 
-    void set_glyph_width(char ch, byte width)
+    void set_glyph_width(char ch, u8 width)
     {
         ASSERT(m_glyph_widths);
-        m_glyph_widths[(byte)ch] = width;
+        m_glyph_widths[(u8)ch] = width;
     }
 
 private:
-    Font(const StringView& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height);
+    Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height);
 
-    static RefPtr<Font> load_from_memory(const byte*);
+    static RefPtr<Font> load_from_memory(const u8*);
 
     String m_name;
 
     unsigned* m_rows { nullptr };
-    byte* m_glyph_widths { nullptr };
+    u8* m_glyph_widths { nullptr };
     MappedFile m_mapped_file;
 
-    byte m_glyph_width { 0 };
-    byte m_glyph_height { 0 };
-    byte m_min_glyph_width { 0 };
-    byte m_max_glyph_width { 0 };
+    u8 m_glyph_width { 0 };
+    u8 m_glyph_height { 0 };
+    u8 m_min_glyph_width { 0 };
+    u8 m_max_glyph_width { 0 };
 
     bool m_fixed_width { false };
 };

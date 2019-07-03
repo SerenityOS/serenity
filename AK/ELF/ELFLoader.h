@@ -13,7 +13,7 @@ class Region;
 
 class ELFLoader {
 public:
-    explicit ELFLoader(const byte*);
+    explicit ELFLoader(const u8*);
     ~ELFLoader();
 
     bool load();
@@ -26,7 +26,7 @@ public:
 
     bool has_symbols() const { return m_image.symbol_count(); }
 
-    String symbolicate(dword address) const;
+    String symbolicate(u32 address) const;
 
 private:
     bool layout();
@@ -49,7 +49,7 @@ private:
     ELFImage m_image;
 
     struct SortedSymbol {
-        dword address;
+        u32 address;
         const char* name;
     };
 #ifdef KERNEL

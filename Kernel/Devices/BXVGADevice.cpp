@@ -43,7 +43,7 @@ BXVGADevice::BXVGADevice()
     m_framebuffer_address = PhysicalAddress(find_framebuffer_address());
 }
 
-void BXVGADevice::set_register(word index, word data)
+void BXVGADevice::set_register(u16 index, u16 data)
 {
     IO::out16(VBE_DISPI_IOPORT_INDEX, index);
     IO::out16(VBE_DISPI_IOPORT_DATA, data);
@@ -54,10 +54,10 @@ void BXVGADevice::set_resolution(int width, int height)
     m_framebuffer_size = { width, height };
 
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
-    set_register(VBE_DISPI_INDEX_XRES, (word)width);
-    set_register(VBE_DISPI_INDEX_YRES, (word)height);
-    set_register(VBE_DISPI_INDEX_VIRT_WIDTH, (word)width);
-    set_register(VBE_DISPI_INDEX_VIRT_HEIGHT, (word)height * 2);
+    set_register(VBE_DISPI_INDEX_XRES, (u16)width);
+    set_register(VBE_DISPI_INDEX_YRES, (u16)height);
+    set_register(VBE_DISPI_INDEX_VIRT_WIDTH, (u16)width);
+    set_register(VBE_DISPI_INDEX_VIRT_HEIGHT, (u16)height * 2);
     set_register(VBE_DISPI_INDEX_BPP, 32);
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_ENABLED | VBE_DISPI_LFB_ENABLED);
     set_register(VBE_DISPI_INDEX_BANK, 0);
@@ -66,15 +66,15 @@ void BXVGADevice::set_resolution(int width, int height)
 void BXVGADevice::set_y_offset(int offset)
 {
     ASSERT(offset <= m_framebuffer_size.height());
-    set_register(VBE_DISPI_INDEX_Y_OFFSET, (word)offset);
+    set_register(VBE_DISPI_INDEX_Y_OFFSET, (u16)offset);
 }
 
-dword BXVGADevice::find_framebuffer_address()
+u32 BXVGADevice::find_framebuffer_address()
 {
     // NOTE: The QEMU card has the same PCI ID as the Bochs one.
     static const PCI::ID bochs_vga_id = { 0x1234, 0x1111 };
     static const PCI::ID virtualbox_vga_id = { 0x80ee, 0xbeef };
-    dword framebuffer_address = 0;
+    u32 framebuffer_address = 0;
     PCI::enumerate_all([&framebuffer_address](const PCI::Address& address, PCI::ID id) {
         if (id == bochs_vga_id || id == virtualbox_vga_id) {
             framebuffer_address = PCI::get_BAR0(address) & 0xfffffff0;
@@ -133,12 +133,12 @@ bool BXVGADevice::can_write(FileDescription&) const
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BXVGADevice::read(FileDescription&, byte*, ssize_t)
+ssize_t BXVGADevice::read(FileDescription&, u8*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }
 
-ssize_t BXVGADevice::write(FileDescription&, const byte*, ssize_t)
+ssize_t BXVGADevice::write(FileDescription&, const u8*, ssize_t)
 {
     ASSERT_NOT_REACHED();
 }

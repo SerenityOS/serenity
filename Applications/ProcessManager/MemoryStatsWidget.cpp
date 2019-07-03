@@ -64,16 +64,16 @@ void MemoryStatsWidget::refresh()
     auto file_contents = m_proc_memstat.read_all();
     auto json = JsonValue::from_string(file_contents).as_object();
 
-    unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_dword();
+    unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
     (void)kmalloc_eternal_allocated;
-    unsigned kmalloc_allocated = json.get("kmalloc_allocated").to_dword();
-    unsigned kmalloc_available = json.get("kmalloc_available").to_dword();
-    unsigned user_physical_allocated = json.get("user_physical_allocated").to_dword();
-    unsigned user_physical_available = json.get("user_physical_available").to_dword();
-    unsigned super_physical_alloc = json.get("super_physical_allocated").to_dword();
-    unsigned super_physical_free = json.get("super_physical_available").to_dword();
-    unsigned kmalloc_call_count = json.get("kmalloc_call_count").to_dword();
-    unsigned kfree_call_count = json.get("kfree_call_count").to_dword();
+    unsigned kmalloc_allocated = json.get("kmalloc_allocated").to_u32();
+    unsigned kmalloc_available = json.get("kmalloc_available").to_u32();
+    unsigned user_physical_allocated = json.get("user_physical_allocated").to_u32();
+    unsigned user_physical_available = json.get("user_physical_available").to_u32();
+    unsigned super_physical_alloc = json.get("super_physical_allocated").to_u32();
+    unsigned super_physical_free = json.get("super_physical_available").to_u32();
+    unsigned kmalloc_call_count = json.get("kmalloc_call_count").to_u32();
+    unsigned kfree_call_count = json.get("kfree_call_count").to_u32();
 
     size_t kmalloc_sum_available = kmalloc_allocated + kmalloc_available;
     size_t user_pages_available = user_physical_allocated + user_physical_available;

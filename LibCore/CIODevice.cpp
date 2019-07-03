@@ -33,7 +33,7 @@ ByteBuffer CIODevice::read(int max_size)
     if (!m_buffered_data.is_empty()) {
         taken_from_buffered = min(remaining_buffer_space, m_buffered_data.size());
         memcpy(buffer_ptr, m_buffered_data.data(), taken_from_buffered);
-        Vector<byte> new_buffered_data;
+        Vector<u8> new_buffered_data;
         new_buffered_data.append(m_buffered_data.data() + taken_from_buffered, m_buffered_data.size() - taken_from_buffered);
         m_buffered_data = move(new_buffered_data);
         remaining_buffer_space -= taken_from_buffered;
@@ -141,10 +141,10 @@ ByteBuffer CIODevice::read_line(int max_size)
     auto line = ByteBuffer::create_uninitialized(max_size + 1);
     int line_index = 0;
     while (line_index < max_size) {
-        byte ch = m_buffered_data[line_index];
+        u8 ch = m_buffered_data[line_index];
         line[line_index++] = ch;
         if (ch == '\n') {
-            Vector<byte> new_buffered_data;
+            Vector<u8> new_buffered_data;
             new_buffered_data.append(m_buffered_data.data() + line_index, m_buffered_data.size() - line_index);
             m_buffered_data = move(new_buffered_data);
             line[line_index] = '\0';
@@ -159,7 +159,7 @@ bool CIODevice::populate_read_buffer()
 {
     if (m_fd < 0)
         return false;
-    byte buffer[1024];
+    u8 buffer[1024];
     int nread = ::read(m_fd, buffer, sizeof(buffer));
     if (nread < 0) {
         set_error(errno);
@@ -187,7 +187,7 @@ bool CIODevice::close()
     return true;
 }
 
-bool CIODevice::seek(signed_qword offset, SeekMode mode, off_t* pos)
+bool CIODevice::seek(i64 offset, SeekMode mode, off_t* pos)
 {
     int m = SEEK_SET;
     switch (mode) {
@@ -215,7 +215,7 @@ bool CIODevice::seek(signed_qword offset, SeekMode mode, off_t* pos)
     return true;
 }
 
-bool CIODevice::write(const byte* data, int size)
+bool CIODevice::write(const u8* data, int size)
 {
     int rc = ::write(m_fd, data, size);
     if (rc < 0) {
@@ -232,7 +232,7 @@ int CIODevice::printf(const char* format, ...)
     va_start(ap, format);
     // FIXME: We're not propagating write() failures to client here!
     int ret = printf_internal([this](char*&, char ch) {
-        int rc = write((const byte*)&ch, 1);
+        int rc = write((const u8*)&ch, 1);
         if (rc < 0)
             dbgprintf("CIODevice::printf: write: %s\n", strerror(errno));
     },

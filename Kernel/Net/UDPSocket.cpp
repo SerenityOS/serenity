@@ -5,15 +5,15 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
 
-Lockable<HashMap<word, UDPSocket*>>& UDPSocket::sockets_by_port()
+Lockable<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
 {
-    static Lockable<HashMap<word, UDPSocket*>>* s_map;
+    static Lockable<HashMap<u16, UDPSocket*>>* s_map;
     if (!s_map)
-        s_map = new Lockable<HashMap<word, UDPSocket*>>;
+        s_map = new Lockable<HashMap<u16, UDPSocket*>>;
     return *s_map;
 }
 
-UDPSocketHandle UDPSocket::from_port(word port)
+UDPSocketHandle UDPSocket::from_port(u16 port)
 {
     RefPtr<UDPSocket> socket;
     {
@@ -77,13 +77,13 @@ int UDPSocket::protocol_send(const void* data, int data_length)
 
 int UDPSocket::protocol_allocate_local_port()
 {
-    static const word first_ephemeral_port = 32768;
-    static const word last_ephemeral_port = 60999;
-    static const word ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
-    word first_scan_port = first_ephemeral_port + RandomDevice::random_value() % ephemeral_port_range_size;
+    static const u16 first_ephemeral_port = 32768;
+    static const u16 last_ephemeral_port = 60999;
+    static const u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
+    u16 first_scan_port = first_ephemeral_port + RandomDevice::random_value() % ephemeral_port_range_size;
 
     LOCKER(sockets_by_port().lock());
-    for (word port = first_scan_port;;) {
+    for (u16 port = first_scan_port;;) {
         auto it = sockets_by_port().resource().find(port);
         if (it == sockets_by_port().resource().end()) {
             set_local_port(port);

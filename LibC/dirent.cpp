@@ -41,12 +41,12 @@ int closedir(DIR* dirp)
 struct [[gnu::packed]] sys_dirent
 {
     ino_t ino;
-    byte file_type;
+    u8 file_type;
     size_t namelen;
     char name[];
     size_t total_size()
     {
-        return sizeof(ino_t) + sizeof(byte) + sizeof(size_t) + sizeof(char) * namelen;
+        return sizeof(ino_t) + sizeof(u8) + sizeof(size_t) + sizeof(char) * namelen;
     }
 };
 

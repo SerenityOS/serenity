@@ -44,5 +44,5 @@ private:
 inline RGBA32* WSScreen::scanline(int y)
 {
     size_t pitch = sizeof(RGBA32) * width();
-    return reinterpret_cast<RGBA32*>(((byte*)m_framebuffer) + (y * pitch));
+    return reinterpret_cast<RGBA32*>(((u8*)m_framebuffer) + (y * pitch));
 }

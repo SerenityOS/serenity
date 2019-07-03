@@ -118,7 +118,7 @@ void VMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size
     });
 }
 
-void VMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, const byte* data)
+void VMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, const u8* data)
 {
     (void)size;
     (void)data;
@@ -132,7 +132,7 @@ void VMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t size, 
 #if 0
     size_t current_offset = offset;
     size_t remaining_bytes = size;
-    const byte* data_ptr = data;
+    const u8* data_ptr = data;
 
     auto to_page_index = [] (size_t offset) -> size_t {
         return offset / PAGE_SIZE;

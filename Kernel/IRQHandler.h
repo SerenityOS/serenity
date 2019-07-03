@@ -7,14 +7,14 @@ public:
     virtual ~IRQHandler();
     virtual void handle_irq() = 0;
 
-    byte irq_number() const { return m_irq_number; }
+    u8 irq_number() const { return m_irq_number; }
 
     void enable_irq();
     void disable_irq();
 
 protected:
-    explicit IRQHandler(byte irq);
+    explicit IRQHandler(u8 irq);
 
 private:
-    byte m_irq_number { 0 };
+    u8 m_irq_number { 0 };
 };

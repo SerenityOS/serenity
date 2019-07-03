@@ -159,13 +159,13 @@ struct WSAPI_ServerMessage {
             WSAPI_Point position;
             WSAPI_MouseButton button;
             unsigned buttons;
-            byte modifiers;
+            u8 modifiers;
             int wheel_delta;
         } mouse;
         struct {
             char character;
-            byte key;
-            byte modifiers;
+            u8 key;
+            u8 modifiers;
             bool ctrl : 1;
             bool alt : 1;
             bool shift : 1;

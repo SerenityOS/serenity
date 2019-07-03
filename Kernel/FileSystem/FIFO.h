@@ -8,13 +8,13 @@ class FileDescription;
 
 class FIFO final : public File {
 public:
-    enum class Direction : byte {
+    enum class Direction : u8 {
         Neither,
         Reader,
         Writer
     };
 
-    static RefPtr<FIFO> from_fifo_id(dword);
+    static RefPtr<FIFO> from_fifo_id(u32);
 
     static NonnullRefPtr<FIFO> create(uid_t);
     virtual ~FIFO() override;
@@ -28,8 +28,8 @@ public:
 
 private:
     // ^File
-    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
-    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
+    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
     virtual bool can_read(FileDescription&) const override;
     virtual bool can_write(FileDescription&) const override;
     virtual String absolute_path(const FileDescription&) const override;

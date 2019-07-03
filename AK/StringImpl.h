@@ -66,11 +66,11 @@ private:
     char m_inline_buffer[0];
 };
 
-inline constexpr dword string_hash(const char* characters, int length)
+inline constexpr u32 string_hash(const char* characters, int length)
 {
-    dword hash = 0;
+    u32 hash = 0;
     for (int i = 0; i < length; ++i) {
-        hash += (dword)characters[i];
+        hash += (u32)characters[i];
         hash += (hash << 10);
         hash ^= (hash >> 6);
     }

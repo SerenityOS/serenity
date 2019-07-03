@@ -4,9 +4,9 @@
 Color::Color(NamedColor named)
 {
     struct {
-        byte r;
-        byte g;
-        byte b;
+        u8 r;
+        u8 g;
+        u8 b;
     } rgb;
 
     switch (named) {

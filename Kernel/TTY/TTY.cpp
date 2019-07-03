@@ -24,12 +24,12 @@ void TTY::set_default_termios()
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
-ssize_t TTY::read(FileDescription&, byte* buffer, ssize_t size)
+ssize_t TTY::read(FileDescription&, u8* buffer, ssize_t size)
 {
     return m_buffer.read(buffer, size);
 }
 
-ssize_t TTY::write(FileDescription&, const byte* buffer, ssize_t size)
+ssize_t TTY::write(FileDescription&, const u8* buffer, ssize_t size)
 {
 #ifdef TTY_DEBUG
     dbgprintf("TTY::write {%u} ", size);
@@ -52,7 +52,7 @@ bool TTY::can_write(FileDescription&) const
     return true;
 }
 
-void TTY::emit(byte ch)
+void TTY::emit(u8 ch)
 {
     if (should_generate_signals()) {
         if (ch == m_termios.c_cc[VINTR]) {

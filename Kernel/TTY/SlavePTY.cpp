@@ -30,13 +30,13 @@ String SlavePTY::tty_name() const
     return m_tty_name;
 }
 
-void SlavePTY::on_master_write(const byte* buffer, ssize_t size)
+void SlavePTY::on_master_write(const u8* buffer, ssize_t size)
 {
     for (ssize_t i = 0; i < size; ++i)
         emit(buffer[i]);
 }
 
-ssize_t SlavePTY::on_tty_write(const byte* data, ssize_t size)
+ssize_t SlavePTY::on_tty_write(const u8* data, ssize_t size)
 {
     return m_master->on_slave_write(data, size);
 }
@@ -53,7 +53,7 @@ bool SlavePTY::can_read(FileDescription& description) const
     return TTY::can_read(description);
 }
 
-ssize_t SlavePTY::read(FileDescription& description, byte* buffer, ssize_t size)
+ssize_t SlavePTY::read(FileDescription& description, u8* buffer, ssize_t size)
 {
     if (m_master->is_closed())
         return 0;

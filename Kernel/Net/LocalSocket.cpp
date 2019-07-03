@@ -155,7 +155,7 @@ bool LocalSocket::can_read(FileDescription& description) const
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::read(FileDescription& description, byte* buffer, ssize_t size)
+ssize_t LocalSocket::read(FileDescription& description, u8* buffer, ssize_t size)
 {
     auto role = description.socket_role();
     if (role == SocketRole::Accepted) {
@@ -184,7 +184,7 @@ bool LocalSocket::has_attached_peer(const FileDescription& description) const
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::write(FileDescription& description, const byte* data, ssize_t size)
+ssize_t LocalSocket::write(FileDescription& description, const u8* data, ssize_t size)
 {
     if (!has_attached_peer(description))
         return -EPIPE;
@@ -206,10 +206,10 @@ bool LocalSocket::can_write(FileDescription& description) const
 
 ssize_t LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
 {
-    return write(description, (const byte*)data, data_size);
+    return write(description, (const u8*)data, data_size);
 }
 
 ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
 {
-    return read(description, (byte*)buffer, buffer_size);
+    return read(description, (u8*)buffer, buffer_size);
 }

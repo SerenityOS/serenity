@@ -15,7 +15,7 @@
 extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
 #endif
 
-[[gnu::always_inline]] inline void fast_dword_copy(dword* dest, const dword* src, size_t count)
+[[gnu::always_inline]] inline void fast_u32_copy(u32* dest, const u32* src, size_t count)
 {
 #ifndef KERNEL
     if (count >= 256) {
@@ -30,7 +30,7 @@ extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
         : "memory");
 }
 
-[[gnu::always_inline]] inline void fast_dword_fill(dword* dest, dword value, size_t count)
+[[gnu::always_inline]] inline void fast_u32_fill(u32* dest, u32 value, size_t count)
 {
     asm volatile(
         "rep stosl\n"
@@ -39,7 +39,7 @@ extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
         : "memory");
 }
 
-inline constexpr dword round_up_to_power_of_two(dword value, dword power_of_two)
+inline constexpr u32 round_up_to_power_of_two(u32 value, u32 power_of_two)
 {
     return ((value - 1) & ~(power_of_two - 1)) + power_of_two;
 }

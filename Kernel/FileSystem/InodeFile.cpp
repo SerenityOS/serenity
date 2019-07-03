@@ -13,12 +13,12 @@ InodeFile::~InodeFile()
 {
 }
 
-ssize_t InodeFile::read(FileDescription& description, byte* buffer, ssize_t count)
+ssize_t InodeFile::read(FileDescription& description, u8* buffer, ssize_t count)
 {
     return m_inode->read_bytes(description.offset(), count, buffer, &description);
 }
 
-ssize_t InodeFile::write(FileDescription& description, const byte* data, ssize_t count)
+ssize_t InodeFile::write(FileDescription& description, const u8* data, ssize_t count)
 {
     return m_inode->write_bytes(description.offset(), count, data, &description);
 }

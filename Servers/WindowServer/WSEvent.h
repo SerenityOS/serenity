@@ -726,7 +726,7 @@ private:
     Vector<Rect, 32> m_rects;
 };
 
-enum class MouseButton : byte {
+enum class MouseButton : u8 {
     None = 0,
     Left = 1,
     Right = 2,
@@ -735,7 +735,7 @@ enum class MouseButton : byte {
 
 class WSKeyEvent final : public WSEvent {
 public:
-    WSKeyEvent(Type type, int key, char character, byte modifiers)
+    WSKeyEvent(Type type, int key, char character, u8 modifiers)
         : WSEvent(type)
         , m_key(key)
         , m_character(character)
@@ -748,7 +748,7 @@ public:
     bool alt() const { return m_modifiers & Mod_Alt; }
     bool shift() const { return m_modifiers & Mod_Shift; }
     bool logo() const { return m_modifiers & Mod_Logo; }
-    byte modifiers() const { return m_modifiers; }
+    u8 modifiers() const { return m_modifiers; }
     char character() const { return m_character; }
 
 private:
@@ -756,7 +756,7 @@ private:
     friend class WSScreen;
     int m_key { 0 };
     char m_character { 0 };
-    byte m_modifiers { 0 };
+    u8 m_modifiers { 0 };
 };
 
 class WSMouseEvent final : public WSEvent {

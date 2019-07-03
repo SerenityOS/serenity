@@ -37,7 +37,7 @@ public:
     const Vector<RefPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
     Vector<RefPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 
-    void inode_contents_changed(Badge<Inode>, off_t, ssize_t, const byte*);
+    void inode_contents_changed(Badge<Inode>, off_t, ssize_t, const u8*);
     void inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size);
 
     size_t size() const { return m_size; }

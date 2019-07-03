@@ -3,18 +3,18 @@
 #include <AK/Types.h>
 
 struct multiboot_aout_symbol_table {
-    dword tabsize;
-    dword strsize;
-    dword addr;
-    dword reserved;
+    u32 tabsize;
+    u32 strsize;
+    u32 addr;
+    u32 reserved;
 };
 typedef struct multiboot_aout_symbol_table multiboot_aout_symbol_table_t;
 
 struct multiboot_elf_section_header_table {
-    dword num;
-    dword size;
-    dword addr;
-    dword shndx;
+    u32 num;
+    u32 size;
+    u32 addr;
+    u32 shndx;
 };
 typedef struct multiboot_elf_section_header_table multiboot_elf_section_header_table_t;
 
@@ -25,30 +25,30 @@ typedef struct multiboot_elf_section_header_table multiboot_elf_section_header_t
 #define MULTIBOOT_MEMORY_BADRAM 5
 
 struct multiboot_mmap_entry {
-    dword size;
-    qword addr;
-    qword len;
-    dword type;
+    u32 size;
+    u64 addr;
+    u64 len;
+    u32 type;
 } __attribute__((packed));
 typedef struct multiboot_mmap_entry multiboot_memory_map_t;
 
 struct multiboot_info {
     // Multiboot info version number.
-    dword flags;
+    u32 flags;
 
     // Available memory from BIOS.
-    dword mem_lower;
-    dword mem_upper;
+    u32 mem_lower;
+    u32 mem_upper;
 
     // "root" partition.
-    dword boot_device;
+    u32 boot_device;
 
     // Kernel command line.
-    dword cmdline;
+    u32 cmdline;
 
     // Boot-Module list.
-    dword mods_count;
-    dword mods_addr;
+    u32 mods_count;
+    u32 mods_addr;
 
     union {
         multiboot_aout_symbol_table_t aout_sym;
@@ -56,53 +56,53 @@ struct multiboot_info {
     } u;
 
     // Memory Mapping buffer.
-    dword mmap_length;
-    dword mmap_addr;
+    u32 mmap_length;
+    u32 mmap_addr;
 
     // Drive Info buffer.
-    dword drives_length;
-    dword drives_addr;
+    u32 drives_length;
+    u32 drives_addr;
 
     // ROM configuration table.
-    dword config_table;
+    u32 config_table;
 
     // Boot Loader Name.
-    dword boot_loader_name;
+    u32 boot_loader_name;
 
     // APM table.
-    dword apm_table;
+    u32 apm_table;
 
     // Video.
-    dword vbe_control_info;
-    dword vbe_mode_info;
-    word vbe_mode;
-    word vbe_interface_seg;
-    word vbe_interface_off;
-    word vbe_interface_len;
+    u32 vbe_control_info;
+    u32 vbe_mode_info;
+    u16 vbe_mode;
+    u16 vbe_interface_seg;
+    u16 vbe_interface_off;
+    u16 vbe_interface_len;
 
-    qword framebuffer_addr;
-    dword framebuffer_pitch;
-    dword framebuffer_width;
-    dword framebuffer_height;
-    byte framebuffer_bpp;
+    u64 framebuffer_addr;
+    u32 framebuffer_pitch;
+    u32 framebuffer_width;
+    u32 framebuffer_height;
+    u8 framebuffer_bpp;
 #define MULTIBOOT_FRAMEBUFFER_TYPE_INDEXED 0
 #define MULTIBOOT_FRAMEBUFFER_TYPE_RGB 1
 #define MULTIBOOT_FRAMEBUFFER_TYPE_EGA_TEXT 2
-    byte framebuffer_type;
+    u8 framebuffer_type;
     union {
         struct
         {
-            dword framebuffer_palette_addr;
-            word framebuffer_palette_num_colors;
+            u32 framebuffer_palette_addr;
+            u16 framebuffer_palette_num_colors;
         };
         struct
         {
-            byte framebuffer_red_field_position;
-            byte framebuffer_red_mask_size;
-            byte framebuffer_green_field_position;
-            byte framebuffer_green_mask_size;
-            byte framebuffer_blue_field_position;
-            byte framebuffer_blue_mask_size;
+            u8 framebuffer_red_field_position;
+            u8 framebuffer_red_mask_size;
+            u8 framebuffer_green_field_position;
+            u8 framebuffer_green_mask_size;
+            u8 framebuffer_blue_field_position;
+            u8 framebuffer_blue_mask_size;
         };
     };
 };

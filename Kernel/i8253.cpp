@@ -36,8 +36,8 @@ asm(
     "    popa\n"
     "    iret\n");
 
-static dword s_ticks_this_second;
-static dword s_seconds_since_boot;
+static u32 s_ticks_this_second;
+static u32 s_seconds_since_boot;
 
 void timer_interrupt_handler(RegisterDump& regs)
 {
@@ -52,19 +52,19 @@ void timer_interrupt_handler(RegisterDump& regs)
 
 namespace PIT {
 
-dword ticks_this_second()
+u32 ticks_this_second()
 {
     return s_ticks_this_second;
 }
 
-dword seconds_since_boot()
+u32 seconds_since_boot()
 {
     return s_seconds_since_boot;
 }
 
 void initialize()
 {
-    word timer_reload;
+    u16 timer_reload;
 
     IO::out8(PIT_CTL, TIMER0_SELECT | WRITE_WORD | MODE_SQUARE_WAVE);
 

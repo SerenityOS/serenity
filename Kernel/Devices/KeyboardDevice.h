@@ -23,9 +23,9 @@ public:
     void set_client(KeyboardClient* client) { m_client = client; }
 
     // ^CharacterDevice
-    virtual ssize_t read(FileDescription&, byte* buffer, ssize_t) override;
+    virtual ssize_t read(FileDescription&, u8* buffer, ssize_t) override;
     virtual bool can_read(FileDescription&) const override;
-    virtual ssize_t write(FileDescription&, const byte* buffer, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const u8* buffer, ssize_t) override;
     virtual bool can_write(FileDescription&) const override { return true; }
 
 private:
@@ -35,8 +35,8 @@ private:
     // ^CharacterDevice
     virtual const char* class_name() const override { return "KeyboardDevice"; }
 
-    void key_state_changed(byte raw, bool pressed);
-    void update_modifier(byte modifier, bool state)
+    void key_state_changed(u8 raw, bool pressed);
+    void update_modifier(u8 modifier, bool state)
     {
         if (state)
             m_modifiers |= modifier;
@@ -46,7 +46,7 @@ private:
 
     KeyboardClient* m_client { nullptr };
     CircularQueue<Event, 16> m_queue;
-    byte m_modifiers { 0 };
+    u8 m_modifiers { 0 };
 };
 
 class KeyboardClient {

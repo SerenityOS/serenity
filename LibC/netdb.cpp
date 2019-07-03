@@ -136,7 +136,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         close(fd);
     });
 
-    IPv4Address ipv4_address((const byte*)&((const in_addr*)addr)->s_addr);
+    IPv4Address ipv4_address((const u8*)&((const in_addr*)addr)->s_addr);
 
     auto line = String::format("R%d.%d.%d.%d.in-addr.arpa\n",
         ipv4_address[3],

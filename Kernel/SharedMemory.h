@@ -26,8 +26,8 @@ private:
     // ^File
     virtual bool can_read(FileDescription&) const override { return true; }
     virtual bool can_write(FileDescription&) const override { return true; }
-    virtual int read(FileDescription&, byte*, int) override;
-    virtual int write(FileDescription&, const byte*, int) override;
+    virtual int read(FileDescription&, u8*, int) override;
+    virtual int write(FileDescription&, const u8*, int) override;
     virtual String absolute_path(const FileDescription&) const override;
     virtual const char* class_name() const override { return "SharedMemory"; }
     virtual bool is_shared_memory() const override { return true; }

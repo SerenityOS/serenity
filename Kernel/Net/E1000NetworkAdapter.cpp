@@ -92,7 +92,7 @@ OwnPtr<E1000NetworkAdapter> E1000NetworkAdapter::autodetect()
     });
     if (found_address.is_null())
         return nullptr;
-    byte irq = PCI::get_interrupt_line(found_address);
+    u8 irq = PCI::get_interrupt_line(found_address);
     return make<E1000NetworkAdapter>(found_address, irq);
 }
 
@@ -102,7 +102,7 @@ E1000NetworkAdapter* E1000NetworkAdapter::the()
     return s_the;
 }
 
-E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, byte irq)
+E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
     : IRQHandler(irq)
     , m_pci_address(pci_address)
 {
@@ -132,7 +132,7 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, byte irq)
     const auto& mac = mac_address();
     kprintf("E1000: MAC address: %b:%b:%b:%b:%b:%b\n", mac[0], mac[1], mac[2], mac[3], mac[4], mac[5]);
 
-    dword flags = in32(REG_CTRL);
+    u32 flags = in32(REG_CTRL);
     out32(REG_CTRL, flags | ECTRL_SLU);
 
     initialize_rx_descriptors();
@@ -153,9 +153,9 @@ void E1000NetworkAdapter::handle_irq()
 {
     out32(REG_IMASK, 0x1);
 
-    dword status = in32(0xc0);
+    u32 status = in32(0xc0);
     if (status & 4) {
-        dword flags = in32(REG_CTRL);
+        u32 flags = in32(REG_CTRL);
         out32(REG_CTRL, flags | ECTRL_SLU);
     }
     if (status & 0x10) {
@@ -170,7 +170,7 @@ void E1000NetworkAdapter::detect_eeprom()
 {
     out32(REG_EEPROM, 0x1);
     for (volatile int i = 0; i < 999; ++i) {
-        dword data = in32(REG_EEPROM);
+        u32 data = in32(REG_EEPROM);
         if (data & 0x10) {
             m_has_eeprom = true;
             return;
@@ -179,16 +179,16 @@ void E1000NetworkAdapter::detect_eeprom()
     m_has_eeprom = false;
 }
 
-dword E1000NetworkAdapter::read_eeprom(byte address)
+u32 E1000NetworkAdapter::read_eeprom(u8 address)
 {
-    word data = 0;
-    dword tmp = 0;
+    u16 data = 0;
+    u32 tmp = 0;
     if (m_has_eeprom) {
-        out32(REG_EEPROM, ((dword)address << 8) | 1);
+        out32(REG_EEPROM, ((u32)address << 8) | 1);
         while (!((tmp = in32(REG_EEPROM)) & (1 << 4)))
             ;
     } else {
-        out32(REG_EEPROM, ((dword)address << 2) | 1);
+        out32(REG_EEPROM, ((u32)address << 2) | 1);
         while (!((tmp = in32(REG_EEPROM)) & (1 << 1)))
             ;
     }
@@ -199,8 +199,8 @@ dword E1000NetworkAdapter::read_eeprom(byte address)
 void E1000NetworkAdapter::read_mac_address()
 {
     if (m_has_eeprom) {
-        byte mac[6];
-        dword tmp = read_eeprom(0);
+        u8 mac[6];
+        u32 tmp = read_eeprom(0);
         mac[0] = tmp & 0xff;
         mac[1] = tmp >> 8;
         tmp = read_eeprom(1);
@@ -217,14 +217,14 @@ void E1000NetworkAdapter::read_mac_address()
 
 void E1000NetworkAdapter::initialize_rx_descriptors()
 {
-    auto ptr = (dword)kmalloc_eternal(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16);
+    auto ptr = (u32)kmalloc_eternal(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16);
     // Make sure it's 16-byte aligned.
     if (ptr % 16)
         ptr = (ptr + 16) - (ptr % 16);
     m_rx_descriptors = (e1000_rx_desc*)ptr;
     for (int i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = m_rx_descriptors[i];
-        descriptor.addr = (qword)kmalloc_eternal(8192 + 16);
+        descriptor.addr = (u64)kmalloc_eternal(8192 + 16);
         descriptor.status = 0;
     }
 
@@ -239,14 +239,14 @@ void E1000NetworkAdapter::initialize_rx_descriptors()
 
 void E1000NetworkAdapter::initialize_tx_descriptors()
 {
-    auto ptr = (dword)kmalloc_eternal(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16);
+    auto ptr = (u32)kmalloc_eternal(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16);
     // Make sure it's 16-byte aligned.
     if (ptr % 16)
         ptr = (ptr + 16) - (ptr % 16);
     m_tx_descriptors = (e1000_tx_desc*)ptr;
     for (int i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = m_tx_descriptors[i];
-        descriptor.addr = (qword)kmalloc_eternal(8192 + 16);
+        descriptor.addr = (u64)kmalloc_eternal(8192 + 16);
         descriptor.cmd = 0;
     }
 
@@ -260,60 +260,60 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
     out32(REG_TIPG, 0x0060200A);
 }
 
-void E1000NetworkAdapter::out8(word address, byte data)
+void E1000NetworkAdapter::out8(u16 address, u8 data)
 {
     if (m_use_mmio) {
-        auto* ptr = (volatile byte*)(m_mmio_base.get() + address);
+        auto* ptr = (volatile u8*)(m_mmio_base.get() + address);
         *ptr = data;
         return;
     }
     IO::out8(m_io_base + address, data);
 }
 
-void E1000NetworkAdapter::out16(word address, word data)
+void E1000NetworkAdapter::out16(u16 address, u16 data)
 {
     if (m_use_mmio) {
-        auto* ptr = (volatile word*)(m_mmio_base.get() + address);
+        auto* ptr = (volatile u16*)(m_mmio_base.get() + address);
         *ptr = data;
         return;
     }
     IO::out16(m_io_base + address, data);
 }
 
-void E1000NetworkAdapter::out32(word address, dword data)
+void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
     if (m_use_mmio) {
-        auto* ptr = (volatile dword*)(m_mmio_base.get() + address);
+        auto* ptr = (volatile u32*)(m_mmio_base.get() + address);
         *ptr = data;
         return;
     }
     IO::out32(m_io_base + address, data);
 }
 
-byte E1000NetworkAdapter::in8(word address)
+u8 E1000NetworkAdapter::in8(u16 address)
 {
     if (m_use_mmio)
-        return *(volatile byte*)(m_mmio_base.get() + address);
+        return *(volatile u8*)(m_mmio_base.get() + address);
     return IO::in8(m_io_base + address);
 }
 
-word E1000NetworkAdapter::in16(word address)
+u16 E1000NetworkAdapter::in16(u16 address)
 {
     if (m_use_mmio)
-        return *(volatile word*)(m_mmio_base.get() + address);
+        return *(volatile u16*)(m_mmio_base.get() + address);
     return IO::in16(m_io_base + address);
 }
 
-dword E1000NetworkAdapter::in32(word address)
+u32 E1000NetworkAdapter::in32(u16 address)
 {
     if (m_use_mmio)
-        return *(volatile dword*)(m_mmio_base.get() + address);
+        return *(volatile u32*)(m_mmio_base.get() + address);
     return IO::in32(m_io_base + address);
 }
 
-void E1000NetworkAdapter::send_raw(const byte* data, int length)
+void E1000NetworkAdapter::send_raw(const u8* data, int length)
 {
-    dword tx_current = in32(REG_TXDESCTAIL);
+    u32 tx_current = in32(REG_TXDESCTAIL);
 #ifdef E1000_DEBUG
     kprintf("E1000: Sending packet (%d bytes)\n", length);
 #endif
@@ -337,7 +337,7 @@ void E1000NetworkAdapter::send_raw(const byte* data, int length)
 
 void E1000NetworkAdapter::receive()
 {
-    dword rx_current;
+    u32 rx_current;
     for (;;) {
         rx_current = in32(REG_RXDESCTAIL);
         if (rx_current == in32(REG_RXDESCHEAD))
@@ -345,8 +345,8 @@ void E1000NetworkAdapter::receive()
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
         if (!(m_rx_descriptors[rx_current].status & 1))
             break;
-        auto* buffer = (byte*)m_rx_descriptors[rx_current].addr;
-        word length = m_rx_descriptors[rx_current].length;
+        auto* buffer = (u8*)m_rx_descriptors[rx_current].addr;
+        u16 length = m_rx_descriptors[rx_current].length;
 #ifdef E1000_DEBUG
         kprintf("E1000: Received 1 packet @ %p (%u) bytes!\n", buffer, length);
 #endif

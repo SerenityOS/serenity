@@ -13,10 +13,10 @@ public:
 
     static OwnPtr<E1000NetworkAdapter> autodetect();
 
-    E1000NetworkAdapter(PCI::Address, byte irq);
+    E1000NetworkAdapter(PCI::Address, u8 irq);
     virtual ~E1000NetworkAdapter() override;
 
-    virtual void send_raw(const byte*, int) override;
+    virtual void send_raw(const u8*, int) override;
 
 private:
     virtual void handle_irq() override;
@@ -44,28 +44,28 @@ private:
     };
 
     void detect_eeprom();
-    dword read_eeprom(byte address);
+    u32 read_eeprom(u8 address);
     void read_mac_address();
 
-    void write_command(word address, dword);
-    dword read_command(word address);
+    void write_command(u16 address, u32);
+    u32 read_command(u16 address);
 
     void initialize_rx_descriptors();
     void initialize_tx_descriptors();
 
-    void out8(word address, byte);
-    void out16(word address, word);
-    void out32(word address, dword);
-    byte in8(word address);
-    word in16(word address);
-    dword in32(word address);
+    void out8(u16 address, u8);
+    void out16(u16 address, u16);
+    void out32(u16 address, u32);
+    u8 in8(u16 address);
+    u16 in16(u16 address);
+    u32 in32(u16 address);
 
     void receive();
 
     PCI::Address m_pci_address;
-    word m_io_base { 0 };
+    u16 m_io_base { 0 };
     PhysicalAddress m_mmio_base;
-    byte m_interrupt_line { 0 };
+    u8 m_interrupt_line { 0 };
     bool m_has_eeprom { false };
     bool m_use_mmio { false };
 

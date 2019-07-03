@@ -16,7 +16,7 @@
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
 
-static const dword mepoch = 476763780;
+static const u32 mepoch = 476763780;
 
 class Inode;
 class FileDescription;
@@ -30,7 +30,7 @@ public:
     virtual ~FS();
 
     unsigned fsid() const { return m_fsid; }
-    static FS* from_fsid(dword);
+    static FS* from_fsid(u32);
     static void sync();
     static void lock_all();
 
@@ -46,12 +46,12 @@ public:
     virtual unsigned free_inode_count() const { return 0; }
 
     struct DirectoryEntry {
-        DirectoryEntry(const char* name, InodeIdentifier, byte file_type);
-        DirectoryEntry(const char* name, int name_length, InodeIdentifier, byte file_type);
+        DirectoryEntry(const char* name, InodeIdentifier, u8 file_type);
+        DirectoryEntry(const char* name, int name_length, InodeIdentifier, u8 file_type);
         char name[256];
         int name_length { 0 };
         InodeIdentifier inode;
-        byte file_type { 0 };
+        u8 file_type { 0 };
     };
 
     virtual RefPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, int& error) = 0;

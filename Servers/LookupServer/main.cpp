@@ -29,7 +29,7 @@
 static HashMap<String, String> dns_custom_hostnames;
 
 static Vector<String> lookup(const String& hostname, bool& did_timeout, const String& DNS_IP, unsigned short record_type);
-static String parse_dns_name(const byte*, int& offset, int max_offset);
+static String parse_dns_name(const u8*, int& offset, int max_offset);
 
 static void load_etc_hosts()
 {
@@ -46,20 +46,20 @@ static void load_etc_hosts()
 
         auto sections = fields[0].split('.');
         IPv4Address addr {
-            (byte)atoi(sections[0].characters()),
-            (byte)atoi(sections[1].characters()),
-            (byte)atoi(sections[2].characters()),
-            (byte)atoi(sections[3].characters()),
+            (u8)atoi(sections[0].characters()),
+            (u8)atoi(sections[1].characters()),
+            (u8)atoi(sections[2].characters()),
+            (u8)atoi(sections[3].characters()),
         };
 
         auto name = fields[1];
         dns_custom_hostnames.set(name, addr.to_string());
 
         IPv4Address reverse_addr {
-            (byte)atoi(sections[3].characters()),
-            (byte)atoi(sections[2].characters()),
-            (byte)atoi(sections[1].characters()),
-            (byte)atoi(sections[0].characters()),
+            (u8)atoi(sections[3].characters()),
+            (u8)atoi(sections[2].characters()),
+            (u8)atoi(sections[1].characters()),
+            (u8)atoi(sections[0].characters()),
         };
         StringBuilder builder;
         builder.append(reverse_addr.to_string());
@@ -198,9 +198,9 @@ int main(int argc, char** argv)
     return 0;
 }
 
-static word get_next_id()
+static u16 get_next_id()
 {
-    static word s_next_id = 0;
+    static u16 s_next_id = 0;
     return ++s_next_id;
 }
 
@@ -221,7 +221,7 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
         stream << ByteBuffer::wrap(&request_header, sizeof(request_header));
         auto parts = hostname.split('.');
         for (auto& part : parts) {
-            stream << (byte)part.length();
+            stream << (u8)part.length();
             stream << part;
         }
         stream << '\0';
@@ -262,7 +262,7 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
 
     struct sockaddr_in src_addr;
     socklen_t src_addr_len = sizeof(src_addr);
-    byte response_buffer[4096];
+    u8 response_buffer[4096];
     ssize_t nrecv = recvfrom(fd, response_buffer, sizeof(response_buffer) - 1, 0, (struct sockaddr*)&src_addr, &src_addr_len);
     if (nrecv < 0) {
         if (errno == EAGAIN) {
@@ -303,13 +303,13 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
     }
 
     int offset = 0;
-    auto question = parse_dns_name((const byte*)response_header.payload(), offset, nrecv);
+    auto question = parse_dns_name((const u8*)response_header.payload(), offset, nrecv);
     offset += 4;
 
     Vector<String> addresses;
 
-    for (word i = 0; i < response_header.answer_count(); ++i) {
-        auto& record = *(const DNSRecord*)(&((const byte*)response_header.payload())[offset]);
+    for (u16 i = 0; i < response_header.answer_count(); ++i) {
+        auto& record = *(const DNSRecord*)(&((const u8*)response_header.payload())[offset]);
         dbgprintf("LookupServer:     Answer #%u: (question: %s), type=%u, ttl=%u, length=%u, data=",
             i,
             question.characters(),
@@ -320,11 +320,11 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
         offset += sizeof(DNSRecord) + record.data_length();
         if (record.type() == T_PTR) {
             int dummy = 0;
-            auto name = parse_dns_name((const byte*)record.data(), dummy, record.data_length());
+            auto name = parse_dns_name((const u8*)record.data(), dummy, record.data_length());
             dbgprintf("%s\n", name.characters());
             addresses.append(name);
         } else if (record.type() == T_A) {
-            auto ipv4_address = IPv4Address((const byte*)record.data());
+            auto ipv4_address = IPv4Address((const u8*)record.data());
             dbgprintf("%s\n", ipv4_address.to_string().characters());
             addresses.append(ipv4_address.to_string());
         } else {
@@ -337,11 +337,11 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
     return addresses;
 }
 
-static String parse_dns_name(const byte* data, int& offset, int max_offset)
+static String parse_dns_name(const u8* data, int& offset, int max_offset)
 {
     Vector<char, 128> buf;
     while (offset < max_offset) {
-        byte ch = data[offset];
+        u8 ch = data[offset];
         if (ch == '\0') {
             ++offset;
             break;

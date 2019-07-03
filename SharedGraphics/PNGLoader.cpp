@@ -14,43 +14,43 @@
 //#define PNG_STOPWATCH_DEBUG
 
 struct PNG_IHDR {
-    NetworkOrdered<dword> width;
-    NetworkOrdered<dword> height;
-    byte bit_depth { 0 };
-    byte color_type { 0 };
-    byte compression_method { 0 };
-    byte filter_method { 0 };
-    byte interlace_method { 0 };
+    NetworkOrdered<u32> width;
+    NetworkOrdered<u32> height;
+    u8 bit_depth { 0 };
+    u8 color_type { 0 };
+    u8 compression_method { 0 };
+    u8 filter_method { 0 };
+    u8 interlace_method { 0 };
 };
 
 static_assert(sizeof(PNG_IHDR) == 13);
 
 struct Scanline {
-    byte filter { 0 };
+    u8 filter { 0 };
     ByteBuffer data { };
 };
 
 struct PNGLoadingContext {
     int width { -1 };
     int height { -1 };
-    byte bit_depth { 0 };
-    byte color_type { 0 };
-    byte compression_method { 0 };
-    byte filter_method { 0 };
-    byte interlace_method { 0 };
-    byte bytes_per_pixel { 0 };
+    u8 bit_depth { 0 };
+    u8 color_type { 0 };
+    u8 compression_method { 0 };
+    u8 filter_method { 0 };
+    u8 interlace_method { 0 };
+    u8 bytes_per_pixel { 0 };
     bool has_seen_zlib_header { false };
     bool has_alpha() const { return color_type & 4; }
     Vector<Scanline> scanlines;
     RefPtr<GraphicsBitmap> bitmap;
-    byte* decompression_buffer { nullptr };
+    u8* decompression_buffer { nullptr };
     int decompression_buffer_size { 0 };
-    Vector<byte> compressed_data;
+    Vector<u8> compressed_data;
 };
 
 class Streamer {
 public:
-    Streamer(const byte* data, int size)
+    Streamer(const u8* data, int size)
         : m_original_data(data)
         , m_original_size(size)
         , m_data_ptr(data)
@@ -69,7 +69,7 @@ public:
         return true;
     }
 
-    bool read_bytes(byte* buffer, int count)
+    bool read_bytes(u8* buffer, int count)
     {
         if (m_size_remaining < count)
             return false;
@@ -92,13 +92,13 @@ public:
     bool at_end() const { return !m_size_remaining; }
 
 private:
-    const byte* m_original_data;
+    const u8* m_original_data;
     int m_original_size;
-    const byte* m_data_ptr;
+    const u8* m_data_ptr;
     int m_size_remaining;
 };
 
-static RefPtr<GraphicsBitmap> load_png_impl(const byte*, int);
+static RefPtr<GraphicsBitmap> load_png_impl(const u8*, int);
 static bool process_chunk(Streamer&, PNGLoadingContext& context);
 
 RefPtr<GraphicsBitmap> load_png(const StringView& path)
@@ -106,13 +106,13 @@ RefPtr<GraphicsBitmap> load_png(const StringView& path)
     MappedFile mapped_file(path);
     if (!mapped_file.is_valid())
         return nullptr;
-    auto bitmap = load_png_impl((const byte*)mapped_file.pointer(), mapped_file.size());
+    auto bitmap = load_png_impl((const u8*)mapped_file.pointer(), mapped_file.size());
     if (bitmap)
         bitmap->set_mmap_name(String::format("GraphicsBitmap [%dx%d] - Decoded PNG: %s", bitmap->width(), bitmap->height(), FileSystemPath(path).string().characters()));
     return bitmap;
 }
 
-[[gnu::always_inline]] static inline byte paeth_predictor(int a, int b, int c)
+[[gnu::always_inline]] static inline u8 paeth_predictor(int a, int b, int c)
 {
     int p = a + b - c;
     int pa = abs(p - a);
@@ -128,17 +128,17 @@ RefPtr<GraphicsBitmap> load_png(const StringView& path)
 union [[gnu::packed]] Pixel
 {
     RGBA32 rgba { 0 };
-    byte v[4];
+    u8 v[4];
     struct {
-        byte r;
-        byte g;
-        byte b;
-        byte a;
+        u8 r;
+        u8 g;
+        u8 b;
+        u8 a;
     };
 };
 static_assert(sizeof(Pixel) == 4);
 
-template<bool has_alpha, byte filter_type>
+template<bool has_alpha, u8 filter_type>
 [[gnu::always_inline]] static inline void unfilter_impl(GraphicsBitmap& bitmap, int y, const void* dummy_scanline_data)
 {
     auto* dummy_scanline = (const Pixel*)dummy_scanline_data;
@@ -232,9 +232,9 @@ template<bool has_alpha, byte filter_type>
             for (int y = 0; y < context.height; ++y) {
                 struct [[gnu::packed]] Triplet
                 {
-                    byte r;
-                    byte g;
-                    byte b;
+                    u8 r;
+                    u8 g;
+                    u8 b;
                 };
                 auto* triplets = (Triplet*)context.scanlines[y].data.pointer();
                 for (int i = 0; i < context.width; ++i) {
@@ -302,15 +302,15 @@ template<bool has_alpha, byte filter_type>
     }
 }
 
-static RefPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
+static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
 {
 #ifdef PNG_STOPWATCH_DEBUG
     Stopwatch sw("load_png_impl: total");
 #endif
-    const byte* data_ptr = data;
+    const u8* data_ptr = data;
     int data_remaining = data_size;
 
-    const byte png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
+    const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
     if (memcmp(data, png_header, sizeof(png_header))) {
         dbgprintf("Invalid PNG header\n");
         return nullptr;
@@ -354,7 +354,7 @@ static RefPtr<GraphicsBitmap> load_png_impl(const byte* data, int data_size)
         context.scanlines.ensure_capacity(context.height);
         Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
         for (int y = 0; y < context.height; ++y) {
-            byte filter;
+            u8 filter;
             if (!streamer.read(filter))
                 return nullptr;
 
@@ -412,7 +412,7 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
 #endif
 
     context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
-    context.decompression_buffer = (byte*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
+    context.decompression_buffer = (u8*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
     return true;
 }
 
@@ -424,12 +424,12 @@ static bool process_IDAT(const ByteBuffer& data, PNGLoadingContext& context)
 
 static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 {
-    dword chunk_size;
+    u32 chunk_size;
     if (!streamer.read(chunk_size)) {
         printf("Bail at chunk_size\n");
         return false;
     }
-    byte chunk_type[5];
+    u8 chunk_type[5];
     chunk_type[4] = '\0';
     if (!streamer.read_bytes(chunk_type, 4)) {
         printf("Bail at chunk_type\n");
@@ -440,7 +440,7 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
         printf("Bail at chunk_data\n");
         return false;
     }
-    dword chunk_crc;
+    u32 chunk_crc;
     if (!streamer.read(chunk_crc)) {
         printf("Bail at chunk_crc\n");
         return false;

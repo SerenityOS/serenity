@@ -427,7 +427,7 @@ private:
     int m_size { 0 };
     int m_capacity { 0 };
 
-    alignas(T) byte m_inline_buffer_storage[sizeof(T) * inline_capacity];
+    alignas(T) u8 m_inline_buffer_storage[sizeof(T) * inline_capacity];
     T* m_outline_buffer { nullptr };
 };
 

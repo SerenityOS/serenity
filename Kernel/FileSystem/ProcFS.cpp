@@ -125,7 +125,7 @@ static inline InodeIdentifier to_parent_id(const InodeIdentifier& identifier)
 }
 
 #if 0
-static inline byte to_unused_metadata(const InodeIdentifier& identifier)
+static inline u8 to_unused_metadata(const InodeIdentifier& identifier)
 {
     return (identifier.index() >> 8) & 0xf;
 }
@@ -254,7 +254,7 @@ ByteBuffer procfs$pci(InodeIdentifier)
 ByteBuffer procfs$uptime(InodeIdentifier)
 {
     StringBuilder builder;
-    builder.appendf("%u\n", (dword)(g_uptime / 1000));
+    builder.appendf("%u\n", (u32)(g_uptime / 1000));
     return builder.to_byte_buffer();
 }
 
@@ -317,7 +317,7 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
     auto& process = handle->process();
     ProcessPagingScope paging_scope(process);
     struct RecognizedSymbol {
-        dword address;
+        u32 address;
         const KSym* ksym;
     };
     StringBuilder builder;
@@ -325,8 +325,8 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
         builder.appendf("Thread %d:\n", thread.tid());
         Vector<RecognizedSymbol, 64> recognized_symbols;
         recognized_symbols.append({ thread.tss().eip, ksymbolicate(thread.tss().eip) });
-        for (dword* stack_ptr = (dword*)thread.frame_ptr(); process.validate_read_from_kernel(VirtualAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
-            dword retaddr = stack_ptr[1];
+        for (u32* stack_ptr = (u32*)thread.frame_ptr(); process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+            u32 retaddr = stack_ptr[1];
             recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
         }
 
@@ -397,7 +397,7 @@ ByteBuffer procfs$self(InodeIdentifier)
 {
     char buffer[16];
     ksprintf(buffer, "%u", current->pid());
-    return ByteBuffer::copy((const byte*)buffer, strlen(buffer));
+    return ByteBuffer::copy((const u8*)buffer, strlen(buffer));
 }
 
 ByteBuffer procfs$mm(InodeIdentifier)
@@ -471,28 +471,28 @@ ByteBuffer procfs$cpuinfo(InodeIdentifier)
     {
         CPUID cpuid(0);
         builder.appendf("cpuid:     ");
-        auto emit_dword = [&](dword value) {
+        auto emit_u32 = [&](u32 value) {
             builder.appendf("%c%c%c%c",
                 value & 0xff,
                 (value >> 8) & 0xff,
                 (value >> 16) & 0xff,
                 (value >> 24) & 0xff);
         };
-        emit_dword(cpuid.ebx());
-        emit_dword(cpuid.edx());
-        emit_dword(cpuid.ecx());
+        emit_u32(cpuid.ebx());
+        emit_u32(cpuid.edx());
+        emit_u32(cpuid.ecx());
         builder.appendf("\n");
     }
     {
         CPUID cpuid(1);
-        dword stepping = cpuid.eax() & 0xf;
-        dword model = (cpuid.eax() >> 4) & 0xf;
-        dword family = (cpuid.eax() >> 8) & 0xf;
-        dword type = (cpuid.eax() >> 12) & 0x3;
-        dword extended_model = (cpuid.eax() >> 16) & 0xf;
-        dword extended_family = (cpuid.eax() >> 20) & 0xff;
-        dword display_model;
-        dword display_family;
+        u32 stepping = cpuid.eax() & 0xf;
+        u32 model = (cpuid.eax() >> 4) & 0xf;
+        u32 family = (cpuid.eax() >> 8) & 0xf;
+        u32 type = (cpuid.eax() >> 12) & 0x3;
+        u32 extended_model = (cpuid.eax() >> 16) & 0xf;
+        u32 extended_family = (cpuid.eax() >> 20) & 0xff;
+        u32 display_model;
+        u32 display_family;
         if (family == 15) {
             display_family = family + extended_family;
             display_model = model + (extended_model << 4);
@@ -512,8 +512,8 @@ ByteBuffer procfs$cpuinfo(InodeIdentifier)
         // FIXME: Check first that this is supported by calling CPUID with eax=0x80000000
         //        and verifying that the returned eax>=0x80000004.
         char buffer[48];
-        dword* bufptr = reinterpret_cast<dword*>(buffer);
-        auto copy_brand_string_part_to_buffer = [&](dword i) {
+        u32* bufptr = reinterpret_cast<u32*>(buffer);
+        auto copy_brand_string_part_to_buffer = [&](u32 i) {
             CPUID cpuid(0x80000002 + i);
             *bufptr++ = cpuid.eax();
             *bufptr++ = cpuid.ebx();
@@ -858,7 +858,7 @@ InodeMetadata ProcFSInode::metadata() const
     return metadata;
 }
 
-ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription* description) const
+ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDescription* description) const
 {
 #ifdef PROCFS_DEBUG
     dbgprintf("ProcFS: read_bytes %u\n", index());
@@ -1061,7 +1061,7 @@ void ProcFSInode::flush_metadata()
 {
 }
 
-ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer, FileDescription*)
+ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, FileDescription*)
 {
     auto* directory_entry = fs().get_directory_entry(identifier());
     if (!directory_entry || !directory_entry->write_callback)

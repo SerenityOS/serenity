@@ -223,7 +223,7 @@ static KeyCode shifted_key_map[0x100] = {
     Key_Logo,
 };
 
-void KeyboardDevice::key_state_changed(byte raw, bool pressed)
+void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
 {
     Event event;
     event.key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
@@ -239,11 +239,11 @@ void KeyboardDevice::key_state_changed(byte raw, bool pressed)
 void KeyboardDevice::handle_irq()
 {
     for (;;) {
-        byte status = IO::in8(I8042_STATUS);
+        u8 status = IO::in8(I8042_STATUS);
         if (!(((status & I8042_WHICH_BUFFER) == I8042_KEYBOARD_BUFFER) && (status & I8042_BUFFER_FULL)))
             return;
-        byte raw = IO::in8(I8042_BUFFER);
-        byte ch = raw & 0x7f;
+        u8 raw = IO::in8(I8042_BUFFER);
+        u8 ch = raw & 0x7f;
         bool pressed = !(raw & 0x80);
 
 #ifdef KEYBOARD_DEBUG
@@ -316,7 +316,7 @@ bool KeyboardDevice::can_read(FileDescription&) const
     return !m_queue.is_empty();
 }
 
-ssize_t KeyboardDevice::read(FileDescription&, byte* buffer, ssize_t size)
+ssize_t KeyboardDevice::read(FileDescription&, u8* buffer, ssize_t size)
 {
     ssize_t nread = 0;
     while (nread < size) {
@@ -332,7 +332,7 @@ ssize_t KeyboardDevice::read(FileDescription&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t KeyboardDevice::write(FileDescription&, const byte*, ssize_t)
+ssize_t KeyboardDevice::write(FileDescription&, const u8*, ssize_t)
 {
     return 0;
 }

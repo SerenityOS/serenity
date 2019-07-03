@@ -10,7 +10,7 @@ struct InodeMetadata;
 class InodeIdentifier {
 public:
     InodeIdentifier() {}
-    InodeIdentifier(dword fsid, dword inode)
+    InodeIdentifier(u32 fsid, u32 inode)
         : m_fsid(fsid)
         , m_index(inode)
     {
@@ -18,8 +18,8 @@ public:
 
     bool is_valid() const { return m_fsid != 0 && m_index != 0; }
 
-    dword fsid() const { return m_fsid; }
-    dword index() const { return m_index; }
+    u32 fsid() const { return m_fsid; }
+    u32 index() const { return m_index; }
 
     FS* fs();
     const FS* fs() const;
@@ -39,6 +39,6 @@ public:
     String to_string() const { return String::format("%u:%u", m_fsid, m_index); }
 
 private:
-    dword m_fsid { 0 };
-    dword m_index { 0 };
+    u32 m_fsid { 0 };
+    u32 m_index { 0 };
 };

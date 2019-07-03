@@ -8,7 +8,7 @@ static time_t s_boot_time;
 
 void initialize()
 {
-    byte cmos_mode = CMOS::read(0x0b);
+    u8 cmos_mode = CMOS::read(0x0b);
     cmos_mode |= 2; // 24 hour mode
     cmos_mode |= 4; // No BCD mode
     CMOS::write(0x0b, cmos_mode);

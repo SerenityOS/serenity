@@ -31,10 +31,10 @@ int main(int, char**)
     json.for_each([](auto& value) {
         auto fs_object = value.as_object();
         auto fs = fs_object.get("class_name").to_string();
-        auto total_block_count = fs_object.get("total_block_count").to_dword();
-        auto free_block_count = fs_object.get("free_block_count").to_dword();
-        auto total_inode_count = fs_object.get("total_inode_count").to_dword();
-        auto free_inode_count = fs_object.get("free_inode_count").to_dword();
+        auto total_block_count = fs_object.get("total_block_count").to_u32();
+        auto free_block_count = fs_object.get("free_block_count").to_u32();
+        auto total_inode_count = fs_object.get("total_inode_count").to_u32();
+        auto free_inode_count = fs_object.get("free_inode_count").to_u32();
         auto mount_point = fs_object.get("mount_point").to_string();
 
         (void)total_inode_count;

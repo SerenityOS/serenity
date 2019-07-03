@@ -126,7 +126,7 @@ ByteBuffer DiskBackedFS::read_blocks(unsigned index, unsigned count) const
     if (count == 1)
         return read_block(index);
     auto blocks = ByteBuffer::create_uninitialized(count * block_size());
-    byte* out = blocks.pointer();
+    u8* out = blocks.pointer();
 
     for (unsigned i = 0; i < count; ++i) {
         auto block = read_block(index + i);

@@ -10,7 +10,7 @@ namespace AK {
 class Bitmap {
 public:
     // NOTE: A wrapping Bitmap won't try to free the wrapped data.
-    static Bitmap wrap(byte* data, int size)
+    static Bitmap wrap(u8* data, int size)
     {
         return Bitmap(data, size);
     }
@@ -42,13 +42,13 @@ public:
     {
         ASSERT(index < m_size);
         if (value)
-            m_data[index / 8] |= static_cast<byte>((1u << (index % 8)));
+            m_data[index / 8] |= static_cast<u8>((1u << (index % 8)));
         else
-            m_data[index / 8] &= static_cast<byte>(~(1u << (index % 8)));
+            m_data[index / 8] &= static_cast<u8>(~(1u << (index % 8)));
     }
 
-    byte* data() { return m_data; }
-    const byte* data() const { return m_data; }
+    u8* data() { return m_data; }
+    const u8* data() const { return m_data; }
 
     void grow(int size, bool default_value)
     {
@@ -59,7 +59,7 @@ public:
         auto previous_data = m_data;
 
         m_size = size;
-        m_data = reinterpret_cast<byte*>(kmalloc(size_in_bytes()));
+        m_data = reinterpret_cast<u8*>(kmalloc(size_in_bytes()));
 
         fill(default_value);
 
@@ -123,11 +123,11 @@ private:
         , m_owned(true)
     {
         ASSERT(m_size != 0);
-        m_data = reinterpret_cast<byte*>(kmalloc(size_in_bytes()));
+        m_data = reinterpret_cast<u8*>(kmalloc(size_in_bytes()));
         fill(default_value);
     }
 
-    Bitmap(byte* data, int size)
+    Bitmap(u8* data, int size)
         : m_data(data)
         , m_size(size)
         , m_owned(false)
@@ -136,7 +136,7 @@ private:
 
     int size_in_bytes() const { return ceil_div(m_size, 8); }
 
-    byte* m_data { nullptr };
+    u8* m_data { nullptr };
     int m_size { 0 };
     bool m_owned { false };
 };

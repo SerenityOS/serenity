@@ -51,7 +51,7 @@ WSWindowManager::WSWindowManager()
         { "/bin/ProcessManager", "Open ProcessManager..." }
     };
 
-    byte system_menu_name[] = { 0xf8, 0 };
+    u8 system_menu_name[] = { 0xf8, 0 };
     m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
 
     int appIndex = 1;

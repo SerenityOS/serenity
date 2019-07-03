@@ -10,11 +10,11 @@ void* mmx_memcpy(void* dest, const void* src, size_t len)
 {
     ASSERT(len >= 1024);
 
-    auto* dest_ptr = (byte*)dest;
-    auto* src_ptr = (const byte*)src;
+    auto* dest_ptr = (u8*)dest;
+    auto* src_ptr = (const u8*)src;
 
-    if ((dword)dest_ptr & 7) {
-        dword prologue = 8 - ((dword)dest_ptr & 7);
+    if ((u32)dest_ptr & 7) {
+        u32 prologue = 8 - ((u32)dest_ptr & 7);
         len -= prologue;
         asm volatile(
             "rep movsb\n"
@@ -22,7 +22,7 @@ void* mmx_memcpy(void* dest, const void* src, size_t len)
             : "0"(src_ptr), "1"(dest_ptr), "2"(prologue)
             : "memory");
     }
-    for (dword i = len / 64; i; --i) {
+    for (u32 i = len / 64; i; --i) {
         asm volatile(
             "movq (%0), %%mm0\n"
             "movq 8(%0), %%mm1\n"

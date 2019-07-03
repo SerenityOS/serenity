@@ -84,11 +84,11 @@ void MemoryManager::initialize_paging()
 
     for (auto* mmap = (multiboot_memory_map_t*)multiboot_info_ptr->mmap_addr; (unsigned long)mmap < multiboot_info_ptr->mmap_addr + multiboot_info_ptr->mmap_length; mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
         kprintf("MM: Multiboot mmap: base_addr = 0x%x%08x, length = 0x%x%08x, type = 0x%x\n",
-            (dword)(mmap->addr >> 32),
-            (dword)(mmap->addr & 0xffffffff),
-            (dword)(mmap->len >> 32),
-            (dword)(mmap->len & 0xffffffff),
-            (dword)mmap->type);
+            (u32)(mmap->addr >> 32),
+            (u32)(mmap->addr & 0xffffffff),
+            (u32)(mmap->len >> 32),
+            (u32)(mmap->len & 0xffffffff),
+            (u32)mmap->type);
 
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
             continue;
@@ -99,7 +99,7 @@ void MemoryManager::initialize_paging()
 
 #ifdef MM_DEBUG
         kprintf("MM: considering memory at %p - %p\n",
-            (dword)mmap->addr, (dword)(mmap->addr + mmap->len));
+            (u32)mmap->addr, (u32)(mmap->addr + mmap->len));
 #endif
 
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
@@ -163,7 +163,7 @@ void MemoryManager::remove_identity_mapping(PageDirectory& page_directory, Virtu
 {
     InterruptDisabler disabler;
     // FIXME: ASSERT(vaddr is 4KB aligned);
-    for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
+    for (u32 offset = 0; offset < size; offset += PAGE_SIZE) {
         auto pte_address = vaddr.offset(offset);
         auto& pte = ensure_pte(page_directory, pte_address);
         pte.set_physical_page_base(0);
@@ -177,8 +177,8 @@ void MemoryManager::remove_identity_mapping(PageDirectory& page_directory, Virtu
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    dword page_directory_index = (vaddr.get() >> 22) & 0x3ff;
-    dword page_table_index = (vaddr.get() >> 12) & 0x3ff;
+    u32 page_directory_index = (vaddr.get() >> 22) & 0x3ff;
+    u32 page_table_index = (vaddr.get() >> 12) & 0x3ff;
 
     PageDirectoryEntry& pde = page_directory.entries()[page_directory_index];
     if (!pde.is_present()) {
@@ -187,13 +187,13 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 #endif
         if (page_directory_index == 0) {
             ASSERT(&page_directory == m_kernel_page_directory);
-            pde.set_page_table_base((dword)m_page_table_zero);
+            pde.set_page_table_base((u32)m_page_table_zero);
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);
         } else if (page_directory_index == 1) {
             ASSERT(&page_directory == m_kernel_page_directory);
-            pde.set_page_table_base((dword)m_page_table_one);
+            pde.set_page_table_base((u32)m_page_table_one);
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);
@@ -224,7 +224,7 @@ void MemoryManager::map_protected(VirtualAddress vaddr, size_t length)
 {
     InterruptDisabler disabler;
     ASSERT(vaddr.is_page_aligned());
-    for (dword offset = 0; offset < length; offset += PAGE_SIZE) {
+    for (u32 offset = 0; offset < length; offset += PAGE_SIZE) {
         auto pte_address = vaddr.offset(offset);
         auto& pte = ensure_pte(kernel_page_directory(), pte_address);
         pte.set_physical_page_base(pte_address.get());
@@ -239,7 +239,7 @@ void MemoryManager::create_identity_mapping(PageDirectory& page_directory, Virtu
 {
     InterruptDisabler disabler;
     ASSERT((vaddr.get() & ~PAGE_MASK) == 0);
-    for (dword offset = 0; offset < size; offset += PAGE_SIZE) {
+    for (u32 offset = 0; offset < size; offset += PAGE_SIZE) {
         auto pte_address = vaddr.offset(offset);
         auto& pte = ensure_pte(page_directory, pte_address);
         pte.set_physical_page_base(pte_address.get());
@@ -336,8 +336,8 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 #endif
     auto physical_page_to_copy = move(vmo.physical_pages()[page_index_in_region]);
     auto physical_page = allocate_user_physical_page(ShouldZeroFill::No);
-    byte* dest_ptr = quickmap_page(*physical_page);
-    const byte* src_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
+    u8* dest_ptr = quickmap_page(*physical_page);
+    const u8* src_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("      >> COW P%x <- P%x\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
 #endif
@@ -374,7 +374,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     dbgprintf("MM: page_in_from_inode ready to read from inode\n");
 #endif
     sti();
-    byte page_buffer[PAGE_SIZE];
+    u8 page_buffer[PAGE_SIZE];
     auto& inode = *vmo.inode();
     auto nread = inode.read_bytes(vmo.inode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, page_buffer, nullptr);
     if (nread < 0) {
@@ -392,7 +392,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
         return false;
     }
     remap_region_page(region, page_index_in_region, true);
-    byte* dest_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
+    u8* dest_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
     memcpy(dest_ptr, page_buffer, PAGE_SIZE);
     return true;
 }
@@ -406,7 +406,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 #endif
     ASSERT(fault.vaddr() != m_quickmap_addr);
     if (fault.is_not_present() && fault.vaddr().get() >= 0xc0000000) {
-        dword page_directory_index = (fault.vaddr().get() >> 22) & 0x3ff;
+        u32 page_directory_index = (fault.vaddr().get() >> 22) & 0x3ff;
         if (kernel_page_directory().entries()[page_directory_index].is_present()) {
             current->process().page_directory().entries()[page_directory_index].copy_from({}, kernel_page_directory().entries()[page_directory_index]);
             dbgprintf("NP(kernel): copying new kernel mapping for L%x into process\n", fault.vaddr().get());
@@ -510,8 +510,8 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 #endif
 
     if (should_zero_fill == ShouldZeroFill::Yes) {
-        auto* ptr = (dword*)quickmap_page(*page);
-        fast_dword_fill(ptr, 0, PAGE_SIZE / sizeof(dword));
+        auto* ptr = (u32*)quickmap_page(*page);
+        fast_u32_fill(ptr, 0, PAGE_SIZE / sizeof(u32));
         unquickmap_page();
     }
 
@@ -563,7 +563,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
     dbgprintf("MM: allocate_supervisor_physical_page vending P%p\n", page->paddr().get());
 #endif
 
-    fast_dword_fill((dword*)page->paddr().as_ptr(), 0, PAGE_SIZE / sizeof(dword));
+    fast_u32_fill((u32*)page->paddr().as_ptr(), 0, PAGE_SIZE / sizeof(u32));
     ++m_super_physical_pages_used;
     return page;
 }
@@ -603,7 +603,7 @@ void MemoryManager::map_for_kernel(VirtualAddress vaddr, PhysicalAddress paddr)
     flush_tlb(vaddr);
 }
 
-byte* MemoryManager::quickmap_page(PhysicalPage& physical_page)
+u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!m_quickmap_in_use);
@@ -615,7 +615,7 @@ byte* MemoryManager::quickmap_page(PhysicalPage& physical_page)
     pte.set_writable(true);
     pte.set_user_allowed(false);
     flush_tlb(page_vaddr);
-    ASSERT((dword)pte.physical_page_base() == physical_page.paddr().get());
+    ASSERT((u32)pte.physical_page_base() == physical_page.paddr().get());
 #ifdef MM_DEBUG
     dbgprintf("MM: >> quickmap_page L%x => P%x @ PTE=%p\n", page_vaddr, physical_page.paddr().get(), pte.ptr());
 #endif

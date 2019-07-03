@@ -4,23 +4,23 @@
 
 namespace PIC {
 
-void enable(byte number);
-void disable(byte number);
-void eoi(byte number);
+void enable(u8 number);
+void disable(u8 number);
+void eoi(u8 number);
 void initialize();
-word get_isr();
-word get_irr();
+u16 get_isr();
+u16 get_irr();
 
 }
 
 class IRQHandlerScope {
 public:
-    explicit IRQHandlerScope(byte irq)
+    explicit IRQHandlerScope(u8 irq)
         : m_irq(irq)
     {
     }
     ~IRQHandlerScope() { PIC::eoi(m_irq); }
 
 private:
-    byte m_irq { 0 };
+    u8 m_irq { 0 };
 };

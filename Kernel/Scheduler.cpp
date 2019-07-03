@@ -10,7 +10,7 @@
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
 
-static dword time_slice_for(Process::Priority priority)
+static u32 time_slice_for(Process::Priority priority)
 {
     // One time slice unit == 1ms
     switch (priority) {
@@ -30,11 +30,11 @@ Thread* current;
 Thread* g_last_fpu_thread;
 Thread* g_finalizer;
 static Process* s_colonel_process;
-qword g_uptime;
-static qword s_beep_timeout;
+u64 g_uptime;
+static u64 s_beep_timeout;
 
 struct TaskRedirectionData {
-    word selector;
+    u16 selector;
     TSS32 tss;
 };
 static TaskRedirectionData s_redirection;

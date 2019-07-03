@@ -18,9 +18,9 @@ public:
         Execute = 4,
     };
 
-    Region(const Range&, const String&, byte access, bool cow = false);
-    Region(const Range&, NonnullRefPtr<VMObject>&&, size_t offset_in_vmo, const String&, byte access, bool cow = false);
-    Region(const Range&, RefPtr<Inode>&&, const String&, byte access);
+    Region(const Range&, const String&, u8 access, bool cow = false);
+    Region(const Range&, NonnullRefPtr<VMObject>&&, size_t offset_in_vmo, const String&, u8 access, bool cow = false);
+    Region(const Range&, RefPtr<Inode>&&, const String&, u8 access);
     ~Region();
 
     VirtualAddress vaddr() const { return m_range.base(); }
@@ -102,7 +102,7 @@ private:
     size_t m_offset_in_vmo { 0 };
     NonnullRefPtr<VMObject> m_vmo;
     String m_name;
-    byte m_access { 0 };
+    u8 m_access { 0 };
     bool m_shared { false };
     Bitmap m_cow_map;
 };

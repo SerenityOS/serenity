@@ -29,22 +29,22 @@ struct [[gnu::packed]] allocation_t
 #define BASE_PHYSICAL (3 * MB)
 #define RANGE_SIZE (1 * MB)
 
-static byte alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
+static u8 alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 
 volatile size_t sum_alloc = 0;
 volatile size_t sum_free = POOL_SIZE;
 volatile size_t kmalloc_sum_eternal = 0;
 
-dword g_kmalloc_call_count;
-dword g_kfree_call_count;
+u32 g_kmalloc_call_count;
+u32 g_kfree_call_count;
 bool g_dump_kmalloc_stacks;
 
-static byte* s_next_eternal_ptr;
-static byte* s_end_of_eternal_range;
+static u8* s_next_eternal_ptr;
+static u8* s_end_of_eternal_range;
 
 bool is_kmalloc_address(const void* ptr)
 {
-    if (ptr >= (byte*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
+    if (ptr >= (u8*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
         return true;
     return (size_t)ptr >= BASE_PHYSICAL && (size_t)ptr <= (BASE_PHYSICAL + POOL_SIZE);
 }
@@ -58,7 +58,7 @@ void kmalloc_init()
     sum_alloc = 0;
     sum_free = POOL_SIZE;
 
-    s_next_eternal_ptr = (byte*)ETERNAL_BASE_PHYSICAL;
+    s_next_eternal_ptr = (u8*)ETERNAL_BASE_PHYSICAL;
     s_end_of_eternal_range = s_next_eternal_ptr + ETERNAL_RANGE_SIZE;
 }
 
@@ -137,7 +137,7 @@ void* kmalloc_impl(size_t size)
 
                 if (chunks_here == chunks_needed) {
                     auto* a = (allocation_t*)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
-                    byte* ptr = (byte*)a;
+                    u8* ptr = (u8*)a;
                     ptr += sizeof(allocation_t);
                     a->nchunk = chunks_needed;
                     a->start = first_chunk;
@@ -173,7 +173,7 @@ void kfree(void* ptr)
     InterruptDisabler disabler;
     ++g_kfree_call_count;
 
-    auto* a = (allocation_t*)((((byte*)ptr) - sizeof(allocation_t)));
+    auto* a = (allocation_t*)((((u8*)ptr) - sizeof(allocation_t)));
 
     for (size_t k = a->start; k < (a->start + a->nchunk); ++k)
         alloc_map[k / 8] &= ~(1 << (k % 8));

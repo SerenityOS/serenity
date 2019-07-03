@@ -27,9 +27,9 @@ struct Traits<unsigned> : public GenericTraits<unsigned> {
 };
 
 template<>
-struct Traits<word> : public GenericTraits<word> {
-    static unsigned hash(word u) { return int_hash(u); }
-    static void dump(word u) { kprintf("%u", u); }
+struct Traits<u16> : public GenericTraits<u16> {
+    static unsigned hash(u16 u) { return int_hash(u); }
+    static void dump(u16 u) { kprintf("%u", u); }
 };
 
 template<typename T>

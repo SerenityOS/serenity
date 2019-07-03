@@ -198,12 +198,12 @@ void ProcessModel::update()
     auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
     json.as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
-        pid_t pid = process_object.get("pid").to_dword();
-        unsigned nsched = process_object.get("times_scheduled").to_dword();
+        pid_t pid = process_object.get("pid").to_u32();
+        unsigned nsched = process_object.get("times_scheduled").to_u32();
         ProcessState state;
         state.pid = pid;
         state.nsched = nsched;
-        unsigned uid = process_object.get("uid").to_dword();
+        unsigned uid = process_object.get("uid").to_u32();
         {
             auto it = m_usernames.find((uid_t)uid);
             if (it != m_usernames.end())
@@ -212,11 +212,11 @@ void ProcessModel::update()
                 state.user = String::number(uid);
         }
         state.priority = process_object.get("priority").to_string();
-        state.syscalls = process_object.get("syscall_count").to_dword();
+        state.syscalls = process_object.get("syscall_count").to_u32();
         state.state = process_object.get("state").to_string();
         state.name = process_object.get("name").to_string();
-        state.virtual_size = process_object.get("amount_virtual").to_dword();
-        state.physical_size = process_object.get("amount_resident").to_dword();
+        state.virtual_size = process_object.get("amount_virtual").to_u32();
+        state.physical_size = process_object.get("amount_resident").to_u32();
         sum_nsched += nsched;
         {
             auto it = m_processes.find(pid);
@@ -240,7 +240,7 @@ void ProcessModel::update()
             continue;
         }
         auto& process = *it.value;
-        dword nsched_diff = process.current_state.nsched - process.previous_state.nsched;
+        u32 nsched_diff = process.current_state.nsched - process.previous_state.nsched;
         process.current_state.cpu_percent = ((float)nsched_diff * 100) / (float)(sum_nsched - last_sum_nsched);
         if (it.key != 0) {
             total_cpu_percent += process.current_state.cpu_percent;

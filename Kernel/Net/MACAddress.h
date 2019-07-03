@@ -9,13 +9,13 @@ class [[gnu::packed]] MACAddress
 {
 public:
     MACAddress() {}
-    MACAddress(const byte data[6])
+    MACAddress(const u8 data[6])
     {
         memcpy(m_data, data, 6);
     }
     ~MACAddress() {}
 
-    byte operator[](int i) const
+    u8 operator[](int i) const
     {
         ASSERT(i >= 0 && i < 6);
         return m_data[i];
@@ -32,7 +32,7 @@ public:
     }
 
 private:
-    byte m_data[6];
+    u8 m_data[6];
 };
 
 static_assert(sizeof(MACAddress) == 6);

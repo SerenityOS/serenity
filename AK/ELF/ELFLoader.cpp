@@ -8,7 +8,7 @@
 
 //#define ELFLOADER_DEBUG
 
-ELFLoader::ELFLoader(const byte* buffer)
+ELFLoader::ELFLoader(const u8* buffer)
     : m_image(buffer)
 {
 }
@@ -81,7 +81,7 @@ char* ELFLoader::symbol_ptr(const char* name)
     return found_ptr;
 }
 
-String ELFLoader::symbolicate(dword address) const
+String ELFLoader::symbolicate(u32 address) const
 {
     SortedSymbol* sorted_symbols = nullptr;
 #ifdef KERNEL

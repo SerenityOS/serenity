@@ -16,7 +16,7 @@ Lockable<HashTable<FIFO*>>& all_fifos()
     return *s_table;
 }
 
-RefPtr<FIFO> FIFO::from_fifo_id(dword id)
+RefPtr<FIFO> FIFO::from_fifo_id(u32 id)
 {
     auto* ptr = reinterpret_cast<FIFO*>(id);
     LOCKER(all_fifos().lock());
@@ -93,7 +93,7 @@ bool FIFO::can_write(FileDescription&) const
     return m_buffer.bytes_in_write_buffer() < 4096 || !m_readers;
 }
 
-ssize_t FIFO::read(FileDescription&, byte* buffer, ssize_t size)
+ssize_t FIFO::read(FileDescription&, u8* buffer, ssize_t size)
 {
     if (!m_writers && m_buffer.is_empty())
         return 0;
@@ -107,7 +107,7 @@ ssize_t FIFO::read(FileDescription&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t FIFO::write(FileDescription&, const byte* buffer, ssize_t size)
+ssize_t FIFO::write(FileDescription&, const u8* buffer, ssize_t size)
 {
     if (!m_readers) {
         current->process().send_signal(SIGPIPE, &current->process());

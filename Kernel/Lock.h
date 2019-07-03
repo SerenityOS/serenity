@@ -9,9 +9,9 @@
 class Thread;
 extern Thread* current;
 
-static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
+static inline u32 CAS(volatile u32* mem, u32 newval, u32 oldval)
 {
-    dword ret;
+    u32 ret;
     asm volatile(
         "cmpxchgl %2, %1"
         : "=a"(ret), "+m"(*mem)
@@ -35,8 +35,8 @@ public:
     const char* name() const { return m_name; }
 
 private:
-    volatile dword m_lock { 0 };
-    dword m_level { 0 };
+    volatile u32 m_lock { 0 };
+    u32 m_level { 0 };
     Thread* m_holder { nullptr };
     const char* m_name { nullptr };
 };

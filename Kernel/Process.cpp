@@ -154,7 +154,7 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
     if (!validate_read_str(name))
         return -EFAULT;
-    auto* region = region_from_range(VirtualAddress((dword)addr), size);
+    auto* region = region_from_range(VirtualAddress((u32)addr), size);
     if (!region)
         return -EINVAL;
     region->set_name(String(name));
@@ -176,10 +176,10 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     const char* name = params->name;
     if (size == 0)
         return (void*)-EINVAL;
-    if ((dword)addr & ~PAGE_MASK)
+    if ((u32)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
     if (flags & MAP_ANONYMOUS) {
-        auto* region = allocate_region(VirtualAddress((dword)addr), size, "mmap", prot, false);
+        auto* region = allocate_region(VirtualAddress((u32)addr), size, "mmap", prot, false);
         if (!region)
             return (void*)-ENOMEM;
         if (flags & MAP_SHARED)
@@ -193,7 +193,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     auto* description = file_description(fd);
     if (!description)
         return (void*)-EBADF;
-    auto region_or_error = description->mmap(*this, VirtualAddress((dword)addr), offset, size, prot);
+    auto region_or_error = description->mmap(*this, VirtualAddress((u32)addr), offset, size, prot);
     if (region_or_error.is_error())
         return (void*)(int)region_or_error.error();
     auto region = region_or_error.value();
@@ -206,7 +206,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 
 int Process::sys$munmap(void* addr, size_t size)
 {
-    auto* region = region_from_range(VirtualAddress((dword)addr), size);
+    auto* region = region_from_range(VirtualAddress((u32)addr), size);
     if (!region)
         return -EINVAL;
     if (!deallocate_region(*region))
@@ -323,7 +323,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (!metadata.size)
         return -ENOTIMPL;
 
-    dword entry_eip = 0;
+    u32 entry_eip = 0;
     // FIXME: Is there a race here?
     auto old_page_directory = move(m_page_directory);
     m_page_directory = PageDirectory::create_for_userspace();
@@ -420,7 +420,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     m_name = parts.take_last();
 
     // ss0 sp!!!!!!!!!
-    dword old_esp0 = main_thread().m_tss.esp0;
+    u32 old_esp0 = main_thread().m_tss.esp0;
 
     memset(&main_thread().m_tss, 0, sizeof(main_thread().m_tss));
     main_thread().m_tss.eflags = 0x0202;
@@ -548,7 +548,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
 Process* Process::create_kernel_process(String&& name, void (*e)())
 {
     auto* process = new Process(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
-    process->main_thread().tss().eip = (dword)e;
+    process->main_thread().tss().eip = (u32)e;
 
     if (process->pid() != 0) {
         InterruptDisabler disabler;
@@ -679,18 +679,18 @@ void Process::create_signal_trampolines_if_needed()
     // FIXME: Remap as read-only after setup.
     auto* region = allocate_region(VirtualAddress(), PAGE_SIZE, "Signal trampolines", PROT_READ | PROT_WRITE | PROT_EXEC);
     m_return_to_ring3_from_signal_trampoline = region->vaddr();
-    byte* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
+    u8* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
     *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
     *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
-    *code_ptr++ = 0xb8; // mov eax, <dword>
-    *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
-    code_ptr += sizeof(dword);
+    *code_ptr++ = 0xb8; // mov eax, <u32>
+    *(u32*)code_ptr = Syscall::SC_restore_signal_mask;
+    code_ptr += sizeof(u32);
     *code_ptr++ = 0xcd; // int 0x82
     *code_ptr++ = 0x82;
 
     *code_ptr++ = 0x83; // add esp, (stack alignment padding)
     *code_ptr++ = 0xc4;
-    *code_ptr++ = sizeof(dword) * 3;
+    *code_ptr++ = sizeof(u32) * 3;
 
     *code_ptr++ = 0x61; // popa
     *code_ptr++ = 0x9d; // popf
@@ -698,26 +698,26 @@ void Process::create_signal_trampolines_if_needed()
     *code_ptr++ = 0x0f; // ud2
     *code_ptr++ = 0x0b;
 
-    m_return_to_ring0_from_signal_trampoline = VirtualAddress((dword)code_ptr);
+    m_return_to_ring0_from_signal_trampoline = VirtualAddress((u32)code_ptr);
     *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
     *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
-    *code_ptr++ = 0xb8; // mov eax, <dword>
-    *(dword*)code_ptr = Syscall::SC_restore_signal_mask;
-    code_ptr += sizeof(dword);
+    *code_ptr++ = 0xb8; // mov eax, <u32>
+    *(u32*)code_ptr = Syscall::SC_restore_signal_mask;
+    code_ptr += sizeof(u32);
     *code_ptr++ = 0xcd; // int 0x82
     // NOTE: Stack alignment padding doesn't matter when returning to ring0.
     //       Nothing matters really, as we're returning by replacing the entire TSS.
     *code_ptr++ = 0x82;
-    *code_ptr++ = 0xb8; // mov eax, <dword>
-    *(dword*)code_ptr = Syscall::SC_sigreturn;
-    code_ptr += sizeof(dword);
+    *code_ptr++ = 0xb8; // mov eax, <u32>
+    *(u32*)code_ptr = Syscall::SC_sigreturn;
+    code_ptr += sizeof(u32);
     *code_ptr++ = 0xcd; // int 0x82
     *code_ptr++ = 0x82;
     *code_ptr++ = 0x0f; // ud2
     *code_ptr++ = 0x0b;
 }
 
-int Process::sys$restore_signal_mask(dword mask)
+int Process::sys$restore_signal_mask(u32 mask)
 {
     current->m_signal_mask = mask;
     return 0;
@@ -740,7 +740,7 @@ void Process::sys$sigreturn()
     ASSERT_NOT_REACHED();
 }
 
-void Process::crash(int signal, dword eip)
+void Process::crash(int signal, u32 eip)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!is_dead());
@@ -793,7 +793,7 @@ ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
-    return description->get_dir_entries((byte*)buffer, size);
+    return description->get_dir_entries((u8*)buffer, size);
 }
 
 int Process::sys$lseek(int fd, off_t offset, int whence)
@@ -857,7 +857,7 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
 
     int nwritten = 0;
     for (int i = 0; i < iov_count; ++i) {
-        int rc = do_write(*description, (const byte*)iov[i].iov_base, iov[i].iov_len);
+        int rc = do_write(*description, (const u8*)iov[i].iov_base, iov[i].iov_len);
         if (rc < 0) {
             if (nwritten == 0)
                 return rc;
@@ -875,7 +875,7 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     return nwritten;
 }
 
-ssize_t Process::do_write(FileDescription& description, const byte* data, int data_size)
+ssize_t Process::do_write(FileDescription& description, const u8* data, int data_size)
 {
     ssize_t nwritten = 0;
     if (!description.is_blocking()) {
@@ -921,7 +921,7 @@ ssize_t Process::do_write(FileDescription& description, const byte* data, int da
     return nwritten;
 }
 
-ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
+ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
 {
     if (size < 0)
         return -EINVAL;
@@ -944,7 +944,7 @@ ssize_t Process::sys$write(int fd, const byte* data, ssize_t size)
     return nwritten;
 }
 
-ssize_t Process::sys$read(int fd, byte* buffer, ssize_t size)
+ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
 {
     if (size < 0)
         return -EINVAL;
@@ -1005,7 +1005,7 @@ int Process::sys$access(const char* pathname, int mode)
     return VFS::the().access(StringView(pathname), mode, current_directory());
 }
 
-int Process::sys$fcntl(int fd, int cmd, dword arg)
+int Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     (void)cmd;
     (void)arg;
@@ -1144,7 +1144,7 @@ int Process::sys$open(const char* path, int options, mode_t mode)
     if (options & O_DIRECTORY && !description->is_directory())
         return -ENOTDIR; // FIXME: This should be handled by VFS::open.
     description->set_file_flags(options);
-    dword fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
+    u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(description), fd_flags);
     return fd;
 }
@@ -1284,7 +1284,7 @@ int Process::sys$usleep(useconds_t usec)
     current->sleep(usec / 1000);
     if (current->m_wakeup_time > g_uptime) {
         ASSERT(current->m_was_interrupted_while_blocked);
-        dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - g_uptime;
+        u32 ticks_left_until_original_wakeup_time = current->m_wakeup_time - g_uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;
@@ -1297,7 +1297,7 @@ int Process::sys$sleep(unsigned seconds)
     current->sleep(seconds * TICKS_PER_SECOND);
     if (current->m_wakeup_time > g_uptime) {
         ASSERT(current->m_was_interrupted_while_blocked);
-        dword ticks_left_until_original_wakeup_time = current->m_wakeup_time - g_uptime;
+        u32 ticks_left_until_original_wakeup_time = current->m_wakeup_time - g_uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;
@@ -1495,7 +1495,7 @@ bool Process::validate_read_str(const char* str)
 bool Process::validate_read(const void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
-    VirtualAddress first_address((dword)address);
+    VirtualAddress first_address((u32)address);
     VirtualAddress last_address = first_address.offset(size - 1);
     if (is_ring0()) {
         auto kmc_result = check_kernel_memory_access(first_address, false);
@@ -1519,7 +1519,7 @@ bool Process::validate_read(const void* address, ssize_t size) const
 bool Process::validate_write(void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
-    VirtualAddress first_address((dword)address);
+    VirtualAddress first_address((u32)address);
     VirtualAddress last_address = first_address.offset(size - 1);
     if (is_ring0()) {
         if (is_kmalloc_address(address))
@@ -1699,7 +1699,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
         old_act->sa_sigaction = (decltype(old_act->sa_sigaction))action.handler_or_sigaction.get();
     }
     action.flags = act->sa_flags;
-    action.handler_or_sigaction = VirtualAddress((dword)act->sa_sigaction);
+    action.handler_or_sigaction = VirtualAddress((u32)act->sa_sigaction);
     return 0;
 }
 
@@ -1923,7 +1923,7 @@ int Process::sys$rmdir(const char* pathname)
     return VFS::the().rmdir(StringView(pathname), current_directory());
 }
 
-int Process::sys$read_tsc(dword* lsw, dword* msw)
+int Process::sys$read_tsc(u32* lsw, u32* msw)
 {
     if (!validate_write_typed(lsw))
         return -EFAULT;
@@ -2587,7 +2587,7 @@ const char* to_string(Process::Priority priority)
     return nullptr;
 }
 
-void Process::terminate_due_to_signal(byte signal)
+void Process::terminate_due_to_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
@@ -2597,7 +2597,7 @@ void Process::terminate_due_to_signal(byte signal)
     die();
 }
 
-void Process::send_signal(byte signal, Process* sender)
+void Process::send_signal(u8 signal, Process* sender)
 {
     // FIXME(Thread): Find the appropriate thread to deliver the signal to.
     main_thread().send_signal(signal, sender);
@@ -2619,7 +2619,7 @@ int Process::sys$create_thread(int (*entry)(void*), void* argument)
         return -EFAULT;
     auto* thread = new Thread(*this);
     auto& tss = thread->tss();
-    tss.eip = (dword)entry;
+    tss.eip = (u32)entry;
     tss.eflags = 0x0202;
     tss.cr3 = page_directory().cr3();
     thread->make_userspace_stack_for_secondary_thread(argument);
@@ -2734,7 +2734,7 @@ void Process::FileDescriptionAndFlags::clear()
     flags = 0;
 }
 
-void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& d, dword f)
+void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& d, u32 f)
 {
     description = move(d);
     flags = f;

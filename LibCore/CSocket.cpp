@@ -26,7 +26,7 @@ bool CSocket::connect(const String& hostname, int port)
         return false;
     }
 
-    IPv4Address host_address((const byte*)hostent->h_addr_list[0]);
+    IPv4Address host_address((const u8*)hostent->h_addr_list[0]);
     dbgprintf("CSocket::connect: Resolved '%s' to %s\n", hostname.characters(), host_address.to_string().characters());
     return connect(host_address, port);
 }

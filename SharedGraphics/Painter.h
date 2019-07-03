@@ -64,7 +64,7 @@ public:
     }
 
 protected:
-    void set_pixel_with_draw_op(dword& pixel, const Color&);
+    void set_pixel_with_draw_op(u32& pixel, const Color&);
     void fill_rect_with_draw_op(const Rect&, Color);
     void blit_with_alpha(const Point&, const GraphicsBitmap&, const Rect& src_rect);
     void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);

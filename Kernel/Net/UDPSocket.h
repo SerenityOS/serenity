@@ -9,12 +9,12 @@ public:
     static NonnullRefPtr<UDPSocket> create(int protocol);
     virtual ~UDPSocket() override;
 
-    static UDPSocketHandle from_port(word);
+    static UDPSocketHandle from_port(u16);
 
 private:
     explicit UDPSocket(int protocol);
     virtual const char* class_name() const override { return "UDPSocket"; }
-    static Lockable<HashMap<word, UDPSocket*>>& sockets_by_port();
+    static Lockable<HashMap<u16, UDPSocket*>>& sockets_by_port();
 
     virtual int protocol_receive(const ByteBuffer&, void* buffer, size_t buffer_size, int flags) override;
     virtual int protocol_send(const void*, int) override;

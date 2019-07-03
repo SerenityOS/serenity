@@ -7,13 +7,13 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
-static dword s_lastFileSystemID;
-static HashMap<dword, FS*>* s_fs_map;
+static u32 s_lastFileSystemID;
+static HashMap<u32, FS*>* s_fs_map;
 
-static HashMap<dword, FS*>& all_fses()
+static HashMap<u32, FS*>& all_fses()
 {
     if (!s_fs_map)
-        s_fs_map = new HashMap<dword, FS*>();
+        s_fs_map = new HashMap<u32, FS*>();
     return *s_fs_map;
 }
 
@@ -28,7 +28,7 @@ FS::~FS()
     all_fses().remove(m_fsid);
 }
 
-FS* FS::from_fsid(dword id)
+FS* FS::from_fsid(u32 id)
 {
     auto it = all_fses().find(id);
     if (it != all_fses().end())
@@ -36,7 +36,7 @@ FS* FS::from_fsid(dword id)
     return nullptr;
 }
 
-FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
+FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, u8 ft)
     : name_length(strlen(n))
     , inode(i)
     , file_type(ft)
@@ -45,7 +45,7 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, byte ft)
     name[name_length] = '\0';
 }
 
-FS::DirectoryEntry::DirectoryEntry(const char* n, int nl, InodeIdentifier i, byte ft)
+FS::DirectoryEntry::DirectoryEntry(const char* n, int nl, InodeIdentifier i, u8 ft)
     : name_length(nl)
     , inode(i)
     , file_type(ft)

@@ -32,19 +32,19 @@ unsigned FileBackedDiskDevice::block_size() const
     return m_block_size;
 }
 
-bool FileBackedDiskDevice::read_block(unsigned index, byte* out) const
+bool FileBackedDiskDevice::read_block(unsigned index, u8* out) const
 {
     DiskOffset offset = index * m_block_size;
     return read_internal(offset, block_size(), out);
 }
 
-bool FileBackedDiskDevice::write_block(unsigned index, const byte* data)
+bool FileBackedDiskDevice::write_block(unsigned index, const u8* data)
 {
     DiskOffset offset = index * m_block_size;
     return write_internal(offset, block_size(), data);
 }
 
-bool FileBackedDiskDevice::read_internal(DiskOffset offset, unsigned length, byte* out) const
+bool FileBackedDiskDevice::read_internal(DiskOffset offset, unsigned length, u8* out) const
 {
 #ifndef IGNORE_FILE_LENGTH
     if (offset + length >= m_file_length)
@@ -54,12 +54,12 @@ bool FileBackedDiskDevice::read_internal(DiskOffset offset, unsigned length, byt
     printf("[FileBackedDiskDevice] Read device @ offset %llx, length %u\n", offset, length);
 #endif
     fseeko(m_file, offset, SEEK_SET);
-    unsigned nread = fread(out, sizeof(byte), length, m_file);
+    unsigned nread = fread(out, sizeof(u8), length, m_file);
     ASSERT(nread == length);
     return true;
 }
 
-bool FileBackedDiskDevice::write_internal(DiskOffset offset, unsigned length, const byte* data)
+bool FileBackedDiskDevice::write_internal(DiskOffset offset, unsigned length, const u8* data)
 {
 #ifndef IGNORE_FILE_LENGTH
     if (offset + length >= m_file_length)
@@ -70,7 +70,7 @@ bool FileBackedDiskDevice::write_internal(DiskOffset offset, unsigned length, co
 #endif
     fseeko(m_file, offset, SEEK_SET);
     // size_t fwrite(const void *ptr, size_t size, size_t nmemb, FILE *stream);
-    unsigned nwritten = fwrite(data, sizeof(byte), length, m_file);
+    unsigned nwritten = fwrite(data, sizeof(u8), length, m_file);
     ASSERT(nwritten == length);
     return true;
 }

@@ -5,13 +5,13 @@
 #include <AK/AKString.h>
 #include <Kernel/Arch/i386/CPU.h>
 
-static byte* s_vga_buffer;
+static u8* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
 static int s_active_console;
 
-void VirtualConsole::get_vga_cursor(byte& row, byte& column)
+void VirtualConsole::get_vga_cursor(u8& row, u8& column)
 {
-    word value;
+    u16 value;
     IO::out8(0x3d4, 0x0e);
     value = IO::in8(0x3d5) << 8;
     IO::out8(0x3d4, 0x0f);
@@ -22,7 +22,7 @@ void VirtualConsole::get_vga_cursor(byte& row, byte& column)
 
 void VirtualConsole::flush_vga_cursor()
 {
-    word value = m_current_vga_start_address + (m_cursor_row * columns() + m_cursor_column);
+    u16 value = m_current_vga_start_address + (m_cursor_row * columns() + m_cursor_column);
     IO::out8(0x3d4, 0x0e);
     IO::out8(0x3d5, MSB(value));
     IO::out8(0x3d4, 0x0f);
@@ -31,7 +31,7 @@ void VirtualConsole::flush_vga_cursor()
 
 void VirtualConsole::initialize()
 {
-    s_vga_buffer = (byte*)0xb8000;
+    s_vga_buffer = (u8*)0xb8000;
     memset(s_consoles, 0, sizeof(s_consoles));
     s_active_console = -1;
 }
@@ -42,20 +42,20 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
 {
     m_tty_name = String::format("/dev/tty%u", m_index);
     set_size(80, 25);
-    m_horizontal_tabs = static_cast<byte*>(kmalloc(columns()));
+    m_horizontal_tabs = static_cast<u8*>(kmalloc(columns()));
     for (unsigned i = 0; i < columns(); ++i)
         m_horizontal_tabs[i] = (i % 8) == 0;
     // Rightmost column is always last tab on line.
     m_horizontal_tabs[columns() - 1] = 1;
 
     s_consoles[index] = this;
-    m_buffer = (byte*)kmalloc_eternal(rows() * columns() * 2);
+    m_buffer = (u8*)kmalloc_eternal(rows() * columns() * 2);
     if (initial_contents == AdoptCurrentVGABuffer) {
         memcpy(m_buffer, s_vga_buffer, rows() * columns() * 2);
         get_vga_cursor(m_cursor_row, m_cursor_column);
     } else {
-        word* line_mem = reinterpret_cast<word*>(m_buffer);
-        for (word i = 0; i < rows() * columns(); ++i)
+        u16* line_mem = reinterpret_cast<u16*>(m_buffer);
+        for (u16 i = 0; i < rows() * columns(); ++i)
             line_mem[i] = 0x0720;
     }
 }
@@ -68,8 +68,8 @@ VirtualConsole::~VirtualConsole()
 
 void VirtualConsole::clear()
 {
-    word* linemem = m_active ? (word*)s_vga_buffer : (word*)m_buffer;
-    for (word i = 0; i < rows() * columns(); ++i)
+    u16* linemem = m_active ? (u16*)s_vga_buffer : (u16*)m_buffer;
+    for (u16 i = 0; i < rows() * columns(); ++i)
         linemem[i] = 0x0720;
     if (m_active)
         set_vga_start_row(0);
@@ -113,22 +113,22 @@ void VirtualConsole::set_active(bool b)
 #endif
 }
 
-inline bool is_valid_parameter_character(byte ch)
+inline bool is_valid_parameter_character(u8 ch)
 {
     return ch >= 0x30 && ch <= 0x3f;
 }
 
-inline bool is_valid_intermediate_character(byte ch)
+inline bool is_valid_intermediate_character(u8 ch)
 {
     return ch >= 0x20 && ch <= 0x2f;
 }
 
-inline bool is_valid_final_character(byte ch)
+inline bool is_valid_final_character(u8 ch)
 {
     return ch >= 0x40 && ch <= 0x7e;
 }
 
-enum class VGAColor : byte {
+enum class VGAColor : u8 {
     Black = 0,
     Blue,
     Green,
@@ -147,7 +147,7 @@ enum class VGAColor : byte {
     White,
 };
 
-enum class ANSIColor : byte {
+enum class ANSIColor : u8 {
     Black = 0,
     Red,
     Green,
@@ -206,9 +206,9 @@ static inline VGAColor ansi_color_to_vga(ANSIColor color)
     return VGAColor::LightGray;
 }
 
-static inline byte ansi_color_to_vga(byte color)
+static inline u8 ansi_color_to_vga(u8 color)
 {
-    return (byte)ansi_color_to_vga((ANSIColor)color);
+    return (u8)ansi_color_to_vga((ANSIColor)color);
 }
 
 void VirtualConsole::escape$m(const Vector<unsigned>& params)
@@ -319,7 +319,7 @@ void VirtualConsole::escape$J(const Vector<unsigned>& params)
     }
 }
 
-void VirtualConsole::execute_escape_sequence(byte final)
+void VirtualConsole::execute_escape_sequence(u8 final)
 {
     auto paramparts = String::copy(m_parameters).split(';');
     Vector<unsigned> params;
@@ -362,10 +362,10 @@ void VirtualConsole::execute_escape_sequence(byte final)
     m_intermediates.clear();
 }
 
-void VirtualConsole::clear_vga_row(word row)
+void VirtualConsole::clear_vga_row(u16 row)
 {
-    word* linemem = (word*)&m_current_vga_window[row * 160];
-    for (word i = 0; i < columns(); ++i)
+    u16* linemem = (u16*)&m_current_vga_window[row * 160];
+    for (u16 i = 0; i < columns(); ++i)
         linemem[i] = 0x0720;
 }
 
@@ -383,8 +383,8 @@ void VirtualConsole::scroll_up()
             }
         } else {
             memcpy(m_buffer, m_buffer + 160, 160 * 24);
-            word* linemem = (word*)&m_buffer[24 * 160];
-            for (word i = 0; i < columns(); ++i)
+            u16* linemem = (u16*)&m_buffer[24 * 160];
+            for (u16 i = 0; i < columns(); ++i)
                 linemem[i] = 0x0720;
         }
     } else {
@@ -403,13 +403,13 @@ void VirtualConsole::set_cursor(unsigned row, unsigned column)
         flush_vga_cursor();
 }
 
-void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
+void VirtualConsole::put_character_at(unsigned row, unsigned column, u8 ch)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
-    word cur = (row * 160) + (column * 2);
+    u16 cur = (row * 160) + (column * 2);
     if (m_active) {
-        word cur = (row * 160) + (column * 2);
+        u16 cur = (row * 160) + (column * 2);
         m_current_vga_window[cur] = ch;
         m_current_vga_window[cur + 1] = m_current_attribute;
     } else {
@@ -418,7 +418,7 @@ void VirtualConsole::put_character_at(unsigned row, unsigned column, byte ch)
     }
 }
 
-void VirtualConsole::on_char(byte ch)
+void VirtualConsole::on_char(u8 ch)
 {
     switch (m_escape_state) {
     case ExpectBracket:
@@ -506,7 +506,7 @@ void VirtualConsole::on_key_pressed(KeyboardDevice::Event key)
     emit(key.character);
 }
 
-void VirtualConsole::on_sysconsole_receive(byte ch)
+void VirtualConsole::on_sysconsole_receive(u8 ch)
 {
     InterruptDisabler disabler;
     auto old_attribute = m_current_attribute;
@@ -515,7 +515,7 @@ void VirtualConsole::on_sysconsole_receive(byte ch)
     m_current_attribute = old_attribute;
 }
 
-ssize_t VirtualConsole::on_tty_write(const byte* data, ssize_t size)
+ssize_t VirtualConsole::on_tty_write(const u8* data, ssize_t size)
 {
     InterruptDisabler disabler;
     for (ssize_t i = 0; i < size; ++i)
@@ -528,7 +528,7 @@ String VirtualConsole::tty_name() const
     return m_tty_name;
 }
 
-void VirtualConsole::set_vga_start_row(word row)
+void VirtualConsole::set_vga_start_row(u16 row)
 {
     m_vga_start_row = row;
     m_current_vga_start_address = row * columns();

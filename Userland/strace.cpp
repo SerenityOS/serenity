@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     }
 
     for (;;) {
-        dword call[5];
+        u32 call[5];
         int nread = read(fd, &call, sizeof(call));
         if (nread == 0)
             break;

@@ -8,23 +8,23 @@
 #define MBR_SIGNATURE 0xaa55
 
 struct MBRPartitionEntry {
-    byte status;
-    byte chs1[3];
-    byte type;
-    byte chs2[3];
-    dword offset;
-    dword length;
+    u8 status;
+    u8 chs1[3];
+    u8 type;
+    u8 chs2[3];
+    u32 offset;
+    u32 length;
 } __attribute__((packed));
 
 struct MBRPartitionHeader {
-    byte code1[218];
-    word ts_zero;
-    byte ts_drive, ts_seconds, ts_minutes, ts_hours;
-    byte code2[216];
-    dword disk_signature;
-    word disk_signature_zero;
+    u8 code1[218];
+    u16 ts_zero;
+    u8 ts_drive, ts_seconds, ts_minutes, ts_hours;
+    u8 code2[216];
+    u32 disk_signature;
+    u16 disk_signature_zero;
     MBRPartitionEntry entry[4];
-    word mbr_signature;
+    u16 mbr_signature;
 } __attribute__((packed));
 
 class MBRPartitionTable {
@@ -43,5 +43,5 @@ private:
     ByteBuffer read_header() const;
     const MBRPartitionHeader& header() const;
 
-    byte m_cached_header[512];
+    u8 m_cached_header[512];
 };
