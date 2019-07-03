@@ -5,7 +5,7 @@
 
 class LayoutDocument final : public LayoutBlock {
 public:
-    explicit LayoutDocument(const Document&);
+    LayoutDocument(const Document&, const StyledNode&);
     virtual ~LayoutDocument() override;
 
     const Document& node() const { return static_cast<const Document&>(*LayoutNode::node()); }

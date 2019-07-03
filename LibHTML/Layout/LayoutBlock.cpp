@@ -1,8 +1,8 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 
-LayoutBlock::LayoutBlock(const Node& node)
-    : LayoutNode(&node)
+LayoutBlock::LayoutBlock(const Node& node, const StyledNode& styled_node)
+    : LayoutNode(&node, styled_node)
 {
 }
 

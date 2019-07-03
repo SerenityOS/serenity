@@ -5,7 +5,7 @@
 
 class LayoutText : public LayoutNode {
 public:
-    explicit LayoutText(const Text&);
+    LayoutText(const Text&, const StyledNode&);
     virtual ~LayoutText() override;
 
     const Text& node() const { return static_cast<const Text&>(*LayoutNode::node()); }
