@@ -120,8 +120,8 @@ public:
     mode_t sys$umask(mode_t);
     int sys$open(const char* path, int options, mode_t mode = 0);
     int sys$close(int fd);
-    ssize_t sys$read(int fd, byte*, ssize_t);
-    ssize_t sys$write(int fd, const byte*, ssize_t);
+    ssize_t sys$read(int fd, u8*, ssize_t);
+    ssize_t sys$write(int fd, const u8*, ssize_t);
     ssize_t sys$writev(int fd, const struct iovec* iov, int iov_count);
     int sys$fstat(int fd, stat*);
     int sys$lstat(const char*, stat*);
@@ -164,7 +164,7 @@ public:
     int sys$setuid(uid_t);
     unsigned sys$alarm(unsigned seconds);
     int sys$access(const char* pathname, int mode);
-    int sys$fcntl(int fd, int cmd, dword extra_arg);
+    int sys$fcntl(int fd, int cmd, u32 extra_arg);
     int sys$ioctl(int fd, unsigned request, unsigned arg);
     int sys$mkdir(const char* pathname, mode_t mode);
     clock_t sys$times(tms*);
@@ -173,7 +173,7 @@ public:
     int sys$unlink(const char* pathname);
     int sys$symlink(const char* target, const char* linkpath);
     int sys$rmdir(const char* pathname);
-    int sys$read_tsc(dword* lsw, dword* msw);
+    int sys$read_tsc(u32* lsw, u32* msw);
     int sys$chmod(const char* pathname, mode_t);
     int sys$fchmod(int fd, mode_t);
     int sys$chown(const char* pathname, uid_t, gid_t);
@@ -191,7 +191,7 @@ public:
     int sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen);
     int sys$sched_setparam(pid_t pid, const struct sched_param* param);
     int sys$sched_getparam(pid_t pid, struct sched_param* param);
-    int sys$restore_signal_mask(dword mask);
+    int sys$restore_signal_mask(u32 mask);
     int sys$create_thread(int (*)(void*), void*);
     void sys$exit_thread(int code);
     int sys$rename(const char* oldpath, const char* newpath);
@@ -205,7 +205,7 @@ public:
 
     static void initialize();
 
-    [[noreturn]] void crash(int signal, dword eip);
+    [[noreturn]] void crash(int signal, u32 eip);
     [[nodiscard]] static int reap(Process&);
 
     const TTY* tty() const { return m_tty; }
@@ -218,11 +218,11 @@ public:
     ProcessTracer* tracer() { return m_tracer.ptr(); }
     ProcessTracer& ensure_tracer();
 
-    dword m_ticks_in_user { 0 };
-    dword m_ticks_in_kernel { 0 };
+    u32 m_ticks_in_user { 0 };
+    u32 m_ticks_in_kernel { 0 };
 
-    dword m_ticks_in_user_for_dead_children { 0 };
-    dword m_ticks_in_kernel_for_dead_children { 0 };
+    u32 m_ticks_in_user_for_dead_children { 0 };
+    u32 m_ticks_in_kernel_for_dead_children { 0 };
 
     bool validate_read_from_kernel(VirtualAddress) const;
 
@@ -257,8 +257,8 @@ public:
     void set_being_inspected(bool b) { m_being_inspected = b; }
     bool is_being_inspected() const { return m_being_inspected; }
 
-    void terminate_due_to_signal(byte signal);
-    void send_signal(byte, Process* sender);
+    void terminate_due_to_signal(u8 signal);
+    void send_signal(u8, Process* sender);
 
     int thread_count() const;
 
@@ -279,7 +279,7 @@ private:
     Range allocate_range(VirtualAddress, size_t);
 
     int do_exec(String path, Vector<String> arguments, Vector<String> environment);
-    ssize_t do_write(FileDescription&, const byte*, int data_size);
+    ssize_t do_write(FileDescription&, const u8*, int data_size);
 
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
@@ -308,17 +308,17 @@ private:
     struct FileDescriptionAndFlags {
         operator bool() const { return !!description; }
         void clear();
-        void set(NonnullRefPtr<FileDescription>&& d, dword f = 0);
+        void set(NonnullRefPtr<FileDescription>&& d, u32 f = 0);
         RefPtr<FileDescription> description;
-        dword flags { 0 };
+        u32 flags { 0 };
     };
     Vector<FileDescriptionAndFlags> m_fds;
     RingLevel m_ring { Ring0 };
 
     static const int m_max_open_file_descriptors { FD_SETSIZE };
 
-    byte m_termination_status { 0 };
-    byte m_termination_signal { 0 };
+    u8 m_termination_status { 0 };
+    u8 m_termination_signal { 0 };
 
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
@@ -351,7 +351,7 @@ private:
 
     Lock m_big_lock { "Process" };
 
-    qword m_alarm_deadline { 0 };
+    u64 m_alarm_deadline { 0 };
 };
 
 class ProcessInspectionHandle {

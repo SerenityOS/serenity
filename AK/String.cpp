@@ -124,7 +124,7 @@ ByteBuffer String::to_byte_buffer() const
 {
     if (!m_impl)
         return nullptr;
-    return ByteBuffer::copy(reinterpret_cast<const byte*>(characters()), length());
+    return ByteBuffer::copy(reinterpret_cast<const u8*>(characters()), length());
 }
 
 int String::to_int(bool& ok) const

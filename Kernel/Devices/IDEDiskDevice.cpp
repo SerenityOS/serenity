@@ -106,19 +106,19 @@ unsigned IDEDiskDevice::block_size() const
     return 512;
 }
 
-bool IDEDiskDevice::read_blocks(unsigned index, word count, byte* out)
+bool IDEDiskDevice::read_blocks(unsigned index, u16 count, u8* out)
 {
     if (m_bus_master_base && m_dma_enabled.resource())
         return read_sectors_with_dma(index, count, out);
     return read_sectors(index, count, out);
 }
 
-bool IDEDiskDevice::read_block(unsigned index, byte* out) const
+bool IDEDiskDevice::read_block(unsigned index, u8* out) const
 {
     return const_cast<IDEDiskDevice*>(this)->read_blocks(index, 1, out);
 }
 
-bool IDEDiskDevice::write_blocks(unsigned index, word count, const byte* data)
+bool IDEDiskDevice::write_blocks(unsigned index, u16 count, const u8* data)
 {
     if (m_bus_master_base && m_dma_enabled.resource())
         return write_sectors_with_dma(index, count, data);
@@ -129,12 +129,12 @@ bool IDEDiskDevice::write_blocks(unsigned index, word count, const byte* data)
     return true;
 }
 
-bool IDEDiskDevice::write_block(unsigned index, const byte* data)
+bool IDEDiskDevice::write_block(unsigned index, const u8* data)
 {
     return write_blocks(index, 1, data);
 }
 
-static void print_ide_status(byte status)
+static void print_ide_status(u8 status)
 {
     kprintf("DRQ=%u BSY=%u DRDY=%u DSC=%u DF=%u CORR=%u IDX=%u ERR=%u\n",
         (status & ATA_SR_DRQ) != 0,
@@ -166,7 +166,7 @@ bool IDEDiskDevice::wait_for_irq()
 
 void IDEDiskDevice::handle_irq()
 {
-    byte status = IO::in8(m_io_base + ATA_REG_STATUS);
+    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
         m_device_error = IO::in8(m_io_base + ATA_REG_ERROR);
@@ -192,7 +192,7 @@ void IDEDiskDevice::initialize()
     });
 
 #ifdef DISK_DEBUG
-    byte status = IO::in8(m_io_base + ATA_REG_STATUS);
+    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     kprintf("initial status: ");
     print_ide_status(status);
 #endif
@@ -213,19 +213,19 @@ void IDEDiskDevice::initialize()
 
     ByteBuffer wbuf = ByteBuffer::create_uninitialized(512);
     ByteBuffer bbuf = ByteBuffer::create_uninitialized(512);
-    byte* b = bbuf.pointer();
-    word* w = (word*)wbuf.pointer();
-    const word* wbufbase = (word*)wbuf.pointer();
+    u8* b = bbuf.pointer();
+    u16* w = (u16*)wbuf.pointer();
+    const u16* wbufbase = (u16*)wbuf.pointer();
 
-    for (dword i = 0; i < 256; ++i) {
-        word data = IO::in16(m_io_base + ATA_REG_DATA);
+    for (u32 i = 0; i < 256; ++i) {
+        u16 data = IO::in16(m_io_base + ATA_REG_DATA);
         *(w++) = data;
         *(b++) = MSB(data);
         *(b++) = LSB(data);
     }
 
     // "Unpad" the device name string.
-    for (dword i = 93; i > 54 && bbuf[i] == ' '; --i)
+    for (u32 i = 93; i > 54 && bbuf[i] == ' '; --i)
         bbuf[i] = 0;
 
     m_cylinders = wbufbase[1];
@@ -249,13 +249,13 @@ void IDEDiskDevice::initialize()
     }
 }
 
-static void wait_400ns(word io_base)
+static void wait_400ns(u16 io_base)
 {
     for (int i = 0; i < 4; ++i)
         IO::in8(io_base + ATA_REG_ALTSTATUS);
 }
 
-bool IDEDiskDevice::read_sectors_with_dma(dword lba, word count, byte* outbuf)
+bool IDEDiskDevice::read_sectors_with_dma(u32 lba, u16 count, u8* outbuf)
 {
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
@@ -275,7 +275,7 @@ bool IDEDiskDevice::read_sectors_with_dma(dword lba, word count, byte* outbuf)
     IO::out8(m_bus_master_base, 0);
 
     // Write the PRDT location
-    IO::out32(m_bus_master_base + 4, (dword)&m_prdt);
+    IO::out32(m_bus_master_base + 4, (u32)&m_prdt);
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
@@ -332,7 +332,7 @@ bool IDEDiskDevice::read_sectors_with_dma(dword lba, word count, byte* outbuf)
     return true;
 }
 
-bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
+bool IDEDiskDevice::read_sectors(u32 start_sector, u16 count, u8* outbuf)
 {
     ASSERT(count <= 256);
     LOCKER(m_lock);
@@ -369,7 +369,7 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
     if (m_device_error)
         return false;
 
-    byte status = IO::in8(m_io_base + ATA_REG_STATUS);
+    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     ASSERT(status & ATA_SR_DRQ);
 #ifdef DISK_DEBUG
     kprintf("Retrieving %u bytes (status=%b), outbuf=%p...\n", count * 512, status, outbuf);
@@ -379,7 +379,7 @@ bool IDEDiskDevice::read_sectors(dword start_sector, word count, byte* outbuf)
     return true;
 }
 
-bool IDEDiskDevice::write_sectors_with_dma(dword lba, word count, const byte* inbuf)
+bool IDEDiskDevice::write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf)
 {
     LOCKER(m_lock);
 #ifdef DISK_DEBUG
@@ -401,7 +401,7 @@ bool IDEDiskDevice::write_sectors_with_dma(dword lba, word count, const byte* in
     IO::out8(m_bus_master_base, 0);
 
     // Write the PRDT location
-    IO::out32(m_bus_master_base + 4, (dword)&m_prdt);
+    IO::out32(m_bus_master_base + 4, (u32)&m_prdt);
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
@@ -453,7 +453,7 @@ bool IDEDiskDevice::write_sectors_with_dma(dword lba, word count, const byte* in
     return true;
 }
 
-bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* data)
+bool IDEDiskDevice::write_sectors(u32 start_sector, u16 count, const u8* data)
 {
     ASSERT(count <= 256);
     LOCKER(m_lock);
@@ -484,7 +484,7 @@ bool IDEDiskDevice::write_sectors(dword start_sector, word count, const byte* da
     while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRQ))
         ;
 
-    byte status = IO::in8(m_io_base + ATA_REG_STATUS);
+    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     ASSERT(status & ATA_SR_DRQ);
     IO::repeated_out16(m_io_base + ATA_REG_DATA, data, count * 256);
 

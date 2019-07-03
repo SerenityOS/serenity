@@ -28,12 +28,12 @@ public:
         m_data = nullptr;
     }
 
-    byte& operator[](int i)
+    u8& operator[](int i)
     {
         ASSERT(i < m_size);
         return m_data[i];
     }
-    const byte& operator[](int i) const
+    const u8& operator[](int i) const
     {
         ASSERT(i < m_size);
         return m_data[i];
@@ -41,11 +41,11 @@ public:
     bool is_empty() const { return !m_size; }
     int size() const { return m_size; }
 
-    byte* pointer() { return m_data; }
-    const byte* pointer() const { return m_data; }
+    u8* pointer() { return m_data; }
+    const u8* pointer() const { return m_data; }
 
-    byte* offset_pointer(int offset) { return m_data + offset; }
-    const byte* offset_pointer(int offset) const { return m_data + offset; }
+    u8* offset_pointer(int offset) { return m_data + offset; }
+    const u8* offset_pointer(int offset) const { return m_data + offset; }
 
     void* end_pointer() { return m_data + m_size; }
     const void* end_pointer() const { return m_data + m_size; }
@@ -71,7 +71,7 @@ private:
     ByteBufferImpl(void*, int, ConstructionMode);       // For ConstructionMode=Wrap/Adopt
     ByteBufferImpl() {}
 
-    byte* m_data { nullptr };
+    u8* m_data { nullptr };
     int m_size { 0 };
     bool m_owned { false };
 };
@@ -114,12 +114,12 @@ public:
     bool operator!() const { return is_null(); }
     bool is_null() const { return m_impl == nullptr; }
 
-    byte& operator[](int i)
+    u8& operator[](int i)
     {
         ASSERT(m_impl);
         return (*m_impl)[i];
     }
-    byte operator[](int i) const
+    u8 operator[](int i) const
     {
         ASSERT(m_impl);
         return (*m_impl)[i];
@@ -127,14 +127,14 @@ public:
     bool is_empty() const { return !m_impl || m_impl->is_empty(); }
     int size() const { return m_impl ? m_impl->size() : 0; }
 
-    byte* data() { return pointer(); }
-    const byte* data() const { return pointer(); }
+    u8* data() { return pointer(); }
+    const u8* data() const { return pointer(); }
 
-    byte* pointer() { return m_impl ? m_impl->pointer() : nullptr; }
-    const byte* pointer() const { return m_impl ? m_impl->pointer() : nullptr; }
+    u8* pointer() { return m_impl ? m_impl->pointer() : nullptr; }
+    const u8* pointer() const { return m_impl ? m_impl->pointer() : nullptr; }
 
-    byte* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
-    const byte* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
+    u8* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
+    const u8* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
 
     void* end_pointer() { return m_impl ? m_impl->end_pointer() : nullptr; }
     const void* end_pointer() const { return m_impl ? m_impl->end_pointer() : nullptr; }
@@ -191,7 +191,7 @@ private:
 inline ByteBufferImpl::ByteBufferImpl(int size)
     : m_size(size)
 {
-    m_data = static_cast<byte*>(kmalloc(size));
+    m_data = static_cast<u8*>(kmalloc(size));
     m_owned = true;
 }
 
@@ -199,13 +199,13 @@ inline ByteBufferImpl::ByteBufferImpl(const void* data, int size, ConstructionMo
     : m_size(size)
 {
     ASSERT(mode == Copy);
-    m_data = static_cast<byte*>(kmalloc(size));
+    m_data = static_cast<u8*>(kmalloc(size));
     memcpy(m_data, data, size);
     m_owned = true;
 }
 
 inline ByteBufferImpl::ByteBufferImpl(void* data, int size, ConstructionMode mode)
-    : m_data(static_cast<byte*>(data))
+    : m_data(static_cast<u8*>(data))
     , m_size(size)
 {
     if (mode == Adopt) {
@@ -219,9 +219,9 @@ inline void ByteBufferImpl::grow(int size)
 {
     ASSERT(size > m_size);
     ASSERT(m_owned);
-    byte* new_data = static_cast<byte*>(kmalloc(size));
+    u8* new_data = static_cast<u8*>(kmalloc(size));
     memcpy(new_data, m_data, m_size);
-    byte* old_data = m_data;
+    u8* old_data = m_data;
     m_data = new_data;
     m_size = size;
     kfree(old_data);

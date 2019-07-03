@@ -137,17 +137,17 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
     if (n >= 1024)
         return mmx_memcpy(dest_ptr, src_ptr, n);
 
-    dword dest = (dword)dest_ptr;
-    dword src = (dword)src_ptr;
+    u32 dest = (u32)dest_ptr;
+    u32 src = (u32)src_ptr;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && !(src & 0x3) && n >= 12) {
-        size_t dwords = n / sizeof(dword);
+        size_t u32s = n / sizeof(u32);
         asm volatile(
             "rep movsl\n"
             : "=S"(src), "=D"(dest)
-            : "S"(src), "D"(dest), "c"(dwords)
+            : "S"(src), "D"(dest), "c"(u32s)
             : "memory");
-        n -= dwords * sizeof(dword);
+        n -= u32s * sizeof(u32);
         if (n == 0)
             return dest_ptr;
     }
@@ -159,19 +159,19 @@ void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 
 void* memset(void* dest_ptr, int c, size_t n)
 {
-    dword dest = (dword)dest_ptr;
+    u32 dest = (u32)dest_ptr;
     // FIXME: Support starting at an unaligned address.
     if (!(dest & 0x3) && n >= 12) {
-        size_t dwords = n / sizeof(dword);
-        dword expanded_c = (byte)c;
+        size_t u32s = n / sizeof(u32);
+        u32 expanded_c = (u8)c;
         expanded_c |= expanded_c << 8;
         expanded_c |= expanded_c << 16;
         asm volatile(
             "rep stosl\n"
             : "=D"(dest)
-            : "D"(dest), "c"(dwords), "a"(expanded_c)
+            : "D"(dest), "c"(u32s), "a"(expanded_c)
             : "memory");
-        n -= dwords * sizeof(dword);
+        n -= u32s * sizeof(u32);
         if (n == 0)
             return dest_ptr;
     }
@@ -188,8 +188,8 @@ void* memmove(void* dest, const void* src, size_t n)
     if (dest < src)
         return memcpy(dest, src, n);
 
-    byte* pd = (byte*)dest;
-    const byte* ps = (const byte*)src;
+    u8* pd = (u8*)dest;
+    const u8* ps = (const u8*)src;
     for (pd += n, ps += n; n--;)
         *--pd = *--ps;
     return dest;

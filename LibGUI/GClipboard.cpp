@@ -46,7 +46,7 @@ void GClipboard::set_data(const StringView& data)
     if (!data.is_empty())
         memcpy(shared_buffer->data(), data.characters(), data.length() + 1);
     else
-        ((byte*)shared_buffer->data())[0] = '\0';
+        ((u8*)shared_buffer->data())[0] = '\0';
     shared_buffer->seal();
     request.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
     request.clipboard.contents_size = data.length();

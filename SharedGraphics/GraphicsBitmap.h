@@ -29,8 +29,8 @@ public:
     RGBA32* scanline(int y);
     const RGBA32* scanline(int y) const;
 
-    byte* bits(int y);
-    const byte* bits(int y) const;
+    u8* bits(int y);
+    const u8* bits(int y) const;
 
     Rect rect() const { return { {}, m_size }; }
     Size size() const { return m_size; }
@@ -63,8 +63,8 @@ public:
 
     size_t size_in_bytes() const { return m_pitch * m_size.height(); }
 
-    Color palette_color(byte index) const { return Color::from_rgba(m_palette[index]); }
-    void set_palette_color(byte index, Color color) { m_palette[index] = color.value(); }
+    Color palette_color(u8 index) const { return Color::from_rgba(m_palette[index]); }
+    void set_palette_color(u8 index, Color color) { m_palette[index] = color.value(); }
 
     template<Format>
     Color get_pixel(int x, int y) const
@@ -110,22 +110,22 @@ private:
 
 inline RGBA32* GraphicsBitmap::scanline(int y)
 {
-    return reinterpret_cast<RGBA32*>((((byte*)m_data) + (y * m_pitch)));
+    return reinterpret_cast<RGBA32*>((((u8*)m_data) + (y * m_pitch)));
 }
 
 inline const RGBA32* GraphicsBitmap::scanline(int y) const
 {
-    return reinterpret_cast<const RGBA32*>((((const byte*)m_data) + (y * m_pitch)));
+    return reinterpret_cast<const RGBA32*>((((const u8*)m_data) + (y * m_pitch)));
 }
 
-inline const byte* GraphicsBitmap::bits(int y) const
+inline const u8* GraphicsBitmap::bits(int y) const
 {
-    return reinterpret_cast<const byte*>(scanline(y));
+    return reinterpret_cast<const u8*>(scanline(y));
 }
 
-inline byte* GraphicsBitmap::bits(int y)
+inline u8* GraphicsBitmap::bits(int y)
 {
-    return reinterpret_cast<byte*>(scanline(y));
+    return reinterpret_cast<u8*>(scanline(y));
 }
 
 template<>

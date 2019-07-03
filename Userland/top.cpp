@@ -30,7 +30,7 @@ struct Process {
 
 struct Snapshot {
     HashMap<unsigned, Process> map;
-    dword sum_nsched { 0 };
+    u32 sum_nsched { 0 };
 };
 
 static Snapshot get_snapshot()
@@ -47,19 +47,19 @@ static Snapshot get_snapshot()
     auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
     json.as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
-        pid_t pid = process_object.get("pid").to_dword();
-        unsigned nsched = process_object.get("times_scheduled").to_dword();
+        pid_t pid = process_object.get("pid").to_u32();
+        unsigned nsched = process_object.get("times_scheduled").to_u32();
         snapshot.sum_nsched += nsched;
         Process process;
         process.pid = pid;
         process.nsched = nsched;
-        unsigned uid = process_object.get("uid").to_dword();
+        unsigned uid = process_object.get("uid").to_u32();
         process.user = s_usernames->get(uid);
         process.priority = process_object.get("priority").to_string();
         process.state = process_object.get("state").to_string();
         process.name = process_object.get("name").to_string();
-        process.virtual_size = process_object.get("amount_virtual").to_dword();
-        process.physical_size = process_object.get("amount_resident").to_dword();
+        process.virtual_size = process_object.get("amount_virtual").to_u32();
+        process.physical_size = process_object.get("amount_resident").to_u32();
         snapshot.map.set(pid, move(process));
     });
     return snapshot;
@@ -94,12 +94,12 @@ int main(int, char**)
             pid_t pid = it.key;
             if (pid == 0)
                 continue;
-            dword nsched_now = it.value.nsched;
+            u32 nsched_now = it.value.nsched;
             auto jt = prev.map.find(pid);
             if (jt == prev.map.end())
                 continue;
-            dword nsched_before = (*jt).value.nsched;
-            dword nsched_diff = nsched_now - nsched_before;
+            u32 nsched_before = (*jt).value.nsched;
+            u32 nsched_diff = nsched_now - nsched_before;
             it.value.nsched_since_prev = nsched_diff;
             it.value.cpu_percent = ((nsched_diff * 100) / sum_diff);
             it.value.cpu_percent_decimal = (((nsched_diff * 1000) / sum_diff) % 10);

@@ -10,7 +10,7 @@ struct RegisterDump;
 extern Thread* current;
 extern Thread* g_last_fpu_thread;
 extern Thread* g_finalizer;
-extern qword g_uptime;
+extern u64 g_uptime;
 
 class Scheduler {
 public:

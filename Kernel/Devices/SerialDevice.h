@@ -13,9 +13,9 @@ public:
 
     // ^CharacterDevice
     virtual bool can_read(FileDescription&) const override;
-    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
+    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
     virtual bool can_write(FileDescription&) const override;
-    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
 
     enum InterruptEnable {
         LowPowerMode = 0x01 << 5,

@@ -19,9 +19,9 @@ static bool initialized;
 
 namespace PIC {
 
-void disable(byte irq)
+void disable(u8 irq)
 {
-    byte imr;
+    u8 imr;
     if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
         imr |= 1 << (irq - 8);
@@ -33,9 +33,9 @@ void disable(byte irq)
     }
 }
 
-void enable(byte irq)
+void enable(u8 irq)
 {
-    byte imr;
+    u8 imr;
     if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
         imr &= ~(1 << (irq - 8));
@@ -47,7 +47,7 @@ void enable(byte irq)
     }
 }
 
-void eoi(byte irq)
+void eoi(u8 irq)
 {
     if (irq & 8)
         IO::out8(PIC1_CTL, 0x20);
@@ -90,21 +90,21 @@ void initialize()
 #endif
 }
 
-word get_isr()
+u16 get_isr()
 {
     IO::out8(PIC0_CTL, 0x0b);
     IO::out8(PIC1_CTL, 0x0b);
-    byte isr0 = IO::in8(PIC0_CTL);
-    byte isr1 = IO::in8(PIC1_CTL);
+    u8 isr0 = IO::in8(PIC0_CTL);
+    u8 isr1 = IO::in8(PIC1_CTL);
     return (isr1 << 8) | isr0;
 }
 
-word get_irr()
+u16 get_irr()
 {
     IO::out8(PIC0_CTL, 0x0a);
     IO::out8(PIC1_CTL, 0x0a);
-    byte irr0 = IO::in8(PIC0_CTL);
-    byte irr1 = IO::in8(PIC1_CTL);
+    u8 irr0 = IO::in8(PIC0_CTL);
+    u8 irr1 = IO::in8(PIC1_CTL);
     return (irr1 << 8) | irr0;
 }
 

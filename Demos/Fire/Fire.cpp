@@ -146,7 +146,7 @@ void Fire::timer_event(CTimerEvent&)
             int rnd = my_rand() % 3;
 
             /* Calculate new pixel value, don't go below 0 */
-            byte nv = bitmap->bits(py)[px];
+            u8 nv = bitmap->bits(py)[px];
             if (nv > 0)
                 nv -= (rnd & 1);
 

@@ -185,7 +185,7 @@ InodeMetadata SynthFSInode::metadata() const
     return m_metadata;
 }
 
-ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, byte* buffer, FileDescription* description) const
+ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDescription* description) const
 {
     LOCKER(m_lock);
 #ifdef SYNTHFS_DEBUG
@@ -227,7 +227,7 @@ bool SynthFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&
     callback({ "..", 2, m_parent, 2 });
 
     for (auto& child : m_children)
-        callback({ child->m_name.characters(), child->m_name.length(), child->m_metadata.inode, child->m_metadata.is_directory() ? (byte)2 : (byte)1 });
+        callback({ child->m_name.characters(), child->m_name.length(), child->m_metadata.inode, child->m_metadata.is_directory() ? (u8)2 : (u8)1 });
     return true;
 }
 
@@ -250,7 +250,7 @@ void SynthFSInode::flush_metadata()
 {
 }
 
-ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const byte* buffer, FileDescription*)
+ssize_t SynthFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, FileDescription*)
 {
     LOCKER(m_lock);
     if (!m_write_callback)

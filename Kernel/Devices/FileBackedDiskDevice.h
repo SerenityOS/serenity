@@ -14,14 +14,14 @@ public:
     bool is_valid() const { return m_file; }
 
     virtual unsigned block_size() const override;
-    virtual bool read_block(unsigned index, byte* out) const override;
-    virtual bool write_block(unsigned index, const byte*) override;
+    virtual bool read_block(unsigned index, u8* out) const override;
+    virtual bool write_block(unsigned index, const u8*) override;
 
 private:
     virtual const char* class_name() const override;
 
-    bool read_internal(DiskOffset, unsigned length, byte* out) const;
-    bool write_internal(DiskOffset, unsigned length, const byte* data);
+    bool read_internal(DiskOffset, unsigned length, u8* out) const;
+    bool write_internal(DiskOffset, unsigned length, const u8* data);
 
     FileBackedDiskDevice(String&& imagePath, unsigned block_size);
 

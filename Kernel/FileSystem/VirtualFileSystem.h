@@ -107,7 +107,7 @@ private:
 
     RefPtr<Inode> m_root_inode;
     Vector<OwnPtr<Mount>> m_mounts;
-    HashMap<dword, Device*> m_devices;
+    HashMap<u32, Device*> m_devices;
 
     RefPtr<Custody> m_root_custody;
 };

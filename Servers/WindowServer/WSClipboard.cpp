@@ -16,11 +16,11 @@ WSClipboard::~WSClipboard()
 {
 }
 
-const byte* WSClipboard::data() const
+const u8* WSClipboard::data() const
 {
     if (!m_shared_buffer)
         return nullptr;
-    return (const byte*)m_shared_buffer->data();
+    return (const u8*)m_shared_buffer->data();
 }
 
 int WSClipboard::size() const

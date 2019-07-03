@@ -30,7 +30,7 @@ public:
 
     static NonnullRefPtr<PhysicalPage> create(PhysicalAddress, bool supervisor, bool may_return_to_freelist = true);
 
-    word ref_count() const { return m_retain_count; }
+    u16 ref_count() const { return m_retain_count; }
 
 private:
     PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist = true);
@@ -38,7 +38,7 @@ private:
 
     void return_to_freelist() &&;
 
-    word m_retain_count { 1 };
+    u16 m_retain_count { 1 };
     bool m_may_return_to_freelist { true };
     bool m_supervisor { false };
     PhysicalAddress m_paddr;

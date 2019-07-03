@@ -127,7 +127,7 @@ off_t FileDescription::seek(off_t offset, int whence)
     return m_current_offset;
 }
 
-ssize_t FileDescription::read(byte* buffer, ssize_t count)
+ssize_t FileDescription::read(u8* buffer, ssize_t count)
 {
     int nread = m_file->read(*this, buffer, count);
     if (m_file->is_seekable())
@@ -135,7 +135,7 @@ ssize_t FileDescription::read(byte* buffer, ssize_t count)
     return nread;
 }
 
-ssize_t FileDescription::write(const byte* data, ssize_t size)
+ssize_t FileDescription::write(const u8* data, ssize_t size)
 {
     int nwritten = m_file->write(*this, data, size);
     if (m_file->is_seekable())
@@ -167,7 +167,7 @@ bool FileDescription::is_directory() const
     return metadata().is_directory();
 }
 
-ssize_t FileDescription::get_dir_entries(byte* buffer, ssize_t size)
+ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
 {
     auto metadata = this->metadata();
     if (!metadata.is_valid())
@@ -180,9 +180,9 @@ ssize_t FileDescription::get_dir_entries(byte* buffer, ssize_t size)
     auto temp_buffer = ByteBuffer::create_uninitialized(size_to_allocate);
     BufferStream stream(temp_buffer);
     VFS::the().traverse_directory_inode(*m_inode, [&stream](auto& entry) {
-        stream << (dword)entry.inode.index();
-        stream << (byte)entry.file_type;
-        stream << (dword)entry.name_length;
+        stream << (u32)entry.inode.index();
+        stream << (u8)entry.file_type;
+        stream << (u32)entry.name_length;
         stream << entry.name;
         return true;
     });
@@ -318,7 +318,7 @@ const Socket* FileDescription::socket() const
     return static_cast<const Socket*>(m_file.ptr());
 }
 
-void FileDescription::set_file_flags(dword flags)
+void FileDescription::set_file_flags(u32 flags)
 {
     m_is_blocking = !(flags & O_NONBLOCK);
     m_should_append = flags & O_APPEND;

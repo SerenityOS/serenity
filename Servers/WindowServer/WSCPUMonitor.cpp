@@ -44,8 +44,8 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
     auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
     json.as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
-        pid_t pid = process_object.get("pid").to_dword();
-        unsigned nsched = process_object.get("times_scheduled").to_dword();
+        pid_t pid = process_object.get("pid").to_u32();
+        unsigned nsched = process_object.get("times_scheduled").to_u32();
         if (pid == 0)
             idle += nsched;
         else

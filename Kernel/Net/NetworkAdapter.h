@@ -52,8 +52,8 @@ protected:
     NetworkAdapter();
     void set_interface_name(const StringView& basename);
     void set_mac_address(const MACAddress& mac_address) { m_mac_address = mac_address; }
-    virtual void send_raw(const byte*, int) = 0;
-    void did_receive(const byte*, int);
+    virtual void send_raw(const u8*, int) = 0;
+    void did_receive(const u8*, int);
 
 private:
     MACAddress m_mac_address;

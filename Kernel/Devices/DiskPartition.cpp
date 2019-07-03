@@ -22,7 +22,7 @@ unsigned DiskPartition::block_size() const
     return m_device->block_size();
 }
 
-bool DiskPartition::read_block(unsigned index, byte* out) const
+bool DiskPartition::read_block(unsigned index, u8* out) const
 {
 #ifdef OFFD_DEBUG
     kprintf("DiskPartition::read_block %u (really: %u)\n", index, m_block_offset + index);
@@ -31,7 +31,7 @@ bool DiskPartition::read_block(unsigned index, byte* out) const
     return m_device->read_block(m_block_offset + index, out);
 }
 
-bool DiskPartition::write_block(unsigned index, const byte* data)
+bool DiskPartition::write_block(unsigned index, const u8* data)
 {
 #ifdef OFFD_DEBUG
     kprintf("DiskPartition::write_block %u (really: %u)\n", index, m_block_offset + index);
@@ -40,7 +40,7 @@ bool DiskPartition::write_block(unsigned index, const byte* data)
     return m_device->write_block(m_block_offset + index, data);
 }
 
-bool DiskPartition::read_blocks(unsigned index, word count, byte* out)
+bool DiskPartition::read_blocks(unsigned index, u16 count, u8* out)
 {
 #ifdef OFFD_DEBUG
     kprintf("DiskPartition::read_blocks %u (really: %u) count=%u\n", index, m_block_offset + index, count);
@@ -49,7 +49,7 @@ bool DiskPartition::read_blocks(unsigned index, word count, byte* out)
     return m_device->read_blocks(m_block_offset + index, count, out);
 }
 
-bool DiskPartition::write_blocks(unsigned index, word count, const byte* data)
+bool DiskPartition::write_blocks(unsigned index, u16 count, const u8* data)
 {
 #ifdef OFFD_DEBUG
     kprintf("DiskPartition::write_blocks %u (really: %u) count=%u\n", index, m_block_offset + index, count);

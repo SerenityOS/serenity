@@ -225,8 +225,8 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
         auto& request = reinterpret_cast<const ICMPEchoPacket&>(icmp_header);
         kprintf("handle_icmp: EchoRequest from %s: id=%u, seq=%u\n",
             ipv4_packet.source().to_string().characters(),
-            (word)request.identifier,
-            (word)request.sequence_number);
+            (u16)request.identifier,
+            (u16)request.sequence_number);
         size_t icmp_packet_size = ipv4_packet.payload_size();
         auto buffer = ByteBuffer::create_zeroed(icmp_packet_size);
         auto& response = *(ICMPEchoPacket*)buffer.pointer();

@@ -13,7 +13,7 @@ public:
         return m_shared_buffer;
     }
 
-    const byte* data() const;
+    const u8* data() const;
     int size() const;
 
     void clear();

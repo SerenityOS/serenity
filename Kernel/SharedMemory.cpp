@@ -73,7 +73,7 @@ String SharedMemory::absolute_path(const FileDescription&) const
     return String::format("shm:%u", this);
 }
 
-int SharedMemory::read(FileDescription&, byte* buffer, int buffer_size)
+int SharedMemory::read(FileDescription&, u8* buffer, int buffer_size)
 {
     UNUSED_PARAM(buffer);
     UNUSED_PARAM(buffer_size);
@@ -81,7 +81,7 @@ int SharedMemory::read(FileDescription&, byte* buffer, int buffer_size)
     ASSERT_NOT_REACHED();
 }
 
-int SharedMemory::write(FileDescription&, const byte* data, int data_size)
+int SharedMemory::write(FileDescription&, const u8* data, int data_size)
 {
     UNUSED_PARAM(data);
     UNUSED_PARAM(data_size);

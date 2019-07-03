@@ -9,9 +9,9 @@
 #define memory_barrier() asm volatile("" :: \
                                           : "memory")
 
-static inline dword CAS(volatile dword* mem, dword newval, dword oldval)
+static inline u32 CAS(volatile u32* mem, u32 newval, u32 oldval)
 {
-    dword ret;
+    u32 ret;
     asm volatile(
         "cmpxchgl %2, %1"
         : "=a"(ret), "+m"(*mem)
@@ -29,8 +29,8 @@ public:
     void unlock();
 
 private:
-    volatile dword m_lock { 0 };
-    dword m_level { 0 };
+    volatile u32 m_lock { 0 };
+    u32 m_level { 0 };
     int m_holder { -1 };
 };
 

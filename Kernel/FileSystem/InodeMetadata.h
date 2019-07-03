@@ -7,7 +7,7 @@
 
 class Process;
 
-inline constexpr dword encoded_device(unsigned major, unsigned minor)
+inline constexpr u32 encoded_device(unsigned major, unsigned minor)
 {
     return (minor & 0xff) | (major << 8) | ((minor & ~0xff) << 12);
 }

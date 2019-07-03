@@ -2,7 +2,7 @@
 
 #include "Types.h"
 
-inline unsigned int_hash(dword key)
+inline unsigned int_hash(u32 key)
 {
     key += ~(key << 15);
     key ^= (key >> 10);
@@ -13,7 +13,7 @@ inline unsigned int_hash(dword key)
     return key;
 }
 
-inline unsigned pair_int_hash(dword key1, dword key2)
+inline unsigned pair_int_hash(u32 key1, u32 key2)
 {
     return int_hash((int_hash(key1) * 209) ^ (int_hash(key2 * 413)));
 }

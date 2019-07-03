@@ -19,7 +19,7 @@
 #include <Kernel/VM/VMObject.h>
 #include <Kernel/VirtualAddress.h>
 
-#define PAGE_ROUND_UP(x) ((((dword)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
+#define PAGE_ROUND_UP(x) ((((u32)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
 class SynthFSInode;
 
@@ -108,7 +108,7 @@ private:
     bool page_in_from_inode(Region&, unsigned page_index_in_region);
     bool zero_page(Region& region, unsigned page_index_in_region);
 
-    byte* quickmap_page(PhysicalPage&);
+    u8* quickmap_page(PhysicalPage&);
     void unquickmap_page();
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }

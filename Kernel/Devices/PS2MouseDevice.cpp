@@ -39,11 +39,11 @@ PS2MouseDevice& PS2MouseDevice::the()
 void PS2MouseDevice::handle_irq()
 {
     for (;;) {
-        byte status = IO::in8(I8042_STATUS);
+        u8 status = IO::in8(I8042_STATUS);
         if (!(((status & I8042_WHICH_BUFFER) == I8042_MOUSE_BUFFER) && (status & I8042_BUFFER_FULL)))
             return;
 
-        byte data = IO::in8(I8042_BUFFER);
+        u8 data = IO::in8(I8042_BUFFER);
         m_data[m_data_state] = data;
 
         auto commit_packet = [&] {
@@ -113,13 +113,13 @@ void PS2MouseDevice::parse_data_packet()
     m_queue.enqueue(packet);
 }
 
-void PS2MouseDevice::wait_then_write(byte port, byte data)
+void PS2MouseDevice::wait_then_write(u8 port, u8 data)
 {
     prepare_for_output();
     IO::out8(port, data);
 }
 
-byte PS2MouseDevice::wait_then_read(byte port)
+u8 PS2MouseDevice::wait_then_read(u8 port)
 {
     prepare_for_input();
     return IO::in8(port);
@@ -135,7 +135,7 @@ void PS2MouseDevice::initialize()
 
     // Enable the PS/2 mouse IRQ (12).
     // NOTE: The keyboard uses IRQ 1 (and is enabled by bit 0 in this register).
-    byte status = wait_then_read(0x60) | 2;
+    u8 status = wait_then_read(0x60) | 2;
     wait_then_write(0x64, 0x60);
     wait_then_write(0x60, status);
 
@@ -149,7 +149,7 @@ void PS2MouseDevice::initialize()
 
     mouse_write(PS2MOUSE_GET_DEVICE_ID);
     expect_ack();
-    byte device_id = mouse_read();
+    u8 device_id = mouse_read();
 
     if (device_id != PS2MOUSE_INTELLIMOUSE_ID) {
         // Send magical wheel initiation sequence.
@@ -183,7 +183,7 @@ void PS2MouseDevice::initialize()
 
 void PS2MouseDevice::expect_ack()
 {
-    byte data = mouse_read();
+    u8 data = mouse_read();
     ASSERT(data == I8042_ACK);
 }
 
@@ -203,7 +203,7 @@ void PS2MouseDevice::prepare_for_output()
     }
 }
 
-void PS2MouseDevice::mouse_write(byte data)
+void PS2MouseDevice::mouse_write(u8 data)
 {
     prepare_for_output();
     IO::out8(0x64, 0xd4);
@@ -211,7 +211,7 @@ void PS2MouseDevice::mouse_write(byte data)
     IO::out8(0x60, data);
 }
 
-byte PS2MouseDevice::mouse_read()
+u8 PS2MouseDevice::mouse_read()
 {
     prepare_for_input();
     return IO::in8(0x60);
@@ -222,7 +222,7 @@ bool PS2MouseDevice::can_read(FileDescription&) const
     return !m_queue.is_empty();
 }
 
-ssize_t PS2MouseDevice::read(FileDescription&, byte* buffer, ssize_t size)
+ssize_t PS2MouseDevice::read(FileDescription&, u8* buffer, ssize_t size)
 {
     ssize_t nread = 0;
     while (nread < size) {
@@ -238,7 +238,7 @@ ssize_t PS2MouseDevice::read(FileDescription&, byte* buffer, ssize_t size)
     return nread;
 }
 
-ssize_t PS2MouseDevice::write(FileDescription&, const byte*, ssize_t)
+ssize_t PS2MouseDevice::write(FileDescription&, const u8*, ssize_t)
 {
     return 0;
 }

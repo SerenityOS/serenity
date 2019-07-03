@@ -221,7 +221,7 @@ int fputc(int ch, FILE* stream)
         fflush(stream);
     if (stream->eof || stream->error)
         return EOF;
-    return (byte)ch;
+    return (u8)ch;
 }
 
 int putc(int ch, FILE* stream)
@@ -298,7 +298,7 @@ size_t fread(void* ptr, size_t size, size_t nmemb, FILE* stream)
 size_t fwrite(const void* ptr, size_t size, size_t nmemb, FILE* stream)
 {
     assert(stream);
-    auto* bytes = (const byte*)ptr;
+    auto* bytes = (const u8*)ptr;
     ssize_t nwritten = 0;
     for (size_t i = 0; i < (size * nmemb); ++i) {
         int rc = fputc(bytes[i], stream);

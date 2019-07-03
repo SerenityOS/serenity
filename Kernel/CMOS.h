@@ -4,7 +4,7 @@
 
 namespace CMOS {
 
-byte read(byte index);
-void write(byte index, byte data);
+u8 read(u8 index);
+void write(u8 index, u8 data);
 
 }

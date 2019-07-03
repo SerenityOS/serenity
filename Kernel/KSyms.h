@@ -4,16 +4,16 @@
 #include <AK/Vector.h>
 
 struct KSym {
-    dword address;
+    u32 address;
     const char* name;
 };
 
-const KSym* ksymbolicate(dword address);
+const KSym* ksymbolicate(u32 address);
 void load_ksyms();
 void init_ksyms();
 
 extern bool ksyms_ready;
-extern dword ksym_lowest_address;
-extern dword ksym_highest_address;
+extern u32 ksym_lowest_address;
+extern u32 ksym_highest_address;
 
 void dump_backtrace();

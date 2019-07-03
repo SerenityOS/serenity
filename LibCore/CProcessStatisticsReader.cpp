@@ -34,16 +34,16 @@ void CProcessStatisticsReader::update_map(HashMap<pid_t, CProcessStatistics>& ma
     json.as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
         CProcessStatistics process;
-        process.pid = process_object.get("pid").to_dword();
-        process.nsched = process_object.get("times_scheduled").to_dword();
-        process.uid = process_object.get("uid").to_dword();
+        process.pid = process_object.get("pid").to_u32();
+        process.nsched = process_object.get("times_scheduled").to_u32();
+        process.uid = process_object.get("uid").to_u32();
         process.username = get_username_from_uid(process.uid);
         process.priority = process_object.get("priority").to_string();
-        process.syscalls = process_object.get("syscall_count").to_dword();
+        process.syscalls = process_object.get("syscall_count").to_u32();
         process.state = process_object.get("state").to_string();
         process.name = process_object.get("name").to_string();
-        process.virtual_size = process_object.get("amount_virtual").to_dword();
-        process.physical_size = process_object.get("amount_resident").to_dword();
+        process.virtual_size = process_object.get("amount_virtual").to_u32();
+        process.physical_size = process_object.get("amount_resident").to_u32();
         map.set(process.pid, process);
     });
 }

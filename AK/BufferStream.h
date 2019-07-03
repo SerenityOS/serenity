@@ -12,28 +12,28 @@ public:
     {
     }
 
-    void operator<<(byte value)
+    void operator<<(u8 value)
     {
         m_buffer[m_offset++] = value & 0xffu;
     }
 
     void operator<<(char value)
     {
-        m_buffer[m_offset++] = (byte)value;
+        m_buffer[m_offset++] = (u8)value;
     }
 
-    void operator<<(word value)
+    void operator<<(u16 value)
     {
         m_buffer[m_offset++] = value & 0xffu;
-        m_buffer[m_offset++] = (byte)(value >> 8) & 0xffu;
+        m_buffer[m_offset++] = (u8)(value >> 8) & 0xffu;
     }
 
-    void operator<<(dword value)
+    void operator<<(u32 value)
     {
         m_buffer[m_offset++] = value & 0xffu;
-        m_buffer[m_offset++] = (byte)(value >> 8) & 0xffu;
-        m_buffer[m_offset++] = (byte)(value >> 16) & 0xffu;
-        m_buffer[m_offset++] = (byte)(value >> 24) & 0xffu;
+        m_buffer[m_offset++] = (u8)(value >> 8) & 0xffu;
+        m_buffer[m_offset++] = (u8)(value >> 16) & 0xffu;
+        m_buffer[m_offset++] = (u8)(value >> 24) & 0xffu;
     }
 
     void operator<<(const StringView& value)
@@ -53,7 +53,7 @@ public:
         return m_offset == m_buffer.size();
     }
 
-    void fill_to_end(byte ch)
+    void fill_to_end(u8 ch)
     {
         while (!at_end())
             m_buffer[m_offset++] = ch;

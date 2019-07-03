@@ -18,7 +18,7 @@ LoopbackAdapter::~LoopbackAdapter()
 {
 }
 
-void LoopbackAdapter::send_raw(const byte* data, int size)
+void LoopbackAdapter::send_raw(const u8* data, int size)
 {
     dbgprintf("LoopbackAdapter: Sending %d byte(s) to myself.\n", size);
     did_receive(data, size);

@@ -216,14 +216,14 @@ struct winsize {
     unsigned short ws_col;
 };
 
-typedef dword dev_t;
-typedef dword ino_t;
-typedef word mode_t;
-typedef dword nlink_t;
-typedef dword uid_t;
-typedef dword gid_t;
-typedef dword clock_t;
-typedef dword socklen_t;
+typedef u32 dev_t;
+typedef u32 ino_t;
+typedef u16 mode_t;
+typedef u32 nlink_t;
+typedef u32 uid_t;
+typedef u32 gid_t;
+typedef u32 clock_t;
+typedef u32 socklen_t;
 typedef int pid_t;
 
 struct tms {
@@ -236,7 +236,7 @@ struct tms {
 typedef void (*__sighandler_t)(int);
 typedef __sighandler_t sighandler_t;
 
-typedef dword sigset_t;
+typedef u32 sigset_t;
 typedef void siginfo_t;
 
 struct sigaction {
@@ -259,16 +259,16 @@ struct sigaction {
 
 #define OFF_T_MAX 2147483647
 
-typedef signed_dword off_t;
-typedef dword time_t;
+typedef i32 off_t;
+typedef u32 time_t;
 
 struct utimbuf {
     time_t actime;
     time_t modtime;
 };
 
-typedef dword blksize_t;
-typedef dword blkcnt_t;
+typedef u32 blksize_t;
+typedef u32 blkcnt_t;
 
 #define NCCS 32
 
@@ -343,7 +343,7 @@ struct pollfd {
 #define IPPROTO_UDP 17
 
 struct sockaddr {
-    word sa_family;
+    u16 sa_family;
     char sa_data[14];
 };
 
@@ -351,7 +351,7 @@ struct sockaddr {
 #define UNIX_PATH_MAX 108
 
 struct sockaddr_un {
-    word sun_family;
+    u16 sun_family;
     char sun_path[UNIX_PATH_MAX];
 };
 
@@ -366,14 +366,14 @@ struct sockaddr_in {
     char sin_zero[8];
 };
 
-typedef dword __u32;
-typedef word __u16;
-typedef byte __u8;
+typedef u32 __u32;
+typedef u16 __u16;
+typedef u8 __u8;
 typedef int __s32;
 typedef short __s16;
 
-typedef dword useconds_t;
-typedef signed_dword suseconds_t;
+typedef u32 useconds_t;
+typedef i32 suseconds_t;
 
 struct timeval {
     time_t tv_sec;
@@ -392,8 +392,8 @@ struct utsname {
 
 struct [[gnu::packed]] FarPtr
 {
-    dword offset { 0 };
-    word selector { 0 };
+    u32 offset { 0 };
+    u16 selector { 0 };
 };
 
 struct iovec {

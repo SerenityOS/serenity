@@ -17,8 +17,8 @@
 #include <unistd.h>
 
 //#define TERMINAL_DEBUG
-byte Terminal::Attribute::default_foreground_color = 7;
-byte Terminal::Attribute::default_background_color = 0;
+u8 Terminal::Attribute::default_foreground_color = 7;
+u8 Terminal::Attribute::default_background_color = 0;
 
 Terminal::Terminal(int ptm_fd, RefPtr<CConfigFile> config)
     : m_ptm_fd(ptm_fd)
@@ -45,7 +45,7 @@ Terminal::Terminal(int ptm_fd, RefPtr<CConfigFile> config)
         set_font(Font::load_from_file(font_entry));
 
     m_notifier.on_ready_to_read = [this] {
-        byte buffer[BUFSIZ];
+        u8 buffer[BUFSIZ];
         ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
         if (nread < 0) {
             dbgprintf("Terminal read error: %s\n", strerror(errno));
@@ -69,7 +69,7 @@ Terminal::Terminal(int ptm_fd, RefPtr<CConfigFile> config)
         m_config->read_num_entry("Window", "Height", 25));
 }
 
-Terminal::Line::Line(word length)
+Terminal::Line::Line(u16 length)
 {
     set_length(length);
 }
@@ -80,11 +80,11 @@ Terminal::Line::~Line()
     delete[] attributes;
 }
 
-void Terminal::Line::set_length(word new_length)
+void Terminal::Line::set_length(u16 new_length)
 {
     if (m_length == new_length)
         return;
-    auto* new_characters = new byte[new_length];
+    auto* new_characters = new u8[new_length];
     auto* new_attributes = new Attribute[new_length];
     memset(new_characters, ' ', new_length);
     delete[] characters;
@@ -98,7 +98,7 @@ void Terminal::Line::clear(Attribute attribute)
 {
     if (dirty) {
         memset(characters, ' ', m_length);
-        for (word i = 0; i < m_length; ++i)
+        for (u16 i = 0; i < m_length; ++i)
             attributes[i] = attribute;
         return;
     }
@@ -125,17 +125,17 @@ void Terminal::clear()
     set_cursor(0, 0);
 }
 
-inline bool is_valid_parameter_character(byte ch)
+inline bool is_valid_parameter_character(u8 ch)
 {
     return ch >= 0x30 && ch <= 0x3f;
 }
 
-inline bool is_valid_intermediate_character(byte ch)
+inline bool is_valid_intermediate_character(u8 ch)
 {
     return ch >= 0x20 && ch <= 0x2f;
 }
 
-inline bool is_valid_final_character(byte ch)
+inline bool is_valid_final_character(u8 ch)
 {
     return ch >= 0x40 && ch <= 0x7e;
 }
@@ -481,7 +481,7 @@ void Terminal::escape$S(const ParamVector& params)
     if (params.size() >= 1)
         count = params[0];
 
-    for (word i = 0; i < count; i++)
+    for (u16 i = 0; i < count; i++)
         scroll_up();
 }
 
@@ -491,7 +491,7 @@ void Terminal::escape$T(const ParamVector& params)
     if (params.size() >= 1)
         count = params[0];
 
-    for (word i = 0; i < count; i++)
+    for (u16 i = 0; i < count; i++)
         scroll_down();
 }
 
@@ -577,7 +577,7 @@ void Terminal::execute_xterm_command()
     m_xterm_param2.clear_with_capacity();
 }
 
-void Terminal::execute_escape_sequence(byte final)
+void Terminal::execute_escape_sequence(u8 final)
 {
     bool question_param = false;
     m_final = final;
@@ -701,7 +701,7 @@ void Terminal::execute_escape_sequence(byte final)
 
 void Terminal::newline()
 {
-    word new_row = m_cursor_row;
+    u16 new_row = m_cursor_row;
     if (m_cursor_row == m_scroll_region_bottom) {
         scroll_up();
     } else {
@@ -744,7 +744,7 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
     invalidate_cursor();
 }
 
-void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
+void Terminal::put_character_at(unsigned row, unsigned column, u8 ch)
 {
     ASSERT(row < rows());
     ASSERT(column < columns());
@@ -757,7 +757,7 @@ void Terminal::put_character_at(unsigned row, unsigned column, byte ch)
     m_last_char = ch;
 }
 
-void Terminal::on_char(byte ch)
+void Terminal::on_char(u8 ch)
 {
 #ifdef TERMINAL_DEBUG
     dbgprintf("Terminal::on_char: %b (%c), fg=%u, bg=%u\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
@@ -913,7 +913,7 @@ void Terminal::unimplemented_xterm_escape()
     inject_string(message);
 }
 
-void Terminal::set_size(word columns, word rows)
+void Terminal::set_size(u16 columns, u16 rows)
 {
     if (columns == m_columns && rows == m_rows)
         return;
@@ -965,14 +965,14 @@ void Terminal::set_size(word columns, word rows)
     ASSERT(rc == 0);
 }
 
-Rect Terminal::glyph_rect(word row, word column)
+Rect Terminal::glyph_rect(u16 row, u16 column)
 {
     int y = row * m_line_height;
     int x = column * font().glyph_width('x');
     return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x'), font().glyph_height() };
 }
 
-Rect Terminal::row_rect(word row)
+Rect Terminal::row_rect(u16 row)
 {
     int y = row * m_line_height;
     Rect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x') * m_columns, font().glyph_height() };
@@ -1083,14 +1083,14 @@ void Terminal::paint_event(GPaintEvent& event)
         painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(m_opacity));
     invalidate_cursor();
 
-    for (word row = 0; row < m_rows; ++row) {
+    for (u16 row = 0; row < m_rows; ++row) {
         auto& line = this->line(row);
         bool has_only_one_background_color = line.has_only_one_background_color();
         if (m_visual_beep_timer.is_active())
             painter.fill_rect(row_rect(row), Color::Red);
         else if (has_only_one_background_color)
             painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
-        for (word column = 0; column < m_columns; ++column) {
+        for (u16 column = 0; column < m_columns; ++column) {
             char ch = line.characters[column];
             bool should_reverse_fill_for_cursor_or_selection = (m_cursor_blink_state && m_in_active_window && row == m_cursor_row && column == m_cursor_column)
                 || selection_contains({ row, column });
@@ -1167,7 +1167,7 @@ void Terminal::update_cursor()
     flush_dirty_lines();
 }
 
-void Terminal::set_opacity(byte new_opacity)
+void Terminal::set_opacity(u8 new_opacity)
 {
     if (m_opacity == new_opacity)
         return;

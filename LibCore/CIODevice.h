@@ -31,8 +31,8 @@ public:
     ByteBuffer read_line(int max_size);
     ByteBuffer read_all();
 
-    bool write(const byte*, int size);
-    bool write(const AK::StringView& v) { return write((const byte*)v.characters(), v.length()); }
+    bool write(const u8*, int size);
+    bool write(const AK::StringView& v) { return write((const u8*)v.characters(), v.length()); }
 
     // FIXME: I would like this to be const but currently it needs to call populate_read_buffer().
     bool can_read_line();
@@ -45,7 +45,7 @@ public:
         FromEndPosition,
     };
 
-    bool seek(signed_qword, SeekMode = SeekMode::SetPosition, off_t* = nullptr);
+    bool seek(i64, SeekMode = SeekMode::SetPosition, off_t* = nullptr);
 
     virtual bool open(CIODevice::OpenMode) = 0;
     virtual bool close();
@@ -70,5 +70,5 @@ private:
     int m_error { 0 };
     bool m_eof { false };
     OpenMode m_mode { NotOpen };
-    Vector<byte> m_buffered_data;
+    Vector<u8> m_buffered_data;
 };

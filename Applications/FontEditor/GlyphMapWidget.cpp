@@ -25,7 +25,7 @@ int GlyphMapWidget::preferred_height() const
     return rows() * (font().glyph_height() + m_vertical_spacing) + 2 + frame_thickness() * 2;
 }
 
-void GlyphMapWidget::set_selected_glyph(byte glyph)
+void GlyphMapWidget::set_selected_glyph(u8 glyph)
 {
     if (m_selected_glyph == glyph)
         return;
@@ -35,7 +35,7 @@ void GlyphMapWidget::set_selected_glyph(byte glyph)
     update();
 }
 
-Rect GlyphMapWidget::get_outer_rect(byte glyph) const
+Rect GlyphMapWidget::get_outer_rect(u8 glyph) const
 {
     int row = glyph / columns();
     int column = glyph % columns();
@@ -48,7 +48,7 @@ Rect GlyphMapWidget::get_outer_rect(byte glyph) const
         .translated(frame_thickness(), frame_thickness());
 }
 
-void GlyphMapWidget::update_glyph(byte glyph)
+void GlyphMapWidget::update_glyph(u8 glyph)
 {
     update(get_outer_rect(glyph));
 }
@@ -63,7 +63,7 @@ void GlyphMapWidget::paint_event(GPaintEvent& event)
     painter.set_font(font());
     painter.fill_rect(frame_inner_rect(), Color::White);
 
-    byte glyph = 0;
+    u8 glyph = 0;
 
     for (int row = 0; row < rows(); ++row) {
         for (int column = 0; column < columns(); ++column, ++glyph) {

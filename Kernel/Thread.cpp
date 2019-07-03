@@ -19,8 +19,8 @@ HashTable<Thread*>& thread_table()
 InlineLinkedList<Thread>* g_runnable_threads;
 InlineLinkedList<Thread>* g_nonrunnable_threads;
 
-static const dword default_kernel_stack_size = 65536;
-static const dword default_userspace_stack_size = 65536;
+static const u32 default_kernel_stack_size = 65536;
+static const u32 default_userspace_stack_size = 65536;
 
 Thread::Thread(Process& process)
     : m_process(process)
@@ -33,7 +33,7 @@ Thread::Thread(Process& process)
 
     // Only IF is set when a process boots.
     m_tss.eflags = 0x0202;
-    word cs, ds, ss;
+    u16 cs, ds, ss;
 
     if (m_process.is_ring0()) {
         cs = 0x08;
@@ -57,7 +57,7 @@ Thread::Thread(Process& process)
     if (m_process.is_ring0()) {
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
-        m_kernel_stack_base = (dword)kmalloc_eternal(default_kernel_stack_size);
+        m_kernel_stack_base = (u32)kmalloc_eternal(default_kernel_stack_size);
         m_tss.esp = (m_kernel_stack_base + default_kernel_stack_size) & 0xfffffff8u;
 
     } else {
@@ -135,7 +135,7 @@ void Thread::block(Thread::State new_state, FileDescription& description)
     block(new_state);
 }
 
-void Thread::sleep(dword ticks)
+void Thread::sleep(u32 ticks)
 {
     ASSERT(state() == Thread::Running);
     current->set_wakeup_time(g_uptime + ticks);
@@ -221,7 +221,7 @@ bool Thread::tick()
     return --m_ticks_left;
 }
 
-void Thread::send_signal(byte signal, Process* sender)
+void Thread::send_signal(u8 signal, Process* sender)
 {
     ASSERT(signal < 32);
 
@@ -242,10 +242,10 @@ bool Thread::has_unmasked_pending_signals() const
 ShouldUnblockThread Thread::dispatch_one_pending_signal()
 {
     ASSERT_INTERRUPTS_DISABLED();
-    dword signal_candidates = m_pending_signals & ~m_signal_mask;
+    u32 signal_candidates = m_pending_signals & ~m_signal_mask;
     ASSERT(signal_candidates);
 
-    byte signal = 0;
+    u8 signal = 0;
     for (; signal < 32; ++signal) {
         if (signal_candidates & (1 << signal)) {
             break;
@@ -262,7 +262,7 @@ enum class DefaultSignalAction {
     Continue,
 };
 
-DefaultSignalAction default_signal_action(byte signal)
+DefaultSignalAction default_signal_action(u8 signal)
 {
     ASSERT(signal && signal < NSIG);
 
@@ -307,7 +307,7 @@ DefaultSignalAction default_signal_action(byte signal)
     ASSERT_NOT_REACHED();
 }
 
-ShouldUnblockThread Thread::dispatch_signal(byte signal)
+ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal < 32);
@@ -358,8 +358,8 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
         return ShouldUnblockThread::Yes;
     }
 
-    dword old_signal_mask = m_signal_mask;
-    dword new_signal_mask = action.mask;
+    u32 old_signal_mask = m_signal_mask;
+    u32 new_signal_mask = action.mask;
     if (action.flags & SA_NODEFER)
         new_signal_mask &= ~(1 << signal);
     else
@@ -369,9 +369,9 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
 
     Scheduler::prepare_to_modify_tss(*this);
 
-    word ret_cs = m_tss.cs;
-    dword ret_eip = m_tss.eip;
-    dword ret_eflags = m_tss.eflags;
+    u16 ret_cs = m_tss.cs;
+    u32 ret_eip = m_tss.eip;
+    u32 ret_eflags = m_tss.eflags;
     bool interrupting_in_kernel = (ret_cs & 3) == 0;
 
     ProcessPagingScope paging_scope(m_process);
@@ -404,7 +404,7 @@ ShouldUnblockThread Thread::dispatch_signal(byte signal)
         push_value_on_stack(ret_eflags);
 
         // PUSHA
-        dword old_esp = m_tss.esp;
+        u32 old_esp = m_tss.esp;
         push_value_on_stack(m_tss.eax);
         push_value_on_stack(m_tss.ecx);
         push_value_on_stack(m_tss.edx);
@@ -451,14 +451,14 @@ void Thread::set_default_signal_dispositions()
 {
     // FIXME: Set up all the right default actions. See signal(7).
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
-    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((dword)SIG_IGN);
-    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((dword)SIG_IGN);
+    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((u32)SIG_IGN);
+    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((u32)SIG_IGN);
 }
 
-void Thread::push_value_on_stack(dword value)
+void Thread::push_value_on_stack(u32 value)
 {
     m_tss.esp -= 4;
-    dword* stack_ptr = (dword*)m_tss.esp;
+    u32* stack_ptr = (u32*)m_tss.esp;
     *stack_ptr = value;
 }
 
@@ -502,9 +502,9 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
     env[environment.size()] = nullptr;
 
     // NOTE: The stack needs to be 16-byte aligned.
-    push_value_on_stack((dword)env);
-    push_value_on_stack((dword)argv);
-    push_value_on_stack((dword)argc);
+    push_value_on_stack((u32)env);
+    push_value_on_stack((u32)argv);
+    push_value_on_stack((u32)argc);
     push_value_on_stack(0);
 }
 
@@ -515,7 +515,7 @@ void Thread::make_userspace_stack_for_secondary_thread(void* argument)
     m_tss.esp = region->vaddr().offset(default_userspace_stack_size).get();
 
     // NOTE: The stack needs to be 16-byte aligned.
-    push_value_on_stack((dword)argument);
+    push_value_on_stack((u32)argument);
     push_value_on_stack(0);
 }
 

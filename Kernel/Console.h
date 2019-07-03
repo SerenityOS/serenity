@@ -7,7 +7,7 @@
 class ConsoleImplementation {
 public:
     virtual ~ConsoleImplementation();
-    virtual void on_sysconsole_receive(byte) = 0;
+    virtual void on_sysconsole_receive(u8) = 0;
 };
 
 class Console final : public CharacterDevice {
@@ -21,8 +21,8 @@ public:
     // ^CharacterDevice
     virtual bool can_read(FileDescription&) const override;
     virtual bool can_write(FileDescription&) const override { return true; }
-    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
-    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
+    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
     virtual const char* class_name() const override { return "Console"; }
 
     void set_implementation(ConsoleImplementation* implementation) { m_implementation = implementation; }

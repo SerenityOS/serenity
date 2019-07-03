@@ -17,7 +17,7 @@ void DoubleBuffer::flip()
     compute_emptiness();
 }
 
-ssize_t DoubleBuffer::write(const byte* data, ssize_t size)
+ssize_t DoubleBuffer::write(const u8* data, ssize_t size)
 {
     if (!size)
         return 0;
@@ -27,7 +27,7 @@ ssize_t DoubleBuffer::write(const byte* data, ssize_t size)
     return size;
 }
 
-ssize_t DoubleBuffer::read(byte* data, ssize_t size)
+ssize_t DoubleBuffer::read(u8* data, ssize_t size)
 {
     if (!size)
         return 0;

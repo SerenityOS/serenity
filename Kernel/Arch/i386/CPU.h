@@ -13,45 +13,45 @@ class PageTableEntry;
 
 struct [[gnu::packed]] TSS32
 {
-    word backlink, __blh;
-    dword esp0;
-    word ss0, __ss0h;
-    dword esp1;
-    word ss1, __ss1h;
-    dword esp2;
-    word ss2, __ss2h;
-    dword cr3, eip, eflags;
-    dword eax, ecx, edx, ebx, esp, ebp, esi, edi;
-    word es, __esh;
-    word cs, __csh;
-    word ss, __ssh;
-    word ds, __dsh;
-    word fs, __fsh;
-    word gs, __gsh;
-    word ldt, __ldth;
-    word trace, iomapbase;
+    u16 backlink, __blh;
+    u32 esp0;
+    u16 ss0, __ss0h;
+    u32 esp1;
+    u16 ss1, __ss1h;
+    u32 esp2;
+    u16 ss2, __ss2h;
+    u32 cr3, eip, eflags;
+    u32 eax, ecx, edx, ebx, esp, ebp, esi, edi;
+    u16 es, __esh;
+    u16 cs, __csh;
+    u16 ss, __ssh;
+    u16 ds, __dsh;
+    u16 fs, __fsh;
+    u16 gs, __gsh;
+    u16 ldt, __ldth;
+    u16 trace, iomapbase;
 };
 
 union [[gnu::packed]] Descriptor
 {
     struct {
-        word limit_lo;
-        word base_lo;
-        byte base_hi;
-        byte type : 4;
-        byte descriptor_type : 1;
-        byte dpl : 2;
-        byte segment_present : 1;
-        byte limit_hi : 4;
-        byte : 1;
-        byte zero : 1;
-        byte operation_size : 1;
-        byte granularity : 1;
-        byte base_hi2;
+        u16 limit_lo;
+        u16 base_lo;
+        u8 base_hi;
+        u8 type : 4;
+        u8 descriptor_type : 1;
+        u8 dpl : 2;
+        u8 segment_present : 1;
+        u8 limit_hi : 4;
+        u8 : 1;
+        u8 zero : 1;
+        u8 operation_size : 1;
+        u8 granularity : 1;
+        u8 base_hi2;
     };
     struct {
-        dword low;
-        dword high;
+        u32 low;
+        u32 high;
     };
 
     enum Type {
@@ -72,15 +72,15 @@ union [[gnu::packed]] Descriptor
 
     void set_base(void* b)
     {
-        base_lo = (dword)(b)&0xffff;
-        base_hi = ((dword)(b) >> 16) & 0xff;
-        base_hi2 = ((dword)(b) >> 24) & 0xff;
+        base_lo = (u32)(b)&0xffff;
+        base_hi = ((u32)(b) >> 16) & 0xff;
+        base_hi2 = ((u32)(b) >> 24) & 0xff;
     }
 
-    void set_limit(dword l)
+    void set_limit(u32 l)
     {
-        limit_lo = (dword)l & 0xffff;
-        limit_hi = ((dword)l >> 16) & 0xff;
+        limit_lo = (u32)l & 0xffff;
+        limit_hi = ((u32)l >> 16) & 0xff;
     }
 };
 
@@ -89,13 +89,13 @@ class PageDirectoryEntry {
 
 public:
     PageTableEntry* page_table_base() { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
-    void set_page_table_base(dword value)
+    void set_page_table_base(u32 value)
     {
         m_raw &= 0xfff;
         m_raw |= value & 0xfffff000;
     }
 
-    dword raw() const { return m_raw; }
+    u32 raw() const { return m_raw; }
     void copy_from(Badge<MemoryManager>, const PageDirectoryEntry& other) { m_raw = other.m_raw; }
 
     enum Flags {
@@ -121,7 +121,7 @@ public:
     bool is_cache_disabled() const { return raw() & CacheDisabled; }
     void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
 
-    void set_bit(byte bit, bool value)
+    void set_bit(u8 bit, bool value)
     {
         if (value)
             m_raw |= bit;
@@ -130,7 +130,7 @@ public:
     }
 
 private:
-    dword m_raw;
+    u32 m_raw;
 };
 
 class PageTableEntry {
@@ -138,13 +138,13 @@ class PageTableEntry {
 
 public:
     void* physical_page_base() { return reinterpret_cast<void*>(m_raw & 0xfffff000u); }
-    void set_physical_page_base(dword value)
+    void set_physical_page_base(u32 value)
     {
         m_raw &= 0xfff;
         m_raw |= value & 0xfffff000;
     }
 
-    dword raw() const { return m_raw; }
+    u32 raw() const { return m_raw; }
 
     enum Flags {
         Present = 1 << 0,
@@ -169,7 +169,7 @@ public:
     bool is_cache_disabled() const { return raw() & CacheDisabled; }
     void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
 
-    void set_bit(byte bit, bool value)
+    void set_bit(u8 bit, bool value)
     {
         if (value)
             m_raw |= bit;
@@ -178,7 +178,7 @@ public:
     }
 
 private:
-    dword m_raw;
+    u32 m_raw;
 };
 
 static_assert(sizeof(PageDirectoryEntry) == 4);
@@ -189,17 +189,17 @@ class IRQHandler;
 void gdt_init();
 void idt_init();
 void sse_init();
-void register_interrupt_handler(byte number, void (*f)());
-void register_user_callable_interrupt_handler(byte number, void (*f)());
-void register_irq_handler(byte number, IRQHandler&);
-void unregister_irq_handler(byte number, IRQHandler&);
+void register_interrupt_handler(u8 number, void (*f)());
+void register_user_callable_interrupt_handler(u8 number, void (*f)());
+void register_irq_handler(u8 number, IRQHandler&);
+void unregister_irq_handler(u8 number, IRQHandler&);
 void flush_idt();
 void flush_gdt();
-void load_task_register(word selector);
-word gdt_alloc_entry();
-void gdt_free_entry(word);
-Descriptor& get_gdt_entry(word selector);
-void write_gdt_entry(word selector, Descriptor&);
+void load_task_register(u16 selector);
+u16 gdt_alloc_entry();
+void gdt_free_entry(u16);
+Descriptor& get_gdt_entry(u16 selector);
+void write_gdt_entry(u16 selector, Descriptor&);
 
 [[noreturn]] static inline void hang()
 {
@@ -208,8 +208,8 @@ void write_gdt_entry(word selector, Descriptor&);
     }
 }
 
-#define LSW(x) ((dword)(x)&0xFFFF)
-#define MSW(x) (((dword)(x) >> 16) & 0xFFFF)
+#define LSW(x) ((u32)(x)&0xFFFF)
+#define MSW(x) (((u32)(x) >> 16) & 0xFFFF)
 #define LSB(x) ((x)&0xFF)
 #define MSB(x) (((x) >> 8) & 0xFF)
 
@@ -220,17 +220,17 @@ void write_gdt_entry(word selector, Descriptor&);
 #define memory_barrier() asm volatile("" :: \
                                           : "memory")
 
-inline dword cpu_cr3()
+inline u32 cpu_cr3()
 {
-    dword cr3;
+    u32 cr3;
     asm volatile("movl %%cr3, %%eax"
                  : "=a"(cr3));
     return cr3;
 }
 
-inline dword cpu_flags()
+inline u32 cpu_flags()
 {
-    dword flags;
+    u32 flags;
     asm volatile(
         "pushf\n"
         "pop %0\n"
@@ -259,7 +259,7 @@ public:
     }
 
 private:
-    dword m_flags;
+    u32 m_flags;
 };
 
 class InterruptDisabler {
@@ -277,7 +277,7 @@ public:
     }
 
 private:
-    dword m_flags;
+    u32 m_flags;
 };
 
 /* Map IRQ0-15 @ ISR 0x50-0x5F */
@@ -297,14 +297,14 @@ struct PageFaultFlags {
 
 class PageFault {
 public:
-    PageFault(word code, VirtualAddress vaddr)
+    PageFault(u16 code, VirtualAddress vaddr)
         : m_code(code)
         , m_vaddr(vaddr)
     {
     }
 
     VirtualAddress vaddr() const { return m_vaddr; }
-    word code() const { return m_code; }
+    u16 code() const { return m_code; }
 
     bool is_not_present() const { return (m_code & 1) == PageFaultFlags::NotPresent; }
     bool is_protection_violation() const { return (m_code & 1) == PageFaultFlags::ProtectionViolation; }
@@ -315,86 +315,86 @@ public:
     bool is_instruction_fetch() const { return (m_code & 8) == PageFaultFlags::InstructionFetch; }
 
 private:
-    word m_code;
+    u16 m_code;
     VirtualAddress m_vaddr;
 };
 
 struct [[gnu::packed]] RegisterDump
 {
-    word ss;
-    word gs;
-    word fs;
-    word es;
-    word ds;
-    dword edi;
-    dword esi;
-    dword ebp;
-    dword esp;
-    dword ebx;
-    dword edx;
-    dword ecx;
-    dword eax;
-    dword eip;
-    word cs;
-    word __csPadding;
-    dword eflags;
-    dword esp_if_crossRing;
-    word ss_if_crossRing;
+    u16 ss;
+    u16 gs;
+    u16 fs;
+    u16 es;
+    u16 ds;
+    u32 edi;
+    u32 esi;
+    u32 ebp;
+    u32 esp;
+    u32 ebx;
+    u32 edx;
+    u32 ecx;
+    u32 eax;
+    u32 eip;
+    u16 cs;
+    u16 __csPadding;
+    u32 eflags;
+    u32 esp_if_crossRing;
+    u16 ss_if_crossRing;
 };
 
 struct [[gnu::packed]] RegisterDumpWithExceptionCode
 {
-    word ss;
-    word gs;
-    word fs;
-    word es;
-    word ds;
-    dword edi;
-    dword esi;
-    dword ebp;
-    dword esp;
-    dword ebx;
-    dword edx;
-    dword ecx;
-    dword eax;
-    word exception_code;
-    word __exception_code_padding;
-    dword eip;
-    word cs;
-    word __csPadding;
-    dword eflags;
-    dword esp_if_crossRing;
-    word ss_if_crossRing;
+    u16 ss;
+    u16 gs;
+    u16 fs;
+    u16 es;
+    u16 ds;
+    u32 edi;
+    u32 esi;
+    u32 ebp;
+    u32 esp;
+    u32 ebx;
+    u32 edx;
+    u32 ecx;
+    u32 eax;
+    u16 exception_code;
+    u16 __exception_code_padding;
+    u32 eip;
+    u16 cs;
+    u16 __csPadding;
+    u32 eflags;
+    u32 esp_if_crossRing;
+    u16 ss_if_crossRing;
 };
 
 struct [[gnu::aligned(16)]] FPUState
 {
-    byte buffer[512];
+    u8 buffer[512];
 };
 
-inline constexpr dword page_base_of(dword address)
+inline constexpr u32 page_base_of(u32 address)
 {
     return address & 0xfffff000;
 }
 
 class CPUID {
 public:
-    CPUID(dword function) { asm volatile("cpuid"
+    CPUID(u32 function) { asm volatile("cpuid"
                                          : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx)
                                          : "a"(function), "c"(0)); }
-    dword eax() const { return m_eax; }
-    dword ebx() const { return m_ebx; }
-    dword ecx() const { return m_ecx; }
-    dword edx() const { return m_edx; }
+    u32 eax() const { return m_eax; }
+    u32 ebx() const { return m_ebx; }
+    u32 ecx() const { return m_ecx; }
+    u32 edx() const { return m_edx; }
 
 private:
-    dword m_eax { 0xffffffff };
-    dword m_ebx { 0xffffffff };
-    dword m_ecx { 0xffffffff };
-    dword m_edx { 0xffffffff };
+    u32 m_eax { 0xffffffff };
+    u32 m_ebx { 0xffffffff };
+    u32 m_ecx { 0xffffffff };
+    u32 m_edx { 0xffffffff };
 };
 
-inline void read_tsc(dword& lsw, dword& msw)
+inline void read_tsc(u32& lsw, u32& msw)
 {
     asm volatile("rdtsc"
                  : "=d"(msw), "=a"(lsw));

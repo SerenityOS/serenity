@@ -70,14 +70,14 @@ int main(int argc, char** argv)
     }
 
     if (mode == ReadFromUninitializedMallocMemory) {
-        auto* uninitialized_memory = (volatile dword**)malloc(1024);
+        auto* uninitialized_memory = (volatile u32**)malloc(1024);
         volatile auto x = uninitialized_memory[0][0];
         (void)x;
         ASSERT_NOT_REACHED();
     }
 
     if (mode == ReadFromFreedMemory) {
-        auto* uninitialized_memory = (volatile dword**)malloc(1024);
+        auto* uninitialized_memory = (volatile u32**)malloc(1024);
         free(uninitialized_memory);
         volatile auto x = uninitialized_memory[4][0];
         (void)x;
@@ -85,13 +85,13 @@ int main(int argc, char** argv)
     }
 
     if (mode == WriteToUninitializedMallocMemory) {
-        auto* uninitialized_memory = (volatile dword**)malloc(1024);
+        auto* uninitialized_memory = (volatile u32**)malloc(1024);
         uninitialized_memory[4][0] = 1;
         ASSERT_NOT_REACHED();
     }
 
     if (mode == WriteToFreedMemory) {
-        auto* uninitialized_memory = (volatile dword**)malloc(1024);
+        auto* uninitialized_memory = (volatile u32**)malloc(1024);
         free(uninitialized_memory);
         uninitialized_memory[4][0] = 1;
         ASSERT_NOT_REACHED();

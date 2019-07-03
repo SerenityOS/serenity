@@ -10,13 +10,13 @@ ProcessTracer::~ProcessTracer()
 {
 }
 
-void ProcessTracer::did_syscall(dword function, dword arg1, dword arg2, dword arg3, dword result)
+void ProcessTracer::did_syscall(u32 function, u32 arg1, u32 arg2, u32 arg3, u32 result)
 {
     CallData data = { function, arg1, arg2, arg3, result };
     m_calls.enqueue(data);
 }
 
-int ProcessTracer::read(FileDescription&, byte* buffer, int buffer_size)
+int ProcessTracer::read(FileDescription&, u8* buffer, int buffer_size)
 {
     if (m_calls.is_empty())
         return 0;

@@ -516,7 +516,7 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
     auto new_file = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), 0120644, 0, 0, error);
     if (!new_file)
         return KResult(error);
-    ssize_t nwritten = new_file->write_bytes(0, target.length(), (const byte*)target.characters(), nullptr);
+    ssize_t nwritten = new_file->write_bytes(0, target.length(), (const u8*)target.characters(), nullptr);
     if (nwritten < 0)
         return KResult(nwritten);
     return KSuccess;

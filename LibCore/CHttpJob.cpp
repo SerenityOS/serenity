@@ -24,7 +24,7 @@ void CHttpJob::on_socket_connected()
     if (!success)
         return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::TransmissionFailed); });
 
-    Vector<byte> buffer;
+    Vector<u8> buffer;
     while (m_socket->is_connected()) {
         if (m_state == State::InStatus) {
             while (!m_socket->can_read_line())

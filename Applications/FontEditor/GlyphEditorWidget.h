@@ -6,8 +6,8 @@ public:
     GlyphEditorWidget(Font&, GWidget* parent);
     virtual ~GlyphEditorWidget() override;
 
-    byte glyph() const { return m_glyph; }
-    void set_glyph(byte);
+    u8 glyph() const { return m_glyph; }
+    void set_glyph(u8);
 
     int preferred_width() const;
     int preferred_height() const;
@@ -15,7 +15,7 @@ public:
     Font& font() { return *m_font; }
     const Font& font() const { return *m_font; }
 
-    Function<void(byte)> on_glyph_altered;
+    Function<void(u8)> on_glyph_altered;
 
 private:
     virtual void paint_event(GPaintEvent&) override;
@@ -25,6 +25,6 @@ private:
     void draw_at_mouse(const GMouseEvent&);
 
     RefPtr<Font> m_font;
-    byte m_glyph { 0 };
+    u8 m_glyph { 0 };
     int m_scale { 10 };
 };

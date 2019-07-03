@@ -21,33 +21,23 @@ static_assert(sizeof(i16) == 2);
 static_assert(sizeof(i32) == 4);
 static_assert(sizeof(i64) == 8);
 
-typedef unsigned char byte;
-typedef unsigned short word;
-typedef unsigned int dword;
-typedef unsigned long long int qword;
-
-typedef signed char signed_byte;
-typedef signed short signed_word;
-typedef signed int signed_dword;
-typedef signed long long int signed_qword;
-
 typedef __SIZE_TYPE__ size_t;
-typedef signed_dword ssize_t;
+typedef i32 ssize_t;
 
-static_assert(sizeof(size_t) == sizeof(dword));
-static_assert(sizeof(ssize_t) == sizeof(signed_dword));
+static_assert(sizeof(size_t) == sizeof(u32));
+static_assert(sizeof(ssize_t) == sizeof(i32));
 
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 
-typedef byte uint8_t;
-typedef word uint16_t;
-typedef dword uint32_t;
-typedef qword uint64_t;
+typedef u8 uint8_t;
+typedef u16 uint16_t;
+typedef u32 uint32_t;
+typedef u64 uint64_t;
 
-typedef signed_byte int8_t;
-typedef signed_word int16_t;
-typedef signed_dword int32_t;
-typedef signed_qword int64_t;
+typedef i8 int8_t;
+typedef i16 int16_t;
+typedef i32 int32_t;
+typedef i64 int64_t;
 
 #else
 #    include <stdint.h>
@@ -62,16 +52,6 @@ typedef int8_t i8;
 typedef int16_t i16;
 typedef int32_t i32;
 typedef int64_t i64;
-
-typedef uint8_t byte;
-typedef uint16_t word;
-typedef uint32_t dword;
-typedef uint64_t qword;
-
-typedef int8_t signed_byte;
-typedef int16_t signed_word;
-typedef int32_t signed_dword;
-typedef int64_t signed_qword;
 #endif
 
 constexpr unsigned KB = 1024;
@@ -82,7 +62,7 @@ namespace std {
 typedef decltype(nullptr) nullptr_t;
 }
 
-static constexpr dword explode_byte(byte b)
+static constexpr u32 explode_byte(u8 b)
 {
     return b << 24 | b << 16 | b << 8 | b;
 }

@@ -12,8 +12,8 @@ public:
     {
     }
 
-    ssize_t write(const byte*, ssize_t);
-    ssize_t read(byte*, ssize_t);
+    ssize_t write(const u8*, ssize_t);
+    ssize_t read(u8*, ssize_t);
 
     bool is_empty() const { return m_empty; }
 
@@ -24,10 +24,10 @@ private:
     void flip();
     void compute_emptiness();
 
-    Vector<byte>* m_write_buffer { nullptr };
-    Vector<byte>* m_read_buffer { nullptr };
-    Vector<byte> m_buffer1;
-    Vector<byte> m_buffer2;
+    Vector<u8>* m_write_buffer { nullptr };
+    Vector<u8>* m_read_buffer { nullptr };
+    Vector<u8> m_buffer1;
+    Vector<u8> m_buffer2;
     ssize_t m_read_buffer_index { 0 };
     bool m_empty { true };
     Lock m_lock { "DoubleBuffer" };

@@ -6,37 +6,37 @@
 #include <AK/NetworkOrdered.h>
 #include <AK/Types.h>
 
-enum class IPv4Protocol : word {
+enum class IPv4Protocol : u16 {
     ICMP = 1,
     TCP = 6,
     UDP = 17,
 };
 
-NetworkOrdered<word> internet_checksum(const void*, size_t);
+NetworkOrdered<u16> internet_checksum(const void*, size_t);
 
 class [[gnu::packed]] IPv4Packet
 {
 public:
-    byte version() const { return (m_version_and_ihl >> 4) & 0xf; }
-    void set_version(byte version) { m_version_and_ihl = (m_version_and_ihl & 0x0f) | (version << 4); }
+    u8 version() const { return (m_version_and_ihl >> 4) & 0xf; }
+    void set_version(u8 version) { m_version_and_ihl = (m_version_and_ihl & 0x0f) | (version << 4); }
 
-    byte internet_header_length() const { return m_version_and_ihl & 0xf; }
-    void set_internet_header_length(byte ihl) { m_version_and_ihl = (m_version_and_ihl & 0xf0) | (ihl & 0x0f); }
+    u8 internet_header_length() const { return m_version_and_ihl & 0xf; }
+    void set_internet_header_length(u8 ihl) { m_version_and_ihl = (m_version_and_ihl & 0xf0) | (ihl & 0x0f); }
 
-    word length() const { return m_length; }
-    void set_length(word length) { m_length = length; }
+    u16 length() const { return m_length; }
+    void set_length(u16 length) { m_length = length; }
 
-    word ident() const { return m_ident; }
-    void set_ident(word ident) { m_ident = ident; }
+    u16 ident() const { return m_ident; }
+    void set_ident(u16 ident) { m_ident = ident; }
 
-    byte ttl() const { return m_ttl; }
-    void set_ttl(byte ttl) { m_ttl = ttl; }
+    u8 ttl() const { return m_ttl; }
+    void set_ttl(u8 ttl) { m_ttl = ttl; }
 
-    byte protocol() const { return m_protocol; }
-    void set_protocol(byte protocol) { m_protocol = protocol; }
+    u8 protocol() const { return m_protocol; }
+    void set_protocol(u8 protocol) { m_protocol = protocol; }
 
-    word checksum() const { return m_checksum; }
-    void set_checksum(word checksum) { m_checksum = checksum; }
+    u16 checksum() const { return m_checksum; }
+    void set_checksum(u16 checksum) { m_checksum = checksum; }
 
     const IPv4Address& source() const { return m_source; }
     void set_source(const IPv4Address& address) { m_source = address; }
@@ -47,33 +47,33 @@ public:
     void* payload() { return this + 1; }
     const void* payload() const { return this + 1; }
 
-    word payload_size() const { return m_length - sizeof(IPv4Packet); }
+    u16 payload_size() const { return m_length - sizeof(IPv4Packet); }
 
-    NetworkOrdered<word> compute_checksum() const
+    NetworkOrdered<u16> compute_checksum() const
     {
         ASSERT(!m_checksum);
         return internet_checksum(this, sizeof(IPv4Packet));
     }
 
 private:
-    byte m_version_and_ihl { 0 };
-    byte m_dscp_and_ecn { 0 };
-    NetworkOrdered<word> m_length;
-    NetworkOrdered<word> m_ident;
-    NetworkOrdered<word> m_flags_and_fragment;
-    byte m_ttl { 0 };
-    NetworkOrdered<byte> m_protocol;
-    NetworkOrdered<word> m_checksum;
+    u8 m_version_and_ihl { 0 };
+    u8 m_dscp_and_ecn { 0 };
+    NetworkOrdered<u16> m_length;
+    NetworkOrdered<u16> m_ident;
+    NetworkOrdered<u16> m_flags_and_fragment;
+    u8 m_ttl { 0 };
+    NetworkOrdered<u8> m_protocol;
+    NetworkOrdered<u16> m_checksum;
     IPv4Address m_source;
     IPv4Address m_destination;
 };
 
 static_assert(sizeof(IPv4Packet) == 20);
 
-inline NetworkOrdered<word> internet_checksum(const void* ptr, size_t count)
+inline NetworkOrdered<u16> internet_checksum(const void* ptr, size_t count)
 {
-    dword checksum = 0;
-    auto* w = (const word*)ptr;
+    u32 checksum = 0;
+    auto* w = (const u16*)ptr;
     while (count > 1) {
         checksum += convert_between_host_and_network(*w++);
         if (checksum & 0x80000000)

@@ -2,7 +2,7 @@
 
 #include <AK/Types.h>
 
-enum KeyCode : byte {
+enum KeyCode : u8 {
     Key_Invalid = 0,
     Key_Escape,
     Key_Tab,
@@ -126,8 +126,8 @@ enum KeyModifier {
 
 struct KeyEvent {
     KeyCode key { Key_Invalid };
-    byte character { 0 };
-    byte flags { 0 };
+    u8 character { 0 };
+    u8 flags { 0 };
     bool alt() const { return flags & Mod_Alt; }
     bool ctrl() const { return flags & Mod_Ctrl; }
     bool shift() const { return flags & Mod_Shift; }

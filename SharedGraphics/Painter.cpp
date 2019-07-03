@@ -69,7 +69,7 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
     for (int i = rect.height() - 1; i >= 0; --i) {
-        fast_dword_fill(dst, color.value(), rect.width());
+        fast_u32_fill(dst, color.value(), rect.width());
         dst += dst_skip;
     }
 }
@@ -125,13 +125,13 @@ void Painter::draw_rect(const Rect& a_rect, Color color, bool rough)
     if (rect.top() >= clipped_rect.top() && rect.top() <= clipped_rect.bottom()) {
         int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
         int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
-        fast_dword_fill(m_target->scanline(rect.top()) + start_x, color.value(), width);
+        fast_u32_fill(m_target->scanline(rect.top()) + start_x, color.value(), width);
         ++min_y;
     }
     if (rect.bottom() >= clipped_rect.top() && rect.bottom() <= clipped_rect.bottom()) {
         int start_x = rough ? max(rect.x() + 1, clipped_rect.x()) : clipped_rect.x();
         int width = rough ? min(rect.width() - 2, clipped_rect.width()) : clipped_rect.width();
-        fast_dword_fill(m_target->scanline(rect.bottom()) + start_x, color.value(), width);
+        fast_u32_fill(m_target->scanline(rect.bottom()) + start_x, color.value(), width);
         --max_y;
     }
 
@@ -243,7 +243,7 @@ void Painter::blit_with_opacity(const Point& position, const GraphicsBitmap& sou
     if (opacity >= 1.0f)
         return blit(position, source, src_rect);
 
-    byte alpha = 255 * opacity;
+    u8 alpha = 255 * opacity;
 
     Rect safe_src_rect = Rect::intersection(src_rect, source.rect());
     Rect dst_rect(position, safe_src_rect.size());
@@ -290,7 +290,7 @@ void Painter::blit_dimmed(const Point& position, const GraphicsBitmap& source, c
 
     for (int row = first_row; row <= last_row; ++row) {
         for (int x = 0; x <= (last_column - first_column); ++x) {
-            byte alpha = Color::from_rgba(src[x]).alpha();
+            u8 alpha = Color::from_rgba(src[x]).alpha();
             if (alpha == 0xff)
                 dst[x] = Color::from_rgba(src[x]).to_grayscale().lightened().value();
             else if (!alpha)
@@ -387,7 +387,7 @@ void Painter::blit_with_alpha(const Point& position, const GraphicsBitmap& sourc
 
     for (int row = first_row; row <= last_row; ++row) {
         for (int x = 0; x <= (last_column - first_column); ++x) {
-            byte alpha = Color::from_rgba(src[x]).alpha();
+            u8 alpha = Color::from_rgba(src[x]).alpha();
             if (alpha == 0xff)
                 dst[x] = src[x];
             else if (!alpha)
@@ -422,7 +422,7 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
         const RGBA32* src = source.scanline(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch() / sizeof(RGBA32);
         for (int row = first_row; row <= last_row; ++row) {
-            fast_dword_copy(dst, src, clipped_rect.width());
+            fast_u32_copy(dst, src, clipped_rect.width());
             dst += dst_skip;
             src += src_skip;
         }
@@ -430,7 +430,7 @@ void Painter::blit(const Point& position, const GraphicsBitmap& source, const Re
     }
 
     if (source.format() == GraphicsBitmap::Format::Indexed8) {
-        const byte* src = source.bits(src_rect.top() + first_row) + src_rect.left() + first_column;
+        const u8* src = source.bits(src_rect.top() + first_row) + src_rect.left() + first_column;
         const size_t src_skip = source.pitch();
         for (int row = first_row; row <= last_row; ++row) {
             for (int i = 0; i < clipped_rect.width(); ++i)
@@ -628,7 +628,7 @@ void Painter::set_pixel(const Point& p, Color color)
     m_target->scanline(point.y())[point.x()] = color.value();
 }
 
-[[gnu::always_inline]] inline void Painter::set_pixel_with_draw_op(dword& pixel, const Color& color)
+[[gnu::always_inline]] inline void Painter::set_pixel_with_draw_op(u32& pixel, const Color& color)
 {
     if (draw_op() == DrawOp::Copy)
         pixel = color.value();

@@ -13,7 +13,7 @@
 
 struct [[gnu::packed]] DescriptorTablePointer
 {
-    word limit;
+    u16 limit;
     void* address;
 };
 
@@ -24,18 +24,18 @@ static Descriptor s_gdt[256];
 
 static IRQHandler* s_irq_handler[16];
 
-static Vector<word>* s_gdt_freelist;
+static Vector<u16>* s_gdt_freelist;
 
-static word s_gdt_length;
+static u16 s_gdt_length;
 
-word gdt_alloc_entry()
+u16 gdt_alloc_entry()
 {
     ASSERT(s_gdt_freelist);
     ASSERT(!s_gdt_freelist->is_empty());
     return s_gdt_freelist->take_last();
 }
 
-void gdt_free_entry(word entry)
+void gdt_free_entry(u16 entry)
 {
     s_gdt_freelist->append(entry);
 }
@@ -123,8 +123,8 @@ asm(
 template<typename DumpType>
 static void dump(const DumpType& regs)
 {
-    word ss;
-    dword esp;
+    u16 ss;
+    u32 esp;
     if (!current || current->process().is_ring0()) {
         ss = regs.ds;
         esp = regs.esp;
@@ -144,7 +144,7 @@ static void dump(const DumpType& regs)
     kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
 
     if (current && current->process().validate_read((void*)regs.eip, 8)) {
-        byte* codeptr = (byte*)regs.eip;
+        u8* codeptr = (u8*)regs.eip;
         kprintf("code: %b %b %b %b %b %b %b %b\n",
             codeptr[0],
             codeptr[1],
@@ -236,11 +236,11 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
 {
     ASSERT(current);
 
-    dword fault_address;
+    u32 fault_address;
     asm("movl %%cr2, %%eax"
         : "=a"(fault_address));
 
-    dword fault_page_directory;
+    u32 fault_page_directory;
     asm("movl %%cr3, %%eax"
         : "=a"(fault_page_directory));
 
@@ -269,8 +269,8 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
             regs.exception_code & 2 ? "write to" : "read from",
             fault_address);
 
-        dword malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
-        dword free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
+        u32 malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
+        u32 free_scrub_pattern = explode_byte(FREE_SCRUB_BYTE);
         if ((fault_address & 0xffff0000) == (malloc_scrub_pattern & 0xffff0000)) {
             kprintf("\033[33;1mNote: Address %p looks like it may be uninitialized malloc() memory\033[0m\n", fault_address);
         } else if ((fault_address & 0xffff0000) == (free_scrub_pattern & 0xffff0000)) {
@@ -293,7 +293,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
     static void _exception##i()                                       \
     {                                                                 \
         kprintf(msg "\n");                                            \
-        dword cr0, cr2, cr3, cr4;                                     \
+        u32 cr0, cr2, cr3, cr4;                                     \
         asm("movl %%cr0, %%eax"                                       \
             : "=a"(cr0));                                             \
         asm("movl %%cr2, %%eax"                                       \
@@ -319,9 +319,9 @@ EH(12, "Stack exception")
 EH(15, "Unknown error")
 EH(16, "Coprocessor error")
 
-static void write_raw_gdt_entry(word selector, dword low, dword high)
+static void write_raw_gdt_entry(u16 selector, u32 low, u32 high)
 {
-    word i = (selector & 0xfffc) >> 3;
+    u16 i = (selector & 0xfffc) >> 3;
     s_gdt[i].low = low;
     s_gdt[i].high = high;
 
@@ -329,14 +329,14 @@ static void write_raw_gdt_entry(word selector, dword low, dword high)
         s_gdtr.limit = (s_gdt_length + 1) * 8 - 1;
 }
 
-void write_gdt_entry(word selector, Descriptor& descriptor)
+void write_gdt_entry(u16 selector, Descriptor& descriptor)
 {
     write_raw_gdt_entry(selector, descriptor.low, descriptor.high);
 }
 
-Descriptor& get_gdt_entry(word selector)
+Descriptor& get_gdt_entry(u16 selector)
 {
-    word i = (selector & 0xfffc) >> 3;
+    u16 i = (selector & 0xfffc) >> 3;
     return *(Descriptor*)(&s_gdt[i]);
 }
 
@@ -352,7 +352,7 @@ void gdt_init()
 {
     s_gdt_length = 5;
 
-    s_gdt_freelist = new Vector<word>();
+    s_gdt_freelist = new Vector<u16>();
     s_gdt_freelist->ensure_capacity(256);
     for (size_t i = s_gdt_length; i < 256; ++i)
         s_gdt_freelist->append(i * 8);
@@ -389,30 +389,30 @@ static void unimp_trap()
     hang();
 }
 
-void register_irq_handler(byte irq, IRQHandler& handler)
+void register_irq_handler(u8 irq, IRQHandler& handler)
 {
     ASSERT(!s_irq_handler[irq]);
     s_irq_handler[irq] = &handler;
     register_interrupt_handler(IRQ_VECTOR_BASE + irq, asm_irq_entry);
 }
 
-void unregister_irq_handler(byte irq, IRQHandler& handler)
+void unregister_irq_handler(u8 irq, IRQHandler& handler)
 {
     ASSERT(s_irq_handler[irq] == &handler);
     s_irq_handler[irq] = nullptr;
 }
 
-void register_interrupt_handler(byte index, void (*f)())
+void register_interrupt_handler(u8 index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((dword)(f)&0xffff0000) | 0x8e00;
+    s_idt[index].high = ((u32)(f)&0xffff0000) | 0x8e00;
     flush_idt();
 }
 
-void register_user_callable_interrupt_handler(byte index, void (*f)())
+void register_user_callable_interrupt_handler(u8 index, void (*f)())
 {
     s_idt[index].low = 0x00080000 | LSW((f));
-    s_idt[index].high = ((dword)(f)&0xffff0000) | 0xef00;
+    s_idt[index].high = ((u32)(f)&0xffff0000) | 0xef00;
     flush_idt();
 }
 
@@ -437,7 +437,7 @@ void idt_init()
     s_idtr.address = s_idt;
     s_idtr.limit = 0x100 * 8 - 1;
 
-    for (byte i = 0xff; i > 0x10; --i)
+    for (u8 i = 0xff; i > 0x10; --i)
         register_interrupt_handler(i, unimp_trap);
 
     register_interrupt_handler(0x00, exception_0_entry);
@@ -460,28 +460,28 @@ void idt_init()
 
     register_interrupt_handler(0x57, irq7_handler);
 
-    for (byte i = 0; i < 16; ++i) {
+    for (u8 i = 0; i < 16; ++i) {
         s_irq_handler[i] = nullptr;
     }
 
     flush_idt();
 }
 
-void load_task_register(word selector)
+void load_task_register(u16 selector)
 {
     asm("ltr %0" ::"r"(selector));
 }
 
 void handle_irq()
 {
-    word isr = PIC::get_isr();
+    u16 isr = PIC::get_isr();
     if (!isr) {
         kprintf("Spurious IRQ\n");
         return;
     }
 
-    byte irq = 0;
-    for (byte i = 0; i < 16; ++i) {
+    u8 irq = 0;
+    for (u8 i = 0; i < 16; ++i) {
         if (i == 2)
             continue;
         if (isr & (1 << i)) {

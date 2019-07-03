@@ -13,15 +13,15 @@ public:
 
     unsigned index() const { return m_index; }
     String pts_name() const;
-    ssize_t on_slave_write(const byte*, ssize_t);
+    ssize_t on_slave_write(const u8*, ssize_t);
     bool can_write_from_slave() const;
     void notify_slave_closed(Badge<SlavePTY>);
     bool is_closed() const { return m_closed; }
 
 private:
     // ^CharacterDevice
-    virtual ssize_t read(FileDescription&, byte*, ssize_t) override;
-    virtual ssize_t write(FileDescription&, const byte*, ssize_t) override;
+    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
+    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
     virtual bool can_read(FileDescription&) const override;
     virtual bool can_write(FileDescription&) const override;
     virtual void close() override;

@@ -91,12 +91,12 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_fon
         demo_label_2->update();
     };
 
-    m_glyph_editor_widget->on_glyph_altered = [this, update_demo](byte glyph) {
+    m_glyph_editor_widget->on_glyph_altered = [this, update_demo](u8 glyph) {
         m_glyph_map_widget->update_glyph(glyph);
         update_demo();
     };
 
-    m_glyph_map_widget->on_glyph_selected = [this, info_label, width_spinbox](byte glyph) {
+    m_glyph_map_widget->on_glyph_selected = [this, info_label, width_spinbox](u8 glyph) {
         m_glyph_editor_widget->set_glyph(glyph);
         width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
         info_label->set_text(String::format("0x%b (%c)", glyph, glyph));

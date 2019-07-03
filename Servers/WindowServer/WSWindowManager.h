@@ -232,7 +232,7 @@ private:
     Point m_resize_origin;
     ResizeDirection m_resize_direction { ResizeDirection::None };
 
-    byte m_keyboard_modifiers { 0 };
+    u8 m_keyboard_modifiers { 0 };
 
     OwnPtr<WSMenu> m_system_menu;
     Color m_menu_selection_color;

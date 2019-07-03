@@ -39,10 +39,10 @@ public:
 
     ByteBuffer read_entire(FileDescription* = nullptr) const;
 
-    virtual ssize_t read_bytes(off_t, ssize_t, byte* buffer, FileDescription*) const = 0;
+    virtual ssize_t read_bytes(off_t, ssize_t, u8* buffer, FileDescription*) const = 0;
     virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const = 0;
     virtual InodeIdentifier lookup(StringView name) = 0;
-    virtual ssize_t write_bytes(off_t, ssize_t, const byte* data, FileDescription*) = 0;
+    virtual ssize_t write_bytes(off_t, ssize_t, const u8* data, FileDescription*) = 0;
     virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) = 0;
     virtual KResult remove_child(const StringView& name) = 0;
     virtual size_t directory_entry_count() const = 0;
@@ -76,7 +76,7 @@ public:
 protected:
     Inode(FS& fs, unsigned index);
     void set_metadata_dirty(bool b) { m_metadata_dirty = b; }
-    void inode_contents_changed(off_t, ssize_t, const byte*);
+    void inode_contents_changed(off_t, ssize_t, const u8*);
     void inode_size_changed(size_t old_size, size_t new_size);
 
     mutable Lock m_lock { "Inode" };

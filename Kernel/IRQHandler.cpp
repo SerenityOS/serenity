@@ -2,7 +2,7 @@
 #include "PIC.h"
 #include <Kernel/Arch/i386/CPU.h>
 
-IRQHandler::IRQHandler(byte irq)
+IRQHandler::IRQHandler(u8 irq)
     : m_irq_number(irq)
 {
     register_irq_handler(m_irq_number, *this);

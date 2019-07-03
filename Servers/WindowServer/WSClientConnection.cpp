@@ -86,7 +86,7 @@ void WSClientConnection::post_message(const WSAPI_ServerMessage& message, const 
     iov[0].iov_len = sizeof(message);
 
     if (!extra_data.is_empty()) {
-        iov[1].iov_base = const_cast<byte*>(extra_data.data());
+        iov[1].iov_base = const_cast<u8*>(extra_data.data());
         iov[1].iov_len = extra_data.size();
         ++iov_count;
     }

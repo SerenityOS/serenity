@@ -53,7 +53,7 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     eth->set_destination(destination);
     eth->set_ether_type(EtherType::ARP);
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
-    send_raw((byte*)eth, size_in_bytes);
+    send_raw((u8*)eth, size_in_bytes);
 }
 
 void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, ByteBuffer&& payload)
@@ -69,16 +69,16 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
     ipv4.set_internet_header_length(5);
     ipv4.set_source(ipv4_address());
     ipv4.set_destination(destination_ipv4);
-    ipv4.set_protocol((byte)protocol);
+    ipv4.set_protocol((u8)protocol);
     ipv4.set_length(sizeof(IPv4Packet) + payload.size());
     ipv4.set_ident(1);
     ipv4.set_ttl(64);
     ipv4.set_checksum(ipv4.compute_checksum());
     memcpy(ipv4.payload(), payload.pointer(), payload.size());
-    send_raw((const byte*)&eth, size_in_bytes);
+    send_raw((const u8*)&eth, size_in_bytes);
 }
 
-void NetworkAdapter::did_receive(const byte* data, int length)
+void NetworkAdapter::did_receive(const u8* data, int length)
 {
     InterruptDisabler disabler;
     m_packet_queue.append(ByteBuffer::copy(data, length));

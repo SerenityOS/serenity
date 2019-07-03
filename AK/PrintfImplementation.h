@@ -12,10 +12,10 @@ extern "C" size_t strlen(const char*);
 #endif
 
 template<typename PutChFunc, typename T>
-[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, byte fields)
+[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, u8 fields)
 {
     int ret = 0;
-    byte shr_count = fields * 4;
+    u8 shr_count = fields * 4;
     while (shr_count) {
         shr_count -= 4;
         putch(bufptr, printf_hex_digits[(number >> shr_count) & 0x0F]);
@@ -25,9 +25,9 @@ template<typename PutChFunc, typename T>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_number(PutChFunc putch, char*& bufptr, u32 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
-    dword divisor = 1000000000;
+    u32 divisor = 1000000000;
     char ch;
     char padding = 1;
     char buf[16];
@@ -66,9 +66,9 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_qword(PutChFunc putch, char*& bufptr, qword number, bool leftPad, bool zeroPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_u64(PutChFunc putch, char*& bufptr, u64 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
-    qword divisor = 10000000000000000000LLU;
+    u64 divisor = 10000000000000000000LLU;
     char ch;
     char padding = 1;
     char buf[16];
@@ -107,19 +107,19 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_signed_qword(PutChFunc putch, char*& bufptr, signed_qword number, bool leftPad, bool zeroPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_i64(PutChFunc putch, char*& bufptr, i64 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
     if (number < 0) {
         putch(bufptr, '-');
-        return print_qword(putch, bufptr, 0 - number, leftPad, zeroPad, fieldWidth) + 1;
+        return print_u64(putch, bufptr, 0 - number, leftPad, zeroPad, fieldWidth) + 1;
     }
-    return print_qword(putch, bufptr, number, leftPad, zeroPad, fieldWidth);
+    return print_u64(putch, bufptr, number, leftPad, zeroPad, fieldWidth);
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_octal_number(PutChFunc putch, char*& bufptr, dword number, bool leftPad, bool zeroPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_octal_number(PutChFunc putch, char*& bufptr, u32 number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
-    dword divisor = 134217728;
+    u32 divisor = 134217728;
     char ch;
     char padding = 1;
     char buf[32];
@@ -158,7 +158,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, u32 fieldWidth)
 {
     size_t len = strlen(str);
     if (!fieldWidth || fieldWidth < len)
@@ -178,7 +178,7 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, dword fieldWidth)
+[[gnu::always_inline]] inline int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, u32 fieldWidth)
 {
     if (number < 0) {
         putch(bufptr, '-');
@@ -248,22 +248,22 @@ template<typename PutChFunc>
                 break;
 
             case 'u':
-                ret += print_number(putch, bufptr, va_arg(ap, dword), left_pad, zeroPad, fieldWidth);
+                ret += print_number(putch, bufptr, va_arg(ap, u32), left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'Q':
-                ret += print_qword(putch, bufptr, va_arg(ap, qword), left_pad, zeroPad, fieldWidth);
+                ret += print_u64(putch, bufptr, va_arg(ap, u64), left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'q':
-                ret += print_hex(putch, bufptr, va_arg(ap, qword), 16);
+                ret += print_hex(putch, bufptr, va_arg(ap, u64), 16);
                 break;
 
 #ifndef KERNEL
             case 'g':
             case 'f':
                 // FIXME: Print as float!
-                ret += print_signed_qword(putch, bufptr, (qword)va_arg(ap, double), left_pad, zeroPad, fieldWidth);
+                ret += print_i64(putch, bufptr, (u64)va_arg(ap, double), left_pad, zeroPad, fieldWidth);
                 break;
 #endif
 
@@ -272,7 +272,7 @@ template<typename PutChFunc>
                     putch(bufptr, '0');
                     ++ret;
                 }
-                ret += print_octal_number(putch, bufptr, va_arg(ap, dword), left_pad, zeroPad, fieldWidth);
+                ret += print_octal_number(putch, bufptr, va_arg(ap, u32), left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'x':
@@ -281,7 +281,7 @@ template<typename PutChFunc>
                     putch(bufptr, 'x');
                     ret += 2;
                 }
-                ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
+                ret += print_hex(putch, bufptr, va_arg(ap, u32), 8);
                 break;
 
             case 'w':
@@ -306,7 +306,7 @@ template<typename PutChFunc>
                 putch(bufptr, '0');
                 putch(bufptr, 'x');
                 ret += 2;
-                ret += print_hex(putch, bufptr, va_arg(ap, dword), 8);
+                ret += print_hex(putch, bufptr, va_arg(ap, u32), 8);
                 break;
             }
         } else {

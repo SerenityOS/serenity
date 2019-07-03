@@ -35,7 +35,7 @@ ByteBuffer Inode::read_entire(FileDescription* descriptor) const
     StringBuilder builder(initial_size);
 
     ssize_t nread;
-    byte buffer[4096];
+    u8 buffer[4096];
     off_t offset = 0;
     for (;;) {
         nread = read_bytes(offset, sizeof(buffer), buffer, descriptor);
@@ -76,7 +76,7 @@ void Inode::will_be_destroyed()
         flush_metadata();
 }
 
-void Inode::inode_contents_changed(off_t offset, ssize_t size, const byte* data)
+void Inode::inode_contents_changed(off_t offset, ssize_t size, const u8* data)
 {
     if (m_vmo)
         m_vmo->inode_contents_changed({}, offset, size, data);

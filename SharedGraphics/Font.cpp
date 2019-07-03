@@ -12,11 +12,11 @@
 struct [[gnu::packed]] FontFileHeader
 {
     char magic[4];
-    byte glyph_width;
-    byte glyph_height;
-    byte type;
-    byte is_variable_width;
-    byte unused[6];
+    u8 glyph_width;
+    u8 glyph_height;
+    u8 type;
+    u8 is_variable_width;
+    u8 unused[6];
     char name[64];
 };
 
@@ -55,11 +55,11 @@ Font& Font::default_bold_font()
 
 RefPtr<Font> Font::clone() const
 {
-    size_t bytes_per_glyph = sizeof(dword) * glyph_height();
+    size_t bytes_per_glyph = sizeof(u32) * glyph_height();
     // FIXME: This is leaked!
     auto* new_rows = static_cast<unsigned*>(kmalloc(bytes_per_glyph * 256));
     memcpy(new_rows, m_rows, bytes_per_glyph * 256);
-    auto* new_widths = static_cast<byte*>(kmalloc(256));
+    auto* new_widths = static_cast<u8*>(kmalloc(256));
     if (m_glyph_widths)
         memcpy(new_widths, m_glyph_widths, 256);
     else
@@ -67,7 +67,7 @@ RefPtr<Font> Font::clone() const
     return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height));
 }
 
-Font::Font(const StringView& name, unsigned* rows, byte* widths, bool is_fixed_width, byte glyph_width, byte glyph_height)
+Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height)
     : m_name(name)
     , m_rows(rows)
     , m_glyph_widths(widths)
@@ -78,8 +78,8 @@ Font::Font(const StringView& name, unsigned* rows, byte* widths, bool is_fixed_w
     , m_fixed_width(is_fixed_width)
 {
     if (!m_fixed_width) {
-        byte maximum = 0;
-        byte minimum = 255;
+        u8 maximum = 0;
+        u8 minimum = 255;
         for (int i = 0; i < 256; ++i) {
             minimum = min(minimum, m_glyph_widths[i]);
             maximum = max(maximum, m_glyph_widths[i]);
@@ -93,7 +93,7 @@ Font::~Font()
 {
 }
 
-RefPtr<Font> Font::load_from_memory(const byte* data)
+RefPtr<Font> Font::load_from_memory(const u8* data)
 {
     auto& header = *reinterpret_cast<const FontFileHeader*>(data);
     if (memcmp(header.magic, "!Fnt", 4)) {
@@ -108,9 +108,9 @@ RefPtr<Font> Font::load_from_memory(const byte* data)
     size_t bytes_per_glyph = sizeof(unsigned) * header.glyph_height;
 
     auto* rows = const_cast<unsigned*>((const unsigned*)(data + sizeof(FontFileHeader)));
-    byte* widths = nullptr;
+    u8* widths = nullptr;
     if (header.is_variable_width)
-        widths = (byte*)(rows) + 256 * bytes_per_glyph;
+        widths = (u8*)(rows) + 256 * bytes_per_glyph;
     return adopt(*new Font(String(header.name), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height));
 }
 
@@ -120,7 +120,7 @@ RefPtr<Font> Font::load_from_file(const StringView& path)
     if (!mapped_file.is_valid())
         return nullptr;
 
-    auto font = load_from_memory((const byte*)mapped_file.pointer());
+    auto font = load_from_memory((const u8*)mapped_file.pointer());
     font->m_mapped_file = move(mapped_file);
     return font;
 }

@@ -6,12 +6,12 @@
 #include <Kernel/FileSystem/FileDescription.h>
 
 static KSym* s_ksyms;
-dword ksym_lowest_address;
-dword ksym_highest_address;
-dword ksym_count;
+u32 ksym_lowest_address;
+u32 ksym_highest_address;
+u32 ksym_count;
 bool ksyms_ready;
 
-static byte parse_hex_digit(char nibble)
+static u8 parse_hex_digit(char nibble)
 {
     if (nibble >= '0' && nibble <= '9')
         return nibble - '0';
@@ -19,7 +19,7 @@ static byte parse_hex_digit(char nibble)
     return 10 + (nibble - 'a');
 }
 
-const KSym* ksymbolicate(dword address)
+const KSym* ksymbolicate(u32 address)
 {
     if (address < ksym_lowest_address || address > ksym_highest_address)
         return nullptr;
@@ -36,7 +36,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     ksym_highest_address = 0;
     auto* bufptr = (const char*)buffer.pointer();
     auto* start_of_name = bufptr;
-    dword address = 0;
+    u32 address = 0;
 
     for (unsigned i = 0; i < 8; ++i)
         ksym_count = (ksym_count << 4) | parse_hex_digit(*(bufptr++));
@@ -76,7 +76,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     ksyms_ready = true;
 }
 
-[[gnu::noinline]] void dump_backtrace_impl(dword ebp, bool use_ksyms)
+[[gnu::noinline]] void dump_backtrace_impl(u32 ebp, bool use_ksyms)
 {
     if (!current) {
         //hang();
@@ -87,21 +87,21 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         return;
     }
     struct RecognizedSymbol {
-        dword address;
+        u32 address;
         const KSym* ksym;
     };
     int max_recognized_symbol_count = 256;
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     int recognized_symbol_count = 0;
     if (use_ksyms) {
-        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(VirtualAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
-            dword retaddr = stack_ptr[1];
+        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+            u32 retaddr = stack_ptr[1];
             recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
         }
     } else {
-        for (dword* stack_ptr = (dword*)ebp; current->process().validate_read_from_kernel(VirtualAddress((dword)stack_ptr)); stack_ptr = (dword*)*stack_ptr) {
-            dword retaddr = stack_ptr[1];
-            dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (dword*)*stack_ptr : 0);
+        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+            u32 retaddr = stack_ptr[1];
+            dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (u32*)*stack_ptr : 0);
         }
         return;
     }
@@ -139,7 +139,7 @@ void dump_backtrace()
         return;
     }
     TemporaryChange change(in_dump_backtrace, true);
-    dword ebp;
+    u32 ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
     dump_backtrace_impl(ebp, ksyms_ready);

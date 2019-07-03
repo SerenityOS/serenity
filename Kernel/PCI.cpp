@@ -13,12 +13,12 @@
 #define PCI_LATENCY_TIMER 0x0d   // byte
 #define PCI_HEADER_TYPE 0x0e     // byte
 #define PCI_BIST 0x0f            // byte
-#define PCI_BAR0 0x10            // dword
-#define PCI_BAR1 0x14            // dword
-#define PCI_BAR2 0x18            // dword
-#define PCI_BAR3 0x1C            // dword
-#define PCI_BAR4 0x20            // dword
-#define PCI_BAR5 0x24            // dword
+#define PCI_BAR0 0x10            // u32
+#define PCI_BAR1 0x14            // u32
+#define PCI_BAR2 0x18            // u32
+#define PCI_BAR3 0x1C            // u32
+#define PCI_BAR4 0x20            // u32
+#define PCI_BAR5 0x24            // u32
 #define PCI_INTERRUPT_LINE 0x3C  // byte
 #define PCI_SECONDARY_BUS 0x19   // byte
 #define PCI_HEADER_TYPE_DEVICE 0
@@ -31,7 +31,7 @@
 namespace PCI {
 
 template<typename T>
-T read_field(Address address, dword field)
+T read_field(Address address, u32 field)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     if constexpr (sizeof(T) == 4)
@@ -43,7 +43,7 @@ T read_field(Address address, dword field)
 }
 
 template<typename T>
-void write_field(Address address, dword field, T value)
+void write_field(Address address, u32 field, T value)
 {
     IO::out32(PCI_ADDRESS_PORT, address.io_address_for_field(field));
     if constexpr (sizeof(T) == 4)
@@ -54,74 +54,74 @@ void write_field(Address address, dword field, T value)
         IO::out8(PCI_VALUE_PORT + (field & 3), value);
 }
 
-word read_type(Address address)
+u16 read_type(Address address)
 {
-    return (read_field<byte>(address, PCI_CLASS) << 8u) | read_field<byte>(address, PCI_SUBCLASS);
+    return (read_field<u8>(address, PCI_CLASS) << 8u) | read_field<u8>(address, PCI_SUBCLASS);
 }
 
-void enumerate_bus(int type, byte bus, Function<void(Address, ID)>&);
+void enumerate_bus(int type, u8 bus, Function<void(Address, ID)>&);
 
-void enumerate_functions(int type, byte bus, byte slot, byte function, Function<void(Address, ID)>& callback)
+void enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(Address, ID)>& callback)
 {
     Address address(bus, slot, function);
     if (type == -1 || type == read_type(address))
-        callback(address, { read_field<word>(address, PCI_VENDOR_ID), read_field<word>(address, PCI_DEVICE_ID) });
+        callback(address, { read_field<u16>(address, PCI_VENDOR_ID), read_field<u16>(address, PCI_DEVICE_ID) });
     if (read_type(address) == PCI_TYPE_BRIDGE) {
-        byte secondary_bus = read_field<byte>(address, PCI_SECONDARY_BUS);
+        u8 secondary_bus = read_field<u8>(address, PCI_SECONDARY_BUS);
         kprintf("PCI: Found secondary bus: %u\n", secondary_bus);
         ASSERT(secondary_bus != bus);
         enumerate_bus(type, secondary_bus, callback);
     }
 }
 
-void enumerate_slot(int type, byte bus, byte slot, Function<void(Address, ID)>& callback)
+void enumerate_slot(int type, u8 bus, u8 slot, Function<void(Address, ID)>& callback)
 {
     Address address(bus, slot, 0);
-    if (read_field<word>(address, PCI_VENDOR_ID) == PCI_NONE)
+    if (read_field<u16>(address, PCI_VENDOR_ID) == PCI_NONE)
         return;
     enumerate_functions(type, bus, slot, 0, callback);
-    if (!(read_field<byte>(address, PCI_HEADER_TYPE) & 0x80))
+    if (!(read_field<u8>(address, PCI_HEADER_TYPE) & 0x80))
         return;
-    for (byte function = 1; function < 8; ++function) {
+    for (u8 function = 1; function < 8; ++function) {
         Address address(bus, slot, function);
-        if (read_field<word>(address, PCI_VENDOR_ID) != PCI_NONE)
+        if (read_field<u16>(address, PCI_VENDOR_ID) != PCI_NONE)
             enumerate_functions(type, bus, slot, function, callback);
     }
 }
 
-void enumerate_bus(int type, byte bus, Function<void(Address, ID)>& callback)
+void enumerate_bus(int type, u8 bus, Function<void(Address, ID)>& callback)
 {
-    for (byte slot = 0; slot < 32; ++slot)
+    for (u8 slot = 0; slot < 32; ++slot)
         enumerate_slot(type, bus, slot, callback);
 }
 
-byte get_interrupt_line(Address address) { return read_field<byte>(address, PCI_INTERRUPT_LINE); }
-dword get_BAR0(Address address) { return read_field<dword>(address, PCI_BAR0); }
-dword get_BAR1(Address address) { return read_field<dword>(address, PCI_BAR1); }
-dword get_BAR2(Address address) { return read_field<dword>(address, PCI_BAR2); }
-dword get_BAR3(Address address) { return read_field<dword>(address, PCI_BAR3); }
-dword get_BAR4(Address address) { return read_field<dword>(address, PCI_BAR4); }
-dword get_BAR5(Address address) { return read_field<dword>(address, PCI_BAR5); }
+u8 get_interrupt_line(Address address) { return read_field<u8>(address, PCI_INTERRUPT_LINE); }
+u32 get_BAR0(Address address) { return read_field<u32>(address, PCI_BAR0); }
+u32 get_BAR1(Address address) { return read_field<u32>(address, PCI_BAR1); }
+u32 get_BAR2(Address address) { return read_field<u32>(address, PCI_BAR2); }
+u32 get_BAR3(Address address) { return read_field<u32>(address, PCI_BAR3); }
+u32 get_BAR4(Address address) { return read_field<u32>(address, PCI_BAR4); }
+u32 get_BAR5(Address address) { return read_field<u32>(address, PCI_BAR5); }
 
 void enable_bus_mastering(Address address)
 {
-    auto value = read_field<word>(address, PCI_COMMAND);
+    auto value = read_field<u16>(address, PCI_COMMAND);
     value |= (1 << 2);
     value |= (1 << 0);
-    write_field<word>(address, PCI_COMMAND, value);
+    write_field<u16>(address, PCI_COMMAND, value);
 }
 
 void enumerate_all(Function<void(Address, ID)> callback)
 {
     // Single PCI host controller.
-    if ((read_field<byte>(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {
+    if ((read_field<u8>(Address(), PCI_HEADER_TYPE) & 0x80) == 0) {
         enumerate_bus(-1, 0, callback);
         return;
     }
 
     // Multiple PCI host controllers.
-    for (byte function = 0; function < 8; ++function) {
-        if (read_field<word>(Address(0, 0, function), PCI_VENDOR_ID) == PCI_NONE)
+    for (u8 function = 0; function < 8; ++function) {
+        if (read_field<u16>(Address(0, 0, function), PCI_VENDOR_ID) == PCI_NONE)
             break;
         enumerate_bus(-1, function, callback);
     }

@@ -8,21 +8,21 @@ class [[gnu::packed]] DNSRecord
 public:
     DNSRecord() {}
 
-    word name() const { return m_name; }
-    word type() const { return m_type; }
-    word record_class() const { return m_class; }
-    dword ttl() const { return m_ttl; }
-    word data_length() const { return m_data_length; }
+    u16 name() const { return m_name; }
+    u16 type() const { return m_type; }
+    u16 record_class() const { return m_class; }
+    u32 ttl() const { return m_ttl; }
+    u16 data_length() const { return m_data_length; }
 
     void* data() { return this + 1; }
     const void* data() const { return this + 1; }
 
 private:
-    NetworkOrdered<word> m_name;
-    NetworkOrdered<word> m_type;
-    NetworkOrdered<word> m_class;
-    NetworkOrdered<dword> m_ttl;
-    NetworkOrdered<word> m_data_length;
+    NetworkOrdered<u16> m_name;
+    NetworkOrdered<u16> m_type;
+    NetworkOrdered<u16> m_class;
+    NetworkOrdered<u32> m_ttl;
+    NetworkOrdered<u16> m_data_length;
 };
 
 static_assert(sizeof(DNSRecord) == 12);

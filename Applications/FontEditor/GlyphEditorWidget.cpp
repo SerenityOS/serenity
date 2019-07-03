@@ -15,7 +15,7 @@ GlyphEditorWidget::~GlyphEditorWidget()
 {
 }
 
-void GlyphEditorWidget::set_glyph(byte glyph)
+void GlyphEditorWidget::set_glyph(u8 glyph)
 {
     if (m_glyph == glyph)
         return;

@@ -217,7 +217,7 @@ public:
     }
 };
 
-enum GMouseButton : byte {
+enum GMouseButton : u8 {
     None = 0,
     Left = 1,
     Right = 2,
@@ -226,7 +226,7 @@ enum GMouseButton : byte {
 
 class GKeyEvent final : public GEvent {
 public:
-    GKeyEvent(Type type, int key, byte modifiers)
+    GKeyEvent(Type type, int key, u8 modifiers)
         : GEvent(type)
         , m_key(key)
         , m_modifiers(modifiers)
@@ -238,13 +238,13 @@ public:
     bool alt() const { return m_modifiers & Mod_Alt; }
     bool shift() const { return m_modifiers & Mod_Shift; }
     bool logo() const { return m_modifiers & Mod_Logo; }
-    byte modifiers() const { return m_modifiers; }
+    u8 modifiers() const { return m_modifiers; }
     String text() const { return m_text; }
 
 private:
     friend class GEventLoop;
     int m_key { 0 };
-    byte m_modifiers { 0 };
+    u8 m_modifiers { 0 };
     String m_text;
 };
 

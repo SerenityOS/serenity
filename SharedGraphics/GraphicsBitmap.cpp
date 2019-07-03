@@ -97,6 +97,6 @@ void GraphicsBitmap::fill(Color color)
     ASSERT(m_format == GraphicsBitmap::Format::RGB32 || m_format == GraphicsBitmap::Format::RGBA32);
     for (int y = 0; y < height(); ++y) {
         auto* scanline = this->scanline(y);
-        fast_dword_fill(scanline, color.value(), width());
+        fast_u32_fill(scanline, color.value(), width());
     }
 }

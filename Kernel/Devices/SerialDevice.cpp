@@ -17,7 +17,7 @@ bool SerialDevice::can_read(FileDescription&) const
     return (get_line_status() & DataReady) != 0;
 }
 
-ssize_t SerialDevice::read(FileDescription&, byte* buffer, ssize_t size)
+ssize_t SerialDevice::read(FileDescription&, u8* buffer, ssize_t size)
 {
     if (!size)
         return 0;
@@ -35,7 +35,7 @@ bool SerialDevice::can_write(FileDescription&) const
     return (get_line_status() & EmptyTransmitterHoldingRegister) != 0;
 }
 
-ssize_t SerialDevice::write(FileDescription&, const byte* buffer, ssize_t size)
+ssize_t SerialDevice::write(FileDescription&, const u8* buffer, ssize_t size)
 {
     if (!size)
         return 0;
