@@ -13,7 +13,7 @@ fi
 
 echo "setting up disk image..."
 qemu-img create _disk_image ${DISK_SIZE:-500}m || die "couldn't create disk image"
-chown $(<build_user):$(<build_group) _disk_image || die "couldn't adjust permissions on disk image"
+chown $build_user:$build_group _disk_image || die "couldn't adjust permissions on disk image"
 echo "done"
 
 echo -n "creating new filesystem... "

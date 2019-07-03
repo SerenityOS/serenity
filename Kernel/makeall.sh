@@ -2,8 +2,8 @@
 set -e
 
 # Get user and group details for setting qemu disk image ownership
-echo $USER > build_user
-echo $(id -g) > build_group
+export build_user=$(id -u)
+export build_group=$(id -g)
 
 sudo id
 
@@ -63,4 +63,3 @@ done
 
 sudo ./sync.sh
 
-rm build_user build_group
