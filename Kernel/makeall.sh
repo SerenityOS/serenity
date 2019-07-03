@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Get user and group details for setting qemu disk image ownership
+export build_user=$(id -u)
+export build_group=$(id -g)
+
 sudo id
 
 if [ -z "$MAKEJOBS" ]; then
