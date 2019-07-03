@@ -28,7 +28,7 @@ int main()
     EXPECT(strings.is_empty());
 
     for (int i = 0; i < 10000; ++i) {
-        strings.enqueue(String::format("%d", i));
+        strings.enqueue(String::number(i));
         EXPECT_EQ(strings.size(), i + 1);
     }
 

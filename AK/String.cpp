@@ -170,6 +170,16 @@ unsigned String::to_uint(bool& ok) const
     return value;
 }
 
+String String::number(unsigned value)
+{
+    return String::format("%u", value);
+}
+
+String String::number(int value)
+{
+    return String::format("%d", value);
+}
+
 String String::format(const char* fmt, ...)
 {
     StringBuilder builder;

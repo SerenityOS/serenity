@@ -292,7 +292,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
             auto ruler_line_rect = ruler_content_rect(i);
             painter.draw_text(
                 ruler_line_rect.shrunken(2, 0),
-                String::format("%u", i),
+                String::number(i),
                 is_current_line ? Font::default_bold_font() : font(),
                 TextAlignment::CenterRight,
                 is_current_line ? Color::DarkGray : Color::MidGray);

@@ -148,7 +148,7 @@ void CConfigFile::write_entry(const String& group, const String& key, const Stri
 
 void CConfigFile::write_num_entry(const String& group, const String& key, int value)
 {
-    write_entry(group, key, String::format("%d", value));
+    write_entry(group, key, String::number(value));
 }
 void CConfigFile::write_bool_entry(const String& group, const String& key, bool value)
 {

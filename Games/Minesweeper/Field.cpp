@@ -185,7 +185,7 @@ void Field::reset()
     m_time_elapsed = 0;
     m_time_label.set_text("0");
     m_flags_left = m_mine_count;
-    m_flag_label.set_text(String::format("%u", m_flags_left));
+    m_flag_label.set_text(String::number(m_flags_left));
     m_timer.stop();
     set_greedy_for_hits(false);
     set_face(Face::Default);
@@ -384,7 +384,7 @@ void Field::set_flag(Square& square, bool flag)
     }
     square.has_flag = flag;
 
-    m_flag_label.set_text(String::format("%u", m_flags_left));
+    m_flag_label.set_text(String::number(m_flags_left));
     square.button->set_icon(square.has_flag ? m_flag_bitmap : nullptr);
     square.button->update();
 }
@@ -396,7 +396,7 @@ void Field::on_square_middle_clicked(Square& square)
     if (square.has_flag) {
         ++m_flags_left;
         square.has_flag = false;
-        m_flag_label.set_text(String::format("%u", m_flags_left));
+        m_flag_label.set_text(String::number(m_flags_left));
     }
     square.is_considering = !square.is_considering;
     square.button->set_icon(square.is_considering ? m_consider_bitmap : nullptr);
