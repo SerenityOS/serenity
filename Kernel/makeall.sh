@@ -1,6 +1,10 @@
 #!/bin/bash
 set -e
 
+# Get user and group details for setting qemu disk image ownership
+echo $USER > build_user
+echo $(id -g) > build_group
+
 sudo id
 
 if [ -z "$MAKEJOBS" ]; then
@@ -59,3 +63,4 @@ done
 
 sudo ./sync.sh
 
+rm build_user build_group
