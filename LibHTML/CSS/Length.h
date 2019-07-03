@@ -1,5 +1,7 @@
 #pragma once
 
+#include <AK/AKString.h>
+
 class Length {
 public:
     enum class Type {
@@ -19,6 +21,13 @@ public:
     bool is_absolute() const { return m_type == Type::Absolute; }
 
     int value() const { return m_value; }
+
+    String to_string() const
+    {
+        if (is_auto())
+            return "auto";
+        return String::format("%d [Length/Absolute]", m_value);
+    }
 
 private:
     Type m_type { Type::Auto };

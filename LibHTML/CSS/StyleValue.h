@@ -4,6 +4,7 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
+#include <LibHTML/CSS/Length.h>
 
 class StyleValue : public RefCounted<StyleValue> {
 public:
@@ -11,11 +12,12 @@ public:
 
     virtual ~StyleValue();
 
-    enum Type {
+    enum class Type {
         Invalid,
         Inherit,
         Initial,
-        Primitive,
+        String,
+        Length,
     };
 
     Type type() const { return m_type; }
@@ -29,11 +31,11 @@ private:
     Type m_type { Type::Invalid };
 };
 
-class PrimitiveStyleValue : public StyleValue {
+class StringStyleValue : public StyleValue {
 public:
-    virtual ~PrimitiveStyleValue() override {}
-    PrimitiveStyleValue(const String& string)
-        : StyleValue(Type::Primitive)
+    virtual ~StringStyleValue() override {}
+    StringStyleValue(const String& string)
+        : StyleValue(Type::String)
         , m_string(string)
     {
     }
@@ -42,4 +44,19 @@ public:
 
 private:
     String m_string;
+};
+
+class LengthStyleValue : public StyleValue {
+public:
+    virtual ~LengthStyleValue() override {}
+    LengthStyleValue(const Length& length)
+        : StyleValue(Type::Length)
+        , m_length(length)
+    {
+    }
+
+    String to_string() const override { return m_length.to_string(); }
+
+private:
+    Length m_length;
 };
