@@ -19,7 +19,7 @@ LIBHTML_OBJS = \
     Layout/LayoutBlock.o \
     Layout/LayoutInline.o \
     Layout/LayoutDocument.o \
-    Layout/LayoutStyle.o \
+    Layout/ComputedStyle.o \
     Frame.o \
     Dump.o
 

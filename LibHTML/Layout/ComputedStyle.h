@@ -9,10 +9,10 @@ enum FontStyle {
     Bold,
 };
 
-class LayoutStyle {
+class ComputedStyle {
 public:
-    LayoutStyle();
-    ~LayoutStyle();
+    ComputedStyle();
+    ~ComputedStyle();
 
     Color text_color() const { return m_text_color; }
     Color background_color() const { return m_background_color; }
