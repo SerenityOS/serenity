@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/LogStream.h>
 
 class Rect;
 struct WSAPI_Point;
@@ -71,3 +72,8 @@ private:
     int m_x { 0 };
     int m_y { 0 };
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const Point& value)
+{
+    return stream << value.to_string();
+}

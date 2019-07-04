@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/LogStream.h>
 #include <SharedGraphics/Point.h>
 #include <SharedGraphics/Size.h>
 #include <SharedGraphics/TextAlignment.h>
@@ -243,4 +244,9 @@ inline void Point::constrain(const Rect& rect)
         set_y(rect.top());
     else if (y() > rect.bottom())
         set_y(rect.bottom());
+}
+
+inline const LogStream& operator<<(const LogStream& stream, const Rect& value)
+{
+    return stream << value.to_string();
 }
