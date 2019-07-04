@@ -20,6 +20,6 @@ clean:
 
 install: $(LIBRARY)
 	# Copy headers
-	rsync -a --include '*/' --include '*.h' --exclude '*' . ../Root/usr/include
+	rsync -a --include '*/' --include '*.h' --exclude '*' . ../../Root/usr/include
 	# Install the library
-	cp $(LIBRARY) ../Root/usr/lib
+	cp $(LIBRARY) ../../Root/usr/lib
