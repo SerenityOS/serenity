@@ -8,8 +8,6 @@
 
 class StyleValue : public RefCounted<StyleValue> {
 public:
-    static NonnullRefPtr<StyleValue> parse(const StringView&);
-
     virtual ~StyleValue();
 
     enum class Type {
@@ -33,30 +31,40 @@ private:
 
 class StringStyleValue : public StyleValue {
 public:
+    static NonnullRefPtr<StringStyleValue> create(const String& string)
+    {
+        return adopt(*new StringStyleValue(string));
+    }
     virtual ~StringStyleValue() override {}
-    StringStyleValue(const String& string)
+
+    String to_string() const override { return m_string; }
+
+private:
+    explicit StringStyleValue(const String& string)
         : StyleValue(Type::String)
         , m_string(string)
     {
     }
 
-    String to_string() const override { return m_string; }
-
-private:
     String m_string;
 };
 
 class LengthStyleValue : public StyleValue {
 public:
+    static NonnullRefPtr<LengthStyleValue> create(const Length& length)
+    {
+        return adopt(*new LengthStyleValue(length));
+    }
     virtual ~LengthStyleValue() override {}
-    LengthStyleValue(const Length& length)
+
+    String to_string() const override { return m_length.to_string(); }
+
+private:
+    explicit LengthStyleValue(const Length& length)
         : StyleValue(Type::Length)
         , m_length(length)
     {
     }
 
-    String to_string() const override { return m_length.to_string(); }
-
-private:
     Length m_length;
 };

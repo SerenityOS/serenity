@@ -3,6 +3,21 @@
 #include <ctype.h>
 #include <stdio.h>
 
+NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
+{
+    String string(view);
+    bool ok;
+    int as_int = string.to_int(ok);
+    if (ok)
+        return LengthStyleValue::create(Length(as_int, Length::Type::Absolute));
+    unsigned as_uint = string.to_uint(ok);
+    if (ok)
+        return LengthStyleValue::create(Length(as_uint, Length::Type::Absolute));
+    if (string == "auto")
+        return LengthStyleValue::create(Length());
+    return StringStyleValue::create(string);
+}
+
 NonnullRefPtr<StyleSheet> parse_css(const String& css)
 {
     NonnullRefPtrVector<StyleRule> rules;
@@ -108,7 +123,7 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
         auto property_value = String::copy(buffer);
         buffer.clear();
         consume_specific(';');
-        current_rule.declarations.append(StyleDeclaration::create(property_name, StyleValue::parse(property_value)));
+        current_rule.declarations.append(StyleDeclaration::create(property_name, parse_css_value(property_value)));
     };
 
     auto parse_declarations = [&] {
