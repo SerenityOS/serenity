@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/LogStream.h>
 
 struct WSAPI_Size;
 
@@ -57,3 +58,8 @@ private:
     int m_width { 0 };
     int m_height { 0 };
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const Size& value)
+{
+    return stream << value.to_string();
+}
