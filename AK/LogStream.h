@@ -1,8 +1,11 @@
 #pragma once
 
-#include <AK/AKString.h>
-#include <AK/StringView.h>
 #include <AK/kstdio.h>
+
+namespace AK {
+
+class String;
+class StringView;
 
 class LogStream {
 public:
@@ -35,21 +38,19 @@ inline DebugLogStream dbg()
 
 inline const LogStream& operator<<(const LogStream& stream, const char* value)
 {
-    stream.write(value, strlen(value));
+    int length = 0;
+    const char* p = value;
+    while (*(p++))
+        ++length;
+    stream.write(value, length);
     return stream;
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const String& value)
-{
-    stream.write(value.characters(), value.length());
-    return stream;
-}
-
-inline const LogStream& operator<<(const LogStream& stream, const StringView& value)
-{
-    stream.write(value.characters(), value.length());
-    return stream;
-}
+const LogStream& operator<<(const LogStream&, const String&);
+const LogStream& operator<<(const LogStream&, const StringView&);
+const LogStream& operator<<(const LogStream&, int);
+const LogStream& operator<<(const LogStream&, unsigned);
+const LogStream& operator<<(const LogStream&, const void*);
 
 inline const LogStream& operator<<(const LogStream& stream, char value)
 {
@@ -62,17 +63,7 @@ inline const LogStream& operator<<(const LogStream& stream, bool value)
     return stream << (value ? "true" : "false");
 }
 
-inline const LogStream& operator<<(const LogStream& stream, int value)
-{
-    return stream << String::number(value);
 }
 
-inline const LogStream& operator<<(const LogStream& stream, unsigned value)
-{
-    return stream << String::number(value);
-}
-
-inline const LogStream& operator<<(const LogStream& stream, const void* value)
-{
-    return stream << String::format("%p", value);
-}
+using AK::LogStream;
+using AK::dbg;

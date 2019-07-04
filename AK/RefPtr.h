@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/LogStream.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Types.h>
 
@@ -202,6 +203,12 @@ public:
 private:
     T* m_ptr = nullptr;
 };
+
+template<typename T>
+inline const LogStream& operator<<(const LogStream& stream, const RefPtr<T>& value)
+{
+    return stream << value.ptr();
+}
 
 }
 

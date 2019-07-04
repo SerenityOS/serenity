@@ -1,6 +1,7 @@
 #pragma once
 
-#include "Weakable.h"
+#include <AK/LogStream.h>
+#include <AK/Weakable.h>
 
 namespace AK {
 
@@ -64,6 +65,12 @@ inline WeakPtr<T> Weakable<T>::make_weak_ptr()
     if (!m_link)
         m_link = adopt(*new WeakLink<T>(static_cast<T&>(*this)));
     return WeakPtr<T>(m_link.copy_ref());
+}
+
+template<typename T>
+inline const LogStream& operator<<(const LogStream& stream, const WeakPtr<T>& value)
+{
+    return stream << value.ptr();
 }
 
 }

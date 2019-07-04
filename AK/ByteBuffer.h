@@ -2,8 +2,9 @@
 
 #include "StdLibExtras.h"
 #include "Types.h"
-#include <AK/RefPtr.h>
+#include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 #include <AK/kmalloc.h>
 
 namespace AK {

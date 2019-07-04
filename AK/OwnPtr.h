@@ -1,8 +1,9 @@
 #pragma once
 
-#include "StdLibExtras.h"
-#include "Traits.h"
-#include "Types.h"
+#include <AK/LogStream.h>
+#include <AK/StdLibExtras.h>
+#include <AK/Traits.h>
+#include <AK/Types.h>
 
 namespace AK {
 
@@ -114,6 +115,12 @@ struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
     static void dump(const OwnPtr<T>& p) { kprintf("%p", p.ptr()); }
     static bool equals(const OwnPtr<T>& a, const OwnPtr<T>& b) { return a.ptr() == b.ptr(); }
 };
+
+template<typename T>
+inline const LogStream& operator<<(const LogStream& stream, const OwnPtr<T>& value)
+{
+    return stream << value.ptr();
+}
 
 }
 

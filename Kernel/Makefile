@@ -88,6 +88,7 @@ AK_OBJS = \
     ../AK/JsonValue.o \
     ../AK/JsonArray.o \
     ../AK/JsonParser.o \
+    ../AK/LogStream.o \
     ../AK/ELF/ELFImage.o \
     ../AK/ELF/ELFLoader.o
 

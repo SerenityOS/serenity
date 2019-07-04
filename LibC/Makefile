@@ -11,6 +11,7 @@ AK_OBJS = \
     ../AK/JsonArray.o \
     ../AK/JsonObject.o \
     ../AK/JsonParser.o \
+    ../AK/LogStream.o \
     ../AK/MappedFile.o
 
 LIBC_OBJS = \
