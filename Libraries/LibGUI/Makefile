@@ -82,8 +82,8 @@ clean:
 	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
 
 install: $(LIBRARY)
-	mkdir -p ../Root/usr/include/LibGUI
+	mkdir -p ../../Root/usr/include/LibGUI
 	# Copy headers
-	rsync -r -a --include '*/' --include '*.h' --exclude '*' . ../Root/usr/include/LibGUI
+	rsync -r -a --include '*/' --include '*.h' --exclude '*' . ../../Root/usr/include/LibGUI
 	# Install the library
-	cp $(LIBRARY) ../Root/usr/lib
+	cp $(LIBRARY) ../../Root/usr/lib
