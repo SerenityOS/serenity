@@ -1,14 +1,14 @@
-include ../Makefile.common
+include ../../Makefile.common
 
 SHAREDGRAPHICS_OBJS = \
-    ../SharedGraphics/Painter.o \
-    ../SharedGraphics/StylePainter.o \
-    ../SharedGraphics/Font.o \
-    ../SharedGraphics/Rect.o \
-    ../SharedGraphics/GraphicsBitmap.o \
-    ../SharedGraphics/CharacterBitmap.o \
-    ../SharedGraphics/Color.o \
-    ../SharedGraphics/PNGLoader.o
+    ../../SharedGraphics/Painter.o \
+    ../../SharedGraphics/StylePainter.o \
+    ../../SharedGraphics/Font.o \
+    ../../SharedGraphics/Rect.o \
+    ../../SharedGraphics/GraphicsBitmap.o \
+    ../../SharedGraphics/CharacterBitmap.o \
+    ../../SharedGraphics/Color.o \
+    ../../SharedGraphics/PNGLoader.o
 
 LIBGUI_OBJS = \
     GPainter.o \

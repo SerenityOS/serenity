@@ -1,5 +1,5 @@
 #include <AK/kmalloc.h>
-#include <LibC/SharedBuffer.h>
+#include <SharedBuffer.h>
 #include <stdio.h>
 #include <unistd.h>
 
