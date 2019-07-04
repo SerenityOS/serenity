@@ -240,16 +240,7 @@ public:
 
     void insert(int index, const T& value)
     {
-        ASSERT(index <= size());
-        if (index == size())
-            return append(value);
-        grow_capacity(size() + 1);
-        ++m_size;
-        for (int i = size() - 1; i > index; --i) {
-            new (slot(i)) T(move(at(i - 1)));
-            at(i - 1).~T();
-        }
-        new (slot(index)) T(value);
+        insert(index, T(value));
     }
 
     Vector& operator=(const Vector& other)
@@ -275,6 +266,13 @@ public:
             unchecked_append(move(v));
     }
 
+    void append(const Vector& other)
+    {
+        grow_capacity(size() + other.size());
+        for (auto& value : other)
+            unchecked_append(value);
+    }
+
     template<typename Callback>
     void remove_first_matching(Callback callback)
     {
@@ -295,8 +293,7 @@ public:
 
     void unchecked_append(const T& value)
     {
-        new (slot(m_size)) T(value);
-        ++m_size;
+        unchecked_append(T(value));
     }
 
     void append(T&& value)
@@ -308,9 +305,7 @@ public:
 
     void append(const T& value)
     {
-        grow_capacity(size() + 1);
-        new (slot(m_size)) T(value);
-        ++m_size;
+        append(T(value));
     }
 
     void prepend(const T& value)
