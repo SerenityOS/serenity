@@ -1,18 +1,18 @@
-include ../Makefile.common
+include ../../Makefile.common
 
 AK_OBJS = \
-    ../AK/StringImpl.o \
-    ../AK/String.o \
-    ../AK/StringView.o \
-    ../AK/StringBuilder.o \
-    ../AK/FileSystemPath.o \
-    ../AK/StdLibExtras.o \
-    ../AK/JsonValue.o \
-    ../AK/JsonArray.o \
-    ../AK/JsonObject.o \
-    ../AK/JsonParser.o \
-    ../AK/LogStream.o \
-    ../AK/MappedFile.o
+    ../../AK/StringImpl.o \
+    ../../AK/String.o \
+    ../../AK/StringView.o \
+    ../../AK/StringBuilder.o \
+    ../../AK/FileSystemPath.o \
+    ../../AK/StdLibExtras.o \
+    ../../AK/JsonValue.o \
+    ../../AK/JsonArray.o \
+    ../../AK/JsonObject.o \
+    ../../AK/JsonParser.o \
+    ../../AK/LogStream.o \
+    ../../AK/MappedFile.o
 
 LIBC_OBJS = \
        SharedBuffer.o \

@@ -1,4 +1,4 @@
-include ../Makefile.common
+include ../../Makefile.common
 
 OBJS = \
     CArgsParser.o \
