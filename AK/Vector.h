@@ -243,6 +243,18 @@ public:
         insert(index, T(value));
     }
 
+    template<typename C>
+    void insert_before_matching(T&& value, C callback)
+    {
+        for (int i = 0; i < size(); ++i) {
+            if (callback(at(i))) {
+                insert(i, move(value));
+                return;
+            }
+        }
+        append(move(value));
+    }
+
     Vector& operator=(const Vector& other)
     {
         if (this != &other) {
