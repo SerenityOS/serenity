@@ -6,6 +6,7 @@
 #include "WSMenuItem.h"
 #include "WSScreen.h"
 #include "WSWindow.h"
+#include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/CTimer.h>
@@ -24,7 +25,10 @@
 #include <unistd.h>
 
 //#define DEBUG_COUNTERS
+//#define DEBUG_MENUS
 //#define RESIZE_DEBUG
+//#define DRAG_DEBUG
+//#define DOUBLECLICK_DEBUG
 
 static WSWindowManager* s_the;
 
@@ -91,7 +95,7 @@ WSWindowManager::WSWindowManager()
             return;
         }
 #ifdef DEBUG_MENUS
-        dbgprintf("WSMenu 1 item activated: '%s'\n", item.text().characters());
+        dbg() << "WSMenu 1 item activated: " << item.text();
 #endif
     };
 
@@ -194,8 +198,7 @@ void WSWindowManager::set_resolution(int width, int height)
         client.notify_about_new_screen_rect(WSScreen::the().rect());
     });
     if (m_wm_config) {
-        dbgprintf("Saving resolution: %dx%d to config file at %s.\n", width, height,
-            m_wm_config->file_name().characters());
+        dbg() << "Saving resolution: " << Size(width, height) << " to config file at " << m_wm_config->file_name();
         m_wm_config->write_num_entry("Screen", "Width", width);
         m_wm_config->write_num_entry("Screen", "Height", height);
         m_wm_config->sync();
@@ -224,7 +227,7 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
     else
         m_current_menubar = nullptr;
 #ifdef DEBUG_MENUS
-    dbgprintf("[WM] Current menubar is now %p\n", menubar);
+    dbg() << "[WM] Current menubar is now " << menubar;
 #endif
     Point next_menu_location { menubar_menu_margin() / 2, 0 };
     int index = 0;
@@ -348,7 +351,7 @@ void WSWindowManager::notify_title_changed(WSWindow& window)
 {
     if (window.type() != WSWindowType::Normal)
         return;
-    dbgprintf("[WM] WSWindow{%p} title set to '%s'\n", &window, window.title().characters());
+    dbg() << "[WM] WSWindow{" << &window << "} title set to \"" << window.title() << '"';
     invalidate(window.frame().rect());
     if (m_switcher.is_visible())
         m_switcher.refresh();
@@ -361,7 +364,7 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
     UNUSED_PARAM(old_rect);
     UNUSED_PARAM(new_rect);
 #ifdef RESIZE_DEBUG
-    dbgprintf("[WM] WSWindow %p rect changed (%d,%d %dx%d) -> (%d,%d %dx%d)\n", &window, old_rect.x(), old_rect.y(), old_rect.width(), old_rect.height(), new_rect.x(), new_rect.y(), new_rect.width(), new_rect.height());
+    dbg() << "[WM] WSWindow " << &window << " rect changed " << old_rect << " -> " << new_rect;
 #endif
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
@@ -395,7 +398,7 @@ void WSWindowManager::close_current_menu()
 void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& event)
 {
 #ifdef DRAG_DEBUG
-    printf("[WM] Begin dragging WSWindow{%p}\n", &window);
+    dbg() << "[WM] Begin dragging WSWindow{" << &window << "}";
 #endif
     move_to_front_and_make_active(window);
     m_drag_window = window.make_weak_ptr();
@@ -426,7 +429,7 @@ void WSWindowManager::start_window_resize(WSWindow& window, const Point& positio
     }
 
 #ifdef RESIZE_DEBUG
-    printf("[WM] Begin resizing WSWindow{%p}\n", &window);
+    dbg() << "[WM] Begin resizing WSWindow{" << &window << "}";
 #endif
     m_resizing_mouse_button = button;
     m_resize_window = window.make_weak_ptr();
@@ -448,7 +451,7 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
         return false;
     if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
 #ifdef DRAG_DEBUG
-        printf("[WM] Finish dragging WSWindow{%p}\n", m_drag_window.ptr());
+        dbg() << "[WM] Finish dragging WSWindow{" << m_drag_window << "}";
 #endif
         invalidate(*m_drag_window);
         if (m_drag_window->rect().contains(event.position()))
@@ -457,7 +460,7 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
             process_event_for_doubleclick(*m_drag_window, event);
             if (event.type() == WSEvent::MouseDoubleClick) {
 #if defined(DOUBLECLICK_DEBUG)
-                dbgprintf("[WM] Click up became doubleclick!\n");
+                dbg() << "[WM] Click up became doubleclick!";
 #endif
                 m_drag_window->set_maximized(!m_drag_window->is_maximized());
             }
@@ -467,7 +470,7 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
     }
     if (event.type() == WSEvent::MouseMove) {
 #ifdef DRAG_DEBUG
-        dbgprintf("[WM] Dragging [origin: %d,%d] now: %d,%d\n", m_drag_origin.x(), m_drag_origin.y(), event.x(), event.y());
+        dbg() << "[WM] Dragging, origin: " << m_drag_origin << ", now: " << event.position();
 #endif
         Point pos = m_drag_window_origin.translated(event.position() - m_drag_origin);
         m_drag_window->set_position_without_repaint(pos);
@@ -485,7 +488,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
 
     if (event.type() == WSEvent::MouseUp && event.button() == m_resizing_mouse_button) {
 #ifdef RESIZE_DEBUG
-        printf("[WM] Finish resizing WSWindow{%p}\n", m_resize_window.ptr());
+        dbg() << "[WM] Finish resizing WSWindow{" << m_resize_window << "}";
 #endif
         WSEventLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
         invalidate(*m_resize_window);
@@ -569,9 +572,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     if (m_resize_window->rect() == new_rect)
         return true;
 #ifdef RESIZE_DEBUG
-    dbgprintf("[WM] Resizing [original: %s] now: %s\n",
-        m_resize_window_original_rect.to_string().characters(),
-        new_rect.to_string().characters());
+    dbg() << "[WM] Resizing, original: " << m_resize_window_original_rect << ", now: " << new_rect;
 #endif
     m_resize_window->set_rect(new_rect);
     WSEventLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
@@ -608,7 +609,7 @@ void WSWindowManager::process_event_for_doubleclick(WSWindow& window, WSMouseEve
         // we either haven't clicked anywhere, or we haven't clicked on this
         // window. set the current click window, and reset the timers.
 #if defined(DOUBLECLICK_DEBUG)
-        dbgprintf("Initial mouseup on window %p (previous was %p)\n", &window, m_double_click_info.m_clicked_window);
+        dbg() << "Initial mouseup on window " << &window << " (previous was " << m_double_click_info.m_clicked_window << ')';
 #endif
         m_double_click_info.m_clicked_window = window.make_weak_ptr();
         m_double_click_info.reset();
@@ -628,7 +629,7 @@ void WSWindowManager::process_event_for_doubleclick(WSWindow& window, WSMouseEve
         // If the pointer moves too far, it's not a double click.
         if (elapsed_since_last_click < m_double_click_speed) {
 #if defined(DOUBLECLICK_DEBUG)
-            dbgprintf("Transforming MouseUp to MouseDoubleClick!\n");
+            dbg() << "Transforming MouseUp to MouseDoubleClick!";
 #endif
             event = WSMouseEvent(WSEvent::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
             // invalidate this now we've delivered a doubleclick, otherwise
