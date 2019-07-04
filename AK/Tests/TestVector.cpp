@@ -41,5 +41,21 @@ int main()
     }
     EXPECT_EQ(loop_counter, 2);
 
+    {
+        Vector<String> strings;
+        strings.append("abc");
+        strings.append("def");
+        strings.append("ghi");
+
+        strings.insert_before_matching("f-g", [](auto& entry) {
+            return "f-g" < entry;
+        });
+
+        EXPECT_EQ(strings[0], "abc");
+        EXPECT_EQ(strings[1], "def");
+        EXPECT_EQ(strings[2], "f-g");
+        EXPECT_EQ(strings[3], "ghi");
+    }
+
     return 0;
 }

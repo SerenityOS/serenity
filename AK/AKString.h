@@ -132,6 +132,9 @@ public:
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
     bool operator<(const String&) const;
+    bool operator<(const char*) const;
+    bool operator>=(const String& other) const { return !(*this < other); }
+    bool operator>=(const char* other) const { return !(*this < other); }
 
     bool operator==(const char* cstring) const
     {
@@ -209,6 +212,22 @@ struct Traits<String> : public GenericTraits<String> {
     static unsigned hash(const String& s) { return s.impl() ? s.impl()->hash() : 0; }
     static void dump(const String& s) { kprintf("%s", s.characters()); }
 };
+
+inline bool operator<(const char* characters, const String& string)
+{
+    if (!characters)
+        return !string.is_null();
+
+    if (string.is_null())
+        return false;
+
+    return strcmp(characters, string.characters()) < 0;
+}
+
+inline bool operator>=(const char* characters, const String& string)
+{
+    return !(characters < string);
+}
 
 }
 
