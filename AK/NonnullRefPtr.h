@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/LogStream.h>
 #include <AK/Types.h>
 
 #ifdef __clang__
@@ -237,6 +238,12 @@ template<typename T>
 inline NonnullRefPtr<T> adopt(T& object)
 {
     return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, object);
+}
+
+template<typename T>
+inline const LogStream& operator<<(const LogStream& stream, const NonnullRefPtr<T>& value)
+{
+    return stream << value.ptr();
 }
 
 }
