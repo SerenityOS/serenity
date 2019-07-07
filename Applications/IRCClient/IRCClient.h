@@ -44,6 +44,7 @@ public:
     Function<void()> on_disconnect;
     Function<void()> on_server_message;
     Function<void(const String&)> on_nickname_changed;
+    Function<void(IRCChannel&)> on_part_from_channel;
 
     Function<IRCWindow*(void*, IRCWindow::Type, const String&)> aid_create_window;
     Function<IRCWindow*()> aid_get_active_window;
@@ -58,6 +59,8 @@ public:
     int window_count() const { return m_windows.size(); }
     const IRCWindow& window_at(int index) const { return *m_windows.at(index); }
     IRCWindow& window_at(int index) { return *m_windows.at(index); }
+
+    void did_part_from_channel(Badge<IRCChannel>, IRCChannel&);
 
     void handle_user_input_in_channel(const String& channel_name, const String&);
     void handle_user_input_in_query(const String& query_name, const String&);

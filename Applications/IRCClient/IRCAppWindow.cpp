@@ -1,4 +1,5 @@
 #include "IRCAppWindow.h"
+#include "IRCChannel.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
 #include <LibGUI/GAction.h>
@@ -48,6 +49,9 @@ void IRCAppWindow::setup_client()
     m_client.on_nickname_changed = [this](const String&) {
         update_title();
     };
+    m_client.on_part_from_channel = [this](auto&) {
+        update_part_action();
+    };
 
     if (m_client.hostname().is_empty()) {
         GInputBox input_box("Enter server:", "Connect to server", this);
@@ -70,8 +74,13 @@ void IRCAppWindow::setup_actions()
             m_client.handle_join_action(input_box.text_value());
     });
 
-    m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [](auto&) {
-        printf("FIXME: Implement part action\n");
+    m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
+        auto* window = m_client.current_window();
+        if (!window || window->type() != IRCWindow::Type::Channel) {
+            // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
+            return;
+        }
+        m_client.handle_part_action(window->channel().name());
     });
 
     m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
@@ -163,8 +172,18 @@ void IRCAppWindow::setup_widgets()
     };
 
     m_container = new GStackWidget(horizontal_container);
+    m_container->on_active_widget_change = [this](auto*) {
+        update_part_action();
+    };
 
     create_window(&m_client, IRCWindow::Server, "Server");
+}
+
+void IRCAppWindow::update_part_action()
+{
+    auto* window = static_cast<IRCWindow*>(m_container->active_widget());
+    bool is_open_channel = window && window->type() == IRCWindow::Type::Channel && window->channel().is_open();
+    m_part_action->set_enabled(is_open_channel);
 }
 
 IRCWindow& IRCAppWindow::create_window(void* owner, IRCWindow::Type type, const String& name)
