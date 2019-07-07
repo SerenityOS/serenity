@@ -648,7 +648,7 @@ void IRCClient::handle_part_action(const String& channel)
     part_channel(channel);
 }
 
-void IRCClient::did_part_from_channel(IRCChannel& channel)
+void IRCClient::did_part_from_channel(Badge<IRCChannel>, IRCChannel& channel)
 {
     if (on_part_from_channel)
         on_part_from_channel(channel);
