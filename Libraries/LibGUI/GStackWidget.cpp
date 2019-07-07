@@ -22,6 +22,8 @@ void GStackWidget::set_active_widget(GWidget* widget)
         m_active_widget->set_relative_rect(rect());
         m_active_widget->set_visible(true);
     }
+    if (on_active_widget_change)
+        on_active_widget_change(m_active_widget);
 }
 
 void GStackWidget::resize_event(GResizeEvent& event)
