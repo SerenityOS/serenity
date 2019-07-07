@@ -78,6 +78,7 @@ void IRCChannel::handle_part(const String& nick, const String& hostmask)
     if (nick == m_client.nickname()) {
         m_open = false;
         m_members.clear();
+        m_client.did_part_from_channel({}, *this);
     } else {
         remove_member(nick);
     }

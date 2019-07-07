@@ -19,6 +19,7 @@ private:
     void setup_menus();
     void setup_widgets();
     void update_title();
+    void update_part_action();
 
     IRCWindow& create_window(void* owner, IRCWindow::Type, const String& name);
     IRCClient m_client;
