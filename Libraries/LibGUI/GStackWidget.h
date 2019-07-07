@@ -10,6 +10,8 @@ public:
     GWidget* active_widget() const { return m_active_widget; }
     void set_active_widget(GWidget*);
 
+    Function<void(GWidget*)> on_active_widget_change;
+
     virtual const char* class_name() const override { return "GStackWidget"; }
 
 protected:
