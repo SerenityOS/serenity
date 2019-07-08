@@ -69,21 +69,23 @@ RefPtr<LayoutNode> Frame::generate_layout_tree(const StyledNode& styled_root)
         }
     };
 
-    Function<RefPtr<LayoutNode>(const StyledNode&, LayoutNode*)> resolve_layout = [&](const StyledNode& styled_node, LayoutNode* parent_layout_node) -> RefPtr<LayoutNode> {
+    Function<RefPtr<LayoutNode>(const StyledNode&, LayoutNode*)> build_layout_tree;
+    build_layout_tree = [&](const StyledNode& styled_node, LayoutNode* parent_layout_node) -> RefPtr<LayoutNode> {
         auto layout_node = create_layout_node(styled_node);
         if (!layout_node)
             return nullptr;
-        if (parent_layout_node)
-            parent_layout_node->append_child(*layout_node);
         if (styled_node.has_children()) {
-            for (auto* child = styled_node.first_child(); child; child = child->next_sibling()) {
-                resolve_layout(*child, layout_node.ptr());
+            for (auto* styled_child = styled_node.first_child(); styled_child; styled_child = styled_child->next_sibling()) {
+                auto layout_child = build_layout_tree(*styled_child, layout_node.ptr());
+                if (!layout_child)
+                    continue;
+                layout_node->append_child(*layout_child);
             }
         }
         return layout_node;
     };
 
-    return resolve_layout(styled_root, nullptr);
+    return build_layout_tree(styled_root, nullptr);
 }
 
 void Frame::layout()
