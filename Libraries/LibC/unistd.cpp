@@ -166,13 +166,29 @@ int creat(const char* path, mode_t mode)
     return open(path, O_CREAT | O_WRONLY | O_TRUNC, mode);
 }
 
+int creat_with_path_length(const char* path, size_t path_length, mode_t mode)
+{
+    return open_with_path_length(path, path_length, O_CREAT | O_WRONLY | O_TRUNC, mode);
+}
+
+int open_with_path_length(const char* path, size_t path_length, int options, mode_t mode)
+{
+    if (path_length > INT32_MAX) {
+        errno = EINVAL;
+        return -1;
+    }
+    Syscall::SC_open_params params { path, (int)path_length, options, mode };
+    int rc = syscall(SC_open, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int open(const char* path, int options, ...)
 {
     va_list ap;
     va_start(ap, options);
-    int rc = syscall(SC_open, path, options, (mode_t)va_arg(ap, unsigned));
+    auto mode = (mode_t)va_arg(ap, unsigned);
     va_end(ap);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return open_with_path_length(path, strlen(path), options, mode);
 }
 
 ssize_t read(int fd, void* buf, size_t count)

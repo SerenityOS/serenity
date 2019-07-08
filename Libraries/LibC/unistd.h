@@ -55,6 +55,8 @@ pid_t tcgetpgrp(int fd);
 int tcsetpgrp(int fd, pid_t pgid);
 int creat(const char* path, mode_t);
 int open(const char* path, int options, ...);
+int creat_with_path_length(const char* path, size_t path_length, mode_t);
+int open_with_path_length(const char* path, size_t path_length, int options, mode_t);
 ssize_t read(int fd, void* buf, size_t count);
 ssize_t write(int fd, const void* buf, size_t count);
 int close(int fd);

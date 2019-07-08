@@ -118,7 +118,7 @@ public:
     pid_t sys$getpid();
     pid_t sys$getppid();
     mode_t sys$umask(mode_t);
-    int sys$open(const char* path, int options, mode_t mode = 0);
+    int sys$open(const Syscall::SC_open_params*);
     int sys$close(int fd);
     ssize_t sys$read(int fd, u8*, ssize_t);
     ssize_t sys$write(int fd, const u8*, ssize_t);

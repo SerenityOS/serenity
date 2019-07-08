@@ -148,6 +148,13 @@ struct SC_mmap_params {
     const char* name { nullptr };
 };
 
+struct SC_open_params {
+    const char* path;
+    int path_length;
+    int options;
+    u16 mode;
+};
+
 struct SC_select_params {
     int nfds;
     fd_set* readfds;
