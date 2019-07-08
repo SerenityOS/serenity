@@ -52,13 +52,8 @@ RefPtr<StyledNode> Frame::generate_style_tree()
     return styled_root;
 }
 
-void Frame::layout()
+RefPtr<LayoutNode> Frame::generate_layout_tree(const StyledNode& styled_root)
 {
-    if (!m_document)
-        return;
-
-    auto styled_root = generate_style_tree();
-
     auto create_layout_node = [](const StyledNode& styled_node) -> RefPtr<LayoutNode> {
         if (styled_node.node() && styled_node.node()->is_document())
             return adopt(*new LayoutDocument(static_cast<const Document&>(*styled_node.node()), styled_node));
@@ -88,7 +83,16 @@ void Frame::layout()
         return layout_node;
     };
 
-    auto layout_root = resolve_layout(*styled_root, nullptr);
+    return resolve_layout(styled_root, nullptr);
+}
+
+void Frame::layout()
+{
+    if (!m_document)
+        return;
+
+    auto styled_root = generate_style_tree();
+    auto layout_root = generate_layout_tree(*styled_root);
 
     layout_root->style().size().set_width(m_size.width());
 
