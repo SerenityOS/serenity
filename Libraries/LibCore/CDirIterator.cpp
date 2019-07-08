@@ -4,7 +4,7 @@
 CDirIterator::CDirIterator(const StringView& path, Flags flags)
     : m_flags(flags)
 {
-    m_dir = opendir(path.characters());
+    m_dir = opendir(String(path).characters());
     if (m_dir == nullptr) {
         m_error = errno;
     }
