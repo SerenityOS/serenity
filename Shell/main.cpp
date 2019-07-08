@@ -50,11 +50,6 @@ void did_receive_signal(int signum)
     g_got_signal = true;
 }
 
-void handle_sigint(int)
-{
-    g.was_interrupted = true;
-}
-
 static int sh_exit(int, char**)
 {
     printf("Good-bye!\n");
@@ -561,11 +556,6 @@ void save_history()
     }
 }
 
-void handle_sighup(int)
-{
-    save_history();
-}
-
 int main(int argc, char** argv)
 {
     g.uid = getuid();
@@ -573,23 +563,17 @@ int main(int argc, char** argv)
     tcsetpgrp(0, getpgrp());
     tcgetattr(0, &g.termios);
 
-    {
-        struct sigaction sa;
-        sa.sa_handler = handle_sigint;
-        sa.sa_flags = 0;
-        sa.sa_mask = 0;
-        int rc = sigaction(SIGINT, &sa, nullptr);
-        assert(rc == 0);
-    }
+    signal(SIGINT, [](int) {
+        g.was_interrupted = true;
+    });
 
-    {
-        struct sigaction sa;
-        sa.sa_handler = handle_sighup;
-        sa.sa_flags = 0;
-        sa.sa_mask = 0;
-        int rc = sigaction(SIGHUP, &sa, nullptr);
-        assert(rc == 0);
-    }
+    signal(SIGHUP, [](int) {
+        save_history();
+    });
+
+    signal(SIGWINCH, [](int) {
+        g.was_resized = true;
+    });
 
     int rc = gethostname(g.hostname, sizeof(g.hostname));
     if (rc < 0)
