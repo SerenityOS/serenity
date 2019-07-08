@@ -1,3 +1,4 @@
+#include <AK/AKString.h>
 #include <AK/MappedFile.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -12,7 +13,7 @@ namespace AK {
 MappedFile::MappedFile(const StringView& file_name)
 {
     m_size = PAGE_SIZE;
-    m_fd = open(file_name.characters(), O_RDONLY | O_CLOEXEC);
+    m_fd = open(String(file_name).characters(), O_RDONLY | O_CLOEXEC);
 
     if (m_fd != -1) {
         struct stat st;
