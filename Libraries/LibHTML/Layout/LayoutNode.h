@@ -41,17 +41,20 @@ public:
     virtual const char* class_name() const { return "LayoutNode"; }
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }
+    virtual bool is_inline() const { return false; }
 
     virtual void layout();
 
     const LayoutBlock* containing_block() const;
 
+    virtual LayoutNode& inline_wrapper() { return *this; }
+
 protected:
-    explicit LayoutNode(const Node*, const StyledNode&);
+    explicit LayoutNode(const Node*, const StyledNode*);
 
 private:
     const Node* m_node { nullptr };
-    NonnullRefPtr<StyledNode> m_styled_node;
+    RefPtr<StyledNode> m_styled_node;
 
     ComputedStyle m_style;
     Rect m_rect;

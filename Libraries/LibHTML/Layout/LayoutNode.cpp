@@ -2,7 +2,7 @@
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/CSS/StyledNode.h>
 
-LayoutNode::LayoutNode(const Node* node, const StyledNode& styled_node)
+LayoutNode::LayoutNode(const Node* node, const StyledNode* styled_node)
     : m_node(node)
     , m_styled_node(styled_node)
 {

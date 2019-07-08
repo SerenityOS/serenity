@@ -2,7 +2,7 @@
 #include <ctype.h>
 
 LayoutText::LayoutText(const Text& text, const StyledNode& styled_node)
-    : LayoutNode(&text, styled_node)
+    : LayoutNode(&text, &styled_node)
 {
 }
 
