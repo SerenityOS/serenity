@@ -41,7 +41,7 @@ public:
         if (view.m_impl)
             m_impl = *view.m_impl;
         else
-            m_impl = StringImpl::create(view.characters(), view.length());
+            m_impl = StringImpl::create(view.characters_without_null_termination(), view.length());
     }
 
     String(const String& other)

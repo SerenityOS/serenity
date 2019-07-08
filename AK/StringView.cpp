@@ -24,7 +24,7 @@ Vector<StringView> StringView::split_view(const char separator) const
     Vector<StringView> v;
     ssize_t substart = 0;
     for (ssize_t i = 0; i < length(); ++i) {
-        char ch = characters()[i];
+        char ch = characters_without_null_termination()[i];
         if (ch == separator) {
             ssize_t sublen = i - substart;
             if (sublen != 0)
@@ -35,7 +35,7 @@ Vector<StringView> StringView::split_view(const char separator) const
     ssize_t taillen = length() - substart;
     if (taillen != 0)
         v.append(substring_view(substart, taillen));
-    if (characters()[length() - 1] == separator)
+    if (characters_without_null_termination()[length() - 1] == separator)
         v.append(String::empty());
     return v;
 }
@@ -50,7 +50,7 @@ StringView StringView::substring_view(int start, int length) const
 
 StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
 {
-    const char* remaining_characters = substring.characters();
+    const char* remaining_characters = substring.characters_without_null_termination();
     ASSERT(remaining_characters >= m_characters);
     ASSERT(remaining_characters <= m_characters + m_length);
     int remaining_length = m_length - (remaining_characters - m_characters);
@@ -59,7 +59,7 @@ StringView StringView::substring_view_starting_from_substring(const StringView& 
 
 StringView StringView::substring_view_starting_after_substring(const StringView& substring) const
 {
-    const char* remaining_characters = substring.characters() + substring.length();
+    const char* remaining_characters = substring.characters_without_null_termination() + substring.length();
     ASSERT(remaining_characters >= m_characters);
     ASSERT(remaining_characters <= m_characters + m_length);
     int remaining_length = m_length - (remaining_characters - m_characters);
@@ -70,12 +70,12 @@ unsigned StringView::to_uint(bool& ok) const
 {
     unsigned value = 0;
     for (ssize_t i = 0; i < length(); ++i) {
-        if (characters()[i] < '0' || characters()[i] > '9') {
+        if (characters_without_null_termination()[i] < '0' || characters_without_null_termination()[i] > '9') {
             ok = false;
             return 0;
         }
         value = value * 10;
-        value += characters()[i] - '0';
+        value += characters_without_null_termination()[i] - '0';
     }
     ok = true;
     return value;

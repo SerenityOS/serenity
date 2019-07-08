@@ -21,7 +21,7 @@ void StringBuilder::append(const StringView& str)
     if (str.is_empty())
         return;
     will_append(str.length());
-    memcpy(m_buffer.pointer() + m_length, str.characters(), str.length());
+    memcpy(m_buffer.pointer() + m_length, str.characters_without_null_termination(), str.length());
     m_length += str.length();
 }
 

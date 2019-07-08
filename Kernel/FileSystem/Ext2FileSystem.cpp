@@ -761,7 +761,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
     ASSERT(is_directory());
 
     //#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Adding inode %u with name '%s' and mode %o to directory %u\n", child_id.index(), name.characters(), mode, index());
+    dbg() << "Ext2FSInode::add_child(): Adding inode " << child_id.index() << " with name '" << name << " and mode " << mode << " to directory " << index();
     //#endif
 
     Vector<FS::DirectoryEntry> entries;
@@ -775,7 +775,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
         return true;
     });
     if (name_already_exists) {
-        kprintf("Ext2FS: Name '%s' already exists in directory inode %u\n", name.characters(), index());
+        dbg() << "Ext2FSInode::add_child(): Name '" << name << "' already exists in inode " << index();
         return KResult(-EEXIST);
     }
 
@@ -783,7 +783,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
     if (child_inode)
         child_inode->increment_link_count();
 
-    entries.append({ name.characters(), name.length(), child_id, to_ext2_file_type(mode) });
+    entries.append({ name.characters_without_null_termination(), name.length(), child_id, to_ext2_file_type(mode) });
     bool success = write_directory(entries);
     if (success)
         m_lookup_cache.set(name, child_id.index());
@@ -794,7 +794,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FSInode::remove_child(%s) in inode %u\n", name.characters(), index());
+    dbg() << "Ext2FSInode::remove_child(" << name << ") in inode " << index();
 #endif
     ASSERT(is_directory());
 
@@ -807,7 +807,7 @@ KResult Ext2FSInode::remove_child(const StringView& name)
     InodeIdentifier child_id { fsid(), child_inode_index };
 
     //#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: Removing '%s' in directory %u\n", name.characters(), index());
+    dbg() << "Ext2FSInode::remove_child(): Removing '" << name << "' in directory " << index();
     //#endif
 
     Vector<FS::DirectoryEntry> entries;

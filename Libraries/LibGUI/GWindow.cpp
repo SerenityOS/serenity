@@ -627,7 +627,7 @@ void GWindow::set_icon_path(const StringView& path)
     message.type = WSAPI_ClientMessage::Type::SetWindowIcon;
     message.window_id = m_window_id;
     ASSERT(path.length() < (int)sizeof(message.text));
-    strcpy(message.text, path.characters());
+    strcpy(message.text, String(path).characters());
     message.text_length = path.length();
     GEventLoop::post_message_to_server(message);
 }

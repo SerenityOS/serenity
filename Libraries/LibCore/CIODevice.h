@@ -32,7 +32,7 @@ public:
     ByteBuffer read_all();
 
     bool write(const u8*, int size);
-    bool write(const AK::StringView& v) { return write((const u8*)v.characters(), v.length()); }
+    bool write(const StringView& v) { return write((const u8*)v.characters_without_null_termination(), v.length()); }
 
     // FIXME: I would like this to be const but currently it needs to call populate_read_buffer().
     bool can_read_line();

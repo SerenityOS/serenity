@@ -68,7 +68,7 @@ void GTextEditor::create_actions()
 
 void GTextEditor::set_text(const StringView& text)
 {
-    if (is_single_line() && text.length() == m_lines[0]->length() && !memcmp(text.characters(), m_lines[0]->characters(), text.length()))
+    if (is_single_line() && text.length() == m_lines[0]->length() && !memcmp(text.characters_without_null_termination(), m_lines[0]->characters(), text.length()))
         return;
 
     m_selection.clear();
@@ -783,14 +783,14 @@ void GTextEditor::Line::clear()
 
 void GTextEditor::Line::set_text(const StringView& text)
 {
-    if (text.length() == length() && !memcmp(text.characters(), characters(), length()))
+    if (text.length() == length() && !memcmp(text.characters_without_null_termination(), characters(), length()))
         return;
     if (text.is_empty()) {
         clear();
         return;
     }
     m_text.resize(text.length() + 1);
-    memcpy(m_text.data(), text.characters(), text.length() + 1);
+    memcpy(m_text.data(), text.characters_without_null_termination(), text.length() + 1);
 }
 
 int GTextEditor::Line::width(const Font& font) const
@@ -844,7 +844,7 @@ void GTextEditor::Line::truncate(int length)
 
 bool GTextEditor::write_to_file(const StringView& path)
 {
-    int fd = open(path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+    int fd = open(String(path).characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
     if (fd < 0) {
         perror("open");
         return false;

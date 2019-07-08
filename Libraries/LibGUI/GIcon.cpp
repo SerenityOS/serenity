@@ -64,7 +64,7 @@ void GIconImpl::set_bitmap_for_size(int size, RefPtr<GraphicsBitmap>&& bitmap)
 
 GIcon GIcon::default_icon(const StringView& name)
 {
-    auto bitmap16 = GraphicsBitmap::load_from_file(String::format("/res/icons/16x16/%s.png", name.characters()));
-    auto bitmap32 = GraphicsBitmap::load_from_file(String::format("/res/icons/32x32/%s.png", name.characters()));
+    auto bitmap16 = GraphicsBitmap::load_from_file(String::format("/res/icons/16x16/%s.png", String(name).characters()));
+    auto bitmap32 = GraphicsBitmap::load_from_file(String::format("/res/icons/32x32/%s.png", String(name).characters()));
     return GIcon(move(bitmap16), move(bitmap32));
 }

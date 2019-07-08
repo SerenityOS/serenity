@@ -198,7 +198,7 @@ bool String::starts_with(const StringView& str) const
         return false;
     if (str.length() > length())
         return false;
-    return !memcmp(characters(), str.characters(), str.length());
+    return !memcmp(characters(), str.characters_without_null_termination(), str.length());
 }
 
 bool String::ends_with(const StringView& str) const
@@ -209,7 +209,7 @@ bool String::ends_with(const StringView& str) const
         return false;
     if (str.length() > length())
         return false;
-    return !memcmp(characters() + (length() - str.length()), str.characters(), str.length());
+    return !memcmp(characters() + (length() - str.length()), str.characters_without_null_termination(), str.length());
 }
 
 String String::repeated(char ch, int count)
@@ -239,7 +239,7 @@ bool String::match_helper(const StringView& mask) const
         return false;
 
     const char* string_ptr = characters();
-    const char* mask_ptr = mask.characters();
+    const char* mask_ptr = mask.characters_without_null_termination();
     const char* mask_end = mask_ptr + mask.length();
 
     // Match string against mask directly unless we hit a *
