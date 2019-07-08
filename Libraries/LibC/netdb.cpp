@@ -51,17 +51,13 @@ static int connect_to_lookup_server()
 
 hostent* gethostbyname(const char* name)
 {
-    unsigned a;
-    unsigned b;
-    unsigned c;
-    unsigned d;
-    int count = sscanf(name, "%u.%u.%u.%u", &a, &b, &c, &d);
-    if (count == 4 && a < 256 && b < 256 && c < 256 && d < 256) {
-        sprintf(__gethostbyname_name_buffer, "%u.%u.%u.%u", a, b, c, d);
+    auto ipv4_address = IPv4Address::from_string(name);
+    if (ipv4_address.has_value()) {
+        sprintf(__gethostbyname_name_buffer, "%s", ipv4_address.value().to_string().characters());
         __gethostbyname_buffer.h_name = __gethostbyname_name_buffer;
         __gethostbyname_buffer.h_aliases = nullptr;
         __gethostbyname_buffer.h_addrtype = AF_INET;
-        new (&__gethostbyname_address) IPv4Address(a, b, c, d);
+        new (&__gethostbyname_address) IPv4Address(ipv4_address.value());
         __gethostbyname_address_list_buffer[0] = &__gethostbyname_address;
         __gethostbyname_address_list_buffer[1] = nullptr;
         __gethostbyname_buffer.h_addr_list = (char**)__gethostbyname_address_list_buffer;
