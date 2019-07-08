@@ -297,13 +297,12 @@ bool IDEDiskDevice::read_sectors_with_dma(u32 lba, u16 count, u8* outbuf)
     while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
         ;
 
-    bool is_slave = false;
     u8 devsel = 0xe0;
     if (is_slave())
         devsel |= 0x10;
 
     IO::out8(m_io_base + ATA_REG_CONTROL, 0);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (is_slave << 4));
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (is_slave() << 4));
     wait_400ns(m_io_base);
 
     IO::out8(m_io_base + ATA_REG_FEATURES, 0);
@@ -427,13 +426,12 @@ bool IDEDiskDevice::write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf)
     while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
         ;
 
-    bool is_slave = false;
     u8 devsel = 0xe0;
     if (is_slave())
         devsel |= 0x10;
 
     IO::out8(m_io_base + ATA_REG_CONTROL, 0);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (is_slave << 4));
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (is_slave() << 4));
     wait_400ns(m_io_base);
 
     IO::out8(m_io_base + ATA_REG_FEATURES, 0);
