@@ -87,6 +87,10 @@ void Terminal::Line::set_length(u16 new_length)
     auto* new_characters = new u8[new_length];
     auto* new_attributes = new Attribute[new_length];
     memset(new_characters, ' ', new_length);
+    if (characters && attributes) {
+        memcpy(new_characters, characters, min(m_length, new_length));
+        memcpy(new_attributes, attributes, min(m_length, new_length) * sizeof(Attribute));
+    }
     delete[] characters;
     delete[] attributes;
     characters = new_characters;
@@ -938,10 +942,10 @@ void Terminal::set_size(u16 columns, u16 rows)
     m_scroll_region_top = 0;
     m_scroll_region_bottom = rows - 1;
 
-    m_cursor_row = 0;
-    m_cursor_column = 0;
-    m_saved_cursor_row = 0;
-    m_saved_cursor_column = 0;
+    m_cursor_row = min((int)m_cursor_row, m_rows - 1);
+    m_cursor_column = min((int)m_cursor_column, m_columns - 1);
+    m_saved_cursor_row = min((int)m_saved_cursor_row, m_rows - 1);
+    m_saved_cursor_column = min((int)m_saved_cursor_column, m_columns - 1);
 
     m_horizontal_tabs.resize(columns);
     for (unsigned i = 0; i < columns; ++i)
