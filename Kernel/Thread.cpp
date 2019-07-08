@@ -224,13 +224,19 @@ bool Thread::tick()
 void Thread::send_signal(u8 signal, Process* sender)
 {
     ASSERT(signal < 32);
+    InterruptDisabler disabler;
+
+    // FIXME: Figure out what to do for masked signals. Should we also ignore them here?
+    if (should_ignore_signal(signal)) {
+        dbg() << "signal " << signal << " was ignored by " << process();
+        return;
+    }
 
     if (sender)
         dbgprintf("signal: %s(%u) sent %d to %s(%u)\n", sender->name().characters(), sender->pid(), signal, process().name().characters(), pid());
     else
         dbgprintf("signal: kernel sent %d to %s(%u)\n", signal, process().name().characters(), pid());
 
-    InterruptDisabler disabler;
     m_pending_signals |= 1 << signal;
 }
 
@@ -305,6 +311,17 @@ DefaultSignalAction default_signal_action(u8 signal)
         return DefaultSignalAction::Stop;
     }
     ASSERT_NOT_REACHED();
+}
+
+bool Thread::should_ignore_signal(u8 signal) const
+{
+    ASSERT(signal < 32);
+    auto& action = m_signal_action_data[signal];
+    if (action.handler_or_sigaction.is_null())
+        return default_signal_action(signal) == DefaultSignalAction::Ignore;
+    if (action.handler_or_sigaction.as_ptr() == SIG_IGN)
+        return true;
+    return false;
 }
 
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
