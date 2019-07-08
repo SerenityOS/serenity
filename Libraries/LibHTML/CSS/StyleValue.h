@@ -20,6 +20,9 @@ public:
 
     Type type() const { return m_type; }
 
+    bool is_inherit() const { return type() == Type::Inherit; }
+    bool is_initial() const { return type() == Type::Initial; }
+
     virtual String to_string() const = 0;
 
 protected:
@@ -67,4 +70,32 @@ private:
     }
 
     Length m_length;
+};
+
+class InitialStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<InitialStyleValue> create() { return adopt(*new InitialStyleValue); }
+    virtual ~InitialStyleValue() override {}
+
+    String to_string() const override { return "initial"; }
+
+private:
+    InitialStyleValue()
+        : StyleValue(Type::Initial)
+    {
+    }
+};
+
+class InheritStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<InheritStyleValue> create() { return adopt(*new InheritStyleValue); }
+    virtual ~InheritStyleValue() override {}
+
+    String to_string() const override { return "inherit"; }
+
+private:
+    InheritStyleValue()
+        : StyleValue(Type::Inherit)
+    {
+    }
 };
