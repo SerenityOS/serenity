@@ -13,6 +13,10 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
     unsigned as_uint = string.to_uint(ok);
     if (ok)
         return LengthStyleValue::create(Length(as_uint, Length::Type::Absolute));
+    if (string == "inherit")
+        return InheritStyleValue::create();
+    if (string == "initial")
+        return InitialStyleValue::create();
     if (string == "auto")
         return LengthStyleValue::create(Length());
     return StringStyleValue::create(string);
