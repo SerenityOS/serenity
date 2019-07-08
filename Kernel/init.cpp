@@ -84,7 +84,7 @@ VFS* vfs;
         hang();
     }
 
-    auto dev_hd0 = IDEDiskDevice::create();
+    auto dev_hd0 = IDEDiskDevice::create(IDEDiskDevice::DriveType::MASTER);
 
     NonnullRefPtr<DiskDevice> root_dev = dev_hd0.copy_ref();
 

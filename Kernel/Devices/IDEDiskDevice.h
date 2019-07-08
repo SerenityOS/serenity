@@ -18,7 +18,18 @@ class IDEDiskDevice final : public IRQHandler
     , public DiskDevice {
     AK_MAKE_ETERNAL
 public:
-    static NonnullRefPtr<IDEDiskDevice> create();
+
+    // Type of drive this IDEDiskDevice is on the ATA channel.
+    //
+    // Each PATA channel can contain only two devices, which (I think) are
+    // jumper selectable on the drive itself by shorting two pins.
+    enum class DriveType : u8 {
+        MASTER,
+        SLAVE
+    };
+
+public:
+    static NonnullRefPtr<IDEDiskDevice> create(DriveType type);
     virtual ~IDEDiskDevice() override;
 
     // ^DiskDevice
@@ -29,7 +40,7 @@ public:
     virtual bool write_blocks(unsigned index, u16 count, const u8*) override;
 
 protected:
-    IDEDiskDevice();
+    explicit IDEDiskDevice(DriveType);
 
 private:
     // ^IRQHandler
@@ -45,6 +56,8 @@ private:
     bool read_sectors(u32 lba, u16 count, u8* buffer);
     bool write_sectors(u32 lba, u16 count, const u8* data);
 
+    bool is_slave() const;
+
     Lock m_lock { "IDEDiskDevice" };
     u16 m_cylinders { 0 };
     u16 m_heads { 0 };
@@ -53,6 +66,7 @@ private:
     volatile bool m_interrupted { false };
     volatile u8 m_device_error { 0 };
 
+    DriveType m_drive_type { DriveType::MASTER };
     PCI::Address m_pci_address;
     PhysicalRegionDescriptor m_prdt;
     RefPtr<PhysicalPage> m_dma_buffer_page;
