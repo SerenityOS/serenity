@@ -4,13 +4,13 @@
 
 namespace AK {
 
-inline const LogStream& operator<<(const LogStream& stream, const String& value)
+const LogStream& operator<<(const LogStream& stream, const String& value)
 {
     stream.write(value.characters(), value.length());
     return stream;
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const StringView& value)
+const LogStream& operator<<(const LogStream& stream, const StringView& value)
 {
     stream.write(value.characters(), value.length());
     return stream;
