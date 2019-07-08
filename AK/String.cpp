@@ -133,7 +133,7 @@ int String::to_int(bool& ok) const
     int value = 0;
     int i = 0;
 
-    if (is_null()) {
+    if (is_empty()) {
         ok = false;
         return 0;
     }
