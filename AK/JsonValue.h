@@ -67,6 +67,13 @@ public:
         return IPv4Address::from_string(as_string());
     }
 
+    bool to_bool(bool default_value = false) const
+    {
+        if (!is_bool())
+            return default_value;
+        return as_bool();
+    }
+
     int as_int() const
     {
         ASSERT(is_int());
