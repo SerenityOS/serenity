@@ -61,7 +61,7 @@ RefPtr<LayoutNode> Frame::generate_layout_tree(const StyledNode& styled_root)
         case Display::None:
             return nullptr;
         case Display::Block:
-            return adopt(*new LayoutBlock(*styled_node.node(), styled_node));
+            return adopt(*new LayoutBlock(styled_node.node(), &styled_node));
         case Display::Inline:
             return adopt(*new LayoutInline(*styled_node.node(), styled_node));
         default:
@@ -74,17 +74,19 @@ RefPtr<LayoutNode> Frame::generate_layout_tree(const StyledNode& styled_root)
         auto layout_node = create_layout_node(styled_node);
         if (!layout_node)
             return nullptr;
-        if (styled_node.has_children()) {
-            for (auto* styled_child = styled_node.first_child(); styled_child; styled_child = styled_child->next_sibling()) {
-                auto layout_child = build_layout_tree(*styled_child);
-                if (!layout_child)
-                    continue;
+        if (!styled_node.has_children())
+            return layout_node;
+        for (auto* styled_child = styled_node.first_child(); styled_child; styled_child = styled_child->next_sibling()) {
+            auto layout_child = build_layout_tree(*styled_child);
+            if (!layout_child)
+                continue;
+            if (layout_child->is_inline())
+                layout_node->inline_wrapper().append_child(*layout_child);
+            else
                 layout_node->append_child(*layout_child);
-            }
         }
         return layout_node;
     };
-
     return build_layout_tree(styled_root);
 }
 

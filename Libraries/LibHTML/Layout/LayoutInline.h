@@ -10,6 +10,7 @@ public:
     virtual ~LayoutInline() override;
 
     virtual const char* class_name() const override { return "LayoutInline"; }
+    virtual bool is_inline() const override { return true; }
 
 private:
 };
