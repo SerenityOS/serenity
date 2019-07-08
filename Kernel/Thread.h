@@ -121,6 +121,7 @@ public:
     ShouldUnblockThread dispatch_signal(u8 signal);
     bool has_unmasked_pending_signals() const;
     void terminate_due_to_signal(u8 signal);
+    bool should_ignore_signal(u8 signal) const;
 
     FPUState& fpu_state() { return *m_fpu_state; }
     bool has_used_fpu() const { return m_has_used_fpu; }
