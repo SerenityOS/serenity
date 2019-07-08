@@ -22,9 +22,14 @@ public:
         return (*it).value;
     }
 
+    void set(const String& key, JsonValue&& value)
+    {
+        m_members.set(key, move(value));
+    }
+
     void set(const String& key, const JsonValue& value)
     {
-        m_members.set(key, value);
+        m_members.set(key, JsonValue(value));
     }
 
     template<typename Callback>

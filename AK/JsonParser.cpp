@@ -108,7 +108,7 @@ JsonValue JsonParser::parse_object()
         consume_specific(':');
         consume_whitespace();
         auto value = parse();
-        object.set(name, value);
+        object.set(name, move(value));
         consume_whitespace();
         if (peek() == '}')
             break;
