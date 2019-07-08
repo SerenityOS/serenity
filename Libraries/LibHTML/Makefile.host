@@ -1,12 +1,12 @@
 all: tho
 
-CXXFLAGS = -W -Wall -O -g -I. -I../ -std=c++17
+CXXFLAGS = -W -Wall -O -g -I. -I../ -I../../ -std=c++17
 
 EXTRA_OBJS = \
-    ../AK/StringImpl.o \
-    ../AK/String.o \
-    ../AK/StringBuilder.o \
-    ../AK/StringView.o \
+    ../../AK/StringImpl.o \
+    ../../AK/String.o \
+    ../../AK/StringBuilder.o \
+    ../../AK/StringView.o \
     ../LibCore/CEventLoop.o \
     ../LibCore/CObject.o \
     ../LibCore/CEvent.o \
