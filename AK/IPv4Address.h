@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/LogStream.h>
 #include <AK/NetworkOrdered.h>
 #include <AK/Optional.h>
 
@@ -84,6 +85,11 @@ struct Traits<IPv4Address> : public GenericTraits<IPv4Address> {
     static unsigned hash(const IPv4Address& address) { return string_hash((const char*)&address, sizeof(address)); }
     static void dump(const IPv4Address& address) { kprintf("%s", address.to_string().characters()); }
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const IPv4Address& value)
+{
+    return stream << value.to_string();
+}
 
 }
 
