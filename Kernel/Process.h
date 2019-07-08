@@ -474,3 +474,8 @@ inline int Thread::pid() const
 {
     return m_process.pid();
 }
+
+inline const LogStream& operator<<(const LogStream& stream, const Process& process)
+{
+    return stream << process.name() << '(' << process.pid() << ')';
+}
