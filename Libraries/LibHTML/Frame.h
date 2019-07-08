@@ -17,6 +17,7 @@ public:
 
 private:
     RefPtr<StyledNode> generate_style_tree();
+    RefPtr<LayoutNode> generate_layout_tree(const StyledNode&);
 
     RefPtr<Document> m_document;
     Size m_size;
