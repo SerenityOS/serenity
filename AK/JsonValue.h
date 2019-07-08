@@ -1,6 +1,8 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/IPv4Address.h>
+#include <AK/Optional.h>
 
 namespace AK {
 
@@ -44,6 +46,7 @@ public:
     JsonValue(bool);
     JsonValue(const char*);
     JsonValue(const String&);
+    JsonValue(const IPv4Address&);
     JsonValue(const JsonArray&);
     JsonValue(const JsonObject&);
 
@@ -55,6 +58,13 @@ public:
         if (is_string())
             return as_string();
         return default_value;
+    }
+
+    Optional<IPv4Address> to_ipv4_address() const
+    {
+        if (!is_string())
+            return {};
+        return IPv4Address::from_string(as_string());
     }
 
     int as_int() const
