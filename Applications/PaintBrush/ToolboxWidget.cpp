@@ -53,7 +53,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
         button->set_checkable(true);
         button->set_exclusive(true);
 
-        button->set_icon(load_png(String::format("/res/icons/paintbrush/%s.png", icon_name.characters())));
+        button->set_icon(load_png(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
 
         button->on_checked = [button](auto checked) {
             if (checked)

@@ -40,11 +40,11 @@ bool VFS::mount(NonnullRefPtr<FS>&& file_system, StringView path)
 {
     auto result = resolve_path(path, root_custody());
     if (result.is_error()) {
-        kprintf("VFS: mount can't resolve mount point '%s'\n", path.characters());
+        dbg() << "VFS: mount can't resolve mount point '" << path << "'";
         return false;
     }
     auto& inode = result.value()->inode();
-    kprintf("VFS: mounting %s{%p} at %s (inode: %u)\n", file_system->class_name(), file_system.ptr(), path.characters(), inode.index());
+    dbg() << "VFS: Mounting " << file_system->class_name() << " at " << path << " (inode: " << inode.identifier() << ")";
     // FIXME: check that this is not already a mount point
     auto mount = make<Mount>(*result.value(), move(file_system));
     m_mounts.append(move(mount));
@@ -221,7 +221,7 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
         return KResult(-EACCES);
 
     FileSystemPath p(path);
-    dbgprintf("VFS::mknod: '%s' mode=%o dev=%u in %u:%u\n", p.basename().characters(), mode, dev, parent_inode.fsid(), parent_inode.index());
+    dbg() << "VFS::mknod: '" << p.basename() << "' mode=" << mode << " dev=" << dev << " in " << parent_inode.identifier();
     int error;
     auto new_file = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, dev, error);
     if (!new_file)
@@ -243,7 +243,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
     if (!parent_inode.metadata().may_write(current->process()))
         return KResult(-EACCES);
     FileSystemPath p(path);
-    dbgprintf("VFS::create_file: '%s' in %u:%u\n", p.basename().characters(), parent_inode.fsid(), parent_inode.index());
+    dbg() << "VFS::create: '" << p.basename() << "' in " << parent_inode.identifier();
     int error;
     auto new_file = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), mode, 0, 0, error);
     if (!new_file)
@@ -269,7 +269,7 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
         return KResult(-EACCES);
 
     FileSystemPath p(path);
-    dbgprintf("VFS::mkdir: '%s' in %u:%u\n", p.basename().characters(), parent_inode.fsid(), parent_inode.index());
+    dbg() << "VFS::mkdir: '" << p.basename() << "' in " << parent_inode.identifier();
     int error;
     auto new_dir = parent_inode.fs().create_directory(parent_inode.identifier(), p.basename(), mode, error);
     if (new_dir)
@@ -423,7 +423,7 @@ KResult VFS::chown(Inode& inode, uid_t a_uid, gid_t a_gid)
         new_gid = a_gid;
     }
 
-    dbgprintf("VFS::chown(): inode %u:%u <- uid:%d, gid:%d\n", inode.fsid(), inode.index(), new_uid, new_gid);
+    dbg() << "VFS::chown(): inode " << inode.identifier() << " <- uid:" << new_uid << " gid:" << new_gid;
     return inode.chown(new_uid, new_gid);
 }
 
@@ -511,12 +511,12 @@ KResult VFS::symlink(StringView target, StringView linkpath, Custody& base)
         return KResult(-EACCES);
 
     FileSystemPath p(linkpath);
-    dbgprintf("VFS::symlink: '%s' (-> '%s') in %u:%u\n", p.basename().characters(), target.characters(), parent_inode.fsid(), parent_inode.index());
+    dbg() << "VFS::symlink: '" << p.basename() << "' (-> '" << target << "') in " << parent_inode.identifier();
     int error;
     auto new_file = parent_inode.fs().create_inode(parent_inode.identifier(), p.basename(), 0120644, 0, 0, error);
     if (!new_file)
         return KResult(error);
-    ssize_t nwritten = new_file->write_bytes(0, target.length(), (const u8*)target.characters(), nullptr);
+    ssize_t nwritten = new_file->write_bytes(0, target.length(), (const u8*)target.characters_without_null_termination(), nullptr);
     if (nwritten < 0)
         return KResult(nwritten);
     return KSuccess;

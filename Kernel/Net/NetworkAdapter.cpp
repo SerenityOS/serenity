@@ -1,4 +1,5 @@
 #include <AK/HashTable.h>
+#include <AK/StringBuilder.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
@@ -100,7 +101,10 @@ void NetworkAdapter::set_ipv4_address(const IPv4Address& address)
 void NetworkAdapter::set_interface_name(const StringView& basename)
 {
     // FIXME: Find a unique name for this interface, starting with $basename.
-    m_name = String::format("%s0", basename.characters());
+    StringBuilder builder;
+    builder.append(basename);
+    builder.append('0');
+    m_name = builder.to_string();
 }
 
 bool PacketQueueAlarm::is_ringing() const

@@ -12,7 +12,7 @@ const LogStream& operator<<(const LogStream& stream, const String& value)
 
 const LogStream& operator<<(const LogStream& stream, const StringView& value)
 {
-    stream.write(value.characters(), value.length());
+    stream.write(value.characters_without_null_termination(), value.length());
     return stream;
 }
 

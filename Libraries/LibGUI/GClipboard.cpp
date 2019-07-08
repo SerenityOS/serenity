@@ -44,7 +44,7 @@ void GClipboard::set_data(const StringView& data)
         return;
     }
     if (!data.is_empty())
-        memcpy(shared_buffer->data(), data.characters(), data.length() + 1);
+        memcpy(shared_buffer->data(), data.characters_without_null_termination(), data.length() + 1);
     else
         ((u8*)shared_buffer->data())[0] = '\0';
     shared_buffer->seal();

@@ -42,3 +42,10 @@ private:
     u32 m_fsid { 0 };
     u32 m_index { 0 };
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const InodeIdentifier& value)
+{
+    stream << value.fsid() << ':' << value.index();
+    return stream;
+}
+

@@ -571,7 +571,7 @@ void Painter::draw_text(const Rect& rect, const StringView& text, const Font& fo
             int new_width = font.width("...");
             if (new_width < text_width) {
                 for (int i = 0; i < final_text.length(); ++i) {
-                    int glyph_width = font.glyph_width(final_text.characters()[i]);
+                    int glyph_width = font.glyph_width(final_text.characters_without_null_termination()[i]);
                     // NOTE: Glyph spacing should not be added after the last glyph on the line,
                     //       but since we are here because the last glyph does not actually fit on the line,
                     //       we don't have to worry about spacing.
@@ -582,7 +582,7 @@ void Painter::draw_text(const Rect& rect, const StringView& text, const Font& fo
                     new_width += glyph_width + glyph_spacing;
                 }
                 StringBuilder builder;
-                builder.append(StringView(final_text.characters(), new_length));
+                builder.append(StringView(final_text.characters_without_null_termination(), new_length));
                 builder.append("...");
                 elided_text = builder.to_string();
                 final_text = elided_text;
@@ -609,7 +609,7 @@ void Painter::draw_text(const Rect& rect, const StringView& text, const Font& fo
 
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
     for (ssize_t i = 0; i < final_text.length(); ++i) {
-        char ch = final_text.characters()[i];
+        char ch = final_text.characters_without_null_termination()[i];
         if (ch == ' ') {
             point.move_by(space_width, 0);
             continue;
