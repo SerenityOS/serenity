@@ -50,10 +50,16 @@ String LineEditor::get_line()
         if (nread < 0) {
             if (errno == EINTR) {
                 if (g.was_interrupted) {
+                    g.was_interrupted = false;
                     if (!m_buffer.is_empty())
                         printf("^C");
                 }
-                g.was_interrupted = false;
+                if (g.was_resized) {
+                    g.was_resized = false;
+                    printf("\033[2K\r");
+                    m_buffer.clear();
+                    return String::empty();
+                }
                 m_buffer.clear();
                 putchar('\n');
                 return String::empty();

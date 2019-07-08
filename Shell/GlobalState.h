@@ -13,6 +13,7 @@ struct GlobalState {
     uid_t uid;
     struct termios termios;
     bool was_interrupted { false };
+    bool was_resized { false };
 };
 
 extern GlobalState g;
