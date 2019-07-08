@@ -212,10 +212,10 @@ private:
     u16 m_columns { 0 };
     u16 m_rows { 0 };
 
-    u8 m_cursor_row { 0 };
-    u8 m_cursor_column { 0 };
-    u8 m_saved_cursor_row { 0 };
-    u8 m_saved_cursor_column { 0 };
+    u16 m_cursor_row { 0 };
+    u16 m_cursor_column { 0 };
+    u16 m_saved_cursor_row { 0 };
+    u16 m_saved_cursor_column { 0 };
     bool m_stomp { false };
 
     bool m_should_beep { false };
