@@ -70,6 +70,9 @@ int main(int argc, char** argv)
     (void)slider1;
     auto* slider2 = new GSlider(main_widget);
     slider2->set_enabled(false);
+    auto* slider3 = new GSlider(main_widget);
+    slider3->set_max(5);
+    slider3->set_knob_size_mode(GSlider::KnobSizeMode::Proportional);
 
     auto* scrollbar1 = new GScrollBar(Orientation::Horizontal, main_widget);
     scrollbar1->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
