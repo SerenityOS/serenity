@@ -2,6 +2,9 @@
 
 #include <AK/AKString.h>
 #include <AK/NetworkOrdered.h>
+#include <AK/Optional.h>
+
+typedef u32 in_addr_t;
 
 namespace AK {
 
@@ -38,6 +41,31 @@ public:
     {
         return String::format("%u.%u.%u.%u", m_data[0], m_data[1], m_data[2], m_data[3]);
     }
+
+    static Optional<IPv4Address> from_string(const StringView& string)
+    {
+        if (string.is_null())
+            return {};
+        auto parts = string.split_view('.');
+        if (parts.size() != 4)
+            return {};
+        bool ok;
+        auto a = parts[0].to_uint(ok);
+        if (!ok || a > 255)
+            return {};
+        auto b = parts[1].to_uint(ok);
+        if (!ok || b > 255)
+            return {};
+        auto c = parts[2].to_uint(ok);
+        if (!ok || c > 255)
+            return {};
+        auto d = parts[3].to_uint(ok);
+        if (!ok || d > 255)
+            return {};
+        return IPv4Address((u8)a, (u8)b, (u8)c, (u8)d);
+    }
+
+    in_addr_t to_in_addr_t() const { return m_data_as_u32; }
 
     bool operator==(const IPv4Address& other) const { return m_data_as_u32 == other.m_data_as_u32; }
     bool operator!=(const IPv4Address& other) const { return m_data_as_u32 != other.m_data_as_u32; }
