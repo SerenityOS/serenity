@@ -78,14 +78,15 @@
 #define ATA_REG_ALTSTATUS 0x0C
 #define ATA_REG_DEVADDRESS 0x0D
 
-NonnullRefPtr<IDEDiskDevice> IDEDiskDevice::create()
+NonnullRefPtr<IDEDiskDevice> IDEDiskDevice::create(DriveType type)
 {
-    return adopt(*new IDEDiskDevice);
+    return adopt(*new IDEDiskDevice(type));
 }
 
-IDEDiskDevice::IDEDiskDevice()
+IDEDiskDevice::IDEDiskDevice(DriveType type)
     : IRQHandler(IRQ_FIXED_DISK)
     , m_io_base(0x1f0)
+    , m_drive_type(type)
 {
     m_dma_enabled.resource() = true;
     ProcFS::the().add_sys_bool("ide_dma", m_dma_enabled);
@@ -195,6 +196,9 @@ void IDEDiskDevice::initialize()
     u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     kprintf("initial status: ");
     print_ide_status(status);
+
+    if (is_slave())
+        kprintf("This IDE device is the SECONDARY device on the channel!\n");
 #endif
 
     m_interrupted = false;
@@ -204,8 +208,12 @@ void IDEDiskDevice::initialize()
 
     enable_irq();
 
-    IO::out8(0x1F6, 0xA0); // 0xB0 for 2nd device
-    IO::out8(0x3F6, 0xA0); // 0xB0 for 2nd device
+    u8 devsel = 0xA0;
+    if (is_slave())
+        devsel |= 0x10;
+
+    IO::out8(0x1F6, devsel);
+    IO::out8(0x3F6, devsel);
     IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
 
     enable_irq();
@@ -290,9 +298,12 @@ bool IDEDiskDevice::read_sectors_with_dma(u32 lba, u16 count, u8* outbuf)
         ;
 
     bool is_slave = false;
+    u8 devsel = 0xe0;
+    if (is_slave())
+        devsel |= 0x10;
 
     IO::out8(m_io_base + ATA_REG_CONTROL, 0);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | (is_slave << 4));
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (is_slave << 4));
     wait_400ns(m_io_base);
 
     IO::out8(m_io_base + ATA_REG_FEATURES, 0);
@@ -351,11 +362,15 @@ bool IDEDiskDevice::read_sectors(u32 start_sector, u16 count, u8* outbuf)
     kprintf("IDEDiskDevice: Reading %u sector(s) @ LBA %u\n", count, start_sector);
 #endif
 
+    u8 devsel = 0xe0;
+    if (is_slave())
+        devsel |= 0x10;
+
     IO::out8(m_io_base + ATA_REG_SECCOUNT0, count == 256 ? 0 : LSB(count));
     IO::out8(m_io_base + ATA_REG_LBA0, start_sector & 0xff);
     IO::out8(m_io_base + ATA_REG_LBA1, (start_sector >> 8) & 0xff);
     IO::out8(m_io_base + ATA_REG_LBA2, (start_sector >> 16) & 0xff);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | ((start_sector >> 24) & 0xf));
 
     IO::out8(0x3F6, 0x08);
     while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRDY))
@@ -413,9 +428,12 @@ bool IDEDiskDevice::write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf)
         ;
 
     bool is_slave = false;
+    u8 devsel = 0xe0;
+    if (is_slave())
+        devsel |= 0x10;
 
     IO::out8(m_io_base + ATA_REG_CONTROL, 0);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | (is_slave << 4));
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (is_slave << 4));
     wait_400ns(m_io_base);
 
     IO::out8(m_io_base + ATA_REG_FEATURES, 0);
@@ -471,11 +489,15 @@ bool IDEDiskDevice::write_sectors(u32 start_sector, u16 count, const u8* data)
 
     //dbgprintf("IDEDiskDevice: Writing %u sector(s) @ LBA %u\n", count, start_sector);
 
+    u8 devsel = 0xe0;
+    if (is_slave())
+        devsel |= 0x10;
+
     IO::out8(m_io_base + ATA_REG_SECCOUNT0, count == 256 ? 0 : LSB(count));
     IO::out8(m_io_base + ATA_REG_LBA0, start_sector & 0xff);
     IO::out8(m_io_base + ATA_REG_LBA1, (start_sector >> 8) & 0xff);
     IO::out8(m_io_base + ATA_REG_LBA2, (start_sector >> 16) & 0xff);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xe0 | ((start_sector >> 24) & 0xf)); // 0xf0 for 2nd device
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | ((start_sector >> 24) & 0xf));
 
     IO::out8(0x3F6, 0x08);
 
@@ -501,4 +523,9 @@ bool IDEDiskDevice::write_sectors(u32 start_sector, u16 count, const u8* data)
     wait_for_irq();
 
     return !m_device_error;
+}
+
+bool IDEDiskDevice::is_slave() const
+{
+    return m_drive_type == DriveType::SLAVE;
 }
