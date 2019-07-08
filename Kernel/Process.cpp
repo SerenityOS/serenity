@@ -1127,12 +1127,18 @@ int Process::number_of_open_file_descriptors() const
     return count;
 }
 
-int Process::sys$open(const char* path, int options, mode_t mode)
+int Process::sys$open(const Syscall::SC_open_params* params)
 {
+    if (!validate_read_typed(params))
+        return -EFAULT;
+    auto* path = params->path;
+    auto path_length = params->path_length;
+    auto options = params->options;
+    auto mode = params->mode;
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$open(\"%s\")\n", name().characters(), pid(), path);
 #endif
-    if (!validate_read_str(path))
+    if (!validate_read(path, path_length))
         return -EFAULT;
     int fd = alloc_fd();
     if (fd < 0)

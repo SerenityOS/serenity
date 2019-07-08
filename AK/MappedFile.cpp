@@ -13,7 +13,7 @@ namespace AK {
 MappedFile::MappedFile(const StringView& file_name)
 {
     m_size = PAGE_SIZE;
-    m_fd = open(String(file_name).characters(), O_RDONLY | O_CLOEXEC);
+    m_fd = open_with_path_length(file_name.characters_without_null_termination(), file_name.length(), O_RDONLY | O_CLOEXEC, 0);
 
     if (m_fd != -1) {
         struct stat st;

@@ -85,7 +85,7 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
     case Syscall::SC_getcwd:
         return current->process().sys$getcwd((char*)arg1, (size_t)arg2);
     case Syscall::SC_open:
-        return current->process().sys$open((const char*)arg1, (int)arg2, (mode_t)arg3);
+        return current->process().sys$open((const SC_open_params*)arg1);
     case Syscall::SC_write:
         return current->process().sys$write((int)arg1, (const u8*)arg2, (ssize_t)arg3);
     case Syscall::SC_close:

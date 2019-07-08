@@ -127,7 +127,7 @@ RefPtr<Font> Font::load_from_file(const StringView& path)
 
 bool Font::write_to_file(const StringView& path)
 {
-    int fd = creat(String(path).characters(), 0644);
+    int fd = creat_with_path_length(path.characters_without_null_termination(), path.length(), 0644);
     if (fd < 0) {
         perror("open");
         return false;
