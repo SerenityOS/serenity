@@ -1,4 +1,4 @@
-#include <Kernel/File.h>
+#include <Kernel/FileSystem/File.h>
 #include <Kernel/FileSystem/FileDescription.h>
 
 File::File()

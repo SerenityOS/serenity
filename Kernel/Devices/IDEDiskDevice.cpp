@@ -1,7 +1,7 @@
 #include <Kernel/Devices/IDEDiskDevice.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/IO.h>
-#include <Kernel/PIC.h>
+#include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Process.h>
 #include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
