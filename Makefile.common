@@ -13,7 +13,7 @@ CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
 #CXX = clang $(CLANG_FLAGS)
-CXX = i686-pc-serenity-g++
+CXX = $(PRE_CXX) i686-pc-serenity-g++
 LD = i686-pc-serenity-g++
 AS = i686-pc-serenity-as
 
