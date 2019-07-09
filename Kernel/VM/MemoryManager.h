@@ -17,7 +17,6 @@
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/Region.h>
 #include <Kernel/VM/VMObject.h>
-#include <Kernel/VirtualAddress.h>
 
 #define PAGE_ROUND_UP(x) ((((u32)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 

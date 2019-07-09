@@ -1,7 +1,6 @@
 #pragma once
 
 #include <Kernel/Devices/Device.h>
-#include <Kernel/VirtualAddress.h>
 
 class BlockDevice : public Device {
 public:

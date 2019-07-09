@@ -7,7 +7,7 @@
 #include <AK/ELF/ELFImage.h>
 
 #ifdef KERNEL
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/VM/VirtualAddress.h>
 class Region;
 #endif
 

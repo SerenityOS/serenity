@@ -9,7 +9,7 @@
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Net/Socket.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/VM/VirtualAddress.h>
 
 class File;
 class TTY;

@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/VM/VirtualAddress.h>
 
 class Range {
     friend class RangeAllocator;

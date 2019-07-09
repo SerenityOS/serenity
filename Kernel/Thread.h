@@ -9,7 +9,6 @@
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/Region.h>
-#include <Kernel/VirtualAddress.h>
 
 class Alarm;
 class FileDescription;
