@@ -2,7 +2,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefPtr.h>
 #include <Kernel/Assertions.h>
-#include <Kernel/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/VM/PhysicalRegion.h>
 

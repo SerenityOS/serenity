@@ -5,7 +5,7 @@
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/PCI.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 
 struct PhysicalRegionDescriptor {

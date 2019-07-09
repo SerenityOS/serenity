@@ -7,8 +7,8 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>
-#include <Kernel/PhysicalAddress.h>
 #include <Kernel/UnixTypes.h>
+#include <Kernel/VM/PhysicalAddress.h>
 
 class Inode;
 class PhysicalPage;

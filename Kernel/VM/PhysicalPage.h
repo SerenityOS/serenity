@@ -2,7 +2,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/Assertions.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/PhysicalAddress.h>
 
 class PhysicalPage {
     friend class MemoryManager;

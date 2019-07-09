@@ -3,7 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
-#include <Kernel/PhysicalAddress.h>
+#include <Kernel/VM/PhysicalAddress.h>
 #include <SharedGraphics/Size.h>
 
 class BXVGADevice final : public BlockDevice {
