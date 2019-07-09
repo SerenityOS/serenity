@@ -3,16 +3,10 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GMenuItem.h>
 
-GAction::GAction(const StringView& text, const StringView& custom_data, Function<void(GAction&)> on_activation_callback, GWidget* widget)
+GAction::GAction(const StringView& text, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : on_activation(move(on_activation_callback))
     , m_text(text)
-    , m_custom_data(custom_data)
     , m_widget(widget ? widget->make_weak_ptr() : nullptr)
-{
-}
-
-GAction::GAction(const StringView& text, Function<void(GAction&)> on_activation_callback, GWidget* widget)
-    : GAction(text, String(), move(on_activation_callback), widget)
 {
 }
 
