@@ -1,7 +1,7 @@
 #pragma once
 
 #include <Kernel/DoubleBuffer.h>
-#include <Kernel/File.h>
+#include <Kernel/FileSystem/File.h>
 #include <Kernel/UnixTypes.h>
 
 class FileDescription;

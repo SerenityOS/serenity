@@ -1,6 +1,6 @@
 #pragma once
 
-#include <Kernel/File.h>
+#include <Kernel/FileSystem/File.h>
 
 class Inode;
 

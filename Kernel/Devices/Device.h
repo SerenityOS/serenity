@@ -9,7 +9,7 @@
 // There are two main subclasses:
 //   - BlockDevice (random access)
 //   - CharacterDevice (sequential)
-#include <Kernel/File.h>
+#include <Kernel/FileSystem/File.h>
 #include <Kernel/UnixTypes.h>
 
 class Device : public File {

@@ -4,7 +4,7 @@
 #include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
-#include <Kernel/File.h>
+#include <Kernel/FileSystem/File.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
