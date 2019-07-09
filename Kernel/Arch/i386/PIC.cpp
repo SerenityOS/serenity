@@ -1,8 +1,8 @@
-#include "PIC.h"
-#include "Assertions.h"
-#include "IO.h"
+#include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/PIC.h>
+#include <Kernel/IO.h>
 
 // The slave 8259 is connected to the master's IRQ2 line.
 // This is really only to enhance clarity.
@@ -109,3 +109,4 @@ u16 get_irr()
 }
 
 }
+
