@@ -2,7 +2,7 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
-#include <Kernel/VirtualAddress.h>
+#include <Kernel/VM/VirtualAddress.h>
 #include <Kernel/kstdio.h>
 
 #define PAGE_SIZE 4096
