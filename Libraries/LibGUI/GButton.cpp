@@ -1,7 +1,8 @@
-#include "GButton.h"
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GActionGroup.h>
+#include <LibGUI/GButton.h>
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/StylePainter.h>
 
@@ -60,8 +61,11 @@ void GButton::click()
 {
     if (!is_enabled())
         return;
-    if (is_checkable())
+    if (is_checkable()) {
+        if (is_checked() && !is_uncheckable())
+            return;
         set_checked(!is_checked());
+    }
     if (on_click)
         on_click(*this);
 }
@@ -87,4 +91,13 @@ void GButton::set_icon(RefPtr<GraphicsBitmap>&& icon)
         return;
     m_icon = move(icon);
     update();
+}
+
+bool GButton::is_uncheckable() const
+{
+    if (!m_action)
+        return true;
+    if (!m_action->group())
+        return true;
+    return m_action->group()->is_unchecking_allowed();
 }

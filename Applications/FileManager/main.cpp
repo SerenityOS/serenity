@@ -2,6 +2,7 @@
 #include <AK/FileSystemPath.h>
 #include <LibCore/CUserInfo.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GActionGroup.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GFileSystemModel.h>
@@ -108,18 +109,21 @@ int main(int argc, char** argv)
 
     view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::List);
-        view_as_icons_action->set_checked(false);
         view_as_table_action->set_checked(true);
     });
     view_as_table_action->set_checkable(true);
-    view_as_table_action->set_checked(false);
 
     view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
-        view_as_table_action->set_checked(false);
         view_as_icons_action->set_checked(true);
     });
     view_as_icons_action->set_checkable(true);
+
+    auto view_type_action_group = make<GActionGroup>();
+    view_type_action_group->set_exclusive(true);
+    view_type_action_group->add_action(*view_as_table_action);
+    view_type_action_group->add_action(*view_as_icons_action);
+
     view_as_icons_action->set_checked(true);
 
     auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [](const GAction&) {

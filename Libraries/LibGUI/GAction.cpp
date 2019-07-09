@@ -1,4 +1,5 @@
 #include <LibGUI/GAction.h>
+#include <LibGUI/GActionGroup.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GMenuItem.h>
@@ -105,10 +106,26 @@ void GAction::set_checked(bool checked)
     if (m_checked == checked)
         return;
     m_checked = checked;
+
+    if (m_checked && m_action_group) {
+        m_action_group->for_each_action([this](auto& other_action) {
+            if (this == &other_action)
+                return IterationDecision::Continue;
+            if (other_action.is_checkable())
+                other_action.set_checked(false);
+            return IterationDecision::Continue;
+        });
+    }
+
     for_each_toolbar_button([checked](GButton& button) {
         button.set_checked(checked);
     });
     for_each_menu_item([checked](GMenuItem& item) {
         item.set_checked(checked);
     });
+}
+
+void GAction::set_group(Badge<GActionGroup>, GActionGroup* group)
+{
+    m_action_group = group ? group->make_weak_ptr() : nullptr;
 }
