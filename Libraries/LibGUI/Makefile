@@ -27,6 +27,7 @@ LIBGUI_OBJS = \
     GMenuItem.o \
     GApplication.o \
     GAction.o \
+    GActionGroup.o \
     GFontDatabase.o \
     GToolBar.o \
     GTableView.o \

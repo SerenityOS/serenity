@@ -34,6 +34,7 @@ public:
     virtual const char* class_name() const override { return "GButton"; }
     virtual bool accepts_focus() const override { return m_focusable; }
     virtual bool supports_keyboard_activation() const override;
+    virtual bool is_uncheckable() const override;
 
     void set_focusable(bool b) { m_focusable = b; }
 

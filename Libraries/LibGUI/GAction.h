@@ -11,6 +11,7 @@
 #include <LibGUI/GShortcut.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 
+class GActionGroup;
 class GButton;
 class GMenuItem;
 class GWidget;
@@ -70,6 +71,9 @@ public:
     void register_menu_item(Badge<GMenuItem>, GMenuItem&);
     void unregister_menu_item(Badge<GMenuItem>, GMenuItem&);
 
+    const GActionGroup* group() const { return m_action_group.ptr(); }
+    void set_group(Badge<GActionGroup>, GActionGroup*);
+
 private:
     GAction(const StringView& text, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
     GAction(const StringView& text, const GShortcut&, Function<void(GAction&)> = nullptr, GWidget* = nullptr);
@@ -92,4 +96,5 @@ private:
     HashTable<GButton*> m_buttons;
     HashTable<GMenuItem*> m_menu_items;
     WeakPtr<GWidget> m_widget;
+    WeakPtr<GActionGroup> m_action_group;
 };
