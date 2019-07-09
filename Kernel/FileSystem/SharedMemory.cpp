@@ -1,7 +1,7 @@
 #include <AK/HashMap.h>
+#include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Process.h>
-#include <Kernel/SharedMemory.h>
 #include <Kernel/VM/VMObject.h>
 
 Lockable<HashMap<String, RefPtr<SharedMemory>>>& shared_memories()

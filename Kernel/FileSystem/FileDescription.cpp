@@ -6,9 +6,9 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeFile.h>
+#include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
-#include <Kernel/SharedMemory.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/TTY/TTY.h>
 #include <Kernel/UnixTypes.h>
