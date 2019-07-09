@@ -1,11 +1,11 @@
 #include <AK/TemporaryChange.h>
 #include <Kernel/Alarm.h>
+#include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/i8253.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
