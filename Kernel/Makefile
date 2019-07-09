@@ -98,8 +98,8 @@ OBJS = $(CXX_OBJS) Boot/boot.ao
 KERNEL = kernel
 CXXFLAGS += -ffreestanding -mregparm=3 -mno-80387 -mno-mmx -mno-sse -mno-sse2
 CXXFLAGS += -nostdlib -nostdinc -nostdinc++
-CXXFLAGS += -I../Root/usr/local/include/c++/8.3.0/
-CXXFLAGS += -I../Root/usr/local/include/c++/8.3.0/i686-pc-serenity/
+CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/8.3.0/
+CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/8.3.0/i686-pc-serenity/
 DEFINES += -DKERNEL
 LDFLAGS += -Ttext 0x10000 -Wl,-T linker.ld -nostdlib
 
