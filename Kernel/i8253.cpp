@@ -1,8 +1,8 @@
-#include "i8253.h"
-#include "IO.h"
-#include "PIC.h"
-#include "Scheduler.h"
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/PIC.h>
+#include <Kernel/i8253.h>
+#include <Kernel/IO.h>
+#include <Kernel/Scheduler.h>
 
 #define IRQ_TIMER 0
 

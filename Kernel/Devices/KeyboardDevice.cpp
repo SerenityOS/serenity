@@ -1,10 +1,10 @@
-#include "IO.h"
-#include "PIC.h"
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/TTY/VirtualConsole.h>
+#include <Kernel/IO.h>
 
 //#define KEYBOARD_DEBUG
 

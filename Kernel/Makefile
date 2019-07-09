@@ -10,7 +10,7 @@ KERNEL_OBJS = \
        i8253.o \
        Devices/KeyboardDevice.o \
        CMOS.o \
-       PIC.o \
+       Arch/i386/PIC.o \
        Syscall.o \
        Devices/IDEDiskDevice.o \
        VM/MemoryManager.o \
