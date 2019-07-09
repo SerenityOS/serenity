@@ -1,6 +1,6 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
-#include <Kernel/i8253.h>
+#include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/IO.h>
 #include <Kernel/Scheduler.h>
 

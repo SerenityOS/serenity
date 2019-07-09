@@ -7,7 +7,7 @@ KERNEL_OBJS = \
        Arch/i386/CPU.o \
        Process.o \
        Thread.o \
-       i8253.o \
+       Arch/i386/PIT.o \
        Devices/KeyboardDevice.o \
        CMOS.o \
        Arch/i386/PIC.o \
