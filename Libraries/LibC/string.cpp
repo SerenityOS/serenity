@@ -1,7 +1,8 @@
-#include "ctype.h"
+#include <AK/Platform.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 #include <assert.h>
+#include <ctype.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>
@@ -132,6 +133,7 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
+#if ARCH(I386)
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
     if (n >= 1024)
@@ -182,6 +184,24 @@ void* memset(void* dest_ptr, int c, size_t n)
         : "memory");
     return dest_ptr;
 }
+#else
+void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
+{
+    auto* dest = (u8*)dest_ptr;
+    auto* src = (const u8*)src_ptr;
+    for (size_t i = 0; i < n; ++i)
+        dest[i] = src[i];
+    return dest_ptr;
+}
+
+void* memset(void* dest_ptr, int c, size_t n)
+{
+    auto* dest = (u8*)dest_ptr;
+    for (size_t i = 0; i < n; ++i)
+        dest[i] = (u8)c;
+    return dest_ptr;
+}
+#endif
 
 void* memmove(void* dest, const void* src, size_t n)
 {
