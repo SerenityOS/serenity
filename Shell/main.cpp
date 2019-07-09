@@ -42,14 +42,6 @@ static int sh_pwd(int, char**)
     return 0;
 }
 
-static volatile bool g_got_signal = false;
-
-void did_receive_signal(int signum)
-{
-    printf("\nMy word, I've received a signal with number %d\n", signum);
-    g_got_signal = true;
-}
-
 static int sh_exit(int, char**)
 {
     printf("Good-bye!\n");
