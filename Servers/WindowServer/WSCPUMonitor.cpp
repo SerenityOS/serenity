@@ -1,6 +1,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <LibCore/CProcessStatisticsReader.h>
 #include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSWindowManager.h>
@@ -8,11 +9,7 @@
 #include <unistd.h>
 
 WSCPUMonitor::WSCPUMonitor()
-    : m_proc_all("/proc/all")
 {
-    if (!m_proc_all.open(CIODevice::OpenMode::ReadOnly))
-        ASSERT_NOT_REACHED();
-
     create_thread([](void* context) -> int {
         auto& monitor = *(WSCPUMonitor*)context;
         for (;;) {
@@ -39,18 +36,14 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
     busy = 0;
     idle = 0;
 
-    m_proc_all.seek(0);
-    auto file_contents = m_proc_all.read_all();
-    auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
-    json.as_array().for_each([&](auto& value) {
-        const JsonObject& process_object = value.as_object();
-        pid_t pid = process_object.get("pid").to_u32();
-        unsigned nsched = process_object.get("times_scheduled").to_u32();
-        if (pid == 0)
-            idle += nsched;
+    auto all_processes = CProcessStatisticsReader::get_all();
+
+    for (auto& it : all_processes) {
+        if (it.value.pid == 0)
+            idle += it.value.nsched;
         else
-            busy += nsched;
-    });
+            busy += it.value.nsched;
+    }
 }
 
 void WSCPUMonitor::paint(Painter& painter, const Rect& rect)
