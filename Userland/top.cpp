@@ -5,15 +5,11 @@
 #include <AK/JsonValue.h>
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
-#include <LibCore/CFile.h>
 #include <LibCore/CProcessStatisticsReader.h>
 #include <fcntl.h>
-#include <pwd.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-
-static HashMap<unsigned, String>* s_usernames;
 
 struct ProcessData {
     CProcessStatistics stats;
@@ -29,12 +25,6 @@ struct Snapshot {
 
 static Snapshot get_snapshot()
 {
-    CFile file("/proc/all");
-    if (!file.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Failed to open /proc/all: %s\n", file.error_string());
-        exit(1);
-    }
-
     Snapshot snapshot;
 
     auto all_processes = CProcessStatisticsReader::get_all();
@@ -52,12 +42,6 @@ static Snapshot get_snapshot()
 
 int main(int, char**)
 {
-    s_usernames = new HashMap<unsigned, String>();
-    setpwent();
-    while (auto* passwd = getpwent())
-        s_usernames->set(passwd->pw_uid, passwd->pw_name);
-    endpwent();
-
     Vector<ProcessData*> processes;
     auto prev = get_snapshot();
     usleep(10000);
