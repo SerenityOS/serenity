@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/AKString.h>
 #include <AK/Function.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
@@ -17,6 +18,9 @@ public:
     virtual const char* class_name() const { return "CObject"; }
 
     virtual void event(CEvent&);
+
+    const String& name() const { return m_name; }
+    void set_name(const StringView& name) { m_name = name; }
 
     Vector<CObject*>& children() { return m_children; }
     const Vector<CObject*>& children() const { return m_children; }
@@ -58,6 +62,7 @@ protected:
 
 private:
     CObject* m_parent { nullptr };
+    String m_name;
     int m_timer_id { 0 };
     bool m_widget { false };
     Vector<CObject*> m_children;
