@@ -34,15 +34,50 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    dbg() << "auto* main_widget = new GWidget(nullptr);";
+    dbg() << "struct UI_" << name << " {";
+    dbg() << "    GWidget* main_widget;";
 
     widgets.as_array().for_each([&](auto& value) {
         ASSERT(value.is_object());
         const JsonObject& widget_object = value.as_object();
         auto name = widget_object.get("name").to_string();
         auto class_name = widget_object.get("class").to_string();
-        dbg() << "auto* " << name << " = new " << class_name << "(main_widget);";
+        dbg() << "    " << class_name << "* " << name << ";";
     });
+
+    dbg() << "    UI_" << name << "();";
+
+    dbg() << "};";
+
+    dbg() << "UI_" << name << "::UI_" << name << "()";
+    dbg() << "{";
+
+    dbg() << "    main_widget = new GWidget(nullptr);";
+
+    widgets.as_array().for_each([&](auto& value) {
+        ASSERT(value.is_object());
+        const JsonObject& widget_object = value.as_object();
+        auto name = widget_object.get("name").to_string();
+        auto class_name = widget_object.get("class").to_string();
+        dbg() << "    " << name << " = new " << class_name << "(main_widget);";
+
+        widget_object.for_each_member([&](auto& property_name, auto& property_value) {
+            if (property_name == "class")
+                return;
+
+            String value;
+
+            if (property_value.is_null())
+                value = "{}";
+            else
+                value = property_value.serialized();
+
+            dbg() << "    " << name << "->set_" << property_name << "(" << value << ");";
+        });
+
+        dbg() << "";
+    });
+    dbg() << "}";
 
     return 0;
 }
