@@ -3,7 +3,6 @@
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <AK/Vector.h>
-#include <LibCore/CFile.h>
 #include <LibGUI/GModel.h>
 #include <unistd.h>
 
@@ -65,5 +64,4 @@ private:
     RefPtr<GraphicsBitmap> m_high_priority_icon;
     RefPtr<GraphicsBitmap> m_low_priority_icon;
     RefPtr<GraphicsBitmap> m_normal_priority_icon;
-    CFile m_proc_all;
 };
