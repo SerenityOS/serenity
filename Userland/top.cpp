@@ -6,6 +6,7 @@
 #include <AK/QuickSort.h>
 #include <AK/Vector.h>
 #include <LibCore/CFile.h>
+#include <LibCore/CProcessStatisticsReader.h>
 #include <fcntl.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -14,22 +15,15 @@
 
 static HashMap<unsigned, String>* s_usernames;
 
-struct Process {
-    pid_t pid;
-    unsigned nsched;
-    String name;
-    String state;
-    String user;
-    String priority;
-    unsigned virtual_size;
-    unsigned physical_size;
-    unsigned nsched_since_prev;
-    unsigned cpu_percent;
-    unsigned cpu_percent_decimal;
+struct ProcessData {
+    CProcessStatistics stats;
+    unsigned nsched_since_prev { 0 };
+    unsigned cpu_percent { 0 };
+    unsigned cpu_percent_decimal { 0 };
 };
 
 struct Snapshot {
-    HashMap<unsigned, Process> map;
+    HashMap<unsigned, ProcessData> map;
     u32 sum_nsched { 0 };
 };
 
@@ -43,25 +37,16 @@ static Snapshot get_snapshot()
 
     Snapshot snapshot;
 
-    auto file_contents = file.read_all();
-    auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
-    json.as_array().for_each([&](auto& value) {
-        const JsonObject& process_object = value.as_object();
-        pid_t pid = process_object.get("pid").to_u32();
-        unsigned nsched = process_object.get("times_scheduled").to_u32();
-        snapshot.sum_nsched += nsched;
-        Process process;
-        process.pid = pid;
-        process.nsched = nsched;
-        unsigned uid = process_object.get("uid").to_u32();
-        process.user = s_usernames->get(uid);
-        process.priority = process_object.get("priority").to_string();
-        process.state = process_object.get("state").to_string();
-        process.name = process_object.get("name").to_string();
-        process.virtual_size = process_object.get("amount_virtual").to_u32();
-        process.physical_size = process_object.get("amount_resident").to_u32();
-        snapshot.map.set(pid, move(process));
-    });
+    auto all_processes = CProcessStatisticsReader::get_all();
+
+    for (auto& it : all_processes) {
+        auto& stats = it.value;
+        snapshot.sum_nsched += stats.nsched;
+        ProcessData process_data;
+        process_data.stats = stats;
+        snapshot.map.set(stats.pid, move(process_data));
+    }
+
     return snapshot;
 }
 
@@ -73,7 +58,7 @@ int main(int, char**)
         s_usernames->set(passwd->pw_uid, passwd->pw_name);
     endpwent();
 
-    Vector<Process*> processes;
+    Vector<ProcessData*> processes;
     auto prev = get_snapshot();
     usleep(10000);
     for (;;) {
@@ -94,11 +79,11 @@ int main(int, char**)
             pid_t pid = it.key;
             if (pid == 0)
                 continue;
-            u32 nsched_now = it.value.nsched;
+            u32 nsched_now = it.value.stats.nsched;
             auto jt = prev.map.find(pid);
             if (jt == prev.map.end())
                 continue;
-            u32 nsched_before = (*jt).value.nsched;
+            u32 nsched_before = (*jt).value.stats.nsched;
             u32 nsched_diff = nsched_now - nsched_before;
             it.value.nsched_since_prev = nsched_diff;
             it.value.cpu_percent = ((nsched_diff * 100) / sum_diff);
@@ -111,16 +96,16 @@ int main(int, char**)
         });
 
         for (auto* process : processes) {
-            printf("%6d  %c    %-8s  %-8s  %6u  %6u  %2u.%1u  %s\n",
-                process->pid,
-                process->priority[0],
-                process->user.characters(),
-                process->state.characters(),
-                process->virtual_size / 1024,
-                process->physical_size / 1024,
+            printf("%6d  %c    %-8s  %-8s  %6zu  %6zu  %2u.%1u  %s\n",
+                process->stats.pid,
+                process->stats.priority[0],
+                process->stats.username.characters(),
+                process->stats.state.characters(),
+                process->stats.virtual_size / 1024,
+                process->stats.physical_size / 1024,
                 process->cpu_percent,
                 process->cpu_percent_decimal,
-                process->name.characters());
+                process->stats.name.characters());
         }
         processes.clear_with_capacity();
         prev = move(current);

@@ -13,7 +13,7 @@ static void print_usage_and_exit()
 
 static int kill_all(const String& process_name, const unsigned signum)
 {
-    HashMap<pid_t, CProcessStatistics> processes = CProcessStatisticsReader().get_map();
+    auto processes = CProcessStatisticsReader().get_all();
 
     for (auto& it : processes) {
         if (it.value.name == process_name) {

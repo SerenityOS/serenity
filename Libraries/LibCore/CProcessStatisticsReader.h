@@ -18,12 +18,9 @@ struct CProcessStatistics {
 
 class CProcessStatisticsReader {
 public:
-    CProcessStatisticsReader();
-    HashMap<pid_t, CProcessStatistics> get_map();
+    static HashMap<pid_t, CProcessStatistics> get_all();
 
 private:
-    void update_map(HashMap<pid_t, CProcessStatistics>& map);
-    String get_username_from_uid(const uid_t uid);
-
-    HashMap<uid_t, String> m_usernames;
+    static String username_from_uid(uid_t);
+    static HashMap<uid_t, String> s_usernames;
 };

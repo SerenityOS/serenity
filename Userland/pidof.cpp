@@ -12,7 +12,7 @@ static int pid_of(const String& process_name, bool single_shot, bool omit_pid, p
 {
     bool displayed_at_least_one = false;
 
-    HashMap<pid_t, CProcessStatistics> processes = CProcessStatisticsReader().get_map();
+    auto processes = CProcessStatisticsReader().get_all();
 
     for (auto& it : processes) {
         if (it.value.name == process_name) {
