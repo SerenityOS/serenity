@@ -34,6 +34,14 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    dbg() << "#pragma once";
+
+    widgets.as_array().for_each([&](auto& value) {
+        const JsonObject& widget_object = value.as_object();
+        auto class_name = widget_object.get("class").to_string();
+        dbg() << "#include <LibGUI/" << class_name << ".h>";
+    });
+
     dbg() << "struct UI_" << name << " {";
     dbg() << "    GWidget* main_widget;";
 
@@ -53,6 +61,7 @@ int main(int argc, char** argv)
     dbg() << "{";
 
     dbg() << "    main_widget = new GWidget(nullptr);";
+    dbg() << "    main_widget->set_fill_with_background_color(true);";
 
     widgets.as_array().for_each([&](auto& value) {
         ASSERT(value.is_object());
