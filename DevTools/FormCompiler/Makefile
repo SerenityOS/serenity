@@ -22,7 +22,7 @@ all: $(PROGRAM)
 CXXFLAGS = -std=c++17 -Wall -Wextra
 
 $(PROGRAM): $(SOURCES)
-	$(CXX) $(CXXFLAGS) -I../ -I../../ -I../../Libraries/ -o $@ $(SOURCES)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -I../ -I../../ -I../../Libraries/ -o $@ $(SOURCES)
 
 clean:
 	rm -f $(PROGRAM)

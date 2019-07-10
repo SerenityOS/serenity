@@ -14,6 +14,7 @@ fi
 make_cmd="make -j $MAKEJOBS"
 
 build_targets=""
+build_targets="$build_targets ../DevTools/FormCompiler"
 build_targets="$build_targets ../Libraries/LibC"
 build_targets="$build_targets ../Libraries/LibM"
 build_targets="$build_targets ../Libraries/LibCore"
