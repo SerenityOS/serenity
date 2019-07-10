@@ -77,6 +77,7 @@ cp ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
 cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Applications/QuickShow/QuickShow mnt/bin/QuickShow
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
+cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
 cp ../Demos/Fire/Fire mnt/bin/Fire
@@ -94,6 +95,7 @@ echo -n "installing shortcuts... "
 ln -s Downloader mnt/bin/dl
 ln -s FileManager mnt/bin/fm
 ln -s HelloWorld mnt/bin/hw
+ln -s HelloWorld2 mnt/bin/hw2
 ln -s IRCClient mnt/bin/irc
 ln -s Minesweeper mnt/bin/ms
 ln -s Shell mnt/bin/sh
