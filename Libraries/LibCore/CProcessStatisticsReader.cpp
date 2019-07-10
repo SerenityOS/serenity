@@ -6,27 +6,16 @@
 #include <pwd.h>
 #include <stdio.h>
 
-CProcessStatisticsReader::CProcessStatisticsReader()
-{
-    setpwent();
-    while (auto* passwd = getpwent())
-        m_usernames.set(passwd->pw_uid, passwd->pw_name);
-    endpwent();
-}
+HashMap<uid_t, String> CProcessStatisticsReader::s_usernames;
 
-HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_map()
+HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
 {
-    HashMap<pid_t, CProcessStatistics> res;
-    update_map(res);
-    return res;
-}
+    HashMap<pid_t, CProcessStatistics> map;
 
-void CProcessStatisticsReader::update_map(HashMap<pid_t, CProcessStatistics>& map)
-{
     CFile file("/proc/all");
     if (!file.open(CIODevice::ReadOnly)) {
         fprintf(stderr, "CProcessHelper : failed to open /proc/all: %s\n", file.error_string());
-        return;
+        return {};
     }
 
     auto file_contents = file.read_all();
@@ -37,7 +26,7 @@ void CProcessStatisticsReader::update_map(HashMap<pid_t, CProcessStatistics>& ma
         process.pid = process_object.get("pid").to_u32();
         process.nsched = process_object.get("times_scheduled").to_u32();
         process.uid = process_object.get("uid").to_u32();
-        process.username = get_username_from_uid(process.uid);
+        process.username = username_from_uid(process.uid);
         process.priority = process_object.get("priority").to_string();
         process.syscalls = process_object.get("syscall_count").to_u32();
         process.state = process_object.get("state").to_string();
@@ -46,13 +35,22 @@ void CProcessStatisticsReader::update_map(HashMap<pid_t, CProcessStatistics>& ma
         process.physical_size = process_object.get("amount_resident").to_u32();
         map.set(process.pid, process);
     });
+
+    return map;
 }
 
-String CProcessStatisticsReader::get_username_from_uid(const uid_t uid)
+String CProcessStatisticsReader::username_from_uid(uid_t uid)
 {
-    auto it = m_usernames.find(uid);
-    if (it != m_usernames.end())
+    if (s_usernames.is_empty()) {
+        setpwent();
+        while (auto* passwd = getpwent())
+            s_usernames.set(passwd->pw_uid, passwd->pw_name);
+        endpwent();
+    }
+
+    auto it = s_usernames.find(uid);
+    if (it != s_usernames.end())
         return (*it).value;
-    else
-        return String::number(uid);
+    return String::number(uid);
 }
+
