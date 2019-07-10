@@ -139,6 +139,10 @@ public:
     void set_background_color(Color color) { m_background_color = color; }
     void set_foreground_color(Color color) { m_foreground_color = color; }
 
+    // FIXME: Implement these.
+    void set_backcolor(const StringView&) { }
+    void set_forecolor(const StringView&) { }
+
     GWindow* window()
     {
         if (auto* pw = parent_widget())
