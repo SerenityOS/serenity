@@ -143,6 +143,8 @@ public:
     void set_backcolor(const StringView&) { }
     void set_forecolor(const StringView&) { }
 
+    void set_autofill(bool b) { set_fill_with_background_color(b); }
+
     GWindow* window()
     {
         if (auto* pw = parent_widget())
