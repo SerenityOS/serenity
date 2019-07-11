@@ -42,6 +42,17 @@ public:
         : m_ptr(other.leak_ref())
     {
     }
+    RefPtr(const NonnullRefPtr<T>& other)
+        : m_ptr(const_cast<T*>(other.ptr()))
+    {
+        m_ptr->ref();
+    }
+    template<typename U>
+    RefPtr(const NonnullRefPtr<U>& other)
+        : m_ptr(static_cast<T*>(const_cast<U*>(other.ptr())))
+    {
+        m_ptr->ref();
+    }
     template<typename U>
     RefPtr(NonnullRefPtr<U>&& other)
         : m_ptr(static_cast<T*>(&other.leak_ref()))
@@ -100,6 +111,16 @@ public:
         return *this;
     }
 
+    RefPtr& operator=(const NonnullRefPtr<T>& other)
+    {
+        if (m_ptr != other.ptr())
+            deref_if_not_null(m_ptr);
+        m_ptr = const_cast<T*>(other.ptr());
+        ASSERT(m_ptr);
+        ref_if_not_null(m_ptr);
+        return *this;
+    }
+
     template<typename U>
     RefPtr& operator=(const NonnullRefPtr<U>& other)
     {
@@ -107,6 +128,15 @@ public:
             deref_if_not_null(m_ptr);
         m_ptr = const_cast<T*>(other.ptr());
         ASSERT(m_ptr);
+        ref_if_not_null(m_ptr);
+        return *this;
+    }
+
+    RefPtr& operator=(const RefPtr& other)
+    {
+        if (m_ptr != other.ptr())
+            deref_if_not_null(m_ptr);
+        m_ptr = const_cast<T*>(other.ptr());
         ref_if_not_null(m_ptr);
         return *this;
     }
