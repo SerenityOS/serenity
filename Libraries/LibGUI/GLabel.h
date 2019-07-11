@@ -14,7 +14,7 @@ public:
     String text() const { return m_text; }
     void set_text(const StringView&);
 
-    void set_icon(RefPtr<GraphicsBitmap>&&);
+    void set_icon(GraphicsBitmap*);
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
     GraphicsBitmap* icon() { return m_icon.ptr(); }
 
