@@ -64,13 +64,15 @@ public:
     {
     }
     RefPtr(const RefPtr& other)
-        : m_ptr(const_cast<RefPtr&>(other).copy_ref().leak_ref())
+        : m_ptr(const_cast<T*>(other.ptr()))
     {
+        ref_if_not_null(m_ptr);
     }
     template<typename U>
     RefPtr(const RefPtr<U>& other)
-        : m_ptr(const_cast<RefPtr<U>&>(other).copy_ref().leak_ref())
+        : m_ptr(static_cast<T*>(const_cast<U*>(other.ptr())))
     {
+        ref_if_not_null(m_ptr);
     }
     ~RefPtr()
     {

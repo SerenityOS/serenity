@@ -45,7 +45,7 @@ public:
     }
 
     String(const String& other)
-        : m_impl(const_cast<String&>(other).m_impl.copy_ref())
+        : m_impl(const_cast<String&>(other).m_impl)
     {
     }
 
@@ -173,7 +173,7 @@ public:
     String& operator=(const String& other)
     {
         if (this != &other)
-            m_impl = const_cast<String&>(other).m_impl.copy_ref();
+            m_impl = const_cast<String&>(other).m_impl;
         return *this;
     }
 
