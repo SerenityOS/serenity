@@ -1,7 +1,7 @@
 include ../../Makefile.common
 
 OBJS = \
-    TextEditor.o \
+    TextEditorWidget.o \
     main.o 
 
 APP = TextEditor
