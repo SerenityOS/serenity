@@ -168,7 +168,8 @@ public:
     bool fill_with_background_color() const { return m_fill_with_background_color; }
 
     const Font& font() const { return *m_font; }
-    void set_font(RefPtr<Font>&&);
+    void set_font(Font*);
+    void set_font(Font& font) { set_font(&font); }
 
     void set_global_cursor_tracking(bool);
     bool global_cursor_tracking() const;
