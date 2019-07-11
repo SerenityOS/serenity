@@ -17,9 +17,9 @@ GLabel::~GLabel()
 {
 }
 
-void GLabel::set_icon(RefPtr<GraphicsBitmap>&& icon)
+void GLabel::set_icon(GraphicsBitmap* icon)
 {
-    m_icon = move(icon);
+    m_icon = icon;
 }
 
 void GLabel::set_text(const StringView& text)
