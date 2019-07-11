@@ -7,6 +7,9 @@
 namespace AK {
 
 template<typename T>
+class OwnPtr;
+
+template<typename T>
 class RefPtr {
 public:
     enum AdoptTag {
@@ -85,6 +88,11 @@ public:
 #endif
     }
     RefPtr(std::nullptr_t) {}
+
+    template<typename U>
+    RefPtr(const OwnPtr<U>&) = delete;
+    template<typename U>
+    RefPtr& operator=(const OwnPtr<U>&) = delete;
 
     RefPtr& operator=(RefPtr&& other)
     {
