@@ -168,7 +168,7 @@ public:
     bool contains_slow(const T& value) const
     {
         for (int i = 0; i < size(); ++i) {
-            if (Traits<T>::equals(at(i), value))
+            if (at(i) == value)
                 return true;
         }
         return false;
