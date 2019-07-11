@@ -177,11 +177,6 @@ public:
         return *this;
     }
 
-    RefPtr copy_ref() const
-    {
-        return RefPtr(m_ptr);
-    }
-
     void clear()
     {
         deref_if_not_null(m_ptr);

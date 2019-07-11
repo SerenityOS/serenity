@@ -143,12 +143,6 @@ public:
     }
 
     CALLABLE_WHEN(unconsumed)
-    NonnullRefPtr copy_ref() const
-    {
-        return NonnullRefPtr(*m_ptr);
-    }
-
-    CALLABLE_WHEN(unconsumed)
     SET_TYPESTATE(consumed)
     T& leak_ref()
     {
