@@ -96,9 +96,9 @@ int main(int argc, char** argv)
             kill(pid, SIGCONT);
     });
 
-    toolbar->add_action(kill_action.copy_ref());
-    toolbar->add_action(stop_action.copy_ref());
-    toolbar->add_action(continue_action.copy_ref());
+    toolbar->add_action(kill_action);
+    toolbar->add_action(stop_action);
+    toolbar->add_action(continue_action);
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Process Manager");
