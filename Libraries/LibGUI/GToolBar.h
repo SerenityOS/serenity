@@ -9,7 +9,7 @@ public:
     explicit GToolBar(GWidget* parent);
     virtual ~GToolBar() override;
 
-    void add_action(NonnullRefPtr<GAction>&&);
+    void add_action(GAction&);
     void add_separator();
 
     bool has_frame() const { return m_has_frame; }

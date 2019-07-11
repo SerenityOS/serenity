@@ -18,12 +18,11 @@ GToolBar::~GToolBar()
 {
 }
 
-void GToolBar::add_action(NonnullRefPtr<GAction>&& action)
+void GToolBar::add_action(GAction& action)
 {
-    GAction* raw_action_ptr = action.ptr();
     auto item = make<Item>();
     item->type = Item::Action;
-    item->action = move(action);
+    item->action = action;
 
     auto* button = new GButton(this);
     button->set_action(*item->action);
@@ -32,8 +31,8 @@ void GToolBar::add_action(NonnullRefPtr<GAction>&& action)
         button->set_icon(item->action->icon());
     else
         button->set_text(item->action->text());
-    button->on_click = [raw_action_ptr](const GButton&) {
-        raw_action_ptr->activate();
+    button->on_click = [&action](const GButton&) {
+        action.activate();
     };
 
     button->set_button_style(ButtonStyle::CoolBar);
