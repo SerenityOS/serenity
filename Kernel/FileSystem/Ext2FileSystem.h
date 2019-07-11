@@ -60,7 +60,7 @@ class Ext2FS final : public DiskBackedFS {
     friend class Ext2FSInode;
 
 public:
-    static NonnullRefPtr<Ext2FS> create(NonnullRefPtr<DiskDevice>&&);
+    static NonnullRefPtr<Ext2FS> create(NonnullRefPtr<DiskDevice>);
     virtual ~Ext2FS() override;
     virtual bool initialize() override;
 

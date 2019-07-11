@@ -3,7 +3,7 @@
 
 #define MBR_DEBUG
 
-MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<DiskDevice>&& device)
+MBRPartitionTable::MBRPartitionTable(NonnullRefPtr<DiskDevice> device)
     : m_device(move(device))
 {
 }
@@ -65,5 +65,5 @@ RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
     kprintf("MBRPartitionTable::partition: found partition index=%d type=%x\n", index, entry.type);
 #endif
 
-    return DiskPartition::create(m_device.copy_ref(), entry.offset);
+    return DiskPartition::create(m_device, entry.offset);
 }

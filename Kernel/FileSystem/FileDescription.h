@@ -22,7 +22,7 @@ class SharedMemory;
 class FileDescription : public RefCounted<FileDescription> {
 public:
     static NonnullRefPtr<FileDescription> create(RefPtr<Custody>&&);
-    static NonnullRefPtr<FileDescription> create(RefPtr<File>&&, SocketRole = SocketRole::None);
+    static NonnullRefPtr<FileDescription> create(RefPtr<File>, SocketRole = SocketRole::None);
     ~FileDescription();
 
     NonnullRefPtr<FileDescription> clone();

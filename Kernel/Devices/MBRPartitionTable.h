@@ -31,7 +31,7 @@ class MBRPartitionTable {
     AK_MAKE_ETERNAL
 
 public:
-    MBRPartitionTable(NonnullRefPtr<DiskDevice>&& device);
+    MBRPartitionTable(NonnullRefPtr<DiskDevice>);
     ~MBRPartitionTable();
 
     bool initialize();

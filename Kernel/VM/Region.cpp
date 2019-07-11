@@ -25,7 +25,7 @@ Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject>&& vmo, size_t offset_in_vmo, const String& name, u8 access, bool cow)
+Region::Region(const Range& range, NonnullRefPtr<VMObject> vmo, size_t offset_in_vmo, const String& name, u8 access, bool cow)
     : m_range(range)
     , m_offset_in_vmo(offset_in_vmo)
     , m_vmo(move(vmo))
@@ -78,7 +78,7 @@ NonnullRefPtr<Region> Region::clone()
             vaddr().get());
 #endif
         // Create a new region backed by the same VMObject.
-        return adopt(*new Region(m_range, m_vmo.copy_ref(), m_offset_in_vmo, String(m_name), m_access));
+        return adopt(*new Region(m_range, m_vmo, m_offset_in_vmo, String(m_name), m_access));
     }
 
 #ifdef MM_DEBUG

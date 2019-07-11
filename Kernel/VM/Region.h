@@ -19,7 +19,7 @@ public:
     };
 
     Region(const Range&, const String&, u8 access, bool cow = false);
-    Region(const Range&, NonnullRefPtr<VMObject>&&, size_t offset_in_vmo, const String&, u8 access, bool cow = false);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String&, u8 access, bool cow = false);
     Region(const Range&, RefPtr<Inode>&&, const String&, u8 access);
     ~Region();
 

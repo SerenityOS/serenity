@@ -155,7 +155,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_dire
     auto physical_page = allocate_supervisor_physical_page();
     if (!physical_page)
         return nullptr;
-    page_directory.m_physical_pages.set(index, physical_page.copy_ref());
+    page_directory.m_physical_pages.set(index, physical_page);
     return physical_page;
 }
 
