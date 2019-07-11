@@ -58,11 +58,6 @@ public:
     {
     }
     RETURN_TYPESTATE(unconsumed)
-    NonnullRefPtr(NonnullRefPtr& other)
-        : m_ptr(&other.copy_ref().leak_ref())
-    {
-    }
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(NonnullRefPtr&& other)
         : m_ptr(&other.leak_ref())
     {
