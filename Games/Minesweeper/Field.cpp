@@ -263,7 +263,7 @@ void Field::reset()
             if (square.has_mine)
                 continue;
             if (square.number)
-                square.label->set_icon(m_number_bitmap[square.number - 1].copy_ref());
+                square.label->set_icon(m_number_bitmap[square.number - 1]);
         }
     }
 
