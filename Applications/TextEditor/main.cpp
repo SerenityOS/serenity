@@ -83,9 +83,9 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto file_menu = make<GMenu>("File");
-    file_menu->add_action(new_action.copy_ref());
-    file_menu->add_action(open_action.copy_ref());
-    file_menu->add_action(save_action.copy_ref());
+    file_menu->add_action(new_action);
+    file_menu->add_action(open_action);
+    file_menu->add_action(save_action);
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
