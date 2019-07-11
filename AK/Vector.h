@@ -147,6 +147,24 @@ public:
         m_size = 0;
     }
 
+    bool operator==(const Vector& other) const
+    {
+        if (m_size != other.m_size)
+            return false;
+
+        for (int i = 0; i < m_size; ++i) {
+            if (at(i) != other.at(i))
+                return false;
+        }
+
+        return true;
+    }
+
+    bool operator!=(const Vector& other) const
+    {
+        return !(*this == other);
+    }
+
     bool contains_slow(const T& value) const
     {
         for (int i = 0; i < size(); ++i) {
