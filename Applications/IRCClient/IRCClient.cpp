@@ -367,7 +367,7 @@ IRCQuery& IRCClient::ensure_query(const String& name)
         return *(*it).value;
     auto query = IRCQuery::create(*this, name);
     auto& query_reference = *query;
-    m_queries.set(name, query.copy_ref());
+    m_queries.set(name, query);
     return query_reference;
 }
 
@@ -378,7 +378,7 @@ IRCChannel& IRCClient::ensure_channel(const String& name)
         return *(*it).value;
     auto channel = IRCChannel::create(*this, name);
     auto& channel_reference = *channel;
-    m_channels.set(name, channel.copy_ref());
+    m_channels.set(name, channel);
     return channel_reference;
 }
 
