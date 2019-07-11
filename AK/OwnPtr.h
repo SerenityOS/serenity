@@ -8,6 +8,13 @@
 namespace AK {
 
 template<typename T>
+class RefPtr;
+template<typename T>
+class NonnullRefPtr;
+template<typename T>
+class WeakPtr;
+
+template<typename T>
 class OwnPtr {
 public:
     OwnPtr() {}
@@ -35,6 +42,19 @@ public:
             m_ptr = (T*)(0xe1e1e1e1);
 #endif
     }
+
+    template<typename U>
+    OwnPtr(const RefPtr<U>&) = delete;
+    template<typename U>
+    OwnPtr(const NonnullRefPtr<U>&) = delete;
+    template<typename U>
+    OwnPtr(const WeakPtr<U>&) = delete;
+    template<typename U>
+    OwnPtr& operator=(const RefPtr<U>&) = delete;
+    template<typename U>
+    OwnPtr& operator=(const NonnullRefPtr<U>&) = delete;
+    template<typename U>
+    OwnPtr& operator=(const WeakPtr<U>&) = delete;
 
     OwnPtr& operator=(OwnPtr&& other)
     {

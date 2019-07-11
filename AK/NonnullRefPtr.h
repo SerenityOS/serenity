@@ -19,6 +19,9 @@
 namespace AK {
 
 template<typename T>
+class OwnPtr;
+
+template<typename T>
 inline void ref_if_not_null(T* ptr)
 {
     if (ptr)
@@ -92,6 +95,11 @@ public:
             m_ptr = (T*)(0xb0b0b0b0);
 #endif
     }
+
+    template<typename U>
+    NonnullRefPtr(const OwnPtr<U>&) = delete;
+    template<typename U>
+    NonnullRefPtr& operator=(const OwnPtr<U>&) = delete;
 
     NonnullRefPtr& operator=(const NonnullRefPtr& other)
     {
