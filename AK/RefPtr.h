@@ -38,10 +38,6 @@ public:
         : m_ptr(&object)
     {
     }
-    RefPtr(RefPtr& other)
-        : m_ptr(other.copy_ref().leak_ref())
-    {
-    }
     RefPtr(RefPtr&& other)
         : m_ptr(other.leak_ref())
     {
