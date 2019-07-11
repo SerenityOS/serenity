@@ -7,6 +7,8 @@ class GlyphEditorWidget;
 class GlyphMapWidget;
 class GTextBox;
 
+struct UI_FontEditorBottom;
+
 class FontEditorWidget final : public GWidget {
 public:
     FontEditorWidget(const String& path, RefPtr<Font>&&, GWidget* parent = nullptr);
@@ -17,8 +19,8 @@ private:
 
     GlyphMapWidget* m_glyph_map_widget { nullptr };
     GlyphEditorWidget* m_glyph_editor_widget { nullptr };
-    GTextBox* m_name_textbox { nullptr };
-    GTextBox* m_path_textbox { nullptr };
 
     String m_path;
+
+    OwnPtr<UI_FontEditorBottom> m_ui;
 };
