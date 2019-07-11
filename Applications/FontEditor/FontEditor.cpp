@@ -77,12 +77,12 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_fon
     width_spinbox->set_relative_rect({ 5, 155, m_glyph_editor_widget->preferred_width(), 20 });
 
     auto* demo_label_1 = new GLabel(this);
-    demo_label_1->set_font(m_edited_font.copy_ref());
+    demo_label_1->set_font(m_edited_font);
     demo_label_1->set_text("quick fox jumps nightly above wizard.");
     demo_label_1->set_relative_rect({ 110, 120, 300, 20 });
 
     auto* demo_label_2 = new GLabel(this);
-    demo_label_2->set_font(m_edited_font.copy_ref());
+    demo_label_2->set_font(m_edited_font);
     demo_label_2->set_text("QUICK FOX JUMPS NIGHTLY ABOVE WIZARD!");
     demo_label_2->set_relative_rect({ 110, 140, 300, 20 });
 
