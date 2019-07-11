@@ -56,15 +56,28 @@ void GSlider::paint_event(GPaintEvent& event)
 Rect GSlider::knob_rect() const
 {
     auto inner_rect = this->inner_rect();
-    float range_size = m_max - m_min;
-    float adjusted_value = m_value - m_min;
-    float relative_value = adjusted_value / range_size;
-    Rect rect {
-        inner_rect.x() + (int)(relative_value * inner_rect.width()) - knob_width() / 2,
-        0,
-        knob_width(),
-        knob_height()
-    };
+    Rect rect;
+    rect.set_y(0);
+    rect.set_height(knob_height());
+
+    if (knob_size_mode() == KnobSizeMode::Fixed) {
+        if (m_max - m_min)
+        {
+            float scale = (float)inner_rect.width() / (float)(m_max - m_min);
+            rect.set_x(inner_rect.x() + ((int)(m_value * scale)) - (knob_fixed_width() / 2));
+        }
+        else
+            rect.set_x(0);
+        rect.set_width(knob_fixed_width());
+    }
+    else {
+        float scale = (float)inner_rect.width() / (float)(m_max - m_min + 1);
+        rect.set_x(inner_rect.x() + ((int)(m_value * scale)));
+        if (m_max - m_min)
+            rect.set_width(::max((int)(scale), knob_fixed_width()));
+        else
+            rect.set_width(inner_rect.width());
+    }
     rect.center_vertically_within(inner_rect);
     return rect;
 }
@@ -79,6 +92,12 @@ void GSlider::mousedown_event(GMouseEvent& event)
             m_drag_origin = event.position();
             m_drag_origin_value = m_value;
             return;
+        }
+        else {
+            if (event.position().x() > knob_rect().right())
+                set_value(m_value + 1);
+            else if (event.position().x() < knob_rect().left())
+                set_value(m_value - 1);
         }
     }
     return GWidget::mousedown_event(event);
