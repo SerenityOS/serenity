@@ -149,7 +149,7 @@ GIcon GDirectoryModel::icon_for(const Entry& entry) const
             LOCKER(thumbnail_cache().lock());
             auto it = thumbnail_cache().resource().find(path);
             if (it != thumbnail_cache().resource().end()) {
-                entry.thumbnail = (*it).value.copy_ref();
+                entry.thumbnail = (*it).value;
             } else {
                 thumbnail_cache().resource().set(path, nullptr);
             }
