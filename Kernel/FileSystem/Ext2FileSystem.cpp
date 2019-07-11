@@ -31,7 +31,7 @@ static u8 to_ext2_file_type(mode_t mode)
     return EXT2_FT_UNKNOWN;
 }
 
-NonnullRefPtr<Ext2FS> Ext2FS::create(NonnullRefPtr<DiskDevice>&& device)
+NonnullRefPtr<Ext2FS> Ext2FS::create(NonnullRefPtr<DiskDevice> device)
 {
     return adopt(*new Ext2FS(move(device)));
 }
@@ -475,7 +475,7 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
         return (*it).value;
     auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
     memcpy(&new_inode->m_raw_inode, reinterpret_cast<ext2_inode*>(block.offset_pointer(offset)), sizeof(ext2_inode));
-    m_inode_cache.set(inode.index(), new_inode.copy_ref());
+    m_inode_cache.set(inode.index(), new_inode);
     return new_inode;
 }
 

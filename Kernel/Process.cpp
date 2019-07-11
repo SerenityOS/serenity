@@ -115,7 +115,7 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
     return &m_regions.last();
 }
 
-Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject>&& vmo, size_t offset_in_vmo, const String& name, int prot)
+Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmo, size_t offset_in_vmo, const String& name, int prot)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
@@ -229,7 +229,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
 
 Process* Process::fork(RegisterDump& regs)
 {
-    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd.copy_ref(), m_executable.copy_ref(), m_tty, this);
+    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
     if (!child)
         return nullptr;
 
@@ -334,7 +334,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     auto vmo = VMObject::create_file_backed(description->inode());
     vmo->set_name(description->absolute_path());
-    RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo.copy_ref(), 0, vmo->name(), PROT_READ);
+    RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, vmo->name(), PROT_READ);
     ASSERT(region);
 
     if (this != &current->process()) {
@@ -358,7 +358,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            (void)allocate_region_with_vmo(vaddr, size, vmo.copy_ref(), offset_in_image, String(name), prot);
+            (void)allocate_region_with_vmo(vaddr, size, vmo, offset_in_image, String(name), prot);
             return vaddr.as_ptr();
         };
         loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
@@ -520,7 +520,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     {
         InterruptDisabler disabler;
         if (auto* parent = Process::from_pid(parent_pid))
-            cwd = parent->m_cwd.copy_ref();
+            cwd = parent->m_cwd;
     }
 
     if (!cwd)
@@ -562,7 +562,7 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
     return process;
 }
 
-Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody>&& cwd, RefPtr<Custody>&& executable, TTY* tty, Process* fork_parent)
+Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
@@ -2370,14 +2370,14 @@ struct SharedBuffer {
         if (m_pid1 == process.pid()) {
             ++m_pid1_retain_count;
             if (!m_pid1_region) {
-                m_pid1_region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | (m_pid1_writable ? PROT_WRITE : 0));
+                m_pid1_region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo, 0, "SharedBuffer", PROT_READ | (m_pid1_writable ? PROT_WRITE : 0));
                 m_pid1_region->set_shared(true);
             }
             return m_pid1_region->vaddr().as_ptr();
         } else if (m_pid2 == process.pid()) {
             ++m_pid2_retain_count;
             if (!m_pid2_region) {
-                m_pid2_region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | (m_pid2_writable ? PROT_WRITE : 0));
+                m_pid2_region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo, 0, "SharedBuffer", PROT_READ | (m_pid2_writable ? PROT_WRITE : 0));
                 m_pid2_region->set_shared(true);
             }
             return m_pid2_region->vaddr().as_ptr();
@@ -2506,7 +2506,7 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
     auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
     shared_buffer->m_shared_buffer_id = shared_buffer_id;
     ASSERT((int)shared_buffer->size() >= size);
-    shared_buffer->m_pid1_region = allocate_region_with_vmo(VirtualAddress(), shared_buffer->size(), shared_buffer->m_vmo.copy_ref(), 0, "SharedBuffer", PROT_READ | PROT_WRITE);
+    shared_buffer->m_pid1_region = allocate_region_with_vmo(VirtualAddress(), shared_buffer->size(), shared_buffer->m_vmo, 0, "SharedBuffer", PROT_READ | PROT_WRITE);
     shared_buffer->m_pid1_region->set_shared(true);
     *buffer = shared_buffer->m_pid1_region->vaddr().as_ptr();
 #ifdef SHARED_BUFFER_DEBUG
