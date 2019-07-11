@@ -1,10 +1,12 @@
 #pragma once
 
-#include "StringView.h"
+#include <AK/Noncopyable.h>
+#include <AK/StringView.h>
 
 namespace AK {
 
 class MappedFile {
+    AK_MAKE_NONCOPYABLE(MappedFile);
 public:
     MappedFile() {}
     explicit MappedFile(const StringView& file_name);
