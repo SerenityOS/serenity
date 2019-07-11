@@ -2,6 +2,11 @@
 #include <LibGUI/GPainter.h>
 #include <SharedGraphics/StylePainter.h>
 
+GGroupBox::GGroupBox(GWidget* parent)
+    : GGroupBox({}, parent)
+{
+}
+
 GGroupBox::GGroupBox(const StringView& title, GWidget* parent)
     : GWidget(parent)
     , m_title(title)

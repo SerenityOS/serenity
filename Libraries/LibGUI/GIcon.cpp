@@ -11,7 +11,7 @@ GIcon::GIcon(const GIconImpl& impl)
 }
 
 GIcon::GIcon(const GIcon& other)
-    : m_impl(other.m_impl.copy_ref())
+    : m_impl(other.m_impl)
 {
 }
 

@@ -51,7 +51,7 @@ public:
     bool operator==(const OwnPtr<T>& other) const { return ptr() == other.ptr(); }
 
 private:
-    WeakPtr(RefPtr<WeakLink<T>>&& link)
+    WeakPtr(RefPtr<WeakLink<T>> link)
         : m_link(move(link))
     {
     }
@@ -64,7 +64,7 @@ inline WeakPtr<T> Weakable<T>::make_weak_ptr()
 {
     if (!m_link)
         m_link = adopt(*new WeakLink<T>(static_cast<T&>(*this)));
-    return WeakPtr<T>(m_link.copy_ref());
+    return WeakPtr<T>(m_link);
 }
 
 template<typename T>

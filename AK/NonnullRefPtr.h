@@ -19,6 +19,9 @@
 namespace AK {
 
 template<typename T>
+class OwnPtr;
+
+template<typename T>
 inline void ref_if_not_null(T* ptr)
 {
     if (ptr)
@@ -58,11 +61,6 @@ public:
     {
     }
     RETURN_TYPESTATE(unconsumed)
-    NonnullRefPtr(NonnullRefPtr& other)
-        : m_ptr(&other.copy_ref().leak_ref())
-    {
-    }
-    RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(NonnullRefPtr&& other)
         : m_ptr(&other.leak_ref())
     {
@@ -97,6 +95,11 @@ public:
             m_ptr = (T*)(0xb0b0b0b0);
 #endif
     }
+
+    template<typename U>
+    NonnullRefPtr(const OwnPtr<U>&) = delete;
+    template<typename U>
+    NonnullRefPtr& operator=(const OwnPtr<U>&) = delete;
 
     NonnullRefPtr& operator=(const NonnullRefPtr& other)
     {
@@ -145,12 +148,6 @@ public:
         m_ptr = &object;
         m_ptr->ref();
         return *this;
-    }
-
-    CALLABLE_WHEN(unconsumed)
-    NonnullRefPtr copy_ref() const
-    {
-        return NonnullRefPtr(*m_ptr);
     }
 
     CALLABLE_WHEN(unconsumed)

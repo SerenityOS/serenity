@@ -4,6 +4,8 @@
 
 class GSlider : public GWidget {
 public:
+    enum class KnobSizeMode { Fixed, Proportional };
+
     explicit GSlider(GWidget*);
     virtual ~GSlider() override;
 
@@ -17,8 +19,11 @@ public:
     void set_min(int min) { set_range(min, max()); }
     void set_max(int max) { set_range(min(), max); }
 
+    void set_knob_size_mode(KnobSizeMode mode) { m_knob_size_mode = mode; }
+    KnobSizeMode knob_size_mode() const { return m_knob_size_mode; }
+
     int track_height() const { return 2; }
-    int knob_width() const { return 8; }
+    int knob_fixed_width() const { return 8; }
     int knob_height() const { return 20; }
 
     Rect knob_rect() const;
@@ -45,4 +50,6 @@ private:
     bool m_dragging { false };
     int m_drag_origin_value { 0 };
     Point m_drag_origin;
+
+    KnobSizeMode m_knob_size_mode { KnobSizeMode::Fixed };
 };

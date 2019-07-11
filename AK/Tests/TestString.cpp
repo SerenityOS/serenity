@@ -25,6 +25,15 @@ int main()
     EXPECT(test_string != "ABCDE");
     EXPECT(test_string != "ABCDEFG");
 
+    EXPECT("a" < String("b"));
+    EXPECT(!("a" > String("b")));
+    EXPECT("b" > String("a"));
+    EXPECT(!("b" < String("b")));
+    EXPECT("a" >= String("a"));
+    EXPECT(!("a" >= String("b")));
+    EXPECT("a" <= String("a"));
+    EXPECT(!("b" <= String("a")));
+
     EXPECT_EQ(test_string[0], 'A');
     EXPECT_EQ(test_string[1], 'B');
 

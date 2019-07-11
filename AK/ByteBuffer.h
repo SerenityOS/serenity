@@ -82,7 +82,7 @@ public:
     ByteBuffer() {}
     ByteBuffer(std::nullptr_t) {}
     ByteBuffer(const ByteBuffer& other)
-        : m_impl(other.m_impl.copy_ref())
+        : m_impl(other.m_impl)
     {
     }
     ByteBuffer(ByteBuffer&& other)
@@ -97,7 +97,8 @@ public:
     }
     ByteBuffer& operator=(const ByteBuffer& other)
     {
-        m_impl = other.m_impl.copy_ref();
+        if (this != &other)
+            m_impl = other.m_impl;
         return *this;
     }
 

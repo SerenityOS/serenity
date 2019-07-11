@@ -22,7 +22,7 @@ NonnullRefPtr<FileDescription> FileDescription::create(RefPtr<Custody>&& custody
     return description;
 }
 
-NonnullRefPtr<FileDescription> FileDescription::create(RefPtr<File>&& file, SocketRole role)
+NonnullRefPtr<FileDescription> FileDescription::create(RefPtr<File> file, SocketRole role)
 {
     return adopt(*new FileDescription(move(file), role));
 }
@@ -64,9 +64,9 @@ NonnullRefPtr<FileDescription> FileDescription::clone()
     if (is_fifo()) {
         description = fifo()->open_direction(m_fifo_direction);
     } else {
-        description = FileDescription::create(m_file.copy_ref(), m_socket_role);
-        description->m_custody = m_custody.copy_ref();
-        description->m_inode = m_inode.copy_ref();
+        description = FileDescription::create(m_file, m_socket_role);
+        description->m_custody = m_custody;
+        description->m_inode = m_inode;
     }
     ASSERT(description);
     description->m_current_offset = m_current_offset;

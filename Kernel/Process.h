@@ -249,7 +249,7 @@ public:
 
     bool is_superuser() const { return m_euid == 0; }
 
-    Region* allocate_region_with_vmo(VirtualAddress, size_t, NonnullRefPtr<VMObject>&&, size_t offset_in_vmo, const String& name, int prot);
+    Region* allocate_region_with_vmo(VirtualAddress, size_t, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String& name, int prot);
     Region* allocate_file_backed_region(VirtualAddress, size_t, RefPtr<Inode>&&, const String& name, int prot);
     Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
@@ -274,7 +274,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody>&& cwd = nullptr, RefPtr<Custody>&& executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     Range allocate_range(VirtualAddress, size_t);
 

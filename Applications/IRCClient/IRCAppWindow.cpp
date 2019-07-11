@@ -150,7 +150,7 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_change_nick_action);
     toolbar->add_separator();
     toolbar->add_action(*m_join_action);
-    toolbar->add_action(*m_part_action.copy_ref());
+    toolbar->add_action(*m_part_action);
     toolbar->add_separator();
     toolbar->add_action(*m_whois_action);
     toolbar->add_action(*m_open_query_action);

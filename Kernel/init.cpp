@@ -86,7 +86,7 @@ VFS* vfs;
 
     auto dev_hd0 = IDEDiskDevice::create(IDEDiskDevice::DriveType::MASTER);
 
-    NonnullRefPtr<DiskDevice> root_dev = dev_hd0.copy_ref();
+    NonnullRefPtr<DiskDevice> root_dev = dev_hd0;
 
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
 
@@ -104,7 +104,7 @@ VFS* vfs;
             hang();
         }
 
-        MBRPartitionTable mbr(root_dev.copy_ref());
+        MBRPartitionTable mbr(root_dev);
         if (!mbr.initialize()) {
             kprintf("init_stage2: couldn't read MBR from disk\n");
             hang();
@@ -119,13 +119,13 @@ VFS* vfs;
         root_dev = *partition;
     }
 
-    auto e2fs = Ext2FS::create(root_dev.copy_ref());
+    auto e2fs = Ext2FS::create(root_dev);
     if (!e2fs->initialize()) {
         kprintf("init_stage2: couldn't open root filesystem\n");
         hang();
     }
 
-    vfs->mount_root(e2fs.copy_ref());
+    vfs->mount_root(e2fs);
 
     dbgprintf("Load ksyms\n");
     load_ksyms();

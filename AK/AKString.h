@@ -45,7 +45,7 @@ public:
     }
 
     String(const String& other)
-        : m_impl(const_cast<String&>(other).m_impl.copy_ref())
+        : m_impl(const_cast<String&>(other).m_impl)
     {
     }
 
@@ -131,10 +131,16 @@ public:
 
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
+
     bool operator<(const String&) const;
     bool operator<(const char*) const;
     bool operator>=(const String& other) const { return !(*this < other); }
     bool operator>=(const char* other) const { return !(*this < other); }
+
+    bool operator>(const String&) const;
+    bool operator>(const char*) const;
+    bool operator<=(const String& other) const { return !(*this > other); }
+    bool operator<=(const char* other) const { return !(*this > other); }
 
     bool operator==(const char* cstring) const
     {
@@ -167,7 +173,7 @@ public:
     String& operator=(const String& other)
     {
         if (this != &other)
-            m_impl = const_cast<String&>(other).m_impl.copy_ref();
+            m_impl = const_cast<String&>(other).m_impl;
         return *this;
     }
 
@@ -227,6 +233,22 @@ inline bool operator<(const char* characters, const String& string)
 inline bool operator>=(const char* characters, const String& string)
 {
     return !(characters < string);
+}
+
+inline bool operator>(const char* characters, const String& string)
+{
+    if (!characters)
+        return !string.is_null();
+
+    if (string.is_null())
+        return false;
+
+    return strcmp(characters, string.characters()) > 0;
+}
+
+inline bool operator<=(const char* characters, const String& string)
+{
+    return !(characters > string);
 }
 
 }

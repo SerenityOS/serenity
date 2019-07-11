@@ -7,6 +7,9 @@
 namespace AK {
 
 template<typename T>
+class OwnPtr;
+
+template<typename T>
 class RefPtr {
 public:
     enum AdoptTag {
@@ -38,13 +41,20 @@ public:
         : m_ptr(&object)
     {
     }
-    RefPtr(RefPtr& other)
-        : m_ptr(other.copy_ref().leak_ref())
-    {
-    }
     RefPtr(RefPtr&& other)
         : m_ptr(other.leak_ref())
     {
+    }
+    RefPtr(const NonnullRefPtr<T>& other)
+        : m_ptr(const_cast<T*>(other.ptr()))
+    {
+        m_ptr->ref();
+    }
+    template<typename U>
+    RefPtr(const NonnullRefPtr<U>& other)
+        : m_ptr(static_cast<T*>(const_cast<U*>(other.ptr())))
+    {
+        m_ptr->ref();
     }
     template<typename U>
     RefPtr(NonnullRefPtr<U>&& other)
@@ -57,13 +67,15 @@ public:
     {
     }
     RefPtr(const RefPtr& other)
-        : m_ptr(const_cast<RefPtr&>(other).copy_ref().leak_ref())
+        : m_ptr(const_cast<T*>(other.ptr()))
     {
+        ref_if_not_null(m_ptr);
     }
     template<typename U>
     RefPtr(const RefPtr<U>& other)
-        : m_ptr(const_cast<RefPtr<U>&>(other).copy_ref().leak_ref())
+        : m_ptr(static_cast<T*>(const_cast<U*>(other.ptr())))
     {
+        ref_if_not_null(m_ptr);
     }
     ~RefPtr()
     {
@@ -76,6 +88,11 @@ public:
 #endif
     }
     RefPtr(std::nullptr_t) {}
+
+    template<typename U>
+    RefPtr(const OwnPtr<U>&) = delete;
+    template<typename U>
+    RefPtr& operator=(const OwnPtr<U>&) = delete;
 
     RefPtr& operator=(RefPtr&& other)
     {
@@ -104,6 +121,16 @@ public:
         return *this;
     }
 
+    RefPtr& operator=(const NonnullRefPtr<T>& other)
+    {
+        if (m_ptr != other.ptr())
+            deref_if_not_null(m_ptr);
+        m_ptr = const_cast<T*>(other.ptr());
+        ASSERT(m_ptr);
+        ref_if_not_null(m_ptr);
+        return *this;
+    }
+
     template<typename U>
     RefPtr& operator=(const NonnullRefPtr<U>& other)
     {
@@ -111,6 +138,15 @@ public:
             deref_if_not_null(m_ptr);
         m_ptr = const_cast<T*>(other.ptr());
         ASSERT(m_ptr);
+        ref_if_not_null(m_ptr);
+        return *this;
+    }
+
+    RefPtr& operator=(const RefPtr& other)
+    {
+        if (m_ptr != other.ptr())
+            deref_if_not_null(m_ptr);
+        m_ptr = const_cast<T*>(other.ptr());
         ref_if_not_null(m_ptr);
         return *this;
     }
@@ -147,11 +183,6 @@ public:
     {
         clear();
         return *this;
-    }
-
-    RefPtr copy_ref() const
-    {
-        return RefPtr(m_ptr);
     }
 
     void clear()
