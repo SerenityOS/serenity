@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     auto* splitter = new GSplitter(Orientation::Horizontal, widget);
     auto* tree_view = new GTreeView(splitter);
     auto file_system_model = GFileSystemModel::create("/", GFileSystemModel::Mode::DirectoriesOnly);
-    tree_view->set_model(file_system_model.copy_ref());
+    tree_view->set_model(file_system_model);
     tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     tree_view->set_preferred_size({ 200, 0 });
     auto* directory_view = new DirectoryView(splitter);
@@ -154,9 +154,9 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto file_menu = make<GMenu>("File");
-    file_menu->add_action(mkdir_action.copy_ref());
-    file_menu->add_action(copy_action.copy_ref());
-    file_menu->add_action(delete_action.copy_ref());
+    file_menu->add_action(mkdir_action);
+    file_menu->add_action(copy_action);
+    file_menu->add_action(delete_action);
     menubar->add_menu(move(file_menu));
 
     auto view_menu = make<GMenu>("View");
@@ -165,9 +165,9 @@ int main(int argc, char** argv)
     menubar->add_menu(move(view_menu));
 
     auto go_menu = make<GMenu>("Go");
-    go_menu->add_action(go_back_action.copy_ref());
-    go_menu->add_action(go_forward_action.copy_ref());
-    go_menu->add_action(open_parent_directory_action.copy_ref());
+    go_menu->add_action(go_back_action);
+    go_menu->add_action(go_forward_action);
+    go_menu->add_action(open_parent_directory_action);
     menubar->add_menu(move(go_menu));
 
     auto help_menu = make<GMenu>("Help");
@@ -178,14 +178,14 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    main_toolbar->add_action(go_back_action.copy_ref());
-    main_toolbar->add_action(go_forward_action.copy_ref());
-    main_toolbar->add_action(open_parent_directory_action.copy_ref());
+    main_toolbar->add_action(go_back_action);
+    main_toolbar->add_action(go_forward_action);
+    main_toolbar->add_action(open_parent_directory_action);
 
     main_toolbar->add_separator();
-    main_toolbar->add_action(mkdir_action.copy_ref());
-    main_toolbar->add_action(copy_action.copy_ref());
-    main_toolbar->add_action(delete_action.copy_ref());
+    main_toolbar->add_action(mkdir_action);
+    main_toolbar->add_action(copy_action);
+    main_toolbar->add_action(delete_action);
 
     main_toolbar->add_separator();
     main_toolbar->add_action(*view_as_icons_action);
