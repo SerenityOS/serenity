@@ -4,6 +4,7 @@
 
 class GGroupBox : public GWidget {
 public:
+    explicit GGroupBox(GWidget* parent);
     GGroupBox(const StringView& title, GWidget* parent);
     virtual ~GGroupBox() override;
 
