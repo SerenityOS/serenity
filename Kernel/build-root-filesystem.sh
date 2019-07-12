@@ -38,6 +38,7 @@ mknod -m 666 mnt/dev/full c 1 7
 mknod -m 666 mnt/dev/debuglog c 1 18
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
+mknod -m 666 mnt/dev/audio c 42 42
 mknod -m 666 mnt/dev/ptmx c 5 2
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
@@ -87,6 +88,7 @@ cp ../Games/Snake/Snake mnt/bin/Snake
 cp ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
 cp ../Servers/SystemServer/SystemServer mnt/bin/SystemServer
 cp ../Servers/WindowServer/WindowServer mnt/bin/WindowServer
+cp ../Servers/AudioServer/AudioServer mnt/bin/AudioServer
 cp ../Shell/Shell mnt/bin/Shell
 cp ../Libraries/LibHTML/tho mnt/bin/tho
 echo "done"

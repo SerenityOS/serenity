@@ -78,6 +78,7 @@ int main(int, char**)
     int highest_prio = sched_get_priority_max(SCHED_OTHER);
     start_process("/bin/LookupServer", lowest_prio);
     start_process("/bin/WindowServer", highest_prio);
+    start_process("/bin/AudioServer", highest_prio);
     start_process("/bin/Taskbar", highest_prio);
     start_process("/bin/Terminal", highest_prio - 1);
     start_process("/bin/Launcher", highest_prio);

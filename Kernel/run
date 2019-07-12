@@ -20,7 +20,8 @@ elif [ "$1" = "qn" ]; then
         -kernel kernel \
         -append "${SERENITY_KERNEL_CMDLINE}" \
         -hda _disk_image \
-        -soundhw pcspk
+        -soundhw pcspk \
+        -soundhw sb16
 elif [ "$1" = "qtap" ]; then
     # ./run qtap: qemu with tap
     sudo $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
@@ -34,7 +35,8 @@ elif [ "$1" = "qtap" ]; then
         -kernel kernel \
         -append "${SERENITY_KERNEL_CMDLINE}" \
         -hda _disk_image \
-        -soundhw pcspk
+        -soundhw pcspk \
+        -soundhw sb16
 elif [ "$1" = "qgrub" ]; then
     # ./run qgrub: qemu with grub
     $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
@@ -60,6 +62,7 @@ else
         -kernel kernel \
         -append "${SERENITY_KERNEL_CMDLINE}" \
         -hda _disk_image \
-        -soundhw pcspk
+        -soundhw pcspk \
+        -soundhw sb16
 fi
 
