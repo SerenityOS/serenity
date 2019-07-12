@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto* label = new GLabel(main_widget);
-    label->set_text("Hello World!");
+    label->set_text("Hello\nWorld!");
 
     auto* button = new GButton(main_widget);
     button->set_text("Good-bye");
