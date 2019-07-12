@@ -640,7 +640,7 @@ void Painter::draw_text(const Rect& rect, const StringView& text, const Font& fo
 
     static const int line_spacing = 4;
     int line_height = font.glyph_height() + line_spacing;
-    Rect bounding_rect { 0, 0, 0, lines.size() * line_height };
+    Rect bounding_rect { 0, 0, 0, (lines.size() * line_height) - line_spacing };
 
     for (auto& line : lines) {
         auto line_width = font.width(line);
