@@ -16,6 +16,7 @@
 #include <Kernel/Devices/MBRPartitionTable.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
+#include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/ZeroDevice.h>
@@ -39,6 +40,7 @@ VirtualConsole* tty2;
 VirtualConsole* tty3;
 KeyboardDevice* keyboard;
 PS2MouseDevice* ps2mouse;
+SB16* sb16;
 DebugLogDevice* dev_debuglog;
 NullDevice* dev_null;
 SerialDevice* ttyS0;
@@ -177,6 +179,7 @@ extern "C" [[noreturn]] void init()
 
     keyboard = new KeyboardDevice;
     ps2mouse = new PS2MouseDevice;
+    sb16 = new SB16;
     dev_null = new NullDevice;
     ttyS0 = new SerialDevice(SERIAL_COM1_ADDR, 64);
     ttyS1 = new SerialDevice(SERIAL_COM2_ADDR, 65);
