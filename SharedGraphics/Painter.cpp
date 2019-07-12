@@ -554,13 +554,9 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
     draw_bitmap(point, font.glyph_bitmap(ch), color);
 }
 
-void Painter::draw_text(const Rect& rect, const StringView& text, TextAlignment alignment, Color color, TextElision elision)
+void Painter::draw_text_line(const Rect& a_rect, const StringView& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
 {
-    draw_text(rect, text, font(), alignment, color, elision);
-}
-
-void Painter::draw_text(const Rect& rect, const StringView& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
-{
+    auto rect = a_rect;
     StringView final_text(text);
     String elided_text;
     if (elision == TextElision::Right) {
@@ -590,24 +586,24 @@ void Painter::draw_text(const Rect& rect, const StringView& text, const Font& fo
         }
     }
 
-    Point point;
-
     if (alignment == TextAlignment::TopLeft) {
-        point = rect.location();
+        // No-op.
     } else if (alignment == TextAlignment::CenterLeft) {
-        point = { rect.x(), rect.center().y() - (font.glyph_height() / 2) };
+        // No-op.
     } else if (alignment == TextAlignment::CenterRight) {
-        int text_width = font.width(final_text);
-        point = { rect.right() - text_width, rect.center().y() - (font.glyph_height() / 2) };
+        rect.set_x(rect.right() - font.width(final_text));
     } else if (alignment == TextAlignment::Center) {
-        int text_width = font.width(final_text);
-        point = rect.center();
-        point.move_by(-(text_width / 2), -(font.glyph_height() / 2));
+        auto shrunken_rect = rect;
+        shrunken_rect.set_width(font.width(final_text));
+        shrunken_rect.center_within(rect);
+        rect = shrunken_rect;
     } else {
         ASSERT_NOT_REACHED();
     }
 
+    auto point = rect.location();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
+
     for (ssize_t i = 0; i < final_text.length(); ++i) {
         char ch = final_text.characters_without_null_termination()[i];
         if (ch == ' ') {
@@ -616,6 +612,59 @@ void Painter::draw_text(const Rect& rect, const StringView& text, const Font& fo
         }
         draw_glyph(point, ch, font, color);
         point.move_by(font.glyph_width(ch) + font.glyph_spacing(), 0);
+    }
+}
+
+void Painter::draw_text(const Rect& rect, const StringView& text, TextAlignment alignment, Color color, TextElision elision)
+{
+    draw_text(rect, text, font(), alignment, color, elision);
+}
+
+void Painter::draw_text(const Rect& rect, const StringView& text, const Font& font, TextAlignment alignment, Color color, TextElision elision)
+{
+    Vector<StringView, 32> lines;
+
+    int start_of_current_line = 0;
+    for (int i = 0; i < text.length(); ++i) {
+        auto ch = text[i];
+        if (ch == '\n') {
+            lines.append(text.substring_view(start_of_current_line, i - start_of_current_line));
+            start_of_current_line = i + 1;
+            continue;
+        }
+    }
+
+    if (start_of_current_line != text.length()) {
+        lines.append(text.substring_view(start_of_current_line, text.length() - start_of_current_line));
+    }
+
+    static const int line_spacing = 4;
+    int line_height = font.glyph_height() + line_spacing;
+    Rect bounding_rect { 0, 0, 0, lines.size() * line_height };
+
+    for (auto& line : lines) {
+        auto line_width = font.width(line);
+        if (line_width > bounding_rect.width())
+            bounding_rect.set_width(line_width);
+    }
+
+    if (alignment == TextAlignment::TopLeft) {
+        bounding_rect.set_location(rect.location());
+    } else if (alignment == TextAlignment::CenterLeft) {
+        bounding_rect.set_location({ rect.x(), rect.center().y() - (bounding_rect.height() / 2) });
+    } else if (alignment == TextAlignment::CenterRight) {
+        bounding_rect.set_location({ rect.right() - bounding_rect.width(), rect.center().y() - (bounding_rect.height() / 2) });
+    } else if (alignment == TextAlignment::Center) {
+        bounding_rect.center_within(rect);
+    } else {
+        ASSERT_NOT_REACHED();
+    }
+
+    for (int i = 0; i < lines.size(); ++i) {
+        auto& line = lines[i];
+        Rect line_rect { bounding_rect.x(), bounding_rect.y() + i * line_height, bounding_rect.width(), line_height };
+        line_rect.intersect(rect);
+        draw_text_line(line_rect, line, font, alignment, color, elision);
     }
 }
 
