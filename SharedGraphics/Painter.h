@@ -70,6 +70,8 @@ protected:
     void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
     void draw_pixel(const Point&, Color, int thickness = 1);
 
+    void draw_text_line(const Rect&, const StringView&, const Font&, TextAlignment, Color, TextElision);
+
     struct State {
         const Font* font;
         Point translation;
