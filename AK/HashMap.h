@@ -7,7 +7,7 @@
 
 namespace AK {
 
-template<typename K, typename V>
+template<typename K, typename V, typename KeyTraits = Traits<K>>
 class HashMap {
 private:
     struct Entry {
@@ -16,12 +16,12 @@ private:
     };
 
     struct EntryTraits {
-        static unsigned hash(const Entry& entry) { return Traits<K>::hash(entry.key); }
-        static bool equals(const Entry& a, const Entry& b) { return a.key == b.key; }
+        static unsigned hash(const Entry& entry) { return KeyTraits::hash(entry.key); }
+        static bool equals(const Entry& a, const Entry& b) { return KeyTraits::equals(a.key, b.key); }
         static void dump(const Entry& entry)
         {
             kprintf("key=");
-            Traits<K>::dump(entry.key);
+            KeyTraits::dump(entry.key);
             kprintf(" value=");
             Traits<V>::dump(entry.value);
         }
@@ -51,11 +51,11 @@ public:
 
     IteratorType begin() { return m_table.begin(); }
     IteratorType end() { return m_table.end(); }
-    IteratorType find(const K& key) { return m_table.find(Traits<K>::hash(key), [&](auto& entry) { return key == entry.key; }); }
+    IteratorType find(const K& key) { return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); }); }
 
     ConstIteratorType begin() const { return m_table.begin(); }
     ConstIteratorType end() const { return m_table.end(); }
-    ConstIteratorType find(const K& key) const { return m_table.find(Traits<K>::hash(key), [&](auto& entry) { return key == entry.key; }); }
+    ConstIteratorType find(const K& key) const { return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); }); }
 
     void ensure_capacity(int capacity) { m_table.ensure_capacity(capacity); }
 
