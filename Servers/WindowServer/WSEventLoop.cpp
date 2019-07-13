@@ -212,10 +212,7 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
             ws_window_type = WSWindowType::Menubar;
             break;
         case WSAPI_WindowType::Invalid:
-            break; // handled below
-        }
-
-        if (ws_window_type == WSWindowType::Invalid) {
+        default:
             dbgprintf("Unknown WSAPI_WindowType: %d\n", message.window.type);
             client.did_misbehave();
             return false;
