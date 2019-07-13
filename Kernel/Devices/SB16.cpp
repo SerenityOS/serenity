@@ -123,8 +123,9 @@ void SB16::dma_start(uint32_t length)
     IO::out8(0xd6, (channel % 4) | mode);
 
     // Write the offset of the buffer
-    IO::out8(0xc4, (u8)addr);
-    IO::out8(0xc4, (u8)(addr >> 8));
+    u16 offset = (addr / 2) % 65536;
+    IO::out8(0xc4, (u8)offset);
+    IO::out8(0xc4, (u8)(offset >> 8));
 
     // Write the transfer length
     IO::out8(0xc6, (u8)(length - 1));
@@ -175,9 +176,9 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     memcpy(m_dma_buffer_page->paddr().as_ptr(), data, length);
     dma_start(length);
 
-    u8 command = 0x06;
-    // Send 16-bit samples.
-    command |= 0xb0;
+    // 16-bit single-cycle output.
+    // FIXME: Implement auto-initialized output.
+    u8 command = 0xb0;
 
     u16 sample_count = length / sizeof(i16);
     if (mode & (u8)SampleFormat::Stereo)
