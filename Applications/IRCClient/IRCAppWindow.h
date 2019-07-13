@@ -13,6 +13,10 @@ public:
     IRCAppWindow();
     virtual ~IRCAppWindow() override;
 
+    static IRCAppWindow& the();
+
+    void set_active_window(IRCWindow&);
+
 private:
     void setup_client();
     void setup_actions();
