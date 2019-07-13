@@ -12,40 +12,100 @@ public:
     {
     }
 
-    void operator<<(u8 value)
+    ~BufferStream()
+    {
+        ASSERT(!m_read_failure);
+    }
+
+    BufferStream& operator<<(u8 value)
     {
         m_buffer[m_offset++] = value;
+        return *this;
+    }
+    BufferStream& operator>>(u8& value )
+    {
+        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+            m_read_failure = true;
+            return *this;
+        }
+        value = m_buffer[m_offset++];
+        return *this;
     }
 
-    void operator<<(char value)
+    BufferStream& operator<<(char value)
     {
         m_buffer[m_offset++] = (u8)value;
+        return *this;
+    }
+    BufferStream& operator>>(char& value)
+    {
+        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+            m_read_failure = true;
+            return *this;
+        }
+        value = (u8)m_buffer[m_offset++];
+        return *this;
     }
 
-    void operator<<(u16 value)
+    BufferStream& operator<<(u16 value)
     {
         m_buffer[m_offset++] = value;
         m_buffer[m_offset++] = (u8)(value >> 8);
+        return *this;
+    }
+    BufferStream& operator>>(u16& value)
+    {
+        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+            m_read_failure = true;
+            return *this;
+        }
+        value = 0;
+        u8 b0 = m_buffer[m_offset++];
+        u8 b1 = m_buffer[m_offset++];
+        value |= (u8(b1) << 8);
+        value |= (u8(b0));
+        return *this;
     }
 
-    void operator<<(u32 value)
+    BufferStream& operator<<(u32 value)
     {
         m_buffer[m_offset++] = value;
         m_buffer[m_offset++] = (u8)(value >> 8);
         m_buffer[m_offset++] = (u8)(value >> 16);
         m_buffer[m_offset++] = (u8)(value >> 24);
+        return *this;
+    }
+    BufferStream& operator>>(u32& value)
+    {
+        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+            m_read_failure = true;
+            return *this;
+        }
+        u8 b0 = m_buffer[m_offset++];
+        u8 b1 = m_buffer[m_offset++];
+        u8 b2 = m_buffer[m_offset++];
+        u8 b3 = m_buffer[m_offset++];
+
+        value = 0;
+        value |= (u8(b3) << 24);
+        value |= (u8(b2) << 16);
+        value |= (u8(b1) << 8);
+        value |= (u8(b0));
+        return *this;
     }
 
-    void operator<<(const StringView& value)
+    BufferStream& operator<<(const StringView& value)
     {
         for (ssize_t i = 0; i < value.length(); ++i)
             m_buffer[m_offset++] = value[i];
+        return *this;
     }
 
-    void operator<<(const ByteBuffer& value)
+    BufferStream& operator<<(const ByteBuffer& value)
     {
         for (ssize_t i = 0; i < value.size(); ++i)
             m_buffer[m_offset++] = value[i];
+        return *this;
     }
 
     bool at_end() const
@@ -66,9 +126,16 @@ public:
         m_buffer.trim(m_offset);
     }
 
+    bool handle_read_failure() {
+        bool old = m_read_failure;
+        m_read_failure = false;
+        return old;
+    }
+
 private:
     ByteBuffer& m_buffer;
     ssize_t m_offset { 0 };
+    bool m_read_failure { false };
 };
 
 }

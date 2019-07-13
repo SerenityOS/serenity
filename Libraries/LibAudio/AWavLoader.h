@@ -9,6 +9,6 @@ public:
     RefPtr<AWavFile> load_wav(const StringView& path);
     const char* error_string() { return m_error_string.characters(); }
 private:
-    RefPtr<AWavFile> parse_wav(const ByteBuffer& buffer);
+    RefPtr<AWavFile> parse_wav(ByteBuffer& buffer);
     String m_error_string;
 };
