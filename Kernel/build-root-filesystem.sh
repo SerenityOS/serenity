@@ -77,6 +77,7 @@ cp ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
 cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Applications/QuickShow/QuickShow mnt/bin/QuickShow
+cp ../Applications/Piano/Piano mnt/bin/Piano
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
@@ -108,6 +109,7 @@ ln -s WidgetGallery mnt/bin/wg
 ln -s TextEditor mnt/bin/te
 ln -s PaintBrush mnt/bin/pb
 ln -s QuickShow mnt/bin/qs
+ln -s Piano mnt/bin/pi
 echo "done"
 
 # Run local sync script, if it exists
