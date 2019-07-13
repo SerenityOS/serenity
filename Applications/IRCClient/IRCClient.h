@@ -87,6 +87,11 @@ private:
         Vector<String> arguments;
     };
 
+    enum class PrivmsgOrNotice {
+        Privmsg,
+        Notice,
+    };
+
     void receive_from_server();
     void send(const String&);
     void send_user();
@@ -109,7 +114,7 @@ private:
     void handle_rpl_topicwhotime(const Message&);
     void handle_rpl_endofnames(const Message&);
     void handle_rpl_namreply(const Message&);
-    void handle_privmsg(const Message&);
+    void handle_privmsg_or_notice(const Message&, PrivmsgOrNotice);
     void handle_nick(const Message&);
     void handle(const Message&);
     void handle_user_command(const String&);
