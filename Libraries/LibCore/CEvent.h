@@ -17,6 +17,7 @@ public:
         DeferredInvoke,
         ChildAdded,
         ChildRemoved,
+        Custom,
     };
 
     CEvent() {}
@@ -71,4 +72,23 @@ public:
 
 private:
     WeakPtr<CObject> m_child;
+};
+
+class CCustomEvent : public CEvent {
+public:
+    CCustomEvent(int custom_type, void* data = nullptr)
+        : CEvent(CEvent::Type::Custom)
+        , m_custom_type(custom_type)
+        , m_data(data)
+    {
+    }
+    ~CCustomEvent() {}
+
+    int custom_type() const { return m_custom_type; }
+    void* data() { return m_data; }
+    const void* data() const { return m_data; }
+
+private:
+    int m_custom_type { 0 };
+    void* m_data { nullptr };
 };
