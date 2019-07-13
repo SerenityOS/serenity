@@ -629,7 +629,7 @@ void WSWindowManager::process_event_for_doubleclick(WSWindow& window, WSMouseEve
         // If the pointer moves too far, it's not a double click.
         if (elapsed_since_last_click < m_double_click_speed) {
 #if defined(DOUBLECLICK_DEBUG)
-            dbg() << "Transforming MouseUp to MouseDoubleClick!";
+            dbg() << "Transforming MouseUp to MouseDoubleClick (" << elapsed_since_last_click << " < " << m_double_click_speed << ")!";
 #endif
             event = WSMouseEvent(WSEvent::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
             // invalidate this now we've delivered a doubleclick, otherwise
@@ -710,8 +710,11 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         //
         // This prevents e.g. dragging on one window out of the bounds starting
         // a drag in that other unrelated window, and other silly shennanigans.
-        auto translated_event = event.translated(-m_active_input_window->position());
-        deliver_mouse_event(*m_active_input_window, translated_event);
+        if (!windows_who_received_mouse_event_due_to_cursor_tracking.contains(m_active_input_window)) {
+            auto translated_event = event.translated(-m_active_input_window->position());
+            deliver_mouse_event(*m_active_input_window, translated_event);
+            windows_who_received_mouse_event_due_to_cursor_tracking.set(m_active_input_window.ptr());
+        }
         if (event.type() == WSEvent::MouseUp && event.buttons() == 0) {
             m_active_input_window = nullptr;
         }
