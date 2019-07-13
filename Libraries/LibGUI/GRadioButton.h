@@ -15,6 +15,10 @@ protected:
     virtual void paint_event(GPaintEvent&) override;
 
 private:
+    // These don't make sense for a radio button, so hide them.
+    using GAbstractButton::auto_repeat_interval;
+    using GAbstractButton::set_auto_repeat_interval;
+
     virtual bool is_radio_button() const final { return true; }
 
     template<typename Callback>

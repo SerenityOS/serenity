@@ -2,7 +2,7 @@
 #include <LibGUI/GPainter.h>
 
 GAbstractButton::GAbstractButton(GWidget* parent)
-    : GWidget(parent)
+    : GAbstractButton({}, parent)
 {
 }
 
@@ -10,6 +10,9 @@ GAbstractButton::GAbstractButton(const StringView& text, GWidget* parent)
     : GWidget(parent)
     , m_text(text)
 {
+    m_auto_repeat_timer.on_timeout = [this] {
+        click();
+    };
 }
 
 GAbstractButton::~GAbstractButton()
@@ -65,6 +68,12 @@ void GAbstractButton::mousemove_event(GMouseEvent& event)
             bool being_pressed = is_over;
             if (being_pressed != m_being_pressed) {
                 m_being_pressed = being_pressed;
+                if (m_auto_repeat_interval) {
+                    if (!m_being_pressed)
+                        m_auto_repeat_timer.stop();
+                    else
+                        m_auto_repeat_timer.start(m_auto_repeat_interval);
+                }
                 update();
             }
         }
@@ -81,6 +90,11 @@ void GAbstractButton::mousedown_event(GMouseEvent& event)
         if (is_enabled()) {
             m_being_pressed = true;
             update();
+
+            if (m_auto_repeat_interval) {
+                click();
+                m_auto_repeat_timer.start(m_auto_repeat_interval);
+            }
         }
     }
     GWidget::mousedown_event(event);
@@ -92,11 +106,13 @@ void GAbstractButton::mouseup_event(GMouseEvent& event)
     dbgprintf("GAbstractButton::mouse_up_event: x=%d, y=%d, button=%u\n", event.x(), event.y(), (unsigned)event.button());
 #endif
     if (event.button() == GMouseButton::Left) {
+        bool was_auto_repeating = m_auto_repeat_timer.is_active();
+        m_auto_repeat_timer.stop();
         if (is_enabled()) {
             bool was_being_pressed = m_being_pressed;
             m_being_pressed = false;
             update();
-            if (was_being_pressed)
+            if (was_being_pressed && !was_auto_repeating)
                 click();
         }
     }
