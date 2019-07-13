@@ -211,6 +211,9 @@ bool WSEventLoop::on_receive_from_client(int client_id, const WSAPI_ClientMessag
         case WSAPI_WindowType::Menubar:
             ws_window_type = WSWindowType::Menubar;
             break;
+        case WSAPI_WindowType::Launcher:
+            ws_window_type = WSWindowType::Launcher;
+            break;
         case WSAPI_WindowType::Invalid:
         default:
             dbgprintf("Unknown WSAPI_WindowType: %d\n", message.window.type);

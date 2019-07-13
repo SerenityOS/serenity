@@ -28,6 +28,7 @@ enum WSAPI_WindowType {
     Taskbar,
     Tooltip,
     Menubar,
+    Launcher,
 };
 
 struct WSAPI_WindowBackingStoreInfo {
