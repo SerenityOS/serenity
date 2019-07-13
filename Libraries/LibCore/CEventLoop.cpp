@@ -139,6 +139,7 @@ void CEventLoop::pump(WaitMode mode)
             auto rejigged_event_queue = move(events);
             rejigged_event_queue.append(move(m_queued_events));
             m_queued_events = move(rejigged_event_queue);
+            return;
         }
     }
 }
