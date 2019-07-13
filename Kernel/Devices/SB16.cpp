@@ -2,6 +2,13 @@
 #include "IO.h"
 #include <Kernel/VM/MemoryManager.h>
 
+//#define SB16_DEBUG
+
+enum class SampleFormat : u8 {
+    Signed = 0x10,
+    Stereo = 0x20,
+};
+
 const u16 DSP_READ = 0x22A;
 const u16 DSP_WRITE = 0x22C;
 const u16 DSP_STATUS = 0x22E;
@@ -101,31 +108,31 @@ ssize_t SB16::read(FileDescription&, u8*, ssize_t)
 void SB16::dma_start(uint32_t length)
 {
     const auto addr = m_dma_buffer_page->paddr().get();
-    const u8 channel = 1;
+    const u8 channel = 5; // 16-bit samples use DMA channel 5 (on the master DMA controller)
     const u8 mode = 0;
 
     // Disable the DMA channel
-    IO::out8(0x0a, 4 + (channel % 4));
+    IO::out8(0xd4, 4 + (channel % 4));
 
     // Clear the byte pointer flip-flop
-    IO::out8(0x0c, 0);
+    IO::out8(0xd8, 0);
 
     // Write the DMA mode for the transfer
-    IO::out8(0x0b, channel | mode);
+    IO::out8(0xd6, (channel % 4) | mode);
 
     // Write the offset of the buffer
-    IO::out8(0x02, (u8)addr);
-    IO::out8(0x02, (u8)(addr >> 8));
+    IO::out8(0xc4, (u8)addr);
+    IO::out8(0xc4, (u8)(addr >> 8));
 
     // Write the transfer length
-    IO::out8(0x03, (u8)(length - 1));
-    IO::out8(0x03, (u8)((length - 1) >> 8));
+    IO::out8(0xc6, (u8)(length - 1));
+    IO::out8(0xc6, (u8)((length - 1) >> 8));
 
     // Write the buffer
-    IO::out8(0x83, addr >> 16);
+    IO::out8(0x8b, addr >> 16);
 
     // Enable the DMA channel
-    IO::out8(0x0a, channel);
+    IO::out8(0xd4, (channel % 4));
 }
 
 void SB16::wait_for_irq()
@@ -142,7 +149,6 @@ void SB16::wait_for_irq()
 #ifdef SB16_DEBUG
     kprintf("SB16: got interrupt!\n");
 #endif
-    memory_barrier();
 }
 
 ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
@@ -153,20 +159,24 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     }
 
     kprintf("SB16: Writing buffer of %d bytes\n", length);
+    ASSERT(length <= PAGE_SIZE);
     const int BLOCK_SIZE = 32 * 1024;
     if (length > BLOCK_SIZE) {
         return -ENOSPC;
     }
-    const u8 mode = 0;
+
+    u8 mode = (u8)SampleFormat::Signed;
 
     disable_irq();
     const int sample_rate = 44100;
     set_sample_rate(sample_rate);
-    dma_start(length);
     memcpy(m_dma_buffer_page->paddr().as_ptr(), data, length);
+    dma_start(length);
 
     u8 command = 0x06;
-    command |= 0xc0;
+
+    // Send 16-bit samples.
+    command |= 0xb0;
 
     dsp_write(command);
     dsp_write(mode);
