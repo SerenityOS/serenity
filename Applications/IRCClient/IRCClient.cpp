@@ -267,7 +267,10 @@ void IRCClient::handle(const Message& msg)
         return handle_topic(msg);
 
     if (msg.command == "PRIVMSG")
-        return handle_privmsg(msg);
+        return handle_privmsg_or_notice(msg, PrivmsgOrNotice::Privmsg);
+
+    if (msg.command == "NOTICE")
+        return handle_privmsg_or_notice(msg, PrivmsgOrNotice::Notice);
 
     if (msg.command == "NICK")
         return handle_nick(msg);
@@ -326,7 +329,7 @@ bool IRCClient::is_nick_prefix(char ch) const
     return false;
 }
 
-void IRCClient::handle_privmsg(const Message& msg)
+void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice type)
 {
     if (msg.arguments.size() < 2)
         return;
@@ -337,7 +340,10 @@ void IRCClient::handle_privmsg(const Message& msg)
     auto target = msg.arguments[0];
 
 #ifdef IRC_DEBUG
-    printf("handle_privmsg: sender_nick='%s', target='%s'\n", sender_nick.characters(), target.characters());
+    printf("handle_privmsg_or_notice: type='%s', sender_nick='%s', target='%s'\n",
+        type == PrivmsgOrNotice::Privmsg ? "privmsg" : "notice",
+        sender_nick.characters(),
+        target.characters());
 #endif
 
     if (sender_nick.is_empty())
