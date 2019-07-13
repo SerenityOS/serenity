@@ -23,6 +23,11 @@ public:
         ++m_size;
     }
 
+    void enqueue(const T& value)
+    {
+        enqueue(T(value));
+    }
+
     T dequeue()
     {
         ASSERT(!is_empty());
