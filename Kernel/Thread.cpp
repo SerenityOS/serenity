@@ -181,6 +181,9 @@ const char* to_string(Thread::State state)
         return "Receive";
     case Thread::BlockedSnoozing:
         return "Snoozing";
+    case Thread::__Begin_Blocked_States__:
+    case Thread::__End_Blocked_States__:
+        break;
     }
     kprintf("to_string(Thread::State): Invalid state: %u\n", state);
     ASSERT_NOT_REACHED();

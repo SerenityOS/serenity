@@ -61,6 +61,8 @@ public:
         Dying,
         Dead,
         Stopped,
+
+        __Begin_Blocked_States__,
         BlockedLurking,
         BlockedSleep,
         BlockedWait,
@@ -71,6 +73,7 @@ public:
         BlockedConnect,
         BlockedReceive,
         BlockedSnoozing,
+        __End_Blocked_States__
     };
 
     void did_schedule() { ++m_times_scheduled; }
@@ -79,7 +82,7 @@ public:
     bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const
     {
-        return m_state == BlockedSleep || m_state == BlockedWait || m_state == BlockedRead || m_state == BlockedWrite || m_state == BlockedSignal || m_state == BlockedSelect;
+        return m_state > __Begin_Blocked_States__ && m_state < __End_Blocked_States__;
     }
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
