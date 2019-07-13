@@ -58,17 +58,17 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
 
     auto* sst = (Sample*)stream;
     for (int i = 0; i < m_sample_count; ++i) {
-        static const double VOLUME = 3000;
+        static const double volume = 1800;
         for (size_t n = 0; n < (sizeof(m_note_on) / sizeof(bool)); ++n) {
             if (!m_note_on[n])
                 continue;
             double val = 0;
             if (m_wave_type == WaveType::Sine)
-                val = ((VOLUME * m_power[n]) * w_sine(n));
+                val = ((volume * m_power[n]) * w_sine(n));
             else if (m_wave_type == WaveType::Saw)
-                val = ((VOLUME * m_power[n]) * w_saw(n));
+                val = ((volume * m_power[n]) * w_saw(n));
             else if (m_wave_type == WaveType::Square)
-                val = ((VOLUME * m_power[n]) * w_square(n));
+                val = ((volume * m_power[n]) * w_square(n));
             if (sst[i].left == 0)
                 sst[i].left = val;
             else
