@@ -63,7 +63,7 @@ DEFINES += -DUSERLAND -DSERENITY_LIBC_BUILD
 
 all: $(LIBRARY) startfiles
 
-startfiles:
+startfiles: $(ASM_OBJS)
 	@echo "CXX crt0.o"; $(CXX) $(CXXFLAGS) -o crt0.o -c crt0.cpp
 	cp crti.ao crti.o
 	cp crtn.ao crtn.o
