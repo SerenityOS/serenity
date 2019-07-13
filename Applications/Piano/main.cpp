@@ -25,6 +25,8 @@ int main(int argc, char** argv)
 
     window->show();
 
+    window->set_icon_path("/res/icons/16x16/app-piano.png");
+
     CNotifier notifier(s_pipefds[0], CNotifier::Read);
     notifier.on_ready_to_read = [&] {
         char buffer[32];
