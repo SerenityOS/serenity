@@ -154,11 +154,15 @@ void SB16::wait_for_irq()
 ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
 {
     if (!m_dma_buffer_page) {
+#ifdef SB16_DEBUG
         kprintf("SB16: Allocating page\n");
+#endif
         m_dma_buffer_page = MM.allocate_supervisor_physical_page();
     }
 
+#ifdef SB16_DEBUG
     kprintf("SB16: Writing buffer of %d bytes\n", length);
+#endif
     ASSERT(length <= PAGE_SIZE);
     const int BLOCK_SIZE = 32 * 1024;
     if (length > BLOCK_SIZE) {
