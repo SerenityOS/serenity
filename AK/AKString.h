@@ -219,6 +219,12 @@ struct Traits<String> : public GenericTraits<String> {
     static void dump(const String& s) { kprintf("%s", s.characters()); }
 };
 
+struct CaseInsensitiveStringTraits : public AK::Traits<String> {
+    static unsigned hash(const String& s) { return s.impl() ? s.to_lowercase().impl()->hash() : 0; }
+    static bool equals(const String& a, const String& b) { return a.to_lowercase() == b.to_lowercase(); }
+
+};
+
 inline bool operator<(const char* characters, const String& string)
 {
     if (!characters)
@@ -254,3 +260,4 @@ inline bool operator<=(const char* characters, const String& string)
 }
 
 using AK::String;
+using AK::CaseInsensitiveStringTraits;

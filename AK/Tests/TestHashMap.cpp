@@ -32,5 +32,14 @@ int main()
     EXPECT(number_to_string.find(3) == number_to_string.end());
 
     EXPECT_EQ(loop_counter, 3);
+
+    {
+        HashMap<String, int, CaseInsensitiveStringTraits> casemap;
+        EXPECT_EQ(String("nickserv").to_lowercase(), String("NickServ").to_lowercase());
+        casemap.set("nickserv", 3);
+        casemap.set("NickServ", 3);
+        EXPECT_EQ(casemap.size(), 1);
+    }
+
     return 0;
 }
