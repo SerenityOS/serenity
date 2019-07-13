@@ -72,6 +72,7 @@ GWindow* make_launcher_window()
     int launcher_size = (config->groups().size() - 1) * 50;
     window->set_rect(50, 50, vertical ? 50 : launcher_size, vertical ? launcher_size : 50);
     window->set_show_titlebar(false);
+    window->set_window_type(GWindowType::Launcher);
 
     auto* widget = new GWidget;
     widget->set_fill_with_background_color(true);
