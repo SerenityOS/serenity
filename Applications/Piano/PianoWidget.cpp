@@ -8,6 +8,8 @@ PianoWidget::PianoWidget()
 {
     memset(keys, 0, sizeof(keys));
     m_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, { m_width, m_height });
+    m_front_buffer = new Sample[2048];
+    m_back_buffer = new Sample[2048];
 }
 
 PianoWidget::~PianoWidget()
@@ -18,16 +20,44 @@ void PianoWidget::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
-    painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
+
+    painter.fill_rect(event.rect(), Color::Black);
+
+    auto* samples = m_front_buffer;
+    Color wave_color;
+    if (m_wave_type == WaveType::Sine)
+        wave_color = Color(255, 192, 0);
+    else if (m_wave_type == WaveType::Saw)
+        wave_color = Color(240, 100, 128);
+    else if (m_wave_type == WaveType::Square)
+        wave_color = Color(128, 160, 255);
+
+    int prev_x = 0;
+    int prev_y = m_height / 2;
+    for (int x = 0; x < m_sample_count; ++x) {
+        double val = samples[x].left;
+        val /= 32768;
+        val *= m_height * 2;
+        int y = (m_height / 2) + val;
+        if (x == 0)
+            painter.set_pixel({ x, y }, wave_color);
+        else
+            painter.draw_line({ prev_x, prev_y }, { x, y }, wave_color);
+        prev_x = x;
+        prev_y = y;
+    }
+
+    render_piano(painter);
+    render_knobs(painter);
 }
 
 void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
 {
-    size_t sample_count = len / sizeof(Sample);
+    m_sample_count = len / sizeof(Sample);
     memset(stream, 0, len);
 
-    Sample* sst = (Sample*)stream;
-    for (size_t i = 0; i < sample_count; ++i) {
+    auto* sst = (Sample*)stream;
+    for (int i = 0; i < m_sample_count; ++i) {
         static const double VOLUME = 3000;
         for (size_t n = 0; n < (sizeof(m_note_on) / sizeof(bool)); ++n) {
             if (!m_note_on[n])
@@ -58,52 +88,24 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
     static Queue<Sample*> delay_frames;
     static const int delay_length_in_frames = 50;
 
-    //assert((int)sample_count == m_width);
-
     if (m_delay_enabled) {
         if (delay_frames.size() >= delay_length_in_frames) {
             auto* to_blend = delay_frames.dequeue();
-            for (size_t i = 0; i < sample_count; ++i) {
+            for (int i = 0; i < m_sample_count; ++i) {
                 sst[i].left += to_blend[i].left * 0.333333;
                 sst[i].right += to_blend[i].right * 0.333333;
             }
             delete[] to_blend;
         }
-        Sample* frame = new Sample[sample_count];
-        memcpy(frame, sst, sample_count * sizeof(Sample));
+        Sample* frame = new Sample[m_sample_count];
+        memcpy(frame, sst, m_sample_count * sizeof(Sample));
 
         delay_frames.enqueue(frame);
     }
 
-    GPainter painter(*m_bitmap);
-    painter.fill_rect(m_bitmap->rect(), Color::Black);
-
-    Sample* samples = (Sample*)stream;
-    Color wave_color;
-    if (m_wave_type == WaveType::Sine)
-        wave_color = Color(255, 192, 0);
-    else if (m_wave_type == WaveType::Saw)
-        wave_color = Color(240, 100, 128);
-    else if (m_wave_type == WaveType::Square)
-        wave_color = Color(128, 160, 255);
-
-    int prev_x = 0;
-    int prev_y = m_height / 2;
-    for (int x = 0; x < (int)sample_count; ++x) {
-        double val = samples[x].left;
-        val /= 32768;
-        val *= m_height * 2;
-        int y = (m_height / 2) + val;
-        if (x == 0)
-            painter.set_pixel({ x, y }, wave_color);
-        else
-            painter.draw_line({ prev_x, prev_y }, { x, y }, wave_color);
-        prev_x = x;
-        prev_y = y;
-    }
-
-    render_piano(painter);
-    render_knobs(painter);
+    ASSERT(len <= 2048 * (int)sizeof(Sample));
+    memcpy(m_back_buffer, (Sample*)stream, len);
+    swap(m_front_buffer, m_back_buffer);
 }
 
 double PianoWidget::w_sine(size_t n)
@@ -350,4 +352,13 @@ void PianoWidget::render_knobs(GPainter& painter)
         wave_name = "C: Square  ";
     painter.draw_rect(wave_knob_rect, Color(r, g, b));
     painter.draw_text(wave_knob_rect, wave_name, TextAlignment::Center, Color(r, g, b));
+}
+
+void PianoWidget::event(CEvent& event)
+{
+    if (event.type() == CEvent::Custom) {
+        dbg() << "Piano got custom event!";
+        update();
+    }
+    GWidget::event(event);
 }
