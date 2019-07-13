@@ -17,6 +17,14 @@ public:
     {
     }
 
+    static CSocketAddress local(const String& address)
+    {
+        CSocketAddress addr;
+        addr.m_type = Type::Local;
+        addr.m_local_address = address;
+        return addr;
+    }
+
     Type type() const { return m_type; }
     bool is_valid() const { return m_type != Type::Invalid; }
     IPv4Address ipv4_address() const { return m_ipv4_address; }
@@ -26,6 +34,8 @@ public:
         switch (m_type) {
         case Type::IPv4:
             return m_ipv4_address.to_string();
+        case Type::Local:
+            return m_local_address;
         default:
             return "[CSocketAddress]";
         }
@@ -34,4 +44,5 @@ public:
 private:
     Type m_type { Type::Invalid };
     IPv4Address m_ipv4_address;
+    String m_local_address;
 };

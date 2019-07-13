@@ -10,12 +10,14 @@ public:
     enum class Type {
         Invalid,
         TCP,
-        UDP
+        UDP,
+        Local,
     };
     virtual ~CSocket() override;
 
     bool connect(const String& hostname, int port);
     bool connect(const CSocketAddress&, int port);
+    bool connect(const CSocketAddress&);
 
     ByteBuffer receive(int max_size);
     bool send(const ByteBuffer&);
