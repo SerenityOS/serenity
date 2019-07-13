@@ -588,7 +588,7 @@ void IRCClient::unregister_subwindow(IRCWindow& subwindow)
 
 void IRCClient::handle_user_command(const String& input)
 {
-    auto parts = input.split(' ');
+    auto parts = input.split_view(' ');
     if (parts.is_empty())
         return;
     auto command = String(parts[0]).to_uppercase();
@@ -612,6 +612,15 @@ void IRCClient::handle_user_command(const String& input)
             auto& query = ensure_query(parts[1]);
             IRCAppWindow::the().set_active_window(query.window());
         }
+        return;
+    }
+    if (command == "/MSG") {
+        if (parts.size() < 3)
+            return;
+        auto nick = parts[1];
+        auto& query = ensure_query(nick);
+        IRCAppWindow::the().set_active_window(query.window());
+        query.say(input.view().substring_view_starting_after_substring(nick));
         return;
     }
     if (command == "/WHOIS") {
