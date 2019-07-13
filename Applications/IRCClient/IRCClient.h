@@ -128,8 +128,8 @@ private:
 
     String m_nickname;
     OwnPtr<CNotifier> m_notifier;
-    HashMap<String, RefPtr<IRCChannel>> m_channels;
-    HashMap<String, RefPtr<IRCQuery>> m_queries;
+    HashMap<String, RefPtr<IRCChannel>, CaseInsensitiveStringTraits> m_channels;
+    HashMap<String, RefPtr<IRCQuery>, CaseInsensitiveStringTraits> m_queries;
 
     Vector<IRCWindow*> m_windows;
 
