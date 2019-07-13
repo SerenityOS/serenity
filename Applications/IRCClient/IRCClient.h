@@ -60,6 +60,15 @@ public:
     const IRCWindow& window_at(int index) const { return *m_windows.at(index); }
     IRCWindow& window_at(int index) { return *m_windows.at(index); }
 
+    int window_index(const IRCWindow& window) const
+    {
+        for (int i = 0; i < m_windows.size(); ++i) {
+            if (m_windows[i] == &window)
+                return i;
+        }
+        return -1;
+    }
+
     void did_part_from_channel(Badge<IRCChannel>, IRCChannel&);
 
     void handle_user_input_in_channel(const String& channel_name, const String&);

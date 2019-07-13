@@ -1,3 +1,4 @@
+#include "IRCAppWindow.h"
 #include "IRCClient.h"
 #include "IRCChannel.h"
 #include "IRCLogBuffer.h"
@@ -607,8 +608,10 @@ void IRCClient::handle_user_command(const String& input)
         return;
     }
     if (command == "/QUERY") {
-        if (parts.size() >= 2)
-            ensure_query(parts[1]);
+        if (parts.size() >= 2) {
+            auto& query = ensure_query(parts[1]);
+            IRCAppWindow::the().set_active_window(query.window());
+        }
         return;
     }
     if (command == "/WHOIS") {

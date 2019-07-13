@@ -22,8 +22,6 @@ public:
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
-    Function<void(IRCWindow&)> on_activation;
-
 private:
     explicit IRCWindowListModel(IRCClient&);
 

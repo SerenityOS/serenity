@@ -15,8 +15,18 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+static IRCAppWindow* s_the;
+
+IRCAppWindow& IRCAppWindow::the()
+{
+    return *s_the;
+}
+
 IRCAppWindow::IRCAppWindow()
 {
+    ASSERT(!s_the);
+    s_the = this;
+
     update_title();
     set_rect(200, 200, 600, 400);
     setup_actions();
@@ -166,9 +176,7 @@ void IRCAppWindow::setup_widgets()
     m_window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_window_list->set_preferred_size({ 100, 0 });
     m_window_list->on_activation = [this](auto& index) {
-        auto& window = m_client.window_at(index.row());
-        m_container->set_active_widget(&window);
-        window.clear_unread_count();
+        set_active_window(m_client.window_at(index.row()));
     };
 
     m_container = new GStackWidget(horizontal_container);
@@ -177,6 +185,14 @@ void IRCAppWindow::setup_widgets()
     };
 
     create_window(&m_client, IRCWindow::Server, "Server");
+}
+
+void IRCAppWindow::set_active_window(IRCWindow& window)
+{
+    m_container->set_active_widget(&window);
+    window.clear_unread_count();
+    auto index = m_window_list->model()->index(m_client.window_index(window));
+    m_window_list->model()->set_selected_index(index);
 }
 
 void IRCAppWindow::update_part_action()
