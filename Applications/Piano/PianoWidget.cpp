@@ -7,7 +7,6 @@
 PianoWidget::PianoWidget()
 {
     memset(keys, 0, sizeof(keys));
-    m_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, { m_width, m_height });
     m_front_buffer = new Sample[2048];
     m_back_buffer = new Sample[2048];
 }
@@ -352,13 +351,4 @@ void PianoWidget::render_knobs(GPainter& painter)
         wave_name = "C: Square  ";
     painter.draw_rect(wave_knob_rect, Color(r, g, b));
     painter.draw_text(wave_knob_rect, wave_name, TextAlignment::Center, Color(r, g, b));
-}
-
-void PianoWidget::event(CEvent& event)
-{
-    if (event.type() == CEvent::Custom) {
-        dbg() << "Piano got custom event!";
-        update();
-    }
-    GWidget::event(event);
 }

@@ -10,14 +10,12 @@ public:
     PianoWidget();
     virtual ~PianoWidget() override;
 
-
     void fill_audio_buffer(uint8_t* stream, int len);
 
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void keyup_event(GKeyEvent&) override;
-    virtual void event(CEvent&) override;
 
     double w_sine(size_t);
     double w_saw(size_t);
@@ -35,8 +33,6 @@ private:
     int m_sample_count { 0 };
     Sample* m_front_buffer { nullptr };
     Sample* m_back_buffer { nullptr };
-
-    RefPtr<GraphicsBitmap> m_bitmap;
 
 #define note_count sizeof(note_frequency) / sizeof(double)
 
