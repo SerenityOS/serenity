@@ -8,7 +8,7 @@ MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 SERENITY_BASE_DIR := $(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
 
 INCLUDE_FLAGS = -I$(SERENITY_BASE_DIR) -I$(SERENITY_BASE_DIR)/Libraries -I. -I$(SERENITY_BASE_DIR)/Libraries/LibC -I$(SERENITY_BASE_DIR)/Servers -I$(SERENITY_BASE_DIR)/Libraries/LibM
-LDFLAGS = -L$(SERENITY_BASE_DIR)/Libraries/LibC -L$(SERENITY_BASE_DIR)/Libraries/LibCore -L$(SERENITY_BASE_DIR)/Libraries/LibM -L$(SERENITY_BASE_DIR)/Libraries/LibGUI
+LDFLAGS = -L$(SERENITY_BASE_DIR)/Libraries/LibC -L$(SERENITY_BASE_DIR)/Libraries/LibCore -L$(SERENITY_BASE_DIR)/Libraries/LibM -L$(SERENITY_BASE_DIR)/Libraries/LibGUI -L$(SERENITY_BASE_DIR)/Libraries/LibAudio
 CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)

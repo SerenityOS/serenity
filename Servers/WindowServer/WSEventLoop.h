@@ -2,6 +2,8 @@
 
 #include <AK/ByteBuffer.h>
 #include <LibCore/CEventLoop.h>
+#include <LibCore/CNotifier.h>
+#include <LibCore/CLocalSocket.h>
 
 class WSClientConnection;
 struct WSAPI_ClientMessage;
@@ -25,5 +27,6 @@ private:
 
     int m_keyboard_fd { -1 };
     int m_mouse_fd { -1 };
-    int m_server_fd { -1 };
+    CLocalSocket m_server_sock;
+    OwnPtr<CNotifier> m_server_notifier;
 };

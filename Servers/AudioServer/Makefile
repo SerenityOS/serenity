@@ -11,7 +11,7 @@ DEFINES += -DUSERLAND
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore -laudio
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

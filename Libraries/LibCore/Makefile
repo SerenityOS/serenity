@@ -5,6 +5,7 @@ OBJS = \
     CIODevice.o \
     CFile.o \
     CSocket.o \
+    CLocalSocket.o \
     CTCPSocket.o \
     CElapsedTimer.o \
     CNotifier.o \

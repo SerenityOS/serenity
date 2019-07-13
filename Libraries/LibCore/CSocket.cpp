@@ -35,6 +35,8 @@ bool CSocket::connect(const CSocketAddress& address, int port)
 {
     ASSERT(!is_connected());
     ASSERT(address.type() == CSocketAddress::Type::IPv4);
+    dbgprintf("Connecting to %s...", address.to_string().characters());
+
     ASSERT(port > 0 && port <= 65535);
 
     struct sockaddr_in addr;
@@ -47,7 +49,6 @@ bool CSocket::connect(const CSocketAddress& address, int port)
     m_destination_address = address;
     m_destination_port = port;
 
-    dbgprintf("Connecting to %s...", address.to_string().characters());
     fflush(stdout);
     int rc = ::connect(fd(), (struct sockaddr*)&addr, sizeof(addr));
     if (rc < 0) {
@@ -67,6 +68,26 @@ bool CSocket::connect(const CSocketAddress& address, int port)
         exit(1);
     }
     dbgprintf("ok!\n");
+    m_connected = true;
+    return true;
+}
+
+bool CSocket::connect(const CSocketAddress& address)
+{
+    ASSERT(!is_connected());
+    ASSERT(address.type() == CSocketAddress::Type::Local);
+    dbgprintf("Connecting to %s...", address.to_string().characters());
+
+    sockaddr_un saddr;
+    saddr.sun_family = AF_LOCAL;
+    strcpy(saddr.sun_path, address.to_string().characters());
+
+    int rc = ::connect(fd(), (const sockaddr*)&saddr, sizeof(saddr));
+    if (rc < 0) {
+        perror("connect");
+        return false;
+    }
+
     m_connected = true;
     return true;
 }
