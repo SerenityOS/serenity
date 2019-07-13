@@ -1,5 +1,6 @@
-#include "SB16.h"
-#include "IO.h"
+#include <Kernel/Devices/SB16.h>
+#include <Kernel/IO.h>
+#include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 
 //#define SB16_DEBUG
@@ -48,6 +49,7 @@ static SB16* s_the;
 SB16::SB16()
     : IRQHandler(5)
     , CharacterDevice(42, 42) // ### ?
+    , m_interrupt_alarm(*this)
 {
     s_the = this;
     initialize();
@@ -141,11 +143,7 @@ void SB16::wait_for_irq()
 #ifdef SB16_DEBUG
     kprintf("SB16: waiting for interrupt...\n");
 #endif
-    // FIXME: Add timeout.
-    while (!m_interrupted) {
-        // FIXME: Put this process into a Blocked state instead, it's stupid to wake up just to check a flag.
-        Scheduler::yield();
-    }
+    current->snooze_until(m_interrupt_alarm);
 #ifdef SB16_DEBUG
     kprintf("SB16: got interrupt!\n");
 #endif
@@ -195,4 +193,9 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     enable_irq();
     wait_for_irq();
     return length;
+}
+
+bool SB16InterruptAlarm::is_ringing() const
+{
+    return m_device.got_interrupt({});
 }
