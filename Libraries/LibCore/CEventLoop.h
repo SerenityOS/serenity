@@ -6,11 +6,11 @@
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CLock.h>
+#include <LibCore/CEvent.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <time.h>
 
-class CEvent;
 class CObject;
 class CNotifier;
 

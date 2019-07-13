@@ -26,18 +26,20 @@ WSEventLoop::WSEventLoop()
 
     unlink("/tmp/wsportal");
 
-    m_server_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
-    ASSERT(m_server_fd >= 0);
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
     strcpy(address.sun_path, "/tmp/wsportal");
-    int rc = bind(m_server_fd, (const sockaddr*)&address, sizeof(address));
+    int rc = bind(m_server_sock.fd(), (const sockaddr*)&address, sizeof(address));
     ASSERT(rc == 0);
-    rc = listen(m_server_fd, 5);
+    rc = listen(m_server_sock.fd(), 5);
     ASSERT(rc == 0);
 
+    ASSERT(m_server_sock.fd() >= 0);
     ASSERT(m_keyboard_fd >= 0);
     ASSERT(m_mouse_fd >= 0);
+
+    m_server_notifier = make<CNotifier>(m_server_sock.fd(), CNotifier::Read);
+    m_server_notifier->on_ready_to_read = [this] { drain_server(); };
 }
 
 WSEventLoop::~WSEventLoop()
@@ -48,7 +50,7 @@ void WSEventLoop::drain_server()
 {
     sockaddr_un address;
     socklen_t address_size = sizeof(address);
-    int client_fd = accept(m_server_fd, (sockaddr*)&address, &address_size);
+    int client_fd = accept(m_server_sock.fd(), (sockaddr*)&address, &address_size);
     if (client_fd < 0) {
         dbgprintf("WindowServer: accept() failed: %s\n", strerror(errno));
     } else {
@@ -333,7 +335,6 @@ void WSEventLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added
     };
     add_fd_to_set(m_keyboard_fd, fds);
     add_fd_to_set(m_mouse_fd, fds);
-    add_fd_to_set(m_server_fd, fds);
     WSClientConnection::for_each_client([&](WSClientConnection& client) {
         add_fd_to_set(client.fd(), fds);
     });
@@ -341,8 +342,6 @@ void WSEventLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added
 
 void WSEventLoop::process_file_descriptors_after_select(const fd_set& fds)
 {
-    if (FD_ISSET(m_server_fd, &fds))
-        drain_server();
     if (FD_ISSET(m_keyboard_fd, &fds))
         drain_keyboard();
     if (FD_ISSET(m_mouse_fd, &fds))

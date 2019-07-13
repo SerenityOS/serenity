@@ -2,6 +2,7 @@
 #include "PianoWidget.h"
 #include <LibCore/CFile.h>
 #include <LibCore/CNotifier.h>
+#include <LibAudio/AClientConnection.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GEventLoop.h>
 #include <LibGUI/GWindow.h>
@@ -10,6 +11,7 @@ static int s_pipefds[2];
 
 int main(int argc, char** argv)
 {
+    AClientConnection audio_connection;
     GApplication app(argc, argv);
 
     pipe(s_pipefds);
