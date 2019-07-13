@@ -66,14 +66,14 @@ SB16& SB16::the()
 
 void SB16::handle_irq()
 {
-    m_interrupted = true;
-
     // Stop sound output ready for the next block.
-    dsp_write(0xd0);
+    dsp_write(0xd5);
 
     IO::in8(DSP_STATUS); // 8 bit interrupt
     if (m_major_version >= 4)
         IO::in8(DSP_R_ACK); // 16 bit interrupt
+
+    m_interrupted = true;
 }
 
 void SB16::initialize()
