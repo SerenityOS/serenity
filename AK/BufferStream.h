@@ -14,7 +14,7 @@ public:
 
     void operator<<(u8 value)
     {
-        m_buffer[m_offset++] = value & 0xffu;
+        m_buffer[m_offset++] = value;
     }
 
     void operator<<(char value)
@@ -24,16 +24,16 @@ public:
 
     void operator<<(u16 value)
     {
-        m_buffer[m_offset++] = value & 0xffu;
-        m_buffer[m_offset++] = (u8)(value >> 8) & 0xffu;
+        m_buffer[m_offset++] = value;
+        m_buffer[m_offset++] = (u8)(value >> 8);
     }
 
     void operator<<(u32 value)
     {
-        m_buffer[m_offset++] = value & 0xffu;
-        m_buffer[m_offset++] = (u8)(value >> 8) & 0xffu;
-        m_buffer[m_offset++] = (u8)(value >> 16) & 0xffu;
-        m_buffer[m_offset++] = (u8)(value >> 24) & 0xffu;
+        m_buffer[m_offset++] = value;
+        m_buffer[m_offset++] = (u8)(value >> 8);
+        m_buffer[m_offset++] = (u8)(value >> 16);
+        m_buffer[m_offset++] = (u8)(value >> 24);
     }
 
     void operator<<(const StringView& value)
