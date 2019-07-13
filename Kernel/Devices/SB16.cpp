@@ -165,7 +165,7 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
         return -ENOSPC;
     }
 
-    u8 mode = (u8)SampleFormat::Signed;
+    u8 mode = (u8)SampleFormat::Signed | (u8)SampleFormat::Stereo;
 
     disable_irq();
     const int sample_rate = 44100;
