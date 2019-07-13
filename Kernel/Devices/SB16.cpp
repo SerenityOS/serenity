@@ -174,14 +174,19 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     dma_start(length);
 
     u8 command = 0x06;
-
     // Send 16-bit samples.
     command |= 0xb0;
 
+    u16 sample_count = length / sizeof(i16);
+    if (mode & (u8)SampleFormat::Stereo)
+        sample_count /= 2;
+
+    sample_count -= 1;
+
     dsp_write(command);
     dsp_write(mode);
-    dsp_write((u8)length);
-    dsp_write((u8)(length >> 8));
+    dsp_write((u8)sample_count);
+    dsp_write((u8)(sample_count >> 8));
 
     enable_irq();
     wait_for_irq();
