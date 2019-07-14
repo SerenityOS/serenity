@@ -3,6 +3,10 @@
 #include <AK/Types.h>
 
 #define WNOHANG 1
+#define WUNTRACED 2
+#define WSTOPPED WUNTRACED
+#define WEXITED 4
+#define WCONTINUED 8
 
 #define R_OK 4
 #define W_OK 2

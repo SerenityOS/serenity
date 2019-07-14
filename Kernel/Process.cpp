@@ -1393,8 +1393,12 @@ int Process::reap(Process& process)
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
     dbgprintf("sys$waitpid(%d, %p, %d)\n", waitee, wstatus, options);
-    // FIXME: Respect options
-    (void)options;
+
+    if (!options) {
+        // FIXME: This can't be right.. can it? Figure out how this should actually work.
+        options = WEXITED;
+    }
+
     if (wstatus)
         if (!validate_write_typed(wstatus))
             return -EFAULT;
@@ -1409,6 +1413,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     }
 
     if (options & WNOHANG) {
+        // FIXME: Figure out what WNOHANG should do with stopped children.
         if (waitee == -1) {
             pid_t reaped_pid = 0;
             InterruptDisabler disabler;
@@ -1417,7 +1422,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
                     reaped_pid = process.pid();
                     exit_status = reap(process);
                 }
-                return true;
+                return IterationDecision::Continue;
             });
             return reaped_pid;
         } else {
@@ -1435,17 +1440,22 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     }
 
     current->m_waitee_pid = waitee;
+    current->m_wait_options = options;
     current->block(Thread::State::BlockedWait);
     if (current->m_was_interrupted_while_blocked)
         return -EINTR;
-    Process* waitee_process;
-    {
-        InterruptDisabler disabler;
-        // NOTE: If waitee was -1, m_waitee will have been filled in by the scheduler.
-        waitee_process = Process::from_pid(current->m_waitee_pid);
-    }
+
+    InterruptDisabler disabler;
+
+    // NOTE: If waitee was -1, m_waitee_pid will have been filled in by the scheduler.
+    Process* waitee_process = Process::from_pid(current->m_waitee_pid);
     ASSERT(waitee_process);
-    exit_status = reap(*waitee_process);
+    if (waitee_process->is_dead()) {
+        exit_status = reap(*waitee_process);
+    } else {
+        ASSERT(waitee_process->main_thread().state() == Thread::State::Stopped);
+        exit_status = 0x7f;
+    }
     return current->m_waitee_pid;
 }
 

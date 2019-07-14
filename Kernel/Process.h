@@ -411,7 +411,7 @@ inline void Process::for_each_child(Callback callback)
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
         if (process->ppid() == my_pid) {
-            if (!callback(*process))
+            if (callback(*process) == IterationDecision::Break)
                 break;
         }
         process = next_process;

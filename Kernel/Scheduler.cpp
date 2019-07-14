@@ -83,14 +83,21 @@ bool Scheduler::pick_next()
 
         if (thread.state() == Thread::BlockedWait) {
             process.for_each_child([&](Process& child) {
-                if (!child.is_dead())
-                    return true;
-                if (thread.waitee_pid() == -1 || thread.waitee_pid() == child.pid()) {
-                    thread.m_waitee_pid = child.pid();
-                    thread.unblock();
-                    return false;
-                }
-                return true;
+                if (thread.waitee_pid() != -1 && thread.waitee_pid() != child.pid())
+                    return IterationDecision::Continue;
+
+                bool child_exited = child.is_dead();
+                bool child_stopped = child.main_thread().state() == Thread::State::Stopped;
+
+                bool wait_finished = ((thread.m_wait_options & WEXITED) && child_exited)
+                    || ((thread.m_wait_options & WSTOPPED) && child_stopped);
+
+                if (!wait_finished)
+                    return IterationDecision::Continue;
+
+                thread.m_waitee_pid = child.pid();
+                thread.unblock();
+                return IterationDecision::Break;
             });
             return IterationDecision::Continue;
         }

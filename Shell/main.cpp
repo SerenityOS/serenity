@@ -488,7 +488,7 @@ static int run_command(const String& cmd)
     for (int i = 0; i < children.size(); ++i) {
         auto& child = children[i];
         do {
-            int rc = waitpid(child.pid, &wstatus, 0);
+            int rc = waitpid(child.pid, &wstatus, WEXITED | WSTOPPED);
             if (rc < 0 && errno != EINTR) {
                 if (errno != ECHILD)
                     perror("waitpid");
@@ -499,6 +499,8 @@ static int run_command(const String& cmd)
                     printf("Shell: %s(%d) exited with status %d\n", child.name.characters(), child.pid, WEXITSTATUS(wstatus));
                 if (i == 0)
                     return_value = WEXITSTATUS(wstatus);
+            } else if (WIFSTOPPED(wstatus)) {
+                printf("Shell: %s(%d) stopped.\n", child.name.characters(), child.pid);
             } else {
                 if (WIFSIGNALED(wstatus)) {
                     printf("Shell: %s(%d) exited due to signal '%s'\n", child.name.characters(), child.pid, strsignal(WTERMSIG(wstatus)));
