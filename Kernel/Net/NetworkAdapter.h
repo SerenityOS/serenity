@@ -4,26 +4,12 @@
 #include <AK/Function.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
-#include <Kernel/Alarm.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/MACAddress.h>
 
 class NetworkAdapter;
-
-class PacketQueueAlarm final : public Alarm {
-public:
-    PacketQueueAlarm(NetworkAdapter& adapter)
-        : m_adapter(adapter)
-    {
-    }
-    virtual ~PacketQueueAlarm() override {}
-    virtual bool is_ringing() const override;
-
-private:
-    NetworkAdapter& m_adapter;
-};
 
 class NetworkAdapter {
 public:
@@ -44,8 +30,6 @@ public:
 
     ByteBuffer dequeue_packet();
 
-    Alarm& packet_queue_alarm() { return m_packet_queue_alarm; }
-
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 
 protected:
@@ -58,7 +42,6 @@ protected:
 private:
     MACAddress m_mac_address;
     IPv4Address m_ipv4_address;
-    PacketQueueAlarm m_packet_queue_alarm;
     SinglyLinkedList<ByteBuffer> m_packet_queue;
     String m_name;
 };

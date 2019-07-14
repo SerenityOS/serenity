@@ -33,7 +33,6 @@ NetworkAdapter* NetworkAdapter::from_ipv4_address(const IPv4Address& address)
 }
 
 NetworkAdapter::NetworkAdapter()
-    : m_packet_queue_alarm(*this)
 {
     // FIXME: I wanna lock :(
     all_adapters().resource().set(this);
@@ -105,9 +104,4 @@ void NetworkAdapter::set_interface_name(const StringView& basename)
     builder.append(basename);
     builder.append('0');
     m_name = builder.to_string();
-}
-
-bool PacketQueueAlarm::is_ringing() const
-{
-    return m_adapter.has_queued_packets();
 }

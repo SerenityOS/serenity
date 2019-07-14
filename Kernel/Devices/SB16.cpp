@@ -49,7 +49,6 @@ static SB16* s_the;
 SB16::SB16()
     : IRQHandler(5)
     , CharacterDevice(42, 42) // ### ?
-    , m_interrupt_alarm(*this)
 {
     s_the = this;
     initialize();
@@ -144,7 +143,7 @@ void SB16::wait_for_irq()
 #ifdef SB16_DEBUG
     kprintf("SB16: waiting for interrupt...\n");
 #endif
-    current->snooze_until(m_interrupt_alarm);
+    current->block_until([this] { return m_interrupted; });
 #ifdef SB16_DEBUG
     kprintf("SB16: got interrupt!\n");
 #endif
@@ -194,9 +193,4 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     enable_irq();
     wait_for_irq();
     return length;
-}
-
-bool SB16InterruptAlarm::is_ringing() const
-{
-    return m_device.got_interrupt({});
 }
