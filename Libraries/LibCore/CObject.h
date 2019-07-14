@@ -99,3 +99,8 @@ inline void CObject::for_each_child_of_type(Callback callback)
         return IterationDecision::Continue;
     });
 }
+
+inline const LogStream& operator<<(const LogStream& stream, const CObject& object)
+{
+    return stream << object.class_name() << '{' << &object << '}';
+}
