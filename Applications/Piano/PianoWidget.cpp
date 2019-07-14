@@ -354,3 +354,11 @@ void PianoWidget::render_knobs(GPainter& painter)
     painter.draw_rect(wave_knob_rect, Color(r, g, b));
     painter.draw_text(wave_knob_rect, wave_name, TextAlignment::Center, Color(r, g, b));
 }
+
+void PianoWidget::event(CEvent& event)
+{
+    if (event.type() == CEvent::Custom) {
+        update();
+    }
+    GWidget::event(event);
+}

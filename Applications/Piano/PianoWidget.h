@@ -16,6 +16,7 @@ private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void keyup_event(GKeyEvent&) override;
+    virtual void event(CEvent&) override;
 
     double w_sine(size_t);
     double w_saw(size_t);
