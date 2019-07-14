@@ -1,4 +1,5 @@
 #include "TextEditorWidget.h"
+#include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <LibGUI/GAction.h>
@@ -33,17 +34,35 @@ TextEditorWidget::TextEditorWidget()
     });
 
     auto open_action = GAction::create("Open document", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [this](const GAction&) {
-        GFilePicker picker;
+        Optional<String> open_name = GFilePicker::get_open_filepath();
 
-        if (picker.exec() == GDialog::ExecOK) {
-            m_path = picker.selected_file().string();
-            open_sesame(m_path);
-        }
+        if (!open_name.has_value())
+            return;
+
+        m_path = open_name.value();
+        open_sesame(m_path);
     });
 
     auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
-        dbgprintf("Writing document to '%s'\n", m_path.characters());
-        m_editor->write_to_file(m_path);
+        if (!m_path.is_empty()) {
+            if (!m_editor->write_to_file(m_path))
+                GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, window());
+
+            return;
+        }
+
+        Optional<String> save_name = GFilePicker::get_save_filepath();
+        if (!save_name.has_value())
+            return;
+
+        dbgprintf("Writing document to '%s'\n", save_name.value());
+        if (!m_editor->write_to_file(save_name.value())) {
+            GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, window());
+            return;
+        }
+
+        m_path = save_name.value();
+        window()->set_title(String::format("Text Editor: %s", m_path.characters()));
     });
 
     auto menubar = make<GMenuBar>();
@@ -121,5 +140,5 @@ void TextEditorWidget::open_sesame(const String& path)
 
     window()->set_title(String::format("Text Editor: %s", path.characters()));
     m_editor->set_text(String::copy(file.read_all()));
+    m_path = path;
 }
-
