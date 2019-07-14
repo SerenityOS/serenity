@@ -43,9 +43,12 @@ public:
 
     void did_misbehave();
 
+    void on_ready_read();
+
 private:
     virtual void event(CEvent&) override;
 
+    bool handle_message(const WSAPI_ClientMessage& message, ByteBuffer&& extra_data);
     void on_request(const WSAPIClientRequest&);
     void handle_request(const WSAPICreateMenubarRequest&);
     void handle_request(const WSAPIDestroyMenubarRequest&);
