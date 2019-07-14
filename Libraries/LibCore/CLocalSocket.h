@@ -1,3 +1,4 @@
+#pragma once
 #include <LibCore/CSocket.h>
 
 class CLocalSocket final : public CSocket {
