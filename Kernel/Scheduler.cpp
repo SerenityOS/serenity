@@ -1,5 +1,4 @@
 #include <AK/TemporaryChange.h>
-#include <Kernel/Alarm.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -159,9 +158,9 @@ bool Scheduler::pick_next()
             return IterationDecision::Continue;
         }
 
-        if (thread.state() == Thread::BlockedSnoozing) {
-            if (thread.m_snoozing_alarm->is_ringing()) {
-                thread.m_snoozing_alarm = nullptr;
+        if (thread.state() == Thread::BlockedCondition) {
+            if (thread.m_block_until_condition()) {
+                thread.m_block_until_condition = nullptr;
                 thread.unblock();
             }
             return IterationDecision::Continue;

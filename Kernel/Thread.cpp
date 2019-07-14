@@ -108,10 +108,10 @@ void Thread::unblock()
     set_state(Thread::Runnable);
 }
 
-void Thread::snooze_until(Alarm& alarm)
+void Thread::block_until(Function<bool()>&& condition)
 {
-    m_snoozing_alarm = &alarm;
-    block(Thread::BlockedSnoozing);
+    m_block_until_condition = move(condition);
+    block(Thread::BlockedCondition);
     Scheduler::yield();
 }
 
@@ -179,8 +179,8 @@ const char* to_string(Thread::State state)
         return "Connect";
     case Thread::BlockedReceive:
         return "Receive";
-    case Thread::BlockedSnoozing:
-        return "Snoozing";
+    case Thread::BlockedCondition:
+        return "Condition";
     case Thread::__Begin_Blocked_States__:
     case Thread::__End_Blocked_States__:
         break;

@@ -33,22 +33,6 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
     return *the;
 }
 
-class CombinedPacketQueueAlarm : public Alarm {
-public:
-    CombinedPacketQueueAlarm() {}
-
-    virtual bool is_ringing() const override
-    {
-        if (LoopbackAdapter::the().has_queued_packets())
-            return true;
-        if (auto* e1000 = E1000NetworkAdapter::the()) {
-            if (e1000->has_queued_packets())
-                return true;
-        }
-        return false;
-    }
-};
-
 void NetworkTask_main()
 {
     LoopbackAdapter::the();
@@ -71,13 +55,19 @@ void NetworkTask_main()
         return {};
     };
 
-    CombinedPacketQueueAlarm queue_alarm;
-
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
         auto packet = dequeue_packet();
         if (packet.is_null()) {
-            current->snooze_until(queue_alarm);
+            current->block_until([] {
+                if (LoopbackAdapter::the().has_queued_packets())
+                    return true;
+                if (auto* e1000 = E1000NetworkAdapter::the()) {
+                    if (e1000->has_queued_packets())
+                        return true;
+                }
+                return false;
+            });
             continue;
         }
         if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {

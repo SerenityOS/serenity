@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/Function.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
@@ -72,7 +73,7 @@ public:
         BlockedSelect,
         BlockedConnect,
         BlockedReceive,
-        BlockedSnoozing,
+        BlockedCondition,
         __End_Blocked_States__
     };
 
@@ -102,7 +103,7 @@ public:
 
     void set_wakeup_time(u64 t) { m_wakeup_time = t; }
     u64 wakeup_time() const { return m_wakeup_time; }
-    void snooze_until(Alarm&);
+    void block_until(Function<bool()>&&);
     KResult wait_for_connect(FileDescription&);
 
     const FarPtr& far_ptr() const { return m_far_ptr; }
@@ -187,7 +188,7 @@ private:
     timeval m_select_timeout;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };
-    Alarm* m_snoozing_alarm { nullptr };
+    Function<bool()> m_block_until_condition;
     Vector<int> m_select_read_fds;
     Vector<int> m_select_write_fds;
     Vector<int> m_select_exceptional_fds;

@@ -1,25 +1,12 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
-#include <Kernel/Alarm.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 
 class SB16;
-
-class SB16InterruptAlarm final : public Alarm {
-public:
-    SB16InterruptAlarm(SB16& device)
-        : m_device(device)
-    {
-    }
-    virtual bool is_ringing() const override;
-
-private:
-    SB16& m_device;
-};
 
 class SB16 final : public IRQHandler
     , public CharacterDevice {
@@ -34,8 +21,6 @@ public:
     virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
     virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
     virtual bool can_write(FileDescription&) const override { return true; }
-
-    bool got_interrupt(Badge<SB16InterruptAlarm>) const { return m_interrupted; }
 
 private:
     // ^IRQHandler
@@ -54,6 +39,4 @@ private:
     RefPtr<PhysicalPage> m_dma_buffer_page;
     bool m_interrupted { false };
     int m_major_version { 0 };
-
-    SB16InterruptAlarm m_interrupt_alarm;
 };
