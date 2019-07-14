@@ -37,6 +37,8 @@ void CObject::event(CEvent& event)
     case CEvent::Invalid:
         ASSERT_NOT_REACHED();
         break;
+    case CEvent::Custom:
+        return custom_event(static_cast<CCustomEvent&>(event));
     default:
         break;
     }
@@ -67,6 +69,10 @@ void CObject::timer_event(CTimerEvent&)
 }
 
 void CObject::child_event(CChildEvent&)
+{
+}
+
+void CObject::custom_event(CCustomEvent&)
 {
 }
 

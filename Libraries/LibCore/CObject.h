@@ -8,6 +8,7 @@
 
 class CEvent;
 class CChildEvent;
+class CCustomEvent;
 class CTimerEvent;
 
 class CObject : public Weakable<CObject> {
@@ -59,6 +60,7 @@ public:
 protected:
     virtual void timer_event(CTimerEvent&);
     virtual void child_event(CChildEvent&);
+    virtual void custom_event(CCustomEvent&);
 
 private:
     CObject* m_parent { nullptr };
