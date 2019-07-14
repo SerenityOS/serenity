@@ -2631,7 +2631,7 @@ int Process::sys$create_thread(int (*entry)(void*), void* argument)
     thread->make_userspace_stack_for_secondary_thread(argument);
 
     thread->set_state(Thread::State::Runnable);
-    return 0;
+    return thread->tid();
 }
 
 void Process::sys$exit_thread(int code)
