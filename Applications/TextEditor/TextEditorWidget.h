@@ -15,6 +15,6 @@ public:
     void open_sesame(const String& path);
 
 private:
-    GTextEditor* m_editor{ nullptr };
-    String m_path = "/tmp/TextEditor.save.txt";
+    GTextEditor* m_editor { nullptr };
+    String m_path;
 };
