@@ -23,6 +23,7 @@ static Vector<CEventLoop*>* s_event_loop_stack;
 HashMap<int, OwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
 HashTable<CNotifier*>* CEventLoop::s_notifiers;
 int CEventLoop::s_next_timer_id = 1;
+int CEventLoop::s_wake_pipe_fds[2];
 
 CEventLoop::CEventLoop()
 {
@@ -34,6 +35,8 @@ CEventLoop::CEventLoop()
 
     if (!s_main_event_loop) {
         s_main_event_loop = this;
+        int rc = pipe(s_wake_pipe_fds);
+        ASSERT(rc == 0);
         s_event_loop_stack->append(this);
     }
 
@@ -169,6 +172,7 @@ void CEventLoop::wait_for_event(WaitMode mode)
 
     int max_fd_added = -1;
     add_file_descriptors_for_select(rfds, max_fd_added);
+    add_fd_to_set(s_wake_pipe_fds[1], rfds);
     max_fd = max(max_fd, max_fd_added);
     for (auto& notifier : *s_notifiers) {
         if (notifier->event_mask() & CNotifier::Read)
@@ -203,6 +207,11 @@ void CEventLoop::wait_for_event(WaitMode mode)
     int marked_fd_count = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
     if (marked_fd_count < 0) {
         ASSERT_NOT_REACHED();
+    }
+
+    if (FD_ISSET(s_wake_pipe_fds[1], &rfds)) {
+        char buffer[32];
+        read(s_wake_pipe_fds[1], buffer, sizeof(buffer));
     }
 
     if (!s_timers->is_empty()) {
@@ -300,4 +309,14 @@ void CEventLoop::register_notifier(Badge<CNotifier>, CNotifier& notifier)
 void CEventLoop::unregister_notifier(Badge<CNotifier>, CNotifier& notifier)
 {
     s_notifiers->remove(&notifier);
+}
+
+void CEventLoop::wake()
+{
+    char ch = '!';
+    int nwritten = write(s_wake_pipe_fds[0], &ch, 1);
+    if (nwritten < 0) {
+        perror("CEventLoop::wake: write");
+        ASSERT_NOT_REACHED();
+    }
 }
