@@ -46,3 +46,8 @@ private:
     IPv4Address m_ipv4_address;
     String m_local_address;
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const CSocketAddress& value)
+{
+    return stream << value;
+}
