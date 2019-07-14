@@ -63,18 +63,6 @@ SB16& SB16::the()
     return *s_the;
 }
 
-void SB16::handle_irq()
-{
-    // Stop sound output ready for the next block.
-    dsp_write(0xd5);
-
-    IO::in8(DSP_STATUS); // 8 bit interrupt
-    if (m_major_version >= 4)
-        IO::in8(DSP_R_ACK); // 16 bit interrupt
-
-    m_interrupted = true;
-}
-
 void SB16::initialize()
 {
     IO::out8(0x226, 1);
@@ -137,26 +125,29 @@ void SB16::dma_start(uint32_t length)
     IO::out8(0xd4, (channel % 4));
 }
 
+void SB16::handle_irq()
+{
+    // Stop sound output ready for the next block.
+    dsp_write(0xd5);
+
+    IO::in8(DSP_STATUS); // 8 bit interrupt
+    if (m_major_version >= 4)
+        IO::in8(DSP_R_ACK); // 16 bit interrupt
+
+    m_interrupted = true;
+}
+
 void SB16::wait_for_irq()
 {
-    m_interrupted = false;
-#ifdef SB16_DEBUG
-    kprintf("SB16: waiting for interrupt...\n");
-#endif
-    current->block_until([this] { return m_interrupted; });
-#ifdef SB16_DEBUG
-    kprintf("SB16: got interrupt!\n");
-#endif
+    current->block_until([this] {
+        return m_interrupted;
+    });
 }
 
 ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
 {
-    if (!m_dma_buffer_page) {
-#ifdef SB16_DEBUG
-        kprintf("SB16: Allocating page\n");
-#endif
+    if (!m_dma_buffer_page)
         m_dma_buffer_page = MM.allocate_supervisor_physical_page();
-    }
 
 #ifdef SB16_DEBUG
     kprintf("SB16: Writing buffer of %d bytes\n", length);
@@ -190,6 +181,7 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     dsp_write((u8)sample_count);
     dsp_write((u8)(sample_count >> 8));
 
+    m_interrupted = false;
     enable_irq();
     wait_for_irq();
     return length;
