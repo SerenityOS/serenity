@@ -1,4 +1,5 @@
 #include <AK/FileSystemPath.h>
+#include <AK/Function.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
@@ -12,9 +13,46 @@
 #include <LibGUI/GToolBar.h>
 #include <SharedGraphics/PNGLoader.h>
 
-GFilePicker::GFilePicker(const StringView& path, CObject* parent)
+Optional<String> GFilePicker::get_open_filepath()
+{
+    GFilePicker picker(Mode::Open);
+
+    if (picker.exec() == GDialog::ExecOK) {
+        String file_path = picker.selected_file().string();
+
+        if (file_path.is_null())
+            return {};
+
+        return file_path;
+    }
+    return {};
+}
+
+Optional<String> GFilePicker::get_save_filepath()
+{
+    GFilePicker picker(Mode::Save);
+
+    if (picker.exec() == GDialog::ExecOK) {
+        String file_path = picker.selected_file().string();
+
+        if (file_path.is_null())
+            return {};
+
+        if (GFilePicker::file_exists(file_path)) {
+            //TODO: Add Yes, No Messagebox to give the user a proper option
+            GMessageBox::show("File already exists: Overwrite?\n", "Error", GMessageBox::Type::Information, &picker);
+            return file_path;
+        }
+
+        return file_path;
+    }
+    return {};
+}
+
+GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
     : GDialog(parent)
     , m_model(GDirectoryModel::create())
+    , m_mode(mode)
 {
     set_title("GFilePicker");
     set_rect(200, 200, 700, 400);
@@ -95,12 +133,16 @@ GFilePicker::GFilePicker(const StringView& path, CObject* parent)
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     filename_label->set_preferred_size({ 60, 0 });
     auto* filename_textbox = new GTextBox(filename_container);
+    if (m_mode == Mode::Save) {
+        filename_textbox->set_text("Untitled.txt"); //TODO: replace .txt with a preferred extension
+        filename_textbox->set_focus(true);
+        filename_textbox->select_all();
+    }
 
     m_view->on_activation = [this, filename_textbox](auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
         const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
-
         FileSystemPath path(String::format("%s/%s", m_model->path().characters(), entry.name.characters()));
 
         clear_preview();
@@ -132,7 +174,7 @@ GFilePicker::GFilePicker(const StringView& path, CObject* parent)
     auto* ok_button = new GButton(button_container);
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size({ 80, 0 });
-    ok_button->set_text("OK");
+    ok_button->set_text(ok_button_name(m_mode));
     ok_button->on_click = [this, filename_textbox](auto&) {
         FileSystemPath path(String::format("%s/%s", m_model->path().characters(), filename_textbox->text().characters()));
         m_selected_file = path;
@@ -188,4 +230,18 @@ void GFilePicker::clear_preview()
     m_preview_image_label->set_icon(nullptr);
     m_preview_name_label->set_text(String::empty());
     m_preview_geometry_label->set_text(String::empty());
+}
+
+bool GFilePicker::file_exists(const StringView& path)
+{
+    struct stat st;
+    int rc = stat(String(path).characters(), &st);
+    if (rc < 0) {
+        if (errno == ENOENT)
+            return false;
+    }
+    if (rc == 0) {
+        return true;
+    }
+    return false;
 }
