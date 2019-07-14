@@ -50,6 +50,8 @@ public:
         m_queued_events.append(move(other.m_queued_events));
     }
 
+    static void wake();
+
 protected:
     virtual void add_file_descriptors_for_select(fd_set&, int& max_fd) { UNUSED_PARAM(max_fd); }
     virtual void process_file_descriptors_after_select(const fd_set&) {}
@@ -68,6 +70,8 @@ private:
 
     bool m_exit_requested { false };
     int m_exit_code { 0 };
+
+    static int s_wake_pipe_fds[2];
 
     CLock m_lock;
 
