@@ -1,20 +1,16 @@
 #include "Music.h"
 #include "PianoWidget.h"
-#include <LibCore/CFile.h>
-#include <LibCore/CNotifier.h>
 #include <LibAudio/AClientConnection.h>
+#include <LibCore/CFile.h>
+#include <LibCore/CThread.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GEventLoop.h>
 #include <LibGUI/GWindow.h>
-
-static int s_pipefds[2];
 
 int main(int argc, char** argv)
 {
     AClientConnection audio_connection;
     GApplication app(argc, argv);
-
-    pipe(s_pipefds);
 
     auto* window = new GWindow;
     window->set_title("Piano");
@@ -22,19 +18,10 @@ int main(int argc, char** argv)
 
     auto* piano_widget = new PianoWidget;
     window->set_main_widget(piano_widget);
-
     window->show();
-
     window->set_icon_path("/res/icons/16x16/app-piano.png");
 
-    CNotifier notifier(s_pipefds[0], CNotifier::Read);
-    notifier.on_ready_to_read = [&] {
-        char buffer[32];
-        read(s_pipefds[1], buffer, sizeof(buffer));
-        piano_widget->update();
-    };
-
-    create_thread([](void* context) -> int {
+    CThread sound_thread([](void* context) -> int {
         auto* piano_widget = (PianoWidget*)context;
 
         CFile audio("/dev/audio");
@@ -47,10 +34,11 @@ int main(int argc, char** argv)
             u8 buffer[4096];
             piano_widget->fill_audio_buffer(buffer, sizeof(buffer));
             audio.write(buffer, sizeof(buffer));
-            char ch = '!';
-            write(s_pipefds[0], &ch, 1);
+            GEventLoop::current().post_event(*piano_widget, make<CCustomEvent>(0));
+            GEventLoop::current().wake();
         }
-    }, piano_widget);
+    },
+        piano_widget);
 
     return app.exec();
 }
