@@ -49,5 +49,5 @@ private:
 
 inline const LogStream& operator<<(const LogStream& stream, const CSocketAddress& value)
 {
-    return stream << value;
+    return stream << value.to_string();
 }
