@@ -182,6 +182,7 @@ private:
     RefPtr<Region> m_kernel_stack_region;
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
     pid_t m_waitee_pid { -1 };
+    int m_wait_options { 0 };
     RefPtr<FileDescription> m_blocked_description;
     timeval m_select_timeout;
     SignalActionData m_signal_action_data[32];
