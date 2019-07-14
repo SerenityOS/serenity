@@ -172,7 +172,7 @@ void CEventLoop::wait_for_event(WaitMode mode)
 
     int max_fd_added = -1;
     add_file_descriptors_for_select(rfds, max_fd_added);
-    add_fd_to_set(s_wake_pipe_fds[1], rfds);
+    add_fd_to_set(s_wake_pipe_fds[0], rfds);
     max_fd = max(max_fd, max_fd_added);
     for (auto& notifier : *s_notifiers) {
         if (notifier->event_mask() & CNotifier::Read)
@@ -209,9 +209,14 @@ void CEventLoop::wait_for_event(WaitMode mode)
         ASSERT_NOT_REACHED();
     }
 
-    if (FD_ISSET(s_wake_pipe_fds[1], &rfds)) {
+    if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
         char buffer[32];
-        read(s_wake_pipe_fds[1], buffer, sizeof(buffer));
+        auto nread = read(s_wake_pipe_fds[0], buffer, sizeof(buffer));
+        if (nread < 0) {
+            perror("read from wake pipe");
+            ASSERT_NOT_REACHED();
+        }
+        ASSERT(nread > 0);
     }
 
     if (!s_timers->is_empty()) {
@@ -314,7 +319,7 @@ void CEventLoop::unregister_notifier(Badge<CNotifier>, CNotifier& notifier)
 void CEventLoop::wake()
 {
     char ch = '!';
-    int nwritten = write(s_wake_pipe_fds[0], &ch, 1);
+    int nwritten = write(s_wake_pipe_fds[1], &ch, 1);
     if (nwritten < 0) {
         perror("CEventLoop::wake: write");
         ASSERT_NOT_REACHED();
