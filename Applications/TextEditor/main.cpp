@@ -9,7 +9,6 @@ int main(int argc, char** argv)
 
     window->set_rect(20, 200, 640, 400);
     window->set_should_exit_event_loop_on_close(true);
-    window->show();
     window->set_icon_path("/res/icons/TextEditor16.png");
 
     auto* text_widget = new TextEditorWidget();
@@ -17,6 +16,8 @@ int main(int argc, char** argv)
 
     if (argc >= 2)
         text_widget->open_sesame(argv[1]);
+
+    window->show();
 
     return app.exec();
 }
