@@ -31,7 +31,7 @@
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
-#define SIGNAL_DEBUG
+//#define SIGNAL_DEBUG
 //#define SHARED_BUFFER_DEBUG
 
 static pid_t next_pid;
@@ -2367,101 +2367,127 @@ int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
 }
 
 struct SharedBuffer {
-    SharedBuffer(pid_t pid1, pid_t pid2, int size)
-        : m_pid1(pid1)
-        , m_pid2(pid2)
+private:
+    struct Reference {
+        Reference(pid_t pid)
+            : pid(pid)
+        {
+        }
+
+        pid_t pid;
+        unsigned count { 1 };
+        Region* region { nullptr };
+    };
+public:
+    SharedBuffer(int id, int size)
+        : m_shared_buffer_id(id)
         , m_vmo(VMObject::create_anonymous(size))
     {
-        ASSERT(pid1 != pid2);
+#ifdef SHARED_BUFFER_DEBUG
+        dbgprintf("Created shared buffer %d of size %d\n", m_shared_buffer_id, size);
+#endif
     }
 
-    void* retain(Process& process)
+    ~SharedBuffer()
     {
-        if (m_pid1 == process.pid()) {
-            ++m_pid1_retain_count;
-            if (!m_pid1_region) {
-                m_pid1_region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo, 0, "SharedBuffer", PROT_READ | (m_pid1_writable ? PROT_WRITE : 0));
-                m_pid1_region->set_shared(true);
+#ifdef SHARED_BUFFER_DEBUG
+        dbgprintf("Destroyed shared buffer %d of size %d\n", m_shared_buffer_id, size());
+#endif
+    }
+
+    bool is_shared_with(pid_t peer_pid)
+    {
+        LOCKER(m_refs.lock());
+        for (auto& ref : m_refs.resource()) {
+            if (ref.pid == peer_pid) {
+                return true;
             }
-            return m_pid1_region->vaddr().as_ptr();
-        } else if (m_pid2 == process.pid()) {
-            ++m_pid2_retain_count;
-            if (!m_pid2_region) {
-                m_pid2_region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo, 0, "SharedBuffer", PROT_READ | (m_pid2_writable ? PROT_WRITE : 0));
-                m_pid2_region->set_shared(true);
-            }
-            return m_pid2_region->vaddr().as_ptr();
         }
-        return nullptr;
+
+        return false;
+    }
+
+    void* get_address(Process& process)
+    {
+        LOCKER(m_refs.lock());
+        ASSERT(is_shared_with(process.pid()));
+        for (auto& ref : m_refs.resource()) {
+            if (ref.pid == process.pid()) {
+                if (ref.region == nullptr) {
+                    ref.region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
+                    ref.region->set_shared(true);
+                }
+                return ref.region->vaddr().as_ptr();
+            }
+        }
+        ASSERT_NOT_REACHED();
+    }
+
+    void share_with(pid_t peer_pid)
+    {
+        LOCKER(m_refs.lock());
+        for (auto& ref : m_refs.resource()) {
+            if (ref.pid == peer_pid) {
+                ref.count++;
+                return;
+            }
+        }
+
+        m_refs.resource().append(Reference(peer_pid));
     }
 
     void release(Process& process)
     {
-        if (m_pid1 == process.pid()) {
-            ASSERT(m_pid1_retain_count);
-            --m_pid1_retain_count;
-            if (!m_pid1_retain_count) {
-                if (m_pid1_region)
-                    process.deallocate_region(*m_pid1_region);
-                m_pid1_region = nullptr;
+        LOCKER(m_refs.lock());
+#ifdef SHARED_BUFFER_DEBUG
+        dbgprintf("Releasing shared buffer %d of size %d by PID %d\n", m_shared_buffer_id, size(), process.pid());
+#endif
+        for (int i = 0; i < m_refs.resource().size(); ++i) {
+            auto& ref = m_refs.resource()[i];
+            if (ref.pid == process.pid()) {
+                if (--ref.count == 0) {
+                    process.deallocate_region(*ref.region);
+                    m_refs.resource().remove(i);
+                    destroy_if_unused();
+                    return;
+                }
             }
-            destroy_if_unused();
-        } else if (m_pid2 == process.pid()) {
-            ASSERT(m_pid2_retain_count);
-            --m_pid2_retain_count;
-            if (!m_pid2_retain_count) {
-                if (m_pid2_region)
-                    process.deallocate_region(*m_pid2_region);
-                m_pid2_region = nullptr;
-            }
-            destroy_if_unused();
         }
     }
 
     void disown(pid_t pid)
     {
-        if (m_pid1 == pid) {
-            m_pid1 = 0;
-            m_pid1_retain_count = 0;
-            destroy_if_unused();
-        } else if (m_pid2 == pid) {
-            m_pid2 = 0;
-            m_pid2_retain_count = 0;
-            destroy_if_unused();
+        LOCKER(m_refs.lock());
+#ifdef SHARED_BUFFER_DEBUG
+        dbgprintf("Disowning shared buffer %d of size %d by PID %d\n", m_shared_buffer_id, size(), pid);
+#endif
+        for (int i = 0; i < m_refs.resource().size(); ++i) {
+            auto& ref = m_refs.resource()[i];
+            if (ref.pid == pid) {
+                m_refs.resource().remove(i);
+                destroy_if_unused();
+                return;
+            }
         }
     }
 
-    pid_t pid1() const { return m_pid1; }
-    pid_t pid2() const { return m_pid2; }
-    unsigned pid1_ref_count() const { return m_pid1_retain_count; }
-    unsigned pid2_ref_count() const { return m_pid2_retain_count; }
     size_t size() const { return m_vmo->size(); }
     void destroy_if_unused();
 
     void seal()
     {
-        m_pid1_writable = false;
-        m_pid2_writable = false;
-        if (m_pid1_region) {
-            m_pid1_region->set_writable(false);
-            MM.remap_region(*m_pid1_region->page_directory(), *m_pid1_region);
-        }
-        if (m_pid2_region) {
-            m_pid2_region->set_writable(false);
-            MM.remap_region(*m_pid2_region->page_directory(), *m_pid2_region);
+        LOCKER(m_refs.lock());
+        m_writable = false;
+        for (auto& ref : m_refs.resource()) {
+            ref.region->set_writable(false);
+            MM.remap_region(*ref.region->page_directory(), *ref.region);
         }
     }
 
     int m_shared_buffer_id { -1 };
-    pid_t m_pid1;
-    pid_t m_pid2;
-    unsigned m_pid1_retain_count { 1 };
-    unsigned m_pid2_retain_count { 0 };
-    Region* m_pid1_region { nullptr };
-    Region* m_pid2_region { nullptr };
-    bool m_pid1_writable { false };
-    bool m_pid2_writable { false };
+    bool m_writable { true };
     NonnullRefPtr<VMObject> m_vmo;
+    Lockable<Vector<Reference, 2>> m_refs;
 };
 
 static int s_next_shared_buffer_id;
@@ -2475,10 +2501,11 @@ Lockable<HashMap<int, OwnPtr<SharedBuffer>>>& shared_buffers()
 
 void SharedBuffer::destroy_if_unused()
 {
-    if (!m_pid1_retain_count && !m_pid2_retain_count) {
+    LOCKER(m_refs.lock());
+    if (m_refs.resource().size() == 0) {
         LOCKER(shared_buffers().lock());
 #ifdef SHARED_BUFFER_DEBUG
-        kprintf("Destroying unused SharedBuffer{%p} id: %d (pid1: %d, pid2: %d)\n", this, m_shared_buffer_id, m_pid1, m_pid2);
+        kprintf("Destroying unused SharedBuffer{%p} id: %d\n", this, m_shared_buffer_id);
 #endif
         auto count_before = shared_buffers().resource().size();
         shared_buffers().resource().remove(m_shared_buffer_id);
@@ -2505,6 +2532,7 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
         return -EINVAL;
     if (!validate_write_typed(buffer))
         return -EFAULT;
+
     {
         InterruptDisabler disabler;
         auto* peer = Process::from_pid(peer_pid);
@@ -2513,16 +2541,16 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
     }
     LOCKER(shared_buffers().lock());
     int shared_buffer_id = ++s_next_shared_buffer_id;
-    auto shared_buffer = make<SharedBuffer>(m_pid, peer_pid, size);
-    shared_buffer->m_shared_buffer_id = shared_buffer_id;
+    auto shared_buffer = make<SharedBuffer>(shared_buffer_id, size);
+    shared_buffer->share_with(m_pid);
+    shared_buffer->share_with(peer_pid);
+    *buffer = shared_buffer->get_address(*this);
     ASSERT((int)shared_buffer->size() >= size);
-    shared_buffer->m_pid1_region = allocate_region_with_vmo(VirtualAddress(), shared_buffer->size(), shared_buffer->m_vmo, 0, "SharedBuffer", PROT_READ | PROT_WRITE);
-    shared_buffer->m_pid1_region->set_shared(true);
-    *buffer = shared_buffer->m_pid1_region->vaddr().as_ptr();
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Created shared buffer %d (%u bytes, vmo is %u) for sharing with %d\n", name().characters(), pid(), shared_buffer_id, size, shared_buffer->size(), peer_pid);
+    kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmo is %u)\n", name().characters(), pid(), shared_buffer_id, *buffer, size, shared_buffer->size());
 #endif
     shared_buffers().resource().set(shared_buffer_id, move(shared_buffer));
+
     return shared_buffer_id;
 }
 
@@ -2547,12 +2575,12 @@ void* Process::sys$get_shared_buffer(int shared_buffer_id)
     if (it == shared_buffers().resource().end())
         return (void*)-EINVAL;
     auto& shared_buffer = *(*it).value;
-    if (shared_buffer.pid1() != m_pid && shared_buffer.pid2() != m_pid)
+    if (!shared_buffer.is_shared_with(m_pid))
         return (void*)-EINVAL;
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Retaining shared buffer %d, buffer count: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
-    return shared_buffer.retain(*this);
+    return shared_buffer.get_address(*this);
 }
 
 int Process::sys$seal_shared_buffer(int shared_buffer_id)
@@ -2562,7 +2590,7 @@ int Process::sys$seal_shared_buffer(int shared_buffer_id)
     if (it == shared_buffers().resource().end())
         return -EINVAL;
     auto& shared_buffer = *(*it).value;
-    if (shared_buffer.pid1() != m_pid && shared_buffer.pid2() != m_pid)
+    if (!shared_buffer.is_shared_with(m_pid))
         return -EINVAL;
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Sealing shared buffer %d\n", name().characters(), pid(), shared_buffer_id);
@@ -2578,7 +2606,7 @@ int Process::sys$get_shared_buffer_size(int shared_buffer_id)
     if (it == shared_buffers().resource().end())
         return -EINVAL;
     auto& shared_buffer = *(*it).value;
-    if (shared_buffer.pid1() != m_pid && shared_buffer.pid2() != m_pid)
+    if (!shared_buffer.is_shared_with(m_pid))
         return -EINVAL;
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Get shared buffer %d size: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
