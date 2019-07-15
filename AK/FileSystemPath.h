@@ -19,7 +19,7 @@ public:
     bool has_extension(StringView) const;
 
 private:
-    bool canonicalize(bool resolve_symbolic_links = false);
+    void canonicalize();
 
     Vector<String> m_parts;
     String m_string;
@@ -27,6 +27,9 @@ private:
     bool m_is_valid { false };
 };
 
+String canonicalized_path(const StringView&);
+
 };
 
 using AK::FileSystemPath;
+using AK::canonicalized_path;

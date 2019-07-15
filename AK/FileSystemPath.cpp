@@ -8,14 +8,14 @@ namespace AK {
 FileSystemPath::FileSystemPath(const StringView& s)
     : m_string(s)
 {
-    m_is_valid = canonicalize();
+    canonicalize();
+    m_is_valid = true;
 }
 
-bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
+void FileSystemPath::canonicalize()
 {
-    // FIXME: Implement "resolve_symbolic_links"
-    (void)resolve_symbolic_links;
-    auto parts = m_string.split('/');
+    auto parts = m_string.split_view('/');
+    int approximate_canonical_length = 0;
     Vector<String> canonical_parts;
 
     for (auto& part : parts) {
@@ -26,23 +26,24 @@ bool FileSystemPath::canonicalize(bool resolve_symbolic_links)
                 canonical_parts.take_last();
             continue;
         }
-        if (!part.is_empty())
+        if (!part.is_empty()) {
+            approximate_canonical_length += part.length() + 1;
             canonical_parts.append(part);
+        }
     }
     if (canonical_parts.is_empty()) {
         m_string = m_basename = "/";
-        return true;
+        return;
     }
 
     m_basename = canonical_parts.last();
-    StringBuilder builder;
+    StringBuilder builder(approximate_canonical_length);
     for (auto& cpart : canonical_parts) {
         builder.append('/');
         builder.append(cpart);
     }
     m_parts = move(canonical_parts);
     m_string = builder.to_string();
-    return true;
 }
 
 bool FileSystemPath::has_extension(StringView extension) const
@@ -50,6 +51,11 @@ bool FileSystemPath::has_extension(StringView extension) const
     // FIXME: This is inefficient, expand StringView with enough functionality that we don't need to copy strings here.
     String extension_string = extension;
     return m_string.to_lowercase().ends_with(extension_string.to_lowercase());
+}
+
+String canonicalized_path(const StringView& path)
+{
+    return FileSystemPath(path).string();
 }
 
 }
