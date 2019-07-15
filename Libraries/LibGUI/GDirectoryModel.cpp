@@ -301,8 +301,7 @@ void GDirectoryModel::update()
 
 void GDirectoryModel::open(const StringView& a_path)
 {
-    FileSystemPath canonical_path(a_path);
-    auto path = canonical_path.string();
+    auto path = canonicalized_path(a_path);
     if (m_path == path)
         return;
     DIR* dirp = opendir(path.characters());

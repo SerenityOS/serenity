@@ -108,7 +108,7 @@ RefPtr<GraphicsBitmap> load_png(const StringView& path)
         return nullptr;
     auto bitmap = load_png_impl((const u8*)mapped_file.pointer(), mapped_file.size());
     if (bitmap)
-        bitmap->set_mmap_name(String::format("GraphicsBitmap [%dx%d] - Decoded PNG: %s", bitmap->width(), bitmap->height(), FileSystemPath(path).string().characters()));
+        bitmap->set_mmap_name(String::format("GraphicsBitmap [%dx%d] - Decoded PNG: %s", bitmap->width(), bitmap->height(), canonicalized_path(path).characters()));
     return bitmap;
 }
 
