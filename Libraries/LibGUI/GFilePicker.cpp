@@ -40,7 +40,7 @@ Optional<String> GFilePicker::get_save_filepath()
 
         if (GFilePicker::file_exists(file_path)) {
             //TODO: Add Yes, No Messagebox to give the user a proper option
-            GMessageBox::show("File already exists: Overwrite?\n", "Error", GMessageBox::Type::Information, &picker);
+            GMessageBox::show("File already exists: Overwrite?\n", "Warning", GMessageBox::Type::Warning, &picker);
             return file_path;
         }
 
