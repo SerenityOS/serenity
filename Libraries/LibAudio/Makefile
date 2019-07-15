@@ -2,7 +2,6 @@ include ../../Makefile.common
 
 OBJS = \
     AClientConnection.o \
-    AWavFile.o \
     AWavLoader.o
 
 LIBRARY = libaudio.a
