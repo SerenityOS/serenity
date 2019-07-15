@@ -55,7 +55,6 @@ TextEditorWidget::TextEditorWidget()
         if (!save_name.has_value())
             return;
 
-        dbgprintf("Writing document to '%s'\n", save_name.value());
         if (!m_editor->write_to_file(save_name.value())) {
             GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, window());
             return;
@@ -63,6 +62,7 @@ TextEditorWidget::TextEditorWidget()
 
         m_path = save_name.value();
         window()->set_title(String::format("Text Editor: %s", m_path.characters()));
+        dbgprintf("Wrote document to '%s'\n", m_path.characters());
     });
 
     auto menubar = make<GMenuBar>();
