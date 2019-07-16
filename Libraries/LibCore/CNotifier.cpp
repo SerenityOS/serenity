@@ -21,3 +21,14 @@ void CNotifier::set_enabled(bool enabled)
     else
         CEventLoop::unregister_notifier({}, *this);
 }
+
+void CNotifier::event(CEvent& event)
+{
+    if (event.type() == CEvent::NotifierRead && on_ready_to_read) {
+        on_ready_to_read();
+    } else if (event.type() == CEvent::NotifierWrite && on_ready_to_write) {
+        on_ready_to_write();
+    } else {
+        CObject::event(event);
+    }
+}

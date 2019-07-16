@@ -1,8 +1,9 @@
 #pragma once
 
 #include <AK/Function.h>
+#include "CObject.h"
 
-class CNotifier {
+class CNotifier : public CObject {
 public:
     enum Event {
         None = 0,
@@ -21,6 +22,9 @@ public:
     int fd() const { return m_fd; }
     unsigned event_mask() const { return m_event_mask; }
     void set_event_mask(unsigned event_mask) { m_event_mask = event_mask; }
+
+    const char* class_name() const override { return "CNotifier"; }
+    void event(CEvent& event) override;
 
 private:
     int m_fd { -1 };

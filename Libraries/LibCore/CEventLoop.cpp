@@ -245,11 +245,11 @@ void CEventLoop::wait_for_event(WaitMode mode)
     for (auto& notifier : *s_notifiers) {
         if (FD_ISSET(notifier->fd(), &rfds)) {
             if (notifier->on_ready_to_read)
-                notifier->on_ready_to_read();
+                post_event(*notifier, make<CNotifierReadEvent>(notifier->fd()));
         }
         if (FD_ISSET(notifier->fd(), &wfds)) {
             if (notifier->on_ready_to_write)
-                notifier->on_ready_to_write();
+                post_event(*notifier, make<CNotifierWriteEvent>(notifier->fd()));
         }
     }
 
