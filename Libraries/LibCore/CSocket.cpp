@@ -92,6 +92,8 @@ bool CSocket::connect(const CSocketAddress& address)
     }
 
     m_connected = true;
+    if (on_connected)
+        on_connected();
     return true;
 }
 
