@@ -66,9 +66,12 @@ bool CSocket::connect(const CSocketAddress& address, int port)
         }
         perror("connect");
         exit(1);
+    } else {
+        dbg() << *this << " connected ok!";
+        m_connected = true;
+        if (on_connected)
+            on_connected();
     }
-    dbg() << *this << " connected ok!";
-    m_connected = true;
     return true;
 }
 
