@@ -187,6 +187,12 @@ public:
         m_buffer.trim(m_offset);
     }
 
+    void reset()
+    {
+        m_offset = 0;
+        m_read_failure = false;
+    }
+
     bool handle_read_failure() {
         bool old = m_read_failure;
         m_read_failure = false;
