@@ -89,7 +89,7 @@ WSWindowManager::WSWindowManager()
             return;
         case 300:
             if (fork() == 0) {
-                execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
+                execl("/bin/SystemDialog", "/bin/SystemDialog", "--shutdown", nullptr);
                 ASSERT_NOT_REACHED();
             }
             return;
