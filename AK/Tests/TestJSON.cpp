@@ -1,4 +1,4 @@
-#include "TestHelpers.h"
+#include <AK/TestSuite.h>
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
@@ -6,9 +6,7 @@
 #include <AK/JsonValue.h>
 #include <AK/StringBuilder.h>
 
-typedef HashMap<int, int> IntIntMap;
-
-int main()
+TEST_CASE(load_form)
 {
     FILE* fp = fopen("../../Base/home/anon/test.frm", "r");
     ASSERT(fp);
@@ -42,6 +40,6 @@ int main()
             //dbgprintf("Set property %s.%s to '%s'\n", widget_class.characters(), property_name.characters(), property_value.serialized().characters());
         });
     });
-
-    return 0;
 }
+
+TEST_MAIN(JSON)
