@@ -6,6 +6,7 @@ KERNEL_OBJS = \
        StdLib.o \
        Arch/i386/CPU.o \
        Process.o \
+       SharedBuffer.o \
        Thread.o \
        Arch/i386/PIT.o \
        Devices/KeyboardDevice.o \
