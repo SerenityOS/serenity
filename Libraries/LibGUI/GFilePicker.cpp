@@ -40,7 +40,7 @@ Optional<String> GFilePicker::get_save_filepath()
 
         if (GFilePicker::file_exists(file_path)) {
             //TODO: Add Yes, No Messagebox to give the user a proper option
-            GMessageBox::show("File already exists: Overwrite?\n", "Warning", GMessageBox::Type::Warning, &picker);
+            GMessageBox::show("File already exists: Overwrite?\n", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OK, &picker);
             return file_path;
         }
 
@@ -110,7 +110,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
                                     .string();
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
-                GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, this);
+                GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, this);
             } else {
                 m_model->update();
             }

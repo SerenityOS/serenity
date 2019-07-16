@@ -29,7 +29,7 @@ int run_shutdown_dialog(int argc, char** argv)
     GApplication app(argc, argv);
 
     {
-        GMessageBox box("Shut down Serenity?", "Confirm Shutdown", GMessageBox::Type::Warning, GMessageBox::InputType::OkCancel);
+        GMessageBox box("Shut down Serenity?", "Confirm Shutdown", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel);
         auto result = box.exec();
 
         if (result == GMessageBox::ExecOK) {

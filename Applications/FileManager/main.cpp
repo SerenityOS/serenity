@@ -97,7 +97,7 @@ int main(int argc, char** argv)
                     input_box.text_value().characters()));
             int rc = mkdir(new_dir_path.characters(), 0777);
             if (rc < 0) {
-                GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, window);
+                GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
             } else {
                 directory_view->refresh();
             }
