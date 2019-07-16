@@ -23,6 +23,7 @@ public:
     bool send(const ByteBuffer&);
 
     bool is_connected() const { return m_connected; }
+    void set_blocking(bool blocking);
 
     CSocketAddress source_address() const { return m_source_address; }
     int source_port() const { return m_source_port; }
