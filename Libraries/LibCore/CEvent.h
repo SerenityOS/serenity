@@ -13,6 +13,8 @@ public:
         Invalid = 0,
         Quit,
         Timer,
+        NotifierRead,
+        NotifierWrite,
         DeferredDestroy,
         DeferredInvoke,
         ChildAdded,
@@ -60,6 +62,36 @@ public:
 
 private:
     int m_timer_id;
+};
+
+class CNotifierReadEvent final : public CEvent {
+public:
+    explicit CNotifierReadEvent(int fd)
+        : CEvent(CEvent::NotifierRead)
+        , m_fd(fd)
+    {
+    }
+    ~CNotifierReadEvent() {}
+
+    int fd() const { return m_fd; }
+
+private:
+    int m_fd;
+};
+
+class CNotifierWriteEvent final : public CEvent {
+public:
+    explicit CNotifierWriteEvent(int fd)
+        : CEvent(CEvent::NotifierWrite)
+        , m_fd(fd)
+    {
+    }
+    ~CNotifierWriteEvent() {}
+
+    int fd() const { return m_fd; }
+
+private:
+    int m_fd;
 };
 
 class CChildEvent final : public CEvent {
