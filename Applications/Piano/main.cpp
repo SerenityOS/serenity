@@ -9,8 +9,8 @@
 
 int main(int argc, char** argv)
 {
-    AClientConnection audio_connection;
     GApplication app(argc, argv);
+    AClientConnection audio_connection;
 
     auto* window = new GWindow;
     window->set_title("Piano");
