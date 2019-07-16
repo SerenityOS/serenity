@@ -8,7 +8,7 @@ class SlavePTY;
 
 class DevPtsFS final : public SynthFS {
 public:
-    [[gnu::pure]] static DevPtsFS& the();
+    static DevPtsFS& the();
 
     virtual ~DevPtsFS() override;
     static NonnullRefPtr<DevPtsFS> create();

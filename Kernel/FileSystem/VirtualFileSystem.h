@@ -51,7 +51,7 @@ public:
         RefPtr<Custody> m_host_custody;
     };
 
-    [[gnu::pure]] static VFS& the();
+    static VFS& the();
 
     VFS();
     ~VFS();

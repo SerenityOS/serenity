@@ -40,7 +40,7 @@ class MemoryManager {
     friend ByteBuffer procfs$memstat(InodeIdentifier);
 
 public:
-    [[gnu::pure]] static MemoryManager& the();
+    static MemoryManager& the();
 
     static void initialize();
 
