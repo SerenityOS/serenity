@@ -13,6 +13,8 @@ public:
     CNotifier(int fd, unsigned event_mask);
     ~CNotifier();
 
+    void set_enabled(bool);
+
     Function<void()> on_ready_to_read;
     Function<void()> on_ready_to_write;
 
