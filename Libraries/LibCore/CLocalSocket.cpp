@@ -4,7 +4,7 @@
 CLocalSocket::CLocalSocket(CObject* parent)
     : CSocket(CSocket::Type::Local, parent)
 {
-    int fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_CLOEXEC, 0);
+    int fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (fd < 0) {
         set_error(fd);
     } else {
