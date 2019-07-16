@@ -15,7 +15,7 @@ class KeyboardDevice final : public IRQHandler
 public:
     using Event = KeyEvent;
 
-    [[gnu::pure]] static KeyboardDevice& the();
+    static KeyboardDevice& the();
 
     virtual ~KeyboardDevice() override;
     KeyboardDevice();

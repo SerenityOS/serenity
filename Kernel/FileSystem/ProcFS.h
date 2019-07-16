@@ -13,7 +13,7 @@ class ProcFS final : public FS {
     friend class ProcFSInode;
 
 public:
-    [[gnu::pure]] static ProcFS& the();
+    static ProcFS& the();
 
     virtual ~ProcFS() override;
     static NonnullRefPtr<ProcFS> create();
