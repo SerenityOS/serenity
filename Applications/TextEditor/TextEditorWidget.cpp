@@ -46,7 +46,7 @@ TextEditorWidget::TextEditorWidget()
     auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
         if (!m_path.is_empty()) {
             if (!m_editor->write_to_file(m_path))
-                GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, window());
+                GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
 
             return;
         }
@@ -56,7 +56,7 @@ TextEditorWidget::TextEditorWidget()
             return;
 
         if (!m_editor->write_to_file(save_name.value())) {
-            GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, window());
+            GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
             return;
         }
 
@@ -135,7 +135,7 @@ void TextEditorWidget::open_sesame(const String& path)
     CFile file(path);
 
     if (!file.open(CIODevice::ReadOnly)) {
-        GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, window());
+        GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
     }
 
     window()->set_title(String::format("Text Editor: %s", path.characters()));

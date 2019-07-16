@@ -4,16 +4,17 @@
 #include <LibGUI/GMessageBox.h>
 #include <stdio.h>
 
-void GMessageBox::show(const StringView& text, const StringView& title, Type type, CObject* parent)
+void GMessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, CObject* parent)
 {
-    GMessageBox box(text, title, type, parent);
+    GMessageBox box(text, title, type, input_type, parent);
     box.exec();
 }
 
-GMessageBox::GMessageBox(const StringView& text, const StringView& title, Type type, CObject* parent)
+GMessageBox::GMessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, CObject* parent)
     : GDialog(parent)
     , m_text(text)
     , m_type(type)
+    , m_input_type(input_type)
 {
     set_title(title);
     build();
@@ -35,6 +36,16 @@ RefPtr<GraphicsBitmap> GMessageBox::icon() const
     default:
         return nullptr;
     }
+}
+
+bool GMessageBox::should_include_ok_button() const
+{
+    return m_input_type == InputType::OK || m_input_type == InputType::OKCancel;
+}
+
+bool GMessageBox::should_include_cancel_button() const
+{
+    return m_input_type == InputType::OKCancel;
 }
 
 void GMessageBox::build()
@@ -69,14 +80,32 @@ void GMessageBox::build()
     label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     label->set_preferred_size({ text_width, 16 });
 
-    auto* button = new GButton(widget);
-    button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    button->set_preferred_size({ 100, 20 });
-    button->set_text("OK");
-    button->on_click = [this](auto&) {
-        dbgprintf("GMessageBox: OK button clicked\n");
-        done(0);
-    };
+    auto* button_container = new GWidget(widget);
+    button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    button_container->layout()->set_spacing(5);
+    button_container->layout()->set_margins({ 15, 0, 15, 0 });
+
+    if (should_include_ok_button()) {
+        auto* ok_button = new GButton(button_container);
+        ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        ok_button->set_preferred_size({ 0, 20 });
+        ok_button->set_text("OK");
+        ok_button->on_click = [this](auto&) {
+            dbgprintf("GMessageBox: OK button clicked\n");
+            done(GDialog::ExecOK);
+        };
+    }
+
+    if (should_include_cancel_button()) {
+        auto* cancel_button = new GButton(button_container);
+        cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        cancel_button->set_preferred_size({ 0, 20 });
+        cancel_button->set_text("Cancel");
+        cancel_button->on_click = [this](auto&) {
+            dbgprintf("GMessageBox: Cancel button clicked\n");
+            done(GDialog::ExecCancel);
+        };
+    }
 
     set_rect(x(), y(), text_width + icon_width + 80, 100);
     set_resizable(false);
