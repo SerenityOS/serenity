@@ -2479,8 +2479,10 @@ public:
         LOCKER(m_refs.lock());
         m_writable = false;
         for (auto& ref : m_refs.resource()) {
-            ref.region->set_writable(false);
-            MM.remap_region(*ref.region->page_directory(), *ref.region);
+            if (ref.region) {
+                ref.region->set_writable(false);
+                MM.remap_region(*ref.region->page_directory(), *ref.region);
+            }
         }
     }
 
