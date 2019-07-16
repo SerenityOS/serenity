@@ -6,6 +6,8 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include <sys/socket.h>
 
 CSocket::CSocket(Type type, CObject* parent)
@@ -29,6 +31,17 @@ bool CSocket::connect(const String& hostname, int port)
     IPv4Address host_address((const u8*)hostent->h_addr_list[0]);
     dbg() << "CSocket::connect: Resolved '" << hostname << "' to " << host_address;
     return connect(host_address, port);
+}
+
+void CSocket::set_blocking(bool blocking)
+{
+    int flags = fcntl(fd(), F_GETFL, 0);
+    ASSERT(flags >= 0);
+    if (blocking)
+        flags = fcntl(fd(), F_SETFL, flags | O_NONBLOCK);
+    else
+        flags = fcntl(fd(), F_SETFL, flags & O_NONBLOCK);
+    ASSERT(flags >= 0);
 }
 
 bool CSocket::connect(const CSocketAddress& address, int port)
