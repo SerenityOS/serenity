@@ -161,7 +161,6 @@ bool IDEDiskDevice::wait_for_irq()
 #ifdef DISK_DEBUG
     kprintf("disk: got interrupt!\n");
 #endif
-    memory_barrier();
     return true;
 }
 
