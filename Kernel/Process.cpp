@@ -442,6 +442,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 #endif
 
     main_thread().set_state(Thread::State::Skip1SchedulerPass);
+    big_lock().unlock_if_locked();
     return 0;
 }
 
