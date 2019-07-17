@@ -31,7 +31,8 @@ void ASEventLoop::drain_server()
     } else {
         dbgprintf("AudioServer: accept()ed client %d\n", client_fd);
         static int s_next_client_id = 0;
-        new ASClientConnection(client_fd, s_next_client_id++, m_mixer);
+        CIPCServerSideClientCreator<ASClientConnection>(client_fd, s_next_client_id++, m_mixer);
+        //new ASClientConnection(client_fd, s_next_client_id++, m_mixer);
     }
 }
 
