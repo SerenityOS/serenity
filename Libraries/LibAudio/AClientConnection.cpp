@@ -3,11 +3,11 @@
 #include "AClientConnection.h"
 
 AClientConnection::AClientConnection()
-    : CIPCClientSideConnection()
+    : CIPCClientSideConnection("/tmp/asportal")
 {
 }
 
-void AClientConnection::send_greeting()
+void AClientConnection::handshake()
 {
     ASAPI_ClientMessage request;
     request.type = ASAPI_ClientMessage::Type::Greeting;

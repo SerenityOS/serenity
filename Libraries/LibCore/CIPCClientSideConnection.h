@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LibCore/CEventLoop.h>
+#include <LibCore/CEvent.h>
 #include <LibCore/CLocalSocket.h>
 #include <LibCore/CNotifier.h>
 #include <LibAudio/ASAPI.h>
@@ -12,26 +13,51 @@
 #include <sys/socket.h>
 #include <sys/uio.h>
 
-template <typename ServerMessage, typename ClientMessage>
-class CIPCClientSideConnection {
+//#define CIPC_DEBUG
+
+class CIPCClientEvent : public CEvent {
 public:
-    CIPCClientSideConnection()
+    enum Type {
+        Invalid = 2000,
+        DoPostprocess,
+    };
+    CIPCClientEvent() {}
+    explicit CIPCClientEvent(Type type)
+        : CEvent(type)
+    {
+    }
+};
+
+class CIPCClientPostprocessEvent : public CIPCClientEvent {
+public:
+    explicit CIPCClientPostprocessEvent(int client_id)
+        : CIPCClientEvent(DoPostprocess)
+        , m_client_id(client_id)
+    {
+    }
+
+    int client_id() const { return m_client_id; }
+
+private:
+    int m_client_id { 0 };
+};
+
+template <typename ServerMessage, typename ClientMessage>
+class CIPCClientSideConnection : public CObject {
+public:
+    CIPCClientSideConnection(const StringView& address)
         : m_notifier(CNotifier(m_connection.fd(), CNotifier::Read))
     {
         // We want to rate-limit our clients
         m_connection.set_blocking(true);
         m_notifier.on_ready_to_read = [this] {
             drain_messages_from_server();
-        };
-        m_connection.on_connected = [this] {
-            dbg() << "IPC: Connected, sending greeting";
-            send_greeting();
-            dbg() << "IPC: Greeting sent!";
+            CEventLoop::current().post_event(*this, make<CIPCClientPostprocessEvent>(m_connection.fd()));
         };
 
         int retries = 1000;
         while (retries) {
-            if (m_connection.connect(CSocketAddress::local("/tmp/asportal"))) {
+            if (m_connection.connect(CSocketAddress::local(address))) {
                 break;
             }
 
@@ -39,18 +65,39 @@ public:
             sleep(1);
             --retries;
         }
+        ASSERT(m_connection.is_connected());
     }
 
-    virtual void send_greeting() = 0;
+    virtual void handshake() = 0;
+
+
+    virtual void event(CEvent& event) override
+    {
+        if (event.type() == CIPCClientEvent::DoPostprocess) {
+            postprocess_bundles(m_unprocessed_bundles);
+        } else {
+            CObject::event(event);
+        }
+    }
+
     void set_server_pid(pid_t pid) { m_server_pid = pid; }
     pid_t server_pid() const { return m_server_pid; }
     void set_my_client_id(int id) { m_my_client_id = id; }
     int my_client_id() const { return m_my_client_id; }
 
-protected:
     template <typename MessageType>
     bool wait_for_specific_event(MessageType type, ServerMessage& event)
     {
+        // Double check we don't already have the event waiting for us.
+        // Otherwise we might end up blocked for a while for no reason.
+        for (ssize_t i = 0; i < m_unprocessed_bundles.size(); ++i) {
+            if (m_unprocessed_bundles[i].message.type == type) {
+                event = move(m_unprocessed_bundles[i].message);
+                m_unprocessed_bundles.remove(i);
+                CEventLoop::current().post_event(*this, make<CIPCClientPostprocessEvent>(m_connection.fd()));
+                return true;
+            }
+        }
         for (;;) {
             fd_set rfds;
             FD_ZERO(&rfds);
@@ -68,6 +115,7 @@ protected:
                 if (m_unprocessed_bundles[i].message.type == type) {
                     event = move(m_unprocessed_bundles[i].message);
                     m_unprocessed_bundles.remove(i);
+                    CEventLoop::current().post_event(*this, make<CIPCClientPostprocessEvent>(m_connection.fd()));
                     return true;
                 }
             }
@@ -76,6 +124,9 @@ protected:
 
     bool post_message_to_server(const ClientMessage& message, const ByteBuffer&& extra_data = {})
     {
+#if defined(CIPC_DEBUG)
+        dbg() << "C: -> S " << int(message.type) << " extra " << extra_data.size();
+#endif
         if (!extra_data.is_empty())
             const_cast<ClientMessage&>(message).extra_size = extra_data.size();
 
@@ -112,6 +163,18 @@ protected:
         return response;
     }
 
+protected:
+    struct IncomingASMessageBundle {
+        ServerMessage message;
+        ByteBuffer extra_data;
+    };
+
+    virtual void postprocess_bundles(Vector<IncomingASMessageBundle>& new_bundles)
+    {
+        dbg() << "CIPCClientSideConnection " << " warning: discarding " << new_bundles.size() << " unprocessed bundles; this may not be what you want";
+        new_bundles.clear();
+    }
+
 private:
     bool drain_messages_from_server()
     {
@@ -142,17 +205,15 @@ private:
                 }
                 ASSERT((size_t)extra_nread == message.extra_size);
             }
+#if defined(CIPC_DEBUG)
+            dbg() << "C: <- S " << int(message.type) << " extra " << extra_data.size();
+#endif
             m_unprocessed_bundles.append({ move(message), move(extra_data) });
         }
     }
 
     CLocalSocket m_connection;
     CNotifier m_notifier;
-
-    struct IncomingASMessageBundle {
-        ServerMessage message;
-        ByteBuffer extra_data;
-    };
     Vector<IncomingASMessageBundle> m_unprocessed_bundles;
     int m_server_pid;
     int m_my_client_id;
