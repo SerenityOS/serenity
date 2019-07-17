@@ -11,6 +11,7 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
     AClientConnection audio_connection;
+    audio_connection.handshake();
 
     auto* window = new GWindow;
     window->set_title("Piano");

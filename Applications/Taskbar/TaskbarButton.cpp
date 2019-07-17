@@ -20,5 +20,5 @@ void TaskbarButton::context_menu_event(GContextMenuEvent&)
     request.wm.client_id = m_identifier.client_id();
     request.wm.window_id = m_identifier.window_id();
     request.wm.position = screen_relative_rect().location();
-    GEventLoop::post_message_to_server(request);
+    GEventLoop::current().connection().post_message_to_server(request);
 }

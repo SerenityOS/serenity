@@ -242,7 +242,7 @@ public:
     String text() const { return m_text; }
 
 private:
-    friend class GEventLoop;
+    friend class GWindowServerConnection;
     int m_key { 0 };
     u8 m_modifiers { 0 };
     String m_text;

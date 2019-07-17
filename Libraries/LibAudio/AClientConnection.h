@@ -11,6 +11,6 @@ class AClientConnection : public CIPCClientSideConnection<ASAPI_ServerMessage, A
 public:
     AClientConnection();
 
-    void send_greeting() override;
+    void handshake() override;
     void play(const ABuffer& buffer);
 };
