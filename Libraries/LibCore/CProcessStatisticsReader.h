@@ -4,16 +4,28 @@
 #include <AK/HashMap.h>
 
 struct CProcessStatistics {
+    // Keep this in sync with /proc/all.
+    // From the kernel side:
     pid_t pid;
-    unsigned nsched;
-    String name;
-    String state;
-    String username;
+    unsigned times_scheduled;
+    unsigned pgid;
+    unsigned sid;
     uid_t uid;
+    gid_t gid;
+    String state;
+    pid_t ppid;
+    unsigned nfds;
+    String name;
+    String tty;
+    size_t amount_virtual;
+    size_t amount_resident;
+    size_t amount_shared;
+    unsigned ticks;
     String priority;
-    size_t virtual_size;
-    size_t physical_size;
-    unsigned syscalls;
+    unsigned syscall_count;
+
+    // synthetic
+    String username;
 };
 
 class CProcessStatisticsReader {
