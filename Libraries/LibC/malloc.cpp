@@ -195,7 +195,7 @@ void* malloc(size_t size)
         allocator->full_blocks.append(block);
     }
 #ifdef MALLOC_DEBUG
-    dbgprintf("LibC: allocated %p (chunk %d in block %p, size %u)\n", ptr, index, block, block->bytes_per_chunk());
+    dbgprintf("LibC: allocated %p (chunk in block %p, size %u)\n", ptr, block, block->bytes_per_chunk());
 #endif
     if (s_scrub_malloc)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
@@ -230,7 +230,7 @@ void free(void* ptr)
     auto* block = (ChunkedBlock*)page_base;
 
 #ifdef MALLOC_DEBUG
-    dbgprintf("LibC: freeing %p in allocator %p (size=%u, used=%u)\n", ptr, page, page->bytes_per_chunk(), page->used_chunks());
+    dbgprintf("LibC: freeing %p in allocator %p (size=%u, used=%u)\n", ptr, block, block->bytes_per_chunk(), block->used_chunks());
 #endif
 
     if (s_scrub_free)
