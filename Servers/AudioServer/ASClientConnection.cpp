@@ -14,7 +14,7 @@
 #include <stdio.h>
 
 ASClientConnection::ASClientConnection(int fd, int client_id, ASMixer& mixer)
-    : CIPCServerSideClient(fd, client_id)
+    : Connection(fd, client_id)
     , m_mixer(mixer)
 {
 }

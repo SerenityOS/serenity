@@ -3,7 +3,7 @@
 #include "AClientConnection.h"
 
 AClientConnection::AClientConnection()
-    : CIPCClientSideConnection("/tmp/asportal")
+    : Connection("/tmp/asportal")
 {
 }
 

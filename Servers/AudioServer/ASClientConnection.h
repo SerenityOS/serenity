@@ -1,11 +1,11 @@
 #pragma once
 
-#include <LibCore/CIPCServerSideClient.h>
+#include <LibCore/CoreIPCServer.h>
 #include <LibAudio/ASAPI.h>
 
 class ASMixer;
 
-class ASClientConnection final : public CIPCServerSideClient<ASAPI_ServerMessage, ASAPI_ClientMessage>
+class ASClientConnection final : public IPC::Server::Connection<ASAPI_ServerMessage, ASAPI_ClientMessage>
 {
 public:
     explicit ASClientConnection(int fd, int client_id, ASMixer& mixer);

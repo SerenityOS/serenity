@@ -15,23 +15,27 @@
 
 //#define CIPC_DEBUG
 
-class CIPCServerEvent : public CEvent {
+namespace IPC
+{
+namespace Server {
+
+class Event : public CEvent {
 public:
     enum Type {
         Invalid = 2000,
-        ClientDisconnected,
+        Disconnected,
     };
-    CIPCServerEvent() {}
-    explicit CIPCServerEvent(Type type)
+    Event() {}
+    explicit Event(Type type)
         : CEvent(type)
     {
     }
 };
 
-class ASClientDisconnectedNotification : public CIPCServerEvent {
+class DisconnectedEvent : public Event {
 public:
-    explicit ASClientDisconnectedNotification(int client_id)
-        : CIPCServerEvent(ClientDisconnected)
+    explicit DisconnectedEvent(int client_id)
+        : Event(Disconnected)
         , m_client_id(client_id)
     {
     }
@@ -43,7 +47,7 @@ private:
 };
 
 template <typename T, class... Args>
-T* CIPCServerSideClientCreator(Args&& ... args)
+T* new_connection_for_client(Args&& ... args)
 {
     auto conn = new T(AK::forward<Args>(args)...) /* arghs */;
     conn->send_greeting();
@@ -51,24 +55,24 @@ T* CIPCServerSideClientCreator(Args&& ... args)
 };
 
 template <typename ServerMessage, typename ClientMessage>
-class CIPCServerSideClient : public CObject
+class Connection : public CObject
 {
 public:
-    CIPCServerSideClient(int fd, int client_id)
+    Connection(int fd, int client_id)
         : m_socket(fd)
         , m_notifier(CNotifier(fd, CNotifier::Read))
         , m_client_id(client_id)
     {
         m_notifier.on_ready_to_read = [this] { drain_client(); };
 #if defined(CIPC_DEBUG)
-        dbg() << "S: Created new CIPCServerSideClient " << fd << client_id << " and said hello";
+        dbg() << "S: Created new Connection " << fd << client_id << " and said hello";
 #endif
     }
 
-    ~CIPCServerSideClient()
+    ~Connection()
     {
 #if defined(CIPC_DEBUG)
-        dbg() << "S: Destroyed CIPCServerSideClient " << m_socket.fd() << client_id();
+        dbg() << "S: Destroyed Connection " << m_socket.fd() << client_id();
 #endif
     }
 
@@ -96,17 +100,17 @@ public:
         if (nwritten < 0) {
             switch (errno) {
             case EPIPE:
-                dbgprintf("WSClientConnection::post_message: Disconnected from peer.\n");
+                dbgprintf("Connection::post_message: Disconnected from peer.\n");
                 delete_later();
                 return;
                 break;
             case EAGAIN:
-                dbgprintf("WSClientConnection::post_message: Client buffer overflowed.\n");
+                dbgprintf("Connection::post_message: Client buffer overflowed.\n");
                 did_misbehave();
                 return;
                 break;
             default:
-                perror("WSClientConnection::post_message writev");
+                perror("Connection::post_message writev");
                 ASSERT_NOT_REACHED();
             }
         }
@@ -124,7 +128,7 @@ public:
             if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
                 if (!messages_received) {
                     // TODO: is delete_later() sufficient?
-                    CEventLoop::current().post_event(*this, make<ASClientDisconnectedNotification>(client_id()));
+                    CEventLoop::current().post_event(*this, make<DisconnectedEvent>(client_id()));
                 }
                 break;
             }
@@ -159,12 +163,12 @@ public:
 
     void did_misbehave()
     {
-        dbgprintf("CIPCServerSideClient{%p} (id=%d, pid=%d) misbehaved, disconnecting.\n", this, client_id(), m_pid);
+        dbgprintf("Connection{%p} (id=%d, pid=%d) misbehaved, disconnecting.\n", this, client_id(), m_pid);
         delete_later();
         m_notifier.set_enabled(false);
     }
 
-    const char* class_name() const override { return "CIPCServerSideClient"; }
+    const char* class_name() const override { return "Connection"; }
 
     int client_id() const { return m_client_id; }
     pid_t client_pid() const { return m_pid; }
@@ -176,9 +180,9 @@ public:
 protected:
     void event(CEvent& event)
     {
-        if (event.type() == CIPCServerEvent::ClientDisconnected) {
-            int client_id = static_cast<const ASClientDisconnectedNotification&>(event).client_id();
-            dbgprintf("CIPCServerSideClient: Client disconnected: %d\n", client_id);
+        if (event.type() == Event::Disconnected) {
+            int client_id = static_cast<const DisconnectedEvent&>(event).client_id();
+            dbgprintf("Connection: Client disconnected: %d\n", client_id);
             delete this;
             return;
         }
@@ -215,4 +219,6 @@ private:
     int m_pid;
 };
 
+} // Server
+} // IPC
 
