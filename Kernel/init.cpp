@@ -7,9 +7,11 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Arch/i386/PIT.h>
+#include <Kernel/CMOS.h>
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/Devices/DebugLogDevice.h>
 #include <Kernel/Devices/DiskPartition.h>
+#include <Kernel/Devices/FloppyDiskDevice.h>
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/IDEDiskDevice.h>
 #include <Kernel/Devices/KeyboardDevice.h>
@@ -135,6 +137,24 @@ VFS* vfs;
 
     vfs->mount(ProcFS::the(), "/proc");
     vfs->mount(DevPtsFS::the(), "/dev/pts");
+
+    // Now, detect whether or not there are actually any floppy disks attached to the system
+    u8 detect = CMOS::read(0x10);
+    RefPtr<FloppyDiskDevice> fd0;
+    RefPtr<FloppyDiskDevice> fd1;
+    if ((detect >> 4) & 0x4) {
+        fd0 = FloppyDiskDevice::create(FloppyDiskDevice::DriveType::Master);
+        kprintf("fd0 is 1.44MB floppy drive\n");
+    } else {
+        kprintf("fd0 type unsupported! Type == 0x%x\n", detect >> 4);
+    }
+
+    if (detect & 0x0f) {
+        fd0 = FloppyDiskDevice::create(FloppyDiskDevice::DriveType::Slave);
+        kprintf("fd1 is 1.44MB floppy drive");
+    } else {
+        kprintf("fd1 type unsupported! Type == 0x%x\n", detect & 0x0f);
+    }
 
     int error;
 

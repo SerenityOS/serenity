@@ -14,6 +14,7 @@ KERNEL_OBJS = \
        Arch/i386/PIC.o \
        Syscall.o \
        Devices/IDEDiskDevice.o \
+       Devices/FloppyDiskDevice.o \
        VM/MemoryManager.o \
        VM/Region.o \
        VM/VMObject.o \
