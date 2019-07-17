@@ -39,7 +39,6 @@ enum ProcFileType {
     FI_Root_kmalloc,
     FI_Root_all,
     FI_Root_memstat,
-    FI_Root_summary,
     FI_Root_cpuinfo,
     FI_Root_inodes,
     FI_Root_dmesg,
@@ -541,29 +540,6 @@ ByteBuffer procfs$kmalloc(InodeIdentifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$summary(InodeIdentifier)
-{
-    InterruptDisabler disabler;
-    auto processes = Process::all_processes();
-    StringBuilder builder;
-    builder.appendf("PID TPG PGP SID  OWNER  STATE      PPID NSCHED     FDS  TTY  NAME\n");
-    for (auto* process : processes) {
-        builder.appendf("%-3u %-3u %-3u %-3u  %-4u   %-8s   %-3u  %-9u  %-3u  %-4s  %s\n",
-            process->pid(),
-            process->tty() ? process->tty()->pgid() : 0,
-            process->pgid(),
-            process->sid(),
-            process->uid(),
-            to_string(process->state()),
-            process->ppid(),
-            process->main_thread().times_scheduled(), // FIXME(Thread): Bill all scheds to the process
-            process->number_of_open_file_descriptors(),
-            process->tty() ? strrchr(process->tty()->tty_name().characters(), '/') + 1 : "n/a",
-            process->name().characters());
-    }
-    return builder.to_byte_buffer();
-}
-
 ByteBuffer procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
@@ -592,6 +568,7 @@ ByteBuffer procfs$all(InodeIdentifier)
         process_object.set("pid", process.pid());
         process_object.set("times_scheduled", process.main_thread().times_scheduled());
         process_object.set("pgid", process.tty() ? process.tty()->pgid() : 0);
+        process_object.set("pgp", process.pgid());
         process_object.set("sid", process.sid());
         process_object.set("uid", process.uid());
         process_object.set("gid", process.gid());
@@ -1120,7 +1097,6 @@ ProcFS::ProcFS()
     m_entries[FI_Root_kmalloc] = { "kmalloc", FI_Root_kmalloc, procfs$kmalloc };
     m_entries[FI_Root_all] = { "all", FI_Root_all, procfs$all };
     m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, procfs$memstat };
-    m_entries[FI_Root_summary] = { "summary", FI_Root_summary, procfs$summary };
     m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, procfs$cpuinfo };
     m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, procfs$inodes };
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, procfs$dmesg };
