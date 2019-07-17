@@ -62,8 +62,7 @@ void WSEventLoop::drain_server()
     } else {
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-
-        CIPCServerSideClientCreator<WSClientConnection>(client_fd, client_id);
+        IPC::Server::new_connection_for_client<WSClientConnection>(client_fd, client_id);
     }
 }
 

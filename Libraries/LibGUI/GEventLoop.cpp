@@ -188,7 +188,7 @@ void GWindowServerConnection::handle_wm_event(const WSAPI_ServerMessage& event, 
         ASSERT_NOT_REACHED();
 }
 
-void GWindowServerConnection::postprocess_bundles(Vector<CIPCClientSideConnection::IncomingASMessageBundle>& bundles)
+void GWindowServerConnection::postprocess_bundles(Vector<IncomingMessageBundle>& bundles)
 {
     int coalesced_paints = 0;
     int coalesced_resizes = 0;
