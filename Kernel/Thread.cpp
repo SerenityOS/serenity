@@ -119,7 +119,7 @@ void Thread::block(Thread::State new_state)
 {
     bool did_unlock = process().big_lock().unlock_if_locked();
     if (state() != Thread::Running) {
-        kprintf("Thread::block: %s(%u) block(%u/%s) with state=%u/%s\n", process().name().characters(), process().pid(), new_state, to_string(new_state), state(), to_string(state()));
+        dbgprintf("Thread::block: %s(%u) block(%u/%s) with state=%u/%s\n", process().name().characters(), process().pid(), new_state, to_string(new_state), state(), to_string(state()));
     }
     ASSERT(state() == Thread::Running);
     m_was_interrupted_while_blocked = false;
