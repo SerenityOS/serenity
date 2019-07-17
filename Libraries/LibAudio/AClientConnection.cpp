@@ -57,7 +57,6 @@ bool AClientConnection::drain_messages_from_server()
         if (nread == 0) {
             dbgprintf("EOF on IPC fd\n");
             exit(1);
-            exit(-1);
             return false;
         }
         ASSERT(nread == sizeof(message));
