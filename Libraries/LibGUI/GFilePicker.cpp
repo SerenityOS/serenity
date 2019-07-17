@@ -38,12 +38,6 @@ Optional<String> GFilePicker::get_save_filepath()
         if (file_path.is_null())
             return {};
 
-        if (GFilePicker::file_exists(file_path)) {
-            //TODO: Add Yes, No Messagebox to give the user a proper option
-            GMessageBox::show("File already exists: Overwrite?\n", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OK, &picker);
-            return file_path;
-        }
-
         return file_path;
     }
     return {};
@@ -177,6 +171,13 @@ GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
     ok_button->set_text(ok_button_name(m_mode));
     ok_button->on_click = [this, filename_textbox](auto&) {
         FileSystemPath path(String::format("%s/%s", m_model->path().characters(), filename_textbox->text().characters()));
+
+        if (GFilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
+            GMessageBox box("File already exists, overwrite?", "Existing File", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel);
+            if (box.exec() == GMessageBox::ExecCancel)
+                return;
+        }
+
         m_selected_file = path;
         done(ExecOK);
     };
