@@ -247,7 +247,7 @@ void WSWindowManager::add_window(WSWindow& window)
     m_windows_in_order.append(&window);
 
     if (window.is_fullscreen()) {
-        WSEventLoop::the().post_event(window, make<WSResizeEvent>(window.rect(), WSScreen::the().rect()));
+        CEventLoop::current().post_event(window, make<WSResizeEvent>(window.rect(), WSScreen::the().rect()));
         window.set_rect(WSScreen::the().rect());
     }
 
@@ -294,7 +294,7 @@ void WSWindowManager::remove_window(WSWindow& window)
         if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (window.client())
-            WSEventLoop::the().post_event(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
+            CEventLoop::current().post_event(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
         return IterationDecision::Continue;
     });
 }
@@ -304,7 +304,7 @@ void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow
     if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowStateChanges))
         return;
     if (window.client())
-        WSEventLoop::the().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
+        CEventLoop::current().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
 }
 
 void WSWindowManager::tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow& window)
@@ -312,7 +312,7 @@ void WSWindowManager::tell_wm_listener_about_window_rect(WSWindow& listener, WSW
     if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowRectChanges))
         return;
     if (window.client())
-        WSEventLoop::the().post_event(listener, make<WSWMWindowRectChangedEvent>(window.client()->client_id(), window.window_id(), window.rect()));
+        CEventLoop::current().post_event(listener, make<WSWMWindowRectChangedEvent>(window.client()->client_id(), window.window_id(), window.rect()));
 }
 
 void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow& window)
@@ -320,7 +320,7 @@ void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSW
     if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowIconChanges))
         return;
     if (window.client())
-        WSEventLoop::the().post_event(listener, make<WSWMWindowIconChangedEvent>(window.client()->client_id(), window.window_id(), window.icon_path()));
+        CEventLoop::current().post_event(listener, make<WSWMWindowIconChangedEvent>(window.client()->client_id(), window.window_id(), window.icon_path()));
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
@@ -490,7 +490,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
 #ifdef RESIZE_DEBUG
         dbg() << "[WM] Finish resizing WSWindow{" << m_resize_window << "}";
 #endif
-        WSEventLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
+        CEventLoop::current().post_event(*m_resize_window, make<WSResizeEvent>(m_resize_window->rect(), m_resize_window->rect()));
         invalidate(*m_resize_window);
         if (m_resize_window->rect().contains(event.position()))
             hovered_window = m_resize_window;
@@ -575,7 +575,7 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     dbg() << "[WM] Resizing, original: " << m_resize_window_original_rect << ", now: " << new_rect;
 #endif
     m_resize_window->set_rect(new_rect);
-    WSEventLoop::the().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
+    CEventLoop::current().post_event(*m_resize_window, make<WSResizeEvent>(old_rect, new_rect));
     return true;
 }
 
@@ -904,12 +904,12 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
     auto* previously_active_window = m_active_window.ptr();
     if (previously_active_window) {
-        WSEventLoop::the().post_event(*previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
+        CEventLoop::current().post_event(*previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
         invalidate(*previously_active_window);
     }
     m_active_window = window->make_weak_ptr();
     if (m_active_window) {
-        WSEventLoop::the().post_event(*m_active_window, make<WSEvent>(WSEvent::WindowActivated));
+        CEventLoop::current().post_event(*m_active_window, make<WSEvent>(WSEvent::WindowActivated));
         invalidate(*m_active_window);
 
         auto* client = window->client();
@@ -927,12 +927,12 @@ void WSWindowManager::set_hovered_window(WSWindow* window)
         return;
 
     if (m_hovered_window)
-        WSEventLoop::the().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowLeft));
+        CEventLoop::current().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowLeft));
 
     m_hovered_window = window ? window->make_weak_ptr() : nullptr;
 
     if (m_hovered_window)
-        WSEventLoop::the().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowEntered));
+        CEventLoop::current().post_event(*m_hovered_window, make<WSEvent>(WSEvent::WindowEntered));
 }
 
 void WSWindowManager::invalidate()

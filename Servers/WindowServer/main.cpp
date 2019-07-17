@@ -27,6 +27,6 @@ int main(int, char**)
     WSWindowManager window_manager;
 
     dbgprintf("Entering WindowServer main loop.\n");
-    WSEventLoop::the().exec();
+    loop.exec();
     ASSERT_NOT_REACHED();
 }
