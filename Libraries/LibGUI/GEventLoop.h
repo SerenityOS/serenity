@@ -1,7 +1,7 @@
 #pragma once
 
 #include <LibCore/CEventLoop.h>
-#include <LibCore/CIPCClientSideConnection.h>
+#include <LibCore/CoreIPCClient.h>
 #include <LibGUI/GEvent.h>
 #include <WindowServer/WSAPITypes.h>
 
@@ -10,16 +10,16 @@ class CObject;
 class CNotifier;
 class GWindow;
 
-class GWindowServerConnection : public CIPCClientSideConnection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
+class GWindowServerConnection : public IPC::Client::Connection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
 public:
     GWindowServerConnection()
-        : CIPCClientSideConnection("/tmp/wsportal")
+        : Connection("/tmp/wsportal")
     {}
 
     void handshake() override;
 
 private:
-    void postprocess_bundles(Vector<IncomingASMessageBundle>& m_unprocessed_bundles) override;
+    void postprocess_bundles(Vector<IncomingMessageBundle>& m_unprocessed_bundles) override;
     void handle_paint_event(const WSAPI_ServerMessage&, GWindow&, const ByteBuffer& extra_data);
     void handle_resize_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_mouse_event(const WSAPI_ServerMessage&, GWindow&);

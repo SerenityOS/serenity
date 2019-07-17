@@ -5,7 +5,7 @@
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
-#include <LibCore/CIPCServerSideClient.h>
+#include <LibCore/CoreIPCServer.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <WindowServer/WSEvent.h>
 
@@ -13,7 +13,7 @@ class WSWindow;
 class WSMenu;
 class WSMenuBar;
 
-class WSClientConnection final : public CIPCServerSideClient<WSAPI_ServerMessage, WSAPI_ClientMessage> {
+class WSClientConnection final : public IPC::Server::Connection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
 public:
     explicit WSClientConnection(int fd, int client_id);
     ~WSClientConnection() override;

@@ -2,12 +2,12 @@
 
 #include <LibCore/CLocalSocket.h>
 #include <LibCore/CNotifier.h>
-#include <LibCore/CIPCClientSideConnection.h>
+#include <LibCore/CoreIPCClient.h>
 #include <LibAudio/ASAPI.h>
 
 class ABuffer;
 
-class AClientConnection : public CIPCClientSideConnection<ASAPI_ServerMessage, ASAPI_ClientMessage> {
+class AClientConnection : public IPC::Client::Connection<ASAPI_ServerMessage, ASAPI_ClientMessage> {
 public:
     AClientConnection();
 

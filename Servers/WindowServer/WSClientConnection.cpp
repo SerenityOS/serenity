@@ -40,7 +40,7 @@ WSClientConnection* WSClientConnection::from_client_id(int client_id)
 }
 
 WSClientConnection::WSClientConnection(int fd, int client_id)
-    : CIPCServerSideClient(fd, client_id)
+    : Connection(fd, client_id)
 {
     if (!s_connections)
         s_connections = new HashMap<int, WSClientConnection*>;
@@ -88,7 +88,7 @@ void WSClientConnection::event(CEvent& event)
         return;
     }
 
-    CIPCServerSideClient::event(event);
+    Connection::event(event);
 }
 
 static Vector<Rect, 32> get_rects(const WSAPI_ClientMessage& message, const ByteBuffer& extra_data)

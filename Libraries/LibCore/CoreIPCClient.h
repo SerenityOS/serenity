@@ -15,23 +15,27 @@
 
 //#define CIPC_DEBUG
 
-class CIPCClientEvent : public CEvent {
+namespace IPC
+{
+namespace Client {
+
+class Event : public CEvent {
 public:
     enum Type {
         Invalid = 2000,
-        DoPostprocess,
+        PostProcess,
     };
-    CIPCClientEvent() {}
-    explicit CIPCClientEvent(Type type)
+    Event() {}
+    explicit Event(Type type)
         : CEvent(type)
     {
     }
 };
 
-class CIPCClientPostprocessEvent : public CIPCClientEvent {
+class PostProcessEvent : public Event {
 public:
-    explicit CIPCClientPostprocessEvent(int client_id)
-        : CIPCClientEvent(DoPostprocess)
+    explicit PostProcessEvent(int client_id)
+        : Event(PostProcess)
         , m_client_id(client_id)
     {
     }
@@ -43,16 +47,16 @@ private:
 };
 
 template <typename ServerMessage, typename ClientMessage>
-class CIPCClientSideConnection : public CObject {
+class Connection : public CObject {
 public:
-    CIPCClientSideConnection(const StringView& address)
+    Connection(const StringView& address)
         : m_notifier(CNotifier(m_connection.fd(), CNotifier::Read))
     {
         // We want to rate-limit our clients
         m_connection.set_blocking(true);
         m_notifier.on_ready_to_read = [this] {
             drain_messages_from_server();
-            CEventLoop::current().post_event(*this, make<CIPCClientPostprocessEvent>(m_connection.fd()));
+            CEventLoop::current().post_event(*this, make<PostProcessEvent>(m_connection.fd()));
         };
 
         int retries = 1000;
@@ -61,7 +65,7 @@ public:
                 break;
             }
 
-            dbgprintf("CIPCClientSideConnection: connect failed: %d, %s\n", errno, strerror(errno));
+            dbgprintf("Client::Connection: connect failed: %d, %s\n", errno, strerror(errno));
             sleep(1);
             --retries;
         }
@@ -73,7 +77,7 @@ public:
 
     virtual void event(CEvent& event) override
     {
-        if (event.type() == CIPCClientEvent::DoPostprocess) {
+        if (event.type() == Event::PostProcess) {
             postprocess_bundles(m_unprocessed_bundles);
         } else {
             CObject::event(event);
@@ -94,7 +98,7 @@ public:
             if (m_unprocessed_bundles[i].message.type == type) {
                 event = move(m_unprocessed_bundles[i].message);
                 m_unprocessed_bundles.remove(i);
-                CEventLoop::current().post_event(*this, make<CIPCClientPostprocessEvent>(m_connection.fd()));
+                CEventLoop::current().post_event(*this, make<PostProcessEvent>(m_connection.fd()));
                 return true;
             }
         }
@@ -115,7 +119,7 @@ public:
                 if (m_unprocessed_bundles[i].message.type == type) {
                     event = move(m_unprocessed_bundles[i].message);
                     m_unprocessed_bundles.remove(i);
-                    CEventLoop::current().post_event(*this, make<CIPCClientPostprocessEvent>(m_connection.fd()));
+                    CEventLoop::current().post_event(*this, make<PostProcessEvent>(m_connection.fd()));
                     return true;
                 }
             }
@@ -164,14 +168,14 @@ public:
     }
 
 protected:
-    struct IncomingASMessageBundle {
+    struct IncomingMessageBundle {
         ServerMessage message;
         ByteBuffer extra_data;
     };
 
-    virtual void postprocess_bundles(Vector<IncomingASMessageBundle>& new_bundles)
+    virtual void postprocess_bundles(Vector<IncomingMessageBundle>& new_bundles)
     {
-        dbg() << "CIPCClientSideConnection " << " warning: discarding " << new_bundles.size() << " unprocessed bundles; this may not be what you want";
+        dbg() << "Client::Connection: " << " warning: discarding " << new_bundles.size() << " unprocessed bundles; this may not be what you want";
         new_bundles.clear();
     }
 
@@ -214,7 +218,11 @@ private:
 
     CLocalSocket m_connection;
     CNotifier m_notifier;
-    Vector<IncomingASMessageBundle> m_unprocessed_bundles;
+    Vector<IncomingMessageBundle> m_unprocessed_bundles;
     int m_server_pid;
     int m_my_client_id;
 };
+
+} // Client
+} // IPC
+
