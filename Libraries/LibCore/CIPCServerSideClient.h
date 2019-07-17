@@ -13,6 +13,8 @@
 #include <sys/socket.h>
 #include <stdio.h>
 
+//#define CIPC_DEBUG
+
 class CIPCServerEvent : public CEvent {
 public:
     enum Type {
@@ -58,16 +60,23 @@ public:
         , m_client_id(client_id)
     {
         m_notifier.on_ready_to_read = [this] { drain_client(); };
-        dbg() << "********** S: Created new CIPCServerSideClient " << fd << client_id << " and said hello";
+#if defined(CIPC_DEBUG)
+        dbg() << "S: Created new CIPCServerSideClient " << fd << client_id << " and said hello";
+#endif
     }
 
     ~CIPCServerSideClient()
     {
-        dbg() << "********** S: Destroyed CIPCServerSideClient " << m_socket.fd() << client_id();
+#if defined(CIPC_DEBUG)
+        dbg() << "S: Destroyed CIPCServerSideClient " << m_socket.fd() << client_id();
+#endif
     }
 
     void post_message(const ServerMessage& message, const ByteBuffer& extra_data = {})
     {
+#if defined(CIPC_DEBUG)
+        dbg() << "S: -> C " << int(message.type) << " extra " << extra_data.size();
+#endif
         if (!extra_data.is_empty())
             const_cast<ServerMessage&>(message).extra_size = extra_data.size();
 
@@ -139,6 +148,9 @@ public:
                     return did_misbehave();
                 }
             }
+#if defined(CIPC_DEBUG)
+            dbg() << "S: <- C " << int(message.type) << " extra " << extra_data.size();
+#endif
             if (!handle_message(message, move(extra_data)))
                 return;
             ++messages_received;

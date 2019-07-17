@@ -19,7 +19,7 @@ String GClipboard::data() const
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::GetClipboardContents;
-    auto response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidGetClipboardContents);
+    auto response = GEventLoop::current().connection().sync_request(request, WSAPI_ServerMessage::Type::DidGetClipboardContents);
     if (response.clipboard.shared_buffer_id < 0)
         return {};
     auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(response.clipboard.shared_buffer_id);
@@ -38,7 +38,7 @@ void GClipboard::set_data(const StringView& data)
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::SetClipboardContents;
-    auto shared_buffer = SharedBuffer::create(GEventLoop::current().server_pid(), data.length() + 1);
+    auto shared_buffer = SharedBuffer::create(GEventLoop::current().connection().server_pid(), data.length() + 1);
     if (!shared_buffer) {
         dbgprintf("GClipboard::set_data() failed to create a shared buffer\n");
         return;
@@ -50,6 +50,6 @@ void GClipboard::set_data(const StringView& data)
     shared_buffer->seal();
     request.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
     request.clipboard.contents_size = data.length();
-    auto response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidSetClipboardContents);
+    auto response = GEventLoop::current().connection().sync_request(request, WSAPI_ServerMessage::Type::DidSetClipboardContents);
     ASSERT(response.clipboard.shared_buffer_id == shared_buffer->shared_buffer_id());
 }

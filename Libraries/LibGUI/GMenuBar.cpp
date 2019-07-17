@@ -19,7 +19,7 @@ int GMenuBar::realize_menubar()
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::CreateMenubar;
-    WSAPI_ServerMessage response = GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidCreateMenubar);
+    WSAPI_ServerMessage response = GEventLoop::current().connection().sync_request(request, WSAPI_ServerMessage::Type::DidCreateMenubar);
     return response.menu.menubar_id;
 }
 
@@ -30,7 +30,7 @@ void GMenuBar::unrealize_menubar()
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::DestroyMenubar;
     request.menu.menubar_id = m_menubar_id;
-    GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidDestroyMenubar);
+    GEventLoop::current().connection().sync_request(request, WSAPI_ServerMessage::Type::DidDestroyMenubar);
     m_menubar_id = -1;
 }
 
@@ -47,12 +47,12 @@ void GMenuBar::notify_added_to_application(Badge<GApplication>)
         request.type = WSAPI_ClientMessage::Type::AddMenuToMenubar;
         request.menu.menubar_id = m_menubar_id;
         request.menu.menu_id = menu_id;
-        GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuToMenubar);
+        GEventLoop::current().connection().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuToMenubar);
     }
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::SetApplicationMenubar;
     request.menu.menubar_id = m_menubar_id;
-    GEventLoop::current().sync_request(request, WSAPI_ServerMessage::Type::DidSetApplicationMenubar);
+    GEventLoop::current().connection().sync_request(request, WSAPI_ServerMessage::Type::DidSetApplicationMenubar);
 }
 
 void GMenuBar::notify_removed_from_application(Badge<GApplication>)

@@ -5,7 +5,7 @@
 #include <AK/Function.h>
 #include <SharedGraphics/Rect.h>
 
-class GEventLoop;
+class GWindowServerConnection;
 
 class GDesktop {
 public:
@@ -16,7 +16,7 @@ public:
     bool set_wallpaper(const StringView& path);
 
     Rect rect() const { return m_rect; }
-    void did_receive_screen_rect(Badge<GEventLoop>, const Rect&);
+    void did_receive_screen_rect(Badge<GWindowServerConnection>, const Rect&);
 
     Function<void(const Rect&)> on_rect_change;
 

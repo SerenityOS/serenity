@@ -14,6 +14,7 @@ int main(int argc, char **argv)
 
     printf("Establishing connection\n");
     AClientConnection a_conn;
+    a_conn.handshake();
     printf("Established connection\n");
     AWavLoader loader;
     const auto& buffer = loader.load_wav(argv[1]);
