@@ -40,9 +40,9 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
 
     for (auto& it : all_processes) {
         if (it.value.pid == 0)
-            idle += it.value.nsched;
+            idle += it.value.times_scheduled;
         else
-            busy += it.value.nsched;
+            busy += it.value.times_scheduled;
     }
 }
 

@@ -23,16 +23,28 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
     json.as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();
         CProcessStatistics process;
+
+        // kernel data first
         process.pid = process_object.get("pid").to_u32();
-        process.nsched = process_object.get("times_scheduled").to_u32();
+        process.times_scheduled = process_object.get("times_scheduled").to_u32();
+        process.pgid = process_object.get("pgid").to_u32();
+        process.sid = process_object.get("sid").to_u32();
         process.uid = process_object.get("uid").to_u32();
-        process.username = username_from_uid(process.uid);
-        process.priority = process_object.get("priority").to_string();
-        process.syscalls = process_object.get("syscall_count").to_u32();
+        process.gid = process_object.get("gid").to_u32();
         process.state = process_object.get("state").to_string();
+        process.ppid = process_object.get("ppid").to_u32();
+        process.nfds = process_object.get("nfds").to_u32();
         process.name = process_object.get("name").to_string();
-        process.virtual_size = process_object.get("amount_virtual").to_u32();
-        process.physical_size = process_object.get("amount_resident").to_u32();
+        process.tty = process_object.get("tty").to_string();
+        process.amount_virtual = process_object.get("amount_virtual").to_u32();
+        process.amount_resident = process_object.get("amount_resident").to_u32();
+        process.amount_shared = process_object.get("amount_shared").to_u32();
+        process.ticks = process_object.get("ticks").to_u32();
+        process.priority = process_object.get("priority").to_string();
+        process.syscall_count = process_object.get("syscall_count").to_u32();
+
+        // and synthetic data last
+        process.username = username_from_uid(process.uid);
         map.set(process.pid, process);
     });
 

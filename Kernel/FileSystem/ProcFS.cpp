@@ -585,6 +585,8 @@ ByteBuffer procfs$all(InodeIdentifier)
     InterruptDisabler disabler;
     auto processes = Process::all_processes();
     JsonArray array;
+
+    // Keep this in sync with CProcessStatistics.
     auto build_process = [&](const Process& process) {
         JsonObject process_object;
         process_object.set("pid", process.pid());

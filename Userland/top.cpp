@@ -13,14 +13,14 @@
 
 struct ProcessData {
     CProcessStatistics stats;
-    unsigned nsched_since_prev { 0 };
+    unsigned times_scheduled_since_prev { 0 };
     unsigned cpu_percent { 0 };
     unsigned cpu_percent_decimal { 0 };
 };
 
 struct Snapshot {
     HashMap<unsigned, ProcessData> map;
-    u32 sum_nsched { 0 };
+    u32 sum_times_scheduled { 0 };
 };
 
 static Snapshot get_snapshot()
@@ -31,7 +31,7 @@ static Snapshot get_snapshot()
 
     for (auto& it : all_processes) {
         auto& stats = it.value;
-        snapshot.sum_nsched += stats.nsched;
+        snapshot.sum_times_scheduled += stats.times_scheduled;
         ProcessData process_data;
         process_data.stats = stats;
         snapshot.map.set(stats.pid, move(process_data));
@@ -47,7 +47,7 @@ int main(int, char**)
     usleep(10000);
     for (;;) {
         auto current = get_snapshot();
-        auto sum_diff = current.sum_nsched - prev.sum_nsched;
+        auto sum_diff = current.sum_times_scheduled - prev.sum_times_scheduled;
 
         printf("\033[3J\033[H\033[2J");
         printf("\033[47;30m%6s  %3s  %-8s  %-8s  %6s  %6s  %4s  %s\033[K\033[0m\n",
@@ -63,20 +63,20 @@ int main(int, char**)
             pid_t pid = it.key;
             if (pid == 0)
                 continue;
-            u32 nsched_now = it.value.stats.nsched;
+            u32 times_scheduled_now = it.value.stats.times_scheduled;
             auto jt = prev.map.find(pid);
             if (jt == prev.map.end())
                 continue;
-            u32 nsched_before = (*jt).value.stats.nsched;
-            u32 nsched_diff = nsched_now - nsched_before;
-            it.value.nsched_since_prev = nsched_diff;
-            it.value.cpu_percent = ((nsched_diff * 100) / sum_diff);
-            it.value.cpu_percent_decimal = (((nsched_diff * 1000) / sum_diff) % 10);
+            u32 times_scheduled_before = (*jt).value.stats.times_scheduled;
+            u32 times_scheduled_diff = times_scheduled_now - times_scheduled_before;
+            it.value.times_scheduled_since_prev = times_scheduled_diff;
+            it.value.cpu_percent = ((times_scheduled_diff * 100) / sum_diff);
+            it.value.cpu_percent_decimal = (((times_scheduled_diff * 1000) / sum_diff) % 10);
             processes.append(&it.value);
         }
 
         quick_sort(processes.begin(), processes.end(), [](auto* p1, auto* p2) {
-            return p2->nsched_since_prev < p1->nsched_since_prev;
+            return p2->times_scheduled_since_prev < p1->times_scheduled_since_prev;
         });
 
         for (auto* process : processes) {
@@ -85,8 +85,8 @@ int main(int, char**)
                 process->stats.priority[0],
                 process->stats.username.characters(),
                 process->stats.state.characters(),
-                process->stats.virtual_size / 1024,
-                process->stats.physical_size / 1024,
+                process->stats.amount_virtual / 1024,
+                process->stats.amount_resident / 1024,
                 process->cpu_percent,
                 process->cpu_percent_decimal,
                 process->stats.name.characters());

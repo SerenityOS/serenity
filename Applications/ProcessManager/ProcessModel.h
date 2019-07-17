@@ -41,14 +41,14 @@ private:
 
     struct ProcessState {
         pid_t pid;
-        unsigned nsched;
+        unsigned times_scheduled;
         String name;
         String state;
         String user;
         String priority;
-        size_t virtual_size;
-        size_t physical_size;
-        unsigned syscalls;
+        size_t amount_virtual;
+        size_t amount_resident;
+        unsigned syscall_count;
         float cpu_percent;
     };
 
