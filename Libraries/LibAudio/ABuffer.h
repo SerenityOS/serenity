@@ -25,7 +25,7 @@ struct ASample {
         , right(right)
     {}
 
-    void clamp()
+    void clip()
     {
         if (left > 1)
             left = 1;
