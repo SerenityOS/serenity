@@ -12,9 +12,8 @@
 class WSEvent : public CEvent {
 public:
     enum Type {
-        Invalid = 2000,
+        Invalid = 3000,
         WM_DeferredCompose,
-        WM_ClientDisconnected,
         MouseMove,
         MouseDown,
         MouseDoubleClick,
@@ -83,20 +82,6 @@ public:
     bool is_client_request() const { return type() > __Begin_API_Client_Requests && type() < __End_API_Client_Requests; }
     bool is_mouse_event() const { return type() == MouseMove || type() == MouseDown || type() == MouseDoubleClick || type() == MouseUp || type() == MouseWheel; }
     bool is_key_event() const { return type() == KeyUp || type() == KeyDown; }
-};
-
-class WSClientDisconnectedNotification : public WSEvent {
-public:
-    explicit WSClientDisconnectedNotification(int client_id)
-        : WSEvent(WM_ClientDisconnected)
-        , m_client_id(client_id)
-    {
-    }
-
-    int client_id() const { return m_client_id; }
-
-private:
-    int m_client_id { 0 };
 };
 
 class WSAPIClientRequest : public WSEvent {
