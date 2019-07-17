@@ -90,7 +90,7 @@ void ASMixer::mix()
 
         for (int i = 0; i < mixed_buffer.size(); ++i) {
             auto& mixed_sample = mixed_buffer[i];
-            mixed_sample.clamp();
+            mixed_sample.clip();
 
             i16 out_sample;
             out_sample = mixed_sample.left * std::numeric_limits<i16>::max();
