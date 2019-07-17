@@ -8,6 +8,7 @@
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
+//#define SCHEDULER_RUNNABLE_DEBUG
 
 static u32 time_slice_for(Process::Priority priority)
 {
@@ -233,7 +234,7 @@ bool Scheduler::pick_next()
         return true;
     });
 
-#ifdef SCHEDULER_DEBUG
+#ifdef SCHEDULER_RUNNABLE_DEBUG
     dbgprintf("Non-runnables:\n");
     for (auto* thread = g_nonrunnable_threads->head(); thread; thread = thread->next()) {
         auto* process = &thread->process();
@@ -258,7 +259,7 @@ bool Scheduler::pick_next()
 
         if (!thread->process().is_being_inspected() && (thread->state() == Thread::Runnable || thread->state() == Thread::Running)) {
 #ifdef SCHEDULER_DEBUG
-            kprintf("switch to %s(%u:%u) @ %w:%x\n", thread->process().name().characters(), thread->process().pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
+            dbgprintf("switch to %s(%u:%u) @ %w:%x\n", thread->process().name().characters(), thread->process().pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
 #endif
             return context_switch(*thread);
         }
