@@ -33,9 +33,7 @@ void ASMixer::mix()
     for (;;) {
         {
             CLocker lock(m_lock);
-            for (const auto& buf : m_pending_mixing)
-                active_mix_buffers.append(buf);
-            m_pending_mixing.clear();
+            active_mix_buffers.append(move(m_pending_mixing));
         }
 
         // ### use a wakeup of some kind rather than this garbage
