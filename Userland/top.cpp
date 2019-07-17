@@ -80,7 +80,7 @@ int main(int, char**)
         });
 
         for (auto* process : processes) {
-            printf("%6d  %c    %-8s  %-8s  %6zu  %6zu  %2u.%1u  %s\n",
+            printf("%6d  %c    %-8s  %-10s  %6zu  %6zu  %2u.%1u  %s\n",
                 process->stats.pid,
                 process->stats.priority[0],
                 process->stats.username.characters(),
