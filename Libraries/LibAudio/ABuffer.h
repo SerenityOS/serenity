@@ -53,8 +53,8 @@ struct ASample {
 class ABuffer : public RefCounted<ABuffer> {
 public:
     static RefPtr<ABuffer> from_pcm_data(ByteBuffer& data, int num_channels, int bits_per_sample, int source_rate);
-    ABuffer(Vector<ASample>& samples)
-        : m_samples(samples)
+    ABuffer(Vector<ASample>&& samples)
+        : m_samples(move(samples))
     {}
 
     const Vector<ASample>& samples() const { return m_samples; }
