@@ -174,7 +174,7 @@ protected:
         CObject::event(event);
     }
 
-    virtual bool handle_message(const ClientMessage&, const ByteBuffer& = {}) = 0;
+    virtual bool handle_message(const ClientMessage&, const ByteBuffer&& = {}) = 0;
 
 private:
     // TODO: A way to create some kind of CIODevice with an open FD would be nice.
