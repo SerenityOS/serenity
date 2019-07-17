@@ -120,16 +120,16 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             ASSERT_NOT_REACHED();
             return 3;
         case Column::Virtual:
-            return (int)process.current_state.virtual_size;
+            return (int)process.current_state.amount_virtual;
         case Column::Physical:
-            return (int)process.current_state.physical_size;
+            return (int)process.current_state.amount_resident;
         case Column::CPU:
             return process.current_state.cpu_percent;
         case Column::Name:
             return process.current_state.name;
         // FIXME: GVariant with unsigned?
         case Column::Syscalls:
-            return (int)process.current_state.syscalls;
+            return (int)process.current_state.syscall_count;
         }
         ASSERT_NOT_REACHED();
         return {};
@@ -156,16 +156,16 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
                 return *m_normal_priority_icon;
             return process.current_state.priority;
         case Column::Virtual:
-            return pretty_byte_size(process.current_state.virtual_size);
+            return pretty_byte_size(process.current_state.amount_virtual);
         case Column::Physical:
-            return pretty_byte_size(process.current_state.physical_size);
+            return pretty_byte_size(process.current_state.amount_resident);
         case Column::CPU:
             return process.current_state.cpu_percent;
         case Column::Name:
             return process.current_state.name;
         // FIXME: It's weird that GVariant doesn't support unsigned ints. Should it?
         case Column::Syscalls:
-            return (int)process.current_state.syscalls;
+            return (int)process.current_state.syscall_count;
         }
     }
 
@@ -176,24 +176,24 @@ void ProcessModel::update()
 {
     auto all_processes = CProcessStatisticsReader::get_all();
 
-    unsigned last_sum_nsched = 0;
+    unsigned last_sum_times_scheduled = 0;
     for (auto& it : m_processes)
-        last_sum_nsched += it.value->current_state.nsched;
+        last_sum_times_scheduled += it.value->current_state.times_scheduled;
 
     HashTable<pid_t> live_pids;
-    unsigned sum_nsched = 0;
+    unsigned sum_times_scheduled = 0;
     for (auto& it : all_processes) {
         ProcessState state;
         state.pid = it.value.pid;
-        state.nsched = it.value.nsched;
+        state.times_scheduled = it.value.times_scheduled;
         state.user = it.value.username;
         state.priority = it.value.priority;
-        state.syscalls = it.value.syscalls;
+        state.syscall_count = it.value.syscall_count;
         state.state = it.value.state;
         state.name = it.value.name;
-        state.virtual_size = it.value.virtual_size;
-        state.physical_size = it.value.physical_size;
-        sum_nsched += it.value.nsched;
+        state.amount_virtual = it.value.amount_virtual;
+        state.amount_resident = it.value.amount_resident;
+        sum_times_scheduled += it.value.times_scheduled;
         {
             auto pit = m_processes.find(it.value.pid);
             if (pit == m_processes.end())
@@ -216,8 +216,8 @@ void ProcessModel::update()
             continue;
         }
         auto& process = *it.value;
-        u32 nsched_diff = process.current_state.nsched - process.previous_state.nsched;
-        process.current_state.cpu_percent = ((float)nsched_diff * 100) / (float)(sum_nsched - last_sum_nsched);
+        u32 times_scheduled_diff = process.current_state.times_scheduled - process.previous_state.times_scheduled;
+        process.current_state.cpu_percent = ((float)times_scheduled_diff * 100) / (float)(sum_times_scheduled - last_sum_times_scheduled);
         if (it.key != 0) {
             total_cpu_percent += process.current_state.cpu_percent;
             m_pids.append(it.key);
