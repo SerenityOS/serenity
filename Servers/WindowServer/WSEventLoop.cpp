@@ -40,6 +40,12 @@ WSEventLoop::WSEventLoop()
 
     m_server_notifier = make<CNotifier>(m_server_sock.fd(), CNotifier::Read);
     m_server_notifier->on_ready_to_read = [this] { drain_server(); };
+
+    m_keyboard_notifier = make<CNotifier>(m_keyboard_fd, CNotifier::Read);
+    m_keyboard_notifier->on_ready_to_read = [this] { drain_keyboard(); };
+
+    m_mouse_notifier = make<CNotifier>(m_mouse_fd, CNotifier::Read);
+    m_mouse_notifier->on_ready_to_read = [this] { drain_mouse(); };
 }
 
 WSEventLoop::~WSEventLoop()
@@ -57,7 +63,7 @@ void WSEventLoop::drain_server()
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
 
-        new WSClientConnection(client_fd, client_id);
+        CIPCServerSideClientCreator<WSClientConnection>(client_fd, client_id);
     }
 }
 
@@ -103,24 +109,5 @@ void WSEventLoop::drain_keyboard()
         ASSERT(nread == sizeof(KeyEvent));
         screen.on_receive_keyboard_data(event);
     }
-}
-
-void WSEventLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added)
-{
-    auto add_fd_to_set = [&max_fd_added](int fd, auto& set) {
-        FD_SET(fd, &set);
-        if (fd > max_fd_added)
-            max_fd_added = fd;
-    };
-    add_fd_to_set(m_keyboard_fd, fds);
-    add_fd_to_set(m_mouse_fd, fds);
-}
-
-void WSEventLoop::process_file_descriptors_after_select(const fd_set& fds)
-{
-    if (FD_ISSET(m_keyboard_fd, &fds))
-        drain_keyboard();
-    if (FD_ISSET(m_mouse_fd, &fds))
-        drain_mouse();
 }
 
