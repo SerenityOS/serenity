@@ -156,7 +156,7 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
         reply.playing_buffer.buffer_id = message.play_buffer.buffer_id;
         post_message(reply);
 
-        m_mixer.queue(*this, adopt(*new ABuffer(samples)));
+        m_mixer.queue(*this, adopt(*new ABuffer(move(samples))));
         break;
     }
     case ASAPI_ClientMessage::Type::Invalid:

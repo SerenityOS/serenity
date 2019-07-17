@@ -217,5 +217,5 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, int num_channels, int b
     // don't belong.
     ASSERT(!stream.handle_read_failure());
 
-    return adopt(*new ABuffer(fdata));
+    return adopt(*new ABuffer(move(fdata)));
 }
