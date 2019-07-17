@@ -31,7 +31,7 @@ bool GDesktop::set_wallpaper(const StringView& path)
     ASSERT(path.length() < (int)sizeof(message.text));
     strncpy(message.text, path.characters_without_null_termination(), path.length());
     message.text_length = path.length();
-    auto response = GEventLoop::current().connection().sync_request(message, WSAPI_ServerMessage::Type::DidSetWallpaper);
+    auto response = GWindowServerConnection::the().sync_request(message, WSAPI_ServerMessage::Type::DidSetWallpaper);
     return response.value;
 }
 
@@ -39,6 +39,6 @@ String GDesktop::wallpaper() const
 {
     WSAPI_ClientMessage message;
     message.type = WSAPI_ClientMessage::Type::GetWallpaper;
-    auto response = GEventLoop::current().connection().sync_request(message, WSAPI_ServerMessage::Type::DidGetWallpaper);
+    auto response = GWindowServerConnection::the().sync_request(message, WSAPI_ServerMessage::Type::DidGetWallpaper);
     return String(response.text, response.text_length);
 }

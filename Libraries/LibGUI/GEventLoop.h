@@ -17,6 +17,7 @@ public:
     {}
 
     void handshake() override;
+    static GWindowServerConnection& the();
 
 private:
     void postprocess_bundles(Vector<IncomingMessageBundle>& m_unprocessed_bundles) override;
@@ -39,9 +40,6 @@ public:
 
     static GEventLoop& current() { return static_cast<GEventLoop&>(CEventLoop::current()); }
 
-    GWindowServerConnection& connection() { return m_connection; }
-
 private:
     void process_unprocessed_bundles();
-    GWindowServerConnection m_connection;
 };

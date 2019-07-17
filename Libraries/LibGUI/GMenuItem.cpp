@@ -70,5 +70,5 @@ void GMenuItem::update_window_server()
         request.menu.shortcut_text_length = 0;
     }
 
-    GEventLoop::current().connection().sync_request(request, WSAPI_ServerMessage::Type::DidUpdateMenuItem);
+    GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidUpdateMenuItem);
 }

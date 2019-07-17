@@ -23,6 +23,16 @@
 //#define GEVENTLOOP_DEBUG
 //#define COALESCING_DEBUG
 
+GWindowServerConnection& GWindowServerConnection::the()
+{
+    static GWindowServerConnection* s_connection = nullptr;
+    if (!s_connection) {
+        s_connection = new GWindowServerConnection();
+        s_connection->handshake();
+    }
+    return *s_connection;
+}
+
 void GWindowServerConnection::handshake()
 {
     WSAPI_ClientMessage request;
@@ -34,7 +44,9 @@ void GWindowServerConnection::handshake()
 
 GEventLoop::GEventLoop()
 {
-    m_connection.handshake();
+    // ensure the WS connection is up, as our users might be expecting it to be
+    // valid very early (via e.g. GDesktop) :)
+    GWindowServerConnection::the();
 }
 
 GEventLoop::~GEventLoop()
