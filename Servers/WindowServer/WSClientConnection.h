@@ -5,33 +5,27 @@
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
+#include <LibCore/CIPCServerSideClient.h>
 #include <SharedGraphics/GraphicsBitmap.h>
 #include <WindowServer/WSEvent.h>
 
 class WSWindow;
 class WSMenu;
 class WSMenuBar;
-struct WSAPI_ServerMessage;
 
-class WSClientConnection final : public CObject {
+class WSClientConnection final : public CIPCServerSideClient<WSAPI_ServerMessage, WSAPI_ClientMessage> {
 public:
-    explicit WSClientConnection(int fd);
-    virtual ~WSClientConnection() override;
+    explicit WSClientConnection(int fd, int client_id);
+    ~WSClientConnection() override;
+    void send_greeting() override;
+    bool handle_message(const WSAPI_ClientMessage&, const ByteBuffer&& = {}) override;
 
     static WSClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(WSClientConnection&)>);
 
-    void post_message(const WSAPI_ServerMessage&, const ByteBuffer& = {});
-
-    int client_id() const { return m_client_id; }
     WSMenuBar* app_menubar() { return m_app_menubar.ptr(); }
 
-    int fd() const { return m_fd; }
-    pid_t pid() const { return m_pid; }
-
     bool is_showing_modal_window() const;
-
-    void set_client_pid(pid_t pid) { m_pid = pid; }
 
     template<typename Matching, typename Callback>
     void for_each_window_matching(Matching, Callback);
@@ -41,14 +35,10 @@ public:
     void notify_about_new_screen_rect(const Rect&);
     void post_paint_message(WSWindow&);
 
-    void did_misbehave();
-
-    void on_ready_read();
 
 private:
     virtual void event(CEvent&) override;
 
-    bool handle_message(const WSAPI_ClientMessage& message, ByteBuffer&& extra_data);
     void on_request(const WSAPIClientRequest&);
     void handle_request(const WSAPICreateMenubarRequest&);
     void handle_request(const WSAPIDestroyMenubarRequest&);
@@ -87,10 +77,6 @@ private:
     void handle_request(const WSAPIMoveWindowToFrontRequest&);
 
     void post_error(const String&);
-
-    int m_client_id { 0 };
-    int m_fd { -1 };
-    pid_t m_pid { -1 };
 
     HashMap<int, OwnPtr<WSWindow>> m_windows;
     HashMap<int, OwnPtr<WSMenuBar>> m_menubars;

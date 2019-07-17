@@ -54,7 +54,10 @@ void WSEventLoop::drain_server()
     if (client_fd < 0) {
         dbgprintf("WindowServer: accept() failed: %s\n", strerror(errno));
     } else {
-        new WSClientConnection(client_fd);
+        static int s_next_client_id = 0;
+        int client_id = ++s_next_client_id;
+
+        new WSClientConnection(client_fd, client_id);
     }
 }
 
@@ -111,9 +114,6 @@ void WSEventLoop::add_file_descriptors_for_select(fd_set& fds, int& max_fd_added
     };
     add_fd_to_set(m_keyboard_fd, fds);
     add_fd_to_set(m_mouse_fd, fds);
-    WSClientConnection::for_each_client([&](WSClientConnection& client) {
-        add_fd_to_set(client.fd(), fds);
-    });
 }
 
 void WSEventLoop::process_file_descriptors_after_select(const fd_set& fds)
@@ -122,9 +122,5 @@ void WSEventLoop::process_file_descriptors_after_select(const fd_set& fds)
         drain_keyboard();
     if (FD_ISSET(m_mouse_fd, &fds))
         drain_mouse();
-    WSClientConnection::for_each_client([&](WSClientConnection& client) {
-        if (FD_ISSET(client.fd(), &fds))
-            client.on_ready_read();
-    });
 }
 
