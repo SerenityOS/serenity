@@ -35,7 +35,7 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
         }
         message.wm.client_id = identifier.client_id();
         message.wm.window_id = identifier.window_id();
-        bool success = GEventLoop::current().connection().post_message_to_server(message);
+        bool success = GWindowServerConnection::the().post_message_to_server(message);
         ASSERT(success);
     };
     auto& window_ref = *window;
