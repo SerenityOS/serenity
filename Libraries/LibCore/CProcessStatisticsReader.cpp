@@ -28,6 +28,7 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
         process.pid = process_object.get("pid").to_u32();
         process.times_scheduled = process_object.get("times_scheduled").to_u32();
         process.pgid = process_object.get("pgid").to_u32();
+        process.pgp = process_object.get("pgp").to_u32();
         process.sid = process_object.get("sid").to_u32();
         process.uid = process_object.get("uid").to_u32();
         process.gid = process_object.get("gid").to_u32();

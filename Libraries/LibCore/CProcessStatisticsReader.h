@@ -9,6 +9,7 @@ struct CProcessStatistics {
     pid_t pid;
     unsigned times_scheduled;
     unsigned pgid;
+    unsigned pgp;
     unsigned sid;
     uid_t uid;
     gid_t gid;
