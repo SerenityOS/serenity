@@ -9,7 +9,7 @@ class ELFImage {
 public:
     explicit ELFImage(const u8*);
     ~ELFImage();
-    void dump();
+    void dump() const;
     bool is_valid() const { return m_valid; }
     bool parse();
 
@@ -132,7 +132,7 @@ private:
     const Elf32_Phdr& program_header_internal(unsigned) const;
     const char* table_string(unsigned offset) const;
     const char* section_header_table_string(unsigned offset) const;
-    const char* section_index_to_string(unsigned index);
+    const char* section_index_to_string(unsigned index) const;
 
     const u8* m_buffer { nullptr };
     bool m_valid { false };
