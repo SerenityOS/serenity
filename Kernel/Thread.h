@@ -67,7 +67,6 @@ public:
         BlockedLurking,
         BlockedWait,
         BlockedSignal,
-        BlockedSelect,
         BlockedCondition,
         __End_Blocked_States__
     };
@@ -75,7 +74,7 @@ public:
     class ThreadBlocker {
     public:
         virtual ~ThreadBlocker() {}
-        virtual bool should_unblock(time_t now_s, long us) = 0;
+        virtual bool should_unblock(Thread&, time_t now_s, long us) = 0;
     };
 
     class ThreadBlockerFileDescription : public ThreadBlocker {
@@ -90,37 +89,37 @@ public:
     class ThreadBlockerAccept : public ThreadBlockerFileDescription {
     public:
         ThreadBlockerAccept(const RefPtr<FileDescription>& description);
-        virtual bool should_unblock(time_t, long) override;
+        virtual bool should_unblock(Thread&, time_t, long) override;
     };
 
     class ThreadBlockerReceive : public ThreadBlockerFileDescription {
     public:
         ThreadBlockerReceive(const RefPtr<FileDescription>& description);
-        virtual bool should_unblock(time_t, long) override;
+        virtual bool should_unblock(Thread&, time_t, long) override;
     };
 
     class ThreadBlockerConnect : public ThreadBlockerFileDescription {
     public:
         ThreadBlockerConnect(const RefPtr<FileDescription>& description);
-        virtual bool should_unblock(time_t, long) override;
+        virtual bool should_unblock(Thread&, time_t, long) override;
     };
 
     class ThreadBlockerWrite : public ThreadBlockerFileDescription {
     public:
         ThreadBlockerWrite(const RefPtr<FileDescription>& description);
-        virtual bool should_unblock(time_t, long) override;
+        virtual bool should_unblock(Thread&, time_t, long) override;
     };
 
     class ThreadBlockerRead : public ThreadBlockerFileDescription {
     public:
         ThreadBlockerRead(const RefPtr<FileDescription>& description);
-        virtual bool should_unblock(time_t, long) override;
+        virtual bool should_unblock(Thread&, time_t, long) override;
     };
 
     class ThreadBlockerCondition : public ThreadBlocker {
     public:
         ThreadBlockerCondition(Function<bool()> &condition);
-        virtual bool should_unblock(time_t, long) override;
+        virtual bool should_unblock(Thread&, time_t, long) override;
 
     private:
         Function<bool()> m_block_until_condition;
@@ -129,10 +128,23 @@ public:
     class ThreadBlockerSleep : public ThreadBlocker {
     public:
         ThreadBlockerSleep(u64 wakeup_time);
-        virtual bool should_unblock(time_t, long) override;
+        virtual bool should_unblock(Thread&, time_t, long) override;
 
     private:
         u64 m_wakeup_time { 0 };
+    };
+
+    class ThreadBlockerSelect : public ThreadBlocker {
+    public:
+        ThreadBlockerSelect(const timeval& tv, bool select_has_timeout, const Vector<int>& read_fds, const Vector<int>& write_fds, const Vector<int>& except_fds);
+        virtual bool should_unblock(Thread&, time_t, long) override;
+
+    private:
+        timeval m_select_timeout;
+        bool m_select_has_timeout { false };
+        const Vector<int>& m_select_read_fds;
+        const Vector<int>& m_select_write_fds;
+        const Vector<int>& m_select_exceptional_fds;
     };
 
     void did_schedule() { ++m_times_scheduled; }
@@ -240,17 +252,12 @@ private:
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
     pid_t m_waitee_pid { -1 };
     int m_wait_options { 0 };
-    timeval m_select_timeout;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };
     OwnPtr<ThreadBlocker> m_blocker;
-    Vector<int> m_select_read_fds;
-    Vector<int> m_select_write_fds;
-    Vector<int> m_select_exceptional_fds;
     FPUState* m_fpu_state { nullptr };
     InlineLinkedList<Thread>* m_thread_list { nullptr };
     State m_state { Invalid };
-    bool m_select_has_timeout { false };
     bool m_has_used_fpu { false };
     bool m_was_interrupted_while_blocked { false };
 };

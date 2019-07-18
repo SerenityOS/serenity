@@ -1792,12 +1792,16 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     if (params->nfds < 0)
         return -EINVAL;
 
+    timeval timeout;
+    bool select_has_timeout = false;
     if (params->timeout && (params->timeout->tv_sec || params->timeout->tv_usec)) {
-        timeval_add(kgettimeofday(), *params->timeout, current->m_select_timeout);
-        current->m_select_has_timeout = true;
-    } else {
-        current->m_select_has_timeout = false;
+        timeval_add(kgettimeofday(), *params->timeout, timeout);
+        select_has_timeout = true;
     }
+
+    Vector<int> rfds;
+    Vector<int> wfds;
+    Vector<int> efds;
 
     auto transfer_fds = [&](auto* fds, auto& vector) -> int {
         vector.clear_with_capacity();
@@ -1812,19 +1816,19 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         }
         return 0;
     };
-    if (int error = transfer_fds(params->writefds, current->m_select_write_fds))
+    if (int error = transfer_fds(params->writefds, wfds))
         return error;
-    if (int error = transfer_fds(params->readfds, current->m_select_read_fds))
+    if (int error = transfer_fds(params->readfds, rfds))
         return error;
-    if (int error = transfer_fds(params->exceptfds, current->m_select_exceptional_fds))
+    if (int error = transfer_fds(params->exceptfds, efds))
         return error;
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), params->timeout);
+    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), rfds.size(), wfds.size(), params->timeout);
 #endif
 
-    if (!params->timeout || current->m_select_has_timeout)
-        current->block(Thread::State::BlockedSelect);
+    if (!params->timeout || select_has_timeout)
+        current->block(*new Thread::ThreadBlockerSelect(timeout, select_has_timeout, rfds, wfds, efds));
 
     int marked_fd_count = 0;
     auto mark_fds = [&](auto* fds, auto& vector, auto should_mark) {
@@ -1838,8 +1842,8 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             }
         }
     };
-    mark_fds(params->readfds, current->m_select_read_fds, [](auto& description) { return description.can_read(); });
-    mark_fds(params->writefds, current->m_select_write_fds, [](auto& description) { return description.can_write(); });
+    mark_fds(params->readfds, rfds, [](auto& description) { return description.can_read(); });
+    mark_fds(params->writefds, wfds, [](auto& description) { return description.can_write(); });
     // FIXME: We should also mark params->exceptfds as appropriate.
     return marked_fd_count;
 }
@@ -1849,15 +1853,18 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     if (!validate_read_typed(fds))
         return -EFAULT;
 
-    current->m_select_write_fds.clear_with_capacity();
-    current->m_select_read_fds.clear_with_capacity();
+    Vector<int> rfds;
+    Vector<int> wfds;
+
     for (int i = 0; i < nfds; ++i) {
         if (fds[i].events & POLLIN)
-            current->m_select_read_fds.append(fds[i].fd);
+            rfds.append(fds[i].fd);
         if (fds[i].events & POLLOUT)
-            current->m_select_write_fds.append(fds[i].fd);
+            wfds.append(fds[i].fd);
     }
 
+    timeval actual_timeout;
+    bool has_timeout = false;
     if (timeout >= 0) {
         // poll is in ms, we want s/us.
         struct timeval tvtimeout;
@@ -1867,19 +1874,16 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
             timeout -= 1000;
         }
         tvtimeout.tv_usec = timeout * 1000;
-        timeval_add(kgettimeofday(), tvtimeout, current->m_select_timeout);
-        current->m_select_has_timeout = true;
-    } else {
-        current->m_select_has_timeout = false;
+        timeval_add(kgettimeofday(), tvtimeout, actual_timeout);
+        has_timeout = true;
     }
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbgprintf("%s<%u> polling on (read:%u, write:%u), timeout=%d\n", name().characters(), pid(), current->m_select_read_fds.size(), current->m_select_write_fds.size(), timeout);
+    dbgprintf("%s<%u> polling on (read:%u, write:%u), timeout=%d\n", name().characters(), pid(), rfds.size(), wfds.size(), timeout);
 #endif
 
-    if (current->m_select_has_timeout || timeout < 0) {
-        current->block(Thread::State::BlockedSelect);
-    }
+    if (has_timeout|| timeout < 0)
+        current->block(*new Thread::ThreadBlockerSelect(actual_timeout, has_timeout, rfds, wfds, Vector<int>()));
 
     int fds_with_revents = 0;
 
