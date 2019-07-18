@@ -3,15 +3,25 @@
 #include <stdio.h>
 #include <unistd.h>
 
-RefPtr<SharedBuffer> SharedBuffer::create(pid_t peer, int size)
+RefPtr<SharedBuffer> SharedBuffer::create_with_size(int size)
 {
     void* data;
-    int shared_buffer_id = create_shared_buffer(peer, size, &data);
+    int shared_buffer_id = create_shared_buffer(size, &data);
     if (shared_buffer_id < 0) {
         perror("create_shared_buffer");
         return nullptr;
     }
     return adopt(*new SharedBuffer(shared_buffer_id, size, data));
+}
+
+bool SharedBuffer::share_with(pid_t peer)
+{
+    int ret = share_buffer_with(shared_buffer_id(), peer);
+    if (ret < 0) {
+        perror("share_buffer_with");
+        return false;
+    }
+    return true;
 }
 
 RefPtr<SharedBuffer> SharedBuffer::create_from_shared_buffer_id(int shared_buffer_id)

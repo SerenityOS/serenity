@@ -5,10 +5,11 @@
 
 class SharedBuffer : public RefCounted<SharedBuffer> {
 public:
-    static RefPtr<SharedBuffer> create(pid_t peer, int);
+    static RefPtr<SharedBuffer> create_with_size(int);
     static RefPtr<SharedBuffer> create_from_shared_buffer_id(int);
     ~SharedBuffer();
 
+    bool share_with(pid_t);
     int shared_buffer_id() const { return m_shared_buffer_id; }
     void seal();
     int size() const { return m_size; }

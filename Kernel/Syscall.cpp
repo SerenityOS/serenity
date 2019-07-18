@@ -235,7 +235,9 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
     case Syscall::SC_connect:
         return current->process().sys$connect((int)arg1, (const sockaddr*)arg2, (socklen_t)arg3);
     case Syscall::SC_create_shared_buffer:
-        return current->process().sys$create_shared_buffer((pid_t)arg1, (size_t)arg2, (void**)arg3);
+        return current->process().sys$create_shared_buffer((size_t)arg1, (void**)arg2);
+    case Syscall::SC_share_buffer_with:
+        return current->process().sys$share_buffer_with((int)arg1, (pid_t)arg2);
     case Syscall::SC_get_shared_buffer:
         return (u32)current->process().sys$get_shared_buffer((int)arg1);
     case Syscall::SC_release_shared_buffer:
