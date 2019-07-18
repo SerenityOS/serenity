@@ -120,6 +120,7 @@ public:
     void set_state(State);
 
     void send_signal(u8 signal, Process* sender);
+    void consider_unblock(time_t now_sec, long now_usec);
 
     ShouldUnblockThread dispatch_one_pending_signal();
     ShouldUnblockThread dispatch_signal(u8 signal);
