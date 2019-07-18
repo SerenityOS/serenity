@@ -172,11 +172,39 @@ bool Thread::ThreadBlockerSelect::should_unblock(Thread& thread, time_t now_sec,
     return false;
 }
 
+Thread::ThreadBlockerWait::ThreadBlockerWait(int wait_options, pid_t& waitee_pid)
+    : m_wait_options(wait_options)
+    , m_waitee_pid(waitee_pid)
+{
+}
+
+bool Thread::ThreadBlockerWait::should_unblock(Thread& thread, time_t, long)
+{
+    bool should_unblock = false;
+    thread.process().for_each_child([&](Process& child) {
+        if (m_waitee_pid != -1 && m_waitee_pid != child.pid())
+            return IterationDecision::Continue;
+
+        bool child_exited = child.is_dead();
+        bool child_stopped = child.main_thread().state() == Thread::State::Stopped;
+
+        bool wait_finished = ((m_wait_options & WEXITED) && child_exited)
+            || ((m_wait_options & WSTOPPED) && child_stopped);
+
+        if (!wait_finished)
+            return IterationDecision::Continue;
+
+        m_waitee_pid = child.pid();
+        should_unblock = true;
+        return IterationDecision::Break;
+    });
+    return should_unblock;
+}
+
 // Called by the scheduler on threads that are blocked for some reason.
 // Make a decision as to whether to unblock them or not.
 void Thread::consider_unblock(time_t now_sec, long now_usec)
 {
-    auto& process = this->process();
     switch (state()) {
     case Thread::__Begin_Blocked_States__:
     case Thread::__End_Blocked_States__:
@@ -190,25 +218,6 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
     case Thread::BlockedLurking:
     case Thread::BlockedSignal:
         /* don't know, don't care */
-        return;
-    case Thread::BlockedWait:
-        process.for_each_child([&](Process& child) {
-            if (waitee_pid() != -1 && waitee_pid() != child.pid())
-                return IterationDecision::Continue;
-
-            bool child_exited = child.is_dead();
-            bool child_stopped = child.main_thread().state() == Thread::State::Stopped;
-
-            bool wait_finished = ((m_wait_options & WEXITED) && child_exited)
-                || ((m_wait_options & WSTOPPED) && child_stopped);
-
-            if (!wait_finished)
-                return IterationDecision::Continue;
-
-            m_waitee_pid = child.pid();
-            unblock();
-            return IterationDecision::Break;
-        });
         return;
     case Thread::BlockedCondition:
         ASSERT(m_blocker);

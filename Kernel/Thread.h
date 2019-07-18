@@ -65,7 +65,6 @@ public:
 
         __Begin_Blocked_States__,
         BlockedLurking,
-        BlockedWait,
         BlockedSignal,
         BlockedCondition,
         __End_Blocked_States__
@@ -147,6 +146,16 @@ public:
         const Vector<int>& m_select_exceptional_fds;
     };
 
+    class ThreadBlockerWait : public ThreadBlocker {
+    public:
+        ThreadBlockerWait(int wait_options, pid_t& waitee_pid);
+        virtual bool should_unblock(Thread&, time_t, long) override;
+
+    private:
+        int m_wait_options { 0 };
+        pid_t& m_waitee_pid;
+    };
+
     void did_schedule() { ++m_times_scheduled; }
     u32 times_scheduled() const { return m_times_scheduled; }
 
@@ -164,7 +173,6 @@ public:
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
     u32 ticks() const { return m_ticks; }
-    pid_t waitee_pid() const { return m_waitee_pid; }
 
     u64 sleep(u32 ticks);
     void block(Thread::State);
@@ -250,8 +258,6 @@ private:
     u32 m_kernel_stack_base { 0 };
     RefPtr<Region> m_kernel_stack_region;
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
-    pid_t m_waitee_pid { -1 };
-    int m_wait_options { 0 };
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };
     OwnPtr<ThreadBlocker> m_blocker;
