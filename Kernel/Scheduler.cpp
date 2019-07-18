@@ -137,6 +137,18 @@ bool Scheduler::pick_next()
             return IterationDecision::Continue;
         }
 
+        if (thread.state() == Thread::BlockedAccept) {
+            auto& description = *thread.m_blocked_description;
+            auto& socket = *description.socket();
+
+            if (socket.can_accept()) {
+                thread.unblock();
+                return IterationDecision::Continue;
+            }
+
+            return IterationDecision::Continue;
+        }
+
         if (thread.state() == Thread::BlockedSelect) {
             if (thread.m_select_has_timeout) {
                 if (now_sec > thread.m_select_timeout.tv_sec || (now_sec == thread.m_select_timeout.tv_sec && now_usec >= thread.m_select_timeout.tv_usec)) {

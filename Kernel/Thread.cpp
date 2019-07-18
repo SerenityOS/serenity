@@ -179,6 +179,8 @@ const char* to_string(Thread::State state)
         return "Connect";
     case Thread::BlockedReceive:
         return "Receive";
+    case Thread::BlockedAccept:
+        return "Accepting";
     case Thread::BlockedCondition:
         return "Condition";
     case Thread::__Begin_Blocked_States__:

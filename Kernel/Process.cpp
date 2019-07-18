@@ -2120,8 +2120,13 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
         return -ENOTSOCK;
     auto& socket = *accepting_socket_description->socket();
     if (!socket.can_accept()) {
-        ASSERT(!accepting_socket_description->is_blocking());
-        return -EAGAIN;
+        if (accepting_socket_description->is_blocking()) {
+            current->block(Thread::State::BlockedAccept, *accepting_socket_description);
+            if (current->m_was_interrupted_while_blocked)
+                return -EINTR;
+        } else {
+            return -EAGAIN;
+        }
     }
     auto accepted_socket = socket.accept();
     ASSERT(accepted_socket);
