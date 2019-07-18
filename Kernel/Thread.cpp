@@ -166,8 +166,6 @@ const char* to_string(Thread::State state)
         return "Wait";
     case Thread::BlockedSignal:
         return "Signal";
-    case Thread::BlockedSelect:
-        return "Select";
     case Thread::BlockedLurking:
         return "Lurking";
     case Thread::BlockedCondition:

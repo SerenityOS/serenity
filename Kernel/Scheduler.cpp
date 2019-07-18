@@ -65,7 +65,7 @@ Thread::ThreadBlockerAccept::ThreadBlockerAccept(const RefPtr<FileDescription>& 
 {
 }
 
-bool Thread::ThreadBlockerAccept::should_unblock(time_t, long)
+bool Thread::ThreadBlockerAccept::should_unblock(Thread&, time_t, long)
 {
     auto& description = *blocked_description();
     auto& socket = *description.socket();
@@ -78,7 +78,7 @@ Thread::ThreadBlockerReceive::ThreadBlockerReceive(const RefPtr<FileDescription>
 {
 }
 
-bool Thread::ThreadBlockerReceive::should_unblock(time_t now_sec, long now_usec)
+bool Thread::ThreadBlockerReceive::should_unblock(Thread&, time_t now_sec, long now_usec)
 {
     auto& description = *blocked_description();
     auto& socket = *description.socket();
@@ -94,7 +94,7 @@ Thread::ThreadBlockerConnect::ThreadBlockerConnect(const RefPtr<FileDescription>
 {
 }
 
-bool Thread::ThreadBlockerConnect::should_unblock(time_t, long)
+bool Thread::ThreadBlockerConnect::should_unblock(Thread&, time_t, long)
 {
     auto& description = *blocked_description();
     auto& socket = *description.socket();
@@ -106,7 +106,7 @@ Thread::ThreadBlockerWrite::ThreadBlockerWrite(const RefPtr<FileDescription>& de
 {
 }
 
-bool Thread::ThreadBlockerWrite::should_unblock(time_t, long)
+bool Thread::ThreadBlockerWrite::should_unblock(Thread&, time_t, long)
 {
     return blocked_description()->can_write();
 }
@@ -116,7 +116,7 @@ Thread::ThreadBlockerRead::ThreadBlockerRead(const RefPtr<FileDescription>& desc
 {
 }
 
-bool Thread::ThreadBlockerRead::should_unblock(time_t, long)
+bool Thread::ThreadBlockerRead::should_unblock(Thread&, time_t, long)
 {
     // FIXME: Block until the amount of data wanted is available.
     return blocked_description()->can_read();
@@ -128,7 +128,7 @@ Thread::ThreadBlockerCondition::ThreadBlockerCondition(Function<bool()> &conditi
     ASSERT(m_block_until_condition);
 }
 
-bool Thread::ThreadBlockerCondition::should_unblock(time_t, long)
+bool Thread::ThreadBlockerCondition::should_unblock(Thread&, time_t, long)
 {
     return m_block_until_condition();
 }
@@ -138,9 +138,38 @@ Thread::ThreadBlockerSleep::ThreadBlockerSleep(u64 wakeup_time)
 {
 }
 
-bool Thread::ThreadBlockerSleep::should_unblock(time_t, long)
+bool Thread::ThreadBlockerSleep::should_unblock(Thread&, time_t, long)
 {
     return m_wakeup_time <= g_uptime;
+}
+
+Thread::ThreadBlockerSelect::ThreadBlockerSelect(const timeval& tv, bool select_has_timeout, const Vector<int>& read_fds, const Vector<int>& write_fds, const Vector<int>& except_fds)
+    : m_select_timeout(tv)
+    , m_select_has_timeout(select_has_timeout)
+    , m_select_read_fds(read_fds)
+    , m_select_write_fds(write_fds)
+    , m_select_exceptional_fds(except_fds)
+{
+}
+
+bool Thread::ThreadBlockerSelect::should_unblock(Thread& thread, time_t now_sec, long now_usec)
+{
+    if (m_select_has_timeout) {
+        if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec >= m_select_timeout.tv_usec))
+            return true;
+    }
+
+    auto& process = thread.process();
+    for (int fd : m_select_read_fds) {
+        if (process.m_fds[fd].description->can_read())
+            return true;
+    }
+    for (int fd : m_select_write_fds) {
+        if (process.m_fds[fd].description->can_write())
+            return true;
+    }
+
+    return false;
 }
 
 // Called by the scheduler on threads that are blocked for some reason.
@@ -181,29 +210,9 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
             return IterationDecision::Break;
         });
         return;
-    case Thread::BlockedSelect:
-        if (m_select_has_timeout) {
-            if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec >= m_select_timeout.tv_usec)) {
-                unblock();
-                return;
-            }
-        }
-        for (int fd : m_select_read_fds) {
-            if (process.m_fds[fd].description->can_read()) {
-                unblock();
-                return;
-            }
-        }
-        for (int fd : m_select_write_fds) {
-            if (process.m_fds[fd].description->can_write()) {
-                unblock();
-                return;
-            }
-        }
-        return;
     case Thread::BlockedCondition:
         ASSERT(m_blocker);
-        if (m_blocker->should_unblock(now_sec, now_usec)) {
+        if (m_blocker->should_unblock(*this, now_sec, now_usec)) {
             unblock();
             m_blocker = nullptr;
         }
