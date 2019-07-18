@@ -51,21 +51,21 @@ void Scheduler::beep()
     s_beep_timeout = g_uptime + 100;
 }
 
-Thread::ThreadBlockerFileDescription::ThreadBlockerFileDescription(const RefPtr<FileDescription>& description)
+Thread::FileDescriptionBlocker::FileDescriptionBlocker(const RefPtr<FileDescription>& description)
     : m_blocked_description(description)
 {}
 
-RefPtr<FileDescription> Thread::ThreadBlockerFileDescription::blocked_description() const
+RefPtr<FileDescription> Thread::FileDescriptionBlocker::blocked_description() const
 {
     return m_blocked_description;
 }
 
-Thread::ThreadBlockerAccept::ThreadBlockerAccept(const RefPtr<FileDescription>& description)
-    : ThreadBlockerFileDescription(description)
+Thread::AcceptBlocker::AcceptBlocker(const RefPtr<FileDescription>& description)
+    : FileDescriptionBlocker(description)
 {
 }
 
-bool Thread::ThreadBlockerAccept::should_unblock(Thread&, time_t, long)
+bool Thread::AcceptBlocker::should_unblock(Thread&, time_t, long)
 {
     auto& description = *blocked_description();
     auto& socket = *description.socket();
@@ -73,12 +73,12 @@ bool Thread::ThreadBlockerAccept::should_unblock(Thread&, time_t, long)
     return socket.can_accept();
 }
 
-Thread::ThreadBlockerReceive::ThreadBlockerReceive(const RefPtr<FileDescription>& description)
-    : ThreadBlockerFileDescription(description)
+Thread::ReceiveBlocker::ReceiveBlocker(const RefPtr<FileDescription>& description)
+    : FileDescriptionBlocker(description)
 {
 }
 
-bool Thread::ThreadBlockerReceive::should_unblock(Thread&, time_t now_sec, long now_usec)
+bool Thread::ReceiveBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
 {
     auto& description = *blocked_description();
     auto& socket = *description.socket();
@@ -89,61 +89,61 @@ bool Thread::ThreadBlockerReceive::should_unblock(Thread&, time_t now_sec, long 
     return false;
 }
 
-Thread::ThreadBlockerConnect::ThreadBlockerConnect(const RefPtr<FileDescription>& description)
-    : ThreadBlockerFileDescription(description)
+Thread::ConnectBlocker::ConnectBlocker(const RefPtr<FileDescription>& description)
+    : FileDescriptionBlocker(description)
 {
 }
 
-bool Thread::ThreadBlockerConnect::should_unblock(Thread&, time_t, long)
+bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
 {
     auto& description = *blocked_description();
     auto& socket = *description.socket();
     return socket.is_connected();
 }
 
-Thread::ThreadBlockerWrite::ThreadBlockerWrite(const RefPtr<FileDescription>& description)
-    : ThreadBlockerFileDescription(description)
+Thread::WriteBlocker::WriteBlocker(const RefPtr<FileDescription>& description)
+    : FileDescriptionBlocker(description)
 {
 }
 
-bool Thread::ThreadBlockerWrite::should_unblock(Thread&, time_t, long)
+bool Thread::WriteBlocker::should_unblock(Thread&, time_t, long)
 {
     return blocked_description()->can_write();
 }
 
-Thread::ThreadBlockerRead::ThreadBlockerRead(const RefPtr<FileDescription>& description)
-    : ThreadBlockerFileDescription(description)
+Thread::ReadBlocker::ReadBlocker(const RefPtr<FileDescription>& description)
+    : FileDescriptionBlocker(description)
 {
 }
 
-bool Thread::ThreadBlockerRead::should_unblock(Thread&, time_t, long)
+bool Thread::ReadBlocker::should_unblock(Thread&, time_t, long)
 {
     // FIXME: Block until the amount of data wanted is available.
     return blocked_description()->can_read();
 }
 
-Thread::ThreadBlockerCondition::ThreadBlockerCondition(Function<bool()> &condition)
+Thread::ConditionBlocker::ConditionBlocker(Function<bool()> &condition)
     : m_block_until_condition(move(condition))
 {
     ASSERT(m_block_until_condition);
 }
 
-bool Thread::ThreadBlockerCondition::should_unblock(Thread&, time_t, long)
+bool Thread::ConditionBlocker::should_unblock(Thread&, time_t, long)
 {
     return m_block_until_condition();
 }
 
-Thread::ThreadBlockerSleep::ThreadBlockerSleep(u64 wakeup_time)
+Thread::SleepBlocker::SleepBlocker(u64 wakeup_time)
     : m_wakeup_time(wakeup_time)
 {
 }
 
-bool Thread::ThreadBlockerSleep::should_unblock(Thread&, time_t, long)
+bool Thread::SleepBlocker::should_unblock(Thread&, time_t, long)
 {
     return m_wakeup_time <= g_uptime;
 }
 
-Thread::ThreadBlockerSelect::ThreadBlockerSelect(const timeval& tv, bool select_has_timeout, const Vector<int>& read_fds, const Vector<int>& write_fds, const Vector<int>& except_fds)
+Thread::SelectBlocker::SelectBlocker(const timeval& tv, bool select_has_timeout, const Vector<int>& read_fds, const Vector<int>& write_fds, const Vector<int>& except_fds)
     : m_select_timeout(tv)
     , m_select_has_timeout(select_has_timeout)
     , m_select_read_fds(read_fds)
@@ -152,7 +152,7 @@ Thread::ThreadBlockerSelect::ThreadBlockerSelect(const timeval& tv, bool select_
 {
 }
 
-bool Thread::ThreadBlockerSelect::should_unblock(Thread& thread, time_t now_sec, long now_usec)
+bool Thread::SelectBlocker::should_unblock(Thread& thread, time_t now_sec, long now_usec)
 {
     if (m_select_has_timeout) {
         if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec >= m_select_timeout.tv_usec))
@@ -172,13 +172,13 @@ bool Thread::ThreadBlockerSelect::should_unblock(Thread& thread, time_t now_sec,
     return false;
 }
 
-Thread::ThreadBlockerWait::ThreadBlockerWait(int wait_options, pid_t& waitee_pid)
+Thread::WaitBlocker::WaitBlocker(int wait_options, pid_t& waitee_pid)
     : m_wait_options(wait_options)
     , m_waitee_pid(waitee_pid)
 {
 }
 
-bool Thread::ThreadBlockerWait::should_unblock(Thread& thread, time_t, long)
+bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
 {
     bool should_unblock = false;
     thread.process().for_each_child([&](Process& child) {
