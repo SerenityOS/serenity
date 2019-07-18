@@ -1,7 +1,7 @@
 #include <LibCore/CTimer.h>
 #include <LibDraw/Font.h>
 #include <LibDraw/Painter.h>
-#include <WindowServer/WSMenuBarKeeper.h>
+#include <WindowServer/WSMenuManager.h>
 #include <WindowServer/WSWindowManager.h>
 #include <time.h>
 #include <unistd.h>
