@@ -5,7 +5,7 @@
 #include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Rect.h>
 
 // FIXME: Make a MutableGlyphBitmap buddy class for FontEditor instead?
 class GlyphBitmap {

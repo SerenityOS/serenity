@@ -3,9 +3,9 @@
 #include <AK/AKString.h>
 #include <AK/Function.h>
 #include <LibGUI/GAbstractButton.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/StylePainter.h>
-#include <SharedGraphics/TextAlignment.h>
+#include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/StylePainter.h>
+#include <LibDraw/TextAlignment.h>
 
 class GAction;
 

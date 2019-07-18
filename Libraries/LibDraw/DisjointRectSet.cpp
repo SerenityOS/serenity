@@ -1,4 +1,4 @@
-#include <SharedGraphics/DisjointRectSet.h>
+#include <LibDraw/DisjointRectSet.h>
 
 void DisjointRectSet::add(const Rect& new_rect)
 {

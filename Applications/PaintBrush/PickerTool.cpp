@@ -1,5 +1,5 @@
 #include "PickerTool.h"
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 PickerTool::PickerTool()
 {

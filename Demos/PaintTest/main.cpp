@@ -2,7 +2,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
-#include <SharedGraphics/PNGLoader.h>
+#include <LibDraw/PNGLoader.h>
 
 class TestWidget final : public GWidget {
 public:

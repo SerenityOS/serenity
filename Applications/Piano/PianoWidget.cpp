@@ -1,7 +1,7 @@
 #include "PianoWidget.h"
 #include <AK/Queue.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <math.h>
 
 PianoWidget::PianoWidget()

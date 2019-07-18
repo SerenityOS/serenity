@@ -6,7 +6,7 @@
 #include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Rect.h>
 
 class GPainter;
 class GVariant;

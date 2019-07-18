@@ -4,7 +4,7 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/StylePainter.h>
 #include <stdio.h>
 #include <stdlib.h>
 

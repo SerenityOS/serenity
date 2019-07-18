@@ -1,5 +1,5 @@
-#include <LibGUI/GPainter.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/Painter.h>
+#include <LibDraw/StylePainter.h>
 
 void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool active, bool hovered, bool enabled)
 {

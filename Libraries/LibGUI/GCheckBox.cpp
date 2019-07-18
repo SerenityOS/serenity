@@ -1,8 +1,8 @@
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/CharacterBitmap.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/CharacterBitmap.h>
+#include <LibDraw/StylePainter.h>
 
 static const char* s_checked_bitmap_data = {
     "         "

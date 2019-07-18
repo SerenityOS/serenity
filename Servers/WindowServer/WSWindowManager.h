@@ -6,10 +6,10 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CElapsedTimer.h>
-#include <SharedGraphics/Color.h>
-#include <SharedGraphics/DisjointRectSet.h>
-#include <SharedGraphics/Painter.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Color.h>
+#include <LibDraw/DisjointRectSet.h>
+#include <LibDraw/Painter.h>
+#include <LibDraw/Rect.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSMenuBar.h>

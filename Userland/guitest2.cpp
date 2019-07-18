@@ -9,7 +9,7 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>

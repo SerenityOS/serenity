@@ -1,6 +1,6 @@
 #include <LibCore/CDirIterator.h>
 #include <LibGUI/GFontDatabase.h>
-#include <SharedGraphics/Font.h>
+#include <LibDraw/Font.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>

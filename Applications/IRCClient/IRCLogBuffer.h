@@ -4,7 +4,7 @@
 #include <AK/CircularQueue.h>
 #include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
-#include <SharedGraphics/Color.h>
+#include <LibDraw/Color.h>
 
 class IRCLogBufferModel;
 

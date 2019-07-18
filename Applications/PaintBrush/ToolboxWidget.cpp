@@ -7,7 +7,7 @@
 #include "EraseTool.h"
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
-#include <SharedGraphics/PNGLoader.h>
+#include <LibDraw/PNGLoader.h>
 
 class ToolButton final : public GButton {
 public:

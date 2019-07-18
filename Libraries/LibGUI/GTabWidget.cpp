@@ -1,7 +1,7 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GTabWidget.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/StylePainter.h>
 
 GTabWidget::GTabWidget(GWidget* parent)
     : GWidget(parent)

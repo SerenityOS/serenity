@@ -5,8 +5,8 @@
 #include "Rect.h"
 #include "Size.h"
 #include <AK/AKString.h>
-#include <SharedGraphics/TextAlignment.h>
-#include <SharedGraphics/TextElision.h>
+#include <LibDraw/TextAlignment.h>
+#include <LibDraw/TextElision.h>
 
 class CharacterBitmap;
 class GlyphBitmap;

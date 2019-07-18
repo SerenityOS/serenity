@@ -4,7 +4,7 @@
 #include <LibGUI/GActionGroup.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/StylePainter.h>
 
 GButton::GButton(GWidget* parent)
     : GAbstractButton(parent)

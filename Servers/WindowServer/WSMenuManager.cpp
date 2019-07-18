@@ -1,6 +1,6 @@
 #include <LibCore/CTimer.h>
-#include <SharedGraphics/Font.h>
-#include <SharedGraphics/Painter.h>
+#include <LibDraw/Font.h>
+#include <LibDraw/Painter.h>
 #include <WindowServer/WSMenuBarKeeper.h>
 #include <WindowServer/WSWindowManager.h>
 #include <time.h>

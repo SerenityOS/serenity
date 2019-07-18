@@ -2,7 +2,7 @@
 
 #include <AK/AKString.h>
 #include <LibGUI/GIcon.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 namespace AK {
 class JsonValue;

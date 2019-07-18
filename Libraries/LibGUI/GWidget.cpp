@@ -8,7 +8,7 @@
 #include <LibGUI/GLayout.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <unistd.h>
 
 GWidget::GWidget(GWidget* parent)

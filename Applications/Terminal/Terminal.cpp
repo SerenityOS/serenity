@@ -8,7 +8,7 @@
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWindow.h>
-#include <SharedGraphics/Font.h>
+#include <LibDraw/Font.h>
 #include <errno.h>
 #include <stdio.h>
 #include <stdlib.h>

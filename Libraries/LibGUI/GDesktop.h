@@ -3,7 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/Badge.h>
 #include <AK/Function.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Rect.h>
 
 class GWindowServerConnection;
 

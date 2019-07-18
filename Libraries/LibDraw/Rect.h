@@ -2,9 +2,9 @@
 
 #include <AK/AKString.h>
 #include <AK/LogStream.h>
-#include <SharedGraphics/Point.h>
-#include <SharedGraphics/Size.h>
-#include <SharedGraphics/TextAlignment.h>
+#include <LibDraw/Point.h>
+#include <LibDraw/Size.h>
+#include <LibDraw/TextAlignment.h>
 
 struct WSAPI_Rect;
 

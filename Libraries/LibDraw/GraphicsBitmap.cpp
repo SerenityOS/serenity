@@ -1,6 +1,6 @@
 #include <AK/MappedFile.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/PNGLoader.h>
+#include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/PNGLoader.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>

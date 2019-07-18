@@ -4,8 +4,8 @@
 #include <AK/Types.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/CEvent.h>
-#include <SharedGraphics/Point.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Point.h>
+#include <LibDraw/Rect.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSWindowType.h>
 

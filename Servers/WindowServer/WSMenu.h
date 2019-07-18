@@ -4,7 +4,7 @@
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Rect.h>
 #include <WindowServer/WSMenuItem.h>
 
 class WSClientConnection;

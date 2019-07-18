@@ -3,7 +3,7 @@
 #include <AK/Queue.h>
 #include <AK/SinglyLinkedList.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <stdio.h>
 
 BucketTool::BucketTool()

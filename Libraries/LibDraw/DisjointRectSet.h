@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Rect.h>
 
 class DisjointRectSet {
 public:

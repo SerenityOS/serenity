@@ -21,7 +21,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>

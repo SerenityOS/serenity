@@ -9,7 +9,7 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GWindow.h>
-#include <SharedGraphics/PNGLoader.h>
+#include <LibDraw/PNGLoader.h>
 
 int main(int argc, char** argv)
 {

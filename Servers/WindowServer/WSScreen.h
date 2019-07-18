@@ -1,9 +1,9 @@
 #pragma once
 
 #include <Kernel/KeyCode.h>
-#include <SharedGraphics/Color.h>
-#include <SharedGraphics/Rect.h>
-#include <SharedGraphics/Size.h>
+#include <LibDraw/Color.h>
+#include <LibDraw/Rect.h>
+#include <LibDraw/Size.h>
 
 class WSScreen {
 public:

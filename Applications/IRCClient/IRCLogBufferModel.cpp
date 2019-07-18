@@ -1,6 +1,6 @@
 #include "IRCLogBufferModel.h"
 #include "IRCLogBuffer.h"
-#include <SharedGraphics/Font.h>
+#include <LibDraw/Font.h>
 #include <stdio.h>
 #include <time.h>
 

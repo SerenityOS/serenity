@@ -7,7 +7,7 @@
 #include <AK/RefCounted.h>
 #include <LibGUI/GModelIndex.h>
 #include <LibGUI/GVariant.h>
-#include <SharedGraphics/TextAlignment.h>
+#include <LibDraw/TextAlignment.h>
 
 class Font;
 class GAbstractView;

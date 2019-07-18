@@ -5,10 +5,10 @@
 #include "WSScreen.h"
 #include "WSWindow.h"
 #include "WSWindowManager.h"
-#include <SharedGraphics/CharacterBitmap.h>
-#include <SharedGraphics/Font.h>
-#include <SharedGraphics/Painter.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/CharacterBitmap.h>
+#include <LibDraw/Font.h>
+#include <LibDraw/Painter.h>
+#include <LibDraw/StylePainter.h>
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 

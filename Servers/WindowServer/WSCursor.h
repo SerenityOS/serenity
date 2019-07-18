@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 enum class WSStandardCursor {
     None = 0,

@@ -6,7 +6,7 @@
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
-#include <SharedGraphics/PNGLoader.h>
+#include <LibDraw/PNGLoader.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)

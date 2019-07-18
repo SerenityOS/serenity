@@ -4,8 +4,8 @@
 #include <AK/RefPtr.h>
 #include <LibCore/CObject.h>
 #include <LibCore/CTimer.h>
-#include <SharedGraphics/DisjointRectSet.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/DisjointRectSet.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 class Painter;
 class WSCursor;
