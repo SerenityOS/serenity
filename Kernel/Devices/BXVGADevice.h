@@ -4,7 +4,6 @@
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/VM/PhysicalAddress.h>
-#include <LibDraw/Size.h>
 
 class BXVGADevice final : public BlockDevice {
     AK_MAKE_ETERNAL
@@ -20,8 +19,9 @@ public:
     virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t, int prot) override;
 
-    size_t framebuffer_size_in_bytes() const { return m_framebuffer_size.area() * sizeof(u32) * 2; }
-    Size framebuffer_size() const { return m_framebuffer_size; }
+    size_t framebuffer_size_in_bytes() const { return m_framebuffer_width * m_framebuffer_height * sizeof(u32) * 2; }
+    int framebuffer_width() const { return m_framebuffer_width; }
+    int framebuffer_height() const { return m_framebuffer_height; }
 
 private:
     virtual const char* class_name() const override { return "BXVGA"; }
@@ -34,5 +34,6 @@ private:
     u32 find_framebuffer_address();
 
     PhysicalAddress m_framebuffer_address;
-    Size m_framebuffer_size;
+    int m_framebuffer_width { 0 };
+    int m_framebuffer_height { 0 };
 };
