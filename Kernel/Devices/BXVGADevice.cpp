@@ -51,7 +51,8 @@ void BXVGADevice::set_register(u16 index, u16 data)
 
 void BXVGADevice::set_resolution(int width, int height)
 {
-    m_framebuffer_size = { width, height };
+    m_framebuffer_width = width;
+    m_framebuffer_height = height;
 
     set_register(VBE_DISPI_INDEX_ENABLE, VBE_DISPI_DISABLED);
     set_register(VBE_DISPI_INDEX_XRES, (u16)width);
@@ -65,7 +66,7 @@ void BXVGADevice::set_resolution(int width, int height)
 
 void BXVGADevice::set_y_offset(int offset)
 {
-    ASSERT(offset <= m_framebuffer_size.height());
+    ASSERT(offset <= m_framebuffer_height);
     set_register(VBE_DISPI_INDEX_Y_OFFSET, (u16)offset);
 }
 
@@ -107,7 +108,7 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
     switch (request) {
     case BXVGA_DEV_IOCTL_SET_Y_OFFSET:
-        if (arg > (unsigned)m_framebuffer_size.height() * 2)
+        if (arg > (unsigned)m_framebuffer_height * 2)
             return -EINVAL;
         set_y_offset((int)arg);
         return 0;
