@@ -83,8 +83,8 @@ RefPtr<ABuffer> AWavLoader::parse_wav(ByteBuffer& buffer)
 
     u16 bits_per_sample; stream >> bits_per_sample;
     CHECK_OK("Bits per sample"); // incomplete read check
-    ok = ok && (bits_per_sample == 8 || bits_per_sample == 16);
-    ASSERT(bits_per_sample == 8 || bits_per_sample == 16);
+    ok = ok && (bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24);
+    ASSERT(bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24);
     CHECK_OK("Bits per sample"); // value check
 
     // Read chunks until we find DATA
@@ -190,6 +190,54 @@ static void read_samples_from_stream(BufferStream& stream, Vector<ASample>& samp
     }
 }
 
+static void read_24bit_samples_from_stream(BufferStream& stream, Vector<ASample>& samples, int num_channels, int source_rate)
+{
+    AResampleHelper resampler(source_rate, 44100);
+
+    auto read_norm_sample = [&stream]() {
+        u8 byte = 0;
+        stream >> byte;
+        u32 sample1 = byte;
+        stream >> byte;
+        u32 sample2 = byte;
+        stream >> byte;
+        u32 sample3 = byte;
+
+        i32 value = 0;
+        value = sample1 << 8;
+        value |= (sample2 << 16);
+        value |= (sample3 << 24);
+        return float(value) / std::numeric_limits<i32>::max();
+    };
+
+    float norm_l = 0;
+    float norm_r = 0;
+
+    switch (num_channels) {
+    case 1:
+        while (!stream.handle_read_failure()) {
+            resampler.prepare();
+            while (resampler.read_sample()) {
+                norm_l = read_norm_sample();
+            }
+            samples.append(ASample(norm_l));
+        }
+        break;
+    case 2:
+        while (!stream.handle_read_failure()) {
+            resampler.prepare();
+            while (resampler.read_sample()) {
+                norm_l = read_norm_sample();
+                norm_r = read_norm_sample();
+            }
+            samples.append(ASample(norm_l, norm_r));
+        }
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
 // ### can't const this because BufferStream is non-const
 // perhaps we need a reading class separate from the writing one, that can be
 // entirely consted.
@@ -207,6 +255,9 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, int num_channels, int b
         break;
     case 16:
         read_samples_from_stream<i16>(stream, fdata, num_channels, source_rate);
+        break;
+    case 24:
+        read_24bit_samples_from_stream(stream, fdata, num_channels, source_rate);
         break;
     default:
         ASSERT_NOT_REACHED();
