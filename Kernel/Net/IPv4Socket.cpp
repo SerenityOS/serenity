@@ -212,7 +212,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         }
 
         load_receive_deadline();
-        current->block(*new Thread::ThreadBlockerReceive(description));
+        current->block(*new Thread::ReceiveBlocker(description));
 
         LOCKER(lock());
         if (!m_can_read) {

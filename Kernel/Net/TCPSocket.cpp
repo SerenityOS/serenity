@@ -162,7 +162,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_state = State::Connecting;
 
     if (should_block == ShouldBlock::Yes) {
-        current->block(*new Thread::ThreadBlockerConnect(description));
+        current->block(*new Thread::ConnectBlocker(description));
         ASSERT(is_connected());
         return KSuccess;
     }

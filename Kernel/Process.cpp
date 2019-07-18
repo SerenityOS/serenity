@@ -900,7 +900,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 #ifdef IO_DEBUG
             dbgprintf("block write on %d\n", fd);
 #endif
-            current->block(*new Thread::ThreadBlockerWrite(description));
+            current->block(*new Thread::WriteBlocker(description));
         }
         ssize_t rc = description.write(data + nwritten, data_size - nwritten);
 #ifdef IO_DEBUG
@@ -962,7 +962,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
         return -EBADF;
     if (description->is_blocking()) {
         if (!description->can_read()) {
-            current->block(*new Thread::ThreadBlockerRead(*description));
+            current->block(*new Thread::ReadBlocker(*description));
             if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         }
@@ -1442,7 +1442,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     }
 
     pid_t waitee_pid = waitee;
-    current->block(*new Thread::ThreadBlockerWait(options, waitee_pid));
+    current->block(*new Thread::WaitBlocker(options, waitee_pid));
     if (current->m_was_interrupted_while_blocked)
         return -EINTR;
 
@@ -1827,7 +1827,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
 #endif
 
     if (!params->timeout || select_has_timeout)
-        current->block(*new Thread::ThreadBlockerSelect(timeout, select_has_timeout, rfds, wfds, efds));
+        current->block(*new Thread::SelectBlocker(timeout, select_has_timeout, rfds, wfds, efds));
 
     int marked_fd_count = 0;
     auto mark_fds = [&](auto* fds, auto& vector, auto should_mark) {
@@ -1882,7 +1882,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
 #endif
 
     if (has_timeout|| timeout < 0)
-        current->block(*new Thread::ThreadBlockerSelect(actual_timeout, has_timeout, rfds, wfds, Vector<int>()));
+        current->block(*new Thread::SelectBlocker(actual_timeout, has_timeout, rfds, wfds, Vector<int>()));
 
     int fds_with_revents = 0;
 
@@ -2125,7 +2125,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     auto& socket = *accepting_socket_description->socket();
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
-            current->block(*new Thread::ThreadBlockerAccept(*accepting_socket_description));
+            current->block(*new Thread::AcceptBlocker(*accepting_socket_description));
             if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         } else {
