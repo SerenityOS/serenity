@@ -102,7 +102,7 @@ WSWindowManager::WSWindowManager()
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
 
-    m_menubar_keeper.setup();
+    m_menu_manager.setup();
 
     invalidate();
     WSCompositor::the().compose();
@@ -239,7 +239,7 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
         ++index;
         return true;
     });
-    m_menubar_keeper.refresh();
+    m_menu_manager.refresh();
 }
 
 void WSWindowManager::add_window(WSWindow& window)
@@ -392,7 +392,7 @@ void WSWindowManager::close_current_menu()
     if (m_current_menu && m_current_menu->menu_window())
         m_current_menu->menu_window()->set_visible(false);
     m_current_menu = nullptr;
-    m_menubar_keeper.refresh();
+    m_menu_manager.refresh();
 }
 
 void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& event)
@@ -682,7 +682,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
     }
 
     if (menubar_rect().contains(event.position())) {
-        m_menubar_keeper.event(event);
+        m_menu_manager.event(event);
         return;
     }
     if (m_current_menu && m_current_menu->menu_window()) {
@@ -987,7 +987,7 @@ void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& clie
 {
     if (active_client() == &client)
         set_current_menubar(client.app_menubar());
-    m_menubar_keeper.refresh();
+    m_menu_manager.refresh();
 }
 
 const WSCursor& WSWindowManager::active_cursor() const

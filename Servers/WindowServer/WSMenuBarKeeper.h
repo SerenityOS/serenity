@@ -4,16 +4,16 @@
 #include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSWindow.h>
 
-class WSMenuBarKeeper final : public CObject {
+class WSMenuManager final : public CObject {
 public:
-    WSMenuBarKeeper();
-    virtual ~WSMenuBarKeeper() override;
+    WSMenuManager();
+    virtual ~WSMenuManager() override;
 
     void setup();
     void refresh();
 
     virtual void event(CEvent&) override;
-    virtual const char* class_name() const override { return "WSMenuBarKeeper"; }
+    virtual const char* class_name() const override { return "WSMenuManager"; }
 
 private:
     WSWindow& window() { return *m_window; }

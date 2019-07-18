@@ -241,7 +241,7 @@ private:
     WeakPtr<WSMenu> m_current_menu;
 
     WSWindowSwitcher m_switcher;
-    WSMenuBarKeeper m_menubar_keeper;
+    WSMenuManager m_menu_manager;
 
     WeakPtr<WSButton> m_cursor_tracking_button;
     WeakPtr<WSButton> m_hovered_button;
