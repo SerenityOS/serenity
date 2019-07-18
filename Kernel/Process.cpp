@@ -2377,28 +2377,19 @@ void Process::disown_all_shared_buffers()
         shared_buffer->disown(m_pid);
 }
 
-int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
+int Process::sys$create_shared_buffer(int size, void** buffer)
 {
     if (!size || size < 0)
         return -EINVAL;
     size = PAGE_ROUND_UP(size);
-    if (!peer_pid || peer_pid < 0 || peer_pid == m_pid)
-        return -EINVAL;
     if (!validate_write_typed(buffer))
         return -EFAULT;
 
-    {
-        InterruptDisabler disabler;
-        auto* peer = Process::from_pid(peer_pid);
-        if (!peer)
-            return -ESRCH;
-    }
     LOCKER(shared_buffers().lock());
     static int s_next_shared_buffer_id;
     int shared_buffer_id = ++s_next_shared_buffer_id;
     auto shared_buffer = make<SharedBuffer>(shared_buffer_id, size);
     shared_buffer->share_with(m_pid);
-    shared_buffer->share_with(peer_pid);
     *buffer = shared_buffer->get_address(*this);
     ASSERT((int)shared_buffer->size() >= size);
 #ifdef SHARED_BUFFER_DEBUG
@@ -2407,6 +2398,25 @@ int Process::sys$create_shared_buffer(pid_t peer_pid, int size, void** buffer)
     shared_buffers().resource().set(shared_buffer_id, move(shared_buffer));
 
     return shared_buffer_id;
+}
+
+int Process::sys$share_buffer_with(int shared_buffer_id, pid_t peer_pid)
+{
+    if (!peer_pid || peer_pid < 0 || peer_pid == m_pid)
+        return -EINVAL;
+    LOCKER(shared_buffers().lock());
+    auto it = shared_buffers().resource().find(shared_buffer_id);
+    if (it == shared_buffers().resource().end())
+        return -EINVAL;
+    auto& shared_buffer = *(*it).value;
+    {
+        InterruptDisabler disabler;
+        auto* peer = Process::from_pid(peer_pid);
+        if (!peer)
+            return -ESRCH;
+    }
+    shared_buffer.share_with(peer_pid);
+    return 0;
 }
 
 int Process::sys$release_shared_buffer(int shared_buffer_id)

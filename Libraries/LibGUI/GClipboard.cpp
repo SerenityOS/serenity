@@ -38,7 +38,7 @@ void GClipboard::set_data(const StringView& data)
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::SetClipboardContents;
-    auto shared_buffer = SharedBuffer::create(GWindowServerConnection::the().server_pid(), data.length() + 1);
+    auto shared_buffer = SharedBuffer::create_with_size(data.length() + 1);
     if (!shared_buffer) {
         dbgprintf("GClipboard::set_data() failed to create a shared buffer\n");
         return;
@@ -48,6 +48,7 @@ void GClipboard::set_data(const StringView& data)
     else
         ((u8*)shared_buffer->data())[0] = '\0';
     shared_buffer->seal();
+    shared_buffer->share_with(GWindowServerConnection::the().server_pid());
     request.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
     request.clipboard.contents_size = data.length();
     auto response = GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidSetClipboardContents);

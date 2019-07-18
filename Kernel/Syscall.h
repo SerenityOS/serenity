@@ -83,6 +83,7 @@ struct timeval;
     __ENUMERATE_SYSCALL(listen)                 \
     __ENUMERATE_SYSCALL(connect)                \
     __ENUMERATE_SYSCALL(create_shared_buffer)   \
+    __ENUMERATE_SYSCALL(share_buffer_with)      \
     __ENUMERATE_SYSCALL(get_shared_buffer)      \
     __ENUMERATE_SYSCALL(release_shared_buffer)  \
     __ENUMERATE_SYSCALL(link)                   \
