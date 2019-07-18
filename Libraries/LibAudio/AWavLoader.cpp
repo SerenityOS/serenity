@@ -155,11 +155,10 @@ bool AResampleHelper::read_sample()
     return false;
 }
 
-template <typename T>
-static void read_samples_from_stream(BufferStream& stream, Vector<ASample>& samples, int num_channels, int source_rate)
+template <typename SampleReader>
+static void read_samples_from_stream(BufferStream& stream, SampleReader read_sample, Vector<ASample>& samples, int num_channels, int source_rate)
 {
     AResampleHelper resampler(source_rate, 44100);
-    T sample = 0;
     float norm_l = 0;
     float norm_r = 0;
     switch (num_channels) {
@@ -167,8 +166,7 @@ static void read_samples_from_stream(BufferStream& stream, Vector<ASample>& samp
         while (!stream.handle_read_failure()) {
             resampler.prepare();
             while (resampler.read_sample()) {
-                stream >> sample;
-                norm_l = float(sample) / std::numeric_limits<T>::max();
+                norm_l = read_sample(stream);
             }
             samples.append(ASample(norm_l));
         }
@@ -177,10 +175,8 @@ static void read_samples_from_stream(BufferStream& stream, Vector<ASample>& samp
         while (!stream.handle_read_failure()) {
             resampler.prepare();
             while (resampler.read_sample()) {
-                stream >> sample;
-                norm_l = float(sample) / std::numeric_limits<T>::max();
-                stream >> sample;
-                norm_r = float(sample) / std::numeric_limits<T>::max();
+                norm_l = read_sample(stream);
+                norm_r = read_sample(stream);
             }
             samples.append(ASample(norm_l, norm_r));
         }
@@ -190,52 +186,35 @@ static void read_samples_from_stream(BufferStream& stream, Vector<ASample>& samp
     }
 }
 
-static void read_24bit_samples_from_stream(BufferStream& stream, Vector<ASample>& samples, int num_channels, int source_rate)
+static float read_norm_sample_24(BufferStream& stream)
 {
-    AResampleHelper resampler(source_rate, 44100);
+    u8 byte = 0;
+    stream >> byte;
+    u32 sample1 = byte;
+    stream >> byte;
+    u32 sample2 = byte;
+    stream >> byte;
+    u32 sample3 = byte;
 
-    auto read_norm_sample = [&stream]() {
-        u8 byte = 0;
-        stream >> byte;
-        u32 sample1 = byte;
-        stream >> byte;
-        u32 sample2 = byte;
-        stream >> byte;
-        u32 sample3 = byte;
+    i32 value = 0;
+    value = sample1 << 8;
+    value |= (sample2 << 16);
+    value |= (sample3 << 24);
+    return float(value) / std::numeric_limits<i32>::max();
+}
 
-        i32 value = 0;
-        value = sample1 << 8;
-        value |= (sample2 << 16);
-        value |= (sample3 << 24);
-        return float(value) / std::numeric_limits<i32>::max();
-    };
+static float read_norm_sample_16(BufferStream& stream)
+{
+    i16 sample = 0;
+    stream >> sample;
+    return float(sample) / std::numeric_limits<i16>::max();
+}
 
-    float norm_l = 0;
-    float norm_r = 0;
-
-    switch (num_channels) {
-    case 1:
-        while (!stream.handle_read_failure()) {
-            resampler.prepare();
-            while (resampler.read_sample()) {
-                norm_l = read_norm_sample();
-            }
-            samples.append(ASample(norm_l));
-        }
-        break;
-    case 2:
-        while (!stream.handle_read_failure()) {
-            resampler.prepare();
-            while (resampler.read_sample()) {
-                norm_l = read_norm_sample();
-                norm_r = read_norm_sample();
-            }
-            samples.append(ASample(norm_l, norm_r));
-        }
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-    }
+static float read_norm_sample_8(BufferStream& stream)
+{
+    u8 sample = 0;
+    stream >> sample;
+    return float(sample) / std::numeric_limits<u8>::max();
 }
 
 // ### can't const this because BufferStream is non-const
@@ -251,13 +230,13 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, int num_channels, int b
 
     switch (bits_per_sample) {
     case 8:
-        read_samples_from_stream<u8>(stream, fdata, num_channels, source_rate);
+        read_samples_from_stream(stream, read_norm_sample_8, fdata, num_channels, source_rate);
         break;
     case 16:
-        read_samples_from_stream<i16>(stream, fdata, num_channels, source_rate);
+        read_samples_from_stream(stream, read_norm_sample_16, fdata, num_channels, source_rate);
         break;
     case 24:
-        read_24bit_samples_from_stream(stream, fdata, num_channels, source_rate);
+        read_samples_from_stream(stream, read_norm_sample_24, fdata, num_channels, source_rate);
         break;
     default:
         ASSERT_NOT_REACHED();
