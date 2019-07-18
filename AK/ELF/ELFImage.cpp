@@ -29,7 +29,7 @@ static const char* object_file_type_to_string(Elf32_Half type)
     }
 }
 
-const char* ELFImage::section_index_to_string(unsigned index)
+const char* ELFImage::section_index_to_string(unsigned index) const
 {
     if (index == SHN_UNDEF)
         return "Undefined";
@@ -43,7 +43,7 @@ unsigned ELFImage::symbol_count() const
     return section(m_symbol_table_section_index).entry_count();
 }
 
-void ELFImage::dump()
+void ELFImage::dump() const
 {
     kprintf("ELFImage{%p} {\n", this);
     kprintf("    is_valid: %u\n", is_valid());
