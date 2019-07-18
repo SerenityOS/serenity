@@ -133,6 +133,16 @@ bool Thread::ThreadBlockerCondition::should_unblock(time_t, long)
     return m_block_until_condition();
 }
 
+Thread::ThreadBlockerSleep::ThreadBlockerSleep(u64 wakeup_time)
+    : m_wakeup_time(wakeup_time)
+{
+}
+
+bool Thread::ThreadBlockerSleep::should_unblock(time_t, long)
+{
+    return m_wakeup_time <= g_uptime;
+}
+
 // Called by the scheduler on threads that are blocked for some reason.
 // Make a decision as to whether to unblock them or not.
 void Thread::consider_unblock(time_t now_sec, long now_usec)
@@ -151,10 +161,6 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
     case Thread::BlockedLurking:
     case Thread::BlockedSignal:
         /* don't know, don't care */
-        return;
-    case Thread::BlockedSleep:
-        if (wakeup_time() <= g_uptime)
-            unblock();
         return;
     case Thread::BlockedWait:
         process.for_each_child([&](Process& child) {
