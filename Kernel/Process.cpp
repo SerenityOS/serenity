@@ -1289,10 +1289,10 @@ int Process::sys$usleep(useconds_t usec)
     if (!usec)
         return 0;
 
-    current->sleep(usec / 1000);
-    if (current->m_wakeup_time > g_uptime) {
+    u64 wakeup_time = current->sleep(usec / 1000);
+    if (wakeup_time > g_uptime) {
         ASSERT(current->m_was_interrupted_while_blocked);
-        u32 ticks_left_until_original_wakeup_time = current->m_wakeup_time - g_uptime;
+        u32 ticks_left_until_original_wakeup_time = wakeup_time - g_uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;
@@ -1302,10 +1302,10 @@ int Process::sys$sleep(unsigned seconds)
 {
     if (!seconds)
         return 0;
-    current->sleep(seconds * TICKS_PER_SECOND);
-    if (current->m_wakeup_time > g_uptime) {
+    u64 wakeup_time = current->sleep(seconds * TICKS_PER_SECOND);
+    if (wakeup_time > g_uptime) {
         ASSERT(current->m_was_interrupted_while_blocked);
-        u32 ticks_left_until_original_wakeup_time = current->m_wakeup_time - g_uptime;
+        u32 ticks_left_until_original_wakeup_time = wakeup_time - g_uptime;
         return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
     }
     return 0;

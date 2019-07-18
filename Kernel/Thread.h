@@ -65,7 +65,6 @@ public:
 
         __Begin_Blocked_States__,
         BlockedLurking,
-        BlockedSleep,
         BlockedWait,
         BlockedSignal,
         BlockedSelect,
@@ -127,6 +126,15 @@ public:
         Function<bool()> m_block_until_condition;
     };
 
+    class ThreadBlockerSleep : public ThreadBlocker {
+    public:
+        ThreadBlockerSleep(u64 wakeup_time);
+        virtual bool should_unblock(time_t, long) override;
+
+    private:
+        u64 m_wakeup_time { 0 };
+    };
+
     void did_schedule() { ++m_times_scheduled; }
     u32 times_scheduled() const { return m_times_scheduled; }
 
@@ -146,13 +154,11 @@ public:
     u32 ticks() const { return m_ticks; }
     pid_t waitee_pid() const { return m_waitee_pid; }
 
-    void sleep(u32 ticks);
+    u64 sleep(u32 ticks);
     void block(Thread::State);
     void block(ThreadBlocker& blocker);
     void unblock();
 
-    void set_wakeup_time(u64 t) { m_wakeup_time = t; }
-    u64 wakeup_time() const { return m_wakeup_time; }
     void block_until(Function<bool()>&&);
     KResult wait_for_connect(FileDescription&);
 
@@ -226,7 +232,6 @@ private:
     FarPtr m_far_ptr;
     u32 m_ticks { 0 };
     u32 m_ticks_left { 0 };
-    u64 m_wakeup_time { 0 };
     u32 m_times_scheduled { 0 };
     u32 m_pending_signals { 0 };
     u32 m_signal_mask { 0 };
