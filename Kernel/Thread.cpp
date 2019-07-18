@@ -135,11 +135,12 @@ void Thread::block(ThreadBlocker& blocker)
     block(Thread::BlockedCondition);
 }
 
-void Thread::sleep(u32 ticks)
+u64 Thread::sleep(u32 ticks)
 {
     ASSERT(state() == Thread::Running);
-    current->set_wakeup_time(g_uptime + ticks);
-    current->block(Thread::BlockedSleep);
+    u64 wakeup_time = g_uptime + ticks;
+    current->block(*new Thread::ThreadBlockerSleep(wakeup_time));
+    return wakeup_time;
 }
 
 const char* to_string(Thread::State state)
@@ -161,8 +162,6 @@ const char* to_string(Thread::State state)
         return "Skip1";
     case Thread::Skip0SchedulerPasses:
         return "Skip0";
-    case Thread::BlockedSleep:
-        return "Sleep";
     case Thread::BlockedWait:
         return "Wait";
     case Thread::BlockedSignal:
