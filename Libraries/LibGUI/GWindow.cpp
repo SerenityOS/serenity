@@ -600,8 +600,9 @@ NonnullRefPtr<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
     ASSERT(!size.is_empty());
     size_t pitch = round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16);
     size_t size_in_bytes = size.height() * pitch;
-    auto shared_buffer = SharedBuffer::create(GWindowServerConnection::the().server_pid(), size_in_bytes);
+    auto shared_buffer = SharedBuffer::create_with_size(size_in_bytes);
     ASSERT(shared_buffer);
+    shared_buffer->share_with(GWindowServerConnection::the().server_pid());
     auto format = m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32;
     return GraphicsBitmap::create_with_shared_buffer(format, *shared_buffer, size);
 }
