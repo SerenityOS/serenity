@@ -67,15 +67,64 @@ public:
         BlockedLurking,
         BlockedSleep,
         BlockedWait,
-        BlockedRead,
-        BlockedWrite,
         BlockedSignal,
         BlockedSelect,
-        BlockedConnect,
-        BlockedReceive,
-        BlockedAccept,
         BlockedCondition,
         __End_Blocked_States__
+    };
+
+    class ThreadBlocker {
+    public:
+        virtual ~ThreadBlocker() {}
+        virtual bool should_unblock(time_t now_s, long us) = 0;
+    };
+
+    class ThreadBlockerFileDescription : public ThreadBlocker {
+    public:
+        ThreadBlockerFileDescription(const RefPtr<FileDescription>& description);
+        RefPtr<FileDescription> blocked_description() const;
+
+    private:
+        RefPtr<FileDescription> m_blocked_description;
+    };
+
+    class ThreadBlockerAccept : public ThreadBlockerFileDescription {
+    public:
+        ThreadBlockerAccept(const RefPtr<FileDescription>& description);
+        virtual bool should_unblock(time_t, long) override;
+    };
+
+    class ThreadBlockerReceive : public ThreadBlockerFileDescription {
+    public:
+        ThreadBlockerReceive(const RefPtr<FileDescription>& description);
+        virtual bool should_unblock(time_t, long) override;
+    };
+
+    class ThreadBlockerConnect : public ThreadBlockerFileDescription {
+    public:
+        ThreadBlockerConnect(const RefPtr<FileDescription>& description);
+        virtual bool should_unblock(time_t, long) override;
+    };
+
+    class ThreadBlockerWrite : public ThreadBlockerFileDescription {
+    public:
+        ThreadBlockerWrite(const RefPtr<FileDescription>& description);
+        virtual bool should_unblock(time_t, long) override;
+    };
+
+    class ThreadBlockerRead : public ThreadBlockerFileDescription {
+    public:
+        ThreadBlockerRead(const RefPtr<FileDescription>& description);
+        virtual bool should_unblock(time_t, long) override;
+    };
+
+    class ThreadBlockerCondition : public ThreadBlocker {
+    public:
+        ThreadBlockerCondition(Function<bool()> &condition);
+        virtual bool should_unblock(time_t, long) override;
+
+    private:
+        Function<bool()> m_block_until_condition;
     };
 
     void did_schedule() { ++m_times_scheduled; }
@@ -99,7 +148,7 @@ public:
 
     void sleep(u32 ticks);
     void block(Thread::State);
-    void block(Thread::State, FileDescription&);
+    void block(ThreadBlocker& blocker);
     void unblock();
 
     void set_wakeup_time(u64 t) { m_wakeup_time = t; }
@@ -186,11 +235,10 @@ private:
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
     pid_t m_waitee_pid { -1 };
     int m_wait_options { 0 };
-    RefPtr<FileDescription> m_blocked_description;
     timeval m_select_timeout;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };
-    Function<bool()> m_block_until_condition;
+    OwnPtr<ThreadBlocker> m_blocker;
     Vector<int> m_select_read_fds;
     Vector<int> m_select_write_fds;
     Vector<int> m_select_exceptional_fds;

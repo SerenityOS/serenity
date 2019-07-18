@@ -99,7 +99,7 @@ Thread::~Thread()
 
 void Thread::unblock()
 {
-    m_blocked_description = nullptr;
+    m_blocker = nullptr;
     if (current == this) {
         set_state(Thread::Running);
         return;
@@ -110,7 +110,7 @@ void Thread::unblock()
 
 void Thread::block_until(Function<bool()>&& condition)
 {
-    m_block_until_condition = move(condition);
+    m_blocker = make<ThreadBlockerCondition>(condition);
     block(Thread::BlockedCondition);
     Scheduler::yield();
 }
@@ -129,10 +129,10 @@ void Thread::block(Thread::State new_state)
         process().big_lock().lock();
 }
 
-void Thread::block(Thread::State new_state, FileDescription& description)
+void Thread::block(ThreadBlocker& blocker)
 {
-    m_blocked_description = &description;
-    block(new_state);
+    m_blocker = &blocker;
+    block(Thread::BlockedCondition);
 }
 
 void Thread::sleep(u32 ticks)
@@ -165,22 +165,12 @@ const char* to_string(Thread::State state)
         return "Sleep";
     case Thread::BlockedWait:
         return "Wait";
-    case Thread::BlockedRead:
-        return "Read";
-    case Thread::BlockedWrite:
-        return "Write";
     case Thread::BlockedSignal:
         return "Signal";
     case Thread::BlockedSelect:
         return "Select";
     case Thread::BlockedLurking:
         return "Lurking";
-    case Thread::BlockedConnect:
-        return "Connect";
-    case Thread::BlockedReceive:
-        return "Receive";
-    case Thread::BlockedAccept:
-        return "Accepting";
     case Thread::BlockedCondition:
         return "Condition";
     case Thread::__Begin_Blocked_States__:
@@ -197,7 +187,7 @@ void Thread::finalize()
     dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
     set_state(Thread::State::Dead);
 
-    m_blocked_description = nullptr;
+    m_blocker = nullptr;
 
     if (this == &m_process.main_thread())
         m_process.finalize();
@@ -558,7 +548,7 @@ KResult Thread::wait_for_connect(FileDescription& description)
     auto& socket = *description.socket();
     if (socket.is_connected())
         return KSuccess;
-    block(Thread::State::BlockedConnect, description);
+    block(*new Thread::ThreadBlockerConnect(description));
     Scheduler::yield();
     if (!socket.is_connected())
         return KResult(-ECONNREFUSED);

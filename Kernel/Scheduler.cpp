@@ -51,6 +51,88 @@ void Scheduler::beep()
     s_beep_timeout = g_uptime + 100;
 }
 
+Thread::ThreadBlockerFileDescription::ThreadBlockerFileDescription(const RefPtr<FileDescription>& description)
+    : m_blocked_description(description)
+{}
+
+RefPtr<FileDescription> Thread::ThreadBlockerFileDescription::blocked_description() const
+{
+    return m_blocked_description;
+}
+
+Thread::ThreadBlockerAccept::ThreadBlockerAccept(const RefPtr<FileDescription>& description)
+    : ThreadBlockerFileDescription(description)
+{
+}
+
+bool Thread::ThreadBlockerAccept::should_unblock(time_t, long)
+{
+    auto& description = *blocked_description();
+    auto& socket = *description.socket();
+
+    return socket.can_accept();
+}
+
+Thread::ThreadBlockerReceive::ThreadBlockerReceive(const RefPtr<FileDescription>& description)
+    : ThreadBlockerFileDescription(description)
+{
+}
+
+bool Thread::ThreadBlockerReceive::should_unblock(time_t now_sec, long now_usec)
+{
+    auto& description = *blocked_description();
+    auto& socket = *description.socket();
+    // FIXME: Block until the amount of data wanted is available.
+    bool timed_out = now_sec > socket.receive_deadline().tv_sec || (now_sec == socket.receive_deadline().tv_sec && now_usec >= socket.receive_deadline().tv_usec);
+    if (timed_out || description.can_read())
+        return true;
+    return false;
+}
+
+Thread::ThreadBlockerConnect::ThreadBlockerConnect(const RefPtr<FileDescription>& description)
+    : ThreadBlockerFileDescription(description)
+{
+}
+
+bool Thread::ThreadBlockerConnect::should_unblock(time_t, long)
+{
+    auto& description = *blocked_description();
+    auto& socket = *description.socket();
+    return socket.is_connected();
+}
+
+Thread::ThreadBlockerWrite::ThreadBlockerWrite(const RefPtr<FileDescription>& description)
+    : ThreadBlockerFileDescription(description)
+{
+}
+
+bool Thread::ThreadBlockerWrite::should_unblock(time_t, long)
+{
+    return blocked_description()->can_write();
+}
+
+Thread::ThreadBlockerRead::ThreadBlockerRead(const RefPtr<FileDescription>& description)
+    : ThreadBlockerFileDescription(description)
+{
+}
+
+bool Thread::ThreadBlockerRead::should_unblock(time_t, long)
+{
+    // FIXME: Block until the amount of data wanted is available.
+    return blocked_description()->can_read();
+}
+
+Thread::ThreadBlockerCondition::ThreadBlockerCondition(Function<bool()> &condition)
+    : m_block_until_condition(move(condition))
+{
+    ASSERT(m_block_until_condition);
+}
+
+bool Thread::ThreadBlockerCondition::should_unblock(time_t, long)
+{
+    return m_block_until_condition();
+}
+
 // Called by the scheduler on threads that are blocked for some reason.
 // Make a decision as to whether to unblock them or not.
 void Thread::consider_unblock(time_t now_sec, long now_usec)
@@ -93,41 +175,6 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
             return IterationDecision::Break;
         });
         return;
-    case Thread::BlockedRead:
-        ASSERT(m_blocked_description);
-        // FIXME: Block until the amount of data wanted is available.
-        if (m_blocked_description->can_read())
-            unblock();
-        return;
-    case Thread::BlockedWrite:
-        ASSERT(m_blocked_description != -1);
-        if (m_blocked_description->can_write())
-            unblock();
-        return;
-    case Thread::BlockedConnect: {
-        auto& description = *m_blocked_description;
-        auto& socket = *description.socket();
-        if (socket.is_connected())
-            unblock();
-        return;
-    }
-    case Thread::BlockedReceive: {
-        auto& description = *m_blocked_description;
-        auto& socket = *description.socket();
-        // FIXME: Block until the amount of data wanted is available.
-        bool timed_out = now_sec > socket.receive_deadline().tv_sec || (now_sec == socket.receive_deadline().tv_sec && now_usec >= socket.receive_deadline().tv_usec);
-        if (timed_out || description.can_read())
-            unblock();
-        return;
-    }
-    case Thread::BlockedAccept: {
-        auto& description = *m_blocked_description;
-        auto& socket = *description.socket();
-
-        if (socket.can_accept())
-            unblock();
-        return;
-    }
     case Thread::BlockedSelect:
         if (m_select_has_timeout) {
             if (now_sec > m_select_timeout.tv_sec || (now_sec == m_select_timeout.tv_sec && now_usec >= m_select_timeout.tv_usec)) {
@@ -149,9 +196,10 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         }
         return;
     case Thread::BlockedCondition:
-        if (m_block_until_condition()) {
-            m_block_until_condition = nullptr;
+        ASSERT(m_blocker);
+        if (m_blocker->should_unblock(now_sec, now_usec)) {
             unblock();
+            m_blocker = nullptr;
         }
         return;
     case Thread::Skip1SchedulerPass:
