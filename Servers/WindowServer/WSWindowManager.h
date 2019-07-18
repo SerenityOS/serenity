@@ -13,7 +13,7 @@
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSMenuBar.h>
-#include <WindowServer/WSMenuBarKeeper.h>
+#include <WindowServer/WSMenuManager.h>
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WSWindowType.h>
