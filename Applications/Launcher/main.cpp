@@ -5,7 +5,7 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <errno.h>
 #include <signal.h>
 #include <stdio.h>

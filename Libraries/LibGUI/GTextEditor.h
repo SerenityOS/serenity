@@ -3,7 +3,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <LibGUI/GScrollableWidget.h>
-#include <SharedGraphics/TextAlignment.h>
+#include <LibDraw/TextAlignment.h>
 
 class GAction;
 class GMenu;

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <LibHTML/CSS/LengthBox.h>
-#include <SharedGraphics/Color.h>
-#include <SharedGraphics/Size.h>
+#include <LibDraw/Color.h>
+#include <LibDraw/Size.h>
 
 enum FontStyle {
     Normal,

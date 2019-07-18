@@ -7,9 +7,9 @@
 #include <LibCore/CObject.h>
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GShortcut.h>
-#include <SharedGraphics/Color.h>
-#include <SharedGraphics/Font.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Color.h>
+#include <LibDraw/Font.h>
+#include <LibDraw/Rect.h>
 
 class GraphicsBitmap;
 class GAction;

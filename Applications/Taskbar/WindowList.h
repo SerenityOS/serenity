@@ -4,7 +4,7 @@
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <LibGUI/GButton.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Rect.h>
 
 class Window {
 public:

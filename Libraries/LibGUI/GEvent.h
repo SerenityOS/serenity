@@ -3,8 +3,8 @@
 #include <Kernel/KeyCode.h>
 #include <LibCore/CEvent.h>
 #include <LibGUI/GWindowType.h>
-#include <SharedGraphics/Point.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Point.h>
+#include <LibDraw/Rect.h>
 
 class CObject;
 

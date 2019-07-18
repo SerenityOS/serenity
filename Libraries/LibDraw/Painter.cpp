@@ -4,7 +4,7 @@
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
-#include <SharedGraphics/CharacterBitmap.h>
+#include <LibDraw/CharacterBitmap.h>
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>

@@ -4,7 +4,7 @@
 #include <AK/Vector.h>
 #include <LibHTML/Layout/ComputedStyle.h>
 #include <LibHTML/TreeNode.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Rect.h>
 
 class Node;
 class LayoutBlock;

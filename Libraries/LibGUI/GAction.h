@@ -9,7 +9,7 @@
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibGUI/GShortcut.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 class GActionGroup;
 class GButton;

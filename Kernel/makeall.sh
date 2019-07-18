@@ -18,6 +18,7 @@ build_targets="$build_targets ../DevTools/FormCompiler"
 build_targets="$build_targets ../Libraries/LibC"
 build_targets="$build_targets ../Libraries/LibM"
 build_targets="$build_targets ../Libraries/LibCore"
+build_targets="$build_targets ../Libraries/LibDraw"
 build_targets="$build_targets ../Libraries/LibAudio"
 build_targets="$build_targets ../Servers/SystemServer"
 build_targets="$build_targets ../Servers/LookupServer"
@@ -64,7 +65,6 @@ for targ in $build_targets; do
 done
 
 # has no need to build separately, but install headers.
-(cd ../SharedGraphics && ./install.sh)
 (cd ../AK && ./install.sh)
 
 sudo -E ./build-image-qemu.sh

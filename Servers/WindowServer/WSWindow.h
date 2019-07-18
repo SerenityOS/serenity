@@ -3,9 +3,9 @@
 #include <AK/AKString.h>
 #include <AK/InlineLinkedList.h>
 #include <LibCore/CObject.h>
-#include <SharedGraphics/DisjointRectSet.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/DisjointRectSet.h>
+#include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/Rect.h>
 #include <WindowServer/WSWindowFrame.h>
 #include <WindowServer/WSWindowType.h>
 

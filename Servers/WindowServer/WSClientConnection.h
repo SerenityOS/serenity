@@ -6,7 +6,7 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibCore/CoreIPCServer.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <WindowServer/WSEvent.h>
 
 class WSWindow;

@@ -1,5 +1,5 @@
-#include <SharedGraphics/Font.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/Font.h>
+#include <LibDraw/StylePainter.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>

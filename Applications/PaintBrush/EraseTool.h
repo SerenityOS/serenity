@@ -1,7 +1,7 @@
 #pragma once
 
 #include "Tool.h"
-#include <SharedGraphics/Point.h>
+#include <LibDraw/Point.h>
 
 class GMenu;
 

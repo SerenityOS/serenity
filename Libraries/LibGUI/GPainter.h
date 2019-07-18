@@ -1,6 +1,6 @@
 #pragma once
 
-#include <SharedGraphics/Painter.h>
+#include <LibDraw/Painter.h>
 
 class GWidget;
 class GraphicsBitmap;

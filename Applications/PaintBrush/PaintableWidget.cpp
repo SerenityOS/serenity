@@ -1,7 +1,7 @@
 #include "PaintableWidget.h"
 #include "Tool.h"
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 static PaintableWidget* s_the;
 

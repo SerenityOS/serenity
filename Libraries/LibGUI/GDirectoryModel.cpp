@@ -4,7 +4,7 @@
 #include <LibCore/CDirIterator.h>
 #include <LibCore/CLock.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <dirent.h>
 #include <grp.h>
 #include <pwd.h>

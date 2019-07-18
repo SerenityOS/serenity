@@ -10,11 +10,11 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/CTimer.h>
-#include <SharedGraphics/CharacterBitmap.h>
-#include <SharedGraphics/Font.h>
-#include <SharedGraphics/PNGLoader.h>
-#include <SharedGraphics/Painter.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/CharacterBitmap.h>
+#include <LibDraw/Font.h>
+#include <LibDraw/PNGLoader.h>
+#include <LibDraw/Painter.h>
+#include <LibDraw/StylePainter.h>
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSClientConnection.h>

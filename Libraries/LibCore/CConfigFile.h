@@ -5,7 +5,7 @@
 #include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/Vector.h>
-#include <SharedGraphics/Color.h>
+#include <LibDraw/Color.h>
 
 class CConfigFile : public RefCounted<CConfigFile> {
 public:

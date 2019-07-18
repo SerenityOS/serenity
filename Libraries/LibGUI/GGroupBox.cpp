@@ -1,6 +1,6 @@
 #include <LibGUI/GGroupBox.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/StylePainter.h>
 
 GGroupBox::GGroupBox(GWidget* parent)
     : GGroupBox({}, parent)

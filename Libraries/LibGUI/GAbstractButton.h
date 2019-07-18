@@ -2,7 +2,7 @@
 
 #include <LibCore/CTimer.h>
 #include <LibGUI/GWidget.h>
-#include <SharedGraphics/TextAlignment.h>
+#include <LibDraw/TextAlignment.h>
 
 class GPainter;
 

@@ -1,6 +1,6 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GRadioButton.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 static RefPtr<GraphicsBitmap> s_unfilled_circle_bitmap;
 static RefPtr<GraphicsBitmap> s_filled_circle_bitmap;

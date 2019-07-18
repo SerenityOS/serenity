@@ -1,7 +1,7 @@
-#include <SharedGraphics/CharacterBitmap.h>
-#include <SharedGraphics/Font.h>
-#include <SharedGraphics/Painter.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/CharacterBitmap.h>
+#include <LibDraw/Font.h>
+#include <LibDraw/Painter.h>
+#include <LibDraw/StylePainter.h>
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSCompositor.h>
 #include <WindowServer/WSEvent.h>

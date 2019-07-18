@@ -1,6 +1,6 @@
-#include <SharedGraphics/CharacterBitmap.h>
-#include <SharedGraphics/Painter.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/CharacterBitmap.h>
+#include <LibDraw/Painter.h>
+#include <LibDraw/StylePainter.h>
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSWindowManager.h>

@@ -1,6 +1,6 @@
 #include "QSWidget.h"
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 QSWidget::QSWidget(GWidget* parent)
     : GFrame(parent)

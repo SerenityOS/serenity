@@ -1,6 +1,6 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GSlider.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/StylePainter.h>
 
 GSlider::GSlider(GWidget* parent)
     : GWidget(parent)

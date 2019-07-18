@@ -5,8 +5,8 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibGUI/GWindowType.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/Rect.h>
 
 class GWidget;
 class GWMEvent;

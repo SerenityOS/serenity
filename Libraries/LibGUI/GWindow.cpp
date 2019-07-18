@@ -8,7 +8,7 @@
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 //#define UPDATE_COALESCING_DEBUG
 

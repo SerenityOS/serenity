@@ -3,7 +3,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GResizeCorner.h>
 #include <LibGUI/GStatusBar.h>
-#include <SharedGraphics/StylePainter.h>
+#include <LibDraw/StylePainter.h>
 
 GStatusBar::GStatusBar(GWidget* parent)
     : GWidget(parent)

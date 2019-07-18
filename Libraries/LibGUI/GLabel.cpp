@@ -1,6 +1,6 @@
 #include "GLabel.h"
 #include <LibGUI/GPainter.h>
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 GLabel::GLabel(GWidget* parent)
     : GFrame(parent)

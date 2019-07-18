@@ -1,16 +1,6 @@
 include ../../Makefile.common
 
-SHAREDGRAPHICS_OBJS = \
-    ../../SharedGraphics/Painter.o \
-    ../../SharedGraphics/StylePainter.o \
-    ../../SharedGraphics/Font.o \
-    ../../SharedGraphics/Rect.o \
-    ../../SharedGraphics/GraphicsBitmap.o \
-    ../../SharedGraphics/CharacterBitmap.o \
-    ../../SharedGraphics/Color.o \
-    ../../SharedGraphics/PNGLoader.o
-
-LIBGUI_OBJS = \
+OBJS = \
     GPainter.o \
     GButton.o \
     GCheckBox.o \
@@ -63,8 +53,6 @@ LIBGUI_OBJS = \
     GListView.o \
     GComboBox.o \
     GWindow.o
-
-OBJS = $(SHAREDGRAPHICS_OBJS) $(LIBGUI_OBJS)
 
 LIBRARY = libgui.a
 DEFINES += -DUSERLAND

@@ -11,7 +11,7 @@
 #include <LibGUI/GSortingProxyModel.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GToolBar.h>
-#include <SharedGraphics/PNGLoader.h>
+#include <LibDraw/PNGLoader.h>
 
 Optional<String> GFilePicker::get_open_filepath()
 {

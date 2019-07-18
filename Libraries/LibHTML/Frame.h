@@ -1,7 +1,7 @@
 #pragma once
 
 #include <LibHTML/DOM/Document.h>
-#include <SharedGraphics/Size.h>
+#include <LibDraw/Size.h>
 
 class Frame {
 public:

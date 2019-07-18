@@ -1,5 +1,5 @@
 #pragma once
 
-#include <SharedGraphics/GraphicsBitmap.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 RefPtr<GraphicsBitmap> load_png(const StringView& path);

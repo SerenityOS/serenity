@@ -7,8 +7,8 @@
 #include <LibCore/CNotifier.h>
 #include <LibCore/CTimer.h>
 #include <LibGUI/GFrame.h>
-#include <SharedGraphics/GraphicsBitmap.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/Rect.h>
 
 class Font;
 

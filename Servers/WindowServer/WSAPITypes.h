@@ -1,7 +1,7 @@
 #pragma once
 
-#include <SharedGraphics/Color.h>
-#include <SharedGraphics/Rect.h>
+#include <LibDraw/Color.h>
+#include <LibDraw/Rect.h>
 
 typedef unsigned WSAPI_Color;
 
