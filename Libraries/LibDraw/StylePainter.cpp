@@ -4,7 +4,7 @@
 void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool active, bool hovered, bool enabled)
 {
     Color base_color = Color::WarmGray;
-    Color highlight_color2 = Color::from_rgb(0xdfdfdf);
+    Color highlight_color2 = Color::from_rgb(0xe8e7e4);
     Color shadow_color1 = Color::from_rgb(0x808080);
     Color shadow_color2 = Color::from_rgb(0x404040);
 
@@ -45,7 +45,7 @@ void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool act
 static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, bool checked, bool hovered, bool enabled)
 {
     Color button_color = Color::WarmGray;
-    Color highlight_color2 = Color::from_rgb(0xdfdfdf);
+    Color highlight_color2 = Color::from_rgb(0xe8e7e4);
     Color shadow_color1 = Color::from_rgb(0x808080);
     Color shadow_color2 = Color::from_rgb(0x404040);
 
