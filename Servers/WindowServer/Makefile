@@ -27,7 +27,7 @@ WINDOWSERVER_OBJS = \
     WSButton.o \
     WSCPUMonitor.o \
     WSCompositor.o \
-    WSMenuBarKeeper.o \
+    WSMenuManager.o \
     main.o
 
 APP = WindowServer
