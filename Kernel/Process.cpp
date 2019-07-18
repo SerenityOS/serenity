@@ -900,7 +900,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 #ifdef IO_DEBUG
             dbgprintf("block write on %d\n", fd);
 #endif
-            current->block(Thread::State::BlockedWrite, description);
+            current->block(*new Thread::ThreadBlockerWrite(description));
         }
         ssize_t rc = description.write(data + nwritten, data_size - nwritten);
 #ifdef IO_DEBUG
@@ -962,7 +962,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
         return -EBADF;
     if (description->is_blocking()) {
         if (!description->can_read()) {
-            current->block(Thread::State::BlockedRead, *description);
+            current->block(*new Thread::ThreadBlockerRead(*description));
             if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         }
@@ -2122,7 +2122,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     auto& socket = *accepting_socket_description->socket();
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
-            current->block(Thread::State::BlockedAccept, *accepting_socket_description);
+            current->block(*new Thread::ThreadBlockerAccept(*accepting_socket_description));
             if (current->m_was_interrupted_while_blocked)
                 return -EINTR;
         } else {
