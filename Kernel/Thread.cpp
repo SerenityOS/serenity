@@ -162,8 +162,6 @@ const char* to_string(Thread::State state)
         return "Skip1";
     case Thread::Skip0SchedulerPasses:
         return "Skip0";
-    case Thread::BlockedWait:
-        return "Wait";
     case Thread::BlockedSignal:
         return "Signal";
     case Thread::BlockedLurking:
