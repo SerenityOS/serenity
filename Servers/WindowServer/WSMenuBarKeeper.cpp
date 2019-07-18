@@ -6,7 +6,7 @@
 #include <time.h>
 #include <unistd.h>
 
-WSMenuBarKeeper::WSMenuBarKeeper()
+WSMenuManager::WSMenuManager()
 {
     m_username = getlogin();
 
@@ -21,17 +21,17 @@ WSMenuBarKeeper::WSMenuBarKeeper()
     });
 }
 
-WSMenuBarKeeper::~WSMenuBarKeeper()
+WSMenuManager::~WSMenuManager()
 {
 }
 
-void WSMenuBarKeeper::setup()
+void WSMenuManager::setup()
 {
     m_window = make<WSWindow>(*this, WSWindowType::Menubar);
     m_window->set_rect(WSWindowManager::the().menubar_rect());
 }
 
-void WSMenuBarKeeper::draw()
+void WSMenuManager::draw()
 {
     auto& wm = WSWindowManager::the();
     auto menubar_rect = wm.menubar_rect();
@@ -89,12 +89,12 @@ void WSMenuBarKeeper::draw()
     m_cpu_monitor.paint(painter, cpu_rect);
 }
 
-void WSMenuBarKeeper::tick_clock()
+void WSMenuManager::tick_clock()
 {
     refresh();
 }
 
-void WSMenuBarKeeper::refresh()
+void WSMenuManager::refresh()
 {
     if (!m_window)
         return;
@@ -102,7 +102,7 @@ void WSMenuBarKeeper::refresh()
     window().invalidate();
 }
 
-void WSMenuBarKeeper::event(CEvent& event)
+void WSMenuManager::event(CEvent& event)
 {
     if (event.type() == WSEvent::MouseMove || event.type() == WSEvent::MouseUp || event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseWheel) {
         auto& mouse_event = static_cast<WSMouseEvent&>(event);
@@ -117,7 +117,7 @@ void WSMenuBarKeeper::event(CEvent& event)
     return CObject::event(event);
 }
 
-void WSMenuBarKeeper::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
+void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
 {
     auto& wm = WSWindowManager::the();
     bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && wm.current_menu() && (wm.current_menu()->menubar() || wm.current_menu() == wm.system_menu());
