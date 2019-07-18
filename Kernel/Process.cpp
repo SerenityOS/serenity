@@ -1441,16 +1441,15 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         }
     }
 
-    current->m_waitee_pid = waitee;
-    current->m_wait_options = options;
-    current->block(Thread::State::BlockedWait);
+    pid_t waitee_pid = waitee;
+    current->block(*new Thread::ThreadBlockerWait(options, waitee_pid));
     if (current->m_was_interrupted_while_blocked)
         return -EINTR;
 
     InterruptDisabler disabler;
 
     // NOTE: If waitee was -1, m_waitee_pid will have been filled in by the scheduler.
-    Process* waitee_process = Process::from_pid(current->m_waitee_pid);
+    Process* waitee_process = Process::from_pid(waitee_pid);
     ASSERT(waitee_process);
     if (waitee_process->is_dead()) {
         exit_status = reap(*waitee_process);
@@ -1458,7 +1457,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         ASSERT(waitee_process->main_thread().state() == Thread::State::Stopped);
         exit_status = 0x7f;
     }
-    return current->m_waitee_pid;
+    return waitee_pid;
 }
 
 enum class KernelMemoryCheckResult {
