@@ -10,6 +10,7 @@
 #include <Kernel/KResult.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/Region.h>
+#include <LibC/fd_set.h>
 
 class Alarm;
 class FileDescription;
@@ -135,15 +136,16 @@ public:
 
     class SelectBlocker : public Blocker {
     public:
-        SelectBlocker(const timeval& tv, bool select_has_timeout, const Vector<int>& read_fds, const Vector<int>& write_fds, const Vector<int>& except_fds);
+        typedef Vector<int, FD_SETSIZE> FDVector;
+        SelectBlocker(const timeval& tv, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds);
         virtual bool should_unblock(Thread&, time_t, long) override;
 
     private:
         timeval m_select_timeout;
         bool m_select_has_timeout { false };
-        const Vector<int>& m_select_read_fds;
-        const Vector<int>& m_select_write_fds;
-        const Vector<int>& m_select_exceptional_fds;
+        const FDVector& m_select_read_fds;
+        const FDVector& m_select_write_fds;
+        const FDVector& m_select_exceptional_fds;
     };
 
     class WaitBlocker : public Blocker {

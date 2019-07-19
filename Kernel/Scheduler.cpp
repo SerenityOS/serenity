@@ -143,7 +143,7 @@ bool Thread::SleepBlocker::should_unblock(Thread&, time_t, long)
     return m_wakeup_time <= g_uptime;
 }
 
-Thread::SelectBlocker::SelectBlocker(const timeval& tv, bool select_has_timeout, const Vector<int>& read_fds, const Vector<int>& write_fds, const Vector<int>& except_fds)
+Thread::SelectBlocker::SelectBlocker(const timeval& tv, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds)
     : m_select_timeout(tv)
     , m_select_has_timeout(select_has_timeout)
     , m_select_read_fds(read_fds)
