@@ -16,8 +16,8 @@ HashTable<Thread*>& thread_table()
     return *table;
 }
 
-InlineLinkedList<Thread>* g_runnable_threads;
-InlineLinkedList<Thread>* g_nonrunnable_threads;
+Thread::SchedulerThreadList* Thread::g_runnable_threads;
+Thread::SchedulerThreadList* Thread::g_nonrunnable_threads;
 
 static const u32 default_kernel_stack_size = 65536;
 static const u32 default_userspace_stack_size = 65536;
@@ -75,7 +75,7 @@ Thread::Thread(Process& process)
     if (m_process.pid() != 0) {
         InterruptDisabler disabler;
         thread_table().set(this);
-        set_thread_list(g_nonrunnable_threads);
+        g_nonrunnable_threads->append(*this);
     }
 }
 
@@ -85,8 +85,6 @@ Thread::~Thread()
     kfree_aligned(m_fpu_state);
     {
         InterruptDisabler disabler;
-        if (m_thread_list)
-            m_thread_list->remove(this);
         thread_table().remove(this);
     }
 
@@ -534,8 +532,8 @@ KResult Thread::wait_for_connect(FileDescription& description)
 
 void Thread::initialize()
 {
-    g_runnable_threads = new InlineLinkedList<Thread>;
-    g_nonrunnable_threads = new InlineLinkedList<Thread>;
+    g_runnable_threads = new SchedulerThreadList;
+    g_nonrunnable_threads = new SchedulerThreadList;
     Scheduler::initialize();
 }
 
@@ -555,23 +553,20 @@ bool Thread::is_thread(void* ptr)
     return thread_table().contains((Thread*)ptr);
 }
 
-void Thread::set_thread_list(InlineLinkedList<Thread>* thread_list)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(pid() != 0);
-    if (m_thread_list == thread_list)
-        return;
-    if (m_thread_list)
-        m_thread_list->remove(this);
-    if (thread_list)
-        thread_list->append(this);
-    m_thread_list = thread_list;
-}
-
 void Thread::set_state(State new_state)
 {
     InterruptDisabler disabler;
     m_state = new_state;
-    if (m_process.pid() != 0)
-        set_thread_list(thread_list_for_state(new_state));
+    if (m_process.pid() != 0) {
+        SchedulerThreadList* list = nullptr;
+        if (is_runnable_state(new_state))
+            list = g_runnable_threads;
+        else
+            list = g_nonrunnable_threads;
+
+        if (list->contains(*this))
+            return;
+
+        list->append(*this);
+    }
 }

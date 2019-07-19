@@ -2,7 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/Function.h>
-#include <AK/InlineLinkedList.h>
+#include <AK/IntrusiveList.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
@@ -29,10 +29,7 @@ struct SignalActionData {
     int flags { 0 };
 };
 
-extern InlineLinkedList<Thread>* g_runnable_threads;
-extern InlineLinkedList<Thread>* g_nonrunnable_threads;
-
-class Thread : public InlineLinkedListNode<Thread> {
+class Thread {
     friend class Process;
     friend class Scheduler;
 
@@ -253,13 +250,6 @@ public:
 
     Thread* clone(Process&);
 
-    // For InlineLinkedList
-    Thread* m_prev { nullptr };
-    Thread* m_next { nullptr };
-
-    InlineLinkedList<Thread>* thread_list() { return m_thread_list; }
-    void set_thread_list(InlineLinkedList<Thread>*);
-
     template<typename Callback>
     static IterationDecision for_each_in_state(State, Callback);
     template<typename Callback>
@@ -276,7 +266,15 @@ public:
         return state == Thread::State::Running || state == Thread::State::Runnable;
     }
 
-    static InlineLinkedList<Thread>* thread_list_for_state(Thread::State state)
+private:
+    IntrusiveListNode m_runnable_list_node;
+
+    typedef IntrusiveList<Thread, &Thread::m_runnable_list_node> SchedulerThreadList;
+
+public:
+    static SchedulerThreadList* g_runnable_threads;
+    static SchedulerThreadList* g_nonrunnable_threads;
+    static SchedulerThreadList* thread_list_for_state(Thread::State state)
     {
         if (is_runnable_state(state))
             return g_runnable_threads;
@@ -301,7 +299,6 @@ private:
     Region* m_signal_stack_user_region { nullptr };
     Blocker* m_blocker { nullptr };
     FPUState* m_fpu_state { nullptr };
-    InlineLinkedList<Thread>* m_thread_list { nullptr };
     State m_state { Invalid };
     bool m_has_used_fpu { false };
     bool m_was_interrupted_while_blocked { false };
@@ -345,11 +342,12 @@ template<typename Callback>
 inline IterationDecision Thread::for_each_runnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* thread = g_runnable_threads->head(); thread;) {
-        auto* next_thread = thread->next();
+    auto& tl = *g_runnable_threads;
+    for (auto it = tl.begin(); it != tl.end();) {
+        auto thread = *it;
+        it = ++it;
         if (callback(*thread) == IterationDecision::Break)
             return IterationDecision::Break;
-        thread = next_thread;
     }
 
     return IterationDecision::Continue;
@@ -359,11 +357,12 @@ template<typename Callback>
 inline IterationDecision Thread::for_each_nonrunnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* thread = g_nonrunnable_threads->head(); thread;) {
-        auto* next_thread = thread->next();
+    auto& tl = *g_nonrunnable_threads;
+    for (auto it = tl.begin(); it != tl.end();) {
+        auto thread = *it;
+        it = ++it;
         if (callback(*thread) == IterationDecision::Break)
             return IterationDecision::Break;
-        thread = next_thread;
     }
 
     return IterationDecision::Continue;
