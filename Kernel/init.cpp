@@ -242,7 +242,7 @@ extern "C" [[noreturn]] void init()
         current->process().set_priority(Process::LowPriority);
         for (;;) {
             Thread::finalize_dying_threads();
-            current->block(*new Thread::SemiPermanentBlocker(Thread::SemiPermanentBlocker::Reason::Lurking));
+            current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Lurking);
             Scheduler::yield();
         }
     });

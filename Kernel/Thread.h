@@ -208,9 +208,17 @@ public:
     u32 ticks() const { return m_ticks; }
 
     u64 sleep(u32 ticks);
-    void block(Blocker& blocker);
-    void unblock();
 
+    template <typename T, class... Args>
+    void block(Args&& ... args)
+    {
+        ASSERT(!m_blocker);
+        T t(AK::forward<Args>(args)...);
+        m_blocker = &t;
+        block_helper();
+    };
+
+    void unblock();
     void block_until(const char* state_string, Function<bool()>&&);
     KResult wait_for_connect(FileDescription&);
 
@@ -292,7 +300,7 @@ private:
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };
-    OwnPtr<Blocker> m_blocker;
+    Blocker* m_blocker { nullptr };
     FPUState* m_fpu_state { nullptr };
     InlineLinkedList<Thread>* m_thread_list { nullptr };
     State m_state { Invalid };
