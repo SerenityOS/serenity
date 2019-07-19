@@ -35,10 +35,14 @@
 //#define SIGNAL_DEBUG
 //#define SHARED_BUFFER_DEBUG
 
+static void create_signal_trampolines();
+
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
 static String* s_hostname;
 static Lock* s_hostname_lock;
+VirtualAddress g_return_to_ring3_from_signal_trampoline;
+VirtualAddress g_return_to_ring0_from_signal_trampoline;
 
 void Process::initialize()
 {
@@ -46,6 +50,8 @@ void Process::initialize()
     g_processes = new InlineLinkedList<Process>;
     s_hostname = new String("courage");
     s_hostname_lock = new Lock;
+
+    create_signal_trampolines();
 }
 
 Vector<pid_t> Process::all_pids()
@@ -673,15 +679,15 @@ void Process::sys$exit(int status)
     ASSERT_NOT_REACHED();
 }
 
-void Process::create_signal_trampolines_if_needed()
+void create_signal_trampolines()
 {
-    if (!m_return_to_ring3_from_signal_trampoline.is_null())
-        return;
-    // FIXME: This should be a global trampoline shared by all processes, not one created per process!
-    // FIXME: Remap as read-only after setup.
-    auto* region = allocate_region(VirtualAddress(), PAGE_SIZE, "Signal trampolines", PROT_READ | PROT_WRITE | PROT_EXEC);
-    m_return_to_ring3_from_signal_trampoline = region->vaddr();
-    u8* code_ptr = m_return_to_ring3_from_signal_trampoline.as_ptr();
+    InterruptDisabler disabler;
+
+    // NOTE: We leak this region.
+    auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines").leak_ref();
+    g_return_to_ring3_from_signal_trampoline = trampoline_region->vaddr();
+
+    u8* code_ptr = (u8*)trampoline_region->vaddr().as_ptr();
     *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
     *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
     *code_ptr++ = 0xb8; // mov eax, <u32>
@@ -700,7 +706,7 @@ void Process::create_signal_trampolines_if_needed()
     *code_ptr++ = 0x0f; // ud2
     *code_ptr++ = 0x0b;
 
-    m_return_to_ring0_from_signal_trampoline = VirtualAddress((u32)code_ptr);
+    g_return_to_ring0_from_signal_trampoline = VirtualAddress((u32)code_ptr);
     *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
     *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
     *code_ptr++ = 0xb8; // mov eax, <u32>
@@ -717,6 +723,9 @@ void Process::create_signal_trampolines_if_needed()
     *code_ptr++ = 0x82;
     *code_ptr++ = 0x0f; // ud2
     *code_ptr++ = 0x0b;
+
+    trampoline_region->set_writable(false);
+    MM.remap_region(*trampoline_region->page_directory(), *trampoline_region);
 }
 
 int Process::sys$restore_signal_mask(u32 mask)

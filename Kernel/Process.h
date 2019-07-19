@@ -26,6 +26,9 @@ class ProcessTracer;
 timeval kgettimeofday();
 void kgettimeofday(timeval&);
 
+extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
+extern VirtualAddress g_return_to_ring0_from_signal_trampoline;
+
 class Process : public InlineLinkedListNode<Process>
     , public Weakable<Process> {
     friend class InlineLinkedListNode<Process>;
@@ -287,8 +290,6 @@ private:
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
 
-    void create_signal_trampolines_if_needed();
-
     Thread* m_main_thread { nullptr };
 
     RefPtr<PageDirectory> m_page_directory;
@@ -331,9 +332,6 @@ private:
     Region* region_from_range(VirtualAddress, size_t);
 
     NonnullRefPtrVector<Region> m_regions;
-
-    VirtualAddress m_return_to_ring3_from_signal_trampoline;
-    VirtualAddress m_return_to_ring0_from_signal_trampoline;
 
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
