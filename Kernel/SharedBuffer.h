@@ -12,7 +12,7 @@ private:
         }
 
         pid_t pid;
-        unsigned count { 1 };
+        unsigned count { 0 };
         Region* region { nullptr };
     };
 public:
@@ -33,9 +33,9 @@ public:
     }
 
     bool is_shared_with(pid_t peer_pid);
-    void* get_address(Process& process);
+    void* ref_for_process_and_get_address(Process& process);
     void share_with(pid_t peer_pid);
-    void release(Process& process);
+    void deref_for_process(Process& process);
     void disown(pid_t pid);
     size_t size() const { return m_vmo->size(); }
     void destroy_if_unused();
@@ -45,6 +45,7 @@ public:
     bool m_writable { true };
     NonnullRefPtr<VMObject> m_vmo;
     Vector<Reference, 2> m_refs;
+    unsigned m_total_refs { 0 };
 };
 
 Lockable<HashMap<int, OwnPtr<SharedBuffer>>>& shared_buffers();

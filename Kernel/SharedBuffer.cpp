@@ -21,12 +21,14 @@ bool SharedBuffer::is_shared_with(pid_t peer_pid)
     return false;
 }
 
-void* SharedBuffer::get_address(Process& process)
+void* SharedBuffer::ref_for_process_and_get_address(Process& process)
 {
     LOCKER(shared_buffers().lock());
     ASSERT(is_shared_with(process.pid()));
     for (auto& ref : m_refs) {
         if (ref.pid == process.pid()) {
+            ref.count++;
+            m_total_refs++;
             if (ref.region == nullptr) {
                 ref.region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmo, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
                 ref.region->set_shared(true);
@@ -42,7 +44,7 @@ void SharedBuffer::share_with(pid_t peer_pid)
     LOCKER(shared_buffers().lock());
     for (auto& ref : m_refs) {
         if (ref.pid == peer_pid) {
-            ref.count++;
+            // don't increment the reference count yet; let them get_shared_buffer it first.
             return;
         }
     }
@@ -50,7 +52,7 @@ void SharedBuffer::share_with(pid_t peer_pid)
     m_refs.append(Reference(peer_pid));
 }
 
-void SharedBuffer::release(Process& process)
+void SharedBuffer::deref_for_process(Process& process)
 {
     LOCKER(shared_buffers().lock());
     for (int i = 0; i < m_refs.size(); ++i) {
@@ -94,7 +96,7 @@ void SharedBuffer::disown(pid_t pid)
 void SharedBuffer::destroy_if_unused()
 {
     LOCKER(shared_buffers().lock());
-    if (m_refs.size() == 0) {
+    if (m_total_refs == 0) {
 #ifdef SHARED_BUFFER_DEBUG
         kprintf("Destroying unused SharedBuffer{%p} id: %d\n", this, m_shared_buffer_id);
 #endif
