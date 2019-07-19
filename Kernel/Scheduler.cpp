@@ -6,6 +6,65 @@
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
 
+struct SchedulerData {
+    typedef IntrusiveList<Thread, &Thread::m_runnable_list_node> ThreadList;
+
+    ThreadList m_runnable_threads;
+    ThreadList m_nonrunnable_threads;
+
+    ThreadList& thread_list_for_state(Thread::State state)
+    {
+        if (Thread::is_runnable_state(state))
+            return m_runnable_threads;
+        return m_nonrunnable_threads;
+    }
+};
+
+static SchedulerData* g_scheduler_data;
+
+void Scheduler::init_thread(Thread& thread)
+{
+    g_scheduler_data->m_nonrunnable_threads.append(thread);
+}
+
+void Scheduler::update_state_for_thread(Thread& thread)
+{
+    auto& list = g_scheduler_data->thread_list_for_state(thread.state());
+
+    if (list.contains(thread))
+        return;
+
+    list.append(thread);
+}
+
+IterationDecision Scheduler::for_each_runnable_func(Function<IterationDecision(Thread&)>&& callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    auto& tl = g_scheduler_data->m_runnable_threads;
+    for (auto it = tl.begin(); it != tl.end();) {
+        auto thread = *it;
+        it = ++it;
+        if (callback(*thread) == IterationDecision::Break)
+            return IterationDecision::Break;
+    }
+
+    return IterationDecision::Continue;
+}
+
+IterationDecision Scheduler::for_each_nonrunnable_func(Function<IterationDecision(Thread&)>&& callback)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    auto& tl = g_scheduler_data->m_nonrunnable_threads;
+    for (auto it = tl.begin(); it != tl.end();) {
+        auto thread = *it;
+        it = ++it;
+        if (callback(*thread) == IterationDecision::Break)
+            return IterationDecision::Break;
+    }
+
+    return IterationDecision::Continue;
+}
+
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
 //#define SCHEDULER_RUNNABLE_DEBUG
@@ -261,7 +320,7 @@ bool Scheduler::pick_next()
     auto now_usec = now.tv_usec;
 
     // Check and unblock threads whose wait conditions have been met.
-    Thread::for_each_nonrunnable([&](Thread& thread) {
+    Scheduler::for_each_nonrunnable([&](Thread& thread) {
         thread.consider_unblock(now_sec, now_usec);
         return IterationDecision::Continue;
     });
@@ -330,7 +389,7 @@ bool Scheduler::pick_next()
     });
 #endif
 
-    auto& runnable_list = *Thread::g_runnable_threads;
+    auto& runnable_list = g_scheduler_data->m_runnable_threads;
     if (runnable_list.is_empty())
         return context_switch(s_colonel_process->main_thread());
 
@@ -488,6 +547,7 @@ Process* Scheduler::colonel()
 
 void Scheduler::initialize()
 {
+    g_scheduler_data = new SchedulerData;
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);
