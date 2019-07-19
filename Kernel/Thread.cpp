@@ -362,7 +362,6 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     bool interrupting_in_kernel = (ret_cs & 3) == 0;
 
     ProcessPagingScope paging_scope(m_process);
-    m_process.create_signal_trampolines_if_needed();
 
     if (interrupting_in_kernel) {
 #ifdef SIGNAL_DEBUG
@@ -419,9 +418,9 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     push_value_on_stack(signal);
 
     if (interrupting_in_kernel)
-        push_value_on_stack(m_process.m_return_to_ring0_from_signal_trampoline.get());
+        push_value_on_stack(g_return_to_ring0_from_signal_trampoline.get());
     else
-        push_value_on_stack(m_process.m_return_to_ring3_from_signal_trampoline.get());
+        push_value_on_stack(g_return_to_ring3_from_signal_trampoline.get());
 
     ASSERT((m_tss.esp % 16) == 0);
 
