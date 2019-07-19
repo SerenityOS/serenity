@@ -65,8 +65,6 @@ public:
         Stopped,
 
         __Begin_Blocked_States__,
-        BlockedLurking,
-        BlockedSignal,
         BlockedCondition,
         __End_Blocked_States__
     };
@@ -156,6 +154,20 @@ public:
     private:
         int m_wait_options { 0 };
         pid_t& m_waitee_pid;
+    };
+
+    class SemiPermanentBlocker : public Blocker {
+    public:
+        enum class Reason {
+            Lurking,
+            Signal,
+        };
+
+        SemiPermanentBlocker(Reason reason);
+        virtual bool should_unblock(Thread&, time_t, long) override;
+
+    private:
+        Reason m_reason;
     };
 
     void did_schedule() { ++m_times_scheduled; }

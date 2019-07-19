@@ -162,10 +162,6 @@ const char* to_string(Thread::State state)
         return "Skip1";
     case Thread::Skip0SchedulerPasses:
         return "Skip0";
-    case Thread::BlockedSignal:
-        return "Signal";
-    case Thread::BlockedLurking:
-        return "Lurking";
     case Thread::BlockedCondition:
         return "Condition";
     case Thread::__Begin_Blocked_States__:
@@ -349,9 +345,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
             m_process.terminate_due_to_signal(signal);
             return ShouldUnblockThread::No;
         case DefaultSignalAction::Ignore:
-            if (state() == BlockedSignal)
-                set_state(Runnable);
-            return ShouldUnblockThread::No;
+            ASSERT_NOT_REACHED();
         case DefaultSignalAction::Continue:
             return ShouldUnblockThread::Yes;
         }
