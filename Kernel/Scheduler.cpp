@@ -291,14 +291,14 @@ bool Scheduler::pick_next()
 
     // Dispatch any pending signals.
     // FIXME: Do we really need this to be a separate pass over the process list?
-    Thread::for_each_living([](Thread& thread) {
+    Thread::for_each_living([](Thread& thread) -> IterationDecision {
         if (!thread.has_unmasked_pending_signals())
-            return true;
+            return IterationDecision::Continue;
         // FIXME: It would be nice if the Scheduler didn't have to worry about who is "current"
         //        For now, avoid dispatching signals to "current" and do it in a scheduling pass
         //        while some other process is interrupted. Otherwise a mess will be made.
         if (&thread == current)
-            return true;
+            return IterationDecision::Continue;
         // We know how to interrupt blocked processes, but if they are just executing
         // at some random point in the kernel, let them continue. They'll be in userspace
         // sooner or later and we can deliver the signal then.
@@ -306,17 +306,17 @@ bool Scheduler::pick_next()
         //        signal and dispatch it then and there? Would that be doable without the
         //        syscall effectively being "interrupted" despite having completed?
         if (thread.in_kernel() && !thread.is_blocked() && !thread.is_stopped())
-            return true;
+            return IterationDecision::Continue;
         // NOTE: dispatch_one_pending_signal() may unblock the process.
         bool was_blocked = thread.is_blocked();
         if (thread.dispatch_one_pending_signal() == ShouldUnblockThread::No)
-            return true;
+            return IterationDecision::Continue;
         if (was_blocked) {
             dbgprintf("Unblock %s(%u) due to signal\n", thread.process().name().characters(), thread.pid());
             thread.m_was_interrupted_while_blocked = true;
             thread.unblock();
         }
-        return true;
+        return IterationDecision::Continue;
     });
 
 #ifdef SCHEDULER_RUNNABLE_DEBUG
