@@ -25,15 +25,15 @@
 GlobalState g;
 static LineEditor editor;
 
-static void prompt()
+static String prompt()
 {
     if (g.uid == 0)
-        printf("# ");
-    else {
-        printf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
-        printf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
-    }
-    fflush(stdout);
+        return "# ";
+
+    StringBuilder builder;
+    builder.appendf("\033]0;%s@%s:%s\007", g.username.characters(), g.hostname, g.cwd.characters());
+    builder.appendf("\033[31;1m%s\033[0m@\033[37;1m%s\033[0m:\033[32;1m%s\033[0m$> ", g.username.characters(), g.hostname, g.cwd.characters());
+    return builder.to_string();
 }
 
 static int sh_pwd(int, char**)
@@ -602,8 +602,7 @@ int main(int argc, char** argv)
     atexit(save_history);
 
     for (;;) {
-        prompt();
-        auto line = editor.get_line();
+        auto line = editor.get_line(prompt());
         if (line.is_empty())
             continue;
         run_command(line);

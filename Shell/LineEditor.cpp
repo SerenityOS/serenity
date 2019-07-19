@@ -37,8 +37,11 @@ void LineEditor::append(const String& string)
     m_cursor = m_buffer.size();
 }
 
-String LineEditor::get_line()
+String LineEditor::get_line(const String& prompt)
 {
+    fputs(prompt.characters(), stdout);
+    fflush(stdout);
+
     m_history_cursor = m_history.size();
     m_cursor = 0;
     for (;;) {
@@ -188,6 +191,16 @@ String LineEditor::get_line()
             if (ch == g.termios.c_cc[VKILL]) {
                 while (m_cursor > 0)
                     do_backspace();
+                continue;
+            }
+            if (ch == 0xc) { // ^L
+                printf("\033[3J\033[H\033[2J"); // Clear screen.
+                fputs(prompt.characters(), stdout);
+                for (int i = 0; i < m_buffer.size(); ++i)
+                    fputc(m_buffer[i], stdout);
+                if (m_cursor < m_buffer.size())
+                    printf("\033[%dD", m_buffer.size() - m_cursor); // Move cursor N steps left.
+                fflush(stdout);
                 continue;
             }
             putchar(ch);
