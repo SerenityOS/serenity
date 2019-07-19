@@ -321,16 +321,18 @@ bool Scheduler::pick_next()
 
 #ifdef SCHEDULER_RUNNABLE_DEBUG
     dbgprintf("Non-runnables:\n");
-    for (auto* thread = g_nonrunnable_threads->head(); thread; thread = thread->next()) {
-        auto* process = &thread->process();
-        dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", process, to_string(thread->state()), process->name().characters(), process->pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
-    }
+    Thread::for_each_nonrunnable([](Thread& thread) -> IterationDecision {
+        auto& process = thread.process();
+        dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", &process, thread.state_string(), process.name().characters(), process.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
+        return IterationDecision::Continue;
+    });
 
     dbgprintf("Runnables:\n");
-    for (auto* thread = g_runnable_threads->head(); thread; thread = thread->next()) {
-        auto* process = &thread->process();
-        dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", process, to_string(thread->state()), process->name().characters(), process->pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
-    }
+    Thread::for_each_runnable([](Thread& thread) -> IterationDecision {
+        auto& process = thread.process();
+        dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", &process, thread.state_string(), process.name().characters(), process.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
+        return IterationDecision::Continue;
+    });
 #endif
 
     if (g_runnable_threads->is_empty())
