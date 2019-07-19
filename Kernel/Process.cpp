@@ -1384,7 +1384,7 @@ int Process::reap(Process& process)
             }
         }
 
-        dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), to_string(process.state()));
+        dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), process.main_thread().state_string());
         ASSERT(process.is_dead());
         g_processes->remove(&process);
     }
