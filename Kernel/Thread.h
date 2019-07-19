@@ -312,9 +312,14 @@ template<typename Callback>
 inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
+    auto new_callback = [=](Thread& thread) -> IterationDecision {
+        if (thread.state() == state)
+            return callback(thread);
+        return IterationDecision::Continue;
+    };
     if (is_runnable_state(state))
-        return for_each_runnable(callback);
-    return for_each_nonrunnable(callback);
+        return for_each_runnable(new_callback);
+    return for_each_nonrunnable(new_callback);
 }
 
 template<typename Callback>
