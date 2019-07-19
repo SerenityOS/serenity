@@ -16,9 +16,6 @@ HashTable<Thread*>& thread_table()
     return *table;
 }
 
-Thread::SchedulerThreadList* Thread::g_runnable_threads;
-Thread::SchedulerThreadList* Thread::g_nonrunnable_threads;
-
 static const u32 default_kernel_stack_size = 65536;
 static const u32 default_userspace_stack_size = 65536;
 
@@ -75,7 +72,7 @@ Thread::Thread(Process& process)
     if (m_process.pid() != 0) {
         InterruptDisabler disabler;
         thread_table().set(this);
-        g_nonrunnable_threads->append(*this);
+        Scheduler::init_thread(*this);
     }
 }
 
@@ -514,8 +511,6 @@ Thread* Thread::clone(Process& process)
 
 void Thread::initialize()
 {
-    g_runnable_threads = new SchedulerThreadList;
-    g_nonrunnable_threads = new SchedulerThreadList;
     Scheduler::initialize();
 }
 
@@ -545,15 +540,6 @@ void Thread::set_state(State new_state)
 
     m_state = new_state;
     if (m_process.pid() != 0) {
-        SchedulerThreadList* list = nullptr;
-        if (is_runnable_state(new_state))
-            list = g_runnable_threads;
-        else
-            list = g_nonrunnable_threads;
-
-        if (list->contains(*this))
-            return;
-
-        list->append(*this);
+        Scheduler::update_state_for_thread(*this);
     }
 }
