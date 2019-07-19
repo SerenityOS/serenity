@@ -262,15 +262,15 @@ public:
     void set_thread_list(InlineLinkedList<Thread>*);
 
     template<typename Callback>
-    static void for_each_in_state(State, Callback);
+    static IterationDecision for_each_in_state(State, Callback);
     template<typename Callback>
-    static void for_each_living(Callback);
+    static IterationDecision for_each_living(Callback);
     template<typename Callback>
-    static void for_each_runnable(Callback);
+    static IterationDecision for_each_runnable(Callback);
     template<typename Callback>
-    static void for_each_nonrunnable(Callback);
+    static IterationDecision for_each_nonrunnable(Callback);
     template<typename Callback>
-    static void for_each(Callback);
+    static IterationDecision for_each(Callback);
 
     static bool is_runnable_state(Thread::State state)
     {
@@ -313,63 +313,77 @@ private:
 HashTable<Thread*>& thread_table();
 
 template<typename Callback>
-inline void Thread::for_each_in_state(State state, Callback callback)
+inline IterationDecision Thread::for_each_in_state(State state, Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* thread = thread_list_for_state(state)->head(); thread;) {
         auto* next_thread = thread->next();
-        if (thread->state() == state)
-            callback(*thread);
+        if (thread->state() == state) {
+            if (callback(*thread) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
         thread = next_thread;
     }
+
+    return IterationDecision::Continue;
 }
 
 template<typename Callback>
-inline void Thread::for_each_living(Callback callback)
+inline IterationDecision Thread::for_each_living(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* thread = g_runnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->state() != Thread::State::Dead && thread->state() != Thread::State::Dying)
-            callback(*thread);
+            if (callback(*thread) == IterationDecision::Break)
+                return IterationDecision::Break;
         thread = next_thread;
     }
     for (auto* thread = g_nonrunnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (thread->state() != Thread::State::Dead && thread->state() != Thread::State::Dying)
-            callback(*thread);
+            if (callback(*thread) == IterationDecision::Break)
+                return IterationDecision::Break;
         thread = next_thread;
     }
+
+    return IterationDecision::Continue;
 }
 
 template<typename Callback>
-inline void Thread::for_each(Callback callback)
+inline IterationDecision Thread::for_each(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for_each_runnable(callback);
-    for_each_nonrunnable(callback);
+    auto ret = for_each_runnable(callback);
+    if (ret == IterationDecision::Break)
+        return ret;
+    return for_each_nonrunnable(callback);
 }
 
 template<typename Callback>
-inline void Thread::for_each_runnable(Callback callback)
+inline IterationDecision Thread::for_each_runnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* thread = g_runnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (callback(*thread) == IterationDecision::Break)
-            return;
+            return IterationDecision::Break;
         thread = next_thread;
     }
+
+    return IterationDecision::Continue;
 }
 
 template<typename Callback>
-inline void Thread::for_each_nonrunnable(Callback callback)
+inline IterationDecision Thread::for_each_nonrunnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* thread = g_nonrunnable_threads->head(); thread;) {
         auto* next_thread = thread->next();
         if (callback(*thread) == IterationDecision::Break)
-            return;
+            return IterationDecision::Break;
         thread = next_thread;
     }
+
+    return IterationDecision::Continue;
 }
