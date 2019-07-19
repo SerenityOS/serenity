@@ -514,4 +514,10 @@ int fsync(int fd)
     dbgprintf("FIXME: Implement fsync()\n");
     return 0;
 }
+
+int reboot()
+{
+    int rc = syscall(SC_reboot);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }

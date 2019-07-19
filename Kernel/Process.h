@@ -203,6 +203,7 @@ public:
     int sys$release_shared_buffer(int shared_buffer_id);
     int sys$seal_shared_buffer(int shared_buffer_id);
     int sys$get_shared_buffer_size(int shared_buffer_id);
+    int sys$reboot();
 
     static void initialize();
 
