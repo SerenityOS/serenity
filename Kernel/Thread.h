@@ -217,10 +217,19 @@ public:
     template <typename T, class... Args>
     [[nodiscard]] BlockResult block(Args&& ... args)
     {
-        ASSERT(!m_blocker);
+        // If this is triggered, state has gotten messed: we should never have a
+        // blocker already set. That means we're re-entering somehow, which is
+        // bad.
+        ASSERT(m_blocker == nullptr);
+
+        // We should never be blocking a blocked (or otherwise non-active) thread.
+        ASSERT(state() == Thread::Running);
         T t(AK::forward<Args>(args)...);
         m_blocker = &t;
-        block_helper();
+        set_state(Thread::Blocked);
+        block_helper(); // this will unlock, yield, and eventually unblock us to return here.
+        ASSERT(state() != Thread::Blocked);
+        m_blocker = nullptr;
         if (t.was_interrupted_by_signal())
             return BlockResult::InterruptedBySignal;
         return BlockResult::WokeNormally;

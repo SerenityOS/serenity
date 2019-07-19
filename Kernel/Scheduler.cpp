@@ -222,10 +222,8 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         return;
     case Thread::Blocked:
         ASSERT(m_blocker);
-        if (m_blocker->should_unblock(*this, now_sec, now_usec)) {
+        if (m_blocker->should_unblock(*this, now_sec, now_usec))
             unblock();
-            m_blocker = nullptr;
-        }
         return;
     case Thread::Skip1SchedulerPass:
         set_state(Thread::Skip0SchedulerPasses);
