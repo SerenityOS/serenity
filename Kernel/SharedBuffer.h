@@ -32,6 +32,7 @@ public:
 #endif
     }
 
+    void sanity_check(const char* what);
     bool is_shared_with(pid_t peer_pid);
     void* ref_for_process_and_get_address(Process& process);
     void share_with(pid_t peer_pid);
