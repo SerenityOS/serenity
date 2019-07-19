@@ -178,6 +178,7 @@ void Thread::finalize_dying_threads()
         InterruptDisabler disabler;
         for_each_in_state(Thread::State::Dying, [&](Thread& thread) {
             dying_threads.append(&thread);
+            return IterationDecision::Continue;
         });
     }
     for (auto* thread : dying_threads)
