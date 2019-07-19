@@ -108,9 +108,9 @@ void Thread::unblock()
     set_state(Thread::Runnable);
 }
 
-void Thread::block_until(Function<bool()>&& condition)
+void Thread::block_until(const char* state_string, Function<bool()>&& condition)
 {
-    m_blocker = make<ConditionBlocker>(condition);
+    m_blocker = make<ConditionBlocker>(state_string, condition);
     block(Thread::Blocked);
     Scheduler::yield();
 }
@@ -118,9 +118,6 @@ void Thread::block_until(Function<bool()>&& condition)
 void Thread::block(Thread::State new_state)
 {
     bool did_unlock = process().big_lock().unlock_if_locked();
-    if (state() != Thread::Running) {
-        dbgprintf("Thread::block: %s(%u) block(%u/%s) with state=%u/%s\n", process().name().characters(), process().pid(), new_state, to_string(new_state), state(), to_string(state()));
-    }
     ASSERT(state() == Thread::Running);
     m_was_interrupted_while_blocked = false;
     set_state(new_state);
@@ -143,9 +140,9 @@ u64 Thread::sleep(u32 ticks)
     return wakeup_time;
 }
 
-const char* to_string(Thread::State state)
+const char* Thread::state_string() const
 {
-    switch (state) {
+    switch (state()) {
     case Thread::Invalid:
         return "Invalid";
     case Thread::Runnable:
@@ -163,9 +160,10 @@ const char* to_string(Thread::State state)
     case Thread::Skip0SchedulerPasses:
         return "Skip0";
     case Thread::Blocked:
-        return "Blocked";
+        ASSERT(m_blocker);
+        return m_blocker->state_string();
     }
-    kprintf("to_string(Thread::State): Invalid state: %u\n", state);
+    kprintf("to_string(Thread::State): Invalid state: %u\n", state());
     ASSERT_NOT_REACHED();
     return nullptr;
 }

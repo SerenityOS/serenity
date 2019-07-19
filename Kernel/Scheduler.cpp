@@ -122,8 +122,9 @@ bool Thread::ReadBlocker::should_unblock(Thread&, time_t, long)
     return blocked_description()->can_read();
 }
 
-Thread::ConditionBlocker::ConditionBlocker(Function<bool()> &condition)
+Thread::ConditionBlocker::ConditionBlocker(const char* state_string, Function<bool()> &condition)
     : m_block_until_condition(move(condition))
+    , m_state_string(state_string)
 {
     ASSERT(m_block_until_condition);
 }

@@ -70,6 +70,7 @@ public:
     public:
         virtual ~Blocker() {}
         virtual bool should_unblock(Thread&, time_t now_s, long us) = 0;
+        virtual const char* state_string() const = 0;
     };
 
     class FileDescriptionBlocker : public Blocker {
@@ -85,45 +86,53 @@ public:
     public:
         AcceptBlocker(const RefPtr<FileDescription>& description);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Accepting"; }
     };
 
     class ReceiveBlocker : public FileDescriptionBlocker {
     public:
         ReceiveBlocker(const RefPtr<FileDescription>& description);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Receiving"; }
     };
 
     class ConnectBlocker : public FileDescriptionBlocker {
     public:
         ConnectBlocker(const RefPtr<FileDescription>& description);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Connecting"; }
     };
 
     class WriteBlocker : public FileDescriptionBlocker {
     public:
         WriteBlocker(const RefPtr<FileDescription>& description);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Writing"; }
     };
 
     class ReadBlocker : public FileDescriptionBlocker {
     public:
         ReadBlocker(const RefPtr<FileDescription>& description);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Reading"; }
     };
 
     class ConditionBlocker : public Blocker {
     public:
-        ConditionBlocker(Function<bool()> &condition);
+        ConditionBlocker(const char* state_string, Function<bool()> &condition);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return m_state_string; }
 
     private:
         Function<bool()> m_block_until_condition;
+        const char* m_state_string;
     };
 
     class SleepBlocker : public Blocker {
     public:
         SleepBlocker(u64 wakeup_time);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Sleeping"; }
 
     private:
         u64 m_wakeup_time { 0 };
@@ -134,6 +143,7 @@ public:
         typedef Vector<int, FD_SETSIZE> FDVector;
         SelectBlocker(const timeval& tv, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Selecting"; }
 
     private:
         timeval m_select_timeout;
@@ -147,6 +157,7 @@ public:
     public:
         WaitBlocker(int wait_options, pid_t& waitee_pid);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Waiting"; }
 
     private:
         int m_wait_options { 0 };
@@ -162,6 +173,16 @@ public:
 
         SemiPermanentBlocker(Reason reason);
         virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override
+        {
+            switch (m_reason) {
+                case Reason::Lurking:
+                    return "Lurking";
+                case Reason::Signal:
+                    return "Signal";
+            }
+            ASSERT_NOT_REACHED();
+        }
 
     private:
         Reason m_reason;
@@ -183,6 +204,7 @@ public:
     u16 selector() const { return m_far_ptr.selector; }
     TSS32& tss() { return m_tss; }
     State state() const { return m_state; }
+    const char* state_string() const;
     u32 ticks() const { return m_ticks; }
 
     u64 sleep(u32 ticks);
@@ -190,7 +212,7 @@ public:
     void block(Blocker& blocker);
     void unblock();
 
-    void block_until(Function<bool()>&&);
+    void block_until(const char* state_string, Function<bool()>&&);
     KResult wait_for_connect(FileDescription&);
 
     const FarPtr& far_ptr() const { return m_far_ptr; }
@@ -280,8 +302,6 @@ private:
 };
 
 HashTable<Thread*>& thread_table();
-
-const char* to_string(Thread::State);
 
 template<typename Callback>
 inline void Thread::for_each_in_state(State state, Callback callback)

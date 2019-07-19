@@ -572,7 +572,7 @@ ByteBuffer procfs$all(InodeIdentifier)
         process_object.set("sid", process.sid());
         process_object.set("uid", process.uid());
         process_object.set("gid", process.gid());
-        process_object.set("state", to_string(process.state()));
+        process_object.set("state", process.main_thread().state_string());
         process_object.set("ppid", process.ppid());
         process_object.set("nfds", process.number_of_open_file_descriptors());
         process_object.set("name", process.name());
