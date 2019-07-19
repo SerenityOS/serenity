@@ -99,19 +99,19 @@ Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    m_regions.append(adopt(*new Region(range, move(name), prot_to_region_access_flags(prot))));
+    m_regions.append(Region::create_user_accessible(range, name, prot_to_region_access_flags(prot)));
     MM.map_region(*this, m_regions.last());
     if (commit)
         m_regions.last().commit();
     return &m_regions.last();
 }
 
-Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, RefPtr<Inode>&& inode, const String& name, int prot)
+Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, NonnullRefPtr<Inode> inode, const String& name, int prot)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    m_regions.append(adopt(*new Region(range, move(inode), name, prot_to_region_access_flags(prot))));
+    m_regions.append(Region::create_user_accessible(range, inode, name, prot_to_region_access_flags(prot)));
     MM.map_region(*this, m_regions.last());
     return &m_regions.last();
 }
@@ -122,7 +122,7 @@ Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, Non
     if (!range.is_valid())
         return nullptr;
     offset_in_vmo &= PAGE_MASK;
-    m_regions.append(adopt(*new Region(range, move(vmo), offset_in_vmo, name, prot_to_region_access_flags(prot))));
+    m_regions.append(Region::create_user_accessible(range, move(vmo), offset_in_vmo, name, prot_to_region_access_flags(prot)));
     MM.map_region(*this, m_regions.last());
     return &m_regions.last();
 }
