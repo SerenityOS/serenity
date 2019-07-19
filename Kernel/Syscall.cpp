@@ -1,7 +1,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Console.h>
-#include <Kernel/Process.h>
 #include <Kernel/IO.h>
+#include <Kernel/Process.h>
 #include <Kernel/ProcessTracer.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Syscall.h>
@@ -285,12 +285,7 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
     case Syscall::SC_sched_getparam:
         return current->process().sys$sched_setparam((pid_t)arg1, (struct sched_param*)arg2);
     case Syscall::SC_halt: {
-        dbgprintf("<%u> halting! acquiring locks...\n");
-        FS::lock_all();
-        dbgprintf("<%u> halting! syncing...\n");
-        FS::sync();
-        dbgprintf("<%u> halting! bye, friends...\n");
-        IO::out16(0x604, 0x2000);
+        return current->process().sys$halt();
         break;
     }
     case Syscall::SC_reboot: {

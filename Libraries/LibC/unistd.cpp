@@ -515,6 +515,12 @@ int fsync(int fd)
     return 0;
 }
 
+int halt()
+{
+    int rc = syscall(SC_halt);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int reboot()
 {
     int rc = syscall(SC_reboot);
