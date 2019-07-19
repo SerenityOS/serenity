@@ -111,16 +111,16 @@ void Thread::unblock()
 void Thread::block_until(const char* state_string, Function<bool()>&& condition)
 {
     m_blocker = make<ConditionBlocker>(state_string, condition);
-    block(Thread::Blocked);
+    block_helper();
     Scheduler::yield();
 }
 
-void Thread::block(Thread::State new_state)
+void Thread::block_helper()
 {
     bool did_unlock = process().big_lock().unlock_if_locked();
     ASSERT(state() == Thread::Running);
     m_was_interrupted_while_blocked = false;
-    set_state(new_state);
+    set_state(Thread::Blocked);
     Scheduler::yield();
     if (did_unlock)
         process().big_lock().lock();
@@ -129,7 +129,7 @@ void Thread::block(Thread::State new_state)
 void Thread::block(Blocker& blocker)
 {
     m_blocker = &blocker;
-    block(Thread::Blocked);
+    block_helper();
 }
 
 u64 Thread::sleep(u32 ticks)

@@ -208,7 +208,6 @@ public:
     u32 ticks() const { return m_ticks; }
 
     u64 sleep(u32 ticks);
-    void block(Thread::State);
     void block(Blocker& blocker);
     void unblock();
 
@@ -299,6 +298,8 @@ private:
     State m_state { Invalid };
     bool m_has_used_fpu { false };
     bool m_was_interrupted_while_blocked { false };
+
+    void block_helper();
 };
 
 HashTable<Thread*>& thread_table();
