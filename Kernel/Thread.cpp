@@ -97,7 +97,6 @@ Thread::~Thread()
 
 void Thread::unblock()
 {
-    m_blocker = nullptr;
     if (current == this) {
         set_state(Thread::Running);
         return;
@@ -108,9 +107,11 @@ void Thread::unblock()
 
 void Thread::block_helper()
 {
+    // This function mostly exists to avoid circular header dependencies. If
+    // anything needs adding, think carefully about whether it belongs in
+    // block() instead. Remember that we're unlocking here, so be very careful
+    // about altering any state once we're unlocked!
     bool did_unlock = process().big_lock().unlock_if_locked();
-    ASSERT(state() == Thread::Running);
-    set_state(Thread::Blocked);
     Scheduler::yield();
     if (did_unlock)
         process().big_lock().lock();
@@ -159,8 +160,6 @@ void Thread::finalize()
 {
     dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
     set_state(Thread::State::Dead);
-
-    m_blocker = nullptr;
 
     if (this == &m_process.main_thread())
         m_process.finalize();
@@ -539,6 +538,11 @@ bool Thread::is_thread(void* ptr)
 void Thread::set_state(State new_state)
 {
     InterruptDisabler disabler;
+    if (new_state == Blocked) {
+        // we should always have an m_blocker while blocked
+        ASSERT(m_blocker != nullptr);
+    }
+
     m_state = new_state;
     if (m_process.pid() != 0) {
         SchedulerThreadList* list = nullptr;
