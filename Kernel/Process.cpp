@@ -2408,7 +2408,7 @@ int Process::sys$create_shared_buffer(int size, void** buffer)
     int shared_buffer_id = ++s_next_shared_buffer_id;
     auto shared_buffer = make<SharedBuffer>(shared_buffer_id, size);
     shared_buffer->share_with(m_pid);
-    *buffer = shared_buffer->get_address(*this);
+    *buffer = shared_buffer->ref_for_process_and_get_address(*this);
     ASSERT((int)shared_buffer->size() >= size);
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmo is %u)\n", name().characters(), pid(), shared_buffer_id, *buffer, size, shared_buffer->size());
@@ -2447,7 +2447,7 @@ int Process::sys$release_shared_buffer(int shared_buffer_id)
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Releasing shared buffer %d, buffer count: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
-    shared_buffer.release(*this);
+    shared_buffer.deref_for_process(*this);
     return 0;
 }
 
@@ -2463,7 +2463,7 @@ void* Process::sys$get_shared_buffer(int shared_buffer_id)
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Retaining shared buffer %d, buffer count: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
-    return shared_buffer.get_address(*this);
+    return shared_buffer.ref_for_process_and_get_address(*this);
 }
 
 int Process::sys$seal_shared_buffer(int shared_buffer_id)
