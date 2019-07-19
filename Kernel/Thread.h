@@ -75,8 +75,10 @@ public:
 
     class FileDescriptionBlocker : public Blocker {
     public:
-        explicit FileDescriptionBlocker(const FileDescription&);
         const FileDescription& blocked_description() const;
+
+    protected:
+        explicit FileDescriptionBlocker(const FileDescription&);
 
     private:
         NonnullRefPtr<FileDescription> m_blocked_description;
