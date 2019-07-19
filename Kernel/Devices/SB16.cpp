@@ -139,7 +139,7 @@ void SB16::handle_irq()
 
 void SB16::wait_for_irq()
 {
-    current->block_until([this] {
+    current->block_until("Interrupting", [this] {
         return m_interrupted;
     });
 }
