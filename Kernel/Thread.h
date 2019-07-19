@@ -63,10 +63,7 @@ public:
         Dying,
         Dead,
         Stopped,
-
-        __Begin_Blocked_States__,
-        BlockedCondition,
-        __End_Blocked_States__
+        Blocked,
     };
 
     class Blocker {
@@ -176,7 +173,7 @@ public:
     bool is_stopped() const { return m_state == Stopped; }
     bool is_blocked() const
     {
-        return m_state > __Begin_Blocked_States__ && m_state < __End_Blocked_States__;
+        return m_state == Blocked;
     }
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
