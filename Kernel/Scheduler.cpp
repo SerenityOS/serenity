@@ -331,14 +331,15 @@ bool Scheduler::pick_next()
     });
 #endif
 
-    if (g_runnable_threads->is_empty())
+    auto& runnable_list = *Thread::g_runnable_threads;
+    if (runnable_list.is_empty())
         return context_switch(s_colonel_process->main_thread());
 
-    auto* previous_head = g_runnable_threads->head();
+    auto* previous_head = runnable_list.first();
     for (;;) {
         // Move head to tail.
-        g_runnable_threads->append(g_runnable_threads->remove_head());
-        auto* thread = g_runnable_threads->head();
+        runnable_list.append(*previous_head);
+        auto* thread = runnable_list.first();
 
         if (!thread->process().is_being_inspected() && (thread->state() == Thread::Runnable || thread->state() == Thread::Running)) {
 #ifdef SCHEDULER_DEBUG
