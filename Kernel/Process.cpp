@@ -869,7 +869,7 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     }
 
     if (current->has_unmasked_pending_signals()) {
-        current->block(Thread::State::BlockedSignal);
+        current->block(*new Thread::SemiPermanentBlocker(Thread::SemiPermanentBlocker::Reason::Signal));
         if (nwritten == 0)
             return -EINTR;
     }
@@ -914,7 +914,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
         if (rc == 0)
             break;
         if (current->has_unmasked_pending_signals()) {
-            current->block(Thread::State::BlockedSignal);
+            current->block(*new Thread::SemiPermanentBlocker(Thread::SemiPermanentBlocker::Reason::Signal));
             if (nwritten == 0)
                 return -EINTR;
         }
@@ -939,7 +939,7 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
         return -EBADF;
     auto nwritten = do_write(*description, data, size);
     if (current->has_unmasked_pending_signals()) {
-        current->block(Thread::State::BlockedSignal);
+        current->block(*new Thread::SemiPermanentBlocker(Thread::SemiPermanentBlocker::Reason::Signal));
         if (nwritten == 0)
             return -EINTR;
     }
@@ -1265,7 +1265,7 @@ int Process::sys$kill(pid_t pid, int signal)
     }
     if (pid == m_pid) {
         current->send_signal(signal, this);
-        current->block(Thread::State::BlockedSignal);
+        current->block(*new Thread::SemiPermanentBlocker(Thread::SemiPermanentBlocker::Reason::Signal));
         return 0;
     }
     InterruptDisabler disabler;

@@ -201,6 +201,16 @@ bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
     return should_unblock;
 }
 
+Thread::SemiPermanentBlocker::SemiPermanentBlocker(Reason reason)
+    : m_reason(reason)
+{}
+
+bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
+{
+    // someone else has to unblock us
+    return false;
+}
+
 // Called by the scheduler on threads that are blocked for some reason.
 // Make a decision as to whether to unblock them or not.
 void Thread::consider_unblock(time_t now_sec, long now_usec)
@@ -215,8 +225,6 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
     case Thread::Running:
     case Thread::Dead:
     case Thread::Stopped:
-    case Thread::BlockedLurking:
-    case Thread::BlockedSignal:
         /* don't know, don't care */
         return;
     case Thread::BlockedCondition:
@@ -234,7 +242,7 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         return;
     case Thread::Dying:
         ASSERT(g_finalizer);
-        if (g_finalizer->state() == Thread::BlockedLurking)
+        if (g_finalizer->is_blocked())
             g_finalizer->unblock();
         return;
     }
