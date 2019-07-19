@@ -1798,9 +1798,9 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         select_has_timeout = true;
     }
 
-    Vector<int> rfds;
-    Vector<int> wfds;
-    Vector<int> efds;
+    Thread::SelectBlocker::FDVector rfds;
+    Thread::SelectBlocker::FDVector wfds;
+    Thread::SelectBlocker::FDVector efds;
 
     auto transfer_fds = [&](auto* fds, auto& vector) -> int {
         vector.clear_with_capacity();
@@ -1852,8 +1852,8 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     if (!validate_read_typed(fds))
         return -EFAULT;
 
-    Vector<int> rfds;
-    Vector<int> wfds;
+    Thread::SelectBlocker::FDVector rfds;
+    Thread::SelectBlocker::FDVector wfds;
 
     for (int i = 0; i < nfds; ++i) {
         if (fds[i].events & POLLIN)
@@ -1882,7 +1882,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
 #endif
 
     if (has_timeout|| timeout < 0)
-        current->block(*new Thread::SelectBlocker(actual_timeout, has_timeout, rfds, wfds, Vector<int>()));
+        current->block(*new Thread::SelectBlocker(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()));
 
     int fds_with_revents = 0;
 
