@@ -18,9 +18,11 @@ public:
         Execute = 4,
     };
 
-    Region(const Range&, const String&, u8 access, bool cow = false);
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String&, u8 access, bool cow = false);
-    Region(const Range&, RefPtr<Inode>&&, const String&, u8 access);
+    static NonnullRefPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access, bool cow = false);
+    static NonnullRefPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cow = false);
+    static NonnullRefPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access, bool cow = false);
+    static NonnullRefPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access, bool cow = false);
+
     ~Region();
 
     VirtualAddress vaddr() const { return m_range.base(); }
@@ -37,6 +39,8 @@ public:
 
     bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }
+
+    bool is_user_accessible() const { return m_user_accessible; }
 
     NonnullRefPtr<Region> clone();
 
@@ -97,6 +101,10 @@ public:
     }
 
 private:
+    Region(const Range&, const String&, u8 access, bool cow = false);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String&, u8 access, bool cow = false);
+    Region(const Range&, RefPtr<Inode>&&, const String&, u8 access, bool cow = false);
+
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;
     size_t m_offset_in_vmo { 0 };
@@ -104,5 +112,6 @@ private:
     String m_name;
     u8 m_access { 0 };
     bool m_shared { false };
+    bool m_user_accessible { false };
     Bitmap m_cow_map;
 };

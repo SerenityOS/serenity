@@ -305,7 +305,7 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
 #endif
-        remap_region_page(region, page_index_in_region, true);
+        remap_region_page(region, page_index_in_region);
         return true;
     }
     auto physical_page = allocate_user_physical_page(ShouldZeroFill::Yes);
@@ -314,7 +314,7 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 #endif
     region.set_should_cow(page_index_in_region, false);
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
-    remap_region_page(region, page_index_in_region, true);
+    remap_region_page(region, page_index_in_region);
     return true;
 }
 
@@ -327,7 +327,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
         dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
 #endif
         region.set_should_cow(page_index_in_region, false);
-        remap_region_page(region, page_index_in_region, true);
+        remap_region_page(region, page_index_in_region);
         return true;
     }
 
@@ -345,7 +345,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
     unquickmap_page();
     region.set_should_cow(page_index_in_region, false);
-    remap_region_page(region, page_index_in_region, true);
+    remap_region_page(region, page_index_in_region);
     return true;
 }
 
@@ -366,7 +366,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 
     if (!vmo_page.is_null()) {
         dbgprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
-        remap_region_page(region, page_index_in_region, true);
+        remap_region_page(region, page_index_in_region);
         return true;
     }
 
@@ -391,7 +391,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
         kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
         return false;
     }
-    remap_region_page(region, page_index_in_region, true);
+    remap_region_page(region, page_index_in_region);
     u8* dest_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
     memcpy(dest_ptr, page_buffer, PAGE_SIZE);
     return true;
@@ -457,8 +457,9 @@ RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& name)
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
-    auto region = adopt(*new Region(range, move(name), PROT_READ | PROT_WRITE | PROT_EXEC, false));
-    MM.map_region_at_address(*m_kernel_page_directory, *region, range.base(), false);
+    auto region = Region::create_kernel_only(range, move(name), PROT_READ | PROT_WRITE | PROT_EXEC, false);
+    region->set_user_accessible(false);
+    MM.map_region_at_address(*m_kernel_page_directory, *region, range.base());
     // FIXME: It would be cool if these could zero-fill on demand instead.
     region->commit();
     return region;
@@ -641,7 +642,7 @@ void MemoryManager::unquickmap_page()
     m_quickmap_in_use = false;
 }
 
-void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_region, bool user_allowed)
+void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_region)
 {
     ASSERT(region.page_directory());
     InterruptDisabler disabler;
@@ -657,7 +658,7 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
         pte.set_writable(region.is_writable());
     pte.set_cache_disabled(!region.vmo().m_allow_cpu_caching);
     pte.set_write_through(!region.vmo().m_allow_cpu_caching);
-    pte.set_user_allowed(user_allowed);
+    pte.set_user_allowed(region.is_user_accessible());
     region.page_directory()->flush(page_vaddr);
 #ifdef MM_DEBUG
     dbgprintf("MM: >> remap_region_page (PD=%x, PTE=P%x) '%s' L%x => P%x (@%p)\n", region.page_directory()->cr3(), pte.ptr(), region.name().characters(), page_vaddr.get(), physical_page->paddr().get(), physical_page.ptr());
@@ -668,10 +669,10 @@ void MemoryManager::remap_region(PageDirectory& page_directory, Region& region)
 {
     InterruptDisabler disabler;
     ASSERT(region.page_directory() == &page_directory);
-    map_region_at_address(page_directory, region, region.vaddr(), true);
+    map_region_at_address(page_directory, region, region.vaddr());
 }
 
-void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region& region, VirtualAddress vaddr, bool user_allowed)
+void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region& region, VirtualAddress vaddr)
 {
     InterruptDisabler disabler;
     region.set_page_directory(page_directory);
@@ -698,7 +699,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
             pte.set_present(false);
             pte.set_writable(region.is_writable());
         }
-        pte.set_user_allowed(user_allowed);
+        pte.set_user_allowed(region.is_user_accessible());
         page_directory.flush(page_vaddr);
 #ifdef MM_DEBUG
         dbgprintf("MM: >> map_region_at_address (PD=%x) '%s' L%x => P%x (@%p)\n", &page_directory, region.name().characters(), page_vaddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
@@ -729,7 +730,7 @@ bool MemoryManager::unmap_region(Region& region)
 
 bool MemoryManager::map_region(Process& process, Region& region)
 {
-    map_region_at_address(process.page_directory(), region, region.vaddr(), true);
+    map_region_at_address(process.page_directory(), region, region.vaddr());
     return true;
 }
 

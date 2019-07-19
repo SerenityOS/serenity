@@ -71,7 +71,7 @@ public:
     void map_for_kernel(VirtualAddress, PhysicalAddress);
 
     RefPtr<Region> allocate_kernel_region(size_t, String&& name);
-    void map_region_at_address(PageDirectory&, Region&, VirtualAddress, bool user_accessible);
+    void map_region_at_address(PageDirectory&, Region&, VirtualAddress);
 
     unsigned user_physical_pages() const { return m_user_physical_pages; }
     unsigned user_physical_pages_used() const { return m_user_physical_pages_used; }
@@ -87,7 +87,7 @@ private:
     void register_region(Region&);
     void unregister_region(Region&);
 
-    void remap_region_page(Region&, unsigned page_index_in_region, bool user_allowed);
+    void remap_region_page(Region&, unsigned page_index_in_region);
 
     void initialize_paging();
     void flush_entire_tlb();

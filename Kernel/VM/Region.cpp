@@ -1,3 +1,4 @@
+#include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -15,12 +16,12 @@ Region::Region(const Range& range, const String& name, u8 access, bool cow)
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8 access)
+Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8 access, bool cow)
     : m_range(range)
     , m_vmo(VMObject::create_file_backed(move(inode)))
     , m_name(name)
     , m_access(access)
-    , m_cow_map(Bitmap::create(m_vmo->page_count()))
+    , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
     MM.register_region(*this);
 }
@@ -61,7 +62,7 @@ bool Region::page_in()
                 return false;
             continue;
         }
-        MM.remap_region_page(*this, i, true);
+        MM.remap_region_page(*this, i);
     }
     return true;
 }
@@ -69,6 +70,10 @@ bool Region::page_in()
 NonnullRefPtr<Region> Region::clone()
 {
     ASSERT(current);
+
+    // NOTE: Kernel-only regions should never be cloned.
+    ASSERT(is_user_accessible());
+
     if (m_shared || (is_readable() && !is_writable())) {
 #ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
@@ -78,7 +83,7 @@ NonnullRefPtr<Region> Region::clone()
             vaddr().get());
 #endif
         // Create a new region backed by the same VMObject.
-        return adopt(*new Region(m_range, m_vmo, m_offset_in_vmo, String(m_name), m_access));
+        return Region::create_user_accessible(m_range, m_vmo, m_offset_in_vmo, m_name, m_access);
     }
 
 #ifdef MM_DEBUG
@@ -91,7 +96,7 @@ NonnullRefPtr<Region> Region::clone()
     // Set up a COW region. The parent (this) region becomes COW as well!
     m_cow_map.fill(true);
     MM.remap_region(current->process().page_directory(), *this);
-    return adopt(*new Region(m_range, m_vmo->clone(), m_offset_in_vmo, String(m_name), m_access, true));
+    return Region::create_user_accessible(m_range, m_vmo->clone(), m_offset_in_vmo, m_name, m_access, true);
 }
 
 int Region::commit()
@@ -109,7 +114,7 @@ int Region::commit()
             return -ENOMEM;
         }
         vmo().physical_pages()[i] = move(physical_page);
-        MM.remap_region_page(*this, i, true);
+        MM.remap_region_page(*this, i);
     }
     return 0;
 }
@@ -133,4 +138,32 @@ size_t Region::amount_shared() const
             bytes += PAGE_SIZE;
     }
     return bytes;
+}
+
+NonnullRefPtr<Region> Region::create_user_accessible(const Range& range, const StringView& name, u8 access, bool cow)
+{
+    auto region = adopt(*new Region(range, name, access, cow));
+    region->m_user_accessible = true;
+    return region;
+}
+
+NonnullRefPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cow)
+{
+    auto region = adopt(*new Region(range, move(vmobject), offset_in_vmobject, name, access, cow));
+    region->m_user_accessible = true;
+    return region;
+}
+
+NonnullRefPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<Inode> inode, const StringView& name, u8 access, bool cow)
+{
+    auto region = adopt(*new Region(range, move(inode), name, access, cow));
+    region->m_user_accessible = true;
+    return region;
+}
+
+NonnullRefPtr<Region> Region::create_kernel_only(const Range& range, const StringView& name, u8 access, bool cow)
+{
+    auto region = adopt(*new Region(range, name, access, cow));
+    region->m_user_accessible = false;
+    return region;
 }
