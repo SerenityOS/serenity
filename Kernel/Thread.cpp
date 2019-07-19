@@ -111,7 +111,7 @@ void Thread::unblock()
 void Thread::block_until(Function<bool()>&& condition)
 {
     m_blocker = make<ConditionBlocker>(condition);
-    block(Thread::BlockedCondition);
+    block(Thread::Blocked);
     Scheduler::yield();
 }
 
@@ -132,7 +132,7 @@ void Thread::block(Thread::State new_state)
 void Thread::block(Blocker& blocker)
 {
     m_blocker = &blocker;
-    block(Thread::BlockedCondition);
+    block(Thread::Blocked);
 }
 
 u64 Thread::sleep(u32 ticks)
@@ -162,11 +162,8 @@ const char* to_string(Thread::State state)
         return "Skip1";
     case Thread::Skip0SchedulerPasses:
         return "Skip0";
-    case Thread::BlockedCondition:
-        return "Condition";
-    case Thread::__Begin_Blocked_States__:
-    case Thread::__End_Blocked_States__:
-        break;
+    case Thread::Blocked:
+        return "Blocked";
     }
     kprintf("to_string(Thread::State): Invalid state: %u\n", state);
     ASSERT_NOT_REACHED();

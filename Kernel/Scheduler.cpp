@@ -216,10 +216,6 @@ bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
 void Thread::consider_unblock(time_t now_sec, long now_usec)
 {
     switch (state()) {
-    case Thread::__Begin_Blocked_States__:
-    case Thread::__End_Blocked_States__:
-        ASSERT_NOT_REACHED();
-        [[fallthrough]];
     case Thread::Invalid:
     case Thread::Runnable:
     case Thread::Running:
@@ -227,7 +223,7 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
     case Thread::Stopped:
         /* don't know, don't care */
         return;
-    case Thread::BlockedCondition:
+    case Thread::Blocked:
         ASSERT(m_blocker);
         if (m_blocker->should_unblock(*this, now_sec, now_usec)) {
             unblock();
