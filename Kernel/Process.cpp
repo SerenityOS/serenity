@@ -12,6 +12,7 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/IO.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
@@ -19,8 +20,8 @@
 #include <Kernel/ProcessTracer.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/SharedBuffer.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/kmalloc.h>
@@ -2633,6 +2634,21 @@ int Process::sys$systrace(pid_t pid)
     auto description = FileDescription::create(peer->ensure_tracer());
     m_fds[fd].set(move(description), 0);
     return fd;
+}
+
+int Process::sys$reboot()
+{
+    if (!is_superuser())
+        return -EPERM;
+
+    dbgprintf("acquiring FS locks...\n");
+    FS::lock_all();
+    dbgprintf("syncing mounted filesystems...\n");
+    FS::sync();
+    dbgprintf("attempting reboot via KB Controller...\n");
+    IO::out8(0x64, 0xFE);
+
+    return ESUCCESS;
 }
 
 ProcessTracer& Process::ensure_tracer()

@@ -293,6 +293,9 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
         IO::out16(0x604, 0x2000);
         break;
     }
+    case Syscall::SC_reboot: {
+        return current->process().sys$reboot();
+    }
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         return -ENOSYS;

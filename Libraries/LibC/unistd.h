@@ -93,6 +93,7 @@ char* getlogin();
 int chown(const char* pathname, uid_t, gid_t);
 int fchown(int fd, uid_t, gid_t);
 int ftruncate(int fd, off_t length);
+int reboot();
 
 enum {
     _PC_NAME_MAX,

@@ -114,7 +114,8 @@ struct timeval;
     __ENUMERATE_SYSCALL(sched_setparam)         \
     __ENUMERATE_SYSCALL(sched_getparam)         \
     __ENUMERATE_SYSCALL(fchown)                 \
-    __ENUMERATE_SYSCALL(halt)
+    __ENUMERATE_SYSCALL(halt)                   \
+    __ENUMERATE_SYSCALL(reboot)
 
 namespace Syscall {
 
