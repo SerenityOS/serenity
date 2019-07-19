@@ -2639,6 +2639,21 @@ int Process::sys$systrace(pid_t pid)
     return fd;
 }
 
+int Process::sys$halt()
+{
+    if (!is_superuser())
+        return -EPERM;
+
+    dbgprintf("acquiring FS locks...\n");
+    FS::lock_all();
+    dbgprintf("syncing mounted filesystems...\n");
+    FS::sync();
+    dbgprintf("attempting system shutdown...\n");
+    IO::out16(0x604, 0x2000);
+
+    return ESUCCESS;
+}
+
 int Process::sys$reboot()
 {
     if (!is_superuser())
