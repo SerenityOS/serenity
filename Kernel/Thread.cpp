@@ -110,9 +110,7 @@ void Thread::unblock()
 
 void Thread::block_until(const char* state_string, Function<bool()>&& condition)
 {
-    m_blocker = make<ConditionBlocker>(state_string, condition);
-    block_helper();
-    Scheduler::yield();
+    block<ConditionBlocker>(state_string, condition);
 }
 
 void Thread::block_helper()
@@ -126,17 +124,11 @@ void Thread::block_helper()
         process().big_lock().lock();
 }
 
-void Thread::block(Blocker& blocker)
-{
-    m_blocker = &blocker;
-    block_helper();
-}
-
 u64 Thread::sleep(u32 ticks)
 {
     ASSERT(state() == Thread::Running);
     u64 wakeup_time = g_uptime + ticks;
-    current->block(*new Thread::SleepBlocker(wakeup_time));
+    current->block<Thread::SleepBlocker>(wakeup_time);
     return wakeup_time;
 }
 
@@ -532,7 +524,7 @@ KResult Thread::wait_for_connect(FileDescription& description)
     auto& socket = *description.socket();
     if (socket.is_connected())
         return KSuccess;
-    block(*new Thread::ConnectBlocker(description));
+    block<Thread::ConnectBlocker>(description);
     Scheduler::yield();
     if (!socket.is_connected())
         return KResult(-ECONNREFUSED);
