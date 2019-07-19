@@ -110,7 +110,7 @@ void Thread::unblock()
 
 void Thread::block_until(const char* state_string, Function<bool()>&& condition)
 {
-    block<ConditionBlocker>(state_string, condition);
+    block<ConditionBlocker>(state_string, move(condition));
 }
 
 void Thread::block_helper()
