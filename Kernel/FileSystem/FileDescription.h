@@ -36,8 +36,8 @@ public:
 
     KResult fchmod(mode_t);
 
-    bool can_read();
-    bool can_write();
+    bool can_read() const;
+    bool can_write() const;
 
     ssize_t get_dir_entries(u8* buffer, ssize_t);
 

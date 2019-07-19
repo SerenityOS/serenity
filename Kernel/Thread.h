@@ -75,62 +75,62 @@ public:
 
     class FileDescriptionBlocker : public Blocker {
     public:
-        FileDescriptionBlocker(const RefPtr<FileDescription>& description);
-        RefPtr<FileDescription> blocked_description() const;
+        explicit FileDescriptionBlocker(const FileDescription&);
+        const FileDescription& blocked_description() const;
 
     private:
-        RefPtr<FileDescription> m_blocked_description;
+        NonnullRefPtr<FileDescription> m_blocked_description;
     };
 
-    class AcceptBlocker : public FileDescriptionBlocker {
+    class AcceptBlocker final : public FileDescriptionBlocker {
     public:
-        AcceptBlocker(const RefPtr<FileDescription>& description);
+        explicit AcceptBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Accepting"; }
     };
 
-    class ReceiveBlocker : public FileDescriptionBlocker {
+    class ReceiveBlocker final : public FileDescriptionBlocker {
     public:
-        ReceiveBlocker(const RefPtr<FileDescription>& description);
+        explicit ReceiveBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Receiving"; }
     };
 
-    class ConnectBlocker : public FileDescriptionBlocker {
+    class ConnectBlocker final : public FileDescriptionBlocker {
     public:
-        ConnectBlocker(const RefPtr<FileDescription>& description);
+        explicit ConnectBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Connecting"; }
     };
 
-    class WriteBlocker : public FileDescriptionBlocker {
+    class WriteBlocker final : public FileDescriptionBlocker {
     public:
-        WriteBlocker(const RefPtr<FileDescription>& description);
+        explicit WriteBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Writing"; }
     };
 
-    class ReadBlocker : public FileDescriptionBlocker {
+    class ReadBlocker final : public FileDescriptionBlocker {
     public:
-        ReadBlocker(const RefPtr<FileDescription>& description);
+        explicit ReadBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Reading"; }
     };
 
-    class ConditionBlocker : public Blocker {
+    class ConditionBlocker final : public Blocker {
     public:
-        ConditionBlocker(const char* state_string, Function<bool()> &condition);
+        ConditionBlocker(const char* state_string, Function<bool()>&& condition);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return m_state_string; }
 
     private:
         Function<bool()> m_block_until_condition;
-        const char* m_state_string;
+        const char* m_state_string { nullptr };
     };
 
-    class SleepBlocker : public Blocker {
+    class SleepBlocker final : public Blocker {
     public:
-        SleepBlocker(u64 wakeup_time);
+        explicit SleepBlocker(u64 wakeup_time);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Sleeping"; }
 
@@ -138,7 +138,7 @@ public:
         u64 m_wakeup_time { 0 };
     };
 
-    class SelectBlocker : public Blocker {
+    class SelectBlocker final : public Blocker {
     public:
         typedef Vector<int, FD_SETSIZE> FDVector;
         SelectBlocker(const timeval& tv, bool select_has_timeout, const FDVector& read_fds, const FDVector& write_fds, const FDVector& except_fds);
@@ -153,7 +153,7 @@ public:
         const FDVector& m_select_exceptional_fds;
     };
 
-    class WaitBlocker : public Blocker {
+    class WaitBlocker final : public Blocker {
     public:
         WaitBlocker(int wait_options, pid_t& waitee_pid);
         virtual bool should_unblock(Thread&, time_t, long) override;
@@ -164,7 +164,7 @@ public:
         pid_t& m_waitee_pid;
     };
 
-    class SemiPermanentBlocker : public Blocker {
+    class SemiPermanentBlocker final : public Blocker {
     public:
         enum class Reason {
             Lurking,
@@ -176,10 +176,10 @@ public:
         virtual const char* state_string() const override
         {
             switch (m_reason) {
-                case Reason::Lurking:
-                    return "Lurking";
-                case Reason::Signal:
-                    return "Signal";
+            case Reason::Lurking:
+                return "Lurking";
+            case Reason::Signal:
+                return "Signal";
             }
             ASSERT_NOT_REACHED();
         }
@@ -192,10 +192,7 @@ public:
     u32 times_scheduled() const { return m_times_scheduled; }
 
     bool is_stopped() const { return m_state == Stopped; }
-    bool is_blocked() const
-    {
-        return m_state == Blocked;
-    }
+    bool is_blocked() const { return m_state == Blocked; }
     bool in_kernel() const { return (m_tss.cs & 0x03) == 0; }
 
     u32 frame_ptr() const { return m_tss.ebp; }

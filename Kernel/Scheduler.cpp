@@ -51,67 +51,63 @@ void Scheduler::beep()
     s_beep_timeout = g_uptime + 100;
 }
 
-Thread::FileDescriptionBlocker::FileDescriptionBlocker(const RefPtr<FileDescription>& description)
+Thread::FileDescriptionBlocker::FileDescriptionBlocker(const FileDescription& description)
     : m_blocked_description(description)
 {}
 
-RefPtr<FileDescription> Thread::FileDescriptionBlocker::blocked_description() const
+const FileDescription& Thread::FileDescriptionBlocker::blocked_description() const
 {
     return m_blocked_description;
 }
 
-Thread::AcceptBlocker::AcceptBlocker(const RefPtr<FileDescription>& description)
+Thread::AcceptBlocker::AcceptBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
 }
 
 bool Thread::AcceptBlocker::should_unblock(Thread&, time_t, long)
 {
-    auto& description = *blocked_description();
-    auto& socket = *description.socket();
-
+    auto& socket = *blocked_description().socket();
     return socket.can_accept();
 }
 
-Thread::ReceiveBlocker::ReceiveBlocker(const RefPtr<FileDescription>& description)
+Thread::ReceiveBlocker::ReceiveBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
 }
 
 bool Thread::ReceiveBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
 {
-    auto& description = *blocked_description();
-    auto& socket = *description.socket();
+    auto& socket = *blocked_description().socket();
     // FIXME: Block until the amount of data wanted is available.
     bool timed_out = now_sec > socket.receive_deadline().tv_sec || (now_sec == socket.receive_deadline().tv_sec && now_usec >= socket.receive_deadline().tv_usec);
-    if (timed_out || description.can_read())
+    if (timed_out || blocked_description().can_read())
         return true;
     return false;
 }
 
-Thread::ConnectBlocker::ConnectBlocker(const RefPtr<FileDescription>& description)
+Thread::ConnectBlocker::ConnectBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
 }
 
 bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
 {
-    auto& description = *blocked_description();
-    auto& socket = *description.socket();
+    auto& socket = *blocked_description().socket();
     return socket.is_connected();
 }
 
-Thread::WriteBlocker::WriteBlocker(const RefPtr<FileDescription>& description)
+Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
 }
 
 bool Thread::WriteBlocker::should_unblock(Thread&, time_t, long)
 {
-    return blocked_description()->can_write();
+    return blocked_description().can_write();
 }
 
-Thread::ReadBlocker::ReadBlocker(const RefPtr<FileDescription>& description)
+Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
 }
@@ -119,10 +115,10 @@ Thread::ReadBlocker::ReadBlocker(const RefPtr<FileDescription>& description)
 bool Thread::ReadBlocker::should_unblock(Thread&, time_t, long)
 {
     // FIXME: Block until the amount of data wanted is available.
-    return blocked_description()->can_read();
+    return blocked_description().can_read();
 }
 
-Thread::ConditionBlocker::ConditionBlocker(const char* state_string, Function<bool()> &condition)
+Thread::ConditionBlocker::ConditionBlocker(const char* state_string, Function<bool()>&& condition)
     : m_block_until_condition(move(condition))
     , m_state_string(state_string)
 {
