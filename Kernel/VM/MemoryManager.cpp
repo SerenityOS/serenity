@@ -458,7 +458,6 @@ RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, String&& name)
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
     auto region = Region::create_kernel_only(range, move(name), PROT_READ | PROT_WRITE | PROT_EXEC, false);
-    region->set_user_accessible(false);
     MM.map_region_at_address(*m_kernel_page_directory, *region, range.base());
     // FIXME: It would be cool if these could zero-fill on demand instead.
     region->commit();
