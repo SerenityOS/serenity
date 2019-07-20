@@ -36,13 +36,13 @@ void GSplitter::mousedown_event(GMouseEvent& event)
     if (event.button() != GMouseButton::Left)
         return;
     m_resizing = true;
-    int x_or_y = m_orientation == Orientation::Horizontal ? event.x() : event.y();
+    int x_or_y = event.position().primary_offset_for_orientation(m_orientation);
     GWidget* first_resizee { nullptr };
     GWidget* second_resizee { nullptr };
     int fudge = layout()->spacing();
     for_each_child_widget([&](auto& child) {
-        int child_start = m_orientation == Orientation::Horizontal ? child.relative_rect().left() : child.relative_rect().top();
-        int child_end = m_orientation == Orientation::Horizontal ? child.relative_rect().right() : child.relative_rect().bottom();
+        int child_start = child.relative_rect().first_edge_for_orientation(m_orientation);
+        int child_end = child.relative_rect().last_edge_for_orientation(m_orientation);
         if (x_or_y > child_end && (x_or_y - fudge) <= child_end)
             first_resizee = &child;
         if (x_or_y < child_start && (x_or_y + fudge) >= child_start)
@@ -71,34 +71,19 @@ void GSplitter::mousemove_event(GMouseEvent& event)
     int minimum_size = 0;
     auto new_first_resizee_size = m_first_resizee_start_size;
     auto new_second_resizee_size = m_second_resizee_start_size;
-    if (m_orientation == Orientation::Horizontal) {
-        new_first_resizee_size.set_width(new_first_resizee_size.width() + delta.x());
-        new_second_resizee_size.set_width(new_second_resizee_size.width() - delta.x());
 
-        if (new_first_resizee_size.width() < minimum_size) {
-            int correction = minimum_size - new_first_resizee_size.width();
-            new_first_resizee_size.set_width(new_first_resizee_size.width() + correction);
-            new_second_resizee_size.set_width(new_second_resizee_size.width() - correction);
-        }
-        if (new_second_resizee_size.width() < minimum_size) {
-            int correction = minimum_size - new_second_resizee_size.width();
-            new_second_resizee_size.set_width(new_second_resizee_size.width() + correction);
-            new_first_resizee_size.set_width(new_first_resizee_size.width() - correction);
-        }
-    } else {
-        new_first_resizee_size.set_height(new_first_resizee_size.height() + delta.y());
-        new_second_resizee_size.set_height(new_second_resizee_size.height() - delta.y());
+    new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) + delta.primary_offset_for_orientation(m_orientation));
+    new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) - delta.primary_offset_for_orientation(m_orientation));
 
-        if (new_first_resizee_size.height() < minimum_size) {
-            int correction = minimum_size - new_first_resizee_size.height();
-            new_first_resizee_size.set_height(new_first_resizee_size.height() + correction);
-            new_second_resizee_size.set_height(new_second_resizee_size.height() - correction);
-        }
-        if (new_second_resizee_size.height() < minimum_size) {
-            int correction = minimum_size - new_second_resizee_size.height();
-            new_second_resizee_size.set_height(new_second_resizee_size.height() + correction);
-            new_first_resizee_size.set_height(new_first_resizee_size.height() - correction);
-        }
+    if (new_first_resizee_size.primary_size_for_orientation(m_orientation) < minimum_size) {
+        int correction = minimum_size - new_first_resizee_size.primary_size_for_orientation(m_orientation);
+        new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) + correction);
+        new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) - correction);
+    }
+    if (new_second_resizee_size.primary_size_for_orientation(m_orientation) < minimum_size) {
+        int correction = minimum_size - new_second_resizee_size.primary_size_for_orientation(m_orientation);
+        new_second_resizee_size.set_primary_size_for_orientation(m_orientation, new_second_resizee_size.primary_size_for_orientation(m_orientation) + correction);
+        new_first_resizee_size.set_primary_size_for_orientation(m_orientation, new_first_resizee_size.primary_size_for_orientation(m_orientation) - correction);
     }
     m_first_resizee->set_preferred_size(new_first_resizee_size);
     m_second_resizee->set_preferred_size(new_second_resizee_size);
