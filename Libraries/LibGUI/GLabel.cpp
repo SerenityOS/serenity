@@ -65,5 +65,5 @@ void GLabel::paint_event(GPaintEvent& event)
 void GLabel::size_to_fit()
 {
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    set_preferred_size({ font().width(m_text), 0 });
+    set_preferred_size(font().width(m_text), 0);
 }

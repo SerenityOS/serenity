@@ -8,7 +8,7 @@ GResizeCorner::GResizeCorner(GWidget* parent)
     : GWidget(parent)
 {
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    set_preferred_size({ 16, 16 });
+    set_preferred_size(16, 16);
     m_bitmap = GraphicsBitmap::load_from_file("/res/icons/resize-corner.png");
     ASSERT(m_bitmap);
 }

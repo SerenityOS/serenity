@@ -957,7 +957,7 @@ void Terminal::set_size(u16 columns, u16 rows)
     m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (m_rows * (font().glyph_height() + m_line_spacing)) - m_line_spacing;
 
     set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    set_preferred_size({ m_pixel_width, m_pixel_height });
+    set_preferred_size(m_pixel_width, m_pixel_height);
 
     m_needs_background_fill = true;
     force_repaint();

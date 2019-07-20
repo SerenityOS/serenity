@@ -53,7 +53,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     set_background_color(Color::WarmGray);
 
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    set_preferred_size({ 0, 34 });
+    set_preferred_size(0, 34);
 
     m_secondary_color_widget = new GFrame(this);
     m_secondary_color_widget->set_frame_thickness(2);

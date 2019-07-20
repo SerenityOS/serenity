@@ -46,6 +46,7 @@ public:
 
     Size preferred_size() const { return m_preferred_size; }
     void set_preferred_size(const Size&);
+    void set_preferred_size(int width, int height) { set_preferred_size({ width, height }); }
 
     bool has_tooltip() const { return !m_tooltip.is_empty(); }
     String tooltip() const { return m_tooltip; }

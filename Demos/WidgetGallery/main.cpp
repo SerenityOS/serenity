@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
     auto* vertical_slider_container = new GWidget(main_widget);
     vertical_slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    vertical_slider_container->set_preferred_size({ 0, 100 });
+    vertical_slider_container->set_preferred_size(0, 100);
     vertical_slider_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     auto* vslider1 = new GSlider(Orientation::Vertical, vertical_slider_container);
     (void)vslider1;
@@ -88,13 +88,13 @@ int main(int argc, char** argv)
 
     auto* scrollbar1 = new GScrollBar(Orientation::Horizontal, main_widget);
     scrollbar1->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    scrollbar1->set_preferred_size({ 0, 16 });
+    scrollbar1->set_preferred_size(0, 16);
     scrollbar1->set_min(0);
     scrollbar1->set_max(100);
     scrollbar1->set_value(50);
     auto* scrollbar2 = new GScrollBar(Orientation::Horizontal, main_widget);
     scrollbar2->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    scrollbar2->set_preferred_size({ 0, 16 });
+    scrollbar2->set_preferred_size(0, 16);
     scrollbar2->set_enabled(false);
 
     window->show();

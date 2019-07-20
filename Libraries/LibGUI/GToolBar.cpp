@@ -8,7 +8,7 @@ GToolBar::GToolBar(GWidget* parent)
     : GWidget(parent)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    set_preferred_size({ 0, 28 });
+    set_preferred_size(0, 28);
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
     layout()->set_spacing(0);
     layout()->set_margins({ 2, 2, 2, 2 });
@@ -39,7 +39,7 @@ void GToolBar::add_action(GAction& action)
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     ASSERT(button->size_policy(Orientation::Horizontal) == SizePolicy::Fixed);
     ASSERT(button->size_policy(Orientation::Vertical) == SizePolicy::Fixed);
-    button->set_preferred_size({ 24, 24 });
+    button->set_preferred_size(24, 24);
 
     m_items.append(move(item));
 }
@@ -51,7 +51,7 @@ public:
     {
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         set_background_color(Color::White);
-        set_preferred_size({ 8, 22 });
+        set_preferred_size(8, 22);
     }
     virtual ~SeparatorWidget() override {}
 

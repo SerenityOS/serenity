@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     cpu_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
     cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     cpu_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    cpu_graph_group_box->set_preferred_size({ 0, 120 });
+    cpu_graph_group_box->set_preferred_size(0, 120);
     auto* cpu_graph = new GraphWidget(cpu_graph_group_box);
     cpu_graph->set_max(100);
     cpu_graph->set_text_color(Color::Green);
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
     memory_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
     memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    memory_graph_group_box->set_preferred_size({ 0, 120 });
+    memory_graph_group_box->set_preferred_size(0, 120);
     auto* memory_graph = new GraphWidget(memory_graph_group_box);
     memory_graph->set_text_color(Color::Cyan);
     memory_graph->set_graph_color(Color::from_rgb(0x00bbbb));

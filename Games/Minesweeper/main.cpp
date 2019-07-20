@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     auto* container = new GWidget(widget);
     container->set_fill_with_background_color(true);
     container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    container->set_preferred_size({ 0, 36 });
+    container->set_preferred_size(0, 36);
     container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     auto* flag_icon_label = new GLabel(container);
     flag_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png"));
@@ -35,7 +35,7 @@ int main(int argc, char** argv)
     auto* face_button = new GButton(container);
     face_button->set_button_style(ButtonStyle::CoolBar);
     face_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    face_button->set_preferred_size({ 36, 0 });
+    face_button->set_preferred_size(36, 0);
     auto* time_icon_label = new GLabel(container);
     time_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/timer.png"));
     auto* time_label = new GLabel(container);
