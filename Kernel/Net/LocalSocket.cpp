@@ -103,7 +103,15 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
     if (result.is_error())
         return result;
 
-    return current->wait_for_connect(description);
+    if (is_connected())
+        return KSuccess;
+
+    if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
+        return KResult(-EINTR);
+
+    if (!is_connected())
+        return KResult(-ECONNREFUSED);
+    return KSuccess;
 }
 
 void LocalSocket::attach(FileDescription& description)
