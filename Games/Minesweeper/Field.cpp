@@ -467,7 +467,7 @@ void Field::set_field_size(int rows, int columns, int mine_count)
     m_rows = rows;
     m_columns = columns;
     m_mine_count = mine_count;
-    set_preferred_size({ frame_thickness() * 2 + m_columns * square_size(), frame_thickness() * 2 + m_rows * square_size() });
+    set_preferred_size(frame_thickness() * 2 + m_columns * square_size(), frame_thickness() * 2 + m_rows * square_size());
     reset();
     m_on_size_changed(preferred_size());
 }

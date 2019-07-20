@@ -98,7 +98,7 @@ GWindow* create_settings_window(Terminal& terminal, RefPtr<CConfigFile> config)
     radio_container->layout()->set_margins({ 6, 16, 6, 6 });
     radio_container->set_fill_with_background_color(true);
     radio_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    radio_container->set_preferred_size({ 100, 70 });
+    radio_container->set_preferred_size(100, 70);
 
     auto* sysbell_radio = new GRadioButton("Use (Audible) System Bell", radio_container);
     auto* visbell_radio = new GRadioButton("Use (Visual) Terminal Bell", radio_container);
@@ -113,7 +113,7 @@ GWindow* create_settings_window(Terminal& terminal, RefPtr<CConfigFile> config)
     slider_container->layout()->set_margins({ 6, 16, 6, 6 });
     slider_container->set_fill_with_background_color(true);
     slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    slider_container->set_preferred_size({ 100, 50 });
+    slider_container->set_preferred_size(100, 50);
     auto* slider = new GSlider(Orientation::Horizontal, slider_container);
     slider->set_fill_with_background_color(true);
     slider->set_background_color(Color::WarmGray);

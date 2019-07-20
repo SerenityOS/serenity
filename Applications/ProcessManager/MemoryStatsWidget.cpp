@@ -16,7 +16,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
     if (!m_proc_memstat.open(CIODevice::OpenMode::ReadOnly))
         ASSERT_NOT_REACHED();
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    set_preferred_size({ 0, 72 });
+    set_preferred_size(0, 72);
 
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_margins({ 0, 8, 0, 0 });
@@ -26,7 +26,7 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
         auto* container = new GWidget(this);
         container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
         container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        container->set_preferred_size({ 255, 12 });
+        container->set_preferred_size(255, 12);
         auto* description_label = new GLabel(description, container);
         description_label->set_font(Font::default_bold_font());
         description_label->set_text_alignment(TextAlignment::CenterLeft);

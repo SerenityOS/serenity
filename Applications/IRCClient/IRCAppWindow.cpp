@@ -174,7 +174,7 @@ void IRCAppWindow::setup_widgets()
     m_window_list->set_model(m_client.client_window_list_model());
     m_window_list->set_activates_on_selection(true);
     m_window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_window_list->set_preferred_size({ 100, 0 });
+    m_window_list->set_preferred_size(100, 0);
     m_window_list->on_activation = [this](auto& index) {
         set_active_window(m_client.window_at(index.row()));
     };

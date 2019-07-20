@@ -34,7 +34,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
         auto* member_view = new GTableView(container);
         member_view->set_headers_visible(false);
         member_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-        member_view->set_preferred_size({ 100, 0 });
+        member_view->set_preferred_size(100, 0);
         member_view->set_alternating_row_colors(false);
         member_view->set_model(channel().member_model());
         member_view->set_activates_on_selection(true);
@@ -42,7 +42,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
 
     m_text_editor = new GTextEditor(GTextEditor::SingleLine, this);
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_text_editor->set_preferred_size({ 0, 19 });
+    m_text_editor->set_preferred_size(0, 19);
     m_text_editor->on_return_pressed = [this] {
         if (m_type == Channel)
             m_client.handle_user_input_in_channel(m_name, m_text_editor->text());

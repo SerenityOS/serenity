@@ -45,7 +45,7 @@ public:
         set_tooltip(name);
         set_button_style(ButtonStyle::CoolBar);
         set_icon(GraphicsBitmap::load_from_file(icon_path));
-        set_preferred_size({ 50, 50 });
+        set_preferred_size(50, 50);
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         on_click = [this](GButton&) {
             pid_t child_pid = fork();

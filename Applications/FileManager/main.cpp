@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     auto* main_toolbar = new GToolBar(widget);
     auto* location_toolbar = new GToolBar(widget);
     location_toolbar->layout()->set_margins({ 6, 3, 6, 3 });
-    location_toolbar->set_preferred_size({ 0, 25 });
+    location_toolbar->set_preferred_size(0, 25);
 
     auto* location_label = new GLabel("Location: ", location_toolbar);
     location_label->size_to_fit();
@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     auto file_system_model = GFileSystemModel::create("/", GFileSystemModel::Mode::DirectoriesOnly);
     tree_view->set_model(file_system_model);
     tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    tree_view->set_preferred_size({ 200, 0 });
+    tree_view->set_preferred_size(200, 0);
     auto* directory_view = new DirectoryView(splitter);
 
     auto* statusbar = new GStatusBar(widget);

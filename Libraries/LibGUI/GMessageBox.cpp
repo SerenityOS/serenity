@@ -71,14 +71,14 @@ void GMessageBox::build()
 
         auto* icon_label = new GLabel(message_container);
         icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        icon_label->set_preferred_size({ 32, 32 });
+        icon_label->set_preferred_size(32, 32);
         icon_label->set_icon(icon());
         icon_width = icon_label->icon()->width();
     }
 
     auto* label = new GLabel(m_text, message_container);
     label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    label->set_preferred_size({ text_width, 16 });
+    label->set_preferred_size(text_width, 16);
 
     auto* button_container = new GWidget(widget);
     button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
@@ -88,7 +88,7 @@ void GMessageBox::build()
     if (should_include_ok_button()) {
         auto* ok_button = new GButton(button_container);
         ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        ok_button->set_preferred_size({ 0, 20 });
+        ok_button->set_preferred_size(0, 20);
         ok_button->set_text("OK");
         ok_button->on_click = [this](auto&) {
             dbgprintf("GMessageBox: OK button clicked\n");
@@ -99,7 +99,7 @@ void GMessageBox::build()
     if (should_include_cancel_button()) {
         auto* cancel_button = new GButton(button_container);
         cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        cancel_button->set_preferred_size({ 0, 20 });
+        cancel_button->set_preferred_size(0, 20);
         cancel_button->set_text("Cancel");
         cancel_button->on_click = [this](auto&) {
             dbgprintf("GMessageBox: Cancel button clicked\n");

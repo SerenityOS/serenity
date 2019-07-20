@@ -41,13 +41,13 @@ void ColorDialog::build()
     right_vertical_container->layout()->add_spacer();
     auto* cancel_button = new GButton("Cancel", right_vertical_container);
     cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    cancel_button->set_preferred_size({ 0, 20 });
+    cancel_button->set_preferred_size(0, 20);
     cancel_button->on_click = [&](auto&) {
         done(GDialog::ExecCancel);
     };
     auto* ok_button = new GButton("Okay", right_vertical_container);
     ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    ok_button->set_preferred_size({ 0, 20 });
+    ok_button->set_preferred_size(0, 20);
     ok_button->on_click = [&](auto&) {
         done(GDialog::ExecOK);
     };
@@ -55,7 +55,7 @@ void ColorDialog::build()
     auto make_spinbox = [&](RGBComponent component, int initial_value) {
          auto* spinbox = new GSpinBox(left_vertical_container);
          spinbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-         spinbox->set_preferred_size({ 0, 20 });
+         spinbox->set_preferred_size(0, 20);
          spinbox->set_min(0);
          spinbox->set_max(255);
          spinbox->set_value(initial_value);
