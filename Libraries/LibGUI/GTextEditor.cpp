@@ -35,34 +35,40 @@ GTextEditor::~GTextEditor()
 
 void GTextEditor::create_actions()
 {
-    m_undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&](const GAction&) {
-        // FIXME: Undo
-    },
+    m_undo_action = GAction::create(
+        "Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&](const GAction&) {
+            // FIXME: Undo
+        },
         this);
 
-    m_redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&](const GAction&) {
-        // FIXME: Redo
-    },
+    m_redo_action = GAction::create(
+        "Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&](const GAction&) {
+            // FIXME: Redo
+        },
         this);
 
-    m_cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&](const GAction&) {
-        cut();
-    },
+    m_cut_action = GAction::create(
+        "Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&](const GAction&) {
+            cut();
+        },
         this);
 
-    m_copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
-        copy();
-    },
+    m_copy_action = GAction::create(
+        "Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
+            copy();
+        },
         this);
 
-    m_paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
-        paste();
-    },
+    m_paste_action = GAction::create(
+        "Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
+            paste();
+        },
         this);
 
-    m_delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&](const GAction&) {
-        do_delete();
-    },
+    m_delete_action = GAction::create(
+        "Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&](const GAction&) {
+            do_delete();
+        },
         this);
 }
 
@@ -100,6 +106,7 @@ void GTextEditor::set_text(const StringView& text)
 
 void GTextEditor::update_content_size()
 {
+    update_line_wrapping();
     int content_width = 0;
     for (auto& line : m_lines)
         content_width = max(line->width(font()), content_width);
@@ -109,6 +116,82 @@ void GTextEditor::update_content_size()
     int content_height = line_count() * line_height();
     set_content_size({ content_width, content_height });
     set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
+}
+
+void GTextEditor::update_line_wrapping()
+{
+    for (int i = 0; i < m_lines.size(); i++) {
+        auto& line = *m_lines[i];
+
+        //auto window_width = width() - width_occupied_by_vertical_scrollbar() - ruler_width() - (m_horizontal_content_padding * 3);
+        // auto line_width = line.width(font());
+
+        if (width() > 0)
+            while (line.width(font()) >= (width() - width_occupied_by_vertical_scrollbar()) - ruler_width() - (m_horizontal_content_padding * 3)) {
+                //Use continue; instead of return to remove these sloppy if statements. or break now?
+
+                String last_word = get_last_word(line);
+                int last_word_index = line.length() - last_word.length();
+                if (last_word.length() == line.length())
+                    break; //was continue
+
+                if (next_line_wrapped(i))
+                    m_lines[i + 1]->set_text(String::format("%s%s", last_word.characters(), m_lines[i + 1]->characters()));
+                else {
+                    m_lines.insert(i + 1, make<Line>(String::format("%s", last_word.characters()), true));
+                }
+                //Set proper cursor position.
+                if (m_cursor.line() == i) {
+                    if (m_cursor.column() >= last_word_index) {
+                        int cursor_pos = m_cursor.column() - last_word_index;
+
+                        set_cursor(i + 1, cursor_pos);
+                    }
+                } else if (m_cursor.line() == i + 1)
+                    set_cursor(i + 1, m_cursor.column() + last_word.length());
+
+                //Remove the last_word from the current line
+                for (int i = line.length() - 1; i >= last_word_index; i--) //Am i removing \0?
+                    line.remove(i);
+            }
+        // else
+        //{ //If
+        //    if (!line.m_wrapped && next_line_wrapped(i) && line_width + font().glyph_width('x') < window_width) {
+        //         //This if statement needs to get the size of the WHOLE WORD not a single ^^^ character.
+        //         //UNDO: TAKE CHARACTERS BACK FROM WRAPPED LINE BELOW.
+        //     }
+        // }
+    }
+}
+
+bool GTextEditor::next_line_wrapped(int index)
+{
+    bool is_next_wrapped = false;
+    if (m_lines.size() > index + 1)
+        is_next_wrapped = m_lines[index + 1]->m_wrapped;
+
+    return is_next_wrapped;
+}
+
+/*
+To detect a word. If the current char isn't a whitespace &
+the char the to left is a whitespace. All selected characerts
+up to that point is a word.
+ */
+String GTextEditor::get_last_word(Line line)
+{
+    auto characters = line.characters();
+    auto word = String("");
+
+    for (int i = line.length() - 1; i >= 0; i--) { //changed > to >=
+        word = String::format("%c%s", characters[i], word.characters());
+
+        if (characters[i] != ' ' && i > 0) //TODO: This should probally be a const bool method?
+            if (characters[i - 1] == ' ')
+                break;
+    }
+
+    return word;
 }
 
 GTextPosition GTextEditor::text_position_at(const Point& a_position) const
@@ -770,7 +853,8 @@ GTextEditor::Line::Line()
     clear();
 }
 
-GTextEditor::Line::Line(const StringView& text)
+GTextEditor::Line::Line(const StringView& text, bool wrapped)
+    : m_wrapped(wrapped)
 {
     set_text(text);
 }

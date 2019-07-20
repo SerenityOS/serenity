@@ -2,8 +2,8 @@
 
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <LibGUI/GScrollableWidget.h>
 #include <LibDraw/TextAlignment.h>
+#include <LibGUI/GScrollableWidget.h>
 
 class GAction;
 class GMenu;
@@ -161,6 +161,7 @@ private:
     void create_actions();
     void paint_ruler(Painter&);
     void update_content_size();
+    void update_line_wrapping();
     void did_change();
 
     class Line {
@@ -168,7 +169,7 @@ private:
 
     public:
         Line();
-        explicit Line(const StringView&);
+        explicit Line(const StringView&, bool wrapped = false);
 
         const char* characters() const { return m_text.data(); }
         int length() const { return m_text.size() - 1; }
@@ -185,6 +186,7 @@ private:
     private:
         // NOTE: This vector is null terminated.
         Vector<char> m_text;
+        bool m_wrapped = false;
     };
 
     Rect line_content_rect(int item_index) const;
@@ -205,6 +207,8 @@ private:
     void delete_selection();
     void did_update_selection();
     int content_x_for_position(const GTextPosition&) const;
+    bool next_line_wrapped(int index);
+    String get_last_word(Line line);
 
     Type m_type { MultiLine };
 
