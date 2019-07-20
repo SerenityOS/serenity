@@ -139,7 +139,9 @@ void SB16::handle_irq()
 
 void SB16::wait_for_irq()
 {
-    current->block_until("Interrupting", [this] {
+    // Well, we have no way of knowing how much got written. So just hope all of
+    // it did, even if we're interrupted.
+    (void)current->block_until("Interrupting", [this] {
         return m_interrupted;
     });
 }

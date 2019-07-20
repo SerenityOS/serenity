@@ -68,6 +68,10 @@ public:
         virtual ~Blocker() {}
         virtual bool should_unblock(Thread&, time_t now_s, long us) = 0;
         virtual const char* state_string() const = 0;
+        void set_interrupted_by_signal() { m_was_interrupted_while_blocked = true; }
+        bool was_interrupted_by_signal() const { return m_was_interrupted_while_blocked; }
+    private:
+        bool m_was_interrupted_while_blocked { false };
     };
 
     class FileDescriptionBlocker : public Blocker {
@@ -205,17 +209,30 @@ public:
 
     u64 sleep(u32 ticks);
 
+    enum class BlockResult {
+        WokeNormally,
+        InterruptedBySignal,
+    };
+
     template <typename T, class... Args>
-    void block(Args&& ... args)
+    [[nodiscard]] BlockResult block(Args&& ... args)
     {
         ASSERT(!m_blocker);
         T t(AK::forward<Args>(args)...);
         m_blocker = &t;
         block_helper();
+        if (t.was_interrupted_by_signal())
+            return BlockResult::InterruptedBySignal;
+        return BlockResult::WokeNormally;
     };
 
+    [[nodiscard]] BlockResult block_until(const char* state_string, Function<bool()>&& condition)
+    {
+        return block<ConditionBlocker>(state_string, move(condition));
+    }
+
     void unblock();
-    void block_until(const char* state_string, Function<bool()>&&);
+
     KResult wait_for_connect(FileDescription&);
 
     const FarPtr& far_ptr() const { return m_far_ptr; }
@@ -301,7 +318,6 @@ private:
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };
     bool m_has_used_fpu { false };
-    bool m_was_interrupted_while_blocked { false };
 
     void block_helper();
 };

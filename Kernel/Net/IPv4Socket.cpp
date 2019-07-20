@@ -212,10 +212,13 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         }
 
         load_receive_deadline();
-        current->block<Thread::ReceiveBlocker>(description);
+        auto res = current->block<Thread::ReceiveBlocker>(description);
 
         LOCKER(lock());
         if (!m_can_read) {
+            if (res == Thread::BlockResult::InterruptedBySignal)
+                return -EINTR;
+
             // Unblocked due to timeout.
             return -EAGAIN;
         }

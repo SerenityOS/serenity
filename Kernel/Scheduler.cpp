@@ -309,7 +309,8 @@ bool Scheduler::pick_next()
             return IterationDecision::Continue;
         if (was_blocked) {
             dbgprintf("Unblock %s(%u) due to signal\n", thread.process().name().characters(), thread.pid());
-            thread.m_was_interrupted_while_blocked = true;
+            ASSERT(thread.m_blocker);
+            thread.m_blocker->set_interrupted_by_signal();
             thread.unblock();
         }
         return IterationDecision::Continue;
