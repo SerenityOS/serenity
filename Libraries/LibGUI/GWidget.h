@@ -5,11 +5,12 @@
 #include <AK/HashMap.h>
 #include <LibCore/CElapsedTimer.h>
 #include <LibCore/CObject.h>
-#include <LibGUI/GEvent.h>
-#include <LibGUI/GShortcut.h>
 #include <LibDraw/Color.h>
 #include <LibDraw/Font.h>
+#include <LibDraw/Orientation.h>
 #include <LibDraw/Rect.h>
+#include <LibGUI/GEvent.h>
+#include <LibGUI/GShortcut.h>
 
 class GraphicsBitmap;
 class GAction;
@@ -20,10 +21,6 @@ class GWindow;
 enum class SizePolicy {
     Fixed,
     Fill
-};
-enum class Orientation {
-    Horizontal,
-    Vertical
 };
 enum class HorizontalDirection {
     Left,
@@ -140,8 +137,8 @@ public:
     void set_foreground_color(Color color) { m_foreground_color = color; }
 
     // FIXME: Implement these.
-    void set_backcolor(const StringView&) { }
-    void set_forecolor(const StringView&) { }
+    void set_backcolor(const StringView&) {}
+    void set_forecolor(const StringView&) {}
 
     void set_autofill(bool b) { set_fill_with_background_color(b); }
 
