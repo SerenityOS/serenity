@@ -2,6 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/LogStream.h>
+#include <LibDraw/Orientation.h>
 
 class Rect;
 struct WSAPI_Point;
@@ -67,6 +68,32 @@ public:
     String to_string() const { return String::format("[%d,%d]", x(), y()); }
 
     bool is_null() const { return !m_x && !m_y; }
+
+    int primary_offset_for_orientation(Orientation orientation) const
+    {
+        return orientation == Orientation::Vertical ? y() : x();
+    }
+
+    void set_primary_offset_for_orientation(Orientation orientation, int value)
+    {
+        if (orientation == Orientation::Vertical)
+            set_y(value);
+        else
+            set_x(value);
+    }
+
+    int secondary_offset_for_orientation(Orientation orientation) const
+    {
+        return orientation == Orientation::Vertical ? x() : y();
+    }
+
+    void set_secondary_offset_for_orientation(Orientation orientation, int value)
+    {
+        if (orientation == Orientation::Vertical)
+            set_x(value);
+        else
+            set_y(value);
+    }
 
 private:
     int m_x { 0 };
