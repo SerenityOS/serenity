@@ -243,7 +243,6 @@ extern "C" [[noreturn]] void init()
         for (;;) {
             Thread::finalize_dying_threads();
             (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Lurking);
-            Scheduler::yield();
         }
     });
     Process::create_kernel_process("NetworkTask", NetworkTask_main);
