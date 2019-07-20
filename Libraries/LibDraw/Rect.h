@@ -138,31 +138,10 @@ public:
     int secondary_offset_for_orientation(Orientation orientation) const { return m_location.secondary_offset_for_orientation(orientation); }
     void set_secondary_offset_for_orientation(Orientation orientation, int value) { m_location.set_secondary_offset_for_orientation(orientation, value); }
 
-    int primary_size_for_orientation(Orientation orientation) const
-    {
-        return orientation == Orientation::Vertical ? height() : width();
-    }
-
-    void set_primary_size_for_orientation(Orientation orientation, int value)
-    {
-        if (orientation == Orientation::Vertical)
-            set_height(value);
-        else
-            set_width(value);
-    }
-
-    int secondary_size_for_orientation(Orientation orientation) const
-    {
-        return orientation == Orientation::Vertical ? width() : height();
-    }
-
-    void set_secondary_size_for_orientation(Orientation orientation, int value)
-    {
-        if (orientation == Orientation::Vertical)
-            set_width(value);
-        else
-            set_height(value);
-    }
+    int primary_size_for_orientation(Orientation orientation) const { return m_size.primary_size_for_orientation(orientation); }
+    int secondary_size_for_orientation(Orientation orientation) const { return m_size.secondary_size_for_orientation(orientation); }
+    void set_primary_size_for_orientation(Orientation orientation, int value) { m_size.set_primary_size_for_orientation(orientation, value); }
+    void set_secondary_size_for_orientation(Orientation orientation, int value) { m_size.set_secondary_size_for_orientation(orientation, value); }
 
     int first_edge_for_orientation(Orientation orientation) const
     {
