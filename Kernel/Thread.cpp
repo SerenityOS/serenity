@@ -513,20 +513,6 @@ Thread* Thread::clone(Process& process)
     return clone;
 }
 
-KResult Thread::wait_for_connect(FileDescription& description)
-{
-    ASSERT(description.is_socket());
-    auto& socket = *description.socket();
-    if (socket.is_connected())
-        return KSuccess;
-    if (block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
-        return KResult(-EINTR);
-    Scheduler::yield();
-    if (!socket.is_connected())
-        return KResult(-ECONNREFUSED);
-    return KSuccess;
-}
-
 void Thread::initialize()
 {
     g_runnable_threads = new SchedulerThreadList;

@@ -233,8 +233,6 @@ public:
 
     void unblock();
 
-    KResult wait_for_connect(FileDescription&);
-
     const FarPtr& far_ptr() const { return m_far_ptr; }
 
     bool tick();
