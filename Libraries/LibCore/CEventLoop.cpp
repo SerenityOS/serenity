@@ -135,9 +135,7 @@ void CEventLoop::pump(WaitMode mode)
 
         if (m_exit_requested) {
             LOCKER(m_lock);
-            auto rejigged_event_queue = move(events);
-            rejigged_event_queue.append(move(m_queued_events));
-            m_queued_events = move(rejigged_event_queue);
+            m_queued_events.prepend(move(events));
             return;
         }
     }
