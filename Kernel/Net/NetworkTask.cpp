@@ -59,7 +59,7 @@ void NetworkTask_main()
     for (;;) {
         auto packet = dequeue_packet();
         if (packet.is_null()) {
-            current->block_until("Networking", [] {
+            (void)current->block_until("Networking", [] {
                 if (LoopbackAdapter::the().has_queued_packets())
                     return true;
                 if (auto* e1000 = E1000NetworkAdapter::the()) {
