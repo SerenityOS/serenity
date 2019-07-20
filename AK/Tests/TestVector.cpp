@@ -65,4 +65,37 @@ TEST_CASE(strings_insert_ordered)
     EXPECT_EQ(strings[3], "ghi");
 }
 
+TEST_CASE(prepend_vector)
+{
+    Vector<int> ints;
+    ints.append(1);
+    ints.append(2);
+    ints.append(3);
+
+    Vector<int> more_ints;
+    more_ints.append(4);
+    more_ints.append(5);
+    more_ints.append(6);
+
+    ints.prepend(move(more_ints));
+
+    EXPECT_EQ(ints.size(), 6);
+    EXPECT_EQ(more_ints.size(), 0);
+
+    EXPECT_EQ(ints[0], 4);
+    EXPECT_EQ(ints[1], 5);
+    EXPECT_EQ(ints[2], 6);
+    EXPECT_EQ(ints[3], 1);
+    EXPECT_EQ(ints[4], 2);
+    EXPECT_EQ(ints[5], 3);
+
+    ints.prepend(move(more_ints));
+    EXPECT_EQ(ints.size(), 6);
+    EXPECT_EQ(more_ints.size(), 0);
+
+    more_ints.prepend(move(ints));
+    EXPECT_EQ(more_ints.size(), 6);
+    EXPECT_EQ(ints.size(), 0);
+}
+
 TEST_MAIN(Vector)

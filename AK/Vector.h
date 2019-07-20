@@ -349,6 +349,31 @@ public:
         ++m_size;
     }
 
+    void prepend(Vector&& other)
+    {
+        if (other.is_empty())
+            return;
+
+        if (is_empty()) {
+            *this = move(other);
+            return;
+        }
+
+        auto other_size = other.size();
+        grow_capacity(size() + other_size);
+
+        for (int i = size() + other_size - 1; i > other.size(); --i) {
+            new (slot(i)) T(move(at(i - other_size)));
+            at(i - other_size).~T();
+        }
+
+        Vector tmp = move(other);
+        for (int i = 0; i < tmp.size(); ++i)
+            new (slot(i)) T(move(tmp.at(i)));
+
+        m_size += other_size;
+    }
+
     void append(const T* values, int count)
     {
         if (!count)
