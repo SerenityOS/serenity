@@ -101,13 +101,9 @@ int CEventLoop::exec()
 
 void CEventLoop::pump(WaitMode mode)
 {
-    // window server event processing...
-    do_processing();
-
-    if (m_queued_events.is_empty()) {
+    if (m_queued_events.is_empty())
         wait_for_event(mode);
-        do_processing();
-    }
+
     decltype(m_queued_events) events;
     {
         LOCKER(m_lock);
@@ -171,7 +167,6 @@ void CEventLoop::wait_for_event(WaitMode mode)
     };
 
     int max_fd_added = -1;
-    add_file_descriptors_for_select(rfds, max_fd_added);
     add_fd_to_set(s_wake_pipe_fds[0], rfds);
     max_fd = max(max_fd, max_fd_added);
     for (auto& notifier : *s_notifiers) {
@@ -252,8 +247,6 @@ void CEventLoop::wait_for_event(WaitMode mode)
                 post_event(*notifier, make<CNotifierWriteEvent>(notifier->fd()));
         }
     }
-
-    process_file_descriptors_after_select(rfds);
 }
 
 bool CEventLoop::EventLoopTimer::has_expired(const timeval& now) const
