@@ -19,7 +19,7 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     auto* window = new GWindow;
-    window->set_rect(100, 100, 320, 480);
+    window->set_rect(100, 100, 320, 620);
     window->set_title("Widget Gallery");
 
     auto* main_widget = new GWidget;
@@ -66,11 +66,23 @@ int main(int argc, char** argv)
     auto* spinbox2 = new GSpinBox(main_widget);
     spinbox2->set_enabled(false);
 
-    auto* slider1 = new GSlider(main_widget);
+    auto* vertical_slider_container = new GWidget(main_widget);
+    vertical_slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    vertical_slider_container->set_preferred_size({ 0, 100 });
+    vertical_slider_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    auto* vslider1 = new GSlider(Orientation::Vertical, vertical_slider_container);
+    (void)vslider1;
+    auto* vslider2 = new GSlider(Orientation::Vertical, vertical_slider_container);
+    vslider2->set_enabled(false);
+    auto* vslider3 = new GSlider(Orientation::Vertical, vertical_slider_container);
+    vslider3->set_max(5);
+    vslider3->set_knob_size_mode(GSlider::KnobSizeMode::Proportional);
+
+    auto* slider1 = new GSlider(Orientation::Horizontal, main_widget);
     (void)slider1;
-    auto* slider2 = new GSlider(main_widget);
+    auto* slider2 = new GSlider(Orientation::Horizontal, main_widget);
     slider2->set_enabled(false);
-    auto* slider3 = new GSlider(main_widget);
+    auto* slider3 = new GSlider(Orientation::Horizontal, main_widget);
     slider3->set_max(5);
     slider3->set_knob_size_mode(GSlider::KnobSizeMode::Proportional);
 

@@ -1,9 +1,10 @@
+#include <LibDraw/StylePainter.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GSlider.h>
-#include <LibDraw/StylePainter.h>
 
-GSlider::GSlider(GWidget* parent)
+GSlider::GSlider(Orientation orientation, GWidget* parent)
     : GWidget(parent)
+    , m_orientation(orientation)
 {
 }
 
@@ -46,8 +47,15 @@ void GSlider::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    Rect track_rect { inner_rect().x(), 0, inner_rect().width(), track_height() };
-    track_rect.center_vertically_within(inner_rect());
+    Rect track_rect;
+
+    if (orientation() == Orientation::Horizontal) {
+        track_rect = { inner_rect().x(), 0, inner_rect().width(), track_size() };
+        track_rect.center_vertically_within(inner_rect());
+    } else {
+        track_rect = { 0, inner_rect().y(), track_size(), inner_rect().height() };
+        track_rect.center_horizontally_within(inner_rect());
+    }
 
     StylePainter::paint_frame(painter, track_rect, FrameShape::Panel, FrameShadow::Sunken, 1);
     StylePainter::paint_button(painter, knob_rect(), ButtonStyle::Normal, false, m_knob_hovered);
@@ -57,28 +65,28 @@ Rect GSlider::knob_rect() const
 {
     auto inner_rect = this->inner_rect();
     Rect rect;
-    rect.set_y(0);
-    rect.set_height(knob_height());
+    rect.set_secondary_offset_for_orientation(orientation(), 0);
+    rect.set_secondary_size_for_orientation(orientation(), knob_secondary_size());
 
     if (knob_size_mode() == KnobSizeMode::Fixed) {
+        if (m_max - m_min) {
+            float scale = (float)inner_rect.primary_size_for_orientation(orientation()) / (float)(m_max - m_min);
+            rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)(m_value * scale)) - (knob_fixed_primary_size() / 2));
+        } else
+            rect.set_primary_size_for_orientation(orientation(), 0);
+        rect.set_primary_size_for_orientation(orientation(), knob_fixed_primary_size());
+    } else {
+        float scale = (float)inner_rect.primary_size_for_orientation(orientation()) / (float)(m_max - m_min + 1);
+        rect.set_primary_offset_for_orientation(orientation(), inner_rect.primary_offset_for_orientation(orientation()) + ((int)(m_value * scale)));
         if (m_max - m_min)
-        {
-            float scale = (float)inner_rect.width() / (float)(m_max - m_min);
-            rect.set_x(inner_rect.x() + ((int)(m_value * scale)) - (knob_fixed_width() / 2));
-        }
+            rect.set_primary_size_for_orientation(orientation(), ::max((int)(scale), knob_fixed_primary_size()));
         else
-            rect.set_x(0);
-        rect.set_width(knob_fixed_width());
+            rect.set_primary_size_for_orientation(orientation(), inner_rect.primary_size_for_orientation(orientation()));
     }
-    else {
-        float scale = (float)inner_rect.width() / (float)(m_max - m_min + 1);
-        rect.set_x(inner_rect.x() + ((int)(m_value * scale)));
-        if (m_max - m_min)
-            rect.set_width(::max((int)(scale), knob_fixed_width()));
-        else
-            rect.set_width(inner_rect.width());
-    }
-    rect.center_vertically_within(inner_rect);
+    if (orientation() == Orientation::Horizontal)
+        rect.center_vertically_within(inner_rect);
+    else
+        rect.center_horizontally_within(inner_rect);
     return rect;
 }
 
@@ -92,11 +100,10 @@ void GSlider::mousedown_event(GMouseEvent& event)
             m_drag_origin = event.position();
             m_drag_origin_value = m_value;
             return;
-        }
-        else {
-            if (event.position().x() > knob_rect().right())
+        } else {
+            if (event.position().primary_offset_for_orientation(orientation()) > knob_rect().last_edge_for_orientation(orientation()))
                 set_value(m_value + 1);
-            else if (event.position().x() < knob_rect().left())
+            else if (event.position().primary_offset_for_orientation(orientation()) < knob_rect().first_edge_for_orientation(orientation()))
                 set_value(m_value - 1);
         }
     }
@@ -109,8 +116,8 @@ void GSlider::mousemove_event(GMouseEvent& event)
         return;
     set_knob_hovered(knob_rect().contains(event.position()));
     if (m_dragging) {
-        float delta = event.position().x() - m_drag_origin.x();
-        float scrubbable_range = inner_rect().width();
+        float delta = event.position().primary_offset_for_orientation(orientation()) - m_drag_origin.primary_offset_for_orientation(orientation());
+        float scrubbable_range = inner_rect().primary_size_for_orientation(orientation());
         float value_steps_per_scrubbed_pixel = (m_max - m_min) / scrubbable_range;
         float new_value = m_drag_origin_value + (value_steps_per_scrubbed_pixel * delta);
         set_value((int)new_value);

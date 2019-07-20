@@ -114,7 +114,7 @@ GWindow* create_settings_window(Terminal& terminal, RefPtr<CConfigFile> config)
     slider_container->set_fill_with_background_color(true);
     slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     slider_container->set_preferred_size({ 100, 50 });
-    auto* slider = new GSlider(slider_container);
+    auto* slider = new GSlider(Orientation::Horizontal, slider_container);
     slider->set_fill_with_background_color(true);
     slider->set_background_color(Color::WarmGray);
 
