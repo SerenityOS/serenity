@@ -52,11 +52,6 @@ public:
 
     static void wake();
 
-protected:
-    virtual void add_file_descriptors_for_select(fd_set&, int& max_fd) { UNUSED_PARAM(max_fd); }
-    virtual void process_file_descriptors_after_select(const fd_set&) {}
-    virtual void do_processing() {}
-
 private:
     void wait_for_event(WaitMode);
     void get_next_timer_expiration(timeval&);
