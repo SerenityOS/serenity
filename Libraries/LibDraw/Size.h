@@ -2,6 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/LogStream.h>
+#include <LibDraw/Orientation.h>
 
 struct WSAPI_Size;
 
@@ -48,6 +49,32 @@ public:
         m_width += other.m_width;
         m_height += other.m_height;
         return *this;
+    }
+
+    int primary_size_for_orientation(Orientation orientation) const
+    {
+        return orientation == Orientation::Vertical ? height() : width();
+    }
+
+    void set_primary_size_for_orientation(Orientation orientation, int value)
+    {
+        if (orientation == Orientation::Vertical)
+            set_height(value);
+        else
+            set_width(value);
+    }
+
+    int secondary_size_for_orientation(Orientation orientation) const
+    {
+        return orientation == Orientation::Vertical ? width() : height();
+    }
+
+    void set_secondary_size_for_orientation(Orientation orientation, int value)
+    {
+        if (orientation == Orientation::Vertical)
+            set_width(value);
+        else
+            set_height(value);
     }
 
     operator WSAPI_Size() const;
