@@ -284,7 +284,8 @@ int do_file_system_object_short(const char* path)
             printed_on_row = 0;
         }
     }
-    printf("\n");
+    if (printed_on_row)
+        printf("\n");
 
     return 0;
 }
