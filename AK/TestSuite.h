@@ -73,11 +73,11 @@ private:
 
 class TestSuite {
 public:
-    static TestSuite* instance()
+    static TestSuite& the()
     {
         if (s_global == nullptr)
             s_global = new TestSuite();
-        return s_global;
+        return *s_global;
     }
     void run(const NonnullRefPtrVector<TestCase>& tests);
     void main(const String& suite_name, int argc, char** argv);
@@ -193,24 +193,24 @@ using AK::TestSuite;
 #define TESTCASE_TYPE_NAME(x) TestCase_##x
 
 /*! Define a test case function. */
-#define TEST_CASE(x)                                                                       \
-    static void x();                                                                       \
-    struct TESTCASE_TYPE_NAME(x) {                                                         \
-        TESTCASE_TYPE_NAME(x)                                                              \
-        () { TestSuite::instance()->add_case(adopt(*new TestCase(___str(x), x, false))); } \
-    };                                                                                     \
-    static struct TESTCASE_TYPE_NAME(x) TESTCASE_TYPE_NAME(x);                             \
+#define TEST_CASE(x)                                                                 \
+    static void x();                                                                 \
+    struct TESTCASE_TYPE_NAME(x) {                                                   \
+        TESTCASE_TYPE_NAME(x)                                                        \
+        () { TestSuite::the().add_case(adopt(*new TestCase(___str(x), x, false))); } \
+    };                                                                               \
+    static struct TESTCASE_TYPE_NAME(x) TESTCASE_TYPE_NAME(x);                       \
     static void x()
 
 #define BENCHMARK_TYPE_NAME(x) TestCase_##x
 
-#define BENCHMARK_CASE(x)                                                                 \
-    static void x();                                                                      \
-    struct BENCHMARK_TYPE_NAME(x) {                                                       \
-        BENCHMARK_TYPE_NAME(x)                                                            \
-        () { TestSuite::instance()->add_case(adopt(*new TestCase(___str(x), x, true))); } \
-    };                                                                                    \
-    static struct BENCHMARK_TYPE_NAME(x) BENCHMARK_TYPE_NAME(x);                          \
+#define BENCHMARK_CASE(x)                                                           \
+    static void x();                                                                \
+    struct BENCHMARK_TYPE_NAME(x) {                                                 \
+        BENCHMARK_TYPE_NAME(x)                                                      \
+        () { TestSuite::the().add_case(adopt(*new TestCase(___str(x), x, true))); } \
+    };                                                                              \
+    static struct BENCHMARK_TYPE_NAME(x) BENCHMARK_TYPE_NAME(x);                    \
     static void x()
 
 /*! Define the main function of the testsuite. All TEST_CASE functions will be executed. */
@@ -224,7 +224,7 @@ using AK::TestSuite;
     int main(int argc, char** argv)                                                \
     {                                                                              \
         static_assert(compiletime_lenof(___str(SuiteName)) != 0, "Set SuiteName"); \
-        TestSuite::instance()->main(___str(SuiteName), argc, argv);                \
+        TestSuite::the().main(___str(SuiteName), argc, argv);                      \
     }
 
 #define assertEqual(one, two)                                                                                                \
