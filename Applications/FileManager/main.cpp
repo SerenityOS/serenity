@@ -144,6 +144,10 @@ int main(int argc, char** argv)
         directory_view->open_next_directory();
     });
 
+    auto go_home_action = GAction::create("Go to Home Directory", GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), [directory_view](auto&) {
+        directory_view->open(get_current_user_home_path());
+    });
+
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("File Manager");
@@ -181,6 +185,7 @@ int main(int argc, char** argv)
     main_toolbar->add_action(go_back_action);
     main_toolbar->add_action(go_forward_action);
     main_toolbar->add_action(open_parent_directory_action);
+    main_toolbar->add_action(go_home_action);
 
     main_toolbar->add_separator();
     main_toolbar->add_action(mkdir_action);
