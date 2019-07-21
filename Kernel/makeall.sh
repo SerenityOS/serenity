@@ -66,6 +66,8 @@ done
 
 # has no need to build separately, but install headers.
 (cd ../AK && ./install.sh)
+(cd ../AK/Tests && $make_cmd clean)
+(cd ../AK/Tests && $make_cmd)
 
 sudo -E ./build-image-qemu.sh
 
