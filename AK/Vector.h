@@ -362,7 +362,7 @@ public:
         auto other_size = other.size();
         grow_capacity(size() + other_size);
 
-        for (int i = size() + other_size - 1; i > other.size(); --i) {
+        for (int i = size() + other_size - 1; i >= other.size(); --i) {
             new (slot(i)) T(move(at(i - other_size)));
             at(i - other_size).~T();
         }
