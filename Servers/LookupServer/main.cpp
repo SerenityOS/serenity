@@ -8,6 +8,7 @@
 #include <Kernel/Net/IPv4.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CFile.h>
+#include <LibCore/CSyscallUtils.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -108,7 +109,7 @@ int main(int argc, char** argv)
         fd_set rfds;
         FD_ZERO(&rfds);
         FD_SET(server_fd, &rfds);
-        rc = select(server_fd + 1, &rfds, nullptr, nullptr, nullptr);
+        rc = CSyscallUtils::safe_syscall(select, server_fd + 1, &rfds, nullptr, nullptr, nullptr);
         if (rc < 1) {
             perror("select");
             return 1;

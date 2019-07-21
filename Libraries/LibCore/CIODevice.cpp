@@ -1,5 +1,6 @@
 #include <AK/PrintfImplementation.h>
 #include <LibCore/CIODevice.h>
+#include <LibCore/CSyscallUtils.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/select.h>
@@ -71,7 +72,7 @@ bool CIODevice::can_read_from_fd() const
     struct timeval timeout {
         0, 0
     };
-    int rc = select(m_fd + 1, &rfds, nullptr, nullptr, &timeout);
+    int rc = CSyscallUtils::safe_syscall(select, m_fd + 1, &rfds, nullptr, nullptr, &timeout);
     if (rc < 0) {
         // NOTE: We don't set m_error here.
         perror("CIODevice::can_read: select");
