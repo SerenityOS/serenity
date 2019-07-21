@@ -105,6 +105,7 @@ public:
     void finalize();
 
     int sys$dbgputch(u8);
+    int sys$dbgputstr(const u8*, int length);
     int sys$dump_backtrace();
     int sys$gettid();
     int sys$donate(int tid);

@@ -6,4 +6,5 @@
 #include <stdio.h>
 #define kprintf printf
 #define dbgprintf printf
+#define dbgputstr(characters, length) fwrite(characters, 1, length, stdout)
 #endif

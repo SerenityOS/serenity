@@ -2722,3 +2722,12 @@ int Process::sys$dbgputch(u8 ch)
     IO::out8(0xe9, ch);
     return 0;
 }
+
+int Process::sys$dbgputstr(const u8* characters, int length)
+{
+    if (!validate_read(characters, length))
+        return -EFAULT;
+    for (int i = 0; i < length; ++i)
+        IO::out8(0xe9, characters[i]);
+    return 0;
+}

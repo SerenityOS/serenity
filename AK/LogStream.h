@@ -79,8 +79,7 @@ public:
 
     virtual void write(const char* characters, int length) const override
     {
-        for (int i = 0; i < length; ++i)
-            dbgprintf("%c", characters[i]);
+        dbgputstr(characters, length);
     }
 };
 

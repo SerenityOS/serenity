@@ -57,11 +57,17 @@ int ksprintf(char* buffer, const char* fmt, ...)
     return ret;
 }
 
+extern "C" int dbgputstr(const char* characters, int length)
+{
+    for (int i = 0; i < length; ++i)
+        IO::out8(0xe9, characters[i]);
+    return 0;
+}
+
 static void debugger_putch(char*&, char ch)
 {
     IO::out8(0xe9, ch);
 }
-
 
 extern "C" int dbgprintf(const char* fmt, ...)
 {
