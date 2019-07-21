@@ -1837,9 +1837,10 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), rfds.size(), wfds.size(), params->timeout);
 #endif
 
-    Thread::BlockResult block_res = Thread::BlockResult::WokeNormally;
-    if (!params->timeout || select_has_timeout)
-        block_res = current->block<Thread::SelectBlocker>(timeout, select_has_timeout, rfds, wfds, efds);
+    if (!params->timeout || select_has_timeout) {
+        if (current->block<Thread::SelectBlocker>(timeout, select_has_timeout, rfds, wfds, efds) == Thread::BlockResult::InterruptedBySignal)
+            return -EINTR;
+    }
 
     int marked_fd_count = 0;
     auto mark_fds = [&](auto* fds, auto& vector, auto should_mark) {
@@ -1856,11 +1857,6 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     mark_fds(params->readfds, rfds, [](auto& description) { return description.can_read(); });
     mark_fds(params->writefds, wfds, [](auto& description) { return description.can_write(); });
     // FIXME: We should also mark params->exceptfds as appropriate.
-
-    if (marked_fd_count == 0) {
-        if (block_res == Thread::BlockResult::InterruptedBySignal)
-            return -EINTR;
-    }
 
     return marked_fd_count;
 }
@@ -1899,9 +1895,10 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     dbgprintf("%s<%u> polling on (read:%u, write:%u), timeout=%d\n", name().characters(), pid(), rfds.size(), wfds.size(), timeout);
 #endif
 
-    Thread::BlockResult block_res = Thread::BlockResult::WokeNormally;
-    if (has_timeout|| timeout < 0)
-        block_res = current->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector());
+    if (has_timeout|| timeout < 0) {
+        if (current->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()) == Thread::BlockResult::InterruptedBySignal)
+            return -EINTR;
+    }
 
     int fds_with_revents = 0;
 
@@ -1919,11 +1916,6 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
 
         if (fds[i].revents)
             ++fds_with_revents;
-    }
-
-    if (fds_with_revents == 0) {
-        if (block_res != Thread::BlockResult::InterruptedBySignal)
-            return -EINTR;
     }
 
     return fds_with_revents;
