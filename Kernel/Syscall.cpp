@@ -291,6 +291,8 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
     case Syscall::SC_reboot: {
         return current->process().sys$reboot();
     }
+    case Syscall::SC_dump_backtrace:
+        return current->process().sys$dump_backtrace();
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         return -ENOSYS;

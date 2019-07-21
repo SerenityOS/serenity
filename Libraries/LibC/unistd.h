@@ -14,6 +14,7 @@ __BEGIN_DECLS
 
 extern char** environ;
 
+void dump_backtrace();
 int fsync(int fd);
 void sysbeep();
 int systrace(pid_t);
