@@ -79,6 +79,13 @@ public:
             s_global = new TestSuite();
         return *s_global;
     }
+
+    static void release()
+    {
+        delete s_global;
+        s_global = nullptr;
+    }
+
     void run(const NonnullRefPtrVector<TestCase>& tests);
     void main(const String& suite_name, int argc, char** argv);
     NonnullRefPtrVector<TestCase> find_cases(const String& search, bool find_tests, bool find_benchmarks);
@@ -225,6 +232,7 @@ using AK::TestSuite;
     {                                                                              \
         static_assert(compiletime_lenof(___str(SuiteName)) != 0, "Set SuiteName"); \
         TestSuite::the().main(___str(SuiteName), argc, argv);                      \
+        TestSuite::release();                                                      \
     }
 
 #define assertEqual(one, two)                                                                                                \
