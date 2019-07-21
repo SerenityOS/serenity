@@ -221,8 +221,8 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         /* don't know, don't care */
         return;
     case Thread::Blocked:
-        ASSERT(m_blocker);
-        if (m_blocker->should_unblock(*this, now_sec, now_usec))
+        ASSERT(!m_blockers.is_empty());
+        if (m_blockers.first()->should_unblock(*this, now_sec, now_usec))
             unblock();
         return;
     case Thread::Skip1SchedulerPass:
@@ -307,8 +307,8 @@ bool Scheduler::pick_next()
             return IterationDecision::Continue;
         if (was_blocked) {
             dbgprintf("Unblock %s(%u) due to signal\n", thread.process().name().characters(), thread.pid());
-            ASSERT(thread.m_blocker);
-            thread.m_blocker->set_interrupted_by_signal();
+            ASSERT(!thread.m_blockers.is_empty());
+            thread.m_blockers.first()->set_interrupted_by_signal();
             thread.unblock();
         }
         return IterationDecision::Continue;

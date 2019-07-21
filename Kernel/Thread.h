@@ -72,6 +72,8 @@ public:
         bool was_interrupted_by_signal() const { return m_was_interrupted_while_blocked; }
     private:
         bool m_was_interrupted_while_blocked { false };
+        friend class Thread;
+        IntrusiveListNode m_blocker_list_node;
     };
 
     class FileDescriptionBlocker : public Blocker {
@@ -217,21 +219,39 @@ public:
     template <typename T, class... Args>
     [[nodiscard]] BlockResult block(Args&& ... args)
     {
-        // If this is triggered, state has gotten messed: we should never have a
-        // blocker already set. That means we're re-entering somehow, which is
-        // bad.
-        ASSERT(m_blocker == nullptr);
-
         // We should never be blocking a blocked (or otherwise non-active) thread.
         ASSERT(state() == Thread::Running);
+
         T t(AK::forward<Args>(args)...);
-        m_blocker = &t;
+        m_blockers.prepend(t);
+
+        // Enter blocked state.
         set_state(Thread::Blocked);
-        block_helper(); // this will unlock, yield, and eventually unblock us to return here.
+
+        // Yield to the scheduler, and wait for us to resume unblocked.
+        block_helper();
+
+        // We should no longer be blocked once we woke up
         ASSERT(state() != Thread::Blocked);
-        m_blocker = nullptr;
+
+        // We should be the first blocker, otherwise we're waking up in a
+        // different order than we are waiting: scheduler bug?
+        ASSERT(m_blockers.first() == &t);
+
+        // Remove ourselves...
+        m_blockers.remove(t);
+
+        // If there are still pending blockers that need to be waited for, then
+        // set state back to Blocked, for the next one to be handled.
+        // Otherwise, we're good now, and done with blocking state.
+        if (!m_blockers.is_empty()) {
+            if (!m_blockers.first()->was_interrupted_by_signal())
+                set_state(Thread::Blocked);
+        }
+
         if (t.was_interrupted_by_signal())
             return BlockResult::InterruptedBySignal;
+
         return BlockResult::WokeNormally;
     };
 
@@ -321,7 +341,7 @@ private:
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };
-    Blocker* m_blocker { nullptr };
+    IntrusiveList<Blocker, &Blocker::m_blocker_list_node> m_blockers;
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };
     bool m_has_used_fpu { false };
