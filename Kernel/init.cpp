@@ -34,8 +34,6 @@
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/VM/MemoryManager.h>
 
-//#define STRESS_TEST_SPAWNING
-
 VirtualConsole* tty0;
 VirtualConsole* tty1;
 VirtualConsole* tty2;
@@ -50,24 +48,6 @@ SerialDevice* ttyS1;
 SerialDevice* ttyS2;
 SerialDevice* ttyS3;
 VFS* vfs;
-
-#ifdef STRESS_TEST_SPAWNING
-[[noreturn]] static void spawn_stress()
-{
-    u32 last_sum_alloc = sum_alloc;
-
-    for (unsigned i = 0; i < 10000; ++i) {
-        int error;
-        Process::create_user_process("/bin/true", (uid_t)100, (gid_t)100, (pid_t)0, error, {}, {}, tty0);
-        dbgprintf("malloc stats: alloc:%u free:%u eternal:%u !delta:%u\n", sum_alloc, sum_free, kmalloc_sum_eternal, sum_alloc - last_sum_alloc);
-        last_sum_alloc = sum_alloc;
-        sleep(60);
-    }
-    for (;;) {
-        asm volatile("hlt");
-    }
-}
-#endif
 
 [[noreturn]] static void init_stage2()
 {
@@ -164,10 +144,6 @@ VFS* vfs;
         hang();
     }
     system_server_process->set_priority(Process::HighPriority);
-
-#ifdef STRESS_TEST_SPAWNING
-    Process::create_kernel_process("spawn_stress", spawn_stress);
-#endif
 
     current->process().sys$exit(0);
     ASSERT_NOT_REACHED();
