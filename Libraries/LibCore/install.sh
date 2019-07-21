@@ -1,5 +1,8 @@
 #!/bin/sh
 
-mkdir -p ../Root/usr/include/LibCore/
-cp *.h ../Root/usr/include/LibCore/
-cp libcore.a ../Root/usr/lib/
+set -e
+SERENITY_ROOT=../../
+
+mkdir -p $SERENITY_ROOT/Root/usr/include/LibCore/
+cp *.h $SERENITY_ROOT/Root/usr/include/LibCore/
+cp libcore.a $SERENITY_ROOT/Root/usr/lib/
