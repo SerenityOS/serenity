@@ -104,6 +104,7 @@ public:
     void die();
     void finalize();
 
+    int sys$dbgputch(u8);
     int sys$dump_backtrace();
     int sys$gettid();
     int sys$donate(int tid);

@@ -2716,3 +2716,9 @@ int Process::sys$dump_backtrace()
     dump_backtrace();
     return 0;
 }
+
+int Process::sys$dbgputch(u8 ch)
+{
+    IO::out8(0xe9, ch);
+    return 0;
+}

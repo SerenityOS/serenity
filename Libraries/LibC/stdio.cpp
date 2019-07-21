@@ -18,7 +18,6 @@ static FILE __default_streams[4];
 FILE* stdin;
 FILE* stdout;
 FILE* stderr;
-FILE* stddbg;
 
 void init_FILE(FILE& fp, int fd, int mode)
 {
@@ -41,16 +40,9 @@ void __stdio_init()
     stdin = &__default_streams[0];
     stdout = &__default_streams[1];
     stderr = &__default_streams[2];
-    stddbg = &__default_streams[3];
     init_FILE(*stdin, 0, isatty(0) ? _IOLBF : _IOFBF);
     init_FILE(*stdout, 1, isatty(1) ? _IOLBF : _IOFBF);
     init_FILE(*stderr, 2, _IONBF);
-    int fd = open("/dev/debuglog", O_WRONLY | O_CLOEXEC);
-    if (fd < 0) {
-        perror("open /dev/debuglog");
-        ASSERT_NOT_REACHED();
-    }
-    init_FILE(*stddbg, fd, _IOLBF);
 }
 
 int setvbuf(FILE* stream, char* buf, int mode, size_t size)
@@ -337,14 +329,10 @@ void rewind(FILE* stream)
 
 int dbgprintf(const char* fmt, ...)
 {
-    // if this fails, you're printing too early.
-    ASSERT(stddbg);
-    int errno_backup = errno;
     va_list ap;
     va_start(ap, fmt);
-    int ret = vfprintf(stddbg, fmt, ap);
+    int ret = printf_internal([](char*&, char ch) { dbgputch(ch); }, nullptr, fmt, ap);
     va_end(ap);
-    errno = errno_backup;
     return ret;
 }
 
@@ -493,6 +481,11 @@ int rename(const char* oldpath, const char* newpath)
 {
     int rc = syscall(SC_rename, oldpath, newpath);
     __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+void dbgputch(char ch)
+{
+    syscall(SC_dbgputch, ch);
 }
 
 char* tmpnam(char*)

@@ -43,7 +43,6 @@ typedef struct __STDIO_FILE FILE;
 extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;
-extern FILE* stddbg;
 
 typedef size_t fpos_t;
 
@@ -79,6 +78,7 @@ int vsnprintf(char* buffer, size_t, const char* fmt, va_list);
 int fprintf(FILE*, const char* fmt, ...);
 int printf(const char* fmt, ...);
 int dbgprintf(const char* fmt, ...);
+void dbgputch(char);
 int sprintf(char* buffer, const char* fmt, ...);
 int snprintf(char* buffer, size_t, const char* fmt, ...);
 int putchar(int ch);
