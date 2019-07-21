@@ -110,8 +110,13 @@ void CEventLoop::pump(WaitMode mode)
         events = move(m_queued_events);
     }
 
-    for (auto& queued_event : events) {
+    for (int i = 0; i < events.size(); ++i) {
+        auto& queued_event = events.at(i);
         auto* receiver = queued_event.receiver.ptr();
+        if (!queued_event.event) {
+            dbg() << "CEventLoop: FIXME: Null event in queue.";
+            continue;
+        }
         auto& event = *queued_event.event;
 #ifdef CEVENTLOOP_DEBUG
         dbgprintf("CEventLoop: %s{%p} event %u\n", receiver->class_name(), receiver, (unsigned)event.type());
@@ -122,7 +127,7 @@ void CEventLoop::pump(WaitMode mode)
                 ASSERT_NOT_REACHED();
                 return;
             default:
-                dbgprintf("Event type %u with no receiver :(\n", event.type());
+                dbg() << "Event type " << event.type() << " with no receiver :(";
             }
         } else if (event.type() == CEvent::Type::DeferredInvoke) {
 #ifdef DEFERRED_INVOKE_DEBUG
@@ -135,6 +140,7 @@ void CEventLoop::pump(WaitMode mode)
 
         if (m_exit_requested) {
             LOCKER(m_lock);
+            // FIXME: Shouldn't we only prepend the events that haven't been processed yet?
             m_queued_events.prepend(move(events));
             return;
         }
