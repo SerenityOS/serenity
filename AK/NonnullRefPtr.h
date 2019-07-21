@@ -136,7 +136,7 @@ public:
     {
         if (this != static_cast<void*>(&other)) {
             deref_if_not_null(m_ptr);
-            m_ptr = &other.leak_ref();
+            m_ptr = static_cast<T*>(&other.leak_ref());
         }
         return *this;
     }
