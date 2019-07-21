@@ -67,6 +67,7 @@ public:
 
     WSWindow* active_window() { return m_active_window.ptr(); }
     const WSClientConnection* active_client() const;
+    bool active_window_is_modal() const { return m_active_window && m_active_window->is_modal(); }
 
     WSWindow* highlight_window() { return m_highlight_window.ptr(); }
     void set_highlight_window(WSWindow*);
@@ -150,8 +151,6 @@ private:
     void deliver_mouse_event(WSWindow& window, WSMouseEvent& event);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& hovered_window);
     bool process_ongoing_window_drag(WSMouseEvent&, WSWindow*& hovered_window);
-    void handle_menu_mouse_event(WSMenu&, const WSMouseEvent&);
-    void handle_close_button_mouse_event(WSWindow&, const WSMouseEvent&);
     void start_window_drag(WSWindow&, const WSMouseEvent&);
     void handle_client_request(const WSAPIClientRequest&);
     void set_hovered_window(WSWindow*);

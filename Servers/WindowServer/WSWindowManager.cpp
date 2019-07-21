@@ -681,10 +681,12 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         deliver_mouse_event(*window, translated_event);
     }
 
-    if (menubar_rect().contains(event.position())) {
+    // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
+    if (!active_window_is_modal() && menubar_rect().contains(event.position())) {
         m_menu_manager.event(event);
         return;
     }
+
     if (m_current_menu && m_current_menu->menu_window()) {
         auto& window = *m_current_menu->menu_window();
         bool event_is_inside_current_menu = window.rect().contains(event.position());

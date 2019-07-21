@@ -104,6 +104,9 @@ void WSMenuManager::refresh()
 
 void WSMenuManager::event(CEvent& event)
 {
+    if (WSWindowManager::the().active_window_is_modal())
+        return CObject::event(event);
+
     if (event.type() == WSEvent::MouseMove || event.type() == WSEvent::MouseUp || event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseWheel) {
         auto& mouse_event = static_cast<WSMouseEvent&>(event);
         WSWindowManager::the().for_each_active_menubar_menu([&](WSMenu& menu) {
