@@ -1,26 +1,47 @@
 PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr
 
+CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
+
+SHARED_TEST_OBJS = \
+	../String.o \
+	../StringImpl.o \
+	../StringBuilder.o \
+	../StringView.o \
+	../LogStream.o \
+	../JsonArray.o \
+	../JsonObject.o \
+	../JsonValue.o \
+	../JsonParser.o \
+
+.cpp.o:
+	@echo "HOST_CXX $<"; $(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ -c $<
+
+define execute-command
+$(1)
+
+endef
+
 all: $(PROGRAMS)
+	$(foreach x,$(PROGRAMS),$(call execute-command,./$(x)))
 
-CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2
+TestString: TestString.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestString.o $(SHARED_TEST_OBJS)
 
-TestString: TestString.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../TestSuite.h ../LogStream.cpp
-	$(CXX) $(CXXFLAGS) -I../ -I../../ -o $@ TestString.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../LogStream.cpp
+TestQueue: TestQueue.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestQueue.o $(SHARED_TEST_OBJS)
 
-TestQueue: TestQueue.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../TestSuite.h ../LogStream.cpp
-	$(CXX) $(CXXFLAGS) -I../ -I../../ -o $@ TestQueue.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../LogStream.cpp
+TestVector: TestVector.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestVector.o $(SHARED_TEST_OBJS)
+#
+TestHashMap: TestHashMap.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestHashMap.o $(SHARED_TEST_OBJS)
+#
+TestJSON: TestJSON.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestJSON.o $(SHARED_TEST_OBJS)
 
-TestVector: TestVector.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../TestSuite.h ../LogStream.cpp
-	$(CXX) $(CXXFLAGS) -I../ -I../../ -o $@ TestVector.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../LogStream.cpp
-
-TestHashMap: TestHashMap.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../TestSuite.h ../LogStream.cpp
-	$(CXX) $(CXXFLAGS) -I../ -I../../ -o $@ TestHashMap.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../LogStream.cpp
-
-TestJSON: TestJSON.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../TestSuite.h ../LogStream.cpp ../JsonObject.cpp ../JsonValue.cpp ../JsonArray.cpp ../JsonParser.cpp
-	$(CXX) $(CXXFLAGS) -I../ -I../../ -o $@ TestJSON.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../LogStream.cpp ../JsonObject.cpp ../JsonValue.cpp ../JsonArray.cpp ../JsonParser.cpp
-
-TestWeakPtr: TestWeakPtr.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../TestSuite.h ../LogStream.cpp ../WeakPtr.h ../Weakable.h
-	$(CXX) $(CXXFLAGS) -I../ -I../../ -o $@ TestWeakPtr.cpp ../String.cpp ../StringImpl.cpp ../StringBuilder.cpp ../StringView.cpp ../LogStream.cpp
+TestWeakPtr: TestWeakPtr.o $(SHARED_TEST_OBJS) 
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestWeakPtr.o $(SHARED_TEST_OBJS)
 
 clean:
+	rm -f $(SHARED_TEST_OBJS)
 	rm -f $(PROGRAMS)
