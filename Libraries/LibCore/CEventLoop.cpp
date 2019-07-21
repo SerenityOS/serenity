@@ -4,6 +4,7 @@
 #include <LibCore/CLock.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
+#include <LibCore/CSyscallUtils.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -203,11 +204,7 @@ void CEventLoop::wait_for_event(WaitMode mode)
         should_wait_forever = false;
     }
 
-    int marked_fd_count = select(max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
-    if (marked_fd_count < 0) {
-        ASSERT_NOT_REACHED();
-    }
-
+    int marked_fd_count = CSyscallUtils::safe_syscall(select, max_fd + 1, &rfds, &wfds, nullptr, should_wait_forever ? nullptr : &timeout);
     if (FD_ISSET(s_wake_pipe_fds[0], &rfds)) {
         char buffer[32];
         auto nread = read(s_wake_pipe_fds[0], buffer, sizeof(buffer));

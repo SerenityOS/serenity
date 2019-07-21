@@ -3,6 +3,7 @@
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CEvent.h>
 #include <LibCore/CLocalSocket.h>
+#include <LibCore/CSyscallUtils.h>
 #include <LibCore/CNotifier.h>
 #include <LibAudio/ASAPI.h>
 
@@ -106,7 +107,7 @@ public:
             fd_set rfds;
             FD_ZERO(&rfds);
             FD_SET(m_connection.fd(), &rfds);
-            int rc = select(m_connection.fd() + 1, &rfds, nullptr, nullptr, nullptr);
+            int rc = CSyscallUtils::safe_syscall(select, m_connection.fd() + 1, &rfds, nullptr, nullptr, nullptr);
             if (rc < 0) {
                 perror("select");
             }
