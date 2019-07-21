@@ -81,14 +81,3 @@ $(LIBRARY): $(CPP_OBJS) $(ASM_OBJS)
 
 clean:
 	@echo "CLEAN"; rm -f $(LIBRARY) $(CPP_OBJS) $(ASM_OBJS) *.d
-
-install: $(LIBRARY) startfiles
-	mkdir -p ../../Root/usr/include
-	mkdir -p ../../Root/usr/lib
-	# Copy headers
-	rsync -r -a --include '*/' --include '*.h' --exclude '*' . ../../Root/usr/include
-	# Install the library
-	cp $(LIBRARY) ../../Root/usr/lib
-	cp crt0.o ../../Root/usr/lib/
-	cp crti.ao ../../Root/usr/lib/crti.o
-	cp crtn.ao ../../Root/usr/lib/crtn.o
