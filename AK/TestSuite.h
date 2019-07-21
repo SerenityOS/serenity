@@ -162,7 +162,7 @@ void TestSuite::run(const NonnullRefPtrVector<TestCase>& tests)
         dbg() << "START Running " << (t.is_benchmark() ? "benchmark" : "test") << " " << t.name();
         TestElapsedTimer timer;
         try {
-            t.func();
+            t.func()();
         } catch (const TestException& t) {
             fprintf(stderr, "\033[31;1mFAIL\033[0m: %s\n", t.to_string().characters());
             exit(1);
