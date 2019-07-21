@@ -72,6 +72,8 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
         break;
     case Syscall::SC_dbgputch:
         return current->process().sys$dbgputch((u8)arg1);
+    case Syscall::SC_dbgputstr:
+        return current->process().sys$dbgputstr((const u8*)arg1, (int)arg2);
     case Syscall::SC_sleep:
         return current->process().sys$sleep((unsigned)arg1);
     case Syscall::SC_usleep:

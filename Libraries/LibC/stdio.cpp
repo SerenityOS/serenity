@@ -488,6 +488,12 @@ void dbgputch(char ch)
     syscall(SC_dbgputch, ch);
 }
 
+int dbgputstr(const char* characters, int length)
+{
+    int rc = syscall(SC_dbgputstr, characters, length);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 char* tmpnam(char*)
 {
     ASSERT_NOT_REACHED();
