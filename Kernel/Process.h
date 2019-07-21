@@ -104,6 +104,7 @@ public:
     void die();
     void finalize();
 
+    int sys$dump_backtrace();
     int sys$gettid();
     int sys$donate(int tid);
     int sys$shm_open(const char* name, int flags, mode_t);

@@ -526,4 +526,10 @@ int reboot()
     int rc = syscall(SC_reboot);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+void dump_backtrace()
+{
+    syscall(SC_dump_backtrace);
+}
+
 }
