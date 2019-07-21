@@ -1,5 +1,6 @@
 #include <AK/TestSuite.h>
 #include <AK/AKString.h>
+#include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
 TEST_CASE(construct)
@@ -96,6 +97,41 @@ TEST_CASE(prepend_vector)
     more_ints.prepend(move(ints));
     EXPECT_EQ(more_ints.size(), 6);
     EXPECT_EQ(ints.size(), 0);
+}
+
+TEST_CASE(prepend_vector_object)
+{
+    struct SubObject {
+        SubObject(int v) : value(v) {}
+        int value { 0 };
+    };
+    struct Object {
+        OwnPtr<SubObject> object;
+    };
+
+    Vector<Object> objects;
+    objects.append({ make<SubObject>(1) });
+    objects.append({ make<SubObject>(2) });
+    objects.append({ make<SubObject>(3) });
+
+    EXPECT_EQ(objects.size(), 3);
+
+    Vector<Object> more_objects;
+    objects.append({ make<SubObject>(4) });
+    objects.append({ make<SubObject>(5) });
+    objects.append({ make<SubObject>(6) });
+    EXPECT_EQ(more_objects.size(), 3);
+
+    objects.prepend(move(more_objects));
+    EXPECT_EQ(more_objects.size(), 0);
+    EXPECT_EQ(objects.size(), 6);
+
+    EXPECT_EQ(objects[0].object->value, 4);
+    EXPECT_EQ(objects[1].object->value, 5);
+    EXPECT_EQ(objects[2].object->value, 6);
+    EXPECT_EQ(objects[3].object->value, 1);
+    EXPECT_EQ(objects[4].object->value, 2);
+    EXPECT_EQ(objects[5].object->value, 3);
 }
 
 TEST_MAIN(Vector)
