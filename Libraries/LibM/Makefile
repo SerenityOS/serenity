@@ -17,9 +17,3 @@ $(LIBRARY): $(OBJS)
 
 clean:
 	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
-
-install: $(LIBRARY)
-	# Copy headers
-	rsync -a --include '*/' --include '*.h' --exclude '*' . ../../Root/usr/include
-	# Install the library
-	cp $(LIBRARY) ../../Root/usr/lib

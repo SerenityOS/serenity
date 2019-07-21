@@ -26,10 +26,3 @@ $(LIBRARY): $(OBJS)
 
 clean:
 	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
-
-install: $(LIBRARY)
-	mkdir -p ../../Root/usr/include/LibGfx
-	# Copy headers
-	rsync -r -a --include '*/' --include '*.h' --exclude '*' . ../../Root/usr/include/LibGfx
-	# Install the library
-	cp $(LIBRARY) ../../Root/usr/lib

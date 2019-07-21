@@ -19,13 +19,3 @@ $(LIBRARY): $(OBJS)
 
 clean:
 	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
-
-install: $(LIBRARY)
-	mkdir -p ../../Root/usr/include/LibAudio
-	mkdir -p ../../Root/usr/include/AK
-	mkdir -p ../../Root/usr/lib
-	# Copy headers
-	rsync -r -a --include '*/' --include '*.h' --exclude '*' . ../../Root/usr/include/LibAudio
-	rsync -r -a --include '*/' --include '*.h' --exclude '*' ../../AK/ ../../Root/usr/include/AK
-	# Install the library
-	cp $(LIBRARY) ../../Root/usr/lib
