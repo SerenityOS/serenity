@@ -319,6 +319,9 @@ void GDirectoryModel::open(const StringView& a_path)
     m_notifier = make<CNotifier>(watch_fd, CNotifier::Event::Read);
     m_notifier->on_ready_to_read = [this] {
         update();
+        char buffer[32];
+        int rc = read(m_notifier->fd(), buffer, sizeof(buffer));
+        ASSERT(rc >= 0);
     };
     update();
     set_selected_index(index(0, 0));
