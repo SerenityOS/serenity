@@ -39,10 +39,7 @@ const char* DevPtsFS::class_name() const
 NonnullRefPtr<SynthFSInode> DevPtsFS::create_slave_pty_device_file(unsigned index)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
-
-    StringBuilder builder;
-    builder.appendf("%u", index);
-    file->m_name = builder.to_string();
+    file->m_name = String::number(index);
 
     auto* device = VFS::the().get_device(11, index);
     ASSERT(device);
