@@ -54,6 +54,7 @@ __BEGIN_DECLS
 #define S_IRWXO (S_IRWXG >> 3)
 
 int fcntl(int fd, int cmd, ...);
+int watch_file(const char* path, int path_length);
 
 #define F_RDLCK 0
 #define F_WRLCK 1

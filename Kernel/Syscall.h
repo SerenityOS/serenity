@@ -118,7 +118,8 @@ struct timeval;
     __ENUMERATE_SYSCALL(reboot)                 \
     __ENUMERATE_SYSCALL(dump_backtrace)         \
     __ENUMERATE_SYSCALL(dbgputch)               \
-    __ENUMERATE_SYSCALL(dbgputstr)
+    __ENUMERATE_SYSCALL(dbgputstr)              \
+    __ENUMERATE_SYSCALL(watch_file)
 
 namespace Syscall {
 

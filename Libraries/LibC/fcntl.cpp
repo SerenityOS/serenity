@@ -14,4 +14,11 @@ int fcntl(int fd, int cmd, ...)
     int rc = syscall(SC_fcntl, fd, cmd, extra_arg);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+int watch_file(const char* path, int path_length)
+{
+    int rc = syscall(SC_watch_file, path, path_length);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }

@@ -11,10 +11,11 @@
 #include <Kernel/Lock.h>
 
 class FileDescription;
+class InodeWatcher;
 class LocalSocket;
 class VMObject;
 
-class Inode : public RefCounted<Inode> {
+class Inode : public RefCounted<Inode>, public Weakable<Inode> {
     friend class VFS;
     friend class FS;
 
@@ -73,9 +74,12 @@ public:
 
     static void sync();
 
+    void register_watcher(Badge<InodeWatcher>, InodeWatcher&);
+    void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
+
 protected:
     Inode(FS& fs, unsigned index);
-    void set_metadata_dirty(bool b) { m_metadata_dirty = b; }
+    void set_metadata_dirty(bool);
     void inode_contents_changed(off_t, ssize_t, const u8*);
     void inode_size_changed(size_t old_size, size_t new_size);
 
@@ -86,5 +90,6 @@ private:
     unsigned m_index { 0 };
     WeakPtr<VMObject> m_vmo;
     RefPtr<LocalSocket> m_socket;
+    HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };
 };
