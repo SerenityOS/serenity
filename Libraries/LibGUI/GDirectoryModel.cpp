@@ -308,7 +308,18 @@ void GDirectoryModel::open(const StringView& a_path)
     if (!dirp)
         return;
     closedir(dirp);
+    if (m_notifier)
+        close(m_notifier->fd());
     m_path = path;
+    int watch_fd = watch_file(path.characters(), path.length());
+    if (watch_fd < 0) {
+        perror("watch_file");
+        ASSERT_NOT_REACHED();
+    }
+    m_notifier = make<CNotifier>(watch_fd, CNotifier::Event::Read);
+    m_notifier->on_ready_to_read = [this] {
+        update();
+    };
     update();
     set_selected_index(index(0, 0));
 }
