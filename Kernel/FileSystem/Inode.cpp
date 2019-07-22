@@ -1,6 +1,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/VM/VMObject.h>
 
@@ -130,4 +131,34 @@ bool Inode::unbind_socket()
     ASSERT(m_socket);
     m_socket = nullptr;
     return true;
+}
+
+void Inode::register_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
+{
+    LOCKER(m_lock);
+    ASSERT(!m_watchers.contains(&watcher));
+    m_watchers.set(&watcher);
+}
+
+void Inode::unregister_watcher(Badge<InodeWatcher>, InodeWatcher& watcher)
+{
+    LOCKER(m_lock);
+    ASSERT(m_watchers.contains(&watcher));
+    m_watchers.remove(&watcher);
+}
+
+void Inode::set_metadata_dirty(bool metadata_dirty)
+{
+    if (m_metadata_dirty == metadata_dirty)
+        return;
+
+    m_metadata_dirty = metadata_dirty;
+    if (m_metadata_dirty) {
+        // FIXME: Maybe we should hook into modification events somewhere else, I'm not sure where.
+        //        We don't always end up on this particular code path, for instance when writing to an ext2fs file.
+        LOCKER(m_lock);
+        for (auto& watcher : m_watchers) {
+            watcher->notify_inode_event({}, InodeWatcher::Event::Type::Modified);
+        }
+    }
 }

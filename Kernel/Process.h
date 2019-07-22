@@ -104,6 +104,7 @@ public:
     void die();
     void finalize();
 
+    int sys$watch_file(const char* path, int path_length);
     int sys$dbgputch(u8);
     int sys$dbgputstr(const u8*, int length);
     int sys$dump_backtrace();

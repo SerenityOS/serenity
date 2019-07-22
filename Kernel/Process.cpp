@@ -10,6 +10,7 @@
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/IO.h>
@@ -2636,6 +2637,26 @@ int Process::sys$ftruncate(int fd, off_t length)
         return -EBADF;
     // FIXME: Check that fd is writable, otherwise EINVAL.
     return description->truncate(length);
+}
+
+int Process::sys$watch_file(const char* path, int path_length)
+{
+    if (!validate_read(path, path_length))
+        return -EFAULT;
+
+    auto custody_or_error = VFS::the().resolve_path({ path, path_length }, current_directory());
+    if (custody_or_error.is_error())
+        return custody_or_error.error();
+
+    auto& custody = custody_or_error.value();
+    auto& inode = custody->inode();
+
+    int fd = alloc_fd();
+    if (fd < 0)
+        return fd;
+
+    m_fds[fd].set(FileDescription::create(*InodeWatcher::create(inode)));
+    return fd;
 }
 
 int Process::sys$systrace(pid_t pid)
