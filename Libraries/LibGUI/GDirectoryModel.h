@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/HashMap.h>
+#include <LibCore/CNotifier.h>
 #include <LibGUI/GModel.h>
 #include <sys/stat.h>
 
@@ -77,4 +78,6 @@ private:
 
     HashMap<uid_t, String> m_user_names;
     HashMap<gid_t, String> m_group_names;
+
+    OwnPtr<CNotifier> m_notifier;
 };
