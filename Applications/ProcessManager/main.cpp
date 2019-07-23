@@ -119,7 +119,7 @@ int main(int argc, char** argv)
     process_context_menu->add_action(stop_action);
     process_context_menu->add_action(continue_action);
     process_table_view->on_context_menu_request = [&](const GModelIndex& index, const GContextMenuEvent& event) {
-        (void) index;
+        (void)index;
         process_context_menu->popup(event.screen_position());
     };
 
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
     window->set_title("Process Manager");
     window->set_rect(20, 200, 680, 400);
     window->set_main_widget(keeper);
-    window->set_should_exit_event_loop_on_close(true);
+
     window->show();
 
     window->set_icon_path("/res/icons/16x16/app-process-manager.png");

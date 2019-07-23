@@ -46,8 +46,6 @@ GWindow::~GWindow()
 
 void GWindow::close()
 {
-    if (should_exit_event_loop_on_close())
-        GEventLoop::current().quit(0);
     if (should_destroy_on_close())
         delete_later();
 }

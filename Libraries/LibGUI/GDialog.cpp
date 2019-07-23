@@ -6,7 +6,7 @@ GDialog::GDialog(CObject* parent)
     : GWindow(parent)
 {
     set_modal(true);
-    set_should_exit_event_loop_on_close(true);
+
 }
 
 GDialog::~GDialog()

@@ -29,7 +29,6 @@ int main(int argc, char** argv)
     window->set_rect({ 50, 50, 390, 342 });
     auto* font_editor = new FontEditorWidget(path, move(edited_font));
     window->set_main_widget(font_editor);
-    window->set_should_exit_event_loop_on_close(true);
     window->show();
     window->set_icon_path("/res/icons/16x16/app-font-editor.png");
     return app.exec();
