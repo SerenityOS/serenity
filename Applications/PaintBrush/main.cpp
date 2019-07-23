@@ -18,6 +18,7 @@ int main(int argc, char** argv)
     auto* window = new GWindow;
     window->set_title("PaintBrush");
     window->set_rect(100, 100, 640, 480);
+    window->set_should_exit_event_loop_on_close(true);
 
     auto* horizontal_container = new GWidget(nullptr);
     window->set_main_widget(horizontal_container);
