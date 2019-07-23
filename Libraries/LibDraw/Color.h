@@ -141,3 +141,8 @@ private:
 
     RGBA32 m_value { 0 };
 };
+
+inline const LogStream& operator<<(const LogStream& stream, Color value)
+{
+    return stream << value.to_string();
+}
