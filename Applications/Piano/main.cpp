@@ -16,7 +16,6 @@ int main(int argc, char** argv)
     auto* window = new GWindow;
     window->set_title("Piano");
     window->set_rect(100, 100, 512, 512);
-    window->set_should_exit_event_loop_on_close(true);
 
     auto* piano_widget = new PianoWidget;
     window->set_main_widget(piano_widget);

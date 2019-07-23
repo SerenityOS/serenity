@@ -1,4 +1,5 @@
 #include "QSWidget.h"
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -6,7 +7,6 @@
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
-#include <LibDraw/PNGLoader.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -67,7 +67,6 @@ int main(int argc, char** argv)
     widget->set_bitmap(*bitmap);
     window->set_main_widget(widget);
 
-    window->set_should_exit_event_loop_on_close(true);
     window->show();
 
     return app.exec();

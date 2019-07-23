@@ -16,7 +16,6 @@ int main(int argc, char** argv)
     window_rect.center_within(GDesktop::the().rect());
     window->set_resizable(false);
     window->set_rect(window_rect);
-    window->set_should_exit_event_loop_on_close(true);
 
     auto* widget = new GWidget;
     window->set_main_widget(widget);

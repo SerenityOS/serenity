@@ -146,7 +146,6 @@ int main(int argc, char** argv)
     window->set_title("Terminal");
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
-    window->set_should_exit_event_loop_on_close(true);
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
     Terminal terminal(ptm_fd, config);

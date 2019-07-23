@@ -104,9 +104,6 @@ public:
     GWidget* automatic_cursor_tracking_widget() { return m_automatic_cursor_tracking_widget.ptr(); }
     const GWidget* automatic_cursor_tracking_widget() const { return m_automatic_cursor_tracking_widget.ptr(); }
 
-    bool should_exit_event_loop_on_close() const { return m_should_exit_app_on_close; }
-    void set_should_exit_event_loop_on_close(bool b) { m_should_exit_app_on_close = b; }
-
     GWidget* hovered_widget() { return m_hovered_widget.ptr(); }
     const GWidget* hovered_widget() const { return m_hovered_widget.ptr(); }
     void set_hovered_widget(GWidget*);
@@ -160,7 +157,6 @@ private:
     Color m_background_color { Color::WarmGray };
     GWindowType m_window_type { GWindowType::Normal };
     bool m_is_active { false };
-    bool m_should_exit_app_on_close { false };
     bool m_destroy_on_close { true };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };

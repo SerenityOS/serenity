@@ -30,7 +30,6 @@ int main(int argc, char** argv)
     signal(SIGCHLD, handle_sigchld);
 
     auto* launcher_window = make_launcher_window();
-    launcher_window->set_should_exit_event_loop_on_close(true);
     launcher_window->show();
 
     return app.exec();

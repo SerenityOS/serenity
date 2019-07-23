@@ -8,7 +8,6 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     IRCAppWindow app_window;
-    app_window.set_should_exit_event_loop_on_close(true);
     app_window.show();
 
     printf("Entering main loop...\n");

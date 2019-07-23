@@ -15,7 +15,6 @@ TaskbarWindow::TaskbarWindow()
 {
     set_window_type(GWindowType::Taskbar);
     set_title("Taskbar");
-    set_should_exit_event_loop_on_close(true);
 
     on_screen_rect_change(GDesktop::the().rect());
 

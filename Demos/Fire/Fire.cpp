@@ -16,12 +16,12 @@
  *  [ ] handle fire bitmap edges better
 */
 
+#include <LibDraw/GraphicsBitmap.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
-#include <LibDraw/GraphicsBitmap.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -214,7 +214,6 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     auto* window = new GWindow;
-    window->set_should_exit_event_loop_on_close(true);
     window->set_double_buffering_enabled(false);
     window->set_title("Fire");
     window->set_resizable(false);

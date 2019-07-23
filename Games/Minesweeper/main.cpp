@@ -14,7 +14,6 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     auto* window = new GWindow;
-    window->set_should_exit_event_loop_on_close(true);
     window->set_resizable(false);
     window->set_title("Minesweeper");
     window->set_rect(100, 100, 139, 175);
