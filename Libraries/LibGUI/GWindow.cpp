@@ -1,30 +1,25 @@
-#include "GWindow.h"
-#include "GEvent.h"
-#include "GEventLoop.h"
-#include "GWidget.h"
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
-#include <LibGUI/GPainter.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GApplication.h>
+#include <LibGUI/GEvent.h>
+#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 
 //#define UPDATE_COALESCING_DEBUG
 
-static HashMap<int, GWindow*>* s_windows;
-
-static HashMap<int, GWindow*>& windows()
-{
-    if (!s_windows)
-        s_windows = new HashMap<int, GWindow*>;
-    return *s_windows;
-}
+static HashTable<GWindow*> all_windows;
+static HashMap<int, GWindow*> reified_windows;
 
 GWindow* GWindow::from_window_id(int window_id)
 {
-    auto it = windows().find(window_id);
-    if (it != windows().end())
+    auto it = reified_windows.find(window_id);
+    if (it != reified_windows.end())
         return (*it).value;
     return nullptr;
 }
@@ -32,15 +27,21 @@ GWindow* GWindow::from_window_id(int window_id)
 GWindow::GWindow(CObject* parent)
     : CObject(parent)
 {
+    all_windows.set(this);
     m_rect_when_windowless = { 100, 400, 140, 140 };
     m_title_when_windowless = "GWindow";
 }
 
 GWindow::~GWindow()
 {
+    all_windows.remove(this);
     if (m_main_widget)
         delete m_main_widget;
     hide();
+
+    if (all_windows.is_empty()) {
+        GApplication::the().did_delete_last_window({});
+    }
 }
 
 void GWindow::close()
@@ -87,7 +88,7 @@ void GWindow::show()
     auto response = GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidCreateWindow);
     m_window_id = response.window_id;
 
-    windows().set(m_window_id, this);
+    reified_windows.set(m_window_id, this);
     update();
 }
 
@@ -95,7 +96,7 @@ void GWindow::hide()
 {
     if (!m_window_id)
         return;
-    windows().remove(m_window_id);
+    reified_windows.remove(m_window_id);
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::DestroyWindow;
     request.window_id = m_window_id;

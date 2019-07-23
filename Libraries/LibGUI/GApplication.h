@@ -6,9 +6,10 @@
 #include <LibGUI/GShortcut.h>
 
 class GAction;
-class GKeyEvent;
 class GEventLoop;
+class GKeyEvent;
 class GMenuBar;
+class GWindow;
 class Point;
 
 class GApplication {
@@ -29,10 +30,16 @@ public:
     void show_tooltip(const StringView&, const Point& screen_location);
     void hide_tooltip();
 
+    bool quit_when_last_window_deleted() const { return m_quit_when_last_window_deleted; }
+    void set_quit_when_last_window_deleted(bool b) { m_quit_when_last_window_deleted = b; }
+
+    void did_delete_last_window(Badge<GWindow>);
+
 private:
     OwnPtr<GEventLoop> m_event_loop;
     OwnPtr<GMenuBar> m_menubar;
     HashMap<GShortcut, GAction*> m_global_shortcut_actions;
     class TooltipWindow;
     TooltipWindow* m_tooltip_window { nullptr };
+    bool m_quit_when_last_window_deleted { true };
 };
