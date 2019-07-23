@@ -287,7 +287,7 @@ int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_re
     int timer_id = ++s_next_timer_id; // FIXME: This will eventually wrap around.
     ASSERT(timer_id);                 // FIXME: Aforementioned wraparound.
     timer->timer_id = timer_id;
-    s_timers->set(timer->timer_id, move(timer));
+    s_timers->set(timer_id, move(timer));
     return timer_id;
 }
 
