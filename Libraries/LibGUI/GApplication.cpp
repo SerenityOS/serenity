@@ -108,8 +108,11 @@ void GApplication::show_tooltip(const StringView& tooltip, const Point& screen_l
 
 void GApplication::hide_tooltip()
 {
-    if (m_tooltip_window)
+    if (m_tooltip_window) {
         m_tooltip_window->hide();
+        delete m_tooltip_window;
+        m_tooltip_window = nullptr;
+    }
 }
 
 void GApplication::did_delete_last_window(Badge<GWindow>)
