@@ -78,7 +78,8 @@ VFS_OBJS = \
     FileSystem/VirtualFileSystem.o \
     FileSystem/FileDescription.o \
     FileSystem/SyntheticFileSystem.o \
-    Devices/SB16.o
+    Devices/SB16.o \
+    Devices/AdLib.o
 
 AK_OBJS = \
     ../AK/String.o \

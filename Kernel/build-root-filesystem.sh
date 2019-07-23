@@ -39,6 +39,7 @@ mknod -m 666 mnt/dev/debuglog c 1 18
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
 mknod -m 666 mnt/dev/audio c 42 42
+mknod -m 666 mnt/dev/adlib c 43 42
 mknod -m 666 mnt/dev/ptmx c 5 2
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
