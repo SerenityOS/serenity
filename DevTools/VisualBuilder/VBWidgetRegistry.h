@@ -3,6 +3,7 @@
 #include "VBWidgetType.h"
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 
 class GWidget;
@@ -18,7 +19,7 @@ public:
             callback((VBWidgetType)i);
     }
 
-    static GWidget* build_gwidget(VBWidget&, VBWidgetType, GWidget* parent, Vector<OwnPtr<VBProperty>>&);
+    static GWidget* build_gwidget(VBWidget&, VBWidgetType, GWidget* parent, NonnullOwnPtrVector<VBProperty>&);
 };
 
 String to_class_name(VBWidgetType);

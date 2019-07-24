@@ -3,8 +3,9 @@
 #include "VBWidgetType.h"
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <AK/RefCounted.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <LibDraw/Rect.h>
 
@@ -79,7 +80,7 @@ private:
     VBWidgetType m_type { VBWidgetType::None };
     VBForm& m_form;
     GWidget* m_gwidget { nullptr };
-    Vector<OwnPtr<VBProperty>> m_properties;
+    NonnullOwnPtrVector<VBProperty> m_properties;
     NonnullRefPtr<VBWidgetPropertyModel> m_property_model;
     Rect m_transform_origin_rect;
 };

@@ -125,7 +125,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
     }
 }
 
-GWidget* VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GWidget* parent, Vector<OwnPtr<VBProperty>>& properties)
+GWidget* VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GWidget* parent, NonnullOwnPtrVector<VBProperty>& properties)
 {
     auto* gwidget = ::build_gwidget(type, parent);
     auto add_readonly_property = [&](const String& name, const GVariant& value) {
