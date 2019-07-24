@@ -80,7 +80,7 @@ int GMenu::realize_menu()
 #endif
     ASSERT(m_menu_id > 0);
     for (int i = 0; i < m_items.size(); ++i) {
-        auto& item = *m_items[i];
+        auto& item = m_items[i];
         item.set_menu_id({}, m_menu_id);
         item.set_identifier({}, i);
         if (item.type() == GMenuItem::Separator) {
@@ -136,5 +136,5 @@ GAction* GMenu::action_at(int index)
 {
     if (index >= m_items.size())
         return nullptr;
-    return m_items[index]->action();
+    return m_items[index].action();
 }

@@ -1,9 +1,8 @@
 #pragma once
 
 #include <AK/Function.h>
-#include <AK/RefCounted.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/Vector.h>
 #include <LibGUI/GMenuItem.h>
 
 class GAction;
@@ -35,5 +34,5 @@ private:
 
     int m_menu_id { -1 };
     String m_name;
-    Vector<OwnPtr<GMenuItem>> m_items;
+    NonnullOwnPtrVector<GMenuItem> m_items;
 };

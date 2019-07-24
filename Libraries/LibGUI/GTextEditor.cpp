@@ -68,7 +68,7 @@ void GTextEditor::create_actions()
 
 void GTextEditor::set_text(const StringView& text)
 {
-    if (is_single_line() && text.length() == m_lines[0]->length() && !memcmp(text.characters_without_null_termination(), m_lines[0]->characters(), text.length()))
+    if (is_single_line() && text.length() == m_lines[0].length() && !memcmp(text.characters_without_null_termination(), m_lines[0].characters(), text.length()))
         return;
 
     m_selection.clear();
@@ -91,7 +91,7 @@ void GTextEditor::set_text(const StringView& text)
     add_line(i);
     update_content_size();
     if (is_single_line())
-        set_cursor(0, m_lines[0]->length());
+        set_cursor(0, m_lines[0].length());
     else
         set_cursor(0, 0);
     did_update_selection();
@@ -102,7 +102,7 @@ void GTextEditor::update_content_size()
 {
     int content_width = 0;
     for (auto& line : m_lines)
-        content_width = max(line->width(font()), content_width);
+        content_width = max(line.width(font()), content_width);
     content_width += m_horizontal_content_padding * 2;
     if (is_right_text_alignment(m_text_alignment))
         content_width = max(frame_inner_rect().width(), content_width);
@@ -133,7 +133,7 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
         ASSERT_NOT_REACHED();
     }
 
-    column_index = max(0, min(column_index, m_lines[line_index]->length()));
+    column_index = max(0, min(column_index, m_lines[line_index].length()));
     return { line_index, column_index };
 }
 
@@ -147,7 +147,7 @@ void GTextEditor::doubleclick_event(GMouseEvent& event)
 
     auto start = text_position_at(event.position());
     auto end = start;
-    auto& line = *m_lines[start.line()];
+    auto& line = m_lines[start.line()];
     while (start.column() > 0) {
         if (isspace(line.characters()[start.column() - 1]))
             break;
@@ -181,11 +181,11 @@ void GTextEditor::mousedown_event(GMouseEvent& event)
         if (is_multi_line()) {
             // select *current* line
             start = GTextPosition(m_cursor.line(), 0);
-            end = GTextPosition(m_cursor.line(), m_lines[m_cursor.line()]->length());
+            end = GTextPosition(m_cursor.line(), m_lines[m_cursor.line()].length());
         } else {
             // select *whole* line
             start = GTextPosition(0, 0);
-            end = GTextPosition(line_count() - 1, m_lines[line_count() - 1]->length());
+            end = GTextPosition(line_count() - 1, m_lines[line_count() - 1].length());
         }
 
         m_selection.set(start, end);
@@ -302,7 +302,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
     painter.add_clip_rect({ m_ruler_visible ? (ruler_rect.right() + frame_thickness() + 1) : frame_thickness(), frame_thickness(), width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
 
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
-        auto& line = *m_lines[i];
+        auto& line = m_lines[i];
         auto line_rect = line_content_rect(i);
         // FIXME: Make sure we always fill the entire line.
         //line_rect.set_width(exposed_width);
@@ -316,7 +316,6 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
             int selection_left = content_x_for_position({ i, selection_start_column_on_line });
             int selection_right = content_x_for_position({ i, selection_end_column_on_line });
-            ;
 
             Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
             painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
@@ -347,7 +346,7 @@ void GTextEditor::toggle_selection_if_needed_for_event(const GKeyEvent& event)
 void GTextEditor::select_all()
 {
     GTextPosition start_of_document { 0, 0 };
-    GTextPosition end_of_document { line_count() - 1, m_lines[line_count() - 1]->length() };
+    GTextPosition end_of_document { line_count() - 1, m_lines[line_count() - 1].length() };
     m_selection.set(start_of_document, end_of_document);
     did_update_selection();
     set_cursor(end_of_document);
@@ -373,7 +372,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
             int new_line = m_cursor.line() - 1;
-            int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            int new_column = min(m_cursor.column(), m_lines[new_line].length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
             if (m_selection.start().is_valid()) {
@@ -386,7 +385,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (m_lines.size() - 1)) {
             int new_line = m_cursor.line() + 1;
-            int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            int new_column = min(m_cursor.column(), m_lines[new_line].length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
             if (m_selection.start().is_valid()) {
@@ -399,7 +398,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_PageUp) {
         if (m_cursor.line() > 0) {
             int new_line = max(0, m_cursor.line() - visible_content_rect().height() / line_height());
-            int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            int new_column = min(m_cursor.column(), m_lines[new_line].length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
             if (m_selection.start().is_valid()) {
@@ -412,7 +411,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_PageDown) {
         if (m_cursor.line() < (m_lines.size() - 1)) {
             int new_line = min(line_count() - 1, m_cursor.line() + visible_content_rect().height() / line_height());
-            int new_column = min(m_cursor.column(), m_lines[new_line]->length());
+            int new_column = min(m_cursor.column(), m_lines[new_line].length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
             if (m_selection.start().is_valid()) {
@@ -433,7 +432,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             }
         } else if (m_cursor.line() > 0) {
             int new_line = m_cursor.line() - 1;
-            int new_column = m_lines[new_line]->length();
+            int new_column = m_lines[new_line].length();
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
             if (m_selection.start().is_valid()) {
@@ -493,7 +492,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
     if (event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
-        set_cursor(line_count() - 1, m_lines[line_count() - 1]->length());
+        set_cursor(line_count() - 1, m_lines[line_count() - 1].length());
         if (m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
@@ -522,7 +521,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         }
         if (m_cursor.column() == 0 && m_cursor.line() != 0) {
             // Backspace at column 0; merge with previous line
-            auto& previous_line = *m_lines[m_cursor.line() - 1];
+            auto& previous_line = m_lines[m_cursor.line() - 1];
             int previous_length = previous_line.length();
             previous_line.append(current_line().characters(), current_line().length());
             m_lines.remove(m_cursor.line());
@@ -582,7 +581,7 @@ void GTextEditor::do_delete()
     }
     if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
         // Delete at end of line; merge with next line
-        auto& next_line = *m_lines[m_cursor.line() + 1];
+        auto& next_line = m_lines[m_cursor.line() + 1];
         int previous_length = current_line().length();
         current_line().append(next_line.characters(), next_line.length());
         m_lines.remove(m_cursor.line() + 1);
@@ -610,7 +609,7 @@ void GTextEditor::insert_at_cursor(char ch)
             String new_line_contents;
             if (m_automatic_indentation_enabled && at_tail) {
                 int leading_spaces = 0;
-                auto& old_line = *m_lines[m_cursor.line()];
+                auto& old_line = m_lines[m_cursor.line()];
                 for (int i = 0; i < old_line.length(); ++i) {
                     if (old_line.characters()[i] == ' ')
                         ++leading_spaces;
@@ -623,7 +622,7 @@ void GTextEditor::insert_at_cursor(char ch)
             m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>(new_line_contents));
             update();
             did_change();
-            set_cursor(m_cursor.line() + 1, m_lines[m_cursor.line() + 1]->length());
+            set_cursor(m_cursor.line() + 1, m_lines[m_cursor.line() + 1].length());
             return;
         }
         auto new_line = make<Line>();
@@ -652,7 +651,7 @@ void GTextEditor::insert_at_cursor(char ch)
 
 int GTextEditor::content_x_for_position(const GTextPosition& position) const
 {
-    auto& line = *m_lines[position.line()];
+    auto& line = m_lines[position.line()];
     switch (m_text_alignment) {
     case TextAlignment::CenterLeft:
         return m_horizontal_content_padding + position.column() * glyph_width();
@@ -696,14 +695,14 @@ void GTextEditor::scroll_cursor_into_view()
     auto rect = cursor_content_rect();
     if (m_cursor.column() == 0)
         rect.set_x(content_x_for_position({ m_cursor.line(), 0 }) - 2);
-    else if (m_cursor.column() == m_lines[m_cursor.line()]->length())
-        rect.set_x(content_x_for_position({ m_cursor.line(), m_lines[m_cursor.line()]->length() }) + 2);
+    else if (m_cursor.column() == m_lines[m_cursor.line()].length())
+        rect.set_x(content_x_for_position({ m_cursor.line(), m_lines[m_cursor.line()].length() }) + 2);
     scroll_into_view(rect, true, true);
 }
 
 Rect GTextEditor::line_content_rect(int line_index) const
 {
-    auto& line = *m_lines[line_index];
+    auto& line = m_lines[line_index];
     if (is_single_line()) {
         Rect line_rect = { content_x_for_position({ line_index, 0 }), 0, line.length() * glyph_width(), font().glyph_height() + 2 };
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
@@ -731,7 +730,7 @@ void GTextEditor::set_cursor(const GTextPosition& position)
 {
     ASSERT(!m_lines.is_empty());
     ASSERT(position.line() < m_lines.size());
-    ASSERT(position.column() <= m_lines[position.line()]->length());
+    ASSERT(position.column() <= m_lines[position.line()].length());
     if (m_cursor != position) {
         // NOTE: If the old cursor is no longer valid, repaint everything just in case.
         auto old_cursor_line_rect = m_cursor.line() < m_lines.size()
@@ -850,7 +849,7 @@ bool GTextEditor::write_to_file(const StringView& path)
         return false;
     }
     for (int i = 0; i < m_lines.size(); ++i) {
-        auto& line = *m_lines[i];
+        auto& line = m_lines[i];
         if (line.length()) {
             ssize_t nwritten = write(fd, line.characters(), line.length());
             if (nwritten < 0) {
@@ -878,7 +877,7 @@ String GTextEditor::text() const
 {
     StringBuilder builder;
     for (int i = 0; i < line_count(); ++i) {
-        auto& line = *m_lines[i];
+        auto& line = m_lines[i];
         builder.append(line.characters(), line.length());
         if (i != line_count() - 1)
             builder.append('\n');
@@ -904,7 +903,7 @@ String GTextEditor::selected_text() const
     auto selection = normalized_selection();
     StringBuilder builder;
     for (int i = selection.start().line(); i <= selection.end().line(); ++i) {
-        auto& line = *m_lines[i];
+        auto& line = m_lines[i];
         int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
         int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
         builder.append(line.characters() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line);
@@ -930,7 +929,7 @@ void GTextEditor::delete_selection()
 
     if (selection.start().line() == selection.end().line()) {
         // Delete within same line.
-        auto& line = *m_lines[selection.start().line()];
+        auto& line = m_lines[selection.start().line()];
         bool whole_line_is_selected = selection.start().column() == 0 && selection.end().column() == line.length();
         if (whole_line_is_selected) {
             line.clear();
@@ -945,8 +944,8 @@ void GTextEditor::delete_selection()
     } else {
         // Delete across a newline, merging lines.
         ASSERT(selection.start().line() == selection.end().line() - 1);
-        auto& first_line = *m_lines[selection.start().line()];
-        auto& second_line = *m_lines[selection.end().line()];
+        auto& first_line = m_lines[selection.start().line()];
+        auto& second_line = m_lines[selection.end().line()];
         auto before_selection = String(first_line.characters(), first_line.length()).substring(0, selection.start().column());
         auto after_selection = String(second_line.characters(), second_line.length()).substring(selection.end().column(), second_line.length() - selection.end().column());
         StringBuilder builder(before_selection.length() + after_selection.length());

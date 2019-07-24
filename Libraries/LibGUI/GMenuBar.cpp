@@ -10,7 +10,7 @@ GMenuBar::~GMenuBar()
     unrealize_menubar();
 }
 
-void GMenuBar::add_menu(OwnPtr<GMenu>&& menu)
+void GMenuBar::add_menu(NonnullOwnPtr<GMenu>&& menu)
 {
     m_menus.append(move(menu));
 }
@@ -40,8 +40,7 @@ void GMenuBar::notify_added_to_application(Badge<GApplication>)
     m_menubar_id = realize_menubar();
     ASSERT(m_menubar_id != -1);
     for (auto& menu : m_menus) {
-        ASSERT(menu);
-        int menu_id = menu->realize_menu();
+        int menu_id = menu.realize_menu();
         ASSERT(menu_id != -1);
         WSAPI_ClientMessage request;
         request.type = WSAPI_ClientMessage::Type::AddMenuToMenubar;

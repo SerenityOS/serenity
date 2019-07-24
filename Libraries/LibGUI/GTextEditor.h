@@ -2,8 +2,9 @@
 
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <LibGUI/GScrollableWidget.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <LibDraw/TextAlignment.h>
+#include <LibGUI/GScrollableWidget.h>
 
 class GAction;
 class GMenu;
@@ -193,8 +194,8 @@ private:
     void update_cursor();
     void set_cursor(int line, int column);
     void set_cursor(const GTextPosition&);
-    Line& current_line() { return *m_lines[m_cursor.line()]; }
-    const Line& current_line() const { return *m_lines[m_cursor.line()]; }
+    Line& current_line() { return m_lines[m_cursor.line()]; }
+    const Line& current_line() const { return m_lines[m_cursor.line()]; }
     GTextPosition text_position_at(const Point&) const;
     void insert_at_cursor(char);
     void insert_at_cursor(const StringView&);
@@ -208,7 +209,7 @@ private:
 
     Type m_type { MultiLine };
 
-    Vector<OwnPtr<Line>> m_lines;
+    NonnullOwnPtrVector<Line> m_lines;
     GTextPosition m_cursor;
     TextAlignment m_text_alignment { TextAlignment::CenterLeft };
     bool m_cursor_state { true };
