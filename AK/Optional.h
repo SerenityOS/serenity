@@ -103,7 +103,9 @@ public:
         return fallback;
     }
 
+    operator bool() const { return has_value(); }
+
 private:
-    char m_storage[sizeof(T)] __attribute__((aligned(sizeof(T))));
+    char m_storage[sizeof(T)];
     bool m_has_value { false };
 };

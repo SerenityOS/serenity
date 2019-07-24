@@ -20,10 +20,10 @@ public:
     void for_each_font(Function<void(const StringView&)>);
     void for_each_fixed_width_font(Function<void(const StringView&)>);
 
-    Metadata get_metadata_by_name(const StringView& name) const
+    Optional<Metadata> get_metadata_by_name(const StringView& name) const
     {
         return m_name_to_metadata.get(name);
-    };
+    }
 
 private:
     GFontDatabase();

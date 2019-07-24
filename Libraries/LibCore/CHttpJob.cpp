@@ -92,7 +92,7 @@ void CHttpJob::on_socket_connected()
         buffer.append(payload.pointer(), payload.size());
 
         bool ok;
-        if (buffer.size() >= m_headers.get("Content-Length").to_int(ok) && ok) {
+        if (buffer.size() >= m_headers.get("Content-Length").value_or("0").to_int(ok) && ok) {
             m_state = State::Finished;
             break;
         }

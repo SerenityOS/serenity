@@ -93,7 +93,7 @@ VBWidget* VBForm::widget_at(const Point& position)
     auto* gwidget = child_at(position);
     if (!gwidget)
         return nullptr;
-    return m_gwidget_map.get(gwidget);
+    return m_gwidget_map.get(gwidget).value_or(nullptr);
 }
 
 void VBForm::grabber_mousedown_event(GMouseEvent& event, Direction grabber)

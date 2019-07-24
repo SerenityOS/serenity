@@ -10,7 +10,7 @@ bool CArgsParserResult::is_present(const String& arg_name) const
 
 String CArgsParserResult::get(const String& arg_name) const
 {
-    return m_args.get(arg_name);
+    return m_args.get(arg_name).value_or({});
 }
 
 const Vector<String>& CArgsParserResult::get_single_values() const
