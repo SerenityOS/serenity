@@ -41,6 +41,12 @@ public:
     const T& first() const { return at(0); }
     T& last() { return at(size() - 1); }
     const T& last() const { return at(size() - 1); }
+
+private:
+    // NOTE: You can't use resize() on a NonnullRefPtrVector since making the vector
+    //       bigger would require being able to default-construct NonnullRefPtrs.
+    //       Instead, use shrink(new_size).
+    void resize(int) = delete;
 };
 
 }

@@ -407,8 +407,9 @@ public:
         m_capacity = new_capacity;
     }
 
-    void resize(int new_size)
+    void shrink(int new_size)
     {
+        ASSERT(new_size <= size());
         if (new_size == size())
             return;
 
@@ -417,14 +418,19 @@ public:
             return;
         }
 
-        if (new_size > size()) {
-            ensure_capacity(new_size);
-            for (int i = size(); i < new_size; ++i)
-                new (slot(i)) T;
-        } else {
-            for (int i = new_size; i < size(); ++i)
-                at(i).~T();
-        }
+        for (int i = new_size; i < size(); ++i)
+            at(i).~T();
+        m_size = new_size;
+    }
+
+    void resize(int new_size)
+    {
+        if (new_size <= size())
+            return shrink(new_size);
+
+        ensure_capacity(new_size);
+        for (int i = size(); i < new_size; ++i)
+            new (slot(i)) T;
         m_size = new_size;
     }
 
