@@ -49,6 +49,9 @@ public:
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 
+    StyledNode* styled_node() { return m_styled_node; }
+    const StyledNode* styled_node() const { return m_styled_node; }
+
 protected:
     explicit LayoutNode(const Node*, const StyledNode*);
 
