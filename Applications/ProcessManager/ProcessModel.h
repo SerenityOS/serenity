@@ -58,7 +58,7 @@ private:
     };
 
     HashMap<uid_t, String> m_usernames;
-    HashMap<pid_t, OwnPtr<Process>> m_processes;
+    HashMap<pid_t, NonnullOwnPtr<Process>> m_processes;
     Vector<pid_t> m_pids;
     RefPtr<GraphicsBitmap> m_generic_process_icon;
     RefPtr<GraphicsBitmap> m_high_priority_icon;

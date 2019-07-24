@@ -21,7 +21,7 @@
 
 static CEventLoop* s_main_event_loop;
 static Vector<CEventLoop*>* s_event_loop_stack;
-HashMap<int, OwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
+HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
 HashTable<CNotifier*>* CEventLoop::s_notifiers;
 int CEventLoop::s_next_timer_id = 1;
 int CEventLoop::s_wake_pipe_fds[2];
@@ -30,7 +30,7 @@ CEventLoop::CEventLoop()
 {
     if (!s_event_loop_stack) {
         s_event_loop_stack = new Vector<CEventLoop*>;
-        s_timers = new HashMap<int, OwnPtr<CEventLoop::EventLoopTimer>>;
+        s_timers = new HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>;
         s_notifiers = new HashTable<CNotifier*>;
     }
 

@@ -81,7 +81,7 @@ private:
         bool has_expired(const timeval& now) const;
     };
 
-    static HashMap<int, OwnPtr<EventLoopTimer>>* s_timers;
+    static HashMap<int, NonnullOwnPtr<EventLoopTimer>>* s_timers;
     static int s_next_timer_id;
 
     static HashTable<CNotifier*>* s_notifiers;

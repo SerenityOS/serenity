@@ -49,4 +49,4 @@ public:
     unsigned m_total_refs { 0 };
 };
 
-Lockable<HashMap<int, OwnPtr<SharedBuffer>>>& shared_buffers();
+Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers();

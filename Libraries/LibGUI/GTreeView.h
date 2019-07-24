@@ -35,7 +35,7 @@ private:
 
     MetadataForIndex& ensure_metadata_for_index(const GModelIndex&) const;
 
-    mutable HashMap<void*, OwnPtr<MetadataForIndex>> m_view_metadata;
+    mutable HashMap<void*, NonnullOwnPtr<MetadataForIndex>> m_view_metadata;
 
     RefPtr<GraphicsBitmap> m_expand_bitmap;
     RefPtr<GraphicsBitmap> m_collapse_bitmap;

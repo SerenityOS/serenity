@@ -78,9 +78,9 @@ private:
 
     void post_error(const String&);
 
-    HashMap<int, OwnPtr<WSWindow>> m_windows;
-    HashMap<int, OwnPtr<WSMenuBar>> m_menubars;
-    HashMap<int, OwnPtr<WSMenu>> m_menus;
+    HashMap<int, NonnullOwnPtr<WSWindow>> m_windows;
+    HashMap<int, NonnullOwnPtr<WSMenuBar>> m_menubars;
+    HashMap<int, NonnullOwnPtr<WSMenu>> m_menus;
     WeakPtr<WSMenuBar> m_app_menubar;
 
     int m_next_menubar_id { 10000 };
