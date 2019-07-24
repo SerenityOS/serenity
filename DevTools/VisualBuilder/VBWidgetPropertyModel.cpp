@@ -42,13 +42,13 @@ GModel::ColumnMetadata VBWidgetPropertyModel::column_metadata(int column) const
 GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
 {
     if (role == Role::Custom) {
-        auto& property = *m_widget.m_properties[index.row()];
+        auto& property = m_widget.m_properties[index.row()];
         if (index.column() == Column::Type)
             return (int)property.value().type();
         return {};
     }
     if (role == Role::Display) {
-        auto& property = *m_widget.m_properties[index.row()];
+        auto& property = m_widget.m_properties[index.row()];
         switch (index.column()) {
         case Column::Name:
             return property.name();
@@ -60,7 +60,7 @@ GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
         ASSERT_NOT_REACHED();
     }
     if (role == Role::ForegroundColor) {
-        auto& property = *m_widget.m_properties[index.row()];
+        auto& property = m_widget.m_properties[index.row()];
         switch (index.column()) {
         case Column::Name:
             return Color::Black;
@@ -77,7 +77,7 @@ GVariant VBWidgetPropertyModel::data(const GModelIndex& index, Role role) const
 void VBWidgetPropertyModel::set_data(const GModelIndex& index, const GVariant& value)
 {
     ASSERT(index.column() == Column::Value);
-    auto& property = *m_widget.m_properties[index.row()];
+    auto& property = m_widget.m_properties[index.row()];
     ASSERT(!property.is_readonly());
     property.set_value(value);
 }
@@ -86,6 +86,6 @@ bool VBWidgetPropertyModel::is_editable(const GModelIndex& index) const
 {
     if (index.column() != Column::Value)
         return false;
-    auto& property = *m_widget.m_properties[index.row()];
+    auto& property = m_widget.m_properties[index.row()];
     return !property.is_readonly();
 }
