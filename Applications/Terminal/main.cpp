@@ -184,7 +184,8 @@ int main(int argc, char** argv)
         font_menu->add_action(GAction::create(font_name, [&terminal, &config](const GAction& action) {
             terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
             auto metadata = GFontDatabase::the().get_metadata_by_name(action.text());
-            config->write_entry("Text", "Font", metadata.path);
+            ASSERT(metadata.has_value());
+            config->write_entry("Text", "Font", metadata.value().path);
             config->sync();
             terminal.force_repaint();
         }));

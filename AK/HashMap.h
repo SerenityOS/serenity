@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/HashTable.h>
+#include <AK/Optional.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <AK/kstdio.h>
@@ -51,21 +52,27 @@ public:
 
     IteratorType begin() { return m_table.begin(); }
     IteratorType end() { return m_table.end(); }
-    IteratorType find(const K& key) { return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); }); }
+    IteratorType find(const K& key)
+    {
+        return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); });
+    }
 
     ConstIteratorType begin() const { return m_table.begin(); }
     ConstIteratorType end() const { return m_table.end(); }
-    ConstIteratorType find(const K& key) const { return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); }); }
+    ConstIteratorType find(const K& key) const
+    {
+        return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); });
+    }
 
     void ensure_capacity(int capacity) { m_table.ensure_capacity(capacity); }
 
     void dump() const { m_table.dump(); }
 
-    V get(const K& key) const
+    Optional<V> get(const K& key) const
     {
         auto it = find(key);
         if (it == end())
-            return V();
+            return {};
         return (*it).value;
     }
 

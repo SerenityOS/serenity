@@ -29,7 +29,7 @@ KParams::KParams(const String& cmdline)
 
 String KParams::get(const String& key) const
 {
-    return m_params.get(key);
+    return m_params.get(key).value_or({});
 }
 
 bool KParams::has(const String& key) const

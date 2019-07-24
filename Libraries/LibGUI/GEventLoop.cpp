@@ -266,7 +266,7 @@ void GWindowServerConnection::postprocess_bundles(Vector<IncomingMessageBundle>&
         }
         switch (event.type) {
         case WSAPI_ServerMessage::Type::Paint:
-            if (Size(event.paint.window_size) != latest_paint_size_for_window_id.get(event.window_id)) {
+            if (Size(event.paint.window_size) != latest_paint_size_for_window_id.get(event.window_id).value_or({})) {
                 ++coalesced_paints;
                 break;
             }
@@ -295,7 +295,7 @@ void GWindowServerConnection::postprocess_bundles(Vector<IncomingMessageBundle>&
             handle_window_entered_or_left_event(event, *window);
             break;
         case WSAPI_ServerMessage::Type::WindowResized:
-            if (Size(event.window.rect.size) != latest_size_for_window_id.get(event.window_id)) {
+            if (Size(event.window.rect.size) != latest_size_for_window_id.get(event.window_id).value_or({})) {
                 ++coalesced_resizes;
                 break;
             }
