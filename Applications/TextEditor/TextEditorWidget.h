@@ -15,6 +15,8 @@ public:
     void open_sesame(const String& path);
 
 private:
+    void set_path(const StringView&);
+
     GTextEditor* m_editor { nullptr };
     String m_path;
 };
