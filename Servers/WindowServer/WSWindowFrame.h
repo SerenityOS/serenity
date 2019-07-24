@@ -1,8 +1,7 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/OwnPtr.h>
-#include <AK/Vector.h>
+#include <AK/NonnullOwnPtrVector.h>
 
 class Painter;
 class Rect;
@@ -29,6 +28,6 @@ public:
 
 private:
     WSWindow& m_window;
-    Vector<OwnPtr<WSButton>> m_buttons;
+    NonnullOwnPtrVector<WSButton> m_buttons;
     WSButton* m_maximize_button { nullptr };
 };

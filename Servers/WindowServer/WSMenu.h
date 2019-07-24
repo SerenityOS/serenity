@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
-#include <AK/Vector.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibDraw/Rect.h>
@@ -28,10 +28,8 @@ public:
 
     bool is_empty() const { return m_items.is_empty(); }
     int item_count() const { return m_items.size(); }
-    WSMenuItem* item(int i) { return m_items[i].ptr(); }
-    const WSMenuItem* item(int i) const { return m_items[i].ptr(); }
 
-    void add_item(OwnPtr<WSMenuItem>&& item) { m_items.append(move(item)); }
+    void add_item(NonnullOwnPtr<WSMenuItem>&& item) { m_items.append(move(item)); }
 
     String name() const { return m_name; }
 
@@ -39,7 +37,7 @@ public:
     void for_each_item(Callback callback) const
     {
         for (auto& item : m_items)
-            callback(*item);
+            callback(item);
     }
 
     Rect text_rect_in_menubar() const { return m_text_rect_in_menubar; }
@@ -88,6 +86,6 @@ private:
     Rect m_text_rect_in_menubar;
     WSMenuBar* m_menubar { nullptr };
     WSMenuItem* m_hovered_item { nullptr };
-    Vector<OwnPtr<WSMenuItem>> m_items;
+    NonnullOwnPtrVector<WSMenuItem> m_items;
     OwnPtr<WSWindow> m_menu_window;
 };
