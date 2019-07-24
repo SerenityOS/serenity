@@ -7,6 +7,7 @@ EXTRA_OBJS = \
     ../../AK/String.o \
     ../../AK/StringBuilder.o \
     ../../AK/StringView.o \
+    ../../AK/LogStream.o \
     ../LibCore/CEventLoop.o \
     ../LibCore/CObject.o \
     ../LibCore/CEvent.o \
