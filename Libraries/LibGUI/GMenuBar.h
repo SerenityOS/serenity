@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <AK/Vector.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/GMenu.h>
 
 class GApplication;
@@ -11,7 +11,7 @@ public:
     GMenuBar();
     ~GMenuBar();
 
-    void add_menu(OwnPtr<GMenu>&&);
+    void add_menu(NonnullOwnPtr<GMenu>&&);
 
     void notify_added_to_application(Badge<GApplication>);
     void notify_removed_from_application(Badge<GApplication>);
@@ -21,5 +21,5 @@ private:
     void unrealize_menubar();
 
     int m_menubar_id { -1 };
-    Vector<OwnPtr<GMenu>> m_menus;
+    NonnullOwnPtrVector<GMenu> m_menus;
 };

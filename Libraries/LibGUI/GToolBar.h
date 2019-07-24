@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/NonnullOwnPtrVector.h>
 #include <LibGUI/GWidget.h>
 
 class GAction;
@@ -29,6 +30,6 @@ private:
         Type type { Invalid };
         RefPtr<GAction> action;
     };
-    Vector<OwnPtr<Item>> m_items;
+    NonnullOwnPtrVector<Item> m_items;
     bool m_has_frame { true };
 };
