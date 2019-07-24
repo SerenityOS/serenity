@@ -930,11 +930,11 @@ void Terminal::set_size(u16 columns, u16 rows)
         while (m_lines.size() < rows)
             m_lines.append(make<Line>(columns));
     } else {
-        m_lines.resize(rows);
+        m_lines.shrink(rows);
     }
 
     for (int i = 0; i < rows; ++i)
-        m_lines[i]->set_length(columns);
+        m_lines[i].set_length(columns);
 
     m_columns = columns;
     m_rows = rows;
