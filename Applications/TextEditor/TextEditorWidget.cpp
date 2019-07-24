@@ -29,28 +29,20 @@ TextEditorWidget::TextEditorWidget()
         statusbar->set_text(builder.to_string());
     };
 
-    auto new_action = GAction::create("New document", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [](const GAction&) {
+    auto new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [](const GAction&) {
         dbgprintf("FIXME: Implement File/New\n");
     });
 
-    auto open_action = GAction::create("Open document", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [this](const GAction&) {
+    auto open_action = GAction::create("Open...", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [this](const GAction&) {
         Optional<String> open_name = GFilePicker::get_open_filepath();
 
         if (!open_name.has_value())
             return;
 
-        m_path = open_name.value();
         open_sesame(m_path);
     });
 
-    auto save_action = GAction::create("Save document", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
-        if (!m_path.is_empty()) {
-            if (!m_editor->write_to_file(m_path))
-                GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
-
-            return;
-        }
-
+    auto save_as_action = GAction::create("Save as...", { Mod_None, Key_F12 }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
         Optional<String> save_name = GFilePicker::get_save_filepath();
         if (!save_name.has_value())
             return;
@@ -60,9 +52,18 @@ TextEditorWidget::TextEditorWidget()
             return;
         }
 
-        m_path = save_name.value();
-        window()->set_title(String::format("Text Editor: %s", m_path.characters()));
-        dbgprintf("Wrote document to '%s'\n", m_path.characters());
+        set_path(save_name.value());
+        dbg() << "Wrote document to " << save_name.value();
+    });
+
+    auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GAction&) {
+        if (!m_path.is_empty()) {
+            if (!m_editor->write_to_file(m_path))
+                GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            return;
+        }
+
+        save_as_action->activate();
     });
 
     auto menubar = make<GMenuBar>();
@@ -77,6 +78,7 @@ TextEditorWidget::TextEditorWidget()
     file_menu->add_action(new_action);
     file_menu->add_action(open_action);
     file_menu->add_action(save_action);
+    file_menu->add_action(save_as_action);
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
@@ -129,6 +131,15 @@ TextEditorWidget::~TextEditorWidget()
 {
 }
 
+void TextEditorWidget::set_path(const StringView& path)
+{
+    m_path = path;
+    StringBuilder builder;
+    builder.append("Text Editor: ");
+    builder.append(path);
+    window()->set_title(builder.to_string());
+}
+
 void TextEditorWidget::open_sesame(const String& path)
 {
     dbgprintf("Our path to file in open_sesame: %s\n", path.characters());
@@ -138,7 +149,6 @@ void TextEditorWidget::open_sesame(const String& path)
         GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
     }
 
-    window()->set_title(String::format("Text Editor: %s", path.characters()));
     m_editor->set_text(String::copy(file.read_all()));
-    m_path = path;
+    set_path(path);
 }
