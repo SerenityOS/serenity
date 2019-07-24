@@ -30,7 +30,7 @@ public:
     // this should really only be used for integrating with other event loops
     void pump(WaitMode = WaitMode::WaitForEvents);
 
-    void post_event(CObject& receiver, OwnPtr<CEvent>&&);
+    void post_event(CObject& receiver, NonnullOwnPtr<CEvent>&&);
 
     static CEventLoop& main();
     static CEventLoop& current();
@@ -58,7 +58,7 @@ private:
 
     struct QueuedEvent {
         WeakPtr<CObject> receiver;
-        OwnPtr<CEvent> event;
+        NonnullOwnPtr<CEvent> event;
     };
 
     Vector<QueuedEvent, 64> m_queued_events;

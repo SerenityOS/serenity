@@ -148,7 +148,7 @@ void CEventLoop::pump(WaitMode mode)
     }
 }
 
-void CEventLoop::post_event(CObject& receiver, OwnPtr<CEvent>&& event)
+void CEventLoop::post_event(CObject& receiver, NonnullOwnPtr<CEvent>&& event)
 {
     LOCKER(m_lock);
 #ifdef CEVENTLOOP_DEBUG
