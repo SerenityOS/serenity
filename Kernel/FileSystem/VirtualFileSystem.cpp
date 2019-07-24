@@ -82,8 +82,8 @@ bool VFS::mount_root(NonnullRefPtr<FS>&& file_system)
 auto VFS::find_mount_for_host(InodeIdentifier inode) -> Mount*
 {
     for (auto& mount : m_mounts) {
-        if (mount->host() == inode)
-            return mount.ptr();
+        if (mount.host() == inode)
+            return &mount;
     }
     return nullptr;
 }
@@ -91,8 +91,8 @@ auto VFS::find_mount_for_host(InodeIdentifier inode) -> Mount*
 auto VFS::find_mount_for_guest(InodeIdentifier inode) -> Mount*
 {
     for (auto& mount : m_mounts) {
-        if (mount->guest() == inode)
-            return mount.ptr();
+        if (mount.guest() == inode)
+            return &mount;
     }
     return nullptr;
 }
@@ -608,7 +608,7 @@ Device* VFS::get_device(unsigned major, unsigned minor)
 void VFS::for_each_mount(Function<void(const Mount&)> callback) const
 {
     for (auto& mount : m_mounts) {
-        callback(*mount);
+        callback(mount);
     }
 }
 

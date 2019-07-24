@@ -4,9 +4,9 @@
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
-#include <AK/Vector.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -106,7 +106,7 @@ private:
     Mount* find_mount_for_guest(InodeIdentifier);
 
     RefPtr<Inode> m_root_inode;
-    Vector<OwnPtr<Mount>> m_mounts;
+    NonnullOwnPtrVector<Mount> m_mounts;
     HashMap<u32, Device*> m_devices;
 
     RefPtr<Custody> m_root_custody;
