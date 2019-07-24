@@ -1,11 +1,11 @@
 #include <Kernel/SharedBuffer.h>
 #include <Kernel/Process.h>
 
-Lockable<HashMap<int, OwnPtr<SharedBuffer>>>& shared_buffers()
+Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 {
-    static Lockable<HashMap<int, OwnPtr<SharedBuffer>>>* map;
+    static Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>* map;
     if (!map)
-        map = new Lockable<HashMap<int, OwnPtr<SharedBuffer>>>;
+        map = new Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>;
     return *map;
 }
 

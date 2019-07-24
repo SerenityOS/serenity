@@ -78,5 +78,5 @@ public:
     Function<GButton*(const WindowIdentifier&)> aid_create_button;
 
 private:
-    HashMap<WindowIdentifier, OwnPtr<Window>> m_windows;
+    HashMap<WindowIdentifier, NonnullOwnPtr<Window>> m_windows;
 };
