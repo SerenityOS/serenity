@@ -1,14 +1,14 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/Types.h>
-#include <AK/Vector.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CTimer.h>
-#include <LibGUI/GFrame.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/Rect.h>
+#include <LibGUI/GFrame.h>
 
 class Font;
 
@@ -193,15 +193,15 @@ private:
     Line& line(size_t index)
     {
         ASSERT(index < m_rows);
-        return *m_lines[index];
+        return m_lines[index];
     }
     const Line& line(size_t index) const
     {
         ASSERT(index < m_rows);
-        return *m_lines[index];
+        return m_lines[index];
     }
 
-    Vector<OwnPtr<Line>> m_lines;
+    NonnullOwnPtrVector<Line> m_lines;
 
     BufferPosition m_selection_start;
     BufferPosition m_selection_end;
