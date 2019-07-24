@@ -1,10 +1,11 @@
 #pragma once
 
+#include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
-#include <AK/AKString.h>
-#include <LibHTML/TreeNode.h>
+#include <AK/Optional.h>
 #include <LibHTML/CSS/StyleValue.h>
+#include <LibHTML/TreeNode.h>
 
 class Node;
 
@@ -48,6 +49,14 @@ public:
     void set_property(const String& name, NonnullRefPtr<StyleValue> value)
     {
         m_property_values.set(name, move(value));
+    }
+
+    Optional<NonnullRefPtr<StyleValue>> property(const String& name) const
+    {
+        auto it = m_property_values.find(name);
+        if (it == m_property_values.end())
+            return {};
+        return it->value;
     }
 
     Display display() const;

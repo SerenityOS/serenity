@@ -29,6 +29,13 @@ public:
         return String::format("%d [Length/Absolute]", m_value);
     }
 
+    int to_px() const
+    {
+        if (is_auto())
+            return 0;
+        return m_value;
+    }
+
 private:
     Type m_type { Type::Auto };
     int m_value { 0 };
