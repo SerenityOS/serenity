@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/IterationDecision.h>
+#include <AK/Platform.h>
 
 #ifdef __serenity__
 typedef unsigned char u8;
