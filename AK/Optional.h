@@ -96,6 +96,13 @@ public:
         return released_value;
     }
 
+    T value_or(const T& fallback) const
+    {
+        if (has_value())
+            return value();
+        return fallback;
+    }
+
 private:
     char m_storage[sizeof(T)] __attribute__((aligned(sizeof(T))));
     bool m_has_value { false };
