@@ -194,7 +194,7 @@ void WSWindowFrame::paint(Painter& painter)
 
     painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), Color::WarmGray);
 
-    auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last()->relative_rect();
+    auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last().relative_rect();
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
     for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
@@ -208,7 +208,7 @@ void WSWindowFrame::paint(Painter& painter)
     painter.blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
 
     for (auto& button : m_buttons) {
-        button->paint(painter);
+        button.paint(painter);
     }
 }
 
@@ -248,12 +248,12 @@ void WSWindowFrame::notify_window_rect_changed(const Rect& old_rect, const Rect&
     int window_button_width = 15;
     int window_button_height = 15;
     int x = title_bar_text_rect().right() + 1;
-    ;
+
     for (auto& button : m_buttons) {
         x -= window_button_width;
         Rect rect { x, 0, window_button_width, window_button_height };
         rect.center_vertically_within(title_bar_text_rect());
-        button->set_relative_rect(rect);
+        button.set_relative_rect(rect);
     }
 
     auto& wm = WSWindowManager::the();
@@ -288,8 +288,8 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
             wm.move_to_front_and_make_active(m_window);
 
         for (auto& button : m_buttons) {
-            if (button->relative_rect().contains(event.position()))
-                return button->on_mouse_event(event.translated(-button->relative_rect().location()));
+            if (button.relative_rect().contains(event.position()))
+                return button.on_mouse_event(event.translated(-button.relative_rect().location()));
         }
         if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left)
             wm.start_window_drag(m_window, event.translated(rect().location()));
