@@ -4,9 +4,7 @@
 
 NonnullRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
 {
-    void* slot = kmalloc(sizeof(PhysicalPage));
-    new (slot) PhysicalPage(paddr, supervisor, may_return_to_freelist);
-    return adopt(*(PhysicalPage*)slot);
+    return adopt(*new PhysicalPage(paddr, supervisor, may_return_to_freelist));
 }
 
 PhysicalPage::PhysicalPage(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
