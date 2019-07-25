@@ -1,5 +1,7 @@
 #pragma once
 
+#ifdef __serenity__
+
 class CThread {
 public:
     static CThread& main_thread();
@@ -16,3 +18,6 @@ private:
 
     int m_thread_id { -1 };
 };
+
+#endif
+

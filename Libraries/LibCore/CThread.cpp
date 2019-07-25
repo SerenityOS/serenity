@@ -1,3 +1,5 @@
+#ifdef __serenity__
+
 #include <AK/Assertions.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CThread.h>
@@ -27,3 +29,5 @@ CThread::CThread(int (*entry)(void*), void* user_data)
 CThread::~CThread()
 {
 }
+
+#endif
