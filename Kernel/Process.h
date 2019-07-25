@@ -56,6 +56,8 @@ public:
         Ring3 = 3,
     };
 
+    String backtrace(ProcessInspectionHandle&) const;
+
     bool is_dead() const { return m_dead; }
 
     Thread::State state() const { return main_thread().state(); }

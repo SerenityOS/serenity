@@ -1,3 +1,4 @@
+#include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
@@ -319,7 +320,12 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         case DefaultSignalAction::Stop:
             set_state(Stopped);
             return ShouldUnblockThread::No;
-        case DefaultSignalAction::DumpCore:
+        case DefaultSignalAction::DumpCore: {
+            ProcessInspectionHandle handle(process());
+            dbg() << "Dumping \"Core\" for " << process();
+            dbg() << process().backtrace(handle);
+        }
+            [[fallthrough]];
         case DefaultSignalAction::Terminate:
             m_process.terminate_due_to_signal(signal);
             return ShouldUnblockThread::No;
@@ -542,4 +548,36 @@ void Thread::set_state(State new_state)
     if (m_process.pid() != 0) {
         Scheduler::update_state_for_thread(*this);
     }
+}
+
+String Thread::backtrace(ProcessInspectionHandle&) const
+{
+    auto& process = const_cast<Process&>(this->process());
+    ProcessPagingScope paging_scope(process);
+    struct RecognizedSymbol {
+        u32 address;
+        const KSym* ksym;
+    };
+    StringBuilder builder;
+    Vector<RecognizedSymbol, 64> recognized_symbols;
+    recognized_symbols.append({ tss().eip, ksymbolicate(tss().eip) });
+    for (u32* stack_ptr = (u32*)frame_ptr(); process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+        u32 retaddr = stack_ptr[1];
+        recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
+    }
+
+    for (auto& symbol : recognized_symbols) {
+        if (!symbol.address)
+            break;
+        if (!symbol.ksym) {
+            builder.appendf("%p\n", symbol.address);
+            continue;
+        }
+        unsigned offset = symbol.address - symbol.ksym->address;
+        if (symbol.ksym->address == ksym_highest_address && offset > 4096)
+            builder.appendf("%p\n", symbol.address);
+        else
+            builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+    }
+    return builder.to_string();
 }

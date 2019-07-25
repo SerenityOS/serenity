@@ -1279,6 +1279,7 @@ int Process::sys$kill(pid_t pid, int signal)
         ASSERT(pid != -1);
     }
     if (pid == m_pid) {
+        // FIXME: If we ignore this signal anyway, we don't need to block here, right?
         current->send_signal(signal, this);
         (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
         return 0;
@@ -2751,4 +2752,15 @@ int Process::sys$dbgputstr(const u8* characters, int length)
     for (int i = 0; i < length; ++i)
         IO::out8(0xe9, characters[i]);
     return 0;
+}
+
+String Process::backtrace(ProcessInspectionHandle& handle) const
+{
+    StringBuilder builder;
+    for_each_thread([&](Thread& thread) {
+        builder.appendf("Thread %d:\n", thread.tid());
+        builder.append(thread.backtrace(handle));
+        return IterationDecision::Continue;
+    });
+    return builder.to_string();
 }
