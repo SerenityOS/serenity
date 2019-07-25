@@ -148,13 +148,13 @@ public:
         return *leakedPtr;
     }
 
-    CALLABLE_WHEN(unconsumed)
+    CALLABLE_WHEN("unconsumed","unknown")
     T* ptr()
     {
         ASSERT(m_ptr);
         return m_ptr;
     }
-    CALLABLE_WHEN(unconsumed)
+    CALLABLE_WHEN("unconsumed","unknown")
     const T* ptr() const
     {
         ASSERT(m_ptr);
