@@ -53,22 +53,26 @@ int execve(const char* filename, char* const argv[], char* const envp[])
 
 int execvpe(const char* filename, char* const argv[], char* const envp[])
 {
-    int rc = execve(filename, argv, envp);
-    if (rc < 0 && errno != ENOENT) {
-        fprintf(stderr, "execvpe() failed on first with %s\n", strerror(errno));
-        return rc;
-    }
-    String path = getenv("PATH");
-    if (path.is_empty())
-        path = "/bin:/usr/bin";
-    auto parts = path.split(':');
-    for (auto& part : parts) {
-        auto candidate = String::format("%s/%s", part.characters(), filename);
-        int rc = execve(candidate.characters(), argv, envp);
+    // NOTE: We scope everything here to make sure that setting errno on exit is sticky.
+    {
+        int rc = execve(filename, argv, envp);
         if (rc < 0 && errno != ENOENT) {
-            printf("execvpe() failed on attempt (%s) with %s\n", candidate.characters(), strerror(errno));
+            dbg() << "execvpe() failed on first with" << strerror(errno);
             return rc;
         }
+        String path = getenv("PATH");
+        if (path.is_empty())
+            path = "/bin:/usr/bin";
+        auto parts = path.split(':');
+        for (auto& part : parts) {
+            auto candidate = String::format("%s/%s", part.characters(), filename);
+            int rc = execve(candidate.characters(), argv, envp);
+            if (rc < 0 && errno != ENOENT) {
+                dbg() << "execvpe() failed on attempt (" << candidate << ") with " << strerror(errno);
+                return rc;
+            }
+        }
+        dbg() << "execvpe() leaving :(";
     }
     errno = ENOENT;
     return -1;
@@ -76,7 +80,9 @@ int execvpe(const char* filename, char* const argv[], char* const envp[])
 
 int execvp(const char* filename, char* const argv[])
 {
-    return execvpe(filename, argv, environ);
+    int rc = execvpe(filename, argv, environ);
+    dbg() << "execvp() about to return " << rc << " with errno=" << errno;
+    return rc;
 }
 
 int execl(const char* filename, const char* arg0, ...)
@@ -531,5 +537,4 @@ void dump_backtrace()
 {
     syscall(SC_dump_backtrace);
 }
-
 }
