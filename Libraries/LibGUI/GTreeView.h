@@ -3,12 +3,12 @@
 #include <LibGUI/GAbstractView.h>
 
 class GTreeView : public GAbstractView {
+    C_OBJECT(GTreeView)
 public:
     explicit GTreeView(GWidget*);
     virtual ~GTreeView() override;
 
     virtual void scroll_into_view(const GModelIndex&, Orientation);
-    virtual const char* class_name() const override { return "GTreeView"; }
 
 protected:
     virtual void paint_event(GPaintEvent&) override;

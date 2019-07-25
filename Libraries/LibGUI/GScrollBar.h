@@ -5,6 +5,7 @@
 #include <LibGUI/GWidget.h>
 
 class GScrollBar final : public GWidget {
+    C_OBJECT(GScrollBar)
 public:
     explicit GScrollBar(Orientation, GWidget* parent);
     virtual ~GScrollBar() override;
@@ -26,8 +27,6 @@ public:
     bool has_scrubber() const;
 
     Function<void(int)> on_change;
-
-    virtual const char* class_name() const override { return "GScrollBar"; }
 
     enum Component {
         Invalid,

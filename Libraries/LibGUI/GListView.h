@@ -9,6 +9,7 @@ class GScrollBar;
 class Painter;
 
 class GListView : public GAbstractView {
+    C_OBJECT(GListView)
 public:
     explicit GListView(GWidget* parent);
     virtual ~GListView() override;
@@ -25,8 +26,6 @@ public:
     Point adjusted_position(const Point&);
 
     virtual Rect content_rect(const GModelIndex&) const override;
-
-    virtual const char* class_name() const override { return "GListView"; }
 
 private:
     virtual void did_update_model() override;

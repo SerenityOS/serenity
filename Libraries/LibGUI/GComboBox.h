@@ -7,6 +7,7 @@ class GButton;
 class GTextEditor;
 
 class GComboBox : public GWidget {
+    C_OBJECT(GComboBox)
 public:
     explicit GComboBox(GWidget* parent = nullptr);
     virtual ~GComboBox() override;
@@ -27,8 +28,6 @@ public:
 
     Function<void(const String&)> on_change;
     Function<void()> on_return_pressed;
-
-    virtual const char* class_name() const override { return "GComboBox"; }
 
 protected:
     virtual void resize_event(GResizeEvent&) override;

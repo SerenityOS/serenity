@@ -6,6 +6,7 @@
 class GraphicsBitmap;
 
 class GLabel : public GFrame {
+    C_OBJECT(GLabel)
 public:
     explicit GLabel(GWidget* parent = nullptr);
     GLabel(const StringView& text, GWidget* parent = nullptr);
@@ -25,8 +26,6 @@ public:
     void set_should_stretch_icon(bool b) { m_should_stretch_icon = b; }
 
     void size_to_fit();
-
-    virtual const char* class_name() const override { return "GLabel"; }
 
 private:
     virtual void paint_event(GPaintEvent&) override;

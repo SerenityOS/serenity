@@ -7,8 +7,8 @@
 class GModelEditingDelegate;
 
 class GAbstractView : public GScrollableWidget {
+    C_OBJECT(GAbstractView)
     friend class GModel;
-
 public:
     explicit GAbstractView(GWidget* parent);
     virtual ~GAbstractView() override;
@@ -37,8 +37,6 @@ public:
     Function<void(const GModelNotification&)> on_model_notification;
 
     Function<OwnPtr<GModelEditingDelegate>(const GModelIndex&)> aid_create_editing_delegate;
-
-    virtual const char* class_name() const override { return "GAbstractView"; }
 
 protected:
     virtual void model_notification(const GModelNotification&);

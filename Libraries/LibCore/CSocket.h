@@ -6,6 +6,7 @@
 class CNotifier;
 
 class CSocket : public CIODevice {
+    C_OBJECT(CSocket)
 public:
     enum class Type {
         Invalid,
@@ -34,8 +35,6 @@ public:
     int destination_port() const { return m_destination_port; }
 
     Function<void()> on_connected;
-
-    virtual const char* class_name() const override { return "CSocket"; }
 
 protected:
     CSocket(Type, CObject* parent);

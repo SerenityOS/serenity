@@ -7,6 +7,7 @@
 class GPainter;
 
 class GAbstractButton : public GWidget {
+    C_OBJECT(GAbstractButton)
 public:
     virtual ~GAbstractButton() override;
 
@@ -28,7 +29,6 @@ public:
     bool is_being_pressed() const { return m_being_pressed; }
 
     virtual void click() = 0;
-    virtual const char* class_name() const override { return "GAbstractButton"; }
     virtual bool accepts_focus() const override { return true; }
     virtual bool supports_keyboard_activation() const override { return true; }
     virtual bool is_uncheckable() const { return true; }

@@ -32,6 +32,7 @@ enum class VerticalDirection {
 };
 
 class GWidget : public CObject {
+    C_OBJECT(GWidget)
 public:
     explicit GWidget(GWidget* parent = nullptr);
     virtual ~GWidget() override;
@@ -112,8 +113,6 @@ public:
     };
     HitTestResult hit_test(const Point&);
     GWidget* child_at(const Point&) const;
-
-    virtual const char* class_name() const override { return "GWidget"; }
 
     void set_relative_rect(const Rect&);
     void set_relative_rect(int x, int y, int width, int height) { set_relative_rect({ x, y, width, height }); }

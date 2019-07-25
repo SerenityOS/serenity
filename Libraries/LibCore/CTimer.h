@@ -4,6 +4,7 @@
 #include <LibCore/CObject.h>
 
 class CTimer final : public CObject {
+    C_OBJECT(CTimer)
 public:
     explicit CTimer(CObject* parent = nullptr);
     CTimer(int interval, Function<void()>&& timeout_handler, CObject* parent = nullptr);
@@ -28,8 +29,6 @@ public:
     void set_single_shot(bool single_shot) { m_single_shot = single_shot; }
 
     Function<void()> on_timeout;
-
-    virtual const char* class_name() const override { return "CTimer"; }
 
 private:
     virtual void timer_event(CTimerEvent&) override;

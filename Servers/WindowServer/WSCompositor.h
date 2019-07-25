@@ -19,6 +19,7 @@ enum class WallpaperMode {
 };
 
 class WSCompositor final : public CObject {
+    C_OBJECT(WSCompositor)
 public:
     static WSCompositor& the();
 
@@ -35,8 +36,6 @@ public:
     Rect current_cursor_rect() const;
 
 private:
-    virtual const char* class_name() const override { return "WSCompositor"; }
-
     WSCompositor();
     void flip_buffers();
     void flush(const Rect&);

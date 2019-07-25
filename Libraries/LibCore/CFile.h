@@ -4,6 +4,7 @@
 #include <LibCore/CIODevice.h>
 
 class CFile final : public CIODevice {
+    C_OBJECT(CFile)
 public:
     CFile() {}
     explicit CFile(const StringView&);
@@ -19,8 +20,6 @@ public:
         Yes
     };
     bool open(int fd, CIODevice::OpenMode, ShouldCloseFileDescription);
-
-    virtual const char* class_name() const override { return "CFile"; }
 
 private:
     String m_filename;

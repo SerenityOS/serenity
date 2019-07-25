@@ -5,6 +5,7 @@
 #include <WindowServer/WSWindow.h>
 
 class WSMenuManager final : public CObject {
+    C_OBJECT(WSMenuManager)
 public:
     WSMenuManager();
     virtual ~WSMenuManager() override;
@@ -13,7 +14,6 @@ public:
     void refresh();
 
     virtual void event(CEvent&) override;
-    virtual const char* class_name() const override { return "WSMenuManager"; }
 
 private:
     WSWindow& window() { return *m_window; }

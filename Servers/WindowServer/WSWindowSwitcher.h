@@ -10,6 +10,7 @@ class WSKeyEvent;
 class WSWindow;
 
 class WSWindowSwitcher : public CObject {
+    C_OBJECT(WSWindowSwitcher)
 public:
     static WSWindowSwitcher& the();
 

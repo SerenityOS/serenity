@@ -7,6 +7,7 @@ class GDirectoryModel;
 class GLabel;
 
 class GFilePicker final : public GDialog {
+    C_OBJECT(GFilePicker)
 public:
     enum class Mode {
         Open,
@@ -21,8 +22,6 @@ public:
     virtual ~GFilePicker() override;
 
     FileSystemPath selected_file() const { return m_selected_file; }
-
-    virtual const char* class_name() const override { return "GFilePicker"; }
 
 private:
     void set_preview(const FileSystemPath&);

@@ -10,6 +10,7 @@ class GTableView;
 class GTextEditor;
 
 class IRCWindow : public GWidget {
+    C_OBJECT(IRCWindow)
 public:
     enum Type {
         Server,
@@ -41,8 +42,6 @@ public:
     const IRCQuery& query() const { return *(const IRCQuery*)m_owner; }
 
 private:
-    const char* class_name() const override { return "IRCWindow"; }
-
     IRCClient& m_client;
     void* m_owner { nullptr };
     Type m_type;

@@ -9,6 +9,7 @@ class GScrollBar;
 class Painter;
 
 class GTableView : public GAbstractView {
+    C_OBJECT(GTableView)
 public:
     explicit GTableView(GWidget* parent);
     virtual ~GTableView() override;
@@ -33,8 +34,6 @@ public:
     Point adjusted_position(const Point&) const;
 
     virtual Rect content_rect(const GModelIndex&) const override;
-
-    virtual const char* class_name() const override { return "GTableView"; }
 
 private:
     virtual void did_update_model() override;

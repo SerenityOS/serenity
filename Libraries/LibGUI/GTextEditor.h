@@ -78,6 +78,7 @@ private:
 };
 
 class GTextEditor : public GScrollableWidget {
+    C_OBJECT(GTextEditor)
 public:
     enum Type {
         MultiLine,
@@ -133,8 +134,6 @@ public:
     Function<void()> on_change;
     Function<void()> on_return_pressed;
     Function<void()> on_escape_pressed;
-
-    virtual const char* class_name() const override { return "GTextEditor"; }
 
     GAction& undo_action() { return *m_undo_action; }
     GAction& redo_action() { return *m_redo_action; }

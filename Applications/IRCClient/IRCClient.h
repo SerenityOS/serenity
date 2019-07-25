@@ -15,9 +15,9 @@ class IRCWindowListModel;
 class CNotifier;
 
 class IRCClient final : public CObject {
+    C_OBJECT(IRCClient)
     friend class IRCChannel;
     friend class IRCQuery;
-
 public:
     IRCClient();
     virtual ~IRCClient() override;
@@ -86,8 +86,6 @@ public:
     IRCChannel& ensure_channel(const String& name);
 
     void add_server_message(const String&);
-
-    const char* class_name() const override { return "IRCClient"; }
 
 private:
     struct Message {

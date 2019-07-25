@@ -16,6 +16,7 @@ class WSMouseEvent;
 
 class WSWindow final : public CObject
     , public InlineLinkedListNode<WSWindow> {
+    C_OBJECT(WSWindow)
 public:
     WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal, bool resizable, bool fullscreen);
     WSWindow(CObject&, WSWindowType);

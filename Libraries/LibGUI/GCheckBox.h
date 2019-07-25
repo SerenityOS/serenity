@@ -5,14 +5,13 @@
 #include <LibGUI/GAbstractButton.h>
 
 class GCheckBox : public GAbstractButton {
+    C_OBJECT(GCheckBox)
 public:
     GCheckBox(const StringView&, GWidget* parent);
     explicit GCheckBox(GWidget* parent);
     virtual ~GCheckBox() override;
 
     virtual void click() override;
-
-    virtual const char* class_name() const override { return "GCheckBox"; }
 
 private:
     // These don't make sense for a check box, so hide them.

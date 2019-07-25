@@ -4,6 +4,7 @@
 #include <LibDraw/StylePainter.h>
 
 class GFrame : public GWidget {
+    C_OBJECT(GFrame)
 public:
     explicit GFrame(GWidget* parent = nullptr);
     virtual ~GFrame() override;
@@ -19,8 +20,6 @@ public:
 
     Rect frame_inner_rect_for_size(const Size& size) const { return { m_thickness, m_thickness, size.width() - m_thickness * 2, size.height() - m_thickness * 2 }; }
     Rect frame_inner_rect() const { return frame_inner_rect_for_size(size()); }
-
-    virtual const char* class_name() const override { return "GFrame"; }
 
 protected:
     void paint_event(GPaintEvent&) override;

@@ -6,6 +6,7 @@ class GButton;
 class GTextEditor;
 
 class GSpinBox : public GWidget {
+    C_OBJECT(GSpinBox)
 public:
     GSpinBox(GWidget* parent = nullptr);
     virtual ~GSpinBox() override;
@@ -20,8 +21,6 @@ public:
     void set_range(int min, int max);
 
     Function<void(int value)> on_change;
-
-    virtual const char* class_name() const override { return "GSpinBox"; }
 
 protected:
     virtual void resize_event(GResizeEvent&) override;

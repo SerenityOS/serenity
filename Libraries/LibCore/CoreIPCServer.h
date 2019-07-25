@@ -55,8 +55,8 @@ T* new_connection_for_client(Args&& ... args)
 };
 
 template <typename ServerMessage, typename ClientMessage>
-class Connection : public CObject
-{
+class Connection : public CObject {
+    C_OBJECT(Connection)
 public:
     Connection(int fd, int client_id)
         : m_socket(fd)
@@ -168,8 +168,6 @@ public:
         m_notifier.set_enabled(false);
     }
 
-    const char* class_name() const override { return "Connection"; }
-
     int client_id() const { return m_client_id; }
     pid_t client_pid() const { return m_pid; }
     void set_client_pid(pid_t pid) { m_pid = pid; }
@@ -194,10 +192,9 @@ protected:
 
 private:
     // TODO: A way to create some kind of CIODevice with an open FD would be nice.
-    class COpenedSocket : public CIODevice
-    {
+    class COpenedSocket : public CIODevice {
+        C_OBJECT(COpenedSocket)
     public:
-        const char* class_name() const override { return "COpenedSocket"; }
         COpenedSocket(int fd)
         {
             set_fd(fd);

@@ -3,11 +3,10 @@
 #include <LibGUI/GAbstractButton.h>
 
 class GRadioButton : public GAbstractButton {
+    C_OBJECT(GRadioButton)
 public:
     GRadioButton(const StringView& text, GWidget* parent);
     virtual ~GRadioButton() override;
-
-    virtual const char* class_name() const override { return "GRadioButton"; }
 
     virtual void click() override;
 
