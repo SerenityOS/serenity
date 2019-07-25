@@ -24,3 +24,6 @@ include_directories (../)
 include_directories (../Libraries/)
 add_library(lagom ${SOURCES})
 
+add_executable(TestApp TestApp.cpp)
+target_link_libraries(TestApp lagom)
+target_link_libraries(TestApp stdc++)
