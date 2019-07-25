@@ -499,7 +499,7 @@ static int run_command(const String& cmd)
             }
             if (WIFEXITED(wstatus)) {
                 if (WEXITSTATUS(wstatus) != 0)
-                    printf("Shell: %s(%d) exited with status %d\n", child.name.characters(), child.pid, WEXITSTATUS(wstatus));
+                    dbg() << "Shell: " << child.name << ":" << child.pid << " exited with status " << WEXITSTATUS(wstatus);
                 if (i == 0)
                     return_value = WEXITSTATUS(wstatus);
             } else if (WIFSTOPPED(wstatus)) {
