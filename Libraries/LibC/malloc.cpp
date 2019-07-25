@@ -1,5 +1,6 @@
 #include <AK/Bitmap.h>
 #include <AK/InlineLinkedList.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <LibCore/CLock.h>
 #include <assert.h>
@@ -204,6 +205,8 @@ void* malloc(size_t size)
 
 void free(void* ptr)
 {
+    ScopedValueRollback rollback(errno);
+
     if (!ptr)
         return;
 
