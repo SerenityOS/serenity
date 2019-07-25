@@ -1,4 +1,5 @@
 #include <AK/AKString.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <Kernel/Syscall.h>
 #include <assert.h>
@@ -53,28 +54,28 @@ int execve(const char* filename, char* const argv[], char* const envp[])
 
 int execvpe(const char* filename, char* const argv[], char* const envp[])
 {
-    // NOTE: We scope everything here to make sure that setting errno on exit is sticky.
-    {
-        int rc = execve(filename, argv, envp);
+    ScopedValueRollback errno_rollback(errno);
+    int rc = execve(filename, argv, envp);
+    if (rc < 0 && errno != ENOENT) {
+        errno_rollback.set_override_rollback_value(errno);
+        dbg() << "execvpe() failed on first with" << strerror(errno);
+        return rc;
+    }
+    String path = getenv("PATH");
+    if (path.is_empty())
+        path = "/bin:/usr/bin";
+    auto parts = path.split(':');
+    for (auto& part : parts) {
+        auto candidate = String::format("%s/%s", part.characters(), filename);
+        int rc = execve(candidate.characters(), argv, envp);
         if (rc < 0 && errno != ENOENT) {
-            dbg() << "execvpe() failed on first with" << strerror(errno);
+            errno_rollback.set_override_rollback_value(errno);
+            dbg() << "execvpe() failed on attempt (" << candidate << ") with " << strerror(errno);
             return rc;
         }
-        String path = getenv("PATH");
-        if (path.is_empty())
-            path = "/bin:/usr/bin";
-        auto parts = path.split(':');
-        for (auto& part : parts) {
-            auto candidate = String::format("%s/%s", part.characters(), filename);
-            int rc = execve(candidate.characters(), argv, envp);
-            if (rc < 0 && errno != ENOENT) {
-                dbg() << "execvpe() failed on attempt (" << candidate << ") with " << strerror(errno);
-                return rc;
-            }
-        }
-        dbg() << "execvpe() leaving :(";
     }
-    errno = ENOENT;
+    errno_rollback.set_override_rollback_value(ENOENT);
+    dbg() << "execvpe() leaving :(";
     return -1;
 }
 
