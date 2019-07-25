@@ -17,7 +17,11 @@
 #    define RETURN_TYPESTATE(state) __attribute__((return_typestate(state)))
 #else
 #    define CONSUMABLE(initial_state)
-#    define CALLABLE_WHEN(state)
+#    define CALLABLE_WHEN(...)
 #    define SET_TYPESTATE(state)
 #    define RETURN_TYPESTATE(state)
+#endif
+
+#ifndef __serenity__
+#define PAGE_SIZE sysconf(_SC_PAGESIZE)
 #endif
