@@ -463,7 +463,10 @@ static int run_command(const String& cmd)
 
             int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
             if (rc < 0) {
-                fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(errno));
+                if (errno == ENOENT)
+                    fprintf(stderr, "%s: Command not found.\n", argv[0]);
+                else
+                    fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(errno));
                 exit(1);
             }
             ASSERT_NOT_REACHED();
