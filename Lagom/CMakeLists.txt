@@ -2,7 +2,7 @@ cmake_minimum_required (VERSION 2.6)
 
 set(CMAKE_C_COMPILER clang)
 set(CMAKE_CXX_COMPILER clang)
-set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -Wconsumed -Werror -std=c++17")
+set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -Wconsumed -Werror -std=c++17 -fPIC")
 
 project (Lagom)
 
