@@ -11,13 +11,16 @@ class CChildEvent;
 class CCustomEvent;
 class CTimerEvent;
 
+#define C_OBJECT(klass) \
+public:                 \
+    virtual const char* class_name() const override { return #klass; }
+
 class CObject : public Weakable<CObject> {
+    // NOTE: No C_OBJECT macro for CObject itself.
 public:
-    CObject(CObject* parent = nullptr, bool is_widget = false);
     virtual ~CObject();
 
-    virtual const char* class_name() const { return "CObject"; }
-
+    virtual const char* class_name() const = 0;
     virtual void event(CEvent&);
 
     const String& name() const { return m_name; }
@@ -58,6 +61,8 @@ public:
     virtual bool is_window() const { return false; }
 
 protected:
+    CObject(CObject* parent = nullptr, bool is_widget = false);
+
     virtual void timer_event(CTimerEvent&);
     virtual void child_event(CChildEvent&);
     virtual void custom_event(CCustomEvent&);

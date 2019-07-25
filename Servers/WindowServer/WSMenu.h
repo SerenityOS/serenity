@@ -14,6 +14,7 @@ class WSWindow;
 class Font;
 
 class WSMenu final : public CObject {
+    C_OBJECT(WSMenu)
 public:
     WSMenu(WSClientConnection*, int menu_id, const String& name);
     virtual ~WSMenu() override;

@@ -3,10 +3,10 @@
 #include <LibGUI/GDialog.h>
 
 class ColorDialog final : public GDialog {
+    C_OBJECT(ColorDialog)
 public:
     explicit ColorDialog(Color, CObject* parent = nullptr);
     virtual ~ColorDialog() override;
-    virtual const char* class_name() const override { return "ColorDialog"; }
 
     Color color() const { return m_color; }
 

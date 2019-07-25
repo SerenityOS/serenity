@@ -42,6 +42,8 @@ enum class ResizeDirection {
 };
 
 class WSWindowManager : public CObject {
+    C_OBJECT(WSWindowManager)
+
     friend class WSCompositor;
     friend class WSWindowFrame;
     friend class WSWindowSwitcher;

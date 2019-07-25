@@ -6,6 +6,7 @@
 class CNetworkResponse;
 
 class CNetworkJob : public CObject {
+    C_OBJECT(CNetworkJob)
 public:
     enum class Error {
         None,
@@ -23,8 +24,6 @@ public:
     const CNetworkResponse* response() const { return m_response.ptr(); }
 
     virtual void start() = 0;
-
-    virtual const char* class_name() const override { return "CNetworkJob"; }
 
 protected:
     CNetworkJob();

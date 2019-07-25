@@ -56,6 +56,7 @@ private:
 };
 
 class Terminal final : public GFrame {
+    C_OBJECT(Terminal)
 public:
     explicit Terminal(int ptm_fd, RefPtr<CConfigFile> config);
     virtual ~Terminal() override;
@@ -92,7 +93,6 @@ private:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
-    virtual const char* class_name() const override { return "Terminal"; }
 
     void scroll_up();
     void scroll_down();

@@ -1,11 +1,10 @@
 #include <LibGUI/GWidget.h>
 
 class GResizeCorner : public GWidget {
+    C_OBJECT(GResizeCorner)
 public:
     explicit GResizeCorner(GWidget* parent);
     virtual ~GResizeCorner() override;
-
-    virtual const char* class_name() const override { return "GResizeCorner"; }
 
 protected:
     virtual void paint_event(GPaintEvent&) override;

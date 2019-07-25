@@ -5,6 +5,7 @@
 class GScrollBar;
 
 class GScrollableWidget : public GFrame {
+    C_OBJECT(GScrollableWidget)
 public:
     virtual ~GScrollableWidget() override;
 
@@ -36,8 +37,6 @@ public:
 
     int width_occupied_by_vertical_scrollbar() const;
     int height_occupied_by_horizontal_scrollbar() const;
-
-    virtual const char* class_name() const override { return "GScrollableWidget"; }
 
 protected:
     explicit GScrollableWidget(GWidget* parent);

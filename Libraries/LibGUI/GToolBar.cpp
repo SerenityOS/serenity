@@ -45,6 +45,7 @@ void GToolBar::add_action(GAction& action)
 }
 
 class SeparatorWidget final : public GWidget {
+    C_OBJECT(SeparatorWidget)
 public:
     SeparatorWidget(GWidget* parent)
         : GWidget(parent)
@@ -63,9 +64,6 @@ public:
         painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, Color::MidGray);
         painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, Color::White);
     }
-
-private:
-    virtual const char* class_name() const override { return "SeparatorWidget"; }
 };
 
 void GToolBar::add_separator()

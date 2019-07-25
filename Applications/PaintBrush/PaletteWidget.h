@@ -5,11 +5,10 @@
 class PaintableWidget;
 
 class PaletteWidget final : public GFrame {
+    C_OBJECT(PaletteWidget)
 public:
     explicit PaletteWidget(PaintableWidget&, GWidget* parent);
     virtual ~PaletteWidget() override;
-
-    virtual const char* class_name() const override { return "PaletteWidget"; }
 
     void set_primary_color(Color);
     void set_secondary_color(Color);

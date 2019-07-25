@@ -4,13 +4,12 @@
 class Tool;
 
 class PaintableWidget final : public GWidget {
+    C_OBJECT(PaintableWidget)
 public:
     static PaintableWidget& the();
 
     explicit PaintableWidget(GWidget* parent);
     virtual ~PaintableWidget() override;
-
-    virtual const char* class_name() const override { return "PaintableWidget"; }
 
     Color primary_color() const { return m_primary_color; }
     Color secondary_color() const { return m_secondary_color; }

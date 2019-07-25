@@ -3,6 +3,7 @@
 #include <LibGUI/GDialog.h>
 
 class GMessageBox : public GDialog {
+    C_OBJECT(GMessageBox)
 public:
     enum class Type {
         None,
@@ -20,8 +21,6 @@ public:
     virtual ~GMessageBox() override;
 
     static void show(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, CObject* parent = nullptr);
-
-    virtual const char* class_name() const override { return "GMessageBox"; }
 
 private:
     bool should_include_ok_button() const;

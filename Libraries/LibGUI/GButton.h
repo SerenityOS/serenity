@@ -10,6 +10,7 @@
 class GAction;
 
 class GButton : public GAbstractButton {
+    C_OBJECT(GButton)
 public:
     GButton(const StringView& text, GWidget* parent);
     explicit GButton(GWidget* parent);
@@ -31,7 +32,6 @@ public:
 
     void set_action(GAction&);
 
-    virtual const char* class_name() const override { return "GButton"; }
     virtual bool accepts_focus() const override { return m_focusable; }
     virtual bool supports_keyboard_activation() const override;
     virtual bool is_uncheckable() const override;

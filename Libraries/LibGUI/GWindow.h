@@ -22,6 +22,7 @@ enum class GStandardCursor {
 };
 
 class GWindow : public CObject {
+    C_OBJECT(GWindow)
 public:
     GWindow(CObject* parent = nullptr);
     virtual ~GWindow() override;
@@ -122,8 +123,6 @@ public:
     void set_icon_path(const StringView&);
 
     Vector<GWidget*> focusable_widgets() const;
-
-    virtual const char* class_name() const override { return "GWindow"; }
 
 protected:
     virtual void wm_event(GWMEvent&);

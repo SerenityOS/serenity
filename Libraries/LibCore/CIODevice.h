@@ -5,6 +5,7 @@
 #include <LibCore/CObject.h>
 
 class CIODevice : public CObject {
+    C_OBJECT(CIODevice)
 public:
     enum OpenMode {
         NotOpen = 0,
@@ -51,8 +52,6 @@ public:
     virtual bool close();
 
     int printf(const char*, ...);
-
-    virtual const char* class_name() const override { return "CIODevice"; }
 
 protected:
     explicit CIODevice(CObject* parent = nullptr);

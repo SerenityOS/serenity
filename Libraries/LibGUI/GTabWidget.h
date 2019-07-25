@@ -3,6 +3,7 @@
 #include <LibGUI/GWidget.h>
 
 class GTabWidget : public GWidget {
+    C_OBJECT(GTabWidget)
 public:
     explicit GTabWidget(GWidget* parent);
     virtual ~GTabWidget() override;
@@ -14,8 +15,6 @@ public:
     int container_padding() const { return 2; }
 
     void add_widget(const StringView&, GWidget*);
-
-    virtual const char* class_name() const override { return "GTabWidget"; }
 
 protected:
     virtual void paint_event(GPaintEvent&) override;

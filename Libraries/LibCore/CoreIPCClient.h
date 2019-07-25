@@ -49,6 +49,7 @@ private:
 
 template <typename ServerMessage, typename ClientMessage>
 class Connection : public CObject {
+    C_OBJECT(Connection)
 public:
     Connection(const StringView& address)
         : m_notifier(CNotifier(m_connection.fd(), CNotifier::Read))

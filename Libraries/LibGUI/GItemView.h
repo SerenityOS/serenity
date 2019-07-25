@@ -9,6 +9,7 @@ class GScrollBar;
 class Painter;
 
 class GItemView : public GAbstractView {
+    C_OBJECT(GItemView)
 public:
     explicit GItemView(GWidget* parent);
     virtual ~GItemView() override;
@@ -21,8 +22,6 @@ public:
 
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
-
-    virtual const char* class_name() const override { return "GItemView"; }
 
 private:
     virtual void did_update_model() override;

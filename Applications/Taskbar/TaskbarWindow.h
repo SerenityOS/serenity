@@ -3,13 +3,12 @@
 #include <LibGUI/GWindow.h>
 
 class TaskbarWindow final : public GWindow {
+    C_OBJECT(TaskbarWindow)
 public:
     TaskbarWindow();
     virtual ~TaskbarWindow() override;
 
     int taskbar_height() const { return 28; }
-
-    virtual const char* class_name() const override { return "TaskbarWindow"; }
 
 private:
     void on_screen_rect_change(const Rect&);

@@ -7,13 +7,12 @@
 class CTCPSocket;
 
 class CHttpJob final : public CNetworkJob {
+    C_OBJECT(CHttpJob)
 public:
     explicit CHttpJob(const CHttpRequest&);
     virtual ~CHttpJob() override;
 
     virtual void start() override;
-
-    virtual const char* class_name() const override { return "CHttpJob"; }
 
 private:
     void on_socket_connected();
