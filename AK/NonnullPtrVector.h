@@ -4,8 +4,9 @@
 
 namespace AK {
 
-template<typename PtrType, typename T, int inline_capacity = 0>
+template<typename PtrType, int inline_capacity = 0>
 class NonnullPtrVector : public Vector<PtrType, inline_capacity> {
+    typedef typename PtrType::ElementType T;
     typedef Vector<PtrType, inline_capacity> Base;
 
 public:
