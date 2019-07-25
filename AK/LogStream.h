@@ -3,7 +3,7 @@
 #include <AK/kstdio.h>
 
 #ifdef USERLAND
-#include <AK/ValueRestorer.h>
+#include <AK/ScopedValueRollback.h>
 #include <errno.h>
 #endif
 
@@ -77,7 +77,7 @@ protected:
 
 private:
 #ifdef USERLAND
-    ValueRestorer<int> m_errno_restorer;
+    ScopedValueRollback<int> m_errno_restorer;
 #endif
 };
 
