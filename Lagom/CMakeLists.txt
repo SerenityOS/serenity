@@ -22,5 +22,5 @@ set(SOURCES ${SOURCES}
 
 include_directories (../)
 include_directories (../Libraries/)
-add_library(lagom SHARED ${SOURCES})
+add_library(lagom ${SOURCES})
 
