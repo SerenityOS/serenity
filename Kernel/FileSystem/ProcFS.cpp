@@ -314,37 +314,7 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
     if (!handle)
         return {};
     auto& process = handle->process();
-    ProcessPagingScope paging_scope(process);
-    struct RecognizedSymbol {
-        u32 address;
-        const KSym* ksym;
-    };
-    StringBuilder builder;
-    process.for_each_thread([&](Thread& thread) {
-        builder.appendf("Thread %d:\n", thread.tid());
-        Vector<RecognizedSymbol, 64> recognized_symbols;
-        recognized_symbols.append({ thread.tss().eip, ksymbolicate(thread.tss().eip) });
-        for (u32* stack_ptr = (u32*)thread.frame_ptr(); process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
-            u32 retaddr = stack_ptr[1];
-            recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
-        }
-
-        for (auto& symbol : recognized_symbols) {
-            if (!symbol.address)
-                break;
-            if (!symbol.ksym) {
-                builder.appendf("%p\n", symbol.address);
-                continue;
-            }
-            unsigned offset = symbol.address - symbol.ksym->address;
-            if (symbol.ksym->address == ksym_highest_address && offset > 4096)
-                builder.appendf("%p\n", symbol.address);
-            else
-                builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
-        }
-        return IterationDecision::Continue;
-    });
-    return builder.to_byte_buffer();
+    return process.backtrace(*handle).to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_regs(InodeIdentifier identifier)

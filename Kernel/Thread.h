@@ -16,6 +16,7 @@
 class Alarm;
 class FileDescription;
 class Process;
+class ProcessInspectionHandle;
 class Region;
 
 enum class ShouldUnblockThread {
@@ -48,6 +49,8 @@ public:
 
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
+
+    String backtrace(ProcessInspectionHandle&) const;
 
     void finalize();
 
@@ -205,6 +208,7 @@ public:
 
     u16 selector() const { return m_far_ptr.selector; }
     TSS32& tss() { return m_tss; }
+    const TSS32& tss() const { return m_tss; }
     State state() const { return m_state; }
     const char* state_string() const;
     u32 ticks() const { return m_ticks; }
@@ -371,3 +375,7 @@ inline IterationDecision Thread::for_each_in_state(State state, Callback callbac
     return Scheduler::for_each_nonrunnable(new_callback);
 }
 
+inline const LogStream& operator<<(const LogStream& stream, const Thread& value)
+{
+    return stream << "Thread{" << &value << "}(" << value.pid() << ":" << value.tid() << ")";
+}
