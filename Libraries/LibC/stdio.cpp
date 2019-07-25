@@ -1,6 +1,6 @@
 #include <AK/PrintfImplementation.h>
+#include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
-#include <AK/ValueRestorer.h>
 #include <Kernel/Syscall.h>
 #include <assert.h>
 #include <errno.h>
@@ -510,7 +510,7 @@ FILE* popen(const char* command, const char* type)
 
     int rc = pipe(pipe_fds);
     if (rc < 0) {
-        ValueRestorer restorer(errno);
+        ScopedValueRollback rollback(errno);
         perror("pipe");
         return nullptr;
     }

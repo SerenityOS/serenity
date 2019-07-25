@@ -3,15 +3,15 @@
 namespace AK {
 
 template<typename T>
-class ValueRestorer {
+class ScopedValueRollback {
 public:
-    ValueRestorer(T& variable)
+    ScopedValueRollback(T& variable)
         : m_variable(variable)
         , m_saved_value(variable)
     {
     }
 
-    ~ValueRestorer()
+    ~ScopedValueRollback()
     {
         m_variable = m_saved_value;
     }
@@ -23,4 +23,4 @@ private:
 
 }
 
-using AK::ValueRestorer;
+using AK::ScopedValueRollback;
