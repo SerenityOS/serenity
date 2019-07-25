@@ -5,6 +5,7 @@
 
 extern "C" {
 
+#if ARCH(I386)
 #ifndef KERNEL
 void* mmx_memcpy(void* dest, const void* src, size_t len)
 {
@@ -53,6 +54,7 @@ void* mmx_memcpy(void* dest, const void* src, size_t len)
         memcpy(dest_ptr, src_ptr, len);
     return dest;
 }
+#endif
 #endif
 
 #ifdef KERNEL
