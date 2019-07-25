@@ -6,19 +6,10 @@ set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -Wconsumed -Werror -std=c++17")
 
 project (Lagom)
 
-file(GLOB SOURCES "../Libraries/LibCore/*.cpp")
+file(GLOB AK_SOURCES "../AK/*.cpp")
+file(GLOB LIBCORE_SOURCES "../Libraries/LibCore/*.cpp")
 
-set(SOURCES ${SOURCES}
-    ../AK/StringImpl.cpp
-    ../AK/String.cpp
-    ../AK/JsonArray.cpp
-    ../AK/JsonValue.cpp
-    ../AK/JsonObject.cpp
-    ../AK/JsonParser.cpp
-    ../AK/StringBuilder.cpp
-    ../AK/StringView.cpp
-    ../AK/LogStream.cpp
-)
+set(SOURCES ${AK_SOURCES} ${LIBCORE_SOURCES})
 
 include_directories (../)
 include_directories (../Libraries/)
