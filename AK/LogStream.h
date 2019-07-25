@@ -2,6 +2,11 @@
 
 #include <AK/kstdio.h>
 
+#ifdef USERLAND
+#include <AK/ValueRestorer.h>
+#include <errno.h>
+#endif
+
 namespace AK {
 
 class String;
@@ -56,7 +61,12 @@ private:
 
 class LogStream {
 public:
-    LogStream() {}
+    LogStream()
+#ifdef USERLAND
+        : m_errno_restorer(errno)
+#endif
+    {
+    }
     virtual ~LogStream() {}
 
     virtual void write(const char*, int) const = 0;
@@ -64,6 +74,11 @@ public:
 protected:
     friend const LogStream& operator<<(const LogStream&, const TStyle&);
     mutable bool m_needs_style_reset { false };
+
+private:
+#ifdef USERLAND
+    ValueRestorer<int> m_errno_restorer;
+#endif
 };
 
 class DebugLogStream final : public LogStream {
