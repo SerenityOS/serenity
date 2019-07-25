@@ -15,6 +15,8 @@ public:
     };
     virtual ~CSocket() override;
 
+    Type type() const { return m_type; }
+
     bool connect(const String& hostname, int port);
     bool connect(const CSocketAddress&, int port);
     bool connect(const CSocketAddress&);
