@@ -6,7 +6,7 @@
 namespace AK {
 
 template<typename T, int inline_capacity = 0>
-class NonnullOwnPtrVector : public NonnullPtrVector<NonnullOwnPtr<T>, T, inline_capacity>
+class NonnullOwnPtrVector : public NonnullPtrVector<NonnullOwnPtr<T>, inline_capacity>
 {
 };
 

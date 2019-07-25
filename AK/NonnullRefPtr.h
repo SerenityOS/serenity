@@ -26,9 +26,9 @@ inline void deref_if_not_null(T* ptr)
 template<typename T>
 class CONSUMABLE(unconsumed) NonnullRefPtr {
 public:
-    enum AdoptTag {
-        Adopt
-    };
+    typedef T ElementType;
+
+    enum AdoptTag { Adopt };
 
     RETURN_TYPESTATE(unconsumed)
     NonnullRefPtr(const T& object)

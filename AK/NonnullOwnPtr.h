@@ -18,6 +18,8 @@ class WeakPtr;
 template<typename T>
 class CONSUMABLE(unconsumed) NonnullOwnPtr {
 public:
+    typedef T ElementType;
+
     enum AdoptTag { Adopt };
 
     RETURN_TYPESTATE(unconsumed)
