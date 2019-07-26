@@ -40,3 +40,10 @@ void GDialog::done(int result)
     dbgprintf("%s: quit event loop with result %d\n", class_name(), result);
     m_event_loop->quit(result);
 }
+
+void GDialog::close()
+{
+    GWindow::close();
+    m_event_loop->quit(ExecCancel);
+}
+
