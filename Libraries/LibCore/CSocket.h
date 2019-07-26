@@ -22,6 +22,10 @@ public:
     bool connect(const CSocketAddress&, int port);
     bool connect(const CSocketAddress&);
 
+    virtual bool bind(const CSocketAddress&) = 0;
+
+    bool listen();
+
     ByteBuffer receive(int max_size);
     bool send(const ByteBuffer&);
 

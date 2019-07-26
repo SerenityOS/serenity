@@ -2,14 +2,13 @@
 #include <LibCore/CSocket.h>
 #include <arpa/inet.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <netdb.h>
 #include <netinet/in.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
 #include <sys/socket.h>
-#include <sys/un.h>
+#include <unistd.h>
 
 CSocket::CSocket(Type type, CObject* parent)
     : CIODevice(parent)
@@ -130,4 +129,11 @@ bool CSocket::send(const ByteBuffer& data)
     }
     ASSERT(nsent == data.size());
     return true;
+}
+
+bool CSocket::listen()
+{
+    int rc = ::listen(fd(), 5);
+    set_error(errno);
+    return rc == 0;
 }
