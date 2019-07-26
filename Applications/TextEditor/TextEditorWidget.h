@@ -19,4 +19,8 @@ private:
 
     GTextEditor* m_editor { nullptr };
     String m_path;
+    RefPtr<GAction> m_new_action;
+    RefPtr<GAction> m_open_action;
+    RefPtr<GAction> m_save_action;
+    RefPtr<GAction> m_save_as_action;
 };
