@@ -50,6 +50,22 @@ void LayoutBlock::compute_width()
 
     dbg() << " Left: " << margin_left->to_string() << "+" << border_left->to_string() << "+" << padding_left->to_string();
     dbg() << "Right: " << margin_right->to_string() << "+" << border_right->to_string() << "+" << padding_right->to_string();
+
+    int total_px = 0;
+    for (auto& value : { margin_left, border_left, padding_left, width, padding_right, border_right, margin_right }) {
+        total_px += value->to_length().to_px();
+    }
+
+    dbg() << "Total: " << total_px;
+
+    // 10.3.3 Block-level, non-replaced elements in normal flow
+    // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
+    if (width->to_length().is_auto() && total_px > containing_block()->rect().width()) {
+        if (margin_left->to_length().is_auto())
+            margin_left = zero_value;
+        if (margin_right->to_length().is_auto())
+            margin_right = zero_value;
+    }
 }
 
 void LayoutBlock::compute_height()
