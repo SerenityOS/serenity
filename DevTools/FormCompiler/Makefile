@@ -15,6 +15,9 @@ OBJS = \
     ../../Libraries/LibCore/CFile.o \
     ../../Libraries/LibCore/CObject.o \
     ../../Libraries/LibCore/CEvent.o \
+    ../../Libraries/LibCore/CSocket.o \
+    ../../Libraries/LibCore/CLocalSocket.o \
+    ../../Libraries/LibCore/CNotifier.o \
     ../../Libraries/LibCore/CEventLoop.o
 
 all: $(PROGRAM)
