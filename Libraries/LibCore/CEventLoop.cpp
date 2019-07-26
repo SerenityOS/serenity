@@ -42,7 +42,7 @@ CEventLoop::CEventLoop()
     }
 
 #ifdef CEVENTLOOP_DEBUG
-    dbgprintf("(%u) CEventLoop constructed :)\n", getpid());
+    dbg() << getpid() << " CEventLoop constructed :)";
 #endif
 }
 
@@ -113,14 +113,13 @@ void CEventLoop::pump(WaitMode mode)
 
     for (int i = 0; i < events.size(); ++i) {
         auto& queued_event = events.at(i);
+        ASSERT(queued_event.event);
+
         auto* receiver = queued_event.receiver.ptr();
-        if (!queued_event.event) {
-            dbg() << "CEventLoop: FIXME: Null event in queue.";
-            continue;
-        }
         auto& event = *queued_event.event;
 #ifdef CEVENTLOOP_DEBUG
-        dbgprintf("CEventLoop: %s{%p} event %u\n", receiver->class_name(), receiver, (unsigned)event.type());
+        if (receiver)
+            dbg() << "CEventLoop: " << *receiver << " event " << (int)event.type();
 #endif
         if (!receiver) {
             switch (event.type()) {
@@ -141,6 +140,9 @@ void CEventLoop::pump(WaitMode mode)
 
         if (m_exit_requested) {
             LOCKER(m_lock);
+#ifdef CEVENTLOOP_DEBUG
+            dbg() << "CEventLoop: Exit requested. Rejigging " << (events.size() - i) << " events.";
+#endif
             decltype(m_queued_events) new_event_queue;
             new_event_queue.ensure_capacity(m_queued_events.size() + events.size());
             for (; i < events.size(); ++i)
@@ -156,7 +158,7 @@ void CEventLoop::post_event(CObject& receiver, NonnullOwnPtr<CEvent>&& event)
 {
     LOCKER(m_lock);
 #ifdef CEVENTLOOP_DEBUG
-    dbgprintf("CEventLoop::post_event: {%u} << receiver=%p, event=%p\n", m_queued_events.size(), &receiver, event.ptr());
+    dbg() << "CEventLoop::post_event: {" << m_queued_events.size() << "} << receiver=" << receiver << ", event=" << event;
 #endif
     m_queued_events.append({ receiver.make_weak_ptr(), move(event) });
 }
@@ -228,7 +230,7 @@ void CEventLoop::wait_for_event(WaitMode mode)
         if (!timer.has_expired(now))
             continue;
 #ifdef CEVENTLOOP_DEBUG
-        dbgprintf("CEventLoop: Timer %d has expired, sending CTimerEvent to %p\n", timer.timer_id, timer.owner);
+        dbg() << "CEventLoop: Timer " << timer.timer_id << " has expired, sending CTimerEvent to " << timer.owner;
 #endif
         post_event(*timer.owner, make<CTimerEvent>(timer.timer_id));
         if (timer.should_reload) {
