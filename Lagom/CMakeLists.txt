@@ -1,8 +1,12 @@
-cmake_minimum_required (VERSION 2.6)
+cmake_minimum_required (VERSION 3.0)
 
-set(CMAKE_C_COMPILER clang)
-set(CMAKE_CXX_COMPILER clang)
-set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -Wconsumed -Werror -std=c++17 -fPIC")
+set(CMAKE_CXX_FLAGS "-O2 -Wall -Wextra -Werror -std=c++17 -fPIC")
+
+if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wconsumed")
+elseif ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "GNU")
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-expansion-to-defined")
+endif()
 
 project (Lagom)
 
