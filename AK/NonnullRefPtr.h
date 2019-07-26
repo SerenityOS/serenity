@@ -102,7 +102,7 @@ public:
     template<typename U>
     NonnullRefPtr& operator=(const NonnullRefPtr<U>& other)
     {
-        if (m_ptr != other.m_ptr) {
+        if (m_ptr != other.ptr()) {
             deref_if_not_null(m_ptr);
             m_ptr = const_cast<T*>(static_cast<const T*>(other.ptr()));
             m_ptr->ref();
