@@ -82,7 +82,7 @@ public:
 
     void show();
     void hide();
-    void close();
+    virtual void close();
     void move_to_front();
 
     void start_wm_resize();
