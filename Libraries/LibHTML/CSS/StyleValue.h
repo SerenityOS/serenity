@@ -24,6 +24,7 @@ public:
     bool is_initial() const { return type() == Type::Initial; }
 
     virtual String to_string() const = 0;
+    virtual Length to_length() const { return {}; }
 
 protected:
     explicit StyleValue(Type);
@@ -60,7 +61,10 @@ public:
     }
     virtual ~LengthStyleValue() override {}
 
-    String to_string() const override { return m_length.to_string(); }
+    virtual String to_string() const override { return m_length.to_string(); }
+    virtual Length to_length() const override { return m_length; }
+
+    const Length& length() const { return m_length; }
 
 private:
     explicit LengthStyleValue(const Length& length)
