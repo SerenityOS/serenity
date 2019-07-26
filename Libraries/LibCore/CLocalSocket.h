@@ -6,4 +6,6 @@ class CLocalSocket final : public CSocket {
 public:
     explicit CLocalSocket(CObject* parent = nullptr);
     virtual ~CLocalSocket() override;
+
+    virtual bool bind(const CSocketAddress&) override;
 };

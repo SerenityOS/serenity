@@ -6,5 +6,5 @@ public:
     explicit CTCPSocket(CObject* parent = nullptr);
     virtual ~CTCPSocket() override;
 
-private:
+    virtual bool bind(const CSocketAddress&) override;
 };

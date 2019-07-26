@@ -1,6 +1,8 @@
 #pragma once
 
 #include <AK/IPv4Address.h>
+#include <sys/socket.h>
+#include <sys/un.h>
 
 class CSocketAddress {
 public:
@@ -39,6 +41,16 @@ public:
         default:
             return "[CSocketAddress]";
         }
+    }
+
+    sockaddr_un to_sockaddr_un() const
+    {
+        ASSERT(type() == Type::Local);
+        sockaddr_un address;
+        address.sun_family = AF_LOCAL;
+        RELEASE_ASSERT(m_local_address.length() < (int)sizeof(address.sun_path));
+        strcpy(address.sun_path, m_local_address.characters());
+        return address;
     }
 
 private:
