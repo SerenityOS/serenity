@@ -1,16 +1,15 @@
 #pragma once
 
-#include <LibCore/CLocalSocket.h>
-#include <LibCore/CNotifier.h>
-#include <LibCore/CoreIPCClient.h>
 #include <LibAudio/ASAPI.h>
+#include <LibCore/CoreIPCClient.h>
 
 class ABuffer;
 
 class AClientConnection : public IPC::Client::Connection<ASAPI_ServerMessage, ASAPI_ClientMessage> {
+    C_OBJECT(AClientConnection)
 public:
     AClientConnection();
 
-    void handshake() override;
-    void play(const ABuffer& buffer);
+    virtual void handshake() override;
+    void play(const ABuffer&);
 };
