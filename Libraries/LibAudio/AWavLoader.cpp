@@ -126,7 +126,7 @@ RefPtr<ABuffer> AWavLoader::parse_wav(ByteBuffer& buffer)
     // Just make sure we're good before we read the data...
     ASSERT(!stream.handle_read_failure());
 
-    auto sample_data = buffer.slice(stream.offset(), data_sz);
+    auto sample_data = buffer.slice_view(stream.offset(), data_sz);
 
     dbgprintf("Read WAV of format PCM with num_channels %d sample rate %d, bits per sample %d\n", num_channels, sample_rate, bits_per_sample);
 
