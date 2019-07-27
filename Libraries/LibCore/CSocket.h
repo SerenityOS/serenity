@@ -39,6 +39,7 @@ public:
     int destination_port() const { return m_destination_port; }
 
     Function<void()> on_connected;
+    Function<void()> on_ready_to_read;
 
 protected:
     CSocket(Type, CObject* parent);
@@ -49,8 +50,11 @@ protected:
     int m_destination_port { -1 };
     bool m_connected { false };
 
+    virtual void did_update_fd(int) override;
+
 private:
     virtual bool open(CIODevice::OpenMode) override { ASSERT_NOT_REACHED(); }
     Type m_type { Type::Invalid };
     OwnPtr<CNotifier> m_notifier;
+    OwnPtr<CNotifier> m_read_notifier;
 };

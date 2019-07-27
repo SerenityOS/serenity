@@ -137,3 +137,16 @@ bool CSocket::listen()
     set_error(errno);
     return rc == 0;
 }
+
+void CSocket::did_update_fd(int fd)
+{
+    if (fd < 0) {
+        m_read_notifier = nullptr;
+        return;
+    }
+    m_read_notifier = make<CNotifier>(fd, CNotifier::Event::Read);
+    m_read_notifier->on_ready_to_read = [this] {
+        if (on_ready_to_read)
+            on_ready_to_read();
+    };
+}
