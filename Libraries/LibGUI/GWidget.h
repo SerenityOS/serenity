@@ -44,6 +44,7 @@ public:
     SizePolicy vertical_size_policy() const { return m_vertical_size_policy; }
     SizePolicy size_policy(Orientation orientation) { return orientation == Orientation::Horizontal ? m_horizontal_size_policy : m_vertical_size_policy; }
     void set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy);
+    void set_size_policy(Orientation, SizePolicy);
 
     Size preferred_size() const { return m_preferred_size; }
     void set_preferred_size(const Size&);
