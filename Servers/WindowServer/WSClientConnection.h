@@ -16,7 +16,7 @@ class WSMenuBar;
 
 class WSClientConnection final : public IPC::Server::Connection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
 public:
-    explicit WSClientConnection(int fd, int client_id);
+    explicit WSClientConnection(CLocalSocket&, int client_id);
     ~WSClientConnection() override;
     void send_greeting() override;
     bool handle_message(const WSAPI_ClientMessage&, const ByteBuffer&& = {}) override;
