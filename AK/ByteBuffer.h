@@ -155,6 +155,17 @@ public:
             m_impl->trim(size);
     }
 
+    ByteBuffer slice_view(int offset, int size) const
+    {
+        if (is_null())
+            return {};
+        if (offset >= this->size())
+            return {};
+        if (offset + size >= this->size())
+            size = this->size() - offset;
+        return wrap(offset_pointer(offset), size);
+    }
+
     ByteBuffer slice(int offset, int size) const
     {
         if (is_null())
