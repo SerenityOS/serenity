@@ -28,8 +28,8 @@ int main(int argc, char** argv)
 
     auto* tabwidget = new GTabWidget(keeper);
 
-    auto* widget = new GWidget(nullptr);
-    tabwidget->add_widget("Processes", widget);
+    auto* process_table_container = new GWidget(nullptr);
+    tabwidget->add_widget("Processes", process_table_container);
 
     auto* graphs_container = new GWidget;
     graphs_container->set_fill_with_background_color(true);
@@ -64,14 +64,14 @@ int main(int argc, char** argv)
 
     tabwidget->add_widget("Graphs", graphs_container);
 
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    widget->layout()->set_margins({ 4, 0, 4, 4 });
-    widget->layout()->set_spacing(0);
+    process_table_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    process_table_container->layout()->set_margins({ 4, 0, 4, 4 });
+    process_table_container->layout()->set_spacing(0);
 
-    auto* toolbar = new GToolBar(widget);
+    auto* toolbar = new GToolBar(process_table_container);
     toolbar->set_has_frame(false);
-    auto* process_table_view = new ProcessTableView(*cpu_graph, widget);
-    auto* memory_stats_widget = new MemoryStatsWidget(*memory_graph, widget);
+    auto* process_table_view = new ProcessTableView(*cpu_graph, process_table_container);
+    auto* memory_stats_widget = new MemoryStatsWidget(*memory_graph, process_table_container);
 
     auto* refresh_timer = new CTimer(1000, [&] {
         process_table_view->refresh();
