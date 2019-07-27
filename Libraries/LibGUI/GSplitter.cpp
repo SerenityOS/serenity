@@ -66,7 +66,6 @@ void GSplitter::mousemove_event(GMouseEvent& event)
         // One or both of the resizees were deleted during an ongoing resize, screw this.
         m_resizing = false;
         return;
-        ;
     }
     int minimum_size = 0;
     auto new_first_resizee_size = m_first_resizee_start_size;
@@ -87,6 +86,9 @@ void GSplitter::mousemove_event(GMouseEvent& event)
     }
     m_first_resizee->set_preferred_size(new_first_resizee_size);
     m_second_resizee->set_preferred_size(new_second_resizee_size);
+
+    m_first_resizee->set_size_policy(m_orientation, SizePolicy::Fixed);
+    m_second_resizee->set_size_policy(m_orientation, SizePolicy::Fill);
 
     invalidate_layout();
 }
