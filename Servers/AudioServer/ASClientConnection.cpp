@@ -1,17 +1,17 @@
 #include "ASClientConnection.h"
 #include "ASMixer.h"
 
-#include <LibCore/CEventLoop.h>
-#include <LibAudio/ASAPI.h>
 #include <LibAudio/ABuffer.h>
+#include <LibAudio/ASAPI.h>
+#include <LibCore/CEventLoop.h>
 #include <SharedBuffer.h>
 
 #include <errno.h>
-#include <unistd.h>
-#include <sys/uio.h>
-#include <sys/types.h>
-#include <sys/socket.h>
 #include <stdio.h>
+#include <sys/socket.h>
+#include <sys/types.h>
+#include <sys/uio.h>
+#include <unistd.h>
 
 ASClientConnection::ASClientConnection(CLocalSocket& client_socket, int client_id, ASMixer& mixer)
     : Connection(client_socket, client_id)
@@ -63,3 +63,10 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
     return true;
 }
 
+void ASClientConnection::did_finish_playing_buffer(Badge<ASMixer>, int buffer_id)
+{
+    ASAPI_ServerMessage reply;
+    reply.type = ASAPI_ServerMessage::Type::FinishedPlayingBuffer;
+    reply.playing_buffer.buffer_id = buffer_id;
+    post_message(reply);
+}

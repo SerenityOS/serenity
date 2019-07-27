@@ -1,7 +1,6 @@
 #include <AK/BufferStream.h>
 #include <AudioServer/ASClientConnection.h>
 #include <AudioServer/ASMixer.h>
-#include <LibAudio/ASAPI.h>
 #include <LibCore/CThread.h>
 #include <limits>
 
@@ -78,12 +77,8 @@ void ASMixer::mix()
 
             // clear it later
             if (buffer.pos == sample_count) {
-                if (buffer.m_client) {
-                    ASAPI_ServerMessage reply;
-                    reply.type = ASAPI_ServerMessage::Type::FinishedPlayingBuffer;
-                    reply.playing_buffer.buffer_id = buffer.buffer->shared_buffer_id();
-                    buffer.m_client->post_message(reply);
-                }
+                if (buffer.m_client)
+                    buffer.m_client->did_finish_playing_buffer({}, buffer.buffer->shared_buffer_id());
                 buffer.done = true;
             }
         }
