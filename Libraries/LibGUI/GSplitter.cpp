@@ -18,7 +18,7 @@ GSplitter::~GSplitter()
 
 void GSplitter::enter_event(CEvent&)
 {
-    set_background_color(Color::from_rgb(0xd6d2ce));
+    set_background_color(StylePainter::hover_highlight_color());
     window()->set_override_cursor(m_orientation == Orientation::Horizontal ? GStandardCursor::ResizeHorizontal : GStandardCursor::ResizeVertical);
     update();
 }
