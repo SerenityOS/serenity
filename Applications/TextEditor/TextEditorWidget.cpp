@@ -78,6 +78,7 @@ TextEditorWidget::TextEditorWidget()
     file_menu->add_action(*m_new_action);
     file_menu->add_action(*m_open_action);
     file_menu->add_action(*m_save_action);
+    file_menu->add_action(*m_save_as_action);
     menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
