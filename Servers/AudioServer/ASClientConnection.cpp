@@ -13,8 +13,8 @@
 #include <sys/socket.h>
 #include <stdio.h>
 
-ASClientConnection::ASClientConnection(int fd, int client_id, ASMixer& mixer)
-    : Connection(fd, client_id)
+ASClientConnection::ASClientConnection(CLocalSocket& client_socket, int client_id, ASMixer& mixer)
+    : Connection(client_socket, client_id)
     , m_mixer(mixer)
 {
 }

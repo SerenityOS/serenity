@@ -3,6 +3,7 @@
 #include <LibCore/CEvent.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CIODevice.h>
+#include <LibCore/CLocalSocket.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
 
@@ -57,12 +58,12 @@ namespace Server {
     class Connection : public CObject {
         C_OBJECT(Connection)
     public:
-        Connection(int fd, int client_id)
-            : m_socket(fd)
-            , m_notifier(CNotifier(fd, CNotifier::Read))
+        Connection(CLocalSocket& socket, int client_id)
+            : m_socket(socket)
             , m_client_id(client_id)
         {
-            m_notifier.on_ready_to_read = [this] { drain_client(); };
+            add_child(socket);
+            m_socket.on_ready_to_read = [this] { drain_client(); };
 #if defined(CIPC_DEBUG)
             dbg() << "S: Created new Connection " << fd << client_id << " and said hello";
 #endif
@@ -163,8 +164,8 @@ namespace Server {
         void did_misbehave()
         {
             dbgprintf("Connection{%p} (id=%d, pid=%d) misbehaved, disconnecting.\n", this, client_id(), m_pid);
+            m_socket.close();
             delete_later();
-            m_notifier.set_enabled(false);
         }
 
         int client_id() const { return m_client_id; }
@@ -190,27 +191,7 @@ namespace Server {
         virtual bool handle_message(const ClientMessage&, const ByteBuffer&& = {}) = 0;
 
     private:
-        // TODO: A way to create some kind of CIODevice with an open FD would be nice.
-        class COpenedSocket : public CIODevice {
-            C_OBJECT(COpenedSocket)
-        public:
-            COpenedSocket(int fd)
-            {
-                set_fd(fd);
-                set_mode(CIODevice::OpenMode::ReadWrite);
-            }
-
-            bool open(CIODevice::OpenMode) override
-            {
-                ASSERT_NOT_REACHED();
-                return true;
-            };
-
-            int fd() const { return CIODevice::fd(); }
-        };
-
-        COpenedSocket m_socket;
-        CNotifier m_notifier;
+        CLocalSocket& m_socket;
         int m_client_id;
         int m_pid;
     };

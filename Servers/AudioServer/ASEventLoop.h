@@ -1,7 +1,7 @@
 #pragma once
 
 #include <LibCore/CEventLoop.h>
-#include <LibCore/CLocalSocket.h>
+#include <LibCore/CLocalServer.h>
 #include <LibCore/CNotifier.h>
 #include "ASMixer.h"
 
@@ -12,9 +12,6 @@ public:
     int exec() { return m_event_loop.exec(); }
 private:
     CEventLoop m_event_loop;
-    CLocalSocket m_server_sock;
-    OwnPtr<CNotifier> m_server_notifier;
+    CLocalServer m_server_sock;
     ASMixer m_mixer;
-
-    void drain_server();
 };
