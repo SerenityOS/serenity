@@ -5,6 +5,7 @@ OBJS = \
     ProcessTableView.o \
     MemoryStatsWidget.o \
     GraphWidget.o \
+    ProcessStacksWidget.o \
     main.o
 
 APP = ProcessManager
