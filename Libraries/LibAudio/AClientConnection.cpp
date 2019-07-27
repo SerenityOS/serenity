@@ -19,17 +19,9 @@ void AClientConnection::handshake()
 
 void AClientConnection::play(const ABuffer& buffer, bool block)
 {
-    auto shared_buf = SharedBuffer::create_with_size(buffer.size_in_bytes());
-    if (!shared_buf) {
-        dbg() << "Failed to create a shared buffer!";
-        return;
-    }
-
-    memcpy(shared_buf->data(), buffer.data(), buffer.size_in_bytes());
-    shared_buf->seal();
-    shared_buf->share_with(server_pid());
+    const_cast<ABuffer&>(buffer).shared_buffer().share_with(server_pid());
     ASAPI_ClientMessage request;
     request.type = ASAPI_ClientMessage::Type::PlayBuffer;
-    request.play_buffer.buffer_id = shared_buf->shared_buffer_id();
+    request.play_buffer.buffer_id = buffer.shared_buffer_id();
     sync_request(request, block ? ASAPI_ServerMessage::Type::FinishedPlayingBuffer : ASAPI_ServerMessage::Type::PlayingBuffer);
 }

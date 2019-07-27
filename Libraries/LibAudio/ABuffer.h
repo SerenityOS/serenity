@@ -68,6 +68,7 @@ public:
     const void* data() const { return m_buffer->data(); }
     int size_in_bytes() const { return m_buffer->size(); }
     int shared_buffer_id() const { return m_buffer->shared_buffer_id(); }
+    SharedBuffer& shared_buffer() { return *m_buffer; }
 
 private:
     explicit ABuffer(Vector<ASample>&& samples)
