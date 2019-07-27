@@ -1,5 +1,6 @@
 #include "GraphWidget.h"
 #include "MemoryStatsWidget.h"
+#include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
 #include <LibCore/CTimer.h>
 #include <LibGUI/GAction.h>
@@ -8,6 +9,7 @@
 #include <LibGUI/GGroupBox.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GSplitter.h>
 #include <LibGUI/GTabWidget.h>
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GWidget.h>
@@ -26,7 +28,9 @@ int main(int argc, char** argv)
     keeper->set_background_color(Color::WarmGray);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* tabwidget = new GTabWidget(keeper);
+    auto* splitter = new GSplitter(Orientation::Vertical, keeper);
+
+    auto* tabwidget = new GTabWidget(splitter);
 
     auto* process_table_container = new GWidget(nullptr);
     tabwidget->add_widget("Processes", process_table_container);
@@ -148,6 +152,14 @@ int main(int argc, char** argv)
     menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
+
+    auto* process_tab_widget = new GTabWidget(splitter);
+    auto* stacks_widget = new ProcessStacksWidget(nullptr);
+    process_tab_widget->add_widget("Stacks", stacks_widget);
+
+    process_table_view->on_process_selected = [&](pid_t pid) {
+        stacks_widget->set_pid(pid);
+    };
 
     auto* window = new GWindow;
     window->set_title("Process Manager");
