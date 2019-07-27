@@ -28,12 +28,12 @@ int main(int argc, char** argv)
     keeper->set_background_color(Color::WarmGray);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* splitter = new GSplitter(Orientation::Vertical, keeper);
+    auto* tabwidget = new GTabWidget(keeper);
 
-    auto* tabwidget = new GTabWidget(splitter);
+    auto* process_container_splitter = new GSplitter(Orientation::Vertical, nullptr);
+    tabwidget->add_widget("Processes", process_container_splitter);
 
-    auto* process_table_container = new GWidget(nullptr);
-    tabwidget->add_widget("Processes", process_table_container);
+    auto* process_table_container = new GWidget(process_container_splitter);
 
     auto* graphs_container = new GWidget;
     graphs_container->set_fill_with_background_color(true);
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    auto* process_tab_widget = new GTabWidget(splitter);
+    auto* process_tab_widget = new GTabWidget(process_container_splitter);
     auto* stacks_widget = new ProcessStacksWidget(nullptr);
     process_tab_widget->add_widget("Stacks", stacks_widget);
 
