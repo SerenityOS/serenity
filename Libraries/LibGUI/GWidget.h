@@ -208,8 +208,6 @@ public:
     virtual bool is_abstract_button() const { return false; }
 
 private:
-    virtual bool is_widget() const final { return true; }
-
     void handle_paint_event(GPaintEvent&);
     void handle_resize_event(GResizeEvent&);
     void handle_mousedown_event(GMouseEvent&);
