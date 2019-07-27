@@ -55,9 +55,9 @@ bool AWavLoader::parse_header()
 
     u32 sz;
     stream >> sz;
-    ok = ok && sz < 1024 * 1024 * 42; // arbitrary
+    ok = ok && sz < 1024 * 1024 * 1024; // arbitrary
     CHECK_OK("File size");
-    ASSERT(sz < 1024 * 1024 * 42);
+    ASSERT(sz < 1024 * 1024 * 1024);
 
     u32 wave;
     stream >> wave;
