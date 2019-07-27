@@ -3,8 +3,11 @@
 #include <LibAudio/AClientConnection.h>
 #include <LibCore/CFile.h>
 #include <LibCore/CThread.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GEventLoop.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
 
 int main(int argc, char** argv)
@@ -40,6 +43,17 @@ int main(int argc, char** argv)
         }
     },
         piano_widget);
+
+    auto menubar = make<GMenuBar>();
+
+    auto app_menu = make<GMenu>("Piano");
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
+        GApplication::the().quit(0);
+        return;
+    }));
+    menubar->add_menu(move(app_menu));
+
+    app.set_menubar(move(menubar));
 
     return app.exec();
 }
