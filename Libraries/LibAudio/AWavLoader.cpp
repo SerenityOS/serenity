@@ -2,26 +2,32 @@
 #include <LibAudio/ABuffer.h>
 #include <LibAudio/AWavLoader.h>
 #include <LibCore/CFile.h>
+#include <LibCore/CFileStreamReader.h>
 #include <limits>
 
-RefPtr<ABuffer> AWavLoader::load_wav(const StringView& path)
+AWavLoader::AWavLoader(const StringView& path)
+    : m_file(path)
 {
-    m_error_string = {};
-
-    CFile wav(path);
-    if (!wav.open(CIODevice::ReadOnly)) {
-        m_error_string = String::format("Can't open file: %s", wav.error_string());
-        return nullptr;
+    if (!m_file.open(CIODevice::ReadOnly)) {
+        m_error_string = String::format("Can't open file: %s", m_file.error_string());
+        return;
     }
 
-    auto contents = wav.read_all();
-    return parse_wav(contents);
+    parse_header();
 }
 
-// TODO: A streaming parser might be better than forcing a ByteBuffer
-RefPtr<ABuffer> AWavLoader::parse_wav(ByteBuffer& buffer)
+RefPtr<ABuffer> AWavLoader::get_more_samples()
 {
-    BufferStream stream(buffer);
+    dbgprintf("Read WAV of format PCM with num_channels %u sample rate %u, bits per sample %u\n", m_num_channels, m_sample_rate, m_bits_per_sample);
+
+    auto raw_samples = m_file.read(128 * KB);
+    auto buffer = ABuffer::from_pcm_data(raw_samples, m_num_channels, m_bits_per_sample, m_sample_rate);
+    return buffer;
+}
+
+bool AWavLoader::parse_header()
+{
+    CFileStreamReader stream(m_file);
 
 #define CHECK_OK(msg)                                                           \
     do {                                                                        \
@@ -73,13 +79,11 @@ RefPtr<ABuffer> AWavLoader::parse_wav(ByteBuffer& buffer)
     ASSERT(audio_format == 1);
     CHECK_OK("Audio format"); // value check
 
-    u16 num_channels;
-    stream >> num_channels;
-    ok = ok && (num_channels == 1 || num_channels == 2);
+    stream >> m_num_channels;
+    ok = ok && (m_num_channels == 1 || m_num_channels == 2);
     CHECK_OK("Channel count");
 
-    u32 sample_rate;
-    stream >> sample_rate;
+    stream >> m_sample_rate;
     CHECK_OK("Sample rate");
 
     u32 byte_rate;
@@ -90,11 +94,10 @@ RefPtr<ABuffer> AWavLoader::parse_wav(ByteBuffer& buffer)
     stream >> block_align;
     CHECK_OK("Block align");
 
-    u16 bits_per_sample;
-    stream >> bits_per_sample;
+    stream >> m_bits_per_sample;
     CHECK_OK("Bits per sample"); // incomplete read check
-    ok = ok && (bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24);
-    ASSERT(bits_per_sample == 8 || bits_per_sample == 16 || bits_per_sample == 24);
+    ok = ok && (m_bits_per_sample == 8 || m_bits_per_sample == 16 || m_bits_per_sample == 24);
+    ASSERT(m_bits_per_sample == 8 || m_bits_per_sample == 16 || m_bits_per_sample == 24);
     CHECK_OK("Bits per sample"); // value check
 
     // Read chunks until we find DATA
@@ -116,21 +119,13 @@ RefPtr<ABuffer> AWavLoader::parse_wav(ByteBuffer& buffer)
     CHECK_OK("Found no data chunk");
     ASSERT(found_data);
 
-    ok = ok && data_sz < std::numeric_limits<int>::max();
+    ok = ok && data_sz < INT32_MAX;
     CHECK_OK("Data was too large");
-
-    // ### consider using BufferStream to do this for us
-    ok = ok && int(data_sz) <= (buffer.size() - stream.offset());
-    CHECK_OK("Bad DATA (truncated)");
 
     // Just make sure we're good before we read the data...
     ASSERT(!stream.handle_read_failure());
 
-    auto sample_data = buffer.slice_view(stream.offset(), data_sz);
-
-    dbgprintf("Read WAV of format PCM with num_channels %d sample rate %d, bits per sample %d\n", num_channels, sample_rate, bits_per_sample);
-
-    return ABuffer::from_pcm_data(sample_data, num_channels, bits_per_sample, sample_rate);
+    return true;
 }
 
 // Small helper to resample from one playback rate to another

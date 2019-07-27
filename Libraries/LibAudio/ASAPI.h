@@ -5,6 +5,7 @@ struct ASAPI_ServerMessage {
         Invalid,
         Greeting,
         PlayingBuffer,
+        FinishedPlayingBuffer,
     };
 
     Type type { Type::Invalid };

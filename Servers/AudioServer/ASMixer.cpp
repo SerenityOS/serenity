@@ -1,8 +1,9 @@
 #include <AK/BufferStream.h>
+#include <AudioServer/ASClientConnection.h>
+#include <AudioServer/ASMixer.h>
+#include <LibAudio/ASAPI.h>
 #include <LibCore/CThread.h>
-
 #include <limits>
-#include "ASMixer.h"
 
 ASMixer::ASMixer()
     : m_device("/dev/audio")
@@ -19,11 +20,11 @@ ASMixer::ASMixer()
     }, this);
 }
 
-void ASMixer::queue(ASClientConnection&, const ABuffer& buffer)
+void ASMixer::queue(ASClientConnection& client, const ABuffer& buffer, int buffer_id)
 {
     ASSERT(buffer.size_in_bytes());
     CLocker lock(m_lock);
-    m_pending_mixing.append(ASMixerBuffer(buffer));
+    m_pending_mixing.append(ASMixerBuffer(buffer, client, buffer_id));
 }
 
 void ASMixer::mix()
@@ -75,8 +76,15 @@ void ASMixer::mix()
             }
 
             // clear it later
-            if (buffer.pos == samples.size())
+            if (buffer.pos == samples.size()) {
+                if (buffer.m_buffer_id && buffer.m_client) {
+                    ASAPI_ServerMessage reply;
+                    reply.type = ASAPI_ServerMessage::Type::FinishedPlayingBuffer;
+                    reply.playing_buffer.buffer_id = buffer.m_buffer_id;
+                    buffer.m_client->post_message(reply);
+                }
                 buffer.done = true;
+            }
         }
 
         // output the mixed stuff to the device
@@ -107,4 +115,11 @@ void ASMixer::mix()
             mixed_buffer.resize(0);
         }
     }
+}
+
+ASMixer::ASMixerBuffer::ASMixerBuffer(const NonnullRefPtr<ABuffer>& buf, ASClientConnection& client, int buffer_id)
+    : buffer(buf)
+    , m_client(client.make_weak_ptr())
+    , m_buffer_id(buffer_id)
+{
 }

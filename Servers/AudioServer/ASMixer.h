@@ -1,11 +1,12 @@
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <AK/ByteBuffer.h>
+#include <AK/NonnullRefPtrVector.h>
+#include <AK/RefCounted.h>
+#include <AK/WeakPtr.h>
+#include <LibAudio/ABuffer.h>
 #include <LibCore/CFile.h>
 #include <LibCore/CLock.h>
-#include <LibAudio/ABuffer.h>
-#include <AK/NonnullRefPtrVector.h>
 
 class ASClientConnection;
 
@@ -13,16 +14,16 @@ class ASMixer : public RefCounted<ASMixer> {
 public:
     ASMixer();
 
-    void queue(ASClientConnection&, const ABuffer&);
+    void queue(ASClientConnection&, const ABuffer&, int buffer_id);
 
 private:
     struct ASMixerBuffer {
-        ASMixerBuffer(const NonnullRefPtr<ABuffer>& buf)
-            : buffer(buf)
-        {}
+        ASMixerBuffer(const NonnullRefPtr<ABuffer>&, ASClientConnection&, int buffer_id = -1);
         NonnullRefPtr<ABuffer> buffer;
         int pos { 0 };
         bool done { false };
+        WeakPtr<ASClientConnection> m_client;
+        int m_buffer_id { -1 };
     };
 
     Vector<ASMixerBuffer> m_pending_mixing;

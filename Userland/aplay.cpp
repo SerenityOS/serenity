@@ -16,15 +16,18 @@ int main(int argc, char **argv)
     AClientConnection a_conn;
     a_conn.handshake();
     printf("Established connection\n");
-    AWavLoader loader;
-    const auto& buffer = loader.load_wav(argv[1]);
-    if (!buffer) {
-        dbgprintf("Can't parse WAV: %s\n", loader.error_string());
-        return 1;
+    AWavLoader loader(argv[1]);
+    printf("Loaded WAV\n");
+
+    for (;;) {
+        auto samples = loader.get_more_samples();
+        if (!samples) {
+            break;
+        }
+        printf("Playing %d sample(s)\n", samples->samples().size());
+        a_conn.play(*samples, true);
     }
 
-    printf("Playing WAV\n");
-    a_conn.play(*buffer);
     printf("Exiting! :)\n");
     return 0;
 }

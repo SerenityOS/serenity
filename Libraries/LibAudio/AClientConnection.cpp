@@ -17,7 +17,7 @@ void AClientConnection::handshake()
     set_my_client_id(response.greeting.your_client_id);
 }
 
-void AClientConnection::play(const ABuffer& buffer)
+void AClientConnection::play(const ABuffer& buffer, bool block)
 {
     auto shared_buf = SharedBuffer::create_with_size(buffer.size_in_bytes());
     if (!shared_buf) {
@@ -31,5 +31,5 @@ void AClientConnection::play(const ABuffer& buffer)
     ASAPI_ClientMessage request;
     request.type = ASAPI_ClientMessage::Type::PlayBuffer;
     request.play_buffer.buffer_id = shared_buf->shared_buffer_id();
-    sync_request(request, ASAPI_ServerMessage::Type::PlayingBuffer);
+    sync_request(request, block ? ASAPI_ServerMessage::Type::FinishedPlayingBuffer : ASAPI_ServerMessage::Type::PlayingBuffer);
 }
