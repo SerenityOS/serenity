@@ -56,10 +56,12 @@ public:
 protected:
     explicit CIODevice(CObject* parent = nullptr);
 
-    void set_fd(int fd) { m_fd = fd; }
+    void set_fd(int);
     void set_mode(OpenMode mode) { m_mode = mode; }
     void set_error(int error) { m_error = error; }
     void set_eof(bool eof) { m_eof = eof; }
+
+    virtual void did_update_fd(int) {}
 
 private:
     bool populate_read_buffer();

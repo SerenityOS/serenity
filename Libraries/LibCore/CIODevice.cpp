@@ -241,3 +241,12 @@ int CIODevice::printf(const char* format, ...)
     va_end(ap);
     return ret;
 }
+
+void CIODevice::set_fd(int fd)
+{
+    if (m_fd == fd)
+        return;
+
+    m_fd = fd;
+    did_update_fd(fd);
+}
