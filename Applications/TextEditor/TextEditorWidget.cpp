@@ -25,7 +25,7 @@ TextEditorWidget::TextEditorWidget()
 
     m_editor->on_cursor_change = [statusbar, this] {
         StringBuilder builder;
-        builder.appendf("Line: %d, Column: %d", m_editor->cursor().line(), m_editor->cursor().column());
+        builder.appendf("Line: %d, Column: %d", m_editor->cursor().line() + 1, m_editor->cursor().column());
         statusbar->set_text(builder.to_string());
     };
 
