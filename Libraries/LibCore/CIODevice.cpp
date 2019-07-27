@@ -4,6 +4,7 @@
 #include <errno.h>
 #include <stdio.h>
 #include <sys/select.h>
+#include <sys/stat.h>
 #include <sys/time.h>
 #include <unistd.h>
 
@@ -100,9 +101,17 @@ bool CIODevice::can_read() const
 
 ByteBuffer CIODevice::read_all()
 {
-    ByteBuffer buffer;
+    off_t file_size = 0;
+    struct stat st;
+    int rc = fstat(fd(), &st);
+    if (rc == 0)
+        file_size = st.st_size;
+
+    Vector<u8> data;
+    data.ensure_capacity(file_size);
+
     if (!m_buffered_data.is_empty()) {
-        buffer = ByteBuffer::copy(m_buffered_data.data(), m_buffered_data.size());
+        data.append(m_buffered_data.data(), m_buffered_data.size());
         m_buffered_data.clear();
     }
 
@@ -111,15 +120,15 @@ ByteBuffer CIODevice::read_all()
         int nread = ::read(m_fd, read_buffer, sizeof(read_buffer));
         if (nread < 0) {
             set_error(nread);
-            return buffer;
+            return ByteBuffer::copy(data.data(), data.size());
         }
         if (nread == 0) {
             set_eof(true);
             break;
         }
-        buffer.append(read_buffer, nread);
+        data.append((const u8*)read_buffer, nread);
     }
-    return buffer;
+    return ByteBuffer::copy(data.data(), data.size());
 }
 
 ByteBuffer CIODevice::read_line(int max_size)
