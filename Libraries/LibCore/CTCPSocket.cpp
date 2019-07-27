@@ -17,8 +17,3 @@ CTCPSocket::CTCPSocket(CObject* parent)
 CTCPSocket::~CTCPSocket()
 {
 }
-
-bool CTCPSocket::bind(const CSocketAddress&)
-{
-    ASSERT_NOT_REACHED();
-}

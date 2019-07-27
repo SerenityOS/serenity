@@ -131,13 +131,6 @@ bool CSocket::send(const ByteBuffer& data)
     return true;
 }
 
-bool CSocket::listen()
-{
-    int rc = ::listen(fd(), 5);
-    set_error(errno);
-    return rc == 0;
-}
-
 void CSocket::did_update_fd(int fd)
 {
     if (fd < 0) {
