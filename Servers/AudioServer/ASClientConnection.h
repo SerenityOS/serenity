@@ -13,6 +13,8 @@ public:
     void send_greeting() override;
     bool handle_message(const ASAPI_ClientMessage&, const ByteBuffer&& = {}) override;
 
+    void did_finish_playing_buffer(Badge<ASMixer>, int buffer_id);
+
 private:
     ASMixer& m_mixer;
 };
