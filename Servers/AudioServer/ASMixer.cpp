@@ -61,7 +61,7 @@ void ASMixer::mix()
 
         max_size = min(1023, max_size);
 
-        Vector<ASample> mixed_buffer;
+        Vector<ASample, 1024> mixed_buffer;
         mixed_buffer.resize(max_size);
 
         // Mix the buffers together into the output
@@ -91,7 +91,8 @@ void ASMixer::mix()
         // max_size is 0 indexed, so add 1.
         const int output_buffer_byte_size = (max_size + 1) * 2 * 2;
         ASSERT(output_buffer_byte_size == 4096);
-        ByteBuffer buffer(ByteBuffer::create_uninitialized(output_buffer_byte_size));
+        u8 raw_buffer[4096];
+        auto buffer = ByteBuffer::wrap(raw_buffer, sizeof(raw_buffer));
         BufferStream stream(buffer);
 
         for (int i = 0; i < mixed_buffer.size(); ++i) {
