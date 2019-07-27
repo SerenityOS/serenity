@@ -7,6 +7,7 @@
 #include <LibCore/CObject.h>
 #include <LibCore/CoreIPCServer.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSEvent.h>
 
 class WSWindow;
@@ -34,7 +35,6 @@ public:
 
     void notify_about_new_screen_rect(const Rect&);
     void post_paint_message(WSWindow&);
-
 
 private:
     virtual void event(CEvent&) override;
