@@ -350,6 +350,11 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         bool success = region->page_in();
         ASSERT(success);
     }
+
+#ifdef EXPENSIVE_USERSPACE_STACKS
+    region->page_in();
+#endif
+
     OwnPtr<ELFLoader> loader;
     {
         // Okay, here comes the sleight of hand, pay close attention..

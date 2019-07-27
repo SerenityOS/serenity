@@ -1,3 +1,4 @@
+#include <AK/ELF/ELFLoader.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
@@ -570,7 +571,12 @@ String Thread::backtrace(ProcessInspectionHandle&) const
         if (!symbol.address)
             break;
         if (!symbol.ksym) {
-            builder.appendf("%p\n", symbol.address);
+#ifdef EXPENSIVE_USERSPACE_STACKS
+            if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
+                builder.appendf("%p  %s\n", symbol.address, process.elf_loader()->symbolicate(symbol.address).characters());
+            else
+#endif
+                builder.appendf("%p\n", symbol.address);
             continue;
         }
         unsigned offset = symbol.address - symbol.ksym->address;
