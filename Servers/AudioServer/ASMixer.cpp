@@ -20,11 +20,11 @@ ASMixer::ASMixer()
     }, this);
 }
 
-void ASMixer::queue(ASClientConnection& client, const ABuffer& buffer, int buffer_id)
+void ASMixer::queue(ASClientConnection& client, const ABuffer& buffer)
 {
     ASSERT(buffer.size_in_bytes());
     CLocker lock(m_lock);
-    m_pending_mixing.append(ASMixerBuffer(buffer, client, buffer_id));
+    m_pending_mixing.append(ASMixerBuffer(buffer, client));
 }
 
 void ASMixer::mix()
@@ -68,19 +68,20 @@ void ASMixer::mix()
         for (auto& buffer : active_mix_buffers) {
             if (buffer.done)
                 continue;
-            auto& samples = buffer.buffer->samples();
+            auto* samples = buffer.buffer->samples();
+            auto sample_count = buffer.buffer->sample_count();
 
-            for (int i = 0; i < max_size && buffer.pos < samples.size(); ++buffer.pos, ++i) {
+            for (int i = 0; i < max_size && buffer.pos < sample_count; ++buffer.pos, ++i) {
                 auto& mixed_sample = mixed_buffer[i];
                 mixed_sample += samples[buffer.pos];
             }
 
             // clear it later
-            if (buffer.pos == samples.size()) {
-                if (buffer.m_buffer_id && buffer.m_client) {
+            if (buffer.pos == sample_count) {
+                if (buffer.m_client) {
                     ASAPI_ServerMessage reply;
                     reply.type = ASAPI_ServerMessage::Type::FinishedPlayingBuffer;
-                    reply.playing_buffer.buffer_id = buffer.m_buffer_id;
+                    reply.playing_buffer.buffer_id = buffer.buffer->shared_buffer_id();
                     buffer.m_client->post_message(reply);
                 }
                 buffer.done = true;
@@ -118,9 +119,8 @@ void ASMixer::mix()
     }
 }
 
-ASMixer::ASMixerBuffer::ASMixerBuffer(const NonnullRefPtr<ABuffer>& buf, ASClientConnection& client, int buffer_id)
+ASMixer::ASMixerBuffer::ASMixerBuffer(const NonnullRefPtr<ABuffer>& buf, ASClientConnection& client)
     : buffer(buf)
     , m_client(client.make_weak_ptr())
-    , m_buffer_id(buffer_id)
 {
 }
