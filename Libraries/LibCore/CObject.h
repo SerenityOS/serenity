@@ -64,8 +64,10 @@ protected:
     CObject(CObject* parent = nullptr, bool is_widget = false);
 
     virtual void timer_event(CTimerEvent&);
-    virtual void child_event(CChildEvent&);
     virtual void custom_event(CCustomEvent&);
+
+    // NOTE: You may get child events for children that are not yet fully constructed!
+    virtual void child_event(CChildEvent&);
 
 private:
     CObject* m_parent { nullptr };
