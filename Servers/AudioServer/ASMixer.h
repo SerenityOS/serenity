@@ -14,16 +14,15 @@ class ASMixer : public RefCounted<ASMixer> {
 public:
     ASMixer();
 
-    void queue(ASClientConnection&, const ABuffer&, int buffer_id);
+    void queue(ASClientConnection&, const ABuffer&);
 
 private:
     struct ASMixerBuffer {
-        ASMixerBuffer(const NonnullRefPtr<ABuffer>&, ASClientConnection&, int buffer_id = -1);
+        ASMixerBuffer(const NonnullRefPtr<ABuffer>&, ASClientConnection&);
         NonnullRefPtr<ABuffer> buffer;
         int pos { 0 };
         bool done { false };
         WeakPtr<ASClientConnection> m_client;
-        int m_buffer_id { -1 };
     };
 
     Vector<ASMixerBuffer> m_pending_mixing;

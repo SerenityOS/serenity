@@ -40,16 +40,11 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
         break;
     case ASAPI_ClientMessage::Type::PlayBuffer: {
         // ### ensure that the size is that of a Vector<ASample>
-        Vector<ASample> samples;
 
-        {
-            const auto& shared_buf = SharedBuffer::create_from_shared_buffer_id(message.play_buffer.buffer_id);
-            if (!shared_buf) {
-                did_misbehave();
-                return false;
-            }
-            samples.resize(shared_buf->size() / sizeof(ASample));
-            memcpy(samples.data(), shared_buf->data(), shared_buf->size());
+        auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.play_buffer.buffer_id);
+        if (!shared_buffer) {
+            did_misbehave();
+            return false;
         }
 
         // we no longer need the buffer, so acknowledge that it's playing
@@ -59,7 +54,7 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
         reply.playing_buffer.buffer_id = message.play_buffer.buffer_id;
         post_message(reply);
 
-        m_mixer.queue(*this, ABuffer::create_with_samples(move(samples)), message.play_buffer.buffer_id);
+        m_mixer.queue(*this, ABuffer::create_with_shared_buffer(*shared_buffer));
         break;
     }
     case ASAPI_ClientMessage::Type::Invalid:

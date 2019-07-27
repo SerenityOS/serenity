@@ -4,6 +4,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
+#include <LibC/SharedBuffer.h>
 
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0
@@ -57,17 +58,29 @@ public:
     {
         return adopt(*new ABuffer(move(samples)));
     }
+    static NonnullRefPtr<ABuffer> create_with_shared_buffer(NonnullRefPtr<SharedBuffer>&& buffer)
+    {
+        return adopt(*new ABuffer(move(buffer)));
+    }
 
-    const Vector<ASample>& samples() const { return m_samples; }
-    Vector<ASample>& samples() { return m_samples; }
-    const void* data() const { return m_samples.data(); }
-    int size_in_bytes() const { return m_samples.size() * sizeof(ASample); }
+    const ASample* samples() const { return (const ASample*)data(); }
+    int sample_count() const { return m_buffer->size() / (int)sizeof(ASample); }
+    const void* data() const { return m_buffer->data(); }
+    int size_in_bytes() const { return m_buffer->size(); }
+    int shared_buffer_id() const { return m_buffer->shared_buffer_id(); }
 
 private:
-    ABuffer(Vector<ASample>&& samples)
-        : m_samples(move(samples))
+    explicit ABuffer(Vector<ASample>&& samples)
+        : m_buffer(*SharedBuffer::create_with_size(samples.size() * sizeof(ASample)))
+    {
+        memcpy(m_buffer->data(), samples.data(), samples.size() * sizeof(ASample));
+    }
+
+    explicit ABuffer(NonnullRefPtr<SharedBuffer>&& buffer)
+        : m_buffer(move(buffer))
     {
     }
 
-    Vector<ASample> m_samples;
+    NonnullRefPtr<SharedBuffer> m_buffer;
+    int m_sample_count { 0 };
 };

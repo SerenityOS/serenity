@@ -24,7 +24,7 @@ int main(int argc, char **argv)
         if (!samples) {
             break;
         }
-        printf("Playing %d sample(s)\n", samples->samples().size());
+        printf("Playing %d sample(s)\n", samples->sample_count());
         a_conn.play(*samples, true);
     }
 
