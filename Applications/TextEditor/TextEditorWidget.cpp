@@ -43,7 +43,7 @@ TextEditorWidget::TextEditorWidget()
     });
 
     m_save_as_action = GAction::create("Save as...", { Mod_None, Key_F12 }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
-        Optional<String> save_name = GFilePicker::get_save_filepath();
+        Optional<String> save_name = GFilePicker::get_save_filepath("txt");
         if (!save_name.has_value())
             return;
 

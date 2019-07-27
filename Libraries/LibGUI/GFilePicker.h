@@ -15,10 +15,10 @@ public:
     };
 
     static Optional<String> get_open_filepath();
-    static Optional<String> get_save_filepath();
+    static Optional<String> get_save_filepath(const String& file_extension);
     static bool file_exists(const StringView& path);
 
-    GFilePicker(Mode type = Mode::Open, const StringView& path = "/", CObject* parent = nullptr);
+    GFilePicker(Mode type = Mode::Open, const String& file_extension = ".txt", const StringView& path = "/", CObject* parent = nullptr);
     virtual ~GFilePicker() override;
 
     FileSystemPath selected_file() const { return m_selected_file; }
@@ -47,4 +47,5 @@ private:
     GLabel* m_preview_name_label { nullptr };
     GLabel* m_preview_geometry_label { nullptr };
     Mode m_mode { Mode::Open };
+    const String& m_file_extension;
 };

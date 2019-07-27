@@ -1,5 +1,6 @@
 #include <AK/FileSystemPath.h>
 #include <AK/Function.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
@@ -11,7 +12,6 @@
 #include <LibGUI/GSortingProxyModel.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GToolBar.h>
-#include <LibDraw/PNGLoader.h>
 
 Optional<String> GFilePicker::get_open_filepath()
 {
@@ -28,9 +28,9 @@ Optional<String> GFilePicker::get_open_filepath()
     return {};
 }
 
-Optional<String> GFilePicker::get_save_filepath()
+Optional<String> GFilePicker::get_save_filepath(const String& file_extension)
 {
-    GFilePicker picker(Mode::Save);
+    GFilePicker picker(Mode::Save, file_extension);
 
     if (picker.exec() == GDialog::ExecOK) {
         String file_path = picker.selected_file().string();
@@ -43,10 +43,11 @@ Optional<String> GFilePicker::get_save_filepath()
     return {};
 }
 
-GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
+GFilePicker::GFilePicker(Mode mode, const String& file_extension, const StringView& path, CObject* parent)
     : GDialog(parent)
     , m_model(GDirectoryModel::create())
     , m_mode(mode)
+    , m_file_extension(file_extension)
 {
     set_title("GFilePicker");
     set_rect(200, 200, 700, 400);
@@ -128,7 +129,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
     filename_label->set_preferred_size(60, 0);
     auto* filename_textbox = new GTextBox(filename_container);
     if (m_mode == Mode::Save) {
-        filename_textbox->set_text("Untitled.txt"); //TODO: replace .txt with a preferred extension
+        filename_textbox->set_text(String::format("Untitled.%s", m_file_extension.characters()));
         filename_textbox->set_focus(true);
         filename_textbox->select_all();
     }
