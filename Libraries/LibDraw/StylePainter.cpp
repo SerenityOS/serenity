@@ -9,7 +9,7 @@ void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool act
     Color shadow_color2 = Color::from_rgb(0x404040);
 
     if (hovered && enabled && !active)
-        base_color = Color::from_rgb(0xd4d4d4);
+        base_color = StylePainter::hover_highlight_color();
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
@@ -55,7 +55,7 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, b
         else
             button_color = Color::from_rgb(0xd6d2ce);
     } else if (hovered && enabled)
-        button_color = Color::from_rgb(0xd4d4d4);
+        button_color = StylePainter::hover_highlight_color();
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());

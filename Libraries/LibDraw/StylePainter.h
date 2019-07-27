@@ -1,5 +1,7 @@
 #pragma once
 
+#include <LibDraw/Color.h>
+
 class Painter;
 class Rect;
 
@@ -28,4 +30,6 @@ public:
     static void paint_surface(Painter&, const Rect&, bool paint_vertical_lines = true, bool paint_top_line = true);
     static void paint_frame(Painter&, const Rect&, FrameShape, FrameShadow, int thickness, bool skip_vertical_lines = false);
     static void paint_window_frame(Painter&, const Rect&);
+
+    static Color hover_highlight_color() { return Color::from_rgb(0xe6e5e2); }
 };
