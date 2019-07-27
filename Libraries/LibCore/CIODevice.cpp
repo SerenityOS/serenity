@@ -22,6 +22,13 @@ const char* CIODevice::error_string() const
     return strerror(m_error);
 }
 
+int CIODevice::read(u8* buffer, int length)
+{
+    auto read_buffer = read(length);
+    memcpy(buffer, read_buffer.data(), length);
+    return read_buffer.size();
+}
+
 ByteBuffer CIODevice::read(int max_size)
 {
     if (m_fd < 0)

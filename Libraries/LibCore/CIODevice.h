@@ -28,6 +28,9 @@ public:
 
     bool has_error() const { return m_error != 0; }
 
+
+    int read(u8* buffer, int length);
+
     ByteBuffer read(int max_size);
     ByteBuffer read_line(int max_size);
     ByteBuffer read_all();
