@@ -9,6 +9,11 @@ ProcessTableView::ProcessTableView(GraphWidget& graph, GWidget* parent)
     set_model(GSortingProxyModel::create(ProcessModel::create(graph)));
     model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GSortOrder::Descending);
     refresh();
+
+    on_selection = [this](auto&) {
+        if (on_process_selected)
+            on_process_selected(selected_pid());
+    };
 }
 
 ProcessTableView::~ProcessTableView()
