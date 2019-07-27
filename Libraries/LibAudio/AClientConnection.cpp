@@ -1,6 +1,6 @@
-#include <SharedBuffer.h>
 #include <LibAudio/ABuffer.h>
-#include "AClientConnection.h"
+#include <LibAudio/AClientConnection.h>
+#include <SharedBuffer.h>
 
 AClientConnection::AClientConnection()
     : Connection("/tmp/asportal")
