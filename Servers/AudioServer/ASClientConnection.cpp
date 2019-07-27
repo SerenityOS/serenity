@@ -39,8 +39,6 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
         set_client_pid(message.greeting.client_pid);
         break;
     case ASAPI_ClientMessage::Type::PlayBuffer: {
-        // ### ensure that the size is that of a Vector<ASample>
-
         auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.play_buffer.buffer_id);
         if (!shared_buffer) {
             did_misbehave();
@@ -48,7 +46,6 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
         }
 
         // we no longer need the buffer, so acknowledge that it's playing
-        // TODO: rate limit playback here somehow
         ASAPI_ServerMessage reply;
         reply.type = ASAPI_ServerMessage::Type::PlayingBuffer;
         reply.playing_buffer.buffer_id = message.play_buffer.buffer_id;
