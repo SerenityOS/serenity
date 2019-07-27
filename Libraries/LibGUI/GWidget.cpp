@@ -404,6 +404,14 @@ void GWidget::set_preferred_size(const Size& size)
     invalidate_layout();
 }
 
+void GWidget::set_size_policy(Orientation orientation, SizePolicy policy)
+{
+    if (orientation == Orientation::Horizontal)
+        set_size_policy(policy, m_vertical_size_policy);
+    else
+        set_size_policy(m_horizontal_size_policy, policy);
+}
+
 void GWidget::set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_policy)
 {
     if (m_horizontal_size_policy == horizontal_policy && m_vertical_size_policy == vertical_policy)
