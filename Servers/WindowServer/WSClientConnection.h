@@ -15,6 +15,7 @@ class WSMenu;
 class WSMenuBar;
 
 class WSClientConnection final : public IPC::Server::Connection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
+    C_OBJECT(WSClientConnection)
 public:
     explicit WSClientConnection(CLocalSocket&, int client_id);
     ~WSClientConnection() override;
