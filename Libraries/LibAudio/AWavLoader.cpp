@@ -18,11 +18,14 @@ AWavLoader::AWavLoader(const StringView& path)
 
 RefPtr<ABuffer> AWavLoader::get_more_samples()
 {
+#ifdef AWAVLOADER_DEBUG
     dbgprintf("Read WAV of format PCM with num_channels %u sample rate %u, bits per sample %u\n", m_num_channels, m_sample_rate, m_bits_per_sample);
+#endif
 
     auto raw_samples = m_file.read(128 * KB);
-    auto buffer = ABuffer::from_pcm_data(raw_samples, m_num_channels, m_bits_per_sample, m_sample_rate);
-    return buffer;
+    if (raw_samples.is_empty())
+        return nullptr;
+    return ABuffer::from_pcm_data(raw_samples, m_num_channels, m_bits_per_sample, m_sample_rate);
 }
 
 bool AWavLoader::parse_header()
