@@ -26,11 +26,3 @@ CLocalSocket::CLocalSocket(CObject* parent)
 CLocalSocket::~CLocalSocket()
 {
 }
-
-bool CLocalSocket::bind(const CSocketAddress& address)
-{
-    auto un = address.to_sockaddr_un();
-    int rc = ::bind(fd(), (const sockaddr*)&un, sizeof(un));
-    set_error(errno);
-    return rc == 0;
-}

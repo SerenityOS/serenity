@@ -11,6 +11,4 @@ public:
     explicit CLocalSocket(CObject* parent = nullptr);
     CLocalSocket(Badge<CLocalServer>, int fd, CObject* parent = nullptr);
     virtual ~CLocalSocket() override;
-
-    virtual bool bind(const CSocketAddress&) override;
 };

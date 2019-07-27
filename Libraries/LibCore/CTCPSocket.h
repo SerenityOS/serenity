@@ -5,6 +5,4 @@ class CTCPSocket final : public CSocket {
 public:
     explicit CTCPSocket(CObject* parent = nullptr);
     virtual ~CTCPSocket() override;
-
-    virtual bool bind(const CSocketAddress&) override;
 };
