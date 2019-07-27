@@ -11,5 +11,5 @@ public:
     AClientConnection();
 
     virtual void handshake() override;
-    void play(const ABuffer&);
+    void play(const ABuffer&, bool block);
 };

@@ -48,11 +48,6 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
                 did_misbehave();
                 return false;
             }
-
-            if (shared_buf->size() / sizeof(ASample) > 441000) {
-                did_misbehave();
-                return false;
-            }
             samples.resize(shared_buf->size() / sizeof(ASample));
             memcpy(samples.data(), shared_buf->data(), shared_buf->size());
         }
@@ -64,7 +59,7 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
         reply.playing_buffer.buffer_id = message.play_buffer.buffer_id;
         post_message(reply);
 
-        m_mixer.queue(*this, adopt(*new ABuffer(move(samples))));
+        m_mixer.queue(*this, ABuffer::create_with_samples(move(samples)), message.play_buffer.buffer_id);
         break;
     }
     case ASAPI_ClientMessage::Type::Invalid:
