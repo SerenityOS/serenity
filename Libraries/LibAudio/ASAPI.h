@@ -6,10 +6,12 @@ struct ASAPI_ServerMessage {
         Greeting,
         PlayingBuffer,
         FinishedPlayingBuffer,
+        EnqueueBufferResponse,
     };
 
     Type type { Type::Invalid };
     unsigned extra_size { 0 };
+    bool success { true };
 
     union {
         struct {
@@ -27,6 +29,7 @@ struct ASAPI_ClientMessage {
         Invalid,
         Greeting,
         PlayBuffer,
+        EnqueueBuffer,
     };
 
     Type type { Type::Invalid };
