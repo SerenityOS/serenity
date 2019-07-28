@@ -242,7 +242,9 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, int num_channels, int b
     Vector<ASample> fdata;
     fdata.ensure_capacity(data.size() * 2);
 
+#ifdef AWAVLOADER_DEBUG
     dbg() << "Reading " << bits_per_sample << " bits and " << num_channels << " channels, total bytes: " << data.size();
+#endif
 
     switch (bits_per_sample) {
     case 8:
