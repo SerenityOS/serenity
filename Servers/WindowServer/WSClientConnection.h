@@ -54,7 +54,6 @@ private:
     void handle_request(const WSAPIGetWindowTitleRequest&);
     void handle_request(const WSAPISetWindowRectRequest&);
     void handle_request(const WSAPIGetWindowRectRequest&);
-    void handle_request(const WSAPISetWindowIconRequest&);
     void handle_request(const WSAPISetWindowIconBitmapRequest&);
     void handle_request(const WSAPISetClipboardContentsRequest&);
     void handle_request(const WSAPIGetClipboardContentsRequest&);

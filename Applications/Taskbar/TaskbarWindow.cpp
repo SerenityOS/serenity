@@ -86,25 +86,11 @@ void TaskbarWindow::wm_event(GWMEvent& event)
 #endif
         break;
     }
-    case GEvent::WM_WindowIconChanged: {
-        auto& changed_event = static_cast<GWMWindowIconChangedEvent&>(event);
-#ifdef EVENT_DEBUG
-        dbgprintf("WM_WindowIconChanged: client_id=%d, window_id=%d, icon_path=%s\n",
-            changed_event.client_id(),
-            changed_event.window_id(),
-            changed_event.icon_path().characters());
-#endif
-        if (auto* window = WindowList::the().window(identifier)) {
-            window->set_icon_path(changed_event.icon_path());
-            window->button()->set_icon(window->icon());
-        }
-        break;
-    }
 
     case GEvent::WM_WindowIconBitmapChanged: {
         auto& changed_event = static_cast<GWMWindowIconBitmapChangedEvent&>(event);
 #ifdef EVENT_DEBUG
-        dbgprintf("WM_WindowIconChanged: client_id=%d, window_id=%d, icon_buffer_id=%d\n",
+        dbgprintf("WM_WindowIconBitmapChanged: client_id=%d, window_id=%d, icon_buffer_id=%d\n",
             changed_event.client_id(),
             changed_event.window_id(),
             changed_event.icon_buffer_id());

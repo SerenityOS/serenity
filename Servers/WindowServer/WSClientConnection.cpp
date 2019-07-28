@@ -139,13 +139,6 @@ bool WSClientConnection::handle_message(const WSAPI_ClientMessage& message, cons
     case WSAPI_ClientMessage::Type::DismissMenu:
         CEventLoop::current().post_event(*this, make<WSAPIDismissMenuRequest>(client_id(), message.menu.menu_id));
         break;
-    case WSAPI_ClientMessage::Type::SetWindowIcon:
-        if (message.text_length > (int)sizeof(message.text)) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPISetWindowIconRequest>(client_id(), message.window_id, String(message.text, message.text_length)));
-        break;
     case WSAPI_ClientMessage::Type::SetWindowIconBitmap:
         CEventLoop::current().post_event(*this, make<WSAPISetWindowIconBitmapRequest>(client_id(), message.window_id, message.window.icon_buffer_id, message.window.icon_size));
         break;
@@ -577,28 +570,6 @@ void WSClientConnection::handle_request(const WSAPIGetWindowTitleRequest& reques
     post_message(response);
 }
 
-void WSClientConnection::handle_request(const WSAPISetWindowIconRequest& request)
-{
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
-    if (it == m_windows.end()) {
-        post_error("WSAPISetWindowIconRequest: Bad window ID");
-        return;
-    }
-    auto& window = *(*it).value;
-    if (request.icon_path().is_empty()) {
-        window.set_default_icon();
-    } else {
-        auto icon = GraphicsBitmap::load_from_file(request.icon_path());
-        if (!icon)
-            return;
-        window.set_icon(request.icon_path(), *icon);
-    }
-
-    window.frame().invalidate_title_bar();
-    WSWindowManager::the().tell_wm_listeners_window_icon_changed(window);
-}
-
 void WSClientConnection::handle_request(const WSAPISetWindowIconBitmapRequest& request)
 {
     int window_id = request.window_id();
@@ -970,8 +941,6 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPISetWindowRectRequest&>(request));
     case WSEvent::APIGetWindowRectRequest:
         return handle_request(static_cast<const WSAPIGetWindowRectRequest&>(request));
-    case WSEvent::APISetWindowIconRequest:
-        return handle_request(static_cast<const WSAPISetWindowIconRequest&>(request));
     case WSEvent::APISetWindowIconBitmapRequest:
         return handle_request(static_cast<const WSAPISetWindowIconBitmapRequest&>(request));
     case WSEvent::APISetClipboardContentsRequest:
