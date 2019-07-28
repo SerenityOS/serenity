@@ -13,7 +13,8 @@ KERNEL_OBJS = \
        CMOS.o \
        Arch/i386/PIC.o \
        Syscall.o \
-       Devices/IDEDiskDevice.o \
+       Devices/PATAChannel.o \
+       Devices/PATADiskDevice.o \
        Devices/FloppyDiskDevice.o \
        VM/MemoryManager.o \
        VM/Region.o \
