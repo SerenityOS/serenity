@@ -257,5 +257,10 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, int num_channels, int b
     // don't belong.
     ASSERT(!stream.handle_read_failure());
 
+    // HACK: This is a total hack to remove an unnecessary sample at the end of the buffer.
+    // FIXME: Don't generate the extra sample... :^)
+    for (int i = 0; i < 1; ++i)
+        fdata.take_last();
+
     return ABuffer::create_with_samples(move(fdata));
 }
