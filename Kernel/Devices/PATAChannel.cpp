@@ -1,14 +1,15 @@
-#include <Kernel/Devices/IDEDiskDevice.h>
+#include "PATADiskDevice.h"
+#include <AK/ByteBuffer.h>
+#include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/IO.h>
-#include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Process.h>
-#include <Kernel/StdLib.h>
 #include <Kernel/VM/MemoryManager.h>
 
-//#define DISK_DEBUG
+#define PATA_PRIMARY_IRQ 14
+#define PATA_SECONDARY_IRQ 15
 
-#define IRQ_FIXED_DISK 14
+//#define PATA_DEBUG
 
 #define ATA_SR_BSY 0x80
 #define ATA_SR_DRDY 0x40
@@ -78,61 +79,55 @@
 #define ATA_REG_ALTSTATUS 0x0C
 #define ATA_REG_DEVADDRESS 0x0D
 
-NonnullRefPtr<IDEDiskDevice> IDEDiskDevice::create(DriveType type)
+static Lock& s_lock()
 {
-    return adopt(*new IDEDiskDevice(type));
+    static Lock* lock;
+    if (!lock)
+        lock = new Lock;
+
+    return *lock;
+};
+
+OwnPtr<PATAChannel> PATAChannel::create(ChannelType type)
+{
+    return make<PATAChannel>(type);
 }
 
-IDEDiskDevice::IDEDiskDevice(DriveType type)
-    : IRQHandler(IRQ_FIXED_DISK)
-    , m_io_base(0x1f0)
-    , m_drive_type(type)
+PATAChannel::PATAChannel(ChannelType type)
+    : IRQHandler((type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ))
+    , m_channel_number((type == ChannelType::Primary ? 0 : 1))
+    , m_io_base((type == ChannelType::Primary ? 0x1F0 : 0x170))
 {
     m_dma_enabled.resource() = true;
     ProcFS::the().add_sys_bool("ide_dma", m_dma_enabled);
+
     initialize();
+    detect_disks();
 }
 
-IDEDiskDevice::~IDEDiskDevice()
+PATAChannel::~PATAChannel()
 {
 }
 
-const char* IDEDiskDevice::class_name() const
+void PATAChannel::initialize()
 {
-    return "IDEDiskDevice";
-}
+    static const PCI::ID piix3_ide_id = { 0x8086, 0x7010 };
+    static const PCI::ID piix4_ide_id = { 0x8086, 0x7111 };
+    PCI::enumerate_all([this](const PCI::Address& address, PCI::ID id) {
+        if (id == piix3_ide_id || id == piix4_ide_id) {
+            m_pci_address = address;
+            kprintf("PIIX%u PATA Controller found!\n", id == piix3_ide_id ? 3 : 4);
+        }
+    });
 
-unsigned IDEDiskDevice::block_size() const
-{
-    return 512;
-}
-
-bool IDEDiskDevice::read_blocks(unsigned index, u16 count, u8* out)
-{
-    if (m_bus_master_base && m_dma_enabled.resource())
-        return read_sectors_with_dma(index, count, out);
-    return read_sectors(index, count, out);
-}
-
-bool IDEDiskDevice::read_block(unsigned index, u8* out) const
-{
-    return const_cast<IDEDiskDevice*>(this)->read_blocks(index, 1, out);
-}
-
-bool IDEDiskDevice::write_blocks(unsigned index, u16 count, const u8* data)
-{
-    if (m_bus_master_base && m_dma_enabled.resource())
-        return write_sectors_with_dma(index, count, data);
-    for (unsigned i = 0; i < count; ++i) {
-        if (!write_sectors(index + i, 1, data + i * 512))
-            return false;
+    // Let's try to set up DMA transfers.
+    if (!m_pci_address.is_null()) {
+        m_prdt.end_of_table = 0x8000;
+        PCI::enable_bus_mastering(m_pci_address);
+        m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
+        m_dma_buffer_page = MM.allocate_supervisor_physical_page();
+        dbgprintf("PIIX Bus master IDE: I/O @ %x\n", m_bus_master_base);
     }
-    return true;
-}
-
-bool IDEDiskDevice::write_block(unsigned index, const u8* data)
-{
-    return write_blocks(index, 1, data);
 }
 
 static void print_ide_status(u8 status)
@@ -148,112 +143,36 @@ static void print_ide_status(u8 status)
         (status & ATA_SR_ERR) != 0);
 }
 
-bool IDEDiskDevice::wait_for_irq()
+bool PATAChannel::wait_for_irq()
 {
-#ifdef DISK_DEBUG
-    kprintf("disk: waiting for interrupt...\n");
+#ifdef PATA_DEBUG
+    kprintf("PATA: waiting for IRQ %d...\n", irq_number());
 #endif
-    // FIXME: Add timeout.
     while (!m_interrupted) {
         // FIXME: Put this process into a Blocked state instead, it's stupid to wake up just to check a flag.
         Scheduler::yield();
     }
-#ifdef DISK_DEBUG
-    kprintf("disk: got interrupt!\n");
+#ifdef PATA_DEBUG
+    kprintf("PATA: received IRQ %d!\n", irq_number());
 #endif
+
     return true;
 }
 
-void IDEDiskDevice::handle_irq()
+void PATAChannel::handle_irq()
 {
     u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
         m_device_error = IO::in8(m_io_base + ATA_REG_ERROR);
-        kprintf("IDEDiskDevice: Error %b!\n", m_device_error);
+        kprintf("PATADiskDevice: Error %b!\n", m_device_error);
     } else {
         m_device_error = 0;
     }
-#ifdef DISK_DEBUG
+#ifdef PATA_DEBUG
     kprintf("disk:interrupt: DRQ=%u BSY=%u DRDY=%u\n", (status & ATA_SR_DRQ) != 0, (status & ATA_SR_BSY) != 0, (status & ATA_SR_DRDY) != 0);
 #endif
     m_interrupted = true;
-}
-
-void IDEDiskDevice::initialize()
-{
-    static const PCI::ID piix3_ide_id = { 0x8086, 0x7010 };
-    static const PCI::ID piix4_ide_id = { 0x8086, 0x7111 };
-    PCI::enumerate_all([this](const PCI::Address& address, PCI::ID id) {
-        if (id == piix3_ide_id || id == piix4_ide_id) {
-            m_pci_address = address;
-            kprintf("PIIX%u IDE device found!\n", id == piix3_ide_id ? 3 : 4);
-        }
-    });
-
-#ifdef DISK_DEBUG
-    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
-    kprintf("initial status: ");
-    print_ide_status(status);
-
-    if (is_slave())
-        kprintf("This IDE device is the SECONDARY device on the channel!\n");
-#endif
-
-    m_interrupted = false;
-
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
-        ;
-
-    enable_irq();
-
-    u8 devsel = 0xA0;
-    if (is_slave())
-        devsel |= 0x10;
-
-    IO::out8(0x1F6, devsel);
-    IO::out8(0x3F6, devsel);
-    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_IDENTIFY);
-
-    enable_irq();
-    wait_for_irq();
-
-    ByteBuffer wbuf = ByteBuffer::create_uninitialized(512);
-    ByteBuffer bbuf = ByteBuffer::create_uninitialized(512);
-    u8* b = bbuf.pointer();
-    u16* w = (u16*)wbuf.pointer();
-    const u16* wbufbase = (u16*)wbuf.pointer();
-
-    for (u32 i = 0; i < 256; ++i) {
-        u16 data = IO::in16(m_io_base + ATA_REG_DATA);
-        *(w++) = data;
-        *(b++) = MSB(data);
-        *(b++) = LSB(data);
-    }
-
-    // "Unpad" the device name string.
-    for (u32 i = 93; i > 54 && bbuf[i] == ' '; --i)
-        bbuf[i] = 0;
-
-    m_cylinders = wbufbase[1];
-    m_heads = wbufbase[3];
-    m_sectors_per_track = wbufbase[6];
-
-    kprintf(
-        "IDEDiskDevice: Master=\"%s\", C/H/Spt=%u/%u/%u\n",
-        bbuf.pointer() + 54,
-        m_cylinders,
-        m_heads,
-        m_sectors_per_track);
-
-    // Let's try to set up DMA transfers.
-    if (!m_pci_address.is_null()) {
-        m_prdt.end_of_table = 0x8000;
-        PCI::enable_bus_mastering(m_pci_address);
-        m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
-        m_dma_buffer_page = MM.allocate_supervisor_physical_page();
-        dbgprintf("PIIX Bus master IDE: I/O @ %x\n", m_bus_master_base);
-    }
 }
 
 static void wait_400ns(u16 io_base)
@@ -262,11 +181,76 @@ static void wait_400ns(u16 io_base)
         IO::in8(io_base + ATA_REG_ALTSTATUS);
 }
 
-bool IDEDiskDevice::read_sectors_with_dma(u32 lba, u16 count, u8* outbuf)
+void PATAChannel::detect_disks()
 {
-    LOCKER(m_lock);
-#ifdef DISK_DEBUG
-    dbgprintf("%s(%u): IDEDiskDevice::read_sectors_with_dma (%u x%u) -> %p\n",
+    // There are only two possible disks connected to a channel
+    for (auto i = 0; i < 2; i++) {
+        enable_irq();
+
+        IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xA0 | (i << 4)); // First, we need to select the drive itself
+
+        // Apparently these need to be 0 before sending IDENTIFY?!
+        IO::out8(m_io_base + ATA_REG_SECCOUNT0, 0x00);
+        IO::out8(m_io_base + ATA_REG_LBA0, 0x00);
+        IO::out8(m_io_base + ATA_REG_LBA1, 0x00);
+        IO::out8(m_io_base + ATA_REG_LBA2, 0x00);
+
+        IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_IDENTIFY); // Send the ATA_IDENTIFY command
+
+        // Wait for the BSY flag to be reset
+        while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+            ;
+
+        if (IO::in8(m_io_base + ATA_REG_STATUS) == 0x00) {
+#ifdef PATA_DEBUG
+            kprintf("PATA: No %s disk detected!\n", (i == 0 ? "master" : "slave"));
+#endif
+            continue;
+        }
+
+        ByteBuffer wbuf = ByteBuffer::create_uninitialized(512);
+        ByteBuffer bbuf = ByteBuffer::create_uninitialized(512);
+        u8* b = bbuf.pointer();
+        u16* w = (u16*)wbuf.pointer();
+        const u16* wbufbase = (u16*)wbuf.pointer();
+
+        for (u32 i = 0; i < 256; ++i) {
+            u16 data = IO::in16(m_io_base + ATA_REG_DATA);
+            *(w++) = data;
+            *(b++) = MSB(data);
+            *(b++) = LSB(data);
+        }
+
+        // "Unpad" the device name string.
+        for (u32 i = 93; i > 54 && bbuf[i] == ' '; --i)
+            bbuf[i] = 0;
+
+        u8 cyls = wbufbase[1];
+        u8 heads = wbufbase[3];
+        u8 spt = wbufbase[6];
+
+        kprintf(
+            "PATADiskDevice: Name=\"%s\", C/H/Spt=%u/%u/%u\n",
+            bbuf.pointer() + 54,
+            cyls,
+            heads,
+            spt);
+
+        if (i == 0) {
+            m_master = PATADiskDevice::create(*this, PATADiskDevice::DriveType::Master);
+            m_master->set_drive_geometry(cyls, heads, spt);
+        } else {
+            m_slave = PATADiskDevice::create(*this, PATADiskDevice::DriveType::Slave);
+            m_slave->set_drive_geometry(cyls, heads, spt);
+        }
+    }
+}
+
+bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool slave_request)
+{
+    LOCKER(s_lock());
+#ifdef PATA_DEBUG
+    dbgprintf("%s(%u): PATADiskDevice::read_sectors_with_dma (%u x%u) -> %p\n",
         current->process().name().characters(),
         current->pid(), lba, count, outbuf);
 #endif
@@ -297,11 +281,11 @@ bool IDEDiskDevice::read_sectors_with_dma(u32 lba, u16 count, u8* outbuf)
         ;
 
     u8 devsel = 0xe0;
-    if (is_slave())
+    if (slave_request)
         devsel |= 0x10;
 
     IO::out8(m_io_base + ATA_REG_CONTROL, 0);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (is_slave() << 4));
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (static_cast<u8>(slave_request) << 4));
     wait_400ns(m_io_base);
 
     IO::out8(m_io_base + ATA_REG_FEATURES, 0);
@@ -341,62 +325,11 @@ bool IDEDiskDevice::read_sectors_with_dma(u32 lba, u16 count, u8* outbuf)
     return true;
 }
 
-bool IDEDiskDevice::read_sectors(u32 start_sector, u16 count, u8* outbuf)
+bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf, bool slave_request)
 {
-    ASSERT(count <= 256);
-    LOCKER(m_lock);
-#ifdef DISK_DEBUG
-    dbgprintf("%s: Disk::read_sectors request (%u sector(s) @ %u)\n",
-        current->process().name().characters(),
-        count,
-        start_sector);
-#endif
-    disable_irq();
-
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
-        ;
-
-#ifdef DISK_DEBUG
-    kprintf("IDEDiskDevice: Reading %u sector(s) @ LBA %u\n", count, start_sector);
-#endif
-
-    u8 devsel = 0xe0;
-    if (is_slave())
-        devsel |= 0x10;
-
-    IO::out8(m_io_base + ATA_REG_SECCOUNT0, count == 256 ? 0 : LSB(count));
-    IO::out8(m_io_base + ATA_REG_LBA0, start_sector & 0xff);
-    IO::out8(m_io_base + ATA_REG_LBA1, (start_sector >> 8) & 0xff);
-    IO::out8(m_io_base + ATA_REG_LBA2, (start_sector >> 16) & 0xff);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | ((start_sector >> 24) & 0xf));
-
-    IO::out8(0x3F6, 0x08);
-    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRDY))
-        ;
-
-    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_READ_PIO);
-    m_interrupted = false;
-    enable_irq();
-    wait_for_irq();
-
-    if (m_device_error)
-        return false;
-
-    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
-    ASSERT(status & ATA_SR_DRQ);
-#ifdef DISK_DEBUG
-    kprintf("Retrieving %u bytes (status=%b), outbuf=%p...\n", count * 512, status, outbuf);
-#endif
-
-    IO::repeated_in16(m_io_base + ATA_REG_DATA, outbuf, count * 256);
-    return true;
-}
-
-bool IDEDiskDevice::write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf)
-{
-    LOCKER(m_lock);
-#ifdef DISK_DEBUG
-    dbgprintf("%s(%u): IDEDiskDevice::write_sectors_with_dma (%u x%u) <- %p\n",
+    LOCKER(s_lock());
+#ifdef PATA_DEBUG
+    dbgprintf("%s(%u): PATADiskDevice::write_sectors_with_dma (%u x%u) <- %p\n",
         current->process().name().characters(),
         current->pid(), lba, count, inbuf);
 #endif
@@ -426,11 +359,11 @@ bool IDEDiskDevice::write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf)
         ;
 
     u8 devsel = 0xe0;
-    if (is_slave())
+    if (slave_request)
         devsel |= 0x10;
 
     IO::out8(m_io_base + ATA_REG_CONTROL, 0);
-    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (is_slave() << 4));
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | (static_cast<u8>(slave_request) << 4));
     wait_400ns(m_io_base);
 
     IO::out8(m_io_base + ATA_REG_FEATURES, 0);
@@ -468,12 +401,63 @@ bool IDEDiskDevice::write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf)
     return true;
 }
 
-bool IDEDiskDevice::write_sectors(u32 start_sector, u16 count, const u8* data)
+bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool slave_request)
 {
     ASSERT(count <= 256);
-    LOCKER(m_lock);
-#ifdef DISK_DEBUG
-    dbgprintf("%s(%u): IDEDiskDevice::write_sectors request (%u sector(s) @ %u)\n",
+    LOCKER(s_lock());
+#ifdef PATA_DEBUG
+    dbgprintf("%s: Disk::read_sectors request (%u sector(s) @ %u)\n",
+        current->process().name().characters(),
+        count,
+        start_sector);
+#endif
+    disable_irq();
+
+    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+        ;
+
+#ifdef PATA_DEBUG
+    kprintf("PATADiskDevice: Reading %u sector(s) @ LBA %u\n", count, start_sector);
+#endif
+
+    u8 devsel = 0xe0;
+    if (slave_request)
+        devsel |= 0x10;
+
+    IO::out8(m_io_base + ATA_REG_SECCOUNT0, count == 256 ? 0 : LSB(count));
+    IO::out8(m_io_base + ATA_REG_LBA0, start_sector & 0xff);
+    IO::out8(m_io_base + ATA_REG_LBA1, (start_sector >> 8) & 0xff);
+    IO::out8(m_io_base + ATA_REG_LBA2, (start_sector >> 16) & 0xff);
+    IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | ((start_sector >> 24) & 0xf));
+
+    IO::out8(0x3F6, 0x08);
+    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRDY))
+        ;
+
+    IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_READ_PIO);
+    m_interrupted = false;
+    enable_irq();
+    wait_for_irq();
+
+    if (m_device_error)
+        return false;
+
+    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
+    ASSERT(status & ATA_SR_DRQ);
+#ifdef PATA_DEBUG
+    kprintf("Retrieving %u bytes (status=%b), outbuf=%p...\n", count * 512, status, outbuf);
+#endif
+
+    IO::repeated_in16(m_io_base + ATA_REG_DATA, outbuf, count * 256);
+    return true;
+}
+
+bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf, bool slave_request)
+{
+    ASSERT(count <= 256);
+    LOCKER(s_lock());
+#ifdef PATA_DEBUG
+    dbgprintf("%s(%u): PATADiskDevice::write_sectors request (%u sector(s) @ %u)\n",
         current->process().name().characters(),
         current->pid(),
         count,
@@ -484,10 +468,10 @@ bool IDEDiskDevice::write_sectors(u32 start_sector, u16 count, const u8* data)
     while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
         ;
 
-    //dbgprintf("IDEDiskDevice: Writing %u sector(s) @ LBA %u\n", count, start_sector);
+    //dbgprintf("PATADiskDevice: Writing %u sector(s) @ LBA %u\n", count, start_sector);
 
     u8 devsel = 0xe0;
-    if (is_slave())
+    if (slave_request)
         devsel |= 0x10;
 
     IO::out8(m_io_base + ATA_REG_SECCOUNT0, count == 256 ? 0 : LSB(count));
@@ -505,7 +489,7 @@ bool IDEDiskDevice::write_sectors(u32 start_sector, u16 count, const u8* data)
 
     u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     ASSERT(status & ATA_SR_DRQ);
-    IO::repeated_out16(m_io_base + ATA_REG_DATA, data, count * 256);
+    IO::repeated_out16(m_io_base + ATA_REG_DATA, inbuf, count * 256);
 
     m_interrupted = false;
     enable_irq();
@@ -520,9 +504,4 @@ bool IDEDiskDevice::write_sectors(u32 start_sector, u16 count, const u8* data)
     wait_for_irq();
 
     return !m_device_error;
-}
-
-bool IDEDiskDevice::is_slave() const
-{
-    return m_drive_type == DriveType::SLAVE;
 }

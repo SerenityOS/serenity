@@ -1,3 +1,4 @@
+#include "Devices/PATADiskDevice.h"
 #include "KSyms.h"
 #include "Process.h"
 #include "RTC.h"
@@ -13,13 +14,13 @@
 #include <Kernel/Devices/DiskPartition.h>
 #include <Kernel/Devices/FloppyDiskDevice.h>
 #include <Kernel/Devices/FullDevice.h>
-#include <Kernel/Devices/IDEDiskDevice.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/MBRPartitionTable.h>
 #include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
-#include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/Devices/SB16.h>
 #include <Kernel/Devices/SerialDevice.h>
 #include <Kernel/Devices/ZeroDevice.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
@@ -68,9 +69,8 @@ VFS* vfs;
         hang();
     }
 
-    auto dev_hd0 = IDEDiskDevice::create(IDEDiskDevice::DriveType::MASTER);
-
-    NonnullRefPtr<DiskDevice> root_dev = dev_hd0;
+    auto pata0 = PATAChannel::create(PATAChannel::ChannelType::Primary);
+    NonnullRefPtr<DiskDevice> root_dev = *pata0->master_device();
 
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
 
