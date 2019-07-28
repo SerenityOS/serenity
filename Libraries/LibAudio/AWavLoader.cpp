@@ -25,7 +25,10 @@ RefPtr<ABuffer> AWavLoader::get_more_samples()
     auto raw_samples = m_file.read(128 * KB);
     if (raw_samples.is_empty())
         return nullptr;
-    return ABuffer::from_pcm_data(raw_samples, m_num_channels, m_bits_per_sample, m_sample_rate);
+
+    auto buffer = ABuffer::from_pcm_data(raw_samples, m_num_channels, m_bits_per_sample, m_sample_rate);
+    m_loaded_samples += buffer->sample_count();
+    return buffer;
 }
 
 bool AWavLoader::parse_header()
@@ -124,6 +127,9 @@ bool AWavLoader::parse_header()
 
     ok = ok && data_sz < INT32_MAX;
     CHECK_OK("Data was too large");
+
+    int bytes_per_sample = (m_bits_per_sample / 8) * m_num_channels;
+    m_total_samples = data_sz / bytes_per_sample;
 
     // Just make sure we're good before we read the data...
     ASSERT(!stream.handle_read_failure());
