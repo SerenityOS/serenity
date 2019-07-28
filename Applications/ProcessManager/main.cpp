@@ -1,5 +1,6 @@
 #include "GraphWidget.h"
 #include "MemoryStatsWidget.h"
+#include "ProcessMemoryMapWidget.h"
 #include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
 #include <LibCore/CTimer.h>
@@ -155,11 +156,16 @@ int main(int argc, char** argv)
     app.set_menubar(move(menubar));
 
     auto* process_tab_widget = new GTabWidget(process_container_splitter);
+
+    auto* memory_map_widget = new ProcessMemoryMapWidget(nullptr);
+    process_tab_widget->add_widget("Memory map", memory_map_widget);
+
     auto* stacks_widget = new ProcessStacksWidget(nullptr);
     process_tab_widget->add_widget("Stacks", stacks_widget);
 
     process_table_view->on_process_selected = [&](pid_t pid) {
         stacks_widget->set_pid(pid);
+        memory_map_widget->set_pid(pid);
     };
 
     auto* window = new GWindow;
