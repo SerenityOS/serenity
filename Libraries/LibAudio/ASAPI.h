@@ -28,7 +28,6 @@ struct ASAPI_ClientMessage {
     enum class Type {
         Invalid,
         Greeting,
-        PlayBuffer,
         EnqueueBuffer,
     };
 

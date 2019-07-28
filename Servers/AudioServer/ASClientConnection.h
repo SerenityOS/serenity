@@ -1,10 +1,10 @@
 #pragma once
 
-#include <AK/Queue.h>
 #include <LibAudio/ASAPI.h>
 #include <LibCore/CoreIPCServer.h>
 
 class ABuffer;
+class ASBufferQueue;
 class ASMixer;
 
 class ASClientConnection final : public IPC::Server::Connection<ASAPI_ServerMessage, ASAPI_ClientMessage> {
@@ -18,9 +18,6 @@ public:
     void did_finish_playing_buffer(Badge<ASMixer>, int buffer_id);
 
 private:
-    void play_next_in_queue();
-
     ASMixer& m_mixer;
-    Queue<NonnullRefPtr<ABuffer>> m_buffer_queue;
-    int m_playing_queued_buffer_id { -1 };
+    RefPtr<ASBufferQueue> m_queue;
 };

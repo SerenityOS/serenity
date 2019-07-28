@@ -38,22 +38,6 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
     case ASAPI_ClientMessage::Type::Greeting:
         set_client_pid(message.greeting.client_pid);
         break;
-    case ASAPI_ClientMessage::Type::PlayBuffer: {
-        auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.play_buffer.buffer_id);
-        if (!shared_buffer) {
-            did_misbehave();
-            return false;
-        }
-
-        // we no longer need the buffer, so acknowledge that it's playing
-        ASAPI_ServerMessage reply;
-        reply.type = ASAPI_ServerMessage::Type::PlayingBuffer;
-        reply.playing_buffer.buffer_id = message.play_buffer.buffer_id;
-        post_message(reply);
-
-        m_mixer.queue(*this, ABuffer::create_with_shared_buffer(*shared_buffer));
-        break;
-    }
     case ASAPI_ClientMessage::Type::EnqueueBuffer: {
         auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.play_buffer.buffer_id);
         if (!shared_buffer) {
@@ -61,21 +45,19 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
             return false;
         }
 
-        static const int max_in_queue = 2;
-
         ASAPI_ServerMessage reply;
         reply.type = ASAPI_ServerMessage::Type::EnqueueBufferResponse;
         reply.playing_buffer.buffer_id = message.play_buffer.buffer_id;
-        if (m_buffer_queue.size() >= max_in_queue) {
+
+        if (!m_queue)
+            m_queue = m_mixer.create_queue(*this);
+
+        if (m_queue->is_full()) {
             reply.success = false;
         } else {
-            m_buffer_queue.enqueue(ABuffer::create_with_shared_buffer(*shared_buffer));
+            m_queue->enqueue(ABuffer::create_with_shared_buffer(*shared_buffer));
         }
         post_message(reply);
-
-        if (m_playing_queued_buffer_id == -1)
-            play_next_in_queue();
-
         break;
     }
     case ASAPI_ClientMessage::Type::Invalid:
@@ -89,19 +71,8 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
 
 void ASClientConnection::did_finish_playing_buffer(Badge<ASMixer>, int buffer_id)
 {
-    if (m_playing_queued_buffer_id == buffer_id)
-        play_next_in_queue();
-
     ASAPI_ServerMessage reply;
     reply.type = ASAPI_ServerMessage::Type::FinishedPlayingBuffer;
     reply.playing_buffer.buffer_id = buffer_id;
     post_message(reply);
-}
-
-void ASClientConnection::play_next_in_queue()
-{
-    dbg() << "Playing next in queue (" << m_buffer_queue.size() << " queued)";
-    auto buffer = m_buffer_queue.dequeue();
-    m_playing_queued_buffer_id = buffer->shared_buffer_id();
-    m_mixer.queue(*this, move(buffer));
 }
