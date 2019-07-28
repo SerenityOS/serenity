@@ -31,7 +31,6 @@ public:
         WM_WindowRemoved,
         WM_WindowStateChanged,
         WM_WindowRectChanged,
-        WM_WindowIconChanged,
         WM_WindowIconBitmapChanged,
 
         __Begin_API_Client_Requests,
@@ -50,7 +49,6 @@ public:
         APIGetWindowTitleRequest,
         APISetWindowRectRequest,
         APIGetWindowRectRequest,
-        APISetWindowIconRequest,
         APISetWindowIconBitmapRequest,
         APIInvalidateRectRequest,
         APIDidFinishPaintingNotification,
@@ -573,23 +571,6 @@ private:
     Rect m_rect;
 };
 
-class WSAPISetWindowIconRequest final : public WSAPIClientRequest {
-public:
-    explicit WSAPISetWindowIconRequest(int client_id, int window_id, const String& icon_path)
-        : WSAPIClientRequest(WSEvent::APISetWindowIconRequest, client_id)
-        , m_window_id(window_id)
-        , m_icon_path(icon_path)
-    {
-    }
-
-    int window_id() const { return m_window_id; }
-    String icon_path() const { return m_icon_path; }
-
-private:
-    int m_window_id { 0 };
-    String m_icon_path;
-};
-
 class WSAPISetWindowIconBitmapRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPISetWindowIconBitmapRequest(int client_id, int window_id, int icon_buffer_id, const Size& icon_size)
@@ -862,20 +843,6 @@ private:
     bool m_active;
     WSWindowType m_window_type;
     bool m_minimized;
-};
-
-class WSWMWindowIconChangedEvent : public WSWMEvent {
-public:
-    WSWMWindowIconChangedEvent(int client_id, int window_id, const String& icon_path)
-        : WSWMEvent(WSEvent::WM_WindowIconChanged, client_id, window_id)
-        , m_icon_path(icon_path)
-    {
-    }
-
-    String icon_path() const { return m_icon_path; }
-
-private:
-    String m_icon_path;
 };
 
 class WSWMWindowIconBitmapChangedEvent : public WSWMEvent {

@@ -116,7 +116,6 @@ struct WSAPI_ServerMessage {
         WM_WindowRemoved,
         WM_WindowStateChanged,
         WM_WindowRectChanged,
-        WM_WindowIconChanged,
         WM_WindowIconBitmapChanged,
         __End_WM_Events__,
     };
@@ -232,7 +231,6 @@ struct WSAPI_ClientMessage {
         WM_PopupWindowMenu,
         PopupMenu,
         DismissMenu,
-        SetWindowIcon,
         SetWindowHasAlphaChannel,
         MoveWindowToFront,
         SetWindowIconBitmap,

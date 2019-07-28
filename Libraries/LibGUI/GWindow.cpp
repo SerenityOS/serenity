@@ -643,22 +643,6 @@ void GWindow::set_icon(const GraphicsBitmap* icon)
     GWindowServerConnection::the().post_message_to_server(message);
 }
 
-void GWindow::set_icon_path(const StringView& path)
-{
-    if (m_icon_path == path)
-        return;
-    m_icon_path = path;
-    if (!m_window_id)
-        return;
-    WSAPI_ClientMessage message;
-    message.type = WSAPI_ClientMessage::Type::SetWindowIcon;
-    message.window_id = m_window_id;
-    ASSERT(path.length() < (int)sizeof(message.text));
-    strcpy(message.text, String(path).characters());
-    message.text_length = path.length();
-    GWindowServerConnection::the().post_message_to_server(message);
-}
-
 void GWindow::start_wm_resize()
 {
     WSAPI_ClientMessage message;

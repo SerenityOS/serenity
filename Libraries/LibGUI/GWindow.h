@@ -119,9 +119,6 @@ public:
 
     void set_override_cursor(GStandardCursor);
 
-    String icon_path() const { return m_icon_path; }
-    void set_icon_path(const StringView&);
-
     void set_icon(const GraphicsBitmap*);
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
 
@@ -154,7 +151,6 @@ private:
     WeakPtr<GWidget> m_hovered_widget;
     Rect m_rect_when_windowless;
     String m_title_when_windowless;
-    String m_icon_path;
     Vector<Rect, 32> m_pending_paint_event_rects;
     Size m_size_increment;
     Size m_base_size;

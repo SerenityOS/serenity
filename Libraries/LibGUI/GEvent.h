@@ -39,7 +39,6 @@ public:
         WM_WindowRemoved,
         WM_WindowStateChanged,
         WM_WindowRectChanged,
-        WM_WindowIconChanged,
         WM_WindowIconBitmapChanged,
         __End_WM_Events,
     };
@@ -118,20 +117,6 @@ public:
 
 private:
     Rect m_rect;
-};
-
-class GWMWindowIconChangedEvent : public GWMEvent {
-public:
-    GWMWindowIconChangedEvent(int client_id, int window_id, const StringView& icon_path)
-        : GWMEvent(GEvent::Type::WM_WindowIconChanged, client_id, window_id)
-        , m_icon_path(icon_path)
-    {
-    }
-
-    String icon_path() const { return m_icon_path; }
-
-private:
-    String m_icon_path;
 };
 
 class GWMWindowIconBitmapChangedEvent : public GWMEvent {
