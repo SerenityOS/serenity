@@ -20,6 +20,12 @@ public:
 
     RefPtr<ABuffer> get_more_samples();
 
+    int loaded_samples() const { return m_loaded_samples; }
+    int total_samples() const { return m_total_samples; }
+    u32 sample_rate() const { return m_sample_rate; }
+    u16 num_channels() const { return m_num_channels; }
+    u16 bits_per_sample() const { return m_bits_per_sample; }
+
 private:
     bool parse_header();
     CFile m_file;
@@ -28,4 +34,7 @@ private:
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };
     u16 m_bits_per_sample { 0 };
+
+    int m_loaded_samples { 0 };
+    int m_total_samples { 0 };
 };
