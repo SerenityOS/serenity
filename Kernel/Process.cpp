@@ -2440,6 +2440,8 @@ int Process::sys$share_buffer_with(int shared_buffer_id, pid_t peer_pid)
     if (it == shared_buffers().resource().end())
         return -EINVAL;
     auto& shared_buffer = *(*it).value;
+    if (!shared_buffer.is_shared_with(m_pid))
+        return -EPERM;
     {
         InterruptDisabler disabler;
         auto* peer = Process::from_pid(peer_pid);
@@ -2457,6 +2459,8 @@ int Process::sys$release_shared_buffer(int shared_buffer_id)
     if (it == shared_buffers().resource().end())
         return -EINVAL;
     auto& shared_buffer = *(*it).value;
+    if (!shared_buffer.is_shared_with(m_pid))
+        return -EPERM;
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Releasing shared buffer %d, buffer count: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
@@ -2472,7 +2476,7 @@ void* Process::sys$get_shared_buffer(int shared_buffer_id)
         return (void*)-EINVAL;
     auto& shared_buffer = *(*it).value;
     if (!shared_buffer.is_shared_with(m_pid))
-        return (void*)-EINVAL;
+        return (void*)-EPERM;
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Retaining shared buffer %d, buffer count: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
@@ -2487,7 +2491,7 @@ int Process::sys$seal_shared_buffer(int shared_buffer_id)
         return -EINVAL;
     auto& shared_buffer = *(*it).value;
     if (!shared_buffer.is_shared_with(m_pid))
-        return -EINVAL;
+        return -EPERM;
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Sealing shared buffer %d\n", name().characters(), pid(), shared_buffer_id);
 #endif
@@ -2503,7 +2507,7 @@ int Process::sys$get_shared_buffer_size(int shared_buffer_id)
         return -EINVAL;
     auto& shared_buffer = *(*it).value;
     if (!shared_buffer.is_shared_with(m_pid))
-        return -EINVAL;
+        return -EPERM;
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Get shared buffer %d size: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
