@@ -48,7 +48,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
     , m_model(GDirectoryModel::create())
     , m_mode(mode)
 {
-    set_title("GFilePicker");
+    set_title(m_mode == Mode::Open ? "Open File" : "Save File");
     set_rect(200, 200, 700, 400);
     auto* horizontal_container = new GWidget;
     set_main_widget(horizontal_container);
@@ -69,7 +69,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
 
     auto* toolbar = new GToolBar(upper_container);
     toolbar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    toolbar->set_preferred_size(60, 0);
+    toolbar->set_preferred_size(85, 0);
     toolbar->set_has_frame(false);
 
     auto* location_textbox = new GTextBox(upper_container);
@@ -94,6 +94,12 @@ GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
         clear_preview();
     });
     toolbar->add_action(*open_parent_directory_action);
+
+    auto go_home_action = GAction::create("Go to Home Directory", GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), [this](auto&) {
+        m_model->open(get_current_user_home_path());
+    });
+    toolbar->add_action(go_home_action);
+    toolbar->add_separator();
 
     auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [this](const GAction&) {
         GInputBox input_box("Enter name:", "New directory", this);
@@ -169,6 +175,8 @@ GFilePicker::GFilePicker(Mode mode, const StringView& path, CObject* parent)
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size(80, 0);
     ok_button->set_text(ok_button_name(m_mode));
+    if (m_mode == Mode::Save)
+        ok_button->set_focus(true);
     ok_button->on_click = [this, filename_textbox](auto&) {
         FileSystemPath path(String::format("%s/%s", m_model->path().characters(), filename_textbox->text().characters()));
 
