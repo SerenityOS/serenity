@@ -1,6 +1,7 @@
 #include "Terminal.h"
 #include <Kernel/KeyCode.h>
 #include <LibCore/CUserInfo.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -154,7 +155,7 @@ int main(int argc, char** argv)
     window->move_to(300, 300);
     terminal.apply_size_increments_to_window(*window);
     window->show();
-    window->set_icon_path("/res/icons/16x16/app-terminal.png");
+    window->set_icon(load_png("/res/icons/16x16/app-terminal.png"));
     terminal.set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
     WeakPtr<GWindow> settings_window;

@@ -1,5 +1,6 @@
 #include "TaskbarWindow.h"
 #include "TaskbarButton.h"
+#include <LibC/SharedBuffer.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GDesktop.h>
@@ -96,6 +97,22 @@ void TaskbarWindow::wm_event(GWMEvent& event)
         if (auto* window = WindowList::the().window(identifier)) {
             window->set_icon_path(changed_event.icon_path());
             window->button()->set_icon(window->icon());
+        }
+        break;
+    }
+
+    case GEvent::WM_WindowIconBitmapChanged: {
+        auto& changed_event = static_cast<GWMWindowIconBitmapChangedEvent&>(event);
+#ifdef EVENT_DEBUG
+        dbgprintf("WM_WindowIconChanged: client_id=%d, window_id=%d, icon_buffer_id=%d\n",
+            changed_event.client_id(),
+            changed_event.window_id(),
+            changed_event.icon_buffer_id());
+#endif
+        if (auto* window = WindowList::the().window(identifier)) {
+            auto buffer = SharedBuffer::create_from_shared_buffer_id(changed_event.icon_buffer_id());
+            ASSERT(buffer);
+            window->button()->set_icon(GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *buffer, changed_event.icon_size()));
         }
         break;
     }

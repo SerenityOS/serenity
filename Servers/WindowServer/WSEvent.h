@@ -32,6 +32,7 @@ public:
         WM_WindowStateChanged,
         WM_WindowRectChanged,
         WM_WindowIconChanged,
+        WM_WindowIconBitmapChanged,
 
         __Begin_API_Client_Requests,
         APICreateMenubarRequest,
@@ -50,6 +51,7 @@ public:
         APISetWindowRectRequest,
         APIGetWindowRectRequest,
         APISetWindowIconRequest,
+        APISetWindowIconBitmapRequest,
         APIInvalidateRectRequest,
         APIDidFinishPaintingNotification,
         APIGetWindowBackingStoreRequest,
@@ -588,6 +590,26 @@ private:
     String m_icon_path;
 };
 
+class WSAPISetWindowIconBitmapRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetWindowIconBitmapRequest(int client_id, int window_id, int icon_buffer_id, const Size& icon_size)
+        : WSAPIClientRequest(WSEvent::APISetWindowIconBitmapRequest, client_id)
+        , m_window_id(window_id)
+        , m_icon_buffer_id(icon_buffer_id)
+        , m_icon_size(icon_size)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+    int icon_buffer_id() const { return m_icon_buffer_id; }
+    const Size& icon_size() const { return m_icon_size; }
+
+private:
+    int m_window_id { 0 };
+    int m_icon_buffer_id { 0 };
+    Size m_icon_size;
+};
+
 class WSAPIGetWindowRectRequest final : public WSAPIClientRequest {
 public:
     explicit WSAPIGetWindowRectRequest(int client_id, int window_id)
@@ -854,6 +876,23 @@ public:
 
 private:
     String m_icon_path;
+};
+
+class WSWMWindowIconBitmapChangedEvent : public WSWMEvent {
+public:
+    WSWMWindowIconBitmapChangedEvent(int client_id, int window_id, int icon_buffer_id, const Size& icon_size)
+        : WSWMEvent(WSEvent::WM_WindowIconBitmapChanged, client_id, window_id)
+        , m_icon_buffer_id(icon_buffer_id)
+        , m_icon_size(icon_size)
+    {
+    }
+
+    int icon_buffer_id() const { return m_icon_buffer_id; }
+    const Size icon_size() const { return m_icon_size; }
+
+private:
+    int m_icon_buffer_id;
+    Size m_icon_size;
 };
 
 class WSWMWindowRectChangedEvent : public WSWMEvent {

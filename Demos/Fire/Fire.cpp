@@ -17,6 +17,7 @@
 */
 
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
@@ -229,7 +230,7 @@ int main(int argc, char** argv)
     fire->set_stat_label(time);
 
     window->show();
-    window->set_icon_path("/res/icons/16x16/app-demo.png");
+    window->set_icon(load_png("/res/icons/16x16/app-demo.png"));
 
     return app.exec();
 }
