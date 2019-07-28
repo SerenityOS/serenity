@@ -40,6 +40,13 @@ public:
         return value;
     }
 
+    void clear()
+    {
+        m_segments.clear();
+        m_index_into_first = 0;
+        m_size = 0;
+    }
+
 private:
     static const int segment_size = 1000;
 
