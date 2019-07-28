@@ -45,7 +45,13 @@ void GTabWidget::resize_event(GResizeEvent& event)
 
 Rect GTabWidget::child_rect_for_size(const Size& size) const
 {
-    return { { container_padding(), bar_height() + container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+    switch (m_tab_position) {
+    case TabPosition::Top:
+        return { { container_padding(), bar_height() + container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+    case TabPosition::Bottom:
+        return { { container_padding(), container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+    }
+    ASSERT_NOT_REACHED();
 }
 
 void GTabWidget::child_event(CChildEvent& event)
@@ -73,7 +79,24 @@ void GTabWidget::child_event(CChildEvent& event)
 
 Rect GTabWidget::bar_rect() const
 {
-    return { 0, 0, width(), bar_height() };
+    switch (m_tab_position) {
+    case TabPosition::Top:
+        return { 0, 0, width(), bar_height() };
+    case TabPosition::Bottom:
+        return { 0, height() - bar_height(), width(), bar_height() };
+    }
+    ASSERT_NOT_REACHED();
+}
+
+Rect GTabWidget::container_rect() const
+{
+    switch (m_tab_position) {
+    case TabPosition::Top:
+        return { 0, bar_height(), width(), height() - bar_height() };
+    case TabPosition::Bottom:
+        return { 0, 0, width(), height() - bar_height() };
+    }
+    ASSERT_NOT_REACHED();
 }
 
 void GTabWidget::paint_event(GPaintEvent& event)
@@ -81,7 +104,7 @@ void GTabWidget::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    Rect container_rect { 0, bar_height(), width(), height() - bar_height() };
+    auto container_rect = this->container_rect();
     auto padding_rect = container_rect;
     for (int i = 0; i < container_padding(); ++i) {
         painter.draw_rect(padding_rect, background_color());
@@ -124,6 +147,7 @@ Rect GTabWidget::button_rect(int index) const
         rect.move_by(-2, 0);
         rect.set_width(rect.width() + 4);
     }
+    rect.move_by(bar_rect().location());
     return rect;
 }
 
@@ -173,4 +197,14 @@ void GTabWidget::update_bar()
     auto invalidation_rect = bar_rect();
     invalidation_rect.set_height(invalidation_rect.height() + 1);
     update(invalidation_rect);
+}
+
+void GTabWidget::set_tab_position(TabPosition tab_position)
+{
+    if (m_tab_position == tab_position)
+        return;
+    m_tab_position = tab_position;
+    if (m_active_widget)
+        m_active_widget->set_relative_rect(child_rect_for_size(size()));
+    update();
 }
