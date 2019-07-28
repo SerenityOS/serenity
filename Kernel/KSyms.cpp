@@ -94,7 +94,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     int recognized_symbol_count = 0;
     if (use_ksyms) {
-        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr)) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (u32*)*stack_ptr) {
             u32 retaddr = stack_ptr[1];
             recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
         }
@@ -105,7 +105,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         }
         return;
     }
-    ASSERT(recognized_symbol_count < max_recognized_symbol_count);
+    ASSERT(recognized_symbol_count <= max_recognized_symbol_count);
     size_t bytes_needed = 0;
     for (int i = 0; i < recognized_symbol_count; ++i) {
         auto& symbol = recognized_symbols[i];
