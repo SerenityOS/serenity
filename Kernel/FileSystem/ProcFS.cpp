@@ -222,23 +222,18 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
     if (!handle)
         return {};
     auto& process = handle->process();
-    StringBuilder builder;
-    builder.appendf("BEGIN       END         SIZE      COMMIT     FLAGS  NAME\n");
+    JsonArray array;
     for (auto& region : process.regions()) {
-        StringBuilder flags_builder;
-        if (region.is_readable())
-            flags_builder.append('R');
-        if (region.is_writable())
-            flags_builder.append('W');
-        builder.appendf("%x -- %x    %x  %x   %-4s   %s\n",
-            region.vaddr().get(),
-            region.vaddr().offset(region.size() - 1).get(),
-            region.size(),
-            region.amount_resident(),
-            flags_builder.to_string().characters(),
-            region.name().characters());
+        JsonObject region_object;
+        region_object.set("readable", region.is_readable());
+        region_object.set("writable", region.is_writable());
+        region_object.set("address", region.vaddr().get());
+        region_object.set("size", region.size());
+        region_object.set("amount_resident", region.amount_resident());
+        region_object.set("name", region.name());
+        array.append(move(region_object));
     }
-    return builder.to_byte_buffer();
+    return array.serialized().to_byte_buffer();
 }
 
 ByteBuffer procfs$pci(InodeIdentifier)
