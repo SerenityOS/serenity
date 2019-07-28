@@ -12,4 +12,5 @@ public:
 
     virtual void handshake() override;
     void play(const ABuffer&, bool block);
+    void enqueue(const ABuffer&);
 };

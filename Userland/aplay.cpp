@@ -25,7 +25,7 @@ int main(int argc, char **argv)
             break;
         }
         printf("Playing %d sample(s)\n", samples->sample_count());
-        a_conn.play(*samples, true);
+        a_conn.enqueue(*samples);
     }
 
     printf("Exiting! :)\n");
