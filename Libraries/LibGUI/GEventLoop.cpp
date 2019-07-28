@@ -192,8 +192,6 @@ void GWindowServerConnection::handle_wm_event(const WSAPI_ServerMessage& event, 
         CEventLoop::current().post_event(window, make<GWMWindowStateChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length), event.wm.rect, event.wm.is_active, (GWindowType)event.wm.window_type, event.wm.is_minimized));
     else if (event.type == WSAPI_ServerMessage::WM_WindowRectChanged)
         CEventLoop::current().post_event(window, make<GWMWindowRectChangedEvent>(event.wm.client_id, event.wm.window_id, event.wm.rect));
-    else if (event.type == WSAPI_ServerMessage::WM_WindowIconChanged)
-        CEventLoop::current().post_event(window, make<GWMWindowIconChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length)));
     else if (event.type == WSAPI_ServerMessage::WM_WindowIconBitmapChanged)
         CEventLoop::current().post_event(window, make<GWMWindowIconBitmapChangedEvent>(event.wm.client_id, event.wm.window_id, event.wm.icon_buffer_id, event.wm.icon_size));
     else if (event.type == WSAPI_ServerMessage::WM_WindowRemoved)

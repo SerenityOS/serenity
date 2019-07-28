@@ -35,18 +35,6 @@ public:
     void set_minimized(bool minimized) { m_minimized = minimized; }
     bool is_minimized() const { return m_minimized; }
 
-    String icon_path() const { return m_icon_path; }
-    void set_icon_path(const String& icon_path)
-    {
-        if (m_icon_path == icon_path)
-            return;
-        auto icon = GraphicsBitmap::load_from_file(icon_path);
-        if (!icon)
-            return;
-        m_icon_path = icon_path;
-        m_icon = move(icon);
-    }
-
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
 
 private:
@@ -54,7 +42,6 @@ private:
     String m_title;
     Rect m_rect;
     GButton* m_button { nullptr };
-    String m_icon_path;
     RefPtr<GraphicsBitmap> m_icon;
     bool m_active { false };
     bool m_minimized { false };
