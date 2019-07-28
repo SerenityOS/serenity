@@ -122,6 +122,9 @@ public:
     String icon_path() const { return m_icon_path; }
     void set_icon_path(const StringView&);
 
+    void set_icon(const GraphicsBitmap*);
+    const GraphicsBitmap* icon() const { return m_icon.ptr(); }
+
     Vector<GWidget*> focusable_widgets() const;
 
 protected:
@@ -135,11 +138,13 @@ private:
     void collect_keyboard_activation_targets();
 
     NonnullRefPtr<GraphicsBitmap> create_backing_bitmap(const Size&);
+    NonnullRefPtr<GraphicsBitmap> create_shared_bitmap(GraphicsBitmap::Format, const Size&);
     void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);
     void flip(const Vector<Rect, 32>& dirty_rects);
 
     RefPtr<GraphicsBitmap> m_front_bitmap;
     RefPtr<GraphicsBitmap> m_back_bitmap;
+    RefPtr<GraphicsBitmap> m_icon;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
     GWidget* m_main_widget { nullptr };

@@ -1,4 +1,5 @@
 #include "SnakeGame.h"
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -45,7 +46,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon_path("/res/icons/16x16/app-snake.png");
+    window->set_icon(load_png("/res/icons/16x16/app-snake.png"));
 
     return app.exec();
 }

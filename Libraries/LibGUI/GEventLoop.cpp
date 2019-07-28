@@ -194,6 +194,8 @@ void GWindowServerConnection::handle_wm_event(const WSAPI_ServerMessage& event, 
         CEventLoop::current().post_event(window, make<GWMWindowRectChangedEvent>(event.wm.client_id, event.wm.window_id, event.wm.rect));
     else if (event.type == WSAPI_ServerMessage::WM_WindowIconChanged)
         CEventLoop::current().post_event(window, make<GWMWindowIconChangedEvent>(event.wm.client_id, event.wm.window_id, String(event.text, event.text_length)));
+    else if (event.type == WSAPI_ServerMessage::WM_WindowIconBitmapChanged)
+        CEventLoop::current().post_event(window, make<GWMWindowIconBitmapChangedEvent>(event.wm.client_id, event.wm.window_id, event.wm.icon_buffer_id, event.wm.icon_size));
     else if (event.type == WSAPI_ServerMessage::WM_WindowRemoved)
         CEventLoop::current().post_event(window, make<GWMWindowRemovedEvent>(event.wm.client_id, event.wm.window_id));
     else
@@ -301,12 +303,9 @@ void GWindowServerConnection::postprocess_bundles(Vector<IncomingMessageBundle>&
             }
             handle_resize_event(event, *window);
             break;
-        case WSAPI_ServerMessage::Type::WM_WindowRemoved:
-        case WSAPI_ServerMessage::Type::WM_WindowStateChanged:
-        case WSAPI_ServerMessage::Type::WM_WindowIconChanged:
-            handle_wm_event(event, *window);
-            break;
         default:
+            if (event.type > WSAPI_ServerMessage::__Begin_WM_Events__ && event.type < WSAPI_ServerMessage::Type::__End_WM_Events__)
+                handle_wm_event(event, *window);
             break;
         }
     }
