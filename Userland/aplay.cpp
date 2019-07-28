@@ -16,12 +16,12 @@ int main(int argc, char** argv)
     a_conn.handshake();
     AWavLoader loader(argv[1]);
 
-    printf("\033[34;1mPlaying\033[0m: %s\n", argv[1]);
-    printf("\033[34;1m Format\033[0m: %u Hz, %u-bit, %s\n",
+    printf("\033[34;1m Playing\033[0m: %s\n", argv[1]);
+    printf("\033[34;1m  Format\033[0m: %u Hz, %u-bit, %s\n",
         loader.sample_rate(),
         loader.bits_per_sample(),
         loader.num_channels() == 1 ? "Mono" : "Stereo");
-    printf("\033[34;1m Sample\033[0m: \033[s");
+    printf("\033[34;1mProgress\033[0m: \033[s");
     for (;;) {
         auto samples = loader.get_more_samples();
         if (!samples)
