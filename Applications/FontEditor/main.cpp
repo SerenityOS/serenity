@@ -1,4 +1,5 @@
 #include "FontEditor.h"
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
@@ -30,6 +31,6 @@ int main(int argc, char** argv)
     auto* font_editor = new FontEditorWidget(path, move(edited_font));
     window->set_main_widget(font_editor);
     window->show();
-    window->set_icon_path("/res/icons/16x16/app-font-editor.png");
+    window->set_icon(load_png("/res/icons/16x16/app-font-editor.png"));
     return app.exec();
 }

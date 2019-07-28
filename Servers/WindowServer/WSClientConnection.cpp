@@ -1,3 +1,4 @@
+#include <LibC/SharedBuffer.h>
 #include <SharedBuffer.h>
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
@@ -13,8 +14,8 @@
 #include <WindowServer/WSWindowSwitcher.h>
 #include <errno.h>
 #include <stdio.h>
-#include <sys/socket.h>
 #include <sys/ioctl.h>
+#include <sys/socket.h>
 #include <sys/uio.h>
 #include <unistd.h>
 
@@ -144,6 +145,9 @@ bool WSClientConnection::handle_message(const WSAPI_ClientMessage& message, cons
             return false;
         }
         CEventLoop::current().post_event(*this, make<WSAPISetWindowIconRequest>(client_id(), message.window_id, String(message.text, message.text_length)));
+        break;
+    case WSAPI_ClientMessage::Type::SetWindowIconBitmap:
+        CEventLoop::current().post_event(*this, make<WSAPISetWindowIconBitmapRequest>(client_id(), message.window_id, message.window.icon_buffer_id, message.window.icon_size));
         break;
     case WSAPI_ClientMessage::Type::DestroyMenu:
         CEventLoop::current().post_event(*this, make<WSAPIDestroyMenuRequest>(client_id(), message.menu.menu_id));
@@ -538,7 +542,7 @@ void WSClientConnection::handle_request(const WSAPIGetWallpaperRequest&)
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidGetWallpaper;
     ASSERT(path.length() < (int)sizeof(response.text));
-    strncpy(response.text, path.characters(), path.length());
+    memcpy(response.text, path.characters(), path.length() + 1);
     response.text_length = path.length();
     post_message(response);
 }
@@ -589,6 +593,28 @@ void WSClientConnection::handle_request(const WSAPISetWindowIconRequest& request
         if (!icon)
             return;
         window.set_icon(request.icon_path(), *icon);
+    }
+
+    window.frame().invalidate_title_bar();
+    WSWindowManager::the().tell_wm_listeners_window_icon_changed(window);
+}
+
+void WSClientConnection::handle_request(const WSAPISetWindowIconBitmapRequest& request)
+{
+    int window_id = request.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        post_error("WSAPISetWindowIconBitmapRequest: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+
+    auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(request.icon_buffer_id());
+
+    if (!icon_buffer) {
+        window.set_default_icon();
+    } else {
+        window.set_icon(GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *icon_buffer, request.icon_size()));
     }
 
     window.frame().invalidate_title_bar();
@@ -946,6 +972,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPIGetWindowRectRequest&>(request));
     case WSEvent::APISetWindowIconRequest:
         return handle_request(static_cast<const WSAPISetWindowIconRequest&>(request));
+    case WSEvent::APISetWindowIconBitmapRequest:
+        return handle_request(static_cast<const WSAPISetWindowIconBitmapRequest&>(request));
     case WSEvent::APISetClipboardContentsRequest:
         return handle_request(static_cast<const WSAPISetClipboardContentsRequest&>(request));
     case WSEvent::APIGetClipboardContentsRequest:

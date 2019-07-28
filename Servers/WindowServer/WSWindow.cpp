@@ -254,6 +254,23 @@ void WSWindow::event(CEvent& event)
         break;
     }
 
+    case WSEvent::WM_WindowIconBitmapChanged: {
+        auto& changed_event = static_cast<const WSWMWindowIconBitmapChangedEvent&>(event);
+        server_message.type = WSAPI_ServerMessage::Type::WM_WindowIconBitmapChanged;
+        server_message.wm.client_id = changed_event.client_id();
+        server_message.wm.window_id = changed_event.window_id();
+        server_message.wm.icon_buffer_id = changed_event.icon_buffer_id();
+        server_message.wm.icon_size = changed_event.icon_size();
+
+        // FIXME: Perhaps we should update the bitmap sharing list somewhere else instead?
+        ASSERT(client());
+        dbg() << "WindowServer: Sharing icon buffer " << changed_event.icon_buffer_id() << " with PID " << client()->client_pid();
+        if (share_buffer_with(changed_event.icon_buffer_id(), client()->client_pid()) < 0) {
+            ASSERT_NOT_REACHED();
+        }
+        break;
+    }
+
     case WSEvent::WM_WindowRectChanged: {
         auto& changed_event = static_cast<const WSWMWindowRectChangedEvent&>(event);
         server_message.type = WSAPI_ServerMessage::Type::WM_WindowRectChanged;

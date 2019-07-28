@@ -3,6 +3,7 @@
 #include <LibAudio/AClientConnection.h>
 #include <LibCore/CFile.h>
 #include <LibCore/CThread.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GEventLoop.h>
@@ -23,7 +24,7 @@ int main(int argc, char** argv)
     auto* piano_widget = new PianoWidget;
     window->set_main_widget(piano_widget);
     window->show();
-    window->set_icon_path("/res/icons/16x16/app-piano.png");
+    window->set_icon(load_png("/res/icons/16x16/app-piano.png"));
 
     CThread sound_thread([](void* context) -> int {
         auto* piano_widget = (PianoWidget*)context;

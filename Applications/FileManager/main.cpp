@@ -1,6 +1,7 @@
 #include "DirectoryView.h"
 #include <AK/FileSystemPath.h>
 #include <LibCore/CUserInfo.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
 #include <LibGUI/GApplication.h>
@@ -227,7 +228,7 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
-    window->set_icon_path("/res/icons/16x16/filetype-folder.png");
+    window->set_icon(load_png("/res/icons/16x16/filetype-folder.png"));
 
     return app.exec();
 }

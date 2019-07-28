@@ -1,5 +1,6 @@
 #include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
+#include <LibC/SharedBuffer.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
@@ -593,7 +594,7 @@ void GWindow::flip(const Vector<Rect, 32>& dirty_rects)
         painter.blit(dirty_rect.location(), *m_front_bitmap, dirty_rect);
 }
 
-NonnullRefPtr<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
+NonnullRefPtr<GraphicsBitmap> GWindow::create_shared_bitmap(GraphicsBitmap::Format format, const Size& size)
 {
     ASSERT(GWindowServerConnection::the().server_pid());
     ASSERT(!size.is_empty());
@@ -602,8 +603,13 @@ NonnullRefPtr<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
     auto shared_buffer = SharedBuffer::create_with_size(size_in_bytes);
     ASSERT(shared_buffer);
     shared_buffer->share_with(GWindowServerConnection::the().server_pid());
-    auto format = m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32;
     return GraphicsBitmap::create_with_shared_buffer(format, *shared_buffer, size);
+}
+
+NonnullRefPtr<GraphicsBitmap> GWindow::create_backing_bitmap(const Size& size)
+{
+    auto format = m_has_alpha_channel ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32;
+    return create_shared_bitmap(format, size);
 }
 
 void GWindow::set_modal(bool modal)
@@ -614,6 +620,27 @@ void GWindow::set_modal(bool modal)
 
 void GWindow::wm_event(GWMEvent&)
 {
+}
+
+void GWindow::set_icon(const GraphicsBitmap* icon)
+{
+    if (m_icon == icon)
+        return;
+    if (!m_window_id)
+        return;
+
+    m_icon = create_shared_bitmap(GraphicsBitmap::Format::RGBA32, icon->size());
+    {
+        GPainter painter(*m_icon);
+        painter.blit({ 0, 0 }, *icon, icon->rect());
+    }
+
+    WSAPI_ClientMessage message;
+    message.type = WSAPI_ClientMessage::Type::SetWindowIconBitmap;
+    message.window_id = m_window_id;
+    message.window.icon_buffer_id = m_icon->shared_buffer_id();
+    message.window.icon_size = icon->size();
+    GWindowServerConnection::the().post_message_to_server(message);
 }
 
 void GWindow::set_icon_path(const StringView& path)

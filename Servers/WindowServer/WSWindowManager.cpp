@@ -319,8 +319,11 @@ void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSW
 {
     if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowIconChanges))
         return;
-    if (window.client())
+    if (window.client()) {
         CEventLoop::current().post_event(listener, make<WSWMWindowIconChangedEvent>(window.client()->client_id(), window.window_id(), window.icon_path()));
+        if (window.icon().shared_buffer_id() != -1)
+            CEventLoop::current().post_event(listener, make<WSWMWindowIconBitmapChangedEvent>(window.client()->client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));
+    }
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)

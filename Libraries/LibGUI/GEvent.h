@@ -40,6 +40,7 @@ public:
         WM_WindowStateChanged,
         WM_WindowRectChanged,
         WM_WindowIconChanged,
+        WM_WindowIconBitmapChanged,
         __End_WM_Events,
     };
 
@@ -131,6 +132,23 @@ public:
 
 private:
     String m_icon_path;
+};
+
+class GWMWindowIconBitmapChangedEvent : public GWMEvent {
+public:
+    GWMWindowIconBitmapChangedEvent(int client_id, int window_id, int icon_buffer_id, const Size& icon_size)
+        : GWMEvent(GEvent::Type::WM_WindowIconBitmapChanged, client_id, window_id)
+        , m_icon_buffer_id(icon_buffer_id)
+        , m_icon_size(icon_size)
+    {
+    }
+
+    int icon_buffer_id() const { return m_icon_buffer_id; }
+    const Size& icon_size() const { return m_icon_size; }
+
+private:
+    int m_icon_buffer_id;
+    Size m_icon_size;
 };
 
 class GMultiPaintEvent final : public GEvent {

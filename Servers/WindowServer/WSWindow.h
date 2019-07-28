@@ -129,6 +129,8 @@ public:
     void set_base_size(const Size& size) { m_base_size = size; }
 
     const GraphicsBitmap& icon() const { return *m_icon; }
+    void set_icon(NonnullRefPtr<GraphicsBitmap>&& icon) { m_icon = move(icon); }
+
     String icon_path() const { return m_icon_path; }
     void set_icon(const String& path, NonnullRefPtr<GraphicsBitmap>&& icon)
     {

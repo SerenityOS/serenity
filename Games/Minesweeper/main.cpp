@@ -1,5 +1,6 @@
 #include "Field.h"
 #include <LibCore/CConfigFile.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -93,7 +94,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    window->set_icon_path("/res/icons/minesweeper/mine.png");
+    window->set_icon(load_png("/res/icons/minesweeper/mine.png"));
 
     return app.exec();
 }
