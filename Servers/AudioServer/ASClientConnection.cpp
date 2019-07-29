@@ -60,6 +60,20 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
         post_message(reply);
         break;
     }
+    case ASAPI_ClientMessage::Type::GetMainMixVolume: {
+        ASAPI_ServerMessage reply;
+        reply.type = ASAPI_ServerMessage::Type::DidGetMainMixVolume;
+        reply.value = m_mixer.main_volume();
+        post_message(reply);
+        break;
+    }
+    case ASAPI_ClientMessage::Type::SetMainMixVolume: {
+        ASAPI_ServerMessage reply;
+        reply.type = ASAPI_ServerMessage::Type::DidSetMainMixVolume;
+        m_mixer.set_main_volume(message.value);
+        post_message(reply);
+        break;
+    }
     case ASAPI_ClientMessage::Type::Invalid:
     default:
         dbgprintf("ASClientConnection: Unexpected message ID %d\n", int(message.type));

@@ -71,6 +71,8 @@ void ASMixer::mix()
 
         for (int i = 0; i < mixed_buffer_length; ++i) {
             auto& mixed_sample = mixed_buffer[i];
+
+            mixed_sample.scale(m_main_volume);
             mixed_sample.clip();
 
             i16 out_sample;

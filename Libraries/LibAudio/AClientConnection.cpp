@@ -30,3 +30,19 @@ void AClientConnection::enqueue(const ABuffer& buffer)
         sleep(1);
     }
 }
+
+int AClientConnection::get_main_mix_volume()
+{
+    ASAPI_ClientMessage request;
+    request.type = ASAPI_ClientMessage::Type::GetMainMixVolume;
+    auto response = sync_request(request, ASAPI_ServerMessage::Type::DidGetMainMixVolume);
+    return response.value;
+}
+
+void AClientConnection::set_main_mix_volume(int volume)
+{
+    ASAPI_ClientMessage request;
+    request.type = ASAPI_ClientMessage::Type::SetMainMixVolume;
+    request.value = volume;
+    sync_request(request, ASAPI_ServerMessage::Type::DidSetMainMixVolume);
+}
