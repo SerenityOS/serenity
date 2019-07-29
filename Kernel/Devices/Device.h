@@ -25,6 +25,7 @@ public:
     uid_t gid() const { return m_gid; }
 
     virtual bool is_device() const override { return true; }
+    virtual bool is_disk_device() const { return false; }
 
 protected:
     Device(unsigned major, unsigned minor);

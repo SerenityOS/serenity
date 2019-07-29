@@ -8,7 +8,8 @@ NonnullRefPtr<DiskPartition> DiskPartition::create(NonnullRefPtr<DiskDevice> dev
 }
 
 DiskPartition::DiskPartition(NonnullRefPtr<DiskDevice> device, unsigned block_offset)
-    : m_device(move(device))
+    : DiskDevice(100, 0)
+    , m_device(move(device))
     , m_block_offset(block_offset)
 {
 }
