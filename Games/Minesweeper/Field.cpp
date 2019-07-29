@@ -1,6 +1,6 @@
 #include "Field.h"
 #include <AK/HashTable.h>
-#include <AK/DoublyLinkedList.h>
+#include <AK/Queue.h>
 #include <LibCore/CConfigFile.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
@@ -293,14 +293,15 @@ void Field::flood_mark(Square& square)
 
 void Field::flood_fill(Square& square)
 {
-    DoublyLinkedList<Square*> queue;
-    queue.append(&square);
+    Queue<Square*> queue;
+    queue.enqueue(&square);
 
-    for (auto s : queue) {
+    while(!queue.is_empty()) {
+		Square *s = queue.dequeue();
         s->for_each_neighbor([this, &queue](Square& neighbor) {
             if (!neighbor.is_swept && !neighbor.has_mine && neighbor.number == 0) {
                 flood_mark(neighbor);
-                queue.append(&neighbor);
+                queue.enqueue(&neighbor);
             }
             if (!neighbor.has_mine && neighbor.number)
                 flood_mark(neighbor);
