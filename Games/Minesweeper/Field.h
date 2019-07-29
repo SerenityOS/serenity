@@ -67,7 +67,7 @@ private:
     const Square& square(int row, int column) const { return *m_squares[row * columns() + column]; }
 
     void flood_fill(Square&);
-    void flood_mark(Square&);
+    void on_square_clicked_impl(Square&, bool);
 
     template<typename Callback>
     void for_each_square(Callback);
