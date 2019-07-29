@@ -4,6 +4,7 @@ KERNEL_OBJS = \
        init.o \
        kmalloc.o \
        StdLib.o \
+       Lock.o \
        Arch/i386/CPU.o \
        Process.o \
        SharedBuffer.o \
