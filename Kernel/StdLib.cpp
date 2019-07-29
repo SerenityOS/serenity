@@ -134,4 +134,100 @@ int memcmp(const void* v1, const void* v2, size_t n)
 {
     ASSERT_NOT_REACHED();
 }
+
+static inline uint32_t divq(uint64_t n, uint32_t d)
+{
+    uint32_t n1 = n >> 32;
+    uint32_t n0 = n;
+    uint32_t q;
+    uint32_t r;
+    asm volatile("divl %4"
+                 : "=d"(r), "=a"(q)
+                 : "0"(n1), "1"(n0), "rm"(d));
+    return q;
+}
+
+static uint64_t unsigned_divide64(uint64_t n, uint64_t d)
+{
+    if ((d >> 32) == 0) {
+        uint64_t b = 1ULL << 32;
+        uint32_t n1 = n >> 32;
+        uint32_t n0 = n;
+        uint32_t d0 = d;
+        return divq(b * (n1 % d0) + n0, d0) + b * (n1 / d0);
+    }
+    if (n < d)
+        return 0;
+    uint32_t d1 = d >> 32u;
+    int s = __builtin_clz(d1);
+    uint64_t q = divq(n >> 1, (d << s) >> 32) >> (31 - s);
+    return n - (q - 1) * d < d ? q - 1 : q;
+}
+
+static uint32_t unsigned_modulo64(uint64_t n, uint64_t d)
+{
+    return n - d * unsigned_divide64(n, d);
+}
+
+static int64_t signed_divide64(int64_t n, int64_t d)
+{
+    uint64_t n_abs = n >= 0 ? (uint64_t)n : -(uint64_t)n;
+    uint64_t d_abs = d >= 0 ? (uint64_t)d : -(uint64_t)d;
+    uint64_t q_abs = unsigned_divide64(n_abs, d_abs);
+    return (n < 0) == (d < 0) ? (int64_t)q_abs : -(int64_t)q_abs;
+}
+
+static int32_t signed_modulo64(int64_t n, int64_t d)
+{
+    return n - d * signed_divide64(n, d);
+}
+
+int64_t __divdi3(int64_t n, int64_t d)
+{
+    return signed_divide64(n, d);
+}
+
+int64_t __moddi3(int64_t n, int64_t d)
+{
+    return signed_modulo64(n, d);
+}
+
+uint64_t __udivdi3(uint64_t n, uint64_t d)
+{
+    return unsigned_divide64(n, d);
+}
+
+uint64_t __umoddi3(uint64_t n, uint64_t d)
+{
+    return unsigned_modulo64(n, d);
+}
+
+uint64_t __udivmoddi4(uint64_t n, uint64_t d, uint64_t* r)
+{
+    uint64_t q = 0;
+    uint64_t qbit = 1;
+
+    if (!d)
+        return 1 / ((unsigned)d);
+
+    while ((int64_t)d >= 0) {
+        d <<= 1;
+        qbit <<= 1;
+    }
+
+    while (qbit) {
+        if (d <= n) {
+            n -= d;
+            q += qbit;
+        }
+        d >>= 1;
+        qbit >>= 1;
+    }
+
+    if (r)
+        *r = n;
+
+    return q;
+}
+
 }

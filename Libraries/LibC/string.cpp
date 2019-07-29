@@ -134,6 +134,54 @@ int memcmp(const void* v1, const void* v2, size_t n)
 }
 
 #if ARCH(I386)
+void* mmx_memcpy(void* dest, const void* src, size_t len)
+{
+    ASSERT(len >= 1024);
+
+    auto* dest_ptr = (u8*)dest;
+    auto* src_ptr = (const u8*)src;
+
+    if ((u32)dest_ptr & 7) {
+        u32 prologue = 8 - ((u32)dest_ptr & 7);
+        len -= prologue;
+        asm volatile(
+            "rep movsb\n"
+            : "=S"(src_ptr), "=D"(dest_ptr), "=c"(prologue)
+            : "0"(src_ptr), "1"(dest_ptr), "2"(prologue)
+            : "memory");
+    }
+    for (u32 i = len / 64; i; --i) {
+        asm volatile(
+            "movq (%0), %%mm0\n"
+            "movq 8(%0), %%mm1\n"
+            "movq 16(%0), %%mm2\n"
+            "movq 24(%0), %%mm3\n"
+            "movq 32(%0), %%mm4\n"
+            "movq 40(%0), %%mm5\n"
+            "movq 48(%0), %%mm6\n"
+            "movq 56(%0), %%mm7\n"
+            "movq %%mm0, (%1)\n"
+            "movq %%mm1, 8(%1)\n"
+            "movq %%mm2, 16(%1)\n"
+            "movq %%mm3, 24(%1)\n"
+            "movq %%mm4, 32(%1)\n"
+            "movq %%mm5, 40(%1)\n"
+            "movq %%mm6, 48(%1)\n"
+            "movq %%mm7, 56(%1)\n" ::"r"(src_ptr),
+            "r"(dest_ptr)
+            : "memory");
+        src_ptr += 64;
+        dest_ptr += 64;
+    }
+    asm volatile("emms" ::
+                     : "memory");
+    // Whatever remains we'll have to memcpy.
+    len %= 64;
+    if (len)
+        memcpy(dest_ptr, src_ptr, len);
+    return dest;
+}
+
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
     if (n >= 1024)
