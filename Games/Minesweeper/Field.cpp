@@ -272,39 +272,20 @@ void Field::reset()
     set_updates_enabled(true);
 }
 
-void Field::flood_mark(Square& square)
-{
-    if (square.is_swept)
-        return;
-    if (square.has_flag)
-        return;
-    if (square.is_considering)
-        return;
-    update();
-    square.is_swept = true;
-    square.button->set_visible(false);
-    square.label->set_visible(true);
-
-    --m_unswept_empties;
-
-    if (!m_unswept_empties)
-        win();
-}
-
 void Field::flood_fill(Square& square)
 {
     Queue<Square*> queue;
     queue.enqueue(&square);
 
-    while(!queue.is_empty()) {
-		Square *s = queue.dequeue();
+    while (!queue.is_empty()) {
+        Square* s = queue.dequeue();
         s->for_each_neighbor([this, &queue](Square& neighbor) {
             if (!neighbor.is_swept && !neighbor.has_mine && neighbor.number == 0) {
-                flood_mark(neighbor);
+                on_square_clicked_impl(neighbor, false);
                 queue.enqueue(&neighbor);
             }
             if (!neighbor.has_mine && neighbor.number)
-                flood_mark(neighbor);
+                on_square_clicked_impl(neighbor, false);
         });
     }
 }
@@ -330,7 +311,7 @@ void Field::paint_event(GPaintEvent& event)
     }
 }
 
-void Field::on_square_clicked(Square& square)
+void Field::on_square_clicked_impl(Square& square, bool should_flood_fill)
 {
     if (m_first_click) {
         while (square.has_mine) {
@@ -358,11 +339,16 @@ void Field::on_square_clicked(Square& square)
     }
 
     --m_unswept_empties;
-    if (square.number == 0)
+    if (should_flood_fill && square.number == 0)
         flood_fill(square);
 
     if (!m_unswept_empties)
         win();
+}
+
+void Field::on_square_clicked(Square& square)
+{
+    on_square_clicked_impl(square, true);
 }
 
 void Field::on_square_chorded(Square& square)
