@@ -12,4 +12,7 @@ public:
 
     virtual void handshake() override;
     void enqueue(const ABuffer&);
+
+    int get_main_mix_volume();
+    void set_main_mix_volume(int);
 };

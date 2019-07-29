@@ -7,11 +7,14 @@ struct ASAPI_ServerMessage {
         PlayingBuffer,
         FinishedPlayingBuffer,
         EnqueueBufferResponse,
+        DidGetMainMixVolume,
+        DidSetMainMixVolume,
     };
 
     Type type { Type::Invalid };
     unsigned extra_size { 0 };
     bool success { true };
+    int value { 0 };
 
     union {
         struct {
@@ -29,10 +32,13 @@ struct ASAPI_ClientMessage {
         Invalid,
         Greeting,
         EnqueueBuffer,
+        GetMainMixVolume,
+        SetMainMixVolume,
     };
 
     Type type { Type::Invalid };
     unsigned extra_size { 0 };
+    int value { 0 };
 
     union {
         struct {

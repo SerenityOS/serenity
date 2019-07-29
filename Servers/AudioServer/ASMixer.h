@@ -54,11 +54,16 @@ public:
 
     NonnullRefPtr<ASBufferQueue> create_queue(ASClientConnection&);
 
+    int main_volume() const { return m_main_volume; }
+    void set_main_volume(int volume) { m_main_volume = volume; }
+
 private:
     Vector<NonnullRefPtr<ASBufferQueue>> m_pending_mixing;
 
     CFile m_device;
     CLock m_lock;
+
+    int m_main_volume { 100 };
 
     void mix();
 };

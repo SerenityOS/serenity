@@ -39,6 +39,13 @@ struct ASample {
             right = -1;
     }
 
+    void scale(int percent)
+    {
+        float pct = (float)percent / 100.0;
+        left *= pct;
+        right *= pct;
+    }
+
     ASample& operator+=(const ASample& other)
     {
         left += other.left;
