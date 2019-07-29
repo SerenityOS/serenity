@@ -89,7 +89,6 @@ AK_OBJS = \
     ../AK/StringBuilder.o \
     ../AK/StringView.o \
     ../AK/FileSystemPath.o \
-    ../AK/StdLibExtras.o \
     ../AK/JsonObject.o \
     ../AK/JsonValue.o \
     ../AK/JsonArray.o \

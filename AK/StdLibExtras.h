@@ -11,13 +11,13 @@
 
 #include <AK/Types.h>
 
-#ifndef KERNEL
+#if defined(__serenity__) && !defined(KERNEL)
 extern "C" void* mmx_memcpy(void* to, const void* from, size_t);
 #endif
 
 [[gnu::always_inline]] inline void fast_u32_copy(u32* dest, const u32* src, size_t count)
 {
-#ifndef KERNEL
+#if defined(__serenity__) && !defined(KERNEL)
     if (count >= 256) {
         mmx_memcpy(dest, src, count * sizeof(count));
         return;
