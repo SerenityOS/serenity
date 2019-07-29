@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/FileSystemPath.h>
 #include <AK/Function.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GTextEditor.h>
@@ -15,10 +16,12 @@ public:
     void open_sesame(const String& path);
 
 private:
-    void set_path(const StringView&);
+    void set_path(const FileSystemPath& file);
 
     GTextEditor* m_editor { nullptr };
     String m_path;
+    String m_name;
+    String m_extension;
     RefPtr<GAction> m_new_action;
     RefPtr<GAction> m_open_action;
     RefPtr<GAction> m_save_action;

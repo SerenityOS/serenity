@@ -34,26 +34,26 @@ TextEditorWidget::TextEditorWidget()
     });
 
     m_open_action = GAction::create("Open...", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [this](const GAction&) {
-        Optional<String> open_name = GFilePicker::get_open_filepath();
+        Optional<String> open_path = GFilePicker::get_open_filepath();
 
-        if (!open_name.has_value())
+        if (!open_path.has_value())
             return;
 
-        open_sesame(open_name.value());
+        open_sesame(open_path.value());
     });
 
     m_save_as_action = GAction::create("Save as...", { Mod_None, Key_F12 }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
-        Optional<String> save_name = GFilePicker::get_save_filepath();
-        if (!save_name.has_value())
+        Optional<String> save_path = GFilePicker::get_save_filepath(m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "txt" : m_extension);
+        if (!save_path.has_value())
             return;
 
-        if (!m_editor->write_to_file(save_name.value())) {
+        if (!m_editor->write_to_file(save_path.value())) {
             GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
             return;
         }
 
-        set_path(save_name.value());
-        dbg() << "Wrote document to " << save_name.value();
+        set_path(FileSystemPath(save_path.value()));
+        dbg() << "Wrote document to " << save_path.value();
     });
 
     m_save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GAction&) {
@@ -131,12 +131,14 @@ TextEditorWidget::~TextEditorWidget()
 {
 }
 
-void TextEditorWidget::set_path(const StringView& path)
+void TextEditorWidget::set_path(const FileSystemPath& file)
 {
-    m_path = path;
+    m_path = file.string();
+    m_name = file.title();
+    m_extension = file.extension();
     StringBuilder builder;
     builder.append("Text Editor: ");
-    builder.append(path);
+    builder.append(file.string());
     window()->set_title(builder.to_string());
 }
 
@@ -150,5 +152,5 @@ void TextEditorWidget::open_sesame(const String& path)
     }
 
     m_editor->set_text(String::copy(file.read_all()));
-    set_path(path);
+    set_path(FileSystemPath(path));
 }

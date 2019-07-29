@@ -13,6 +13,8 @@ public:
     const String& string() const { return m_string; }
 
     const String& basename() const { return m_basename; }
+    const String& title() const { return m_title; }
+    const String& extension() const { return m_extension; }
 
     const Vector<String>& parts() const { return m_parts; }
 
@@ -24,6 +26,8 @@ private:
     Vector<String> m_parts;
     String m_string;
     String m_basename;
+    String m_title;
+    String m_extension;
     bool m_is_valid { false };
 };
 

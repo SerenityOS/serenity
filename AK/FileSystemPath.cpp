@@ -37,6 +37,11 @@ void FileSystemPath::canonicalize()
     }
 
     m_basename = canonical_parts.last();
+    auto name_parts = m_basename.split('.');
+    m_title = name_parts[0];
+    if (name_parts.size() > 1)
+        m_extension = name_parts[1];
+
     StringBuilder builder(approximate_canonical_length);
     for (auto& cpart : canonical_parts) {
         builder.append('/');
