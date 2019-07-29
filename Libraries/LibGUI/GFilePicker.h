@@ -6,6 +6,7 @@
 
 class GDirectoryModel;
 class GLabel;
+class GTextBox;
 
 class GFilePicker final : public GDialog {
     C_OBJECT(GFilePicker)
@@ -27,6 +28,7 @@ public:
 private:
     void set_preview(const FileSystemPath&);
     void clear_preview();
+    void on_file_return();
 
     static String ok_button_name(Mode mode)
     {
@@ -44,6 +46,7 @@ private:
     NonnullRefPtr<GDirectoryModel> m_model;
     FileSystemPath m_selected_file;
 
+    GTextBox* m_filename_textbox { nullptr };
     GLabel* m_preview_image_label { nullptr };
     GLabel* m_preview_name_label { nullptr };
     GLabel* m_preview_geometry_label { nullptr };

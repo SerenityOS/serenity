@@ -132,14 +132,17 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     filename_label->set_text_alignment(TextAlignment::CenterLeft);
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     filename_label->set_preferred_size(60, 0);
-    auto* filename_textbox = new GTextBox(filename_container);
+    m_filename_textbox = new GTextBox(filename_container);
     if (m_mode == Mode::Save) {
-        filename_textbox->set_text(file_name);
-        filename_textbox->set_focus(true);
-        filename_textbox->select_all();
+        m_filename_textbox->set_text(file_name);
+        m_filename_textbox->set_focus(true);
+        m_filename_textbox->select_all();
     }
+    m_filename_textbox->on_return_pressed = [&] {
+        on_file_return();
+    };
 
-    m_view->on_activation = [this, filename_textbox](auto& index) {
+    m_view->on_activation = [this](auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
         const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
@@ -151,7 +154,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
             m_model->open(path.string());
             // NOTE: 'entry' is invalid from here on
         } else {
-            filename_textbox->set_text(entry.name);
+            m_filename_textbox->set_text(entry.name);
             set_preview(path);
         }
     };
@@ -175,19 +178,8 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size(80, 0);
     ok_button->set_text(ok_button_name(m_mode));
-    if (m_mode == Mode::Save)
-        ok_button->set_focus(true);
-    ok_button->on_click = [this, filename_textbox](auto&) {
-        FileSystemPath path(String::format("%s/%s", m_model->path().characters(), filename_textbox->text().characters()));
-
-        if (GFilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
-            GMessageBox box("File already exists, overwrite?", "Existing File", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel);
-            if (box.exec() == GMessageBox::ExecCancel)
-                return;
-        }
-
-        m_selected_file = path;
-        done(ExecOK);
+    ok_button->on_click = [this](auto&) {
+        on_file_return();
     };
 
     auto* preview_container = new GFrame(horizontal_container);
@@ -239,6 +231,20 @@ void GFilePicker::clear_preview()
     m_preview_image_label->set_icon(nullptr);
     m_preview_name_label->set_text(String::empty());
     m_preview_geometry_label->set_text(String::empty());
+}
+
+void GFilePicker::on_file_return()
+{
+    FileSystemPath path(String::format("%s/%s", m_model->path().characters(), m_filename_textbox->text().characters()));
+
+    if (GFilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
+        GMessageBox box("File already exists, overwrite?", "Existing File", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel);
+        if (box.exec() == GMessageBox::ExecCancel)
+            return;
+    }
+
+    m_selected_file = path;
+    done(ExecOK);
 }
 
 bool GFilePicker::file_exists(const StringView& path)
