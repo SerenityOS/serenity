@@ -50,6 +50,7 @@ private:
         size_t amount_resident;
         unsigned syscall_count;
         float cpu_percent;
+        int icon_id;
     };
 
     struct Process {

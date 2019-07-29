@@ -3,6 +3,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <LibC/SharedBuffer.h>
 #include <LibCore/CProcessStatisticsReader.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -138,6 +139,14 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
     if (role == Role::Display) {
         switch (index.column()) {
         case Column::Icon:
+            if (process.current_state.icon_id != -1) {
+                auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(process.current_state.icon_id);
+                if (icon_buffer) {
+                    auto icon_bitmap = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *icon_buffer, { 16, 16 });
+                    if (icon_bitmap)
+                        return *icon_bitmap;
+                }
+            }
             return *m_generic_process_icon;
         case Column::PID:
             return process.current_state.pid;
@@ -193,6 +202,7 @@ void ProcessModel::update()
         state.name = it.value.name;
         state.amount_virtual = it.value.amount_virtual;
         state.amount_resident = it.value.amount_resident;
+        state.icon_id = it.value.icon_id;
         sum_times_scheduled += it.value.times_scheduled;
         {
             auto pit = m_processes.find(it.value.pid);

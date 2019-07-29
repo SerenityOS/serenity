@@ -442,6 +442,18 @@ int share_buffer_with(int shared_buffer_id, pid_t peer_pid)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int share_buffer_globally(int shared_buffer_id)
+{
+    int rc = syscall(SC_share_buffer_globally, shared_buffer_id);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
+int set_process_icon(int icon_id)
+{
+    int rc = syscall(SC_set_process_icon, icon_id);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 void* get_shared_buffer(int shared_buffer_id)
 {
     int rc = syscall(SC_get_shared_buffer, shared_buffer_id);

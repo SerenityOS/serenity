@@ -24,6 +24,7 @@ struct CProcessStatistics {
     unsigned ticks;
     String priority;
     unsigned syscall_count;
+    int icon_id;
 
     // synthetic
     String username;

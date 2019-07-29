@@ -22,6 +22,7 @@ class PageDirectory;
 class Region;
 class VMObject;
 class ProcessTracer;
+class SharedBuffer;
 
 timeval kgettimeofday();
 void kgettimeofday(timeval&);
@@ -208,12 +209,14 @@ public:
     int sys$mknod(const char* pathname, mode_t, dev_t);
     int sys$create_shared_buffer(int, void** buffer);
     int sys$share_buffer_with(int, pid_t peer_pid);
+    int sys$share_buffer_globally(int);
     void* sys$get_shared_buffer(int shared_buffer_id);
     int sys$release_shared_buffer(int shared_buffer_id);
     int sys$seal_shared_buffer(int shared_buffer_id);
     int sys$get_shared_buffer_size(int shared_buffer_id);
     int sys$halt();
     int sys$reboot();
+    int sys$set_process_icon(int icon_id);
 
     static void initialize();
 
@@ -280,6 +283,8 @@ public:
     void did_syscall() { ++m_syscall_count; }
 
     const ELFLoader* elf_loader() const { return m_elf_loader.ptr(); }
+
+    int icon_id() const { return m_icon_id; }
 
 private:
     friend class MemoryManager;
@@ -359,6 +364,8 @@ private:
     Lock m_big_lock { "Process" };
 
     u64 m_alarm_deadline { 0 };
+
+    int m_icon_id { -1 };
 };
 
 class ProcessInspectionHandle {

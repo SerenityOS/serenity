@@ -299,6 +299,10 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
         return current->process().sys$dump_backtrace();
     case Syscall::SC_watch_file:
         return current->process().sys$watch_file((const char*)arg1, (int)arg2);
+    case Syscall::SC_share_buffer_globally:
+        return current->process().sys$share_buffer_globally((int)arg1);
+    case Syscall::SC_set_process_icon:
+        return current->process().sys$set_process_icon((int)arg1);
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         return -ENOSYS;
