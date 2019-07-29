@@ -1,5 +1,6 @@
 #include "Field.h"
 #include <AK/HashTable.h>
+#include <AK/DoublyLinkedList.h>
 #include <LibCore/CConfigFile.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
@@ -271,15 +272,40 @@ void Field::reset()
     set_updates_enabled(true);
 }
 
+void Field::flood_mark(Square& square)
+{
+    if (square.is_swept)
+        return;
+    if (square.has_flag)
+        return;
+    if (square.is_considering)
+        return;
+    update();
+    square.is_swept = true;
+    square.button->set_visible(false);
+    square.label->set_visible(true);
+
+    --m_unswept_empties;
+
+    if (!m_unswept_empties)
+        win();
+}
+
 void Field::flood_fill(Square& square)
 {
-    on_square_clicked(square);
-    square.for_each_neighbor([this](auto& neighbor) {
-        if (!neighbor.is_swept && !neighbor.has_mine && neighbor.number == 0)
-            flood_fill(neighbor);
-        if (!neighbor.has_mine && neighbor.number)
-            on_square_clicked(neighbor);
-    });
+    DoublyLinkedList<Square*> queue;
+    queue.append(&square);
+
+    for (auto s : queue) {
+        s->for_each_neighbor([this, &queue](Square& neighbor) {
+            if (!neighbor.is_swept && !neighbor.has_mine && neighbor.number == 0) {
+                flood_mark(neighbor);
+                queue.append(&neighbor);
+            }
+            if (!neighbor.has_mine && neighbor.number)
+                flood_mark(neighbor);
+        });
+    }
 }
 
 void Field::paint_event(GPaintEvent& event)
