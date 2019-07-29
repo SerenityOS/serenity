@@ -167,6 +167,18 @@ namespace Client {
             return response;
         }
 
+        template<typename RequestType, typename... Args>
+        typename RequestType::ResponseType send_sync(Args&&... args)
+        {
+            bool success = post_message_to_server(RequestType(forward<Args>(args)...));
+            ASSERT(success);
+
+            ServerMessage response;
+            success = wait_for_specific_event(RequestType::ResponseType::message_type(), response);
+            ASSERT(success);
+            return response;
+        }
+
     protected:
         struct IncomingMessageBundle {
             ServerMessage message;

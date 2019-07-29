@@ -25,11 +25,7 @@ ASClientConnection::~ASClientConnection()
 
 void ASClientConnection::send_greeting()
 {
-    ASAPI_ServerMessage message;
-    message.type = ASAPI_ServerMessage::Type::Greeting;
-    message.greeting.server_pid = getpid();
-    message.greeting.your_client_id = client_id();
-    post_message(message);
+    post_message(ASAPI_Server::Greeting(getpid(), client_id()));
 }
 
 bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, const ByteBuffer&&)
@@ -53,25 +49,20 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
             m_queue = m_mixer.create_queue(*this);
 
         if (m_queue->is_full()) {
-            reply.success = false;
-        } else {
-            m_queue->enqueue(ABuffer::create_with_shared_buffer(*shared_buffer));
+            post_message(ASAPI_Server::EnqueueBufferResponse(false, message.play_buffer.buffer_id));
+            break;
         }
-        post_message(reply);
+        m_queue->enqueue(ABuffer::create_with_shared_buffer(*shared_buffer));
+        post_message(ASAPI_Server::EnqueueBufferResponse(true, message.play_buffer.buffer_id));
         break;
     }
     case ASAPI_ClientMessage::Type::GetMainMixVolume: {
-        ASAPI_ServerMessage reply;
-        reply.type = ASAPI_ServerMessage::Type::DidGetMainMixVolume;
-        reply.value = m_mixer.main_volume();
-        post_message(reply);
+        post_message(ASAPI_Server::DidGetMainMixVolume(m_mixer.main_volume()));
         break;
     }
     case ASAPI_ClientMessage::Type::SetMainMixVolume: {
-        ASAPI_ServerMessage reply;
-        reply.type = ASAPI_ServerMessage::Type::DidSetMainMixVolume;
         m_mixer.set_main_volume(message.value);
-        post_message(reply);
+        post_message(ASAPI_Server::DidSetMainMixVolume());
         break;
     }
     case ASAPI_ClientMessage::Type::Invalid:
@@ -85,8 +76,5 @@ bool ASClientConnection::handle_message(const ASAPI_ClientMessage& message, cons
 
 void ASClientConnection::did_finish_playing_buffer(Badge<ASMixer>, int buffer_id)
 {
-    ASAPI_ServerMessage reply;
-    reply.type = ASAPI_ServerMessage::Type::FinishedPlayingBuffer;
-    reply.playing_buffer.buffer_id = buffer_id;
-    post_message(reply);
+    post_message(ASAPI_Server::FinishedPlayingBuffer(buffer_id));
 }
