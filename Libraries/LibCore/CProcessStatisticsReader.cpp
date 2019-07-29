@@ -43,6 +43,7 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
         process.ticks = process_object.get("ticks").to_u32();
         process.priority = process_object.get("priority").to_string();
         process.syscall_count = process_object.get("syscall_count").to_u32();
+        process.icon_id = process_object.get("icon_id").to_int();
 
         // and synthetic data last
         process.username = username_from_uid(process.uid);

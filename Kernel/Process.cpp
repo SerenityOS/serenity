@@ -2452,6 +2452,19 @@ int Process::sys$share_buffer_with(int shared_buffer_id, pid_t peer_pid)
     return 0;
 }
 
+int Process::sys$share_buffer_globally(int shared_buffer_id)
+{
+    LOCKER(shared_buffers().lock());
+    auto it = shared_buffers().resource().find(shared_buffer_id);
+    if (it == shared_buffers().resource().end())
+        return -EINVAL;
+    auto& shared_buffer = *(*it).value;
+    if (!shared_buffer.is_shared_with(m_pid))
+        return -EPERM;
+    shared_buffer.share_globally();
+    return 0;
+}
+
 int Process::sys$release_shared_buffer(int shared_buffer_id)
 {
     LOCKER(shared_buffers().lock());
@@ -2772,4 +2785,17 @@ String Process::backtrace(ProcessInspectionHandle& handle) const
         return IterationDecision::Continue;
     });
     return builder.to_string();
+}
+
+int Process::sys$set_process_icon(int icon_id)
+{
+    LOCKER(shared_buffers().lock());
+    auto it = shared_buffers().resource().find(icon_id);
+    if (it == shared_buffers().resource().end())
+        return -EINVAL;
+    auto& shared_buffer = *(*it).value;
+    if (!shared_buffer.is_shared_with(m_pid))
+        return -EPERM;
+    m_icon_id = icon_id;
+    return 0;
 }

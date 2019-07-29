@@ -548,6 +548,7 @@ ByteBuffer procfs$all(InodeIdentifier)
         process_object.set("ticks", process.main_thread().ticks());
         process_object.set("priority", to_string(process.priority()));
         process_object.set("syscall_count", process.syscall_count());
+        process_object.set("icon_id", process.icon_id());
         array.append(process_object);
     };
     build_process(*Scheduler::colonel());

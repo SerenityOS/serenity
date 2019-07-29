@@ -635,6 +635,16 @@ void GWindow::set_icon(const GraphicsBitmap* icon)
         painter.blit({ 0, 0 }, *icon, icon->rect());
     }
 
+    int rc = seal_shared_buffer(m_icon->shared_buffer_id());
+    ASSERT(rc == 0);
+
+    rc = share_buffer_globally(m_icon->shared_buffer_id());
+    ASSERT(rc == 0);
+
+    static bool has_set_process_icon;
+    if (!has_set_process_icon)
+        set_process_icon(m_icon->shared_buffer_id());
+
     WSAPI_ClientMessage message;
     message.type = WSAPI_ClientMessage::Type::SetWindowIconBitmap;
     message.window_id = m_window_id;

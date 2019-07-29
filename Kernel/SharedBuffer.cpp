@@ -1,5 +1,5 @@
-#include <Kernel/SharedBuffer.h>
 #include <Kernel/Process.h>
+#include <Kernel/SharedBuffer.h>
 
 Lockable<HashMap<int, NonnullOwnPtr<SharedBuffer>>>& shared_buffers()
 {
@@ -29,6 +29,8 @@ void SharedBuffer::sanity_check(const char* what)
 bool SharedBuffer::is_shared_with(pid_t peer_pid)
 {
     LOCKER(shared_buffers().lock());
+    if (m_global)
+        return true;
     for (auto& ref : m_refs) {
         if (ref.pid == peer_pid) {
             return true;
@@ -42,6 +44,18 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
 {
     LOCKER(shared_buffers().lock());
     ASSERT(is_shared_with(process.pid()));
+    if (m_global) {
+        bool found = false;
+        for (auto& ref : m_refs) {
+            if (ref.pid == process.pid()) {
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            m_refs.append(Reference(process.pid()));
+    }
+
     for (auto& ref : m_refs) {
         if (ref.pid == process.pid()) {
             ref.count++;
@@ -93,6 +107,7 @@ void SharedBuffer::deref_for_process(Process& process)
                 destroy_if_unused();
                 return;
             }
+            return;
         }
     }
 
