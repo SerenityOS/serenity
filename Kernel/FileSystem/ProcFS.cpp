@@ -193,14 +193,17 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
     auto& process = handle->process();
     if (process.number_of_open_file_descriptors() == 0)
         return {};
-    StringBuilder builder;
+    JsonArray array;
     for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
         auto* description = process.file_description(i);
         if (!description)
             continue;
-        builder.appendf("%-3u %s\n", i, description->absolute_path().characters());
+        JsonObject description_object;
+        description_object.set("fd", i);
+        description_object.set("absolute_path", description->absolute_path());
+        array.append(move(description_object));
     }
-    return builder.to_byte_buffer();
+    return array.serialized().to_byte_buffer();
 }
 
 ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
