@@ -130,7 +130,7 @@ VFS* vfs;
     }
 
     if (detect & 0x0f) {
-        fd0 = FloppyDiskDevice::create(FloppyDiskDevice::DriveType::Slave);
+        fd1 = FloppyDiskDevice::create(FloppyDiskDevice::DriveType::Slave);
         kprintf("fd1 is 1.44MB floppy drive");
     } else {
         kprintf("fd1 type unsupported! Type == 0x%x\n", detect & 0x0f);
