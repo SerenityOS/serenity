@@ -2,7 +2,7 @@
 #include <LibAudio/ABuffer.h>
 #include <LibAudio/AWavLoader.h>
 #include <LibCore/CFile.h>
-#include <LibCore/CFileStreamReader.h>
+#include <LibCore/CIODeviceStreamReader.h>
 #include <limits>
 
 AWavLoader::AWavLoader(const StringView& path)
@@ -33,7 +33,7 @@ RefPtr<ABuffer> AWavLoader::get_more_samples()
 
 bool AWavLoader::parse_header()
 {
-    CFileStreamReader stream(m_file);
+    CIODeviceStreamReader stream(m_file);
 
 #define CHECK_OK(msg)                                                           \
     do {                                                                        \
