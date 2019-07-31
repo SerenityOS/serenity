@@ -3,12 +3,13 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/CDirIterator.h>
 #include <LibCore/CLock.h>
-#include <LibGUI/GPainter.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GPainter.h>
 #include <dirent.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
+#include <time.h>
 #include <unistd.h>
 
 static CLockable<HashMap<String, RefPtr<GraphicsBitmap>>>& thumbnail_cache()
@@ -106,6 +107,8 @@ String GDirectoryModel::column_name(int column) const
         return "Group";
     case Column::Permissions:
         return "Mode";
+    case Column::ModificationTime:
+        return "Modified";
     case Column::Inode:
         return "Inode";
     }
@@ -125,6 +128,8 @@ GModel::ColumnMetadata GDirectoryModel::column_metadata(int column) const
         return { 50, TextAlignment::CenterLeft };
     case Column::Group:
         return { 50, TextAlignment::CenterLeft };
+    case Column::ModificationTime:
+        return { 110, TextAlignment::CenterLeft };
     case Column::Permissions:
         return { 60, TextAlignment::CenterLeft };
     case Column::Inode:
@@ -159,6 +164,18 @@ GIcon GDirectoryModel::icon_for(const Entry& entry) const
         return GIcon(m_filetype_image_icon.bitmap_for_size(16), *entry.thumbnail);
     }
     return m_file_icon;
+}
+
+static String timestamp_string(time_t timestamp)
+{
+    auto* tm = localtime(&timestamp);
+    return String::format("%4u-%02u-%02u %02u:%02u:%02u",
+        tm->tm_year + 1900,
+        tm->tm_mon + 1,
+        tm->tm_mday,
+        tm->tm_hour,
+        tm->tm_min,
+        tm->tm_sec);
 }
 
 static String permission_string(mode_t mode)
@@ -232,6 +249,8 @@ GVariant GDirectoryModel::data(const GModelIndex& index, Role role) const
             return name_for_gid(entry.gid);
         case Column::Permissions:
             return permission_string(entry.mode);
+        case Column::ModificationTime:
+            return entry.mtime;
         case Column::Inode:
             return (int)entry.inode;
         }
@@ -251,6 +270,8 @@ GVariant GDirectoryModel::data(const GModelIndex& index, Role role) const
             return name_for_gid(entry.gid);
         case Column::Permissions:
             return permission_string(entry.mode);
+        case Column::ModificationTime:
+            return timestamp_string(entry.mtime);
         case Column::Inode:
             return (int)entry.inode;
         }
@@ -289,6 +310,7 @@ void GDirectoryModel::update()
         entry.uid = st.st_uid;
         entry.gid = st.st_gid;
         entry.inode = st.st_ino;
+        entry.mtime = st.st_mtime;
         auto& entries = S_ISDIR(st.st_mode) ? m_directories : m_files;
         entries.append(move(entry));
 
