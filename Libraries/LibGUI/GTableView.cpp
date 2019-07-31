@@ -263,7 +263,7 @@ void GTableView::paint_event(GPaintEvent& event)
                     text_color = Color::White;
                 else
                     text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(Color::Black);
-                painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color);
+                painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
             }
             x_offset += column_width + horizontal_padding() * 2;
         }
