@@ -222,7 +222,23 @@ int main(int argc, char** argv)
         progressbar->set_visible(true);
     };
 
-    directory_view->open("/");
+    // our initial location is defined as, in order of precedence:
+    // 1. the first command-line argument (e.g. FileManager /bin)
+    // 2. the user's home directory
+    // 3. the root directory
+
+    String initial_location;
+
+    if (argc >= 2)
+        initial_location = argv[1];
+
+    if (initial_location.is_empty())
+        initial_location = get_current_user_home_path();
+
+    if (initial_location.is_empty())
+        initial_location = "/";
+
+    directory_view->open(initial_location);
     directory_view->set_focus(true);
 
     window->set_main_widget(widget);
