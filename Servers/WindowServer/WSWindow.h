@@ -42,6 +42,11 @@ public:
     bool show_titlebar() const { return m_show_titlebar; }
     void set_show_titlebar(bool show) { m_show_titlebar = show; }
 
+    bool is_movable() const
+    {
+        return m_type == WSWindowType::Normal || m_type == WSWindowType::Launcher;
+    }
+
     WSWindowFrame& frame() { return m_frame; }
     const WSWindowFrame& frame() const { return m_frame; }
 
