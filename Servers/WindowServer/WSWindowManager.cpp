@@ -731,7 +731,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
 
             // First check if we should initiate a drag or resize (Logo+LMB or Logo+RMB).
             // In those cases, the event is swallowed by the window manager.
-            if (window.type() == WSWindowType::Normal) {
+            if (window.is_movable()) {
                 if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
                     hovered_window = &window;
                     start_window_drag(window, event);
