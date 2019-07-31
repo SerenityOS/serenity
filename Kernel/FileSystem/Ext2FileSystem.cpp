@@ -422,13 +422,10 @@ InodeMetadata Ext2FSInode::metadata() const
     metadata.block_size = fs().block_size();
     metadata.block_count = m_raw_inode.i_blocks;
 
-    if (::is_character_device(m_raw_inode.i_mode)) {
+    if (::is_character_device(m_raw_inode.i_mode) || ::is_block_device(m_raw_inode.i_mode)) {
         unsigned dev = m_raw_inode.i_block[0];
-        metadata.major_device = (dev & 0xfff00) >> 8;
-        metadata.minor_device = (dev & 0xff) | ((dev >> 12) & 0xfff00);
-    }
-    if (::is_block_device(m_raw_inode.i_mode)) {
-        unsigned dev = m_raw_inode.i_block[1];
+        if (!dev)
+            dev = m_raw_inode.i_block[1];
         metadata.major_device = (dev & 0xfff00) >> 8;
         metadata.minor_device = (dev & 0xff) | ((dev >> 12) & 0xfff00);
     }
