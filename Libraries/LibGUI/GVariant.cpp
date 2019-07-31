@@ -7,6 +7,7 @@ const char* to_string(GVariant::Type type)
     case GVariant::Type::Invalid: return "Invalid";
     case GVariant::Type::Bool: return "Bool";
     case GVariant::Type::Int: return "Int";
+    case GVariant::Type::UnsignedInt: return "UnsignedInt";
     case GVariant::Type::Float: return "Float";
     case GVariant::Type::String: return "String";
     case GVariant::Type::Bitmap: return "Bitmap";
@@ -54,6 +55,12 @@ GVariant::GVariant(int value)
     m_value.as_int = value;
 }
 
+GVariant::GVariant(unsigned value)
+    : m_type(Type::UnsignedInt)
+{
+    m_value.as_uint = value;
+}
+
 GVariant::GVariant(float value)
     : m_type(Type::Float)
 {
@@ -92,9 +99,8 @@ GVariant::GVariant(const JsonValue& value)
     }
 
     if (value.is_uint()) {
-        ASSERT(value.as_uint() < INT32_MAX);
-        m_type = Type::Int;
-        m_value.as_int = value.as_uint();
+        m_type = Type::UnsignedInt;
+        m_value.as_uint = value.as_uint();
         return;
     }
 
@@ -188,6 +194,9 @@ void GVariant::copy_from(const GVariant& other)
     case Type::Int:
         m_value.as_int = other.m_value.as_int;
         break;
+    case Type::UnsignedInt:
+        m_value.as_uint = other.m_value.as_uint;
+        break;
     case Type::Float:
         m_value.as_float = other.m_value.as_float;
         break;
@@ -229,6 +238,8 @@ bool GVariant::operator==(const GVariant& other) const
         return as_bool() == other.as_bool();
     case Type::Int:
         return as_int() == other.as_int();
+    case Type::UnsignedInt:
+        return as_uint() == other.as_uint();
     case Type::Float:
         return as_float() == other.as_float();
     case Type::String:
@@ -260,6 +271,8 @@ bool GVariant::operator<(const GVariant& other) const
         return as_bool() < other.as_bool();
     case Type::Int:
         return as_int() < other.as_int();
+    case Type::UnsignedInt:
+        return as_uint() < other.as_uint();
     case Type::Float:
         return as_float() < other.as_float();
     case Type::String:
@@ -290,6 +303,8 @@ String GVariant::to_string() const
         return as_bool() ? "true" : "false";
     case Type::Int:
         return String::number(as_int());
+    case Type::UnsignedInt:
+        return String::number(as_uint());
     case Type::Float:
         return String::format("%f", (double)as_float());
     case Type::String:

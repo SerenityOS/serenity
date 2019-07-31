@@ -14,6 +14,7 @@ public:
     GVariant(bool);
     GVariant(float);
     GVariant(int);
+    GVariant(unsigned);
     GVariant(const char*);
     GVariant(const String&);
     GVariant(const GraphicsBitmap&);
@@ -37,6 +38,7 @@ public:
         Invalid,
         Bool,
         Int,
+        UnsignedInt,
         Float,
         String,
         Bitmap,
@@ -50,6 +52,7 @@ public:
     bool is_valid() const { return m_type != Type::Invalid; }
     bool is_bool() const { return m_type == Type::Bool; }
     bool is_int() const { return m_type == Type::Int; }
+    bool is_uint() const { return m_type == Type::UnsignedInt; }
     bool is_float() const { return m_type == Type::Float; }
     bool is_string() const { return m_type == Type::String; }
     bool is_bitmap() const { return m_type == Type::Bitmap; }
@@ -74,6 +77,8 @@ public:
             return !!m_value.as_string;
         if (type() == Type::Int)
             return m_value.as_int != 0;
+        if (type() == Type::UnsignedInt)
+            return m_value.as_uint != 0;
         if (type() == Type::Rect)
             return !as_rect().is_null();
         if (type() == Type::Size)
@@ -89,6 +94,12 @@ public:
         return m_value.as_int;
     }
 
+    unsigned as_uint() const
+    {
+        ASSERT(type() == Type::UnsignedInt);
+        return m_value.as_uint;
+    }
+
     int to_int() const
     {
         if (is_int())
@@ -97,6 +108,10 @@ public:
             return as_bool() ? 1 : 0;
         if (is_float())
             return (int)as_float();
+        if (is_uint()) {
+            ASSERT(as_uint() <= INT32_MAX);
+            return (int)as_uint();
+        }
         if (is_string()) {
             bool ok;
             int value = as_string().to_int(ok);
@@ -195,6 +210,7 @@ private:
         GIconImpl* as_icon;
         bool as_bool;
         int as_int;
+        unsigned as_uint;
         float as_float;
         RGBA32 as_color;
         RawPoint as_point;
