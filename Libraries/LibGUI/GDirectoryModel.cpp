@@ -126,9 +126,9 @@ GModel::ColumnMetadata GDirectoryModel::column_metadata(int column) const
     case Column::Group:
         return { 50, TextAlignment::CenterLeft };
     case Column::Permissions:
-        return { 80, TextAlignment::CenterLeft };
+        return { 60, TextAlignment::CenterLeft };
     case Column::Inode:
-        return { 80, TextAlignment::CenterRight };
+        return { 60, TextAlignment::CenterRight };
     }
     ASSERT_NOT_REACHED();
 }
