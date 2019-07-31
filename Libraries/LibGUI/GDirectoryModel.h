@@ -19,6 +19,7 @@ public:
         Owner,
         Group,
         Permissions,
+        ModificationTime,
         Inode,
         __Count,
     };
@@ -43,6 +44,7 @@ public:
         uid_t uid { 0 };
         uid_t gid { 0 };
         ino_t inode { 0 };
+        time_t mtime { 0 };
         mutable RefPtr<GraphicsBitmap> thumbnail;
         bool is_directory() const { return S_ISDIR(mode); }
         bool is_executable() const { return mode & S_IXUSR; }
