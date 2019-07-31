@@ -249,7 +249,7 @@ bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& call
         return 0;
     },
         context.leak_ptr());
-    ASSERT(rc == 0);
+    ASSERT(rc > 0);
 
     return true;
 }
