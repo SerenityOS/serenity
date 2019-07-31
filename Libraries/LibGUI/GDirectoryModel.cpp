@@ -131,7 +131,7 @@ GModel::ColumnMetadata GDirectoryModel::column_metadata(int column) const
     case Column::ModificationTime:
         return { 110, TextAlignment::CenterLeft };
     case Column::Permissions:
-        return { 60, TextAlignment::CenterLeft };
+        return { 65, TextAlignment::CenterLeft };
     case Column::Inode:
         return { 60, TextAlignment::CenterRight };
     }
