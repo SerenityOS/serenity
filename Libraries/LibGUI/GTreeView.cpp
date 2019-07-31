@@ -226,19 +226,12 @@ void GTreeView::did_update_selection()
     if (!index.is_valid())
         return;
     bool opened_any = false;
-    auto& metadata_for_index = ensure_metadata_for_index(index);
-    if (!metadata_for_index.open) {
-        opened_any = true;
-        metadata_for_index.open = true;
-    }
-    auto ancestor = index.parent();
-    while (ancestor.is_valid()) {
-        auto& metadata_for_ancestor = ensure_metadata_for_index(ancestor);
+    for (auto current = index; current.is_valid(); current = current.parent()) {
+        auto& metadata_for_ancestor = ensure_metadata_for_index(current);
         if (!metadata_for_ancestor.open) {
             metadata_for_ancestor.open = true;
             opened_any = true;
         }
-        ancestor = ancestor.parent();
     }
     if (opened_any)
         update_content_size();
