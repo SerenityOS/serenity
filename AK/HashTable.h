@@ -3,6 +3,7 @@
 #include <AK/Assertions.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/StdLibExtras.h>
+#include <AK/TemporaryChange.h>
 #include <AK/Traits.h>
 #include <AK/kstdio.h>
 
@@ -59,6 +60,8 @@ private:
         , m_is_end(is_end)
         , m_bucket_iterator(bucket_iterator)
     {
+        ASSERT(!table.m_clearing);
+        ASSERT(!table.m_rehashing);
         if (!is_end && !m_table.is_empty() && !(m_bucket_iterator != BucketIteratorType::universal_end())) {
             m_bucket_iterator = m_table.bucket(0).begin();
             if (m_bucket_iterator.is_end())
@@ -146,7 +149,6 @@ public:
     ConstIterator begin() const { return ConstIterator(*this, is_empty()); }
     ConstIterator end() const { return ConstIterator(*this, true); }
 
-
     template<typename Finder>
     Iterator find(unsigned hash, Finder finder)
     {
@@ -221,6 +223,8 @@ private:
 
     int m_size { 0 };
     int m_capacity { 0 };
+    bool m_clearing { false };
+    bool m_rehashing { false };
 };
 
 template<typename T, typename TraitsForT>
@@ -268,6 +272,7 @@ void HashTable<T, TraitsForT>::set(const T& value)
 template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::rehash(int new_capacity)
 {
+    TemporaryChange change(m_rehashing, true);
     new_capacity *= 2;
     auto* new_buckets = new Bucket[new_capacity];
     auto* old_buckets = m_buckets;
@@ -287,6 +292,7 @@ void HashTable<T, TraitsForT>::rehash(int new_capacity)
 template<typename T, typename TraitsForT>
 void HashTable<T, TraitsForT>::clear()
 {
+    TemporaryChange change(m_clearing, true);
     if (m_buckets) {
         delete[] m_buckets;
         m_buckets = nullptr;
