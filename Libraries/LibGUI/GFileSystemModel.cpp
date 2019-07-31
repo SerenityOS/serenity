@@ -107,6 +107,7 @@ GModelIndex GFileSystemModel::index(const StringView& path) const
         bool found = false;
         for (auto& child : node->children) {
             if (child->name == part) {
+                child->reify_if_needed(*this);
                 node = child;
                 found = true;
                 if (i == canonical_path.parts().size() - 1)
