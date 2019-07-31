@@ -50,6 +50,10 @@ WSClientConnection::WSClientConnection(CLocalSocket& client_socket, int client_i
 
 WSClientConnection::~WSClientConnection()
 {
+    // NOTE: Move the windows out of 'm_windows' before teardown. This prevents code
+    //       that runs in response to window destruction from trying to iterate over
+    //       a partially destroyed window list.
+    auto windows = move(m_windows);
     s_connections->remove(client_id());
 }
 
