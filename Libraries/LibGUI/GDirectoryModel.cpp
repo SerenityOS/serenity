@@ -158,9 +158,9 @@ GIcon GDirectoryModel::icon_for(const Entry& entry) const
             } else {
                 thumbnail_cache().resource().set(path, nullptr);
             }
+            if (!entry.thumbnail)
+                return m_filetype_image_icon;
         }
-        if (!entry.thumbnail)
-            return m_filetype_image_icon;
         return GIcon(m_filetype_image_icon.bitmap_for_size(16), *entry.thumbnail);
     }
     return m_file_icon;
