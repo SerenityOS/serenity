@@ -671,7 +671,7 @@ void ProcFS::add_sys_bool(String&& name, Lockable<bool>& var, Function<void()>&&
     data->notify_callback = move(notify_callback);
     data->address = &var;
     inode->set_custom_data(move(data));
-    m_sys_entries.append({ strdup(name.characters()), 0, read_sys_bool, write_sys_bool, move(inode) });
+    m_sys_entries.empend(strdup(name.characters()), 0, read_sys_bool, write_sys_bool, move(inode));
 }
 
 void ProcFS::add_sys_string(String&& name, Lockable<String>& var, Function<void()>&& notify_callback)
@@ -685,7 +685,7 @@ void ProcFS::add_sys_string(String&& name, Lockable<String>& var, Function<void(
     data->notify_callback = move(notify_callback);
     data->address = &var;
     inode->set_custom_data(move(data));
-    m_sys_entries.append({ strdup(name.characters()), 0, read_sys_string, write_sys_string, move(inode) });
+    m_sys_entries.empend(strdup(name.characters()), 0, read_sys_string, write_sys_string, move(inode));
 }
 
 bool ProcFS::initialize()
