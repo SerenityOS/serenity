@@ -238,8 +238,6 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
 Process* Process::fork(RegisterDump& regs)
 {
     auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
-    if (!child)
-        return nullptr;
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
