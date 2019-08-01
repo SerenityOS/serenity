@@ -1,6 +1,6 @@
-#include <AK/TestSuite.h>
 #include <AK/AKString.h>
 #include <AK/OwnPtr.h>
+#include <AK/TestSuite.h>
 #include <AK/Vector.h>
 
 TEST_CASE(construct)
@@ -102,36 +102,43 @@ TEST_CASE(prepend_vector)
 TEST_CASE(prepend_vector_object)
 {
     struct SubObject {
-        SubObject(int v) : value(v) {}
+        SubObject(int v)
+            : value(v)
+        {
+        }
         int value { 0 };
     };
     struct Object {
-        OwnPtr<SubObject> object;
+        Object(NonnullOwnPtr<SubObject>&& a_subobject)
+            : subobject(move(a_subobject))
+        {
+        }
+        OwnPtr<SubObject> subobject;
     };
 
     Vector<Object> objects;
-    objects.append({ make<SubObject>(1) });
-    objects.append({ make<SubObject>(2) });
-    objects.append({ make<SubObject>(3) });
+    objects.empend(make<SubObject>(1));
+    objects.empend(make<SubObject>(2));
+    objects.empend(make<SubObject>(3));
 
     EXPECT_EQ(objects.size(), 3);
 
     Vector<Object> more_objects;
-    objects.append({ make<SubObject>(4) });
-    objects.append({ make<SubObject>(5) });
-    objects.append({ make<SubObject>(6) });
-    EXPECT_EQ(more_objects.size(), 3);
+    more_objects.empend(make<SubObject>(4));
+    more_objects.empend(make<SubObject>(5));
+    more_objects.empend(make<SubObject>(6));
+    EXPECT_EQ(more_objects.size(), 4);
 
     objects.prepend(move(more_objects));
     EXPECT_EQ(more_objects.size(), 0);
     EXPECT_EQ(objects.size(), 6);
 
-    EXPECT_EQ(objects[0].object->value, 4);
-    EXPECT_EQ(objects[1].object->value, 5);
-    EXPECT_EQ(objects[2].object->value, 6);
-    EXPECT_EQ(objects[3].object->value, 1);
-    EXPECT_EQ(objects[4].object->value, 2);
-    EXPECT_EQ(objects[5].object->value, 3);
+    EXPECT_EQ(objects[0].subobject->value, 4);
+    EXPECT_EQ(objects[1].subobject->value, 5);
+    EXPECT_EQ(objects[2].subobject->value, 6);
+    EXPECT_EQ(objects[3].subobject->value, 1);
+    EXPECT_EQ(objects[4].subobject->value, 2);
+    EXPECT_EQ(objects[5].subobject->value, 3);
 }
 
 TEST_MAIN(Vector)
