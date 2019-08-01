@@ -204,7 +204,7 @@ void Thread::send_signal(u8 signal, Process* sender)
     else
         dbgprintf("signal: kernel sent %d to %s(%u)\n", signal, process().name().characters(), pid());
 
-    m_pending_signals |= 1 << signal;
+    m_pending_signals |= 1 << (signal - 1);
 }
 
 bool Thread::has_unmasked_pending_signals() const
@@ -218,9 +218,9 @@ ShouldUnblockThread Thread::dispatch_one_pending_signal()
     u32 signal_candidates = m_pending_signals & ~m_signal_mask;
     ASSERT(signal_candidates);
 
-    u8 signal = 0;
+    u8 signal = 1;
     for (; signal < 32; ++signal) {
-        if (signal_candidates & (1 << signal)) {
+        if (signal_candidates & (1 << (signal - 1))) {
             break;
         }
     }
@@ -294,7 +294,7 @@ bool Thread::should_ignore_signal(u8 signal) const
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(signal < 32);
+    ASSERT(signal > 0 && signal <= 32);
 
 #ifdef SIGNAL_DEBUG
     kprintf("dispatch_signal %s(%u) <- %u\n", process().name().characters(), pid(), signal);
@@ -305,7 +305,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     ASSERT(!(action.flags & SA_SIGINFO));
 
     // Mark this signal as handled.
-    m_pending_signals &= ~(1 << signal);
+    m_pending_signals &= ~(1 << (signal - 1));
 
     if (signal == SIGSTOP) {
         set_state(Stopped);
@@ -348,9 +348,9 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     u32 old_signal_mask = m_signal_mask;
     u32 new_signal_mask = action.mask;
     if (action.flags & SA_NODEFER)
-        new_signal_mask &= ~(1 << signal);
+        new_signal_mask &= ~(1 << (signal - 1));
     else
-        new_signal_mask |= 1 << signal;
+        new_signal_mask |= 1 << (signal - 1);
 
     m_signal_mask |= new_signal_mask;
 
