@@ -47,6 +47,10 @@ public:
     OwnPtr& operator=(const OwnPtr<U>&) = delete;
 
     template<typename U>
+    OwnPtr(const NonnullOwnPtr<U>&) = delete;
+    template<typename U>
+    OwnPtr& operator=(const NonnullOwnPtr<U>&) = delete;
+    template<typename U>
     OwnPtr(const RefPtr<U>&) = delete;
     template<typename U>
     OwnPtr(const NonnullRefPtr<U>&) = delete;
