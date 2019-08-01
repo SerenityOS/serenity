@@ -73,7 +73,7 @@ private:
     struct EventLoopTimer {
         int timer_id { 0 };
         int interval { 0 };
-        timeval fire_time;
+        timeval fire_time { 0, 0 };
         bool should_reload { false };
         WeakPtr<CObject> owner;
 
