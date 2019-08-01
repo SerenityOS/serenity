@@ -92,6 +92,15 @@ Thread::~Thread()
 
     if (selector())
         gdt_free_entry(selector());
+
+    if (m_userspace_stack_region)
+        m_process.deallocate_region(*m_userspace_stack_region);
+
+    if (m_kernel_stack_region)
+        m_process.deallocate_region(*m_kernel_stack_region);
+
+    if (m_kernel_stack_for_signal_handler_region)
+        m_process.deallocate_region(*m_kernel_stack_for_signal_handler_region);
 }
 
 void Thread::unblock()
@@ -503,9 +512,9 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
 
 void Thread::make_userspace_stack_for_secondary_thread(void* argument)
 {
-    auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
-    ASSERT(region);
-    m_tss.esp = region->vaddr().offset(default_userspace_stack_size).get();
+    m_userspace_stack_region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
+    ASSERT(m_userspace_stack_region);
+    m_tss.esp = m_userspace_stack_region->vaddr().offset(default_userspace_stack_size).get();
 
     // NOTE: The stack needs to be 16-byte aligned.
     push_value_on_stack((u32)argument);

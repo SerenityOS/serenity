@@ -326,6 +326,7 @@ private:
     u32 m_pending_signals { 0 };
     u32 m_signal_mask { 0 };
     u32 m_kernel_stack_base { 0 };
+    RefPtr<Region> m_userspace_stack_region;
     RefPtr<Region> m_kernel_stack_region;
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
     SignalActionData m_signal_action_data[32];
