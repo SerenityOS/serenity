@@ -375,14 +375,14 @@ bool Scheduler::pick_next()
 
 #ifdef SCHEDULER_RUNNABLE_DEBUG
     dbgprintf("Non-runnables:\n");
-    Thread::for_each_nonrunnable([](Thread& thread) -> IterationDecision {
+    Scheduler::for_each_nonrunnable([](Thread& thread) -> IterationDecision {
         auto& process = thread.process();
         dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", &process, thread.state_string(), process.name().characters(), process.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
         return IterationDecision::Continue;
     });
 
     dbgprintf("Runnables:\n");
-    Thread::for_each_runnable([](Thread& thread) -> IterationDecision {
+    Scheduler::for_each_runnable([](Thread& thread) -> IterationDecision {
         auto& process = thread.process();
         dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", &process, thread.state_string(), process.name().characters(), process.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
         return IterationDecision::Continue;
