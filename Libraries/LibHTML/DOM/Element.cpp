@@ -42,7 +42,7 @@ void Element::set_attribute(const String& name, const String& value)
     if (auto* attribute = find_attribute(name))
         attribute->set_value(value);
     else
-        m_attributes.append({ name, value });
+        m_attributes.empend(name, value);
 }
 
 void Element::set_attributes(Vector<Attribute>&& attributes)
