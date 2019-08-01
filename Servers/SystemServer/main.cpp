@@ -1,11 +1,11 @@
 #include <AK/Assertions.h>
+#include <LibCore/CFile.h>
 #include <errno.h>
 #include <sched.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <LibCore/CFile.h>
 
 void start_process(const char* prog, int prio)
 {
@@ -26,25 +26,21 @@ void start_process(const char* prog, int prio)
     }
 
     while (true) {
-        if (pid == 0) {
-            dbgprintf("Executing for %s... at prio %d\n", prog, prio);
-            struct sched_param p;
-            p.sched_priority = prio;
-            int ret = sched_setparam(pid, &p);
-            ASSERT(ret == 0);
+        dbgprintf("Executing for %s... at prio %d\n", prog, prio);
+        struct sched_param p;
+        p.sched_priority = prio;
+        int ret = sched_setparam(pid, &p);
+        ASSERT(ret == 0);
 
-            char* progv[256];
-            progv[0] = const_cast<char*>(prog);
-            progv[1] = nullptr;
-            ret = execv(prog, progv);
-            if (ret < 0) {
-                dbgprintf("Exec %s failed! %s", prog, strerror(errno));
-                continue;
-            }
-            break;
-        } else {
-            break;
+        char* progv[256];
+        progv[0] = const_cast<char*>(prog);
+        progv[1] = nullptr;
+        ret = execv(prog, progv);
+        if (ret < 0) {
+            dbgprintf("Exec %s failed! %s", prog, strerror(errno));
+            continue;
         }
+        break;
     }
 }
 
