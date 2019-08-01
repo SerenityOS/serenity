@@ -67,8 +67,6 @@ String JsonParser::consume_quoted_string()
         char escaped_ch = consume();
         switch (escaped_ch) {
         case 'n':
-            builder.append('\n');
-            break;
         case 'r':
             builder.append('\n');
             break;
