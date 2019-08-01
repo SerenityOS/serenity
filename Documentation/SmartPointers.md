@@ -9,16 +9,18 @@ The reason for using these pointers is to make it explicit through code who owns
 
 
 ----
-## OwnPtr<T>
+## OwnPtr<T> and NonnullOwnPtr<T>
 
 OwnPtr is used for single-owner objects. An object held by an OwnPtr is owned by that OwnPtr, and not by anybody else.
 
 This means that the OwnPtr is responsible for deleting the pointee when the OwnPtr goes out of scope.
 
-There is a make<T>() helper that creates a new object and returns it wrapped in an OwnPtr.
+NonnullOwnPtr<T> is a special variant of OwnPtr with one additional property: it cannot be null. NonnullOwnPtr is suitable as a return type from functions that are guaranteed to never return null, and as an argument type where ownership is transferred, and the argument may not be null. In other words, if OwnPtr is "\*", then NonnullOwnPtr is "&".
+
+There is a make<T>() helper that creates a new object and returns it wrapped in an NonnullOwnPtr.
 
     {
-        OwnPtr<Foo> my_object = make<Foo>();
+        NonnullOwnPtr<Foo> my_object = make<Foo>();
         my_object->do_stuff();
         // my_object goes out of scope here, and the Foo will be deleted.
     }
