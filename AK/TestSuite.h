@@ -4,6 +4,7 @@
 #include "Function.h"
 #include "NonnullRefPtrVector.h"
 #include <chrono>
+#include <stdio.h>
 
 namespace AK {
 
@@ -235,13 +236,13 @@ using AK::TestSuite;
         TestSuite::release();                                                      \
     }
 
-#define assertEqual(one, two)                                                                                                \
-    do {                                                                                                                     \
-        auto ___aev1 = one;                                                                                                  \
-        auto ___aev2 = two;                                                                                                  \
-        if (___aev1 != ___aev2) {                                                                                            \
-            const auto& msg = String::format("\033[31;1mFAIL\033[0m: assertEqual(" ___str(one) ", " ___str(two) ") failed"); \
-        }                                                                                                                    \
+#define assertEqual(one, two)                                                                                                                                              \
+    do {                                                                                                                                                                   \
+        auto ___aev1 = one;                                                                                                                                                \
+        auto ___aev2 = two;                                                                                                                                                \
+        if (___aev1 != ___aev2) {                                                                                                                                          \
+            dbg() << TStyle(TStyle::Red, TStyle::Bold) << "FAIL" << TStyle() << ": " __FILE__ ":" << __LINE__ << ": assertEqual(" ___str(one) ", " ___str(two) ") failed"; \
+        }                                                                                                                                                                  \
     } while (0)
 
 #define EXPECT_EQ(one, two) assertEqual(one, two)
