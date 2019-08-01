@@ -232,8 +232,8 @@ namespace Client {
         CLocalSocket m_connection;
         CNotifier m_notifier;
         Vector<IncomingMessageBundle> m_unprocessed_bundles;
-        int m_server_pid;
-        int m_my_client_id;
+        int m_server_pid { -1 };
+        int m_my_client_id { -1 };
     };
 
 } // Client

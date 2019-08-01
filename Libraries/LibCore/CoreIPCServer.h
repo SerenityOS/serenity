@@ -163,14 +163,14 @@ namespace Server {
 
         void did_misbehave()
         {
-            dbgprintf("Connection{%p} (id=%d, pid=%d) misbehaved, disconnecting.\n", this, client_id(), m_pid);
+            dbgprintf("Connection{%p} (id=%d, pid=%d) misbehaved, disconnecting.\n", this, client_id(), m_client_pid);
             m_socket.close();
             delete_later();
         }
 
         int client_id() const { return m_client_id; }
-        pid_t client_pid() const { return m_pid; }
-        void set_client_pid(pid_t pid) { m_pid = pid; }
+        pid_t client_pid() const { return m_client_pid; }
+        void set_client_pid(pid_t pid) { m_client_pid = pid; }
 
         // ### having this public is sad
         virtual void send_greeting() = 0;
@@ -192,8 +192,8 @@ namespace Server {
 
     private:
         CLocalSocket& m_socket;
-        int m_client_id;
-        int m_pid;
+        int m_client_id { -1 };
+        int m_client_pid { -1 };
     };
 
 } // Server
