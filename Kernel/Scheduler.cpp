@@ -396,7 +396,7 @@ bool Scheduler::pick_next()
     auto* previous_head = runnable_list.first();
     for (;;) {
         // Move head to tail.
-        runnable_list.append(*previous_head);
+        runnable_list.append(*runnable_list.first());
         auto* thread = runnable_list.first();
 
         if (!thread->process().is_being_inspected() && (thread->state() == Thread::Runnable || thread->state() == Thread::Running)) {
