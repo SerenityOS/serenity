@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         auto* str = fgets(buffer, sizeof(buffer), stdin);
         if (!str)
             break;
-        printf(str);
+        printf("%s", str);
         ++lines_printed;
         if ((lines_printed % (ws.ws_row - 1)) == 0) {
             wait_for_key();
