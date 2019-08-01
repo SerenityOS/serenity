@@ -790,7 +790,7 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
     if (child_inode)
         child_inode->increment_link_count();
 
-    entries.append({ name.characters_without_null_termination(), name.length(), child_id, to_ext2_file_type(mode) });
+    entries.empend(name.characters_without_null_termination(), name.length(), child_id, to_ext2_file_type(mode));
     bool success = write_directory(entries);
     if (success)
         m_lookup_cache.set(name, child_id.index());
@@ -1135,8 +1135,8 @@ RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& 
 #endif
 
     Vector<DirectoryEntry> entries;
-    entries.append({ ".", inode->identifier(), EXT2_FT_DIR });
-    entries.append({ "..", parent_id, EXT2_FT_DIR });
+    entries.empend(".", inode->identifier(), EXT2_FT_DIR);
+    entries.empend("..", parent_id, EXT2_FT_DIR);
 
     bool success = static_cast<Ext2FSInode&>(*inode).write_directory(entries);
     ASSERT(success);
