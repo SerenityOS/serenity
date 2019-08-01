@@ -129,12 +129,9 @@ int fgetc(FILE* stream)
     assert(stream);
     char ch;
     size_t nread = fread(&ch, sizeof(char), 1, stream);
-    if (nread <= 0) {
-        stream->eof = nread == 0;
-        stream->error = errno;
-        return EOF;
-    }
-    return ch;
+    if (nread == 1)
+        return ch;
+    return EOF;
 }
 
 int getc(FILE* stream)
