@@ -157,15 +157,22 @@ const char* Thread::state_string() const
 
 void Thread::finalize()
 {
+    ASSERT(current == g_finalizer);
+
     dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
     set_state(Thread::State::Dead);
 
-    if (this == &m_process.main_thread())
+    if (this == &m_process.main_thread()) {
         m_process.finalize();
+        return;
+    }
+
+    delete this;
 }
 
 void Thread::finalize_dying_threads()
 {
+    ASSERT(current == g_finalizer);
     Vector<Thread*, 32> dying_threads;
     {
         InterruptDisabler disabler;
