@@ -249,9 +249,7 @@ int CIODevice::printf(const char* format, ...)
     va_start(ap, format);
     // FIXME: We're not propagating write() failures to client here!
     int ret = printf_internal([this](char*&, char ch) {
-        int rc = write((const u8*)&ch, 1);
-        if (rc < 0)
-            dbgprintf("CIODevice::printf: write: %s\n", strerror(errno));
+        write((const u8*)&ch, 1);
     },
         nullptr, format, ap);
     va_end(ap);
