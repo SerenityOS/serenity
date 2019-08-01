@@ -478,7 +478,7 @@ ByteBuffer procfs$cpuinfo(InodeIdentifier)
     {
         // FIXME: Check first that this is supported by calling CPUID with eax=0x80000000
         //        and verifying that the returned eax>=0x80000004.
-        char buffer[48];
+        alignas(u32) char buffer[48];
         u32* bufptr = reinterpret_cast<u32*>(buffer);
         auto copy_brand_string_part_to_buffer = [&](u32 i) {
             CPUID cpuid(0x80000002 + i);
