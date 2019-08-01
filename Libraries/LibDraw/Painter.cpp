@@ -517,7 +517,7 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
             break;
         case GraphicsBitmap::Format::RGBA32:
-            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
+            do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGBA32>);
             break;
         case GraphicsBitmap::Format::Indexed8:
             do_draw_scaled_bitmap<true>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Indexed8>);
@@ -532,7 +532,7 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
             do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
             break;
         case GraphicsBitmap::Format::RGBA32:
-            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGB32>);
+            do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::RGBA32>);
             break;
         case GraphicsBitmap::Format::Indexed8:
             do_draw_scaled_bitmap<false>(*m_target, dst_rect, clipped_rect, source, src_rect, hscale, vscale, get_pixel<GraphicsBitmap::Format::Indexed8>);
