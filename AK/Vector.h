@@ -326,6 +326,14 @@ public:
         unchecked_append(T(value));
     }
 
+    template<class... Args>
+    void empend(Args&&... args)
+    {
+        grow_capacity(m_size + 1);
+        new (slot(m_size)) T(forward<Args>(args)...);
+        ++m_size;
+    }
+
     void append(T&& value)
     {
         grow_capacity(size() + 1);
