@@ -1,13 +1,15 @@
 #pragma once
 
-#include "Assertions.h"
-#include "StdLibExtras.h"
-#include "Types.h"
-#include "kmalloc.h"
+#include <AK/Assertions.h>
+#include <AK/Noncopyable.h>
+#include <AK/StdLibExtras.h>
+#include <AK/Types.h>
+#include <AK/kmalloc.h>
 
 namespace AK {
 
 class Bitmap {
+    AK_MAKE_NONCOPYABLE(Bitmap)
 public:
     // NOTE: A wrapping Bitmap won't try to free the wrapped data.
     static Bitmap wrap(u8* data, int size)
@@ -23,6 +25,25 @@ public:
     static Bitmap create()
     {
         return Bitmap();
+    }
+
+    Bitmap(Bitmap&& other)
+    {
+        m_owned = exchange(other.m_owned, false);
+        m_data = exchange(other.m_data, nullptr);
+        m_size = exchange(other.m_size, 0);
+    }
+
+    Bitmap& operator=(Bitmap&& other)
+    {
+        if (this != &other) {
+            if (m_owned)
+                kfree(m_data);
+            m_owned = exchange(other.m_owned, false);
+            m_data = exchange(other.m_data, nullptr);
+            m_size = exchange(other.m_size, 0);
+        }
+        return *this;
     }
 
     ~Bitmap()
