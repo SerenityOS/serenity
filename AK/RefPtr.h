@@ -188,11 +188,9 @@ public:
 
     bool operator!() const { return !m_ptr; }
 
-    T* leak_ref()
+    [[nodiscard]] T* leak_ref()
     {
-        T* leakedPtr = m_ptr;
-        m_ptr = nullptr;
-        return leakedPtr;
+        return exchange(m_ptr, nullptr);
     }
 
     T* ptr() { return m_ptr; }
