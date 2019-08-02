@@ -2755,20 +2755,27 @@ int Process::sys$mount(const char* device_path, const char* mountpoint)
 
     auto major = metadata_or_error.value().major_device;
     auto minor = metadata_or_error.value().minor_device;
-    auto* dev = VFS::the().get_device(major, minor);
-    auto* disk_device = static_cast<DiskDevice*>(dev);
+
+    auto* device = VFS::the().get_device(major, minor);
+    if (!device) {
+        dbg() << "mount: device (" << major << "," << minor << ") not found";
+        return -ENODEV;
+    }
+
+    if (!device->is_disk_device()) {
+        dbg() << "mount: device (" << major << "," << minor << ") is not a DiskDevice";
+        return -ENODEV;
+    }
+
+    auto& disk_device = static_cast<DiskDevice&>(*device);
 
     dbg() << "mount: attempting to mount device (" << major << "," << minor << ") on " << mountpoint;
 
-    // Do a quick check to make sure we're not passing nullptr to Ext2FS::create!
-    if (dev == nullptr)
-        return -ENODEV;
-
     // We currently only support ext2. Sorry :^)
-    auto ext2fs = Ext2FS::create(*disk_device);
+    auto ext2fs = Ext2FS::create(disk_device);
     if (!ext2fs->initialize()) {
         dbg() << "mount: could not find ext2 filesystem on " << device_path;
-        return -ENODEV; // Hmmm, this doesn't seem quite right....
+        return -ENODEV;
     }
 
     // Let's mount the volume now
