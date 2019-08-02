@@ -1,7 +1,7 @@
 #include "PianoWidget.h"
 #include <AK/Queue.h>
-#include <LibGUI/GPainter.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GPainter.h>
 #include <math.h>
 
 PianoWidget::PianoWidget()
@@ -152,8 +152,10 @@ int PianoWidget::octave_base() const
     return (m_octave - m_octave_min) * 12;
 }
 
-void PianoWidget::note(PianoKey offset_n, bool is_down)
+void PianoWidget::note(PianoKey offset_n, KeyCode key_code)
 {
+    bool is_down = keys[key_code] || (m_mouse_pressed && m_piano_key_under_mouse == offset_n);
+
     int n = offset_n + octave_base();
     if (m_note_on[n] == is_down)
         return;
@@ -165,28 +167,40 @@ void PianoWidget::note(PianoKey offset_n, bool is_down)
     //printf("note[%u] = %u (%g)\n", (unsigned)n, is_down, note_frequency[n]);
 }
 
+struct KeyDefinition {
+    int index;
+    PianoKey piano_key;
+    String label;
+    KeyCode key_code;
+};
+
+const KeyDefinition key_definitions[] = {
+    { 0, K_C1, "A", KeyCode::Key_A },
+    { 1, K_D1, "S", KeyCode::Key_S },
+    { 2, K_E1, "D", KeyCode::Key_D },
+    { 3, K_F1, "F", KeyCode::Key_F },
+    { 4, K_G1, "G", KeyCode::Key_G },
+    { 5, K_A1, "H", KeyCode::Key_H },
+    { 6, K_B1, "J", KeyCode::Key_J },
+    { 7, K_C2, "K", KeyCode::Key_K },
+    { 8, K_D2, "L", KeyCode::Key_L },
+    { 9, K_E2, ";", KeyCode::Key_Semicolon },
+    { 10, K_F2, "'", KeyCode::Key_Apostrophe },
+    { 11, K_G2, "r", KeyCode::Key_Return },
+    { 0, K_Db1, "W", KeyCode::Key_W },
+    { 1, K_Eb1, "E", KeyCode::Key_E },
+    { 3, K_Gb1, "T", KeyCode::Key_T },
+    { 4, K_Ab1, "Y", KeyCode::Key_Y },
+    { 5, K_Bb1, "U", KeyCode::Key_U },
+    { 7, K_Db2, "O", KeyCode::Key_O },
+    { 8, K_Eb2, "P", KeyCode::Key_P },
+    { 10, K_Gb2, "]", KeyCode::Key_RightBracket },
+};
+
 void PianoWidget::update_keys()
 {
-    note(K_C1, keys[KeyCode::Key_A]);
-    note(K_Db1, keys[KeyCode::Key_W]);
-    note(K_D1, keys[KeyCode::Key_S]);
-    note(K_Eb1, keys[KeyCode::Key_E]);
-    note(K_E1, keys[KeyCode::Key_D]);
-    note(K_F1, keys[KeyCode::Key_F]);
-    note(K_Gb1, keys[KeyCode::Key_T]);
-    note(K_G1, keys[KeyCode::Key_G]);
-    note(K_Ab1, keys[KeyCode::Key_Y]);
-    note(K_A1, keys[KeyCode::Key_H]);
-    note(K_Bb1, keys[KeyCode::Key_U]);
-    note(K_B1, keys[KeyCode::Key_J]);
-    note(K_C2, keys[KeyCode::Key_K]);
-    note(K_Db2, keys[KeyCode::Key_O]);
-    note(K_D2, keys[KeyCode::Key_L]);
-    note(K_Eb2, keys[KeyCode::Key_P]);
-    note(K_E2, keys[KeyCode::Key_Semicolon]);
-    note(K_F2, keys[KeyCode::Key_Apostrophe]);
-    note(K_Gb2, keys[KeyCode::Key_RightBracket]);
-    note(K_G2, keys[KeyCode::Key_Return]);
+    for (auto& kd : key_definitions)
+        note(kd.piano_key, kd.key_code);
 }
 
 void PianoWidget::keydown_event(GKeyEvent& event)
@@ -227,6 +241,39 @@ void PianoWidget::keyup_event(GKeyEvent& event)
     update();
 }
 
+void PianoWidget::mousedown_event(GMouseEvent& event)
+{
+    m_mouse_pressed = true;
+
+    m_piano_key_under_mouse = find_key_for_relative_position(event.x() - x(), event.y() - y());
+
+    update_keys();
+    update();
+}
+
+void PianoWidget::mouseup_event(GMouseEvent&)
+{
+    m_mouse_pressed = false;
+
+    update_keys();
+    update();
+}
+
+void PianoWidget::mousemove_event(GMouseEvent& event)
+{
+    if (!m_mouse_pressed)
+        return;
+
+    int mouse_was_over = m_piano_key_under_mouse;
+
+    m_piano_key_under_mouse = find_key_for_relative_position(event.x() - x(), event.y() - y());
+
+    if (m_piano_key_under_mouse == mouse_was_over)
+        return;
+
+    update_keys();
+    update();
+}
 
 static int white_key_width = 22;
 static int white_key_height = 60;
@@ -235,17 +282,8 @@ static int black_key_height = 35;
 static int black_key_stride = white_key_width - black_key_width;
 static int black_key_offset = white_key_width - black_key_width / 2;
 
-void PianoWidget::render_piano_key(GPainter& painter, int index, PianoKey n, const StringView& text)
+Rect PianoWidget::define_piano_key_rect(int index, PianoKey n) const
 {
-    Color color;
-    if (m_note_on[octave_base() + n]) {
-        color = Color(64, 64, 255);
-    } else {
-        if (is_white(n))
-            color = Color::White;
-        else
-            color = Color::Black;
-    }
     Rect rect;
     int stride = 0;
     int offset = 0;
@@ -260,6 +298,38 @@ void PianoWidget::render_piano_key(GPainter& painter, int index, PianoKey n, con
     }
     rect.set_x(offset + index * rect.width() + (index * stride));
     rect.set_y(m_height - white_key_height);
+    return rect;
+}
+
+PianoKey PianoWidget::find_key_for_relative_position(int x, int y) const
+{
+    // here we iterate backwards because we want to try to match the black
+    // keys first, which are defined last
+    for (int i = (sizeof(key_definitions) / sizeof(KeyDefinition)) - 1; i >= 0; i--) {
+        auto& kd = key_definitions[i];
+
+        auto rect = define_piano_key_rect(kd.index, kd.piano_key);
+
+        if (rect.contains(x, y))
+            return kd.piano_key;
+    }
+
+    return K_None;
+}
+
+void PianoWidget::render_piano_key(GPainter& painter, int index, PianoKey n, const StringView& text)
+{
+    Color color;
+    if (m_note_on[octave_base() + n]) {
+        color = Color(64, 64, 255);
+    } else {
+        if (is_white(n))
+            color = Color::White;
+        else
+            color = Color::Black;
+    }
+
+    auto rect = define_piano_key_rect(index, n);
 
     painter.fill_rect(rect, color);
     painter.draw_rect(rect, Color::Black);
@@ -276,27 +346,8 @@ void PianoWidget::render_piano_key(GPainter& painter, int index, PianoKey n, con
 
 void PianoWidget::render_piano(GPainter& painter)
 {
-    render_piano_key(painter, 0, K_C1, "A");
-    render_piano_key(painter, 1, K_D1, "S");
-    render_piano_key(painter, 2, K_E1, "D");
-    render_piano_key(painter, 3, K_F1, "F");
-    render_piano_key(painter, 4, K_G1, "G");
-    render_piano_key(painter, 5, K_A1, "H");
-    render_piano_key(painter, 6, K_B1, "J");
-    render_piano_key(painter, 7, K_C2, "K");
-    render_piano_key(painter, 8, K_D2, "L");
-    render_piano_key(painter, 9, K_E2, ";");
-    render_piano_key(painter, 10, K_F2, "'");
-    render_piano_key(painter, 11, K_G2, "r");
-
-    render_piano_key(painter, 0, K_Db1, "W");
-    render_piano_key(painter, 1, K_Eb1, "E");
-    render_piano_key(painter, 3, K_Gb1, "T");
-    render_piano_key(painter, 4, K_Ab1, "Y");
-    render_piano_key(painter, 5, K_Bb1, "U");
-    render_piano_key(painter, 7, K_Db2, "O");
-    render_piano_key(painter, 8, K_Eb2, "P");
-    render_piano_key(painter, 10, K_Gb2, "]");
+    for (auto& kd : key_definitions)
+        render_piano_key(painter, kd.index, kd.piano_key, kd.label);
 }
 
 static int knob_width = 100;
@@ -317,7 +368,7 @@ void PianoWidget::render_knob(GPainter& painter, const Rect& rect, bool state, c
 void PianoWidget::render_knobs(GPainter& painter)
 {
     Rect delay_knob_rect(m_width - knob_width - 16, m_height - 50, knob_width, 16);
-    render_knob(painter, delay_knob_rect, m_delay_enabled,     "V: Delay   ");
+    render_knob(painter, delay_knob_rect, m_delay_enabled, "V: Delay   ");
 
     Rect release_knob_rect(m_width - knob_width - 16, m_height - 30, knob_width, 16);
     render_knob(painter, release_knob_rect, m_release_enabled, "B: Release ");
