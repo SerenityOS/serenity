@@ -17,17 +17,23 @@ private:
     virtual void keydown_event(GKeyEvent&) override;
     virtual void keyup_event(GKeyEvent&) override;
     virtual void custom_event(CCustomEvent&) override;
+    virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
 
     double w_sine(size_t);
     double w_saw(size_t);
     double w_square(size_t);
+
+    Rect define_piano_key_rect(int index, PianoKey) const;
+    PianoKey find_key_for_relative_position(int x, int y) const;
 
     void render_piano_key(GPainter&, int index, PianoKey, const StringView&);
     void render_piano(GPainter&);
     void render_knobs(GPainter&);
     void render_knob(GPainter&, const Rect&, bool state, const StringView&);
 
-    void note(Music::PianoKey offset_n, bool is_down);
+    void note(Music::PianoKey offset_n, KeyCode key_code);
     void update_keys();
     int octave_base() const;
 
@@ -55,4 +61,7 @@ private:
     bool m_release_enabled { false };
 
     bool keys[256];
+
+    PianoKey m_piano_key_under_mouse { K_None };
+    bool m_mouse_pressed { false };
 };
