@@ -1,4 +1,4 @@
-PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr
+PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 
@@ -41,6 +41,9 @@ TestJSON: TestJSON.o $(SHARED_TEST_OBJS)
 
 TestWeakPtr: TestWeakPtr.o $(SHARED_TEST_OBJS) 
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestWeakPtr.o $(SHARED_TEST_OBJS)
+
+TestNonnullRefPtr: TestNonnullRefPtr.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestNonnullRefPtr.o $(SHARED_TEST_OBJS)
 
 clean:
 	rm -f $(SHARED_TEST_OBJS)
