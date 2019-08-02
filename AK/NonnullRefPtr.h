@@ -8,6 +8,8 @@ namespace AK {
 
 template<typename T>
 class OwnPtr;
+template<typename T>
+class RefPtr;
 
 template<typename T>
 inline void ref_if_not_null(T* ptr)
@@ -89,6 +91,13 @@ public:
     template<typename U>
     NonnullRefPtr& operator=(const OwnPtr<U>&) = delete;
 
+    template<typename U>
+    NonnullRefPtr(const RefPtr<U>&) = delete;
+    template<typename U>
+    NonnullRefPtr& operator=(const RefPtr<U>&) = delete;
+    NonnullRefPtr(const RefPtr<T>&) = delete;
+    NonnullRefPtr& operator=(const RefPtr<T>&) = delete;
+
     NonnullRefPtr& operator=(const NonnullRefPtr& other)
     {
         if (m_ptr != other.m_ptr) {
@@ -129,11 +138,11 @@ public:
         return *this;
     }
 
-    NonnullRefPtr& operator=(T& object)
+    NonnullRefPtr& operator=(const T& object)
     {
         if (m_ptr != &object) {
             deref_if_not_null(m_ptr);
-            m_ptr = &object;
+            m_ptr = const_cast<T*>(&object);
             m_ptr->ref();
         }
         return *this;
