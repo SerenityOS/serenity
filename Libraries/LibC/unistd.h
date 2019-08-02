@@ -98,6 +98,7 @@ int fchown(int fd, uid_t, gid_t);
 int ftruncate(int fd, off_t length);
 int halt();
 int reboot();
+int mount(const char* device, const char* mountpoint);
 
 enum {
     _PC_NAME_MAX,

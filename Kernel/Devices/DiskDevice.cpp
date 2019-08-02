@@ -1,6 +1,7 @@
 #include <Kernel/Devices/DiskDevice.h>
 
-DiskDevice::DiskDevice()
+DiskDevice::DiskDevice(int major, int minor)
+    : BlockDevice(major, minor)
 {
 }
 

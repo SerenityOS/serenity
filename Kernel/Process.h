@@ -183,6 +183,7 @@ public:
     int sys$unlink(const char* pathname);
     int sys$symlink(const char* target, const char* linkpath);
     int sys$rmdir(const char* pathname);
+    int sys$mount(const char* device, const char* mountpoint);
     int sys$read_tsc(u32* lsw, u32* msw);
     int sys$chmod(const char* pathname, mode_t);
     int sys$fchmod(int fd, mode_t);

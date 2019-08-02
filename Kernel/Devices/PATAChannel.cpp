@@ -236,11 +236,12 @@ void PATAChannel::detect_disks()
             heads,
             spt);
 
+        int major = (m_channel_number == 0) ? 3 : 4;
         if (i == 0) {
-            m_master = PATADiskDevice::create(*this, PATADiskDevice::DriveType::Master);
+            m_master = PATADiskDevice::create(*this, PATADiskDevice::DriveType::Master, major, 0);
             m_master->set_drive_geometry(cyls, heads, spt);
         } else {
-            m_slave = PATADiskDevice::create(*this, PATADiskDevice::DriveType::Slave);
+            m_slave = PATADiskDevice::create(*this, PATADiskDevice::DriveType::Slave, major, 1);
             m_slave->set_drive_geometry(cyls, heads, spt);
         }
     }

@@ -2,11 +2,12 @@
 
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
+#include <Kernel/Devices/BlockDevice.h>
 
 // FIXME: Support 64-bit DiskOffset
 typedef u32 DiskOffset;
 
-class DiskDevice : public RefCounted<DiskDevice> {
+class DiskDevice : public BlockDevice {
 public:
     virtual ~DiskDevice();
 
@@ -20,6 +21,8 @@ public:
     virtual bool read_blocks(unsigned index, u16 count, u8*) = 0;
     virtual bool write_blocks(unsigned index, u16 count, const u8*) = 0;
 
+    virtual bool is_disk_device() const override { return true; };
+
 protected:
-    DiskDevice();
+    DiskDevice(int major, int minor);
 };

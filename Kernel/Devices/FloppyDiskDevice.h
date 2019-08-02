@@ -132,7 +132,7 @@ private:
     };
 
 public:
-    static NonnullRefPtr<FloppyDiskDevice> create(DriveType type);
+    static NonnullRefPtr<FloppyDiskDevice> create(DriveType);
     virtual ~FloppyDiskDevice() override;
 
     // ^DiskDevice
@@ -141,6 +141,12 @@ public:
     virtual bool write_block(unsigned index, const u8*) override;
     virtual bool read_blocks(unsigned index, u16 count, u8*) override;
     virtual bool write_blocks(unsigned index, u16 count, const u8*) override;
+
+    // ^BlockDevice
+    virtual ssize_t read(FileDescription&, u8*, ssize_t) override { return 0; }
+    virtual bool can_read(FileDescription&) const override { return true; }
+    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override { return 0; }
+    virtual bool can_write(FileDescription&) const override { return true; }
 
 protected:
     explicit FloppyDiskDevice(DriveType);
