@@ -49,18 +49,21 @@ public:
     RefPtr(const NonnullRefPtr<T>& other)
         : m_ptr(const_cast<T*>(other.ptr()))
     {
+        ASSERT(m_ptr);
         m_ptr->ref();
     }
     template<typename U>
     RefPtr(const NonnullRefPtr<U>& other)
         : m_ptr(static_cast<T*>(const_cast<U*>(other.ptr())))
     {
+        ASSERT(m_ptr);
         m_ptr->ref();
     }
     template<typename U>
     RefPtr(NonnullRefPtr<U>&& other)
         : m_ptr(static_cast<T*>(&other.leak_ref()))
     {
+        ASSERT(m_ptr);
     }
     template<typename U>
     RefPtr(RefPtr<U>&& other)
@@ -121,6 +124,7 @@ public:
     {
         RefPtr tmp = move(other);
         swap(tmp);
+        ASSERT(m_ptr);
         return *this;
     }
 
@@ -128,6 +132,7 @@ public:
     {
         RefPtr tmp = other;
         swap(tmp);
+        ASSERT(m_ptr);
         return *this;
     }
 
@@ -136,6 +141,7 @@ public:
     {
         RefPtr tmp = other;
         swap(tmp);
+        ASSERT(m_ptr);
         return *this;
     }
 
@@ -192,11 +198,29 @@ public:
     T* ptr() { return m_ptr; }
     const T* ptr() const { return m_ptr; }
 
-    T* operator->() { return m_ptr; }
-    const T* operator->() const { return m_ptr; }
+    T* operator->()
+    {
+        ASSERT(m_ptr);
+        return m_ptr;
+    }
 
-    T& operator*() { return *m_ptr; }
-    const T& operator*() const { return *m_ptr; }
+    const T* operator->() const
+    {
+        ASSERT(m_ptr);
+        return m_ptr;
+    }
+
+    T& operator*()
+    {
+        ASSERT(m_ptr);
+        return *m_ptr;
+    }
+
+    const T& operator*() const
+    {
+        ASSERT(m_ptr);
+        return *m_ptr;
+    }
 
     operator const T*() const { return m_ptr; }
     operator T*() { return m_ptr; }
