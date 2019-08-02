@@ -131,10 +131,11 @@ public:
 
     NonnullRefPtr& operator=(T& object)
     {
-        if (m_ptr != &object)
+        if (m_ptr != &object) {
             deref_if_not_null(m_ptr);
-        m_ptr = &object;
-        m_ptr->ref();
+            m_ptr = &object;
+            m_ptr->ref();
+        }
         return *this;
     }
 
