@@ -1,6 +1,7 @@
+#include <AK/TestSuite.h>
+
 #include <AK/AKString.h>
 #include <AK/OwnPtr.h>
-#include <AK/TestSuite.h>
 #include <AK/Vector.h>
 
 TEST_CASE(construct)

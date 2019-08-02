@@ -1,4 +1,5 @@
 #include <AK/TestSuite.h>
+
 #include <AK/AKString.h>
 #include <AK/Queue.h>
 
