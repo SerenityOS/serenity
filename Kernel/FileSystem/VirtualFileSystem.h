@@ -73,7 +73,7 @@ public:
     KResult chown(StringView path, uid_t, gid_t, Custody& base);
     KResult chown(Inode&, uid_t, gid_t);
     KResult access(StringView path, int mode, Custody& base);
-    KResult stat(StringView path, int options, Custody& base, struct stat&);
+    KResultOr<InodeMetadata> lookup_metadata(StringView path, Custody& base, int options = 0);
     KResult utime(StringView path, Custody& base, time_t atime, time_t mtime);
     KResult rename(StringView oldpath, StringView newpath, Custody& base);
     KResult mknod(StringView path, mode_t, dev_t, Custody& base);

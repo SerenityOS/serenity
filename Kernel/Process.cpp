@@ -1077,14 +1077,20 @@ int Process::sys$lstat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    return VFS::the().stat(StringView(path), O_NOFOLLOW_NOERROR, current_directory(), *statbuf);
+    auto metadata_or_error = VFS::the().lookup_metadata(StringView(path), current_directory(), O_NOFOLLOW_NOERROR);
+    if (metadata_or_error.is_error())
+        return metadata_or_error.error();
+    return metadata_or_error.value().stat(*statbuf);
 }
 
 int Process::sys$stat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    return VFS::the().stat(StringView(path), 0, current_directory(), *statbuf);
+    auto metadata_or_error = VFS::the().lookup_metadata(StringView(path), current_directory());
+    if (metadata_or_error.is_error())
+        return metadata_or_error.error();
+    return metadata_or_error.value().stat(*statbuf);
 }
 
 int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
@@ -2727,15 +2733,15 @@ int Process::sys$reboot()
     return ESUCCESS;
 }
 
-int Process::sys$mount(const char* device, const char* mountpoint)
+int Process::sys$mount(const char* device_path, const char* mountpoint)
 {
     if (!is_superuser())
         return -EPERM;
 
-    if (!validate_read_str(device) || !validate_read_str(mountpoint))
+    if (!validate_read_str(device_path) || !validate_read_str(mountpoint))
         return -EFAULT;
 
-    dbg() << "mount: device " << device << " @ " << mountpoint;
+    dbg() << "mount: device " << device_path << " @ " << mountpoint;
 
     auto custody_or_error = VFS::the().resolve_path(mountpoint, current_directory());
     if (custody_or_error.is_error())
@@ -2743,18 +2749,12 @@ int Process::sys$mount(const char* device, const char* mountpoint)
 
     auto& mountpoint_custody = custody_or_error.value();
 
-    // Let's do a stat to get some information about the device..
-    // Let's use lstat so we can convert devname into a major/minor device pair!
-    struct stat st;
-    int rc = sys$stat(device, &st);
-    if (rc < 0) {
-        dbg() << "mount: call to sys$stat failed!";
-        return -ENODEV;
-    }
+    auto metadata_or_error = VFS::the().lookup_metadata(device_path, current_directory());
+    if (metadata_or_error.is_error())
+        return metadata_or_error.error();
 
-    int major = (st.st_rdev & 0xfff00u) >> 8u;
-    int minor = (st.st_rdev & 0xffu) | ((st.st_rdev >> 12u) & 0xfff00u);
-
+    auto major = metadata_or_error.value().major_device;
+    auto minor = metadata_or_error.value().minor_device;
     auto* dev = VFS::the().get_device(major, minor);
     auto* disk_device = static_cast<DiskDevice*>(dev);
 
@@ -2767,13 +2767,13 @@ int Process::sys$mount(const char* device, const char* mountpoint)
     // We currently only support ext2. Sorry :^)
     auto ext2fs = Ext2FS::create(*disk_device);
     if (!ext2fs->initialize()) {
-        dbg() << "mount: could not find ext2 filesystem on " << device;
+        dbg() << "mount: could not find ext2 filesystem on " << device_path;
         return -ENODEV; // Hmmm, this doesn't seem quite right....
     }
 
     // Let's mount the volume now
     auto result = VFS::the().mount(ext2fs, mountpoint_custody);
-    dbg() << "mount: successfully mounted " << device << " on " << mountpoint;
+    dbg() << "mount: successfully mounted " << device_path << " on " << mountpoint;
     return result;
 }
 
