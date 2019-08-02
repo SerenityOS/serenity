@@ -36,21 +36,25 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-bool VFS::mount(NonnullRefPtr<FS>&& file_system, StringView path)
+KResult VFS::mount(NonnullRefPtr<FS>&& file_system, Custody& mount_point)
+{
+    auto& inode = mount_point.inode();
+    dbg() << "VFS: Mounting " << file_system->class_name() << " at " << mount_point.absolute_path() << " (inode: " << inode.identifier() << ")";
+    // FIXME: check that this is not already a mount point
+    auto mount = make<Mount>(mount_point, move(file_system));
+    m_mounts.append(move(mount));
+    mount_point.did_mount_on({});
+    return KSuccess;
+}
+
+KResult VFS::mount(NonnullRefPtr<FS>&& file_system, StringView path)
 {
     auto result = resolve_path(path, root_custody());
     if (result.is_error()) {
         dbg() << "VFS: mount can't resolve mount point '" << path << "'";
-        return false;
+        return result.error();
     }
-    auto& inode = result.value()->inode();
-    dbg() << "VFS: Mounting " << file_system->class_name() << " at " << path << " (inode: " << inode.identifier() << ")";
-    // FIXME: check that this is not already a mount point
-    auto mount = make<Mount>(*result.value(), move(file_system));
-    m_mounts.append(move(mount));
-
-    result.value()->did_mount_on({});
-    return true;
+    return mount(move(file_system), result.value());
 }
 
 bool VFS::mount_root(NonnullRefPtr<FS>&& file_system)
