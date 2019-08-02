@@ -45,7 +45,7 @@ public:
 
     void quit(int);
 
-    virtual void take_pending_events_from(CEventLoop& other)
+    void take_pending_events_from(CEventLoop& other)
     {
         m_queued_events.append(move(other.m_queued_events));
     }
