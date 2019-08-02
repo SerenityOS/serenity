@@ -145,12 +145,12 @@ KResult VFS::utime(StringView path, Custody& base, time_t atime, time_t mtime)
     return KSuccess;
 }
 
-KResult VFS::stat(StringView path, int options, Custody& base, struct stat& statbuf)
+KResultOr<InodeMetadata> VFS::lookup_metadata(StringView path, Custody& base, int options)
 {
     auto custody_or_error = resolve_path(path, base, nullptr, options);
     if (custody_or_error.is_error())
         return custody_or_error.error();
-    return custody_or_error.value()->inode().metadata().stat(statbuf);
+    return custody_or_error.value()->inode().metadata();
 }
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
