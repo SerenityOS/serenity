@@ -116,6 +116,7 @@ struct timeval;
     __ENUMERATE_SYSCALL(fchown)                 \
     __ENUMERATE_SYSCALL(halt)                   \
     __ENUMERATE_SYSCALL(reboot)                 \
+    __ENUMERATE_SYSCALL(mount)                  \
     __ENUMERATE_SYSCALL(dump_backtrace)         \
     __ENUMERATE_SYSCALL(dbgputch)               \
     __ENUMERATE_SYSCALL(dbgputstr)              \

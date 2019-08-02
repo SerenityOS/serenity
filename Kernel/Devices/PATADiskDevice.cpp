@@ -78,13 +78,14 @@
 #define ATA_REG_ALTSTATUS 0x0C
 #define ATA_REG_DEVADDRESS 0x0D
 
-NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(PATAChannel& channel, DriveType type)
+NonnullRefPtr<PATADiskDevice> PATADiskDevice::create(PATAChannel& channel, DriveType type, int major, int minor)
 {
-    return adopt(*new PATADiskDevice(channel, type));
+    return adopt(*new PATADiskDevice(channel, type, major, minor));
 }
 
-PATADiskDevice::PATADiskDevice(PATAChannel& channel, DriveType type)
-    : m_drive_type(type)
+PATADiskDevice::PATADiskDevice(PATAChannel& channel, DriveType type, int major, int minor)
+    : DiskDevice(major, minor)
+    , m_drive_type(type)
     , m_channel(channel)
 {
 }

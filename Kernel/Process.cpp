@@ -8,6 +8,7 @@
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
@@ -1900,7 +1901,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     dbgprintf("%s<%u> polling on (read:%u, write:%u), timeout=%d\n", name().characters(), pid(), rfds.size(), wfds.size(), timeout);
 #endif
 
-    if (has_timeout|| timeout < 0) {
+    if (has_timeout || timeout < 0) {
         if (current->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()) == Thread::BlockResult::InterruptedBySignal)
             return -EINTR;
     }
@@ -2722,6 +2723,47 @@ int Process::sys$reboot()
     FS::sync();
     dbgprintf("attempting reboot via KB Controller...\n");
     IO::out8(0x64, 0xFE);
+
+    return ESUCCESS;
+}
+
+int Process::sys$mount(const char* device, const char* mountpoint)
+{
+    dbgprintf("mount: device = %s mountpoint = %s\n", device, mountpoint);
+    if (!validate_read_str(device) || !validate_read_str(mountpoint))
+        return -EFAULT;
+
+    // Let's do a stat to get some information about the device..
+    // Let's use lstat so we can convert devname into a major/minor device pair!
+    struct stat st;
+    int rc = sys$stat(device, &st);
+    if (rc < 0) {
+        dbgprintf("mount: call to sys$stat failed!\n");
+        return -ENODEV;
+    }
+
+    int major = (st.st_rdev & 0xfff00u) >> 8u;
+    int minor = (st.st_rdev & 0xffu) | ((st.st_rdev >> 12u) & 0xfff00u);
+
+    auto* dev = VFS::the().get_device(major, minor);
+    auto* disk_device = static_cast<DiskDevice*>(dev);
+
+    dbgprintf("mount: attempting to mount %d,%d to %s...\n", major, minor, mountpoint);
+
+    // Do a quick check to make sure we're not passing nullptr to Ext2FS::create!
+    if (dev == nullptr)
+        return -ENODEV;
+
+    // We currently only support ext2. Sorry :^)
+    auto ext2fs = Ext2FS::create(*disk_device);
+    if (!ext2fs->initialize()) {
+        dbgprintf("mount: failed to create ext2fs!\n");
+        return -ENODEV; // Hmmm, this doesn't seem quite right....
+    }
+
+    // Let's mount the volume now
+    VFS::the().mount(ext2fs, mountpoint);
+    dbgprintf("mount: successfully mounted ext2 volume on %s to %s!\n", device, mountpoint);
 
     return ESUCCESS;
 }
