@@ -1,4 +1,5 @@
 #include <AK/TestSuite.h>
+
 #include <AK/AKString.h>
 
 TEST_CASE(construct_empty)

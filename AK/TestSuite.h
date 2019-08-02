@@ -1,10 +1,21 @@
 #pragma once
 
+#define AK_TEST_SUITE
+
+#include <stdio.h>
+
+#define ASSERT(x)                                             \
+    if (!(x)) {                                               \
+        fprintf(stderr, "\033[33;1mASSERT\033[0m: " #x "\n"); \
+    }
+
+#define ASSERT_NOT_REACHED() fprintf(stderr, "\033[31;1mASSERT_NOT_REACHED\033[0m\n");
+#define RELEASE_ASSERT ASSERT
+
 #include "AKString.h"
 #include "Function.h"
 #include "NonnullRefPtrVector.h"
 #include <chrono>
-#include <stdio.h>
 
 namespace AK {
 
