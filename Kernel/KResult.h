@@ -94,7 +94,7 @@ public:
     }
 
 private:
-    char m_storage[sizeof(T)] __attribute__((aligned(sizeof(T))));
+    alignas (T) char m_storage[sizeof(T)];
     KResult m_error;
     bool m_is_error { false };
 };
