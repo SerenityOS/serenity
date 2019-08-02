@@ -2,6 +2,7 @@
 
 #include <AK/LogStream.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -94,88 +95,76 @@ public:
     template<typename U>
     RefPtr& operator=(const OwnPtr<U>&) = delete;
 
+    template<typename U>
+    void swap(RefPtr<U>& other)
+    {
+        ::swap(m_ptr, other.m_ptr);
+    }
+
     RefPtr& operator=(RefPtr&& other)
     {
-        if (this != &other) {
-            deref_if_not_null(m_ptr);
-            m_ptr = other.leak_ref();
-        }
+        RefPtr tmp = move(other);
+        swap(tmp);
         return *this;
     }
 
     template<typename U>
     RefPtr& operator=(RefPtr<U>&& other)
     {
-        if (this != static_cast<void*>(&other)) {
-            deref_if_not_null(m_ptr);
-            m_ptr = static_cast<T*>(other.leak_ref());
-        }
+        RefPtr tmp = move(other);
+        swap(tmp);
         return *this;
     }
 
     template<typename U>
     RefPtr& operator=(NonnullRefPtr<U>&& other)
     {
-        deref_if_not_null(m_ptr);
-        m_ptr = &other.leak_ref();
+        RefPtr tmp = move(other);
+        swap(tmp);
         return *this;
     }
 
     RefPtr& operator=(const NonnullRefPtr<T>& other)
     {
-        if (m_ptr != other.ptr())
-            deref_if_not_null(m_ptr);
-        m_ptr = const_cast<T*>(other.ptr());
-        ASSERT(m_ptr);
-        ref_if_not_null(m_ptr);
+        RefPtr tmp = other;
+        swap(tmp);
         return *this;
     }
 
     template<typename U>
     RefPtr& operator=(const NonnullRefPtr<U>& other)
     {
-        if (m_ptr != other.ptr())
-            deref_if_not_null(m_ptr);
-        m_ptr = const_cast<T*>(other.ptr());
-        ASSERT(m_ptr);
-        ref_if_not_null(m_ptr);
+        RefPtr tmp = other;
+        swap(tmp);
         return *this;
     }
 
     RefPtr& operator=(const RefPtr& other)
     {
-        if (m_ptr != other.ptr())
-            deref_if_not_null(m_ptr);
-        m_ptr = const_cast<T*>(other.ptr());
-        ref_if_not_null(m_ptr);
+        RefPtr tmp = other;
+        swap(tmp);
         return *this;
     }
 
     template<typename U>
     RefPtr& operator=(const RefPtr<U>& other)
     {
-        if (m_ptr != other.ptr())
-            deref_if_not_null(m_ptr);
-        m_ptr = const_cast<T*>(other.ptr());
-        ref_if_not_null(m_ptr);
+        RefPtr tmp = other;
+        swap(tmp);
         return *this;
     }
 
     RefPtr& operator=(const T* ptr)
     {
-        if (m_ptr != ptr)
-            deref_if_not_null(m_ptr);
-        m_ptr = const_cast<T*>(ptr);
-        ref_if_not_null(m_ptr);
+        RefPtr tmp = ptr;
+        swap(tmp);
         return *this;
     }
 
     RefPtr& operator=(const T& object)
     {
-        if (m_ptr != &object)
-            deref_if_not_null(m_ptr);
-        m_ptr = const_cast<T*>(&object);
-        ref_if_not_null(m_ptr);
+        RefPtr tmp = object;
+        swap(tmp);
         return *this;
     }
 
