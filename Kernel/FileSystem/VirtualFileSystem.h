@@ -57,7 +57,8 @@ public:
     ~VFS();
 
     bool mount_root(NonnullRefPtr<FS>&&);
-    bool mount(NonnullRefPtr<FS>&&, StringView path);
+    KResult mount(NonnullRefPtr<FS>&&, StringView path);
+    KResult mount(NonnullRefPtr<FS>&&, Custody& mount_point);
 
     KResultOr<NonnullRefPtr<FileDescription>> open(RefPtr<Device>&&, int options);
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
