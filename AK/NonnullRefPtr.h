@@ -148,14 +148,12 @@ public:
         return *this;
     }
 
-    CALLABLE_WHEN(unconsumed)
+    [[nodiscard]] CALLABLE_WHEN(unconsumed)
     SET_TYPESTATE(consumed)
     T& leak_ref()
     {
         ASSERT(m_ptr);
-        T* leakedPtr = m_ptr;
-        m_ptr = nullptr;
-        return *leakedPtr;
+        return *exchange(m_ptr, nullptr);
     }
 
     CALLABLE_WHEN("unconsumed","unknown")
