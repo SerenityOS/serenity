@@ -87,6 +87,8 @@ void GWindow::show()
     auto response = GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidCreateWindow);
     m_window_id = response.window_id;
 
+    apply_icon();
+
     reified_windows.set(m_window_id, this);
     update();
 }
@@ -626,14 +628,23 @@ void GWindow::set_icon(const GraphicsBitmap* icon)
 {
     if (m_icon == icon)
         return;
-    if (!m_window_id)
-        return;
 
     m_icon = create_shared_bitmap(GraphicsBitmap::Format::RGBA32, icon->size());
     {
         GPainter painter(*m_icon);
         painter.blit({ 0, 0 }, *icon, icon->rect());
     }
+
+    apply_icon();
+}
+
+void GWindow::apply_icon()
+{
+    if (!m_icon)
+        return;
+
+    if (!m_window_id)
+        return;
 
     int rc = seal_shared_buffer(m_icon->shared_buffer_id());
     ASSERT(rc == 0);
@@ -649,7 +660,7 @@ void GWindow::set_icon(const GraphicsBitmap* icon)
     message.type = WSAPI_ClientMessage::Type::SetWindowIconBitmap;
     message.window_id = m_window_id;
     message.window.icon_buffer_id = m_icon->shared_buffer_id();
-    message.window.icon_size = icon->size();
+    message.window.icon_size = m_icon->size();
     GWindowServerConnection::the().post_message_to_server(message);
 }
 
