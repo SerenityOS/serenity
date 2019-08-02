@@ -127,7 +127,7 @@ TEST_CASE(prepend_vector_object)
     more_objects.empend(make<SubObject>(4));
     more_objects.empend(make<SubObject>(5));
     more_objects.empend(make<SubObject>(6));
-    EXPECT_EQ(more_objects.size(), 4);
+    EXPECT_EQ(more_objects.size(), 3);
 
     objects.prepend(move(more_objects));
     EXPECT_EQ(more_objects.size(), 0);
