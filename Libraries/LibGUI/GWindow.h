@@ -120,6 +120,7 @@ public:
     void set_override_cursor(GStandardCursor);
 
     void set_icon(const GraphicsBitmap*);
+    void apply_icon();
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
 
     Vector<GWidget*> focusable_widgets() const;
