@@ -3,10 +3,6 @@
 #include <AK/Weakable.h>
 #include <AK/WeakPtr.h>
 
-namespace AK{
-int g_weaklinks = 0;
-}
-
 class SimpleWeakable : public Weakable<SimpleWeakable> {
 public:
     SimpleWeakable() {}
@@ -49,7 +45,7 @@ TEST_CASE(weakptr_move)
         EXPECT_EQ(weak2.ptr(), &simple);
     }
 
-    EXPECT_EQ(weak2.is_null(), false);
+    EXPECT_EQ(weak2.is_null(), true);
 
     fprintf(stderr, "ok\n");
 }
