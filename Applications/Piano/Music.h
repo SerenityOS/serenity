@@ -12,6 +12,7 @@ struct Sample {
 enum WaveType { Sine, Saw, Square, InvalidWave };
 
 enum PianoKey {
+    K_None,
     K_C1, K_Db1, K_D1, K_Eb1, K_E1, K_F1, K_Gb1, K_G1, K_Ab1, K_A1, K_Bb1, K_B1,
     K_C2, K_Db2, K_D2, K_Eb2, K_E2, K_F2, K_Gb2, K_G2,
 };
