@@ -40,6 +40,10 @@ mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
 mknod -m 666 mnt/dev/audio c 42 42
 mknod -m 666 mnt/dev/ptmx c 5 2
+mknod mnt/dev/hda b 3 0
+mknod mnt/dev/hdb b 3 1
+mknod mnt/dev/hdc b 4 0
+mknod mnt/dev/hdd b 4 1
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
