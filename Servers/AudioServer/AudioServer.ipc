@@ -1,0 +1,9 @@
+endpoint AudioServer
+{
+    Greet(i32 client_pid) => (i32 server_pid, i32 client_id)
+
+    GetMainMixVolume() => (i32 volume)
+    SetMainMixVolume(i32 volume) => ()
+
+    EnqueueBuffer(i32 buffer_id) => ()
+}
