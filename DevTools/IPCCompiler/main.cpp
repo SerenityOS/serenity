@@ -182,6 +182,7 @@ int main(int argc, char** argv)
     while (index < file_contents.size())
         parse_endpoint();
 
+    dbg() << "#pragma once";
     dbg() << "#include <AK/BufferStream.h>";
     dbg() << "#include <AK/OwnPtr.h>";
     dbg() << "#include <LibIPC/IEndpoint.h>";
@@ -255,8 +256,13 @@ int main(int argc, char** argv)
                 dbg() << "        (void)stream;";
 
             for (auto& parameter : parameters) {
-                dbg() << "        " << parameter.type << " " << parameter.name << ";";
+                String initial_value = "{}";
+                if (parameter.type == "bool")
+                    initial_value = "false";
+                dbg() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
                 dbg() << "        stream >> " << parameter.name << ";";
+                dbg() << "        if (stream.handle_read_failure())";
+                dbg() << "            return nullptr;";
             }
 
             StringBuilder builder;
@@ -280,6 +286,9 @@ int main(int argc, char** argv)
             dbg() << "        stream.snip();";
             dbg() << "        return buffer;";
             dbg() << "    }";
+            for (auto& parameter : parameters) {
+                dbg() << "    const " << parameter.type << "& " << parameter.name << "() const { return m_" << parameter.name << "; }";
+            }
             dbg() << "private:";
             for (auto& parameter : parameters) {
                 dbg() << "    " << parameter.type << " m_" << parameter.name << ";";
@@ -298,7 +307,7 @@ int main(int argc, char** argv)
         dbg() << "} // namespace " << endpoint.name;
         dbg();
 
-        dbg() << "class " << endpoint.name << "Endpoint final : public IEndpoint {";
+        dbg() << "class " << endpoint.name << "Endpoint : public IEndpoint {";
         dbg() << "public:";
         dbg() << "    " << endpoint.name << "Endpoint() {}";
         dbg() << "    virtual ~" << endpoint.name << "Endpoint() override {}";
@@ -335,7 +344,7 @@ int main(int argc, char** argv)
                 builder.append("Response");
                 return_type = builder.to_string();
             }
-            dbg() << "    " << return_type << " handle(const " << endpoint.name << "::" << message.name << "&);";
+            dbg() << "    virtual " << return_type << " handle(const " << endpoint.name << "::" << message.name << "&) = 0;";
         }
 
         dbg() << "private:";
