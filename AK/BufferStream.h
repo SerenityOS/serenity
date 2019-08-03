@@ -24,7 +24,7 @@ public:
     }
     BufferStream& operator>>(i8& value)
     {
-        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
@@ -39,7 +39,7 @@ public:
     }
     BufferStream& operator>>(u8& value )
     {
-        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
@@ -54,7 +54,7 @@ public:
     }
     BufferStream& operator>>(bool& value )
     {
-        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
@@ -69,7 +69,7 @@ public:
     }
     BufferStream& operator>>(char& value)
     {
-        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
@@ -85,7 +85,7 @@ public:
     }
     BufferStream& operator>>(u16& value)
     {
-        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
@@ -105,7 +105,7 @@ public:
     }
     BufferStream& operator>>(i16& value)
     {
-        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
@@ -127,7 +127,7 @@ public:
     }
     BufferStream& operator>>(u32& value)
     {
-        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
@@ -153,7 +153,7 @@ public:
     }
     BufferStream& operator>>(i32& value)
     {
-        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+        if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
