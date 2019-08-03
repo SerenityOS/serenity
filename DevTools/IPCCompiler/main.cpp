@@ -1,4 +1,5 @@
 #include <AK/BufferStream.h>
+#include <AK/HashMap.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <ctype.h>
@@ -182,12 +183,32 @@ int main(int argc, char** argv)
         dbg() << "namespace " << endpoint.name << " {";
         dbg();
 
+        HashMap<String, int> message_ids;
+
+        dbg() << "enum class MessageID : int {";
+        for (auto& message : endpoint.messages) {
+            message_ids.set(message.name, message_ids.size() + 1);
+            dbg() << "    " << message.name << " = " << message_ids.size() << ",";
+            if (message.is_synchronous) {
+                StringBuilder builder;
+                builder.append(message.name);
+                builder.append("Response");
+                auto response_name = builder.to_string();
+                message_ids.set(response_name, message_ids.size() + 1);
+                dbg() << "    " << response_name << " = " << message_ids.size() << ",";
+            }
+        }
+        dbg() << "};";
+        dbg();
+
         auto do_message = [&](const String& name, const Vector<Parameter>& parameters, String response_type = {}) {
             dbg() << "class " << name << " final : public IMessage {";
             dbg() << "public:";
             if (!response_type.is_null())
-                dbg() << "    typedef " << response_type << " ResponseType;";
+                dbg() << "    typedef class " << response_type << " ResponseType;";
             dbg() << "    virtual ~" << name << "() override {}";
+            dbg() << "    virtual int id() const override { return (int)MessageID::" << name << "; }";
+            dbg() << "    virtual String name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
             dbg() << "    virtual ByteBuffer encode() override";
             dbg() << "    {";
             if (parameters.is_empty()) {
