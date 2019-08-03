@@ -569,3 +569,19 @@ void GWidget::focus_next_widget()
             focusable_widgets.first()->set_focus(true);
     }
 }
+
+void GWidget::set_backcolor(const StringView& color_string)
+{
+    auto color = Color::from_string(color_string);
+    if (!color.has_value())
+        return;
+    set_background_color(color.value());
+}
+
+void GWidget::set_forecolor(const StringView& color_string)
+{
+    auto color = Color::from_string(color_string);
+    if (!color.has_value())
+        return;
+    set_foreground_color(color.value());
+}
