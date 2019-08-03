@@ -1,3 +1,4 @@
+#include <AK/BufferStream.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <ctype.h>
@@ -85,7 +86,7 @@ int main(int argc, char** argv)
                 break;
             parameter.type = extract_while([](char ch) { return !isspace(ch); });
             consume_whitespace();
-            parameter.name = extract_while([](char ch) { return !isspace(ch) && ch != ')'; });
+            parameter.name = extract_while([](char ch) { return !isspace(ch) && ch != ',' && ch != ')'; });
             consume_whitespace();
             storage.append(move(parameter));
             if (peek() == ',') {
@@ -172,6 +173,77 @@ int main(int argc, char** argv)
     while (index < file_contents.size())
         parse_endpoint();
 
+    dbg() << "#include <AK/BufferStream.h>";
+    dbg() << "#include <LibIPC/IEndpoint.h>";
+    dbg() << "#include <LibIPC/IMessage.h>";
+    dbg();
+
+    for (auto& endpoint : endpoints) {
+        dbg() << "namespace " << endpoint.name << " {";
+        dbg();
+
+        auto do_message = [&](const String& name, const Vector<Parameter>& parameters) {
+            dbg() << "class " << name << " final : public IMessage {";
+            dbg() << "public:";
+            dbg() << "    virtual ~" << name << "() override {}";
+            dbg() << "    virtual ByteBuffer encode() override";
+            dbg() << "    {";
+            if (parameters.is_empty()) {
+                dbg() << "        return {};";
+            } else {
+                // FIXME: Support longer messages:
+                dbg() << "        auto buffer = ByteBuffer::create_uninitialized(1024);";
+                dbg() << "        BufferStream stream(buffer);";
+                for (auto& parameter : parameters) {
+                    dbg() << "        stream << m_" << parameter.name << ";";
+                }
+                dbg() << "        stream.snip();";
+                dbg() << "        return buffer;";
+            }
+            dbg() << "    }";
+            dbg() << "private:";
+            for (auto& parameter : parameters) {
+                dbg() << "    " << parameter.type << " m_" << parameter.name << ";";
+            }
+            dbg() << "};";
+            dbg();
+        };
+        for (auto& message : endpoint.messages) {
+            if (message.is_synchronous) {
+                StringBuilder builder;
+                builder.append(message.name);
+                builder.append("Response");
+                do_message(builder.to_string(), message.outputs);
+            }
+            do_message(message.name, message.inputs);
+        }
+        dbg() << "} // namespace " << endpoint.name;
+        dbg();
+
+        dbg() << "class " << endpoint.name << "Endpoint final : public IEndpoint {";
+        dbg() << "public:";
+        dbg() << "    " << endpoint.name << "Endpoint() {}";
+        dbg() << "    virtual ~" << endpoint.name << "Endpoint() override {}";
+        dbg();
+
+        for (auto& message : endpoint.messages) {
+            String return_type = "void";
+            if (message.is_synchronous) {
+                StringBuilder builder;
+                builder.append(endpoint.name);
+                builder.append("::");
+                builder.append(message.name);
+                builder.append("Response");
+                return_type = builder.to_string();
+            }
+            dbg() << "    " << return_type << " handle(const " << endpoint.name << "::" << message.name << "&);";
+        }
+
+        dbg() << "private:";
+        dbg() << "};";
+    }
+
+#ifdef DEBUG
     for (auto& endpoint : endpoints) {
         dbg() << "Endpoint: '" << endpoint.name << "'";
         for (auto& message : endpoint.messages) {
@@ -191,6 +263,7 @@ int main(int argc, char** argv)
             }
         }
     }
+#endif
 
     return 0;
 }
