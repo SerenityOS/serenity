@@ -29,6 +29,12 @@ String ProcessFileDescriptorMapModel::column_name(int column) const
     switch (column) {
     case Column::FileDescriptor:
         return "FD";
+    case Column::ClassName:
+        return "Class";
+    case Column::Offset:
+        return "Offset";
+    case Column::Access:
+        return "Access";
     case Column::Path:
         return "Path";
     default:
@@ -41,6 +47,12 @@ GModel::ColumnMetadata ProcessFileDescriptorMapModel::column_metadata(int column
     switch (column) {
     case Column::FileDescriptor:
         return { 32, TextAlignment::CenterRight };
+    case Column::ClassName:
+        return { 80, TextAlignment::CenterLeft };
+    case Column::Offset:
+        return { 40, TextAlignment::CenterRight };
+    case Column::Access:
+        return { 60, TextAlignment::CenterLeft };
     case Column::Path:
         return { 300, TextAlignment::CenterLeft };
     default:
@@ -56,6 +68,12 @@ GVariant ProcessFileDescriptorMapModel::data(const GModelIndex& index, Role role
         switch (index.column()) {
         case Column::FileDescriptor:
             return fd_object.get("fd").to_int();
+        case Column::ClassName:
+            return fd_object.get("class").to_string();
+        case Column::Offset:
+            return fd_object.get("offset").to_int();
+        case Column::Access:
+            return fd_object.get("seekable").to_bool() ? "Seekable" : "Sequential";
         case Column::Path:
             return fd_object.get("absolute_path").to_string();
         default:

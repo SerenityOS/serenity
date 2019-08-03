@@ -201,6 +201,9 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
         JsonObject description_object;
         description_object.set("fd", i);
         description_object.set("absolute_path", description->absolute_path());
+        description_object.set("seekable", description->file().is_seekable());
+        description_object.set("class", description->file().class_name());
+        description_object.set("offset", description->offset());
         array.append(move(description_object));
     }
     return array.serialized().to_byte_buffer();
