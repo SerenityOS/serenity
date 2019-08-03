@@ -23,16 +23,6 @@ public:
     {
         ref_if_not_null(m_ptr);
     }
-    RefPtr(T* ptr)
-        : m_ptr(ptr)
-    {
-        ref_if_not_null(m_ptr);
-    }
-    RefPtr(T& object)
-        : m_ptr(&object)
-    {
-        m_ptr->ref();
-    }
     RefPtr(const T& object)
         : m_ptr(const_cast<T*>(&object))
     {
