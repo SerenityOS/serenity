@@ -51,9 +51,9 @@ int main(int argc, char** argv)
 
     int index = 0;
 
-    auto peek = [&]() -> char {
-        if (index < file_contents.size())
-            return file_contents[index];
+    auto peek = [&](int offset = 0) -> char {
+        if ((index + offset) < file_contents.size())
+            return file_contents[index + offset];
         return 0;
     };
 
@@ -85,6 +85,10 @@ int main(int argc, char** argv)
     auto consume_whitespace = [&] {
         while (isspace(peek()))
             ++index;
+        if (peek() == '/' && peek(1) == '/') {
+            while (peek() != '\n')
+                ++index;
+        }
     };
 
     auto parse_parameter = [&](Vector<Parameter>& storage) {
