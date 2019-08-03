@@ -33,3 +33,5 @@ LD = i686-pc-serenity-g++
 AS = i686-pc-serenity-as
 
 DEFINES = -DSANITIZE_PTRS -DDEBUG
+
+IPCCOMPILER = $(SERENITY_BASE_DIR)/DevTools/IPCCompiler/IPCCompiler

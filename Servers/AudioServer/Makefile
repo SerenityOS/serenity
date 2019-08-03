@@ -13,6 +13,11 @@ DEFINES += -DUSERLAND
 
 all: $(APP)
 
+main.cpp: AudioServerEndpoint.h
+
+AudioServerEndpoint.h: AudioServer.ipc
+	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
+
 $(APP): $(OBJS)
 	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore -lipc
 
@@ -22,5 +27,5 @@ $(APP): $(OBJS)
 -include $(OBJS:%.o=%.d)
 
 clean:
-	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d
+	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d AudioServerEndpoint.h
 
