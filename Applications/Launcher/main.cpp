@@ -24,7 +24,9 @@ void handle_sigchld(int)
 
 int main(int argc, char** argv)
 {
-    chdir(get_current_user_home_path());
+    if (chdir(get_current_user_home_path().characters()) < 0)
+        perror("chdir");
+
     GApplication app(argc, argv);
 
     signal(SIGCHLD, handle_sigchld);
