@@ -182,9 +182,11 @@ int main(int argc, char** argv)
         dbg() << "namespace " << endpoint.name << " {";
         dbg();
 
-        auto do_message = [&](const String& name, const Vector<Parameter>& parameters) {
+        auto do_message = [&](const String& name, const Vector<Parameter>& parameters, String response_type = {}) {
             dbg() << "class " << name << " final : public IMessage {";
             dbg() << "public:";
+            if (!response_type.is_null())
+                dbg() << "    typedef " << response_type << " ResponseType;";
             dbg() << "    virtual ~" << name << "() override {}";
             dbg() << "    virtual ByteBuffer encode() override";
             dbg() << "    {";
@@ -209,13 +211,15 @@ int main(int argc, char** argv)
             dbg();
         };
         for (auto& message : endpoint.messages) {
+            String response_name;
             if (message.is_synchronous) {
                 StringBuilder builder;
                 builder.append(message.name);
                 builder.append("Response");
-                do_message(builder.to_string(), message.outputs);
+                response_name = builder.to_string();
+                do_message(response_name, message.outputs);
             }
-            do_message(message.name, message.inputs);
+            do_message(message.name, message.inputs, response_name);
         }
         dbg() << "} // namespace " << endpoint.name;
         dbg();
