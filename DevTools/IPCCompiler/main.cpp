@@ -318,6 +318,8 @@ int main(int argc, char** argv)
             if (message.is_synchronous)
                 do_decode_message(message.response_name());
         }
+        dbg() << "        default:";
+        dbg() << "            return nullptr;";
 
         dbg() << "        }";
         dbg() << "    }";
