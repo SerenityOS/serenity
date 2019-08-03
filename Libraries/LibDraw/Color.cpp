@@ -1,5 +1,7 @@
-#include "Color.h"
 #include <AK/Assertions.h>
+#include <LibDraw/Color.h>
+#include <ctype.h>
+#include <stdio.h>
 
 Color::Color(NamedColor named)
 {
@@ -78,4 +80,42 @@ Color::Color(NamedColor named)
 String Color::to_string() const
 {
     return String::format("#%b%b%b%b", red(), green(), blue(), alpha());
+}
+
+Optional<Color> Color::from_string(const StringView& string)
+{
+    if (string.is_empty())
+        return {};
+
+    if (string[0] != '#')
+        return {};
+
+    if (string.length() != 7 && string.length() != 9)
+        return {};
+
+    auto hex_nibble_to_u8 = [](char nibble) -> Optional<u8> {
+        if (!isxdigit(nibble))
+            return {};
+        if (nibble >= '0' && nibble <= '9')
+            return nibble - '0';
+        return 10 + (tolower(nibble) - 'a');
+    };
+
+    auto to_hex = [&](char c1, char c2) -> Optional<u8> {
+        auto nib1 = hex_nibble_to_u8(c1);
+        auto nib2 = hex_nibble_to_u8(c2);
+        if (!nib1.has_value() || !nib2.has_value())
+            return {};
+        return nib1.value() << 4 | nib2.value();
+    };
+
+    Optional<u8> r = to_hex(string[1], string[2]);
+    Optional<u8> g = to_hex(string[3], string[4]);
+    Optional<u8> b = to_hex(string[5], string[6]);
+    Optional<u8> a = string.length() == 9 ? to_hex(string[7], string[8]) : Optional<u8>(255);
+
+    if (!r.has_value() || !g.has_value() || !b.has_value() || !a.has_value())
+        return {};
+
+    return Color(r.value(), g.value(), b.value(), a.value());
 }

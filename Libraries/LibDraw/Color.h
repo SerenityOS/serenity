@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/Optional.h>
 #include <AK/Types.h>
 
 typedef u32 RGBA32;
@@ -132,6 +133,7 @@ public:
     }
 
     String to_string() const;
+    static Optional<Color> from_string(const StringView&);
 
 private:
     explicit Color(RGBA32 rgba)
