@@ -47,6 +47,21 @@ public:
         return *this;
     }
 
+    BufferStream& operator<<(bool value)
+    {
+        m_buffer[m_offset++] = value;
+        return *this;
+    }
+    BufferStream& operator>>(bool& value )
+    {
+        if (m_offset + sizeof(value) >= unsigned(m_buffer.size())) {
+            m_read_failure = true;
+            return *this;
+        }
+        value = m_buffer[m_offset++];
+        return *this;
+    }
+
     BufferStream& operator<<(char value)
     {
         m_buffer[m_offset++] = (u8)value;
