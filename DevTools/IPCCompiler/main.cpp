@@ -366,13 +366,15 @@ int main(int argc, char** argv)
             String return_type = "void";
             if (message.is_synchronous) {
                 StringBuilder builder;
+                builder.append("OwnPtr<");
                 builder.append(endpoint.name);
                 builder.append("::");
                 builder.append(message.name);
                 builder.append("Response");
+                builder.append(">");
                 return_type = builder.to_string();
             }
-            dbg() << "    virtual OwnPtr<" << return_type << "> handle(const " << endpoint.name << "::" << message.name << "&) = 0;";
+            dbg() << "    virtual " << return_type << " handle(const " << endpoint.name << "::" << message.name << "&) = 0;";
         }
 
         dbg() << "private:";
