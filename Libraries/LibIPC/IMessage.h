@@ -7,12 +7,10 @@ class IMessage {
 public:
     virtual ~IMessage();
 
-    const String& name() const { return m_name; }
+    virtual int id() const = 0;
+    virtual String name() const = 0;
     virtual ByteBuffer encode() = 0;
 
 protected:
     IMessage();
-
-private:
-    String m_name;
 };

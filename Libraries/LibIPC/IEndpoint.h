@@ -6,7 +6,7 @@ class IEndpoint {
 public:
     virtual ~IEndpoint();
 
-    const String& name() const { return m_name; }
+    virtual String name() const = 0;
 
 protected:
     IEndpoint();
