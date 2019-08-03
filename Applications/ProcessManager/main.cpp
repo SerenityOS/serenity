@@ -1,5 +1,6 @@
 #include "GraphWidget.h"
 #include "MemoryStatsWidget.h"
+#include "ProcessFileDescriptorMapWidget.h"
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
@@ -157,6 +158,9 @@ int main(int argc, char** argv)
 
     auto* process_tab_widget = new GTabWidget(process_container_splitter);
 
+    auto* open_files_widget = new ProcessFileDescriptorMapWidget(nullptr);
+    process_tab_widget->add_widget("Open files", open_files_widget);
+
     auto* memory_map_widget = new ProcessMemoryMapWidget(nullptr);
     process_tab_widget->add_widget("Memory map", memory_map_widget);
 
@@ -164,6 +168,7 @@ int main(int argc, char** argv)
     process_tab_widget->add_widget("Stacks", stacks_widget);
 
     process_table_view->on_process_selected = [&](pid_t pid) {
+        open_files_widget->set_pid(pid);
         stacks_widget->set_pid(pid);
         memory_map_widget->set_pid(pid);
     };

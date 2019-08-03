@@ -8,6 +8,8 @@ OBJS = \
     ProcessStacksWidget.o \
     ProcessMemoryMapWidget.o \
     ProcessMemoryMapModel.o \
+    ProcessFileDescriptorMapWidget.o \
+    ProcessFileDescriptorMapModel.o \
     main.o
 
 APP = ProcessManager
