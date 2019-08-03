@@ -5,5 +5,5 @@ endpoint AudioServer
     GetMainMixVolume() => (i32 volume)
     SetMainMixVolume(i32 volume) => ()
 
-    EnqueueBuffer(i32 buffer_id) => ()
+    EnqueueBuffer(i32 buffer_id) => (bool success)
 }
