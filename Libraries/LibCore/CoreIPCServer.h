@@ -6,6 +6,8 @@
 #include <LibCore/CLocalSocket.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
+#include <LibIPC/IEndpoint.h>
+#include <LibIPC/IMessage.h>
 
 #include <errno.h>
 #include <stdio.h>
@@ -52,7 +54,13 @@ namespace Server {
         auto conn = new T(AK::forward<Args>(args)...) /* arghs */;
         conn->send_greeting();
         return conn;
-    };
+    }
+
+    template<typename T, class... Args>
+    T* new_connection_ng_for_client(Args&&... args)
+    {
+        return new T(AK::forward<Args>(args)...) /* arghs */;
+    }
 
     template<typename ServerMessage, typename ClientMessage>
     class Connection : public CObject {
@@ -191,6 +199,110 @@ namespace Server {
         virtual bool handle_message(const ClientMessage&, const ByteBuffer&& = {}) = 0;
 
     private:
+        CLocalSocket& m_socket;
+        int m_client_id { -1 };
+        int m_client_pid { -1 };
+    };
+
+    template<typename Endpoint>
+    class ConnectionNG : public CObject {
+        C_OBJECT(Connection)
+    public:
+        ConnectionNG(Endpoint& endpoint, CLocalSocket& socket, int client_id)
+            : m_endpoint(endpoint)
+            , m_socket(socket)
+            , m_client_id(client_id)
+        {
+            add_child(socket);
+            m_socket.on_ready_to_read = [this] { drain_client(); };
+        }
+
+        virtual ~ConnectionNG() override
+        {
+        }
+
+        void post_message(const IMessage& message)
+        {
+            auto buffer = message.encode();
+
+            int nwritten = write(m_socket.fd(), buffer.data(), (size_t)buffer.size());
+            if (nwritten < 0) {
+                switch (errno) {
+                case EPIPE:
+                    dbg() << "Connection::post_message: Disconnected from peer";
+                    delete_later();
+                    return;
+                case EAGAIN:
+                    dbg() << "Connection::post_message: Client buffer overflowed.";
+                    did_misbehave();
+                    return;
+                    break;
+                default:
+                    perror("Connection::post_message write");
+                    ASSERT_NOT_REACHED();
+                }
+            }
+
+            ASSERT(nwritten == buffer.size());
+        }
+
+        void drain_client()
+        {
+            unsigned messages_received = 0;
+            for (;;) {
+                u8 buffer[4096];
+                ssize_t nread = recv(m_socket.fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
+                if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
+                    if (!messages_received) {
+                        // TODO: is delete_later() sufficient?
+                        CEventLoop::current().post_event(*this, make<DisconnectedEvent>(client_id()));
+                    }
+                    break;
+                }
+                if (nread < 0) {
+                    perror("recv");
+                    ASSERT_NOT_REACHED();
+                }
+                auto message = m_endpoint.decode_message(ByteBuffer::wrap(buffer, nread));
+                if (!message) {
+                    dbg() << "drain_client: Endpoint didn't recognize message";
+                    did_misbehave();
+                    return;
+                }
+                ++messages_received;
+
+                auto response = m_endpoint.handle(*message);
+                if (response)
+                    post_message(*response);
+            }
+        }
+
+        void did_misbehave()
+        {
+            dbg() << "Connection{" << this << "} (id=" << m_client_id << ", pid=" << m_client_pid << ") misbehaved, disconnecting.";
+            m_socket.close();
+            delete_later();
+        }
+
+        int client_id() const { return m_client_id; }
+        pid_t client_pid() const { return m_client_pid; }
+        void set_client_pid(pid_t pid) { m_client_pid = pid; }
+
+    protected:
+        void event(CEvent& event) override
+        {
+            if (event.type() == Event::Disconnected) {
+                int client_id = static_cast<const DisconnectedEvent&>(event).client_id();
+                dbgprintf("Connection: Client disconnected: %d\n", client_id);
+                delete this;
+                return;
+            }
+
+            CObject::event(event);
+        }
+
+    private:
+        Endpoint& m_endpoint;
         CLocalSocket& m_socket;
         int m_client_id { -1 };
         int m_client_pid { -1 };
