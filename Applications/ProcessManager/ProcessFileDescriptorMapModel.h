@@ -8,6 +8,9 @@ public:
     enum Column {
         FileDescriptor,
         Path,
+        Offset,
+        Access,
+        ClassName,
         __Count
     };
 
