@@ -280,6 +280,7 @@ int main(int argc, char** argv)
         dbg() << "public:";
         dbg() << "    " << endpoint.name << "Endpoint() {}";
         dbg() << "    virtual ~" << endpoint.name << "Endpoint() override {}";
+        dbg() << "    virtual String name() const override { return \"" << endpoint.name << "\"; };";
         dbg();
 
         for (auto& message : endpoint.messages) {
