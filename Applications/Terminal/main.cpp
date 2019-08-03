@@ -133,7 +133,8 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    chdir(get_current_user_home_path());
+    if (chdir(get_current_user_home_path().characters()) < 0)
+        perror("chdir");
 
     int ptm_fd = open("/dev/ptmx", O_RDWR);
     if (ptm_fd < 0) {
