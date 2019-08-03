@@ -15,6 +15,14 @@ struct Message {
     bool is_synchronous { false };
     Vector<Parameter> inputs;
     Vector<Parameter> outputs;
+
+    String response_name() const
+    {
+        StringBuilder builder;
+        builder.append(name);
+        builder.append("Response");
+        return builder.to_string();
+    }
 };
 
 struct Endpoint {
@@ -175,6 +183,7 @@ int main(int argc, char** argv)
         parse_endpoint();
 
     dbg() << "#include <AK/BufferStream.h>";
+    dbg() << "#include <AK/OwnPtr.h>";
     dbg() << "#include <LibIPC/IEndpoint.h>";
     dbg() << "#include <LibIPC/IMessage.h>";
     dbg();
@@ -190,12 +199,8 @@ int main(int argc, char** argv)
             message_ids.set(message.name, message_ids.size() + 1);
             dbg() << "    " << message.name << " = " << message_ids.size() << ",";
             if (message.is_synchronous) {
-                StringBuilder builder;
-                builder.append(message.name);
-                builder.append("Response");
-                auto response_name = builder.to_string();
-                message_ids.set(response_name, message_ids.size() + 1);
-                dbg() << "    " << response_name << " = " << message_ids.size() << ",";
+                message_ids.set(message.response_name(), message_ids.size() + 1);
+                dbg() << "    " << message.response_name() << " = " << message_ids.size() << ",";
             }
         }
         dbg() << "};";
@@ -243,6 +248,26 @@ int main(int argc, char** argv)
             dbg() << "    virtual ~" << name << "() override {}";
             dbg() << "    virtual int id() const override { return (int)MessageID::" << name << "; }";
             dbg() << "    virtual String name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
+            dbg() << "    static OwnPtr<" << name << "> decode(BufferStream& stream)";
+            dbg() << "    {";
+
+            if (parameters.is_empty())
+                dbg() << "        (void)stream;";
+
+            for (auto& parameter : parameters) {
+                dbg() << "        " << parameter.type << " " << parameter.name << ";";
+                dbg() << "        stream >> " << parameter.name << ";";
+            }
+
+            StringBuilder builder;
+            for (int i = 0; i < parameters.size(); ++i) {
+                auto& parameter = parameters[i];
+                builder.append(parameter.name);
+                if (i != parameters.size() - 1)
+                    builder.append(", ");
+            }
+            dbg() << "        return make<" << name << ">(" << builder.to_string() << ");";
+            dbg() << "    }";
             dbg() << "    virtual ByteBuffer encode() override";
             dbg() << "    {";
             // FIXME: Support longer messages:
@@ -265,10 +290,7 @@ int main(int argc, char** argv)
         for (auto& message : endpoint.messages) {
             String response_name;
             if (message.is_synchronous) {
-                StringBuilder builder;
-                builder.append(message.name);
-                builder.append("Response");
-                response_name = builder.to_string();
+                response_name = message.response_name();
                 do_message(response_name, message.outputs);
             }
             do_message(message.name, message.inputs, response_name);
@@ -281,6 +303,24 @@ int main(int argc, char** argv)
         dbg() << "    " << endpoint.name << "Endpoint() {}";
         dbg() << "    virtual ~" << endpoint.name << "Endpoint() override {}";
         dbg() << "    virtual String name() const override { return \"" << endpoint.name << "\"; };";
+        dbg() << "    virtual OwnPtr<IMessage> decode_message(const ByteBuffer& buffer)";
+        dbg() << "    {";
+        dbg() << "        BufferStream stream(const_cast<ByteBuffer&>(buffer));";
+        dbg() << "        int message_id = 0;";
+        dbg() << "        stream >> message_id;";
+        dbg() << "        switch (message_id) {";
+        for (auto& message : endpoint.messages) {
+            auto do_decode_message = [&](const String& name) {
+                dbg() << "        case (int)" << endpoint.name << "::MessageID::" << name << ":";
+                dbg() << "            return " << endpoint.name << "::" << name << "::decode(stream);";
+            };
+            do_decode_message(message.name);
+            if (message.is_synchronous)
+                do_decode_message(message.response_name());
+        }
+
+        dbg() << "        }";
+        dbg() << "    }";
         dbg();
 
         for (auto& message : endpoint.messages) {
