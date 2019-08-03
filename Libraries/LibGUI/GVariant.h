@@ -167,17 +167,15 @@ public:
         return Color::from_rgba(m_value.as_color);
     }
 
-    Color to_color() const
-    {
-        if (is_color())
-            return as_color();
-        return Color();
-    }
-
-    Color to_color(Color default_value) const
+    Color to_color(Color default_value = {}) const
     {
         if (type() == Type::Color)
             return as_color();
+        if (type() == Type::String) {
+            auto color = Color::from_string(as_string());
+            if (color.has_value())
+                return color.value();
+        }
         return default_value;
     }
 
