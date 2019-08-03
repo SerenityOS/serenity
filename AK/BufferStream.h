@@ -170,6 +170,11 @@ public:
         return *this;
     }
 
+    BufferStream& operator<<(const char* value)
+    {
+        return *this << StringView(value);
+    }
+
     BufferStream& operator<<(const StringView& value)
     {
         for (ssize_t i = 0; i < value.length(); ++i)
