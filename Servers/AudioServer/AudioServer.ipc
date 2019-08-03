@@ -1,9 +1,12 @@
 endpoint AudioServer
 {
+    // Basic protocol
     Greet(i32 client_pid) => (i32 server_pid, i32 client_id)
 
+    // Mixer functions
     GetMainMixVolume() => (i32 volume)
     SetMainMixVolume(i32 volume) => ()
 
+    // Buffer playback
     EnqueueBuffer(i32 buffer_id) => (bool success)
 }
