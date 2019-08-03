@@ -201,28 +201,59 @@ int main(int argc, char** argv)
         dbg() << "};";
         dbg();
 
+        auto constructor_for_message = [&](const String& name, const Vector<Parameter>& parameters) {
+            StringBuilder builder;
+            builder.append(name);
+
+            if (parameters.is_empty()) {
+                builder.append("() {}");
+                return builder.to_string();
+            }
+
+            builder.append('(');
+            for (int i = 0; i < parameters.size(); ++i) {
+                auto& parameter = parameters[i];
+                builder.append(parameter.type);
+                builder.append(' ');
+                builder.append(parameter.name);
+                if (i != parameters.size() - 1)
+                    builder.append(", ");
+            }
+            builder.append(") : ");
+            for (int i = 0; i < parameters.size(); ++i) {
+                auto& parameter = parameters[i];
+                builder.append("m_");
+                builder.append(parameter.name);
+                builder.append("(");
+                builder.append(parameter.name);
+                builder.append(")");
+                if (i != parameters.size() - 1)
+                    builder.append(", ");
+            }
+            builder.append(" {}");
+            return builder.to_string();
+        };
+
         auto do_message = [&](const String& name, const Vector<Parameter>& parameters, String response_type = {}) {
             dbg() << "class " << name << " final : public IMessage {";
             dbg() << "public:";
             if (!response_type.is_null())
                 dbg() << "    typedef class " << response_type << " ResponseType;";
+            dbg() << "    " << constructor_for_message(name, parameters);
             dbg() << "    virtual ~" << name << "() override {}";
             dbg() << "    virtual int id() const override { return (int)MessageID::" << name << "; }";
             dbg() << "    virtual String name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
             dbg() << "    virtual ByteBuffer encode() override";
             dbg() << "    {";
-            if (parameters.is_empty()) {
-                dbg() << "        return {};";
-            } else {
-                // FIXME: Support longer messages:
-                dbg() << "        auto buffer = ByteBuffer::create_uninitialized(1024);";
-                dbg() << "        BufferStream stream(buffer);";
-                for (auto& parameter : parameters) {
-                    dbg() << "        stream << m_" << parameter.name << ";";
-                }
-                dbg() << "        stream.snip();";
-                dbg() << "        return buffer;";
+            // FIXME: Support longer messages:
+            dbg() << "        auto buffer = ByteBuffer::create_uninitialized(1024);";
+            dbg() << "        BufferStream stream(buffer);";
+            dbg() << "        stream << (int)MessageID::" << name << ";";
+            for (auto& parameter : parameters) {
+                dbg() << "        stream << m_" << parameter.name << ";";
             }
+            dbg() << "        stream.snip();";
+            dbg() << "        return buffer;";
             dbg() << "    }";
             dbg() << "private:";
             for (auto& parameter : parameters) {
