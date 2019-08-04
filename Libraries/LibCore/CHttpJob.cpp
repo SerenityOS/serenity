@@ -91,10 +91,13 @@ void CHttpJob::on_socket_connected()
         }
         buffer.append(payload.pointer(), payload.size());
 
-        bool ok;
-        if (buffer.size() >= m_headers.get("Content-Length").value_or("0").to_int(ok) && ok) {
-            m_state = State::Finished;
-            break;
+        auto content_length_header = m_headers.get("Content-Length");
+        if (content_length_header.has_value()) {
+            bool ok;
+            if (buffer.size() >= content_length_header.value().to_int(ok) && ok) {
+                m_state = State::Finished;
+                break;
+            }
         }
     }
 
