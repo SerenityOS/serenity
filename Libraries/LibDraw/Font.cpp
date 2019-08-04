@@ -42,6 +42,17 @@ Font& Font::default_fixed_width_font()
     return *s_default_fixed_width_font;
 }
 
+Font& Font::default_bold_fixed_width_font()
+{
+    static Font* font;
+    static const char* default_bold_fixed_width_font_path = "/res/fonts/CsillaBold7x10.font";
+    if (!font) {
+        font = Font::load_from_file(default_bold_fixed_width_font_path).leak_ref();
+        ASSERT(font);
+    }
+    return *font;
+}
+
 Font& Font::default_bold_font()
 {
     static Font* s_default_bold_font;
