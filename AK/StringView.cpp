@@ -66,6 +66,34 @@ StringView StringView::substring_view_starting_after_substring(const StringView&
     return { remaining_characters, remaining_length };
 }
 
+int StringView::to_int(bool& ok) const
+{
+    bool negative = false;
+    int value = 0;
+    int i = 0;
+
+    if (is_empty()) {
+        ok = false;
+        return 0;
+    }
+
+    if (characters_without_null_termination()[0] == '-') {
+        i++;
+        negative = true;
+    }
+    for (; i < length(); i++) {
+        if (characters_without_null_termination()[i] < '0' || characters_without_null_termination()[i] > '9') {
+            ok = false;
+            return 0;
+        }
+        value = value * 10;
+        value += characters_without_null_termination()[i] - '0';
+    }
+    ok = true;
+
+    return negative ? -value : value;
+}
+
 unsigned StringView::to_uint(bool& ok) const
 {
     unsigned value = 0;
