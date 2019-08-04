@@ -35,9 +35,6 @@ private:
     template<typename C>
     void consume_while(C);
 
-    template<typename C>
-    Vector<char, 128> extract_while(C);
-
     StringView m_input;
     int m_index { 0 };
 
