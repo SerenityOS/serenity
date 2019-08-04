@@ -28,7 +28,7 @@ public:
     u8* as_ptr() { return reinterpret_cast<u8*>(m_address); }
     const u8* as_ptr() const { return reinterpret_cast<const u8*>(m_address); }
 
-    u32 page_base() const { return m_address & 0xfffff000; }
+    VirtualAddress page_base() const { return VirtualAddress(m_address & 0xfffff000); }
 
 private:
     u32 m_address { 0 };
