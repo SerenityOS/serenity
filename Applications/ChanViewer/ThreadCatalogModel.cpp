@@ -26,8 +26,12 @@ void ThreadCatalogModel::update()
 
     job->on_finish = [job, this](bool success) {
         auto* response = job->response();
-        dbg() << "job finished! success=" << success << ", response=" << response;
-        dbg() << "payload size: " << response->payload().size();
+        dbg() << "Catalog download finished, success=" << success << ", response=" << response;
+
+        if (!success)
+            return;
+
+        dbg() << "Catalog payload size: " << response->payload().size();
 
         auto json = JsonValue::from_string(response->payload());
 
