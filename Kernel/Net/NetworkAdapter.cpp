@@ -81,10 +81,10 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
 void NetworkAdapter::did_receive(const u8* data, int length)
 {
     InterruptDisabler disabler;
-    m_packet_queue.append(ByteBuffer::copy(data, length));
+    m_packet_queue.append(KBuffer::copy(data, length));
 }
 
-ByteBuffer NetworkAdapter::dequeue_packet()
+RefPtr<KBuffer> NetworkAdapter::dequeue_packet()
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())
