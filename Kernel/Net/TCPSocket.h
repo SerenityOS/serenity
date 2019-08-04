@@ -33,7 +33,7 @@ private:
 
     static NetworkOrdered<u16> compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket&, u16 payload_size);
 
-    virtual int protocol_receive(const ByteBuffer&, void* buffer, size_t buffer_size, int flags) override;
+    virtual int protocol_receive(const KBuffer&, void* buffer, size_t buffer_size, int flags) override;
     virtual int protocol_send(const void*, int) override;
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) override;
     virtual int protocol_allocate_local_port() override;

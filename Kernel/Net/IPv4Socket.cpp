@@ -228,7 +228,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
 #endif
     }
     ASSERT(!packet.data.is_null());
-    auto& ipv4_packet = *(const IPv4Packet*)(packet.data.pointer());
+    auto& ipv4_packet = *(const IPv4Packet*)(packet.data->data());
 
     if (addr) {
         dbgprintf("Incoming packet is from: %s:%u\n", packet.peer_address.to_string().characters(), packet.peer_port);
@@ -246,13 +246,13 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         return ipv4_packet.payload_size();
     }
 
-    return protocol_receive(packet.data, buffer, buffer_length, flags);
+    return protocol_receive(*packet.data, buffer, buffer_length, flags);
 }
 
-void IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, ByteBuffer&& packet)
+void IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, NonnullRefPtr<KBuffer>&& packet)
 {
     LOCKER(lock());
-    auto packet_size = packet.size();
+    auto packet_size = packet->size();
     m_receive_queue.append({ source_address, source_port, move(packet) });
     m_can_read = true;
     m_bytes_received += packet_size;

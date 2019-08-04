@@ -46,11 +46,10 @@ NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
     return adopt(*new TCPSocket(protocol));
 }
 
-int TCPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
+int TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size_t buffer_size, int flags)
 {
     (void)flags;
-    ASSERT(!packet_buffer.is_null());
-    auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
+    auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.data());
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
     size_t payload_size = packet_buffer.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
 #ifdef TCP_SOCKET_DEBUG

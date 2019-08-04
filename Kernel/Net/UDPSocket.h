@@ -16,7 +16,7 @@ private:
     virtual const char* class_name() const override { return "UDPSocket"; }
     static Lockable<HashMap<u16, UDPSocket*>>& sockets_by_port();
 
-    virtual int protocol_receive(const ByteBuffer&, void* buffer, size_t buffer_size, int flags) override;
+    virtual int protocol_receive(const KBuffer&, void* buffer, size_t buffer_size, int flags) override;
     virtual int protocol_send(const void*, int) override;
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) override { return KSuccess; }
     virtual int protocol_allocate_local_port() override;
