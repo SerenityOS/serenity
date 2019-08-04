@@ -59,9 +59,6 @@ protected:
 private:
     virtual bool is_ipv4() const override { return true; }
 
-    bool m_bound { false };
-    int m_attached_fds { 0 };
-
     IPv4Address m_local_address;
     IPv4Address m_peer_address;
 

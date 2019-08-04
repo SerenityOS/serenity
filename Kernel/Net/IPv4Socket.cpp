@@ -91,7 +91,6 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
 
 KResult IPv4Socket::connect(FileDescription& description, const sockaddr* address, socklen_t address_size, ShouldBlock should_block)
 {
-    ASSERT(!m_bound);
     if (address_size != sizeof(sockaddr_in))
         return KResult(-EINVAL);
     if (address->sa_family != AF_INET)
@@ -106,12 +105,10 @@ KResult IPv4Socket::connect(FileDescription& description, const sockaddr* addres
 
 void IPv4Socket::attach(FileDescription&)
 {
-    ++m_attached_fds;
 }
 
 void IPv4Socket::detach(FileDescription&)
 {
-    --m_attached_fds;
 }
 
 bool IPv4Socket::can_read(FileDescription& description) const
