@@ -203,7 +203,7 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
             LOCKER(socket->lock());
             if (socket->protocol() != (unsigned)IPv4Protocol::ICMP)
                 continue;
-            socket->did_receive(ipv4_packet.source(), 0, ByteBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+            socket->did_receive(ipv4_packet.source(), 0, KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
         }
     }
 
@@ -260,7 +260,7 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
 
     ASSERT(socket->type() == SOCK_DGRAM);
     ASSERT(socket->local_port() == udp_packet.destination_port());
-    socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), ByteBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+    socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }
 
 void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
@@ -319,7 +319,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         kprintf("handle_tcp: Got FIN, payload_size=%u\n", payload_size);
 
         if (payload_size != 0)
-            socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), ByteBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+            socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 
         socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
         socket->send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
@@ -340,5 +340,5 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     socket->send_tcp_packet(TCPFlags::ACK);
 
     if (payload_size != 0)
-        socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), ByteBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+        socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }

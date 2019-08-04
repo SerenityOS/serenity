@@ -2,6 +2,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/SinglyLinkedList.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Net/IPv4.h>
@@ -33,7 +34,7 @@ public:
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
-    void did_receive(const IPv4Address& peer_address, u16 peer_port, ByteBuffer&&);
+    void did_receive(const IPv4Address& peer_address, u16 peer_port, NonnullRefPtr<KBuffer>&&);
 
     const IPv4Address& local_address() const;
     u16 local_port() const { return m_local_port; }
@@ -50,7 +51,7 @@ protected:
     int allocate_local_port_if_needed();
 
     virtual KResult protocol_bind() { return KSuccess; }
-    virtual int protocol_receive(const ByteBuffer&, void*, size_t, int) { return -ENOTIMPL; }
+    virtual int protocol_receive(const KBuffer&, void*, size_t, int) { return -ENOTIMPL; }
     virtual int protocol_send(const void*, int) { return -ENOTIMPL; }
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) { return KSuccess; }
     virtual int protocol_allocate_local_port() { return 0; }
@@ -65,7 +66,7 @@ private:
     struct ReceivedPacket {
         IPv4Address peer_address;
         u16 peer_port;
-        ByteBuffer data;
+        RefPtr<KBuffer> data;
     };
 
     SinglyLinkedList<ReceivedPacket> m_receive_queue;
