@@ -24,7 +24,9 @@ void CHttpJob::on_socket_connected()
     if (!success)
         return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::TransmissionFailed); });
 
-    Vector<u8> buffer;
+    Vector<ByteBuffer> received_buffers;
+    size_t received_size = 0;
+
     while (m_socket->is_connected()) {
         if (m_state == State::InStatus) {
             while (!m_socket->can_read_line())
@@ -89,19 +91,28 @@ void CHttpJob::on_socket_connected()
             }
             return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
         }
-        buffer.append(payload.pointer(), payload.size());
+        received_buffers.append(payload);
+        received_size += payload.size();
 
         auto content_length_header = m_headers.get("Content-Length");
         if (content_length_header.has_value()) {
             bool ok;
-            if (buffer.size() >= content_length_header.value().to_int(ok) && ok) {
+            if (received_size >= content_length_header.value().to_uint(ok) && ok) {
                 m_state = State::Finished;
                 break;
             }
         }
     }
 
-    auto response = CHttpResponse::create(m_code, move(m_headers), ByteBuffer::copy(buffer.data(), buffer.size()));
+    auto flattened_buffer = ByteBuffer::create_uninitialized(received_size);
+    u8* flat_ptr = flattened_buffer.data();
+    for (auto& received_buffer : received_buffers) {
+        memcpy(flat_ptr, received_buffer.data(), received_buffer.size());
+        flat_ptr += received_buffer.size();
+    }
+    received_buffers.clear();
+
+    auto response = CHttpResponse::create(m_code, move(m_headers), move(flattened_buffer));
     deferred_invoke([this, response](auto&) {
         did_finish(move(response));
     });
