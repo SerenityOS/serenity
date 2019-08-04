@@ -9,7 +9,31 @@ namespace AK {
 class JsonObject {
 public:
     JsonObject() { }
-    ~JsonObject() { }
+    ~JsonObject() {}
+
+    JsonObject(const JsonObject& other)
+        : m_members(other.m_members)
+    {
+    }
+
+    JsonObject(JsonObject&& other)
+        : m_members(move(other.m_members))
+    {
+    }
+
+    JsonObject& operator=(const JsonObject& other)
+    {
+        if (this != &other)
+            m_members = other.m_members;
+        return *this;
+    }
+
+    JsonObject& operator=(JsonObject&& other)
+    {
+        if (this != &other)
+            m_members = move(other.m_members);
+        return *this;
+    }
 
     int size() const { return m_members.size(); }
     bool is_empty() const { return m_members.is_empty(); }

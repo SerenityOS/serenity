@@ -10,6 +10,30 @@ public:
     JsonArray() {}
     ~JsonArray() {}
 
+    JsonArray(const JsonArray& other)
+        : m_values(other.m_values)
+    {
+    }
+
+    JsonArray(JsonArray&& other)
+        : m_values(move(other.m_values))
+    {
+    }
+
+    JsonArray& operator=(const JsonArray& other)
+    {
+        if (this != &other)
+            m_values = other.m_values;
+        return *this;
+    }
+
+    JsonArray& operator=(JsonArray&& other)
+    {
+        if (this != &other)
+            m_values = move(other.m_values);
+        return *this;
+    }
+
     int size() const { return m_values.size(); }
     bool is_empty() const { return m_values.is_empty(); }
 
@@ -18,6 +42,7 @@ public:
 
     void clear() { m_values.clear(); }
     void append(const JsonValue& value) { m_values.append(value); }
+    void append(JsonValue&& value) { m_values.append(move(value)); }
 
     String serialized() const;
     void serialize(StringBuilder&) const;
