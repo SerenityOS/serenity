@@ -23,8 +23,8 @@ private:
     void consume_specific(char expected_ch);
     void consume_string(const char*);
     String consume_quoted_string();
-    JsonValue parse_array();
-    JsonValue parse_object();
+    JsonArray parse_array();
+    JsonObject parse_object();
     JsonValue parse_number();
     JsonValue parse_string();
     JsonValue parse_false();
@@ -36,7 +36,7 @@ private:
     void consume_while(C);
 
     template<typename C>
-    String extract_while(C);
+    Vector<char, 128> extract_while(C);
 
     StringView m_input;
     int m_index { 0 };
