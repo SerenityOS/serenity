@@ -50,6 +50,7 @@ public:
     int operator-(const VectorIterator& other) { return m_index - other.m_index; }
 
     bool is_end() const { return m_index == m_vector.size(); }
+    int index() const { return m_index; }
 
 private:
     friend VectorType;
