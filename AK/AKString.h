@@ -92,6 +92,7 @@ public:
     static String repeated(char, int count);
     bool matches(const StringView& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
+    // FIXME: These should be shared between String and StringView somehow!
     int to_int(bool& ok) const;
     unsigned to_uint(bool& ok) const;
 
