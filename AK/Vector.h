@@ -24,11 +24,11 @@ class Vector;
 template<typename VectorType, typename ElementType>
 class VectorIterator {
 public:
-    bool operator!=(const VectorIterator& other) { return m_index != other.m_index; }
-    bool operator==(const VectorIterator& other) { return m_index == other.m_index; }
-    bool operator<(const VectorIterator& other) { return m_index < other.m_index; }
-    bool operator>(const VectorIterator& other) { return m_index > other.m_index; }
-    bool operator>=(const VectorIterator& other) { return m_index >= other.m_index; }
+    bool operator!=(const VectorIterator& other) const { return m_index != other.m_index; }
+    bool operator==(const VectorIterator& other) const { return m_index == other.m_index; }
+    bool operator<(const VectorIterator& other) const { return m_index < other.m_index; }
+    bool operator>(const VectorIterator& other) const { return m_index > other.m_index; }
+    bool operator>=(const VectorIterator& other) const { return m_index >= other.m_index; }
     VectorIterator& operator++()
     {
         ++m_index;
@@ -48,6 +48,8 @@ public:
     }
     ElementType& operator*() { return m_vector[m_index]; }
     int operator-(const VectorIterator& other) { return m_index - other.m_index; }
+
+    bool is_end() const { return m_index == m_vector.size(); }
 
 private:
     friend VectorType;
@@ -449,6 +451,36 @@ public:
     using ConstIterator = VectorIterator<const Vector, const T>;
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
+
+    template<typename Finder>
+    ConstIterator find(Finder finder) const
+    {
+        for (int i = 0; i < m_size; ++i) {
+            if (finder(at(i)))
+                return ConstIterator(*this, i);
+        }
+        return end();
+    }
+
+    template<typename Finder>
+    Iterator find(Finder finder)
+    {
+        for (int i = 0; i < m_size; ++i) {
+            if (finder(at(i)))
+                return Iterator(*this, i);
+        }
+        return end();
+    }
+
+    ConstIterator find(const T& value) const
+    {
+        return find([&](auto& other) { return value == other; });
+    }
+
+    Iterator find(const T& value)
+    {
+        return find([&](auto& other) { return value == other; });
+    }
 
 private:
     void reset_capacity()
