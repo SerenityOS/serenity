@@ -40,6 +40,8 @@ private:
 
     StringView m_input;
     int m_index { 0 };
+
+    String m_last_string_starting_with_character[256];
 };
 
 }
