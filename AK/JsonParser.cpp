@@ -30,15 +30,6 @@ void JsonParser::consume_while(C condition)
         consume();
 }
 
-template<typename C>
-Vector<char, 128> JsonParser::extract_while(C condition)
-{
-    Vector<char, 128> buffer;
-    while (condition(peek()))
-        buffer.append(consume());
-    return buffer;
-};
-
 void JsonParser::consume_whitespace()
 {
     consume_while([](char ch) { return is_whitespace(ch); });
@@ -156,7 +147,17 @@ JsonValue JsonParser::parse_string()
 
 JsonValue JsonParser::parse_number()
 {
-    auto number_buffer = extract_while([](char ch) { return ch == '-' || (ch >= '0' && ch <= '9'); });
+    Vector<char, 128> number_buffer;
+    for (;;) {
+        char ch = peek();
+        if (ch == '-' || (ch >= '0' && ch <= '9')) {
+            number_buffer.append(ch);
+            ++m_index;
+            continue;
+        }
+        break;
+    }
+
     StringView number_string(number_buffer.data(), number_buffer.size());
     bool ok;
     auto value = JsonValue(number_string.to_uint(ok));
