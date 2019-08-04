@@ -408,8 +408,9 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     if (fault.is_not_present() && fault.vaddr().get() >= 0xc0000000) {
         u32 page_directory_index = (fault.vaddr().get() >> 22) & 0x3ff;
         if (kernel_page_directory().entries()[page_directory_index].is_present()) {
-            current->process().page_directory().entries()[page_directory_index].copy_from({}, kernel_page_directory().entries()[page_directory_index]);
             dbgprintf("NP(kernel): copying new kernel mapping for L%x into process\n", fault.vaddr().get());
+            current->process().page_directory().entries()[page_directory_index].copy_from({}, kernel_page_directory().entries()[page_directory_index]);
+            flush_tlb(fault.vaddr().page_base());
             return PageFaultResponse::Continue;
         }
     }
