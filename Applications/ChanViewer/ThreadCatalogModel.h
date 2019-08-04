@@ -10,6 +10,7 @@ public:
         Text,
         ReplyCount,
         ImageCount,
+        PostTime,
         __Count,
     };
 
