@@ -16,6 +16,7 @@ public:
 
 private:
     void on_socket_connected();
+    void finish_up();
 
     enum class State {
         InStatus,
@@ -29,4 +30,6 @@ private:
     State m_state { State::InStatus };
     int m_code { -1 };
     HashMap<String, String> m_headers;
+    Vector<ByteBuffer> m_received_buffers;
+    size_t m_received_size { 0 };
 };

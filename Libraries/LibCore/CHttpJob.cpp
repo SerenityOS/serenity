@@ -24,14 +24,10 @@ void CHttpJob::on_socket_connected()
     if (!success)
         return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::TransmissionFailed); });
 
-    Vector<ByteBuffer> received_buffers;
-    size_t received_size = 0;
-
-    while (m_socket->is_connected()) {
+    m_socket->on_ready_to_read = [&] {
         if (m_state == State::InStatus) {
-            while (!m_socket->can_read_line())
-                usleep(1);
-            ASSERT(m_socket->can_read_line());
+            if (!m_socket->can_read_line())
+                return;
             auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
                 printf("Expected HTTP status\n");
@@ -49,11 +45,11 @@ void CHttpJob::on_socket_connected()
                 return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             m_state = State::InHeaders;
-            continue;
+            return;
         }
         if (m_state == State::InHeaders) {
-            while (!m_socket->can_read_line())
-                usleep(1);
+            if (!m_socket->can_read_line())
+                return;
             auto line = m_socket->read_line(PAGE_SIZE);
             if (line.is_null()) {
                 printf("Expected HTTP header\n");
@@ -62,7 +58,7 @@ void CHttpJob::on_socket_connected()
             auto chomped_line = String::copy(line, Chomp);
             if (chomped_line.is_empty()) {
                 m_state = State::InBody;
-                continue;
+                return;
             }
             auto parts = chomped_line.split(':');
             if (parts.is_empty()) {
@@ -77,40 +73,38 @@ void CHttpJob::on_socket_connected()
             auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
             m_headers.set(name, value);
             printf("[%s] = '%s'\n", name.characters(), value.characters());
-            continue;
+            return;
         }
         ASSERT(m_state == State::InBody);
-        while (!m_socket->can_read())
-            usleep(1);
         ASSERT(m_socket->can_read());
         auto payload = m_socket->receive(PAGE_SIZE);
         if (!payload) {
-            if (m_socket->eof()) {
-                m_state = State::Finished;
-                break;
-            }
+            if (m_socket->eof())
+                return finish_up();
             return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
         }
-        received_buffers.append(payload);
-        received_size += payload.size();
+        m_received_buffers.append(payload);
+        m_received_size += payload.size();
 
         auto content_length_header = m_headers.get("Content-Length");
         if (content_length_header.has_value()) {
             bool ok;
-            if (received_size >= content_length_header.value().to_uint(ok) && ok) {
-                m_state = State::Finished;
-                break;
-            }
+            if (m_received_size >= content_length_header.value().to_uint(ok) && ok)
+                return finish_up();
         }
-    }
+    };
+}
 
-    auto flattened_buffer = ByteBuffer::create_uninitialized(received_size);
+void CHttpJob::finish_up()
+{
+    m_state = State::Finished;
+    auto flattened_buffer = ByteBuffer::create_uninitialized(m_received_size);
     u8* flat_ptr = flattened_buffer.data();
-    for (auto& received_buffer : received_buffers) {
+    for (auto& received_buffer : m_received_buffers) {
         memcpy(flat_ptr, received_buffer.data(), received_buffer.size());
         flat_ptr += received_buffer.size();
     }
-    received_buffers.clear();
+    m_received_buffers.clear();
 
     auto response = CHttpResponse::create(m_code, move(m_headers), move(flattened_buffer));
     deferred_invoke([this, response](auto&) {
