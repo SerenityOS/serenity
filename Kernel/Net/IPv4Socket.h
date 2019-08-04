@@ -65,9 +65,6 @@ private:
     IPv4Address m_local_address;
     IPv4Address m_peer_address;
 
-    DoubleBuffer m_for_client;
-    DoubleBuffer m_for_server;
-
     struct ReceivedPacket {
         IPv4Address peer_address;
         u16 peer_port;
