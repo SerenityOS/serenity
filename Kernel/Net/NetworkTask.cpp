@@ -14,10 +14,10 @@
 #include <Kernel/Process.h>
 
 //#define ETHERNET_DEBUG
-#define IPV4_DEBUG
+//#define IPV4_DEBUG
 //#define ICMP_DEBUG
-#define UDP_DEBUG
-#define TCP_DEBUG
+//#define UDP_DEBUG
+//#define TCP_DEBUG
 
 static void handle_arp(const EthernetFrameHeader&, int frame_size);
 static void handle_ipv4(const EthernetFrameHeader&, int frame_size);
@@ -329,12 +329,14 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     }
 
     socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
+#ifdef TCP_DEBUG
     kprintf("Got packet with ack_no=%u, seq_no=%u, payload_size=%u, acking it with new ack_no=%u, seq_no=%u\n",
         tcp_packet.ack_number(),
         tcp_packet.sequence_number(),
         payload_size,
         socket->ack_number(),
         socket->sequence_number());
+#endif
     socket->send_tcp_packet(TCPFlags::ACK);
 
     if (payload_size != 0)

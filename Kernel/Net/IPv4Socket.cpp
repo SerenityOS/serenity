@@ -13,7 +13,7 @@
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
-#define IPV4_SOCKET_DEBUG
+//#define IPV4_SOCKET_DEBUG
 
 Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
 {
