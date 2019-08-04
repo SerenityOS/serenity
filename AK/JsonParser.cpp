@@ -96,7 +96,7 @@ String JsonParser::consume_quoted_string()
     if (buffer.is_empty())
         return {};
 
-    auto& last_string_starting_with_character = m_last_string_starting_with_character[buffer.first()];
+    auto& last_string_starting_with_character = m_last_string_starting_with_character[(int)buffer.first()];
     if (last_string_starting_with_character.length() == buffer.size()) {
         if (!memcmp(last_string_starting_with_character.characters(), buffer.data(), buffer.size()))
             return last_string_starting_with_character;
