@@ -4,6 +4,7 @@
 #include <AK/Function.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
@@ -28,7 +29,7 @@ public:
     void send(const MACAddress&, const ARPPacket&);
     void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, ByteBuffer&& payload);
 
-    ByteBuffer dequeue_packet();
+    RefPtr<KBuffer> dequeue_packet();
 
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 
@@ -42,6 +43,6 @@ protected:
 private:
     MACAddress m_mac_address;
     IPv4Address m_ipv4_address;
-    SinglyLinkedList<ByteBuffer> m_packet_queue;
+    SinglyLinkedList<NonnullRefPtr<KBuffer>> m_packet_queue;
     String m_name;
 };

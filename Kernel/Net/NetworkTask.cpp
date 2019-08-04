@@ -44,10 +44,10 @@ void NetworkTask_main()
     if (adapter)
         adapter->set_ipv4_address(IPv4Address(192, 168, 5, 2));
 
-    auto dequeue_packet = [&]() -> ByteBuffer {
+    auto dequeue_packet = [&]() -> RefPtr<KBuffer> {
         auto packet = LoopbackAdapter::the().dequeue_packet();
         if (!packet.is_null()) {
-            dbgprintf("Receive loopback packet (%d bytes)\n", packet.size());
+            dbgprintf("Receive loopback packet (%d bytes)\n", packet->size());
             return packet;
         }
         if (adapter && adapter->has_queued_packets())
@@ -57,8 +57,8 @@ void NetworkTask_main()
 
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
-        auto packet = dequeue_packet();
-        if (packet.is_null()) {
+        auto packet_maybe_null = dequeue_packet();
+        if (packet_maybe_null.is_null()) {
             (void)current->block_until("Networking", [] {
                 if (LoopbackAdapter::the().has_queued_packets())
                     return true;
@@ -70,11 +70,12 @@ void NetworkTask_main()
             });
             continue;
         }
+        auto& packet = *packet_maybe_null;
         if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {
             kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%d)\n", packet.size());
             continue;
         }
-        auto& eth = *(const EthernetFrameHeader*)packet.pointer();
+        auto& eth = *(const EthernetFrameHeader*)packet.data();
 #ifdef ETHERNET_DEBUG
         kprintf("NetworkTask: From %s to %s, ether_type=%w, packet_length=%u\n",
             eth.source().to_string().characters(),
