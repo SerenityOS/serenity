@@ -43,4 +43,27 @@ TEST_CASE(load_form)
     });
 }
 
+BENCHMARK_CASE(load_4chan_catalog)
+{
+    FILE* fp = fopen("4chan_catalog.json", "r");
+    ASSERT(fp);
+
+    StringBuilder builder;
+    for (;;) {
+        char buffer[1024];
+        if (!fgets(buffer, sizeof(buffer), fp))
+            break;
+        builder.append(buffer);
+    }
+
+    fclose(fp);
+
+    auto json_string = builder.to_string();
+
+    for (int i = 0; i < 10; ++i) {
+        JsonValue form_json = JsonValue::from_string(json_string);
+        EXPECT(form_json.is_array());
+    }
+}
+
 TEST_MAIN(JSON)
