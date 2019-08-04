@@ -68,6 +68,8 @@ String ThreadCatalogModel::column_name(int column) const
         return "Replies";
     case Column::ImageCount:
         return "Images";
+    case Column::PostTime:
+        return "Time";
     default:
         ASSERT_NOT_REACHED();
     }
@@ -79,11 +81,13 @@ GModel::ColumnMetadata ThreadCatalogModel::column_metadata(int column) const
     case Column::ThreadNumber:
         return { 70, TextAlignment::CenterRight };
     case Column::Text:
-        return { 200, TextAlignment::CenterLeft };
+        return { 290, TextAlignment::CenterLeft };
     case Column::ReplyCount:
         return { 45, TextAlignment::CenterRight };
     case Column::ImageCount:
         return { 40, TextAlignment::CenterRight };
+    case Column::PostTime:
+        return { 120, TextAlignment::CenterLeft };
     default:
         ASSERT_NOT_REACHED();
     }
@@ -102,6 +106,8 @@ GVariant ThreadCatalogModel::data(const GModelIndex& index, Role role) const
             return thread.get("replies").to_u32();
         case Column::ImageCount:
             return thread.get("images").to_u32();
+        case Column::PostTime:
+            return thread.get("now").to_string();
         default:
             ASSERT_NOT_REACHED();
         }
