@@ -31,12 +31,12 @@ void JsonParser::consume_while(C condition)
 }
 
 template<typename C>
-String JsonParser::extract_while(C condition)
+Vector<char, 128> JsonParser::extract_while(C condition)
 {
-    Vector<char, 1024> buffer;
+    Vector<char, 128> buffer;
     while (condition(peek()))
         buffer.append(consume());
-    return String::copy(buffer);
+    return buffer;
 };
 
 void JsonParser::consume_whitespace()
@@ -95,7 +95,7 @@ String JsonParser::consume_quoted_string()
     return String::copy(buffer);
 }
 
-JsonValue JsonParser::parse_object()
+JsonObject JsonParser::parse_object()
 {
     JsonObject object;
     consume_specific('{');
@@ -119,7 +119,7 @@ JsonValue JsonParser::parse_object()
     return object;
 }
 
-JsonValue JsonParser::parse_array()
+JsonArray JsonParser::parse_array()
 {
     JsonArray array;
     consume_specific('[');
@@ -145,7 +145,8 @@ JsonValue JsonParser::parse_string()
 
 JsonValue JsonParser::parse_number()
 {
-    auto number_string = extract_while([](char ch) { return ch == '-' || (ch >= '0' && ch <= '9'); });
+    auto number_buffer = extract_while([](char ch) { return ch == '-' || (ch >= '0' && ch <= '9'); });
+    StringView number_string(number_buffer.data(), number_buffer.size());
     bool ok;
     auto value = JsonValue(number_string.to_uint(ok));
     if (!ok)
