@@ -80,8 +80,12 @@ String JsonParser::consume_quoted_string()
             builder.append('\f');
             break;
         case 'u':
-            // FIXME: Implement \uXXXX
-            ASSERT_NOT_REACHED();
+            consume();
+            consume();
+            consume();
+            consume();
+            // FIXME: This is obviously not correct, but we don't have non-ASCII support so meh.
+            builder.append("?");
             break;
         default:
             builder.append(escaped_ch);
