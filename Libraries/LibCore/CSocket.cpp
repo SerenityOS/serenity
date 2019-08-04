@@ -18,6 +18,7 @@ CSocket::CSocket(Type type, CObject* parent)
 
 CSocket::~CSocket()
 {
+    close();
 }
 
 bool CSocket::connect(const String& hostname, int port)
