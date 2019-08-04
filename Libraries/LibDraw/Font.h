@@ -46,6 +46,7 @@ public:
     static Font& default_bold_font();
 
     static Font& default_fixed_width_font();
+    static Font& default_bold_fixed_width_font();
 
     RefPtr<Font> clone() const;
 
