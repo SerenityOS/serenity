@@ -1106,7 +1106,11 @@ void Terminal::paint_event(GPaintEvent& event)
             }
             if (ch == ' ')
                 continue;
-            painter.draw_glyph(character_rect.location(), ch, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
+            painter.draw_glyph(
+                character_rect.location(),
+                ch,
+                attribute.flags & Attribute::Bold ? Font::default_bold_fixed_width_font() : font(),
+                lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
         }
     }
 
