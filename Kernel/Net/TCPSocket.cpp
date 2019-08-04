@@ -6,6 +6,8 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 
+//#define TCP_SOCKET_DEBUG
+
 Lockable<HashMap<u16, TCPSocket*>>& TCPSocket::sockets_by_port()
 {
     static Lockable<HashMap<u16, TCPSocket*>>* s_map;
@@ -51,7 +53,9 @@ int TCPSocket::protocol_receive(const ByteBuffer& packet_buffer, void* buffer, s
     auto& ipv4_packet = *(const IPv4Packet*)(packet_buffer.pointer());
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
     size_t payload_size = packet_buffer.size() - sizeof(IPv4Packet) - tcp_packet.header_size();
+#ifdef TCP_SOCKET_DEBUG
     kprintf("payload_size %u, will it fit in %u?\n", payload_size, buffer_size);
+#endif
     ASSERT(buffer_size >= payload_size);
     memcpy(buffer, tcp_packet.payload(), payload_size);
     return payload_size;
@@ -93,6 +97,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
 
     memcpy(tcp_packet.payload(), payload, payload_size);
     tcp_packet.set_checksum(compute_tcp_checksum(adapter->ipv4_address(), peer_address(), tcp_packet, payload_size));
+#ifdef TCP_SOCKET_DEBUG
     kprintf("sending tcp packet from %s:%u to %s:%u with (%s %s) seq_no=%u, ack_no=%u\n",
         adapter->ipv4_address().to_string().characters(),
         local_port(),
@@ -102,6 +107,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
         tcp_packet.has_ack() ? "ACK" : "",
         tcp_packet.sequence_number(),
         tcp_packet.ack_number());
+#endif
     adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::TCP, move(buffer));
 }
 
