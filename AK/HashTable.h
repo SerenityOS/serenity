@@ -139,12 +139,12 @@ public:
 
     void dump() const;
 
-    using Iterator = HashTableIterator<HashTable, T, typename SinglyLinkedList<T>::Iterator>;
+    using Iterator = HashTableIterator<HashTable, T, typename Bucket::Iterator>;
     friend Iterator;
     Iterator begin() { return Iterator(*this, is_empty()); }
     Iterator end() { return Iterator(*this, true); }
 
-    using ConstIterator = HashTableIterator<const HashTable, const T, typename SinglyLinkedList<T>::ConstIterator>;
+    using ConstIterator = HashTableIterator<const HashTable, const T, typename Bucket::ConstIterator>;
     friend ConstIterator;
     ConstIterator begin() const { return ConstIterator(*this, is_empty()); }
     ConstIterator end() const { return ConstIterator(*this, true); }
