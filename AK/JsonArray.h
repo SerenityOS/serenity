@@ -29,6 +29,8 @@ public:
             callback(value);
     }
 
+    const Vector<JsonValue>& values() const { return m_values; }
+
 private:
     Vector<JsonValue> m_values;
 };
