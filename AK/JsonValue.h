@@ -50,6 +50,13 @@ public:
     JsonValue(const JsonArray&);
     JsonValue(const JsonObject&);
 
+    JsonValue(JsonArray&&);
+    JsonValue(JsonObject&&);
+
+    // FIXME: Implement these
+    JsonValue& operator=(JsonArray&&) = delete;
+    JsonValue& operator=(JsonObject&&) = delete;
+
     String serialized() const;
     void serialize(StringBuilder&) const;
 

@@ -127,6 +127,18 @@ JsonValue::JsonValue(const JsonArray& value)
     m_value.as_array = new JsonArray(value);
 }
 
+JsonValue::JsonValue(JsonObject&& value)
+    : m_type(Type::Object)
+{
+    m_value.as_object = new JsonObject(move(value));
+}
+
+JsonValue::JsonValue(JsonArray&& value)
+    : m_type(Type::Array)
+{
+    m_value.as_array = new JsonArray(move(value));
+}
+
 void JsonValue::clear()
 {
     switch (m_type) {
