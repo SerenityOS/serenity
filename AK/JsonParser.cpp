@@ -1,7 +1,6 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonParser.h>
-#include <AK/StringBuilder.h>
 
 namespace AK {
 
@@ -34,10 +33,10 @@ void JsonParser::consume_while(C condition)
 template<typename C>
 String JsonParser::extract_while(C condition)
 {
-    StringBuilder builder;
+    Vector<char, 1024> buffer;
     while (condition(peek()))
-        builder.append(consume());
-    return builder.to_string();
+        buffer.append(consume());
+    return String::copy(buffer);
 };
 
 void JsonParser::consume_whitespace()
@@ -54,13 +53,13 @@ void JsonParser::consume_specific(char expected_ch)
 String JsonParser::consume_quoted_string()
 {
     consume_specific('"');
-    StringBuilder builder;
+    Vector<char, 1024> buffer;
     for (;;) {
         char ch = peek();
         if (ch == '"')
             break;
         if (ch != '\\') {
-            builder.append(consume());
+            buffer.append(consume());
             continue;
         }
         consume();
@@ -68,16 +67,16 @@ String JsonParser::consume_quoted_string()
         switch (escaped_ch) {
         case 'n':
         case 'r':
-            builder.append('\n');
+            buffer.append('\n');
             break;
         case 't':
-            builder.append('\t');
+            buffer.append('\t');
             break;
         case 'b':
-            builder.append('\b');
+            buffer.append('\b');
             break;
         case 'f':
-            builder.append('\f');
+            buffer.append('\f');
             break;
         case 'u':
             consume();
@@ -85,15 +84,15 @@ String JsonParser::consume_quoted_string()
             consume();
             consume();
             // FIXME: This is obviously not correct, but we don't have non-ASCII support so meh.
-            builder.append("?");
+            buffer.append('?');
             break;
         default:
-            builder.append(escaped_ch);
+            buffer.append(escaped_ch);
             break;
         }
     }
     consume_specific('"');
-    return builder.to_string();
+    return String::copy(buffer);
 }
 
 JsonValue JsonParser::parse_object()
