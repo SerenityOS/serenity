@@ -6,8 +6,8 @@
 #include <AK/ByteBuffer.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtrVector.h>
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
@@ -20,6 +20,7 @@
 
 #define PAGE_ROUND_UP(x) ((((u32)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
+class KBuffer;
 class SynthFSInode;
 
 enum class PageFaultResponse {
@@ -36,8 +37,8 @@ class MemoryManager {
     friend class PhysicalRegion;
     friend class Region;
     friend class VMObject;
-    friend ByteBuffer procfs$mm(InodeIdentifier);
-    friend ByteBuffer procfs$memstat(InodeIdentifier);
+    friend Optional<KBuffer> procfs$mm(InodeIdentifier);
+    friend Optional<KBuffer> procfs$memstat(InodeIdentifier);
 
 public:
     static MemoryManager& the();

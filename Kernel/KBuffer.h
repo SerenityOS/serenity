@@ -65,11 +65,16 @@ public:
 
     const KBufferImpl& impl() const { return m_impl; }
 
-    KBuffer(NonnullRefPtr<KBufferImpl>&& impl)
-        : m_impl(move(impl))
+    KBuffer(const ByteBuffer& buffer)
+        : m_impl(KBufferImpl::copy(buffer.data(), buffer.size()))
     {
     }
 
 private:
+    explicit KBuffer(NonnullRefPtr<KBufferImpl>&& impl)
+        : m_impl(move(impl))
+    {
+    }
+
     NonnullRefPtr<KBufferImpl> m_impl;
 };
