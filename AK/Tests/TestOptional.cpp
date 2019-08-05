@@ -27,4 +27,17 @@ TEST_CASE(move_optional)
     EXPECT_EQ(x.has_value(), false);
 }
 
+TEST_CASE(optional_leak_1)
+{
+    struct Structure {
+        Optional<String> str;
+    };
+
+    // This used to leak, it does not anymore.
+    Vector<Structure> vec;
+    vec.append({ "foo" });
+    EXPECT_EQ(vec[0].str.has_value(), true);
+    EXPECT_EQ(vec[0].str.value(), "foo");
+}
+
 TEST_MAIN(Optional)

@@ -29,7 +29,7 @@ public:
         : m_has_value(other.m_has_value)
     {
         if (m_has_value) {
-            new (&m_storage) T(move(other.value_without_consume_state()));
+            new (&m_storage) T(other.release_value());
             other.m_has_value = false;
         }
     }
