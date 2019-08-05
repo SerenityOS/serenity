@@ -32,7 +32,7 @@ public:
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
 
-    void did_receive(const IPv4Address& peer_address, u16 peer_port, NonnullRefPtr<KBuffer>&&);
+    void did_receive(const IPv4Address& peer_address, u16 peer_port, KBuffer&&);
 
     const IPv4Address& local_address() const;
     u16 local_port() const { return m_local_port; }
@@ -64,7 +64,7 @@ private:
     struct ReceivedPacket {
         IPv4Address peer_address;
         u16 peer_port;
-        RefPtr<KBuffer> data;
+        Optional<KBuffer> data;
     };
 
     SinglyLinkedList<ReceivedPacket> m_receive_queue;

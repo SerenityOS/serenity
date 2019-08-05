@@ -29,7 +29,7 @@ public:
     void send(const MACAddress&, const ARPPacket&);
     void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const u8* payload, size_t payload_size);
 
-    RefPtr<KBuffer> dequeue_packet();
+    Optional<KBuffer> dequeue_packet();
 
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 
@@ -43,6 +43,6 @@ protected:
 private:
     MACAddress m_mac_address;
     IPv4Address m_ipv4_address;
-    SinglyLinkedList<NonnullRefPtr<KBuffer>> m_packet_queue;
+    SinglyLinkedList<KBuffer> m_packet_queue;
     String m_name;
 };

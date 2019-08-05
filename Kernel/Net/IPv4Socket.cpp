@@ -192,7 +192,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
 #endif
         }
     }
-    if (packet.data.is_null()) {
+    if (!packet.data.has_value()) {
         if (protocol_is_disconnected()) {
             kprintf("IPv4Socket{%p} is protocol-disconnected, returning 0 in recvfrom!\n", this);
             return 0;
@@ -217,8 +217,8 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         kprintf("IPv4Socket(%p): recvfrom with blocking %d bytes, packets in queue: %d\n", this, packet.data.size(), m_receive_queue.size_slow());
 #endif
     }
-    ASSERT(!packet.data.is_null());
-    auto& ipv4_packet = *(const IPv4Packet*)(packet.data->data());
+    ASSERT(packet.data.has_value());
+    auto& ipv4_packet = *(const IPv4Packet*)(packet.data.value().data());
 
     if (addr) {
         dbgprintf("Incoming packet is from: %s:%u\n", packet.peer_address.to_string().characters(), packet.peer_port);
@@ -236,13 +236,13 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         return ipv4_packet.payload_size();
     }
 
-    return protocol_receive(*packet.data, buffer, buffer_length, flags);
+    return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
 }
 
-void IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, NonnullRefPtr<KBuffer>&& packet)
+void IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet)
 {
     LOCKER(lock());
-    auto packet_size = packet->size();
+    auto packet_size = packet.size();
     m_receive_queue.append({ source_address, source_port, move(packet) });
     m_can_read = true;
     m_bytes_received += packet_size;

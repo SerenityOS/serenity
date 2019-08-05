@@ -84,7 +84,7 @@ void NetworkAdapter::did_receive(const u8* data, int length)
     m_packet_queue.append(KBuffer::copy(data, length));
 }
 
-RefPtr<KBuffer> NetworkAdapter::dequeue_packet()
+Optional<KBuffer> NetworkAdapter::dequeue_packet()
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())
