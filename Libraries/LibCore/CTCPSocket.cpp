@@ -1,5 +1,14 @@
 #include <LibCore/CTCPSocket.h>
 #include <sys/socket.h>
+#include <errno.h>
+
+CTCPSocket::CTCPSocket(Badge<CTCPServer>, int fd, CObject* parent)
+    : CSocket(CSocket::Type::TCP, parent)
+{
+    set_fd(fd);
+    set_mode(CIODevice::ReadWrite);
+    set_error(0);
+}
 
 CTCPSocket::CTCPSocket(CObject* parent)
     : CSocket(CSocket::Type::TCP, parent)
