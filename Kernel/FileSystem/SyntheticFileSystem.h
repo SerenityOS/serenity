@@ -29,7 +29,6 @@ protected:
     SynthFS();
 
     NonnullRefPtr<SynthFSInode> create_directory(String&& name);
-    NonnullRefPtr<SynthFSInode> create_text_file(String&& name, ByteBuffer&&, mode_t = 0010644);
     NonnullRefPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, mode_t = 0100644);
     NonnullRefPtr<SynthFSInode> create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&&, Function<ssize_t(SynthFSInode&, const ByteBuffer&)>&&, mode_t = 0100644);
 
@@ -76,7 +75,6 @@ private:
 
     String m_name;
     InodeIdentifier m_parent;
-    Optional<KBuffer> m_data;
     Function<KBuffer(SynthFSInode&)> m_generator;
     Function<ssize_t(SynthFSInode&, const ByteBuffer&)> m_write_callback;
     Vector<SynthFSInode*> m_children;

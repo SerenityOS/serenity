@@ -45,19 +45,6 @@ NonnullRefPtr<SynthFSInode> SynthFS::create_directory(String&& name)
     return file;
 }
 
-NonnullRefPtr<SynthFSInode> SynthFS::create_text_file(String&& name, ByteBuffer&& contents, mode_t mode)
-{
-    auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
-    file->m_data = contents;
-    file->m_name = move(name);
-    file->m_metadata.size = file->m_data.value().size();
-    file->m_metadata.uid = 100;
-    file->m_metadata.gid = 200;
-    file->m_metadata.mode = mode;
-    file->m_metadata.mtime = mepoch;
-    return file;
-}
-
 NonnullRefPtr<SynthFSInode> SynthFS::create_generated_file(String&& name, Function<ByteBuffer(SynthFSInode&)>&& generator, mode_t mode)
 {
     auto file = adopt(*new SynthFSInode(*this, generate_inode_index()));
@@ -205,15 +192,9 @@ ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDe
         }
     }
 
-    const KBuffer* data_to_use = nullptr;
-    if (generated_data.has_value())
-        data_to_use = &generated_data.value();
-    else if (m_data.has_value())
-        data_to_use = &m_data.value();
-    else
-        ASSERT_NOT_REACHED();
-    ssize_t nread = min(static_cast<off_t>(data_to_use->size() - offset), static_cast<off_t>(count));
-    memcpy(buffer, data_to_use->data() + offset, nread);
+    ASSERT(generated_data.has_value());
+    ssize_t nread = min(static_cast<off_t>(generated_data.value().size() - offset), static_cast<off_t>(count));
+    memcpy(buffer, generated_data.value().data() + offset, nread);
     if (nread == 0 && description && description->generator_cache())
         description->generator_cache().clear();
     return nread;
