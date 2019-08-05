@@ -3,6 +3,7 @@
 #include <AK/HashMap.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/UnixTypes.h>
 
 class SynthFSInode;
@@ -75,8 +76,8 @@ private:
 
     String m_name;
     InodeIdentifier m_parent;
-    ByteBuffer m_data;
-    Function<ByteBuffer(SynthFSInode&)> m_generator;
+    Optional<KBuffer> m_data;
+    Function<KBuffer(SynthFSInode&)> m_generator;
     Function<ssize_t(SynthFSInode&, const ByteBuffer&)> m_write_callback;
     Vector<SynthFSInode*> m_children;
     InodeMetadata m_metadata;

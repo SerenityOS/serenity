@@ -185,7 +185,7 @@ ProcFS::~ProcFS()
 {
 }
 
-ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -209,7 +209,7 @@ ByteBuffer procfs$pid_fds(InodeIdentifier identifier)
     return array.serialized().to_byte_buffer();
 }
 
-ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -222,7 +222,7 @@ ByteBuffer procfs$pid_fd_entry(InodeIdentifier identifier)
     return description->absolute_path().to_byte_buffer();
 }
 
-ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -242,7 +242,7 @@ ByteBuffer procfs$pid_vm(InodeIdentifier identifier)
     return array.serialized().to_byte_buffer();
 }
 
-ByteBuffer procfs$pci(InodeIdentifier)
+Optional<KBuffer> procfs$pci(InodeIdentifier)
 {
     StringBuilder builder;
     PCI::enumerate_all([&builder](PCI::Address address, PCI::ID id) {
@@ -251,21 +251,21 @@ ByteBuffer procfs$pci(InodeIdentifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$uptime(InodeIdentifier)
+Optional<KBuffer> procfs$uptime(InodeIdentifier)
 {
     StringBuilder builder;
     builder.appendf("%u\n", (u32)(g_uptime / 1000));
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$cmdline(InodeIdentifier)
+Optional<KBuffer> procfs$cmdline(InodeIdentifier)
 {
     StringBuilder builder;
     builder.appendf("%s\n", KParams::the().cmdline().characters());
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$netadapters(InodeIdentifier)
+Optional<KBuffer> procfs$netadapters(InodeIdentifier)
 {
     StringBuilder builder;
     NetworkAdapter::for_each([&builder](auto& adapter) {
@@ -278,7 +278,7 @@ ByteBuffer procfs$netadapters(InodeIdentifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$pid_vmo(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -309,7 +309,7 @@ ByteBuffer procfs$pid_vmo(InodeIdentifier identifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_stack(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -318,7 +318,7 @@ ByteBuffer procfs$pid_stack(InodeIdentifier identifier)
     return process.backtrace(*handle).to_byte_buffer();
 }
 
-ByteBuffer procfs$pid_regs(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_regs(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -344,7 +344,7 @@ ByteBuffer procfs$pid_regs(InodeIdentifier identifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$pid_exe(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -355,7 +355,7 @@ ByteBuffer procfs$pid_exe(InodeIdentifier identifier)
     return custody->absolute_path().to_byte_buffer();
 }
 
-ByteBuffer procfs$pid_cwd(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_cwd(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -363,14 +363,14 @@ ByteBuffer procfs$pid_cwd(InodeIdentifier identifier)
     return handle->process().current_directory().absolute_path().to_byte_buffer();
 }
 
-ByteBuffer procfs$self(InodeIdentifier)
+Optional<KBuffer> procfs$self(InodeIdentifier)
 {
     char buffer[16];
     ksprintf(buffer, "%u", current->pid());
-    return ByteBuffer::copy((const u8*)buffer, strlen(buffer));
+    return KBuffer::copy((const u8*)buffer, strlen(buffer));
 }
 
-ByteBuffer procfs$mm(InodeIdentifier)
+Optional<KBuffer> procfs$mm(InodeIdentifier)
 {
     // FIXME: Implement
     InterruptDisabler disabler;
@@ -389,7 +389,7 @@ ByteBuffer procfs$mm(InodeIdentifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$dmesg(InodeIdentifier)
+Optional<KBuffer> procfs$dmesg(InodeIdentifier)
 {
     InterruptDisabler disabler;
     StringBuilder builder;
@@ -398,7 +398,7 @@ ByteBuffer procfs$dmesg(InodeIdentifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$mounts(InodeIdentifier)
+Optional<KBuffer> procfs$mounts(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
     StringBuilder builder;
@@ -417,7 +417,7 @@ ByteBuffer procfs$mounts(InodeIdentifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$df(InodeIdentifier)
+Optional<KBuffer> procfs$df(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
     JsonArray json;
@@ -435,7 +435,7 @@ ByteBuffer procfs$df(InodeIdentifier)
     return json.serialized().to_byte_buffer();
 }
 
-ByteBuffer procfs$cpuinfo(InodeIdentifier)
+Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
 {
     StringBuilder builder;
     {
@@ -498,7 +498,7 @@ ByteBuffer procfs$cpuinfo(InodeIdentifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$kmalloc(InodeIdentifier)
+Optional<KBuffer> procfs$kmalloc(InodeIdentifier)
 {
     StringBuilder builder;
     builder.appendf(
@@ -511,7 +511,7 @@ ByteBuffer procfs$kmalloc(InodeIdentifier)
     return builder.to_byte_buffer();
 }
 
-ByteBuffer procfs$memstat(InodeIdentifier)
+Optional<KBuffer> procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
     JsonObject json;
@@ -527,7 +527,7 @@ ByteBuffer procfs$memstat(InodeIdentifier)
     return json.serialized().to_byte_buffer();
 }
 
-ByteBuffer procfs$all(InodeIdentifier)
+Optional<KBuffer> procfs$all(InodeIdentifier)
 {
     InterruptDisabler disabler;
     auto processes = Process::all_processes();
@@ -563,7 +563,7 @@ ByteBuffer procfs$all(InodeIdentifier)
     return array.serialized().to_byte_buffer();
 }
 
-ByteBuffer procfs$inodes(InodeIdentifier)
+Optional<KBuffer> procfs$inodes(InodeIdentifier)
 {
     extern HashTable<Inode*>& all_inodes();
     StringBuilder builder;
@@ -819,8 +819,8 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
     auto* directory_entry = fs().get_directory_entry(identifier());
 
-    Function<ByteBuffer(InodeIdentifier)> callback_tmp;
-    Function<ByteBuffer(InodeIdentifier)>* read_callback { nullptr };
+    Function<Optional<KBuffer>(InodeIdentifier)> callback_tmp;
+    Function<Optional<KBuffer>(InodeIdentifier)>* read_callback { nullptr };
     if (directory_entry) {
         read_callback = &directory_entry->read_callback;
     } else {
@@ -832,7 +832,7 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
     ASSERT(read_callback);
 
-    ByteBuffer generated_data;
+    Optional<KBuffer> generated_data;
     if (!description) {
         generated_data = (*read_callback)(identifier());
     } else {
@@ -842,8 +842,8 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     }
 
     auto& data = generated_data;
-    ssize_t nread = min(static_cast<off_t>(data.size() - offset), static_cast<off_t>(count));
-    memcpy(buffer, data.pointer() + offset, nread);
+    ssize_t nread = min(static_cast<off_t>(data.value().size() - offset), static_cast<off_t>(count));
+    memcpy(buffer, data.value().data() + offset, nread);
     if (nread == 0 && description && description->generator_cache())
         description->generator_cache().clear();
     return nread;

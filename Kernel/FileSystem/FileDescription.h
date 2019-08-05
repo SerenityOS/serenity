@@ -8,6 +8,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/VM/VirtualAddress.h>
 
@@ -90,7 +91,7 @@ public:
     SharedMemory* shared_memory();
     const SharedMemory* shared_memory() const;
 
-    ByteBuffer& generator_cache() { return m_generator_cache; }
+    Optional<KBuffer>& generator_cache() { return m_generator_cache; }
 
     void set_original_inode(Badge<VFS>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
 
@@ -114,7 +115,7 @@ private:
 
     off_t m_current_offset { 0 };
 
-    ByteBuffer m_generator_cache;
+    Optional<KBuffer> m_generator_cache;
 
     u32 m_file_flags { 0 };
 
