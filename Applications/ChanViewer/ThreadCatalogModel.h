@@ -25,7 +25,11 @@ public:
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
+    const String& board() const { return m_board; }
     void set_board(const String&);
+
+    Function<void()> on_load_started;
+    Function<void(bool success)> on_load_finished;
 
 private:
     ThreadCatalogModel();
