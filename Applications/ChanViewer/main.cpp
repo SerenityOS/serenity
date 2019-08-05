@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 
     auto* window = new GWindow;
     window->set_title("ChanViewer");
-    window->set_rect(100, 100, 640, 480);
+    window->set_rect(100, 100, 800, 500);
     window->set_icon(load_png("/res/icons/16x16/app-chanviewer.png"));
 
     auto* widget = new GWidget;
