@@ -366,7 +366,12 @@ int getgroups(int size, gid_t list[])
 
 int pipe(int pipefd[2])
 {
-    int rc = syscall(SC_pipe, pipefd);
+    return pipe2(pipefd, 0);
+}
+
+int pipe2(int pipefd[2], int flags)
+{
+    int rc = syscall(SC_pipe, pipefd, flags);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

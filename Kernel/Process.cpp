@@ -1194,20 +1194,25 @@ int Process::alloc_fd(int first_candidate_fd)
     return fd;
 }
 
-int Process::sys$pipe(int pipefd[2])
+int Process::sys$pipe(int pipefd[2], int flags)
 {
     if (!validate_write_typed(pipefd))
         return -EFAULT;
     if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())
         return -EMFILE;
+    // Reject flags other than O_CLOEXEC.
+    if ((flags & O_CLOEXEC) != flags)
+        return -EINVAL;
+
+    u32 fd_flags = (flags & O_CLOEXEC) ? FD_CLOEXEC : 0;
     auto fifo = FIFO::create(m_uid);
 
     int reader_fd = alloc_fd();
-    m_fds[reader_fd].set(fifo->open_direction(FIFO::Direction::Reader));
+    m_fds[reader_fd].set(fifo->open_direction(FIFO::Direction::Reader), fd_flags);
     pipefd[0] = reader_fd;
 
     int writer_fd = alloc_fd();
-    m_fds[writer_fd].set(fifo->open_direction(FIFO::Direction::Writer));
+    m_fds[writer_fd].set(fifo->open_direction(FIFO::Direction::Writer), fd_flags);
     pipefd[1] = writer_fd;
 
     return 0;

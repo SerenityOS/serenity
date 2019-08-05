@@ -168,7 +168,7 @@ public:
     int sys$sigpending(sigset_t*);
     int sys$getgroups(ssize_t, gid_t*);
     int sys$setgroups(ssize_t, const gid_t*);
-    int sys$pipe(int* pipefd);
+    int sys$pipe(int pipefd[2], int flags);
     int sys$killpg(int pgrp, int sig);
     int sys$setgid(gid_t);
     int sys$setuid(uid_t);
