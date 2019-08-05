@@ -104,6 +104,7 @@ public:
         ASSERT(m_has_value);
         T released_value = move(value());
         value().~T();
+        m_has_value = false;
         return released_value;
     }
 
