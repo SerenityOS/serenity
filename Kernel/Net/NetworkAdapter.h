@@ -27,7 +27,7 @@ public:
     void set_ipv4_address(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
-    void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, ByteBuffer&& payload);
+    void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const u8* payload, size_t payload_size);
 
     RefPtr<KBuffer> dequeue_packet();
 

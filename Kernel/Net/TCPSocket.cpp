@@ -107,7 +107,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
         tcp_packet.sequence_number(),
         tcp_packet.ack_number());
 #endif
-    adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::TCP, move(buffer));
+    adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::TCP, buffer.data(), buffer.size());
 }
 
 NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, u16 payload_size)
