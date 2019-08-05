@@ -36,7 +36,7 @@ CEventLoop::CEventLoop()
 
     if (!s_main_event_loop) {
         s_main_event_loop = this;
-        int rc = pipe(s_wake_pipe_fds);
+        int rc = pipe2(s_wake_pipe_fds, O_CLOEXEC);
         ASSERT(rc == 0);
         s_event_loop_stack->append(this);
     }
