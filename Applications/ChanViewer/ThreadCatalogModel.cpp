@@ -16,11 +16,19 @@ ThreadCatalogModel::~ThreadCatalogModel()
 {
 }
 
+void ThreadCatalogModel::set_board(const String& board)
+{
+    if (m_board == board)
+        return;
+    m_board = board;
+    update();
+}
+
 void ThreadCatalogModel::update()
 {
     CHttpRequest request;
     request.set_hostname("a.4cdn.org");
-    request.set_path("/g/catalog.json");
+    request.set_path(String::format("/%s/catalog.json", m_board.characters()));
 
     auto* job = request.schedule();
 
