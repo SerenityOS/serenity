@@ -66,6 +66,8 @@ String ThreadCatalogModel::column_name(int column) const
     switch (column) {
     case Column::ThreadNumber:
         return "#";
+    case Column::Subject:
+        return "Subject";
     case Column::Text:
         return "Text";
     case Column::ReplyCount:
@@ -84,8 +86,10 @@ GModel::ColumnMetadata ThreadCatalogModel::column_metadata(int column) const
     switch (column) {
     case Column::ThreadNumber:
         return { 70, TextAlignment::CenterRight };
+    case Column::Subject:
+        return { 170, TextAlignment::CenterLeft };
     case Column::Text:
-        return { 290, TextAlignment::CenterLeft };
+        return { 270, TextAlignment::CenterLeft };
     case Column::ReplyCount:
         return { 45, TextAlignment::CenterRight };
     case Column::ImageCount:
@@ -104,6 +108,8 @@ GVariant ThreadCatalogModel::data(const GModelIndex& index, Role role) const
         switch (index.column()) {
         case Column::ThreadNumber:
             return thread.get("no").to_u32();
+        case Column::Subject:
+            return thread.get("sub").to_string();
         case Column::Text:
             return thread.get("com").to_string();
         case Column::ReplyCount:

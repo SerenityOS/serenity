@@ -7,6 +7,7 @@ class ThreadCatalogModel final : public GModel {
 public:
     enum Column {
         ThreadNumber,
+        Subject,
         Text,
         ReplyCount,
         ImageCount,
