@@ -212,8 +212,8 @@ ssize_t SynthFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDe
         data_to_use = &m_data.value();
     else
         ASSERT_NOT_REACHED();
-    ssize_t nread = min(static_cast<off_t>(data->size() - offset), static_cast<off_t>(count));
-    memcpy(buffer, data->data() + offset, nread);
+    ssize_t nread = min(static_cast<off_t>(data_to_use->size() - offset), static_cast<off_t>(count));
+    memcpy(buffer, data_to_use->data() + offset, nread);
     if (nread == 0 && description && description->generator_cache())
         description->generator_cache().clear();
     return nread;
