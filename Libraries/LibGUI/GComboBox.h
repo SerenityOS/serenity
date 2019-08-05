@@ -29,7 +29,7 @@ public:
     int model_column() const { return m_list_view->model_column(); }
     void set_model_column(int column) { m_list_view->set_model_column(column); }
 
-    Function<void(const String&)> on_change;
+    Function<void(const String&, const GModelIndex&)> on_change;
     Function<void()> on_return_pressed;
 
 protected:

@@ -12,7 +12,7 @@ GComboBox::GComboBox(GWidget* parent)
     m_editor = new GTextEditor(GTextEditor::Type::SingleLine, this);
     m_editor->on_change = [this] {
         if (on_change)
-            on_change(m_editor->text());
+            on_change(m_editor->text(), model()->selected_index());
     };
     m_editor->on_return_pressed = [this] {
         if (on_return_pressed)
@@ -43,9 +43,9 @@ GComboBox::GComboBox(GWidget* parent)
         m_editor->set_text(new_value);
         m_editor->select_all();
         close();
-        deferred_invoke([this](auto&) {
+        deferred_invoke([this, index](auto&) {
             if (on_change)
-                on_change(m_editor->text());
+                on_change(m_editor->text(), index);
         });
     };
 }
