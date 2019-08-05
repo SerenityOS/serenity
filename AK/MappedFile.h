@@ -24,7 +24,6 @@ public:
 
 private:
     size_t m_size { 0 };
-    int m_fd { -1 };
     void* m_map { (void*)-1 };
 };
 
