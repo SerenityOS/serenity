@@ -37,7 +37,7 @@ public:
         combo->set_only_allow_values_from_model(true);
         combo->set_model(adopt(*new BoolValuesModel));
         combo->on_return_pressed = [this] { commit(); };
-        combo->on_change = [this](auto&) { commit(); };
+        combo->on_change = [this](auto&, auto&) { commit(); };
         return combo;
     }
     virtual GVariant value() const override { return static_cast<const GComboBox*>(widget())->text() == "true"; }
