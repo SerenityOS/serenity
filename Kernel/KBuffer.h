@@ -1,5 +1,15 @@
 #pragma once
 
+// KBuffer: Statically sized kernel-only memory buffer.
+//
+// A KBuffer is a value-type convenience class that wraps a NonnullRefPtr<KBufferImpl>.
+// The memory is allocated via the global kernel-only page allocator, rather than via
+// kmalloc() which is what ByteBuffer/Vector/etc will use.
+//
+// This makes KBuffer a little heavier to allocate, but much better for large and/or
+// long-lived allocations, since they don't put all that weight and pressure on the
+// severely limited kmalloc heap.
+
 #include <AK/Assertions.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
