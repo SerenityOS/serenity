@@ -86,6 +86,7 @@ int getdtablesize();
 int dup(int old_fd);
 int dup2(int old_fd, int new_fd);
 int pipe(int pipefd[2]);
+int pipe2(int pipefd[2], int flags);
 unsigned int alarm(unsigned int seconds);
 int access(const char* pathname, int mode);
 int isatty(int fd);
