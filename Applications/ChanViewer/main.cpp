@@ -4,6 +4,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GComboBox.h>
+#include <LibGUI/GStatusBar.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GWindow.h>
 
@@ -29,11 +30,25 @@ int main(int argc, char** argv)
 
     auto* catalog_view = new GTableView(widget);
     catalog_view->set_model(ThreadCatalogModel::create());
+    auto& catalog_model = *static_cast<ThreadCatalogModel*>(catalog_view->model());
+
+    auto* statusbar = new GStatusBar(widget);
 
     board_combo->on_change = [&] (auto&, const GModelIndex& index) {
         auto selected_board = board_combo->model()->data(index, GModel::Role::Custom);
         ASSERT(selected_board.is_string());
-        static_cast<ThreadCatalogModel*>(catalog_view->model())->set_board(selected_board.to_string());
+        catalog_model.set_board(selected_board.to_string());
+    };
+
+    catalog_model.on_load_started = [&] {
+        statusbar->set_text(String::format("Loading /%s/...", catalog_model.board().characters()));
+    };
+
+    catalog_model.on_load_finished = [&](bool success) {
+        statusbar->set_text(success ? "Load finished" : "Load failed");
+        if (success) {
+            window->set_title(String::format("/%s/ - ChanViewer", catalog_model.board().characters()));
+        }
     };
 
     window->show();

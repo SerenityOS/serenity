@@ -32,12 +32,18 @@ void ThreadCatalogModel::update()
 
     auto* job = request.schedule();
 
+    if (on_load_started)
+        on_load_started();
+
     job->on_finish = [job, this](bool success) {
         auto* response = job->response();
         dbg() << "Catalog download finished, success=" << success << ", response=" << response;
 
-        if (!success)
+        if (!success) {
+            if (on_load_finished)
+                on_load_finished(false);
             return;
+        }
 
         dbg() << "Catalog payload size: " << response->payload().size();
 
@@ -61,6 +67,9 @@ void ThreadCatalogModel::update()
         }
 
         did_update();
+
+        if (on_load_finished)
+            on_load_finished(true);
     };
 }
 
