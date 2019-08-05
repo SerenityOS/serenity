@@ -1,5 +1,6 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GComboBox.h>
+#include <LibGUI/GDesktop.h>
 #include <LibGUI/GListView.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GTextEditor.h>
@@ -90,7 +91,10 @@ void GComboBox::open()
         model()->row_count() * m_list_view->item_height() + m_list_view->frame_thickness() * 2
     };
 
-    m_list_window->set_rect({ my_screen_rect.bottom_left(), size });
+    Rect list_window_rect { my_screen_rect.bottom_left(), size };
+    list_window_rect.intersect(GDesktop::the().rect().shrunken(0, 128));
+
+    m_list_window->set_rect(list_window_rect);
     m_list_window->show();
 }
 
