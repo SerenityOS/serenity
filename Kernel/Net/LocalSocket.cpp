@@ -163,43 +163,12 @@ bool LocalSocket::can_read(FileDescription& description) const
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::read(FileDescription& description, u8* buffer, ssize_t size)
-{
-    auto role = description.socket_role();
-    if (role == SocketRole::Accepted) {
-        if (!description.is_blocking()) {
-            if (m_for_server.is_empty())
-                return -EAGAIN;
-        }
-        return m_for_server.read(buffer, size);
-    }
-    if (role == SocketRole::Connected) {
-        if (!description.is_blocking()) {
-            if (m_for_client.is_empty())
-                return -EAGAIN;
-        }
-        return m_for_client.read(buffer, size);
-    }
-    ASSERT_NOT_REACHED();
-}
-
 bool LocalSocket::has_attached_peer(const FileDescription& description) const
 {
     if (description.socket_role() == SocketRole::Accepted)
         return m_connected_fds_open || m_connecting_fds_open;
     if (description.socket_role() == SocketRole::Connected)
         return m_accepted_fds_open;
-    ASSERT_NOT_REACHED();
-}
-
-ssize_t LocalSocket::write(FileDescription& description, const u8* data, ssize_t size)
-{
-    if (!has_attached_peer(description))
-        return -EPIPE;
-    if (description.socket_role() == SocketRole::Accepted)
-        return m_for_client.write(data, size);
-    if (description.socket_role() == SocketRole::Connected)
-        return m_for_server.write(data, size);
     ASSERT_NOT_REACHED();
 }
 
@@ -214,10 +183,31 @@ bool LocalSocket::can_write(FileDescription& description) const
 
 ssize_t LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
 {
-    return write(description, (const u8*)data, data_size);
+    if (!has_attached_peer(description))
+        return -EPIPE;
+    if (description.socket_role() == SocketRole::Accepted)
+        return m_for_client.write((const u8*)data, data_size);
+    if (description.socket_role() == SocketRole::Connected)
+        return m_for_server.write((const u8*)data, data_size);
+    ASSERT_NOT_REACHED();
 }
 
 ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
 {
-    return read(description, (u8*)buffer, buffer_size);
+    auto role = description.socket_role();
+    if (role == SocketRole::Accepted) {
+        if (!description.is_blocking()) {
+            if (m_for_server.is_empty())
+                return -EAGAIN;
+        }
+        return m_for_server.read((u8*)buffer, buffer_size);
+    }
+    if (role == SocketRole::Connected) {
+        if (!description.is_blocking()) {
+            if (m_for_client.is_empty())
+                return -EAGAIN;
+        }
+        return m_for_client.read((u8*)buffer, buffer_size);
+    }
+    ASSERT_NOT_REACHED();
 }

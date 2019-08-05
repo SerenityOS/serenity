@@ -120,16 +120,6 @@ bool IPv4Socket::can_read(FileDescription& description) const
     return m_can_read;
 }
 
-ssize_t IPv4Socket::read(FileDescription& description, u8* buffer, ssize_t size)
-{
-    return recvfrom(description, buffer, size, 0, nullptr, 0);
-}
-
-ssize_t IPv4Socket::write(FileDescription& description, const u8* data, ssize_t size)
-{
-    return sendto(description, data, size, 0, nullptr, 0);
-}
-
 bool IPv4Socket::can_write(FileDescription&) const
 {
     return is_connected();

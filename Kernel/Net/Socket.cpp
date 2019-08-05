@@ -146,3 +146,13 @@ String Socket::absolute_path(const FileDescription& description) const
 {
     return String::format("socket:%x (role: %s)", this, to_string(description.socket_role()));
 }
+
+ssize_t Socket::read(FileDescription& description, u8* buffer, ssize_t size)
+{
+    return recvfrom(description, buffer, size, 0, nullptr, 0);
+}
+
+ssize_t Socket::write(FileDescription& description, const u8* data, ssize_t size)
+{
+    return sendto(description, data, size, 0, nullptr, 0);
+}
