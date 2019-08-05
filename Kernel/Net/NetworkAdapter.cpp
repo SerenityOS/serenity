@@ -56,9 +56,9 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     send_raw((u8*)eth, size_in_bytes);
 }
 
-void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, ByteBuffer&& payload)
+void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const u8* payload, size_t payload_size)
 {
-    size_t size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload.size();
+    size_t size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload_size;
     auto buffer = ByteBuffer::create_zeroed(size_in_bytes);
     auto& eth = *(EthernetFrameHeader*)buffer.pointer();
     eth.set_source(mac_address());
@@ -70,11 +70,11 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
     ipv4.set_source(ipv4_address());
     ipv4.set_destination(destination_ipv4);
     ipv4.set_protocol((u8)protocol);
-    ipv4.set_length(sizeof(IPv4Packet) + payload.size());
+    ipv4.set_length(sizeof(IPv4Packet) + payload_size);
     ipv4.set_ident(1);
     ipv4.set_ttl(64);
     ipv4.set_checksum(ipv4.compute_checksum());
-    memcpy(ipv4.payload(), payload.pointer(), payload.size());
+    memcpy(ipv4.payload(), payload, payload_size);
     send_raw((const u8*)&eth, size_in_bytes);
 }
 

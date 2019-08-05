@@ -70,7 +70,7 @@ int UDPSocket::protocol_send(const void* data, int data_length)
         local_port(),
         peer_address().to_string().characters(),
         peer_port());
-    adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::UDP, move(buffer));
+    adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::UDP, buffer.data(), buffer.size());
     return data_length;
 }
 

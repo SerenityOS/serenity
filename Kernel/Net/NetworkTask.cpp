@@ -228,7 +228,7 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
         if (size_t icmp_payload_size = icmp_packet_size - sizeof(ICMPEchoPacket))
             memcpy(response.payload(), request.payload(), icmp_payload_size);
         response.header.set_checksum(internet_checksum(&response, icmp_packet_size));
-        adapter->send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, move(buffer));
+        adapter->send_ipv4(eth.source(), ipv4_packet.source(), IPv4Protocol::ICMP, buffer.data(), buffer.size());
     }
 }
 
