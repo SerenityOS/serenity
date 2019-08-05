@@ -60,6 +60,9 @@ public:
 
     Lock& lock() { return m_lock; }
 
+    // ^File
+    virtual ssize_t read(FileDescription&, u8*, ssize_t) override final;
+    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override final;
     virtual String absolute_path(const FileDescription&) const override;
 
 protected:

@@ -28,8 +28,6 @@ public:
     virtual void attach(FileDescription&) override;
     virtual void detach(FileDescription&) override;
     virtual bool can_read(FileDescription&) const override;
-    virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
-    virtual ssize_t write(FileDescription&, const u8*, ssize_t) override;
     virtual bool can_write(FileDescription&) const override;
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
