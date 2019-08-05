@@ -48,6 +48,9 @@ TestNonnullRefPtr: TestNonnullRefPtr.o $(SHARED_TEST_OBJS)
 TestRefPtr: TestRefPtr.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestRefPtr.o $(SHARED_TEST_OBJS)
 
+TestOptional: TestOptional.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestOptional.o $(SHARED_TEST_OBJS)
+
 clean:
 	rm -f $(SHARED_TEST_OBJS)
 	rm -f $(PROGRAMS)
