@@ -4,16 +4,16 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
-class KBuffer : public RefCounted<KBuffer> {
+class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
-    static NonnullRefPtr<KBuffer> create_with_size(size_t size)
+    static NonnullRefPtr<KBufferImpl> create_with_size(size_t size)
     {
         auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), "KBuffer");
         ASSERT(region);
-        return adopt(*new KBuffer(*region, size));
+        return adopt(*new KBufferImpl(*region, size));
     }
 
-    static NonnullRefPtr<KBuffer> copy(const void* data, size_t size)
+    static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size)
     {
         auto buffer = create_with_size(size);
         memcpy(buffer->data(), data, size);
@@ -26,7 +26,7 @@ public:
     size_t capacity() const { return m_region->size(); }
 
 private:
-    explicit KBuffer(NonnullRefPtr<Region>&& region, size_t size)
+    explicit KBufferImpl(NonnullRefPtr<Region>&& region, size_t size)
         : m_size(size)
         , m_region(move(region))
     {
@@ -34,4 +34,32 @@ private:
 
     size_t m_size { 0 };
     NonnullRefPtr<Region> m_region;
+};
+
+class KBuffer {
+public:
+    static KBuffer create_with_size(size_t size)
+    {
+        return KBuffer(KBufferImpl::create_with_size(size));
+    }
+
+    static KBuffer copy(const void* data, size_t size)
+    {
+        return KBuffer(KBufferImpl::copy(data, size));
+    }
+
+    u8* data() { return m_impl->data(); }
+    const u8* data() const { return m_impl->data(); }
+    size_t size() const { return m_impl->size(); }
+    size_t capacity() const { return m_impl->size(); }
+
+    const KBufferImpl& impl() const { return m_impl; }
+
+    KBuffer(NonnullRefPtr<KBufferImpl>&& impl)
+        : m_impl(move(impl))
+    {
+    }
+
+private:
+    NonnullRefPtr<KBufferImpl> m_impl;
 };
