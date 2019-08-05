@@ -38,9 +38,16 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * /proc filesystem
 * Local sockets
 * Pseudoterminals (with /dev/pts filesystem)
+* Filesystem notifications
 * JSON framework
 * Low-level utility library (LibCore)
+* Mid-level 2D graphics library (LibDraw)
 * High-level GUI library (LibGUI)
+* HTTP downloads
+* SoundBlaster 16 driver
+* Software-mixing sound daemon
+* WAV playback
+* Simple desktop piano/synthesizer
 * Visual GUI design tool
 * PNG format support
 * Text editor
