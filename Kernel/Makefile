@@ -36,6 +36,7 @@ KERNEL_OBJS = \
        FileSystem/FIFO.o \
        Scheduler.o \
        DoubleBuffer.o \
+       KBufferBuilder.o \
        KSyms.o \
        KParams.o \
        FileSystem/SharedMemory.o \
