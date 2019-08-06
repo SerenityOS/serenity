@@ -407,9 +407,11 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     ASSERT(fault.vaddr() != m_quickmap_addr);
     if (fault.is_not_present() && fault.vaddr().get() >= 0xc0000000) {
         u32 page_directory_index = (fault.vaddr().get() >> 22) & 0x3ff;
-        if (kernel_page_directory().entries()[page_directory_index].is_present()) {
-            dbgprintf("NP(kernel): copying new kernel mapping for L%x into process\n", fault.vaddr().get());
-            current->process().page_directory().entries()[page_directory_index].copy_from({}, kernel_page_directory().entries()[page_directory_index]);
+        auto& kernel_pde = kernel_page_directory().entries()[page_directory_index];
+        if (kernel_pde.is_present()) {
+            dbgprintf("NP(kernel): copying new kernel mapping for L%x into current page directory\n", fault.vaddr().get());
+            auto* current_page_directory = reinterpret_cast<PageDirectoryEntry*>(cpu_cr3());
+            current_page_directory[page_directory_index].copy_from({}, kernel_pde);
             flush_tlb(fault.vaddr().page_base());
             return PageFaultResponse::Continue;
         }
