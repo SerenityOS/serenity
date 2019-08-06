@@ -255,42 +255,43 @@ void MemoryManager::initialize()
     s_the = new MemoryManager;
 }
 
+Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
+{
+    ASSERT(vaddr.get() >= 0xc0000000);
+    for (auto& region : MM.m_kernel_regions) {
+        if (region->contains(vaddr))
+            return region;
+    }
+    return nullptr;
+}
+
+Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress vaddr)
+{
+    // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
+    for (auto& region : process.m_regions) {
+        if (region.contains(vaddr))
+            return &region;
+    }
+    dbg() << process << " Couldn't find user region for " << vaddr;
+    return nullptr;
+}
+
 Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
 
-    if (vaddr.get() >= 0xc0000000) {
-        for (auto& region : MM.m_kernel_regions) {
-            if (region->contains(vaddr))
-                return region;
-        }
-    }
+    if (vaddr.get() >= 0xc0000000)
+        return kernel_region_from_vaddr(vaddr);
 
-    // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
-    for (auto& region : process.m_regions) {
-        if (region.contains(vaddr))
-            return &region;
-    }
-    dbgprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), vaddr.get(), process.page_directory().cr3());
-    return nullptr;
+    return user_region_from_vaddr(process, vaddr);
 }
 
 const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAddress vaddr)
 {
-    if (vaddr.get() >= 0xc0000000) {
-        for (auto& region : MM.m_kernel_regions) {
-            if (region->contains(vaddr))
-                return region;
-        }
-    }
+    if (vaddr.get() >= 0xc0000000)
+        return kernel_region_from_vaddr(vaddr);
 
-    // FIXME: Use a binary search tree (maybe red/black?) or some other more appropriate data structure!
-    for (auto& region : process.m_regions) {
-        if (region.contains(vaddr))
-            return &region;
-    }
-    dbgprintf("%s(%u) Couldn't find region for L%x (CR3=%x)\n", process.name().characters(), process.pid(), vaddr.get(), process.page_directory().cr3());
-    return nullptr;
+    return user_region_from_vaddr(const_cast<Process&>(process), vaddr);
 }
 
 bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)

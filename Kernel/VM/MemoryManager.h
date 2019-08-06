@@ -105,6 +105,9 @@ private:
     static Region* region_from_vaddr(Process&, VirtualAddress);
     static const Region* region_from_vaddr(const Process&, VirtualAddress);
 
+    static Region* user_region_from_vaddr(Process&, VirtualAddress);
+    static Region* kernel_region_from_vaddr(VirtualAddress);
+
     bool copy_on_write(Region&, unsigned page_index_in_region);
     bool page_in_from_inode(Region&, unsigned page_index_in_region);
     bool zero_page(Region& region, unsigned page_index_in_region);
