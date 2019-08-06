@@ -19,7 +19,7 @@ class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
     static NonnullRefPtr<KBufferImpl> create_with_size(size_t size)
     {
-        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), "KBuffer");
+        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), "KBuffer", false, false);
         ASSERT(region);
         return adopt(*new KBufferImpl(*region, size));
     }
