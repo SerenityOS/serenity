@@ -281,6 +281,8 @@ public:
     void send_signal(u8 signal, Process* sender);
     void consider_unblock(time_t now_sec, long now_usec);
 
+    void set_dump_backtrace_on_finalization() { m_dump_backtrace_on_finalization = true; }
+
     ShouldUnblockThread dispatch_one_pending_signal();
     ShouldUnblockThread dispatch_signal(u8 signal);
     bool has_unmasked_pending_signals() const;
@@ -315,6 +317,7 @@ private:
 
 private:
     friend class SchedulerData;
+    String backtrace_impl() const;
     Process& m_process;
     int m_tid { -1 };
     TSS32 m_tss;
@@ -335,6 +338,7 @@ private:
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };
     bool m_has_used_fpu { false };
+    bool m_dump_backtrace_on_finalization { false };
 
     void block_helper();
 };
