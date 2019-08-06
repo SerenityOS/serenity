@@ -333,7 +333,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     u32 entry_eip = 0;
     // FIXME: Is there a race here?
     auto old_page_directory = move(m_page_directory);
-    m_page_directory = PageDirectory::create_for_userspace();
+    m_page_directory = PageDirectory::create_for_userspace(*this);
 #ifdef MM_DEBUG
     dbgprintf("Process %u exec: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif
@@ -590,7 +590,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 {
     dbgprintf("Process: New process PID=%u with name=%s\n", m_pid, m_name.characters());
 
-    m_page_directory = PageDirectory::create_for_userspace(fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
+    m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
 #ifdef MM_DEBUG
     dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif

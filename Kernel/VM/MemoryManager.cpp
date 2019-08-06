@@ -257,7 +257,8 @@ void MemoryManager::initialize()
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 {
-    ASSERT(vaddr.get() >= 0xc0000000);
+    if (vaddr.get() < 0xc0000000)
+        return nullptr;
     for (auto& region : MM.m_kernel_regions) {
         if (region->contains(vaddr))
             return region;
@@ -279,18 +280,15 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
 Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
-
-    if (vaddr.get() >= 0xc0000000)
-        return kernel_region_from_vaddr(vaddr);
-
+    if (auto* region = kernel_region_from_vaddr(vaddr))
+        return region;
     return user_region_from_vaddr(process, vaddr);
 }
 
 const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAddress vaddr)
 {
-    if (vaddr.get() >= 0xc0000000)
-        return kernel_region_from_vaddr(vaddr);
-
+    if (auto* region = kernel_region_from_vaddr(vaddr))
+        return region;
     return user_region_from_vaddr(const_cast<Process&>(process), vaddr);
 }
 
@@ -398,6 +396,17 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     return true;
 }
 
+Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
+{
+    if (auto* region = kernel_region_from_vaddr(vaddr))
+        return region;
+    auto page_directory = PageDirectory::find_by_pdb(cpu_cr3());
+    if (!page_directory)
+        return nullptr;
+    ASSERT(page_directory->process());
+    return user_region_from_vaddr(*page_directory->process(), vaddr);
+}
+
 PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -417,7 +426,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
             return PageFaultResponse::Continue;
         }
     }
-    auto* region = region_from_vaddr(current->process(), fault.vaddr());
+    auto* region = region_from_vaddr(fault.vaddr());
     if (!region) {
         kprintf("NP(error) fault at invalid address L%x\n", fault.vaddr().get());
         return PageFaultResponse::ShouldCrash;
