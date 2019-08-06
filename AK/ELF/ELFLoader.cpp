@@ -88,7 +88,6 @@ String ELFLoader::symbolicate(u32 address) const
     if (!m_sorted_symbols_region) {
         m_sorted_symbols_region = MM.allocate_kernel_region(PAGE_ROUND_UP(m_image.symbol_count() * sizeof(SortedSymbol)), "Sorted symbols");
         sorted_symbols = (SortedSymbol*)m_sorted_symbols_region->vaddr().as_ptr();
-        dbgprintf("sorted_symbols: %p\n", sorted_symbols);
         size_t index = 0;
         m_image.for_each_symbol([&](auto& symbol) {
             sorted_symbols[index++] = { symbol.value(), symbol.name() };
