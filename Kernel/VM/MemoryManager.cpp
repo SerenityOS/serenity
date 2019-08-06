@@ -437,7 +437,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         return PageFaultResponse::Continue;
     }
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
-    if (region->should_cow(page_index_in_region)) {
+    if (fault.access() == PageFault::Access::Write && region->should_cow(page_index_in_region)) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("PV(cow) fault in Region{%p}[%u]\n", region, page_index_in_region);
 #endif

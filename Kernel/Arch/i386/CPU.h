@@ -304,14 +304,20 @@ public:
     }
 
     enum class Type {
-        PageNotPresent,
-        ProtectionViolation,
+        PageNotPresent = PageFaultFlags::NotPresent,
+        ProtectionViolation = PageFaultFlags::ProtectionViolation,
+    };
+
+    enum class Access {
+        Read = PageFaultFlags::Read,
+        Write = PageFaultFlags::Write,
     };
 
     VirtualAddress vaddr() const { return m_vaddr; }
     u16 code() const { return m_code; }
 
     Type type() const { return (Type)(m_code & 1); }
+    Access access() const { return (Access)(m_code & 2); }
 
     bool is_not_present() const { return (m_code & 1) == PageFaultFlags::NotPresent; }
     bool is_protection_violation() const { return (m_code & 1) == PageFaultFlags::ProtectionViolation; }
