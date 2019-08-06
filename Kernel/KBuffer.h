@@ -11,6 +11,7 @@
 // severely limited kmalloc heap.
 
 #include <AK/Assertions.h>
+#include <AK/LogStream.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
@@ -34,6 +35,12 @@ public:
     const u8* data() const { return m_region->vaddr().as_ptr(); }
     size_t size() const { return m_size; }
     size_t capacity() const { return m_region->size(); }
+
+    void set_size(size_t size)
+    {
+        ASSERT(size <= capacity());
+        m_size = size;
+    }
 
 private:
     explicit KBufferImpl(NonnullRefPtr<Region>&& region, size_t size)
@@ -63,6 +70,8 @@ public:
     size_t size() const { return m_impl->size(); }
     size_t capacity() const { return m_impl->size(); }
 
+    void set_size(size_t size) { m_impl->set_size(size); }
+
     const KBufferImpl& impl() const { return m_impl; }
 
     KBuffer(const ByteBuffer& buffer)
@@ -78,3 +87,8 @@ private:
 
     NonnullRefPtr<KBufferImpl> m_impl;
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const KBuffer& value)
+{
+    return stream << StringView(value.data(), value.size());
+}
