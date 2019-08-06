@@ -114,6 +114,16 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
     return KSuccess;
 }
 
+KResult LocalSocket::listen(int backlog)
+{
+    LOCKER(lock());
+    if (type() != SOCK_STREAM)
+        return KResult(-EOPNOTSUPP);
+    set_backlog(backlog);
+    kprintf("LocalSocket{%p} listening with backlog=%d\n", this, backlog);
+    return KSuccess;
+}
+
 void LocalSocket::attach(FileDescription& description)
 {
     switch (description.socket_role()) {

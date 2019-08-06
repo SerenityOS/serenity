@@ -14,6 +14,7 @@
 #include <Kernel/Process.h>
 
 //#define ETHERNET_DEBUG
+//#define ETHERNET_VERY_DEBUG
 //#define IPV4_DEBUG
 //#define ICMP_DEBUG
 //#define UDP_DEBUG
@@ -82,6 +83,28 @@ void NetworkTask_main()
             eth.destination().to_string().characters(),
             eth.ether_type(),
             packet.size());
+#endif
+
+#ifdef ETHERNET_VERY_DEBUG
+        u8* data = packet.data();
+
+        for (size_t i = 0; i < packet.size(); i++) {
+            kprintf("%b", data[i]);
+
+            switch (i % 16) {
+            case 7:
+                kprintf("  ");
+                break;
+            case 15:
+                kprintf("\n");
+                break;
+            default:
+                kprintf(" ");
+                break;
+            }
+        }
+
+        kprintf("\n");
 #endif
 
         switch (eth.ether_type()) {
@@ -279,7 +302,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
 
 #ifdef TCP_DEBUG
-    kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq_no=%u, ack_no=%u, flags=%w (%s %s), window_size=%u, payload_size=%u\n",
+    kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq_no=%u, ack_no=%u, flags=%w (%s%s%s%s), window_size=%u, payload_size=%u\n",
         ipv4_packet.source().to_string().characters(),
         tcp_packet.source_port(),
         ipv4_packet.destination().to_string().characters(),
@@ -287,15 +310,19 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         tcp_packet.sequence_number(),
         tcp_packet.ack_number(),
         tcp_packet.flags(),
-        tcp_packet.has_syn() ? "SYN" : "",
-        tcp_packet.has_ack() ? "ACK" : "",
+        tcp_packet.has_syn() ? "SYN " : "",
+        tcp_packet.has_ack() ? "ACK " : "",
+        tcp_packet.has_fin() ? "FIN " : "",
+        tcp_packet.has_rst() ? "RST " : "",
         tcp_packet.window_size(),
         payload_size);
 #endif
 
-    auto socket = TCPSocket::from_port(tcp_packet.destination_port());
+    IPv4SocketTuple tuple(ipv4_packet.destination(), tcp_packet.destination_port(), ipv4_packet.source(), tcp_packet.source_port());
+
+    auto socket = TCPSocket::from_tuple(tuple);
     if (!socket) {
-        kprintf("handle_tcp: No TCP socket for port %u\n", tcp_packet.destination_port());
+        kprintf("handle_tcp: No TCP socket for tuple %s\n", tuple.to_string().characters());
         return;
     }
 
@@ -307,39 +334,168 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         return;
     }
 
-    if (tcp_packet.has_syn() && tcp_packet.has_ack()) {
-        socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-        socket->send_tcp_packet(TCPFlags::ACK);
-        socket->set_connected(true);
-        kprintf("handle_tcp: Connection established!\n");
-        socket->set_state(TCPSocket::State::Connected);
-        return;
-    }
+#ifdef TCP_DEBUG
+    kprintf("handle_tcp: state=%s\n", TCPSocket::to_string(socket->state()));
+#endif
 
-    if (tcp_packet.has_fin()) {
-        kprintf("handle_tcp: Got FIN, payload_size=%u\n", payload_size);
+    switch (socket->state()) {
+    case TCPSocket::State::Closed:
+        kprintf("handle_tcp: unexpected flags in Closed state\n");
+        socket->send_tcp_packet(TCPFlags::RST);
+        socket->set_state(TCPSocket::State::Closed);
+        kprintf("handle_tcp: Closed -> Closed\n");
+        return;
+    case TCPSocket::State::TimeWait:
+        kprintf("handle_tcp: unexpected flags in TimeWait state\n");
+        socket->send_tcp_packet(TCPFlags::RST);
+        socket->set_state(TCPSocket::State::Closed);
+        kprintf("handle_tcp: TimeWait -> Closed\n");
+        return;
+    case TCPSocket::State::Listen:
+        switch (tcp_packet.flags()) {
+        case TCPFlags::SYN:
+            kprintf("handle_tcp: incoming connections not supported\n");
+            // socket->send_tcp_packet(TCPFlags::RST);
+            return;
+        default:
+            kprintf("handle_tcp: unexpected flags in Listen state\n");
+            // socket->send_tcp_packet(TCPFlags::RST);
+            return;
+        }
+    case TCPSocket::State::SynSent:
+        switch (tcp_packet.flags()) {
+        case TCPFlags::SYN:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->send_tcp_packet(TCPFlags::ACK);
+            socket->set_state(TCPSocket::State::SynReceived);
+            kprintf("handle_tcp: SynSent -> SynReceived\n");
+            return;
+        case TCPFlags::SYN | TCPFlags::ACK:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->send_tcp_packet(TCPFlags::ACK);
+            socket->set_state(TCPSocket::State::Established);
+            socket->set_connected(true);
+            kprintf("handle_tcp: SynSent -> Established\n");
+            return;
+        default:
+            kprintf("handle_tcp: unexpected flags in SynSent state\n");
+            socket->send_tcp_packet(TCPFlags::RST);
+            socket->set_state(TCPSocket::State::Closed);
+            kprintf("handle_tcp: SynSent -> Closed\n");
+            return;
+        }
+    case TCPSocket::State::SynReceived:
+        switch (tcp_packet.flags()) {
+        case TCPFlags::ACK:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_state(TCPSocket::State::Established);
+            socket->set_connected(true);
+            kprintf("handle_tcp: SynReceived -> Established\n");
+            return;
+        default:
+            kprintf("handle_tcp: unexpected flags in SynReceived state\n");
+            socket->send_tcp_packet(TCPFlags::RST);
+            socket->set_state(TCPSocket::State::Closed);
+            kprintf("handle_tcp: SynReceived -> Closed\n");
+            return;
+        }
+    case TCPSocket::State::CloseWait:
+        switch (tcp_packet.flags()) {
+        default:
+            kprintf("handle_tcp: unexpected flags in CloseWait state\n");
+            socket->send_tcp_packet(TCPFlags::RST);
+            socket->set_state(TCPSocket::State::Closed);
+            kprintf("handle_tcp: CloseWait -> Closed\n");
+            return;
+        }
+    case TCPSocket::State::LastAck:
+        switch (tcp_packet.flags()) {
+        case TCPFlags::ACK:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_state(TCPSocket::State::Closed);
+            kprintf("handle_tcp: LastAck -> Closed\n");
+            return;
+        default:
+            kprintf("handle_tcp: unexpected flags in LastAck state\n");
+            socket->send_tcp_packet(TCPFlags::RST);
+            socket->set_state(TCPSocket::State::Closed);
+            kprintf("handle_tcp: LastAck -> Closed\n");
+            return;
+        }
+    case TCPSocket::State::FinWait1:
+        switch (tcp_packet.flags()) {
+        case TCPFlags::ACK:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_state(TCPSocket::State::FinWait2);
+            kprintf("handle_tcp: FinWait1 -> FinWait2\n");
+            return;
+        case TCPFlags::FIN:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_state(TCPSocket::State::Closing);
+            kprintf("handle_tcp: FinWait1 -> Closing\n");
+            return;
+        default:
+            kprintf("handle_tcp: unexpected flags in FinWait1 state\n");
+            socket->send_tcp_packet(TCPFlags::RST);
+            socket->set_state(TCPSocket::State::Closed);
+            kprintf("handle_tcp: FinWait1 -> Closed\n");
+            return;
+        }
+    case TCPSocket::State::FinWait2:
+        switch (tcp_packet.flags()) {
+        case TCPFlags::FIN:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_state(TCPSocket::State::TimeWait);
+            kprintf("handle_tcp: FinWait2 -> TimeWait\n");
+            return;
+        default:
+            kprintf("handle_tcp: unexpected flags in FinWait2 state\n");
+            socket->send_tcp_packet(TCPFlags::RST);
+            socket->set_state(TCPSocket::State::Closed);
+            kprintf("handle_tcp: FinWait2 -> Closed\n");
+            return;
+        }
+    case TCPSocket::State::Closing:
+        switch (tcp_packet.flags()) {
+        case TCPFlags::ACK:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_state(TCPSocket::State::TimeWait);
+            kprintf("handle_tcp: Closing -> TimeWait\n");
+            return;
+        default:
+            kprintf("handle_tcp: unexpected flags in Closing state\n");
+            socket->send_tcp_packet(TCPFlags::RST);
+            socket->set_state(TCPSocket::State::Closed);
+            kprintf("handle_tcp: Closing -> Closed\n");
+            return;
+        }
+    case TCPSocket::State::Established:
+        if (tcp_packet.has_fin()) {
+            if (payload_size != 0)
+                socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
+
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->send_tcp_packet(TCPFlags::ACK);
+            socket->set_state(TCPSocket::State::CloseWait);
+            socket->set_connected(false);
+            kprintf("handle_tcp: Established -> CloseWait\n");
+            return;
+        }
+
+        socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
+
+#ifdef TCP_DEBUG
+        kprintf("Got packet with ack_no=%u, seq_no=%u, payload_size=%u, acking it with new ack_no=%u, seq_no=%u\n",
+            tcp_packet.ack_number(),
+            tcp_packet.sequence_number(),
+            payload_size,
+            socket->ack_number(),
+            socket->sequence_number());
+#endif
+
+        socket->send_tcp_packet(TCPFlags::ACK);
 
         if (payload_size != 0)
             socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
-
-        socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
-        socket->send_tcp_packet(TCPFlags::FIN | TCPFlags::ACK);
-        socket->set_state(TCPSocket::State::Disconnecting);
-        socket->set_connected(false);
-        return;
     }
-
-    socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
-#ifdef TCP_DEBUG
-    kprintf("Got packet with ack_no=%u, seq_no=%u, payload_size=%u, acking it with new ack_no=%u, seq_no=%u\n",
-        tcp_packet.ack_number(),
-        tcp_packet.sequence_number(),
-        payload_size,
-        socket->ack_number(),
-        socket->sequence_number());
-#endif
-    socket->send_tcp_packet(TCPFlags::ACK);
-
-    if (payload_size != 0)
-        socket->did_receive(ipv4_packet.source(), tcp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }

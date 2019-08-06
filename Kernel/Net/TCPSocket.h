@@ -1,18 +1,57 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <Kernel/Net/IPv4Socket.h>
 
 class TCPSocket final : public IPv4Socket {
 public:
+    static void for_each(Function<void(TCPSocket*&)>);
     static NonnullRefPtr<TCPSocket> create(int protocol);
     virtual ~TCPSocket() override;
 
     enum class State {
-        Disconnected,
-        Connecting,
-        Connected,
-        Disconnecting,
+        Closed,
+        Listen,
+        SynSent,
+        SynReceived,
+        Established,
+        CloseWait,
+        LastAck,
+        FinWait1,
+        FinWait2,
+        Closing,
+        TimeWait,
     };
+
+    static const char* to_string(State state)
+    {
+        switch (state) {
+        case State::Closed:
+            return "Closed";
+        case State::Listen:
+            return "Listen";
+        case State::SynSent:
+            return "SynSent";
+        case State::SynReceived:
+            return "SynReceived";
+        case State::Established:
+            return "Established";
+        case State::CloseWait:
+            return "CloseWait";
+        case State::LastAck:
+            return "LastAck";
+        case State::FinWait1:
+            return "FinWait1";
+        case State::FinWait2:
+            return "FinWait2";
+        case State::Closing:
+            return "Closing";
+        case State::TimeWait:
+            return "TimeWait";
+        default:
+            return "None";
+        }
+    }
 
     State state() const { return m_state; }
     void set_state(State state) { m_state = state; }
@@ -24,8 +63,9 @@ public:
 
     void send_tcp_packet(u16 flags, const void* = nullptr, int = 0);
 
-    static Lockable<HashMap<u16, TCPSocket*>>& sockets_by_port();
-    static TCPSocketHandle from_port(u16);
+    static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
+    static TCPSocketHandle from_tuple(const IPv4SocketTuple& tuple);
+    static TCPSocketHandle from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
 private:
     explicit TCPSocket(int protocol);
@@ -39,10 +79,12 @@ private:
     virtual int protocol_allocate_local_port() override;
     virtual bool protocol_is_disconnected() const override;
     virtual KResult protocol_bind() override;
+    virtual KResult protocol_listen() override;
 
+    NetworkAdapter* m_adapter { nullptr };
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
-    State m_state { State::Disconnected };
+    State m_state { State::Closed };
 };
 
 class TCPSocketHandle : public SocketHandle {

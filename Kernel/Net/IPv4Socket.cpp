@@ -89,6 +89,22 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
     return protocol_bind();
 }
 
+KResult IPv4Socket::listen(int backlog)
+{
+    int rc = allocate_local_port_if_needed();
+    if (rc < 0)
+        return KResult(-EADDRINUSE);
+
+    if (m_local_address.to_u32() == 0)
+        return KResult(-EADDRINUSE);
+
+    set_backlog(backlog);
+
+    kprintf("IPv4Socket{%p} listening with backlog=%d\n", this, backlog);
+
+    return protocol_listen();
+}
+
 KResult IPv4Socket::connect(FileDescription& description, const sockaddr* address, socklen_t address_size, ShouldBlock should_block)
 {
     if (address_size != sizeof(sockaddr_in))
@@ -156,6 +172,9 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
     auto* adapter = adapter_for_route_to(m_peer_address);
     if (!adapter)
         return -EHOSTUNREACH;
+
+    if (m_local_address.to_u32() == 0)
+        m_local_address = adapter->ipv4_address();
 
     int rc = allocate_local_port_if_needed();
     if (rc < 0)
