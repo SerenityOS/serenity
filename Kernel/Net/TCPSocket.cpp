@@ -1,33 +1,45 @@
 #include <Kernel/Devices/RandomDevice.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
-#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 
 //#define TCP_SOCKET_DEBUG
 
-Lockable<HashMap<u16, TCPSocket*>>& TCPSocket::sockets_by_port()
+void TCPSocket::for_each(Function<void(TCPSocket*&)> callback)
 {
-    static Lockable<HashMap<u16, TCPSocket*>>* s_map;
+    LOCKER(sockets_by_tuple().lock());
+    for (auto& it : sockets_by_tuple().resource())
+        callback(it.value);
+}
+
+Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
+{
+    static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>* s_map;
     if (!s_map)
-        s_map = new Lockable<HashMap<u16, TCPSocket*>>;
+        s_map = new Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>;
     return *s_map;
 }
 
-TCPSocketHandle TCPSocket::from_port(u16 port)
+TCPSocketHandle TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
 {
     RefPtr<TCPSocket> socket;
     {
-        LOCKER(sockets_by_port().lock());
-        auto it = sockets_by_port().resource().find(port);
-        if (it == sockets_by_port().resource().end())
+        LOCKER(sockets_by_tuple().lock());
+        auto it = sockets_by_tuple().resource().find(tuple);
+        if (it == sockets_by_tuple().resource().end())
             return {};
         socket = (*it).value;
         ASSERT(socket);
     }
     return { move(socket) };
+}
+
+TCPSocketHandle TCPSocket::from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port)
+{
+    return from_tuple(IPv4SocketTuple(local_address, local_port, peer_address, peer_port));
 }
 
 TCPSocket::TCPSocket(int protocol)
@@ -37,8 +49,8 @@ TCPSocket::TCPSocket(int protocol)
 
 TCPSocket::~TCPSocket()
 {
-    LOCKER(sockets_by_port().lock());
-    sockets_by_port().resource().remove(local_port());
+    LOCKER(sockets_by_tuple().lock());
+    sockets_by_tuple().resource().remove(tuple());
 }
 
 NonnullRefPtr<TCPSocket> TCPSocket::create(int protocol)
@@ -62,18 +74,13 @@ int TCPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
 
 int TCPSocket::protocol_send(const void* data, int data_length)
 {
-    auto* adapter = adapter_for_route_to(peer_address());
-    if (!adapter)
-        return -EHOSTUNREACH;
     send_tcp_packet(TCPFlags::PUSH | TCPFlags::ACK, data, data_length);
     return data_length;
 }
 
 void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size)
 {
-    // FIXME: Maybe the socket should be bound to an adapter instead of looking it up every time?
-    auto* adapter = adapter_for_route_to(peer_address());
-    ASSERT(adapter);
+    ASSERT(m_adapter);
 
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.pointer());
@@ -95,19 +102,21 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
     }
 
     memcpy(tcp_packet.payload(), payload, payload_size);
-    tcp_packet.set_checksum(compute_tcp_checksum(adapter->ipv4_address(), peer_address(), tcp_packet, payload_size));
+    tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 #ifdef TCP_SOCKET_DEBUG
-    kprintf("sending tcp packet from %s:%u to %s:%u with (%s %s) seq_no=%u, ack_no=%u\n",
-        adapter->ipv4_address().to_string().characters(),
+    kprintf("sending tcp packet from %s:%u to %s:%u with (%s%s%s%s) seq_no=%u, ack_no=%u\n",
+        local_address().to_string().characters(),
         local_port(),
         peer_address().to_string().characters(),
         peer_port(),
         tcp_packet.has_syn() ? "SYN" : "",
         tcp_packet.has_ack() ? "ACK" : "",
+        tcp_packet.has_fin() ? "FIN" : "",
+        tcp_packet.has_rst() ? "RST" : "",
         tcp_packet.sequence_number(),
         tcp_packet.ack_number());
 #endif
-    adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::TCP, buffer.data(), buffer.size());
+    m_adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::TCP, buffer.data(), buffer.size());
 }
 
 NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, u16 payload_size)
@@ -152,11 +161,36 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
     return ~(checksum & 0xffff);
 }
 
+KResult TCPSocket::protocol_bind()
+{
+    if (!m_adapter) {
+        m_adapter = NetworkAdapter::from_ipv4_address(local_address());
+        if (!m_adapter)
+            return KResult(-EADDRNOTAVAIL);
+    }
+
+    return KSuccess;
+}
+
+KResult TCPSocket::protocol_listen()
+{
+    LOCKER(sockets_by_tuple().lock());
+    if (sockets_by_tuple().resource().contains(tuple()))
+        return KResult(-EADDRINUSE);
+    sockets_by_tuple().resource().set(tuple(), this);
+    set_state(State::Listen);
+    return KSuccess;
+}
+
 KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock should_block)
 {
-    auto* adapter = adapter_for_route_to(peer_address());
-    if (!adapter)
-        return KResult(-EHOSTUNREACH);
+    if (!m_adapter) {
+        m_adapter = adapter_for_route_to(peer_address());
+        if (!m_adapter)
+            return KResult(-EHOSTUNREACH);
+
+        set_local_address(m_adapter->ipv4_address());
+    }
 
     allocate_local_port_if_needed();
 
@@ -164,7 +198,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_ack_number = 0;
 
     send_tcp_packet(TCPFlags::SYN);
-    m_state = State::Connecting;
+    m_state = State::SynSent;
 
     if (should_block == ShouldBlock::Yes) {
         if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
@@ -183,12 +217,14 @@ int TCPSocket::protocol_allocate_local_port()
     static const u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
     u16 first_scan_port = first_ephemeral_port + RandomDevice::random_value() % ephemeral_port_range_size;
 
-    LOCKER(sockets_by_port().lock());
+    LOCKER(sockets_by_tuple().lock());
     for (u16 port = first_scan_port;;) {
-        auto it = sockets_by_port().resource().find(port);
-        if (it == sockets_by_port().resource().end()) {
+        IPv4SocketTuple proposed_tuple(local_address(), port, peer_address(), peer_port());
+
+        auto it = sockets_by_tuple().resource().find(proposed_tuple);
+        if (it == sockets_by_tuple().resource().end()) {
             set_local_port(port);
-            sockets_by_port().resource().set(port, this);
+            sockets_by_tuple().resource().set(proposed_tuple, this);
             return port;
         }
         ++port;
@@ -202,14 +238,16 @@ int TCPSocket::protocol_allocate_local_port()
 
 bool TCPSocket::protocol_is_disconnected() const
 {
-    return m_state == State::Disconnecting || m_state == State::Disconnected;
-}
-
-KResult TCPSocket::protocol_bind()
-{
-    LOCKER(sockets_by_port().lock());
-    if (sockets_by_port().resource().contains(local_port()))
-        return KResult(-EADDRINUSE);
-    sockets_by_port().resource().set(local_port(), this);
-    return KSuccess;
+    switch (m_state) {
+    case State::Closed:
+    case State::CloseWait:
+    case State::LastAck:
+    case State::FinWait1:
+    case State::FinWait2:
+    case State::Closing:
+    case State::TimeWait:
+        return true;
+    default:
+        return false;
+    }
 }
