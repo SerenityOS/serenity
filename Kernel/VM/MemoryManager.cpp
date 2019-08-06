@@ -405,7 +405,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     dbgprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.vaddr().get());
 #endif
     ASSERT(fault.vaddr() != m_quickmap_addr);
-    if (fault.is_not_present() && fault.vaddr().get() >= 0xc0000000) {
+    if (fault.type() == PageFault::Type::PageNotPresent && fault.vaddr().get() >= 0xc0000000) {
         u32 page_directory_index = (fault.vaddr().get() >> 22) & 0x3ff;
         auto& kernel_pde = kernel_page_directory().entries()[page_directory_index];
         if (kernel_pde.is_present()) {
@@ -422,34 +422,30 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         return PageFaultResponse::ShouldCrash;
     }
     auto page_index_in_region = region->page_index_from_address(fault.vaddr());
-    if (fault.is_not_present()) {
+    if (fault.type() == PageFault::Type::PageNotPresent) {
         if (region->vmo().inode()) {
 #ifdef PAGE_FAULT_DEBUG
             dbgprintf("NP(inode) fault in Region{%p}[%u]\n", region, page_index_in_region);
 #endif
             page_in_from_inode(*region, page_index_in_region);
             return PageFaultResponse::Continue;
-        } else {
-#ifdef PAGE_FAULT_DEBUG
-            dbgprintf("NP(zero) fault in Region{%p}[%u]\n", region, page_index_in_region);
-#endif
-            zero_page(*region, page_index_in_region);
-            return PageFaultResponse::Continue;
         }
-    } else if (fault.is_protection_violation()) {
-        if (region->should_cow(page_index_in_region)) {
 #ifdef PAGE_FAULT_DEBUG
-            dbgprintf("PV(cow) fault in Region{%p}[%u]\n", region, page_index_in_region);
+        dbgprintf("NP(zero) fault in Region{%p}[%u]\n", region, page_index_in_region);
 #endif
-            bool success = copy_on_write(*region, page_index_in_region);
-            ASSERT(success);
-            return PageFaultResponse::Continue;
-        }
-        kprintf("PV(error) fault in Region{%p}[%u] at L%x\n", region, page_index_in_region, fault.vaddr().get());
-    } else {
-        ASSERT_NOT_REACHED();
+        zero_page(*region, page_index_in_region);
+        return PageFaultResponse::Continue;
     }
-
+    ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
+    if (region->should_cow(page_index_in_region)) {
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("PV(cow) fault in Region{%p}[%u]\n", region, page_index_in_region);
+#endif
+        bool success = copy_on_write(*region, page_index_in_region);
+        ASSERT(success);
+        return PageFaultResponse::Continue;
+    }
+    kprintf("PV(error) fault in Region{%p}[%u] at L%x\n", region, page_index_in_region, fault.vaddr().get());
     return PageFaultResponse::ShouldCrash;
 }
 
