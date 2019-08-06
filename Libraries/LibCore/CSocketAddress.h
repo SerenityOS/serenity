@@ -75,7 +75,7 @@ public:
 private:
     Type m_type { Type::Invalid };
     IPv4Address m_ipv4_address;
-    u16 m_port;
+    u16 m_port { 0 };
     String m_local_address;
 };
 
