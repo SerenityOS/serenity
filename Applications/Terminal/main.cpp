@@ -150,27 +150,27 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
-    Terminal terminal(ptm_fd, config);
+    auto* terminal = new Terminal(ptm_fd, config);
     window->set_has_alpha_channel(true);
-    window->set_main_widget(&terminal);
+    window->set_main_widget(terminal);
     window->move_to(300, 300);
-    terminal.apply_size_increments_to_window(*window);
+    terminal->apply_size_increments_to_window(*window);
     window->show();
     window->set_icon(load_png("/res/icons/16x16/app-terminal.png"));
-    terminal.set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
+    terminal->set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
     WeakPtr<GWindow> settings_window;
 
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
-    terminal.set_opacity(new_opacity);
+    terminal->set_opacity(new_opacity);
 
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Terminal");
     app_menu->add_action(GAction::create("Settings...",
-        [&settings_window, &terminal, &config](const GAction&) {
+        [&settings_window, terminal, &config](const GAction&) {
             if (!settings_window)
-                settings_window = create_settings_window(terminal, config)->make_weak_ptr();
+                settings_window = create_settings_window(*terminal, config)->make_weak_ptr();
             settings_window->show();
             settings_window->move_to_front();
         }));
@@ -183,13 +183,13 @@ int main(int argc, char** argv)
 
     auto font_menu = make<GMenu>("Font");
     GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        font_menu->add_action(GAction::create(font_name, [&terminal, &config](const GAction& action) {
-            terminal.set_font(GFontDatabase::the().get_by_name(action.text()));
+        font_menu->add_action(GAction::create(font_name, [terminal, &config](const GAction& action) {
+            terminal->set_font(GFontDatabase::the().get_by_name(action.text()));
             auto metadata = GFontDatabase::the().get_metadata_by_name(action.text());
             ASSERT(metadata.has_value());
             config->write_entry("Text", "Font", metadata.value().path);
             config->sync();
-            terminal.force_repaint();
+            terminal->force_repaint();
         }));
     });
     menubar->add_menu(move(font_menu));
