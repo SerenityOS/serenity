@@ -71,7 +71,7 @@ public:
 
     void map_for_kernel(VirtualAddress, PhysicalAddress);
 
-    RefPtr<Region> allocate_kernel_region(size_t, const StringView& name, bool user_accessible = false);
+    RefPtr<Region> allocate_kernel_region(size_t, const StringView& name, bool user_accessible = false, bool should_commit = true);
     RefPtr<Region> allocate_user_accessible_kernel_region(size_t, const StringView& name);
     void map_region_at_address(PageDirectory&, Region&, VirtualAddress);
 

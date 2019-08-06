@@ -461,7 +461,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return PageFaultResponse::ShouldCrash;
 }
 
-RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, bool user_accessible)
+RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, bool user_accessible, bool should_commit)
 {
     InterruptDisabler disabler;
     ASSERT(!(size % PAGE_SIZE));
@@ -474,7 +474,8 @@ RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
         region = Region::create_kernel_only(range, name, PROT_READ | PROT_WRITE | PROT_EXEC, false);
     MM.map_region_at_address(*m_kernel_page_directory, *region, range.base());
     // FIXME: It would be cool if these could zero-fill on demand instead.
-    region->commit();
+    if (should_commit)
+        region->commit();
     return region;
 }
 
