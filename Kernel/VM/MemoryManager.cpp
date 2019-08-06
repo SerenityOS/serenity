@@ -416,12 +416,14 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 #endif
     ASSERT(fault.vaddr() != m_quickmap_addr);
     if (fault.type() == PageFault::Type::PageNotPresent && fault.vaddr().get() >= 0xc0000000) {
+        auto* current_page_directory = reinterpret_cast<PageDirectoryEntry*>(cpu_cr3());
         u32 page_directory_index = (fault.vaddr().get() >> 22) & 0x3ff;
         auto& kernel_pde = kernel_page_directory().entries()[page_directory_index];
-        if (kernel_pde.is_present()) {
-            dbgprintf("NP(kernel): copying new kernel mapping for L%x into current page directory\n", fault.vaddr().get());
-            auto* current_page_directory = reinterpret_cast<PageDirectoryEntry*>(cpu_cr3());
-            current_page_directory[page_directory_index].copy_from({}, kernel_pde);
+        auto& current_pde = current_page_directory[page_directory_index];
+
+        if (kernel_pde.is_present() && !current_pde.is_present()) {
+            dbg() << "NP(kernel): Copying new kernel mapping for " << fault.vaddr() << " into current page directory";
+            current_pde.copy_from({}, kernel_pde);
             flush_tlb(fault.vaddr().page_base());
             return PageFaultResponse::Continue;
         }
