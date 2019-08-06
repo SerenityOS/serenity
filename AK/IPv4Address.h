@@ -67,6 +67,7 @@ public:
     }
 
     in_addr_t to_in_addr_t() const { return m_data_as_u32; }
+    u32 to_u32() const { return m_data_as_u32; }
 
     bool operator==(const IPv4Address& other) const { return m_data_as_u32 == other.m_data_as_u32; }
     bool operator!=(const IPv4Address& other) const { return m_data_as_u32 != other.m_data_as_u32; }

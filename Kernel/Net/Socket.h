@@ -1,8 +1,8 @@
 #pragma once
 
 #include <AK/HashTable.h>
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 #include <AK/Vector.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/KResult.h>
@@ -35,10 +35,10 @@ public:
     bool can_accept() const { return !m_pending.is_empty(); }
     RefPtr<Socket> accept();
     bool is_connected() const { return m_connected; }
-    KResult listen(int backlog);
 
     virtual KResult bind(const sockaddr*, socklen_t) = 0;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock) = 0;
+    virtual KResult listen(int) = 0;
     virtual bool get_local_address(sockaddr*, socklen_t*) = 0;
     virtual bool get_peer_address(sockaddr*, socklen_t*) = 0;
     virtual bool is_local() const { return false; }
@@ -72,6 +72,9 @@ protected:
 
     void load_receive_deadline();
     void load_send_deadline();
+
+    int backlog() const { return m_backlog; }
+    void set_backlog(int backlog) { m_backlog = backlog; }
 
     virtual const char* class_name() const override { return "Socket"; }
 

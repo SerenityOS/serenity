@@ -14,6 +14,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/TCPSocket.h>
 #include <Kernel/PCI.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/kmalloc.h>
@@ -46,6 +47,7 @@ enum ProcFileType {
     FI_Root_uptime,
     FI_Root_cmdline,
     FI_Root_netadapters,
+    FI_Root_net_tcp,
     FI_Root_self, // symlink
     FI_Root_sys,  // directory
     __FI_Root_End,
@@ -276,6 +278,23 @@ Optional<KBuffer> procfs$netadapters(InodeIdentifier)
             adapter.ipv4_address().to_string().characters());
     });
     return builder.to_byte_buffer();
+}
+
+Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
+{
+    JsonArray json;
+    TCPSocket::for_each([&json](auto& socket) {
+        JsonObject obj;
+        obj.set("local_address", socket->local_address().to_string());
+        obj.set("local_port", socket->local_port());
+        obj.set("peer_address", socket->peer_address().to_string());
+        obj.set("peer_port", socket->peer_port());
+        obj.set("state", TCPSocket::to_string(socket->state()));
+        obj.set("ack_number", socket->ack_number());
+        obj.set("sequence_number", socket->sequence_number());
+        json.append(obj);
+    });
+    return json.serialized().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
@@ -1077,6 +1096,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, procfs$cmdline };
     m_entries[FI_Root_netadapters] = { "netadapters", FI_Root_netadapters, procfs$netadapters };
+    m_entries[FI_Root_net_tcp] = { "net_tcp", FI_Root_net_tcp, procfs$net_tcp };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, procfs$pid_vm };
