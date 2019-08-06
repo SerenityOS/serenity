@@ -171,6 +171,9 @@ void Thread::finalize()
     dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
     set_state(Thread::State::Dead);
 
+    if (m_dump_backtrace_on_finalization)
+        dbg() << backtrace_impl();
+
     if (this == &m_process.main_thread()) {
         m_process.finalize();
         return;
@@ -337,11 +340,11 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         case DefaultSignalAction::Stop:
             set_state(Stopped);
             return ShouldUnblockThread::No;
-        case DefaultSignalAction::DumpCore: {
-            ProcessInspectionHandle handle(process());
-            dbg() << "Dumping \"Core\" for " << process();
-            dbg() << process().backtrace(handle);
-        }
+        case DefaultSignalAction::DumpCore:
+            process().for_each_thread([](auto& thread) {
+                thread.set_dump_backtrace_on_finalization();
+                return IterationDecision::Continue;
+            });
             [[fallthrough]];
         case DefaultSignalAction::Terminate:
             m_process.terminate_due_to_signal(signal);
@@ -568,6 +571,11 @@ void Thread::set_state(State new_state)
 }
 
 String Thread::backtrace(ProcessInspectionHandle&) const
+{
+    return backtrace_impl();
+}
+
+String Thread::backtrace_impl() const
 {
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
