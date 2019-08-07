@@ -126,9 +126,9 @@ GVariant ThreadCatalogModel::data(const GModelIndex& index, Role role) const
         case Column::ThreadNumber:
             return thread.get("no").to_u32();
         case Column::Subject:
-            return thread.get("sub").to_string();
+            return thread.get("sub").as_string_or({});
         case Column::Text:
-            return thread.get("com").to_string();
+            return thread.get("com").as_string_or({});
         case Column::ReplyCount:
             return thread.get("replies").to_u32();
         case Column::ImageCount:
