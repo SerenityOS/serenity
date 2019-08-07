@@ -6,21 +6,7 @@
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
 
-struct SchedulerData {
-    typedef IntrusiveList<Thread, &Thread::m_runnable_list_node> ThreadList;
-
-    ThreadList m_runnable_threads;
-    ThreadList m_nonrunnable_threads;
-
-    ThreadList& thread_list_for_state(Thread::State state)
-    {
-        if (Thread::is_runnable_state(state))
-            return m_runnable_threads;
-        return m_nonrunnable_threads;
-    }
-};
-
-static SchedulerData* g_scheduler_data;
+SchedulerData* g_scheduler_data;
 
 void Scheduler::init_thread(Thread& thread)
 {
@@ -35,34 +21,6 @@ void Scheduler::update_state_for_thread(Thread& thread)
         return;
 
     list.append(thread);
-}
-
-IterationDecision Scheduler::for_each_runnable_func(Function<IterationDecision(Thread&)>&& callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    auto& tl = g_scheduler_data->m_runnable_threads;
-    for (auto it = tl.begin(); it != tl.end();) {
-        auto thread = *it;
-        it = ++it;
-        if (callback(*thread) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    return IterationDecision::Continue;
-}
-
-IterationDecision Scheduler::for_each_nonrunnable_func(Function<IterationDecision(Thread&)>&& callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    auto& tl = g_scheduler_data->m_nonrunnable_threads;
-    for (auto it = tl.begin(); it != tl.end();) {
-        auto thread = *it;
-        it = ++it;
-        if (callback(*thread) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    return IterationDecision::Continue;
 }
 
 //#define LOG_EVERY_CONTEXT_SWITCH
