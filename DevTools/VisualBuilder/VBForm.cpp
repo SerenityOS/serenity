@@ -4,6 +4,7 @@
 #include "VBWidgetRegistry.h"
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
@@ -318,7 +319,7 @@ void VBForm::load_from_file(const String& path)
             (void)property_name;
             (void)property_value;
             VBProperty& property = vbwidget->property(property_name);
-            dbgprintf("Set property %s.%s to '%s'\n", widget_class.characters(), property_name.characters(), property_value.serialized().characters());
+            dbgprintf("Set property %s.%s to '%s'\n", widget_class.characters(), property_name.characters(), property_value.to_string().characters());
             property.set_value(property_value);
         });
         m_widgets.append(vbwidget);
@@ -349,7 +350,7 @@ void VBForm::write_to_file(const String& path)
         widget_array.append(widget_object);
     }
     form_object.set("widgets", widget_array);
-    file.write(form_object.serialized());
+    file.write(form_object.to_string());
 }
 
 void VBForm::dump()

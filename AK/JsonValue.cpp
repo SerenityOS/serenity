@@ -158,50 +158,6 @@ void JsonValue::clear()
     m_value.as_string = nullptr;
 }
 
-void JsonValue::serialize(StringBuilder& builder) const
-{
-    switch (m_type) {
-    case Type::String:
-        builder.appendf("\"%s\"", m_value.as_string->characters());
-        break;
-    case Type::Array:
-        m_value.as_array->serialize(builder);
-        break;
-    case Type::Object:
-        m_value.as_object->serialize(builder);
-        break;
-    case Type::Bool:
-        builder.append(m_value.as_bool ? "true" : "false");
-        break;
-#ifndef KERNEL
-    case Type::Double:
-        builder.appendf("%g", m_value.as_double);
-        break;
-#endif
-    case Type::Int:
-        builder.appendf("%d", m_value.as_int);
-        break;
-    case Type::UnsignedInt:
-        builder.appendf("%u", m_value.as_uint);
-        break;
-    case Type::Undefined:
-        builder.append("undefined");
-        break;
-    case Type::Null:
-        builder.append("null");
-        break;
-    default:
-        ASSERT_NOT_REACHED();
-    }
-}
-
-String JsonValue::serialized() const
-{
-    StringBuilder builder;
-    serialize(builder);
-    return builder.to_string();
-}
-
 JsonValue JsonValue::from_string(const StringView& input)
 {
     return JsonParser(input).parse();

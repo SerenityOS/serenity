@@ -3,6 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/IPv4Address.h>
 #include <AK/Optional.h>
+#include <AK/StringBuilder.h>
 
 namespace AK {
 
@@ -57,14 +58,16 @@ public:
     JsonValue& operator=(JsonArray&&) = delete;
     JsonValue& operator=(JsonObject&&) = delete;
 
-    String serialized() const;
-    void serialize(StringBuilder&) const;
+    template<typename Builder>
+    typename Builder::OutputType serialized() const;
+    template<typename Builder>
+    void serialize(Builder&) const;
 
-    String to_string(const String& default_value = {}) const
+    String to_string() const
     {
         if (is_string())
             return as_string();
-        return default_value;
+        return serialized<StringBuilder>();
     }
 
     Optional<IPv4Address> to_ipv4_address() const
@@ -151,7 +154,10 @@ public:
     }
 #endif
 
-    Type type() const { return m_type; }
+    Type type() const
+    {
+        return m_type;
+    }
 
     bool is_null() const { return m_type == Type::Null; }
     bool is_undefined() const { return m_type == Type::Undefined; }
@@ -160,9 +166,15 @@ public:
     bool is_int() const { return m_type == Type::Int; }
     bool is_uint() const { return m_type == Type::UnsignedInt; }
 #ifndef KERNEL
-    bool is_double() const { return m_type == Type::Double; }
+    bool is_double() const
+    {
+        return m_type == Type::Double;
+    }
 #endif
-    bool is_array() const { return m_type == Type::Array; }
+    bool is_array() const
+    {
+        return m_type == Type::Array;
+    }
     bool is_object() const { return m_type == Type::Object; }
     bool is_number() const
     {

@@ -44,8 +44,13 @@ public:
     void append(const JsonValue& value) { m_values.append(value); }
     void append(JsonValue&& value) { m_values.append(move(value)); }
 
-    String serialized() const;
-    void serialize(StringBuilder&) const;
+    template<typename Builder>
+    typename Builder::OutputType serialized() const;
+
+    template<typename Builder>
+    void serialize(Builder&) const;
+
+    String to_string() const { return serialized<StringBuilder>(); }
 
     template<typename Callback>
     void for_each(Callback callback) const
@@ -59,6 +64,26 @@ public:
 private:
     Vector<JsonValue> m_values;
 };
+
+template<typename Builder>
+inline void JsonArray::serialize(Builder& builder) const
+{
+    builder.append('[');
+    for (int i = 0; i < m_values.size(); ++i) {
+        m_values[i].serialize(builder);
+        if (i != size() - 1)
+            builder.append(',');
+    }
+    builder.append(']');
+}
+
+template<typename Builder>
+inline typename Builder::OutputType JsonArray::serialized() const
+{
+    Builder builder;
+    serialize(builder);
+    return builder.build();
+}
 
 }
 

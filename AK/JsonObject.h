@@ -2,13 +2,14 @@
 
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
+#include <AK/JsonArray.h>
 #include <AK/JsonValue.h>
 
 namespace AK {
 
 class JsonObject {
 public:
-    JsonObject() { }
+    JsonObject() {}
     ~JsonObject() {}
 
     JsonObject(const JsonObject& other)
@@ -63,12 +64,89 @@ public:
             callback(it.key, it.value);
     }
 
-    String serialized() const;
-    void serialize(StringBuilder&) const;
+    template<typename Builder>
+    typename Builder::OutputType serialized() const;
+
+    template<typename Builder>
+    void serialize(Builder&) const;
+
+    String to_string() const { return serialized<StringBuilder>(); }
 
 private:
     HashMap<String, JsonValue> m_members;
 };
+
+template<typename Builder>
+inline void JsonObject::serialize(Builder& builder) const
+{
+    int index = 0;
+    builder.append('{');
+    for_each_member([&](auto& key, auto& value) {
+        builder.append('"');
+        builder.append(key);
+        builder.append('"');
+        builder.append(':');
+        value.serialize(builder);
+        if (index != size() - 1)
+            builder.append(',');
+        ++index;
+    });
+    builder.append('}');
+}
+
+template<typename Builder>
+inline typename Builder::OutputType JsonObject::serialized() const
+{
+    Builder builder;
+    serialize(builder);
+    return builder.build();
+}
+
+template<typename Builder>
+void JsonValue::serialize(Builder& builder) const
+{
+    switch (m_type) {
+    case Type::String:
+        builder.appendf("\"%s\"", m_value.as_string->characters());
+        break;
+    case Type::Array:
+        m_value.as_array->serialize(builder);
+        break;
+    case Type::Object:
+        m_value.as_object->serialize(builder);
+        break;
+    case Type::Bool:
+        builder.append(m_value.as_bool ? "true" : "false");
+        break;
+#ifndef KERNEL
+    case Type::Double:
+        builder.appendf("%g", m_value.as_double);
+        break;
+#endif
+    case Type::Int:
+        builder.appendf("%d", m_value.as_int);
+        break;
+    case Type::UnsignedInt:
+        builder.appendf("%u", m_value.as_uint);
+        break;
+    case Type::Undefined:
+        builder.append("undefined");
+        break;
+    case Type::Null:
+        builder.append("null");
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+}
+
+template<typename Builder>
+typename Builder::OutputType JsonValue::serialized() const
+{
+    Builder builder;
+    serialize(builder);
+    return builder.build();
+}
 
 }
 

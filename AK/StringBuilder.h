@@ -8,6 +8,8 @@ namespace AK {
 
 class StringBuilder {
 public:
+    using OutputType = String;
+
     explicit StringBuilder(int initial_capacity = 16);
     ~StringBuilder() {}
 
@@ -16,6 +18,8 @@ public:
     void append(const char*, int);
     void appendf(const char*, ...);
     void appendvf(const char*, va_list);
+
+    String build() { return to_string(); }
 
     String to_string();
     ByteBuffer to_byte_buffer();
