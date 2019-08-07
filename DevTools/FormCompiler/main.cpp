@@ -80,7 +80,7 @@ int main(int argc, char** argv)
             if (property_value.is_null())
                 value = "{}";
             else
-                value = property_value.to_string();
+                value = property_value.serialized<StringBuilder>();
 
             dbg() << "    " << name << "->set_" << property_name << "(" << value << ");";
         });
