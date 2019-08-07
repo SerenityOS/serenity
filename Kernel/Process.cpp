@@ -340,8 +340,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     ProcessPagingScope paging_scope(*this);
 
     auto vmo = VMObject::create_file_backed(description->inode());
-    vmo->set_name(description->absolute_path());
-    RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, vmo->name(), PROT_READ);
+    RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, description->absolute_path(), PROT_READ);
     ASSERT(region);
 
     if (this != &current->process()) {
