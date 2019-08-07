@@ -22,9 +22,7 @@ NonnullRefPtr<VMObject> VMObject::create_anonymous(size_t size)
 NonnullRefPtr<VMObject> VMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
     size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
-    auto vmo = adopt(*new VMObject(paddr, size));
-    vmo->m_allow_cpu_caching = false;
-    return vmo;
+    return adopt(*new VMObject(paddr, size));
 }
 
 NonnullRefPtr<VMObject> VMObject::clone()

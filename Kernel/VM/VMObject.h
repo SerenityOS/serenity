@@ -48,7 +48,6 @@ private:
     template<typename Callback>
     void for_each_region(Callback);
 
-    bool m_allow_cpu_caching { true };
     off_t m_inode_offset { 0 };
     size_t m_size { 0 };
     RefPtr<Inode> m_inode;
