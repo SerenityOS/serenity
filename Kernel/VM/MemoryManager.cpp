@@ -6,6 +6,8 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Multiboot.h>
+#include <Kernel/VM/AnonymousVMObject.h>
+#include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 
 //#define MM_DEBUG
@@ -352,10 +354,11 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 {
     ASSERT(region.page_directory());
     auto& vmo = region.vmo();
-    ASSERT(!vmo.is_anonymous());
-    ASSERT(vmo.inode());
+    ASSERT(vmo.is_inode());
 
-    auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
+    auto& inode_vmobject = static_cast<InodeVMObject&>(vmo);
+
+    auto& vmo_page = inode_vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
 
     InterruptFlagSaver saver;
 
@@ -374,8 +377,8 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 #endif
     sti();
     u8 page_buffer[PAGE_SIZE];
-    auto& inode = *vmo.inode();
-    auto nread = inode.read_bytes(vmo.inode_offset() + ((region.first_page_index() + page_index_in_region) * PAGE_SIZE), PAGE_SIZE, page_buffer, nullptr);
+    auto& inode = inode_vmobject.inode();
+    auto nread = inode.read_bytes((region.first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, page_buffer, nullptr);
     if (nread < 0) {
         kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
         return false;
@@ -435,7 +438,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     }
     auto page_index_in_region = region->page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
-        if (region->vmo().inode()) {
+        if (region->vmo().is_inode()) {
 #ifdef PAGE_FAULT_DEBUG
             dbgprintf("NP(inode) fault in Region{%p}[%u]\n", region, page_index_in_region);
 #endif

@@ -20,6 +20,8 @@ KERNEL_OBJS = \
        VM/MemoryManager.o \
        VM/Region.o \
        VM/VMObject.o \
+       VM/AnonymousVMObject.o \
+       VM/InodeVMObject.o \
        VM/PageDirectory.o \
        VM/PhysicalPage.o \
        VM/PhysicalRegion.o \
