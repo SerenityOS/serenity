@@ -167,4 +167,18 @@ TEST_CASE(vector_compare)
     EXPECT_EQ(strings, same_strings);
 }
 
+BENCHMARK_CASE(vector_append_trivial)
+{
+    // This should be super fast thanks to Vector using memmove.
+    Vector<int> ints;
+    for (int i = 0; i < 1000000; ++i) {
+        ints.append(i);
+    }
+    for (int i = 0; i < 100; ++i) {
+        Vector<int> tmp;
+        tmp.append(ints);
+        EXPECT_EQ(tmp.size(), 1000000);
+    }
+}
+
 TEST_MAIN(Vector)
