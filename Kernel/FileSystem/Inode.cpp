@@ -3,7 +3,7 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/Net/LocalSocket.h>
-#include <Kernel/VM/VMObject.h>
+#include <Kernel/VM/InodeVMObject.h>
 
 HashTable<Inode*>& all_inodes()
 {

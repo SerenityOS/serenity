@@ -2,6 +2,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/PCI.h>
 #include <Kernel/Process.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
@@ -89,7 +90,7 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
 {
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
-    auto vmo = VMObject::create_for_physical_range(framebuffer_address(), framebuffer_size_in_bytes());
+    auto vmo = AnonymousVMObject::create_for_physical_range(framebuffer_address(), framebuffer_size_in_bytes());
     auto* region = process.allocate_region_with_vmo(
         preferred_vaddr,
         framebuffer_size_in_bytes(),

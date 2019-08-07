@@ -26,6 +26,7 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/kmalloc.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
@@ -339,7 +340,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 #endif
     ProcessPagingScope paging_scope(*this);
 
-    auto vmo = VMObject::create_file_backed(description->inode());
+    ASSERT(description->inode());
+    auto vmo = InodeVMObject::create_with_inode(*description->inode());
     RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, description->absolute_path(), PROT_READ);
     ASSERT(region);
 

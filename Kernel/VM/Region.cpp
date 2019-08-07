@@ -1,13 +1,14 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Process.h>
 #include <Kernel/Thread.h>
+#include <Kernel/VM/AnonymousVMObject.h>
+#include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
-#include <Kernel/VM/VMObject.h>
 
 Region::Region(const Range& range, const String& name, u8 access, bool cow)
     : m_range(range)
-    , m_vmo(VMObject::create_anonymous(size()))
+    , m_vmo(AnonymousVMObject::create_with_size(size()))
     , m_name(name)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
@@ -17,7 +18,7 @@ Region::Region(const Range& range, const String& name, u8 access, bool cow)
 
 Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8 access, bool cow)
     : m_range(range)
-    , m_vmo(VMObject::create_file_backed(move(inode)))
+    , m_vmo(InodeVMObject::create_with_inode(*inode))
     , m_name(name)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
@@ -48,8 +49,7 @@ Region::~Region()
 bool Region::page_in()
 {
     ASSERT(m_page_directory);
-    ASSERT(!vmo().is_anonymous());
-    ASSERT(vmo().inode());
+    ASSERT(vmo().is_inode());
 #ifdef MM_DEBUG
     dbgprintf("MM: page_in %u pages\n", page_count());
 #endif

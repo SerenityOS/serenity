@@ -2,7 +2,7 @@
 #include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Process.h>
-#include <Kernel/VM/VMObject.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 
 Lockable<HashMap<String, RefPtr<SharedMemory>>>& shared_memories()
 {
@@ -59,7 +59,7 @@ KResult SharedMemory::truncate(int length)
     }
 
     if (!m_vmo) {
-        m_vmo = VMObject::create_anonymous(length);
+        m_vmo = AnonymousVMObject::create_with_size(length);
         return KSuccess;
     }
 

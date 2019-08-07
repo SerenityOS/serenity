@@ -11,9 +11,9 @@
 #include <Kernel/Lock.h>
 
 class FileDescription;
+class InodeVMObject;
 class InodeWatcher;
 class LocalSocket;
-class VMObject;
 
 class Inode : public RefCounted<Inode>, public Weakable<Inode> {
     friend class VFS;
@@ -69,8 +69,8 @@ public:
     void will_be_destroyed();
 
     void set_vmo(VMObject&);
-    VMObject* vmo() { return m_vmo.ptr(); }
-    const VMObject* vmo() const { return m_vmo.ptr(); }
+    InodeVMObject* vmo() { return m_vmo.ptr(); }
+    const InodeVMObject* vmo() const { return m_vmo.ptr(); }
 
     static void sync();
 
@@ -88,7 +88,7 @@ protected:
 private:
     FS& m_fs;
     unsigned m_index { 0 };
-    WeakPtr<VMObject> m_vmo;
+    WeakPtr<InodeVMObject> m_vmo;
     RefPtr<LocalSocket> m_socket;
     HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };
