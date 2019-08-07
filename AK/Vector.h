@@ -142,8 +142,8 @@ public:
     Vector(const Vector& other)
     {
         ensure_capacity(other.size());
-        for (int i = 0; i < other.size(); ++i)
-            unchecked_append(other[i]);
+        TypedTransfer<T>::copy(data(), other.data(), other.size());
+        m_size = other.size();
     }
 
     // FIXME: What about assigning from a vector with lower inline capacity?
@@ -311,8 +311,8 @@ public:
         if (this != &other) {
             clear();
             ensure_capacity(other.size());
-            for (const auto& v : other)
-                unchecked_append(v);
+            TypedTransfer<T>::copy(data(), other.data(), other.size());
+            m_size = other.size();
         }
         return *this;
     }
@@ -323,17 +323,18 @@ public:
             *this = move(other);
             return;
         }
+        auto other_size = other.size();
         Vector tmp = move(other);
-        grow_capacity(size() + tmp.size());
-        for (auto&& v : tmp)
-            unchecked_append(move(v));
+        grow_capacity(size() + other_size);
+        TypedTransfer<T>::move(data() + m_size, tmp.data(), other_size);
+        m_size += other_size;
     }
 
     void append(const Vector& other)
     {
         grow_capacity(size() + other.size());
-        for (auto& value : other)
-            unchecked_append(value);
+        TypedTransfer<T>::copy(data() + m_size, other.data(), other.size());
+        m_size += other.m_size;
     }
 
     template<typename Callback>
