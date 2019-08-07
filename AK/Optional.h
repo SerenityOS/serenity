@@ -28,7 +28,7 @@ public:
     Optional(Optional&& other)
         : m_has_value(other.m_has_value)
     {
-        if (m_has_value) {
+        if (other.has_value()) {
             new (&m_storage) T(other.release_value());
             other.m_has_value = false;
         }
@@ -62,9 +62,8 @@ public:
         if (this != &other) {
             clear();
             m_has_value = other.m_has_value;
-            if (m_has_value) {
+            if (other.has_value())
                 new (&m_storage) T(other.release_value());
-            }
         }
         return *this;
     }
