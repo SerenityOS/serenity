@@ -100,7 +100,6 @@ private:
     void map_protected(VirtualAddress, size_t length);
 
     void create_identity_mapping(PageDirectory&, VirtualAddress, size_t length);
-    void remove_identity_mapping(PageDirectory&, VirtualAddress, size_t);
 
     static Region* region_from_vaddr(Process&, VirtualAddress);
     static const Region* region_from_vaddr(const Process&, VirtualAddress);

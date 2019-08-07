@@ -161,21 +161,6 @@ RefPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_dire
     return physical_page;
 }
 
-void MemoryManager::remove_identity_mapping(PageDirectory& page_directory, VirtualAddress vaddr, size_t size)
-{
-    InterruptDisabler disabler;
-    // FIXME: ASSERT(vaddr is 4KB aligned);
-    for (u32 offset = 0; offset < size; offset += PAGE_SIZE) {
-        auto pte_address = vaddr.offset(offset);
-        auto& pte = ensure_pte(page_directory, pte_address);
-        pte.set_physical_page_base(0);
-        pte.set_user_allowed(false);
-        pte.set_present(true);
-        pte.set_writable(true);
-        flush_tlb(pte_address);
-    }
-}
-
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
