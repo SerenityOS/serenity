@@ -675,8 +675,6 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
         pte.set_writable(false);
     else
         pte.set_writable(region.is_writable());
-    pte.set_cache_disabled(!region.vmo().m_allow_cpu_caching);
-    pte.set_write_through(!region.vmo().m_allow_cpu_caching);
     pte.set_user_allowed(region.is_user_accessible());
     region.page_directory()->flush(page_vaddr);
 #ifdef MM_DEBUG
@@ -711,8 +709,6 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
                 pte.set_writable(false);
             else
                 pte.set_writable(region.is_writable());
-            pte.set_cache_disabled(!region.vmo().m_allow_cpu_caching);
-            pte.set_write_through(!region.vmo().m_allow_cpu_caching);
         } else {
             pte.set_physical_page_base(0);
             pte.set_present(false);
