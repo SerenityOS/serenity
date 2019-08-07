@@ -208,7 +208,7 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
         description_object.set("offset", description->offset());
         array.append(move(description_object));
     }
-    return array.serialized().to_byte_buffer();
+    return array.to_string().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
@@ -241,7 +241,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.set("name", region.name());
         array.append(move(region_object));
     }
-    return array.serialized().to_byte_buffer();
+    return array.to_string().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$pci(InodeIdentifier)
@@ -294,7 +294,7 @@ Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
         obj.set("sequence_number", socket->sequence_number());
         json.append(obj);
     });
-    return json.serialized().to_byte_buffer();
+    return json.to_string().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
@@ -449,7 +449,7 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         fs_object.set("mount_point", mount.absolute_path());
         json.append(fs_object);
     });
-    return json.serialized().to_byte_buffer();
+    return json.to_string().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
@@ -541,7 +541,7 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     json.set("super_physical_available", MM.super_physical_pages());
     json.set("kmalloc_call_count", g_kmalloc_call_count);
     json.set("kfree_call_count", g_kfree_call_count);
-    return json.serialized().to_byte_buffer();
+    return json.to_string().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$all(InodeIdentifier)
@@ -577,7 +577,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
     build_process(*Scheduler::colonel());
     for (auto* process : processes)
         build_process(*process);
-    return array.serialized().to_byte_buffer();
+    return array.to_string().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$inodes(InodeIdentifier)

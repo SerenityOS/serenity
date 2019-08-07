@@ -1,6 +1,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <stdio.h>
 
@@ -65,6 +66,6 @@ void print(const JsonValue& value, int indent)
         printf("\033[32;1m");
     else if (value.is_null() || value.is_undefined())
         printf("\033[34;1m");
-    printf("%s", value.serialized().characters());
+    printf("%s", value.to_string().characters());
     printf("\033[0m");
 }

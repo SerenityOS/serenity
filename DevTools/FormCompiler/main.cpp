@@ -2,6 +2,7 @@
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/LogStream.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <stdio.h>
 
@@ -70,7 +71,7 @@ int main(int argc, char** argv)
         auto class_name = widget_object.get("class").to_string();
         dbg() << "    " << name << " = new " << class_name << "(main_widget);";
 
-        widget_object.for_each_member([&](auto& property_name, auto& property_value) {
+        widget_object.for_each_member([&](auto& property_name, const JsonValue& property_value) {
             if (property_name == "class")
                 return;
 
@@ -79,7 +80,7 @@ int main(int argc, char** argv)
             if (property_value.is_null())
                 value = "{}";
             else
-                value = property_value.serialized();
+                value = property_value.to_string();
 
             dbg() << "    " << name << "->set_" << property_name << "(" << value << ");";
         });
