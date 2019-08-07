@@ -63,6 +63,30 @@ private:
     int m_index { 0 };
 };
 
+template<typename T>
+class TypedTransfer {
+public:
+    static void move(T* destination, T* source, size_t count)
+    {
+        if constexpr (Traits<T>::is_trivial()) {
+            memmove(destination, source, count * sizeof(T));
+            return;
+        }
+        for (size_t i = 0; i < count; ++i)
+            new (&destination[i]) T(AK::move(source[i]));
+    }
+
+    static void copy(T* destination, const T* source, size_t count)
+    {
+        if constexpr (Traits<T>::is_trivial()) {
+            memmove(destination, source, count * sizeof(T));
+            return;
+        }
+        for (size_t i = 0; i < count; ++i)
+            new (&destination[i]) T(source[i]);
+    }
+};
+
 template<typename T, int inline_capacity = 0>
 class Vector {
 public:
@@ -379,9 +403,7 @@ public:
         }
 
         Vector tmp = move(other);
-        for (int i = 0; i < tmp.size(); ++i)
-            new (slot(i)) T(move(tmp.at(i)));
-
+        TypedTransfer<T>::move(slot(0), tmp.data(), tmp.size());
         m_size += other_size;
     }
 
@@ -390,8 +412,7 @@ public:
         if (!count)
             return;
         grow_capacity(size() + count);
-        for (int i = 0; i < count; ++i)
-            new (slot(m_size + i)) T(values[i]);
+        TypedTransfer<T>::copy(slot(m_size), values, count);
         m_size += count;
     }
 
