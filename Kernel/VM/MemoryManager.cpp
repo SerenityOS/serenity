@@ -742,6 +742,7 @@ bool MemoryManager::unmap_region(Region& region)
         dbgprintf("MM: >> Unmapped L%x => P%x <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
+    region.page_directory()->range_allocator().deallocate({ region.vaddr(), region.size() });
     region.release_page_directory();
     return true;
 }

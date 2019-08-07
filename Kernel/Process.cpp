@@ -142,7 +142,6 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
-            page_directory().range_allocator().deallocate({ region.vaddr(), region.size() });
             MM.unmap_region(region);
             m_regions.remove(i);
             return true;
