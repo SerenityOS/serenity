@@ -7,12 +7,12 @@ namespace AK {
 
 template<typename T>
 struct GenericTraits {
+    static constexpr bool is_trivial() { return false; }
     static bool equals(const T& a, const T& b) { return a == b; }
 };
 
 template<typename T>
 struct Traits : public GenericTraits<T> {
-    static constexpr bool is_trivial() { return false; }
 };
 
 template<>
