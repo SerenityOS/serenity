@@ -15,6 +15,7 @@
 #include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/IO.h>
+#include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
@@ -2838,15 +2839,15 @@ int Process::sys$dbgputstr(const u8* characters, int length)
     return 0;
 }
 
-String Process::backtrace(ProcessInspectionHandle& handle) const
+KBuffer Process::backtrace(ProcessInspectionHandle& handle) const
 {
-    StringBuilder builder;
+    KBufferBuilder builder;
     for_each_thread([&](Thread& thread) {
         builder.appendf("Thread %d:\n", thread.tid());
         builder.append(thread.backtrace(handle));
         return IterationDecision::Continue;
     });
-    return builder.to_string();
+    return builder.build();
 }
 
 int Process::sys$set_process_icon(int icon_id)
