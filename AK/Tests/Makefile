@@ -1,4 +1,4 @@
-PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray
+PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 
@@ -12,6 +12,7 @@ SHARED_TEST_OBJS = \
 	../JsonObject.o \
 	../JsonValue.o \
 	../JsonParser.o \
+    ../FileSystemPath.o \
 
 .cpp.o:
 	@echo "HOST_CXX $<"; $(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -53,6 +54,10 @@ TestRefPtr: TestRefPtr.o $(SHARED_TEST_OBJS)
 
 TestOptional: TestOptional.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestOptional.o $(SHARED_TEST_OBJS)
+
+TestFileSystemPath: TestFileSystemPath.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestFileSystemPath.o $(SHARED_TEST_OBJS)
+
 
 clean:
 	rm -f $(SHARED_TEST_OBJS)
