@@ -1,4 +1,4 @@
-PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr
+PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 
@@ -32,10 +32,13 @@ TestQueue: TestQueue.o $(SHARED_TEST_OBJS)
 
 TestVector: TestVector.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestVector.o $(SHARED_TEST_OBJS)
-#
+
+TestFixedArray: TestFixedArray.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestFixedArray.o $(SHARED_TEST_OBJS)
+
 TestHashMap: TestHashMap.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestHashMap.o $(SHARED_TEST_OBJS)
-#
+
 TestJSON: TestJSON.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestJSON.o $(SHARED_TEST_OBJS)
 
