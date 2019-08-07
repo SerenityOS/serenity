@@ -7,11 +7,11 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <AK/StringBuilder.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/KBufferBuilder.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/TCPSocket.h>
@@ -208,7 +208,7 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
         description_object.set("offset", description->offset());
         array.append(move(description_object));
     }
-    return array.to_string().to_byte_buffer();
+    return array.serialized<KBufferBuilder>();
 }
 
 Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
@@ -241,35 +241,35 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.set("name", region.name());
         array.append(move(region_object));
     }
-    return array.to_string().to_byte_buffer();
+    return array.serialized<KBufferBuilder>();
 }
 
 Optional<KBuffer> procfs$pci(InodeIdentifier)
 {
-    StringBuilder builder;
+    KBufferBuilder builder;
     PCI::enumerate_all([&builder](PCI::Address address, PCI::ID id) {
         builder.appendf("%b:%b.%b %w:%w\n", address.bus(), address.slot(), address.function(), id.vendor_id, id.device_id);
     });
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$uptime(InodeIdentifier)
 {
-    StringBuilder builder;
+    KBufferBuilder builder;
     builder.appendf("%u\n", (u32)(g_uptime / 1000));
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$cmdline(InodeIdentifier)
 {
-    StringBuilder builder;
+    KBufferBuilder builder;
     builder.appendf("%s\n", KParams::the().cmdline().characters());
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$netadapters(InodeIdentifier)
 {
-    StringBuilder builder;
+    KBufferBuilder builder;
     NetworkAdapter::for_each([&builder](auto& adapter) {
         builder.appendf("%s,%s,%s,%s\n",
             adapter.name().characters(),
@@ -277,7 +277,7 @@ Optional<KBuffer> procfs$netadapters(InodeIdentifier)
             adapter.mac_address().to_string().characters(),
             adapter.ipv4_address().to_string().characters());
     });
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
@@ -294,7 +294,7 @@ Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
         obj.set("sequence_number", socket->sequence_number());
         json.append(obj);
     });
-    return json.to_string().to_byte_buffer();
+    return json.serialized<KBufferBuilder>();
 }
 
 Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
@@ -303,7 +303,7 @@ Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
     if (!handle)
         return {};
     auto& process = handle->process();
-    StringBuilder builder;
+    KBufferBuilder builder;
     builder.appendf("BEGIN       END         SIZE        NAME\n");
     for (auto& region : process.regions()) {
         builder.appendf("%x -- %x    %x    %s\n",
@@ -324,7 +324,7 @@ Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
         }
         builder.appendf("\n");
     }
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$pid_stack(InodeIdentifier identifier)
@@ -333,7 +333,7 @@ Optional<KBuffer> procfs$pid_stack(InodeIdentifier identifier)
     if (!handle)
         return {};
     auto& process = handle->process();
-    return process.backtrace(*handle).to_byte_buffer();
+    return process.backtrace(*handle);
 }
 
 Optional<KBuffer> procfs$pid_regs(InodeIdentifier identifier)
@@ -342,7 +342,7 @@ Optional<KBuffer> procfs$pid_regs(InodeIdentifier identifier)
     if (!handle)
         return {};
     auto& process = handle->process();
-    StringBuilder builder;
+    KBufferBuilder builder;
     process.for_each_thread([&](Thread& thread) {
         builder.appendf("Thread %d:\n", thread.tid());
         auto& tss = thread.tss();
@@ -359,7 +359,7 @@ Optional<KBuffer> procfs$pid_regs(InodeIdentifier identifier)
         builder.appendf("pc:  %w:%x\n", tss.cs, tss.eip);
         return IterationDecision::Continue;
     });
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$pid_exe(InodeIdentifier identifier)
@@ -392,7 +392,7 @@ Optional<KBuffer> procfs$mm(InodeIdentifier)
 {
     // FIXME: Implement
     InterruptDisabler disabler;
-    StringBuilder builder;
+    KBufferBuilder builder;
     for (auto* vmo : MM.m_vmos) {
         builder.appendf("VMO: %p %s(%u): p:%4u\n",
             vmo,
@@ -403,22 +403,22 @@ Optional<KBuffer> procfs$mm(InodeIdentifier)
     builder.appendf("VMO count: %u\n", MM.m_vmos.size());
     builder.appendf("Free physical pages: %u\n", MM.user_physical_pages() - MM.user_physical_pages_used());
     builder.appendf("Free supervisor physical pages: %u\n", MM.super_physical_pages() - MM.super_physical_pages_used());
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$dmesg(InodeIdentifier)
 {
     InterruptDisabler disabler;
-    StringBuilder builder;
+    KBufferBuilder builder;
     for (char ch : Console::the().logbuffer())
         builder.append(ch);
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$mounts(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
-    StringBuilder builder;
+    KBufferBuilder builder;
     VFS::the().for_each_mount([&builder](auto& mount) {
         auto& fs = mount.guest_fs();
         builder.appendf("%s @ ", fs.class_name());
@@ -431,7 +431,7 @@ Optional<KBuffer> procfs$mounts(InodeIdentifier)
         }
         builder.append('\n');
     });
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$df(InodeIdentifier)
@@ -449,12 +449,12 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         fs_object.set("mount_point", mount.absolute_path());
         json.append(fs_object);
     });
-    return json.to_string().to_byte_buffer();
+    return json.serialized<KBufferBuilder>();
 }
 
 Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
 {
-    StringBuilder builder;
+    KBufferBuilder builder;
     {
         CPUID cpuid(0);
         builder.appendf("cpuid:     ");
@@ -512,12 +512,12 @@ Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
         copy_brand_string_part_to_buffer(2);
         builder.appendf("brandstr:  \"%s\"\n", buffer);
     }
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$kmalloc(InodeIdentifier)
 {
-    StringBuilder builder;
+    KBufferBuilder builder;
     builder.appendf(
         "eternal:      %u\n"
         "allocated:    %u\n"
@@ -525,7 +525,7 @@ Optional<KBuffer> procfs$kmalloc(InodeIdentifier)
         kmalloc_sum_eternal,
         sum_alloc,
         sum_free);
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$memstat(InodeIdentifier)
@@ -541,7 +541,7 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     json.set("super_physical_available", MM.super_physical_pages());
     json.set("kmalloc_call_count", g_kmalloc_call_count);
     json.set("kfree_call_count", g_kfree_call_count);
-    return json.to_string().to_byte_buffer();
+    return json.serialized<KBufferBuilder>();;
 }
 
 Optional<KBuffer> procfs$all(InodeIdentifier)
@@ -577,18 +577,18 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
     build_process(*Scheduler::colonel());
     for (auto* process : processes)
         build_process(*process);
-    return array.to_string().to_byte_buffer();
+    return array.serialized<KBufferBuilder>();
 }
 
 Optional<KBuffer> procfs$inodes(InodeIdentifier)
 {
     extern HashTable<Inode*>& all_inodes();
-    StringBuilder builder;
+    KBufferBuilder builder;
     for (auto it : all_inodes()) {
         RefPtr<Inode> inode = *it;
         builder.appendf("Inode{K%x} %02u:%08u (%u)\n", inode.ptr(), inode->fsid(), inode->index(), inode->ref_count());
     }
-    return builder.to_byte_buffer();
+    return builder.build();
 }
 
 struct SysVariableData final : public ProcFSInodeCustomData {
