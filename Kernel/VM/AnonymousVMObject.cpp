@@ -3,27 +3,25 @@
 
 NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_size(size_t size)
 {
-    size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     return adopt(*new AnonymousVMObject(size));
 }
 
 NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(PhysicalAddress paddr, size_t size)
 {
-    size = ceil_div(size, PAGE_SIZE) * PAGE_SIZE;
     return adopt(*new AnonymousVMObject(paddr, size));
 }
 
 AnonymousVMObject::AnonymousVMObject(size_t size)
-    : VMObject(size, ShouldFillPhysicalPages::Yes)
+    : VMObject(size)
 {
 }
 
 AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
-    : VMObject(size, ShouldFillPhysicalPages::No)
+    : VMObject(size)
 {
-    for (size_t i = 0; i < size; i += PAGE_SIZE)
-        m_physical_pages.append(PhysicalPage::create(paddr.offset(i), false, false));
-    ASSERT(m_physical_pages.size() == page_count());
+    ASSERT(paddr.page_base() == paddr.get());
+    for (size_t i = 0; i < page_count(); ++i)
+        physical_pages()[i] = PhysicalPage::create(paddr.offset(i * PAGE_SIZE), false, false);
 }
 
 AnonymousVMObject::AnonymousVMObject(const AnonymousVMObject& other)

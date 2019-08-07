@@ -19,7 +19,7 @@ NonnullRefPtr<VMObject> InodeVMObject::clone()
 }
 
 InodeVMObject::InodeVMObject(Inode& inode)
-    : VMObject(ceil_div(inode.size(), PAGE_SIZE) * PAGE_SIZE, ShouldFillPhysicalPages::Yes)
+    : VMObject(inode.size())
     , m_inode(inode)
 {
 }
@@ -43,18 +43,8 @@ void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new
 
     InterruptDisabler disabler;
 
-    auto old_page_count = page_count();
-    m_size = new_size;
-
-    if (page_count() > old_page_count) {
-        // Add null pages and let the fault handler page these in when that day comes.
-        for (auto i = old_page_count; i < page_count(); ++i)
-            m_physical_pages.append(nullptr);
-    } else {
-        // Prune the no-longer valid pages. I'm not sure this is actually correct behavior.
-        for (auto i = page_count(); i < old_page_count; ++i)
-            m_physical_pages.take_last();
-    }
+    auto new_page_count = PAGE_ROUND_UP(new_size);
+    m_physical_pages.resize(new_page_count);
 
     // FIXME: Consolidate with inode_contents_changed() so we only do a single walk.
     for_each_region([](Region& region) {
