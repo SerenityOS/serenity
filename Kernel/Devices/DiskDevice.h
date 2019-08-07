@@ -9,12 +9,11 @@ typedef u32 DiskOffset;
 
 class DiskDevice : public BlockDevice {
 public:
-    virtual ~DiskDevice();
+    virtual ~DiskDevice() override;
 
     virtual unsigned block_size() const = 0;
     virtual bool read_block(unsigned index, u8*) const = 0;
     virtual bool write_block(unsigned index, const u8*) = 0;
-    virtual const char* class_name() const = 0;
     bool read(DiskOffset, unsigned length, u8*) const;
     bool write(DiskOffset, unsigned length, const u8*);
 
