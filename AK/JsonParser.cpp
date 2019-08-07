@@ -45,8 +45,24 @@ String JsonParser::consume_quoted_string()
 {
     consume_specific('"');
     Vector<char, 1024> buffer;
+
     for (;;) {
-        char ch = peek();
+        int peek_index = m_index;
+        char ch = 0;
+        for (;;) {
+            if (peek_index == m_input.length())
+                break;
+            ch = m_input[peek_index];
+            if (ch == '"' || ch == '\\')
+                break;
+            ++peek_index;
+        }
+
+        if (peek_index != m_index) {
+            buffer.append(m_input.characters_without_null_termination() + m_index, peek_index - m_index);
+            m_index = peek_index;
+        }
+
         if (ch == '"')
             break;
         if (ch != '\\') {
@@ -232,5 +248,4 @@ JsonValue JsonParser::parse()
 
     return JsonValue();
 }
-
 }
