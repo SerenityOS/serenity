@@ -30,9 +30,6 @@ public:
     const Inode* inode() const { return m_inode.ptr(); }
     size_t inode_offset() const { return m_inode_offset; }
 
-    const String& name() const { return m_name; }
-    void set_name(const String& name) { m_name = name; }
-
     int page_count() const { return m_size / PAGE_SIZE; }
     const Vector<RefPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
     Vector<RefPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
@@ -51,7 +48,6 @@ private:
     template<typename Callback>
     void for_each_region(Callback);
 
-    String m_name;
     bool m_allow_cpu_caching { true };
     off_t m_inode_offset { 0 };
     size_t m_size { 0 };

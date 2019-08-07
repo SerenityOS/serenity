@@ -311,9 +311,8 @@ Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
             region.vaddr().offset(region.size() - 1).get(),
             region.size(),
             region.name().characters());
-        builder.appendf("VMO: %s \"%s\" @ %x(%u)\n",
+        builder.appendf("VMO: %s @ %x(%u)\n",
             region.vmo().is_anonymous() ? "anonymous" : "file-backed",
-            region.vmo().name().characters(),
             &region.vmo(),
             region.vmo().ref_count());
         for (int i = 0; i < region.vmo().page_count(); ++i) {
@@ -395,12 +394,11 @@ Optional<KBuffer> procfs$mm(InodeIdentifier)
     InterruptDisabler disabler;
     StringBuilder builder;
     for (auto* vmo : MM.m_vmos) {
-        builder.appendf("VMO: %p %s(%u): p:%4u %s\n",
+        builder.appendf("VMO: %p %s(%u): p:%4u\n",
             vmo,
             vmo->is_anonymous() ? "anon" : "file",
             vmo->ref_count(),
-            vmo->page_count(),
-            vmo->name().characters());
+            vmo->page_count());
     }
     builder.appendf("VMO count: %u\n", MM.m_vmos.size());
     builder.appendf("Free physical pages: %u\n", MM.user_physical_pages() - MM.user_physical_pages_used());

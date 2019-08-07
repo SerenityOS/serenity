@@ -12,7 +12,6 @@ Region::Region(const Range& range, const String& name, u8 access, bool cow)
     , m_access(access)
     , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
 {
-    m_vmo->set_name(m_name);
     MM.register_region(*this);
 }
 

@@ -33,8 +33,7 @@ NonnullRefPtr<VMObject> VMObject::clone()
 }
 
 VMObject::VMObject(VMObject& other)
-    : m_name(other.m_name)
-    , m_inode_offset(other.m_inode_offset)
+    : m_inode_offset(other.m_inode_offset)
     , m_size(other.m_size)
     , m_inode(other.m_inode)
     , m_physical_pages(other.m_physical_pages)
