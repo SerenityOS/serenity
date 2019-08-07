@@ -436,9 +436,14 @@ public:
             return;
         int new_capacity = needed_capacity;
         auto* new_buffer = (T*)kmalloc(new_capacity * sizeof(T));
-        for (int i = 0; i < m_size; ++i) {
-            new (&new_buffer[i]) T(move(at(i)));
-            at(i).~T();
+
+        if constexpr (Traits<T>::is_trivial()) {
+            TypedTransfer<T>::copy(new_buffer, data(), m_size);
+        } else {
+            for (int i = 0; i < m_size; ++i) {
+                new (&new_buffer[i]) T(move(at(i)));
+                at(i).~T();
+            }
         }
         if (m_outline_buffer)
             kfree(m_outline_buffer);
