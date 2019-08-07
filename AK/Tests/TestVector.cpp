@@ -142,4 +142,29 @@ TEST_CASE(prepend_vector_object)
     EXPECT_EQ(objects[5].subobject->value, 3);
 }
 
+TEST_CASE(vector_compare)
+{
+    Vector<int> ints;
+    Vector<int> same_ints;
+
+    for (int i = 0; i < 1000; ++i) {
+        ints.append(i);
+        same_ints.append(i);
+    }
+
+    EXPECT_EQ(ints.size(), 1000);
+    EXPECT_EQ(ints, same_ints);
+
+    Vector<String> strings;
+    Vector<String> same_strings;
+
+    for (int i = 0; i < 1000; ++i) {
+        strings.append(String::number(i));
+        same_strings.append(String::number(i));
+    }
+
+    EXPECT_EQ(strings.size(), 1000);
+    EXPECT_EQ(strings, same_strings);
+}
+
 TEST_MAIN(Vector)

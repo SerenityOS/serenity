@@ -85,6 +85,18 @@ public:
         for (size_t i = 0; i < count; ++i)
             new (&destination[i]) T(source[i]);
     }
+
+    static bool compare(const T* a, const T* b, size_t count)
+    {
+        if constexpr (Traits<T>::is_trivial())
+            return !memcmp(a, b, count * sizeof(T));
+
+        for (size_t i = 0; i < count; ++i) {
+            if (a[i] != b[i])
+                return false;
+        }
+        return true;
+    }
 };
 
 template<typename T, int inline_capacity = 0>
@@ -178,13 +190,7 @@ public:
     {
         if (m_size != other.m_size)
             return false;
-
-        for (int i = 0; i < m_size; ++i) {
-            if (at(i) != other.at(i))
-                return false;
-        }
-
-        return true;
+        return TypedTransfer<T>::compare(data(), other.data(), size());
     }
 
     bool operator!=(const Vector& other) const
