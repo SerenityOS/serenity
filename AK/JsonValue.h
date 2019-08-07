@@ -63,6 +63,13 @@ public:
     template<typename Builder>
     void serialize(Builder&) const;
 
+    String as_string_or(const String& alternative)
+    {
+        if (is_string())
+            return as_string();
+        return alternative;
+    }
+
     String to_string() const
     {
         if (is_string())
