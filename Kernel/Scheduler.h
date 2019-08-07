@@ -8,11 +8,13 @@
 class Process;
 class Thread;
 struct RegisterDump;
+struct SchedulerData;
 
 extern Thread* current;
 extern Thread* g_last_fpu_thread;
 extern Thread* g_finalizer;
 extern u64 g_uptime;
+extern SchedulerData* g_scheduler_data;
 
 class Scheduler {
 public:
@@ -30,28 +32,14 @@ public:
     static void beep();
 
     template<typename Callback>
-    static inline IterationDecision for_each_runnable(Callback callback)
-    {
-        return for_each_runnable_func([callback](Thread& thread) {
-            return callback(thread);
-        });
-    }
+    static inline IterationDecision for_each_runnable(Callback);
 
     template<typename Callback>
-    static inline IterationDecision for_each_nonrunnable(Callback callback)
-    {
-        return for_each_nonrunnable_func([callback](Thread& thread) {
-            return callback(thread);
-        });
-    }
+    static inline IterationDecision for_each_nonrunnable(Callback);
 
     static void init_thread(Thread& thread);
     static void update_state_for_thread(Thread& thread);
 
 private:
     static void prepare_for_iret_to_new_process();
-    static IterationDecision for_each_runnable_func(Function<IterationDecision(Thread&)>&& callback);
-    static IterationDecision for_each_nonrunnable_func(Function<IterationDecision(Thread&)>&& callback);
-
 };
-
