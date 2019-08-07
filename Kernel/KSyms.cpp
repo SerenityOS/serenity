@@ -139,6 +139,7 @@ void dump_backtrace()
         return;
     }
     TemporaryChange change(in_dump_backtrace, true);
+    TemporaryChange disable_kmalloc_stacks(g_dump_kmalloc_stacks, false);
     u32 ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
