@@ -167,6 +167,32 @@ TEST_CASE(vector_compare)
     EXPECT_EQ(strings, same_strings);
 }
 
+TEST_CASE(grow_past_inline_capacity)
+{
+    auto make_vector = [] {
+        Vector<String, 16> strings;
+        for (int i = 0; i < 32; ++i) {
+            strings.append(String::number(i));
+        }
+        return strings;
+    };
+
+    auto strings = make_vector();
+
+    EXPECT_EQ(strings.size(), 32);
+    EXPECT_EQ(strings[31], "31");
+
+    strings.clear();
+    EXPECT_EQ(strings.size(), 0);
+    EXPECT_EQ(strings.capacity(), 16);
+
+    strings = make_vector();
+
+    strings.clear_with_capacity();
+    EXPECT_EQ(strings.size(), 0);
+    EXPECT(strings.capacity() >= 32);
+}
+
 BENCHMARK_CASE(vector_append_trivial)
 {
     // This should be super fast thanks to Vector using memmove.
