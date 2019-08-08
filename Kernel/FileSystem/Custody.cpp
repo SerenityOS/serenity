@@ -15,13 +15,13 @@ static Lockable<InlineLinkedList<Custody>>& all_custodies()
 Custody* Custody::get_if_cached(Custody* parent, const String& name)
 {
     LOCKER(all_custodies().lock());
-    for (auto* custody = all_custodies().resource().head(); custody; custody = custody->next()) {
-        if (custody->is_deleted())
+    for (auto& custody : all_custodies().resource()) {
+        if (custody.is_deleted())
             continue;
-        if (custody->is_mounted_on())
+        if (custody.is_mounted_on())
             continue;
-        if (custody->parent() == parent && custody->name() == name)
-            return custody;
+        if (custody.parent() == parent && custody.name() == name)
+            return &custody;
     }
     return nullptr;
 }

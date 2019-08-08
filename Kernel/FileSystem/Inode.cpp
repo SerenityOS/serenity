@@ -18,9 +18,9 @@ void Inode::sync()
     NonnullRefPtrVector<Inode, 32> inodes;
     {
         InterruptDisabler disabler;
-        for (auto* inode = all_inodes().head(); inode; inode = inode->next()) {
-            if (inode->is_metadata_dirty())
-                inodes.append(*inode);
+        for (auto& inode : all_inodes()) {
+            if (inode.is_metadata_dirty())
+                inodes.append(inode);
         }
     }
 

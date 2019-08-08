@@ -83,8 +83,8 @@ public:
     template<typename Callback>
     static void for_each_vmobject(Callback callback)
     {
-        for (auto* vmobject = MM.m_vmobjects.head(); vmobject; vmobject = vmobject->next()) {
-            if (callback(*vmobject) == IterationDecision::Break)
+        for (auto& vmobject : MM.m_vmobjects) {
+            if (callback(vmobject) == IterationDecision::Break)
                 break;
         }
     }
