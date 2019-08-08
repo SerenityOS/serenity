@@ -6,6 +6,33 @@
 namespace AK {
 
 template<typename T>
+class InlineLinkedList;
+
+template<typename T>
+class InlineLinkedListIterator {
+public:
+    bool operator!=(const InlineLinkedListIterator& other) const { return m_node != other.m_node; }
+    bool operator==(const InlineLinkedListIterator& other) const { return m_node == other.m_node; }
+    InlineLinkedListIterator& operator++()
+    {
+        m_node = m_node->next();
+        return *this;
+    }
+    T& operator*() { return *m_node; }
+    T* operator->() { return &m_node; }
+    bool is_end() const { return !m_node; }
+    static InlineLinkedListIterator universal_end() { return InlineLinkedListIterator(nullptr); }
+
+private:
+    friend InlineLinkedList<T>;
+    explicit InlineLinkedListIterator(T* node)
+        : m_node(node)
+    {
+    }
+    T* m_node;
+};
+
+template<typename T>
 class InlineLinkedListNode {
 public:
     InlineLinkedListNode();
@@ -76,6 +103,16 @@ public:
         }
         return false;
     }
+
+    using Iterator = InlineLinkedListIterator<T>;
+    friend Iterator;
+    Iterator begin() { return Iterator(m_head); }
+    Iterator end() { return Iterator::universal_end(); }
+
+    using ConstIterator = InlineLinkedListIterator<const T>;
+    friend ConstIterator;
+    ConstIterator begin() const { return ConstIterator(m_head); }
+    ConstIterator end() const { return ConstIterator::universal_end(); }
 
 private:
     T* m_head { nullptr };
