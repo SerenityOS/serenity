@@ -4,18 +4,18 @@
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/Lock.h>
 
-static Lockable<HashTable<Custody*>>& all_custodies()
+static Lockable<InlineLinkedList<Custody>>& all_custodies()
 {
-    static Lockable<HashTable<Custody*>>* table;
-    if (!table)
-        table = new Lockable<HashTable<Custody*>>;
-    return *table;
+    static Lockable<InlineLinkedList<Custody>>* list;
+    if (!list)
+        list = new Lockable<InlineLinkedList<Custody>>;
+    return *list;
 }
 
 Custody* Custody::get_if_cached(Custody* parent, const String& name)
 {
     LOCKER(all_custodies().lock());
-    for (auto& custody : all_custodies().resource()) {
+    for (auto* custody = all_custodies().resource().head(); custody; custody = custody->next()) {
         if (custody->is_deleted())
             continue;
         if (custody->is_mounted_on())
@@ -47,7 +47,7 @@ Custody::Custody(Custody* parent, const String& name, Inode& inode)
     , m_inode(inode)
 {
     LOCKER(all_custodies().lock());
-    all_custodies().resource().set(this);
+    all_custodies().resource().append(this);
 }
 
 Custody::~Custody()

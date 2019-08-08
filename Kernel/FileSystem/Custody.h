@@ -2,15 +2,17 @@
 
 #include <AK/AKString.h>
 #include <AK/Badge.h>
-#include <AK/RefPtr.h>
+#include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 
 class Inode;
 class VFS;
 
 // FIXME: Custody needs some locking.
 
-class Custody : public RefCounted<Custody> {
+class Custody : public RefCounted<Custody>
+    , public InlineLinkedListNode<Custody> {
 public:
     static Custody* get_if_cached(Custody* parent, const String& name);
     static NonnullRefPtr<Custody> get_or_create(Custody* parent, const String& name, Inode&);
@@ -34,6 +36,10 @@ public:
     void did_delete(Badge<VFS>);
     void did_mount_on(Badge<VFS>);
     void did_rename(Badge<VFS>, const String& name);
+
+    // For InlineLinkedListNode.
+    Custody* m_next { nullptr };
+    Custody* m_prev { nullptr };
 
 private:
     Custody(Custody* parent, const String& name, Inode&);

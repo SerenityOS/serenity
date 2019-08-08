@@ -5,12 +5,12 @@
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/VM/InodeVMObject.h>
 
-HashTable<Inode*>& all_inodes()
+InlineLinkedList<Inode>& all_inodes()
 {
-    static HashTable<Inode*>* s_inode_set;
-    if (!s_inode_set)
-        s_inode_set = new HashTable<Inode*>();
-    return *s_inode_set;
+    static InlineLinkedList<Inode>* list;
+    if (!list)
+        list = new InlineLinkedList<Inode>;
+    return *list;
 }
 
 void Inode::sync()
@@ -18,7 +18,7 @@ void Inode::sync()
     NonnullRefPtrVector<Inode, 32> inodes;
     {
         InterruptDisabler disabler;
-        for (auto* inode : all_inodes()) {
+        for (auto* inode = all_inodes().head(); inode; inode = inode->next()) {
             if (inode->is_metadata_dirty())
                 inodes.append(*inode);
         }
@@ -63,7 +63,7 @@ Inode::Inode(FS& fs, unsigned index)
     : m_fs(fs)
     , m_index(index)
 {
-    all_inodes().set(this);
+    all_inodes().append(this);
 }
 
 Inode::~Inode()
