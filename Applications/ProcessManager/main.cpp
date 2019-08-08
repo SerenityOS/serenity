@@ -4,6 +4,7 @@
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
+#include "NetworkStatisticsWidget.h"
 #include <LibCore/CTimer.h>
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
@@ -70,6 +71,9 @@ int main(int argc, char** argv)
     };
 
     tabwidget->add_widget("Graphs", graphs_container);
+
+    auto* network_stats_widget = new NetworkStatisticsWidget(nullptr);
+    tabwidget->add_widget("Network", network_stats_widget);
 
     process_table_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     process_table_container->layout()->set_margins({ 4, 0, 4, 4 });
