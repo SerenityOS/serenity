@@ -341,9 +341,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     switch (socket->state()) {
     case TCPSocket::State::Closed:
         kprintf("handle_tcp: unexpected flags in Closed state\n");
-        socket->send_tcp_packet(TCPFlags::RST);
-        socket->set_state(TCPSocket::State::Closed);
-        kprintf("handle_tcp: Closed -> Closed\n");
+        // TODO: we may want to send an RST here, maybe as a configurable option
         return;
     case TCPSocket::State::TimeWait:
         kprintf("handle_tcp: unexpected flags in TimeWait state\n");
