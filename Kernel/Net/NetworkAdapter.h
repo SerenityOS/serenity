@@ -33,6 +33,11 @@ public:
 
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 
+    u32 packets_in() const { return m_packets_in; }
+    u32 bytes_in() const { return m_bytes_in; }
+    u32 packets_out() const { return m_packets_out; }
+    u32 bytes_out() const { return m_bytes_out; }
+
 protected:
     NetworkAdapter();
     void set_interface_name(const StringView& basename);
@@ -45,4 +50,8 @@ private:
     IPv4Address m_ipv4_address;
     SinglyLinkedList<KBuffer> m_packet_queue;
     String m_name;
+    u32 m_packets_in { 0 };
+    u32 m_bytes_in { 0 };
+    u32 m_packets_out { 0 };
+    u32 m_bytes_out { 0 };
 };

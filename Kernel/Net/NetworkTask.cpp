@@ -334,6 +334,8 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         return;
     }
 
+    socket->record_incoming_data(ipv4_packet.payload_size());
+
 #ifdef TCP_DEBUG
     kprintf("handle_tcp: state=%s\n", TCPSocket::to_string(socket->state()));
 #endif

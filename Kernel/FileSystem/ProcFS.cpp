@@ -269,15 +269,20 @@ Optional<KBuffer> procfs$cmdline(InodeIdentifier)
 
 Optional<KBuffer> procfs$netadapters(InodeIdentifier)
 {
-    KBufferBuilder builder;
-    NetworkAdapter::for_each([&builder](auto& adapter) {
-        builder.appendf("%s,%s,%s,%s\n",
-            adapter.name().characters(),
-            adapter.class_name(),
-            adapter.mac_address().to_string().characters(),
-            adapter.ipv4_address().to_string().characters());
+    JsonArray json;
+    NetworkAdapter::for_each([&json](auto& adapter) {
+        JsonObject obj;
+        obj.set("name", adapter.name());
+        obj.set("class_name", adapter.class_name());
+        obj.set("mac_address", adapter.mac_address().to_string());
+        obj.set("ipv4_address", adapter.ipv4_address().to_string());
+        obj.set("packets_in", adapter.packets_in());
+        obj.set("bytes_in", adapter.bytes_in());
+        obj.set("packets_out", adapter.packets_out());
+        obj.set("bytes_out", adapter.bytes_out());
+        json.append(obj);
     });
-    return builder.build();
+    return json.serialized<KBufferBuilder>();
 }
 
 Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
@@ -292,6 +297,10 @@ Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
         obj.set("state", TCPSocket::to_string(socket->state()));
         obj.set("ack_number", socket->ack_number());
         obj.set("sequence_number", socket->sequence_number());
+        obj.set("packets_in", socket->packets_in());
+        obj.set("bytes_in", socket->bytes_in());
+        obj.set("packets_out", socket->packets_out());
+        obj.set("bytes_out", socket->bytes_out());
         json.append(obj);
     });
     return json.serialized<KBufferBuilder>();
