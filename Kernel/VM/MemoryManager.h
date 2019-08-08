@@ -143,8 +143,8 @@ private:
     NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
     NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;
 
-    HashTable<Region*> m_user_regions;
-    HashTable<Region*> m_kernel_regions;
+    InlineLinkedList<Region> m_user_regions;
+    InlineLinkedList<Region> m_kernel_regions;
 
     InlineLinkedList<VMObject> m_vmobjects;
 
