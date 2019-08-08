@@ -80,6 +80,15 @@ public:
     unsigned super_physical_pages() const { return m_super_physical_pages; }
     unsigned super_physical_pages_used() const { return m_super_physical_pages_used; }
 
+    template<typename Callback>
+    static void for_each_vmobject(Callback callback)
+    {
+        for (auto* vmobject = MM.m_vmobjects.head(); vmobject; vmobject = vmobject->next()) {
+            if (callback(*vmobject) == IterationDecision::Break)
+                break;
+        }
+    }
+
 private:
     MemoryManager();
     ~MemoryManager();
@@ -134,9 +143,10 @@ private:
     NonnullRefPtrVector<PhysicalRegion> m_user_physical_regions;
     NonnullRefPtrVector<PhysicalRegion> m_super_physical_regions;
 
-    HashTable<VMObject*> m_vmos;
     HashTable<Region*> m_user_regions;
     HashTable<Region*> m_kernel_regions;
+
+    InlineLinkedList<VMObject> m_vmobjects;
 
     bool m_quickmap_in_use { false };
 };

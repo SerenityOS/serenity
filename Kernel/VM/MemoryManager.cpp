@@ -753,13 +753,13 @@ bool MemoryManager::validate_user_write(const Process& process, VirtualAddress v
 void MemoryManager::register_vmo(VMObject& vmo)
 {
     InterruptDisabler disabler;
-    m_vmos.set(&vmo);
+    m_vmobjects.append(&vmo);
 }
 
 void MemoryManager::unregister_vmo(VMObject& vmo)
 {
     InterruptDisabler disabler;
-    m_vmos.remove(&vmo);
+    m_vmobjects.remove(&vmo);
 }
 
 void MemoryManager::register_region(Region& region)
