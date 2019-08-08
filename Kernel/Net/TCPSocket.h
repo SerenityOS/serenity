@@ -60,8 +60,13 @@ public:
     void set_sequence_number(u32 n) { m_sequence_number = n; }
     u32 ack_number() const { return m_ack_number; }
     u32 sequence_number() const { return m_sequence_number; }
+    u32 packets_in() const { return m_packets_in; }
+    u32 bytes_in() const { return m_bytes_in; }
+    u32 packets_out() const { return m_packets_out; }
+    u32 bytes_out() const { return m_bytes_out; }
 
     void send_tcp_packet(u16 flags, const void* = nullptr, int = 0);
+    void record_incoming_data(int);
 
     static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
     static TCPSocketHandle from_tuple(const IPv4SocketTuple& tuple);
@@ -85,6 +90,10 @@ private:
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
     State m_state { State::Closed };
+    u32 m_packets_in { 0 };
+    u32 m_bytes_in { 0 };
+    u32 m_packets_out { 0 };
+    u32 m_bytes_out { 0 };
 };
 
 class TCPSocketHandle : public SocketHandle {
