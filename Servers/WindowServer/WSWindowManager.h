@@ -254,18 +254,18 @@ template<typename Callback>
 IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_front(WSWindowType type, Callback callback, bool ignore_highlight)
 {
     bool do_highlight_window_at_end = false;
-    for (auto* window = m_windows_in_order.head(); window; window = window->next()) {
-        if (!window->is_visible())
+    for (auto& window : m_windows_in_order) {
+        if (!window.is_visible())
             continue;
-        if (window->is_minimized())
+        if (window.is_minimized())
             continue;
-        if (window->type() != type)
+        if (window.type() != type)
             continue;
-        if (!ignore_highlight && m_highlight_window == window) {
+        if (!ignore_highlight && m_highlight_window == &window) {
             do_highlight_window_at_end = true;
             continue;
         }
-        if (callback(*window) == IterationDecision::Break)
+        if (callback(window) == IterationDecision::Break)
             return IterationDecision::Break;
     }
     if (do_highlight_window_at_end) {
