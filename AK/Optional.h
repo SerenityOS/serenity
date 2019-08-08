@@ -10,15 +10,22 @@ public:
     Optional() {}
 
     RETURN_TYPESTATE(unknown)
-    Optional(T&& value)
+    Optional(const T& value)
         : m_has_value(true)
     {
-        new (&m_storage) T(move(value));
+        new (&m_storage) T(value);
     }
 
     template<typename U>
     RETURN_TYPESTATE(unknown)
-    Optional(U&& value)
+    Optional(const U& value)
+        : m_has_value(true)
+    {
+        new (&m_storage) T(value);
+    }
+
+    RETURN_TYPESTATE(unknown)
+    Optional(T&& value)
         : m_has_value(true)
     {
         new (&m_storage) T(move(value));
