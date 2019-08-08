@@ -593,11 +593,11 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
 
 Optional<KBuffer> procfs$inodes(InodeIdentifier)
 {
-    extern HashTable<Inode*>& all_inodes();
+    extern InlineLinkedList<Inode>& all_inodes();
     KBufferBuilder builder;
-    for (auto it : all_inodes()) {
-        RefPtr<Inode> inode = *it;
-        builder.appendf("Inode{K%x} %02u:%08u (%u)\n", inode.ptr(), inode->fsid(), inode->index(), inode->ref_count());
+    InterruptDisabler disabler;
+    for (auto* inode = all_inodes().head(); inode; inode = inode->next()) {
+        builder.appendf("Inode{K%x} %02u:%08u (%u)\n", inode, inode->fsid(), inode->index(), inode->ref_count());
     }
     return builder.build();
 }

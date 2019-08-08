@@ -2,6 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/Function.h>
+#include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/FileSystem/FileSystem.h>
@@ -15,7 +16,9 @@ class InodeVMObject;
 class InodeWatcher;
 class LocalSocket;
 
-class Inode : public RefCounted<Inode>, public Weakable<Inode> {
+class Inode : public RefCounted<Inode>
+    , public Weakable<Inode>
+    , public InlineLinkedListNode<Inode> {
     friend class VFS;
     friend class FS;
 
@@ -76,6 +79,10 @@ public:
 
     void register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
+
+    // For InlineLinkedListNode.
+    Inode* m_next { nullptr };
+    Inode* m_prev { nullptr };
 
 protected:
     Inode(FS& fs, unsigned index);
