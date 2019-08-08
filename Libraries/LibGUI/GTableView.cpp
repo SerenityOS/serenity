@@ -170,6 +170,7 @@ void GTableView::mousemove_event(GMouseEvent& event)
         auto& column_data = this->column_data(m_resizing_column);
         if (column_data.width != new_width) {
             column_data.width = new_width;
+            dbg() << "New column width: " << new_width;
             update_content_size();
             update();
         }
