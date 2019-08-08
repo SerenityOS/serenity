@@ -63,8 +63,8 @@ Vector<pid_t> Process::all_pids()
     Vector<pid_t> pids;
     InterruptDisabler disabler;
     pids.ensure_capacity(g_processes->size_slow());
-    for (auto* process = g_processes->head(); process; process = process->next())
-        pids.append(process->pid());
+    for (auto& process : *g_processes)
+        pids.append(process.pid());
     return pids;
 }
 
@@ -73,8 +73,8 @@ Vector<Process*> Process::all_processes()
     Vector<Process*> processes;
     InterruptDisabler disabler;
     processes.ensure_capacity(g_processes->size_slow());
-    for (auto* process = g_processes->head(); process; process = process->next())
-        processes.append(process);
+    for (auto& process : *g_processes)
+        processes.append(&process);
     return processes;
 }
 
@@ -776,9 +776,9 @@ void Process::crash(int signal, u32 eip)
 Process* Process::from_pid(pid_t pid)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto* process = g_processes->head(); process; process = process->next()) {
-        if (process->pid() == pid)
-            return process;
+    for (auto& process : *g_processes) {
+        if (process.pid() == pid)
+            return &process;
     }
     return nullptr;
 }
