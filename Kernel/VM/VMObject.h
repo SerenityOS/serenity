@@ -1,8 +1,9 @@
 #pragma once
 
+#include <AK/FixedArray.h>
+#include <AK/InlineLinkedList.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/FixedArray.h>
 #include <AK/Weakable.h>
 #include <Kernel/Lock.h>
 
@@ -10,7 +11,8 @@ class Inode;
 class PhysicalPage;
 
 class VMObject : public RefCounted<VMObject>
-    , public Weakable<VMObject> {
+    , public Weakable<VMObject>
+    , public InlineLinkedListNode<VMObject> {
     friend class MemoryManager;
 
 public:
@@ -26,6 +28,10 @@ public:
     FixedArray<RefPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 
     size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }
+
+    // For InlineLinkedListNode
+    VMObject* m_next { nullptr };
+    VMObject* m_prev { nullptr };
 
 protected:
     explicit VMObject(size_t);

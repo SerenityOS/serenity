@@ -399,17 +399,19 @@ Optional<KBuffer> procfs$self(InodeIdentifier)
 
 Optional<KBuffer> procfs$mm(InodeIdentifier)
 {
-    // FIXME: Implement
     InterruptDisabler disabler;
     KBufferBuilder builder;
-    for (auto* vmo : MM.m_vmos) {
-        builder.appendf("VMO: %p %s(%u): p:%4u\n",
-            vmo,
-            vmo->is_anonymous() ? "anon" : "file",
-            vmo->ref_count(),
-            vmo->page_count());
-    }
-    builder.appendf("VMO count: %u\n", MM.m_vmos.size());
+    u32 vmobject_count = 0;
+    MemoryManager::for_each_vmobject([&](auto& vmobject) {
+        ++vmobject_count;
+        builder.appendf("VMObject: %p %s(%u): p:%4u\n",
+            &vmobject,
+            vmobject.is_anonymous() ? "anon" : "file",
+            vmobject.ref_count(),
+            vmobject.page_count());
+        return IterationDecision::Continue;
+    });
+    builder.appendf("VMO count: %u\n", vmobject_count);
     builder.appendf("Free physical pages: %u\n", MM.user_physical_pages() - MM.user_physical_pages_used());
     builder.appendf("Free supervisor physical pages: %u\n", MM.super_physical_pages() - MM.super_physical_pages_used());
     return builder.build();
