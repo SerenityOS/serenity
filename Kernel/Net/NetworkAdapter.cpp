@@ -52,6 +52,8 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     eth->set_source(mac_address());
     eth->set_destination(destination);
     eth->set_ether_type(EtherType::ARP);
+    m_packets_out++;
+    m_bytes_out += size_in_bytes;
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
     send_raw((u8*)eth, size_in_bytes);
 }
@@ -74,6 +76,8 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
     ipv4.set_ident(1);
     ipv4.set_ttl(64);
     ipv4.set_checksum(ipv4.compute_checksum());
+    m_packets_out++;
+    m_bytes_out += size_in_bytes;
     memcpy(ipv4.payload(), payload, payload_size);
     send_raw((const u8*)&eth, size_in_bytes);
 }
@@ -81,6 +85,8 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
 void NetworkAdapter::did_receive(const u8* data, int length)
 {
     InterruptDisabler disabler;
+    m_packets_in++;
+    m_bytes_in += length;
     m_packet_queue.append(KBuffer::copy(data, length));
 }
 
