@@ -44,7 +44,7 @@ public:
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
 
-    enum Priority {
+    enum Priority : u8 {
         IdlePriority,
         FirstPriority = IdlePriority,
         LowPriority,
@@ -53,7 +53,7 @@ public:
         LastPriority = HighPriority,
     };
 
-    enum RingLevel {
+    enum RingLevel : u8 {
         Ring0 = 0,
         Ring3 = 3,
     };
@@ -320,7 +320,7 @@ private:
     pid_t m_sid { 0 };
     pid_t m_pgid { 0 };
 
-    Priority m_priority { NormalPriority };
+    static const int m_max_open_file_descriptors { FD_SETSIZE };
 
     struct FileDescriptionAndFlags {
         operator bool() const { return !!description; }
@@ -330,12 +330,14 @@ private:
         u32 flags { 0 };
     };
     Vector<FileDescriptionAndFlags> m_fds;
+
     RingLevel m_ring { Ring0 };
-
-    static const int m_max_open_file_descriptors { FD_SETSIZE };
-
+    Priority m_priority { NormalPriority };
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
+
+    bool m_being_inspected { false };
+    bool m_dead { false };
 
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
@@ -352,9 +354,6 @@ private:
     static void notify_waiters(pid_t waitee, int exit_status, int signal);
 
     HashTable<gid_t> m_gids;
-
-    bool m_being_inspected { false };
-    bool m_dead { false };
 
     int m_next_tid { 0 };
 
