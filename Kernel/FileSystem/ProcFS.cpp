@@ -37,7 +37,6 @@ enum ProcFileType {
     FI_Root_mm,
     FI_Root_mounts,
     FI_Root_df,
-    FI_Root_kmalloc,
     FI_Root_all,
     FI_Root_memstat,
     FI_Root_cpuinfo,
@@ -523,19 +522,6 @@ Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
         copy_brand_string_part_to_buffer(2);
         builder.appendf("brandstr:  \"%s\"\n", buffer);
     }
-    return builder.build();
-}
-
-Optional<KBuffer> procfs$kmalloc(InodeIdentifier)
-{
-    KBufferBuilder builder;
-    builder.appendf(
-        "eternal:      %u\n"
-        "allocated:    %u\n"
-        "free:         %u\n",
-        kmalloc_sum_eternal,
-        sum_alloc,
-        sum_free);
     return builder.build();
 }
 
@@ -1094,7 +1080,6 @@ ProcFS::ProcFS()
     m_entries[FI_Root_mm] = { "mm", FI_Root_mm, procfs$mm };
     m_entries[FI_Root_mounts] = { "mounts", FI_Root_mounts, procfs$mounts };
     m_entries[FI_Root_df] = { "df", FI_Root_df, procfs$df };
-    m_entries[FI_Root_kmalloc] = { "kmalloc", FI_Root_kmalloc, procfs$kmalloc };
     m_entries[FI_Root_all] = { "all", FI_Root_all, procfs$all };
     m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, procfs$memstat };
     m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, procfs$cpuinfo };
