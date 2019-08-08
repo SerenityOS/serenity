@@ -2,13 +2,15 @@
 
 #include <AK/AKString.h>
 #include <AK/Bitmap.h>
+#include <AK/InlineLinkedList.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/RangeAllocator.h>
 
 class Inode;
 class VMObject;
 
-class Region : public RefCounted<Region> {
+class Region : public RefCounted<Region>
+    , public InlineLinkedListNode<Region> {
     friend class MemoryManager;
 
 public:
@@ -99,6 +101,10 @@ public:
         else
             m_access &= ~Access::Write;
     }
+
+    // For InlineLinkedListNode
+    Region* m_next { nullptr };
+    Region* m_prev { nullptr };
 
 private:
     Region(const Range&, const String&, u8 access, bool cow = false);

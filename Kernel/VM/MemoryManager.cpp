@@ -246,7 +246,7 @@ Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
 {
     if (vaddr.get() < 0xc0000000)
         return nullptr;
-    for (auto& region : MM.m_kernel_regions) {
+    for (auto* region = MM.m_kernel_regions.head(); region; region = region->next()) {
         if (region->contains(vaddr))
             return region;
     }
@@ -766,9 +766,9 @@ void MemoryManager::register_region(Region& region)
 {
     InterruptDisabler disabler;
     if (region.vaddr().get() >= 0xc0000000)
-        m_kernel_regions.set(&region);
+        m_kernel_regions.append(&region);
     else
-        m_user_regions.set(&region);
+        m_user_regions.append(&region);
 }
 
 void MemoryManager::unregister_region(Region& region)
