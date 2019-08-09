@@ -5,6 +5,13 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
 
+void UDPSocket::for_each(Function<void(UDPSocket&)> callback)
+{
+    LOCKER(sockets_by_port().lock());
+    for (auto it : sockets_by_port().resource())
+        callback(*it.value);
+}
+
 Lockable<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
 {
     static Lockable<HashMap<u16, UDPSocket*>>* s_map;
