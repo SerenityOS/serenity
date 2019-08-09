@@ -95,10 +95,10 @@ public:
     void record_incoming_data(int);
 
     static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
-    static TCPSocketHandle from_tuple(const IPv4SocketTuple& tuple);
-    static TCPSocketHandle from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
+    static SocketHandle<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
+    static SocketHandle<TCPSocket> from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
-    TCPSocketHandle create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
+    SocketHandle<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
 protected:
     void set_direction(Direction direction) { m_direction = direction; }
@@ -126,28 +126,4 @@ private:
     u32 m_bytes_in { 0 };
     u32 m_packets_out { 0 };
     u32 m_bytes_out { 0 };
-};
-
-class TCPSocketHandle : public SocketHandle {
-public:
-    TCPSocketHandle() {}
-
-    TCPSocketHandle(RefPtr<TCPSocket>&& socket)
-        : SocketHandle(move(socket))
-    {
-    }
-
-    TCPSocketHandle(TCPSocketHandle&& other)
-        : SocketHandle(move(other))
-    {
-    }
-
-    TCPSocketHandle(const TCPSocketHandle&) = delete;
-    TCPSocketHandle& operator=(const TCPSocketHandle&) = delete;
-
-    TCPSocket* operator->() { return &socket(); }
-    const TCPSocket* operator->() const { return &socket(); }
-
-    TCPSocket& socket() { return static_cast<TCPSocket&>(SocketHandle::socket()); }
-    const TCPSocket& socket() const { return static_cast<const TCPSocket&>(SocketHandle::socket()); }
 };

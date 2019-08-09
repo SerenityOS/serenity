@@ -13,7 +13,7 @@ Lockable<HashMap<u16, UDPSocket*>>& UDPSocket::sockets_by_port()
     return *s_map;
 }
 
-UDPSocketHandle UDPSocket::from_port(u16 port)
+SocketHandle<UDPSocket> UDPSocket::from_port(u16 port)
 {
     RefPtr<UDPSocket> socket;
     {
@@ -24,7 +24,7 @@ UDPSocketHandle UDPSocket::from_port(u16 port)
         socket = (*it).value;
         ASSERT(socket);
     }
-    return { move(socket) };
+    return { *socket };
 }
 
 UDPSocket::UDPSocket(int protocol)

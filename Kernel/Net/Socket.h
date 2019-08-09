@@ -98,11 +98,12 @@ private:
     NonnullRefPtrVector<Socket> m_pending;
 };
 
+template<typename SocketType>
 class SocketHandle {
 public:
     SocketHandle() {}
 
-    SocketHandle(RefPtr<Socket>&& socket)
+    SocketHandle(NonnullRefPtr<SocketType>&& socket)
         : m_socket(move(socket))
     {
         if (m_socket)
@@ -125,12 +126,12 @@ public:
 
     operator bool() const { return m_socket; }
 
-    Socket* operator->() { return &socket(); }
-    const Socket* operator->() const { return &socket(); }
+    SocketType* operator->() { return &socket(); }
+    const SocketType* operator->() const { return &socket(); }
 
-    Socket& socket() { return *m_socket; }
-    const Socket& socket() const { return *m_socket; }
+    SocketType& socket() { return *m_socket; }
+    const SocketType& socket() const { return *m_socket; }
 
 private:
-    RefPtr<Socket> m_socket;
+    RefPtr<SocketType> m_socket;
 };
