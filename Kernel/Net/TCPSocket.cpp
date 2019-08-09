@@ -36,6 +36,11 @@ TCPSocketHandle TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
     if (address_match.has_value())
         return { move(address_match.value()) };
 
+    auto wildcard_tuple = IPv4SocketTuple(IPv4Address(), tuple.local_port(), IPv4Address(), 0);
+    auto wildcard_match = sockets_by_tuple().resource().get(wildcard_tuple);
+    if (wildcard_match.has_value())
+        return { move(wildcard_match.value()) };
+
     return {};
 }
 
@@ -206,7 +211,7 @@ NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, c
 
 KResult TCPSocket::protocol_bind()
 {
-    if (!m_adapter) {
+    if (has_specific_local_address() && !m_adapter) {
         m_adapter = NetworkAdapter::from_ipv4_address(local_address());
         if (!m_adapter)
             return KResult(-EADDRNOTAVAIL);
@@ -230,11 +235,17 @@ KResult TCPSocket::protocol_listen()
 KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock should_block)
 {
     if (!m_adapter) {
-        m_adapter = adapter_for_route_to(peer_address());
-        if (!m_adapter)
-            return KResult(-EHOSTUNREACH);
+        if (has_specific_local_address()) {
+            m_adapter = NetworkAdapter::from_ipv4_address(local_address());
+            if (!m_adapter)
+                return KResult(-EADDRNOTAVAIL);
+        } else {
+            m_adapter = adapter_for_route_to(peer_address());
+            if (!m_adapter)
+                return KResult(-EHOSTUNREACH);
 
-        set_local_address(m_adapter->ipv4_address());
+            set_local_address(m_adapter->ipv4_address());
+        }
     }
 
     allocate_local_port_if_needed();
