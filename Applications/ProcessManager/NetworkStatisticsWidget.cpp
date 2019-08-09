@@ -20,6 +20,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
     adapters_group_box->set_preferred_size(0, 120);
 
     m_adapter_table_view = new GTableView(adapters_group_box);
+    m_adapter_table_view->set_size_columns_to_fit_content(true);
     m_adapter_table_view->set_model(NetworkAdapterModel::create());
 
     auto* sockets_group_box = new GGroupBox("Sockets", this);
@@ -29,6 +30,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
     sockets_group_box->set_preferred_size(0, 0);
 
     m_socket_table_view = new GTableView(sockets_group_box);
+    m_socket_table_view->set_size_columns_to_fit_content(true);
     m_socket_table_view->set_model(SocketModel::create());
 
     m_update_timer = new CTimer(
