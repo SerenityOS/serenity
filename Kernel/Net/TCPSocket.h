@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/Net/IPv4Socket.h>
 
 class TCPSocket final : public IPv4Socket {
@@ -86,7 +87,7 @@ private:
     virtual KResult protocol_bind() override;
     virtual KResult protocol_listen() override;
 
-    NetworkAdapter* m_adapter { nullptr };
+    WeakPtr<NetworkAdapter> m_adapter;
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
     State m_state { State::Closed };

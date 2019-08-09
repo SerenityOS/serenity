@@ -4,6 +4,8 @@
 #include <AK/Function.h>
 #include <AK/SinglyLinkedList.h>
 #include <AK/Types.h>
+#include <AK/Weakable.h>
+#include <AK/WeakPtr.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
@@ -12,10 +14,10 @@
 
 class NetworkAdapter;
 
-class NetworkAdapter {
+class NetworkAdapter : public Weakable<NetworkAdapter> {
 public:
     static void for_each(Function<void(NetworkAdapter&)>);
-    static NetworkAdapter* from_ipv4_address(const IPv4Address&);
+    static WeakPtr<NetworkAdapter> from_ipv4_address(const IPv4Address&);
     virtual ~NetworkAdapter();
 
     virtual const char* class_name() const = 0;
