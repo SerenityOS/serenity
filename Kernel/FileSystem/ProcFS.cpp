@@ -24,6 +24,7 @@ enum ProcParentDirectory {
     PDI_AbstractRoot = 0,
     PDI_Root,
     PDI_Root_sys,
+    PDI_Root_net,
     PDI_PID,
     PDI_PID_fd,
 };
@@ -45,11 +46,13 @@ enum ProcFileType {
     FI_Root_pci,
     FI_Root_uptime,
     FI_Root_cmdline,
-    FI_Root_netadapters,
-    FI_Root_net_tcp,
     FI_Root_self, // symlink
     FI_Root_sys,  // directory
+    FI_Root_net,  // directory
     __FI_Root_End,
+
+    FI_Root_net_adapters,
+    FI_Root_net_tcp,
 
     FI_PID,
 
@@ -116,6 +119,8 @@ static inline InodeIdentifier to_parent_id(const InodeIdentifier& identifier)
         return { identifier.fsid(), FI_Root };
     case PDI_Root_sys:
         return { identifier.fsid(), FI_Root_sys };
+    case PDI_Root_net:
+        return { identifier.fsid(), FI_Root_net };
     case PDI_PID:
         return to_identifier(identifier.fsid(), PDI_Root, to_pid(identifier), FI_PID);
     case PDI_PID_fd:
@@ -156,6 +161,7 @@ static inline bool is_directory(const InodeIdentifier& identifier)
     switch (proc_file_type) {
     case FI_Root:
     case FI_Root_sys:
+    case FI_Root_net:
     case FI_PID:
     case FI_PID_fd:
         return true;
@@ -266,7 +272,7 @@ Optional<KBuffer> procfs$cmdline(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$netadapters(InodeIdentifier)
+Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
 {
     JsonArray json;
     NetworkAdapter::for_each([&json](auto& adapter) {
@@ -809,6 +815,7 @@ InodeMetadata ProcFSInode::metadata() const
         break;
     case FI_Root:
     case FI_Root_sys:
+    case FI_Root_net:
     case FI_PID:
     case FI_PID_fd:
         metadata.mode = 040777;
@@ -907,6 +914,11 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         }
         break;
 
+    case FI_Root_net:
+        callback({ "adapters", 8, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_adapters), 0 });
+        callback({ "tcp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_tcp), 0 });
+        break;
+
     case FI_PID: {
         auto handle = ProcessInspectionHandle::from_pid(pid);
         if (!handle)
@@ -983,6 +995,14 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
             if (name == entry.name)
                 return sys_var_to_identifier(fsid(), i);
         }
+        return {};
+    }
+
+    if (proc_file_type == FI_Root_net) {
+        if (name == "adapters")
+            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_adapters);
+        if (name == "tcp")
+            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_tcp);
         return {};
     }
 
@@ -1089,9 +1109,11 @@ ProcFS::ProcFS()
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, procfs$pci };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, procfs$cmdline };
-    m_entries[FI_Root_netadapters] = { "netadapters", FI_Root_netadapters, procfs$netadapters };
-    m_entries[FI_Root_net_tcp] = { "net_tcp", FI_Root_net_tcp, procfs$net_tcp };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
+    m_entries[FI_Root_net] = { "net", FI_Root_net };
+
+    m_entries[FI_Root_net_adapters] = { "adapters", FI_Root_net_adapters, procfs$net_adapters };
+    m_entries[FI_Root_net_tcp] = { "tcp", FI_Root_net_tcp, procfs$net_tcp };
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, procfs$pid_vm };
     m_entries[FI_PID_vmo] = { "vmo", FI_PID_vmo, procfs$pid_vmo };

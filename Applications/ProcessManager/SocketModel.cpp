@@ -5,7 +5,7 @@
 
 void SocketModel::update()
 {
-    CFile file("/proc/net_tcp");
+    CFile file("/proc/net/tcp");
     if (!file.open(CIODevice::ReadOnly)) {
         dbg() << "Unable to open " << file.filename();
         return;
