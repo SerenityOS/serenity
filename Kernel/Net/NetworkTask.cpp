@@ -320,6 +320,10 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
 
     IPv4SocketTuple tuple(ipv4_packet.destination(), tcp_packet.destination_port(), ipv4_packet.source(), tcp_packet.source_port());
 
+#ifdef TCP_DEBUG
+    kprintf("handle_tcp: looking for socket; tuple=%s\n", tuple.to_string().characters());
+#endif
+
     auto socket = TCPSocket::from_tuple(tuple);
     if (!socket) {
         kprintf("handle_tcp: No TCP socket for tuple %s\n", tuple.to_string().characters());
@@ -329,16 +333,16 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     ASSERT(socket->type() == SOCK_STREAM);
     ASSERT(socket->local_port() == tcp_packet.destination_port());
 
+#ifdef TCP_DEBUG
+    kprintf("handle_tcp: got socket; state=%s\n", socket->tuple().to_string().characters(), TCPSocket::to_string(socket->state()));
+#endif
+
     if (tcp_packet.ack_number() != socket->sequence_number()) {
         kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n", tcp_packet.ack_number(), socket->sequence_number());
         return;
     }
 
     socket->record_incoming_data(ipv4_packet.payload_size());
-
-#ifdef TCP_DEBUG
-    kprintf("handle_tcp: state=%s\n", TCPSocket::to_string(socket->state()));
-#endif
 
     switch (socket->state()) {
     case TCPSocket::State::Closed:
