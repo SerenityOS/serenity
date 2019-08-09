@@ -2831,6 +2831,8 @@ int Process::sys$dbgputch(u8 ch)
 
 int Process::sys$dbgputstr(const u8* characters, int length)
 {
+    if (!length)
+        return 0;
     if (!validate_read(characters, length))
         return -EFAULT;
     for (int i = 0; i < length; ++i)
