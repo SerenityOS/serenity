@@ -1,9 +1,9 @@
 #pragma once
 
 #include <AK/HashTable.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
-#include <AK/Vector.h>
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/KResult.h>
 #include <Kernel/Lock.h>
@@ -68,7 +68,7 @@ public:
 protected:
     Socket(int domain, int type, int protocol);
 
-    KResult queue_connection_from(Socket&);
+    KResult queue_connection_from(NonnullRefPtr<Socket>);
 
     void load_receive_deadline();
     void load_send_deadline();
@@ -95,7 +95,7 @@ private:
     timeval m_receive_deadline { 0, 0 };
     timeval m_send_deadline { 0, 0 };
 
-    Vector<RefPtr<Socket>> m_pending;
+    NonnullRefPtrVector<Socket> m_pending;
 };
 
 class SocketHandle {
