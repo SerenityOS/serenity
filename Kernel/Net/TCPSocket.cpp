@@ -25,21 +25,46 @@ Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 
 TCPSocketHandle TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
 {
-    RefPtr<TCPSocket> socket;
-    {
-        LOCKER(sockets_by_tuple().lock());
-        auto it = sockets_by_tuple().resource().find(tuple);
-        if (it == sockets_by_tuple().resource().end())
-            return {};
-        socket = (*it).value;
-        ASSERT(socket);
-    }
-    return { move(socket) };
+    LOCKER(sockets_by_tuple().lock());
+
+    auto exact_match = sockets_by_tuple().resource().get(tuple);
+    if (exact_match.has_value())
+        return { move(exact_match.value()) };
+
+    auto address_tuple = IPv4SocketTuple(tuple.local_address(), tuple.local_port(), IPv4Address(), 0);
+    auto address_match = sockets_by_tuple().resource().get(address_tuple);
+    if (address_match.has_value())
+        return { move(address_match.value()) };
+
+    return {};
 }
 
 TCPSocketHandle TCPSocket::from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port)
 {
     return from_tuple(IPv4SocketTuple(local_address, local_port, peer_address, peer_port));
+}
+
+TCPSocketHandle TCPSocket::create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
+{
+    auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
+
+    LOCKER(sockets_by_tuple().lock());
+    if (sockets_by_tuple().resource().contains(tuple))
+        return {};
+
+    auto client = TCPSocket::create(protocol());
+
+    client->set_local_address(new_local_address);
+    client->set_local_port(new_local_port);
+    client->set_peer_address(new_peer_address);
+    client->set_peer_port(new_peer_port);
+    client->set_direction(Direction::Incoming);
+
+    queue_connection_from(client);
+
+    sockets_by_tuple().resource().set(tuple, client);
+
+    return from_tuple(tuple);
 }
 
 TCPSocket::TCPSocket(int protocol)
@@ -104,7 +129,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
     if (flags & TCPFlags::ACK)
         tcp_packet.set_ack_number(m_ack_number);
 
-    if (flags == TCPFlags::SYN) {
+    if (flags & TCPFlags::SYN) {
         ++m_sequence_number;
     } else {
         m_sequence_number += payload_size;
@@ -196,7 +221,9 @@ KResult TCPSocket::protocol_listen()
     if (sockets_by_tuple().resource().contains(tuple()))
         return KResult(-EADDRINUSE);
     sockets_by_tuple().resource().set(tuple(), this);
+    set_direction(Direction::Passive);
     set_state(State::Listen);
+    set_connected(true);
     return KSuccess;
 }
 
@@ -217,6 +244,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
 
     send_tcp_packet(TCPFlags::SYN);
     m_state = State::SynSent;
+    m_direction = Direction::Outgoing;
 
     if (should_block == ShouldBlock::Yes) {
         if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)

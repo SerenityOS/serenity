@@ -353,10 +353,24 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         return;
     case TCPSocket::State::Listen:
         switch (tcp_packet.flags()) {
-        case TCPFlags::SYN:
-            kprintf("handle_tcp: incoming connections not supported\n");
-            // socket->send_tcp_packet(TCPFlags::RST);
+        case TCPFlags::SYN: {
+            kprintf("handle_tcp: incoming connection\n");
+            auto& local_address = ipv4_packet.destination();
+            auto& peer_address = ipv4_packet.source();
+            auto client = socket->create_client(local_address, tcp_packet.destination_port(), peer_address, tcp_packet.source_port());
+            if (!client) {
+                kprintf("handle_tcp: couldn't create client socket\n");
+                return;
+            }
+            kprintf("handle_tcp: created new client socket with tuple %s\n", client->tuple().to_string().characters());
+            client->set_sequence_number(1000);
+            client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
+            client->set_sequence_number(1001);
+            client->set_state(TCPSocket::State::SynReceived);
+            kprintf("handle_tcp: Closed -> SynReceived\n");
             return;
+        }
         default:
             kprintf("handle_tcp: unexpected flags in Listen state\n");
             // socket->send_tcp_packet(TCPFlags::RST);
@@ -389,7 +403,8 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         case TCPFlags::ACK:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::Established);
-            socket->set_connected(true);
+            if (socket->direction() == TCPSocket::Direction::Outgoing)
+                socket->set_connected(true);
             kprintf("handle_tcp: SynReceived -> Established\n");
             return;
         default:
