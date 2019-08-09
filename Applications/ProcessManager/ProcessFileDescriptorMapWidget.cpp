@@ -9,6 +9,7 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GWidget* parent)
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_margins({ 4, 4, 4, 4 });
     m_table_view = new GTableView(this);
+    m_table_view->set_size_columns_to_fit_content(true);
     m_table_view->set_model(adopt(*new ProcessFileDescriptorMapModel));
 }
 

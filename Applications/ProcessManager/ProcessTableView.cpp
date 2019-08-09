@@ -6,6 +6,7 @@
 ProcessTableView::ProcessTableView(GraphWidget& graph, GWidget* parent)
     : GTableView(parent)
 {
+    set_size_columns_to_fit_content(true);
     set_model(GSortingProxyModel::create(ProcessModel::create(graph)));
     model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GSortOrder::Descending);
     refresh();
