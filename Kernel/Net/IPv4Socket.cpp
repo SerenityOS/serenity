@@ -84,7 +84,7 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
     m_local_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
     m_local_port = ntohs(ia.sin_port);
 
-    dbgprintf("IPv4Socket::bind %s{%p} to port %u\n", class_name(), this, m_local_port);
+    dbgprintf("IPv4Socket::bind %s{%p} to %s:%u\n", class_name(), this, m_local_address.to_string().characters(), m_local_port);
 
     return protocol_bind();
 }
