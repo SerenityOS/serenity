@@ -2,14 +2,12 @@
 
 #include <Kernel/Net/IPv4Socket.h>
 
-class UDPSocketHandle;
-
 class UDPSocket final : public IPv4Socket {
 public:
     static NonnullRefPtr<UDPSocket> create(int protocol);
     virtual ~UDPSocket() override;
 
-    static UDPSocketHandle from_port(u16);
+    static SocketHandle<UDPSocket> from_port(u16);
 
 private:
     explicit UDPSocket(int protocol);
@@ -21,28 +19,4 @@ private:
     virtual KResult protocol_connect(FileDescription&, ShouldBlock) override { return KSuccess; }
     virtual int protocol_allocate_local_port() override;
     virtual KResult protocol_bind() override;
-};
-
-class UDPSocketHandle : public SocketHandle {
-public:
-    UDPSocketHandle() {}
-
-    UDPSocketHandle(RefPtr<UDPSocket>&& socket)
-        : SocketHandle(move(socket))
-    {
-    }
-
-    UDPSocketHandle(UDPSocketHandle&& other)
-        : SocketHandle(move(other))
-    {
-    }
-
-    UDPSocketHandle(const UDPSocketHandle&) = delete;
-    UDPSocketHandle& operator=(const UDPSocketHandle&) = delete;
-
-    UDPSocket* operator->() { return &socket(); }
-    const UDPSocket* operator->() const { return &socket(); }
-
-    UDPSocket& socket() { return static_cast<UDPSocket&>(SocketHandle::socket()); }
-    const UDPSocket& socket() const { return static_cast<const UDPSocket&>(SocketHandle::socket()); }
 };

@@ -9,8 +9,6 @@
 #include <Kernel/Net/IPv4SocketTuple.h>
 #include <Kernel/Net/Socket.h>
 
-class IPv4SocketHandle;
-class TCPSocketHandle;
 class NetworkAdapter;
 class TCPPacket;
 class TCPSocket;
@@ -84,28 +82,4 @@ private:
     u32 m_bytes_received { 0 };
 
     bool m_can_read { false };
-};
-
-class IPv4SocketHandle : public SocketHandle {
-public:
-    IPv4SocketHandle() {}
-
-    IPv4SocketHandle(RefPtr<IPv4Socket>&& socket)
-        : SocketHandle(move(socket))
-    {
-    }
-
-    IPv4SocketHandle(IPv4SocketHandle&& other)
-        : SocketHandle(move(other))
-    {
-    }
-
-    IPv4SocketHandle(const IPv4SocketHandle&) = delete;
-    IPv4SocketHandle& operator=(const IPv4SocketHandle&) = delete;
-
-    IPv4Socket* operator->() { return &socket(); }
-    const IPv4Socket* operator->() const { return &socket(); }
-
-    IPv4Socket& socket() { return static_cast<IPv4Socket&>(SocketHandle::socket()); }
-    const IPv4Socket& socket() const { return static_cast<const IPv4Socket&>(SocketHandle::socket()); }
 };

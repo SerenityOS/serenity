@@ -23,33 +23,33 @@ Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
     return *s_map;
 }
 
-TCPSocketHandle TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
+SocketHandle<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
 {
     LOCKER(sockets_by_tuple().lock());
 
     auto exact_match = sockets_by_tuple().resource().get(tuple);
     if (exact_match.has_value())
-        return { move(exact_match.value()) };
+        return { *exact_match.value() };
 
     auto address_tuple = IPv4SocketTuple(tuple.local_address(), tuple.local_port(), IPv4Address(), 0);
     auto address_match = sockets_by_tuple().resource().get(address_tuple);
     if (address_match.has_value())
-        return { move(address_match.value()) };
+        return { *address_match.value() };
 
     auto wildcard_tuple = IPv4SocketTuple(IPv4Address(), tuple.local_port(), IPv4Address(), 0);
     auto wildcard_match = sockets_by_tuple().resource().get(wildcard_tuple);
     if (wildcard_match.has_value())
-        return { move(wildcard_match.value()) };
+        return { *wildcard_match.value() };
 
     return {};
 }
 
-TCPSocketHandle TCPSocket::from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port)
+SocketHandle<TCPSocket> TCPSocket::from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port)
 {
     return from_tuple(IPv4SocketTuple(local_address, local_port, peer_address, peer_port));
 }
 
-TCPSocketHandle TCPSocket::create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
+SocketHandle<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
 {
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
 
