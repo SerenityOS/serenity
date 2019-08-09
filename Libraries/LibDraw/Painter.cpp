@@ -653,7 +653,7 @@ void Painter::draw_text(const Rect& rect, const StringView& text, const Font& fo
     } else if (alignment == TextAlignment::CenterLeft) {
         bounding_rect.set_location({ rect.x(), rect.center().y() - (bounding_rect.height() / 2) });
     } else if (alignment == TextAlignment::CenterRight) {
-        bounding_rect.set_location({ rect.right() - bounding_rect.width(), rect.center().y() - (bounding_rect.height() / 2) });
+        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.center().y() - (bounding_rect.height() / 2) });
     } else if (alignment == TextAlignment::Center) {
         bounding_rect.center_within(rect);
     } else {
