@@ -58,9 +58,11 @@ double tan(double angle)
     return ampsin(angle) / ampsin(M_PI_2 + angle);
 }
 
-double sqrt(double)
+double sqrt(double x)
 {
-    ASSERT_NOT_REACHED();
+    double res;
+    __asm__("fsqrt" : "=t"(res) : "0"(x));
+    return res;
 }
 
 double sinh(double)
