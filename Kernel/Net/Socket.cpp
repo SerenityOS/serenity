@@ -52,7 +52,7 @@ RefPtr<Socket> Socket::accept()
     return client;
 }
 
-KResult Socket::queue_connection_from(Socket& peer)
+KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
 {
     LOCKER(m_lock);
     if (m_pending.size() >= m_backlog)
