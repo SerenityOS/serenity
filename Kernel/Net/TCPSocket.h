@@ -10,6 +10,29 @@ public:
     static NonnullRefPtr<TCPSocket> create(int protocol);
     virtual ~TCPSocket() override;
 
+    enum class Direction {
+        Unspecified,
+        Outgoing,
+        Incoming,
+        Passive,
+    };
+
+    static const char* to_string(Direction direction)
+    {
+        switch (direction) {
+        case Direction::Unspecified:
+            return "Unspecified";
+        case Direction::Outgoing:
+            return "Outgoing";
+        case Direction::Incoming:
+            return "Incoming";
+        case Direction::Passive:
+            return "Passive";
+        default:
+            return "None";
+        }
+    }
+
     enum class State {
         Closed,
         Listen,
@@ -57,6 +80,8 @@ public:
     State state() const { return m_state; }
     void set_state(State state) { m_state = state; }
 
+    Direction direction() const { return m_direction; }
+
     void set_ack_number(u32 n) { m_ack_number = n; }
     void set_sequence_number(u32 n) { m_sequence_number = n; }
     u32 ack_number() const { return m_ack_number; }
@@ -73,6 +98,11 @@ public:
     static TCPSocketHandle from_tuple(const IPv4SocketTuple& tuple);
     static TCPSocketHandle from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
+    TCPSocketHandle create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
+
+protected:
+    void set_direction(Direction direction) { m_direction = direction; }
+
 private:
     explicit TCPSocket(int protocol);
     virtual const char* class_name() const override { return "TCPSocket"; }
@@ -87,6 +117,7 @@ private:
     virtual KResult protocol_bind() override;
     virtual KResult protocol_listen() override;
 
+    Direction m_direction { Direction::Unspecified };
     WeakPtr<NetworkAdapter> m_adapter;
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
