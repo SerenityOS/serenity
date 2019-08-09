@@ -56,7 +56,7 @@ int UDPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
 
 int UDPSocket::protocol_send(const void* data, int data_length)
 {
-    auto* adapter = adapter_for_route_to(peer_address());
+    auto adapter = adapter_for_route_to(peer_address());
     if (!adapter)
         return -EHOSTUNREACH;
     auto buffer = ByteBuffer::create_zeroed(sizeof(UDPPacket) + data_length);

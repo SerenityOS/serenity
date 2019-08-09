@@ -38,7 +38,7 @@ void NetworkTask_main()
 {
     LoopbackAdapter::the();
 
-    auto* adapter = E1000NetworkAdapter::the();
+    auto adapter = E1000NetworkAdapter::the();
     if (!adapter)
         dbgprintf("E1000 network card not found!\n");
 
@@ -150,7 +150,7 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
 
     if (packet.operation() == ARPOperation::Request) {
         // Who has this IP address?
-        if (auto* adapter = NetworkAdapter::from_ipv4_address(packet.target_protocol_address())) {
+        if (auto adapter = NetworkAdapter::from_ipv4_address(packet.target_protocol_address())) {
             // We do!
             kprintf("handle_arp: Responding to ARP request for my IPv4 address (%s)\n",
                 adapter->ipv4_address().to_string().characters());
@@ -231,7 +231,7 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
         }
     }
 
-    auto* adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter)
         return;
 
@@ -260,7 +260,7 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
     (void)frame_size;
     auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
 
-    auto* adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter) {
         kprintf("handle_udp: this packet is not for me, it's for %s\n", ipv4_packet.destination().to_string().characters());
         return;
@@ -292,7 +292,7 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
     (void)frame_size;
     auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
 
-    auto* adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter) {
         kprintf("handle_tcp: this packet is not for me, it's for %s\n", ipv4_packet.destination().to_string().characters());
         return;
