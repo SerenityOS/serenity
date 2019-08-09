@@ -222,6 +222,11 @@ template<typename PutChFunc>
                 if (*(p + 1))
                     goto one_more;
             }
+            if (*p == '*') {
+              fieldWidth = va_arg(ap, int);
+              if (*(p + 1))
+                goto one_more;
+            }
             if (*p == 'l') {
                 ++long_qualifiers;
                 if (*(p + 1))
