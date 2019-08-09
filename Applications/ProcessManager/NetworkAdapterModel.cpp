@@ -5,7 +5,7 @@
 
 void NetworkAdapterModel::update()
 {
-    CFile file("/proc/netadapters");
+    CFile file("/proc/net/adapters");
     if (!file.open(CIODevice::ReadOnly)) {
         dbg() << "Unable to open " << file.filename();
         return;
