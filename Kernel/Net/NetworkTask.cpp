@@ -72,8 +72,8 @@ void NetworkTask_main()
             continue;
         }
         auto& packet = packet_maybe_null.value();
-        if (packet.size() < (int)(sizeof(EthernetFrameHeader))) {
-            kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%d)\n", packet.size());
+        if (packet.size() < sizeof(EthernetFrameHeader)) {
+            kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%zu)\n", packet.size());
             continue;
         }
         auto& eth = *(const EthernetFrameHeader*)packet.data();
@@ -185,9 +185,23 @@ void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
     constexpr int minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
         kprintf("handle_ipv4: Frame too small (%d, need %d)\n", frame_size, minimum_ipv4_frame_size);
+        hang();
         return;
     }
     auto& packet = *static_cast<const IPv4Packet*>(eth.payload());
+
+    if (packet.length() < sizeof(IPv4Packet)) {
+        kprintf("handle_ipv4: IPv4 packet too short (%u, need %u)\n", packet.length(), sizeof(IPv4Packet));
+        hang();
+        return;
+    }
+
+    size_t actual_ipv4_packet_length = frame_size - sizeof(EthernetFrameHeader);
+    if (packet.length() > actual_ipv4_packet_length) {
+        kprintf("handle_ipv4: IPv4 packet claims to be longer than it is (%u, actually %zu)\n", packet.length(), actual_ipv4_packet_length);
+        hang();
+        return;
+    }
 
 #ifdef IPV4_DEBUG
     kprintf("handle_ipv4: source=%s, target=%s\n",
