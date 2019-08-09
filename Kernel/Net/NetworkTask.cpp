@@ -20,11 +20,11 @@
 //#define UDP_DEBUG
 //#define TCP_DEBUG
 
-static void handle_arp(const EthernetFrameHeader&, int frame_size);
-static void handle_ipv4(const EthernetFrameHeader&, int frame_size);
-static void handle_icmp(const EthernetFrameHeader&, int frame_size);
-static void handle_udp(const EthernetFrameHeader&, int frame_size);
-static void handle_tcp(const EthernetFrameHeader&, int frame_size);
+static void handle_arp(const EthernetFrameHeader&, size_t frame_size);
+static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size);
+static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&);
+static void handle_udp(const IPv4Packet&);
+static void handle_tcp(const IPv4Packet&);
 
 Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 {
@@ -118,9 +118,9 @@ void NetworkTask_main()
     }
 }
 
-void handle_arp(const EthernetFrameHeader& eth, int frame_size)
+void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
 {
-    constexpr int minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
+    constexpr size_t minimum_arp_frame_size = sizeof(EthernetFrameHeader) + sizeof(ARPPacket);
     if (frame_size < minimum_arp_frame_size) {
         kprintf("handle_arp: Frame too small (%d, need %d)\n", frame_size, minimum_arp_frame_size);
         return;
@@ -180,9 +180,9 @@ void handle_arp(const EthernetFrameHeader& eth, int frame_size)
     }
 }
 
-void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
+void handle_ipv4(const EthernetFrameHeader& eth, size_t frame_size)
 {
-    constexpr int minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
+    constexpr size_t minimum_ipv4_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet);
     if (frame_size < minimum_ipv4_frame_size) {
         kprintf("handle_ipv4: Frame too small (%d, need %d)\n", frame_size, minimum_ipv4_frame_size);
         return;
@@ -208,21 +208,19 @@ void handle_ipv4(const EthernetFrameHeader& eth, int frame_size)
 
     switch ((IPv4Protocol)packet.protocol()) {
     case IPv4Protocol::ICMP:
-        return handle_icmp(eth, frame_size);
+        return handle_icmp(eth, packet);
     case IPv4Protocol::UDP:
-        return handle_udp(eth, frame_size);
+        return handle_udp(packet);
     case IPv4Protocol::TCP:
-        return handle_tcp(eth, frame_size);
+        return handle_tcp(packet);
     default:
         kprintf("handle_ipv4: Unhandled protocol %u\n", packet.protocol());
         break;
     }
 }
 
-void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
+void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet)
 {
-    (void)frame_size;
-    auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
     auto& icmp_header = *static_cast<const ICMPHeader*>(ipv4_packet.payload());
 #ifdef ICMP_DEBUG
     kprintf("handle_icmp: source=%s, destination=%s, type=%b, code=%b\n",
@@ -266,10 +264,12 @@ void handle_icmp(const EthernetFrameHeader& eth, int frame_size)
     }
 }
 
-void handle_udp(const EthernetFrameHeader& eth, int frame_size)
+void handle_udp(const IPv4Packet& ipv4_packet)
 {
-    (void)frame_size;
-    auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
+    if (ipv4_packet.payload_size() < sizeof(UDPPacket)) {
+        kprintf("handle_udp: Packet too small (%u, need %zu)\n", ipv4_packet.payload_size());
+        return;
+    }
 
     auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
     if (!adapter) {
@@ -298,18 +298,26 @@ void handle_udp(const EthernetFrameHeader& eth, int frame_size)
     socket->did_receive(ipv4_packet.source(), udp_packet.source_port(), KBuffer::copy(&ipv4_packet, sizeof(IPv4Packet) + ipv4_packet.payload_size()));
 }
 
-void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
+void handle_tcp(const IPv4Packet& ipv4_packet)
 {
-    (void)frame_size;
-    auto& ipv4_packet = *static_cast<const IPv4Packet*>(eth.payload());
-
-    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
-    if (!adapter) {
-        kprintf("handle_tcp: this packet is not for me, it's for %s\n", ipv4_packet.destination().to_string().characters());
+    if (ipv4_packet.payload_size() < sizeof(TCPPacket)) {
+        kprintf("handle_tcp: IPv4 payload is too small to be a TCP packet (%u, need %zu)\n", ipv4_packet.payload_size(), sizeof(TCPPacket));
         return;
     }
 
     auto& tcp_packet = *static_cast<const TCPPacket*>(ipv4_packet.payload());
+
+    size_t minimum_tcp_header_size = 5 * sizeof(u32);
+    size_t maximum_tcp_header_size = 15 * sizeof(u32);
+    if (tcp_packet.header_size() < minimum_tcp_header_size || tcp_packet.header_size() > maximum_tcp_header_size) {
+        kprintf("handle_tcp: TCP packet header has invalid size %zu\n", tcp_packet.header_size());
+    }
+
+    if (ipv4_packet.payload_size() < tcp_packet.header_size()) {
+        kprintf("handle_tcp: IPv4 payload is smaller than TCP header claims (%u, supposedly %u)\n", ipv4_packet.payload_size(), tcp_packet.header_size());
+        return;
+    }
+
     size_t payload_size = ipv4_packet.payload_size() - tcp_packet.header_size();
 
 #ifdef TCP_DEBUG
@@ -328,6 +336,12 @@ void handle_tcp(const EthernetFrameHeader& eth, int frame_size)
         tcp_packet.window_size(),
         payload_size);
 #endif
+
+    auto adapter = NetworkAdapter::from_ipv4_address(ipv4_packet.destination());
+    if (!adapter) {
+        kprintf("handle_tcp: this packet is not for me, it's for %s\n", ipv4_packet.destination().to_string().characters());
+        return;
+    }
 
     IPv4SocketTuple tuple(ipv4_packet.destination(), tcp_packet.destination_port(), ipv4_packet.source(), tcp_packet.source_port());
 
