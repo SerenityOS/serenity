@@ -6,7 +6,7 @@
 
 class TCPSocket final : public IPv4Socket {
 public:
-    static void for_each(Function<void(TCPSocket*&)>);
+    static void for_each(Function<void(TCPSocket&)>);
     static NonnullRefPtr<TCPSocket> create(int protocol);
     virtual ~TCPSocket() override;
 
