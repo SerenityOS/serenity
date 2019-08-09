@@ -15,6 +15,8 @@
 #include <Kernel/KParams.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/TCPSocket.h>
+#include <Kernel/Net/UDPSocket.h>
+#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/PCI.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/kmalloc.h>
@@ -53,6 +55,7 @@ enum ProcFileType {
 
     FI_Root_net_adapters,
     FI_Root_net_tcp,
+    FI_Root_net_udp,
 
     FI_PID,
 
@@ -306,6 +309,20 @@ Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
         obj.set("bytes_in", socket.bytes_in());
         obj.set("packets_out", socket.packets_out());
         obj.set("bytes_out", socket.bytes_out());
+        json.append(obj);
+    });
+    return json.serialized<KBufferBuilder>();
+}
+
+Optional<KBuffer> procfs$net_udp(InodeIdentifier)
+{
+    JsonArray json;
+    UDPSocket::for_each([&json](auto& socket) {
+        JsonObject obj;
+        obj.set("local_address", socket.local_address().to_string());
+        obj.set("local_port", socket.local_port());
+        obj.set("peer_address", socket.peer_address().to_string());
+        obj.set("peer_port", socket.peer_port());
         json.append(obj);
     });
     return json.serialized<KBufferBuilder>();
@@ -917,6 +934,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     case FI_Root_net:
         callback({ "adapters", 8, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_adapters), 0 });
         callback({ "tcp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_tcp), 0 });
+        callback({ "udp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_udp), 0 });
         break;
 
     case FI_PID: {
@@ -1003,6 +1021,8 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
             return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_adapters);
         if (name == "tcp")
             return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_tcp);
+        if (name == "udp")
+            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_udp);
         return {};
     }
 
@@ -1114,6 +1134,7 @@ ProcFS::ProcFS()
 
     m_entries[FI_Root_net_adapters] = { "adapters", FI_Root_net_adapters, procfs$net_adapters };
     m_entries[FI_Root_net_tcp] = { "tcp", FI_Root_net_tcp, procfs$net_tcp };
+    m_entries[FI_Root_net_udp] = { "udp", FI_Root_net_udp, procfs$net_udp };
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, procfs$pid_vm };
     m_entries[FI_PID_vmo] = { "vmo", FI_PID_vmo, procfs$pid_vmo };
