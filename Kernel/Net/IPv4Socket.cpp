@@ -95,9 +95,6 @@ KResult IPv4Socket::listen(int backlog)
     if (rc < 0)
         return KResult(-EADDRINUSE);
 
-    if (m_local_address.to_u32() == 0)
-        return KResult(-EADDRINUSE);
-
     set_backlog(backlog);
 
     kprintf("IPv4Socket{%p} listening with backlog=%d\n", this, backlog);

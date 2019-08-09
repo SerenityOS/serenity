@@ -39,6 +39,7 @@ public:
     const IPv4Address& local_address() const { return m_local_address; }
     u16 local_port() const { return m_local_port; }
     void set_local_port(u16 port) { m_local_port = port; }
+    bool has_specific_local_address() { return m_local_address.to_u32() != 0; }
 
     const IPv4Address& peer_address() const { return m_peer_address; }
     u16 peer_port() const { return m_peer_port; }
