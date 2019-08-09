@@ -80,7 +80,16 @@ int TCPSocket::protocol_send(const void* data, int data_length)
 
 void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size)
 {
-    ASSERT(m_adapter);
+    if (!m_adapter) {
+        if (has_specific_local_address()) {
+            m_adapter = NetworkAdapter::from_ipv4_address(local_address());
+        } else {
+            m_adapter = adapter_for_route_to(peer_address());
+            if (m_adapter)
+                set_local_address(m_adapter->ipv4_address());
+        }
+    }
+    ASSERT(!!m_adapter);
 
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.pointer());

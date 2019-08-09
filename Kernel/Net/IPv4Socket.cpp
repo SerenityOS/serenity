@@ -169,7 +169,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
         m_peer_port = ntohs(ia.sin_port);
     }
 
-    auto* adapter = adapter_for_route_to(m_peer_address);
+    auto adapter = adapter_for_route_to(m_peer_address);
     if (!adapter)
         return -EHOSTUNREACH;
 

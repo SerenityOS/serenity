@@ -22,12 +22,12 @@ void NetworkAdapter::for_each(Function<void(NetworkAdapter&)> callback)
         callback(*it);
 }
 
-NetworkAdapter* NetworkAdapter::from_ipv4_address(const IPv4Address& address)
+WeakPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& address)
 {
     LOCKER(all_adapters().lock());
     for (auto* adapter : all_adapters().resource()) {
         if (adapter->ipv4_address() == address)
-            return adapter;
+            return adapter->make_weak_ptr();
     }
     return nullptr;
 }
