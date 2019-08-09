@@ -19,7 +19,10 @@ GLabel::~GLabel()
 
 void GLabel::set_icon(GraphicsBitmap* icon)
 {
+    if (m_icon == icon)
+        return;
     m_icon = icon;
+    update();
 }
 
 void GLabel::set_text(const StringView& text)
