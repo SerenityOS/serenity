@@ -148,10 +148,10 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
         local_port(),
         peer_address().to_string().characters(),
         peer_port(),
-        tcp_packet.has_syn() ? "SYN" : "",
-        tcp_packet.has_ack() ? "ACK" : "",
-        tcp_packet.has_fin() ? "FIN" : "",
-        tcp_packet.has_rst() ? "RST" : "",
+        tcp_packet.has_syn() ? "SYN " : "",
+        tcp_packet.has_ack() ? "ACK " : "",
+        tcp_packet.has_fin() ? "FIN " : "",
+        tcp_packet.has_rst() ? "RST " : "",
         tcp_packet.sequence_number(),
         tcp_packet.ack_number());
 #endif
