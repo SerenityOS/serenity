@@ -21,6 +21,39 @@ GTableView::~GTableView()
 {
 }
 
+void GTableView::update_column_sizes()
+{
+    if (!m_size_columns_to_fit_content)
+        return;
+
+    if (!model())
+        return;
+
+    auto& model = *this->model();
+    int column_count = model.column_count();
+    int row_count = model.row_count();
+
+    for (int column = 0; column < column_count; ++column) {
+        if (is_column_hidden(column))
+            continue;
+        int header_width = header_font().width(model.column_name(column));
+        int column_width = header_width;
+        for (int row = 0; row < row_count; ++row) {
+            auto cell_data = model.data(model.index(row, column));
+            int cell_width = 0;
+            if (cell_data.is_bitmap()) {
+                cell_width = cell_data.as_bitmap().width();
+            } else {
+                cell_width = font().width(cell_data.to_string());
+            }
+            column_width = max(column_width, cell_width);
+        }
+        auto& column_data = this->column_data(column);
+        column_data.width = max(column_data.width, column_width);
+        column_data.has_initialized_width = true;
+    }
+}
+
 void GTableView::update_content_size()
 {
     if (!model())
@@ -41,6 +74,7 @@ void GTableView::update_content_size()
 void GTableView::did_update_model()
 {
     GAbstractView::did_update_model();
+    update_column_sizes();
     update_content_size();
     update();
 }
@@ -71,6 +105,7 @@ int GTableView::column_width(int column_index) const
         return 0;
     auto& column_data = this->column_data(column_index);
     if (!column_data.has_initialized_width) {
+        ASSERT(!m_size_columns_to_fit_content);
         column_data.has_initialized_width = true;
         column_data.width = model()->column_metadata(column_index).preferred_width;
     }
@@ -308,7 +343,7 @@ void GTableView::paint_headers(Painter& painter)
             text = model()->column_name(column_index);
         }
         auto text_rect = cell_rect.translated(horizontal_padding(), 0);
-        painter.draw_text(text_rect, text, Font::default_bold_font(), TextAlignment::CenterLeft, Color::Black);
+        painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, Color::Black);
         x_offset += column_width + horizontal_padding() * 2;
     }
 }
@@ -470,4 +505,9 @@ void GTableView::context_menu_event(GContextMenuEvent& event)
 void GTableView::leave_event(CEvent&)
 {
     window()->set_override_cursor(GStandardCursor::None);
+}
+
+const Font& GTableView::header_font()
+{
+    return Font::default_bold_font();
 }

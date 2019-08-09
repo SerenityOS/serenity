@@ -31,6 +31,9 @@ public:
     bool is_column_hidden(int) const;
     void set_column_hidden(int, bool);
 
+    void set_size_columns_to_fit_content(bool b) { m_size_columns_to_fit_content = b; }
+    bool size_columns_to_fit_content() const { return m_size_columns_to_fit_content; }
+
     Point adjusted_position(const Point&) const;
 
     virtual Rect content_rect(const GModelIndex&) const override;
@@ -56,6 +59,8 @@ private:
     Rect column_resize_grabbable_rect(int) const;
     int column_width(int) const;
     void update_content_size();
+    void update_column_sizes();
+    static const Font& header_font();
 
     struct ColumnData {
         int width { 0 };
@@ -69,7 +74,7 @@ private:
     int m_horizontal_padding { 5 };
     bool m_headers_visible { true };
     bool m_alternating_row_colors { true };
-
+    bool m_size_columns_to_fit_content { false };
     bool m_in_column_resize { false };
     Point m_column_resize_origin;
     int m_column_resize_original_width { 0 };
