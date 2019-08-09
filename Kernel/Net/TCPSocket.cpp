@@ -8,11 +8,11 @@
 
 //#define TCP_SOCKET_DEBUG
 
-void TCPSocket::for_each(Function<void(TCPSocket*&)> callback)
+void TCPSocket::for_each(Function<void(TCPSocket&)> callback)
 {
     LOCKER(sockets_by_tuple().lock());
     for (auto& it : sockets_by_tuple().resource())
-        callback(it.value);
+        callback(*it.value);
 }
 
 Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()

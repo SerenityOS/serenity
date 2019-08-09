@@ -295,17 +295,17 @@ Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
     JsonArray json;
     TCPSocket::for_each([&json](auto& socket) {
         JsonObject obj;
-        obj.set("local_address", socket->local_address().to_string());
-        obj.set("local_port", socket->local_port());
-        obj.set("peer_address", socket->peer_address().to_string());
-        obj.set("peer_port", socket->peer_port());
-        obj.set("state", TCPSocket::to_string(socket->state()));
-        obj.set("ack_number", socket->ack_number());
-        obj.set("sequence_number", socket->sequence_number());
-        obj.set("packets_in", socket->packets_in());
-        obj.set("bytes_in", socket->bytes_in());
-        obj.set("packets_out", socket->packets_out());
-        obj.set("bytes_out", socket->bytes_out());
+        obj.set("local_address", socket.local_address().to_string());
+        obj.set("local_port", socket.local_port());
+        obj.set("peer_address", socket.peer_address().to_string());
+        obj.set("peer_port", socket.peer_port());
+        obj.set("state", TCPSocket::to_string(socket.state()));
+        obj.set("ack_number", socket.ack_number());
+        obj.set("sequence_number", socket.sequence_number());
+        obj.set("packets_in", socket.packets_in());
+        obj.set("bytes_in", socket.bytes_in());
+        obj.set("packets_out", socket.packets_out());
+        obj.set("bytes_out", socket.bytes_out());
         json.append(obj);
     });
     return json.serialized<KBufferBuilder>();
