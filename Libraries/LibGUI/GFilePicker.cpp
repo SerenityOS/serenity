@@ -142,7 +142,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
         on_file_return();
     };
 
-    m_view->on_activation = [this](auto& index) {
+    m_view->on_selection = [this](auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
         const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
@@ -150,13 +150,9 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
 
         clear_preview();
 
-        if (entry.is_directory()) {
-            m_model->open(path.string());
-            // NOTE: 'entry' is invalid from here on
-        } else {
+        if (!entry.is_directory())
             m_filename_textbox->set_text(entry.name);
-            set_preview(path);
-        }
+        set_preview(path);
     };
 
     auto* button_container = new GWidget(lower_container);
@@ -180,6 +176,20 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     ok_button->set_text(ok_button_name(m_mode));
     ok_button->on_click = [this](auto&) {
         on_file_return();
+    };
+
+    m_view->on_activation = [this](auto& index) {
+        auto& filter_model = (GSortingProxyModel&)*m_view->model();
+        auto local_index = filter_model.map_to_target(index);
+        const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
+        FileSystemPath path(String::format("%s/%s", m_model->path().characters(), entry.name.characters()));
+
+        if (entry.is_directory()) {
+            m_model->open(path.string());
+            // NOTE: 'entry' is invalid from here on
+        } else {
+            on_file_return();
+        }
     };
 
     auto* preview_container = new GFrame(horizontal_container);
