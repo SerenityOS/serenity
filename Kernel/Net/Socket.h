@@ -32,9 +32,34 @@ public:
     int type() const { return m_type; }
     int protocol() const { return m_protocol; }
 
+    enum class SetupState {
+        Unstarted,  // we haven't tried to set the socket up yet
+        InProgress, // we're in the process of setting things up - for TCP maybe we've sent a SYN packet
+        Completed,  // the setup process is complete, but not necessarily successful
+    };
+
+    static const char* to_string(SetupState setup_state)
+    {
+        switch (setup_state) {
+        case SetupState::Unstarted:
+            return "Unstarted";
+        case SetupState::InProgress:
+            return "InProgress";
+        case SetupState::Completed:
+            return "Completed";
+        default:
+            return "None";
+        }
+    }
+
+    SetupState setup_state() const { return m_setup_state; }
+    void set_setup_state(SetupState setup_state);
+
+    bool is_connected() const { return m_connected; }
+    void set_connected(bool connected) { m_connected = connected; }
+
     bool can_accept() const { return !m_pending.is_empty(); }
     RefPtr<Socket> accept();
-    bool is_connected() const { return m_connected; }
 
     virtual KResult bind(const sockaddr*, socklen_t) = 0;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock) = 0;
@@ -55,8 +80,6 @@ public:
 
     timeval receive_deadline() const { return m_receive_deadline; }
     timeval send_deadline() const { return m_send_deadline; }
-
-    void set_connected(bool connected) { m_connected = connected; }
 
     Lock& lock() { return m_lock; }
 
@@ -87,6 +110,7 @@ private:
     int m_type { 0 };
     int m_protocol { 0 };
     int m_backlog { 0 };
+    SetupState m_setup_state { SetupState::Unstarted };
     bool m_connected { false };
 
     timeval m_receive_timeout { 0, 0 };

@@ -6,6 +6,8 @@
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
+//#define SOCKET_DEBUG
+
 KResultOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
 {
     (void)protocol;
@@ -31,6 +33,15 @@ Socket::~Socket()
 {
 }
 
+void Socket::set_setup_state(SetupState new_setup_state)
+{
+#ifdef SOCKET_DEBUG
+    kprintf("%s(%u) Socket{%p} setup state moving from %s to %s\n", current->process().name().characters(), current->pid(), this, to_string(m_setup_state), to_string(new_setup_state));
+#endif
+
+    m_setup_state = new_setup_state;
+}
+
 KResult Socket::listen(int backlog)
 {
     LOCKER(m_lock);
@@ -46,14 +57,21 @@ RefPtr<Socket> Socket::accept()
     LOCKER(m_lock);
     if (m_pending.is_empty())
         return nullptr;
+#ifdef SOCKET_DEBUG
+    kprintf("%s(%u) Socket{%p} de-queueing connection\n", current->process().name().characters(), current->pid(), this);
+#endif
     auto client = m_pending.take_first();
     ASSERT(!client->is_connected());
+    client->set_setup_state(SetupState::Completed);
     client->m_connected = true;
     return client;
 }
 
 KResult Socket::queue_connection_from(NonnullRefPtr<Socket> peer)
 {
+#ifdef SOCKET_DEBUG
+    kprintf("%s(%u) Socket{%p} queueing connection\n", current->process().name().characters(), current->pid(), this);
+#endif
     LOCKER(m_lock);
     if (m_pending.size() >= m_backlog)
         return KResult(-ECONNREFUSED);
@@ -144,7 +162,7 @@ static const char* to_string(SocketRole role)
 
 String Socket::absolute_path(const FileDescription& description) const
 {
-    return String::format("socket:%x (role: %s)", this, to_string(description.socket_role()));
+    return String::format("socket:%x (role: %s)", this, ::to_string(description.socket_role()));
 }
 
 ssize_t Socket::read(FileDescription& description, u8* buffer, ssize_t size)

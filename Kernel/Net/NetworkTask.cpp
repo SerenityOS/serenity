@@ -414,12 +414,14 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Established);
+            socket->set_setup_state(Socket::SetupState::Completed);
             socket->set_connected(true);
             return;
         default:
             kprintf("handle_tcp: unexpected flags in SynSent state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
+            socket->set_setup_state(Socket::SetupState::Completed);
             return;
         }
     case TCPSocket::State::SynReceived:
@@ -427,8 +429,10 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         case TCPFlags::ACK:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::Established);
-            if (socket->direction() == TCPSocket::Direction::Outgoing)
+            if (socket->direction() == TCPSocket::Direction::Outgoing) {
+                socket->set_setup_state(Socket::SetupState::Completed);
                 socket->set_connected(true);
+            }
             return;
         default:
             kprintf("handle_tcp: unexpected flags in SynReceived state\n");

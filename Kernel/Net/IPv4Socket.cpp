@@ -74,7 +74,7 @@ bool IPv4Socket::get_peer_address(sockaddr* address, socklen_t* address_size)
 
 KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
 {
-    ASSERT(!is_connected());
+    ASSERT(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_in))
         return KResult(-EINVAL);
     if (address->sa_family != AF_INET)
