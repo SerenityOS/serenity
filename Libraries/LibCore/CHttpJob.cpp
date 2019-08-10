@@ -121,7 +121,7 @@ void CHttpJob::start()
         dbg() << "CHttpJob: on_connected callback";
         on_socket_connected();
     };
-    bool success = m_socket->connect(m_request.hostname(), m_request.port());
+    bool success = m_socket->connect(m_request.url().host(), m_request.url().port());
     if (!success)
         return did_fail(CNetworkJob::Error::ConnectionFailed);
 }

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/AKString.h>
+#include <AK/URL.h>
 
 class CNetworkJob;
 
@@ -16,14 +17,10 @@ public:
     CHttpRequest();
     ~CHttpRequest();
 
-    String hostname() const { return m_hostname; }
-    int port() const { return m_port; }
-    String path() const { return m_path; }
-    Method method() const { return m_method; }
+    const URL& url() const { return m_url; }
+    void set_url(const URL& url) { m_url = url; }
 
-    void set_hostname(const String& hostname) { m_hostname = hostname; }
-    void set_port(int port) { m_port = port; }
-    void set_path(const String& path) { m_path = path; }
+    Method method() const { return m_method; }
     void set_method(Method method) { m_method = method; }
 
     String method_name() const;
@@ -32,8 +29,6 @@ public:
     CNetworkJob* schedule();
 
 private:
-    String m_hostname;
-    String m_path;
-    int m_port { 80 };
+    URL m_url;
     Method m_method { GET };
 };
