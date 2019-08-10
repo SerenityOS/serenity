@@ -48,7 +48,7 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
         return KResult(-EINVAL);
 
     const sockaddr_un& local_address = *reinterpret_cast<const sockaddr_un*>(address);
-    char safe_address[sizeof(local_address.sun_path) + 1];
+    char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
 #ifdef DEBUG_LOCAL_SOCKET
@@ -81,7 +81,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
         return KResult(-EINVAL);
 
     const sockaddr_un& local_address = *reinterpret_cast<const sockaddr_un*>(address);
-    char safe_address[sizeof(local_address.sun_path) + 1];
+    char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
     memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
 
 #ifdef DEBUG_LOCAL_SOCKET
