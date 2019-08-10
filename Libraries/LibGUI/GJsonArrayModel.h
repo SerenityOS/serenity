@@ -1,23 +1,30 @@
 #pragma once
 
 #include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
 #include <LibGUI/GModel.h>
 
 class GJsonArrayModel final : public GModel {
 public:
     struct FieldSpec {
-        FieldSpec(const String& a_json_field_name, const String& a_column_name, TextAlignment a_text_alignment, Function<GVariant(const GVariant&)>&& a_massage_for_display = {})
+        FieldSpec(const String& a_column_name, TextAlignment a_text_alignment, Function<GVariant(const JsonObject&)>&& a_massage_for_display = {})
+            : column_name(a_column_name)
+            , text_alignment(a_text_alignment)
+            , massage_for_display(move(a_massage_for_display))
+        {
+        }
+
+        FieldSpec(const String& a_json_field_name, const String& a_column_name, TextAlignment a_text_alignment)
             : json_field_name(a_json_field_name)
             , column_name(a_column_name)
             , text_alignment(a_text_alignment)
-            , massage_for_display(move(a_massage_for_display))
         {
         }
 
         String json_field_name;
         String column_name;
         TextAlignment text_alignment;
-        Function<GVariant(const GVariant&)> massage_for_display;
+        Function<GVariant(const JsonObject&)> massage_for_display;
     };
 
     static NonnullRefPtr<GJsonArrayModel> create(const String& json_path, Vector<FieldSpec>&& fields)
