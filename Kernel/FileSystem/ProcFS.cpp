@@ -13,10 +13,10 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KParams.h>
+#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
-#include <Kernel/Net/LocalSocket.h>
 #include <Kernel/PCI.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/kmalloc.h>
@@ -56,6 +56,7 @@ enum ProcFileType {
     FI_Root_net_adapters,
     FI_Root_net_tcp,
     FI_Root_net_udp,
+    FI_Root_net_local,
 
     FI_PID,
 
@@ -328,6 +329,19 @@ Optional<KBuffer> procfs$net_udp(InodeIdentifier)
     return json.serialized<KBufferBuilder>();
 }
 
+Optional<KBuffer> procfs$net_local(InodeIdentifier)
+{
+    JsonArray json;
+    LocalSocket::for_each([&json](auto& socket) {
+        JsonObject obj;
+        obj.set("path", String(socket.socket_path()));
+        obj.set("origin_pid", socket.origin_pid());
+        obj.set("acceptor_pid", socket.acceptor_pid());
+        json.append(obj);
+    });
+    return json.serialized<KBufferBuilder>();
+}
+
 Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
@@ -563,7 +577,8 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     json.set("super_physical_available", MM.super_physical_pages());
     json.set("kmalloc_call_count", g_kmalloc_call_count);
     json.set("kfree_call_count", g_kfree_call_count);
-    return json.serialized<KBufferBuilder>();;
+    return json.serialized<KBufferBuilder>();
+    ;
 }
 
 Optional<KBuffer> procfs$all(InodeIdentifier)
@@ -937,6 +952,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         callback({ "adapters", 8, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_adapters), 0 });
         callback({ "tcp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_tcp), 0 });
         callback({ "udp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_udp), 0 });
+        callback({ "local", 5, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_local), 0 });
         break;
 
     case FI_PID: {
@@ -1025,6 +1041,8 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
             return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_tcp);
         if (name == "udp")
             return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_udp);
+        if (name == "local")
+            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_local);
         return {};
     }
 
@@ -1137,6 +1155,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_net_adapters] = { "adapters", FI_Root_net_adapters, procfs$net_adapters };
     m_entries[FI_Root_net_tcp] = { "tcp", FI_Root_net_tcp, procfs$net_tcp };
     m_entries[FI_Root_net_udp] = { "udp", FI_Root_net_udp, procfs$net_udp };
+    m_entries[FI_Root_net_local] = { "local", FI_Root_net_local, procfs$net_local };
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, procfs$pid_vm };
     m_entries[FI_PID_vmo] = { "vmo", FI_PID_vmo, procfs$pid_vmo };
