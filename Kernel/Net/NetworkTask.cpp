@@ -410,17 +410,32 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::SynReceived);
             return;
-        case TCPFlags::SYN | TCPFlags::ACK:
+        case TCPFlags::ACK | TCPFlags::SYN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Established);
             socket->set_setup_state(Socket::SetupState::Completed);
             socket->set_connected(true);
             return;
+        case TCPFlags::ACK | TCPFlags::FIN:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->send_tcp_packet(TCPFlags::ACK);
+            socket->set_state(TCPSocket::State::Closed);
+            socket->set_error(TCPSocket::Error::FINDuringConnect);
+            socket->set_setup_state(Socket::SetupState::Completed);
+            return;
+        case TCPFlags::ACK | TCPFlags::RST:
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->send_tcp_packet(TCPFlags::ACK);
+            socket->set_state(TCPSocket::State::Closed);
+            socket->set_error(TCPSocket::Error::RSTDuringConnect);
+            socket->set_setup_state(Socket::SetupState::Completed);
+            return;
         default:
             kprintf("handle_tcp: unexpected flags in SynSent state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
+            socket->set_error(TCPSocket::Error::UnexpectedFlagsDuringConnect);
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         }
