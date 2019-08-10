@@ -7,7 +7,6 @@ OBJS = \
     GraphWidget.o \
     ProcessStacksWidget.o \
     ProcessMemoryMapWidget.o \
-    ProcessMemoryMapModel.o \
     ProcessFileDescriptorMapWidget.o \
     NetworkStatisticsWidget.o \
     main.o
