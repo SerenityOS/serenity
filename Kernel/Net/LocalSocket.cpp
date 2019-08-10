@@ -254,3 +254,29 @@ StringView LocalSocket::socket_path() const
     int len = strnlen(m_address.sun_path, sizeof(m_address.sun_path));
     return { m_address.sun_path, len };
 }
+
+String LocalSocket::absolute_path(const FileDescription& description) const
+{
+    StringBuilder builder;
+    builder.append("socket:");
+    builder.append(socket_path());
+
+    switch (role(description)) {
+    case Role::Listener:
+        builder.append(" (listening)");
+        break;
+    case Role::Accepted:
+        builder.appendf(" (accepted from pid %d)", origin_pid());
+        break;
+    case Role::Connected:
+        builder.appendf(" (connected to pid %d)", acceptor_pid());
+        break;
+    case Role::Connecting:
+        builder.append(" (connecting)");
+        break;
+    default:
+        break;
+    }
+
+    return builder.to_string();
+}
