@@ -102,6 +102,14 @@ size_t strlen(const char* str)
     return len;
 }
 
+size_t strnlen(const char* str, size_t maxlen)
+{
+    size_t len = 0;
+    for (; len < maxlen && *str; str++)
+        len++;
+    return len;
+}
+
 int strcmp(const char* s1, const char* s2)
 {
     for (; *s1 == *s2; ++s1, ++s2) {
