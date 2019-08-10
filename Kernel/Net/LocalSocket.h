@@ -15,6 +15,8 @@ public:
     static void for_each(Function<void(LocalSocket&)>);
 
     StringView socket_path() const;
+    String absolute_path(const FileDescription& description) const override;
+
     // ^Socket
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;

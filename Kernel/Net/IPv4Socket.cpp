@@ -1,3 +1,4 @@
+#include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
@@ -267,4 +268,36 @@ void IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
 #ifdef IPV4_SOCKET_DEBUG
     kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %d\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
 #endif
+}
+
+String IPv4Socket::absolute_path(const FileDescription&) const
+{
+    if (m_role == Role::None)
+        return "socket";
+
+    StringBuilder builder;
+    builder.append("socket:");
+
+    builder.appendf("%s:%d", m_local_address.to_string().characters(), m_local_port);
+    if (m_role == Role::Accepted || m_role == Role::Connected)
+        builder.appendf(" / %s:%d", m_peer_address.to_string().characters(), m_peer_port);
+
+    switch (m_role) {
+    case Role::Listener:
+        builder.append(" (listening)");
+        break;
+    case Role::Accepted:
+        builder.append(" (accepted)");
+        break;
+    case Role::Connected:
+        builder.append(" (connected)");
+        break;
+    case Role::Connecting:
+        builder.append(" (connecting)");
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
+    return builder.to_string();
 }

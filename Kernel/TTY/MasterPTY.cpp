@@ -102,3 +102,8 @@ int MasterPTY::ioctl(FileDescription& description, unsigned request, unsigned ar
         return m_slave->ioctl(description, request, arg);
     return -EINVAL;
 }
+
+String MasterPTY::absolute_path(const FileDescription&) const
+{
+    return String::format("ptm:%s", m_pts_name.characters());
+}

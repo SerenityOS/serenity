@@ -18,6 +18,8 @@ public:
     void notify_slave_closed(Badge<SlavePTY>);
     bool is_closed() const { return m_closed; }
 
+    virtual String absolute_path(const FileDescription&) const override;
+
 private:
     // ^CharacterDevice
     virtual ssize_t read(FileDescription&, u8*, ssize_t) override;
