@@ -9,7 +9,6 @@ OBJS = \
     ProcessMemoryMapWidget.o \
     ProcessMemoryMapModel.o \
     ProcessFileDescriptorMapWidget.o \
-    ProcessFileDescriptorMapModel.o \
     NetworkStatisticsWidget.o \
     main.o
 
