@@ -41,7 +41,7 @@ bool LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
 
 KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
 {
-    ASSERT(!is_connected());
+    ASSERT(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_un))
         return KResult(-EINVAL);
     if (address->sa_family != AF_LOCAL)
@@ -68,6 +68,7 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
 
     m_address = local_address;
     m_bound = true;
+    set_setup_state(SetupState::Completed);
     return KSuccess;
 }
 
@@ -108,6 +109,10 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
 
     if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
         return KResult(-EINTR);
+
+#ifdef DEBUG_LOCAL_SOCKET
+    kprintf("%s(%u) LocalSocket{%p} connect(%s) status is %s\n", current->process().name().characters(), current->pid(), this, safe_address, to_string(setup_state()));
+#endif
 
     if (!is_connected())
         return KResult(-ECONNREFUSED);
