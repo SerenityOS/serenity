@@ -19,8 +19,7 @@ BoardListModel::~BoardListModel()
 void BoardListModel::update()
 {
     CHttpRequest request;
-    request.set_hostname("a.4cdn.org");
-    request.set_path("/boards.json");
+    request.set_url("http://a.4cdn.org/boards.json");
 
     auto* job = request.schedule();
 

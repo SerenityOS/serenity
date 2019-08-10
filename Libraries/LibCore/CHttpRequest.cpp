@@ -36,9 +36,9 @@ ByteBuffer CHttpRequest::to_raw_request() const
     StringBuilder builder;
     builder.append(method_name());
     builder.append(' ');
-    builder.append(m_path);
+    builder.append(m_url.path());
     builder.append(" HTTP/1.0\r\nHost: ");
-    builder.append(m_hostname);
+    builder.append(m_url.host());
     builder.append("\r\n\r\n");
     return builder.to_byte_buffer();
 }

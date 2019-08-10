@@ -9,8 +9,7 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     CHttpRequest request;
-    request.set_hostname("www.google.com");
-    request.set_path("/");
+    request.set_url("http://www.google.com/");
 
     auto job = request.schedule();
     job->on_finish = [&job](bool success) {
