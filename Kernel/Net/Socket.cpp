@@ -63,6 +63,7 @@ RefPtr<Socket> Socket::accept()
 #endif
     auto client = m_pending.take_first();
     ASSERT(!client->is_connected());
+    client->m_acceptor_pid = m_origin_pid;
     client->set_setup_state(SetupState::Completed);
     client->m_connected = true;
     client->m_role = Role::Accepted;

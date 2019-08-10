@@ -80,6 +80,7 @@ public:
     KResult getsockopt(int level, int option, void*, socklen_t*);
 
     pid_t origin_pid() const { return m_origin_pid; }
+    pid_t acceptor_pid() const { return m_acceptor_pid; }
 
     timeval receive_deadline() const { return m_receive_deadline; }
     timeval send_deadline() const { return m_send_deadline; }
@@ -111,6 +112,7 @@ private:
 
     Lock m_lock { "Socket" };
     pid_t m_origin_pid { 0 };
+    pid_t m_acceptor_pid { 0 };
     int m_domain { 0 };
     int m_type { 0 };
     int m_protocol { 0 };
