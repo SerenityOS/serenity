@@ -10,6 +10,8 @@ public:
     static NonnullRefPtr<LocalSocket> create(int type);
     virtual ~LocalSocket() override;
 
+
+    StringView socket_path() const;
     // ^Socket
     virtual KResult bind(const sockaddr*, socklen_t) override;
     virtual KResult connect(FileDescription&, const sockaddr*, socklen_t, ShouldBlock = ShouldBlock::Yes) override;
