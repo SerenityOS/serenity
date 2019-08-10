@@ -77,10 +77,37 @@ public:
         }
     }
 
+    enum class Error {
+        None,
+        FINDuringConnect,
+        RSTDuringConnect,
+        UnexpectedFlagsDuringConnect,
+    };
+
+    static const char* to_string(Error error)
+    {
+        switch (error) {
+        case Error::None:
+            return "None";
+        case Error::FINDuringConnect:
+            return "FINDuringConnect";
+        case Error::RSTDuringConnect:
+            return "RSTDuringConnect";
+        case Error::UnexpectedFlagsDuringConnect:
+            return "UnexpectedFlagsDuringConnect";
+        default:
+            return "Invalid";
+        }
+    }
+
     State state() const { return m_state; }
     void set_state(State state);
 
     Direction direction() const { return m_direction; }
+
+    bool has_error() const { return m_error != Error::None; }
+    Error error() const { return m_error; }
+    void set_error(Error error) { m_error = error; }
 
     void set_ack_number(u32 n) { m_ack_number = n; }
     void set_sequence_number(u32 n) { m_sequence_number = n; }
@@ -118,6 +145,7 @@ private:
     virtual KResult protocol_listen() override;
 
     Direction m_direction { Direction::Unspecified };
+    Error m_error { Error::None };
     WeakPtr<NetworkAdapter> m_adapter;
     u32 m_sequence_number { 0 };
     u32 m_ack_number { 0 };
