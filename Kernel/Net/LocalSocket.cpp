@@ -1,3 +1,4 @@
+#include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Net/LocalSocket.h>
@@ -7,6 +8,21 @@
 
 //#define DEBUG_LOCAL_SOCKET
 
+Lockable<InlineLinkedList<LocalSocket>>& LocalSocket::all_sockets()
+{
+    static Lockable<InlineLinkedList<LocalSocket>>* s_list;
+    if (!s_list)
+        s_list = new Lockable<InlineLinkedList<LocalSocket>>();
+    return *s_list;
+}
+
+void LocalSocket::for_each(Function<void(LocalSocket&)> callback)
+{
+    LOCKER(all_sockets().lock());
+    for (auto& socket : all_sockets().resource())
+        callback(socket);
+}
+
 NonnullRefPtr<LocalSocket> LocalSocket::create(int type)
 {
     return adopt(*new LocalSocket(type));
@@ -15,6 +31,8 @@ NonnullRefPtr<LocalSocket> LocalSocket::create(int type)
 LocalSocket::LocalSocket(int type)
     : Socket(AF_LOCAL, type, 0)
 {
+    LOCKER(all_sockets().lock());
+    all_sockets().resource().append(this);
 #ifdef DEBUG_LOCAL_SOCKET
     kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", current->process().name().characters(), current->pid(), this, type);
 #endif
@@ -22,6 +40,8 @@ LocalSocket::LocalSocket(int type)
 
 LocalSocket::~LocalSocket()
 {
+    LOCKER(all_sockets().lock());
+    all_sockets().resource().remove(this);
 }
 
 bool LocalSocket::get_local_address(sockaddr* address, socklen_t* address_size)
@@ -91,6 +111,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
     auto description_or_error = VFS::the().open(safe_address, 0, 0, current->process().current_directory());
     if (description_or_error.is_error())
         return KResult(-ECONNREFUSED);
+
     m_file = move(description_or_error.value());
 
     ASSERT(m_file->inode());
