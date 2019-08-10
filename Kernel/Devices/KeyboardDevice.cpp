@@ -22,7 +22,13 @@ static char map[0x80] = {
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0,
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
     'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
-    0, 0, 0, ' '
+    0, 0, 0, ' ', 0, 0,
+    //60
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    //70
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    //80
+    0, 0, 0, 0, 0, 0, '\\', 0, 0, 0,
 };
 
 static char shift_map[0x80] = {
@@ -30,7 +36,13 @@ static char shift_map[0x80] = {
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0,
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|',
     'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?',
-    0, 0, 0, ' '
+    0, 0, 0, ' ', 0, 0,
+    //60
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    //70
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    //80
+    0, 0, 0, 0, 0, 0, '|', 0, 0, 0,
 };
 
 static KeyCode unshifted_key_map[0x80] = {
@@ -120,7 +132,7 @@ static KeyCode unshifted_key_map[0x80] = {
     Key_Delete, // 83
     Key_Invalid,
     Key_Invalid,
-    Key_Invalid,
+    Key_Backslash,
     Key_F11,
     Key_F12,
     Key_Invalid,
@@ -215,7 +227,7 @@ static KeyCode shifted_key_map[0x100] = {
     Key_Delete, // 83
     Key_Invalid,
     Key_Invalid,
-    Key_Invalid,
+    Key_Pipe,
     Key_F11,
     Key_F12,
     Key_Invalid,
