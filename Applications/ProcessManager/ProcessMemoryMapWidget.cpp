@@ -1,6 +1,6 @@
 #include "ProcessMemoryMapWidget.h"
-#include "ProcessMemoryMapModel.h"
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GTableView.h>
 
 ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
@@ -10,7 +10,22 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
     layout()->set_margins({ 4, 4, 4, 4 });
     m_table_view = new GTableView(this);
     m_table_view->set_size_columns_to_fit_content(true);
-    m_table_view->set_model(adopt(*new ProcessMemoryMapModel));
+    Vector<GJsonArrayModel::FieldSpec> pid_vm_fields;
+    pid_vm_fields.empend("Address", TextAlignment::CenterLeft, [](auto& object) {
+        return String::format("%#x", object.get("address").to_u32());
+    });
+    pid_vm_fields.empend("size", "Size", TextAlignment::CenterRight);
+    pid_vm_fields.empend("amount_resident", "Resident", TextAlignment::CenterRight);
+    pid_vm_fields.empend("Access", TextAlignment::CenterLeft, [](auto& object) {
+        StringBuilder builder;
+        if (object.get("readable").to_bool())
+            builder.append('R');
+        if (object.get("writable").to_bool())
+            builder.append('W');
+        return builder.to_string();
+    });
+    pid_vm_fields.empend("name", "Name", TextAlignment::CenterLeft);
+    m_table_view->set_model(GJsonArrayModel::create({}, move(pid_vm_fields)));
 }
 
 ProcessMemoryMapWidget::~ProcessMemoryMapWidget()
@@ -22,5 +37,5 @@ void ProcessMemoryMapWidget::set_pid(pid_t pid)
     if (m_pid == pid)
         return;
     m_pid = pid;
-    static_cast<ProcessMemoryMapModel*>(m_table_view->model())->set_pid(pid);
+    static_cast<GJsonArrayModel*>(m_table_view->model())->set_json_path(String::format("/proc/%d/vm", pid));
 }
