@@ -2167,7 +2167,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     }
     auto accepted_socket = socket.accept();
     ASSERT(accepted_socket);
-    bool success = accepted_socket->get_local_address(address, address_size);
+    bool success = accepted_socket->get_peer_address(address, address_size);
     ASSERT(success);
     auto accepted_socket_description = FileDescription::create(move(accepted_socket), SocketRole::Accepted);
     // NOTE: The accepted socket inherits fd flags from the accepting socket.
