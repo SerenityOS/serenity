@@ -85,8 +85,9 @@ int main(int argc, char** argv)
         char addr_str[100];
 
         struct sockaddr_in sin;
-        socklen_t len = sizeof(sin);
+        socklen_t len;
 
+        len = sizeof(sin);
         if (getsockname(listen_fd, (struct sockaddr*)&sin, &len) == -1) {
             perror("getsockname");
             return 1;
@@ -94,6 +95,7 @@ int main(int argc, char** argv)
         if (verbose)
             fprintf(stderr, "waiting for a connection on %s:%d\n", inet_ntop(sin.sin_family, &sin.sin_addr, addr_str, sizeof(addr_str) - 1), ntohs(sin.sin_port));
 
+        len = sizeof(sin);
         fd = accept(listen_fd, (struct sockaddr*)&sin, &len);
         if (fd == -1) {
             perror("accept");
