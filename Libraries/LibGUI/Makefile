@@ -52,6 +52,7 @@ OBJS = \
     GAbstractButton.o \
     GListView.o \
     GComboBox.o \
+    GJsonArrayModel.o \
     GWindow.o
 
 LIBRARY = libgui.a
