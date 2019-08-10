@@ -1,8 +1,7 @@
 #include "NetworkStatisticsWidget.h"
-#include "NetworkAdapterModel.h"
-#include "SocketModel.h"
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GGroupBox.h>
+#include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GTableView.h>
 
 NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
@@ -21,7 +20,18 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
 
     m_adapter_table_view = new GTableView(adapters_group_box);
     m_adapter_table_view->set_size_columns_to_fit_content(true);
-    m_adapter_table_view->set_model(NetworkAdapterModel::create());
+
+    Vector<GJsonArrayModel::FieldSpec> net_adapters_fields = {
+        { "name", "Name", TextAlignment::CenterLeft },
+        { "class_name", "Class", TextAlignment::CenterLeft },
+        { "mac_address", "MAC", TextAlignment::CenterLeft },
+        { "ipv4_address", "IPv4", TextAlignment::CenterLeft },
+        { "packets_in", "Pkt In", TextAlignment::CenterRight },
+        { "packets_out", "Pkt Out", TextAlignment::CenterRight },
+        { "bytes_in", "Bytes In", TextAlignment::CenterRight },
+        { "bytes_out", "Bytes Out", TextAlignment::CenterRight },
+    };
+    m_adapter_table_view->set_model(GJsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields)));
 
     auto* sockets_group_box = new GGroupBox("Sockets", this);
     sockets_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -31,7 +41,21 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
 
     m_socket_table_view = new GTableView(sockets_group_box);
     m_socket_table_view->set_size_columns_to_fit_content(true);
-    m_socket_table_view->set_model(SocketModel::create());
+
+    Vector<GJsonArrayModel::FieldSpec> net_tcp_fields = {
+        { "peer_address", "Peer", TextAlignment::CenterLeft },
+        { "peer_port", "Port", TextAlignment::CenterRight },
+        { "local_address", "Local", TextAlignment::CenterLeft },
+        { "local_port", "Port", TextAlignment::CenterRight },
+        { "state", "State", TextAlignment::CenterLeft },
+        { "ack_number", "Ack#", TextAlignment::CenterRight },
+        { "sequence_number", "Seq#", TextAlignment::CenterRight },
+        { "packets_in", "Pkt In", TextAlignment::CenterRight },
+        { "packets_out", "Pkt Out", TextAlignment::CenterRight },
+        { "bytes_in", "Bytes In", TextAlignment::CenterRight },
+        { "bytes_out", "Bytes Out", TextAlignment::CenterRight },
+    };
+    m_socket_table_view->set_model(GJsonArrayModel::create("/proc/net/tcp", move(net_tcp_fields)));
 
     m_update_timer = new CTimer(
         1000, [this] {
