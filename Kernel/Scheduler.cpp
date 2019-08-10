@@ -111,7 +111,7 @@ Thread::ConnectBlocker::ConnectBlocker(const FileDescription& description)
 bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
 {
     auto& socket = *blocked_description().socket();
-    return socket.is_connected();
+    return socket.setup_state() == Socket::SetupState::Completed;
 }
 
 Thread::WriteBlocker::WriteBlocker(const FileDescription& description)

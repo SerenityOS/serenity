@@ -2313,7 +2313,7 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
 
     auto& socket = *description->socket();
 
-    if (!socket.is_connected())
+    if (socket.setup_state() != Socket::SetupState::Completed)
         return -ENOTCONN;
 
     if (!socket.get_peer_address(addr, addrlen))

@@ -70,6 +70,7 @@ SocketHandle<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_ad
 
     auto client = TCPSocket::create(protocol());
 
+    client->set_setup_state(SetupState::InProgress);
     client->set_local_address(new_local_address);
     client->set_local_port(new_local_port);
     client->set_peer_address(new_peer_address);
@@ -239,7 +240,7 @@ KResult TCPSocket::protocol_listen()
     sockets_by_tuple().resource().set(tuple(), this);
     set_direction(Direction::Passive);
     set_state(State::Listen);
-    set_connected(true);
+    set_setup_state(SetupState::Completed);
     return KSuccess;
 }
 
@@ -264,6 +265,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_sequence_number = 0;
     m_ack_number = 0;
 
+    set_setup_state(SetupState::InProgress);
     send_tcp_packet(TCPFlags::SYN);
     m_state = State::SynSent;
     m_direction = Direction::Outgoing;
@@ -271,7 +273,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     if (should_block == ShouldBlock::Yes) {
         if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
             return KResult(-EINTR);
-        ASSERT(is_connected());
+        ASSERT(setup_state() == SetupState::Completed);
         return KSuccess;
     }
 
