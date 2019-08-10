@@ -274,6 +274,8 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
         if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
             return KResult(-EINTR);
         ASSERT(setup_state() == SetupState::Completed);
+        if (has_error())
+            return KResult(-ECONNREFUSED);
         return KSuccess;
     }
 
