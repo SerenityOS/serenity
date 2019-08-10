@@ -26,11 +26,14 @@ GModel::ColumnMetadata GJsonArrayModel::column_metadata(int column) const
 
 GVariant GJsonArrayModel::data(const GModelIndex& index, Role role) const
 {
+    auto& field_spec = m_fields[index.column()];
     auto& object = m_array.at(index.row()).as_object();
 
     if (role == GModel::Role::Display) {
-        auto& json_field_name = m_fields[index.column()].json_field_name;
+        auto& json_field_name = field_spec.json_field_name;
         auto data = object.get(json_field_name);
+        if (field_spec.massage_for_display)
+            return field_spec.massage_for_display(data);
         if (data.is_int())
             return data.as_int();
         if (data.is_uint())
@@ -38,4 +41,13 @@ GVariant GJsonArrayModel::data(const GModelIndex& index, Role role) const
         return object.get(json_field_name).to_string();
     }
     return {};
+}
+
+void GJsonArrayModel::set_json_path(const String& json_path)
+{
+    if (m_json_path == json_path)
+        return;
+
+    m_json_path = json_path;
+    update();
 }
