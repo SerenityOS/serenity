@@ -6,9 +6,18 @@
 class GJsonArrayModel final : public GModel {
 public:
     struct FieldSpec {
+        FieldSpec(const String& a_json_field_name, const String& a_column_name, TextAlignment a_text_alignment, Function<GVariant(const GVariant&)>&& a_massage_for_display = {})
+            : json_field_name(a_json_field_name)
+            , column_name(a_column_name)
+            , text_alignment(a_text_alignment)
+            , massage_for_display(move(a_massage_for_display))
+        {
+        }
+
         String json_field_name;
         String column_name;
         TextAlignment text_alignment;
+        Function<GVariant(const GVariant&)> massage_for_display;
     };
 
     static NonnullRefPtr<GJsonArrayModel> create(const String& json_path, Vector<FieldSpec>&& fields)
@@ -24,6 +33,9 @@ public:
     virtual ColumnMetadata column_metadata(int) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
+
+    const String& json_path() const { return m_json_path; }
+    void set_json_path(const String& json_path);
 
 private:
     GJsonArrayModel(const String& json_path, Vector<FieldSpec>&& fields)
