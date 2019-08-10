@@ -9,6 +9,14 @@ class URL {
 public:
     URL() {}
     URL(const StringView&);
+    URL(const char* string)
+        : URL(StringView(string))
+    {
+    }
+    URL(const String& string)
+        : URL(string.view())
+    {
+    }
 
     bool is_valid() const { return m_valid; }
     String protocol() const { return m_protocol; }
