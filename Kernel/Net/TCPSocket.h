@@ -78,7 +78,7 @@ public:
     }
 
     State state() const { return m_state; }
-    void set_state(State state) { m_state = state; }
+    void set_state(State state);
 
     Direction direction() const { return m_direction; }
 

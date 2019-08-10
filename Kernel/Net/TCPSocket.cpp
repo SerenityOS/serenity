@@ -15,6 +15,17 @@ void TCPSocket::for_each(Function<void(TCPSocket&)> callback)
         callback(*it.value);
 }
 
+void TCPSocket::set_state(State new_state)
+{
+#ifdef TCP_SOCKET_DEBUG
+    kprintf("%s(%u) TCPSocket{%p} state moving from %s to %s\n",
+        current->process().name().characters(), current->pid(), this,
+        to_string(m_state), to_string(new_state));
+#endif
+
+    m_state = new_state;
+}
+
 Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
 {
     static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>* s_map;

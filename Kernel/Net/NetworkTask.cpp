@@ -378,7 +378,6 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         kprintf("handle_tcp: unexpected flags in TimeWait state\n");
         socket->send_tcp_packet(TCPFlags::RST);
         socket->set_state(TCPSocket::State::Closed);
-        kprintf("handle_tcp: TimeWait -> Closed\n");
         return;
     case TCPSocket::State::Listen:
         switch (tcp_packet.flags()) {
@@ -397,7 +396,6 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
             client->set_sequence_number(1001);
             client->set_state(TCPSocket::State::SynReceived);
-            kprintf("handle_tcp: Closed -> SynReceived\n");
             return;
         }
         default:
@@ -411,20 +409,17 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::SynReceived);
-            kprintf("handle_tcp: SynSent -> SynReceived\n");
             return;
         case TCPFlags::SYN | TCPFlags::ACK:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Established);
             socket->set_connected(true);
-            kprintf("handle_tcp: SynSent -> Established\n");
             return;
         default:
             kprintf("handle_tcp: unexpected flags in SynSent state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
-            kprintf("handle_tcp: SynSent -> Closed\n");
             return;
         }
     case TCPSocket::State::SynReceived:
@@ -434,13 +429,11 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_state(TCPSocket::State::Established);
             if (socket->direction() == TCPSocket::Direction::Outgoing)
                 socket->set_connected(true);
-            kprintf("handle_tcp: SynReceived -> Established\n");
             return;
         default:
             kprintf("handle_tcp: unexpected flags in SynReceived state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
-            kprintf("handle_tcp: SynReceived -> Closed\n");
             return;
         }
     case TCPSocket::State::CloseWait:
@@ -449,7 +442,6 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             kprintf("handle_tcp: unexpected flags in CloseWait state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
-            kprintf("handle_tcp: CloseWait -> Closed\n");
             return;
         }
     case TCPSocket::State::LastAck:
@@ -457,13 +449,11 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         case TCPFlags::ACK:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::Closed);
-            kprintf("handle_tcp: LastAck -> Closed\n");
             return;
         default:
             kprintf("handle_tcp: unexpected flags in LastAck state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
-            kprintf("handle_tcp: LastAck -> Closed\n");
             return;
         }
     case TCPSocket::State::FinWait1:
@@ -471,18 +461,15 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         case TCPFlags::ACK:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::FinWait2);
-            kprintf("handle_tcp: FinWait1 -> FinWait2\n");
             return;
         case TCPFlags::FIN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::Closing);
-            kprintf("handle_tcp: FinWait1 -> Closing\n");
             return;
         default:
             kprintf("handle_tcp: unexpected flags in FinWait1 state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
-            kprintf("handle_tcp: FinWait1 -> Closed\n");
             return;
         }
     case TCPSocket::State::FinWait2:
@@ -490,13 +477,11 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         case TCPFlags::FIN:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::TimeWait);
-            kprintf("handle_tcp: FinWait2 -> TimeWait\n");
             return;
         default:
             kprintf("handle_tcp: unexpected flags in FinWait2 state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
-            kprintf("handle_tcp: FinWait2 -> Closed\n");
             return;
         }
     case TCPSocket::State::Closing:
@@ -504,13 +489,11 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         case TCPFlags::ACK:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             socket->set_state(TCPSocket::State::TimeWait);
-            kprintf("handle_tcp: Closing -> TimeWait\n");
             return;
         default:
             kprintf("handle_tcp: unexpected flags in Closing state\n");
             socket->send_tcp_packet(TCPFlags::RST);
             socket->set_state(TCPSocket::State::Closed);
-            kprintf("handle_tcp: Closing -> Closed\n");
             return;
         }
     case TCPSocket::State::Established:
@@ -522,7 +505,6 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::CloseWait);
             socket->set_connected(false);
-            kprintf("handle_tcp: Established -> CloseWait\n");
             return;
         }
 
