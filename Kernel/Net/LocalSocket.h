@@ -1,15 +1,18 @@
 #pragma once
 
+#include <AK/InlineLinkedList.h>
 #include <Kernel/DoubleBuffer.h>
 #include <Kernel/Net/Socket.h>
 
 class FileDescription;
 
-class LocalSocket final : public Socket {
+class LocalSocket final : public Socket, public InlineLinkedListNode<LocalSocket> {
+    friend class InlineLinkedListNode<LocalSocket>;
 public:
     static NonnullRefPtr<LocalSocket> create(int type);
     virtual ~LocalSocket() override;
 
+    static void for_each(Function<void(LocalSocket&)>);
 
     StringView socket_path() const;
     // ^Socket
@@ -30,6 +33,7 @@ private:
     virtual const char* class_name() const override { return "LocalSocket"; }
     virtual bool is_local() const override { return true; }
     bool has_attached_peer(const FileDescription&) const;
+    static Lockable<InlineLinkedList<LocalSocket>>& all_sockets();
 
     // An open socket file on the filesystem.
     RefPtr<FileDescription> m_file;
@@ -54,4 +58,8 @@ private:
 
     DoubleBuffer m_for_client;
     DoubleBuffer m_for_server;
+
+    // for InlineLinkedList
+    LocalSocket* m_prev { nullptr };
+    LocalSocket* m_next { nullptr };
 };
