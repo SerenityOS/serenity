@@ -2169,7 +2169,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     ASSERT(accepted_socket);
     bool success = accepted_socket->get_peer_address(address, address_size);
     ASSERT(success);
-    auto accepted_socket_description = FileDescription::create(move(accepted_socket), SocketRole::Accepted);
+    auto accepted_socket_description = FileDescription::create(*accepted_socket, SocketRole::Accepted);
     // NOTE: The accepted socket inherits fd flags from the accepting socket.
     //       I'm not sure if this matches other systems but it makes sense to me.
     accepted_socket_description->set_blocking(accepting_socket_description->is_blocking());
@@ -2652,7 +2652,7 @@ int Process::sys$shm_open(const char* name, int flags, mode_t mode)
     auto shm_or_error = SharedMemory::open(String(name), flags, mode);
     if (shm_or_error.is_error())
         return shm_or_error.error();
-    auto description = FileDescription::create(shm_or_error.value().ptr());
+    auto description = FileDescription::create(shm_or_error.value());
     m_fds[fd].set(move(description), FD_CLOEXEC);
     return fd;
 }

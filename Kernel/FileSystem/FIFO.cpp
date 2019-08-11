@@ -32,7 +32,7 @@ NonnullRefPtr<FIFO> FIFO::create(uid_t uid)
 
 NonnullRefPtr<FileDescription> FIFO::open_direction(FIFO::Direction direction)
 {
-    auto description = FileDescription::create(this);
+    auto description = FileDescription::create(*this);
     attach(direction);
     description->set_fifo_direction({}, direction);
     return description;

@@ -39,7 +39,7 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
 #ifdef PTMX_DEBUG
     dbgprintf("PTYMultiplexer::open: Vending master %u\n", master->index());
 #endif
-    return FileDescription::create(master.ptr());
+    return FileDescription::create(move(master));
 }
 
 void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)

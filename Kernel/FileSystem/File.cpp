@@ -12,7 +12,7 @@ File::~File()
 KResultOr<NonnullRefPtr<FileDescription>> File::open(int options)
 {
     UNUSED_PARAM(options);
-    return FileDescription::create(this);
+    return FileDescription::create(*this);
 }
 
 void File::close()

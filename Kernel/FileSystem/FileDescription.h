@@ -22,8 +22,8 @@ class SharedMemory;
 
 class FileDescription : public RefCounted<FileDescription> {
 public:
-    static NonnullRefPtr<FileDescription> create(RefPtr<Custody>&&);
-    static NonnullRefPtr<FileDescription> create(RefPtr<File>, SocketRole = SocketRole::None);
+    static NonnullRefPtr<FileDescription> create(Custody&);
+    static NonnullRefPtr<FileDescription> create(File&, SocketRole = SocketRole::None);
     ~FileDescription();
 
     NonnullRefPtr<FileDescription> clone();
@@ -106,12 +106,12 @@ public:
 
 private:
     friend class VFS;
-    FileDescription(RefPtr<File>&&, SocketRole = SocketRole::None);
+    FileDescription(File&, SocketRole = SocketRole::None);
     FileDescription(FIFO&, FIFO::Direction);
 
     RefPtr<Custody> m_custody;
     RefPtr<Inode> m_inode;
-    RefPtr<File> m_file;
+    NonnullRefPtr<File> m_file;
 
     off_t m_current_offset { 0 };
 
