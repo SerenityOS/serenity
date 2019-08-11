@@ -208,7 +208,7 @@ void GScrollBar::paint_event(GPaintEvent& event)
     }
 
     if (has_scrubber())
-        StylePainter::paint_button(painter, scrubber_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber);
+        StylePainter::paint_button(painter, scrubber_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::Scrubber || m_scrubber_in_use);
 }
 
 void GScrollBar::on_automatic_scrolling_timer_fired()
@@ -238,6 +238,7 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         return;
     }
     if (has_scrubber() && scrubber_rect().contains(event.position())) {
+	m_scrubber_in_use = true;
         m_scrubbing = true;
         m_scrub_start_value = value();
         m_scrub_origin = event.position();
@@ -270,6 +271,7 @@ void GScrollBar::mouseup_event(GMouseEvent& event)
 {
     if (event.button() != GMouseButton::Left)
         return;
+    m_scrubber_in_use = false;
     m_automatic_scrolling_direction = AutomaticScrollingDirection::None;
     set_automatic_scrolling_active(false);
     if (!m_scrubbing)

@@ -70,6 +70,7 @@ private:
 
     Orientation m_orientation { Orientation::Vertical };
     Component m_hovered_component { Component::Invalid };
+    bool m_scrubber_in_use { false };
 
     enum class AutomaticScrollingDirection {
         None = 0,
