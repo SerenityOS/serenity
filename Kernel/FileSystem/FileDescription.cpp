@@ -33,6 +33,8 @@ FileDescription::FileDescription(File& file, SocketRole role)
     if (file.is_inode())
         m_inode = static_cast<InodeFile&>(file).inode();
     set_socket_role(role);
+    if (is_socket())
+        socket()->attach(*this);
 }
 
 FileDescription::~FileDescription()
@@ -51,10 +53,7 @@ void FileDescription::set_socket_role(SocketRole role)
         return;
 
     ASSERT(is_socket());
-    if (m_socket_role != SocketRole::None)
-        socket()->detach(*this);
     m_socket_role = role;
-    socket()->attach(*this);
 }
 
 KResult FileDescription::fstat(stat& buffer)
