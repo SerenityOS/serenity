@@ -29,8 +29,12 @@ private:
 
     void resort();
 
+    void set_sorting_case_sensitive(bool b) { m_sorting_case_sensitive = b; }
+    bool is_sorting_case_sensitive() { return m_sorting_case_sensitive; }
+
     NonnullRefPtr<GModel> m_target;
     Vector<int> m_row_mappings;
     int m_key_column { -1 };
     GSortOrder m_sort_order { GSortOrder::Ascending };
+    bool m_sorting_case_sensitive { false };
 };

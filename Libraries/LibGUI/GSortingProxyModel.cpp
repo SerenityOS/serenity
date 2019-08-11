@@ -87,7 +87,11 @@ void GSortingProxyModel::resort()
         auto data2 = target().data(target().index(row2, m_key_column), GModel::Role::Sort);
         if (data1 == data2)
             return 0;
-        bool is_less_than = data1 < data2;
+        bool is_less_than;
+	if (data1.is_string() && data2.is_string() && !m_sorting_case_sensitive)
+	    is_less_than = data1.as_string().to_lowercase() < data2.as_string().to_lowercase();
+	else
+	    is_less_than = data1 < data2;
         return m_sort_order == GSortOrder::Ascending ? is_less_than : !is_less_than;
     });
     if (previously_selected_target_row != -1) {
