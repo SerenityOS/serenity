@@ -557,6 +557,12 @@ int mount(const char* device, const char* mountpoint)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int umount(const char* mountpoint)
+{
+    int rc = syscall(SC_umount, mountpoint);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 void dump_backtrace()
 {
     syscall(SC_dump_backtrace);

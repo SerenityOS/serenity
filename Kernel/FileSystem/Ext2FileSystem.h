@@ -69,6 +69,8 @@ public:
     virtual unsigned total_inode_count() const override;
     virtual unsigned free_inode_count() const override;
 
+    virtual KResult prepare_to_unmount() const override;
+
 private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;

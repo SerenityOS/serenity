@@ -2786,6 +2786,25 @@ int Process::sys$mount(const char* device_path, const char* mountpoint)
     return result;
 }
 
+int Process::sys$umount(const char* mountpoint)
+{
+    if (!is_superuser())
+        return -EPERM;
+
+    if (!validate_read_str(mountpoint))
+        return -EFAULT;
+
+    auto metadata_or_error = VFS::the().lookup_metadata(mountpoint, current_directory());
+    if (metadata_or_error.is_error())
+        return metadata_or_error.error();
+
+    auto fsid = metadata_or_error.value().inode.fsid();
+    auto fs = Ext2FS::from_fsid(fsid);
+    auto ret = VFS::the().unmount(*fs);
+
+    return ret;
+}
+
 ProcessTracer& Process::ensure_tracer()
 {
     if (!m_tracer)

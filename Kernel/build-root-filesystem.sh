@@ -15,7 +15,7 @@ if [ $(id -u) != 0 ]; then
 fi
 
 echo -n "creating initial filesystem structure... "
-mkdir -p mnt/{bin,etc,proc,tmp}
+mkdir -p mnt/{bin,etc,proc,mnt,tmp}
 chmod 1777 mnt/tmp
 echo "done"
 

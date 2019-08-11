@@ -101,6 +101,7 @@ int ftruncate(int fd, off_t length);
 int halt();
 int reboot();
 int mount(const char* device, const char* mountpoint);
+int umount(const char* mountpoint);
 
 enum {
     _PC_NAME_MAX,

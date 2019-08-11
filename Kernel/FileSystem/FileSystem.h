@@ -8,8 +8,8 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 #include <AK/WeakPtr.h>
 #include <AK/kstdio.h>
 #include <Kernel/Devices/DiskDevice.h>
@@ -44,6 +44,8 @@ public:
     virtual unsigned free_block_count() const { return 0; }
     virtual unsigned total_inode_count() const { return 0; }
     virtual unsigned free_inode_count() const { return 0; }
+
+    virtual KResult prepare_to_unmount() const { return KSuccess; }
 
     struct DirectoryEntry {
         DirectoryEntry(const char* name, InodeIdentifier, u8 file_type);

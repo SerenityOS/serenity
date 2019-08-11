@@ -49,12 +49,35 @@ KResult VFS::mount(NonnullRefPtr<FS>&& file_system, Custody& mount_point)
 
 KResult VFS::mount(NonnullRefPtr<FS>&& file_system, StringView path)
 {
+    LOCKER(m_lock);
     auto result = resolve_path(path, root_custody());
     if (result.is_error()) {
         dbg() << "VFS: mount can't resolve mount point '" << path << "'";
         return result.error();
     }
     return mount(move(file_system), result.value());
+}
+
+KResult VFS::unmount(NonnullRefPtr<FS>&& file_system)
+{
+    LOCKER(m_lock);
+    dbg() << "VFS: unmount called with fsid " << file_system.ptr()->fsid();
+
+    for (auto i = 0; i < m_mounts.size(); i++) {
+        auto mount = m_mounts.at(i);
+        if (mount.guest_fs().fsid() == file_system.ptr()->fsid()) {
+            if (mount.guest_fs().prepare_to_unmount() != KSuccess) {
+                dbg() << "VFS: Failed to unmount! Device busy";
+                return KResult(-EBUSY);
+            }
+            dbg() << "VFS: found fs " << file_system.ptr()->fsid() << " at mount " << i << "! Unmounting...";
+            m_mounts.remove(i);
+            return KSuccess;
+        }
+    }
+
+    dbg() << "VFS: unmount unable to find fsid in m_mounts!";
+    return KResult(-ENODEV);
 }
 
 bool VFS::mount_root(NonnullRefPtr<FS>&& file_system)
