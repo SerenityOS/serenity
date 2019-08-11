@@ -57,24 +57,6 @@ void FileDescription::set_socket_role(SocketRole role)
     socket()->attach(*this);
 }
 
-NonnullRefPtr<FileDescription> FileDescription::clone()
-{
-    RefPtr<FileDescription> description;
-    if (is_fifo()) {
-        description = fifo()->open_direction(m_fifo_direction);
-    } else {
-        description = FileDescription::create(m_file, m_socket_role);
-        description->m_custody = m_custody;
-        description->m_inode = m_inode;
-    }
-    ASSERT(description);
-    description->m_current_offset = m_current_offset;
-    description->m_is_blocking = m_is_blocking;
-    description->m_should_append = m_should_append;
-    description->m_file_flags = m_file_flags;
-    return *description;
-}
-
 KResult FileDescription::fstat(stat& buffer)
 {
     ASSERT(!is_fifo());
