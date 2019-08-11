@@ -131,16 +131,17 @@ KResult LocalSocket::listen(int backlog)
 
 void LocalSocket::attach(FileDescription& description)
 {
+    ASSERT(!m_accept_side_fd_open);
     switch (description.socket_role()) {
+    case SocketRole::None:
+        ASSERT(!m_connect_side_fd_open);
+        m_connect_side_fd_open = true;
+        break;
     case SocketRole::Accepted:
-        ++m_accepted_fds_open;
+        m_accept_side_fd_open = true;
         break;
     case SocketRole::Connected:
-        ++m_connected_fds_open;
-        break;
-    case SocketRole::Connecting:
-        ++m_connecting_fds_open;
-        break;
+        ASSERT_NOT_REACHED();
     default:
         break;
     }
@@ -149,17 +150,18 @@ void LocalSocket::attach(FileDescription& description)
 void LocalSocket::detach(FileDescription& description)
 {
     switch (description.socket_role()) {
+    case SocketRole::None:
+        ASSERT(!m_accept_side_fd_open);
+        ASSERT(m_connect_side_fd_open);
+        m_connect_side_fd_open = false;
+        break;
     case SocketRole::Accepted:
-        ASSERT(m_accepted_fds_open);
-        --m_accepted_fds_open;
+        ASSERT(m_accept_side_fd_open);
+        m_accept_side_fd_open = false;
         break;
     case SocketRole::Connected:
-        ASSERT(m_connected_fds_open);
-        --m_connected_fds_open;
-        break;
-    case SocketRole::Connecting:
-        ASSERT(m_connecting_fds_open);
-        --m_connecting_fds_open;
+        ASSERT(m_connect_side_fd_open);
+        m_connect_side_fd_open = false;
         break;
     default:
         break;
@@ -181,9 +183,9 @@ bool LocalSocket::can_read(FileDescription& description) const
 bool LocalSocket::has_attached_peer(const FileDescription& description) const
 {
     if (description.socket_role() == SocketRole::Accepted)
-        return m_connected_fds_open || m_connecting_fds_open;
+        return m_connect_side_fd_open;
     if (description.socket_role() == SocketRole::Connected)
-        return m_accepted_fds_open;
+        return m_accept_side_fd_open;
     ASSERT_NOT_REACHED();
 }
 

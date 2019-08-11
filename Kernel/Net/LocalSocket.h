@@ -31,9 +31,8 @@ private:
     RefPtr<FileDescription> m_file;
 
     bool m_bound { false };
-    int m_accepted_fds_open { 0 };
-    int m_connected_fds_open { 0 };
-    int m_connecting_fds_open { 0 };
+    bool m_accept_side_fd_open { false };
+    bool m_connect_side_fd_open { false };
     sockaddr_un m_address;
 
     DoubleBuffer m_for_client;
