@@ -443,13 +443,21 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
     if (m_device_error)
         return false;
 
-    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
-    ASSERT(status & ATA_SR_DRQ);
+    for (int i = 0; i < count; i++) {
+        wait_400ns(m_io_base);
+
+        while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+            ;
+
+        u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
+        ASSERT(status & ATA_SR_DRQ);
 #ifdef PATA_DEBUG
-    kprintf("Retrieving %u bytes (status=%b), outbuf=%p...\n", count * 512, status, outbuf);
+        kprintf("PATAChannel: Retrieving 512 bytes (part %d) (status=%b), outbuf=%p...\n", i, status, outbuf + (512 * i));
 #endif
 
-    IO::repeated_in16(m_io_base + ATA_REG_DATA, outbuf, count * 256);
+        IO::repeated_in16(m_io_base + ATA_REG_DATA, outbuf + (512 * i), 256);
+    }
+
     return true;
 }
 
