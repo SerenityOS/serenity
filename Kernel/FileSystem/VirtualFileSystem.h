@@ -60,7 +60,6 @@ public:
     KResult mount(NonnullRefPtr<FS>&&, StringView path);
     KResult mount(NonnullRefPtr<FS>&&, Custody& mount_point);
 
-    KResultOr<NonnullRefPtr<FileDescription>> open(RefPtr<Device>&&, int options);
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
     KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody);
     KResult mkdir(StringView path, mode_t mode, Custody& base);
