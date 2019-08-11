@@ -32,6 +32,7 @@
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
+#include <Kernel/PCI.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -214,6 +215,16 @@ extern "C" [[noreturn]] void init()
 
     MemoryManager::initialize();
     PIT::initialize();
+
+    PCI::enumerate_all([](const PCI::Address& address, PCI::ID id) {
+        kprintf("PCI device: bus=%d slot=%d function=%d id=%w:%w\n",
+            address.bus(),
+            address.slot(),
+            address.function(),
+            id.vendor_id,
+            id.device_id
+        );
+    });
 
     new BXVGADevice;
 
