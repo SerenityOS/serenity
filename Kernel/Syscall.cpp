@@ -189,7 +189,7 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
     case Syscall::SC_sigprocmask:
         return current->process().sys$sigprocmask((int)arg1, (const sigset_t*)arg2, (sigset_t*)arg3);
     case Syscall::SC_pipe:
-        return current->process().sys$pipe((int*)arg1, (int) arg2);
+        return current->process().sys$pipe((int*)arg1, (int)arg2);
     case Syscall::SC_killpg:
         return current->process().sys$killpg((int)arg1, (int)arg2);
     case Syscall::SC_setuid:
@@ -297,6 +297,8 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
     case Syscall::SC_reboot: {
         return current->process().sys$reboot();
     }
+    case Syscall::SC_umount:
+        return current->process().sys$umount((const char*)arg1);
     case Syscall::SC_dump_backtrace:
         return current->process().sys$dump_backtrace();
     case Syscall::SC_watch_file:

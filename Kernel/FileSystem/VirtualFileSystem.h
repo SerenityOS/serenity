@@ -59,6 +59,7 @@ public:
     bool mount_root(NonnullRefPtr<FS>&&);
     KResult mount(NonnullRefPtr<FS>&&, StringView path);
     KResult mount(NonnullRefPtr<FS>&&, Custody& mount_point);
+    KResult unmount(NonnullRefPtr<FS>&&);
 
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
     KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody);
@@ -104,6 +105,8 @@ private:
 
     Mount* find_mount_for_host(InodeIdentifier);
     Mount* find_mount_for_guest(InodeIdentifier);
+
+    Lock m_lock { "VFSLock" };
 
     RefPtr<Inode> m_root_inode;
     NonnullOwnPtrVector<Mount> m_mounts;
