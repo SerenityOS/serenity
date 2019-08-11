@@ -4,6 +4,7 @@
 #include "RTC.h"
 #include "Scheduler.h"
 #include "kmalloc.h"
+#include "kstdio.h"
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
@@ -155,6 +156,25 @@ multiboot_info_t* multiboot_info_ptr;
 
 extern "C" [[noreturn]] void init()
 {
+    // this is only used one time, directly below here. we can't use this part
+    // of libc at this point in the boot process, or we'd just pull strstr in
+    // from <string.h>.
+    auto bad_prefix_check = [](const char *str, const char *search) -> bool {
+        while (*search)
+            if (*search++ != *str++)
+                return false;
+
+        return true;
+    };
+
+    // serial_debug will output all the kprintf and dbgprintf data to COM1 at
+    // 8-N-1 57600 baud. this is particularly useful for debugging the boot
+    // process on live hardware.
+    //
+    // note: it must be the first option in the boot cmdline.
+    if (multiboot_info_ptr->cmdline && bad_prefix_check(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline), "serial_debug"))
+        set_serial_debug(true);
+
     sse_init();
 
     kmalloc_init();
@@ -177,7 +197,8 @@ extern "C" [[noreturn]] void init()
     ps2mouse = new PS2MouseDevice;
     sb16 = new SB16;
     dev_null = new NullDevice;
-    ttyS0 = new SerialDevice(SERIAL_COM1_ADDR, 64);
+    if (!get_serial_debug())
+        ttyS0 = new SerialDevice(SERIAL_COM1_ADDR, 64);
     ttyS1 = new SerialDevice(SERIAL_COM2_ADDR, 65);
     ttyS2 = new SerialDevice(SERIAL_COM3_ADDR, 66);
     ttyS3 = new SerialDevice(SERIAL_COM4_ADDR, 67);
