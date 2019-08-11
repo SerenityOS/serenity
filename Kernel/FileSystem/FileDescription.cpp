@@ -15,23 +15,23 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
 
-NonnullRefPtr<FileDescription> FileDescription::create(RefPtr<Custody>&& custody)
+NonnullRefPtr<FileDescription> FileDescription::create(Custody& custody)
 {
-    auto description = adopt(*new FileDescription(InodeFile::create(custody->inode())));
-    description->m_custody = move(custody);
+    auto description = adopt(*new FileDescription(InodeFile::create(custody.inode())));
+    description->m_custody = custody;
     return description;
 }
 
-NonnullRefPtr<FileDescription> FileDescription::create(RefPtr<File> file, SocketRole role)
+NonnullRefPtr<FileDescription> FileDescription::create(File& file, SocketRole role)
 {
-    return adopt(*new FileDescription(move(file), role));
+    return adopt(*new FileDescription(file, role));
 }
 
-FileDescription::FileDescription(RefPtr<File>&& file, SocketRole role)
-    : m_file(move(file))
+FileDescription::FileDescription(File& file, SocketRole role)
+    : m_file(file)
 {
-    if (m_file->is_inode())
-        m_inode = static_cast<InodeFile&>(*m_file).inode();
+    if (file.is_inode())
+        m_inode = static_cast<InodeFile&>(file).inode();
     set_socket_role(role);
 }
 
@@ -42,7 +42,6 @@ FileDescription::~FileDescription()
     if (is_fifo())
         static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
     m_file->close();
-    m_file = nullptr;
     m_inode = nullptr;
 }
 
