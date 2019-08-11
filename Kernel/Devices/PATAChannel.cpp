@@ -116,7 +116,7 @@ void PATAChannel::initialize()
     PCI::enumerate_all([this](const PCI::Address& address, PCI::ID id) {
         if (id == piix3_ide_id || id == piix4_ide_id) {
             m_pci_address = address;
-            kprintf("PIIX%u PATA Controller found!\n", id == piix3_ide_id ? 3 : 4);
+            kprintf("PATAChannel: PIIX%u PATA Controller found!\n", id == piix3_ide_id ? 3 : 4);
         }
     });
 
@@ -126,13 +126,13 @@ void PATAChannel::initialize()
         PCI::enable_bus_mastering(m_pci_address);
         m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
         m_dma_buffer_page = MM.allocate_supervisor_physical_page();
-        dbgprintf("PIIX Bus master IDE: I/O @ %x\n", m_bus_master_base);
+        kprintf("PATAChannel: PIIX Bus master IDE: I/O @ %x\n", m_bus_master_base);
     }
 }
 
 static void print_ide_status(u8 status)
 {
-    kprintf("DRQ=%u BSY=%u DRDY=%u DSC=%u DF=%u CORR=%u IDX=%u ERR=%u\n",
+    kprintf("PATAChannel: print_ide_status: DRQ=%u BSY=%u DRDY=%u DSC=%u DF=%u CORR=%u IDX=%u ERR=%u\n",
         (status & ATA_SR_DRQ) != 0,
         (status & ATA_SR_BSY) != 0,
         (status & ATA_SR_DRDY) != 0,
@@ -146,14 +146,14 @@ static void print_ide_status(u8 status)
 bool PATAChannel::wait_for_irq()
 {
 #ifdef PATA_DEBUG
-    kprintf("PATA: waiting for IRQ %d...\n", irq_number());
+    kprintf("PATAChannel: waiting for IRQ %d...\n", irq_number());
 #endif
     while (!m_interrupted) {
         // FIXME: Put this process into a Blocked state instead, it's stupid to wake up just to check a flag.
         Scheduler::yield();
     }
 #ifdef PATA_DEBUG
-    kprintf("PATA: received IRQ %d!\n", irq_number());
+    kprintf("PATAChannel: received IRQ %d!\n", irq_number());
 #endif
 
     return true;
@@ -165,12 +165,12 @@ void PATAChannel::handle_irq()
     if (status & ATA_SR_ERR) {
         print_ide_status(status);
         m_device_error = IO::in8(m_io_base + ATA_REG_ERROR);
-        kprintf("PATADiskDevice: Error %b!\n", m_device_error);
+        kprintf("PATAChannel: Error %b!\n", m_device_error);
     } else {
         m_device_error = 0;
     }
 #ifdef PATA_DEBUG
-    kprintf("disk:interrupt: DRQ=%u BSY=%u DRDY=%u\n", (status & ATA_SR_DRQ) != 0, (status & ATA_SR_BSY) != 0, (status & ATA_SR_DRDY) != 0);
+    kprintf("PATAChannel: interrupt: DRQ=%u BSY=%u DRDY=%u\n", (status & ATA_SR_DRQ) != 0, (status & ATA_SR_BSY) != 0, (status & ATA_SR_DRDY) != 0);
 #endif
     m_interrupted = true;
 }
@@ -203,7 +203,7 @@ void PATAChannel::detect_disks()
 
         if (IO::in8(m_io_base + ATA_REG_STATUS) == 0x00) {
 #ifdef PATA_DEBUG
-            kprintf("PATA: No %s disk detected!\n", (i == 0 ? "master" : "slave"));
+            kprintf("PATAChannel: No %s disk detected!\n", (i == 0 ? "master" : "slave"));
 #endif
             continue;
         }
@@ -230,7 +230,7 @@ void PATAChannel::detect_disks()
         u8 spt = wbufbase[6];
 
         kprintf(
-            "PATADiskDevice: Name=\"%s\", C/H/Spt=%u/%u/%u\n",
+            "PATAChannel: Name=\"%s\", C/H/Spt=%u/%u/%u\n",
             bbuf.pointer() + 54,
             cyls,
             heads,
@@ -251,7 +251,7 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
 {
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbgprintf("%s(%u): PATADiskDevice::read_sectors_with_dma (%u x%u) -> %p\n",
+    kprintf("%s(%u): PATAChannel::ata_read_sectors_with_dma (%u x%u) -> %p\n",
         current->process().name().characters(),
         current->pid(), lba, count, outbuf);
 #endif
@@ -330,7 +330,7 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
 {
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbgprintf("%s(%u): PATADiskDevice::write_sectors_with_dma (%u x%u) <- %p\n",
+    kprintf("%s(%u): PATAChannel::ata_write_sectors_with_dma (%u x%u) <- %p\n",
         current->process().name().characters(),
         current->pid(), lba, count, inbuf);
 #endif
@@ -407,10 +407,12 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
     ASSERT(count <= 256);
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbgprintf("%s: Disk::read_sectors request (%u sector(s) @ %u)\n",
+    kprintf("%s(%u): PATAChannel::ata_read_sectors request (%u sector(s) @ %u into %p)\n",
         current->process().name().characters(),
+        current->pid(),
         count,
-        start_sector);
+        start_sector,
+        outbuf);
 #endif
     disable_irq();
 
@@ -418,7 +420,7 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
         ;
 
 #ifdef PATA_DEBUG
-    kprintf("PATADiskDevice: Reading %u sector(s) @ LBA %u\n", count, start_sector);
+    kprintf("PATAChannel: Reading %u sector(s) @ LBA %u\n", count, start_sector);
 #endif
 
     u8 devsel = 0xe0;
@@ -466,7 +468,7 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
     ASSERT(count <= 256);
     LOCKER(s_lock());
 #ifdef PATA_DEBUG
-    dbgprintf("%s(%u): PATADiskDevice::write_sectors request (%u sector(s) @ %u)\n",
+    kprintf("%s(%u): PATAChannel::ata_write_sectors request (%u sector(s) @ %u)\n",
         current->process().name().characters(),
         current->pid(),
         count,
@@ -477,7 +479,9 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
     while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
         ;
 
-    //dbgprintf("PATADiskDevice: Writing %u sector(s) @ LBA %u\n", count, start_sector);
+#ifdef PATA_DEBUG
+    kprintf("PATAChannel: Writing %u sector(s) @ LBA %u\n", count, start_sector);
+#endif
 
     u8 devsel = 0xe0;
     if (slave_request)
