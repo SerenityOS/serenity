@@ -108,6 +108,8 @@ KResult IPv4Socket::connect(FileDescription& description, const sockaddr* addres
         return KResult(-EINVAL);
     if (address->sa_family != AF_INET)
         return KResult(-EINVAL);
+    if (m_role == Role::Connected)
+        return KResult(-EISCONN);
 
     auto& ia = *(const sockaddr_in*)address;
     m_peer_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
@@ -124,9 +126,9 @@ void IPv4Socket::detach(FileDescription&)
 {
 }
 
-bool IPv4Socket::can_read(FileDescription& description) const
+bool IPv4Socket::can_read(FileDescription&) const
 {
-    if (description.socket_role() == SocketRole::Listener)
+    if (m_role == Role::Listener)
         return can_accept();
     if (protocol_is_disconnected())
         return true;

@@ -2134,11 +2134,7 @@ int Process::sys$listen(int sockfd, int backlog)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
-    auto result = socket.listen(backlog);
-    if (result.is_error())
-        return result;
-    description->set_socket_role(SocketRole::Listener);
-    return 0;
+    return socket.listen(backlog);
 }
 
 int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* address_size)
@@ -2168,7 +2164,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     ASSERT(accepted_socket);
     bool success = accepted_socket->get_peer_address(address, address_size);
     ASSERT(success);
-    auto accepted_socket_description = FileDescription::create(*accepted_socket, SocketRole::Accepted);
+    auto accepted_socket_description = FileDescription::create(*accepted_socket);
     // NOTE: The accepted socket inherits fd flags from the accepting socket.
     //       I'm not sure if this matches other systems but it makes sense to me.
     accepted_socket_description->set_blocking(accepting_socket_description->is_blocking());
@@ -2188,17 +2184,9 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
         return -EBADF;
     if (!description->is_socket())
         return -ENOTSOCK;
-    if (description->socket_role() == SocketRole::Connected)
-        return -EISCONN;
+
     auto& socket = *description->socket();
-    description->set_socket_role(SocketRole::Connecting);
-    auto result = socket.connect(*description, address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
-    if (result.is_error()) {
-        description->set_socket_role(SocketRole::None);
-        return result;
-    }
-    description->set_socket_role(SocketRole::Connected);
-    return 0;
+    return socket.connect(*description, address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
 }
 
 ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
