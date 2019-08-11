@@ -238,7 +238,7 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         return;
     }
     if (has_scrubber() && scrubber_rect().contains(event.position())) {
-		m_scrubber_in_use = true;
+	m_scrubber_in_use = true;
         m_scrubbing = true;
         m_scrub_start_value = value();
         m_scrub_origin = event.position();
