@@ -624,8 +624,7 @@ Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring
 #ifdef FORK_DEBUG
             dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_fds[i].description.ptr(), fork_parent->m_fds[i].description->is_tty());
 #endif
-            m_fds[i].description = fork_parent->m_fds[i].description->clone();
-            m_fds[i].flags = fork_parent->m_fds[i].flags;
+            m_fds[i] = fork_parent->m_fds[i];
         }
     } else {
         m_fds.resize(m_max_open_file_descriptors);
