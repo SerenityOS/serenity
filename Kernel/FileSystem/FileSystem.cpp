@@ -76,3 +76,10 @@ void FS::lock_all()
     }
 }
 
+void FS::set_block_size(int block_size)
+{
+    ASSERT(block_size > 0);
+    if (block_size == m_block_size)
+        return;
+    m_block_size = block_size;
+}
