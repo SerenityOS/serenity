@@ -480,6 +480,8 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         fs_object.set("total_inode_count", fs.total_inode_count());
         fs_object.set("free_inode_count", fs.free_inode_count());
         fs_object.set("mount_point", mount.absolute_path());
+        fs_object.set("block_size", fs.block_size());
+        fs_object.set("readonly", fs.is_readonly());
         json.append(fs_object);
     });
     return json.serialized<KBufferBuilder>();
