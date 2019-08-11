@@ -9,13 +9,6 @@
 #include <Kernel/Lock.h>
 #include <Kernel/UnixTypes.h>
 
-enum class SocketRole : u8 {
-    None,
-    Listener,
-    Accepted,
-    Connected,
-    Connecting
-};
 enum class ShouldBlock {
     No = 0,
     Yes = 1
@@ -38,6 +31,14 @@ public:
         Completed,  // the setup process is complete, but not necessarily successful
     };
 
+    enum class Role : u8 {
+        None,
+        Listener,
+        Accepted,
+        Connected,
+        Connecting
+    };
+
     static const char* to_string(SetupState setup_state)
     {
         switch (setup_state) {
@@ -54,6 +55,8 @@ public:
 
     SetupState setup_state() const { return m_setup_state; }
     void set_setup_state(SetupState setup_state);
+
+    virtual Role role(const FileDescription&) const { return m_role; }
 
     bool is_connected() const { return m_connected; }
     void set_connected(bool connected) { m_connected = connected; }
@@ -100,6 +103,8 @@ protected:
     void set_backlog(int backlog) { m_backlog = backlog; }
 
     virtual const char* class_name() const override { return "Socket"; }
+
+    Role m_role { Role::None };
 
 private:
     virtual bool is_socket() const final { return true; }

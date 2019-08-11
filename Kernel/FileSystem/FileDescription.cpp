@@ -22,17 +22,16 @@ NonnullRefPtr<FileDescription> FileDescription::create(Custody& custody)
     return description;
 }
 
-NonnullRefPtr<FileDescription> FileDescription::create(File& file, SocketRole role)
+NonnullRefPtr<FileDescription> FileDescription::create(File& file)
 {
-    return adopt(*new FileDescription(file, role));
+    return adopt(*new FileDescription(file));
 }
 
-FileDescription::FileDescription(File& file, SocketRole role)
+FileDescription::FileDescription(File& file)
     : m_file(file)
 {
     if (file.is_inode())
         m_inode = static_cast<InodeFile&>(file).inode();
-    set_socket_role(role);
     if (is_socket())
         socket()->attach(*this);
 }
@@ -45,15 +44,6 @@ FileDescription::~FileDescription()
         static_cast<FIFO*>(m_file.ptr())->detach(m_fifo_direction);
     m_file->close();
     m_inode = nullptr;
-}
-
-void FileDescription::set_socket_role(SocketRole role)
-{
-    if (role == m_socket_role)
-        return;
-
-    ASSERT(is_socket());
-    m_socket_role = role;
 }
 
 KResult FileDescription::fstat(stat& buffer)

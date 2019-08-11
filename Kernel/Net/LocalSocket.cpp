@@ -99,23 +99,35 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
 
     m_address = local_address;
 
+    ASSERT(m_connect_side_fd == &description);
+    m_connect_side_role = Role::Connecting;
+
     auto peer = m_file->inode()->socket();
     auto result = peer->queue_connection_from(*this);
-    if (result.is_error())
+    if (result.is_error()) {
+        m_connect_side_role = Role::None;
         return result;
+    }
 
-    if (is_connected())
+    if (is_connected()) {
+        m_connect_side_role = Role::Connected;
         return KSuccess;
+    }
 
-    if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
+    if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal) {
+        m_connect_side_role = Role::None;
         return KResult(-EINTR);
+    }
 
 #ifdef DEBUG_LOCAL_SOCKET
     kprintf("%s(%u) LocalSocket{%p} connect(%s) status is %s\n", current->process().name().characters(), current->pid(), this, safe_address, to_string(setup_state()));
 #endif
 
-    if (!is_connected())
+    if (!is_connected()) {
+        m_connect_side_role = Role::None;
         return KResult(-ECONNREFUSED);
+    }
+    m_connect_side_role = Role::Connected;
     return KSuccess;
 }
 
@@ -125,6 +137,7 @@ KResult LocalSocket::listen(int backlog)
     if (type() != SOCK_STREAM)
         return KResult(-EOPNOTSUPP);
     set_backlog(backlog);
+    m_connect_side_role = m_role = Role::Listener;
     kprintf("LocalSocket{%p} listening with backlog=%d\n", this, backlog);
     return KSuccess;
 }
@@ -132,68 +145,53 @@ KResult LocalSocket::listen(int backlog)
 void LocalSocket::attach(FileDescription& description)
 {
     ASSERT(!m_accept_side_fd_open);
-    switch (description.socket_role()) {
-    case SocketRole::None:
-        ASSERT(!m_connect_side_fd_open);
-        m_connect_side_fd_open = true;
-        break;
-    case SocketRole::Accepted:
+    if (m_connect_side_role == Role::None) {
+        ASSERT(m_connect_side_fd == nullptr);
+        m_connect_side_fd = &description;
+    } else {
+        ASSERT(m_connect_side_fd != &description);
         m_accept_side_fd_open = true;
-        break;
-    case SocketRole::Connected:
-        ASSERT_NOT_REACHED();
-    default:
-        break;
     }
 }
 
 void LocalSocket::detach(FileDescription& description)
 {
-    switch (description.socket_role()) {
-    case SocketRole::None:
-        ASSERT(!m_accept_side_fd_open);
-        ASSERT(m_connect_side_fd_open);
-        m_connect_side_fd_open = false;
-        break;
-    case SocketRole::Accepted:
+    if (m_connect_side_fd == &description) {
+        m_connect_side_fd = nullptr;
+    } else {
         ASSERT(m_accept_side_fd_open);
         m_accept_side_fd_open = false;
-        break;
-    case SocketRole::Connected:
-        ASSERT(m_connect_side_fd_open);
-        m_connect_side_fd_open = false;
-        break;
-    default:
-        break;
     }
 }
 
 bool LocalSocket::can_read(FileDescription& description) const
 {
-    auto role = description.socket_role();
-    if (role == SocketRole::Listener)
+    auto role = this->role(description);
+    if (role == Role::Listener)
         return can_accept();
-    if (role == SocketRole::Accepted)
+    if (role == Role::Accepted)
         return !has_attached_peer(description) || !m_for_server.is_empty();
-    if (role == SocketRole::Connected)
+    if (role == Role::Connected)
         return !has_attached_peer(description) || !m_for_client.is_empty();
     ASSERT_NOT_REACHED();
 }
 
 bool LocalSocket::has_attached_peer(const FileDescription& description) const
 {
-    if (description.socket_role() == SocketRole::Accepted)
-        return m_connect_side_fd_open;
-    if (description.socket_role() == SocketRole::Connected)
+    auto role = this->role(description);
+    if (role == Role::Accepted)
+        return m_connect_side_fd != nullptr;
+    if (role == Role::Connected)
         return m_accept_side_fd_open;
     ASSERT_NOT_REACHED();
 }
 
 bool LocalSocket::can_write(FileDescription& description) const
 {
-    if (description.socket_role() == SocketRole::Accepted)
+    auto role = this->role(description);
+    if (role == Role::Accepted)
         return !has_attached_peer(description) || m_for_client.bytes_in_write_buffer() < 16384;
-    if (description.socket_role() == SocketRole::Connected)
+    if (role == Role::Connected)
         return !has_attached_peer(description) || m_for_server.bytes_in_write_buffer() < 16384;
     ASSERT_NOT_REACHED();
 }
@@ -202,24 +200,25 @@ ssize_t LocalSocket::sendto(FileDescription& description, const void* data, size
 {
     if (!has_attached_peer(description))
         return -EPIPE;
-    if (description.socket_role() == SocketRole::Accepted)
+    auto role = this->role(description);
+    if (role == Role::Accepted)
         return m_for_client.write((const u8*)data, data_size);
-    if (description.socket_role() == SocketRole::Connected)
+    if (role == Role::Connected)
         return m_for_server.write((const u8*)data, data_size);
     ASSERT_NOT_REACHED();
 }
 
 ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
 {
-    auto role = description.socket_role();
-    if (role == SocketRole::Accepted) {
+    auto role = this->role(description);
+    if (role == Role::Accepted) {
         if (!description.is_blocking()) {
             if (m_for_server.is_empty())
                 return -EAGAIN;
         }
         return m_for_server.read((u8*)buffer, buffer_size);
     }
-    if (role == SocketRole::Connected) {
+    if (role == Role::Connected) {
         if (!description.is_blocking()) {
             if (m_for_client.is_empty())
                 return -EAGAIN;

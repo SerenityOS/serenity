@@ -24,6 +24,9 @@ void TCPSocket::set_state(State new_state)
 #endif
 
     m_state = new_state;
+
+    if (new_state == State::Established && m_direction == Direction::Outgoing)
+        m_role = Role::Connected;
 }
 
 Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
@@ -268,14 +271,17 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     set_setup_state(SetupState::InProgress);
     send_tcp_packet(TCPFlags::SYN);
     m_state = State::SynSent;
+    m_role = Role::Connecting;
     m_direction = Direction::Outgoing;
 
     if (should_block == ShouldBlock::Yes) {
         if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
             return KResult(-EINTR);
         ASSERT(setup_state() == SetupState::Completed);
-        if (has_error())
+        if (has_error()) {
+            m_role = Role::None;
             return KResult(-ECONNREFUSED);
+        }
         return KSuccess;
     }
 
