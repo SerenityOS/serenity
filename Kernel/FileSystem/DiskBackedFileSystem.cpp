@@ -139,14 +139,6 @@ ByteBuffer DiskBackedFS::read_blocks(unsigned index, unsigned count) const
     return blocks;
 }
 
-void DiskBackedFS::set_block_size(int block_size)
-{
-    ASSERT(block_size > 0);
-    if (block_size == m_block_size)
-        return;
-    m_block_size = block_size;
-}
-
 void DiskBackedFS::flush_writes()
 {
     LOCKER(m_lock);
