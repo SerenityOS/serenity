@@ -11,6 +11,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GGroupBox.h>
+#include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GSplitter.h>
@@ -21,6 +22,19 @@
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
+
+static String human_readable_size(u32 size)
+{
+    if (size < (64 * KB))
+        return String::format("%u", size);
+    if (size < MB)
+        return String::format("%u KB", size / KB);
+    if (size < GB)
+        return String::format("%u MB", size / MB);
+    return String::format("%u GB", size / GB);
+}
+
+static GWidget* build_file_systems_tab();
 
 int main(int argc, char** argv)
 {
@@ -71,6 +85,8 @@ int main(int argc, char** argv)
     };
 
     tabwidget->add_widget("Graphs", graphs_container);
+
+    tabwidget->add_widget("File systems", build_file_systems_tab());
 
     auto* network_stats_widget = new NetworkStatisticsWidget(nullptr);
     tabwidget->add_widget("Network", network_stats_widget);
@@ -187,4 +203,40 @@ int main(int argc, char** argv)
     window->set_icon(load_png("/res/icons/16x16/app-process-manager.png"));
 
     return app.exec();
+}
+
+GWidget* build_file_systems_tab()
+{
+    auto* fs_widget = new GWidget(nullptr);
+    fs_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    fs_widget->layout()->set_margins({ 4, 4, 4, 4 });
+    auto* fs_table_view = new GTableView(fs_widget);
+    fs_table_view->set_size_columns_to_fit_content(true);
+
+    Vector<GJsonArrayModel::FieldSpec> df_fields;
+    df_fields.empend("mount_point", "Mount point", TextAlignment::CenterLeft);
+    df_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
+    df_fields.empend("Size", TextAlignment::CenterRight, [](const JsonObject& object) {
+        return human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32());
+    });
+    df_fields.empend("Used", TextAlignment::CenterRight, [](const JsonObject& object) {
+        auto total_blocks = object.get("total_block_count").to_u32();
+        auto free_blocks = object.get("free_block_count").to_u32();
+        auto used_blocks = total_blocks - free_blocks;
+        return human_readable_size(used_blocks * object.get("block_size").to_u32());
+    });
+    df_fields.empend("Available", TextAlignment::CenterRight, [](const JsonObject& object) {
+        return human_readable_size(object.get("free_block_count").to_u32() * object.get("block_size").to_u32());
+    });
+    df_fields.empend("Access", TextAlignment::CenterLeft, [](const JsonObject& object) {
+        return object.get("readonly").to_bool() ? "Read-only" : "Read/Write";
+    });
+    df_fields.empend("free_block_count", "Free blocks", TextAlignment::CenterRight);
+    df_fields.empend("total_block_count", "Total blocks", TextAlignment::CenterRight);
+    df_fields.empend("free_inode_count", "Free inodes", TextAlignment::CenterRight);
+    df_fields.empend("total_inode_count", "Total inodes", TextAlignment::CenterRight);
+    df_fields.empend("block_size", "Block size", TextAlignment::CenterRight);
+    fs_table_view->set_model(GJsonArrayModel::create("/proc/df", move(df_fields)));
+    fs_table_view->model()->update();
+    return fs_widget;
 }
