@@ -26,8 +26,6 @@ public:
     static NonnullRefPtr<FileDescription> create(File&, SocketRole = SocketRole::None);
     ~FileDescription();
 
-    NonnullRefPtr<FileDescription> clone();
-
     int close();
 
     off_t seek(off_t, int whence);
