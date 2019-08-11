@@ -23,7 +23,7 @@ class SharedMemory;
 class FileDescription : public RefCounted<FileDescription> {
 public:
     static NonnullRefPtr<FileDescription> create(Custody&);
-    static NonnullRefPtr<FileDescription> create(File&, SocketRole = SocketRole::None);
+    static NonnullRefPtr<FileDescription> create(File&);
     ~FileDescription();
 
     int close();
@@ -93,9 +93,6 @@ public:
 
     void set_original_inode(Badge<VFS>, NonnullRefPtr<Inode>&& inode) { m_inode = move(inode); }
 
-    SocketRole socket_role() const { return m_socket_role; }
-    void set_socket_role(SocketRole);
-
     KResult truncate(off_t);
 
     off_t offset() const { return m_current_offset; }
@@ -104,7 +101,7 @@ public:
 
 private:
     friend class VFS;
-    FileDescription(File&, SocketRole = SocketRole::None);
+    explicit FileDescription(File&);
     FileDescription(FIFO&, FIFO::Direction);
 
     RefPtr<Custody> m_custody;
@@ -119,6 +116,5 @@ private:
 
     bool m_is_blocking { true };
     bool m_should_append { false };
-    SocketRole m_socket_role { SocketRole::None };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 };

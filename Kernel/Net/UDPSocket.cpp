@@ -81,6 +81,12 @@ int UDPSocket::protocol_send(const void* data, int data_length)
     return data_length;
 }
 
+KResult UDPSocket::protocol_connect(FileDescription&, ShouldBlock)
+{
+    m_role = Role::Connected;
+    return KSuccess;
+}
+
 int UDPSocket::protocol_allocate_local_port()
 {
     static const u16 first_ephemeral_port = 32768;

@@ -48,6 +48,7 @@ KResult Socket::listen(int backlog)
     if (m_type != SOCK_STREAM)
         return KResult(-EOPNOTSUPP);
     m_backlog = backlog;
+    m_role = Role::Listener;
     kprintf("Socket{%p} listening with backlog=%d\n", this, m_backlog);
     return KSuccess;
 }
@@ -64,6 +65,7 @@ RefPtr<Socket> Socket::accept()
     ASSERT(!client->is_connected());
     client->set_setup_state(SetupState::Completed);
     client->m_connected = true;
+    client->m_role = Role::Accepted;
     return client;
 }
 
@@ -146,14 +148,14 @@ void Socket::load_send_deadline()
     m_send_deadline.tv_usec %= 1000000;
 }
 
-static const char* to_string(SocketRole role)
+static const char* to_string(Socket::Role role)
 {
     switch (role) {
-    case SocketRole::Listener:
+    case Socket::Role::Listener:
         return "Listener";
-    case SocketRole::Accepted:
+    case Socket::Role::Accepted:
         return "Accepted";
-    case SocketRole::Connected:
+    case Socket::Role::Connected:
         return "Connected";
     default:
         return "None";
@@ -162,7 +164,7 @@ static const char* to_string(SocketRole role)
 
 String Socket::absolute_path(const FileDescription& description) const
 {
-    return String::format("socket:%x (role: %s)", this, ::to_string(description.socket_role()));
+    return String::format("socket:%x (role: %s)", this, ::to_string(role(description)));
 }
 
 ssize_t Socket::read(FileDescription& description, u8* buffer, ssize_t size)

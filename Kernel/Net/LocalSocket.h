@@ -28,11 +28,25 @@ private:
     virtual bool is_local() const override { return true; }
     bool has_attached_peer(const FileDescription&) const;
 
+    // An open socket file on the filesystem.
     RefPtr<FileDescription> m_file;
+
+    // A single LocalSocket is shared between two file descriptions
+    // on the connect side and the accept side; so we need to store
+    // an additional role for the connect side and differentiate
+    // between them.
+    Role m_connect_side_role { Role::None };
+    FileDescription* m_connect_side_fd { nullptr };
+
+    virtual Role role(const FileDescription& description) const override
+    {
+        if (m_connect_side_fd == &description)
+            return m_connect_side_role;
+        return m_role;
+    }
 
     bool m_bound { false };
     bool m_accept_side_fd_open { false };
-    bool m_connect_side_fd_open { false };
     sockaddr_un m_address;
 
     DoubleBuffer m_for_client;
