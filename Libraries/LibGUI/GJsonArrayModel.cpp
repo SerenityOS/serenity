@@ -40,6 +40,12 @@ GVariant GJsonArrayModel::data(const GModelIndex& index, Role role) const
             return data.as_uint();
         return object.get(json_field_name).to_string();
     }
+
+    if (role == GModel::Role::Sort) {
+        if (field_spec.massage_for_sort)
+            return field_spec.massage_for_sort(object);
+        return data(index, Role::Display);
+    }
     return {};
 }
 
