@@ -494,27 +494,39 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
     IO::out8(m_io_base + ATA_REG_HDDEVSEL, devsel | ((start_sector >> 24) & 0xf));
 
     IO::out8(0x3F6, 0x08);
+    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRDY))
+        ;
 
     IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_WRITE_PIO);
 
-    while (!(IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_DRQ))
-        ;
+    for (int i = 0; i < count; i++) {
+        wait_400ns(m_io_base);
+        while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
+            ;
 
-    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
-    ASSERT(status & ATA_SR_DRQ);
-    IO::repeated_out16(m_io_base + ATA_REG_DATA, inbuf, count * 256);
+        u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
+        ASSERT(status & ATA_SR_DRQ);
 
-    m_interrupted = false;
-    enable_irq();
-    wait_for_irq();
+#ifdef PATA_DEBUG
+        kprintf("PATAChannel: Writing 512 bytes (part %d) (status=%b), inbuf=%p...\n", i, status, inbuf + (512 * i));
+#endif
+
+        disable_irq();
+        IO::repeated_out16(m_io_base + ATA_REG_DATA, inbuf + (512 * i), 256);
+        m_interrupted = false;
+        enable_irq();
+        wait_for_irq();
+        status = IO::in8(m_io_base + ATA_REG_STATUS);
+        ASSERT(!(status & ATA_SR_BSY));
+    }
 
     disable_irq();
     IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_CACHE_FLUSH);
-    while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
-        ;
     m_interrupted = false;
     enable_irq();
     wait_for_irq();
+    u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
+    ASSERT(!(status & ATA_SR_BSY));
 
     return !m_device_error;
 }
