@@ -33,6 +33,12 @@ int munmap(void* addr, size_t size)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int mprotect(void* addr, size_t size, int prot)
+{
+    int rc = syscall(SC_mprotect, addr, size, prot);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 int set_mmap_name(void* addr, size_t size, const char* name)
 {
     int rc = syscall(SC_set_mmap_name, addr, size, name);

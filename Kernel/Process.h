@@ -145,6 +145,7 @@ public:
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(void*, size_t, const char*);
+    int sys$mprotect(void*, size_t, int prot);
     int sys$select(const Syscall::SC_select_params*);
     int sys$poll(pollfd*, int nfds, int timeout);
     ssize_t sys$get_dir_entries(int fd, void*, ssize_t);
