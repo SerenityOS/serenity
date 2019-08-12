@@ -23,7 +23,7 @@ WSScreen::WSScreen(unsigned width, unsigned height)
     ASSERT(!s_the);
     s_the = this;
     m_cursor_location = rect().center();
-    m_framebuffer_fd = open("/dev/bxvga", O_RDWR);
+    m_framebuffer_fd = open("/dev/fb0", O_RDWR);
     ASSERT(m_framebuffer_fd >= 0);
 
     set_resolution(width, height);
