@@ -22,7 +22,7 @@ echo "done"
 echo -n "setting up device nodes... "
 mkdir -p mnt/dev
 mkdir -p mnt/dev/pts
-mknod -m 666 mnt/dev/bxvga b 82 413
+mknod -m 666 mnt/dev/fb0 b 29 0
 mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2

@@ -38,7 +38,7 @@ BXVGADevice& BXVGADevice::the()
 }
 
 BXVGADevice::BXVGADevice()
-    : BlockDevice(82, 413)
+    : BlockDevice(29, 0)
 {
     s_the = this;
     m_framebuffer_address = PhysicalAddress(find_framebuffer_address());
