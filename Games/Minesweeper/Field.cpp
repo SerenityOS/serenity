@@ -230,7 +230,6 @@ void Field::reset()
             square.label->set_icon(square.has_mine ? m_mine_bitmap : nullptr);
             if (!square.button) {
                 square.button = new SquareButton(this);
-                square.button->set_checkable(true);
                 square.button->on_click = [this, &square](GButton&) {
                     on_square_clicked(square);
                 };
