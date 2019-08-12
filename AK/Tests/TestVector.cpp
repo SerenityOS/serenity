@@ -207,4 +207,49 @@ BENCHMARK_CASE(vector_append_trivial)
     }
 }
 
+BENCHMARK_CASE(vector_remove_trivial)
+{
+    // This should be super fast thanks to Vector using memmove.
+    Vector<int> ints;
+    for (int i = 0; i < 10000; ++i) {
+        ints.append(i);
+    }
+    while (!ints.is_empty()) {
+        ints.remove(0);
+    }
+    EXPECT_EQ(ints.size(), 0);
+}
+
+TEST_CASE(vector_remove)
+{
+    Vector<int> ints;
+    ints.append(1);
+    ints.append(2);
+    ints.append(3);
+    ints.append(4);
+    ints.append(5);
+
+    ints.remove(1);
+    EXPECT_EQ(ints.size(), 4);
+    EXPECT_EQ(ints[0], 1);
+    EXPECT_EQ(ints[1], 3);
+    EXPECT_EQ(ints[2], 4);
+    EXPECT_EQ(ints[3], 5);
+
+    ints.remove(0);
+    EXPECT_EQ(ints.size(), 3);
+    EXPECT_EQ(ints[0], 3);
+    EXPECT_EQ(ints[1], 4);
+    EXPECT_EQ(ints[2], 5);
+
+    ints.take_last();
+    EXPECT_EQ(ints.size(), 2);
+    EXPECT_EQ(ints[0], 3);
+    EXPECT_EQ(ints[1], 4);
+
+    ints.take_first();
+    EXPECT_EQ(ints.size(), 1);
+    EXPECT_EQ(ints[0], 4);
+}
+
 TEST_MAIN(Vector)

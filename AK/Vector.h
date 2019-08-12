@@ -266,10 +266,15 @@ public:
     void remove(int index)
     {
         ASSERT(index < m_size);
-        at(index).~T();
-        for (int i = index + 1; i < m_size; ++i) {
-            new (slot(i - 1)) T(move(at(i)));
-            at(i).~T();
+
+        if constexpr (Traits<T>::is_trivial()) {
+            TypedTransfer<T>::copy(slot(index), slot(index + 1), m_size - index - 1);
+        } else {
+            at(index).~T();
+            for (int i = index + 1; i < m_size; ++i) {
+                new (slot(i - 1)) T(move(at(i)));
+                at(i).~T();
+            }
         }
 
         --m_size;
