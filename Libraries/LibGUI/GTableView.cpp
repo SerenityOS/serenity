@@ -159,7 +159,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
             }
             auto header_rect = this->header_rect(i);
 	    auto column_metadata = model()->column_metadata(i);
-            if (header_rect.contains(event.position()) && column_metadata.sortable) {
+            if (header_rect.contains(event.position()) && column_metadata.sortable == GModel::ColumnMetadata::Sortable::True) {
                 auto new_sort_order = GSortOrder::Ascending;
                 if (model()->key_column() == i)
                     new_sort_order = model()->sort_order() == GSortOrder::Ascending
