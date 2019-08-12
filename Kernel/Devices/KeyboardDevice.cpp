@@ -289,10 +289,12 @@ void KeyboardDevice::handle_irq()
                     VirtualConsole::switch_to(map[ch] - '0' - 1);
                     break;
                 default:
+                    key_state_changed(ch, pressed);
                     break;
                 }
+            } else {
+                key_state_changed(ch, pressed);
             }
-            key_state_changed(ch, pressed);
         }
     }
 }
