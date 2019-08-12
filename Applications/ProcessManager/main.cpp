@@ -1,10 +1,10 @@
 #include "GraphWidget.h"
 #include "MemoryStatsWidget.h"
+#include "NetworkStatisticsWidget.h"
 #include "ProcessFileDescriptorMapWidget.h"
 #include "ProcessMemoryMapWidget.h"
 #include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
-#include "NetworkStatisticsWidget.h"
 #include <LibCore/CTimer.h>
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
@@ -14,6 +14,7 @@
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GSortingProxyModel.h>
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GTabWidget.h>
 #include <LibGUI/GToolBar.h>
@@ -216,18 +217,35 @@ GWidget* build_file_systems_tab()
     Vector<GJsonArrayModel::FieldSpec> df_fields;
     df_fields.empend("mount_point", "Mount point", TextAlignment::CenterLeft);
     df_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
-    df_fields.empend("Size", TextAlignment::CenterRight, [](const JsonObject& object) {
-        return human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32());
-    });
-    df_fields.empend("Used", TextAlignment::CenterRight, [](const JsonObject& object) {
-        auto total_blocks = object.get("total_block_count").to_u32();
-        auto free_blocks = object.get("free_block_count").to_u32();
-        auto used_blocks = total_blocks - free_blocks;
-        return human_readable_size(used_blocks * object.get("block_size").to_u32());
-    });
-    df_fields.empend("Available", TextAlignment::CenterRight, [](const JsonObject& object) {
-        return human_readable_size(object.get("free_block_count").to_u32() * object.get("block_size").to_u32());
-    });
+    df_fields.empend(
+        "Size", TextAlignment::CenterRight,
+        [](const JsonObject& object) {
+            return human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32());
+        },
+        [](const JsonObject& object) {
+            return object.get("total_block_count").to_u32() * object.get("block_size").to_u32();
+        });
+    df_fields.empend(
+        "Used", TextAlignment::CenterRight,
+        [](const JsonObject& object) {
+            auto total_blocks = object.get("total_block_count").to_u32();
+            auto free_blocks = object.get("free_block_count").to_u32();
+            auto used_blocks = total_blocks - free_blocks;
+            return human_readable_size(used_blocks * object.get("block_size").to_u32()); },
+        [](const JsonObject& object) {
+            auto total_blocks = object.get("total_block_count").to_u32();
+            auto free_blocks = object.get("free_block_count").to_u32();
+            auto used_blocks = total_blocks - free_blocks;
+            return used_blocks * object.get("block_size").to_u32();
+        });
+    df_fields.empend(
+        "Available", TextAlignment::CenterRight,
+        [](const JsonObject& object) {
+            return human_readable_size(object.get("free_block_count").to_u32() * object.get("block_size").to_u32());
+        },
+        [](const JsonObject& object) {
+            return object.get("free_block_count").to_u32() * object.get("block_size").to_u32();
+        });
     df_fields.empend("Access", TextAlignment::CenterLeft, [](const JsonObject& object) {
         return object.get("readonly").to_bool() ? "Read-only" : "Read/Write";
     });
@@ -236,7 +254,7 @@ GWidget* build_file_systems_tab()
     df_fields.empend("free_inode_count", "Free inodes", TextAlignment::CenterRight);
     df_fields.empend("total_inode_count", "Total inodes", TextAlignment::CenterRight);
     df_fields.empend("block_size", "Block size", TextAlignment::CenterRight);
-    fs_table_view->set_model(GJsonArrayModel::create("/proc/df", move(df_fields)));
+    fs_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/df", move(df_fields))));
     fs_table_view->model()->update();
     return fs_widget;
 }
