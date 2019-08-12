@@ -142,10 +142,31 @@ VFS* vfs;
 
     auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)100, (gid_t)100, (pid_t)0, error, {}, {}, tty0);
     if (error != 0) {
-        dbgprintf("init_stage2: error spawning SystemServer: %d\n", error);
+        kprintf("init_stage2: error spawning SystemServer: %d\n", error);
         hang();
     }
     system_server_process->set_priority(Process::HighPriority);
+
+    auto* tty1_process = Process::create_user_process("/bin/TTYServer", (uid_t)0, (gid_t)0, (pid_t)0, error, { "/bin/TTYServer", "tty1" }, {}, tty1);
+    if (error != 0) {
+        kprintf("init_stage2: error spawning TTYServer for tty1: %d\n", error);
+        hang();
+    }
+    tty1_process->set_priority(Process::HighPriority);
+
+    auto* tty2_process = Process::create_user_process("/bin/TTYServer", (uid_t)0, (gid_t)0, (pid_t)0, error, { "/bin/TTYServer", "tty2" }, {}, tty2);
+    if (error != 0) {
+        kprintf("init_stage2: error spawning TTYServer for tty2: %d\n", error);
+        hang();
+    }
+    tty2_process->set_priority(Process::HighPriority);
+
+    auto* tty3_process = Process::create_user_process("/bin/TTYServer", (uid_t)0, (gid_t)0, (pid_t)0, error, { "/bin/TTYServer", "tty3" }, {}, tty3);
+    if (error != 0) {
+        kprintf("init_stage2: error spawning TTYServer for tty3: %d\n", error);
+        hang();
+    }
+    tty3_process->set_priority(Process::HighPriority);
 
     current->process().sys$exit(0);
     ASSERT_NOT_REACHED();
