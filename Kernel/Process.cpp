@@ -224,6 +224,16 @@ int Process::sys$munmap(void* addr, size_t size)
     return 0;
 }
 
+int Process::sys$mprotect(void* addr, size_t size, int prot)
+{
+    auto* region = region_from_range(VirtualAddress((u32)addr), size);
+    if (!region)
+        return -EINVAL;
+    region->set_writable(prot & PROT_WRITE);
+    MM.remap_region(page_directory(), *region);
+    return 0;
+}
+
 int Process::sys$gethostname(char* buffer, ssize_t size)
 {
     if (size < 0)

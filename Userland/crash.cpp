@@ -1,6 +1,7 @@
 #include <AK/AKString.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <sys/mman.h>
 
 static void print_usage_and_exit()
 {
@@ -20,6 +21,7 @@ int main(int argc, char** argv)
         WriteToFreedMemory,
         ReadFromUninitializedMallocMemory,
         ReadFromFreedMemory,
+        WriteToReadonlyMemory,
     };
     Mode mode = SegmentationViolation;
 
@@ -42,6 +44,8 @@ int main(int argc, char** argv)
         mode = WriteToUninitializedMallocMemory;
     else if (String(argv[1]) == "-F")
         mode = WriteToFreedMemory;
+    else if (String(argv[1]) == "-r")
+        mode = WriteToReadonlyMemory;
     else
         print_usage_and_exit();
 
@@ -95,6 +99,16 @@ int main(int argc, char** argv)
         free(uninitialized_memory);
         uninitialized_memory[4][0] = 1;
         ASSERT_NOT_REACHED();
+    }
+
+    if (mode == WriteToReadonlyMemory) {
+        auto* ptr = (u8*)mmap(nullptr, 4096, PROT_READ | PROT_WRITE, MAP_ANON, 0, 0);
+        ASSERT(ptr != MAP_FAILED);
+        *ptr = 'x'; // This should work fine.
+        int rc = mprotect(ptr, 4096, PROT_READ);
+        ASSERT(rc == 0);
+        ASSERT(*ptr == 'x');
+        *ptr = 'y'; // This should crash!
     }
 
     ASSERT_NOT_REACHED();
