@@ -4,6 +4,7 @@
 #include "kmalloc.h"
 #include <AK/AKString.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Devices/KeyboardDevice.h>
 
 static u8* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
@@ -101,6 +102,7 @@ void VirtualConsole::set_active(bool b)
     m_active = b;
     if (!m_active) {
         memcpy(m_buffer, m_current_vga_window, rows() * columns() * 2);
+        KeyboardDevice::the().set_client(nullptr);
         return;
     }
 
@@ -108,9 +110,7 @@ void VirtualConsole::set_active(bool b)
     set_vga_start_row(0);
     flush_vga_cursor();
 
-#if 0
-    Keyboard::the().set_client(this);
-#endif
+    KeyboardDevice::the().set_client(this);
 }
 
 inline bool is_valid_parameter_character(u8 ch)
