@@ -720,6 +720,14 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         if (event.type() == WSEvent::MouseUp && event.buttons() == 0) {
             m_active_input_window = nullptr;
         }
+
+        for_each_visible_window_from_front_to_back([&](auto& window) {
+            if (window.frame().rect().contains(event.position())) {
+                hovered_window = &window;
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
     } else {
         for_each_visible_window_from_front_to_back([&](WSWindow& window) {
             auto window_frame_rect = window.frame().rect();
