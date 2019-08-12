@@ -10,8 +10,16 @@
 #define I8042_MOUSE_BUFFER 0x20
 #define I8042_KEYBOARD_BUFFER 0x00
 
+#define PS2MOUSE_SET_RESOLUTION 0xE8
+#define PS2MOUSE_STATUS_REQUEST 0xE9
+#define PS2MOUSE_REQUEST_SINGLE_PACKET 0xEB
 #define PS2MOUSE_GET_DEVICE_ID 0xF2
 #define PS2MOUSE_SET_SAMPLE_RATE 0xF3
+#define PS2MOUSE_ENABLE_PACKET_STREAMING 0xF4
+#define PS2MOUSE_DISABLE_PACKET_STREAMING 0xF5
+#define PS2MOUSE_SET_DEFAULTS 0xF6
+#define PS2MOUSE_RESEND 0xFE
+#define PS2MOUSE_RESET 0xFF
 
 #define PS2MOUSE_INTELLIMOUSE_ID 0x03
 
@@ -128,23 +136,53 @@ u8 PS2MouseDevice::wait_then_read(u8 port)
 void PS2MouseDevice::initialize()
 {
     // Enable PS aux port
-    wait_then_write(0x64, 0xa8);
+    wait_then_write(I8042_STATUS, 0xa8);
+
+    check_device_presence();
+
+    if (m_device_present)
+        initialize_device();
+}
+
+void PS2MouseDevice::check_device_presence()
+{
+    mouse_write(PS2MOUSE_REQUEST_SINGLE_PACKET);
+    u8 maybe_ack = mouse_read();
+    if (maybe_ack == I8042_ACK) {
+        m_device_present = true;
+        kprintf("PS2MouseDevice: Device detected\n");
+
+        // the mouse will send a packet of data, since that's what we asked
+        // for. we don't care about the content.
+        mouse_read();
+        mouse_read();
+        mouse_read();
+    } else {
+        m_device_present = false;
+        kprintf("PS2MouseDevice: Device not detected\n");
+    }
+}
+
+void PS2MouseDevice::initialize_device()
+{
+    if (!m_device_present)
+        return;
 
     // Enable interrupts
-    wait_then_write(0x64, 0x20);
+    wait_then_write(I8042_STATUS, 0x20);
 
     // Enable the PS/2 mouse IRQ (12).
     // NOTE: The keyboard uses IRQ 1 (and is enabled by bit 0 in this register).
-    u8 status = wait_then_read(0x60) | 2;
-    wait_then_write(0x64, 0x60);
-    wait_then_write(0x60, status);
+    u8 status = wait_then_read(I8042_BUFFER) | 2;
+    wait_then_write(I8042_STATUS, 0x60);
+    wait_then_write(I8042_BUFFER, status);
 
     // Set default settings.
-    mouse_write(0xf6);
+    mouse_write(PS2MOUSE_SET_DEFAULTS);
     expect_ack();
 
     // Enable.
-    mouse_write(0xf4);
+    mouse_write(PS2MOUSE_ENABLE_PACKET_STREAMING);
     expect_ack();
 
     mouse_write(PS2MOUSE_GET_DEVICE_ID);
@@ -190,7 +228,7 @@ void PS2MouseDevice::expect_ack()
 void PS2MouseDevice::prepare_for_input()
 {
     for (;;) {
-        if (IO::in8(0x64) & 1)
+        if (IO::in8(I8042_STATUS) & 1)
             return;
     }
 }
@@ -198,7 +236,7 @@ void PS2MouseDevice::prepare_for_input()
 void PS2MouseDevice::prepare_for_output()
 {
     for (;;) {
-        if (!(IO::in8(0x64) & 2))
+        if (!(IO::in8(I8042_STATUS) & 2))
             return;
     }
 }
@@ -206,15 +244,15 @@ void PS2MouseDevice::prepare_for_output()
 void PS2MouseDevice::mouse_write(u8 data)
 {
     prepare_for_output();
-    IO::out8(0x64, 0xd4);
+    IO::out8(I8042_STATUS, 0xd4);
     prepare_for_output();
-    IO::out8(0x60, data);
+    IO::out8(I8042_BUFFER, data);
 }
 
 u8 PS2MouseDevice::mouse_read()
 {
     prepare_for_input();
-    return IO::in8(0x60);
+    return IO::in8(I8042_BUFFER);
 }
 
 bool PS2MouseDevice::can_read(FileDescription&) const
