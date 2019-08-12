@@ -26,7 +26,13 @@ void TTY::set_default_termios()
 
 ssize_t TTY::read(FileDescription&, u8* buffer, ssize_t size)
 {
-    return m_buffer.read(buffer, size);
+    if (m_input_buffer.size() < size)
+        size = m_input_buffer.size();
+
+    for (int i = 0; i < size; i++)
+        buffer[i] = m_input_buffer.dequeue();
+
+    return size;
 }
 
 ssize_t TTY::write(FileDescription&, const u8* buffer, ssize_t size)
@@ -44,7 +50,7 @@ ssize_t TTY::write(FileDescription&, const u8* buffer, ssize_t size)
 
 bool TTY::can_read(FileDescription&) const
 {
-    return !m_buffer.is_empty();
+    return !m_input_buffer.is_empty();
 }
 
 bool TTY::can_write(FileDescription&) const
@@ -71,7 +77,7 @@ void TTY::emit(u8 ch)
             return;
         }
     }
-    m_buffer.write(&ch, 1);
+    m_input_buffer.enqueue(ch);
 }
 
 void TTY::generate_signal(int signal)
