@@ -27,7 +27,7 @@ void GButton::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    StylePainter::paint_button(painter, rect(), m_button_style, is_being_pressed(), is_hovered(), is_checkable() && is_checked(), is_enabled());
+    StylePainter::paint_button(painter, rect(), m_button_style, is_being_pressed(), is_hovered(), is_checked(), is_enabled());
 
     if (text().is_empty() && !m_icon)
         return;
@@ -44,7 +44,7 @@ void GButton::paint_event(GPaintEvent& event)
         else
             painter.blit_dimmed(icon_location, *m_icon, m_icon->rect());
     }
-    auto& font = (is_checkable() && is_checked()) ? Font::default_bold_font() : this->font();
+    auto& font = is_checked() ? Font::default_bold_font() : this->font();
     if (m_icon && !text().is_empty()) {
         content_rect.move_by(m_icon->width() + 4, 0);
         content_rect.set_width(content_rect.width() - m_icon->width() - 4);
