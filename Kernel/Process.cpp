@@ -669,12 +669,15 @@ Process::~Process()
 void Process::dump_regions()
 {
     kprintf("Process %s(%u) regions:\n", name().characters(), pid());
-    kprintf("BEGIN       END         SIZE        NAME\n");
+    kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
     for (auto& region : m_regions) {
-        kprintf("%x -- %x    %x    %s\n",
+        kprintf("%x -- %x    %x    %c%c%c     %s\n",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),
             region.size(),
+            region.is_readable() ? 'R' : ' ',
+            region.is_writable() ? 'W' : ' ',
+            region.is_executable() ? 'X' : ' ',
             region.name().characters());
     }
 }
