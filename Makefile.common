@@ -22,6 +22,7 @@ LDFLAGS = \
     -L$(SERENITY_BASE_DIR)/Libraries/LibM \
     -L$(SERENITY_BASE_DIR)/Libraries/LibDraw \
     -L$(SERENITY_BASE_DIR)/Libraries/LibGUI \
+    -L$(SERENITY_BASE_DIR)/Libraries/LibVT \
     -L$(SERENITY_BASE_DIR)/Libraries/LibAudio
 
 CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
