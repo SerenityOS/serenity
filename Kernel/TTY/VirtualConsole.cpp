@@ -494,6 +494,8 @@ void VirtualConsole::on_char(u8 ch)
 
 void VirtualConsole::on_key_pressed(KeyboardDevice::Event key)
 {
+    if (!key.is_press())
+        return;
     if (key.ctrl()) {
         if (key.character >= 'a' && key.character <= 'z') {
             emit(key.character - 'a' + 1);
