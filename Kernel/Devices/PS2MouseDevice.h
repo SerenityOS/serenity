@@ -27,6 +27,8 @@ private:
     virtual const char* class_name() const override { return "PS2MouseDevice"; }
 
     void initialize();
+    void check_device_presence();
+    void initialize_device();
     void prepare_for_input();
     void prepare_for_output();
     void mouse_write(u8);
@@ -36,6 +38,7 @@ private:
     void parse_data_packet();
     void expect_ack();
 
+    bool m_device_present { false };
     CircularQueue<MousePacket, 100> m_queue;
     u8 m_data_state { 0 };
     u8 m_data[4];
