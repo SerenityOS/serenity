@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DoubleBuffer.h"
+#include <AK/CircularQueue.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/UnixTypes.h>
 
@@ -46,7 +47,7 @@ private:
     // ^CharacterDevice
     virtual bool is_tty() const final override { return true; }
 
-    DoubleBuffer m_buffer;
+    CircularQueue<u8, 16> m_input_buffer;
     pid_t m_pgid { 0 };
     termios m_termios;
     unsigned short m_rows { 0 };
