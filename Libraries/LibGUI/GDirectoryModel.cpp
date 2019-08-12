@@ -119,7 +119,7 @@ GModel::ColumnMetadata GDirectoryModel::column_metadata(int column) const
 {
     switch (column) {
     case Column::Icon:
-        return { 16, TextAlignment::Center };
+        return { 16, TextAlignment::Center, false };
     case Column::Name:
         return { 120, TextAlignment::CenterLeft };
     case Column::Size:
