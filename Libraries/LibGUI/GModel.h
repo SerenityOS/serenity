@@ -44,6 +44,7 @@ public:
     struct ColumnMetadata {
         int preferred_width { 0 };
         TextAlignment text_alignment { TextAlignment::CenterLeft };
+	bool sortable { true };
         const Font* font { nullptr };
     };
 
