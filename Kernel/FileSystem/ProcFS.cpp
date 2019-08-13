@@ -255,11 +255,22 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
 
 Optional<KBuffer> procfs$pci(InodeIdentifier)
 {
-    KBufferBuilder builder;
-    PCI::enumerate_all([&builder](PCI::Address address, PCI::ID id) {
-        builder.appendf("%b:%b.%b %w:%w\n", address.bus(), address.slot(), address.function(), id.vendor_id, id.device_id);
+    JsonArray json;
+    PCI::enumerate_all([&json](PCI::Address address, PCI::ID id) {
+        JsonObject obj;
+        obj.set("bus", address.bus());
+        obj.set("slot", address.slot());
+        obj.set("function", address.function());
+        obj.set("vendor_id", id.vendor_id);
+        obj.set("device_id", id.device_id);
+        obj.set("revision_id", PCI::get_revision_id(address));
+        obj.set("subclass", PCI::get_subclass(address));
+        obj.set("class", PCI::get_class(address));
+        obj.set("subsystem_id", PCI::get_subsystem_id(address));
+        obj.set("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
+        json.append(obj);
     });
-    return builder.build();
+    return json.serialized<KBufferBuilder>();
 }
 
 Optional<KBuffer> procfs$uptime(InodeIdentifier)
