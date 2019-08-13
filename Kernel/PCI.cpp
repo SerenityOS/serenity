@@ -1,26 +1,28 @@
 #include <Kernel/IO.h>
 #include <Kernel/PCI.h>
 
-#define PCI_VENDOR_ID 0x00       // word
-#define PCI_DEVICE_ID 0x02       // word
-#define PCI_COMMAND 0x04         // word
-#define PCI_STATUS 0x06          // word
-#define PCI_REVISION_ID 0x08     // byte
-#define PCI_PROG_IF 0x09         // byte
-#define PCI_SUBCLASS 0x0a        // byte
-#define PCI_CLASS 0x0b           // byte
-#define PCI_CACHE_LINE_SIZE 0x0c // byte
-#define PCI_LATENCY_TIMER 0x0d   // byte
-#define PCI_HEADER_TYPE 0x0e     // byte
-#define PCI_BIST 0x0f            // byte
-#define PCI_BAR0 0x10            // u32
-#define PCI_BAR1 0x14            // u32
-#define PCI_BAR2 0x18            // u32
-#define PCI_BAR3 0x1C            // u32
-#define PCI_BAR4 0x20            // u32
-#define PCI_BAR5 0x24            // u32
-#define PCI_INTERRUPT_LINE 0x3C  // byte
-#define PCI_SECONDARY_BUS 0x19   // byte
+#define PCI_VENDOR_ID 0x00           // word
+#define PCI_DEVICE_ID 0x02           // word
+#define PCI_COMMAND 0x04             // word
+#define PCI_STATUS 0x06              // word
+#define PCI_REVISION_ID 0x08         // byte
+#define PCI_PROG_IF 0x09             // byte
+#define PCI_SUBCLASS 0x0a            // byte
+#define PCI_CLASS 0x0b               // byte
+#define PCI_CACHE_LINE_SIZE 0x0c     // byte
+#define PCI_LATENCY_TIMER 0x0d       // byte
+#define PCI_HEADER_TYPE 0x0e         // byte
+#define PCI_BIST 0x0f                // byte
+#define PCI_BAR0 0x10                // u32
+#define PCI_BAR1 0x14                // u32
+#define PCI_BAR2 0x18                // u32
+#define PCI_BAR3 0x1C                // u32
+#define PCI_BAR4 0x20                // u32
+#define PCI_BAR5 0x24                // u32
+#define PCI_SUBSYSTEM_ID 0x2C        // u16
+#define PCI_SUBSYSTEM_VENDOR_ID 0x2E // u16
+#define PCI_INTERRUPT_LINE 0x3C      // byte
+#define PCI_SECONDARY_BUS 0x19       // byte
 #define PCI_HEADER_TYPE_DEVICE 0
 #define PCI_HEADER_TYPE_BRIDGE 1
 #define PCI_TYPE_BRIDGE 0x0604
@@ -102,6 +104,11 @@ u32 get_BAR2(Address address) { return read_field<u32>(address, PCI_BAR2); }
 u32 get_BAR3(Address address) { return read_field<u32>(address, PCI_BAR3); }
 u32 get_BAR4(Address address) { return read_field<u32>(address, PCI_BAR4); }
 u32 get_BAR5(Address address) { return read_field<u32>(address, PCI_BAR5); }
+u8 get_revision_id(Address address) { return read_field<u8>(address, PCI_REVISION_ID); }
+u8 get_subclass(Address address) { return read_field<u8>(address, PCI_SUBCLASS); }
+u8 get_class(Address address) { return read_field<u8>(address, PCI_CLASS); }
+u16 get_subsystem_id(Address address) { return read_field<u16>(address, PCI_SUBSYSTEM_ID); }
+u16 get_subsystem_vendor_id(Address address) { return read_field<u16>(address, PCI_SUBSYSTEM_VENDOR_ID); }
 
 void enable_bus_mastering(Address address)
 {
