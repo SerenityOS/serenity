@@ -1,7 +1,7 @@
 include ../../Makefile.common
 
 OBJS = \
-    Terminal.o \
+    TerminalWidget.o \
     main.o
 
 APP = Terminal
