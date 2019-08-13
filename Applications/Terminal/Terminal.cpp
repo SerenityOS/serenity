@@ -279,14 +279,14 @@ void Terminal::set_opacity(u8 new_opacity)
     force_repaint();
 }
 
-VT::BufferPosition Terminal::normalized_selection_start() const
+VT::Position Terminal::normalized_selection_start() const
 {
     if (m_selection_start < m_selection_end)
         return m_selection_start;
     return m_selection_end;
 }
 
-VT::BufferPosition Terminal::normalized_selection_end() const
+VT::Position Terminal::normalized_selection_end() const
 {
     if (m_selection_start < m_selection_end)
         return m_selection_end;
@@ -298,7 +298,7 @@ bool Terminal::has_selection() const
     return m_selection_start.is_valid() && m_selection_end.is_valid();
 }
 
-bool Terminal::selection_contains(const VT::BufferPosition& position) const
+bool Terminal::selection_contains(const VT::Position& position) const
 {
     if (!has_selection())
         return false;
@@ -306,7 +306,7 @@ bool Terminal::selection_contains(const VT::BufferPosition& position) const
     return position >= normalized_selection_start() && position <= normalized_selection_end();
 }
 
-VT::BufferPosition Terminal::buffer_position_at(const Point& position) const
+VT::Position Terminal::buffer_position_at(const Point& position) const
 {
     auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     int row = adjusted_position.y() / m_line_height;

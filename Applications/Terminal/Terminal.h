@@ -31,11 +31,11 @@ public:
     RefPtr<CConfigFile> config() const { return m_config; }
 
     bool has_selection() const;
-    bool selection_contains(const VT::BufferPosition&) const;
+    bool selection_contains(const VT::Position&) const;
     String selected_text() const;
-    VT::BufferPosition buffer_position_at(const Point&) const;
-    VT::BufferPosition normalized_selection_start() const;
-    VT::BufferPosition normalized_selection_end() const;
+    VT::Position buffer_position_at(const Point&) const;
+    VT::Position normalized_selection_start() const;
+    VT::Position normalized_selection_end() const;
 
 private:
     // ^GWidget
@@ -61,8 +61,8 @@ private:
 
     VT::Terminal m_terminal;
 
-    VT::BufferPosition m_selection_start;
-    VT::BufferPosition m_selection_end;
+    VT::Position m_selection_start;
+    VT::Position m_selection_end;
 
     bool m_should_beep { false };
     bool m_belling { false };
