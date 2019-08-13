@@ -268,7 +268,7 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
         obj.set("class", PCI::get_class(address));
         obj.set("subsystem_id", PCI::get_subsystem_id(address));
         obj.set("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
-        json.append(obj);
+        json.append(move(obj));
     });
     return json.serialized<KBufferBuilder>();
 }
