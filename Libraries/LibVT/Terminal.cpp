@@ -3,9 +3,6 @@
 
 namespace VT {
 
-u8 Attribute::default_foreground_color = 7;
-u8 Attribute::default_background_color = 0;
-
 Terminal::Terminal(TerminalClient& client)
     : m_client(client)
 {
