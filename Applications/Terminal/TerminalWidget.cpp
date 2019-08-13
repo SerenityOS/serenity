@@ -175,6 +175,8 @@ void TerminalWidget::paint_event(GPaintEvent& event)
 
     GPainter painter(*this);
 
+    painter.add_clip_rect(event.rect());
+
     if (m_visual_beep_timer.is_active())
         painter.fill_rect(frame_inner_rect(), Color::Red);
     else
