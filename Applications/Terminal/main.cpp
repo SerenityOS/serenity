@@ -1,4 +1,4 @@
-#include "Terminal.h"
+#include "TerminalWidget.h"
 #include <Kernel/KeyCode.h>
 #include <LibCore/CUserInfo.h>
 #include <LibDraw/PNGLoader.h>
@@ -82,7 +82,7 @@ static void make_shell(int ptm_fd)
     }
 }
 
-GWindow* create_settings_window(Terminal& terminal, RefPtr<CConfigFile> config)
+GWindow* create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> config)
 {
     auto* window = new GWindow;
     window->set_title("Terminal Settings");
@@ -150,7 +150,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
-    auto* terminal = new Terminal(ptm_fd, config);
+    auto* terminal = new TerminalWidget(ptm_fd, config);
     window->set_has_alpha_channel(true);
     window->set_main_widget(terminal);
     window->move_to(300, 300);

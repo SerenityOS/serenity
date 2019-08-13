@@ -1,4 +1,4 @@
-#include "Terminal.h"
+#include "TerminalWidget.h"
 #include "XtermColors.h"
 #include <AK/AKString.h>
 #include <AK/StdLibExtras.h>
@@ -18,7 +18,7 @@
 
 //#define TERMINAL_DEBUG
 
-Terminal::Terminal(int ptm_fd, RefPtr<CConfigFile> config)
+TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
     : m_terminal(*this)
     , m_ptm_fd(ptm_fd)
     , m_notifier(ptm_fd, CNotifier::Read)
@@ -67,7 +67,7 @@ Terminal::Terminal(int ptm_fd, RefPtr<CConfigFile> config)
     m_terminal.set_size(m_config->read_num_entry("Window", "Width", 80), m_config->read_num_entry("Window", "Height", 25));
 }
 
-Terminal::~Terminal()
+TerminalWidget::~TerminalWidget()
 {
 }
 
@@ -76,14 +76,14 @@ static inline Color lookup_color(unsigned color)
     return Color::from_rgb(xterm_colors[color]);
 }
 
-Rect Terminal::glyph_rect(u16 row, u16 column)
+Rect TerminalWidget::glyph_rect(u16 row, u16 column)
 {
     int y = row * m_line_height;
     int x = column * font().glyph_width('x');
     return { x + frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x'), font().glyph_height() };
 }
 
-Rect Terminal::row_rect(u16 row)
+Rect TerminalWidget::row_rect(u16 row)
 {
     int y = row * m_line_height;
     Rect rect = { frame_thickness() + m_inset, y + frame_thickness() + m_inset, font().glyph_width('x') * m_terminal.columns(), font().glyph_height() };
@@ -91,7 +91,7 @@ Rect Terminal::row_rect(u16 row)
     return rect;
 }
 
-void Terminal::event(CEvent& event)
+void TerminalWidget::event(CEvent& event)
 {
     if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
         m_in_active_window = event.type() == GEvent::WindowBecameActive;
@@ -107,7 +107,7 @@ void Terminal::event(CEvent& event)
     return GWidget::event(event);
 }
 
-void Terminal::keydown_event(GKeyEvent& event)
+void TerminalWidget::keydown_event(GKeyEvent& event)
 {
     // Reset timer so cursor doesn't blink while typing.
     m_cursor_blink_timer.stop();
@@ -169,7 +169,7 @@ void Terminal::keydown_event(GKeyEvent& event)
     }
 }
 
-void Terminal::paint_event(GPaintEvent& event)
+void TerminalWidget::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
 
@@ -214,7 +214,7 @@ void Terminal::paint_event(GPaintEvent& event)
     }
 }
 
-void Terminal::set_window_title(const StringView& title)
+void TerminalWidget::set_window_title(const StringView& title)
 {
     auto* w = window();
     if (!w)
@@ -222,12 +222,12 @@ void Terminal::set_window_title(const StringView& title)
     w->set_title(title);
 }
 
-void Terminal::invalidate_cursor()
+void TerminalWidget::invalidate_cursor()
 {
     m_terminal.invalidate_cursor();
 }
 
-void Terminal::flush_dirty_lines()
+void TerminalWidget::flush_dirty_lines()
 {
     if (m_terminal.m_need_full_flush) {
         update();
@@ -242,7 +242,7 @@ void Terminal::flush_dirty_lines()
     update(rect);
 }
 
-void Terminal::force_repaint()
+void TerminalWidget::force_repaint()
 {
     m_needs_background_fill = true;
     for (int i = 0; i < m_terminal.rows(); ++i)
@@ -250,26 +250,26 @@ void Terminal::force_repaint()
     update();
 }
 
-void Terminal::resize_event(GResizeEvent& event)
+void TerminalWidget::resize_event(GResizeEvent& event)
 {
     int new_columns = (event.size().width() - frame_thickness() * 2 - m_inset * 2) / font().glyph_width('x');
     int new_rows = (event.size().height() - frame_thickness() * 2 - m_inset * 2) / m_line_height;
     m_terminal.set_size(new_columns, new_rows);
 }
 
-void Terminal::apply_size_increments_to_window(GWindow& window)
+void TerminalWidget::apply_size_increments_to_window(GWindow& window)
 {
     window.set_size_increment({ font().glyph_width('x'), m_line_height });
     window.set_base_size({ frame_thickness() * 2 + m_inset * 2, frame_thickness() * 2 + m_inset * 2 });
 }
 
-void Terminal::update_cursor()
+void TerminalWidget::update_cursor()
 {
     invalidate_cursor();
     flush_dirty_lines();
 }
 
-void Terminal::set_opacity(u8 new_opacity)
+void TerminalWidget::set_opacity(u8 new_opacity)
 {
     if (m_opacity == new_opacity)
         return;
@@ -279,26 +279,26 @@ void Terminal::set_opacity(u8 new_opacity)
     force_repaint();
 }
 
-VT::Position Terminal::normalized_selection_start() const
+VT::Position TerminalWidget::normalized_selection_start() const
 {
     if (m_selection_start < m_selection_end)
         return m_selection_start;
     return m_selection_end;
 }
 
-VT::Position Terminal::normalized_selection_end() const
+VT::Position TerminalWidget::normalized_selection_end() const
 {
     if (m_selection_start < m_selection_end)
         return m_selection_end;
     return m_selection_start;
 }
 
-bool Terminal::has_selection() const
+bool TerminalWidget::has_selection() const
 {
     return m_selection_start.is_valid() && m_selection_end.is_valid();
 }
 
-bool Terminal::selection_contains(const VT::Position& position) const
+bool TerminalWidget::selection_contains(const VT::Position& position) const
 {
     if (!has_selection())
         return false;
@@ -306,7 +306,7 @@ bool Terminal::selection_contains(const VT::Position& position) const
     return position >= normalized_selection_start() && position <= normalized_selection_end();
 }
 
-VT::Position Terminal::buffer_position_at(const Point& position) const
+VT::Position TerminalWidget::buffer_position_at(const Point& position) const
 {
     auto adjusted_position = position.translated(-(frame_thickness() + m_inset), -(frame_thickness() + m_inset));
     int row = adjusted_position.y() / m_line_height;
@@ -322,7 +322,7 @@ VT::Position Terminal::buffer_position_at(const Point& position) const
     return { row, column };
 }
 
-void Terminal::mousedown_event(GMouseEvent& event)
+void TerminalWidget::mousedown_event(GMouseEvent& event)
 {
     if (event.button() == GMouseButton::Left) {
         m_selection_start = buffer_position_at(event.position());
@@ -340,7 +340,7 @@ void Terminal::mousedown_event(GMouseEvent& event)
     }
 }
 
-void Terminal::mousemove_event(GMouseEvent& event)
+void TerminalWidget::mousemove_event(GMouseEvent& event)
 {
     if (!(event.buttons() & GMouseButton::Left))
         return;
@@ -351,7 +351,7 @@ void Terminal::mousemove_event(GMouseEvent& event)
         update();
 }
 
-void Terminal::mouseup_event(GMouseEvent& event)
+void TerminalWidget::mouseup_event(GMouseEvent& event)
 {
     if (event.button() != GMouseButton::Left)
         return;
@@ -360,7 +360,7 @@ void Terminal::mouseup_event(GMouseEvent& event)
     GClipboard::the().set_data(selected_text());
 }
 
-String Terminal::selected_text() const
+String TerminalWidget::selected_text() const
 {
     StringBuilder builder;
     auto start = normalized_selection_start();
@@ -385,7 +385,7 @@ String Terminal::selected_text() const
     return builder.to_string();
 }
 
-void Terminal::terminal_did_resize(u16 columns, u16 rows)
+void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
 {
     m_pixel_width = (frame_thickness() * 2) + (m_inset * 2) + (columns * font().glyph_width('x'));
     m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (rows * (font().glyph_height() + m_line_spacing)) - m_line_spacing;
@@ -403,7 +403,7 @@ void Terminal::terminal_did_resize(u16 columns, u16 rows)
     ASSERT(rc == 0);
 }
 
-void Terminal::beep()
+void TerminalWidget::beep()
 {
     if (m_should_beep) {
         sysbeep();
