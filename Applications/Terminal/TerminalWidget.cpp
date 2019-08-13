@@ -184,12 +184,15 @@ void TerminalWidget::paint_event(GPaintEvent& event)
     invalidate_cursor();
 
     for (u16 row = 0; row < m_terminal.rows(); ++row) {
+        auto row_rect = this->row_rect(row);
+        if (!event.rect().contains(row_rect))
+            continue;
         auto& line = m_terminal.line(row);
         bool has_only_one_background_color = line.has_only_one_background_color();
         if (m_visual_beep_timer.is_active())
-            painter.fill_rect(row_rect(row), Color::Red);
+            painter.fill_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
-            painter.fill_rect(row_rect(row), lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
+            painter.fill_rect(row_rect, lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
         for (u16 column = 0; column < m_terminal.columns(); ++column) {
             char ch = line.characters[column];
             bool should_reverse_fill_for_cursor_or_selection = (m_cursor_blink_state && m_in_active_window && row == m_terminal.cursor_row() && column == m_terminal.cursor_column())
@@ -238,8 +241,10 @@ void TerminalWidget::flush_dirty_lines()
     }
     Rect rect;
     for (int i = 0; i < m_terminal.rows(); ++i) {
-        if (m_terminal.line(i).dirty)
+        if (m_terminal.line(i).dirty) {
             rect = rect.united(row_rect(i));
+            m_terminal.line(i).dirty = false;
+        }
     }
     update(rect);
 }
@@ -247,8 +252,6 @@ void TerminalWidget::flush_dirty_lines()
 void TerminalWidget::force_repaint()
 {
     m_needs_background_fill = true;
-    for (int i = 0; i < m_terminal.rows(); ++i)
-        m_terminal.line(i).dirty = true;
     update();
 }
 
