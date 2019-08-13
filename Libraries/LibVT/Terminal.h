@@ -19,8 +19,8 @@ public:
 struct Attribute {
     Attribute() { reset(); }
 
-    static u8 default_foreground_color;
-    static u8 default_background_color;
+    static const u8 default_foreground_color = 7;
+    static const u8 default_background_color = 0;
 
     void reset()
     {
@@ -31,7 +31,7 @@ struct Attribute {
     u8 foreground_color;
     u8 background_color;
 
-    enum Flags {
+    enum Flags : u8 {
         NoAttributes = 0x00,
         Bold = 0x01,
         Italic = 0x02,
@@ -45,7 +45,7 @@ struct Attribute {
 
     // TODO: it would be really nice if we had a helper for enums that
     // exposed bit ops for class enums...
-    int flags = Flags::NoAttributes;
+    u8 flags = Flags::NoAttributes;
 
     bool operator==(const Attribute& other) const
     {
