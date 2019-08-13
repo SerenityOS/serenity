@@ -3,7 +3,8 @@
 #include <AK/Types.h>
 #include <stdarg.h>
 
-static constexpr const char* printf_hex_digits = "0123456789abcdef";
+static constexpr const char* printf_hex_digits_lower = "0123456789abcdef";
+static constexpr const char* printf_hex_digits_upper = "0123456789ABCDEF";
 
 #ifdef __serenity__
 extern "C" size_t strlen(const char*);
@@ -12,15 +13,55 @@ extern "C" size_t strlen(const char*);
 #endif
 
 template<typename PutChFunc, typename T>
-[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, u8 fields)
+[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, bool alternate_form, bool upper_case, bool left_pad, bool zeroPad, u8 width)
 {
     int ret = 0;
-    u8 shr_count = fields * 4;
-    while (shr_count) {
-        shr_count -= 4;
-        putch(bufptr, printf_hex_digits[(number >> shr_count) & 0x0F]);
-        ++ret;
+
+    int digits = 0;
+    for (T n = number; n > 0; n /= 0x0f)
+        ++digits;
+    if (digits == 0)
+        digits = 1;
+
+    if (left_pad) {
+        int stop_at = width - digits;
+        if (alternate_form)
+            stop_at -= 2;
+
+        while (ret < stop_at) {
+            putch(bufptr, ' ');
+            ++ret;
+        }
     }
+
+    if (alternate_form) {
+        putch(bufptr, '0');
+        putch(bufptr, 'x');
+        ret += 2;
+    }
+
+    if (zeroPad) {
+        while (ret < width - digits) {
+            putch(bufptr, '0');
+            ++ret;
+        }
+    }
+
+    if (number == 0) {
+        putch(bufptr, '0');
+        ++ret;
+    } else {
+        u8 shift_count = digits * 4;
+        while (shift_count) {
+            shift_count -= 4;
+            putch(bufptr,
+                upper_case
+                    ? printf_hex_digits_upper[(number >> shift_count) & 0x0f]
+                    : printf_hex_digits_lower[(number >> shift_count) & 0x0f]);
+            ++ret;
+        }
+    }
+
     return ret;
 }
 
@@ -261,7 +302,7 @@ template<typename PutChFunc>
                 break;
 
             case 'q':
-                ret += print_hex(putch, bufptr, va_arg(ap, u64), 16);
+                ret += print_hex(putch, bufptr, va_arg(ap, u64), false, false, left_pad, zeroPad, 16);
                 break;
 
 #ifndef KERNEL
@@ -280,21 +321,17 @@ template<typename PutChFunc>
                 ret += print_octal_number(putch, bufptr, va_arg(ap, u32), left_pad, zeroPad, fieldWidth);
                 break;
 
+            case 'X':
             case 'x':
-                if (alternate_form) {
-                    putch(bufptr, '0');
-                    putch(bufptr, 'x');
-                    ret += 2;
-                }
-                ret += print_hex(putch, bufptr, va_arg(ap, u32), 8);
+                ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'X', alternate_form, left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'w':
-                ret += print_hex(putch, bufptr, va_arg(ap, int), 4);
+                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, left_pad, zeroPad, 4);
                 break;
 
             case 'b':
-                ret += print_hex(putch, bufptr, va_arg(ap, int), 2);
+                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, left_pad, zeroPad, 2);
                 break;
 
             case 'c':
@@ -307,11 +344,9 @@ template<typename PutChFunc>
                 ++ret;
                 break;
 
+            case 'P':
             case 'p':
-                putch(bufptr, '0');
-                putch(bufptr, 'x');
-                ret += 2;
-                ret += print_hex(putch, bufptr, va_arg(ap, u32), 8);
+                ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, false, true, 8);
                 break;
             }
         } else {
