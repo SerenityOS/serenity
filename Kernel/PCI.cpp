@@ -1,6 +1,8 @@
 #include <Kernel/IO.h>
 #include <Kernel/PCI.h>
 
+//#define PCI_DEBUG
+
 #define PCI_VENDOR_ID 0x00           // word
 #define PCI_DEVICE_ID 0x02           // word
 #define PCI_COMMAND 0x04             // word
@@ -70,7 +72,9 @@ void enumerate_functions(int type, u8 bus, u8 slot, u8 function, Function<void(A
         callback(address, { read_field<u16>(address, PCI_VENDOR_ID), read_field<u16>(address, PCI_DEVICE_ID) });
     if (read_type(address) == PCI_TYPE_BRIDGE) {
         u8 secondary_bus = read_field<u8>(address, PCI_SECONDARY_BUS);
+#ifdef PCI_DEBUG
         kprintf("PCI: Found secondary bus: %u\n", secondary_bus);
+#endif
         ASSERT(secondary_bus != bus);
         enumerate_bus(type, secondary_bus, callback);
     }
