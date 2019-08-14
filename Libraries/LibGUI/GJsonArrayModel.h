@@ -7,11 +7,12 @@
 class GJsonArrayModel final : public GModel {
 public:
     struct FieldSpec {
-        FieldSpec(const String& a_column_name, TextAlignment a_text_alignment, Function<GVariant(const JsonObject&)>&& a_massage_for_display, Function<GVariant(const JsonObject&)>&& a_massage_for_sort = {})
+        FieldSpec(const String& a_column_name, TextAlignment a_text_alignment, Function<GVariant(const JsonObject&)>&& a_massage_for_display, Function<GVariant(const JsonObject&)>&& a_massage_for_sort = {}, Function<GVariant(const JsonObject&)>&& a_massage_for_custom = {})
             : column_name(a_column_name)
             , text_alignment(a_text_alignment)
             , massage_for_display(move(a_massage_for_display))
             , massage_for_sort(move(a_massage_for_sort))
+            , massage_for_custom(move(a_massage_for_custom))
         {
         }
 
@@ -27,6 +28,7 @@ public:
         TextAlignment text_alignment;
         Function<GVariant(const JsonObject&)> massage_for_display;
         Function<GVariant(const JsonObject&)> massage_for_sort;
+        Function<GVariant(const JsonObject&)> massage_for_custom;
     };
 
     static NonnullRefPtr<GJsonArrayModel> create(const String& json_path, Vector<FieldSpec>&& fields)
