@@ -14,6 +14,7 @@
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GPainter.h>
 #include <LibGUI/GSortingProxyModel.h>
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GTabWidget.h>
@@ -210,6 +211,24 @@ int main(int argc, char** argv)
     return app.exec();
 }
 
+class ProgressBarPaintingDelegate final : public GTableCellPaintingDelegate {
+public:
+    virtual ~ProgressBarPaintingDelegate() override {}
+
+    virtual void paint(GPainter& painter, const Rect& a_rect, const GModel& model, const GModelIndex& index) override
+    {
+        auto rect = a_rect.shrunken(2, 2);
+        auto percentage = model.data(index, GModel::Role::Custom).to_int();
+
+        auto data = model.data(index, GModel::Role::Display);
+        String text;
+        if (data.is_string())
+            text = data.as_string();
+        StylePainter::paint_progress_bar(painter, rect, 0, 100, percentage, text);
+        painter.draw_rect(rect, Color::Black);
+    }
+};
+
 GWidget* build_file_systems_tab()
 {
     auto* fs_widget = new GWidget(nullptr);
@@ -241,6 +260,15 @@ GWidget* build_file_systems_tab()
             auto free_blocks = object.get("free_block_count").to_u32();
             auto used_blocks = total_blocks - free_blocks;
             return used_blocks * object.get("block_size").to_u32();
+        },
+        [](const JsonObject& object) {
+            auto total_blocks = object.get("total_block_count").to_u32();
+            if (total_blocks == 0)
+                return 0;
+            auto free_blocks = object.get("free_block_count").to_u32();
+            auto used_blocks = total_blocks - free_blocks;
+            int percentage = (int)((float)used_blocks / (float)total_blocks * 100.0f);
+            return percentage;
         });
     df_fields.empend(
         "Available", TextAlignment::CenterRight,
@@ -259,6 +287,9 @@ GWidget* build_file_systems_tab()
     df_fields.empend("total_inode_count", "Total inodes", TextAlignment::CenterRight);
     df_fields.empend("block_size", "Block size", TextAlignment::CenterRight);
     fs_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/df", move(df_fields))));
+
+    fs_table_view->set_cell_painting_delegate(3, make<ProgressBarPaintingDelegate>());
+
     fs_table_view->model()->update();
     return fs_widget;
 }
