@@ -183,6 +183,12 @@ public:
         return exchange(m_ptr, nullptr);
     }
 
+    NonnullRefPtr<T> release_nonnull()
+    {
+        ASSERT(m_ptr);
+        return NonnullRefPtr<T>(NonnullRefPtr<T>::Adopt, *leak_ref());
+    }
+
     T* ptr() { return m_ptr; }
     const T* ptr() const { return m_ptr; }
 
