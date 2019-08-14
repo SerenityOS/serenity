@@ -42,39 +42,21 @@ void GProgressBar::paint_event(GPaintEvent& event)
     painter.add_clip_rect(rect);
     painter.add_clip_rect(event.rect());
 
-    // First we fill the entire widget with the gradient. This incurs a bit of
-    // overdraw but ensures a consistent look throughout the progression.
-    Color start_color(110, 34, 9);
-    Color end_color(244, 202, 158);
-    painter.fill_rect_with_gradient(rect, start_color, end_color);
-
-    float range_size = m_max - m_min;
-    float progress = (m_value - m_min) / range_size;
-
     String progress_text;
     if (m_format != Format::NoText) {
         // Then we draw the progress text over the gradient.
         // We draw it twice, once offset (1, 1) for a drop shadow look.
         StringBuilder builder;
         builder.append(m_caption);
-        if (m_format == Format::Percentage)
+        if (m_format == Format::Percentage) {
+            float range_size = m_max - m_min;
+            float progress = (m_value - m_min) / range_size;
             builder.appendf("%d%%", (int)(progress * 100));
-        else if (m_format == Format::ValueSlashMax)
+        } else if (m_format == Format::ValueSlashMax) {
             builder.appendf("%d/%d", m_value, m_max);
-
+        }
         progress_text = builder.to_string();
-
-        painter.draw_text(rect.translated(1, 1), progress_text, TextAlignment::Center, Color::Black);
-        painter.draw_text(rect, progress_text, TextAlignment::Center, Color::White);
     }
 
-    // Then we carve out a hole in the remaining part of the widget.
-    // We draw the text a third time, clipped and inverse, for sharp contrast.
-    float progress_width = progress * width();
-    Rect hole_rect { (int)progress_width, 0, (int)(width() - progress_width), height() };
-    painter.add_clip_rect(hole_rect);
-    painter.fill_rect(hole_rect, Color::White);
-
-    if (m_format != Format::NoText)
-        painter.draw_text(rect.translated(0, 0), progress_text, TextAlignment::Center, Color::Black);
+    StylePainter::paint_progress_bar(painter, rect, m_min, m_max, m_value, progress_text);
 }

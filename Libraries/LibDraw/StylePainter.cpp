@@ -226,3 +226,32 @@ void StylePainter::paint_window_frame(Painter& painter, const Rect& rect)
     painter.draw_line(rect.bottom_left().translated(1, -1), rect.bottom_right().translated(-1, -1), mid_shade);
     painter.draw_line(rect.bottom_left().translated(2, -2), rect.bottom_right().translated(-2, -2), base_color);
 }
+
+void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, int min, int max, int value, const StringView& text)
+{
+    // First we fill the entire widget with the gradient. This incurs a bit of
+    // overdraw but ensures a consistent look throughout the progression.
+    Color start_color(110, 34, 9);
+    Color end_color(244, 202, 158);
+    painter.fill_rect_with_gradient(rect, start_color, end_color);
+
+    if (!text.is_null()) {
+        painter.draw_text(rect.translated(1, 1), text, TextAlignment::Center, Color::Black);
+        painter.draw_text(rect, text, TextAlignment::Center, Color::White);
+    }
+
+    float range_size = max - min;
+    float progress = (value - min) / range_size;
+
+    // Then we carve out a hole in the remaining part of the widget.
+    // We draw the text a third time, clipped and inverse, for sharp contrast.
+    float progress_width = progress * rect.width();
+    Rect hole_rect { (int)progress_width, 0, (int)(rect.width() - progress_width), rect.height() };
+    hole_rect.move_by(rect.location());
+    PainterStateSaver saver(painter);
+    painter.fill_rect(hole_rect, Color::White);
+
+    painter.add_clip_rect(hole_rect);
+    if (!text.is_null())
+        painter.draw_text(rect.translated(0, 0), text, TextAlignment::Center, Color::Black);
+}
