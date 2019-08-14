@@ -76,4 +76,33 @@ TEST_CASE(assert_on_iteration_during_clear)
     map.clear();
 }
 
+TEST_CASE(hashmap_of_nonnullownptr_get)
+{
+    struct Object {
+        Object(const String& s) : string(s) {}
+        String string;
+    };
+
+    HashMap<int, NonnullOwnPtr<Object>> objects;
+    objects.set(1, make<Object>("One"));
+    objects.set(2, make<Object>("Two"));
+    objects.set(3, make<Object>("Three"));
+
+    {
+        auto x = objects.get(2);
+        EXPECT_EQ(x.has_value(), true);
+        EXPECT_EQ(x.value()->string, "Two");
+    }
+
+    {
+        // Do it again to make sure that peeking into the map above didn't
+        // remove the value from the map.
+        auto x = objects.get(2);
+        EXPECT_EQ(x.has_value(), true);
+        EXPECT_EQ(x.value()->string, "Two");
+    }
+
+    EXPECT_EQ(objects.size(), 3);
+}
+
 TEST_MAIN(HashMap)

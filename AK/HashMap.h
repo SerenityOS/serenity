@@ -68,7 +68,7 @@ public:
 
     void dump() const { m_table.dump(); }
 
-    Optional<V> get(const K& key) const
+    Optional<typename Traits<V>::PeekType> get(const K& key) const
     {
         auto it = find(key);
         if (it == end())

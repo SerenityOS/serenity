@@ -7,6 +7,7 @@ namespace AK {
 
 template<typename T>
 struct GenericTraits {
+    using PeekType = T;
     static constexpr bool is_trivial() { return false; }
     static bool equals(const T& a, const T& b) { return a == b; }
 };
@@ -44,7 +45,7 @@ struct Traits<char> : public GenericTraits<char> {
 };
 
 template<typename T>
-struct Traits<T*> {
+struct Traits<T*> : public GenericTraits<T*> {
     static unsigned hash(const T* p)
     {
         return int_hash((unsigned)(__PTRDIFF_TYPE__)p);
