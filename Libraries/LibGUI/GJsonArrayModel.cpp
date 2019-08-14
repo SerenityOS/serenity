@@ -46,6 +46,13 @@ GVariant GJsonArrayModel::data(const GModelIndex& index, Role role) const
             return field_spec.massage_for_sort(object);
         return data(index, Role::Display);
     }
+
+    if (role == GModel::Role::Custom) {
+        if (field_spec.massage_for_custom)
+            return field_spec.massage_for_custom(object);
+        return {};
+    }
+
     return {};
 }
 
