@@ -158,7 +158,7 @@ void GTableView::mousedown_event(GMouseEvent& event)
                 return;
             }
             auto header_rect = this->header_rect(i);
-	    auto column_metadata = model()->column_metadata(i);
+            auto column_metadata = model()->column_metadata(i);
             if (header_rect.contains(event.position()) && column_metadata.sortable == GModel::ColumnMetadata::Sortable::True) {
                 auto new_sort_order = GSortOrder::Ascending;
                 if (model()->key_column() == i)
@@ -288,19 +288,24 @@ void GTableView::paint_event(GPaintEvent& event)
                 painter.fill_rect(cell_rect_for_fill, key_column_background_color);
             }
             auto cell_index = model()->index(row_index, column_index);
-            auto data = model()->data(cell_index);
-            if (data.is_bitmap()) {
-                painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
-            } else if (data.is_icon()) {
-                if (auto bitmap = data.as_icon().bitmap_for_size(16))
-                    painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
+
+            if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
+                delegate->paint(painter, cell_rect, *model(), cell_index);
             } else {
-                Color text_color;
-                if (is_selected_row)
-                    text_color = Color::White;
-                else
-                    text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(Color::Black);
-                painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
+                auto data = model()->data(cell_index);
+                if (data.is_bitmap()) {
+                    painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
+                } else if (data.is_icon()) {
+                    if (auto bitmap = data.as_icon().bitmap_for_size(16))
+                        painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
+                } else {
+                    Color text_color;
+                    if (is_selected_row)
+                        text_color = Color::White;
+                    else
+                        text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(Color::Black);
+                    painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
+                }
             }
             x_offset += column_width + horizontal_padding() * 2;
         }
@@ -511,4 +516,9 @@ void GTableView::leave_event(CEvent&)
 const Font& GTableView::header_font()
 {
     return Font::default_bold_font();
+}
+
+void GTableView::set_cell_painting_delegate(int column, OwnPtr<GTableCellPaintingDelegate>&& delegate)
+{
+    column_data(column).cell_painting_delegate = move(delegate);
 }
