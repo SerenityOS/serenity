@@ -129,7 +129,7 @@ int main(int argc, char** argv)
     toolbar->add_action(continue_action);
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("Process Manager");
+    auto app_menu = make<GMenu>("System Monitor");
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
@@ -195,13 +195,13 @@ int main(int argc, char** argv)
     };
 
     auto* window = new GWindow;
-    window->set_title("Process Manager");
+    window->set_title("System Monitor");
     window->set_rect(20, 200, 680, 400);
     window->set_main_widget(keeper);
 
     window->show();
 
-    window->set_icon(load_png("/res/icons/16x16/app-process-manager.png"));
+    window->set_icon(load_png("/res/icons/16x16/app-system-monitor.png"));
 
     return app.exec();
 }

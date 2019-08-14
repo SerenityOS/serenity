@@ -11,6 +11,6 @@ OBJS = \
     NetworkStatisticsWidget.o \
     main.o
 
-APP = ProcessManager
+APP = SystemMonitor
 
 include ../Makefile.common
