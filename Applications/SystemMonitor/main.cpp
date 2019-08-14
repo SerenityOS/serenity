@@ -20,6 +20,7 @@
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
+#include <LibPCIDB/Database.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -36,6 +37,7 @@ static String human_readable_size(u32 size)
 }
 
 static GWidget* build_file_systems_tab();
+static GWidget* build_pci_devices_tab();
 
 int main(int argc, char** argv)
 {
@@ -88,6 +90,8 @@ int main(int argc, char** argv)
     tabwidget->add_widget("Graphs", graphs_container);
 
     tabwidget->add_widget("File systems", build_file_systems_tab());
+
+    tabwidget->add_widget("PCI devices", build_pci_devices_tab());
 
     auto* network_stats_widget = new NetworkStatisticsWidget(nullptr);
     tabwidget->add_widget("Network", network_stats_widget);
@@ -257,4 +261,58 @@ GWidget* build_file_systems_tab()
     fs_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/df", move(df_fields))));
     fs_table_view->model()->update();
     return fs_widget;
+}
+
+GWidget* build_pci_devices_tab()
+{
+    auto* pci_widget = new GWidget(nullptr);
+    pci_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    pci_widget->layout()->set_margins({ 4, 4, 4, 4 });
+    auto* pci_table_view = new GTableView(pci_widget);
+    pci_table_view->set_size_columns_to_fit_content(true);
+
+    auto db = PCIDB::Database::open();
+
+    Vector<GJsonArrayModel::FieldSpec> pci_fields;
+    pci_fields.empend(
+        "Address", TextAlignment::CenterLeft,
+        [](const JsonObject& object) {
+            auto bus = object.get("bus").to_u32();
+            auto slot = object.get("slot").to_u32();
+            auto function = object.get("function").to_u32();
+            return String::format("%02x:%02x.%d", bus, slot, function);
+        });
+    pci_fields.empend(
+        "Class", TextAlignment::CenterLeft,
+        [db](const JsonObject& object) {
+            auto class_id = object.get("class").to_u32();
+            String class_name = db->get_class(class_id);
+            return class_name == "" ? String::format("%04x", class_id) : class_name;
+        });
+    pci_fields.empend(
+        "Vendor", TextAlignment::CenterLeft,
+        [db](const JsonObject& object) {
+            auto vendor_id = object.get("vendor_id").to_u32();
+            String vendor_name = db->get_vendor(vendor_id);
+            return vendor_name == "" ? String::format("%02x", vendor_id) : vendor_name;
+        });
+    pci_fields.empend(
+        "Device", TextAlignment::CenterLeft,
+        [db](const JsonObject& object) {
+            auto vendor_id = object.get("vendor_id").to_u32();
+            auto device_id = object.get("device_id").to_u32();
+            String device_name = db->get_device(vendor_id, device_id);
+            return device_name == "" ? String::format("%02x", device_id) : device_name;
+        });
+    pci_fields.empend(
+        "Revision", TextAlignment::CenterRight,
+        [](const JsonObject& object) {
+            auto revision_id = object.get("revision_id").to_u32();
+            return String::format("%02x", revision_id);
+        });
+
+    pci_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/pci", move(pci_fields))));
+    pci_table_view->model()->update();
+
+    return pci_widget;
 }
