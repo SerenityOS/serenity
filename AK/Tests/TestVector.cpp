@@ -1,6 +1,7 @@
 #include <AK/TestSuite.h>
 
 #include <AK/AKString.h>
+#include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 
@@ -250,6 +251,22 @@ TEST_CASE(vector_remove)
     ints.take_first();
     EXPECT_EQ(ints.size(), 1);
     EXPECT_EQ(ints[0], 4);
+}
+
+TEST_CASE(nonnullownptrvector)
+{
+    struct Object {
+        String string;
+    };
+    NonnullOwnPtrVector<Object> objects;
+
+    objects.append(make<Object>());
+    EXPECT_EQ(objects.size(), 1);
+
+    OwnPtr<Object> o = make<Object>();
+    objects.append(o.release_nonnull());
+    EXPECT(o == nullptr);
+    EXPECT_EQ(objects.size(), 2);
 }
 
 TEST_MAIN(Vector)

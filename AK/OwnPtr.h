@@ -120,6 +120,12 @@ public:
         return leaked_ptr;
     }
 
+    NonnullOwnPtr<T> release_nonnull()
+    {
+        ASSERT(m_ptr);
+        return NonnullOwnPtr<T>(NonnullOwnPtr<T>::Adopt, *leak_ptr());
+    }
+
     T* ptr() { return m_ptr; }
     const T* ptr() const { return m_ptr; }
 
