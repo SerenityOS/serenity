@@ -101,7 +101,7 @@ String JsonParser::consume_quoted_string()
     consume_specific('"');
 
     if (buffer.is_empty())
-        return {};
+        return String::empty();
 
     auto& last_string_starting_with_character = m_last_string_starting_with_character[(int)buffer.first()];
     if (last_string_starting_with_character.length() == buffer.size()) {

@@ -66,4 +66,12 @@ BENCHMARK_CASE(load_4chan_catalog)
     }
 }
 
+TEST_CASE(json_empty_string)
+{
+    auto json = JsonValue::from_string("\"\"");
+    EXPECT_EQ(json.type(), JsonValue::Type::String);
+    EXPECT_EQ(json.as_string().is_null(), false);
+    EXPECT_EQ(json.as_string().is_empty(), true);
+}
+
 TEST_MAIN(JSON)
