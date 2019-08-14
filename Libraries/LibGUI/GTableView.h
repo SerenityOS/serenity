@@ -5,8 +5,16 @@
 #include <LibGUI/GAbstractView.h>
 #include <LibGUI/GModel.h>
 
+class GPainter;
 class GScrollBar;
 class Painter;
+
+class GTableCellPaintingDelegate {
+public:
+    virtual ~GTableCellPaintingDelegate() {}
+
+    virtual void paint(GPainter&, const Rect&, const GModel&, const GModelIndex&) = 0;
+};
 
 class GTableView : public GAbstractView {
     C_OBJECT(GTableView)
@@ -38,6 +46,8 @@ public:
 
     virtual Rect content_rect(const GModelIndex&) const override;
 
+    void set_cell_painting_delegate(int column, OwnPtr<GTableCellPaintingDelegate>&&);
+
 private:
     virtual void did_update_model() override;
     virtual void paint_event(GPaintEvent&) override;
@@ -67,6 +77,7 @@ private:
         bool has_initialized_width { false };
         bool visibility { true };
         RefPtr<GAction> visibility_action;
+        OwnPtr<GTableCellPaintingDelegate> cell_painting_delegate;
     };
     ColumnData& column_data(int column) const;
 
