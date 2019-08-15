@@ -8,10 +8,9 @@
         if (rc < 0) {                              \
             errno = -rc;                           \
             return (bad_ret);                      \
-        } else {                                   \
-            errno = 0;                             \
-            return (good_ret);                     \
         }                                          \
+        errno = 0;                                 \
+        return (good_ret);                         \
     } while (0)
 
 __BEGIN_DECLS
