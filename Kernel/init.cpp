@@ -27,6 +27,7 @@
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Multiboot.h>
@@ -117,8 +118,14 @@ VFS* vfs;
     load_ksyms();
     dbgprintf("Loaded ksyms\n");
 
+    // TODO: we should mount these from SystemServer
     vfs->mount(ProcFS::the(), "/proc");
     vfs->mount(DevPtsFS::the(), "/dev/pts");
+
+    auto tmpfs = TmpFS::create();
+    if (!tmpfs->initialize())
+        ASSERT_NOT_REACHED();
+    vfs->mount(move(tmpfs), "/tmp");
 
     // Now, detect whether or not there are actually any floppy disks attached to the system
     u8 detect = CMOS::read(0x10);
