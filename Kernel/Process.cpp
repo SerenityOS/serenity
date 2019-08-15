@@ -9,6 +9,9 @@
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/ProcFS.h>
+#include <Kernel/FileSystem/DevPtsFS.h>
+#include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
@@ -2735,15 +2738,15 @@ int Process::sys$reboot()
     return ESUCCESS;
 }
 
-int Process::sys$mount(const char* device_path, const char* mountpoint)
+int Process::sys$mount(const char* device_path, const char* mountpoint, const char* fstype)
 {
     if (!is_superuser())
         return -EPERM;
 
-    if (!validate_read_str(device_path) || !validate_read_str(mountpoint))
+    if (!validate_read_str(device_path) || !validate_read_str(mountpoint) || !validate_read_str(fstype))
         return -EFAULT;
 
-    dbg() << "mount: device " << device_path << " @ " << mountpoint;
+    dbg() << "mount " << fstype << ": device " << device_path << " @ " << mountpoint;
 
     auto custody_or_error = VFS::the().resolve_path(mountpoint, current_directory());
     if (custody_or_error.is_error())
@@ -2751,37 +2754,47 @@ int Process::sys$mount(const char* device_path, const char* mountpoint)
 
     auto& mountpoint_custody = custody_or_error.value();
 
-    auto metadata_or_error = VFS::the().lookup_metadata(device_path, current_directory());
-    if (metadata_or_error.is_error())
-        return metadata_or_error.error();
+    RefPtr<FS> fs { nullptr };
 
-    auto major = metadata_or_error.value().major_device;
-    auto minor = metadata_or_error.value().minor_device;
+    if (strcmp(fstype, "ext2") == 0 || strcmp(fstype, "Ext2FS") == 0) {
+        auto metadata_or_error = VFS::the().lookup_metadata(device_path, current_directory());
+        if (metadata_or_error.is_error())
+            return metadata_or_error.error();
 
-    auto* device = VFS::the().get_device(major, minor);
-    if (!device) {
-        dbg() << "mount: device (" << major << "," << minor << ") not found";
+        auto major = metadata_or_error.value().major_device;
+        auto minor = metadata_or_error.value().minor_device;
+
+        auto* device = VFS::the().get_device(major, minor);
+        if (!device) {
+            dbg() << "mount: device (" << major << "," << minor << ") not found";
+            return -ENODEV;
+        }
+
+        if (!device->is_disk_device()) {
+            dbg() << "mount: device (" << major << "," << minor << ") is not a DiskDevice";
+            return -ENODEV;
+        }
+
+        auto& disk_device = static_cast<DiskDevice&>(*device);
+
+        dbg() << "mount: attempting to mount device (" << major << "," << minor << ") on " << mountpoint;
+
+        fs = Ext2FS::create(disk_device);
+    } else if (strcmp(fstype, "proc") == 0 || strcmp(fstype, "ProcFS") == 0)
+        fs = ProcFS::create();
+    else if (strcmp(fstype, "devpts") == 0 || strcmp(fstype, "DevPtsFS") == 0)
+        fs = DevPtsFS::create();
+    else if (strcmp(fstype, "tmp") == 0 || strcmp(fstype, "TmpFS") == 0)
+        fs = TmpFS::create();
+    else
+        return -ENODEV;
+
+    if (!fs->initialize()) {
+        dbg() << "mount: failed to initialize " << fstype << " filesystem on " << device_path;
         return -ENODEV;
     }
 
-    if (!device->is_disk_device()) {
-        dbg() << "mount: device (" << major << "," << minor << ") is not a DiskDevice";
-        return -ENODEV;
-    }
-
-    auto& disk_device = static_cast<DiskDevice&>(*device);
-
-    dbg() << "mount: attempting to mount device (" << major << "," << minor << ") on " << mountpoint;
-
-    // We currently only support ext2. Sorry :^)
-    auto ext2fs = Ext2FS::create(disk_device);
-    if (!ext2fs->initialize()) {
-        dbg() << "mount: could not find ext2 filesystem on " << device_path;
-        return -ENODEV;
-    }
-
-    // Let's mount the volume now
-    auto result = VFS::the().mount(ext2fs, mountpoint_custody);
+    auto result = VFS::the().mount(fs.release_nonnull(), mountpoint_custody);
     dbg() << "mount: successfully mounted " << device_path << " on " << mountpoint;
     return result;
 }
