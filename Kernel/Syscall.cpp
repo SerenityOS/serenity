@@ -293,7 +293,7 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
         break;
     }
     case Syscall::SC_mount:
-        return current->process().sys$mount((const char*)arg1, (const char*)arg2);
+        return current->process().sys$mount((const char*)arg1, (const char*)arg2, (const char*)arg3);
     case Syscall::SC_reboot: {
         return current->process().sys$reboot();
     }
