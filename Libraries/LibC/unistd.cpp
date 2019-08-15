@@ -561,4 +561,11 @@ void dump_backtrace()
 {
     syscall(SC_dump_backtrace);
 }
+
+int get_process_name(char* buffer, int buffer_size)
+{
+    int rc = syscall(SC_get_process_name, buffer, buffer_size);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }

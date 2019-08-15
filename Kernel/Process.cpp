@@ -2859,3 +2859,19 @@ int Process::sys$set_process_icon(int icon_id)
     m_icon_id = icon_id;
     return 0;
 }
+
+int Process::sys$get_process_name(char* buffer, int buffer_size)
+{
+    if (buffer_size <= 0)
+        return -EINVAL;
+
+    if (!validate_write(buffer, buffer_size))
+        return -EFAULT;
+
+    if (m_name.length() >= buffer_size)
+        return -ENAMETOOLONG;
+
+    strncpy(buffer, m_name.characters(), buffer_size);
+    return 0;
+}
+

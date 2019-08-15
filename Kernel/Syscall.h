@@ -123,7 +123,8 @@ struct timeval;
     __ENUMERATE_SYSCALL(watch_file)             \
     __ENUMERATE_SYSCALL(share_buffer_globally)  \
     __ENUMERATE_SYSCALL(set_process_icon)       \
-    __ENUMERATE_SYSCALL(mprotect)
+    __ENUMERATE_SYSCALL(mprotect)               \
+    __ENUMERATE_SYSCALL(get_process_name)
 
 namespace Syscall {
 
