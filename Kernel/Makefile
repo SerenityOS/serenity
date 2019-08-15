@@ -65,6 +65,7 @@ KERNEL_OBJS = \
 
 VFS_OBJS = \
     FileSystem/ProcFS.o \
+    FileSystem/TmpFS.o \
     FileSystem/Inode.o \
     Devices/DiskDevice.o \
     Devices/Device.o \
