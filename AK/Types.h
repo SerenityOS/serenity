@@ -72,3 +72,5 @@ static_assert(explode_byte(0xff) == 0xffffffff);
 static_assert(explode_byte(0x80) == 0x80808080);
 static_assert(explode_byte(0x7f) == 0x7f7f7f7f);
 static_assert(explode_byte(0) == 0);
+
+enum class TriState : u8 { False, True, Unknown };
