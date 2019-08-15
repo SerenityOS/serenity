@@ -551,9 +551,9 @@ int reboot()
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int mount(const char* device, const char* mountpoint)
+int mount(const char* device, const char* mountpoint, const char* fstype)
 {
-    int rc = syscall(SC_mount, device, mountpoint);
+    int rc = syscall(SC_mount, device, mountpoint, fstype);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
