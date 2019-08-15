@@ -49,4 +49,25 @@ const LogStream& operator<<(const LogStream& stream, const TStyle& style)
     return stream;
 }
 
+#ifdef USERLAND
+static TriState got_process_name = TriState::Unknown;
+static char process_name_buffer[256];
+#endif
+
+DebugLogStream dbg()
+{
+    DebugLogStream stream;
+#ifdef USERLAND
+    if (got_process_name == TriState::Unknown) {
+        if (get_process_name(process_name_buffer, sizeof(process_name_buffer)) == 0)
+            got_process_name = TriState::True;
+        else
+            got_process_name = TriState::False;
+    }
+    if (got_process_name == TriState::True)
+        stream << TStyle(TStyle::Color::Brown, TStyle::Attribute::Bold) << process_name_buffer << '(' << getpid() << ")" << TStyle(TStyle::None) << ": ";
+#endif
+    return stream;
+}
+
 }
