@@ -595,11 +595,9 @@ String Thread::backtrace_impl() const
         if (!symbol.address)
             break;
         if (!symbol.ksym) {
-#ifdef EXPENSIVE_USERSPACE_STACKS
             if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
                 builder.appendf("%p  %s\n", symbol.address, process.elf_loader()->symbolicate(symbol.address).characters());
             else
-#endif
                 builder.appendf("%p\n", symbol.address);
             continue;
         }
