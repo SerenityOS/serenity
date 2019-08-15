@@ -1,4 +1,4 @@
-PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL
+PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL TestStringView
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 
@@ -62,6 +62,8 @@ TestFileSystemPath: TestFileSystemPath.o $(SHARED_TEST_OBJS)
 TestURL: TestURL.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestURL.o $(SHARED_TEST_OBJS)
 
+TestStringView: TestStringView.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestStringView.o $(SHARED_TEST_OBJS)
 
 clean:
 	rm -f $(SHARED_TEST_OBJS)

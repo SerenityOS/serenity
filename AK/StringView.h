@@ -83,6 +83,22 @@ public:
 
     bool operator==(const String&) const;
 
+    bool operator==(const StringView& other) const
+    {
+        if (is_null())
+            return other.is_null();
+        if (other.is_null())
+            return false;
+        if (length() != other.length())
+            return false;
+        return !memcmp(m_characters, other.m_characters, m_length);
+    }
+
+    bool operator!=(const StringView& other) const
+    {
+        return !(*this == other);
+    }
+
 private:
     friend class String;
     const StringImpl* m_impl { nullptr };
