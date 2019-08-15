@@ -3,8 +3,10 @@
 #include <AK/kstdio.h>
 
 #ifdef USERLAND
-#include <AK/ScopedValueRollback.h>
-#include <errno.h>
+#    include <AK/ScopedValueRollback.h>
+#    include <AK/StringView.h>
+#    include <errno.h>
+#    include <unistd.h>
 #endif
 
 namespace AK {
@@ -14,8 +16,7 @@ class StringView;
 
 class TStyle {
 public:
-    enum NoneTag { DummyValue };
-    static NoneTag None;
+    enum NoneTag { None };
 
     enum Color {
         Black = 0,
@@ -98,11 +99,6 @@ public:
     }
 };
 
-inline DebugLogStream dbg()
-{
-    return {};
-}
-
 inline const LogStream& operator<<(const LogStream& stream, const char* value)
 {
     int length = 0;
@@ -130,6 +126,8 @@ inline const LogStream& operator<<(const LogStream& stream, bool value)
 {
     return stream << (value ? "true" : "false");
 }
+
+DebugLogStream dbg();
 
 }
 
