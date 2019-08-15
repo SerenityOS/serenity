@@ -151,7 +151,6 @@ int main(int argc, char** argv)
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
     auto* terminal = new TerminalWidget(ptm_fd, config);
-    window->set_has_alpha_channel(true);
     window->set_main_widget(terminal);
     window->move_to(300, 300);
     terminal->apply_size_increments_to_window(*window);
@@ -163,6 +162,7 @@ int main(int argc, char** argv)
 
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
     terminal->set_opacity(new_opacity);
+    window->set_has_alpha_channel(new_opacity < 255);
 
     auto menubar = make<GMenuBar>();
 
