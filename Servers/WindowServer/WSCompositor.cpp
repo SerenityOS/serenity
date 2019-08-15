@@ -33,7 +33,11 @@ WSCompositor::WSCompositor()
 {
     auto size = WSScreen::the().size();
     m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(0));
-    m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(size.height()));
+
+    if (can_flip_buffers())
+        m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(size.height()));
+    else
+        m_back_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, size);
 
     m_front_painter = make<Painter>(*m_front_bitmap);
     m_back_painter = make<Painter>(*m_back_bitmap);
@@ -168,7 +172,9 @@ void WSCompositor::compose()
             m_front_painter->fill_rect(rect, Color::Yellow);
     }
 
-    flip_buffers();
+    if (can_flip_buffers())
+        flip_buffers();
+
     for (auto& r : dirty_rects.rects())
         flush(r);
 }
@@ -181,14 +187,34 @@ void WSCompositor::flush(const Rect& a_rect)
     dbgprintf("[WM] flush #%u (%d,%d %dx%d)\n", ++m_flush_count, rect.x(), rect.y(), rect.width(), rect.height());
 #endif
 
-    const RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
+    RGBA32* front_ptr = m_front_bitmap->scanline(rect.y()) + rect.x();
     RGBA32* back_ptr = m_back_bitmap->scanline(rect.y()) + rect.x();
     size_t pitch = m_back_bitmap->pitch();
 
+    // NOTE: The meaning of a flush depends on whether we can flip buffers or not.
+    //
+    //       If flipping is supported, flushing means that we've flipped, and now we
+    //       copy the changed bits from the front buffer to the back buffer, to keep
+    //       them in sync.
+    //
+    //       If flipping is not supported, flushing means that we copy the changed
+    //       rects from the backing bitmap to the display framebuffer.
+
+    RGBA32* to_ptr;
+    const RGBA32* from_ptr;
+
+    if (can_flip_buffers()) {
+        to_ptr = back_ptr;
+        from_ptr = front_ptr;
+    } else {
+        to_ptr = front_ptr;
+        from_ptr = back_ptr;
+    }
+
     for (int y = 0; y < rect.height(); ++y) {
-        fast_u32_copy(back_ptr, front_ptr, rect.width());
-        front_ptr = (const RGBA32*)((const u8*)front_ptr + pitch);
-        back_ptr = (RGBA32*)((u8*)back_ptr + pitch);
+        fast_u32_copy(to_ptr, from_ptr, rect.width());
+        from_ptr = (const RGBA32*)((const u8*)from_ptr + pitch);
+        to_ptr = (RGBA32*)((u8*)to_ptr + pitch);
     }
 }
 
@@ -263,6 +289,7 @@ void WSCompositor::finish_setting_wallpaper(const String& path, NonnullRefPtr<Gr
 
 void WSCompositor::flip_buffers()
 {
+    ASSERT(can_flip_buffers());
     swap(m_front_bitmap, m_back_bitmap);
     swap(m_front_painter, m_back_painter);
     int new_y_offset = m_buffers_are_flipped ? 0 : WSScreen::the().height();
