@@ -13,7 +13,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     m_tty_name = String::format("/dev/pts/%u", m_index);
     set_uid(current->process().uid());
     set_gid(current->process().gid());
-    DevPtsFS::the().register_slave_pty(*this);
+    DevPtsFS::register_slave_pty(*this);
     set_size(80, 25);
 }
 
@@ -22,7 +22,7 @@ SlavePTY::~SlavePTY()
 #ifdef SLAVEPTY_DEBUG
     dbgprintf("~SlavePTY(%u)\n", m_index);
 #endif
-    DevPtsFS::the().unregister_slave_pty(*this);
+    DevPtsFS::unregister_slave_pty(*this);
 }
 
 String SlavePTY::tty_name() const
