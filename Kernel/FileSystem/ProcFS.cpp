@@ -53,6 +53,8 @@ enum ProcFileType {
     FI_Root_net,  // directory
     __FI_Root_End,
 
+    FI_Root_sys_variable,
+
     FI_Root_net_adapters,
     FI_Root_net_tcp,
     FI_Root_net_udp,
@@ -87,6 +89,11 @@ static inline ProcParentDirectory to_proc_parent_directory(const InodeIdentifier
     return (ProcParentDirectory)((identifier.index() >> 12) & 0xf);
 }
 
+static inline ProcFileType to_proc_file_type(const InodeIdentifier& identifier)
+{
+    return (ProcFileType)(identifier.index() & 0xff);
+}
+
 static inline int to_fd(const InodeIdentifier& identifier)
 {
     ASSERT(to_proc_parent_directory(identifier) == PDI_PID_fd);
@@ -96,7 +103,8 @@ static inline int to_fd(const InodeIdentifier& identifier)
 static inline int to_sys_index(const InodeIdentifier& identifier)
 {
     ASSERT(to_proc_parent_directory(identifier) == PDI_Root_sys);
-    return identifier.index() & 0xff;
+    ASSERT(to_proc_file_type(identifier) == FI_Root_sys_variable);
+    return identifier.index() >> 16u;
 }
 
 static inline InodeIdentifier to_identifier(unsigned fsid, ProcParentDirectory parent, pid_t pid, ProcFileType proc_file_type)
@@ -112,7 +120,7 @@ static inline InodeIdentifier to_identifier_with_fd(unsigned fsid, pid_t pid, in
 static inline InodeIdentifier sys_var_to_identifier(unsigned fsid, unsigned index)
 {
     ASSERT(index < 256);
-    return { fsid, (PDI_Root_sys << 12u) | index };
+    return { fsid, (PDI_Root_sys << 12u) | (index << 16u) | FI_Root_sys_variable };
 }
 
 static inline InodeIdentifier to_parent_id(const InodeIdentifier& identifier)
@@ -139,11 +147,6 @@ static inline u8 to_unused_metadata(const InodeIdentifier& identifier)
     return (identifier.index() >> 8) & 0xf;
 }
 #endif
-
-static inline ProcFileType to_proc_file_type(const InodeIdentifier& identifier)
-{
-    return (ProcFileType)(identifier.index() & 0xff);
-}
 
 static inline bool is_process_related_file(const InodeIdentifier& identifier)
 {
@@ -177,14 +180,6 @@ static inline bool is_directory(const InodeIdentifier& identifier)
 static inline bool is_persistent_inode(const InodeIdentifier& identifier)
 {
     return to_proc_parent_directory(identifier) == PDI_Root_sys;
-}
-
-static ProcFS* s_the;
-
-ProcFS& ProcFS::the()
-{
-    ASSERT(s_the);
-    return *s_the;
 }
 
 NonnullRefPtr<ProcFS> ProcFS::create()
@@ -639,31 +634,54 @@ Optional<KBuffer> procfs$inodes(InodeIdentifier)
     return builder.build();
 }
 
-struct SysVariableData final : public ProcFSInodeCustomData {
-    virtual ~SysVariableData() override {}
-
-    enum Type {
+struct SysVariable {
+    String name;
+    enum class Type : u8 {
         Invalid,
         Boolean,
         String,
     };
-    Type type { Invalid };
+    Type type { Type::Invalid };
     Function<void()> notify_callback;
-    void* address;
+    void* address { nullptr };
+
+    static SysVariable& for_inode(InodeIdentifier);
+
+    void notify()
+    {
+        if (notify_callback)
+            notify_callback();
+    }
 };
+
+static Vector<SysVariable, 16>* s_sys_variables;
+
+static inline Vector<SysVariable, 16>& sys_variables()
+{
+    if (s_sys_variables == nullptr) {
+        s_sys_variables = new Vector<SysVariable, 16>;
+        s_sys_variables->append({ "", SysVariable::Type::Invalid, nullptr, nullptr });
+    }
+    return *s_sys_variables;
+}
+
+SysVariable& SysVariable::for_inode(InodeIdentifier id)
+{
+    auto index = to_sys_index(id);
+    if (index >= sys_variables().size())
+        return sys_variables()[0];
+    auto& variable = sys_variables()[index];
+    ASSERT(variable.address);
+    return variable;
+}
 
 static ByteBuffer read_sys_bool(InodeIdentifier inode_id)
 {
-    auto inode_ptr = ProcFS::the().get_inode(inode_id);
-    if (!inode_ptr)
-        return {};
-    auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
-    ASSERT(inode.custom_data());
+    auto& variable = SysVariable::for_inode(inode_id);
+    ASSERT(variable.type == SysVariable::Type::Boolean);
+
     auto buffer = ByteBuffer::create_uninitialized(2);
-    auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
-    ASSERT(custom_data.type == SysVariableData::Boolean);
-    ASSERT(custom_data.address);
-    auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(custom_data.address);
+    auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(variable.address);
     {
         LOCKER(lockable_bool->lock());
         buffer[0] = lockable_bool->resource() ? '1' : '0';
@@ -674,57 +692,42 @@ static ByteBuffer read_sys_bool(InodeIdentifier inode_id)
 
 static ssize_t write_sys_bool(InodeIdentifier inode_id, const ByteBuffer& data)
 {
-    auto inode_ptr = ProcFS::the().get_inode(inode_id);
-    if (!inode_ptr)
-        return {};
-    auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
-    ASSERT(inode.custom_data());
+    auto& variable = SysVariable::for_inode(inode_id);
+    ASSERT(variable.type == SysVariable::Type::Boolean);
+
     if (data.is_empty() || !(data[0] == '0' || data[0] == '1'))
         return data.size();
 
-    auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
-    auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(custom_data.address);
+    auto* lockable_bool = reinterpret_cast<Lockable<bool>*>(variable.address);
     {
         LOCKER(lockable_bool->lock());
         lockable_bool->resource() = data[0] == '1';
     }
-    if (custom_data.notify_callback)
-        custom_data.notify_callback();
+    variable.notify();
     return data.size();
 }
 
 static ByteBuffer read_sys_string(InodeIdentifier inode_id)
 {
-    auto inode_ptr = ProcFS::the().get_inode(inode_id);
-    if (!inode_ptr)
-        return {};
-    auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
-    ASSERT(inode.custom_data());
-    auto buffer = ByteBuffer::create_uninitialized(2);
-    auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
-    ASSERT(custom_data.type == SysVariableData::String);
-    ASSERT(custom_data.address);
-    auto* lockable_string = reinterpret_cast<Lockable<String>*>(custom_data.address);
+    auto& variable = SysVariable::for_inode(inode_id);
+    ASSERT(variable.type == SysVariable::Type::String);
+
+    auto* lockable_string = reinterpret_cast<Lockable<String>*>(variable.address);
     LOCKER(lockable_string->lock());
     return lockable_string->resource().to_byte_buffer();
 }
 
 static ssize_t write_sys_string(InodeIdentifier inode_id, const ByteBuffer& data)
 {
-    auto inode_ptr = ProcFS::the().get_inode(inode_id);
-    if (!inode_ptr)
-        return {};
-    auto& inode = static_cast<ProcFSInode&>(*inode_ptr);
-    ASSERT(inode.custom_data());
-    auto& custom_data = *static_cast<const SysVariableData*>(inode.custom_data());
-    ASSERT(custom_data.address);
+    auto& variable = SysVariable::for_inode(inode_id);
+    ASSERT(variable.type == SysVariable::Type::String);
+
     {
-        auto* lockable_string = reinterpret_cast<Lockable<String>*>(custom_data.address);
+        auto* lockable_string = reinterpret_cast<Lockable<String>*>(variable.address);
         LOCKER(lockable_string->lock());
         lockable_string->resource() = String((const char*)data.pointer(), data.size());
     }
-    if (custom_data.notify_callback)
-        custom_data.notify_callback();
+    variable.notify();
     return data.size();
 }
 
@@ -732,32 +735,39 @@ void ProcFS::add_sys_bool(String&& name, Lockable<bool>& var, Function<void()>&&
 {
     InterruptDisabler disabler;
 
-    int index = m_sys_entries.size();
-    auto inode = adopt(*new ProcFSInode(*this, sys_var_to_identifier(fsid(), index).index()));
-    auto data = make<SysVariableData>();
-    data->type = SysVariableData::Boolean;
-    data->notify_callback = move(notify_callback);
-    data->address = &var;
-    inode->set_custom_data(move(data));
-    m_sys_entries.empend(strdup(name.characters()), 0, read_sys_bool, write_sys_bool, move(inode));
+    SysVariable variable;
+    variable.name = move(name);
+    variable.type = SysVariable::Type::Boolean;
+    variable.notify_callback = move(notify_callback);
+    variable.address = &var;
+
+    sys_variables().append(move(variable));
 }
 
 void ProcFS::add_sys_string(String&& name, Lockable<String>& var, Function<void()>&& notify_callback)
 {
     InterruptDisabler disabler;
 
-    int index = m_sys_entries.size();
-    auto inode = adopt(*new ProcFSInode(*this, sys_var_to_identifier(fsid(), index).index()));
-    auto data = make<SysVariableData>();
-    data->type = SysVariableData::String;
-    data->notify_callback = move(notify_callback);
-    data->address = &var;
-    inode->set_custom_data(move(data));
-    m_sys_entries.empend(strdup(name.characters()), 0, read_sys_string, write_sys_string, move(inode));
+    SysVariable variable;
+    variable.name = move(name);
+    variable.type = SysVariable::Type::String;
+    variable.notify_callback = move(notify_callback);
+    variable.address = &var;
+
+    sys_variables().append(move(variable));
 }
 
 bool ProcFS::initialize()
 {
+    static Lockable<bool>* kmalloc_stack_helper;
+
+    if (kmalloc_stack_helper == nullptr) {
+        kmalloc_stack_helper = new Lockable<bool>();
+        kmalloc_stack_helper->resource() = g_dump_kmalloc_stacks;
+        ProcFS::add_sys_bool("kmalloc_stacks", *kmalloc_stack_helper, [] {
+            g_dump_kmalloc_stacks = kmalloc_stack_helper->resource();
+        });
+    }
     return true;
 }
 
@@ -790,12 +800,6 @@ RefPtr<Inode> ProcFS::get_inode(InodeIdentifier inode_id) const
 #endif
     if (inode_id == root_inode())
         return m_root_inode;
-
-    if (to_proc_parent_directory(inode_id) == ProcParentDirectory::PDI_Root_sys) {
-        auto sys_index = to_sys_index(inode_id);
-        if (sys_index < m_sys_entries.size())
-            return m_sys_entries[sys_index].inode;
-    }
 
     LOCKER(m_inodes_lock);
     auto it = m_inodes.find(inode_id.index());
@@ -847,11 +851,6 @@ InodeMetadata ProcFSInode::metadata() const
         return metadata;
     }
 
-    if (proc_parent_directory == PDI_Root_sys) {
-        metadata.mode = 00100644;
-        return metadata;
-    }
-
     switch (proc_file_type) {
     case FI_Root_self:
     case FI_PID_cwd:
@@ -887,14 +886,30 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
     Function<Optional<KBuffer>(InodeIdentifier)> callback_tmp;
     Function<Optional<KBuffer>(InodeIdentifier)>* read_callback { nullptr };
-    if (directory_entry) {
+    if (directory_entry)
         read_callback = &directory_entry->read_callback;
-    } else {
-        if (to_proc_parent_directory(identifier()) == PDI_PID_fd) {
+    else
+        switch (to_proc_parent_directory(identifier())) {
+        case PDI_PID_fd:
             callback_tmp = procfs$pid_fd_entry;
             read_callback = &callback_tmp;
+            break;
+        case PDI_Root_sys:
+            switch (SysVariable::for_inode(identifier()).type) {
+            case SysVariable::Type::Invalid:
+                ASSERT_NOT_REACHED();
+            case SysVariable::Type::Boolean:
+                callback_tmp = read_sys_bool;
+                break;
+            case SysVariable::Type::String:
+                callback_tmp = read_sys_string;
+                break;
+            }
+            read_callback = &callback_tmp;
+            break;
+        default:
+            ASSERT_NOT_REACHED();
         }
-    }
 
     ASSERT(read_callback);
 
@@ -953,9 +968,9 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
         break;
 
     case FI_Root_sys:
-        for (int i = 0; i < fs().m_sys_entries.size(); ++i) {
-            auto& entry = fs().m_sys_entries[i];
-            callback({ entry.name, (int)strlen(entry.name), sys_var_to_identifier(fsid(), i), 0 });
+        for (int i = 1; i < sys_variables().size(); ++i) {
+            auto& variable = sys_variables()[i];
+            callback({ variable.name.characters(), variable.name.length(), sys_var_to_identifier(fsid(), i), 0 });
         }
         break;
 
@@ -1037,9 +1052,9 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
     }
 
     if (proc_file_type == FI_Root_sys) {
-        for (int i = 0; i < fs().m_sys_entries.size(); ++i) {
-            auto& entry = fs().m_sys_entries[i];
-            if (name == entry.name)
+        for (int i = 1; i < sys_variables().size(); ++i) {
+            auto& variable = sys_variables()[i];
+            if (name == variable.name)
                 return sys_var_to_identifier(fsid(), i);
         }
         return {};
@@ -1100,12 +1115,35 @@ void ProcFSInode::flush_metadata()
 ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, FileDescription*)
 {
     auto* directory_entry = fs().get_directory_entry(identifier());
-    if (!directory_entry || !directory_entry->write_callback)
-        return -EPERM;
+
+    Function<ssize_t(InodeIdentifier, const ByteBuffer&)> callback_tmp;
+    Function<ssize_t(InodeIdentifier, const ByteBuffer&)>* write_callback { nullptr };
+
+    if (directory_entry == nullptr) {
+        if (to_proc_parent_directory(identifier()) == PDI_Root_sys) {
+            switch (SysVariable::for_inode(identifier()).type) {
+            case SysVariable::Type::Invalid:
+                ASSERT_NOT_REACHED();
+            case SysVariable::Type::Boolean:
+                callback_tmp = write_sys_bool;
+                break;
+            case SysVariable::Type::String:
+                callback_tmp = write_sys_string;
+                break;
+            }
+            write_callback = &callback_tmp;
+        } else
+            return -EPERM;
+    } else {
+        if (!directory_entry->write_callback)
+            return -EPERM;
+        write_callback = &directory_entry->write_callback;
+    }
+
     ASSERT(is_persistent_inode(identifier()));
     // FIXME: Being able to write into ProcFS at a non-zero offset seems like something we should maybe support..
     ASSERT(offset == 0);
-    bool success = directory_entry->write_callback(identifier(), ByteBuffer::wrap(buffer, size));
+    bool success = (*write_callback)(identifier(), ByteBuffer::wrap(buffer, size));
     ASSERT(success);
     return 0;
 }
@@ -1121,10 +1159,6 @@ KResult ProcFSInode::remove_child(const StringView& name)
 {
     (void)name;
     return KResult(-EPERM);
-}
-
-ProcFSInodeCustomData::~ProcFSInodeCustomData()
-{
 }
 
 size_t ProcFSInode::directory_entry_count() const
@@ -1145,7 +1179,6 @@ KResult ProcFSInode::chmod(mode_t)
 
 ProcFS::ProcFS()
 {
-    s_the = this;
     m_root_inode = adopt(*new ProcFSInode(*this, 1));
     m_entries.resize(FI_MaxStaticFileIndex);
     m_entries[FI_Root_mm] = { "mm", FI_Root_mm, procfs$mm };
@@ -1176,23 +1209,12 @@ ProcFS::ProcFS()
     m_entries[FI_PID_exe] = { "exe", FI_PID_exe, procfs$pid_exe };
     m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, procfs$pid_cwd };
     m_entries[FI_PID_fd] = { "fd", FI_PID_fd };
-
-    m_kmalloc_stack_helper.resource() = g_dump_kmalloc_stacks;
-    add_sys_bool("kmalloc_stacks", m_kmalloc_stack_helper, [this] {
-        g_dump_kmalloc_stacks = m_kmalloc_stack_helper.resource();
-    });
 }
 
 ProcFS::ProcFSDirectoryEntry* ProcFS::get_directory_entry(InodeIdentifier identifier) const
 {
-    if (to_proc_parent_directory(identifier) == PDI_Root_sys) {
-        auto sys_index = to_sys_index(identifier);
-        if (sys_index < m_sys_entries.size())
-            return const_cast<ProcFSDirectoryEntry*>(&m_sys_entries[sys_index]);
-        return nullptr;
-    }
     auto proc_file_type = to_proc_file_type(identifier);
-    if (proc_file_type != FI_Invalid && proc_file_type < FI_MaxStaticFileIndex)
+    if (proc_file_type != FI_Invalid && proc_file_type != FI_Root_sys_variable && proc_file_type < FI_MaxStaticFileIndex)
         return const_cast<ProcFSDirectoryEntry*>(&m_entries[proc_file_type]);
     return nullptr;
 }

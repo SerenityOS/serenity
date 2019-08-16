@@ -99,7 +99,7 @@ PATAChannel::PATAChannel(ChannelType type)
     , m_io_base((type == ChannelType::Primary ? 0x1F0 : 0x170))
 {
     m_dma_enabled.resource() = true;
-    ProcFS::the().add_sys_bool("ide_dma", m_dma_enabled);
+    ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
 
     initialize();
     detect_disks();
