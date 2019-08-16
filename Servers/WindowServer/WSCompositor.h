@@ -35,7 +35,7 @@ public:
     void invalidate_cursor();
     Rect current_cursor_rect() const;
 
-    bool can_flip_buffers() const { return true; }
+    bool can_flip_buffers() const { return false; }
 
 private:
     WSCompositor();
