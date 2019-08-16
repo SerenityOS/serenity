@@ -122,7 +122,10 @@ VFS* vfs;
     auto procfs = ProcFS::create();
     procfs->initialize();
     vfs->mount(procfs, "/proc");
-    vfs->mount(DevPtsFS::the(), "/dev/pts");
+
+    auto devptsfs = DevPtsFS::create();
+    devptsfs->initialize();
+    vfs->mount(devptsfs, "/dev/pts");
 
     auto tmpfs = TmpFS::create();
     if (!tmpfs->initialize())
