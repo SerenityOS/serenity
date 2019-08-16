@@ -119,7 +119,9 @@ VFS* vfs;
     dbgprintf("Loaded ksyms\n");
 
     // TODO: we should mount these from SystemServer
-    vfs->mount(ProcFS::the(), "/proc");
+    auto procfs = ProcFS::create();
+    procfs->initialize();
+    vfs->mount(procfs, "/proc");
     vfs->mount(DevPtsFS::the(), "/dev/pts");
 
     auto tmpfs = TmpFS::create();

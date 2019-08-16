@@ -14,8 +14,6 @@ class ProcFS final : public FS {
     friend class ProcFSInode;
 
 public:
-    static ProcFS& the();
-
     virtual ~ProcFS() override;
     static NonnullRefPtr<ProcFS> create();
 
@@ -28,9 +26,8 @@ public:
     virtual RefPtr<Inode> create_inode(InodeIdentifier parent_id, const String& name, mode_t, off_t size, dev_t, int& error) override;
     virtual RefPtr<Inode> create_directory(InodeIdentifier parent_id, const String& name, mode_t, int& error) override;
 
-    void add_sys_file(String&&, Function<ByteBuffer(ProcFSInode&)>&& read_callback, Function<ssize_t(ProcFSInode&, const ByteBuffer&)>&& write_callback);
-    void add_sys_bool(String&&, Lockable<bool>&, Function<void()>&& notify_callback = nullptr);
-    void add_sys_string(String&&, Lockable<String>&, Function<void()>&& notify_callback = nullptr);
+    static void add_sys_bool(String&&, Lockable<bool>&, Function<void()>&& notify_callback = nullptr);
+    static void add_sys_string(String&&, Lockable<String>&, Function<void()>&& notify_callback = nullptr);
 
 private:
     ProcFS();
@@ -57,16 +54,10 @@ private:
     ProcFSDirectoryEntry* get_directory_entry(InodeIdentifier) const;
 
     Vector<ProcFSDirectoryEntry> m_entries;
-    Vector<ProcFSDirectoryEntry> m_sys_entries;
 
     mutable Lock m_inodes_lock;
     mutable HashMap<unsigned, ProcFSInode*> m_inodes;
     RefPtr<ProcFSInode> m_root_inode;
-    Lockable<bool> m_kmalloc_stack_helper;
-};
-
-struct ProcFSInodeCustomData {
-    virtual ~ProcFSInodeCustomData();
 };
 
 class ProcFSInode final : public Inode {
@@ -74,10 +65,6 @@ class ProcFSInode final : public Inode {
 
 public:
     virtual ~ProcFSInode() override;
-
-    void set_custom_data(OwnPtr<ProcFSInodeCustomData>&& custom_data) { m_custom_data = move(custom_data); }
-    ProcFSInodeCustomData* custom_data() { return m_custom_data.ptr(); }
-    const ProcFSInodeCustomData* custom_data() const { return m_custom_data.ptr(); }
 
 private:
     // ^Inode
@@ -96,6 +83,4 @@ private:
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }
     ProcFSInode(ProcFS&, unsigned index);
-
-    OwnPtr<ProcFSInodeCustomData> m_custom_data;
 };
