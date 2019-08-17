@@ -20,6 +20,7 @@ public:
     unsigned minor() const { return m_minor; }
 
     virtual String absolute_path(const FileDescription&) const override;
+    virtual String absolute_path() const;
 
     uid_t uid() const { return m_uid; }
     uid_t gid() const { return m_gid; }
