@@ -2,6 +2,7 @@
 
 #include <AK/AKString.h>
 #include <AK/Function.h>
+#include <AK/IntrusiveList.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
@@ -18,6 +19,8 @@ public:                 \
 class CObject : public Weakable<CObject> {
     // NOTE: No C_OBJECT macro for CObject itself.
 public:
+    IntrusiveListNode m_all_objects_list_node;
+
     virtual ~CObject();
 
     virtual const char* class_name() const = 0;
@@ -60,8 +63,10 @@ public:
     bool is_widget() const { return m_widget; }
     virtual bool is_window() const { return false; }
 
+    static IntrusiveList<CObject, &CObject::m_all_objects_list_node>& all_objects();
+
 protected:
-    CObject(CObject* parent = nullptr, bool is_widget = false);
+    explicit CObject(CObject* parent = nullptr, bool is_widget = false);
 
     virtual void timer_event(CTimerEvent&);
     virtual void custom_event(CCustomEvent&);
