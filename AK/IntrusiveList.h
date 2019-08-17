@@ -32,7 +32,7 @@ public:
         Iterator();
         Iterator(T* value);
 
-        T* operator*() const;
+        T& operator*() const;
         T* operator->() const;
         bool operator==(const Iterator& other) const;
         bool operator!=(const Iterator& other) const { return !(*this == other); }
@@ -78,9 +78,9 @@ inline IntrusiveList<T, member>::Iterator::Iterator(T* value)
 }
 
 template<class T, IntrusiveListNode T::*member>
-inline T* IntrusiveList<T, member>::Iterator::operator*() const
+inline T& IntrusiveList<T, member>::Iterator::operator*() const
 {
-    return m_value;
+    return *m_value;
 }
 
 template<class T, IntrusiveListNode T::*member>
