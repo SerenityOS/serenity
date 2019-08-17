@@ -1,0 +1,4 @@
+/dev/hda	/	ext2
+proc	/proc	proc
+devpts	/dev/pts	devpts
+tmp	/tmp	tmp

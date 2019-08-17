@@ -118,20 +118,6 @@ VFS* vfs;
     load_ksyms();
     dbgprintf("Loaded ksyms\n");
 
-    // TODO: we should mount these from SystemServer
-    auto procfs = ProcFS::create();
-    procfs->initialize();
-    vfs->mount(procfs, "/proc");
-
-    auto devptsfs = DevPtsFS::create();
-    devptsfs->initialize();
-    vfs->mount(devptsfs, "/dev/pts");
-
-    auto tmpfs = TmpFS::create();
-    if (!tmpfs->initialize())
-        ASSERT_NOT_REACHED();
-    vfs->mount(move(tmpfs), "/tmp");
-
     // Now, detect whether or not there are actually any floppy disks attached to the system
     u8 detect = CMOS::read(0x10);
     RefPtr<FloppyDiskDevice> fd0;
@@ -152,33 +138,12 @@ VFS* vfs;
 
     int error;
 
-    auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)100, (gid_t)100, (pid_t)0, error, {}, {}, tty0);
+    auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
     if (error != 0) {
         kprintf("init_stage2: error spawning SystemServer: %d\n", error);
         hang();
     }
     system_server_process->set_priority(Process::HighPriority);
-
-    auto* tty1_process = Process::create_user_process("/bin/TTYServer", (uid_t)0, (gid_t)0, (pid_t)0, error, { "/bin/TTYServer", "tty1" }, {}, tty1);
-    if (error != 0) {
-        kprintf("init_stage2: error spawning TTYServer for tty1: %d\n", error);
-        hang();
-    }
-    tty1_process->set_priority(Process::HighPriority);
-
-    auto* tty2_process = Process::create_user_process("/bin/TTYServer", (uid_t)0, (gid_t)0, (pid_t)0, error, { "/bin/TTYServer", "tty2" }, {}, tty2);
-    if (error != 0) {
-        kprintf("init_stage2: error spawning TTYServer for tty2: %d\n", error);
-        hang();
-    }
-    tty2_process->set_priority(Process::HighPriority);
-
-    auto* tty3_process = Process::create_user_process("/bin/TTYServer", (uid_t)0, (gid_t)0, (pid_t)0, error, { "/bin/TTYServer", "tty3" }, {}, tty3);
-    if (error != 0) {
-        kprintf("init_stage2: error spawning TTYServer for tty3: %d\n", error);
-        hang();
-    }
-    tty3_process->set_priority(Process::HighPriority);
 
     current->process().sys$exit(0);
     ASSERT_NOT_REACHED();
