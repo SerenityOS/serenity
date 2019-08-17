@@ -234,16 +234,24 @@ ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t
     auto role = this->role(description);
     if (role == Role::Accepted) {
         if (!description.is_blocking()) {
-            if (m_for_server.is_empty())
+            if (m_for_server.is_empty()) {
+                if (!has_attached_peer(description))
+                    return 0;
                 return -EAGAIN;
+            }
         }
+        ASSERT(!m_for_server.is_empty());
         return m_for_server.read((u8*)buffer, buffer_size);
     }
     if (role == Role::Connected) {
         if (!description.is_blocking()) {
-            if (m_for_client.is_empty())
+            if (m_for_client.is_empty()) {
+                if (!has_attached_peer(description))
+                    return 0;
                 return -EAGAIN;
+            }
         }
+        ASSERT(!m_for_client.is_empty());
         return m_for_client.read((u8*)buffer, buffer_size);
     }
     ASSERT_NOT_REACHED();
