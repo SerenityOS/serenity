@@ -15,7 +15,7 @@ CLocalSocket::CLocalSocket(CObject* parent)
 {
     int fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (fd < 0) {
-        set_error(fd);
+        set_error(errno);
     } else {
         set_fd(fd);
         set_mode(CIODevice::ReadWrite);

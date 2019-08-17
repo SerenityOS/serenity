@@ -126,7 +126,7 @@ ByteBuffer CIODevice::read_all()
         char read_buffer[4096];
         int nread = ::read(m_fd, read_buffer, sizeof(read_buffer));
         if (nread < 0) {
-            set_error(nread);
+            set_error(errno);
             return ByteBuffer::copy(data.data(), data.size());
         }
         if (nread == 0) {
@@ -196,7 +196,7 @@ bool CIODevice::close()
         return false;
     int rc = ::close(fd());
     if (rc < 0) {
-        set_error(rc);
+        set_error(errno);
         return false;
     }
     set_fd(-1);

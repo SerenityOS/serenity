@@ -15,7 +15,7 @@ CTCPSocket::CTCPSocket(CObject* parent)
 {
     int fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
     if (fd < 0) {
-        set_error(fd);
+        set_error(errno);
     } else {
         set_fd(fd);
         set_mode(CIODevice::ReadWrite);
