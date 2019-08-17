@@ -1,5 +1,6 @@
 all: tho
 
+CXX = ccache g++
 CXXFLAGS = -W -Wall -O -g -I. -I../ -I../../ -std=c++17
 
 EXTRA_OBJS = \
@@ -8,10 +9,18 @@ EXTRA_OBJS = \
     ../../AK/StringBuilder.o \
     ../../AK/StringView.o \
     ../../AK/LogStream.o \
+    ../../AK/JsonValue.o \
+    ../../AK/JsonParser.o \
+    ../../AK/JsonArray.o \
+    ../../AK/JsonObject.o \
     ../LibCore/CEventLoop.o \
     ../LibCore/CObject.o \
     ../LibCore/CEvent.o \
     ../LibCore/CIODevice.o \
+    ../LibCore/CLocalServer.o \
+    ../LibCore/CLocalSocket.o \
+    ../LibCore/CSocket.o \
+    ../LibCore/CNotifier.o \
     ../LibCore/CFile.o 
 
 include Makefile.shared
