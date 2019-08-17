@@ -405,9 +405,9 @@ inline IterationDecision Scheduler::for_each_runnable(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     auto& tl = g_scheduler_data->m_runnable_threads;
     for (auto it = tl.begin(); it != tl.end();) {
-        auto thread = *it;
+        auto& thread = *it;
         it = ++it;
-        if (callback(*thread) == IterationDecision::Break)
+        if (callback(thread) == IterationDecision::Break)
             return IterationDecision::Break;
     }
 
@@ -420,9 +420,9 @@ inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     auto& tl = g_scheduler_data->m_nonrunnable_threads;
     for (auto it = tl.begin(); it != tl.end();) {
-        auto thread = *it;
+        auto& thread = *it;
         it = ++it;
-        if (callback(*thread) == IterationDecision::Break)
+        if (callback(thread) == IterationDecision::Break)
             return IterationDecision::Break;
     }
 
