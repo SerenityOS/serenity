@@ -670,7 +670,7 @@ void Process::dump_regions()
     kprintf("Process %s(%u) regions:\n", name().characters(), pid());
     kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
     for (auto& region : m_regions) {
-        kprintf("%x -- %x    %x    %c%c%c     %s\n",
+        kprintf("%08x -- %08x    %08x    %c%c%c     %s\n",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),
             region.size(),
