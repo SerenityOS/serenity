@@ -1,6 +1,10 @@
+#include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
+#include <AK/JsonValue.h>
 #include <AK/Time.h>
 #include <LibCore/CEvent.h>
 #include <LibCore/CEventLoop.h>
+#include <LibCore/CLocalSocket.h>
 #include <LibCore/CLock.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
@@ -25,6 +29,7 @@ HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
 HashTable<CNotifier*>* CEventLoop::s_notifiers;
 int CEventLoop::s_next_timer_id = 1;
 int CEventLoop::s_wake_pipe_fds[2];
+CLocalServer CEventLoop::s_rpc_server;
 
 CEventLoop::CEventLoop()
 {
@@ -39,6 +44,32 @@ CEventLoop::CEventLoop()
         int rc = pipe2(s_wake_pipe_fds, O_CLOEXEC);
         ASSERT(rc == 0);
         s_event_loop_stack->append(this);
+
+
+        auto rpc_path = String::format("/tmp/rpc.%d", getpid());
+        rc = unlink(rpc_path.characters());
+        if (rc < 0 && errno != ENOENT) {
+            perror("unlink");
+            ASSERT_NOT_REACHED();
+        }
+        bool listening = s_rpc_server.listen(rpc_path);
+        ASSERT(listening);
+
+        s_rpc_server.on_ready_to_accept = [&] {
+            auto* client = s_rpc_server.accept();
+            ASSERT(client);
+            JsonArray objects;
+            for (auto& object : CObject::all_objects()) {
+                JsonObject json_object;
+                json_object.set("class_name", object.class_name());
+                json_object.set("address", String::format("%p", &object));
+                json_object.set("name", object.name());
+                json_object.set("parent", String::format("%p", object.parent()));
+                objects.append(move(json_object));
+            }
+            client->write(objects.to_string());
+            client->delete_later();
+        };
     }
 
 #ifdef CEVENTLOOP_DEBUG

@@ -5,8 +5,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
-#include <LibCore/CLock.h>
 #include <LibCore/CEvent.h>
+#include <LibCore/CLocalServer.h>
+#include <LibCore/CLock.h>
 #include <sys/select.h>
 #include <sys/time.h>
 #include <time.h>
@@ -85,4 +86,6 @@ private:
     static int s_next_timer_id;
 
     static HashTable<CNotifier*>* s_notifiers;
+
+    static CLocalServer s_rpc_server;
 };
