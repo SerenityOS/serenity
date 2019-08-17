@@ -15,15 +15,25 @@ make_cmd="make -j $MAKEJOBS"
 
 build_targets=""
 
+# Build the host-side tools first, since they are needed to build some programs.
+build_targets="$build_targets ../DevTools/IPCCompiler"
+build_targets="$build_targets ../DevTools/FormCompiler"
+
+# Build LibC, LibCore and LibIPC before IPC servers, since they depend on it.
+build_targets="$build_targets ../Libraries/LibC"
+build_targets="$build_targets ../Libraries/LibCore"
+build_targets="$build_targets ../Libraries/LibIPC"
+
+# Build IPC servers before their client code to ensure the IPC definitions are available.
+build_targets="$build_targets ../Servers/AudioServer"
+build_targets="$build_targets ../Servers/LookupServer"
+
 build_targets="$build_targets ../AK"
 
 build_targets="$build_targets ../Libraries/LibAudio"
-build_targets="$build_targets ../Libraries/LibC"
-build_targets="$build_targets ../Libraries/LibCore"
 build_targets="$build_targets ../Libraries/LibDraw"
 build_targets="$build_targets ../Libraries/LibGUI"
 build_targets="$build_targets ../Libraries/LibHTML"
-build_targets="$build_targets ../Libraries/LibIPC"
 build_targets="$build_targets ../Libraries/LibM"
 build_targets="$build_targets ../Libraries/LibPCIDB"
 build_targets="$build_targets ../Libraries/LibVT"
@@ -51,15 +61,11 @@ build_targets="$build_targets ../Demos/HelloWorld2"
 build_targets="$build_targets ../Demos/RetroFetch"
 build_targets="$build_targets ../Demos/WidgetGallery"
 
-build_targets="$build_targets ../DevTools/FormCompiler"
-build_targets="$build_targets ../DevTools/IPCCompiler"
 build_targets="$build_targets ../DevTools/VisualBuilder"
 
 build_targets="$build_targets ../Games/Minesweeper"
 build_targets="$build_targets ../Games/Snake"
 
-build_targets="$build_targets ../Servers/AudioServer"
-build_targets="$build_targets ../Servers/LookupServer"
 build_targets="$build_targets ../Servers/SystemServer"
 build_targets="$build_targets ../Servers/TTYServer"
 build_targets="$build_targets ../Servers/WindowServer"
