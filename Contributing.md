@@ -14,12 +14,14 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 
 **Do:**
 
+* Write in idiomatic Serenity C++17, using the `AK` containers in all code.
 * Conform to the project coding style. Please use `clang-format` (version 8 or newer) to automatically format C++ files.
 * Choose expressive variable, function and class names. Make it as obvious as possible what the code is doing.
 * Split your changes into separate, atomic commits.
 * Make sure your commits are rebased on the master branch.
 * Wrap your commit messages at 72 characters.
 * Write your commit messages in proper English, with care and punctuation.
+* Squash your commits when making revisions after a patch review.
 
 **Don't:**
 
@@ -28,6 +30,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Iterate excessively on your design across multiple commits.
 * Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.
 * Include commented-out code.
+* Write in C.
 
 ## Code of Conduct (lol)
 
