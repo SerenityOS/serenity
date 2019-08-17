@@ -9,6 +9,7 @@
 #include <AK/JsonValue.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/KBufferBuilder.h>
@@ -502,7 +503,13 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         fs_object.set("mount_point", mount.absolute_path());
         fs_object.set("block_size", fs.block_size());
         fs_object.set("readonly", fs.is_readonly());
-        json.append(fs_object);
+
+        if (fs.is_disk_backed())
+            fs_object.set("device", static_cast<const DiskBackedFS&>(fs).device().absolute_path());
+        else
+            fs_object.set("device", nullptr);
+
+        json.append(move(fs_object));
     });
     return json.serialized<KBufferBuilder>();
 }

@@ -65,6 +65,8 @@ public:
 
     int block_size() const { return m_block_size; }
 
+    virtual bool is_disk_backed() const { return false; }
+
 protected:
     FS();
 
