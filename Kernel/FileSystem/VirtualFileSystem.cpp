@@ -58,25 +58,26 @@ KResult VFS::mount(NonnullRefPtr<FS>&& file_system, StringView path)
     return mount(move(file_system), result.value());
 }
 
-KResult VFS::unmount(NonnullRefPtr<FS>&& file_system)
+KResult VFS::unmount(InodeIdentifier guest_inode_id)
 {
     LOCKER(m_lock);
-    dbg() << "VFS: unmount called with fsid " << file_system.ptr()->fsid();
+    dbg() << "VFS: unmount called with inode " << guest_inode_id;
 
-    for (auto i = 0; i < m_mounts.size(); i++) {
-        auto mount = m_mounts.at(i);
-        if (mount.guest_fs().fsid() == file_system.ptr()->fsid()) {
-            if (mount.guest_fs().prepare_to_unmount() != KSuccess) {
-                dbg() << "VFS: Failed to unmount! Device busy";
-                return KResult(-EBUSY);
+    for (int i = 0; i < m_mounts.size(); ++i) {
+        auto& mount = m_mounts.at(i);
+        if (mount.guest() == guest_inode_id) {
+            auto result = mount.guest_fs().prepare_to_unmount();
+            if (result.is_error()) {
+                dbg() << "VFS: Failed to unmount!";
+                return result;
             }
-            dbg() << "VFS: found fs " << file_system.ptr()->fsid() << " at mount " << i << "! Unmounting...";
+            dbg() << "VFS: found fs " << mount.guest_fs().fsid() << " at mount index " << i << "! Unmounting...";
             m_mounts.remove(i);
             return KSuccess;
         }
     }
 
-    dbg() << "VFS: unmount unable to find fsid in m_mounts!";
+    dbg() << "VFS: Nothing mounted on inode " << guest_inode_id;
     return KResult(-ENODEV);
 }
 

@@ -2811,11 +2811,8 @@ int Process::sys$umount(const char* mountpoint)
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
 
-    auto fsid = metadata_or_error.value().inode.fsid();
-    auto fs = Ext2FS::from_fsid(fsid);
-    auto ret = VFS::the().unmount(*fs);
-
-    return ret;
+    auto guest_inode_id = metadata_or_error.value().inode;
+    return VFS::the().unmount(guest_inode_id);
 }
 
 ProcessTracer& Process::ensure_tracer()
