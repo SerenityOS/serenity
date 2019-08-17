@@ -214,10 +214,9 @@ void GTableView::mousemove_event(GMouseEvent& event)
         return;
     }
 
-    auto adjusted_position = this->adjusted_position(event.position());
     if (event.buttons() == 0) {
         for (int i = 0; i < model()->column_count(); ++i) {
-            if (column_resize_grabbable_rect(i).contains(adjusted_position)) {
+            if (column_resize_grabbable_rect(i).contains(event.position())) {
                 window()->set_override_cursor(GStandardCursor::ResizeHorizontal);
                 return;
             }
