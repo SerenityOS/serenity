@@ -198,7 +198,6 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
         static_cast<void>(pcn);
 
         memcpy(outbuf, m_dma_buffer_page->paddr().as_ptr(), 512 * count);
-        //kprintf("fdc: 0x%x\n", *outbuf);
 
         return true;
     }
@@ -400,7 +399,7 @@ bool FloppyDiskDevice::recalibrate()
         wait_for_irq();
         m_interrupted = false;
 
-        send_byte(FloppyCommand::Recalibrate);
+        send_byte(FloppyCommand::SenseInterrupt);
         u8 st0 = read_byte();
         u8 pcn = read_byte();
         static_cast<void>(st0);
