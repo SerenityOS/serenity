@@ -125,7 +125,7 @@ bool CSocket::send(const ByteBuffer& data)
 {
     int nsent = ::send(fd(), data.pointer(), data.size(), 0);
     if (nsent < 0) {
-        set_error(nsent);
+        set_error(errno);
         return false;
     }
     ASSERT(nsent == data.size());
