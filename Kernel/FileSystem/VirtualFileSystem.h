@@ -59,7 +59,7 @@ public:
     bool mount_root(NonnullRefPtr<FS>&&);
     KResult mount(NonnullRefPtr<FS>&&, StringView path);
     KResult mount(NonnullRefPtr<FS>&&, Custody& mount_point);
-    KResult unmount(NonnullRefPtr<FS>&&);
+    KResult unmount(InodeIdentifier guest_inode_id);
 
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
     KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody);
