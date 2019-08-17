@@ -108,7 +108,8 @@ int CArgsParser::parse_next_param(int index, char** argv, const int params_left,
 
 bool CArgsParser::is_param_valid(const String& param_name)
 {
-    return param_name.substring(0, m_prefix.length()) == m_prefix;
+    return param_name.length() >= m_prefix.length() &&
+        param_name.substring(0, m_prefix.length()) == m_prefix;
 }
 
 bool CArgsParser::check_required_args(const CArgsParserResult& res)
