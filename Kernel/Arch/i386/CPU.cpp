@@ -134,18 +134,18 @@ static void dump(const DumpType& regs)
     }
 
     if constexpr (IsSame<DumpType, RegisterDumpWithExceptionCode>::value) {
-        kprintf("exception code: %w\n", regs.exception_code);
+        kprintf("exception code: %04x\n", regs.exception_code);
     }
-    kprintf("  pc=%w:%x ds=%w es=%w fs=%w gs=%w\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
-    kprintf(" stk=%w:%x\n", ss, esp);
+    kprintf("  pc=%04x:%08x ds=%04x es=%04x fs=%04x gs=%04x\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf(" stk=%04x:%08x\n", ss, esp);
     if (current)
-        kprintf("kstk=%w:%x, base=%x, sigbase=%x\n", current->tss().ss0, current->tss().esp0, current->kernel_stack_base(), current->kernel_stack_for_signal_handler_base());
-    kprintf("eax=%x ebx=%x ecx=%x edx=%x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
-    kprintf("ebp=%x esp=%x esi=%x edi=%x\n", regs.ebp, esp, regs.esi, regs.edi);
+        kprintf("kstk=%04x:%08x, base=%08x, sigbase=%08x\n", current->tss().ss0, current->tss().esp0, current->kernel_stack_base(), current->kernel_stack_for_signal_handler_base());
+    kprintf("eax=%08x ebx=%08x ecx=%08x edx=%08x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
+    kprintf("ebp=%08x esp=%08x esi=%08x edi=%08x\n", regs.ebp, esp, regs.esi, regs.edi);
 
     if (current && current->process().validate_read((void*)regs.eip, 8)) {
         u8* codeptr = (u8*)regs.eip;
-        kprintf("code: %b %b %b %b %b %b %b %b\n",
+        kprintf("code: %02x %02x %02x %02x %02x %02x %02x %02x\n",
             codeptr[0],
             codeptr[1],
             codeptr[2],
