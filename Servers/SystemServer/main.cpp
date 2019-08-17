@@ -86,7 +86,7 @@ int main(int, char**)
     start_process("/bin/mount", "-a", highest_prio);
     wait(nullptr);
 
-    start_process("/bin/TTYServer", "tty0", highest_prio, "/dev/tty0");
+    // NOTE: We don't start anything on tty0 since that's the "active" TTY while WindowServer is up.
     start_process("/bin/TTYServer", "tty1", highest_prio, "/dev/tty1");
     start_process("/bin/TTYServer", "tty2", highest_prio, "/dev/tty2");
     start_process("/bin/TTYServer", "tty3", highest_prio, "/dev/tty3");
