@@ -1,13 +1,14 @@
 #include <AK/Assertions.h>
 #include <LibCore/CFile.h>
 #include <errno.h>
+#include <fcntl.h>
 #include <sched.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
 #include <unistd.h>
 
-void start_process(const char* prog, int prio)
+void start_process(const char* prog, const char* arg, int prio, const char* tty = nullptr)
 {
     pid_t pid = 0;
 
@@ -32,9 +33,17 @@ void start_process(const char* prog, int prio)
         int ret = sched_setparam(pid, &p);
         ASSERT(ret == 0);
 
+        if (tty != nullptr) {
+            close(0);
+            ASSERT(open(tty, O_RDWR) == 0);
+            dup2(0, 1);
+            dup2(0, 2);
+        }
+
         char* progv[256];
         progv[0] = const_cast<char*>(prog);
-        progv[1] = nullptr;
+        progv[1] = const_cast<char*>(arg);
+        progv[2] = nullptr;
         ret = execv(prog, progv);
         if (ret < 0) {
             dbgprintf("Exec %s failed! %s", prog, strerror(errno));
@@ -72,12 +81,26 @@ int main(int, char**)
 {
     int lowest_prio = sched_get_priority_min(SCHED_OTHER);
     int highest_prio = sched_get_priority_max(SCHED_OTHER);
-    start_process("/bin/LookupServer", lowest_prio);
-    start_process("/bin/WindowServer", highest_prio);
-    start_process("/bin/AudioServer", highest_prio);
-    start_process("/bin/Taskbar", highest_prio);
-    start_process("/bin/Terminal", highest_prio - 1);
-    start_process("/bin/Launcher", highest_prio);
+
+    // Mount the filesystems.
+    start_process("/bin/mount", "-a", highest_prio);
+    wait(nullptr);
+
+    start_process("/bin/TTYServer", "tty0", highest_prio, "/dev/tty0");
+    start_process("/bin/TTYServer", "tty1", highest_prio, "/dev/tty1");
+    start_process("/bin/TTYServer", "tty2", highest_prio, "/dev/tty2");
+    start_process("/bin/TTYServer", "tty3", highest_prio, "/dev/tty3");
+
+    // Drop privileges.
+    setuid(100);
+    setgid(100);
+
+    start_process("/bin/LookupServer", nullptr, lowest_prio);
+    start_process("/bin/WindowServer", nullptr, highest_prio);
+    start_process("/bin/AudioServer", nullptr, highest_prio);
+    start_process("/bin/Taskbar", nullptr, highest_prio);
+    start_process("/bin/Terminal", nullptr, highest_prio - 1);
+    start_process("/bin/Launcher", nullptr, highest_prio);
 
     // This won't return if we're in test mode.
     check_for_test_mode();
