@@ -352,7 +352,8 @@ long strtol(const char* str, char** endptr, int base)
             }
         }
     }
-    const char* estr = str + strlen(str) - 1;
+    size_t length = strlen(str);
+    const char* estr = str + length - 1;
     long track = 1;
     long num = 0;
     while (estr >= str) {
@@ -362,12 +363,14 @@ long strtol(const char* str, char** endptr, int base)
                 digit_value = 10 + (*estr - 'A');
             num += (track *= base) / base * digit_value;
         } else {
-            if (endptr != NULL)
+            if (endptr)
                 *endptr = const_cast<char*>(estr);
             return 0;
         };
         estr--;
     }
+    if (endptr)
+        *endptr = const_cast<char*>(str + length);
     return num * sign;
 }
 
