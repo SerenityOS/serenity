@@ -3,7 +3,7 @@
 !*/
 !Makefile
 !LICENSE
-!Base/*
+!Base/**
 
 *.o
 *.ao
