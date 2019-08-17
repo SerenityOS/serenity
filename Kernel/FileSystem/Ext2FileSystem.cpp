@@ -1398,13 +1398,13 @@ unsigned Ext2FS::free_inode_count() const
 
 KResult Ext2FS::prepare_to_unmount() const
 {
-    LOCKER(m_lock); // Acquire lock for this FS
-    for (auto it = m_inode_cache.begin(); it != m_inode_cache.end(); ++it) {
-        if (it->value.ptr()->ref_count() > 1)
+    LOCKER(m_lock);
+
+    for (auto& it : m_inode_cache) {
+        if (it.value->ref_count() > 1)
             return KResult(-EBUSY);
     }
 
-    dbg() << "here!";
     m_inode_cache.clear();
     return KSuccess;
 }
