@@ -5,16 +5,24 @@
 #include <LibCore/CObject.h>
 #include <stdio.h>
 
+IntrusiveList<CObject, &CObject::m_all_objects_list_node>& CObject::all_objects()
+{
+    static IntrusiveList<CObject, &CObject::m_all_objects_list_node> objects;
+    return objects;
+}
+
 CObject::CObject(CObject* parent, bool is_widget)
     : m_parent(parent)
     , m_widget(is_widget)
 {
+    all_objects().append(*this);
     if (m_parent)
         m_parent->add_child(*this);
 }
 
 CObject::~CObject()
 {
+    all_objects().remove(*this);
     stop_timer();
     if (m_parent)
         m_parent->remove_child(*this);
