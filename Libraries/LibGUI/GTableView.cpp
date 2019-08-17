@@ -86,7 +86,7 @@ Rect GTableView::content_rect(int row, int column) const
     for (int i = 0; i < column; ++i)
         x += column_width(i) + horizontal_padding() * 2;
 
-    return { horizontal_padding() + row_rect.x() + x, row_rect.y(), column_width(column), item_height() };
+    return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, item_height() };
 }
 
 Rect GTableView::content_rect(const GModelIndex& index) const
@@ -190,6 +190,7 @@ GModelIndex GTableView::index_at_event_position(const Point& position) const
                 continue;
             return model()->index(row, column);
         }
+        return model()->index(row, 0);
     }
     return {};
 }
