@@ -17,6 +17,7 @@ OBJS = \
     ../../Libraries/LibCore/CEvent.o \
     ../../Libraries/LibCore/CSocket.o \
     ../../Libraries/LibCore/CLocalSocket.o \
+    ../../Libraries/LibCore/CLocalServer.o \
     ../../Libraries/LibCore/CNotifier.o \
     ../../Libraries/LibCore/CEventLoop.o
 
