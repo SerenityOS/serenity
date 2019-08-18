@@ -32,6 +32,7 @@ private:
         Free,
         ExpectBracket,
         ExpectFinal,
+        ExpectTerminator,
     };
     InputState m_state { InputState::Free };
 };
