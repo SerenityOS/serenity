@@ -7,6 +7,10 @@
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
 
+namespace AK {
+class JsonObject;
+}
+
 class CEvent;
 class CChildEvent;
 class CCustomEvent;
@@ -62,6 +66,8 @@ public:
 
     bool is_widget() const { return m_widget; }
     virtual bool is_window() const { return false; }
+
+    virtual void save_to(AK::JsonObject&);
 
     static IntrusiveList<CObject, &CObject::m_all_objects_list_node>& all_objects();
 

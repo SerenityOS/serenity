@@ -61,10 +61,7 @@ CEventLoop::CEventLoop()
             JsonArray objects;
             for (auto& object : CObject::all_objects()) {
                 JsonObject json_object;
-                json_object.set("class_name", object.class_name());
-                json_object.set("address", String::format("%p", &object));
-                json_object.set("name", object.name());
-                json_object.set("parent", String::format("%p", object.parent()));
+                object.save_to(json_object);
                 objects.append(move(json_object));
             }
             client->write(objects.to_string());
