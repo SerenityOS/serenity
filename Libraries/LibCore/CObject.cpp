@@ -1,4 +1,5 @@
 #include <AK/Assertions.h>
+#include <AK/JsonObject.h>
 #include <AK/kstdio.h>
 #include <LibCore/CEvent.h>
 #include <LibCore/CEventLoop.h>
@@ -124,4 +125,12 @@ void CObject::dump_tree(int indent)
 void CObject::deferred_invoke(Function<void(CObject&)> invokee)
 {
     CEventLoop::current().post_event(*this, make<CDeferredInvocationEvent>(move(invokee)));
+}
+
+void CObject::save_to(JsonObject& json)
+{
+    json.set("class_name", class_name());
+    json.set("address", String::format("%p", this));
+    json.set("name", name());
+    json.set("parent", String::format("%p", parent()));
 }
