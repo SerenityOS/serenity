@@ -97,7 +97,7 @@ protected:
     void for_each_view(Function<void(GAbstractView&)>);
     void did_update();
 
-    GModelIndex create_index(int row, int column, void* data = nullptr) const;
+    GModelIndex create_index(int row, int column, const void* data = nullptr) const;
 
 private:
     HashTable<GAbstractView*> m_views;

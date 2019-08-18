@@ -46,9 +46,9 @@ void GModel::set_selected_index(const GModelIndex& index)
     });
 }
 
-GModelIndex GModel::create_index(int row, int column, void* data) const
+GModelIndex GModel::create_index(int row, int column, const void* data) const
 {
-    return GModelIndex(*this, row, column, data);
+    return GModelIndex(*this, row, column, const_cast<void*>(data));
 }
 
 GModelIndex GModel::sibling(int row, int column, const GModelIndex& parent) const
