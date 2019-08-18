@@ -215,11 +215,6 @@
 #define TCSADRAIN 1
 #define TCSAFLUSH 2
 
-struct winsize {
-    unsigned short ws_row;
-    unsigned short ws_col;
-};
-
 typedef u32 dev_t;
 typedef u32 ino_t;
 typedef u16 mode_t;
