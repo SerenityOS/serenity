@@ -5,6 +5,7 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/errno_numbers.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 #define VBE_DISPI_IOPORT_INDEX 0x01CE
 #define VBE_DISPI_IOPORT_DATA 0x01CF
@@ -22,13 +23,6 @@
 #define VBE_DISPI_DISABLED 0x00
 #define VBE_DISPI_ENABLED 0x01
 #define VBE_DISPI_LFB_ENABLED 0x40
-
-#define BXVGA_DEV_IOCTL_SET_Y_OFFSET 1982
-#define BXVGA_DEV_IOCTL_SET_RESOLUTION 1985
-struct BXVGAResolution {
-    int width;
-    int height;
-};
 
 static BXVGADevice* s_the;
 
@@ -52,6 +46,7 @@ void BXVGADevice::set_register(u16 index, u16 data)
 
 void BXVGADevice::set_resolution(int width, int height)
 {
+    m_framebuffer_pitch = width * sizeof(u32);
     m_framebuffer_width = width;
     m_framebuffer_height = height;
 
@@ -65,10 +60,11 @@ void BXVGADevice::set_resolution(int width, int height)
     set_register(VBE_DISPI_INDEX_BANK, 0);
 }
 
-void BXVGADevice::set_y_offset(int offset)
+void BXVGADevice::set_y_offset(int y_offset)
 {
-    ASSERT(offset <= m_framebuffer_height);
-    set_register(VBE_DISPI_INDEX_Y_OFFSET, (u16)offset);
+    ASSERT(y_offset == 0 || y_offset == m_framebuffer_height);
+    m_y_offset = y_offset;
+    set_register(VBE_DISPI_INDEX_Y_OFFSET, (u16)y_offset);
 }
 
 u32 BXVGADevice::find_framebuffer_address()
@@ -90,7 +86,7 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
 {
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
-    auto vmo = AnonymousVMObject::create_for_physical_range(framebuffer_address(), framebuffer_size_in_bytes());
+    auto vmo = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
     auto* region = process.allocate_region_with_vmo(
         preferred_vaddr,
         framebuffer_size_in_bytes(),
@@ -100,7 +96,7 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
         prot);
     kprintf("BXVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with vaddr L%x\n",
         process.name().characters(), process.pid(),
-        region, region->size(), framebuffer_address().as_ptr(), region->vaddr().get());
+        region, region->size(), m_framebuffer_address.as_ptr(), region->vaddr().get());
     ASSERT(region);
     return region;
 }
@@ -108,16 +104,43 @@ KResultOr<Region*> BXVGADevice::mmap(Process& process, FileDescription&, Virtual
 int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
     switch (request) {
-    case BXVGA_DEV_IOCTL_SET_Y_OFFSET:
-        if (arg > (unsigned)m_framebuffer_height * 2)
-            return -EINVAL;
-        set_y_offset((int)arg);
+    case FB_IOCTL_GET_SIZE_IN_BYTES: {
+        auto* out = (size_t*)arg;
+        if (!current->process().validate_write_typed(out))
+            return -EFAULT;
+        *out = framebuffer_size_in_bytes();
         return 0;
-    case BXVGA_DEV_IOCTL_SET_RESOLUTION: {
-        auto* resolution = (const BXVGAResolution*)arg;
-        if (!current->process().validate_read_typed(resolution))
+    }
+    case FB_IOCTL_GET_BUFFER: {
+        auto* index = (int*)arg;
+        if (!current->process().validate_write_typed(index))
+            return -EFAULT;
+        *index = m_y_offset == 0 ? 0 : 1;
+        return 0;
+    }
+    case FB_IOCTL_SET_BUFFER: {
+        if (arg != 0 && arg != 1)
+            return -EINVAL;
+        set_y_offset(arg == 0 ? 0 : m_framebuffer_height);
+        return 0;
+    }
+    case FB_IOCTL_GET_RESOLUTION: {
+        auto* resolution = (FBResolution*)arg;
+        if (!current->process().validate_write_typed(resolution))
+            return -EFAULT;
+        resolution->pitch = m_framebuffer_pitch;
+        resolution->width = m_framebuffer_width;
+        resolution->height = m_framebuffer_height;
+        return 0;
+    }
+    case FB_IOCTL_SET_RESOLUTION: {
+        auto* resolution = (FBResolution*)arg;
+        if (!current->process().validate_read_typed(resolution) || !current->process().validate_write_typed(resolution))
             return -EFAULT;
         set_resolution(resolution->width, resolution->height);
+        resolution->pitch = m_framebuffer_pitch;
+        resolution->width = m_framebuffer_width;
+        resolution->height = m_framebuffer_height;
         return 0;
     }
     default:
