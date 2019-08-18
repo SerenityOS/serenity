@@ -12,16 +12,8 @@ public:
 
     BXVGADevice();
 
-    PhysicalAddress framebuffer_address() const { return m_framebuffer_address; }
-    void set_resolution(int width, int height);
-    void set_y_offset(int);
-
     virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
     virtual KResultOr<Region*> mmap(Process&, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t, int prot) override;
-
-    size_t framebuffer_size_in_bytes() const { return m_framebuffer_width * m_framebuffer_height * sizeof(u32) * 2; }
-    int framebuffer_width() const { return m_framebuffer_width; }
-    int framebuffer_height() const { return m_framebuffer_height; }
 
 private:
     virtual const char* class_name() const override { return "BXVGA"; }
@@ -32,8 +24,13 @@ private:
 
     void set_register(u16 index, u16 value);
     u32 find_framebuffer_address();
+    size_t framebuffer_size_in_bytes() const { return m_framebuffer_pitch * m_framebuffer_height * 2; }
+    void set_resolution(int width, int height);
+    void set_y_offset(int);
 
     PhysicalAddress m_framebuffer_address;
+    int m_framebuffer_pitch { 0 };
     int m_framebuffer_width { 0 };
     int m_framebuffer_height { 0 };
+    int m_y_offset { 0 };
 };
