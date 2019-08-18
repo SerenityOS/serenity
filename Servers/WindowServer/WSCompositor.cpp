@@ -31,16 +31,9 @@ WallpaperMode mode_to_enum(const String& name)
 
 WSCompositor::WSCompositor()
 {
-    auto size = WSScreen::the().size();
-    m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(0));
+    m_screen_can_set_buffer = WSScreen::the().can_set_buffer();
 
-    if (can_flip_buffers())
-        m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(size.height()));
-    else
-        m_back_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, size);
-
-    m_front_painter = make<Painter>(*m_front_bitmap);
-    m_back_painter = make<Painter>(*m_back_bitmap);
+    init_bitmaps();
 
     m_wallpaper_path = "/res/wallpapers/retro.rgb";
     m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
@@ -61,6 +54,25 @@ WSCompositor::WSCompositor()
     };
     m_immediate_compose_timer.set_single_shot(true);
     m_immediate_compose_timer.set_interval(0);
+}
+
+void WSCompositor::init_bitmaps()
+{
+    auto size = WSScreen::the().size();
+
+    m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(0));
+
+    if (m_screen_can_set_buffer)
+        m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(size.height()));
+    else
+        m_back_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, size);
+
+    m_front_painter = make<Painter>(*m_front_bitmap);
+    m_back_painter = make<Painter>(*m_back_bitmap);
+
+    m_buffers_are_flipped = false;
+
+    invalidate();
 }
 
 void WSCompositor::compose()
@@ -172,7 +184,7 @@ void WSCompositor::compose()
             m_front_painter->fill_rect(rect, Color::Yellow);
     }
 
-    if (can_flip_buffers())
+    if (m_screen_can_set_buffer)
         flip_buffers();
 
     for (auto& r : dirty_rects.rects())
@@ -203,7 +215,7 @@ void WSCompositor::flush(const Rect& a_rect)
     RGBA32* to_ptr;
     const RGBA32* from_ptr;
 
-    if (can_flip_buffers()) {
+    if (m_screen_can_set_buffer) {
         to_ptr = back_ptr;
         from_ptr = front_ptr;
     } else {
@@ -289,28 +301,22 @@ void WSCompositor::finish_setting_wallpaper(const String& path, NonnullRefPtr<Gr
 
 void WSCompositor::flip_buffers()
 {
-    ASSERT(can_flip_buffers());
+    ASSERT(m_screen_can_set_buffer);
     swap(m_front_bitmap, m_back_bitmap);
     swap(m_front_painter, m_back_painter);
-    int new_y_offset = m_buffers_are_flipped ? 0 : WSScreen::the().height();
-    WSScreen::the().set_y_offset(new_y_offset);
+    WSScreen::the().set_buffer(m_buffers_are_flipped ? 0 : 1);
     m_buffers_are_flipped = !m_buffers_are_flipped;
 }
 
-void WSCompositor::set_resolution(int width, int height)
+void WSCompositor::set_resolution(int desired_width, int desired_height)
 {
     auto screen_rect = WSScreen::the().rect();
-    if (screen_rect.width() == width && screen_rect.height() == height)
+    if (screen_rect.width() == desired_width && screen_rect.height() == desired_height)
         return;
     m_wallpaper_path = {};
     m_wallpaper = nullptr;
-    WSScreen::the().set_resolution(width, height);
-    m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, { width, height }, WSScreen::the().scanline(0));
-    m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, { width, height }, WSScreen::the().scanline(height));
-    m_front_painter = make<Painter>(*m_front_bitmap);
-    m_back_painter = make<Painter>(*m_back_bitmap);
-    m_buffers_are_flipped = false;
-    invalidate();
+    WSScreen::the().set_resolution(desired_width, desired_height);
+    init_bitmaps();
     compose();
 }
 

@@ -27,7 +27,7 @@ public:
     void invalidate();
     void invalidate(const Rect&);
 
-    void set_resolution(int width, int height);
+    void set_resolution(int desired_width, int desired_height);
 
     bool set_wallpaper(const String& path, Function<void(bool)>&& callback);
     String wallpaper_path() const { return m_wallpaper_path; }
@@ -35,10 +35,9 @@ public:
     void invalidate_cursor();
     Rect current_cursor_rect() const;
 
-    bool can_flip_buffers() const { return false; }
-
 private:
     WSCompositor();
+    void init_bitmaps();
     void flip_buffers();
     void flush(const Rect&);
     void draw_cursor();
@@ -52,6 +51,7 @@ private:
     CTimer m_immediate_compose_timer;
     bool m_flash_flush { false };
     bool m_buffers_are_flipped { false };
+    bool m_screen_can_set_buffer { false };
 
     RefPtr<GraphicsBitmap> m_front_bitmap;
     RefPtr<GraphicsBitmap> m_back_bitmap;
