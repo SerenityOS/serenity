@@ -44,6 +44,7 @@ KERNEL_OBJS = \
        FileSystem/SharedMemory.o \
        FileSystem/DevPtsFS.o \
        Devices/BXVGADevice.o \
+       Devices/MBVGADevice.o \
        PCI.o \
        Devices/PS2MouseDevice.o \
        Devices/SerialDevice.o \
