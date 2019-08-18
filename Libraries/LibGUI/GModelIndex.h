@@ -1,5 +1,8 @@
 #pragma once
 
+#include <AK/AKString.h>
+#include <AK/LogStream.h>
+
 class GModel;
 
 class GModelIndex {
@@ -40,3 +43,8 @@ private:
     int m_column { -1 };
     void* m_internal_data { nullptr };
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const GModelIndex& value)
+{
+    return stream << String::format("GModelIndex(%d,%d)", value.row(), value.column());
+}
