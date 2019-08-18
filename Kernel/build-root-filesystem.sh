@@ -91,6 +91,7 @@ cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
 cp ../Demos/Fire/Fire mnt/bin/Fire
 cp ../DevTools/VisualBuilder/VisualBuilder mnt/bin/VisualBuilder
+cp ../DevTools/Inspector/Inspector mnt/bin/Inspector
 cp ../Games/Minesweeper/Minesweeper mnt/bin/Minesweeper
 cp ../Games/Snake/Snake mnt/bin/Snake
 cp ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
@@ -121,6 +122,7 @@ ln -s Piano mnt/bin/pi
 ln -s SystemDialog mnt/bin/sd
 ln -s ChanViewer mnt/bin/cv
 ln -s Calculator mnt/bin/calc
+ln -s Inspector mnt/bin/ins
 echo "done"
 
 # Run local sync script, if it exists
