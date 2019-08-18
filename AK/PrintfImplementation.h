@@ -13,7 +13,7 @@ extern "C" size_t strlen(const char*);
 #endif
 
 template<typename PutChFunc, typename T>
-[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, bool alternate_form, bool upper_case, bool left_pad, bool zeroPad, u8 width)
+[[gnu::always_inline]] inline int print_hex(PutChFunc putch, char*& bufptr, T number, bool upper_case, bool alternate_form, bool left_pad, bool zeroPad, u8 width)
 {
     int ret = 0;
 
