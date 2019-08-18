@@ -5,7 +5,7 @@
 #include <limits>
 
 ASMixer::ASMixer()
-    : m_device("/dev/audio")
+    : m_device("/dev/audio", this)
 {
     if (!m_device.open(CIODevice::WriteOnly)) {
         dbgprintf("Can't open audio device: %s\n", m_device.error_string());
@@ -18,6 +18,10 @@ ASMixer::ASMixer()
         return 0;
     },
         this);
+}
+
+ASMixer::~ASMixer()
+{
 }
 
 NonnullRefPtr<ASBufferQueue> ASMixer::create_queue(ASClientConnection& client)
