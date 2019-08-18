@@ -27,6 +27,7 @@ private:
     int toggle_size() const { return 9; }
     int text_padding() const { return 2; }
     void update_content_size();
+    void toggle_index(const GModelIndex&);
 
     template<typename Callback>
     void traverse_in_paint_order(Callback) const;
