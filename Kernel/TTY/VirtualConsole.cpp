@@ -81,12 +81,20 @@ void VirtualConsole::switch_to(unsigned index)
 {
     if ((int)index == s_active_console)
         return;
-    dbgprintf("VC: Switch to %u (%p)\n", index, s_consoles[index]);
     ASSERT(index < 6);
     ASSERT(s_consoles[index]);
+
     InterruptDisabler disabler;
-    if (s_active_console != -1)
-        s_consoles[s_active_console]->set_active(false);
+    if (s_active_console != -1) {
+        auto* active_console = s_consoles[s_active_console];
+        // We won't know how to switch away from a graphical console until we
+        // can set the video mode on our own. Just stop anyone from trying for
+        // now.
+        if (active_console->is_graphical())
+            return;
+        active_console->set_active(false);
+    }
+    dbgprintf("VC: Switch to %u (%p)\n", index, s_consoles[index]);
     s_active_console = index;
     s_consoles[s_active_console]->set_active(true);
     Console::the().set_implementation(s_consoles[s_active_console]);
@@ -420,6 +428,10 @@ void VirtualConsole::put_character_at(unsigned row, unsigned column, u8 ch)
 
 void VirtualConsole::on_char(u8 ch)
 {
+    // ignore writes in graphical mode
+    if (m_graphical)
+        return;
+
     switch (m_escape_state) {
     case ExpectBracket:
         if (ch == '[')
@@ -494,6 +506,10 @@ void VirtualConsole::on_char(u8 ch)
 
 void VirtualConsole::on_key_pressed(KeyboardDevice::Event key)
 {
+    // ignore keyboard in graphical mode
+    if (m_graphical)
+        return;
+
     if (!key.is_press())
         return;
     if (key.ctrl()) {
