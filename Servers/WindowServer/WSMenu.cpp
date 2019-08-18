@@ -13,7 +13,8 @@
 #include <WindowServer/WSClientConnection.h>
 
 WSMenu::WSMenu(WSClientConnection* client, int menu_id, const String& name)
-    : m_client(client)
+    : CObject(client)
+    , m_client(client)
     , m_menu_id(menu_id)
     , m_name(move(name))
 {
