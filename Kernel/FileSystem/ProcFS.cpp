@@ -47,6 +47,7 @@ enum ProcFileType {
     FI_Root_inodes,
     FI_Root_dmesg,
     FI_Root_pci,
+    FI_Root_devices,
     FI_Root_uptime,
     FI_Root_cmdline,
     FI_Root_self, // symlink
@@ -264,6 +265,27 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
         obj.set("class", PCI::get_class(address));
         obj.set("subsystem_id", PCI::get_subsystem_id(address));
         obj.set("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
+        json.append(move(obj));
+    });
+    return json.serialized<KBufferBuilder>();
+}
+
+Optional<KBuffer> procfs$devices(InodeIdentifier)
+{
+    JsonArray json;
+    Device::for_each([&json](auto& device) {
+        JsonObject obj;
+        obj.set("major", device.major());
+        obj.set("minor", device.minor());
+        obj.set("class_name", device.class_name());
+
+        if (device.is_block_device())
+            obj.set("type", "block");
+        else if (device.is_character_device())
+            obj.set("type", "character");
+        else
+            ASSERT_NOT_REACHED();
+
         json.append(move(obj));
     });
     return json.serialized<KBufferBuilder>();
@@ -1198,6 +1220,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, procfs$dmesg };
     m_entries[FI_Root_self] = { "self", FI_Root_self, procfs$self };
     m_entries[FI_Root_pci] = { "pci", FI_Root_pci, procfs$pci };
+    m_entries[FI_Root_devices] = { "devices", FI_Root_devices, procfs$devices };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, procfs$cmdline };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
