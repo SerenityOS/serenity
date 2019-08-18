@@ -72,12 +72,17 @@ void GTreeView::mousedown_event(GMouseEvent& event)
         update();
     }
 
-    if (is_toggle && model.row_count(index)) {
-        auto& metadata = ensure_metadata_for_index(index);
-        metadata.open = !metadata.open;
-        update_content_size();
-        update();
-    }
+    if (is_toggle && model.row_count(index))
+        toggle_index(index);
+}
+
+void GTreeView::toggle_index(const GModelIndex& index)
+{
+    ASSERT(model()->row_count(index));
+    auto& metadata = ensure_metadata_for_index(index);
+    metadata.open = !metadata.open;
+    update_content_size();
+    update();
 }
 
 template<typename Callback>
@@ -85,7 +90,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
 {
     ASSERT(model());
     auto& model = *this->model();
-    int indent_level = 0;
+    int indent_level = 1;
     int y_offset = 0;
 
     Function<IterationDecision(const GModelIndex&)> traverse_index = [&](const GModelIndex& index) {
@@ -121,7 +126,11 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
         --indent_level;
         return IterationDecision::Continue;
     };
-    traverse_index(model.index(0, 0, GModelIndex()));
+    int root_count = model.row_count();
+    for (int root_index = 0; root_index < root_count; ++root_index) {
+        if (traverse_index(model.index(root_index, 0, GModelIndex())) == IterationDecision::Break)
+            break;
+    }
 }
 
 void GTreeView::paint_event(GPaintEvent& event)
@@ -257,6 +266,13 @@ void GTreeView::keydown_event(GKeyEvent& event)
     if (!model())
         return;
     auto cursor_index = model()->selected_index();
+
+    if (event.key() == KeyCode::Key_Space) {
+        if (model()->row_count(cursor_index))
+            toggle_index(cursor_index);
+        return;
+    }
+
     if (event.key() == KeyCode::Key_Up) {
         GModelIndex previous_index;
         GModelIndex found_index;
