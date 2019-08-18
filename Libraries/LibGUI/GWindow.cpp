@@ -36,10 +36,7 @@ GWindow::GWindow(CObject* parent)
 GWindow::~GWindow()
 {
     all_windows.remove(this);
-    if (m_main_widget)
-        delete m_main_widget;
     hide();
-
     if (all_windows.is_empty()) {
         GApplication::the().did_delete_last_window({});
     }
@@ -465,8 +462,11 @@ void GWindow::set_main_widget(GWidget* widget)
 {
     if (m_main_widget == widget)
         return;
+    if (m_main_widget)
+        remove_child(*m_main_widget);
     m_main_widget = widget;
     if (m_main_widget) {
+        add_child(*widget);
         auto new_window_rect = rect();
         if (m_main_widget->horizontal_size_policy() == SizePolicy::Fixed)
             new_window_rect.set_width(m_main_widget->preferred_size().width());
