@@ -4,8 +4,9 @@
 #include <stdio.h>
 #include <unistd.h>
 
-CFile::CFile(const StringView& filename)
-    : m_filename(filename)
+CFile::CFile(const StringView& filename, CObject* parent)
+    : CIODevice(parent)
+    , m_filename(filename)
 {
 }
 

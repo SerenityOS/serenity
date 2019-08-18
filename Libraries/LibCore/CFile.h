@@ -6,8 +6,11 @@
 class CFile final : public CIODevice {
     C_OBJECT(CFile)
 public:
-    CFile() {}
-    explicit CFile(const StringView&);
+    CFile(CObject* parent = nullptr)
+        : CIODevice(parent)
+    {
+    }
+    explicit CFile(const StringView&, CObject* parent = nullptr);
     virtual ~CFile() override;
 
     String filename() const { return m_filename; }
