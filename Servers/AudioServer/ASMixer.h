@@ -48,9 +48,11 @@ private:
     WeakPtr<ASClientConnection> m_client;
 };
 
-class ASMixer : public RefCounted<ASMixer> {
+class ASMixer : public CObject {
+    C_OBJECT(ASMixer)
 public:
     ASMixer();
+    virtual ~ASMixer() override;
 
     NonnullRefPtr<ASBufferQueue> create_queue(ASClientConnection&);
 
