@@ -58,8 +58,20 @@ void dump_tree(const LayoutNode& layout_node)
         layout_node.rect().y(),
         layout_node.rect().width(),
         layout_node.rect().height());
+
+    // Dump the horizontal box properties
+    printf(" [%d+%d+%d %d %d+%d+%d]",
+        layout_node.style().margin().left.to_px(),
+        layout_node.style().border().left.to_px(),
+        layout_node.style().padding().left.to_px(),
+        layout_node.rect().width(),
+        layout_node.style().margin().right.to_px(),
+        layout_node.style().border().right.to_px(),
+        layout_node.style().padding().right.to_px());
+
     if (layout_node.is_text())
         printf(" \"%s\"", static_cast<const LayoutText&>(layout_node).text().characters());
+
     printf("\n");
     ++indent;
     layout_node.for_each_child([](auto& child) {
