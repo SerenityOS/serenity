@@ -9,6 +9,7 @@ GAbstractButton::GAbstractButton(GWidget* parent)
 GAbstractButton::GAbstractButton(const StringView& text, GWidget* parent)
     : GWidget(parent)
     , m_text(text)
+    , m_auto_repeat_timer(this)
 {
     m_auto_repeat_timer.on_timeout = [this] {
         click();
