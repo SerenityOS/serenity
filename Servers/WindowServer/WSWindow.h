@@ -153,7 +153,6 @@ private:
     void handle_mouse_event(const WSMouseEvent&);
 
     WSClientConnection* m_client { nullptr };
-    CObject* m_internal_owner { nullptr };
     String m_title;
     Rect m_rect;
     WSWindowType m_type { WSWindowType::Normal };

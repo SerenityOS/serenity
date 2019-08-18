@@ -18,8 +18,8 @@ static GraphicsBitmap& default_window_icon()
     return *s_icon;
 }
 
-WSWindow::WSWindow(CObject& internal_owner, WSWindowType type)
-    : m_internal_owner(&internal_owner)
+WSWindow::WSWindow(CObject& parent, WSWindowType type)
+    : CObject(&parent)
     , m_type(type)
     , m_icon(default_window_icon())
     , m_frame(*this)
@@ -28,7 +28,8 @@ WSWindow::WSWindow(CObject& internal_owner, WSWindowType type)
 }
 
 WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal, bool resizable, bool fullscreen)
-    : m_client(&client)
+    : CObject(&client)
+    , m_client(&client)
     , m_type(window_type)
     , m_modal(modal)
     , m_resizable(resizable)
@@ -174,8 +175,10 @@ void WSWindow::set_maximized(bool maximized)
 
 void WSWindow::event(CEvent& event)
 {
-    if (m_internal_owner)
-        return m_internal_owner->event(event);
+    if (!m_client) {
+        ASSERT(parent());
+        return parent()->event(event);
+    }
 
     if (is_blocked_by_modal_window())
         return;
