@@ -9,6 +9,12 @@ struct winsize {
     unsigned short ws_col;
 };
 
+struct FBResolution {
+    int pitch;
+    int width;
+    int height;
+};
+
 __END_DECLS
 
 enum IOCtlNumber {
@@ -22,4 +28,9 @@ enum IOCtlNumber {
     TIOCSCTTY,
     TIOCNOTTY,
     TIOCSWINSZ,
+    FB_IOCTL_GET_SIZE_IN_BYTES,
+    FB_IOCTL_GET_RESOLUTION,
+    FB_IOCTL_SET_RESOLUTION,
+    FB_IOCTL_GET_BUFFER,
+    FB_IOCTL_SET_BUFFER,
 };
