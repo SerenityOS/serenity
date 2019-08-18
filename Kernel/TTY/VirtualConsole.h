@@ -20,6 +20,9 @@ public:
     static void switch_to(unsigned);
     static void initialize();
 
+    bool is_graphical() { return m_graphical; }
+    void set_graphical(bool graphical) { m_graphical = graphical; }
+
 private:
     // ^KeyboardClient
     virtual void on_key_pressed(KeyboardDevice::Event) override;
@@ -43,6 +46,7 @@ private:
     u8* m_buffer;
     unsigned m_index;
     bool m_active { false };
+    bool m_graphical { false };
 
     void scroll_up();
     void set_cursor(unsigned row, unsigned column);

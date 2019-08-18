@@ -138,6 +138,11 @@ VFS* vfs;
 
     int error;
 
+    // SystemServer will start WindowServer, which will be doing graphics.
+    // From this point on we don't want to touch the VGA text terminal or
+    // accept keyboard input.
+    tty0->set_graphical(true);
+
     auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
     if (error != 0) {
         kprintf("init_stage2: error spawning SystemServer: %d\n", error);
