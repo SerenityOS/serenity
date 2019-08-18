@@ -35,37 +35,79 @@ void LayoutBlock::compute_width()
         return;
     }
 
-    auto auto_value= LengthStyleValue::create({});
     auto& styled_node = *this->styled_node();
-    auto width = styled_node.property("width").value_or(auto_value);
+    auto auto_value = Length();
+    auto zero_value = Length(0, Length::Type::Absolute);
 
-    auto zero_value = LengthStyleValue::create(Length(0, Length::Type::Absolute));
+    auto length_or_fallback = [&](const StringView& property_name, const Length& fallback) {
+        auto value = styled_node.property(property_name);
+        if (!value.has_value())
+            return fallback;
+        return value.value()->to_length();
+    };
 
-    auto margin_left = styled_node.property("margin-left").value_or(zero_value);
-    auto margin_right = styled_node.property("margin-right").value_or(zero_value);
-    auto border_left = styled_node.property("border-left").value_or(zero_value);
-    auto border_right = styled_node.property("border-right").value_or(zero_value);
-    auto padding_left = styled_node.property("padding-left").value_or(zero_value);
-    auto padding_right = styled_node.property("padding-right").value_or(zero_value);
+    auto width = length_or_fallback("width", auto_value);
+    auto margin_left = length_or_fallback("margin-left", zero_value);
+    auto margin_right = length_or_fallback("margin-right", zero_value);
+    auto border_left = length_or_fallback("border-left", zero_value);
+    auto border_right = length_or_fallback("border-right", zero_value);
+    auto padding_left = length_or_fallback("padding-left", zero_value);
+    auto padding_right = length_or_fallback("padding-right", zero_value);
 
-    dbg() << " Left: " << margin_left->to_string() << "+" << border_left->to_string() << "+" << padding_left->to_string();
-    dbg() << "Right: " << margin_right->to_string() << "+" << border_right->to_string() << "+" << padding_right->to_string();
+    dbg() << " Left: " << margin_left << "+" << border_left << "+" << padding_left;
+    dbg() << "Right: " << margin_right << "+" << border_right << "+" << padding_right;
 
     int total_px = 0;
     for (auto& value : { margin_left, border_left, padding_left, width, padding_right, border_right, margin_right }) {
-        total_px += value->to_length().to_px();
+        total_px += value.to_px();
     }
 
     dbg() << "Total: " << total_px;
 
     // 10.3.3 Block-level, non-replaced elements in normal flow
     // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
-    if (width->to_length().is_auto() && total_px > containing_block()->rect().width()) {
-        if (margin_left->to_length().is_auto())
+    if (width.is_auto() && total_px > containing_block()->rect().width()) {
+        if (margin_left.is_auto())
             margin_left = zero_value;
-        if (margin_right->to_length().is_auto())
+        if (margin_right.is_auto())
             margin_right = zero_value;
     }
+
+    // 10.3.3 cont'd.
+    auto underflow_px = containing_block()->rect().width() - total_px;
+
+    if (width.is_auto()) {
+        if (margin_left.is_auto())
+            margin_left = zero_value;
+        if (margin_right.is_auto())
+            margin_right = zero_value;
+        if (underflow_px >= 0) {
+            width = Length(underflow_px, Length::Type::Absolute);
+        } else {
+            width = zero_value;
+            margin_right = Length(margin_right.to_px() + underflow_px, Length::Type::Absolute);
+        }
+    } else {
+        if (!margin_left.is_auto() && !margin_right.is_auto()) {
+            margin_right = Length(margin_right.to_px() + underflow_px, Length::Type::Absolute);
+        } else if (!margin_left.is_auto() && margin_right.is_auto()) {
+            margin_right = Length(underflow_px, Length::Type::Absolute);
+        } else if (margin_left.is_auto() && !margin_right.is_auto()) {
+            margin_left = Length(underflow_px, Length::Type::Absolute);
+        } else { // margin_left.is_auto() && margin_right.is_auto()
+            auto half_of_the_underflow = Length(underflow_px / 2, Length::Type::Absolute);
+            margin_left = half_of_the_underflow;
+            margin_right = half_of_the_underflow;
+        }
+    }
+
+    rect().set_width(width.to_px());
+    style().margin().left = margin_left;
+    style().margin().right = margin_right;
+    style().border().left = border_left;
+    style().border().right = border_right;
+    style().padding().left = padding_left;
+    style().padding().right = padding_right;
 }
 
 void LayoutBlock::compute_height()

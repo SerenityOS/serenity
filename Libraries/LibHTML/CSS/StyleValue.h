@@ -26,6 +26,8 @@ public:
     virtual String to_string() const = 0;
     virtual Length to_length() const { return {}; }
 
+    virtual bool is_auto() const { return false; }
+
 protected:
     explicit StyleValue(Type);
 
@@ -65,6 +67,8 @@ public:
     virtual Length to_length() const override { return m_length; }
 
     const Length& length() const { return m_length; }
+
+    virtual bool is_auto() const override { return m_length.is_auto(); }
 
 private:
     explicit LengthStyleValue(const Length& length)
