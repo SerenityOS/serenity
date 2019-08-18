@@ -9,6 +9,7 @@ RemoteObjectGraphModel::RemoteObjectGraphModel(pid_t pid)
     : m_pid(pid)
 {
     m_object_icon.set_bitmap_for_size(16, load_png("/res/icons/16x16/inspector-object.png"));
+    m_window_icon.set_bitmap_for_size(16, load_png("/res/icons/16x16/window.png"));
 }
 
 RemoteObjectGraphModel::~RemoteObjectGraphModel()
@@ -59,6 +60,8 @@ GVariant RemoteObjectGraphModel::data(const GModelIndex& index, Role role) const
 {
     auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
     if (role == Role::Icon) {
+        if (remote_object->class_name == "GWindow")
+            return m_window_icon;
         return m_object_icon;
     }
     if (role == Role::Display) {
