@@ -39,4 +39,5 @@ private:
     JsonArray m_json;
     NonnullOwnPtrVector<RemoteObject> m_remote_roots;
     GIcon m_object_icon;
+    GIcon m_window_icon;
 };
