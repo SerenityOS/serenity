@@ -3,8 +3,8 @@
 #include "WSEvent.h"
 #include "WSEventLoop.h"
 #include "WSWindowManager.h"
+#include <Kernel/FB.h>
 #include <fcntl.h>
-#include <sys/ioctl.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -16,9 +16,7 @@ WSScreen& WSScreen::the()
     return *s_the;
 }
 
-WSScreen::WSScreen(unsigned width, unsigned height)
-    : m_width(width)
-    , m_height(height)
+WSScreen::WSScreen(unsigned desired_width, unsigned desired_height)
 {
     ASSERT(!s_the);
     s_the = this;
@@ -26,7 +24,11 @@ WSScreen::WSScreen(unsigned width, unsigned height)
     m_framebuffer_fd = open("/dev/fb0", O_RDWR);
     ASSERT(m_framebuffer_fd >= 0);
 
-    set_resolution(width, height);
+    if (fb_set_buffer(m_framebuffer_fd, 0) == 0) {
+        m_can_set_buffer = true;
+    }
+
+    set_resolution(desired_width, desired_height);
 }
 
 WSScreen::~WSScreen()
@@ -35,28 +37,38 @@ WSScreen::~WSScreen()
 
 void WSScreen::set_resolution(int width, int height)
 {
-    struct BXVGAResolution {
-        int width;
-        int height;
-    };
-    BXVGAResolution resolution { (int)width, (int)height };
-    int rc = ioctl(m_framebuffer_fd, 1985, (int)&resolution);
+    FBResolution resolution { 0, (int)width, (int)height };
+    int rc = fb_set_resolution(m_framebuffer_fd, &resolution);
     ASSERT(rc == 0);
+    on_change_resolution(resolution.pitch, resolution.width, resolution.height);
+}
 
+void WSScreen::on_change_resolution(int pitch, int width, int height)
+{
     if (m_framebuffer) {
-        size_t previous_size_in_bytes = m_width * m_height * sizeof(RGBA32) * 2;
+        size_t previous_size_in_bytes = m_size_in_bytes;
         int rc = munmap(m_framebuffer, previous_size_in_bytes);
         ASSERT(rc == 0);
     }
 
-    size_t framebuffer_size_in_bytes = width * height * sizeof(RGBA32) * 2;
-    m_framebuffer = (RGBA32*)mmap(nullptr, framebuffer_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
+    int rc = fb_get_size_in_bytes(m_framebuffer_fd, &m_size_in_bytes);
+    ASSERT(rc == 0);
+
+    m_framebuffer = (RGBA32*)mmap(nullptr, m_size_in_bytes, PROT_READ | PROT_WRITE, MAP_SHARED, m_framebuffer_fd, 0);
     ASSERT(m_framebuffer && m_framebuffer != (void*)-1);
 
+    m_pitch = pitch;
     m_width = width;
     m_height = height;
 
     m_cursor_location.constrain(rect());
+}
+
+void WSScreen::set_buffer(int index)
+{
+    ASSERT(m_can_set_buffer);
+    int rc = fb_set_buffer(m_framebuffer_fd, index);
+    ASSERT(rc == 0);
 }
 
 void WSScreen::on_receive_mouse_data(int dx, int dy, int dz, unsigned buttons)
@@ -95,10 +107,4 @@ void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
     m_modifiers = kernel_event.modifiers();
     auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSEvent::KeyDown : WSEvent::KeyUp, kernel_event.key, kernel_event.character, kernel_event.modifiers());
     CEventLoop::current().post_event(WSWindowManager::the(), move(message));
-}
-
-void WSScreen::set_y_offset(int offset)
-{
-    int rc = ioctl(m_framebuffer_fd, 1982, offset);
-    ASSERT(rc == 0);
 }
