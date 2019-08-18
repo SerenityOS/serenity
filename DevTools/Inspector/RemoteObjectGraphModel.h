@@ -18,6 +18,7 @@ public:
     virtual int column_count(const GModelIndex& = GModelIndex()) const override;
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual GModelIndex index(int row, int column, const GModelIndex& parent = GModelIndex()) const override;
+    virtual GModelIndex parent_index(const GModelIndex&) const;
     virtual void update() override;
 
 private:

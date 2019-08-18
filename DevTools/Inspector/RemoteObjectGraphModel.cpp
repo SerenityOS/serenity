@@ -26,6 +26,22 @@ GModelIndex RemoteObjectGraphModel::index(int row, int column, const GModelIndex
     return create_index(row, column, remote_parent.children.at(row));
 }
 
+GModelIndex RemoteObjectGraphModel::parent_index(const GModelIndex& index) const
+{
+    if (!index.is_valid())
+        return {};
+    auto& remote_object = *static_cast<RemoteObject*>(index.internal_data());
+    if (!remote_object.parent)
+        return {};
+    for (int row = 0; row < remote_object.parent->children.size(); ++row) {
+        if (remote_object.parent->children[row] == &remote_object)
+            return create_index(row, 0, remote_object.parent);
+    }
+
+    ASSERT_NOT_REACHED();
+    return {};
+}
+
 int RemoteObjectGraphModel::row_count(const GModelIndex& index) const
 {
     if (!index.is_valid())
