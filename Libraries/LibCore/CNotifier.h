@@ -12,7 +12,7 @@ public:
         Write = 2,
         Exceptional = 4,
     };
-    CNotifier(int fd, unsigned event_mask);
+    CNotifier(int fd, unsigned event_mask, CObject* parent = nullptr);
     virtual ~CNotifier() override;
 
     void set_enabled(bool);
