@@ -2764,7 +2764,7 @@ int Process::sys$mount(const char* device_path, const char* mountpoint, const ch
         auto major = metadata_or_error.value().major_device;
         auto minor = metadata_or_error.value().minor_device;
 
-        auto* device = VFS::the().get_device(major, minor);
+        auto* device = Device::get_device(major, minor);
         if (!device) {
             dbg() << "mount: device (" << major << "," << minor << ") not found";
             return -ENODEV;
