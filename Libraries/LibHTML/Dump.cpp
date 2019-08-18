@@ -65,9 +65,19 @@ void dump_tree(const LayoutNode& layout_node)
         layout_node.style().border().left.to_px(),
         layout_node.style().padding().left.to_px(),
         layout_node.rect().width(),
-        layout_node.style().margin().right.to_px(),
+        layout_node.style().padding().right.to_px(),
         layout_node.style().border().right.to_px(),
-        layout_node.style().padding().right.to_px());
+        layout_node.style().margin().right.to_px());
+
+    // And the vertical box properties
+    printf(" [%d+%d+%d %d %d+%d+%d]",
+        layout_node.style().margin().top.to_px(),
+        layout_node.style().border().top.to_px(),
+        layout_node.style().padding().top.to_px(),
+        layout_node.rect().height(),
+        layout_node.style().padding().bottom.to_px(),
+        layout_node.style().border().bottom.to_px(),
+        layout_node.style().margin().bottom.to_px());
 
     if (layout_node.is_text())
         printf(" \"%s\"", static_cast<const LayoutText&>(layout_node).text().characters());
