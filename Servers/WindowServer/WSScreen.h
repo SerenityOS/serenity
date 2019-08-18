@@ -11,6 +11,8 @@ public:
     ~WSScreen();
 
     void set_resolution(int width, int height);
+    bool can_set_buffer() { return m_can_set_buffer; }
+    void set_buffer(int index);
 
     int width() const { return m_width; }
     int height() const { return m_height; }
@@ -21,8 +23,6 @@ public:
     Size size() const { return { width(), height() }; }
     Rect rect() const { return { 0, 0, width(), height() }; }
 
-    void set_y_offset(int);
-
     Point cursor_location() const { return m_cursor_location; }
     unsigned mouse_button_state() const { return m_mouse_button_state; }
 
@@ -30,8 +30,14 @@ public:
     void on_receive_keyboard_data(KeyEvent);
 
 private:
-    RGBA32* m_framebuffer { nullptr };
+    void on_change_resolution(int pitch, int width, int height);
 
+    size_t m_size_in_bytes;
+
+    RGBA32* m_framebuffer { nullptr };
+    bool m_can_set_buffer { false };
+
+    int m_pitch { 0 };
     int m_width { 0 };
     int m_height { 0 };
     int m_framebuffer_fd { -1 };
@@ -43,6 +49,5 @@ private:
 
 inline RGBA32* WSScreen::scanline(int y)
 {
-    size_t pitch = sizeof(RGBA32) * width();
-    return reinterpret_cast<RGBA32*>(((u8*)m_framebuffer) + (y * pitch));
+    return reinterpret_cast<RGBA32*>(((u8*)m_framebuffer) + (y * m_pitch));
 }
