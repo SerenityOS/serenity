@@ -1,4 +1,5 @@
 #include <AK/HashMap.h>
+#include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
 #include <LibC/SharedBuffer.h>
 #include <LibC/stdio.h>
@@ -695,4 +696,17 @@ Vector<GWidget*> GWindow::focusable_widgets() const
 
     collect_focusable_widgets(*m_main_widget);
     return collected_widgets;
+}
+
+void GWindow::save_to(AK::JsonObject& json)
+{
+    json.set("title", title());
+    json.set("visible", is_visible());
+    json.set("active", is_active());
+    json.set("resizable", is_resizable());
+    json.set("fullscreen", is_fullscreen());
+    json.set("rect", rect().to_string());
+    json.set("base_size", base_size().to_string());
+    json.set("size_increment", size_increment().to_string());
+    CObject::save_to(json);
 }

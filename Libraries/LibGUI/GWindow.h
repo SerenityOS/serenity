@@ -125,6 +125,8 @@ public:
 
     Vector<GWidget*> focusable_widgets() const;
 
+    virtual void save_to(AK::JsonObject&) override;
+
 protected:
     virtual void wm_event(GWMEvent&);
 

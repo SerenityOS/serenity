@@ -3,6 +3,7 @@
 #include "GEventLoop.h"
 #include "GWindow.h"
 #include <AK/Assertions.h>
+#include <AK/JsonObject.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GLayout.h>
@@ -584,4 +585,19 @@ void GWidget::set_forecolor(const StringView& color_string)
     if (!color.has_value())
         return;
     set_foreground_color(color.value());
+}
+
+void GWidget::save_to(AK::JsonObject& json)
+{
+    json.set("relative_rect", relative_rect().to_string());
+    json.set("fill_with_background_color", fill_with_background_color());
+    json.set("tooltip", tooltip());
+    json.set("visible", is_visible());
+    json.set("focused", is_focused());
+    json.set("enabled", is_enabled());
+    json.set("background_color", background_color().to_string());
+    json.set("foreground_color", foreground_color().to_string());
+    json.set("preferred_size", preferred_size().to_string());
+    json.set("size_policy", String::format("[%s,%s]", to_string(horizontal_size_policy()), to_string(vertical_size_policy())));
+    CObject::save_to(json);
 }

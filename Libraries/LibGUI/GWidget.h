@@ -22,6 +22,17 @@ enum class SizePolicy {
     Fixed,
     Fill
 };
+inline const char* to_string(SizePolicy policy)
+{
+    switch (policy) {
+    case SizePolicy::Fixed:
+        return "SizePolicy::Fixed";
+    case SizePolicy::Fill:
+        return "SizePolicy::Fill";
+    }
+    return "SizePolicy::(Invalid)";
+}
+
 enum class HorizontalDirection {
     Left,
     Right
@@ -205,6 +216,8 @@ public:
 
     virtual bool is_radio_button() const { return false; }
     virtual bool is_abstract_button() const { return false; }
+
+    virtual void save_to(AK::JsonObject&) override;
 
 private:
     void handle_paint_event(GPaintEvent&);
