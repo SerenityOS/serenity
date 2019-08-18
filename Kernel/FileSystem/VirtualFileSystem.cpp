@@ -216,11 +216,11 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
     }
 
     if (metadata.is_device()) {
-        auto it = m_devices.find(encoded_device(metadata.major_device, metadata.minor_device));
-        if (it == m_devices.end()) {
+        auto device = Device::get_device(metadata.major_device, metadata.minor_device);
+        if (device == nullptr) {
             return KResult(-ENODEV);
         }
-        auto descriptor_or_error = (*it).value->open(options);
+        auto descriptor_or_error = device->open(options);
         if (descriptor_or_error.is_error())
             return descriptor_or_error.error();
         descriptor_or_error.value()->set_original_inode({}, inode);
@@ -615,23 +615,6 @@ InodeIdentifier VFS::Mount::host() const
     return m_host_custody->inode().identifier();
 }
 
-void VFS::register_device(Badge<Device>, Device& device)
-{
-    m_devices.set(encoded_device(device.major(), device.minor()), &device);
-}
-
-void VFS::unregister_device(Badge<Device>, Device& device)
-{
-    m_devices.remove(encoded_device(device.major(), device.minor()));
-}
-
-Device* VFS::get_device(unsigned major, unsigned minor)
-{
-    auto it = m_devices.find(encoded_device(major, minor));
-    if (it == m_devices.end())
-        return nullptr;
-    return (*it).value;
-}
 
 void VFS::for_each_mount(Function<void(const Mount&)> callback) const
 {
