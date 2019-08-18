@@ -50,7 +50,8 @@ namespace Client {
         C_OBJECT(Connection)
     public:
         Connection(const StringView& address)
-            : m_notifier(CNotifier(m_connection.fd(), CNotifier::Read))
+            : m_connection(this)
+            , m_notifier(m_connection.fd(), CNotifier::Read, this)
         {
             // We want to rate-limit our clients
             m_connection.set_blocking(true);
@@ -240,7 +241,8 @@ namespace Client {
         C_OBJECT(Connection)
     public:
         ConnectionNG(const StringView& address)
-            : m_notifier(CNotifier(m_connection.fd(), CNotifier::Read))
+            : m_connection(this)
+            , m_notifier(m_connection.fd(), CNotifier::Read, this)
         {
             // We want to rate-limit our clients
             m_connection.set_blocking(true);

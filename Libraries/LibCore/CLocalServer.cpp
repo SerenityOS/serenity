@@ -31,7 +31,7 @@ bool CLocalServer::listen(const String& address)
     ASSERT(rc == 0);
     m_listening = true;
 
-    m_notifier = make<CNotifier>(m_fd, CNotifier::Event::Read);
+    m_notifier = make<CNotifier>(m_fd, CNotifier::Event::Read, this);
     m_notifier->on_ready_to_read = [this] {
         if (on_ready_to_accept)
             on_ready_to_accept();
