@@ -1,3 +1,4 @@
+#include "DevicesModel.h"
 #include "GraphWidget.h"
 #include "MemoryStatsWidget.h"
 #include "NetworkStatisticsWidget.h"
@@ -39,6 +40,7 @@ static String human_readable_size(u32 size)
 
 static GWidget* build_file_systems_tab();
 static GWidget* build_pci_devices_tab();
+static GWidget* build_devices_tab();
 
 int main(int argc, char** argv)
 {
@@ -93,6 +95,8 @@ int main(int argc, char** argv)
     tabwidget->add_widget("File systems", build_file_systems_tab());
 
     tabwidget->add_widget("PCI devices", build_pci_devices_tab());
+
+    tabwidget->add_widget("Devices", build_devices_tab());
 
     auto* network_stats_widget = new NetworkStatisticsWidget(nullptr);
     tabwidget->add_widget("Network", network_stats_widget);
@@ -346,4 +350,18 @@ GWidget* build_pci_devices_tab()
     pci_table_view->model()->update();
 
     return pci_widget;
+}
+
+GWidget* build_devices_tab()
+{
+    auto* devices_widget = new GWidget(nullptr);
+    devices_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    devices_widget->layout()->set_margins({ 4, 4, 4, 4 });
+
+    auto* devices_table_view = new GTableView(devices_widget);
+    devices_table_view->set_size_columns_to_fit_content(true);
+    devices_table_view->set_model(GSortingProxyModel::create(DevicesModel::create()));
+    devices_table_view->model()->update();
+
+    return devices_widget;
 }

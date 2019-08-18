@@ -2,6 +2,7 @@ include ../../Makefile.common
 
 OBJS = \
     ProcessModel.o \
+    DevicesModel.o \
     ProcessTableView.o \
     MemoryStatsWidget.o \
     GraphWidget.o \
