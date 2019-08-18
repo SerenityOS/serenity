@@ -8,7 +8,7 @@
 RemoteObjectGraphModel::RemoteObjectGraphModel(pid_t pid)
     : m_pid(pid)
 {
-    m_object_icon.set_bitmap_for_size(16, load_png("/res/icons/gear16.png"));
+    m_object_icon.set_bitmap_for_size(16, load_png("/res/icons/16x16/inspector-object.png"));
 }
 
 RemoteObjectGraphModel::~RemoteObjectGraphModel()
@@ -101,7 +101,6 @@ void RemoteObjectGraphModel::update()
             }
         }
 
-        //dbg() << m_json.to_string();
         did_update();
     };
 }
