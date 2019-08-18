@@ -22,8 +22,20 @@ LayoutNode& LayoutBlock::inline_wrapper()
 void LayoutBlock::layout()
 {
     compute_width();
+    compute_position();
 
-    LayoutNode::layout();
+    int content_height = 0;
+    for_each_child([&](auto& child) {
+        child.layout();
+        content_height += child.rect().height()
+            + child.style().margin().top.to_px()
+            + child.style().border().top.to_px()
+            + child.style().padding().top.to_px()
+            + child.style().margin().bottom.to_px()
+            + child.style().border().bottom.to_px()
+            + child.style().padding().bottom.to_px();
+    });
+    rect().set_height(content_height);
 
     compute_height();
 }
@@ -38,21 +50,13 @@ void LayoutBlock::compute_width()
     auto& styled_node = *this->styled_node();
     auto auto_value = Length();
     auto zero_value = Length(0, Length::Type::Absolute);
-
-    auto length_or_fallback = [&](const StringView& property_name, const Length& fallback) {
-        auto value = styled_node.property(property_name);
-        if (!value.has_value())
-            return fallback;
-        return value.value()->to_length();
-    };
-
-    auto width = length_or_fallback("width", auto_value);
-    auto margin_left = length_or_fallback("margin-left", zero_value);
-    auto margin_right = length_or_fallback("margin-right", zero_value);
-    auto border_left = length_or_fallback("border-left", zero_value);
-    auto border_right = length_or_fallback("border-right", zero_value);
-    auto padding_left = length_or_fallback("padding-left", zero_value);
-    auto padding_right = length_or_fallback("padding-right", zero_value);
+    auto width = styled_node.length_or_fallback("width", auto_value);
+    auto margin_left = styled_node.length_or_fallback("margin-left", zero_value);
+    auto margin_right = styled_node.length_or_fallback("margin-right", zero_value);
+    auto border_left = styled_node.length_or_fallback("border-left", zero_value);
+    auto border_right = styled_node.length_or_fallback("border-right", zero_value);
+    auto padding_left = styled_node.length_or_fallback("padding-left", zero_value);
+    auto padding_right = styled_node.length_or_fallback("padding-right", zero_value);
 
     dbg() << " Left: " << margin_left << "+" << border_left << "+" << padding_left;
     dbg() << "Right: " << margin_right << "+" << border_right << "+" << padding_right;
@@ -110,6 +114,37 @@ void LayoutBlock::compute_width()
     style().padding().right = padding_right;
 }
 
+void LayoutBlock::compute_position()
+{
+    if (!styled_node()) {
+        // I guess the size is "auto" in this case.
+        return;
+    }
+
+    auto& styled_node = *this->styled_node();
+    auto auto_value = Length();
+    auto zero_value = Length(0, Length::Type::Absolute);
+
+    auto width = styled_node.length_or_fallback("width", auto_value);
+    style().margin().top = styled_node.length_or_fallback("margin-top", zero_value);
+    style().margin().bottom = styled_node.length_or_fallback("margin-bottom", zero_value);
+    style().border().top = styled_node.length_or_fallback("border-top", zero_value);
+    style().border().bottom = styled_node.length_or_fallback("border-bottom", zero_value);
+    style().padding().top = styled_node.length_or_fallback("padding-top", zero_value);
+    style().padding().bottom = styled_node.length_or_fallback("padding-bottom", zero_value);
+    rect().set_x(containing_block()->rect().x() + style().margin().left.to_px() + style().border().left.to_px() + style().padding().left.to_px());
+    rect().set_y(containing_block()->rect().y() + style().margin().top.to_px() + style().border().top.to_px() + style().padding().top.to_px());
+}
+
 void LayoutBlock::compute_height()
 {
+    if (!styled_node())
+        return;
+    auto& styled_node = *this->styled_node();
+    auto height_property = styled_node.property("height");
+    if (!height_property.has_value())
+        return;
+    auto height_length = height_property.value()->to_length();
+    if (height_length.is_absolute())
+        rect().set_height(height_length.to_px());
 }

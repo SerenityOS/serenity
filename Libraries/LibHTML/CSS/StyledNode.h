@@ -61,6 +61,14 @@ public:
 
     Display display() const;
 
+    Length length_or_fallback(const StringView& property_name, const Length& fallback)
+    {
+        auto value = property(property_name);
+        if (!value.has_value())
+            return fallback;
+        return value.value()->to_length();
+    }
+
 protected:
     explicit StyledNode(const Node*);
 
