@@ -72,6 +72,22 @@ String LineEditor::get_line(const String& prompt)
             exit(2);
         }
 
+        auto do_delete = [&] {
+            if (m_cursor == m_buffer.size()) {
+                fputc('\a', stdout);
+                fflush(stdout);
+                return;
+            }
+            m_buffer.remove(m_cursor - 1);
+            fputs("\033[3~", stdout);
+            fflush(stdout);
+            vt_save_cursor();
+            vt_clear_to_end_of_line();
+            for (int i = m_cursor; i < m_buffer.size(); ++i)
+                fputc(m_buffer[i], stdout);
+            vt_restore_cursor();
+        };
+
         for (ssize_t i = 0; i < nread; ++i) {
             char ch = keybuf[i];
             if (ch == 0)
@@ -136,12 +152,19 @@ String LineEditor::get_line(const String& prompt)
                     }
                     m_state = InputState::Free;
                     continue;
+                case '3':
+                    do_delete();
+                    m_state = InputState::ExpectTerminator;
+                    continue;
                 default:
                     dbgprintf("Shell: Unhandled final: %b (%c)\n", ch, ch);
                     m_state = InputState::Free;
                     continue;
                 }
                 break;
+            case InputState::ExpectTerminator:
+                m_state = InputState::Free;
+                continue;
             case InputState::Free:
                 if (ch == 27) {
                     m_state = InputState::ExpectBracket;
