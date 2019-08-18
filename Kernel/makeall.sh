@@ -62,6 +62,7 @@ build_targets="$build_targets ../Demos/RetroFetch"
 build_targets="$build_targets ../Demos/WidgetGallery"
 
 build_targets="$build_targets ../DevTools/VisualBuilder"
+build_targets="$build_targets ../DevTools/Inspector"
 
 build_targets="$build_targets ../Games/Minesweeper"
 build_targets="$build_targets ../Games/Snake"
