@@ -17,6 +17,7 @@
 #include <Kernel/Devices/FullDevice.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/MBRPartitionTable.h>
+#include <Kernel/Devices/MBVGADevice.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/PATAChannel.h>
 #include <Kernel/Devices/PS2MouseDevice.h>
@@ -229,7 +230,16 @@ extern "C" [[noreturn]] void init()
         );
     });
 
-    new BXVGADevice;
+    if (multiboot_info_ptr->framebuffer_type == 1) {
+        new MBVGADevice(
+            PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
+            multiboot_info_ptr->framebuffer_pitch,
+            multiboot_info_ptr->framebuffer_width,
+            multiboot_info_ptr->framebuffer_height
+        );
+    } else {
+        new BXVGADevice;
+    }
 
     auto e1000 = E1000NetworkAdapter::autodetect();
 

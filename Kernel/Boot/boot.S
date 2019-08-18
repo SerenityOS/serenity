@@ -1,7 +1,7 @@
 .set MULTIBOOT_MAGIC,         0x1badb002
 .set MULTIBOOT_PAGE_ALIGN,    0x1
 .set MULTIBOOT_MEMORY_INFO,   0x2
-.set MULTIBOOT_VIDEO_MODE,    0x0
+.set MULTIBOOT_VIDEO_MODE,    0x4
 .set multiboot_flags,         MULTIBOOT_PAGE_ALIGN | MULTIBOOT_MEMORY_INFO | MULTIBOOT_VIDEO_MODE
 .set multiboot_checksum,      -(MULTIBOOT_MAGIC + multiboot_flags)
 
@@ -22,8 +22,8 @@
 
 /* for MULTIBOOT_VIDEO_MODE */
 .long 0x00000000    /* mode_type */
-.long 0             /* width */
-.long 0             /* height */
+.long 1024          /* width */
+.long 768           /* height */
 .long 32            /* depth */
 
 .section .stack, "aw", @nobits
