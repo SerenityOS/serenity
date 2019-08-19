@@ -33,6 +33,9 @@ public:
     ConstIterator begin() const { return ConstIterator(*this, 0); }
     ConstIterator end() const { return ConstIterator(*this, size()); }
 
+    PtrType& ptr_at(int index) { return Base::at(index); }
+    const PtrType& ptr_at(int index) const { return Base::at(index); }
+
     T& at(int index) { return *Base::at(index); }
     const T& at(int index) const { return *Base::at(index); }
     T& operator[](int index) { return at(index); }
