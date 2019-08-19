@@ -65,8 +65,6 @@ void WSCompositor::init_bitmaps()
 
     m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, screen.pitch(), screen.scanline(0));
 
-    ASSERT(m_screen_can_set_buffer);
-
     if (m_screen_can_set_buffer)
         m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, screen.pitch(), screen.scanline(size.height()));
     else
