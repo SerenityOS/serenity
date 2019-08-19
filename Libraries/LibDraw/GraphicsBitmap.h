@@ -20,7 +20,7 @@ public:
     };
 
     static NonnullRefPtr<GraphicsBitmap> create(Format, const Size&);
-    static NonnullRefPtr<GraphicsBitmap> create_wrapper(Format, const Size&, RGBA32*);
+    static NonnullRefPtr<GraphicsBitmap> create_wrapper(Format, const Size&, size_t pitch, RGBA32*);
     static RefPtr<GraphicsBitmap> load_from_file(const StringView& path);
     static RefPtr<GraphicsBitmap> load_from_file(Format, const StringView& path, const Size&);
     static NonnullRefPtr<GraphicsBitmap> create_with_shared_buffer(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
@@ -94,7 +94,7 @@ public:
 
 private:
     GraphicsBitmap(Format, const Size&);
-    GraphicsBitmap(Format, const Size&, RGBA32*);
+    GraphicsBitmap(Format, const Size&, size_t pitch, RGBA32*);
     GraphicsBitmap(Format, const Size&, MappedFile&&);
     GraphicsBitmap(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
 

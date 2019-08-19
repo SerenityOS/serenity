@@ -24,9 +24,9 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
     m_needs_munmap = true;
 }
 
-NonnullRefPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, RGBA32* data)
+NonnullRefPtr<GraphicsBitmap> GraphicsBitmap::create_wrapper(Format format, const Size& size, size_t pitch, RGBA32* data)
 {
-    return adopt(*new GraphicsBitmap(format, size, data));
+    return adopt(*new GraphicsBitmap(format, size, pitch, data));
 }
 
 RefPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(const StringView& path)
@@ -42,10 +42,10 @@ RefPtr<GraphicsBitmap> GraphicsBitmap::load_from_file(Format format, const Strin
     return adopt(*new GraphicsBitmap(format, size, move(mapped_file)));
 }
 
-GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, RGBA32* data)
+GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, size_t pitch, RGBA32* data)
     : m_size(size)
     , m_data(data)
-    , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
+    , m_pitch(pitch)
     , m_format(format)
 {
     ASSERT(format != Format::Indexed8);

@@ -16,6 +16,7 @@ public:
 
     int width() const { return m_width; }
     int height() const { return m_height; }
+    size_t pitch() const { return m_pitch; }
     RGBA32* scanline(int y);
 
     static WSScreen& the();

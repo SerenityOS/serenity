@@ -60,12 +60,15 @@ WSCompositor::WSCompositor()
 
 void WSCompositor::init_bitmaps()
 {
-    auto size = WSScreen::the().size();
+    auto& screen = WSScreen::the();
+    auto size = screen.size();
 
-    m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(0));
+    m_front_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, screen.pitch(), screen.scanline(0));
+
+    ASSERT(m_screen_can_set_buffer);
 
     if (m_screen_can_set_buffer)
-        m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, WSScreen::the().scanline(size.height()));
+        m_back_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, size, screen.pitch(), screen.scanline(size.height()));
     else
         m_back_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, size);
 
