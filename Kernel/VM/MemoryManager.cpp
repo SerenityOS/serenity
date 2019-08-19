@@ -352,7 +352,9 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     cli();
 
     if (!vmo_page.is_null()) {
+#ifdef PAGE_FAULT_DEBUG
         dbgprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
+#endif
         remap_region_page(region, page_index_in_region);
         return true;
     }
