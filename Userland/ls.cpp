@@ -265,7 +265,6 @@ int do_file_system_object_short(const char* path)
 
     int printed_on_row = 0;
     int nprinted;
-
     for (int i = 0; i < names.size(); ++i) {
         auto& name = names[i];
         char pathbuf[256];
@@ -273,19 +272,22 @@ int do_file_system_object_short(const char* path)
 
         if (!print_filesystem_object_short(pathbuf, name.characters(), &nprinted))
             return 2;
-        int column_width = 14;
+        int offset = columns % longest_name / (columns / longest_name);
+        /* The offset must be at least 2 because:
+	 * - With each file an aditional char is printed e.g. '@','*'.
+	 * - Each filename must be separated by a space.
+	*/
+        int column_width = longest_name + (offset > 0 ? offset : 2);
         printed_on_row += column_width;
 
-        for (int i = nprinted; i < column_width; ++i)
+        for (int j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
             printf(" ");
         if ((printed_on_row + column_width) >= columns) {
-            if (i != names.size() - 1)
-                printf("\n");
+            printf("\n");
             printed_on_row = 0;
         }
     }
     if (printed_on_row)
         printf("\n");
-
     return 0;
 }
