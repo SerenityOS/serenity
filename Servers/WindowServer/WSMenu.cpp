@@ -157,8 +157,8 @@ void WSMenu::draw()
 
 void WSMenu::event(CEvent& event)
 {
-    ASSERT(menu_window());
     if (event.type() == WSEvent::MouseMove) {
+        ASSERT(menu_window());
         auto* item = item_at(static_cast<const WSMouseEvent&>(event).position());
         if (!item || m_hovered_item == item)
             return;
@@ -168,6 +168,7 @@ void WSMenu::event(CEvent& event)
     }
 
     if (event.type() == WSEvent::MouseUp) {
+        ASSERT(menu_window());
         if (!m_hovered_item)
             return;
         if (m_hovered_item->is_enabled())
