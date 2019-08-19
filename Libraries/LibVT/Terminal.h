@@ -14,6 +14,7 @@ public:
     virtual void beep() = 0;
     virtual void set_window_title(const StringView&) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
+    virtual void terminal_history_changed() = 0;
 };
 
 struct Attribute {
@@ -98,6 +99,9 @@ public:
         return m_lines[index];
     }
 
+    int max_history_size() const { return 500; }
+    const NonnullOwnPtrVector<Line>& history() const { return m_history; }
+
 private:
     typedef Vector<unsigned, 4> ParamVector;
 
@@ -137,6 +141,7 @@ private:
 
     TerminalClient& m_client;
 
+    NonnullOwnPtrVector<Line> m_history;
     NonnullOwnPtrVector<Line> m_lines;
 
     int m_scroll_region_top { 0 };
