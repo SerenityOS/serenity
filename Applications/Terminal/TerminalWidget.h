@@ -9,6 +9,8 @@
 #include <LibGUI/GFrame.h>
 #include <LibVT/Terminal.h>
 
+class GScrollBar;
+
 class TerminalWidget final : public GFrame
     , public VT::TerminalClient {
     C_OBJECT(TerminalWidget)
@@ -51,12 +53,15 @@ private:
     virtual void beep() override;
     virtual void set_window_title(const StringView&) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
+    virtual void terminal_history_changed() override;
 
     Rect glyph_rect(u16 row, u16 column);
     Rect row_rect(u16 row);
 
     void update_cursor();
     void invalidate_cursor();
+
+    Size compute_base_size() const;
 
     VT::Terminal m_terminal;
 
@@ -88,4 +93,6 @@ private:
     CTimer m_cursor_blink_timer;
     CTimer m_visual_beep_timer;
     RefPtr<CConfigFile> m_config;
+
+    GScrollBar* m_scrollbar { nullptr };
 };

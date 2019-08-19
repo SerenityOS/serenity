@@ -8,6 +8,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GPainter.h>
+#include <LibGUI/GScrollBar.h>
 #include <LibGUI/GWindow.h>
 #include <errno.h>
 #include <stdio.h>
@@ -27,6 +28,12 @@ TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
+
+    m_scrollbar = new GScrollBar(Orientation::Vertical, this);
+    m_scrollbar->set_relative_rect(0, 0, 16, 0);
+    m_scrollbar->on_change = [this](int) {
+        force_repaint();
+    };
 
     dbgprintf("Terminal: Load config file from %s\n", m_config->file_name().characters());
     m_cursor_blink_timer.set_interval(m_config->read_num_entry("Text",
@@ -183,11 +190,26 @@ void TerminalWidget::paint_event(GPaintEvent& event)
         painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(m_opacity));
     invalidate_cursor();
 
+    int rows_from_history = 0;
+    int first_row_from_history = 0;
+    int row_with_cursor = m_terminal.cursor_row();
+    if (m_scrollbar->value() != m_scrollbar->max()) {
+        rows_from_history = min((int)m_terminal.rows(), m_scrollbar->max() - m_scrollbar->value());
+        first_row_from_history = m_terminal.history().size() - (m_scrollbar->max() - m_scrollbar->value());
+        row_with_cursor = m_terminal.cursor_row() + rows_from_history;
+    }
+
+    auto line_for_visual_row = [&](u16 row) -> const VT::Terminal::Line& {
+        if (row < rows_from_history)
+            return m_terminal.history().at(first_row_from_history + row);
+        return m_terminal.line(row - rows_from_history);
+    };
+
     for (u16 row = 0; row < m_terminal.rows(); ++row) {
         auto row_rect = this->row_rect(row);
         if (!event.rect().contains(row_rect))
             continue;
-        auto& line = m_terminal.line(row);
+        auto& line = line_for_visual_row(row);
         bool has_only_one_background_color = line.has_only_one_background_color();
         if (m_visual_beep_timer.is_active())
             painter.fill_rect(row_rect, Color::Red);
@@ -195,7 +217,7 @@ void TerminalWidget::paint_event(GPaintEvent& event)
             painter.fill_rect(row_rect, lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
         for (u16 column = 0; column < m_terminal.columns(); ++column) {
             char ch = line.characters[column];
-            bool should_reverse_fill_for_cursor_or_selection = (m_cursor_blink_state && m_in_active_window && row == m_terminal.cursor_row() && column == m_terminal.cursor_column())
+            bool should_reverse_fill_for_cursor_or_selection = (m_cursor_blink_state && m_in_active_window && row == row_with_cursor && column == m_terminal.cursor_column())
                 || selection_contains({ row, column });
             auto& attribute = line.attributes[column];
             auto character_rect = glyph_rect(row, column);
@@ -213,9 +235,12 @@ void TerminalWidget::paint_event(GPaintEvent& event)
         }
     }
 
-    if (!m_in_active_window) {
-        auto cell_rect = glyph_rect(m_terminal.cursor_row(), m_terminal.cursor_column()).inflated(0, m_line_spacing);
-        painter.draw_rect(cell_rect, lookup_color(m_terminal.line(m_terminal.cursor_row()).attributes[m_terminal.cursor_column()].foreground_color));
+    if (!m_in_active_window && row_with_cursor < m_terminal.rows()) {
+        auto& cursor_line = line_for_visual_row(row_with_cursor);
+        if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
+            auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);
+            painter.draw_rect(cell_rect, lookup_color(cursor_line.attributes[m_terminal.cursor_column()].foreground_color));
+        }
     }
 }
 
@@ -234,7 +259,8 @@ void TerminalWidget::invalidate_cursor()
 
 void TerminalWidget::flush_dirty_lines()
 {
-    if (m_terminal.m_need_full_flush) {
+    // FIXME: Update smarter when scrolled
+    if (m_terminal.m_need_full_flush || m_scrollbar->value() != m_scrollbar->max()) {
         update();
         m_terminal.m_need_full_flush = false;
         return;
@@ -257,15 +283,31 @@ void TerminalWidget::force_repaint()
 
 void TerminalWidget::resize_event(GResizeEvent& event)
 {
-    int new_columns = (event.size().width() - frame_thickness() * 2 - m_inset * 2) / font().glyph_width('x');
-    int new_rows = (event.size().height() - frame_thickness() * 2 - m_inset * 2) / m_line_height;
+    auto base_size = compute_base_size();
+    int new_columns = (event.size().width() - base_size.width()) / font().glyph_width('x');
+    int new_rows = (event.size().height() - base_size.height()) / m_line_height;
     m_terminal.set_size(new_columns, new_rows);
+
+    Rect scrollbar_rect = {
+        event.size().width() - m_scrollbar->width() - frame_thickness(),
+        frame_thickness(),
+        m_scrollbar->width(),
+        event.size().height() - frame_thickness() * 2,
+    };
+    m_scrollbar->set_relative_rect(scrollbar_rect);
+}
+
+Size TerminalWidget::compute_base_size() const
+{
+    int base_width = frame_thickness() * 2 + m_inset * 2 + m_scrollbar->width();
+    int base_height = frame_thickness() * 2 + m_inset * 2;
+    return { base_width, base_height };
 }
 
 void TerminalWidget::apply_size_increments_to_window(GWindow& window)
 {
     window.set_size_increment({ font().glyph_width('x'), m_line_height });
-    window.set_base_size({ frame_thickness() * 2 + m_inset * 2, frame_thickness() * 2 + m_inset * 2 });
+    window.set_base_size(compute_base_size());
 }
 
 void TerminalWidget::update_cursor()
@@ -388,6 +430,15 @@ String TerminalWidget::selected_text() const
     }
 
     return builder.to_string();
+}
+
+void TerminalWidget::terminal_history_changed()
+{
+    bool was_max = m_scrollbar->value() == m_scrollbar->max();
+    m_scrollbar->set_max(m_terminal.history().size());
+    if (was_max)
+        m_scrollbar->set_value(m_scrollbar->max());
+    m_scrollbar->update();
 }
 
 void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
