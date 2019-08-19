@@ -1,6 +1,11 @@
+#include "RemoteObject.h"
 #include "RemoteObjectGraphModel.h"
+#include "RemoteObjectPropertyModel.h"
+#include "RemoteProcess.h"
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GSplitter.h>
+#include <LibGUI/GTableView.h>
 #include <LibGUI/GTreeView.h>
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
@@ -32,10 +37,23 @@ int main(int argc, char** argv)
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto* tree_view = new GTreeView(widget);
-    tree_view->set_model(RemoteObjectGraphModel::create_with_pid(pid));
-    tree_view->model()->update();
+    auto* splitter = new GSplitter(Orientation::Horizontal, widget);
+
+    RemoteProcess remote_process(pid);
+
+    auto* tree_view = new GTreeView(splitter);
+    tree_view->set_model(remote_process.object_graph_model());
+    tree_view->set_activates_on_selection(true);
+
+    auto* properties_table_view = new GTableView(splitter);
+    properties_table_view->set_size_columns_to_fit_content(true);
+
+    tree_view->on_activation = [&](auto& index) {
+        auto* remote_object = static_cast<RemoteObject*>(index.internal_data());
+        properties_table_view->set_model(remote_object->property_model());
+    };
 
     window->show();
+    remote_process.update();
     return app.exec();
 }

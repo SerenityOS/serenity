@@ -2,6 +2,9 @@ include ../../Makefile.common
 
 OBJS = \
     RemoteObjectGraphModel.o \
+    RemoteObjectPropertyModel.o \
+    RemoteProcess.o \
+    RemoteObject.o \
     main.o
 
 APP = Inspector

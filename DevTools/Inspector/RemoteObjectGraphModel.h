@@ -1,15 +1,18 @@
 #pragma once
 
 #include <AK/JsonArray.h>
+#include <AK/JsonObject.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/CLocalSocket.h>
 #include <LibGUI/GModel.h>
 
+class RemoteProcess;
+
 class RemoteObjectGraphModel final : public GModel {
 public:
-    static NonnullRefPtr<RemoteObjectGraphModel> create_with_pid(pid_t pid)
+    static NonnullRefPtr<RemoteObjectGraphModel> create(RemoteProcess& process)
     {
-        return adopt(*new RemoteObjectGraphModel(pid));
+        return adopt(*new RemoteObjectGraphModel(process));
     }
 
     virtual ~RemoteObjectGraphModel() override;
@@ -22,22 +25,10 @@ public:
     virtual void update() override;
 
 private:
-    struct RemoteObject {
-        RemoteObject* parent { nullptr };
-        Vector<OwnPtr<RemoteObject>> children;
+    explicit RemoteObjectGraphModel(RemoteProcess&);
 
-        String address;
-        String parent_address;
-        String class_name;
-        String name;
-    };
+    RemoteProcess& m_process;
 
-    explicit RemoteObjectGraphModel(pid_t);
-
-    pid_t m_pid { -1 };
-    CLocalSocket m_socket;
-    JsonArray m_json;
-    NonnullOwnPtrVector<RemoteObject> m_remote_roots;
     GIcon m_object_icon;
     GIcon m_window_icon;
 };
