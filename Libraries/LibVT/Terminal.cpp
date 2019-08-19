@@ -666,6 +666,13 @@ void Terminal::scroll_up()
 {
     // NOTE: We have to invalidate the cursor first.
     invalidate_cursor();
+    if (m_scroll_region_top == 0) {
+        auto line = move(m_lines.ptr_at(m_scroll_region_top));
+        m_history.append(move(line));
+        while (m_history.size() > max_history_size())
+            m_history.take_first();
+        m_client.terminal_history_changed();
+    }
     m_lines.remove(m_scroll_region_top);
     m_lines.insert(m_scroll_region_bottom, make<Line>(m_columns));
     m_need_full_flush = true;
