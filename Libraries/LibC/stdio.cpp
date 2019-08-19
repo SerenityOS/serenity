@@ -1,3 +1,4 @@
+#include <AK/LogStream.h>
 #include <AK/PrintfImplementation.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/StdLibExtras.h>
@@ -424,6 +425,7 @@ int snprintf(char* buffer, size_t size, const char* fmt, ...)
 
 void perror(const char* s)
 {
+    dbg() << "perror(): " << strerror(errno);
     fprintf(stderr, "%s: %s\n", s, strerror(errno));
 }
 
