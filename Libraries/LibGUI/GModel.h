@@ -67,7 +67,7 @@ public:
     void register_view(Badge<GAbstractView>, GAbstractView&);
     void unregister_view(Badge<GAbstractView>, GAbstractView&);
 
-    Function<void(GModel&)> on_model_update;
+    Function<void()> on_update;
     Function<void(const GModelIndex&)> on_selection_changed;
 
 protected:

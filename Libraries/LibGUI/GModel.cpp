@@ -27,8 +27,8 @@ void GModel::for_each_view(Function<void(GAbstractView&)> callback)
 
 void GModel::did_update()
 {
-    if (on_model_update)
-        on_model_update(*this);
+    if (on_update)
+        on_update();
     for_each_view([](auto& view) {
         view.did_update_model();
     });
