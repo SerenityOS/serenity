@@ -23,8 +23,20 @@ static bool flag_show_dotfiles = false;
 static bool flag_show_inode = false;
 static bool flag_print_numeric = false;
 
+static int terminal_rows = 0;
+static int terminal_columns = 0;
+static bool output_is_terminal = false;
+
 int main(int argc, char** argv)
 {
+    struct winsize ws;
+    int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+    if (rc == 0) {
+        terminal_rows = ws.ws_row;
+        terminal_columns = ws.ws_col;
+        output_is_terminal = true;
+    }
+
     static const char* valid_option_characters = "laiGn";
     int opt;
     while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
@@ -71,18 +83,10 @@ int main(int argc, char** argv)
     return status;
 }
 
-void get_geometry(int& rows, int& columns)
-{
-    struct winsize ws;
-    ioctl(0, TIOCGWINSZ, &ws);
-    rows = ws.ws_row;
-    columns = ws.ws_col;
-}
-
 int print_name(struct stat& st, const char* name, const char* path_for_link_resolution = nullptr)
 {
     int nprinted = strlen(name);
-    if (!flag_colorize) {
+    if (!flag_colorize || !output_is_terminal) {
         printf("%s", name);
     } else {
         const char* begin_color = "";
@@ -236,10 +240,6 @@ bool print_filesystem_object_short(const char* path, const char* name, int* npri
 
 int do_file_system_object_short(const char* path)
 {
-    int rows;
-    int columns;
-    get_geometry(rows, columns);
-
     CDirIterator di(path, !flag_show_dotfiles ? CDirIterator::SkipDots : CDirIterator::Flags::NoFlags);
     if (di.has_error()) {
         if (di.error() == ENOTDIR) {
@@ -273,18 +273,18 @@ int do_file_system_object_short(const char* path)
         if (!print_filesystem_object_short(pathbuf, name.characters(), &nprinted))
             return 2;
         int offset = 0;
-        if (columns > longest_name)
-            offset = columns % longest_name / (columns / longest_name);
-        /* The offset must be at least 2 because:
-	 * - With each file an aditional char is printed e.g. '@','*'.
-	 * - Each filename must be separated by a space.
-	*/
+        if (terminal_columns > longest_name)
+            offset = terminal_columns % longest_name / (terminal_columns / longest_name);
+
+        // The offset must be at least 2 because:
+        // - With each file an aditional char is printed e.g. '@','*'.
+        // - Each filename must be separated by a space.
         int column_width = longest_name + (offset > 0 ? offset : 2);
         printed_on_row += column_width;
 
         for (int j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
             printf(" ");
-        if ((printed_on_row + column_width) >= columns) {
+        if ((printed_on_row + column_width) >= terminal_columns) {
             printf("\n");
             printed_on_row = 0;
         }
