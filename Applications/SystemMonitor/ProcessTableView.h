@@ -17,7 +17,4 @@ public:
     void refresh();
 
     Function<void(pid_t)> on_process_selected;
-
-private:
-    virtual void model_notification(const GModelNotification&) override;
 };
