@@ -39,6 +39,8 @@ public:
     VT::Position normalized_selection_start() const;
     VT::Position normalized_selection_end() const;
 
+    bool is_scrollable() const;
+
 private:
     // ^GWidget
     virtual void event(CEvent&) override;
@@ -48,6 +50,7 @@ private:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
+    virtual void mousewheel_event(GMouseEvent&) override;
 
     // ^TerminalClient
     virtual void beep() override;

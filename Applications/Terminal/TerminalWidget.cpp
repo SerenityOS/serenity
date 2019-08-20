@@ -407,6 +407,19 @@ void TerminalWidget::mouseup_event(GMouseEvent& event)
     GClipboard::the().set_data(selected_text());
 }
 
+void TerminalWidget::mousewheel_event(GMouseEvent& event)
+{
+    if (!is_scrollable())
+        return;
+    m_scrollbar->set_value(m_scrollbar->value() + event.wheel_delta());
+    GFrame::mousewheel_event(event);
+}
+
+bool TerminalWidget::is_scrollable() const
+{
+    return m_scrollbar->is_scrollable();
+}
+
 String TerminalWidget::selected_text() const
 {
     StringBuilder builder;
