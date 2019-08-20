@@ -281,6 +281,14 @@ void GScrollBar::mouseup_event(GMouseEvent& event)
     update();
 }
 
+void GScrollBar::mousewheel_event(GMouseEvent& event)
+{
+    if (!is_scrollable())
+        return;
+    set_value(value() + event.wheel_delta());
+    GWidget::mousewheel_event(event);
+}
+
 void GScrollBar::set_automatic_scrolling_active(bool active)
 {
     if (active) {

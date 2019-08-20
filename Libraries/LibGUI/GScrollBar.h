@@ -12,6 +12,8 @@ public:
 
     Orientation orientation() const { return m_orientation; }
 
+    bool is_scrollable() const { return max() != min(); }
+
     int value() const { return m_value; }
     int min() const { return m_min; }
     int max() const { return m_max; }
@@ -41,6 +43,7 @@ private:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
+    virtual void mousewheel_event(GMouseEvent&) override;
     virtual void leave_event(CEvent&) override;
     virtual void change_event(GEvent&) override;
 
