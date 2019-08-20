@@ -7,7 +7,7 @@ GSortingProxyModel::GSortingProxyModel(NonnullRefPtr<GModel>&& target)
     : m_target(move(target))
     , m_key_column(-1)
 {
-    m_target->on_model_update = [this](GModel&) {
+    m_target->on_update = [this] {
         resort();
     };
 }

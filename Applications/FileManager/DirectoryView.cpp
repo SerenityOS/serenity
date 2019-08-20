@@ -58,7 +58,7 @@ DirectoryView::DirectoryView(GWidget* parent)
 
     m_item_view->set_model_column(GDirectoryModel::Column::Name);
 
-    m_table_view->model()->on_model_update = [this](auto&) {
+    m_table_view->model()->on_update = [this] {
         set_status_message(String::format("%d item%s (%u byte%s)",
             model().row_count(),
             model().row_count() != 1 ? "s" : "",
