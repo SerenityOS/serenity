@@ -272,7 +272,9 @@ int do_file_system_object_short(const char* path)
 
         if (!print_filesystem_object_short(pathbuf, name.characters(), &nprinted))
             return 2;
-        int offset = columns % longest_name / (columns / longest_name);
+        int offset = 0;
+        if (columns > longest_name)
+            offset = columns % longest_name / (columns / longest_name);
         /* The offset must be at least 2 because:
 	 * - With each file an aditional char is printed e.g. '@','*'.
 	 * - Each filename must be separated by a space.
