@@ -1,4 +1,6 @@
 #include <AK/AKString.h>
+#include <AK/QuickSort.h>
+#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/CDirIterator.h>
 #include <dirent.h>
@@ -202,26 +204,33 @@ bool print_filesystem_object(const char* path, const char* name)
 
 int do_file_system_object_long(const char* path)
 {
-    DIR* dirp = opendir(path);
-    if (!dirp) {
-        if (errno == ENOTDIR) {
+    CDirIterator di(path, !flag_show_dotfiles ? CDirIterator::SkipDots : CDirIterator::Flags::NoFlags);
+    if (di.has_error()) {
+        if (di.error() == ENOTDIR) {
             if (print_filesystem_object(path, path))
                 return 0;
             return 2;
         }
-        perror("opendir");
+        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
         return 1;
     }
-    char pathbuf[PATH_MAX];
 
-    while (auto* de = readdir(dirp)) {
-        if (de->d_name[0] == '.' && !flag_show_dotfiles)
+    Vector<String, 1024> names;
+    while (di.has_next())
+        names.append(di.next_path());
+    quick_sort(names.begin(), names.end(), [](auto& a, auto& b) { return a < b; });
+
+    for (auto& name : names) {
+        ASSERT(!name.is_empty());
+        if (name[0] == '.' && !flag_show_dotfiles)
             continue;
-        sprintf(pathbuf, "%s/%s", path, de->d_name);
-        if (!print_filesystem_object(pathbuf, de->d_name))
+        StringBuilder builder;
+        builder.append(path);
+        builder.append('/');
+        builder.append(name);
+        if (!print_filesystem_object(builder.to_string().characters(), name.characters()))
             return 2;
     }
-    closedir(dirp);
     return 0;
 }
 
@@ -262,15 +271,17 @@ int do_file_system_object_short(const char* path)
         if (names.last().length() > longest_name)
             longest_name = name.length();
     }
+    quick_sort(names.begin(), names.end(), [](auto& a, auto& b) { return a < b; });
 
     int printed_on_row = 0;
     int nprinted;
     for (int i = 0; i < names.size(); ++i) {
         auto& name = names[i];
-        char pathbuf[256];
-        sprintf(pathbuf, "%s/%s", path, name.characters());
-
-        if (!print_filesystem_object_short(pathbuf, name.characters(), &nprinted))
+        StringBuilder builder;
+        builder.append(path);
+        builder.append('/');
+        builder.append(name);
+        if (!print_filesystem_object_short(builder.to_string().characters(), name.characters(), &nprinted))
             return 2;
         int offset = 0;
         if (terminal_columns > longest_name)
