@@ -18,27 +18,6 @@ enum class GSortOrder {
     Descending
 };
 
-class GModelNotification {
-public:
-    enum Type {
-        Invalid = 0,
-        ModelUpdated,
-    };
-
-    explicit GModelNotification(Type type, const GModelIndex& index = GModelIndex())
-        : m_type(type)
-        , m_index(index)
-    {
-    }
-
-    Type type() const { return m_type; }
-    GModelIndex index() const { return m_index; }
-
-private:
-    Type m_type { Invalid };
-    GModelIndex m_index;
-};
-
 class GModel : public RefCounted<GModel> {
 public:
     struct ColumnMetadata {

@@ -28,17 +28,10 @@ void GAbstractView::set_model(RefPtr<GModel>&& model)
     did_update_model();
 }
 
-void GAbstractView::model_notification(const GModelNotification& notification)
-{
-    if (on_model_notification)
-        on_model_notification(notification);
-}
-
 void GAbstractView::did_update_model()
 {
     if (!model() || model()->selected_index() != m_edit_index)
         stop_editing();
-    model_notification(GModelNotification(GModelNotification::ModelUpdated));
 }
 
 void GAbstractView::did_update_selection()

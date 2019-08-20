@@ -26,14 +26,6 @@ void ProcessTableView::refresh()
     model()->update();
 }
 
-void ProcessTableView::model_notification(const GModelNotification& notification)
-{
-    if (notification.type() == GModelNotification::ModelUpdated) {
-        // Do something?
-        return;
-    }
-}
-
 pid_t ProcessTableView::selected_pid() const
 {
     if (!model()->selected_index().is_valid())

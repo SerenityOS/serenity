@@ -34,12 +34,10 @@ public:
     Function<void(const GModelIndex&)> on_activation;
     Function<void(const GModelIndex&)> on_selection;
     Function<void(const GModelIndex&, const GContextMenuEvent&)> on_context_menu_request;
-    Function<void(const GModelNotification&)> on_model_notification;
 
     Function<OwnPtr<GModelEditingDelegate>(const GModelIndex&)> aid_create_editing_delegate;
 
 protected:
-    virtual void model_notification(const GModelNotification&);
     virtual void did_scroll() override;
     void activate(const GModelIndex&);
     void update_edit_widget_position();
