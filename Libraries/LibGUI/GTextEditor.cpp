@@ -24,7 +24,7 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     set_font(GFontDatabase::the().get_by_name("Csilla Thin"));
     // FIXME: Recompute vertical scrollbar step size on font change.
     vertical_scrollbar().set_step(line_height());
-    m_lines.append(make<Line>());
+    m_lines.append(make<Line>(*this));
     m_cursor = { 0, 0 };
     create_actions();
 }
@@ -77,7 +77,7 @@ void GTextEditor::set_text(const StringView& text)
 
     auto add_line = [&](int current_position) {
         int line_length = current_position - start_of_current_line;
-        auto line = make<Line>();
+        auto line = make<Line>(*this);
         if (line_length)
             line->set_text(text.substring_view(start_of_current_line, current_position - start_of_current_line));
         m_lines.append(move(line));
@@ -558,7 +558,7 @@ void GTextEditor::delete_current_line()
 
     m_lines.remove(m_cursor.line());
     if (m_lines.is_empty())
-        m_lines.append(make<Line>());
+        m_lines.append(make<Line>(*this));
 
     update_content_size();
     update();
@@ -619,13 +619,13 @@ void GTextEditor::insert_at_cursor(char ch)
                 if (leading_spaces)
                     new_line_contents = String::repeated(' ', leading_spaces);
             }
-            m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>(new_line_contents));
+            m_lines.insert(m_cursor.line() + (at_tail ? 1 : 0), make<Line>(*this, new_line_contents));
             update();
             did_change();
             set_cursor(m_cursor.line() + 1, m_lines[m_cursor.line() + 1].length());
             return;
         }
-        auto new_line = make<Line>();
+        auto new_line = make<Line>(*this);
         new_line->append(current_line().characters() + m_cursor.column(), current_line().length() - m_cursor.column());
         current_line().truncate(m_cursor.column());
         m_lines.insert(m_cursor.line() + 1, move(new_line));
@@ -764,12 +764,14 @@ void GTextEditor::timer_event(CTimerEvent&)
         update_cursor();
 }
 
-GTextEditor::Line::Line()
+GTextEditor::Line::Line(GTextEditor& editor)
+    : m_editor(editor)
 {
     clear();
 }
 
-GTextEditor::Line::Line(const StringView& text)
+GTextEditor::Line::Line(GTextEditor& editor, const StringView& text)
+    : m_editor(editor)
 {
     set_text(text);
 }
@@ -888,7 +890,7 @@ String GTextEditor::text() const
 void GTextEditor::clear()
 {
     m_lines.clear();
-    m_lines.append(make<Line>());
+    m_lines.append(make<Line>(*this));
     m_selection.clear();
     did_update_selection();
     set_cursor(0, 0);
@@ -956,7 +958,7 @@ void GTextEditor::delete_selection()
     }
 
     if (m_lines.is_empty())
-        m_lines.append(make<Line>());
+        m_lines.append(make<Line>(*this));
 
     m_selection.clear();
     did_update_selection();
