@@ -4,11 +4,13 @@
 #include <LibCore/CFile.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GButton.h>
 #include <LibGUI/GFilePicker.h>
 #include <LibGUI/GFontDatabase.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GStatusBar.h>
+#include <LibGUI/GTextBox.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GToolBar.h>
 
@@ -21,6 +23,35 @@ TextEditorWidget::TextEditorWidget()
     m_editor = new GTextEditor(GTextEditor::MultiLine, this);
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
+
+    auto* find_widget = new GWidget(this);
+    find_widget->set_fill_with_background_color(true);
+    find_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    find_widget->set_preferred_size(0, 22);
+    find_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    find_widget->layout()->set_margins({ 2, 2, 2, 2 });
+
+    m_find_textbox = new GTextBox(find_widget);
+
+    m_find_button = new GButton("Find", find_widget);
+    m_find_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_find_button->set_preferred_size(100, 0);
+
+    m_find_button->on_click = [this](auto&) {
+        auto needle = m_find_textbox->text();
+        auto found_range = m_editor->find(needle, m_editor->normalized_selection().end());
+        dbg() << "find(\"" << needle << "\") returned " << found_range;
+        if (found_range.is_valid()) {
+            m_editor->set_selection(found_range);
+        } else {
+            GMessageBox::show(
+                String::format("Not found: \"%s\"", needle.characters()),
+                "Not found",
+                GMessageBox::Type::Information,
+                GMessageBox::InputType::OK, window());
+        }
+    };
+
     auto* statusbar = new GStatusBar(this);
 
     m_editor->on_cursor_change = [statusbar, this] {

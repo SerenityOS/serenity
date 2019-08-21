@@ -7,6 +7,8 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 
+class GButton;
+class GTextBox;
 class GTextEditor;
 
 class TextEditorWidget final : public GWidget {
@@ -26,4 +28,7 @@ private:
     RefPtr<GAction> m_open_action;
     RefPtr<GAction> m_save_action;
     RefPtr<GAction> m_save_as_action;
+
+    GTextBox* m_find_textbox { nullptr };
+    GButton* m_find_button { nullptr };
 };
