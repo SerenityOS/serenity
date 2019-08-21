@@ -17,6 +17,7 @@ public:
     virtual ~E1000NetworkAdapter() override;
 
     virtual void send_raw(const u8*, int) override;
+    virtual bool link_up() override;
 
 private:
     virtual void handle_irq() override;
