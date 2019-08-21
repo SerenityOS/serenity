@@ -11,6 +11,8 @@ class GMenu;
 class GScrollBar;
 class Painter;
 
+enum class ShouldWrapAtEndOfDocument { No = 0, Yes };
+
 class GTextPosition {
 public:
     GTextPosition() {}
@@ -69,6 +71,11 @@ public:
         m_end = end;
     }
 
+    bool operator==(const GTextRange& other) const
+    {
+        return m_start == other.m_start && m_end == other.m_end;
+    }
+
 private:
     GTextPosition normalized_start() const { return m_start < m_end ? m_start : m_end; }
     GTextPosition normalized_end() const { return m_start < m_end ? m_end : m_start; }
@@ -108,6 +115,7 @@ public:
 
     void set_text(const StringView&);
     void scroll_cursor_into_view();
+    void scroll_position_into_view(const GTextPosition&);
     int line_count() const { return m_lines.size(); }
     int line_spacing() const { return m_line_spacing; }
     int line_height() const { return font().glyph_height() + m_line_spacing; }
@@ -118,8 +126,13 @@ public:
 
     bool write_to_file(const StringView& path);
 
+    GTextRange find(const StringView&, const GTextPosition& start = {});
+    GTextPosition next_position_after(const GTextPosition&, ShouldWrapAtEndOfDocument = ShouldWrapAtEndOfDocument::Yes);
+
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
+    void set_selection(const GTextRange&);
+
     String text() const;
 
     void clear();
@@ -192,6 +205,7 @@ private:
     Rect line_content_rect(int item_index) const;
     Rect line_widget_rect(int line_index) const;
     Rect cursor_content_rect() const;
+    Rect content_rect_for_position(const GTextPosition&) const;
     void update_cursor();
     void set_cursor(int line, int column);
     void set_cursor(const GTextPosition&);
@@ -207,6 +221,7 @@ private:
     void delete_selection();
     void did_update_selection();
     int content_x_for_position(const GTextPosition&) const;
+    char character_at(const GTextPosition&) const;
 
     Type m_type { MultiLine };
 
@@ -232,3 +247,18 @@ private:
     RefPtr<GAction> m_delete_action;
     CElapsedTimer m_triple_click_timer;
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const GTextPosition& value)
+{
+    if (!value.is_valid())
+        return stream << "GTextPosition(Invalid)";
+    return stream << String::format("(%d,%d)", value.line(), value.column());
+}
+
+inline const LogStream& operator<<(const LogStream& stream, const GTextRange& value)
+{
+    if (!value.is_valid())
+        return stream << "GTextRange(Invalid)";
+    return stream << value.start() << '-' << value.end();
+}
+

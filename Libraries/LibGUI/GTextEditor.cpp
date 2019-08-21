@@ -668,21 +668,27 @@ int GTextEditor::content_x_for_position(const GTextPosition& position) const
     }
 }
 
-Rect GTextEditor::cursor_content_rect() const
+Rect GTextEditor::content_rect_for_position(const GTextPosition& position) const
 {
-    if (!m_cursor.is_valid())
+    if (!position.is_valid())
         return {};
     ASSERT(!m_lines.is_empty());
-    ASSERT(m_cursor.column() <= (current_line().length() + 1));
+    ASSERT(position.column() <= (current_line().length() + 1));
 
-    int cursor_x = content_x_for_position(m_cursor);
+    int x = content_x_for_position(position);
 
     if (is_single_line()) {
-        Rect cursor_rect { cursor_x, 0, 1, font().glyph_height() + 2 };
-        cursor_rect.center_vertically_within({ {}, frame_inner_rect().size() });
-        return cursor_rect;
+        Rect rect { x, 0, 1, font().glyph_height() + 2 };
+        rect.center_vertically_within({ {}, frame_inner_rect().size() });
+        return rect;
     }
-    return { cursor_x, m_cursor.line() * line_height(), 1, line_height() };
+    return { x, position.line() * line_height(), 1, line_height() };
+}
+
+
+Rect GTextEditor::cursor_content_rect() const
+{
+    return content_rect_for_position(m_cursor);
 }
 
 Rect GTextEditor::line_widget_rect(int line_index) const
@@ -696,14 +702,19 @@ Rect GTextEditor::line_widget_rect(int line_index) const
     return rect;
 }
 
+void GTextEditor::scroll_position_into_view(const GTextPosition& position)
+{
+    auto rect = content_rect_for_position(position);
+    if (position.column() == 0)
+        rect.set_x(content_x_for_position({ position.line(), 0 }) - 2);
+    else if (position.column() == m_lines[position.line()].length())
+        rect.set_x(content_x_for_position({ position.line(), m_lines[position.line()].length() }) + 2);
+    scroll_into_view(rect, true, true);
+}
+
 void GTextEditor::scroll_cursor_into_view()
 {
-    auto rect = cursor_content_rect();
-    if (m_cursor.column() == 0)
-        rect.set_x(content_x_for_position({ m_cursor.line(), 0 }) - 2);
-    else if (m_cursor.column() == m_lines[m_cursor.line()].length())
-        rect.set_x(content_x_for_position({ m_cursor.line(), m_lines[m_cursor.line()].length() }) + 2);
-    scroll_into_view(rect, true, true);
+    scroll_position_into_view(m_cursor);
 }
 
 Rect GTextEditor::line_content_rect(int line_index) const
@@ -1078,4 +1089,65 @@ void GTextEditor::resize_event(GResizeEvent& event)
 {
     GScrollableWidget::resize_event(event);
     update_content_size();
+}
+
+GTextPosition GTextEditor::next_position_after(const GTextPosition& position, ShouldWrapAtEndOfDocument should_wrap)
+{
+    auto& line = m_lines[position.line()];
+    if (position.column() == line.length()) {
+        if (position.line() == line_count() - 1) {
+            if (should_wrap == ShouldWrapAtEndOfDocument::Yes)
+                return { 0, 0 };
+            return {};
+        }
+        return { position.line() + 1, 0 };
+    }
+    return { position.line(), position.column() + 1 };
+}
+
+GTextRange GTextEditor::find(const StringView& needle, const GTextPosition& start)
+{
+    if (needle.is_empty())
+        return {};
+
+    GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
+    GTextPosition original_position = position;
+
+    GTextPosition start_of_potential_match;
+    int needle_index = 0;
+
+    do {
+        auto ch = character_at(position);
+        if (ch == needle[needle_index]) {
+            if (needle_index == 0)
+                start_of_potential_match = position;
+            ++needle_index;
+            if (needle_index >= needle.length())
+                return { start_of_potential_match, next_position_after(position) };
+        } else {
+            needle_index = 0;
+        }
+        position = next_position_after(position);
+    } while(position.is_valid() && position != original_position);
+
+    return {};
+}
+
+void GTextEditor::set_selection(const GTextRange& selection)
+{
+    if (m_selection == selection)
+        return;
+    m_selection = selection;
+    set_cursor(m_selection.end());
+    scroll_position_into_view(normalized_selection().start());
+    update();
+}
+
+char GTextEditor::character_at(const GTextPosition& position) const
+{
+    ASSERT(position.line() < line_count());
+    auto& line = m_lines[position.line()];
+    if (position.column() == line.length())
+        return '\n';
+    return line.characters()[position.column()];
 }
