@@ -55,6 +55,7 @@ KERNEL_OBJS = \
        Net/UDPSocket.o \
        Net/NetworkAdapter.o \
        Net/E1000NetworkAdapter.o \
+       Net/RTL8139NetworkAdapter.o \
        Net/LoopbackAdapter.o \
        Net/Routing.o \
        Net/NetworkTask.o \

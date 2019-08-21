@@ -34,6 +34,7 @@
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
+#include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
@@ -242,6 +243,7 @@ extern "C" [[noreturn]] void init()
     }
 
     auto e1000 = E1000NetworkAdapter::autodetect();
+    auto rtl8139 = RTL8139NetworkAdapter::autodetect();
 
     NonnullRefPtr<ProcFS> new_procfs = ProcFS::create();
     new_procfs->initialize();
