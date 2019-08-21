@@ -19,7 +19,7 @@ public:
     virtual ~RTL8139NetworkAdapter() override;
 
     virtual void send_raw(const u8*, int) override;
-    virtual bool link_up() const override { return m_link_up; }
+    virtual bool link_up() override { return m_link_up; }
 
 private:
     virtual void handle_irq() override;
