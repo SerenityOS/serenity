@@ -167,8 +167,8 @@ private:
         friend class GTextEditor;
 
     public:
-        Line();
-        explicit Line(const StringView&);
+        explicit Line(GTextEditor&);
+        Line(GTextEditor&, const StringView&);
 
         const char* characters() const { return m_text.data(); }
         int length() const { return m_text.size() - 1; }
@@ -183,6 +183,8 @@ private:
         void clear();
 
     private:
+        GTextEditor& m_editor;
+
         // NOTE: This vector is null terminated.
         Vector<char> m_text;
     };
