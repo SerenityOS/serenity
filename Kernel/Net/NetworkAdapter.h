@@ -25,6 +25,7 @@ public:
     const String& name() const { return m_name; }
     MACAddress mac_address() { return m_mac_address; }
     IPv4Address ipv4_address() const { return m_ipv4_address; }
+    virtual bool link_up() { return false; }
 
     void set_ipv4_address(const IPv4Address&);
 

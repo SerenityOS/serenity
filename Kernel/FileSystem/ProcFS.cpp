@@ -318,6 +318,7 @@ Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
         obj.set("bytes_in", adapter.bytes_in());
         obj.set("packets_out", adapter.packets_out());
         obj.set("bytes_out", adapter.bytes_out());
+        obj.set("link_up", adapter.link_up());
         json.append(obj);
     });
     return json.serialized<KBufferBuilder>();
