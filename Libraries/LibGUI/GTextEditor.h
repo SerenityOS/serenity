@@ -90,7 +90,7 @@ public:
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool);
 
-    bool is_automatic_indentation() const { return m_automatic_indentation_enabled; }
+    bool is_automatic_indentation_enabled() const { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
 
     TextAlignment text_alignment() const { return m_text_alignment; }
