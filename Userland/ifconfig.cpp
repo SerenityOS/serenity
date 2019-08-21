@@ -21,7 +21,7 @@ int main(int argc, char** argv)
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
 
-    CFile file("/proc/netadapters");
+    CFile file("/proc/net/adapters");
     if (!file.open(CIODevice::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", file.error_string());
         return 1;
