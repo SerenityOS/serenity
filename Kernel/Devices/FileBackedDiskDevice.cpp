@@ -12,9 +12,9 @@ RefPtr<FileBackedDiskDevice> FileBackedDiskDevice::create(String&& image_path, u
     return adopt(*new FileBackedDiskDevice(move(image_path), block_size));
 }
 
-FileBackedDiskDevice::FileBackedDiskDevice(String&& image_path, unsigned block_size)
-    : m_image_path(move(image_path))
-    , m_block_size(block_size)
+FileBackedDiskDevice::FileBackedDiskDevice(const String& image_path, size_t block_size)
+    : DiskDevice(0, 0, block_size)
+    , m_image_path(image_path)
 {
     struct stat st;
     int result = stat(m_image_path.characters(), &st);
@@ -27,20 +27,15 @@ FileBackedDiskDevice::~FileBackedDiskDevice()
 {
 }
 
-unsigned FileBackedDiskDevice::block_size() const
-{
-    return m_block_size;
-}
-
 bool FileBackedDiskDevice::read_block(unsigned index, u8* out) const
 {
-    DiskOffset offset = index * m_block_size;
+    DiskOffset offset = index * block_size();
     return read_internal(offset, block_size(), out);
 }
 
 bool FileBackedDiskDevice::write_block(unsigned index, const u8* data)
 {
-    DiskOffset offset = index * m_block_size;
+    DiskOffset offset = index * block_size();
     return write_internal(offset, block_size(), data);
 }
 

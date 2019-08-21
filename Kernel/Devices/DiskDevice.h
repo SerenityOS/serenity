@@ -11,7 +11,6 @@ class DiskDevice : public BlockDevice {
 public:
     virtual ~DiskDevice() override;
 
-    virtual unsigned block_size() const = 0;
     virtual bool read_block(unsigned index, u8*) const = 0;
     virtual bool write_block(unsigned index, const u8*) = 0;
     bool read(DiskOffset, unsigned length, u8*) const;
@@ -23,5 +22,5 @@ public:
     virtual bool is_disk_device() const override { return true; };
 
 protected:
-    DiskDevice(int major, int minor);
+    DiskDevice(int major, int minor, size_t block_size = 512);
 };

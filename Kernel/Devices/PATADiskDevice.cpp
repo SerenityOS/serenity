@@ -99,11 +99,6 @@ const char* PATADiskDevice::class_name() const
     return "PATADiskDevice";
 }
 
-unsigned PATADiskDevice::block_size() const
-{
-    return 512;
-}
-
 bool PATADiskDevice::read_blocks(unsigned index, u16 count, u8* out)
 {
     if (m_channel.m_bus_master_base && m_channel.m_dma_enabled.resource())
