@@ -80,6 +80,17 @@
 #define TSTA_LC (1 << 2) // Late Collision
 #define LSTA_TU (1 << 3) // Transmit Underrun
 
+// STATUS Register
+
+#define STATUS_FD 0x01
+#define STATUS_LU 0x02
+#define STATUS_TXOFF 0x08
+#define STATUS_SPEED 0xC0
+#define STATUS_SPEED_10MB 0x00
+#define STATUS_SPEED_100MB 0x40
+#define STATUS_SPEED_1000MB1 0x80
+#define STATUS_SPEED_1000MB2 0xC0
+
 OwnPtr<E1000NetworkAdapter> E1000NetworkAdapter::autodetect()
 {
     static const PCI::ID qemu_bochs_vbox_id = { 0x8086, 0x100e };
@@ -213,6 +224,11 @@ void E1000NetworkAdapter::read_mac_address()
     } else {
         ASSERT_NOT_REACHED();
     }
+}
+
+bool E1000NetworkAdapter::link_up()
+{
+    return (in32(REG_STATUS) & STATUS_LU);
 }
 
 void E1000NetworkAdapter::initialize_rx_descriptors()
