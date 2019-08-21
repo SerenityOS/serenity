@@ -2,25 +2,20 @@
 
 // #define OFFD_DEBUG
 
-NonnullRefPtr<DiskPartition> DiskPartition::create(NonnullRefPtr<DiskDevice> device, unsigned block_offset)
+NonnullRefPtr<DiskPartition> DiskPartition::create(DiskDevice& device, unsigned block_offset)
 {
-    return adopt(*new DiskPartition(move(device), block_offset));
+    return adopt(*new DiskPartition(device, block_offset));
 }
 
-DiskPartition::DiskPartition(NonnullRefPtr<DiskDevice> device, unsigned block_offset)
-    : DiskDevice(100, 0)
-    , m_device(move(device))
+DiskPartition::DiskPartition(DiskDevice& device, unsigned block_offset)
+    : DiskDevice(100, 0, device.block_size())
+    , m_device(device)
     , m_block_offset(block_offset)
 {
 }
 
 DiskPartition::~DiskPartition()
 {
-}
-
-unsigned DiskPartition::block_size() const
-{
-    return m_device->block_size();
 }
 
 bool DiskPartition::read_block(unsigned index, u8* out) const

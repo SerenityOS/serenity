@@ -30,7 +30,6 @@ public:
     virtual ~PATADiskDevice() override;
 
     // ^DiskDevice
-    virtual unsigned block_size() const override;
     virtual bool read_block(unsigned index, u8*) const override;
     virtual bool write_block(unsigned index, const u8*) override;
     virtual bool read_blocks(unsigned index, u16 count, u8*) override;

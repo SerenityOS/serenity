@@ -84,7 +84,7 @@ const char* FloppyDiskDevice::class_name() const
 
 FloppyDiskDevice::FloppyDiskDevice(FloppyDiskDevice::DriveType type)
     : IRQHandler(IRQ_FLOPPY_DRIVE)
-    , DiskDevice(89, (type == FloppyDiskDevice::DriveType::Master) ? 0 : 1)
+    , DiskDevice(89, (type == FloppyDiskDevice::DriveType::Master) ? 0 : 1, BYTES_PER_SECTOR)
     , m_io_base_addr((type == FloppyDiskDevice::DriveType::Master) ? 0x3F0 : 0x370)
 {
     initialize();
@@ -92,11 +92,6 @@ FloppyDiskDevice::FloppyDiskDevice(FloppyDiskDevice::DriveType type)
 
 FloppyDiskDevice::~FloppyDiskDevice()
 {
-}
-
-unsigned FloppyDiskDevice::block_size() const
-{
-    return BYTES_PER_SECTOR;
 }
 
 bool FloppyDiskDevice::read_block(unsigned index, u8* data) const
