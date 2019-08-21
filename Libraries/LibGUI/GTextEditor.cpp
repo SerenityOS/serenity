@@ -35,34 +35,40 @@ GTextEditor::~GTextEditor()
 
 void GTextEditor::create_actions()
 {
-    m_undo_action = GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&](const GAction&) {
-        // FIXME: Undo
-    },
+    m_undo_action = GAction::create(
+        "Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&](const GAction&) {
+            // FIXME: Undo
+        },
         this);
 
-    m_redo_action = GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&](const GAction&) {
-        // FIXME: Redo
-    },
+    m_redo_action = GAction::create(
+        "Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&](const GAction&) {
+            // FIXME: Redo
+        },
         this);
 
-    m_cut_action = GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&](const GAction&) {
-        cut();
-    },
+    m_cut_action = GAction::create(
+        "Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&](const GAction&) {
+            cut();
+        },
         this);
 
-    m_copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
-        copy();
-    },
+    m_copy_action = GAction::create(
+        "Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
+            copy();
+        },
         this);
 
-    m_paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
-        paste();
-    },
+    m_paste_action = GAction::create(
+        "Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
+            paste();
+        },
         this);
 
-    m_delete_action = GAction::create("Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&](const GAction&) {
-        do_delete();
-    },
+    m_delete_action = GAction::create(
+        "Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&](const GAction&) {
+            do_delete();
+        },
         this);
 }
 
