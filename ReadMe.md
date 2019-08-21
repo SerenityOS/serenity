@@ -66,6 +66,13 @@ Make sure you have all the dependencies installed:
 sudo apt install libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
 ```
 
+Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
+```
+sudo add-apt-repository ppa:ubuntu-toolchain-r/test
+sudo apt-get install gcc-8 g++-8
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+```
+
 Go into the `Toolchain/` directory and run the **BuildIt.sh** script. Then ***source*** the **UseIt.sh** script to put the `i686-pc-serenity` toolchain in your `$PATH`.
 
 Once you've done both of those, go into the `Kernel/` directory, then run
