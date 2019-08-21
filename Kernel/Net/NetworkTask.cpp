@@ -7,6 +7,7 @@
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
+#include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDP.h>
@@ -38,12 +39,17 @@ void NetworkTask_main()
 {
     LoopbackAdapter::the();
 
-    auto adapter = E1000NetworkAdapter::the();
-    if (!adapter)
+    auto e1000 = E1000NetworkAdapter::the();
+    if (!e1000)
         dbgprintf("E1000 network card not found!\n");
+    if (e1000)
+        e1000->set_ipv4_address(IPv4Address(192, 168, 5, 2));
 
-    if (adapter)
-        adapter->set_ipv4_address(IPv4Address(192, 168, 5, 2));
+    auto rtl8139 = RTL8139NetworkAdapter::the();
+    if (!rtl8139)
+        dbgprintf("RTL8139 network card not found!\n");
+    if (rtl8139)
+        rtl8139->set_ipv4_address(IPv4Address(192, 168, 13, 201));
 
     auto dequeue_packet = [&]() -> Optional<KBuffer> {
         auto packet = LoopbackAdapter::the().dequeue_packet();
@@ -51,8 +57,10 @@ void NetworkTask_main()
             dbgprintf("Receive loopback packet (%d bytes)\n", packet.value().size());
             return packet.value();
         }
-        if (adapter && adapter->has_queued_packets())
-            return adapter->dequeue_packet();
+        if (e1000 && e1000->has_queued_packets())
+            return e1000->dequeue_packet();
+        if (rtl8139 && rtl8139->has_queued_packets())
+            return rtl8139->dequeue_packet();
         return {};
     };
 
@@ -65,6 +73,10 @@ void NetworkTask_main()
                     return true;
                 if (auto* e1000 = E1000NetworkAdapter::the()) {
                     if (e1000->has_queued_packets())
+                        return true;
+                }
+                if (auto* rtl8139 = RTL8139NetworkAdapter::the()) {
+                    if (rtl8139->has_queued_packets())
                         return true;
                 }
                 return false;
