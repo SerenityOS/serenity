@@ -1615,7 +1615,7 @@ pid_t Process::sys$setsid()
     bool found_process_with_same_pgid_as_my_pid = false;
     Process::for_each_in_pgrp(pid(), [&](auto&) {
         found_process_with_same_pgid_as_my_pid = true;
-        return false;
+        return IterationDecision::Break;
     });
     if (found_process_with_same_pgid_as_my_pid)
         return -EPERM;
