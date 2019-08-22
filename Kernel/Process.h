@@ -456,7 +456,7 @@ inline void Process::for_each_in_pgrp(pid_t pgid, Callback callback)
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
         if (process->pgid() == pgid) {
-            if (!callback(*process))
+            if (callback(*process) == IterationDecision::Break)
                 break;
         }
         process = next_process;

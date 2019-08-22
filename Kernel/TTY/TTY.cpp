@@ -89,7 +89,7 @@ void TTY::generate_signal(int signal)
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
         dbgprintf("%s: Send signal %d to %d\n", tty_name().characters(), signal, process.pid());
         process.send_signal(signal, nullptr);
-        return true;
+        return IterationDecision::Continue;
     });
 }
 
