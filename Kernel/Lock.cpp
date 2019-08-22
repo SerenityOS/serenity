@@ -2,12 +2,12 @@
 
 void Lock::lock()
 {
+    ASSERT(!Scheduler::is_active());
     if (!are_interrupts_enabled()) {
         kprintf("Interrupts disabled when trying to take Lock{%s}\n", m_name);
         dump_backtrace();
         hang();
     }
-    ASSERT(!Scheduler::is_active());
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
             if (!m_holder || m_holder == current) {
