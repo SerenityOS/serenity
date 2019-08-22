@@ -30,6 +30,7 @@ TextEditorWidget::TextEditorWidget()
     find_widget->set_preferred_size(0, 22);
     find_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     find_widget->layout()->set_margins({ 2, 2, 2, 2 });
+    find_widget->set_visible(false);
 
     m_find_textbox = new GTextBox(find_widget);
 
@@ -51,6 +52,11 @@ TextEditorWidget::TextEditorWidget()
                 GMessageBox::InputType::OK, window());
         }
     };
+
+    m_find_action = GAction::create("Find...", { Mod_Ctrl, Key_F }, [this, find_widget](auto&) {
+        find_widget->set_visible(true);
+        m_find_textbox->set_focus(true);
+    });
 
     auto* statusbar = new GStatusBar(this);
 
@@ -120,6 +126,8 @@ TextEditorWidget::TextEditorWidget()
     edit_menu->add_action(m_editor->copy_action());
     edit_menu->add_action(m_editor->paste_action());
     edit_menu->add_action(m_editor->delete_action());
+    edit_menu->add_separator();
+    edit_menu->add_action(*m_find_action);
     menubar->add_menu(move(edit_menu));
 
     auto font_menu = make<GMenu>("Font");
