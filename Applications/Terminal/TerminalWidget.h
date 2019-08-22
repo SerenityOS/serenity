@@ -51,6 +51,7 @@ private:
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousewheel_event(GMouseEvent&) override;
+    virtual void doubleclick_event(GMouseEvent&) override;
 
     // ^TerminalClient
     virtual void beep() override;
