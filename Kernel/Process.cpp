@@ -1298,8 +1298,11 @@ int Process::sys$kill(pid_t pid, int signal)
     if (signal < 0 || signal >= 32)
         return -EINVAL;
     if (pid == 0) {
-        // FIXME: Send to same-group processes.
-        ASSERT(pid != 0);
+        Process::for_each_in_pgrp(pgid(), [&](auto& process) {
+            process.send_signal(signal, this);
+            return IterationDecision::Continue;
+        });
+        return 0;
     }
     if (pid == -1) {
         // FIXME: Send to all processes.
