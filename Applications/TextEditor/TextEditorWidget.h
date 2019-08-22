@@ -32,4 +32,5 @@ private:
 
     GTextBox* m_find_textbox { nullptr };
     GButton* m_find_button { nullptr };
+    GWidget* m_find_widget { nullptr };
 };

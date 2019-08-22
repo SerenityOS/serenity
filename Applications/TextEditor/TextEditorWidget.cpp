@@ -24,17 +24,17 @@ TextEditorWidget::TextEditorWidget()
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
 
-    auto* find_widget = new GWidget(this);
-    find_widget->set_fill_with_background_color(true);
-    find_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    find_widget->set_preferred_size(0, 22);
-    find_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
-    find_widget->layout()->set_margins({ 2, 2, 2, 2 });
-    find_widget->set_visible(false);
+    m_find_widget = new GWidget(this);
+    m_find_widget->set_fill_with_background_color(true);
+    m_find_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_find_widget->set_preferred_size(0, 22);
+    m_find_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    m_find_widget->layout()->set_margins({ 2, 2, 2, 2 });
+    m_find_widget->set_visible(false);
 
-    m_find_textbox = new GTextBox(find_widget);
+    m_find_textbox = new GTextBox(m_find_widget);
 
-    m_find_button = new GButton("Find", find_widget);
+    m_find_button = new GButton("Find", m_find_widget);
     m_find_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_find_button->set_preferred_size(100, 0);
 
@@ -53,8 +53,17 @@ TextEditorWidget::TextEditorWidget()
         }
     };
 
-    m_find_action = GAction::create("Find...", { Mod_Ctrl, Key_F }, [this, find_widget](auto&) {
-        find_widget->set_visible(true);
+    m_find_textbox->on_return_pressed = [this] {
+        m_find_button->click();
+    };
+
+    m_find_textbox->on_escape_pressed = [this] {
+        m_find_widget->set_visible(false);
+        m_editor->set_focus(true);
+    };
+
+    m_find_action = GAction::create("Find...", { Mod_Ctrl, Key_F }, [this](auto&) {
+        m_find_widget->set_visible(true);
         m_find_textbox->set_focus(true);
     });
 
