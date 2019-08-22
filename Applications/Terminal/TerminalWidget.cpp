@@ -369,6 +369,33 @@ VT::Position TerminalWidget::buffer_position_at(const Point& position) const
     return { row, column };
 }
 
+void TerminalWidget::doubleclick_event(GMouseEvent& event)
+{
+    if (event.button() == GMouseButton::Left) {
+        auto position = buffer_position_at(event.position());
+        auto& line = m_terminal.line(position.row());
+        bool want_whitespace = line.characters[position.column()] == ' ';
+
+        int start_column = 0;
+        int end_column = 0;
+
+        for (int column = position.column(); column >= 0 && (line.characters[column] == ' ') == want_whitespace; --column) {
+            start_column = column;
+        }
+
+        for (int column = position.column(); column < m_terminal.columns() && (line.characters[column] == ' ') == want_whitespace; ++column) {
+            end_column = column;
+        }
+
+        m_selection_start = { position.row(), start_column };
+        m_selection_end = { position.row(), end_column };
+
+        if (has_selection())
+            GClipboard::the().set_data(selected_text());
+    }
+    GFrame::doubleclick_event(event);
+}
+
 void TerminalWidget::mousedown_event(GMouseEvent& event)
 {
     if (event.button() == GMouseButton::Left) {
