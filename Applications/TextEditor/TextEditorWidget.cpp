@@ -192,11 +192,10 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
 
 void TextEditorWidget::open_sesame(const String& path)
 {
-    dbgprintf("Our path to file in open_sesame: %s\n", path.characters());
     CFile file(path);
-
     if (!file.open(CIODevice::ReadOnly)) {
         GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+        return;
     }
 
     m_editor->set_text(file.read_all());
