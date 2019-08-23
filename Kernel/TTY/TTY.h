@@ -47,7 +47,7 @@ private:
     // ^CharacterDevice
     virtual bool is_tty() const final override { return true; }
 
-    CircularQueue<u8, 16> m_input_buffer;
+    CircularQueue<u8, 1024> m_input_buffer;
     pid_t m_pgid { 0 };
     termios m_termios;
     unsigned short m_rows { 0 };
