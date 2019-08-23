@@ -245,7 +245,7 @@ void exception_14_handler(RegisterDumpWithExceptionCode& regs)
         : "=a"(fault_page_directory));
 
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s L%x\n",
+    dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s V%08x\n",
         current->process().name().characters(),
         current->pid(),
         regs.cs & 3,

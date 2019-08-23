@@ -75,7 +75,7 @@ NonnullRefPtr<Region> Region::clone()
 
     if (m_shared || (is_readable() && !is_writable())) {
 #ifdef MM_DEBUG
-        dbgprintf("%s<%u> Region::clone(): sharing %s (L%x)\n",
+        dbgprintf("%s<%u> Region::clone(): sharing %s (V%p)\n",
             current->process().name().characters(),
             current->pid(),
             m_name.characters(),
@@ -86,7 +86,7 @@ NonnullRefPtr<Region> Region::clone()
     }
 
 #ifdef MM_DEBUG
-    dbgprintf("%s<%u> Region::clone(): cowing %s (L%x)\n",
+    dbgprintf("%s<%u> Region::clone(): cowing %s (V%p)\n",
         current->process().name().characters(),
         current->pid(),
         m_name.characters(),
@@ -102,7 +102,7 @@ int Region::commit()
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at L%x\n", vmo().page_count(), this, &vmo(), vaddr().get());
+    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at V%p\n", vmo().page_count(), this, &vmo(), vaddr().get());
 #endif
     for (size_t i = first_page_index(); i <= last_page_index(); ++i) {
         if (!vmo().physical_pages()[i].is_null())

@@ -50,7 +50,7 @@ PageDirectory::~PageDirectory()
 void PageDirectory::flush(VirtualAddress vaddr)
 {
 #ifdef MM_DEBUG
-    dbgprintf("MM: Flush page L%x\n", vaddr.get());
+    dbgprintf("MM: Flush page V%p\n", vaddr.get());
 #endif
     if (!current)
         return;
