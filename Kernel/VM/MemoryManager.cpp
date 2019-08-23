@@ -170,7 +170,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     PageDirectoryEntry& pde = page_directory.entries()[page_directory_index];
     if (!pde.is_present()) {
 #ifdef MM_DEBUG
-        dbgprintf("MM: PDE %u not present (requested for L%x), allocating\n", page_directory_index, vaddr.get());
+        dbgprintf("MM: PDE %u not present (requested for V%p), allocating\n", page_directory_index, vaddr.get());
 #endif
         if (page_directory_index == 0) {
             ASSERT(&page_directory == m_kernel_page_directory);
@@ -188,7 +188,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             //ASSERT(&page_directory != m_kernel_page_directory.ptr());
             auto page_table = allocate_page_table(page_directory, page_directory_index);
 #ifdef MM_DEBUG
-            dbgprintf("MM: PD K%x (%s) at P%x allocated page table #%u (for L%x) at P%x\n",
+            dbgprintf("MM: PD K%x (%s) at P%x allocated page table #%u (for V%p) at P%x\n",
                 &page_directory,
                 &page_directory == m_kernel_page_directory ? "Kernel" : "User",
                 page_directory.cr3(),
@@ -399,7 +399,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(current);
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("MM: handle_page_fault(%w) at L%x\n", fault.code(), fault.vaddr().get());
+    dbgprintf("MM: handle_page_fault(%w) at V%p\n", fault.code(), fault.vaddr().get());
 #endif
     ASSERT(fault.vaddr() != m_quickmap_addr);
     if (fault.type() == PageFault::Type::PageNotPresent && fault.vaddr().get() >= 0xc0000000) {
@@ -417,7 +417,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     }
     auto* region = region_from_vaddr(fault.vaddr());
     if (!region) {
-        kprintf("NP(error) fault at invalid address L%x\n", fault.vaddr().get());
+        kprintf("NP(error) fault at invalid address V%p\n", fault.vaddr().get());
         return PageFaultResponse::ShouldCrash;
     }
     auto page_index_in_region = region->page_index_from_address(fault.vaddr());
@@ -444,7 +444,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         ASSERT(success);
         return PageFaultResponse::Continue;
     }
-    kprintf("PV(error) fault in Region{%p}[%u] at L%x\n", region, page_index_in_region, fault.vaddr().get());
+    kprintf("PV(error) fault in Region{%p}[%u] at V%p\n", region, page_index_in_region, fault.vaddr().get());
     return PageFaultResponse::ShouldCrash;
 }
 
@@ -624,7 +624,7 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
     flush_tlb(page_vaddr);
     ASSERT((u32)pte.physical_page_base() == physical_page.paddr().get());
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> quickmap_page L%x => P%x @ PTE=%p\n", page_vaddr, physical_page.paddr().get(), pte.ptr());
+    dbgprintf("MM: >> quickmap_page V%p => P%x @ PTE=%p\n", page_vaddr, physical_page.paddr().get(), pte.ptr());
 #endif
     return page_vaddr.as_ptr();
 }
@@ -643,7 +643,7 @@ void MemoryManager::unquickmap_page()
     pte.set_writable(false);
     flush_tlb(page_vaddr);
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> unquickmap_page L%x =/> P%x\n", page_vaddr, old_physical_address);
+    dbgprintf("MM: >> unquickmap_page V%p =/> P%x\n", page_vaddr, old_physical_address);
 #endif
     m_quickmap_in_use = false;
 }
@@ -665,7 +665,7 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
     pte.set_user_allowed(region.is_user_accessible());
     region.page_directory()->flush(page_vaddr);
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> remap_region_page (PD=%x, PTE=P%x) '%s' L%x => P%x (@%p)\n", region.page_directory()->cr3(), pte.ptr(), region.name().characters(), page_vaddr.get(), physical_page->paddr().get(), physical_page.ptr());
+    dbgprintf("MM: >> remap_region_page (PD=%x, PTE=P%x) '%s' V%p => P%x (@%p)\n", region.page_directory()->cr3(), pte.ptr(), region.name().characters(), page_vaddr.get(), physical_page->paddr().get(), physical_page.ptr());
 #endif
 }
 
@@ -704,7 +704,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
         pte.set_user_allowed(region.is_user_accessible());
         page_directory.flush(page_vaddr);
 #ifdef MM_DEBUG
-        dbgprintf("MM: >> map_region_at_address (PD=%x) '%s' L%x => P%x (@%p)\n", &page_directory, region.name().characters(), page_vaddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
+        dbgprintf("MM: >> map_region_at_address (PD=%x) '%s' V%p => P%x (@%p)\n", &page_directory, region.name().characters(), page_vaddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
 #endif
     }
 }
@@ -723,7 +723,7 @@ bool MemoryManager::unmap_region(Region& region)
         region.page_directory()->flush(vaddr);
 #ifdef MM_DEBUG
         auto& physical_page = region.vmo().physical_pages()[region.first_page_index() + i];
-        dbgprintf("MM: >> Unmapped L%x => P%x <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
+        dbgprintf("MM: >> Unmapped V%p => P%x <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
     region.page_directory()->range_allocator().deallocate({ region.vaddr(), region.size() });

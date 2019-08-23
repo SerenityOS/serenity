@@ -38,7 +38,7 @@ bool ELFLoader::layout()
         if (program_header.type() != PT_LOAD)
             return;
 #ifdef ELFLOADER_DEBUG
-        kprintf("PH: L%x %u r:%u w:%u\n", program_header.vaddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
+        kprintf("PH: V%p %u r:%u w:%u\n", program_header.vaddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
 #endif
         if (program_header.is_writable()) {
             alloc_section_hook(
