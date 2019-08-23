@@ -199,6 +199,6 @@ void TextEditorWidget::open_sesame(const String& path)
         GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
     }
 
-    m_editor->set_text(String::copy(file.read_all()));
+    m_editor->set_text(file.read_all());
     set_path(FileSystemPath(path));
 }
