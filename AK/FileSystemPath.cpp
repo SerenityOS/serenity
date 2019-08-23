@@ -14,13 +14,26 @@ FileSystemPath::FileSystemPath(const StringView& s)
 
 void FileSystemPath::canonicalize()
 {
+    if (m_string.is_empty()) {
+        m_parts.clear();
+        return;
+    }
+
+    bool is_absolute_path = m_string[0] == '/';
     auto parts = m_string.split_view('/');
+
+    if (!is_absolute_path)
+        parts.prepend(".");
+
     int approximate_canonical_length = 0;
     Vector<String> canonical_parts;
 
-    for (auto& part : parts) {
-        if (part == ".")
-            continue;
+    for (int i = 0; i < parts.size(); ++i) {
+        auto& part = parts[i];
+        if (is_absolute_path || i != 0) {
+            if (part == ".")
+                continue;
+        }
         if (part == "..") {
             if (!canonical_parts.is_empty())
                 canonical_parts.take_last();
@@ -43,9 +56,11 @@ void FileSystemPath::canonicalize()
         m_extension = name_parts[1];
 
     StringBuilder builder(approximate_canonical_length);
-    for (auto& cpart : canonical_parts) {
-        builder.append('/');
-        builder.append(cpart);
+    for (int i = 0; i < canonical_parts.size(); ++i) {
+        auto& canonical_part = canonical_parts[i];
+        if (is_absolute_path || i != 0)
+            builder.append('/');
+        builder.append(canonical_part);
     }
     m_parts = move(canonical_parts);
     m_string = builder.to_string();

@@ -26,4 +26,37 @@ TEST_CASE(dotdot_coalescing)
     EXPECT_EQ(FileSystemPath("/../../../../").string(), "/");
 }
 
+TEST_CASE(relative_paths)
+{
+    {
+        FileSystemPath path("simple");
+        EXPECT_EQ(path.is_valid(), true);
+        EXPECT_EQ(path.string(), "./simple");
+        EXPECT_EQ(path.parts().size(), 2);
+        EXPECT_EQ(path.basename(), "simple");
+    }
+    {
+        FileSystemPath path("a/relative/path");
+        EXPECT_EQ(path.is_valid(), true);
+        EXPECT_EQ(path.string(), "./a/relative/path");
+        EXPECT_EQ(path.parts().size(), 4);
+        EXPECT_EQ(path.basename(), "path");
+    }
+    {
+        FileSystemPath path("./././foo");
+        EXPECT_EQ(path.is_valid(), true);
+        EXPECT_EQ(path.string(), "./foo");
+        EXPECT_EQ(path.parts().size(), 2);
+        EXPECT_EQ(path.basename(), "foo");
+    }
+
+    {
+        FileSystemPath path(".");
+        EXPECT_EQ(path.is_valid(), true);
+        EXPECT_EQ(path.string(), ".");
+        EXPECT_EQ(path.parts().size(), 1);
+        EXPECT_EQ(path.basename(), ".");
+    }
+}
+
 TEST_MAIN(FileSystemPath)
