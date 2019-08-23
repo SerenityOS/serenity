@@ -1125,6 +1125,8 @@ GTextRange GTextEditor::find(const StringView& needle, const GTextPosition& star
             if (needle_index >= needle.length())
                 return { start_of_potential_match, next_position_after(position) };
         } else {
+            if (needle_index > 0)
+                position = start_of_potential_match;
             needle_index = 0;
         }
         position = next_position_after(position);
