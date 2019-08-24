@@ -12,7 +12,7 @@ static Lockable<InlineLinkedList<Custody>>& all_custodies()
     return *list;
 }
 
-Custody* Custody::get_if_cached(Custody* parent, const String& name)
+Custody* Custody::get_if_cached(Custody* parent, const StringView& name)
 {
     LOCKER(all_custodies().lock());
     for (auto& custody : all_custodies().resource()) {
@@ -26,14 +26,11 @@ Custody* Custody::get_if_cached(Custody* parent, const String& name)
     return nullptr;
 }
 
-NonnullRefPtr<Custody> Custody::get_or_create(Custody* parent, const String& name, Inode& inode)
+NonnullRefPtr<Custody> Custody::get_or_create(Custody* parent, const StringView& name, Inode& inode)
 {
     if (RefPtr<Custody> cached_custody = get_if_cached(parent, name)) {
         if (&cached_custody->inode() != &inode) {
-            dbgprintf("WTF! cached custody for name '%s' has inode=%s, new inode=%s\n",
-                name.characters(),
-                cached_custody->inode().identifier().to_string().characters(),
-                inode.identifier().to_string().characters());
+            dbg() << "WTF! Cached custody for name '" << name << "' has inode=" << cached_custody->inode().identifier() << ", new inode=" << inode.identifier();
         }
         ASSERT(&cached_custody->inode() == &inode);
         return *cached_custody;
@@ -41,7 +38,7 @@ NonnullRefPtr<Custody> Custody::get_or_create(Custody* parent, const String& nam
     return create(parent, name, inode);
 }
 
-Custody::Custody(Custody* parent, const String& name, Inode& inode)
+Custody::Custody(Custody* parent, const StringView& name, Inode& inode)
     : m_parent(parent)
     , m_name(name)
     , m_inode(inode)
