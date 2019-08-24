@@ -182,9 +182,12 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, Fi
         m_metadata.size = new_size;
         set_metadata_dirty(true);
         set_metadata_dirty(false);
+        inode_size_changed(old_size, new_size);
     }
 
     memcpy(m_content.value().data() + offset, buffer, size);
+    inode_contents_changed(offset, size, buffer);
+
     return size;
 }
 
@@ -299,6 +302,13 @@ KResult TmpFSInode::truncate(off_t size)
     m_metadata.size = size;
     set_metadata_dirty(true);
     set_metadata_dirty(false);
+
+    if (old_size != (size_t)size) {
+        inode_size_changed(old_size, size);
+        if (m_content.has_value())
+            inode_contents_changed(0, size, m_content.value().data());
+    }
+
     return KSuccess;
 }
 
