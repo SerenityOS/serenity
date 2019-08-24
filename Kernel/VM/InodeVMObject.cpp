@@ -43,7 +43,7 @@ void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new
 
     InterruptDisabler disabler;
 
-    auto new_page_count = PAGE_ROUND_UP(new_size);
+    auto new_page_count = PAGE_ROUND_UP(new_size) / PAGE_SIZE;
     m_physical_pages.resize(new_page_count);
 
     // FIXME: Consolidate with inode_contents_changed() so we only do a single walk.
