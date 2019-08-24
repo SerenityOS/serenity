@@ -109,4 +109,13 @@ unsigned StringView::to_uint(bool& ok) const
     return value;
 }
 
+unsigned StringView::hash() const
+{
+    if (is_empty())
+        return 0;
+    if (m_impl)
+        return m_impl->hash();
+    return string_hash(characters_without_null_termination(), length());
+}
+
 }

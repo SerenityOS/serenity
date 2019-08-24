@@ -39,6 +39,8 @@ public:
     int length() const { return m_length; }
     char operator[](int index) const { return m_characters[index]; }
 
+    unsigned hash() const;
+
     StringView substring_view(int start, int length) const;
     Vector<StringView> split_view(char) const;
 
