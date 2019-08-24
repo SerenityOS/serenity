@@ -153,10 +153,10 @@ ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDescr
     if (!m_content.has_value())
         return 0;
 
-    if (static_cast<size_t>(size) > m_content.value().size() - offset)
-        size = m_content.value().size() - offset;
-    memcpy(buffer, m_content.value().data(), size);
+    if (static_cast<off_t>(size) > m_metadata.size - offset)
+        size = m_metadata.size - offset;
 
+    memcpy(buffer, m_content.value().data() + offset, size);
     return size;
 }
 
@@ -165,26 +165,26 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, Fi
     LOCKER(m_lock);
     ASSERT(!is_directory());
 
-    if (!m_content.has_value()) {
-        ASSERT(offset == 0);
-        m_content = KBuffer::copy(buffer, size);
-        m_metadata.size = size;
-        set_metadata_dirty(true);
-        set_metadata_dirty(false);
-        return size;
-    }
+    off_t old_size = m_metadata.size;
+    off_t new_size = m_metadata.size;
+    if ((offset + size) > new_size)
+        new_size = offset + size;
 
-    if (static_cast<size_t>(size) > m_content.value().size() - offset) {
-        auto tmp = KBuffer::create_with_size(offset + size);
-        memcpy(tmp.data(), m_content.value().data(), m_content.value().size());
-        m_content = move(tmp);
-        m_metadata.size = offset + size;
+    if (new_size > old_size) {
+        if (m_content.has_value() && m_content.value().capacity() >= (size_t)new_size) {
+            m_content.value().set_size(new_size);
+        } else {
+            auto tmp = KBuffer::create_with_size(new_size);
+            if (m_content.has_value())
+                memcpy(tmp.data(), m_content.value().data(), old_size);
+            m_content = move(tmp);
+        }
+        m_metadata.size = new_size;
         set_metadata_dirty(true);
         set_metadata_dirty(false);
     }
 
     memcpy(m_content.value().data() + offset, buffer, size);
-
     return size;
 }
 
@@ -283,24 +283,22 @@ KResult TmpFSInode::truncate(off_t size)
         m_content.clear();
     else if (!m_content.has_value()) {
         m_content = KBuffer::create_with_size(size);
-        memset(m_content.value().data(), 0, size);
     } else if (static_cast<size_t>(size) < m_content.value().capacity()) {
-        size_t prev_size = m_content.value().size();
+        size_t prev_size = m_metadata.size;
         m_content.value().set_size(size);
         if (prev_size < static_cast<size_t>(size))
             memset(m_content.value().data() + prev_size, 0, size - prev_size);
     } else {
-        size_t prev_size = m_content.value().size();
+        size_t prev_size = m_metadata.size;
         KBuffer tmp = KBuffer::create_with_size(size);
         memcpy(tmp.data(), m_content.value().data(), prev_size);
-        memset(tmp.data() + prev_size, 0, size - prev_size);
         m_content = move(tmp);
     }
 
+    size_t old_size = m_metadata.size;
     m_metadata.size = size;
     set_metadata_dirty(true);
     set_metadata_dirty(false);
-
     return KSuccess;
 }
 
