@@ -1105,7 +1105,23 @@ GTextPosition GTextEditor::next_position_after(const GTextPosition& position, Sh
     return { position.line(), position.column() + 1 };
 }
 
-GTextRange GTextEditor::find(const StringView& needle, const GTextPosition& start)
+GTextPosition GTextEditor::prev_position_before(const GTextPosition& position, ShouldWrapAtStartOfDocument should_wrap)
+{
+    if (position.column() == 0){
+        if (position.line() == 0) {
+            if (should_wrap == ShouldWrapAtStartOfDocument::Yes) {
+                auto& last_line = m_lines[line_count() - 1]; 
+                return { line_count() - 1, last_line.length() };
+            }
+            return {};
+        }
+        auto& prev_line = m_lines[position.line() - 1];
+        return { position.line() - 1, prev_line.length() };
+    }
+    return { position.line(), position.column() - 1 };
+}
+
+GTextRange GTextEditor::find_next(const StringView& needle, const GTextPosition& start)
 {
     if (needle.is_empty())
         return {};
@@ -1130,6 +1146,36 @@ GTextRange GTextEditor::find(const StringView& needle, const GTextPosition& star
             needle_index = 0;
         }
         position = next_position_after(position);
+    } while(position.is_valid() && position != original_position);
+
+    return {};
+}
+
+GTextRange GTextEditor::find_prev(const StringView& needle, const GTextPosition& start)
+{
+    if (needle.is_empty())
+        return {};
+
+    GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
+    GTextPosition original_position = position;
+
+    GTextPosition end_of_potential_match;
+    int needle_index = needle.length() - 1;
+
+    do {
+        auto ch = character_at(position);
+        if (ch == needle[needle_index]) {
+            if (needle_index == needle.length() - 1)
+                end_of_potential_match = position;
+            --needle_index;
+            if (needle_index < 0)
+                return { position, next_position_after(end_of_potential_match) };
+        } else {
+            if (needle_index < needle.length() - 1)
+                position = end_of_potential_match;
+            needle_index = needle.length() - 1;
+        }
+        position = prev_position_before(position);
     } while(position.is_valid() && position != original_position);
 
     return {};

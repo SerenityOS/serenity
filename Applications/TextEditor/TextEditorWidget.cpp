@@ -34,14 +34,39 @@ TextEditorWidget::TextEditorWidget()
 
     m_find_textbox = new GTextBox(m_find_widget);
 
-    m_find_button = new GButton("Find", m_find_widget);
-    m_find_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_find_button->set_preferred_size(100, 0);
+    m_find_prev_button = new GButton("Prev", m_find_widget);
+    m_find_prev_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_find_prev_button->set_preferred_size(50, 0);
 
-    m_find_button->on_click = [this](auto&) {
+    m_find_next_button = new GButton("Next", m_find_widget);
+    m_find_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_find_next_button->set_preferred_size(50, 0);
+
+    m_find_next_button->on_click = [this](auto&) {
         auto needle = m_find_textbox->text();
-        auto found_range = m_editor->find(needle, m_editor->normalized_selection().end());
-        dbg() << "find(\"" << needle << "\") returned " << found_range;
+        auto found_range = m_editor->find_next(needle, m_editor->normalized_selection().end());
+        dbg() << "find_next(\"" << needle << "\") returned " << found_range;
+        if (found_range.is_valid()) {
+            m_editor->set_selection(found_range);
+        } else {
+            GMessageBox::show(
+                String::format("Not found: \"%s\"", needle.characters()),
+                "Not found",
+                GMessageBox::Type::Information,
+                GMessageBox::InputType::OK, window());
+        }
+    };
+
+    m_find_prev_button->on_click = [this](auto&) {
+        auto needle = m_find_textbox->text();
+
+        auto selection_start = m_editor->normalized_selection().start();
+        if (!selection_start.is_valid())
+            selection_start = m_editor->normalized_selection().end();
+
+        auto found_range = m_editor->find_prev(needle, selection_start);
+        
+        dbg() << "find_prev(\"" << needle << "\") returned " << found_range;
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
         } else {
@@ -54,7 +79,7 @@ TextEditorWidget::TextEditorWidget()
     };
 
     m_find_textbox->on_return_pressed = [this] {
-        m_find_button->click();
+        m_find_next_button->click();
     };
 
     m_find_textbox->on_escape_pressed = [this] {

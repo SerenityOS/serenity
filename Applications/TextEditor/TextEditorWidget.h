@@ -31,6 +31,7 @@ private:
     RefPtr<GAction> m_find_action;
 
     GTextBox* m_find_textbox { nullptr };
-    GButton* m_find_button { nullptr };
+    GButton* m_find_prev_button { nullptr };
+    GButton* m_find_next_button { nullptr };
     GWidget* m_find_widget { nullptr };
 };
