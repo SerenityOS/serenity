@@ -35,7 +35,6 @@ int remove(bool recursive, const char* path)
                     return s;
             }
         }
-        printf("Removing directory: %s\n", path);
         int s = rmdir(path);
         if (s < 0) {
             perror("rmdir");
@@ -47,7 +46,6 @@ int remove(bool recursive, const char* path)
             perror("unlink");
             return 1;
         }
-        printf("Removing file: %s\n", path);
     }
     return 0;
 }
