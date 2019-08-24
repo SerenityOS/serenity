@@ -56,12 +56,22 @@ public:
     {
         return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); });
     }
+    template<typename Finder>
+    IteratorType find(unsigned hash, Finder finder)
+    {
+        return m_table.find(hash, finder);
+    }
 
     ConstIteratorType begin() const { return m_table.begin(); }
     ConstIteratorType end() const { return m_table.end(); }
     ConstIteratorType find(const K& key) const
     {
         return m_table.find(KeyTraits::hash(key), [&](auto& entry) { return KeyTraits::equals(key, entry.key); });
+    }
+    template<typename Finder>
+    ConstIteratorType find(unsigned hash, Finder finder) const
+    {
+        return m_table.find(hash, finder);
     }
 
     void ensure_capacity(int capacity) { m_table.ensure_capacity(capacity); }
