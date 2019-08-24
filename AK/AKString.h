@@ -133,6 +133,9 @@ public:
     bool operator==(const String&) const;
     bool operator!=(const String& other) const { return !(*this == other); }
 
+    bool operator==(const StringView&) const;
+    bool operator!=(const StringView& other) const { return !(*this == other); }
+
     bool operator<(const String&) const;
     bool operator<(const char*) const;
     bool operator>=(const String& other) const { return !(*this < other); }
