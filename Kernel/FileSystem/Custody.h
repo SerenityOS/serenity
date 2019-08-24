@@ -14,9 +14,9 @@ class VFS;
 class Custody : public RefCounted<Custody>
     , public InlineLinkedListNode<Custody> {
 public:
-    static Custody* get_if_cached(Custody* parent, const String& name);
-    static NonnullRefPtr<Custody> get_or_create(Custody* parent, const String& name, Inode&);
-    static NonnullRefPtr<Custody> create(Custody* parent, const String& name, Inode& inode)
+    static Custody* get_if_cached(Custody* parent, const StringView& name);
+    static NonnullRefPtr<Custody> get_or_create(Custody* parent, const StringView& name, Inode&);
+    static NonnullRefPtr<Custody> create(Custody* parent, const StringView& name, Inode& inode)
     {
         return adopt(*new Custody(parent, name, inode));
     }
@@ -42,7 +42,7 @@ public:
     Custody* m_prev { nullptr };
 
 private:
-    Custody(Custody* parent, const String& name, Inode&);
+    Custody(Custody* parent, const StringView& name, Inode&);
 
     RefPtr<Custody> m_parent;
     String m_name;
