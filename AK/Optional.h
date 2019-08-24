@@ -121,6 +121,7 @@ public:
         return fallback;
     }
 
+    SET_TYPESTATE(consumed)
     operator bool() const { return m_has_value; }
 
 private:
