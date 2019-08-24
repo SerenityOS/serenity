@@ -329,49 +329,89 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     ASSERT_NOT_REACHED();
 }
 
-long strtol(const char* str, char** endptr, int base)
+long strtol(const char* nptr, char** endptr, int base)
 {
-    int sign = 1;
-    while (isspace(*str))
-        str++;
-    if (*str == '-' || *str == '+') {
-        if (*str == '-')
-            sign = -1;
-        str++;
+    errno = 0;
+
+    if (base < 0 || base == 1 || base > 36) {
+        errno = EINVAL;
+        if (endptr)
+            *endptr = const_cast<char*>(nptr);
+        return 0;
     }
+
+    const char* p = nptr;
+    while (isspace(*p))
+        ++p;
+
+    bool is_negative = false;
+    if (*p == '-') {
+        is_negative = true;
+        ++p;
+    } else {
+        if (*p == '+')
+            ++p;
+    }
+
     if (base == 0 || base == 16) {
         if (base == 0)
             base = 10;
-        if (*str == '0') {
-            str++;
-            if (*str == 'X' || *str == 'x') {
-                str++;
+        if (*p == '0') {
+            if (*(p + 1) == 'X' || *(p + 1) == 'x') {
+                p += 2;
                 base = 16;
             } else if (base != 16) {
                 base = 8;
             }
         }
     }
-    size_t length = strlen(str);
-    const char* estr = str + length - 1;
-    long track = 1;
+
+    long cutoff_point = is_negative ? (LONG_MIN / base) : (LONG_MAX / base);
+    int max_valid_digit_at_cutoff_point = is_negative ? (LONG_MIN % base) : (LONG_MAX % base);
+
     long num = 0;
-    while (estr >= str) {
-        if ((*estr >= '0' && *estr <= '9') || (base > 10 && (*estr >= 'A' && *estr <= 'Z'))) {
-            int digit_value = *estr - '0';
-            if (*estr >= 'A' && *estr <= 'Z')
-                digit_value = 10 + (*estr - 'A');
-            num += (track *= base) / base * digit_value;
+
+    bool has_overflowed = false;
+    unsigned digits_consumed = 0;
+
+    for (;;) {
+        char ch = *(p++);
+        int digit;
+        if (isdigit(ch))
+            digit = ch - '0';
+        else if (islower(ch))
+            digit = ch - ('a' - 10);
+        else if (isupper(ch))
+            digit = ch - ('A' - 10);
+        else
+            break;
+
+        if (digit >= base)
+            break;
+
+        if (has_overflowed)
+            continue;
+
+        bool is_past_cutoff = is_negative ? num < cutoff_point : num > cutoff_point;
+
+        if (is_past_cutoff || (num == cutoff_point && digit > max_valid_digit_at_cutoff_point)) {
+            has_overflowed = true;
+            num = is_negative ? LONG_MIN : LONG_MAX;
+            errno = ERANGE;
         } else {
-            if (endptr)
-                *endptr = const_cast<char*>(estr);
-            return 0;
-        };
-        estr--;
+            num *= base;
+            num += is_negative ? -digit : digit;
+            ++digits_consumed;
+        }
     }
-    if (endptr)
-        *endptr = const_cast<char*>(str + length);
-    return num * sign;
+
+    if (endptr) {
+        if (has_overflowed || digits_consumed > 0)
+            *endptr = const_cast<char*>(p - 1);
+        else
+            *endptr = const_cast<char*>(nptr);
+    }
+    return num;
 }
 
 unsigned long strtoul(const char* str, char** endptr, int base)
