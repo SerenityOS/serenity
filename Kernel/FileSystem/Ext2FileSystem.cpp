@@ -1263,7 +1263,7 @@ InodeIdentifier Ext2FSInode::lookup(StringView name)
     ASSERT(is_directory());
     populate_lookup_cache();
     LOCKER(m_lock);
-    auto it = m_lookup_cache.find(name);
+    auto it = m_lookup_cache.find(name.hash(), [&](auto& entry) { return entry.key == name; });
     if (it != m_lookup_cache.end())
         return { fsid(), (*it).value };
     return {};
