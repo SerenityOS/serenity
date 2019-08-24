@@ -68,7 +68,7 @@ public:
     u8* data() { return m_impl->data(); }
     const u8* data() const { return m_impl->data(); }
     size_t size() const { return m_impl->size(); }
-    size_t capacity() const { return m_impl->size(); }
+    size_t capacity() const { return m_impl->capacity(); }
 
     void set_size(size_t size) { m_impl->set_size(size); }
 
