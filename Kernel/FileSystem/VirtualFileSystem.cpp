@@ -637,6 +637,9 @@ Custody& VFS::root_custody()
 
 KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* parent_custody, int options)
 {
+    // FIXME: resolve_path currently doesn't deal with .. and . . If path is ../. and base is /home/anon, it returns
+    //        /home/anon/../. instead of /home .
+
     if (path.is_empty())
         return KResult(-EINVAL);
 
