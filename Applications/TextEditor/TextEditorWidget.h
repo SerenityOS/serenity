@@ -29,6 +29,7 @@ private:
     RefPtr<GAction> m_save_action;
     RefPtr<GAction> m_save_as_action;
     RefPtr<GAction> m_find_action;
+    RefPtr<GAction> m_line_wrapping_setting_action;
 
     GTextBox* m_find_textbox { nullptr };
     GButton* m_find_prev_button { nullptr };
