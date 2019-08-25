@@ -226,6 +226,8 @@ private:
     void did_update_selection();
     int content_x_for_position(const GTextPosition&) const;
     char character_at(const GTextPosition&) const;
+    Rect ruler_rect_in_inner_coordinates() const;
+    Rect visible_text_rect_in_inner_coordinates() const;
 
     Type m_type { MultiLine };
 

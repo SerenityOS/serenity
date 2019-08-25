@@ -258,9 +258,24 @@ Rect GTextEditor::ruler_content_rect(int line_index) const
         return {};
     return {
         0 - ruler_width() + horizontal_scrollbar().value(),
-        line_index * line_height(),
+        line_content_rect(line_index).y(),
         ruler_width(),
-        line_height()
+        line_content_rect(line_index).height()
+    };
+}
+
+Rect GTextEditor::ruler_rect_in_inner_coordinates() const
+{
+    return { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar() };
+}
+
+Rect GTextEditor::visible_text_rect_in_inner_coordinates() const
+{
+    return {
+        (m_horizontal_content_padding * 2) + (m_ruler_visible ? (ruler_rect_in_inner_coordinates().right() + 1) : 0),
+        0,
+        width() - width_occupied_by_vertical_scrollbar() - ruler_width(),
+        height() - height_occupied_by_horizontal_scrollbar()
     };
 }
 
@@ -275,7 +290,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
     painter.translate(frame_thickness(), frame_thickness());
 
-    Rect ruler_rect { 0, 0, ruler_width(), height() - height_occupied_by_horizontal_scrollbar() };
+    auto ruler_rect = ruler_rect_in_inner_coordinates();
 
     if (m_ruler_visible) {
         painter.fill_rect(ruler_rect, Color::WarmGray);
@@ -305,7 +320,13 @@ void GTextEditor::paint_event(GPaintEvent& event)
         }
     }
 
-    painter.add_clip_rect({ m_ruler_visible ? (ruler_rect.right() + frame_thickness() + 1) : frame_thickness(), frame_thickness(), width() - width_occupied_by_vertical_scrollbar() - ruler_width(), height() - height_occupied_by_horizontal_scrollbar() });
+    Rect text_clip_rect {
+        (m_ruler_visible ? (ruler_rect_in_inner_coordinates().right() + frame_thickness() + 1) : frame_thickness()),
+        frame_thickness(),
+        width() - width_occupied_by_vertical_scrollbar() - ruler_width(),
+        height() - height_occupied_by_horizontal_scrollbar()
+    };
+    painter.add_clip_rect(text_clip_rect);
 
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = m_lines[i];
@@ -684,7 +705,6 @@ Rect GTextEditor::content_rect_for_position(const GTextPosition& position) const
     }
     return { x, position.line() * line_height(), 1, line_height() };
 }
-
 
 Rect GTextEditor::cursor_content_rect() const
 {
@@ -1107,10 +1127,10 @@ GTextPosition GTextEditor::next_position_after(const GTextPosition& position, Sh
 
 GTextPosition GTextEditor::prev_position_before(const GTextPosition& position, ShouldWrapAtStartOfDocument should_wrap)
 {
-    if (position.column() == 0){
+    if (position.column() == 0) {
         if (position.line() == 0) {
             if (should_wrap == ShouldWrapAtStartOfDocument::Yes) {
-                auto& last_line = m_lines[line_count() - 1]; 
+                auto& last_line = m_lines[line_count() - 1];
                 return { line_count() - 1, last_line.length() };
             }
             return {};
@@ -1146,7 +1166,7 @@ GTextRange GTextEditor::find_next(const StringView& needle, const GTextPosition&
             needle_index = 0;
         }
         position = next_position_after(position);
-    } while(position.is_valid() && position != original_position);
+    } while (position.is_valid() && position != original_position);
 
     return {};
 }
@@ -1176,7 +1196,7 @@ GTextRange GTextEditor::find_prev(const StringView& needle, const GTextPosition&
             needle_index = needle.length() - 1;
         }
         position = prev_position_before(position);
-    } while(position.is_valid() && position != original_position);
+    } while (position.is_valid() && position != original_position);
 
     return {};
 }
