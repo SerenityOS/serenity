@@ -96,6 +96,7 @@ void GTextEditor::set_text(const StringView& text)
     }
     add_line(i);
     update_content_size();
+    recompute_all_visual_lines();
     if (is_single_line())
         set_cursor(0, m_lines[0].length());
     else
@@ -124,15 +125,41 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
     position.move_by(-(m_horizontal_content_padding + ruler_width()), 0);
     position.move_by(-frame_thickness(), -frame_thickness());
 
-    int line_index = position.y() / line_height();
+    int line_index = -1;
+
+    if (is_line_wrapping_enabled()) {
+        for (int i = 0; i < m_lines.size(); ++i) {
+            auto& rect = m_lines[i].m_visual_rect;
+            if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
+                line_index = i;
+                break;
+            }
+        }
+    } else {
+        line_index = position.y() / line_height();
+    }
+
     line_index = max(0, min(line_index, line_count() - 1));
+
+    auto& line = m_lines[line_index];
 
     int column_index;
     switch (m_text_alignment) {
     case TextAlignment::CenterLeft:
         column_index = (position.x() + glyph_width() / 2) / glyph_width();
+        if (is_line_wrapping_enabled()) {
+            line.for_each_visual_line([&](const Rect& rect, const StringView&, int start_of_line) {
+                if (rect.contains(position)) {
+                    column_index += start_of_line;
+                    return IterationDecision::Break;
+                }
+                return IterationDecision::Continue;
+            });
+        }
         break;
     case TextAlignment::CenterRight:
+        // FIXME: Support right-aligned line wrapping, I guess.
+        ASSERT(!is_line_wrapping_enabled());
         column_index = (position.x() - content_x_for_position({ line_index, 0 }) + glyph_width() / 2) / glyph_width();
         break;
     default:
@@ -330,24 +357,26 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
     for (int i = first_visible_line; i <= last_visible_line; ++i) {
         auto& line = m_lines[i];
-        auto line_rect = line_content_rect(i);
-        // FIXME: Make sure we always fill the entire line.
-        //line_rect.set_width(exposed_width);
-        if (is_multi_line() && i == m_cursor.line())
-            painter.fill_rect(line_rect, Color(230, 230, 230));
-        painter.draw_text(line_rect, StringView(line.characters(), line.length()), m_text_alignment, Color::Black);
-        bool line_has_selection = has_selection && i >= selection.start().line() && i <= selection.end().line();
-        if (line_has_selection) {
-            int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
-            int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
+        line.for_each_visual_line([&](const Rect& line_rect, const StringView& visual_line_text, int) {
+            // FIXME: Make sure we always fill the entire line.
+            //line_rect.set_width(exposed_width);
+            if (is_multi_line() && i == m_cursor.line())
+                painter.fill_rect(line_rect, Color(230, 230, 230));
+            painter.draw_text(line_rect, visual_line_text, m_text_alignment, Color::Black);
+            bool line_has_selection = has_selection && i >= selection.start().line() && i <= selection.end().line();
+            if (line_has_selection) {
+                int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
+                int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
 
-            int selection_left = content_x_for_position({ i, selection_start_column_on_line });
-            int selection_right = content_x_for_position({ i, selection_end_column_on_line });
+                int selection_left = content_x_for_position({ i, selection_start_column_on_line });
+                int selection_right = content_x_for_position({ i, selection_end_column_on_line });
 
-            Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
-            painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
-            painter.draw_text(selection_rect, StringView(line.characters() + selection_start_column_on_line, line.length() - selection_start_column_on_line - (line.length() - selection_end_column_on_line)), TextAlignment::CenterLeft, Color::White);
-        }
+                Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
+                painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
+                painter.draw_text(selection_rect, StringView(line.characters() + selection_start_column_on_line, line.length() - selection_start_column_on_line - (line.length() - selection_end_column_on_line)), TextAlignment::CenterLeft, Color::White);
+            }
+            return IterationDecision::Continue;
+        });
     }
 
     if (is_focused() && m_cursor_state)
@@ -745,6 +774,8 @@ Rect GTextEditor::line_content_rect(int line_index) const
         line_rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return line_rect;
     }
+    if (is_line_wrapping_enabled())
+        return line.m_visual_rect;
     return {
         content_x_for_position({ line_index, 0 }),
         line_index * line_height(),
@@ -833,7 +864,9 @@ void GTextEditor::Line::set_text(const StringView& text)
 
 int GTextEditor::Line::width(const Font& font) const
 {
-    return font.glyph_width('x') * length();
+    if (m_editor.is_line_wrapping_enabled())
+        return m_editor.visible_text_rect_in_inner_coordinates().width();
+    return font.width(view());
 }
 
 void GTextEditor::Line::append(const char* characters, int length)
@@ -1054,6 +1087,7 @@ void GTextEditor::did_change()
 {
     ASSERT(!is_readonly());
     update_content_size();
+    recompute_all_visual_lines();
     if (!m_have_pending_change_notification) {
         m_have_pending_change_notification = true;
         deferred_invoke([this](auto&) {
@@ -1109,6 +1143,7 @@ void GTextEditor::resize_event(GResizeEvent& event)
 {
     GScrollableWidget::resize_event(event);
     update_content_size();
+    recompute_all_visual_lines();
 }
 
 GTextPosition GTextEditor::next_position_after(const GTextPosition& position, ShouldWrapAtEndOfDocument should_wrap)
@@ -1218,4 +1253,63 @@ char GTextEditor::character_at(const GTextPosition& position) const
     if (position.column() == line.length())
         return '\n';
     return line.characters()[position.column()];
+}
+
+void GTextEditor::recompute_all_visual_lines()
+{
+    int y_offset = 0;
+    for (auto& line : m_lines) {
+        line.recompute_visual_lines();
+        line.m_visual_rect.set_y(y_offset);
+        y_offset += line.m_visual_rect.height();
+    }
+}
+
+void GTextEditor::Line::recompute_visual_lines()
+{
+    m_visual_line_breaks.clear_with_capacity();
+
+    int available_width = m_editor.visible_text_rect_in_inner_coordinates().width();
+
+    if (m_editor.is_line_wrapping_enabled()) {
+        int line_width_so_far = 0;
+
+        for (int i = 0; i < length(); ++i) {
+            auto ch = characters()[i];
+            auto glyph_width = m_editor.font().glyph_width(ch);
+            if ((line_width_so_far + glyph_width) > available_width) {
+                m_visual_line_breaks.append(i);
+                line_width_so_far = 0;
+                continue;
+            }
+            line_width_so_far += glyph_width;
+        }
+    }
+
+    m_visual_line_breaks.append(length());
+
+    if (m_editor.is_line_wrapping_enabled())
+        m_visual_rect = { 0, 0, available_width, m_visual_line_breaks.size() * m_editor.line_height() };
+    else
+        m_visual_rect = { 0, 0, m_editor.font().width(view()), m_editor.line_height() };
+}
+
+template<typename Callback>
+void GTextEditor::Line::for_each_visual_line(Callback callback) const
+{
+    int start_of_line = 0;
+    int line_index = 0;
+    for (auto visual_line_break : m_visual_line_breaks) {
+        auto visual_line_view = StringView(characters() + start_of_line, visual_line_break - start_of_line);
+        Rect visual_line_rect {
+            m_visual_rect.x(),
+            m_visual_rect.y() + (line_index * m_editor.line_height()),
+            m_visual_rect.width(),
+            m_editor.line_height()
+        };
+        if (callback(visual_line_rect, visual_line_view, start_of_line) == IterationDecision::Break)
+            break;
+        start_of_line = visual_line_break;
+        ++line_index;
+    }
 }
