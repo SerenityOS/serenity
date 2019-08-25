@@ -34,15 +34,7 @@ TextEditorWidget::TextEditorWidget()
 
     m_find_textbox = new GTextBox(m_find_widget);
 
-    m_find_prev_button = new GButton("Prev", m_find_widget);
-    m_find_prev_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_find_prev_button->set_preferred_size(50, 0);
-
-    m_find_next_button = new GButton("Next", m_find_widget);
-    m_find_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_find_next_button->set_preferred_size(50, 0);
-
-    m_find_next_button->on_click = [this](auto&) {
+    m_find_next_action = GAction::create("Find next", { Mod_Ctrl, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
         auto found_range = m_editor->find_next(needle, m_editor->normalized_selection().end());
         dbg() << "find_next(\"" << needle << "\") returned " << found_range;
@@ -55,9 +47,9 @@ TextEditorWidget::TextEditorWidget()
                 GMessageBox::Type::Information,
                 GMessageBox::InputType::OK, window());
         }
-    };
 
-    m_find_prev_button->on_click = [this](auto&) {
+    });
+    m_find_previous_action = GAction::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
 
         auto selection_start = m_editor->normalized_selection().start();
@@ -76,6 +68,22 @@ TextEditorWidget::TextEditorWidget()
                 GMessageBox::Type::Information,
                 GMessageBox::InputType::OK, window());
         }
+    });
+
+    m_find_previous_button = new GButton("Previous", m_find_widget);
+    m_find_previous_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_find_previous_button->set_preferred_size(64, 0);
+    m_find_previous_button->set_action(*m_find_previous_action);
+    m_find_previous_button->on_click = [&](auto&) {
+        m_find_previous_action->activate();
+    };
+
+    m_find_next_button = new GButton("Next", m_find_widget);
+    m_find_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_find_next_button->set_preferred_size(64, 0);
+    m_find_next_button->set_action(*m_find_next_action);
+    m_find_next_button->on_click = [&](auto&) {
+        m_find_next_action->activate();
     };
 
     m_find_textbox->on_return_pressed = [this] {
@@ -174,6 +182,8 @@ TextEditorWidget::TextEditorWidget()
     edit_menu->add_action(m_editor->delete_action());
     edit_menu->add_separator();
     edit_menu->add_action(*m_find_action);
+    edit_menu->add_action(*m_find_next_action);
+    edit_menu->add_action(*m_find_previous_action);
     menubar->add_menu(move(edit_menu));
 
     auto font_menu = make<GMenu>("Font");
