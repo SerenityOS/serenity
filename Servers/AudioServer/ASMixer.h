@@ -8,6 +8,7 @@
 #include <LibAudio/ABuffer.h>
 #include <LibCore/CFile.h>
 #include <LibCore/CLock.h>
+#include <LibThread/Thread.h>
 
 class ASClientConnection;
 
@@ -64,6 +65,8 @@ private:
 
     CFile m_device;
     CLock m_lock;
+
+    LibThread::Thread m_sound_thread;
 
     int m_main_volume { 100 };
 
