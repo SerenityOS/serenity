@@ -5,10 +5,10 @@
 #include <LibCore/CEvent.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CLocalSocket.h>
-#include <LibCore/CLock.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
 #include <LibCore/CSyscallUtils.h>
+#include <LibThread/Lock.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdio.h>

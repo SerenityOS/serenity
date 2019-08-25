@@ -6,8 +6,8 @@
 #include <AK/Queue.h>
 #include <AK/RefCounted.h>
 #include <LibCore/CEventLoop.h>
-#include <LibCore/CLock.h>
 #include <LibCore/CObject.h>
+#include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 
 namespace LibThread {
@@ -22,7 +22,7 @@ class BackgroundActionBase {
 private:
     BackgroundActionBase() {}
 
-    static CLockable<Queue<Function<void()>>>& all_actions();
+    static Lockable<Queue<Function<void()>>>& all_actions();
     static Thread& background_thread();
 };
 

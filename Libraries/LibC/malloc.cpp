@@ -2,7 +2,7 @@
 #include <AK/InlineLinkedList.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
-#include <LibCore/CLock.h>
+#include <LibThread/Lock.h>
 #include <assert.h>
 #include <mallocdefs.h>
 #include <serenity.h>
@@ -19,10 +19,10 @@
 #define MAGIC_BIGALLOC_HEADER 0x42697267
 #define PAGE_ROUND_UP(x) ((((size_t)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
-static CLock& malloc_lock()
+static LibThread::Lock& malloc_lock()
 {
-    static u32 lock_storage[sizeof(CLock) / sizeof(u32)];
-    return *reinterpret_cast<CLock*>(&lock_storage);
+    static u32 lock_storage[sizeof(LibThread::Lock) / sizeof(u32)];
+    return *reinterpret_cast<LibThread::Lock*>(&lock_storage);
 }
 
 static const int number_of_chunked_blocks_to_keep_around_per_size_class = 32;
@@ -317,7 +317,7 @@ void* realloc(void* ptr, size_t size)
 
 void __malloc_init()
 {
-    new (&malloc_lock()) CLock();
+    new (&malloc_lock()) LibThread::Lock();
     if (getenv("LIBC_NOSCRUB_MALLOC"))
         s_scrub_malloc = false;
     if (getenv("LIBC_NOSCRUB_FREE"))

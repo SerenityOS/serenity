@@ -20,10 +20,12 @@ static inline u32 CAS(volatile u32* mem, u32 newval, u32 oldval)
     return ret;
 }
 
-class CLock {
+namespace LibThread {
+
+class Lock {
 public:
-    CLock() {}
-    ~CLock() {}
+    Lock() {}
+    ~Lock() {}
 
     void lock();
     void unlock();
@@ -34,22 +36,22 @@ private:
     int m_holder { -1 };
 };
 
-class CLocker {
+class Locker {
 public:
-    [[gnu::always_inline]] inline explicit CLocker(CLock& l)
+    [[gnu::always_inline]] inline explicit Locker(Lock& l)
         : m_lock(l)
     {
         lock();
     }
-    [[gnu::always_inline]] inline ~CLocker() { unlock(); }
+    [[gnu::always_inline]] inline ~Locker() { unlock(); }
     [[gnu::always_inline]] inline void unlock() { m_lock.unlock(); }
     [[gnu::always_inline]] inline void lock() { m_lock.lock(); }
 
 private:
-    CLock& m_lock;
+    Lock& m_lock;
 };
 
-[[gnu::always_inline]] inline void CLock::lock()
+[[gnu::always_inline]] inline void Lock::lock()
 {
     int tid = gettid();
     for (;;) {
@@ -67,7 +69,7 @@ private:
     }
 }
 
-inline void CLock::unlock()
+inline void Lock::unlock()
 {
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
@@ -88,17 +90,17 @@ inline void CLock::unlock()
     }
 }
 
-#define LOCKER(lock) CLocker locker(lock)
+#define LOCKER(lock) LibThread::Locker locker(lock)
 
 template<typename T>
-class CLockable {
+class Lockable {
 public:
-    CLockable() {}
-    CLockable(T&& resource)
+    Lockable() {}
+    Lockable(T&& resource)
         : m_resource(move(resource))
     {
     }
-    CLock& lock() { return m_lock; }
+    Lock& lock() { return m_lock; }
     T& resource() { return m_resource; }
 
     T lock_and_copy()
@@ -109,16 +111,22 @@ public:
 
 private:
     T m_resource;
-    CLock m_lock;
+    Lock m_lock;
 };
+
+}
 
 #else
 
-class CLock {
+namespace LibThread {
+
+class Lock {
 public:
-    CLock() { }
-    ~CLock() { }
+    Lock() { }
+    ~Lock() { }
 };
+
+}
 
 #define LOCKER(x)
 

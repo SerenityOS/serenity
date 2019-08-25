@@ -1,9 +1,9 @@
 #include <LibThread/BackgroundAction.h>
 #include <LibThread/Thread.h>
-#include <LibCore/CLock.h>
+#include <LibThread/Lock.h>
 #include <AK/Queue.h>
 
-static CLockable<Queue<Function<void()>>>* s_all_actions;
+static LibThread::Lockable<Queue<Function<void()>>>* s_all_actions;
 static LibThread::Thread* s_background_thread;
 
 static int background_thread_func()
@@ -27,13 +27,13 @@ static int background_thread_func()
 
 static void init()
 {
-    s_all_actions = new CLockable<Queue<Function<void()>>>();
+    s_all_actions = new LibThread::Lockable<Queue<Function<void()>>>();
     s_background_thread = new LibThread::Thread(background_thread_func);
     s_background_thread->set_name("Background thread");
     s_background_thread->start();
 }
 
-CLockable<Queue<Function<void()>>>& LibThread::BackgroundActionBase::all_actions()
+LibThread::Lockable<Queue<Function<void()>>>& LibThread::BackgroundActionBase::all_actions()
 {
     if (s_all_actions == nullptr)
         init();

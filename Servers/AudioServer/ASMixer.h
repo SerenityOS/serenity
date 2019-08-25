@@ -7,7 +7,7 @@
 #include <AK/WeakPtr.h>
 #include <LibAudio/ABuffer.h>
 #include <LibCore/CFile.h>
-#include <LibCore/CLock.h>
+#include <LibThread/Lock.h>
 #include <LibThread/Thread.h>
 
 class ASClientConnection;
@@ -64,7 +64,7 @@ private:
     Vector<NonnullRefPtr<ASBufferQueue>> m_pending_mixing;
 
     CFile m_device;
-    CLock m_lock;
+    LibThread::Lock m_lock;
 
     LibThread::Thread m_sound_thread;
 
