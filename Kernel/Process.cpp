@@ -1,5 +1,6 @@
 #include <AK/ELF/ELFLoader.h>
 #include <AK/ELF/exec_elf.h>
+#include <AK/FileSystemPath.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -1805,6 +1806,35 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
         return -ENAMETOOLONG;
     return VFS::the().mkdir(StringView(pathname, pathname_length), mode & ~umask(), current_directory());
 }
+
+int Process::sys$realpath(const char* pathname, char* buffer, size_t size)
+{
+    if (!validate_read_str(pathname))
+        return -EFAULT;
+
+    size_t pathname_length = strlen(pathname);
+    if (pathname_length == 0)
+        return -EINVAL;
+    if (pathname_length >= size)
+        return -ENAMETOOLONG;
+    if (!validate_write(buffer, size))
+        return -EFAULT;
+
+    auto custody_or_error = VFS::the().resolve_path(pathname, current_directory());
+    if (custody_or_error.is_error())
+        return custody_or_error.error();
+    auto& custody = custody_or_error.value();
+
+    // FIXME: Once resolve_path is fixed to deal with .. and . , remove the use of FileSystemPath::canonical_path.
+    FileSystemPath canonical_path(custody->absolute_path());
+    if (!canonical_path.is_valid()) {
+        printf("FileSystemPath failed to canonicalize '%s'\n", custody->absolute_path());
+        return 1;
+    }
+
+    strncpy(buffer, canonical_path.string().characters(), size);
+    return 0;
+};
 
 clock_t Process::sys$times(tms* times)
 {

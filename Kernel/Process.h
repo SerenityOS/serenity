@@ -222,6 +222,7 @@ public:
     int sys$halt();
     int sys$reboot();
     int sys$set_process_icon(int icon_id);
+    int sys$realpath(const char* pathname, char*, size_t);
 
     static void initialize();
 
