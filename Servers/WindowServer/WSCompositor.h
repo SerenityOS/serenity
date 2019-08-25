@@ -43,7 +43,6 @@ private:
     void draw_cursor();
     void draw_geometry_label();
     void draw_menubar();
-    void finish_setting_wallpaper(const String& path, NonnullRefPtr<GraphicsBitmap>&&);
 
     unsigned m_compose_count { 0 };
     unsigned m_flush_count { 0 };

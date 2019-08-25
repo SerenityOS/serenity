@@ -9,26 +9,31 @@
 #include <unistd.h>
 
 WSCPUMonitor::WSCPUMonitor()
+    : m_thread([this] {
+        monitor();
+        return 0;
+    })
 {
-    create_thread([](void* context) -> int {
-        auto& monitor = *(WSCPUMonitor*)context;
-        for (;;) {
-            static unsigned last_busy;
-            static unsigned last_idle;
-            unsigned busy;
-            unsigned idle;
-            monitor.get_cpu_usage(busy, idle);
-            unsigned busy_diff = busy - last_busy;
-            unsigned idle_diff = idle - last_idle;
-            last_busy = busy;
-            last_idle = idle;
-            float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
-            monitor.m_cpu_history.enqueue(cpu);
-            monitor.m_dirty = true;
-            sleep(1);
-        }
-    },
-        this);
+    m_thread.start();
+}
+
+void WSCPUMonitor::monitor()
+{
+    for (;;) {
+        static unsigned last_busy;
+        static unsigned last_idle;
+        unsigned busy;
+        unsigned idle;
+        get_cpu_usage(busy, idle);
+        unsigned busy_diff = busy - last_busy;
+        unsigned idle_diff = idle - last_idle;
+        last_busy = busy;
+        last_idle = idle;
+        float cpu = (float)busy_diff / (float)(busy_diff + idle_diff);
+        m_cpu_history.enqueue(cpu);
+        m_dirty = true;
+        sleep(1);
+    }
 }
 
 void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
