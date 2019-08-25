@@ -1,13 +1,12 @@
 diff --git a/config.sub b/config.sub
-index a44fd8ae..eb9be19b 100755
+index 5b158ac4..cfd2eb81 100755
 --- a/config.sub
 +++ b/config.sub
-@@ -1367,7 +1367,7 @@ case $os in
- 	     | powermax* | dnix* | nx6 | nx7 | sei* | dragonfly* \
- 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
- 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
--	     | midnightbsd* | amdhsa* | unleashed* | emscripten*)
-+	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | *serenity* )
- 	# Remember, each alternative MUST END IN *, to match a version number.
- 		;;
- 	qnx*)
+@@ -1342,6 +1342,7 @@ case $os in
+ 	# Each alternative MUST end in a * to match a version number.
+ 	# sysv* is not here because it comes later, after sysvr4.
+ 	gnu* | bsd* | mach* | minix* | genix* | ultrix* | irix* \
++	     | serenity* \
+ 	     | *vms* | esix* | aix* | cnk* | sunos | sunos[34]*\
+ 	     | hpux* | unos* | osf* | luna* | dgux* | auroraux* | solaris* \
+ 	     | sym* | kopensolaris* | plan9* \
