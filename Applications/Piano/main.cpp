@@ -2,7 +2,6 @@
 #include "PianoWidget.h"
 #include <LibAudio/AClientConnection.h>
 #include <LibCore/CFile.h>
-#include <LibCore/CThread.h>
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -10,6 +9,7 @@
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
+#include <LibThread/Thread.h>
 
 int main(int argc, char** argv)
 {
@@ -26,9 +26,7 @@ int main(int argc, char** argv)
     window->show();
     window->set_icon(load_png("/res/icons/16x16/app-piano.png"));
 
-    CThread sound_thread([](void* context) -> int {
-        auto* piano_widget = (PianoWidget*)context;
-
+    LibThread::Thread sound_thread([piano_widget] {
         CFile audio("/dev/audio");
         if (!audio.open(CIODevice::WriteOnly)) {
             dbgprintf("Can't open audio device: %s", audio.error_string());
@@ -42,8 +40,8 @@ int main(int argc, char** argv)
             GEventLoop::current().post_event(*piano_widget, make<CCustomEvent>(0));
             GEventLoop::current().wake();
         }
-    },
-        piano_widget);
+    });
+    sound_thread.start();
 
     auto menubar = make<GMenuBar>();
 
