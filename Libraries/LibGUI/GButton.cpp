@@ -68,6 +68,8 @@ void GButton::click()
     }
     if (on_click)
         on_click(*this);
+    if (m_action)
+        m_action->activate();
 }
 
 bool GButton::supports_keyboard_activation() const

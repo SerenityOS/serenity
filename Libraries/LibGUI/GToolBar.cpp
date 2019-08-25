@@ -31,9 +31,6 @@ void GToolBar::add_action(GAction& action)
         button->set_icon(item->action->icon());
     else
         button->set_text(item->action->text());
-    button->on_click = [&action](const GButton&) {
-        action.activate();
-    };
 
     button->set_button_style(ButtonStyle::CoolBar);
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);

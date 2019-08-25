@@ -74,17 +74,11 @@ TextEditorWidget::TextEditorWidget()
     m_find_previous_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_find_previous_button->set_preferred_size(64, 0);
     m_find_previous_button->set_action(*m_find_previous_action);
-    m_find_previous_button->on_click = [&](auto&) {
-        m_find_previous_action->activate();
-    };
 
     m_find_next_button = new GButton("Next", m_find_widget);
     m_find_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_find_next_button->set_preferred_size(64, 0);
     m_find_next_button->set_action(*m_find_next_action);
-    m_find_next_button->on_click = [&](auto&) {
-        m_find_next_action->activate();
-    };
 
     m_find_textbox->on_return_pressed = [this] {
         m_find_next_button->click();
