@@ -1405,3 +1405,14 @@ void GTextEditor::Line::for_each_visual_line(Callback callback) const
         ++line_index;
     }
 }
+
+void GTextEditor::set_line_wrapping_enabled(bool enabled)
+{
+    if (m_line_wrapping_enabled == enabled)
+        return;
+
+    m_line_wrapping_enabled = enabled;
+    update_content_size();
+    recompute_all_visual_lines();
+    update();
+}
