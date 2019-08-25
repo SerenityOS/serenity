@@ -1204,6 +1204,12 @@ void GTextEditor::context_menu_event(GContextMenuEvent& event)
         m_context_menu->add_action(copy_action());
         m_context_menu->add_action(paste_action());
         m_context_menu->add_action(delete_action());
+        if (!m_custom_context_menu_actions.is_empty()) {
+            m_context_menu->add_separator();
+            for (auto& action : m_custom_context_menu_actions) {
+                m_context_menu->add_action(action);
+            }
+        }
     }
     m_context_menu->popup(event.screen_position());
 }
@@ -1412,4 +1418,9 @@ int GTextEditor::Line::visual_line_containing(int column) const
         return IterationDecision::Continue;
     });
     return visual_line_index;
+}
+
+void GTextEditor::add_custom_context_menu_action(GAction& action)
+{
+    m_custom_context_menu_actions.append(action);
 }

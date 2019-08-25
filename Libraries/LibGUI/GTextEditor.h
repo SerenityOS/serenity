@@ -3,6 +3,7 @@
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
 
@@ -162,6 +163,8 @@ public:
     GAction& paste_action() { return *m_paste_action; }
     GAction& delete_action() { return *m_delete_action; }
 
+    void add_custom_context_menu_action(GAction&);
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
@@ -266,6 +269,7 @@ private:
     RefPtr<GAction> m_paste_action;
     RefPtr<GAction> m_delete_action;
     CElapsedTimer m_triple_click_timer;
+    NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const GTextPosition& value)
