@@ -172,6 +172,16 @@ void TerminalWidget::keydown_event(GKeyEvent& event)
         if (event.alt())
             write(m_ptm_fd, "\033", 1);
 
+        //Clear the selection if we type in/behind it
+        auto future_cursor_column = (event.key() == KeyCode::Key_Backspace) ? m_terminal.cursor_column() - 1 : m_terminal.cursor_column();
+        auto min_selection_row = min(m_selection_start.row(), m_selection_end.row());
+        auto max_selection_row = max(m_selection_start.row(), m_selection_end.row());
+
+        if (future_cursor_column <= max(m_selection_start.column(), m_selection_end.column()) && m_terminal.cursor_row() >= min_selection_row && m_terminal.cursor_row() <= max_selection_row) {
+            m_selection_end = {};
+            update();
+        }
+
         write(m_ptm_fd, &ch, 1);
     }
 }
