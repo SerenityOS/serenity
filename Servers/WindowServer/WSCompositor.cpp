@@ -7,6 +7,7 @@
 #include <LibDraw/Font.h>
 #include <LibDraw/PNGLoader.h>
 #include <LibDraw/Painter.h>
+#include <LibThread/BackgroundAction.h>
 
 // #define COMPOSITOR_DEBUG
 
@@ -265,41 +266,22 @@ void WSCompositor::invalidate(const Rect& a_rect)
 
 bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& callback)
 {
-    struct Context {
-        String path;
-        RefPtr<GraphicsBitmap> bitmap;
-        Function<void(bool)> callback;
-    };
-    auto context = make<Context>();
-    context->path = path;
-    context->callback = move(callback);
+    LibThread::BackgroundAction<RefPtr<GraphicsBitmap>>::create(
+        [path] {
+            return load_png(path);
+        },
 
-    int rc = create_thread([](void* ctx) -> int {
-        OwnPtr<Context> context((Context*)ctx);
-        context->bitmap = load_png(context->path);
-        if (!context->bitmap) {
-            context->callback(false);
-            exit_thread(0);
-            return 0;
-        }
-        the().deferred_invoke([context = move(context)](auto&) {
-            the().finish_setting_wallpaper(context->path, *context->bitmap);
-            context->callback(true);
+        [this, path, callback = move(callback)](RefPtr<GraphicsBitmap> bitmap) {
+            if (!bitmap) {
+                callback(false);
+                return;
+            }
+            m_wallpaper_path = path;
+            m_wallpaper = move(bitmap);
+            invalidate();
+            callback(true);
         });
-        exit_thread(0);
-        return 0;
-    },
-        context.leak_ptr());
-    ASSERT(rc > 0);
-
     return true;
-}
-
-void WSCompositor::finish_setting_wallpaper(const String& path, NonnullRefPtr<GraphicsBitmap>&& bitmap)
-{
-    m_wallpaper_path = path;
-    m_wallpaper = move(bitmap);
-    invalidate();
 }
 
 void WSCompositor::flip_buffers()

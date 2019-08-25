@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/CircularQueue.h>
+#include <LibThread/Thread.h>
 #include <stdio.h>
 
 class Painter;
@@ -16,8 +17,11 @@ public:
     void paint(Painter&, const Rect&);
 
 private:
+    void monitor();
+
     void get_cpu_usage(unsigned& busy, unsigned& idle);
 
     CircularQueue<float, 30> m_cpu_history;
     bool m_dirty { false };
+    LibThread::Thread m_thread;
 };
