@@ -92,6 +92,7 @@ TextEditorWidget::TextEditorWidget()
     m_find_action = GAction::create("Find...", { Mod_Ctrl, Key_F }, [this](auto&) {
         m_find_widget->set_visible(true);
         m_find_textbox->set_focus(true);
+        m_find_textbox->select_all();
     });
 
     m_editor->add_custom_context_menu_action(*m_find_action);
