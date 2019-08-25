@@ -177,7 +177,7 @@ void TerminalWidget::keydown_event(GKeyEvent& event)
         auto min_selection_row = min(m_selection_start.row(), m_selection_end.row());
         auto max_selection_row = max(m_selection_start.row(), m_selection_end.row());
 
-        if (future_cursor_column <= max(m_selection_start.column(), m_selection_end.column()) && m_terminal.cursor_row() >= min_selection_row && m_terminal.cursor_row() <= max_selection_row) {
+        if (future_cursor_column <= last_selection_column_on_row(m_terminal.cursor_row()) && m_terminal.cursor_row() >= min_selection_row && m_terminal.cursor_row() <= max_selection_row) {
             m_selection_end = {};
             update();
         }
@@ -464,8 +464,8 @@ String TerminalWidget::selected_text() const
     auto end = normalized_selection_end();
 
     for (int row = start.row(); row <= end.row(); ++row) {
-        int first_column = row == start.row() ? start.column() : 0;
-        int last_column = row == end.row() ? end.column() : m_terminal.columns() - 1;
+        int first_column = first_selection_column_on_row(row);
+        int last_column = last_selection_column_on_row(row);
         for (int column = first_column; column <= last_column; ++column) {
             auto& line = m_terminal.line(row);
             if (line.attributes[column].is_untouched()) {
@@ -480,6 +480,16 @@ String TerminalWidget::selected_text() const
     }
 
     return builder.to_string();
+}
+
+int TerminalWidget::first_selection_column_on_row(int row) const
+{
+    return row == normalized_selection_start().row() ? normalized_selection_start().column() : 0;
+}
+
+int TerminalWidget::last_selection_column_on_row(int row) const
+{
+    return row == normalized_selection_end().row() ? normalized_selection_end().column() : m_terminal.columns() - 1;
 }
 
 void TerminalWidget::terminal_history_changed()
