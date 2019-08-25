@@ -101,6 +101,9 @@ public:
     bool is_automatic_indentation_enabled() const { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
 
+    bool is_line_wrapping_enabled() const { return m_line_wrapping_enabled; }
+    void set_line_wrapping_enabled(bool enabled) { m_line_wrapping_enabled = enabled; }
+
     TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text_alignment(TextAlignment);
 
@@ -132,7 +135,7 @@ public:
 
     GTextPosition next_position_after(const GTextPosition&, ShouldWrapAtEndOfDocument = ShouldWrapAtEndOfDocument::Yes);
     GTextPosition prev_position_before(const GTextPosition&, ShouldWrapAtStartOfDocument = ShouldWrapAtStartOfDocument::Yes);
-    
+
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     void set_selection(const GTextRange&);
@@ -187,6 +190,7 @@ private:
         explicit Line(GTextEditor&);
         Line(GTextEditor&, const StringView&);
 
+        StringView view() const { return { characters(), length() }; }
         const char* characters() const { return m_text.data(); }
         int length() const { return m_text.size() - 1; }
         int width(const Font&) const;
@@ -198,12 +202,19 @@ private:
         void append(const char*, int);
         void truncate(int length);
         void clear();
+        void recompute_visual_lines();
+
+        template<typename Callback>
+        void for_each_visual_line(Callback) const;
 
     private:
         GTextEditor& m_editor;
 
         // NOTE: This vector is null terminated.
         Vector<char> m_text;
+
+        Vector<int, 1> m_visual_line_breaks;
+        Rect m_visual_rect;
     };
 
     Rect line_content_rect(int item_index) const;
@@ -228,6 +239,7 @@ private:
     char character_at(const GTextPosition&) const;
     Rect ruler_rect_in_inner_coordinates() const;
     Rect visible_text_rect_in_inner_coordinates() const;
+    void recompute_all_visual_lines();
 
     Type m_type { MultiLine };
 
@@ -239,6 +251,7 @@ private:
     bool m_ruler_visible { false };
     bool m_have_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
+    bool m_line_wrapping_enabled { false };
     bool m_readonly { false };
     int m_line_spacing { 4 };
     int m_soft_tab_width { 4 };
@@ -267,4 +280,3 @@ inline const LogStream& operator<<(const LogStream& stream, const GTextRange& va
         return stream << "GTextRange(Invalid)";
     return stream << value.start() << '-' << value.end();
 }
-
