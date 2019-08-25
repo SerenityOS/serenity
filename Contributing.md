@@ -20,6 +20,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Split your changes into separate, atomic commits.
 * Make sure your commits are rebased on the master branch.
 * Wrap your commit messages at 72 characters.
+* The first line of the commit message should have the format "Category: Brief description of what's being changed". The "category" can be a subdirectory, but also something like "POSIX compliance" or "ClassName". Whatever seems logical.
 * Write your commit messages in proper English, with care and punctuation.
 * Squash your commits when making revisions after a patch review.
 
