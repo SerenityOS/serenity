@@ -355,26 +355,87 @@ void GTextEditor::paint_event(GPaintEvent& event)
     };
     painter.add_clip_rect(text_clip_rect);
 
-    for (int i = first_visible_line; i <= last_visible_line; ++i) {
-        auto& line = m_lines[i];
-        line.for_each_visual_line([&](const Rect& line_rect, const StringView& visual_line_text, int) {
+    for (int line_index = first_visible_line; line_index <= last_visible_line; ++line_index) {
+        auto& line = m_lines[line_index];
+
+        bool physical_line_has_selection = has_selection && line_index >= selection.start().line() && line_index <= selection.end().line();
+        int first_visual_line_with_selection = -1;
+        int last_visual_line_with_selection = -1;
+        if (physical_line_has_selection) {
+            if (selection.start().line() < line_index) {
+                first_visual_line_with_selection = 0;
+            } else {
+                int visual_line_index = 0;
+                line.for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
+                    if (selection.start().column() >= start_of_visual_line && ((selection.start().column() - start_of_visual_line) < view.length()))
+                        return IterationDecision::Break;
+                    ++visual_line_index;
+                    return IterationDecision::Continue;
+                });
+                first_visual_line_with_selection = visual_line_index;
+            }
+            if (selection.end().line() > line_index) {
+                last_visual_line_with_selection = line.m_visual_line_breaks.size();
+            } else {
+                int visual_line_index = 0;
+                line.for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
+                    if (selection.end().column() >= start_of_visual_line && ((selection.end().column() - start_of_visual_line) < view.length()))
+                        return IterationDecision::Break;
+                    ++visual_line_index;
+                    return IterationDecision::Continue;
+                });
+                last_visual_line_with_selection = visual_line_index;
+            }
+        }
+
+        int selection_start_column_within_line = selection.start().line() == line_index ? selection.start().column() : 0;
+        int selection_end_column_within_line = selection.end().line() == line_index ? selection.end().column() : line.length();
+
+        int visual_line_index = 0;
+        line.for_each_visual_line([&](const Rect& visual_line_rect, const StringView& visual_line_text, int start_of_visual_line) {
             // FIXME: Make sure we always fill the entire line.
             //line_rect.set_width(exposed_width);
-            if (is_multi_line() && i == m_cursor.line())
-                painter.fill_rect(line_rect, Color(230, 230, 230));
-            painter.draw_text(line_rect, visual_line_text, m_text_alignment, Color::Black);
-            bool line_has_selection = has_selection && i >= selection.start().line() && i <= selection.end().line();
-            if (line_has_selection) {
-                int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
-                int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
+            if (is_multi_line() && line_index == m_cursor.line())
+                painter.fill_rect(visual_line_rect, Color(230, 230, 230));
+            painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, Color::Black);
+            bool physical_line_has_selection = has_selection && line_index >= selection.start().line() && line_index <= selection.end().line();
+            if (physical_line_has_selection) {
 
-                int selection_left = content_x_for_position({ i, selection_start_column_on_line });
-                int selection_right = content_x_for_position({ i, selection_end_column_on_line });
+                bool current_visual_line_has_selection = (line_index != selection.start().line() && line_index != selection.end().line())
+                    || (visual_line_index >= first_visual_line_with_selection && visual_line_index <= last_visual_line_with_selection);
+                if (current_visual_line_has_selection) {
+                    bool selection_begins_on_current_visual_line = visual_line_index == first_visual_line_with_selection;
+                    bool selection_ends_on_current_visual_line = visual_line_index == last_visual_line_with_selection;
 
-                Rect selection_rect { selection_left, line_rect.y(), selection_right - selection_left, line_rect.height() };
-                painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
-                painter.draw_text(selection_rect, StringView(line.characters() + selection_start_column_on_line, line.length() - selection_start_column_on_line - (line.length() - selection_end_column_on_line)), TextAlignment::CenterLeft, Color::White);
+                    int selection_left = selection_begins_on_current_visual_line
+                        ? content_x_for_position({ line_index, selection_start_column_within_line })
+                        : m_horizontal_content_padding;
+
+                    int selection_right = selection_ends_on_current_visual_line
+                        ? content_x_for_position({ line_index, selection_end_column_within_line })
+                        : visual_line_rect.right();
+
+                    Rect selection_rect {
+                        selection_left,
+                        visual_line_rect.y(),
+                        selection_right - selection_left,
+                        visual_line_rect.height()
+                    };
+
+                    painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
+
+                    int start_of_selection_within_visual_line = max(0, selection_start_column_within_line - start_of_visual_line);
+                    int end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
+
+                    StringView visual_selected_text {
+                        visual_line_text.characters_without_null_termination() + start_of_selection_within_visual_line,
+                        end_of_selection_within_visual_line - start_of_selection_within_visual_line
+                    };
+
+                    painter.draw_text(selection_rect, visual_selected_text, TextAlignment::CenterLeft, Color::White);
+                }
             }
+            ++visual_line_index;
             return IterationDecision::Continue;
         });
     }
@@ -712,7 +773,7 @@ int GTextEditor::content_x_for_position(const GTextPosition& position) const
     switch (m_text_alignment) {
     case TextAlignment::CenterLeft:
         line.for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
-            if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) < view.length())) {
+            if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
                 x_offset = (position.column() - start_of_visual_line) * glyph_width();
                 return IterationDecision::Break;
             }
@@ -746,7 +807,7 @@ Rect GTextEditor::content_rect_for_position(const GTextPosition& position) const
     auto& line = m_lines[position.line()];
     Rect rect;
     line.for_each_visual_line([&](const Rect& visual_line_rect, const StringView& view, int start_of_visual_line) {
-        if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) < view.length())) {
+        if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
             // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
             //       *and* included in what we get from content_x_for_position().
             rect = {
@@ -1141,6 +1202,10 @@ void GTextEditor::did_update_selection()
     m_copy_action->set_enabled(has_selection());
     if (on_selection_change)
         on_selection_change();
+    if (is_line_wrapping_enabled()) {
+        // FIXME: Try to repaint less.
+        update();
+    }
 }
 
 void GTextEditor::context_menu_event(GContextMenuEvent& event)
