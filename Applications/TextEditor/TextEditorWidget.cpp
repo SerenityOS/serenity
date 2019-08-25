@@ -65,7 +65,7 @@ TextEditorWidget::TextEditorWidget()
             selection_start = m_editor->normalized_selection().end();
 
         auto found_range = m_editor->find_prev(needle, selection_start);
-        
+
         dbg() << "find_prev(\"" << needle << "\") returned " << found_range;
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
@@ -137,8 +137,16 @@ TextEditorWidget::TextEditorWidget()
         m_save_as_action->activate();
     });
 
+    m_line_wrapping_setting_action = GAction::create("Line wrapping", [&](GAction& action) {
+        action.set_checked(!action.is_checked());
+        m_editor->set_line_wrapping_enabled(action.is_checked());
+    });
+    m_line_wrapping_setting_action->set_checkable(true);
+    m_line_wrapping_setting_action->set_checked(m_editor->is_line_wrapping_enabled());
+
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Text Editor");
+    app_menu->add_action(*m_line_wrapping_setting_action);
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
