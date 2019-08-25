@@ -92,6 +92,10 @@ TextEditorWidget::TextEditorWidget()
         m_find_textbox->set_focus(true);
     });
 
+    m_editor->add_custom_context_menu_action(*m_find_action);
+    m_editor->add_custom_context_menu_action(*m_find_next_action);
+    m_editor->add_custom_context_menu_action(*m_find_previous_action);
+
     auto* statusbar = new GStatusBar(this);
 
     m_editor->on_cursor_change = [statusbar, this] {
