@@ -19,7 +19,7 @@ AudioServerEndpoint.h: AudioServer.ipc
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore -lipc
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore -lipc -lthread
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
