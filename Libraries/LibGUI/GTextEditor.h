@@ -203,6 +203,7 @@ private:
         void truncate(int length);
         void clear();
         void recompute_visual_lines();
+        int visual_line_containing(int column) const;
 
         template<typename Callback>
         void for_each_visual_line(Callback) const;

@@ -362,30 +362,15 @@ void GTextEditor::paint_event(GPaintEvent& event)
         int first_visual_line_with_selection = -1;
         int last_visual_line_with_selection = -1;
         if (physical_line_has_selection) {
-            if (selection.start().line() < line_index) {
+            if (selection.start().line() < line_index)
                 first_visual_line_with_selection = 0;
-            } else {
-                int visual_line_index = 0;
-                line.for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
-                    if (selection.start().column() >= start_of_visual_line && ((selection.start().column() - start_of_visual_line) < view.length()))
-                        return IterationDecision::Break;
-                    ++visual_line_index;
-                    return IterationDecision::Continue;
-                });
-                first_visual_line_with_selection = visual_line_index;
-            }
-            if (selection.end().line() > line_index) {
+            else
+                first_visual_line_with_selection = line.visual_line_containing(selection.start().column());
+
+            if (selection.end().line() > line_index)
                 last_visual_line_with_selection = line.m_visual_line_breaks.size();
-            } else {
-                int visual_line_index = 0;
-                line.for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
-                    if (selection.end().column() >= start_of_visual_line && ((selection.end().column() - start_of_visual_line) < view.length()))
-                        return IterationDecision::Break;
-                    ++visual_line_index;
-                    return IterationDecision::Continue;
-                });
-                last_visual_line_with_selection = visual_line_index;
-            }
+            else
+                last_visual_line_with_selection = line.visual_line_containing(selection.end().column());
         }
 
         int selection_start_column_within_line = selection.start().line() == line_index ? selection.start().column() : 0;
@@ -1415,4 +1400,16 @@ void GTextEditor::set_line_wrapping_enabled(bool enabled)
     update_content_size();
     recompute_all_visual_lines();
     update();
+}
+
+int GTextEditor::Line::visual_line_containing(int column) const
+{
+    int visual_line_index = 0;
+    for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
+        if (column >= start_of_visual_line && ((column - start_of_visual_line) < view.length()))
+            return IterationDecision::Break;
+        ++visual_line_index;
+        return IterationDecision::Continue;
+    });
+    return visual_line_index;
 }
