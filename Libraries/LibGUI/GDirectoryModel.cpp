@@ -2,9 +2,9 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CDirIterator.h>
-#include <LibCore/CLock.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibGUI/GPainter.h>
+#include <LibThread/BackgroundAction.h>
 #include <dirent.h>
 #include <grp.h>
 #include <pwd.h>
@@ -12,54 +12,21 @@
 #include <time.h>
 #include <unistd.h>
 
-static CLockable<HashMap<String, RefPtr<GraphicsBitmap>>>& thumbnail_cache()
-{
-    static CLockable<HashMap<String, RefPtr<GraphicsBitmap>>>* s_map;
-    if (!s_map)
-        s_map = new CLockable<HashMap<String, RefPtr<GraphicsBitmap>>>();
-    return *s_map;
-}
+static HashMap<String, RefPtr<GraphicsBitmap>> s_thumbnail_cache;
 
-int thumbnail_thread(void* model_ptr)
+static RefPtr<GraphicsBitmap> render_thumbnail(const StringView& path)
 {
-    auto& model = *(GDirectoryModel*)model_ptr;
-    for (;;) {
-        sleep(1);
-        Vector<String> to_generate;
-        {
-            LOCKER(thumbnail_cache().lock());
-            to_generate.ensure_capacity(thumbnail_cache().resource().size());
-            for (auto& it : thumbnail_cache().resource()) {
-                if (it.value)
-                    continue;
-                to_generate.append(it.key);
-            }
-        }
-        if (to_generate.is_empty())
-            continue;
-        for (int i = 0; i < to_generate.size(); ++i) {
-            auto& path = to_generate[i];
-            auto png_bitmap = GraphicsBitmap::load_from_file(path);
-            if (!png_bitmap)
-                continue;
-            auto thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
-            Painter painter(*thumbnail);
-            painter.draw_scaled_bitmap(thumbnail->rect(), *png_bitmap, png_bitmap->rect());
-            {
-                LOCKER(thumbnail_cache().lock());
-                thumbnail_cache().resource().set(path, move(thumbnail));
-            }
-            if (model.on_thumbnail_progress)
-                model.on_thumbnail_progress(i + 1, to_generate.size());
-            model.did_update();
-        }
-    }
+    auto png_bitmap = GraphicsBitmap::load_from_file(path);
+    if (!png_bitmap)
+        return nullptr;
+    auto thumbnail = GraphicsBitmap::create(png_bitmap->format(), { 32, 32 });
+    Painter painter(*thumbnail);
+    painter.draw_scaled_bitmap(thumbnail->rect(), *png_bitmap, png_bitmap->rect());
+    return thumbnail;
 }
 
 GDirectoryModel::GDirectoryModel()
 {
-    create_thread(thumbnail_thread, this);
-
     m_directory_icon = GIcon::default_icon("filetype-folder");
     m_file_icon = GIcon::default_icon("filetype-unknown");
     m_symlink_icon = GIcon::default_icon("filetype-symlink");
@@ -138,6 +105,47 @@ GModel::ColumnMetadata GDirectoryModel::column_metadata(int column) const
     ASSERT_NOT_REACHED();
 }
 
+bool GDirectoryModel::fetch_thumbnail_for(const Entry& entry)
+{
+    // See if we already have the thumbnail
+    // we're looking for in the cache.
+    auto path = entry.full_path(*this);
+    auto it = s_thumbnail_cache.find(path);
+    if (it != s_thumbnail_cache.end()) {
+        if (!(*it).value)
+            return false;
+        entry.thumbnail = (*it).value;
+        return true;
+    }
+
+    // Otherwise, arrange to render the thumbnail
+    // in background and make it available later.
+
+    s_thumbnail_cache.set(path, nullptr);
+    m_thumbnail_progress_total++;
+
+    LibThread::BackgroundAction<RefPtr<GraphicsBitmap>>::create(
+        [path] {
+            return render_thumbnail(path);
+        },
+
+        [this, path](auto thumbnail) {
+            s_thumbnail_cache.set(path, move(thumbnail));
+
+            m_thumbnail_progress++;
+            if (on_thumbnail_progress)
+                on_thumbnail_progress(m_thumbnail_progress, m_thumbnail_progress_total);
+            if (m_thumbnail_progress == m_thumbnail_progress_total) {
+                m_thumbnail_progress = 0;
+                m_thumbnail_progress_total = 0;
+            }
+
+            did_update();
+        });
+
+    return false;
+}
+
 GIcon GDirectoryModel::icon_for(const Entry& entry) const
 {
     if (S_ISDIR(entry.mode))
@@ -150,15 +158,7 @@ GIcon GDirectoryModel::icon_for(const Entry& entry) const
         return m_executable_icon;
     if (entry.name.to_lowercase().ends_with(".png")) {
         if (!entry.thumbnail) {
-            auto path = entry.full_path(*this);
-            LOCKER(thumbnail_cache().lock());
-            auto it = thumbnail_cache().resource().find(path);
-            if (it != thumbnail_cache().resource().end()) {
-                entry.thumbnail = (*it).value;
-            } else {
-                thumbnail_cache().resource().set(path, nullptr);
-            }
-            if (!entry.thumbnail)
+            if (!const_cast<GDirectoryModel*>(this)->fetch_thumbnail_for(entry))
                 return m_filetype_image_icon;
         }
         return GIcon(m_filetype_image_icon.bitmap_for_size(16), *entry.thumbnail);

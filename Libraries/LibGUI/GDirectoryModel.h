@@ -6,8 +6,6 @@
 #include <sys/stat.h>
 
 class GDirectoryModel final : public GModel {
-    friend int thumbnail_thread(void*);
-
 public:
     static NonnullRefPtr<GDirectoryModel> create() { return adopt(*new GDirectoryModel); }
     virtual ~GDirectoryModel() override;
@@ -64,6 +62,7 @@ private:
     String name_for_uid(uid_t) const;
     String name_for_gid(gid_t) const;
 
+    bool fetch_thumbnail_for(const Entry& entry);
     GIcon icon_for(const Entry& entry) const;
 
     String m_path;
@@ -82,4 +81,7 @@ private:
     HashMap<gid_t, String> m_group_names;
 
     OwnPtr<CNotifier> m_notifier;
+
+    unsigned m_thumbnail_progress { 0 };
+    unsigned m_thumbnail_progress_total { 0 };
 };
