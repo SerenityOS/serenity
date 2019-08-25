@@ -19,7 +19,7 @@ clean:
 
 $(APPS) : % : %.o $(OBJS)
 	@echo "LD $@"
-	@$(LD) -o $@ $(LDFLAGS) $< -lc -lgui -ldraw -laudio -lipc -lcore -lpcidb
+	@$(LD) -o $@ $(LDFLAGS) $< -lc -lgui -ldraw -laudio -lipc -lthread -lcore -lpcidb
 
 %.o: %.cpp
 	@echo "CXX $<"

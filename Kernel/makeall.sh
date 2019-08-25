@@ -19,10 +19,11 @@ build_targets=""
 build_targets="$build_targets ../DevTools/IPCCompiler"
 build_targets="$build_targets ../DevTools/FormCompiler"
 
-# Build LibC, LibCore and LibIPC before IPC servers, since they depend on it.
+# Build LibC, LibCore, LibIPC and LibThread before IPC servers, since they depend on them.
 build_targets="$build_targets ../Libraries/LibC"
 build_targets="$build_targets ../Libraries/LibCore"
 build_targets="$build_targets ../Libraries/LibIPC"
+build_targets="$build_targets ../Libraries/LibThread"
 
 # Build IPC servers before their client code to ensure the IPC definitions are available.
 build_targets="$build_targets ../Servers/AudioServer"
