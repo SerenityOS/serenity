@@ -708,10 +708,20 @@ void GTextEditor::insert_at_cursor(char ch)
 int GTextEditor::content_x_for_position(const GTextPosition& position) const
 {
     auto& line = m_lines[position.line()];
+    int x_offset = -1;
     switch (m_text_alignment) {
     case TextAlignment::CenterLeft:
-        return m_horizontal_content_padding + position.column() * glyph_width();
+        line.for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
+            if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) < view.length())) {
+                x_offset = (position.column() - start_of_visual_line) * glyph_width();
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+        return m_horizontal_content_padding + x_offset;
     case TextAlignment::CenterRight:
+        // FIXME
+        ASSERT(!is_line_wrapping_enabled());
         return content_width() - m_horizontal_content_padding - (line.length() * glyph_width()) + (position.column() * glyph_width());
     default:
         ASSERT_NOT_REACHED();
@@ -732,7 +742,24 @@ Rect GTextEditor::content_rect_for_position(const GTextPosition& position) const
         rect.center_vertically_within({ {}, frame_inner_rect().size() });
         return rect;
     }
-    return { x, position.line() * line_height(), 1, line_height() };
+
+    auto& line = m_lines[position.line()];
+    Rect rect;
+    line.for_each_visual_line([&](const Rect& visual_line_rect, const StringView& view, int start_of_visual_line) {
+        if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) < view.length())) {
+            // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
+            //       *and* included in what we get from content_x_for_position().
+            rect = {
+                visual_line_rect.x() + x - (m_horizontal_content_padding),
+                visual_line_rect.y(),
+                1,
+                line_height()
+            };
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return rect;
 }
 
 Rect GTextEditor::cursor_content_rect() const
