@@ -3,7 +3,6 @@ include ../../Makefile.common
 OBJS = \
     CArgsParser.o \
     CIODevice.o \
-    CThread.o \
     CFile.o \
     CSocket.o \
     CLocalSocket.o \
