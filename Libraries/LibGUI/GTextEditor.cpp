@@ -1289,9 +1289,9 @@ void GTextEditor::Line::recompute_visual_lines()
     m_visual_line_breaks.append(length());
 
     if (m_editor.is_line_wrapping_enabled())
-        m_visual_rect = { 0, 0, available_width, m_visual_line_breaks.size() * m_editor.line_height() };
+        m_visual_rect = { m_editor.m_horizontal_content_padding, 0, available_width, m_visual_line_breaks.size() * m_editor.line_height() };
     else
-        m_visual_rect = { 0, 0, m_editor.font().width(view()), m_editor.line_height() };
+        m_visual_rect = { m_editor.m_horizontal_content_padding, 0, m_editor.font().width(view()), m_editor.line_height() };
 }
 
 template<typename Callback>
