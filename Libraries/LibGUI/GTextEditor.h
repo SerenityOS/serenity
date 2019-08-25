@@ -102,7 +102,7 @@ public:
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
 
     bool is_line_wrapping_enabled() const { return m_line_wrapping_enabled; }
-    void set_line_wrapping_enabled(bool enabled) { m_line_wrapping_enabled = enabled; }
+    void set_line_wrapping_enabled(bool);
 
     TextAlignment text_alignment() const { return m_text_alignment; }
     void set_text_alignment(TextAlignment);
