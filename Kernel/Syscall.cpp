@@ -311,6 +311,8 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
         return current->process().sys$mprotect((void*)arg1, (size_t)arg2, (int)arg3);
     case Syscall::SC_get_process_name:
         return current->process().sys$get_process_name((char*)arg1, (int)arg2);
+    case Syscall::SC_realpath:
+        return current->process().sys$realpath((const char*)arg1, (char*)arg2, (size_t)arg3);
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         return -ENOSYS;
