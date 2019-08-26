@@ -124,6 +124,10 @@ void WSMenu::draw()
     if (!s_checked_bitmap)
         s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
 
+    bool has_checkable_items = false;
+    for (auto& item : m_items)
+        has_checkable_items = has_checkable_items | item.is_checkable();
+
     for (auto& item : m_items) {
         if (item.type() == WSMenuItem::Text) {
             Color text_color = Color::Black;
@@ -135,13 +139,17 @@ void WSMenu::draw()
                 text_color = Color::MidGray;
             Rect text_rect = item.rect().translated(left_padding(), 0);
             if (item.is_checkable()) {
+                Rect checkmark_rect { text_rect.location().x(), 0, s_checked_bitmap_width, s_checked_bitmap_height };
+                checkmark_rect.center_vertically_within(text_rect);
+                Rect checkbox_rect = checkmark_rect.inflated(4, 4);
+                painter.fill_rect(checkbox_rect, Color::White);
+                StylePainter::paint_frame(painter, checkbox_rect, FrameShape::Container, FrameShadow::Sunken, 2);
                 if (item.is_checked()) {
-                    Rect checkmark_rect { text_rect.location().x(), 0, s_checked_bitmap_width, s_checked_bitmap_height };
-                    checkmark_rect.center_vertically_within(text_rect);
                     painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, Color::Black);
                 }
-                text_rect.move_by(s_checked_bitmap_width + s_checked_bitmap_padding, 0);
             }
+            if (has_checkable_items)
+                text_rect.move_by(s_checked_bitmap_width + s_checked_bitmap_padding, 0);
             painter.draw_text(text_rect, item.text(), TextAlignment::CenterLeft, text_color);
             if (!item.shortcut_text().is_empty()) {
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), TextAlignment::CenterRight, text_color);
