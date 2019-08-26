@@ -169,6 +169,7 @@ int main(int argc, char** argv)
     go_menu->add_action(go_back_action);
     go_menu->add_action(go_forward_action);
     go_menu->add_action(open_parent_directory_action);
+    go_menu->add_action(go_home_action);
     menubar->add_menu(move(go_menu));
 
     auto help_menu = make<GMenu>("Help");
