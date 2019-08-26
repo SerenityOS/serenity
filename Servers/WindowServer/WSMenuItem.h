@@ -15,7 +15,7 @@ public:
         Separator,
     };
 
-    WSMenuItem(WSMenu&, unsigned identifier, const String& text, const String& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false);
+    WSMenuItem(WSMenu&, unsigned identifier, const String& text, const String& shortcut_text = {}, bool enabled = true, bool checkable = false, bool checked = false, const GraphicsBitmap* icon = nullptr);
     WSMenuItem(WSMenu&, Type);
     ~WSMenuItem();
 
