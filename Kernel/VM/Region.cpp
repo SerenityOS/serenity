@@ -46,26 +46,6 @@ Region::~Region()
     MM.unregister_region(*this);
 }
 
-bool Region::page_in()
-{
-    ASSERT(m_page_directory);
-    ASSERT(vmo().is_inode());
-#ifdef MM_DEBUG
-    dbgprintf("MM: page_in %u pages\n", page_count());
-#endif
-    for (size_t i = 0; i < page_count(); ++i) {
-        auto& vmo_page = vmo().physical_pages()[first_page_index() + i];
-        if (vmo_page.is_null()) {
-            bool success = MM.page_in_from_inode(*this, i);
-            if (!success)
-                return false;
-            continue;
-        }
-        MM.remap_region_page(*this, i);
-    }
-    return true;
-}
-
 NonnullRefPtr<Region> Region::clone()
 {
     ASSERT(current);
