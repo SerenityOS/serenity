@@ -2,7 +2,7 @@
 #include "WSMenu.h"
 #include <LibDraw/GraphicsBitmap.h>
 
-WSMenuItem::WSMenuItem(WSMenu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked)
+WSMenuItem::WSMenuItem(WSMenu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked, const GraphicsBitmap* icon)
     : m_menu(menu)
     , m_type(Text)
     , m_enabled(enabled)
@@ -11,6 +11,7 @@ WSMenuItem::WSMenuItem(WSMenu& menu, unsigned identifier, const String& text, co
     , m_identifier(identifier)
     , m_text(text)
     , m_shortcut_text(shortcut_text)
+    , m_icon(icon)
 {
 }
 

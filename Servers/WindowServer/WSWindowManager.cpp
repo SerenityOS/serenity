@@ -47,12 +47,13 @@ WSWindowManager::WSWindowManager()
     struct AppMenuItem {
         const char* binary_name;
         const char* description;
+        const char* icon_path;
     };
 
     Vector<AppMenuItem> apps = {
-        { "/bin/Terminal", "Open Terminal..." },
-        { "/bin/FileManager", "Open FileManager..." },
-        { "/bin/ProcessManager", "Open ProcessManager..." }
+        { "/bin/Terminal", "Open Terminal...", "/res/icons/16x16/app-terminal.png" },
+        { "/bin/FileManager", "Open FileManager...", "/res/icons/16x16/filetype-folder.png" },
+        { "/bin/SystemMonitor", "Open SystemMonitor...", "/res/icons/16x16/app-system-monitor.png" }
     };
 
     u8 system_menu_name[] = { 0xf8, 0 };
@@ -60,7 +61,7 @@ WSWindowManager::WSWindowManager()
 
     int appIndex = 1;
     for (const auto& app : apps) {
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, appIndex++, app.description));
+        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, appIndex++, app.description, String(), true, false, false, load_png(app.icon_path)));
     }
 
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
