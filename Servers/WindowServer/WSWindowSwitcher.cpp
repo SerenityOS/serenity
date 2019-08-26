@@ -1,4 +1,5 @@
 #include <LibDraw/Font.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/StylePainter.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WSScreen.h>

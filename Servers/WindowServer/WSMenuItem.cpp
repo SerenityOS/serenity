@@ -1,5 +1,6 @@
 #include "WSMenuItem.h"
 #include "WSMenu.h"
+#include <LibDraw/GraphicsBitmap.h>
 
 WSMenuItem::WSMenuItem(WSMenu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked)
     : m_menu(menu)
