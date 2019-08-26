@@ -71,7 +71,6 @@ public:
         return size() / PAGE_SIZE;
     }
 
-    bool page_in();
     int commit();
 
     size_t amount_resident() const;

@@ -359,12 +359,6 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, description->absolute_path(), PROT_READ);
     ASSERT(region);
 
-    if (this != &current->process()) {
-        // FIXME: Don't force-load the entire executable at once, let the on-demand pager take care of it.
-        bool success = region->page_in();
-        ASSERT(success);
-    }
-
     OwnPtr<ELFLoader> loader;
     {
         // Okay, here comes the sleight of hand, pay close attention..
