@@ -545,24 +545,21 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Right) {
+        int new_line = m_cursor.line();
+        int new_column = m_cursor.column();
         if (m_cursor.column() < current_line().length()) {
-            int new_column = m_cursor.column() + 1;
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(m_cursor.line(), new_column);
-            if (m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
+            new_line = m_cursor.line();
+            new_column = m_cursor.column() + 1;
         } else if (m_cursor.line() != line_count() - 1) {
-            int new_line = m_cursor.line() + 1;
-            int new_column = 0;
-            toggle_selection_if_needed_for_event(event);
-            set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid()) {
-                m_selection.set_end(m_cursor);
-                did_update_selection();
-            }
-        }
+            new_line = m_cursor.line() + 1;
+            new_column = 0;
+        } 
+        toggle_selection_if_needed_for_event(event);
+        set_cursor(new_line, new_column);
+        if (m_selection.start().is_valid()) {
+            m_selection.set_end(m_cursor);
+            did_update_selection();
+        } 
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
