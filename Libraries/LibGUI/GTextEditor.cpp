@@ -1295,6 +1295,7 @@ GTextRange GTextEditor::find_prev(const StringView& needle, const GTextPosition&
         return {};
 
     GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
+    position = prev_position_before(position);
     GTextPosition original_position = position;
 
     GTextPosition end_of_potential_match;
