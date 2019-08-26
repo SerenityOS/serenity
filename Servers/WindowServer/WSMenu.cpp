@@ -47,6 +47,7 @@ static const int s_checked_bitmap_width = 9;
 static const int s_checked_bitmap_height = 9;
 static const int s_item_icon_width = 16;
 static const int s_checkbox_or_icon_padding = 6;
+static const int s_stripe_width = 23;
 
 int WSMenu::width() const
 {
@@ -60,13 +61,10 @@ int WSMenu::width() const
             int shortcut_width = font().width(item.shortcut_text());
             widest_shortcut = max(shortcut_width, widest_shortcut);
         }
-        if (item.is_checkable() || item.icon())
-            text_width += s_item_icon_width + s_checkbox_or_icon_padding;
-
         widest_text = max(widest_text, text_width);
     }
 
-    int widest_item = widest_text;
+    int widest_item = widest_text + s_stripe_width;
     if (widest_shortcut)
         widest_item += padding_between_text_and_shortcut() + widest_shortcut;
 
@@ -104,7 +102,6 @@ WSWindow& WSMenu::ensure_menu_window()
         }
 
         auto window = make<WSWindow>(*this, WSWindowType::Menu);
-        window->set_opacity(0.95f);
         window->set_rect(0, 0, width, height());
         m_menu_window = move(window);
         draw();
@@ -133,18 +130,23 @@ void WSMenu::draw()
         has_items_with_icon = has_items_with_icon | !!item.icon();
     }
 
+    Rect stripe_rect { frame_thickness(), frame_thickness(), s_stripe_width, height() - frame_thickness() * 2 };
+    painter.fill_rect(stripe_rect, Color::from_rgb(0xffffff));
+    painter.draw_line(stripe_rect.top_right(), stripe_rect.bottom_right(), Color::from_rgb(0xbbb7b0));
+
     for (auto& item : m_items) {
         if (item.type() == WSMenuItem::Text) {
             Color text_color = Color::Black;
             if (&item == m_hovered_item) {
-                painter.fill_rect(item.rect(), WSWindowManager::the().menu_selection_color());
+                painter.fill_rect(item.rect(), Color::from_rgb(0xad714f));
+                painter.draw_rect(item.rect(), Color::from_rgb(0x793016));
                 text_color = Color::White;
             }
             if (!item.is_enabled())
                 text_color = Color::MidGray;
-            Rect text_rect = item.rect().translated(left_padding(), 0);
+            Rect text_rect = item.rect().translated(stripe_rect.width() + 6, 0);
             if (item.is_checkable()) {
-                Rect checkmark_rect { text_rect.location().x() + 2, 0, s_checked_bitmap_width, s_checked_bitmap_height };
+                Rect checkmark_rect { item.rect().x() + 7, 0, s_checked_bitmap_width, s_checked_bitmap_height };
                 checkmark_rect.center_vertically_within(text_rect);
                 Rect checkbox_rect = checkmark_rect.inflated(4, 4);
                 painter.fill_rect(checkbox_rect, Color::White);
@@ -153,19 +155,17 @@ void WSMenu::draw()
                     painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, Color::Black);
                 }
             } else if (item.icon()) {
-                Rect icon_rect { text_rect.location().x() - 2, 0, s_item_icon_width, s_item_icon_width };
+                Rect icon_rect { item.rect().x() + 3, 0, s_item_icon_width, s_item_icon_width };
                 icon_rect.center_vertically_within(text_rect);
                 painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());
             }
-            if (has_checkable_items || has_items_with_icon)
-                text_rect.move_by(s_item_icon_width + s_checkbox_or_icon_padding, 0);
             painter.draw_text(text_rect, item.text(), TextAlignment::CenterLeft, text_color);
             if (!item.shortcut_text().is_empty()) {
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), TextAlignment::CenterRight, text_color);
             }
         } else if (item.type() == WSMenuItem::Separator) {
-            Point p1(4, item.rect().center().y());
-            Point p2(width - 5, item.rect().center().y());
+            Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y());
+            Point p2(width - 7, item.rect().center().y());
             painter.draw_line(p1, p2, Color::MidGray);
             painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), Color::White);
         }
