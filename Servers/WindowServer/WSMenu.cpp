@@ -7,6 +7,7 @@
 #include "WSWindowManager.h"
 #include <LibDraw/CharacterBitmap.h>
 #include <LibDraw/Font.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/Painter.h>
 #include <LibDraw/StylePainter.h>
 #include <WindowServer/WSAPITypes.h>
@@ -44,7 +45,8 @@ static const char* s_checked_bitmap_data = {
 static CharacterBitmap* s_checked_bitmap;
 static const int s_checked_bitmap_width = 9;
 static const int s_checked_bitmap_height = 9;
-static const int s_checked_bitmap_padding = 6;
+static const int s_item_icon_width = 16;
+static const int s_checkbox_or_icon_padding = 6;
 
 int WSMenu::width() const
 {
@@ -58,8 +60,8 @@ int WSMenu::width() const
             int shortcut_width = font().width(item.shortcut_text());
             widest_shortcut = max(shortcut_width, widest_shortcut);
         }
-        if (item.is_checkable())
-            text_width += s_checked_bitmap_width + s_checked_bitmap_padding;
+        if (item.is_checkable() || item.icon())
+            text_width += s_item_icon_width + s_checkbox_or_icon_padding;
 
         widest_text = max(widest_text, text_width);
     }
@@ -125,8 +127,11 @@ void WSMenu::draw()
         s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
 
     bool has_checkable_items = false;
-    for (auto& item : m_items)
+    bool has_items_with_icon = false;
+    for (auto& item : m_items) {
         has_checkable_items = has_checkable_items | item.is_checkable();
+        has_items_with_icon = has_items_with_icon | !!item.icon();
+    }
 
     for (auto& item : m_items) {
         if (item.type() == WSMenuItem::Text) {
@@ -139,7 +144,7 @@ void WSMenu::draw()
                 text_color = Color::MidGray;
             Rect text_rect = item.rect().translated(left_padding(), 0);
             if (item.is_checkable()) {
-                Rect checkmark_rect { text_rect.location().x(), 0, s_checked_bitmap_width, s_checked_bitmap_height };
+                Rect checkmark_rect { text_rect.location().x() + 2, 0, s_checked_bitmap_width, s_checked_bitmap_height };
                 checkmark_rect.center_vertically_within(text_rect);
                 Rect checkbox_rect = checkmark_rect.inflated(4, 4);
                 painter.fill_rect(checkbox_rect, Color::White);
@@ -147,9 +152,13 @@ void WSMenu::draw()
                 if (item.is_checked()) {
                     painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, Color::Black);
                 }
+            } else if (item.icon()) {
+                Rect icon_rect { text_rect.location().x() - 2, 0, s_item_icon_width, s_item_icon_width };
+                icon_rect.center_vertically_within(text_rect);
+                painter.blit(icon_rect.location(), *item.icon(), item.icon()->rect());
             }
-            if (has_checkable_items)
-                text_rect.move_by(s_checked_bitmap_width + s_checked_bitmap_padding, 0);
+            if (has_checkable_items || has_items_with_icon)
+                text_rect.move_by(s_item_icon_width + s_checkbox_or_icon_padding, 0);
             painter.draw_text(text_rect, item.text(), TextAlignment::CenterLeft, text_color);
             if (!item.shortcut_text().is_empty()) {
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), TextAlignment::CenterRight, text_color);

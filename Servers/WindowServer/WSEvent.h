@@ -303,7 +303,7 @@ private:
 
 class WSAPIAddMenuItemRequest : public WSAPIClientRequest {
 public:
-    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked)
+    WSAPIAddMenuItemRequest(int client_id, int menu_id, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked, int icon_buffer_id)
         : WSAPIClientRequest(WSEvent::APIAddMenuItemRequest, client_id)
         , m_menu_id(menu_id)
         , m_identifier(identifier)
@@ -312,6 +312,7 @@ public:
         , m_enabled(enabled)
         , m_checkable(checkable)
         , m_checked(checked)
+        , m_icon_buffer_id(icon_buffer_id)
     {
     }
 
@@ -322,6 +323,7 @@ public:
     bool is_enabled() const { return m_enabled; }
     bool is_checkable() const { return m_checkable; }
     bool is_checked() const { return m_checked; }
+    int icon_buffer_id() const { return m_icon_buffer_id; }
 
 private:
     int m_menu_id { 0 };
@@ -331,6 +333,7 @@ private:
     bool m_enabled;
     bool m_checkable;
     bool m_checked;
+    int m_icon_buffer_id { 0 };
 };
 
 class WSAPIUpdateMenuItemRequest : public WSAPIClientRequest {

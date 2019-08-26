@@ -53,7 +53,7 @@ public:
     int width() const;
     int height() const;
 
-    int item_height() const { return 16; }
+    int item_height() const { return 20; }
     int frame_thickness() const { return 3; }
     int horizontal_padding() const { return left_padding() + right_padding(); }
     int left_padding() const { return 14; }

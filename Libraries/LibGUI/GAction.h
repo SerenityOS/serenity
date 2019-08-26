@@ -48,6 +48,7 @@ public:
     String text() const { return m_text; }
     GShortcut shortcut() const { return m_shortcut; }
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
+    void set_icon(const GraphicsBitmap* icon) { m_icon = icon; }
 
     Function<void(GAction&)> on_activation;
 

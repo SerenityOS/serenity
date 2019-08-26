@@ -4,6 +4,7 @@
 #include <AK/Function.h>
 #include <LibDraw/Rect.h>
 
+class GraphicsBitmap;
 class WSMenu;
 
 class WSMenuItem {
@@ -40,6 +41,9 @@ public:
 
     unsigned identifier() const { return m_identifier; }
 
+    const GraphicsBitmap* icon() const { return m_icon; }
+    void set_icon(const GraphicsBitmap* icon) { m_icon = icon; }
+
 private:
     WSMenu& m_menu;
     Type m_type { None };
@@ -50,4 +54,5 @@ private:
     String m_text;
     String m_shortcut_text;
     Rect m_rect;
+    RefPtr<GraphicsBitmap> m_icon;
 };
