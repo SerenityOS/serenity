@@ -44,7 +44,8 @@ void WSMenuManager::draw()
     wm.for_each_active_menubar_menu([&](WSMenu& menu) {
         Color text_color = Color::Black;
         if (&menu == wm.current_menu()) {
-            painter.fill_rect(menu.rect_in_menubar(), wm.menu_selection_color());
+            painter.fill_rect(menu.rect_in_menubar(), Color::from_rgb(0xad714f));
+            painter.draw_rect(menu.rect_in_menubar(), Color::from_rgb(0x793016));
             text_color = Color::White;
         }
         painter.draw_text(
