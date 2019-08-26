@@ -164,8 +164,8 @@ void WSMenu::draw()
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), TextAlignment::CenterRight, text_color);
             }
         } else if (item.type() == WSMenuItem::Separator) {
-            Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y());
-            Point p2(width - 7, item.rect().center().y());
+            Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y() - 1);
+            Point p2(width - 7, item.rect().center().y() - 1);
             painter.draw_line(p1, p2, Color::MidGray);
             painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), Color::White);
         }
