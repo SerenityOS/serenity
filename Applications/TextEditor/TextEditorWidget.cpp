@@ -153,19 +153,19 @@ TextEditorWidget::TextEditorWidget()
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Text Editor");
+    app_menu->add_action(*m_new_action);
+    app_menu->add_action(*m_open_action);
+    app_menu->add_action(*m_save_action);
+    app_menu->add_action(*m_save_as_action);
+    app_menu->add_separator();
     app_menu->add_action(*m_line_wrapping_setting_action);
+    app_menu->add_separator();
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto file_menu = make<GMenu>("File");
-    file_menu->add_action(*m_new_action);
-    file_menu->add_action(*m_open_action);
-    file_menu->add_action(*m_save_action);
-    file_menu->add_action(*m_save_as_action);
-    menubar->add_menu(move(file_menu));
 
     auto edit_menu = make<GMenu>("Edit");
     edit_menu->add_action(m_editor->undo_action());
