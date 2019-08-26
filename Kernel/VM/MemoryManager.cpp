@@ -342,14 +342,14 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     ASSERT(vmo.is_inode());
 
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmo);
+
     auto& vmo_page = inode_vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
 
     InterruptFlagSaver saver;
 
-    bool interrupts_were_enabled = are_interrupts_enabled();
-    if (!interrupts_were_enabled)
-        sti();
+    sti();
     LOCKER(vmo.m_paging_lock);
+    cli();
 
     if (!vmo_page.is_null()) {
 #ifdef PAGE_FAULT_DEBUG
@@ -362,6 +362,19 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
 #ifdef MM_DEBUG
     dbgprintf("MM: page_in_from_inode ready to read from inode\n");
 #endif
+    sti();
+    u8 page_buffer[PAGE_SIZE];
+    auto& inode = inode_vmobject.inode();
+    auto nread = inode.read_bytes((region.first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, page_buffer, nullptr);
+    if (nread < 0) {
+        kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
+        return false;
+    }
+    if (nread < PAGE_SIZE) {
+        // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
+        memset(page_buffer + nread, 0, PAGE_SIZE - nread);
+    }
+    cli();
     vmo_page = allocate_user_physical_page(ShouldZeroFill::No);
     if (vmo_page.is_null()) {
         kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
@@ -369,17 +382,7 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
     }
     remap_region_page(region, page_index_in_region);
     u8* dest_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
-
-    auto& inode = inode_vmobject.inode();
-    auto nread = inode.read_bytes((region.first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, dest_ptr, nullptr);
-    if (nread < 0) {
-        kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
-        return false;
-    }
-    if (nread < PAGE_SIZE) {
-        // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
-        memset(dest_ptr + nread, 0, PAGE_SIZE - nread);
-    }
+    memcpy(dest_ptr, page_buffer, PAGE_SIZE);
     return true;
 }
 
