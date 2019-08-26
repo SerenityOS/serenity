@@ -151,17 +151,14 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("File Manager");
+    app_menu->add_action(mkdir_action);
+    app_menu->add_action(copy_action);
+    app_menu->add_action(delete_action);
+    app_menu->add_separator();
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
-        return;
     }));
     menubar->add_menu(move(app_menu));
-
-    auto file_menu = make<GMenu>("File");
-    file_menu->add_action(mkdir_action);
-    file_menu->add_action(copy_action);
-    file_menu->add_action(delete_action);
-    menubar->add_menu(move(file_menu));
 
     auto view_menu = make<GMenu>("View");
     view_menu->add_action(*view_as_icons_action);
