@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/JsonArraySerializer.h>
 #include <AK/JsonValue.h>
 #include <AK/Vector.h>
 
@@ -68,13 +69,8 @@ private:
 template<typename Builder>
 inline void JsonArray::serialize(Builder& builder) const
 {
-    builder.append('[');
-    for (int i = 0; i < m_values.size(); ++i) {
-        m_values[i].serialize(builder);
-        if (i != size() - 1)
-            builder.append(',');
-    }
-    builder.append(']');
+    JsonArraySerializer serializer { builder };
+    for_each([&](auto& value) { serializer.add(value); });
 }
 
 template<typename Builder>
