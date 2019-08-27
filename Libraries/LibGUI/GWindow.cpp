@@ -322,6 +322,10 @@ void GWindow::event(CEvent& event)
     }
 
     if (event.type() == GEvent::WindowCloseRequest) {
+        if (on_close_request) {
+            if (on_close_request() == GWindow::CloseRequestDecision::StayOpen)
+                return;
+        }
         close();
         return;
     }
