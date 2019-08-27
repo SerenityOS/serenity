@@ -24,17 +24,15 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Snake");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
-        GApplication::the().quit(0);
-        return;
-    }));
-    menubar->add_menu(move(app_menu));
 
-    auto game_menu = make<GMenu>("Game");
-    game_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [&](const GAction&) {
+    app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [&](const GAction&) {
         game->reset();
     }));
-    menubar->add_menu(move(game_menu));
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
+        GApplication::the().quit(0);
+    }));
+
+    menubar->add_menu(move(app_menu));
 
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [](const GAction&) {
