@@ -4,8 +4,9 @@
 #include "Process.h"
 #include "Scheduler.h"
 #include "StdLib.h"
-#include <AK/JsonArray.h>
+#include <AK/JsonArraySerializer.h>
 #include <AK/JsonObject.h>
+#include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -201,20 +202,22 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
     auto& process = handle->process();
     if (process.number_of_open_file_descriptors() == 0)
         return {};
-    JsonArray array;
+
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
     for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
         auto* description = process.file_description(i);
         if (!description)
             continue;
-        JsonObject description_object;
-        description_object.set("fd", i);
-        description_object.set("absolute_path", description->absolute_path());
-        description_object.set("seekable", description->file().is_seekable());
-        description_object.set("class", description->file().class_name());
-        description_object.set("offset", description->offset());
-        array.append(move(description_object));
+        JsonObjectSerializer description_object = array.add_object();
+        description_object.add("fd", i);
+        description_object.add("absolute_path", description->absolute_path());
+        description_object.add("seekable", description->file().is_seekable());
+        description_object.add("class", description->file().class_name());
+        description_object.add("offset", description->offset());
     }
-    return array.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
@@ -236,59 +239,61 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
     if (!handle)
         return {};
     auto& process = handle->process();
-    JsonArray array;
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
     for (auto& region : process.regions()) {
-        JsonObject region_object;
-        region_object.set("readable", region.is_readable());
-        region_object.set("writable", region.is_writable());
-        region_object.set("address", region.vaddr().get());
-        region_object.set("size", region.size());
-        region_object.set("amount_resident", region.amount_resident());
-        region_object.set("name", region.name());
-        array.append(move(region_object));
+        JsonObjectSerializer region_object = array.add_object();
+        region_object.add("readable", region.is_readable());
+        region_object.add("writable", region.is_writable());
+        region_object.add("address", region.vaddr().get());
+        region_object.add("size", region.size());
+        region_object.add("amount_resident", region.amount_resident());
+        region_object.add("name", region.name());
     }
-    return array.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$pci(InodeIdentifier)
 {
-    JsonArray json;
-    PCI::enumerate_all([&json](PCI::Address address, PCI::ID id) {
-        JsonObject obj;
-        obj.set("bus", address.bus());
-        obj.set("slot", address.slot());
-        obj.set("function", address.function());
-        obj.set("vendor_id", id.vendor_id);
-        obj.set("device_id", id.device_id);
-        obj.set("revision_id", PCI::get_revision_id(address));
-        obj.set("subclass", PCI::get_subclass(address));
-        obj.set("class", PCI::get_class(address));
-        obj.set("subsystem_id", PCI::get_subsystem_id(address));
-        obj.set("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
-        json.append(move(obj));
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    PCI::enumerate_all([&array](PCI::Address address, PCI::ID id) {
+        JsonObjectSerializer obj = array.add_object();
+        obj.add("bus", address.bus());
+        obj.add("slot", address.slot());
+        obj.add("function", address.function());
+        obj.add("vendor_id", id.vendor_id);
+        obj.add("device_id", id.device_id);
+        obj.add("revision_id", PCI::get_revision_id(address));
+        obj.add("subclass", PCI::get_subclass(address));
+        obj.add("class", PCI::get_class(address));
+        obj.add("subsystem_id", PCI::get_subsystem_id(address));
+        obj.add("subsystem_vendor_id", PCI::get_subsystem_vendor_id(address));
     });
-    return json.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$devices(InodeIdentifier)
 {
-    JsonArray json;
-    Device::for_each([&json](auto& device) {
-        JsonObject obj;
-        obj.set("major", device.major());
-        obj.set("minor", device.minor());
-        obj.set("class_name", device.class_name());
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    Device::for_each([&array](auto& device) {
+        JsonObjectSerializer obj = array.add_object();
+        obj.add("major", device.major());
+        obj.add("minor", device.minor());
+        obj.add("class_name", device.class_name());
 
         if (device.is_block_device())
-            obj.set("type", "block");
+            obj.add("type", "block");
         else if (device.is_character_device())
-            obj.set("type", "character");
+            obj.add("type", "character");
         else
             ASSERT_NOT_REACHED();
-
-        json.append(move(obj));
     });
-    return json.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$uptime(InodeIdentifier)
@@ -307,69 +312,73 @@ Optional<KBuffer> procfs$cmdline(InodeIdentifier)
 
 Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
 {
-    JsonArray json;
-    NetworkAdapter::for_each([&json](auto& adapter) {
-        JsonObject obj;
-        obj.set("name", adapter.name());
-        obj.set("class_name", adapter.class_name());
-        obj.set("mac_address", adapter.mac_address().to_string());
-        obj.set("ipv4_address", adapter.ipv4_address().to_string());
-        obj.set("packets_in", adapter.packets_in());
-        obj.set("bytes_in", adapter.bytes_in());
-        obj.set("packets_out", adapter.packets_out());
-        obj.set("bytes_out", adapter.bytes_out());
-        obj.set("link_up", adapter.link_up());
-        json.append(obj);
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    NetworkAdapter::for_each([&array](auto& adapter) {
+        JsonObjectSerializer obj = array.add_object();
+        obj.add("name", adapter.name());
+        obj.add("class_name", adapter.class_name());
+        obj.add("mac_address", adapter.mac_address().to_string());
+        obj.add("ipv4_address", adapter.ipv4_address().to_string());
+        obj.add("packets_in", adapter.packets_in());
+        obj.add("bytes_in", adapter.bytes_in());
+        obj.add("packets_out", adapter.packets_out());
+        obj.add("bytes_out", adapter.bytes_out());
+        obj.add("link_up", adapter.link_up());
     });
-    return json.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
 {
-    JsonArray json;
-    TCPSocket::for_each([&json](auto& socket) {
-        JsonObject obj;
-        obj.set("local_address", socket.local_address().to_string());
-        obj.set("local_port", socket.local_port());
-        obj.set("peer_address", socket.peer_address().to_string());
-        obj.set("peer_port", socket.peer_port());
-        obj.set("state", TCPSocket::to_string(socket.state()));
-        obj.set("ack_number", socket.ack_number());
-        obj.set("sequence_number", socket.sequence_number());
-        obj.set("packets_in", socket.packets_in());
-        obj.set("bytes_in", socket.bytes_in());
-        obj.set("packets_out", socket.packets_out());
-        obj.set("bytes_out", socket.bytes_out());
-        json.append(obj);
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    TCPSocket::for_each([&array](auto& socket) {
+        JsonObjectSerializer obj = array.add_object();
+        obj.add("local_address", socket.local_address().to_string());
+        obj.add("local_port", socket.local_port());
+        obj.add("peer_address", socket.peer_address().to_string());
+        obj.add("peer_port", socket.peer_port());
+        obj.add("state", TCPSocket::to_string(socket.state()));
+        obj.add("ack_number", socket.ack_number());
+        obj.add("sequence_number", socket.sequence_number());
+        obj.add("packets_in", socket.packets_in());
+        obj.add("bytes_in", socket.bytes_in());
+        obj.add("packets_out", socket.packets_out());
+        obj.add("bytes_out", socket.bytes_out());
     });
-    return json.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$net_udp(InodeIdentifier)
 {
-    JsonArray json;
-    UDPSocket::for_each([&json](auto& socket) {
-        JsonObject obj;
-        obj.set("local_address", socket.local_address().to_string());
-        obj.set("local_port", socket.local_port());
-        obj.set("peer_address", socket.peer_address().to_string());
-        obj.set("peer_port", socket.peer_port());
-        json.append(obj);
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    UDPSocket::for_each([&array](auto& socket) {
+        JsonObjectSerializer obj = array.add_object();
+        obj.add("local_address", socket.local_address().to_string());
+        obj.add("local_port", socket.local_port());
+        obj.add("peer_address", socket.peer_address().to_string());
+        obj.add("peer_port", socket.peer_port());
     });
-    return json.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$net_local(InodeIdentifier)
 {
-    JsonArray json;
-    LocalSocket::for_each([&json](auto& socket) {
-        JsonObject obj;
-        obj.set("path", String(socket.socket_path()));
-        obj.set("origin_pid", socket.origin_pid());
-        obj.set("acceptor_pid", socket.acceptor_pid());
-        json.append(obj);
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    LocalSocket::for_each([&array](auto& socket) {
+        JsonObjectSerializer obj = array.add_object();
+        obj.add("path", String(socket.socket_path()));
+        obj.add("origin_pid", socket.origin_pid());
+        obj.add("acceptor_pid", socket.acceptor_pid());
     });
-    return json.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
@@ -514,27 +523,27 @@ Optional<KBuffer> procfs$mounts(InodeIdentifier)
 Optional<KBuffer> procfs$df(InodeIdentifier)
 {
     // FIXME: This is obviously racy against the VFS mounts changing.
-    JsonArray json;
-    VFS::the().for_each_mount([&json](auto& mount) {
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    VFS::the().for_each_mount([&array](auto& mount) {
         auto& fs = mount.guest_fs();
-        JsonObject fs_object;
-        fs_object.set("class_name", fs.class_name());
-        fs_object.set("total_block_count", fs.total_block_count());
-        fs_object.set("free_block_count", fs.free_block_count());
-        fs_object.set("total_inode_count", fs.total_inode_count());
-        fs_object.set("free_inode_count", fs.free_inode_count());
-        fs_object.set("mount_point", mount.absolute_path());
-        fs_object.set("block_size", fs.block_size());
-        fs_object.set("readonly", fs.is_readonly());
+        JsonObjectSerializer fs_object = array.add_object();
+        fs_object.add("class_name", fs.class_name());
+        fs_object.add("total_block_count", fs.total_block_count());
+        fs_object.add("free_block_count", fs.free_block_count());
+        fs_object.add("total_inode_count", fs.total_inode_count());
+        fs_object.add("free_inode_count", fs.free_inode_count());
+        fs_object.add("mount_point", mount.absolute_path());
+        fs_object.add("block_size", fs.block_size());
+        fs_object.add("readonly", fs.is_readonly());
 
         if (fs.is_disk_backed())
-            fs_object.set("device", static_cast<const DiskBackedFS&>(fs).device().absolute_path());
+            fs_object.add("device", static_cast<const DiskBackedFS&>(fs).device().absolute_path());
         else
-            fs_object.set("device", nullptr);
-
-        json.append(move(fs_object));
+            fs_object.add("device", nullptr);
     });
-    return json.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
@@ -603,54 +612,56 @@ Optional<KBuffer> procfs$cpuinfo(InodeIdentifier)
 Optional<KBuffer> procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
-    JsonObject json;
-    json.set("kmalloc_allocated", sum_alloc);
-    json.set("kmalloc_available", sum_free);
-    json.set("kmalloc_eternal_allocated", kmalloc_sum_eternal);
-    json.set("user_physical_allocated", MM.user_physical_pages_used());
-    json.set("user_physical_available", MM.user_physical_pages());
-    json.set("super_physical_allocated", MM.super_physical_pages_used());
-    json.set("super_physical_available", MM.super_physical_pages());
-    json.set("kmalloc_call_count", g_kmalloc_call_count);
-    json.set("kfree_call_count", g_kfree_call_count);
-    return json.serialized<KBufferBuilder>();
-    ;
+    KBufferBuilder builder;
+    JsonObjectSerializer json { builder };
+    json.add("kmalloc_allocated", sum_alloc);
+    json.add("kmalloc_available", sum_free);
+    json.add("kmalloc_eternal_allocated", kmalloc_sum_eternal);
+    json.add("user_physical_allocated", MM.user_physical_pages_used());
+    json.add("user_physical_available", MM.user_physical_pages());
+    json.add("super_physical_allocated", MM.super_physical_pages_used());
+    json.add("super_physical_available", MM.super_physical_pages());
+    json.add("kmalloc_call_count", g_kmalloc_call_count);
+    json.add("kfree_call_count", g_kfree_call_count);
+    json.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$all(InodeIdentifier)
 {
     InterruptDisabler disabler;
     auto processes = Process::all_processes();
-    JsonArray array;
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
 
     // Keep this in sync with CProcessStatistics.
     auto build_process = [&](const Process& process) {
-        JsonObject process_object;
-        process_object.set("pid", process.pid());
-        process_object.set("times_scheduled", process.main_thread().times_scheduled());
-        process_object.set("pgid", process.tty() ? process.tty()->pgid() : 0);
-        process_object.set("pgp", process.pgid());
-        process_object.set("sid", process.sid());
-        process_object.set("uid", process.uid());
-        process_object.set("gid", process.gid());
-        process_object.set("state", process.main_thread().state_string());
-        process_object.set("ppid", process.ppid());
-        process_object.set("nfds", process.number_of_open_file_descriptors());
-        process_object.set("name", process.name());
-        process_object.set("tty", process.tty() ? process.tty()->tty_name() : "notty");
-        process_object.set("amount_virtual", process.amount_virtual());
-        process_object.set("amount_resident", process.amount_resident());
-        process_object.set("amount_shared", process.amount_shared());
-        process_object.set("ticks", process.main_thread().ticks());
-        process_object.set("priority", to_string(process.priority()));
-        process_object.set("syscall_count", process.syscall_count());
-        process_object.set("icon_id", process.icon_id());
-        array.append(process_object);
+        JsonObjectSerializer process_object = array.add_object();
+        process_object.add("pid", process.pid());
+        process_object.add("times_scheduled", process.main_thread().times_scheduled());
+        process_object.add("pgid", process.tty() ? process.tty()->pgid() : 0);
+        process_object.add("pgp", process.pgid());
+        process_object.add("sid", process.sid());
+        process_object.add("uid", process.uid());
+        process_object.add("gid", process.gid());
+        process_object.add("state", process.main_thread().state_string());
+        process_object.add("ppid", process.ppid());
+        process_object.add("nfds", process.number_of_open_file_descriptors());
+        process_object.add("name", process.name());
+        process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
+        process_object.add("amount_virtual", process.amount_virtual());
+        process_object.add("amount_resident", process.amount_resident());
+        process_object.add("amount_shared", process.amount_shared());
+        process_object.add("ticks", process.main_thread().ticks());
+        process_object.add("priority", to_string(process.priority()));
+        process_object.add("syscall_count", process.syscall_count());
+        process_object.add("icon_id", process.icon_id());
     };
     build_process(*Scheduler::colonel());
     for (auto* process : processes)
         build_process(*process);
-    return array.serialized<KBufferBuilder>();
+    array.finish();
+    return builder.build();
 }
 
 Optional<KBuffer> procfs$inodes(InodeIdentifier)
