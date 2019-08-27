@@ -3,6 +3,7 @@
 #include <AK/AKString.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
+#include <AK/JsonObjectSerializer.h>
 #include <AK/JsonValue.h>
 
 namespace AK {
@@ -79,19 +80,10 @@ private:
 template<typename Builder>
 inline void JsonObject::serialize(Builder& builder) const
 {
-    int index = 0;
-    builder.append('{');
+    JsonObjectSerializer serializer { builder };
     for_each_member([&](auto& key, auto& value) {
-        builder.append('"');
-        builder.append(key);
-        builder.append('"');
-        builder.append(':');
-        value.serialize(builder);
-        if (index != size() - 1)
-            builder.append(',');
-        ++index;
+            serializer.add(key, value);
     });
-    builder.append('}');
 }
 
 template<typename Builder>
