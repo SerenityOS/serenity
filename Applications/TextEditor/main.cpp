@@ -12,6 +12,12 @@ int main(int argc, char** argv)
     auto* text_widget = new TextEditorWidget();
     window->set_main_widget(text_widget);
 
+    window->on_close_request = [&]() -> GWindow::CloseRequestDecision {
+        if (text_widget->request_close())
+            return GWindow::CloseRequestDecision::Close;
+        return GWindow::CloseRequestDecision::StayOpen;
+    };
+
     if (argc >= 2)
         text_widget->open_sesame(argv[1]);
 
