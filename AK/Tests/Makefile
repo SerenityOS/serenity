@@ -1,4 +1,4 @@
-PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL TestStringView
+PROGRAMS = TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL TestStringView TestUtf8
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 
@@ -14,6 +14,7 @@ SHARED_TEST_OBJS = \
 	../JsonParser.o \
     ../FileSystemPath.o \
     ../URL.o \
+    ../Utf8View.o \
 
 .cpp.o:
 	@echo "HOST_CXX $<"; $(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -64,6 +65,9 @@ TestURL: TestURL.o $(SHARED_TEST_OBJS)
 
 TestStringView: TestStringView.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestStringView.o $(SHARED_TEST_OBJS)
+
+TestUtf8: TestUtf8.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestUtf8.o $(SHARED_TEST_OBJS)
 
 clean:
 	rm -f $(SHARED_TEST_OBJS)
