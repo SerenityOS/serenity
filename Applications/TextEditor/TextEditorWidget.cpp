@@ -23,6 +23,7 @@ TextEditorWidget::TextEditorWidget()
     m_editor = new GTextEditor(GTextEditor::MultiLine, this);
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
+    m_editor->set_line_wrapping_enabled(true);
 
     m_find_widget = new GWidget(this);
     m_find_widget->set_fill_with_background_color(true);
