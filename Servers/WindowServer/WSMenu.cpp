@@ -137,15 +137,12 @@ void WSMenu::draw()
     for (auto& item : m_items) {
         if (item.type() == WSMenuItem::Text) {
             Color text_color = Color::Black;
-            if (&item == m_hovered_item) {
+            if (&item == m_hovered_item && item.is_enabled()) {
                 painter.fill_rect(item.rect(), Color::from_rgb(0xad714f));
                 painter.draw_rect(item.rect(), Color::from_rgb(0x793016));
                 text_color = Color::White;
-                if (!item.is_enabled())
-                    text_color = Color::from_rgb(0xb5a195);
-            } else {
-                if (!item.is_enabled())
-                    text_color = Color::MidGray;
+            } else if (!item.is_enabled()) {
+                text_color = Color::MidGray;
             }
             Rect text_rect = item.rect().translated(stripe_rect.width() + 6, 0);
             if (item.is_checkable()) {
