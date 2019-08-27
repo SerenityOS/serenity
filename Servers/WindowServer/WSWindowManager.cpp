@@ -67,7 +67,7 @@ WSWindowManager::WSWindowManager()
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About..."));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, load_png("/res/icons/16x16/ladybug.png")));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
     m_system_menu->on_item_activation = [this, apps](WSMenuItem& item) {
