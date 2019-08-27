@@ -16,6 +16,7 @@ public:
     TextEditorWidget();
     virtual ~TextEditorWidget() override;
     void open_sesame(const String& path);
+    bool request_close();
 
 private:
     void set_path(const FileSystemPath& file);

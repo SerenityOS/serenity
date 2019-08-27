@@ -55,7 +55,6 @@ TextEditorWidget::TextEditorWidget()
                 GMessageBox::Type::Information,
                 GMessageBox::InputType::OK, window());
         }
-
     });
     m_find_previous_action = GAction::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
@@ -171,9 +170,10 @@ TextEditorWidget::TextEditorWidget()
     app_menu->add_action(*m_save_action);
     app_menu->add_action(*m_save_as_action);
     app_menu->add_separator();
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
+    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [this](const GAction&) {
+        if (!request_close())
+            return;
         GApplication::the().quit(0);
-        return;
     }));
     menubar->add_menu(move(app_menu));
 
@@ -200,7 +200,6 @@ TextEditorWidget::TextEditorWidget()
     });
     menubar->add_menu(move(font_menu));
 
-    
     auto view_menu = make<GMenu>("View");
     view_menu->add_action(*m_line_wrapping_setting_action);
     menubar->add_menu(move(view_menu));
@@ -264,4 +263,13 @@ void TextEditorWidget::open_sesame(const String& path)
 
     m_editor->set_text(file.read_all());
     set_path(FileSystemPath(path));
+}
+
+bool TextEditorWidget::request_close()
+{
+    if (!m_document_dirty)
+        return true;
+    GMessageBox box("The document has been modified. Quit without saving?", "Quit without saving?", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
+    auto result = box.exec();
+    return result == GMessageBox::ExecOK;
 }
