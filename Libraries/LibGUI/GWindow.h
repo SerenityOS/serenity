@@ -4,9 +4,9 @@
 #include <AK/HashMap.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
-#include <LibGUI/GWindowType.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/Rect.h>
+#include <LibGUI/GWindowType.h>
 
 class GWidget;
 class GWMEvent;
@@ -56,6 +56,13 @@ public:
 
     bool should_destroy_on_close() { return m_destroy_on_close; }
     void set_should_destroy_on_close(bool b) { m_destroy_on_close = b; }
+
+    enum class CloseRequestDecision {
+        StayOpen,
+        Close,
+    };
+
+    Function<CloseRequestDecision()> on_close_request;
 
     int x() const { return rect().x(); }
     int y() const { return rect().y(); }
