@@ -25,6 +25,13 @@ TextEditorWidget::TextEditorWidget()
     m_editor->set_automatic_indentation_enabled(true);
     m_editor->set_line_wrapping_enabled(true);
 
+    m_editor->on_change = [this] {
+        bool was_dirty = m_document_dirty;
+        m_document_dirty = true;
+        if (!was_dirty)
+            update_title();
+    };
+
     m_find_widget = new GWidget(this);
     m_find_widget->set_fill_with_background_color(true);
     m_find_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -131,14 +138,19 @@ TextEditorWidget::TextEditorWidget()
             return;
         }
 
+        m_document_dirty = false;
         set_path(FileSystemPath(save_path.value()));
         dbg() << "Wrote document to " << save_path.value();
     });
 
     m_save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](const GAction&) {
         if (!m_path.is_empty()) {
-            if (!m_editor->write_to_file(m_path))
+            if (!m_editor->write_to_file(m_path)) {
                 GMessageBox::show("Unable to save file.\n", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            } else {
+                m_document_dirty = false;
+                update_title();
+            }
             return;
         }
 
@@ -229,9 +241,16 @@ void TextEditorWidget::set_path(const FileSystemPath& file)
     m_path = file.string();
     m_name = file.title();
     m_extension = file.extension();
+    update_title();
+}
+
+void TextEditorWidget::update_title()
+{
     StringBuilder builder;
     builder.append("Text Editor: ");
-    builder.append(file.string());
+    builder.append(m_path);
+    if (m_document_dirty)
+        builder.append(" (*)");
     window()->set_title(builder.to_string());
 }
 
