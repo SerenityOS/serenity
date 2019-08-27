@@ -48,14 +48,22 @@ int main(int argc, char** argv)
 
     auto app_menu = make<GMenu>("Minesweeper");
 
-    RefPtr<GAction> chord_toggler_action;
-    chord_toggler_action = GAction::create("Single-click chording", [&](const GAction&) {
+    app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [field](const GAction&) {
+        field->reset();
+    }));
+
+
+    app_menu->add_separator();
+
+
+    NonnullRefPtr<GAction> chord_toggler_action = GAction::create("Single-click chording", [&](const GAction&) {
         bool toggled = !field->is_single_chording();
         field->set_single_chording(toggled);
         chord_toggler_action->set_checked(toggled);
     });
     chord_toggler_action->set_checkable(true);
     chord_toggler_action->set_checked(field->is_single_chording());
+
     app_menu->add_action(*chord_toggler_action);
     app_menu->add_separator();
 
@@ -65,24 +73,20 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(app_menu));
 
-    auto game_menu = make<GMenu>("Game");
-    game_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [field](const GAction&) {
-        field->reset();
-    }));
-    game_menu->add_separator();
-    game_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [field](const GAction&) {
+    auto difficulty_menu = make<GMenu>("Difficulty");
+    difficulty_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [field](const GAction&) {
         field->set_field_size(9, 9, 10);
     }));
-    game_menu->add_action(GAction::create("Intermediate", { Mod_Ctrl, Key_I }, [field](const GAction&) {
+    difficulty_menu->add_action(GAction::create("Intermediate", { Mod_Ctrl, Key_I }, [field](const GAction&) {
         field->set_field_size(16, 16, 40);
     }));
-    game_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [field](const GAction&) {
+    difficulty_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [field](const GAction&) {
         field->set_field_size(16, 30, 99);
     }));
-    game_menu->add_action(GAction::create("Madwoman", { Mod_Ctrl, Key_M }, [field](const GAction&) {
+    difficulty_menu->add_action(GAction::create("Madwoman", { Mod_Ctrl, Key_M }, [field](const GAction&) {
         field->set_field_size(32, 60, 350);
     }));
-    menubar->add_menu(move(game_menu));
+    menubar->add_menu(move(difficulty_menu));
 
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [](const GAction&) {
