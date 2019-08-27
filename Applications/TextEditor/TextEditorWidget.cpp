@@ -158,14 +158,11 @@ TextEditorWidget::TextEditorWidget()
     app_menu->add_action(*m_save_action);
     app_menu->add_action(*m_save_as_action);
     app_menu->add_separator();
-    app_menu->add_action(*m_line_wrapping_setting_action);
-    app_menu->add_separator();
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         GApplication::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
-
 
     auto edit_menu = make<GMenu>("Edit");
     edit_menu->add_action(m_editor->undo_action());
@@ -189,6 +186,11 @@ TextEditorWidget::TextEditorWidget()
         }));
     });
     menubar->add_menu(move(font_menu));
+
+    
+    auto view_menu = make<GMenu>("View");
+    view_menu->add_action(*m_line_wrapping_setting_action);
+    menubar->add_menu(move(view_menu));
 
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [](const GAction&) {
