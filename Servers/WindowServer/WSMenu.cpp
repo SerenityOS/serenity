@@ -75,7 +75,7 @@ int WSMenu::height() const
 {
     if (m_items.is_empty())
         return 0;
-    return (m_items.last().rect().bottom() - 1) + frame_thickness() * 2;
+    return (m_items.last().rect().bottom() + 1) + frame_thickness();
 }
 
 void WSMenu::redraw()
