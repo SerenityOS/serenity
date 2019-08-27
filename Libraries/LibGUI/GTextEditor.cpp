@@ -616,6 +616,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             current_line().remove(m_cursor.column() - 1);
             update_content_size();
             set_cursor(m_cursor.line(), m_cursor.column() - 1);
+            did_change();
             return;
         }
         if (m_cursor.column() == 0 && m_cursor.line() != 0) {
@@ -627,6 +628,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             update_content_size();
             update();
             set_cursor(m_cursor.line() - 1, previous_length);
+            did_change();
             return;
         }
         return;
