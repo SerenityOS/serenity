@@ -116,7 +116,7 @@ void WSMenu::draw()
     Painter painter(*menu_window()->backing_store());
 
     Rect rect { {}, menu_window()->size() };
-    painter.fill_rect(rect.shrunken(6, 6), Color::WarmGray);
+    painter.fill_rect(rect.shrunken(6, 6), Color::White);
     StylePainter::paint_window_frame(painter, rect);
     int width = this->width();
 
@@ -131,7 +131,7 @@ void WSMenu::draw()
     }
 
     Rect stripe_rect { frame_thickness(), frame_thickness(), s_stripe_width, height() - frame_thickness() * 2 };
-    painter.fill_rect(stripe_rect, Color::from_rgb(0xffffff));
+    painter.fill_rect(stripe_rect, Color::WarmGray);
     painter.draw_line(stripe_rect.top_right(), stripe_rect.bottom_right(), Color::from_rgb(0xbbb7b0));
 
     for (auto& item : m_items) {
