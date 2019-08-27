@@ -141,9 +141,12 @@ void WSMenu::draw()
                 painter.fill_rect(item.rect(), Color::from_rgb(0xad714f));
                 painter.draw_rect(item.rect(), Color::from_rgb(0x793016));
                 text_color = Color::White;
+                if (!item.is_enabled())
+                    text_color = Color::from_rgb(0xb5a195);
+            } else {
+                if (!item.is_enabled())
+                    text_color = Color::MidGray;
             }
-            if (!item.is_enabled())
-                text_color = Color::MidGray;
             Rect text_rect = item.rect().translated(stripe_rect.width() + 6, 0);
             if (item.is_checkable()) {
                 Rect checkmark_rect { item.rect().x() + 7, 0, s_checked_bitmap_width, s_checked_bitmap_height };
