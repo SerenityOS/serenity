@@ -37,6 +37,12 @@ public:
     void notify_about_new_screen_rect(const Rect&);
     void post_paint_message(WSWindow&);
 
+    WSMenu* find_menu_by_id(int menu_id)
+    {
+        // FIXME: Remove this const_cast when Optional knows how to vend a non-const fallback value somehow.
+        return const_cast<WSMenu*>(m_menus.get(menu_id).value_or(nullptr));
+    }
+
 private:
     virtual void event(CEvent&) override;
 

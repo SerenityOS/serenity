@@ -263,6 +263,7 @@ struct WSAPI_ClientMessage {
         struct {
             int menubar_id;
             int menu_id;
+            int submenu_id;
             int icon_buffer_id;
             unsigned identifier;
             char shortcut_text[32];

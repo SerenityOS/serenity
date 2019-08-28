@@ -1,4 +1,5 @@
 #include "WSMenuItem.h"
+#include "WSClientConnection.h"
 #include "WSMenu.h"
 #include <LibDraw/GraphicsBitmap.h>
 
@@ -39,4 +40,11 @@ void WSMenuItem::set_checked(bool checked)
         return;
     m_checked = checked;
     m_menu.redraw();
+}
+
+WSMenu* WSMenuItem::submenu()
+{
+    ASSERT(is_submenu());
+    ASSERT(m_menu.client());
+    return m_menu.client()->find_menu_by_id(m_submenu_id);
 }

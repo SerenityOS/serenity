@@ -78,11 +78,14 @@ public:
 
     void draw_window_switcher();
 
+    WSMenuManager& menu_manager() { return m_menu_manager; }
+    const WSMenuManager& menu_manager() const { return m_menu_manager; }
+
     Rect menubar_rect() const;
     WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
     void set_current_menubar(WSMenuBar*);
     WSMenu* current_menu() { return m_current_menu.ptr(); }
-    void set_current_menu(WSMenu*);
+    void set_current_menu(WSMenu*, bool is_submenu = false);
     WSMenu* system_menu() { return m_system_menu.ptr(); }
 
     const WSCursor& active_cursor() const;
