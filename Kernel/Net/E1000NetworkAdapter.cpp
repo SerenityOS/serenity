@@ -107,18 +107,10 @@ OwnPtr<E1000NetworkAdapter> E1000NetworkAdapter::autodetect()
     return make<E1000NetworkAdapter>(found_address, irq);
 }
 
-static E1000NetworkAdapter* s_the;
-E1000NetworkAdapter* E1000NetworkAdapter::the()
-{
-    return s_the;
-}
-
 E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
     : IRQHandler(irq)
     , m_pci_address(pci_address)
 {
-    s_the = this;
-
     set_interface_name("e1k");
 
     kprintf("E1000: Found at PCI address %b:%b:%b\n", pci_address.bus(), pci_address.slot(), pci_address.function());
