@@ -319,7 +319,12 @@ Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
         obj.add("name", adapter.name());
         obj.add("class_name", adapter.class_name());
         obj.add("mac_address", adapter.mac_address().to_string());
-        obj.add("ipv4_address", adapter.ipv4_address().to_string());
+        if (!adapter.ipv4_address().is_zero()) {
+            obj.add("ipv4_address", adapter.ipv4_address().to_string());
+            obj.add("ipv4_netmask", adapter.ipv4_netmask().to_string());
+        }
+        if (!adapter.ipv4_gateway().is_zero())
+            obj.add("ipv4_gateway", adapter.ipv4_gateway().to_string());
         obj.add("packets_in", adapter.packets_in());
         obj.add("bytes_in", adapter.bytes_in());
         obj.add("packets_out", adapter.packets_out());
