@@ -50,9 +50,9 @@ void NetworkTask_main()
             adapter.ipv4_netmask().to_string().characters(),
             adapter.ipv4_gateway().to_string().characters());
 
-        adapter.set_on_receive([&pending_packets]() {
+        adapter.on_receive = [&pending_packets]() {
             pending_packets++;
-        });
+        };
     });
 
     auto dequeue_packet = [&pending_packets]() -> Optional<KBuffer> {
