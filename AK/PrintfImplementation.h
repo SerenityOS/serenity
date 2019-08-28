@@ -18,7 +18,7 @@ template<typename PutChFunc, typename T>
     int ret = 0;
 
     int digits = 0;
-    for (T n = number; n > 0; n /= 0x0f)
+    for (T n = number; n > 0; n >>= 4)
         ++digits;
     if (digits == 0)
         digits = 1;
