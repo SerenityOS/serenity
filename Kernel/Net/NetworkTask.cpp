@@ -16,6 +16,7 @@
 //#define NETWORK_TASK_DEBUG
 //#define ETHERNET_DEBUG
 //#define ETHERNET_VERY_DEBUG
+//#define ARP_DEBUG
 //#define IPV4_DEBUG
 //#define ICMP_DEBUG
 //#define UDP_DEBUG
@@ -26,14 +27,6 @@ static void handle_ipv4(const EthernetFrameHeader&, size_t frame_size);
 static void handle_icmp(const EthernetFrameHeader&, const IPv4Packet&);
 static void handle_udp(const IPv4Packet&);
 static void handle_tcp(const IPv4Packet&);
-
-Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
-{
-    static Lockable<HashMap<IPv4Address, MACAddress>>* the;
-    if (!the)
-        the = new Lockable<HashMap<IPv4Address, MACAddress>>;
-    return *the;
-}
 
 void NetworkTask_main()
 {

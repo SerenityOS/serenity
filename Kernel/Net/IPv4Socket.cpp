@@ -169,12 +169,12 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
         m_peer_port = ntohs(ia.sin_port);
     }
 
-    auto adapter = adapter_for_route_to(m_peer_address);
-    if (!adapter)
+    auto routing_decision = route_to(m_peer_address, m_local_address);
+    if (!routing_decision.adapter || routing_decision.next_hop.is_zero())
         return -EHOSTUNREACH;
 
     if (m_local_address.to_u32() == 0)
-        m_local_address = adapter->ipv4_address();
+        m_local_address = routing_decision.adapter->ipv4_address();
 
     int rc = allocate_local_port_if_needed();
     if (rc < 0)
@@ -183,7 +183,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
     kprintf("sendto: destination=%s:%u\n", m_peer_address.to_string().characters(), m_peer_port);
 
     if (type() == SOCK_RAW) {
-        adapter->send_ipv4(MACAddress(), m_peer_address, (IPv4Protocol)protocol(), (const u8*)data, data_length);
+        routing_decision.adapter->send_ipv4(routing_decision.next_hop, m_peer_address, (IPv4Protocol)protocol(), (const u8*)data, data_length);
         return data_length;
     }
 

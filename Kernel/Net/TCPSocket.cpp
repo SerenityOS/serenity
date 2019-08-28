@@ -125,16 +125,8 @@ int TCPSocket::protocol_send(const void* data, int data_length)
 
 void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size)
 {
-    if (!m_adapter) {
-        if (has_specific_local_address()) {
-            m_adapter = NetworkAdapter::from_ipv4_address(local_address());
-        } else {
-            m_adapter = adapter_for_route_to(peer_address());
-            if (m_adapter)
-                set_local_address(m_adapter->ipv4_address());
-        }
-    }
-    ASSERT(!!m_adapter);
+    auto routing_decision = route_to(peer_address(), local_address());
+    ASSERT(!!routing_decision.adapter);
 
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.pointer());
@@ -170,7 +162,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
         tcp_packet.sequence_number(),
         tcp_packet.ack_number());
 #endif
-    m_adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::TCP, buffer.data(), buffer.size());
+    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::TCP, buffer.data(), buffer.size());
 
     m_packets_out++;
     m_bytes_out += buffer.size();
@@ -249,19 +241,11 @@ KResult TCPSocket::protocol_listen()
 
 KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock should_block)
 {
-    if (!m_adapter) {
-        if (has_specific_local_address()) {
-            m_adapter = NetworkAdapter::from_ipv4_address(local_address());
-            if (!m_adapter)
-                return KResult(-EADDRNOTAVAIL);
-        } else {
-            m_adapter = adapter_for_route_to(peer_address());
-            if (!m_adapter)
-                return KResult(-EHOSTUNREACH);
-
-            set_local_address(m_adapter->ipv4_address());
-        }
-    }
+    auto routing_decision = route_to(peer_address(), local_address());
+    if (!routing_decision.adapter || routing_decision.next_hop.is_zero())
+        return KResult(-EHOSTUNREACH);
+    if (!has_specific_local_address())
+        set_local_address(routing_decision.adapter->ipv4_address());
 
     allocate_local_port_if_needed();
 
