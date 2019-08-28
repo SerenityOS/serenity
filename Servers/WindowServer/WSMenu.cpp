@@ -2,6 +2,7 @@
 #include "WSEvent.h"
 #include "WSEventLoop.h"
 #include "WSMenuItem.h"
+#include "WSMenuManager.h"
 #include "WSScreen.h"
 #include "WSWindow.h"
 #include "WSWindowManager.h"
@@ -42,9 +43,23 @@ static const char* s_checked_bitmap_data = {
     "         "
 };
 
+static const char* s_submenu_arrow_bitmap_data = {
+    "         "
+    "   #     "
+    "   ##    "
+    "   ###   "
+    "   ####  "
+    "   ###   "
+    "   ##    "
+    "   #     "
+    "         "
+};
+
 static CharacterBitmap* s_checked_bitmap;
 static const int s_checked_bitmap_width = 9;
 static const int s_checked_bitmap_height = 9;
+static const int s_submenu_arrow_bitmap_width = 9;
+static const int s_submenu_arrow_bitmap_height = 9;
 static const int s_item_icon_width = 16;
 static const int s_checkbox_or_icon_padding = 6;
 static const int s_stripe_width = 23;
@@ -163,6 +178,17 @@ void WSMenu::draw()
             if (!item.shortcut_text().is_empty()) {
                 painter.draw_text(item.rect().translated(-right_padding(), 0), item.shortcut_text(), TextAlignment::CenterRight, text_color);
             }
+            if (item.is_submenu()) {
+                static auto& submenu_arrow_bitmap = CharacterBitmap::create_from_ascii(s_submenu_arrow_bitmap_data, s_submenu_arrow_bitmap_width, s_submenu_arrow_bitmap_height).leak_ref();
+                Rect submenu_arrow_rect {
+                    item.rect().right() - s_submenu_arrow_bitmap_width - 2,
+                    0,
+                    s_submenu_arrow_bitmap_width,
+                    s_submenu_arrow_bitmap_height
+                };
+                submenu_arrow_rect.center_vertically_within(item.rect());
+                painter.draw_bitmap(submenu_arrow_rect.location(), submenu_arrow_bitmap, Color::Black);
+            }
         } else if (item.type() == WSMenuItem::Separator) {
             Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y() - 1);
             Point p2(width - 7, item.rect().center().y() - 1);
@@ -180,6 +206,23 @@ void WSMenu::event(CEvent& event)
         if (!item || m_hovered_item == item)
             return;
         m_hovered_item = item;
+        if (m_hovered_item->is_submenu()) {
+            m_hovered_item->submenu()->popup(m_hovered_item->rect().top_right().translated(menu_window()->rect().location()), true);
+        } else {
+            bool close_remaining_menus = false;
+            for (auto& open_menu : WSWindowManager::the().menu_manager().open_menu_stack()) {
+                if (!open_menu)
+                    continue;
+                if (close_remaining_menus) {
+                    open_menu->menu_window()->set_visible(false);
+                    continue;
+                }
+                if (open_menu == this) {
+                    close_remaining_menus = true;
+                    continue;
+                }
+            }
+        }
         redraw();
         return;
     }
@@ -246,7 +289,7 @@ void WSMenu::close()
         menu_window()->set_visible(false);
 }
 
-void WSMenu::popup(const Point& position)
+void WSMenu::popup(const Point& position, bool is_submenu)
 {
     ASSERT(!is_empty());
 
@@ -262,5 +305,5 @@ void WSMenu::popup(const Point& position)
 
     window.move_to(adjusted_pos);
     window.set_visible(true);
-    WSWindowManager::the().set_current_menu(this);
+    WSWindowManager::the().set_current_menu(this, is_submenu);
 }

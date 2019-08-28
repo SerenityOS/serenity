@@ -211,14 +211,22 @@ int WSWindowManager::menubar_menu_margin() const
     return 16;
 }
 
-void WSWindowManager::set_current_menu(WSMenu* menu)
+void WSWindowManager::set_current_menu(WSMenu* menu, bool is_submenu)
 {
     if (m_current_menu == menu)
         return;
-    if (m_current_menu)
+    if (!is_submenu && m_current_menu)
         m_current_menu->close();
     if (menu)
         m_current_menu = menu->make_weak_ptr();
+
+    if (!is_submenu) {
+        m_menu_manager.open_menu_stack().clear();
+        if (menu)
+            m_menu_manager.open_menu_stack().append(menu->make_weak_ptr());
+    } else {
+        m_menu_manager.open_menu_stack().append(menu->make_weak_ptr());
+    }
 }
 
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
@@ -393,6 +401,11 @@ void WSWindowManager::close_current_menu()
     if (m_current_menu && m_current_menu->menu_window())
         m_current_menu->menu_window()->set_visible(false);
     m_current_menu = nullptr;
+    for (auto& menu : m_menu_manager.open_menu_stack()) {
+        if (menu)
+            menu->menu_window()->set_visible(false);
+    }
+    m_menu_manager.open_menu_stack().clear();
     m_menu_manager.refresh();
 }
 
@@ -696,6 +709,18 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
                 m_current_menu->clear_hovered_item();
             if (event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseUp)
                 close_current_menu();
+            if (event.type() == WSEvent::MouseMove) {
+                for (auto& menu : m_menu_manager.open_menu_stack()) {
+                    if (!menu)
+                        continue;
+                    if (!menu->menu_window()->rect().contains(event.position()))
+                        continue;
+                    hovered_window = menu->menu_window();
+                    auto translated_event = event.translated(-menu->menu_window()->position());
+                    deliver_mouse_event(*menu->menu_window(), translated_event);
+                    break;
+                }
+            }
         } else {
             hovered_window = &window;
             auto translated_event = event.translated(-window.position());

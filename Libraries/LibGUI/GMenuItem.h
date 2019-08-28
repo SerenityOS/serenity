@@ -2,6 +2,8 @@
 
 #include <AK/AKString.h>
 #include <AK/Badge.h>
+#include <AK/NonnullOwnPtr.h>
+#include <AK/OwnPtr.h>
 
 class GAction;
 class GMenu;
@@ -11,11 +13,13 @@ public:
     enum Type {
         Invalid,
         Action,
-        Separator
+        Separator,
+        Submenu,
     };
 
     GMenuItem(unsigned menu_id, Type);
     GMenuItem(unsigned menu_id, NonnullRefPtr<GAction>&&);
+    GMenuItem(unsigned menu_id, NonnullOwnPtr<GMenu>&&);
     ~GMenuItem();
 
     Type type() const { return m_type; }
@@ -23,6 +27,9 @@ public:
     const GAction* action() const { return m_action.ptr(); }
     GAction* action() { return m_action.ptr(); }
     unsigned identifier() const { return m_identifier; }
+
+    GMenu* submenu() { return m_submenu.ptr(); }
+    const GMenu* submenu() const { return m_submenu.ptr(); }
 
     bool is_checkable() const { return m_checkable; }
     void set_checkable(bool checkable) { m_checkable = checkable; }
@@ -46,4 +53,5 @@ private:
     bool m_checkable { false };
     bool m_checked { false };
     RefPtr<GAction> m_action;
+    OwnPtr<GMenu> m_submenu;
 };

@@ -31,6 +31,15 @@ void WSMenuManager::setup()
     m_window->set_rect(WSWindowManager::the().menubar_rect());
 }
 
+bool WSMenuManager::is_open(const WSMenu& menu) const
+{
+    for (int i = 0; i < m_open_menu_stack.size(); ++i) {
+        if (&menu == m_open_menu_stack[i].ptr())
+            return true;
+    }
+    return false;
+}
+
 void WSMenuManager::draw()
 {
     auto& wm = WSWindowManager::the();
@@ -43,7 +52,7 @@ void WSMenuManager::draw()
     int index = 0;
     wm.for_each_active_menubar_menu([&](WSMenu& menu) {
         Color text_color = Color::Black;
-        if (&menu == wm.current_menu()) {
+        if (is_open(menu)) {
             painter.fill_rect(menu.rect_in_menubar(), Color::from_rgb(0xad714f));
             painter.draw_rect(menu.rect_in_menubar(), Color::from_rgb(0x793016));
             text_color = Color::White;
@@ -124,7 +133,9 @@ void WSMenuManager::event(CEvent& event)
 void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
 {
     auto& wm = WSWindowManager::the();
-    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove && wm.current_menu() && (wm.current_menu()->menubar() || wm.current_menu() == wm.system_menu());
+    bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove
+                                       && !m_open_menu_stack.is_empty()
+                                       && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == wm.system_menu());
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != wm.current_menu() && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 

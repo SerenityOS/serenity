@@ -1,5 +1,6 @@
 #pragma once
 
+#include "WSMenu.h"
 #include <LibCore/CObject.h>
 #include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSWindow.h>
@@ -15,6 +16,10 @@ public:
 
     virtual void event(CEvent&) override;
 
+    bool is_open(const WSMenu&) const;
+
+    Vector<WeakPtr<WSMenu>>& open_menu_stack() { return m_open_menu_stack; }
+
 private:
     WSWindow& window() { return *m_window; }
     const WSWindow& window() const { return *m_window; }
@@ -27,4 +32,6 @@ private:
     OwnPtr<WSWindow> m_window;
     WSCPUMonitor m_cpu_monitor;
     String m_username;
+
+    Vector<WeakPtr<WSMenu>> m_open_menu_stack;
 };

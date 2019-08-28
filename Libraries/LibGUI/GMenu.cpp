@@ -39,15 +39,25 @@ void GMenu::add_action(NonnullRefPtr<GAction> action)
 #endif
 }
 
+void GMenu::add_submenu(NonnullOwnPtr<GMenu> submenu)
+{
+    m_items.append(make<GMenuItem>(m_menu_id, move(submenu)));
+}
+
 void GMenu::add_separator()
 {
     m_items.append(make<GMenuItem>(m_menu_id, GMenuItem::Separator));
 }
 
-void GMenu::popup(const Point& screen_position)
+void GMenu::realize_if_needed()
 {
     if (m_menu_id == -1)
         realize_menu();
+}
+
+void GMenu::popup(const Point& screen_position)
+{
+    realize_if_needed();
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::PopupMenu;
     request.menu.menu_id = m_menu_id;
@@ -87,7 +97,26 @@ int GMenu::realize_menu()
             WSAPI_ClientMessage request;
             request.type = WSAPI_ClientMessage::Type::AddMenuSeparator;
             request.menu.menu_id = m_menu_id;
+            request.menu.submenu_id = -1;
             GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuSeparator);
+            continue;
+        }
+        if (item.type() == GMenuItem::Submenu) {
+            auto& submenu = *item.submenu();
+            submenu.realize_if_needed();
+            WSAPI_ClientMessage request;
+            request.type = WSAPI_ClientMessage::Type::AddMenuItem;
+            request.menu.menu_id = m_menu_id;
+            request.menu.submenu_id = submenu.menu_id();
+            request.menu.identifier = i;
+            // FIXME: It should be possible to disable a submenu.
+            request.menu.enabled = true;
+            request.menu.checkable = false;
+            request.menu.checked = false;
+            ASSERT(submenu.name().length() < (ssize_t)sizeof(request.text));
+            strcpy(request.text, submenu.name().characters());
+            request.text_length = submenu.name().length();
+            GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidAddMenuItem);
             continue;
         }
         if (item.type() == GMenuItem::Action) {
@@ -95,6 +124,7 @@ int GMenu::realize_menu()
             WSAPI_ClientMessage request;
             request.type = WSAPI_ClientMessage::Type::AddMenuItem;
             request.menu.menu_id = m_menu_id;
+            request.menu.submenu_id = -1;
             request.menu.identifier = i;
             request.menu.enabled = action.is_enabled();
             request.menu.checkable = action.is_checkable();

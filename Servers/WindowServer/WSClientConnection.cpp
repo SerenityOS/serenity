@@ -159,7 +159,7 @@ bool WSClientConnection::handle_message(const WSAPI_ClientMessage& message, cons
             did_misbehave();
             return false;
         }
-        CEventLoop::current().post_event(*this, make<WSAPIAddMenuItemRequest>(client_id(), message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled, message.menu.checkable, message.menu.checked, message.menu.icon_buffer_id));
+        CEventLoop::current().post_event(*this, make<WSAPIAddMenuItemRequest>(client_id(), message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled, message.menu.checkable, message.menu.checked, message.menu.icon_buffer_id, message.menu.submenu_id));
         break;
     case WSAPI_ClientMessage::Type::UpdateMenuItem:
         if (message.text_length > (int)sizeof(message.text)) {
@@ -434,6 +434,7 @@ void WSClientConnection::handle_request(const WSAPIAddMenuItemRequest& request)
         auto shared_icon = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
         menu_item->set_icon(shared_icon);
     }
+    menu_item->set_submenu_id(request.submenu_id());
     menu.add_item(move(menu_item));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidAddMenuItem;

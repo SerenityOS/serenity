@@ -15,10 +15,13 @@ public:
 
     static GMenu* from_menu_id(int);
 
+    const String& name() const { return m_name; }
+
     GAction* action_at(int);
 
     void add_action(NonnullRefPtr<GAction>);
     void add_separator();
+    void add_submenu(NonnullOwnPtr<GMenu>);
 
     void popup(const Point& screen_position);
     void dismiss();
@@ -31,6 +34,7 @@ private:
     int menu_id() const { return m_menu_id; }
     int realize_menu();
     void unrealize_menu();
+    void realize_if_needed();
 
     int m_menu_id { -1 };
     String m_name;

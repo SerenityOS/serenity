@@ -1,5 +1,6 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GEventLoop.h>
+#include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuItem.h>
 #include <WindowServer/WSAPITypes.h>
 
@@ -19,6 +20,13 @@ GMenuItem::GMenuItem(unsigned menu_id, NonnullRefPtr<GAction>&& action)
     m_checkable = m_action->is_checkable();
     if (m_checkable)
         m_checked = m_action->is_checked();
+}
+
+GMenuItem::GMenuItem(unsigned menu_id, NonnullOwnPtr<GMenu>&& submenu)
+    : m_type(Submenu)
+    , m_menu_id(menu_id)
+    , m_submenu(move(submenu))
+{
 }
 
 GMenuItem::~GMenuItem()
