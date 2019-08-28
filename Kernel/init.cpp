@@ -152,6 +152,8 @@ VFS* vfs;
     }
     system_server_process->set_priority(Process::HighPriority);
 
+    Process::create_kernel_process("NetworkTask", NetworkTask_main);
+
     current->process().sys$exit(0);
     ASSERT_NOT_REACHED();
 }
@@ -268,7 +270,6 @@ extern "C" [[noreturn]] void init()
             (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Lurking);
         }
     });
-    Process::create_kernel_process("NetworkTask", NetworkTask_main);
 
     Scheduler::pick_next();
 
