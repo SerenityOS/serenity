@@ -55,7 +55,7 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
     m_packets_out++;
     m_bytes_out += size_in_bytes;
     memcpy(eth->payload(), &packet, sizeof(ARPPacket));
-    send_raw((u8*)eth, size_in_bytes);
+    send_raw((const u8*)eth, size_in_bytes);
 }
 
 void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const u8* payload, size_t payload_size)
