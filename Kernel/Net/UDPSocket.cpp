@@ -63,8 +63,8 @@ int UDPSocket::protocol_receive(const KBuffer& packet_buffer, void* buffer, size
 
 int UDPSocket::protocol_send(const void* data, int data_length)
 {
-    auto adapter = adapter_for_route_to(peer_address());
-    if (!adapter)
+    auto routing_decision = route_to(peer_address(), local_address());
+    if (!routing_decision.adapter)
         return -EHOSTUNREACH;
     auto buffer = ByteBuffer::create_zeroed(sizeof(UDPPacket) + data_length);
     auto& udp_packet = *(UDPPacket*)(buffer.pointer());
@@ -73,11 +73,11 @@ int UDPSocket::protocol_send(const void* data, int data_length)
     udp_packet.set_length(sizeof(UDPPacket) + data_length);
     memcpy(udp_packet.payload(), data, data_length);
     kprintf("sending as udp packet from %s:%u to %s:%u!\n",
-        adapter->ipv4_address().to_string().characters(),
+        routing_decision.adapter->ipv4_address().to_string().characters(),
         local_port(),
         peer_address().to_string().characters(),
         peer_port());
-    adapter->send_ipv4(MACAddress(), peer_address(), IPv4Protocol::UDP, buffer.data(), buffer.size());
+    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, buffer.data(), buffer.size());
     return data_length;
 }
 
