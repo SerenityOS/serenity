@@ -88,6 +88,8 @@ void NetworkAdapter::did_receive(const u8* data, int length)
     m_packets_in++;
     m_bytes_in += length;
     m_packet_queue.append(KBuffer::copy(data, length));
+    if (m_on_receive)
+        m_on_receive();
 }
 
 Optional<KBuffer> NetworkAdapter::dequeue_packet()
