@@ -992,6 +992,20 @@ bool GTextEditor::write_to_file(const StringView& path)
         perror("open");
         return false;
     }
+
+    // Compute the final file size and ftruncate() to make writing fast.
+    // FIXME: Remove this once the kernel is smart enough to do this instead.
+    off_t file_size = 0;
+    for (int i = 0; i < m_lines.size(); ++i)
+        file_size += m_lines[i].length();
+    file_size += m_lines.size() - 1;
+
+    int rc = ftruncate(fd, file_size);
+    if (rc < 0) {
+        perror("ftruncate");
+        return false;
+    }
+
     for (int i = 0; i < m_lines.size(); ++i) {
         auto& line = m_lines[i];
         if (line.length()) {
