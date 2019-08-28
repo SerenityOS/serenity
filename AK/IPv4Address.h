@@ -72,6 +72,11 @@ public:
     bool operator==(const IPv4Address& other) const { return m_data_as_u32 == other.m_data_as_u32; }
     bool operator!=(const IPv4Address& other) const { return m_data_as_u32 != other.m_data_as_u32; }
 
+    bool is_zero() const
+    {
+        return m_data_as_u32 == 0;
+    }
+
 private:
     union {
         u8 m_data[4];
