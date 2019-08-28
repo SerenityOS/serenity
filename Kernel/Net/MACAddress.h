@@ -37,7 +37,7 @@ public:
 
     String to_string() const
     {
-        return String::format("%b:%b:%b:%b:%b:%b", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
+        return String::format("%02x:%02x:%02x:%02x:%02x:%02x", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
     }
 
 private:
