@@ -40,6 +40,11 @@ public:
         return String::format("%02x:%02x:%02x:%02x:%02x:%02x", m_data[0], m_data[1], m_data[2], m_data[3], m_data[4], m_data[5]);
     }
 
+    bool is_zero() const
+    {
+        return m_data[0] == 0 && m_data[1] == 0 && m_data[2] == 0 && m_data[3] == 0 && m_data[4] == 0 && m_data[5] == 0;
+    }
+
 private:
     u8 m_data[6];
 };
