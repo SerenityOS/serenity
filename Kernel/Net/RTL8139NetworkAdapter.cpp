@@ -113,18 +113,10 @@ OwnPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::autodetect()
     return make<RTL8139NetworkAdapter>(found_address, irq);
 }
 
-static RTL8139NetworkAdapter* s_the;
-RTL8139NetworkAdapter* RTL8139NetworkAdapter::the()
-{
-    return s_the;
-}
-
 RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 irq)
     : IRQHandler(irq)
     , m_pci_address(pci_address)
 {
-    s_the = this;
-
     set_interface_name("rtl8139");
 
     kprintf("RTL8139: Found at PCI address %b:%b:%b\n", pci_address.bus(), pci_address.slot(), pci_address.function());
