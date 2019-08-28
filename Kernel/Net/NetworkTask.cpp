@@ -1,19 +1,19 @@
 #include <Kernel/Lock.h>
 #include <Kernel/Net/ARP.h>
-#include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/ICMP.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/LoopbackAdapter.h>
-#include <Kernel/Net/RTL8139NetworkAdapter.h>
+#include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDP.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/Process.h>
 
+//#define NETWORK_TASK_DEBUG
 //#define ETHERNET_DEBUG
 //#define ETHERNET_VERY_DEBUG
 //#define IPV4_DEBUG
@@ -37,49 +37,51 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
 
 void NetworkTask_main()
 {
-    LoopbackAdapter::the();
-
-    auto e1000 = E1000NetworkAdapter::the();
-    if (!e1000)
-        dbgprintf("E1000 network card not found!\n");
-    if (e1000)
-        e1000->set_ipv4_address(IPv4Address(192, 168, 5, 2));
-
-    auto rtl8139 = RTL8139NetworkAdapter::the();
-    if (!rtl8139)
-        dbgprintf("RTL8139 network card not found!\n");
-    if (rtl8139)
-        rtl8139->set_ipv4_address(IPv4Address(192, 168, 13, 201));
-
-    auto dequeue_packet = [&]() -> Optional<KBuffer> {
-        auto packet = LoopbackAdapter::the().dequeue_packet();
-        if (packet.has_value()) {
-            dbgprintf("Receive loopback packet (%d bytes)\n", packet.value().size());
-            return packet.value();
+    u8 octet = 15;
+    int pending_packets = 0;
+    NetworkAdapter::for_each([&octet, &pending_packets](auto& adapter) {
+        if (String(adapter.class_name()) == "LoopbackAdapter") {
+            adapter.set_ipv4_address({ 127, 0, 0, 1 });
+            adapter.set_ipv4_netmask({ 255, 0, 0, 0 });
+            adapter.set_ipv4_gateway({ 0, 0, 0, 0 });
+        } else {
+            adapter.set_ipv4_address({ 10, 0, 2, octet++ });
+            adapter.set_ipv4_netmask({ 255, 255, 255, 0 });
+            adapter.set_ipv4_gateway({ 10, 0, 2, 2 });
         }
-        if (e1000 && e1000->has_queued_packets())
-            return e1000->dequeue_packet();
-        if (rtl8139 && rtl8139->has_queued_packets())
-            return rtl8139->dequeue_packet();
-        return {};
+
+        kprintf("NetworkTask: %s network adapter found: hw=%s address=%s netmask=%s gateway=%s\n",
+            adapter.class_name(),
+            adapter.mac_address().to_string().characters(),
+            adapter.ipv4_address().to_string().characters(),
+            adapter.ipv4_netmask().to_string().characters(),
+            adapter.ipv4_gateway().to_string().characters());
+
+        adapter.set_on_receive([&pending_packets]() {
+            pending_packets++;
+        });
+    });
+
+    auto dequeue_packet = [&pending_packets]() -> Optional<KBuffer> {
+        Optional<KBuffer> packet;
+        NetworkAdapter::for_each([&packet, &pending_packets](auto& adapter) {
+            if (packet.has_value() || !adapter.has_queued_packets())
+                return;
+            packet = adapter.dequeue_packet();
+            pending_packets--;
+#ifdef NETWORK_TASK_DEBUG
+            kprintf("NetworkTask: Dequeued packet from %s (%d bytes)\n", adapter.name().characters(), packet.value().size());
+#endif
+        });
+        return packet;
     };
 
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
         auto packet_maybe_null = dequeue_packet();
         if (!packet_maybe_null.has_value()) {
-            (void)current->block_until("Networking", [] {
-                if (LoopbackAdapter::the().has_queued_packets())
-                    return true;
-                if (auto* e1000 = E1000NetworkAdapter::the()) {
-                    if (e1000->has_queued_packets())
-                        return true;
-                }
-                if (auto* rtl8139 = RTL8139NetworkAdapter::the()) {
-                    if (rtl8139->has_queued_packets())
-                        return true;
-                }
-                return false;
+            (void)current->block_until("Networking", [&pending_packets] {
+                return pending_packets > 0;
             });
             continue;
         }

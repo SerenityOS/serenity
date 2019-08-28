@@ -33,6 +33,7 @@
 #include <Kernel/KParams.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
+#include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI.h>
@@ -244,6 +245,7 @@ extern "C" [[noreturn]] void init()
         new BXVGADevice;
     }
 
+    LoopbackAdapter::the();
     auto e1000 = E1000NetworkAdapter::autodetect();
     auto rtl8139 = RTL8139NetworkAdapter::autodetect();
 
