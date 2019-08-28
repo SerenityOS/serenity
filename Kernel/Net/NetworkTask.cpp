@@ -126,6 +126,11 @@ void NetworkTask_main()
         case EtherType::IPv4:
             handle_ipv4(eth, packet.size());
             break;
+        case EtherType::IPv6:
+            // ignore
+            break;
+        default:
+            kprintf("NetworkTask: Unknown ethernet type %#04x\n", eth.ether_type());
         }
     }
 }
