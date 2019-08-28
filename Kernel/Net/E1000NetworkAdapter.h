@@ -4,13 +4,10 @@
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI.h>
-#include <Kernel/VM/MemoryManager.h>
 
 class E1000NetworkAdapter final : public NetworkAdapter
     , public IRQHandler {
 public:
-    static E1000NetworkAdapter* the();
-
     static OwnPtr<E1000NetworkAdapter> autodetect();
 
     E1000NetworkAdapter(PCI::Address, u8 irq);

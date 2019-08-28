@@ -1,7 +1,6 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <AK/RefPtr.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI.h>
@@ -11,8 +10,6 @@
 class RTL8139NetworkAdapter final : public NetworkAdapter
     , public IRQHandler {
 public:
-    static RTL8139NetworkAdapter* the();
-
     static OwnPtr<RTL8139NetworkAdapter> autodetect();
 
     RTL8139NetworkAdapter(PCI::Address, u8 irq);
