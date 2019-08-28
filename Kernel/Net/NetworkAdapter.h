@@ -45,6 +45,8 @@ public:
     u32 packets_out() const { return m_packets_out; }
     u32 bytes_out() const { return m_bytes_out; }
 
+    void set_on_receive(Function<void()> on_receive) { m_on_receive = move(on_receive); }
+
 protected:
     NetworkAdapter();
     void set_interface_name(const StringView& basename);
@@ -63,4 +65,5 @@ private:
     u32 m_bytes_in { 0 };
     u32 m_packets_out { 0 };
     u32 m_bytes_out { 0 };
+    Function<void()> m_on_receive;
 };
