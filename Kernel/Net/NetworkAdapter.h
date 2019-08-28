@@ -25,9 +25,13 @@ public:
     const String& name() const { return m_name; }
     MACAddress mac_address() { return m_mac_address; }
     IPv4Address ipv4_address() const { return m_ipv4_address; }
+    IPv4Address ipv4_netmask() const { return m_ipv4_netmask; }
+    IPv4Address ipv4_gateway() const { return m_ipv4_gateway; }
     virtual bool link_up() { return false; }
 
     void set_ipv4_address(const IPv4Address&);
+    void set_ipv4_netmask(const IPv4Address&);
+    void set_ipv4_gateway(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
     void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const u8* payload, size_t payload_size);
@@ -51,6 +55,8 @@ protected:
 private:
     MACAddress m_mac_address;
     IPv4Address m_ipv4_address;
+    IPv4Address m_ipv4_netmask;
+    IPv4Address m_ipv4_gateway;
     SinglyLinkedList<KBuffer> m_packet_queue;
     String m_name;
     u32 m_packets_in { 0 };

@@ -103,6 +103,16 @@ void NetworkAdapter::set_ipv4_address(const IPv4Address& address)
     m_ipv4_address = address;
 }
 
+void NetworkAdapter::set_ipv4_netmask(const IPv4Address& netmask)
+{
+    m_ipv4_netmask = netmask;
+}
+
+void NetworkAdapter::set_ipv4_gateway(const IPv4Address& gateway)
+{
+    m_ipv4_gateway = gateway;
+}
+
 void NetworkAdapter::set_interface_name(const StringView& basename)
 {
     // FIXME: Find a unique name for this interface, starting with $basename.
