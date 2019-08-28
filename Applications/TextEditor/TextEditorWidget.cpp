@@ -198,10 +198,11 @@ TextEditorWidget::TextEditorWidget()
             m_editor->update();
         }));
     });
-    menubar->add_menu(move(font_menu));
 
     auto view_menu = make<GMenu>("View");
     view_menu->add_action(*m_line_wrapping_setting_action);
+    view_menu->add_separator();
+    view_menu->add_submenu(move(font_menu));
     menubar->add_menu(move(view_menu));
 
     auto help_menu = make<GMenu>("Help");
