@@ -16,7 +16,7 @@ If you like some of the same things, you are welcome to join the project. It wou
 
 I regularly post raw hacking sessions and demos on [my YouTube channel](https://www.youtube.com/c/AndreasKling/).
 
-Sometimes I write about about the system on [my github.io blog](https://awesomekling.github.io/).
+Sometimes I write about the system on [my github.io blog](https://awesomekling.github.io/).
 
 There's also a [Patreon](https://www.patreon.com/serenityos) if you would like to show some support that way.
 
