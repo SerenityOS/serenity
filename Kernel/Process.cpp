@@ -1866,8 +1866,8 @@ int Process::sys$realpath(const char* pathname, char* buffer, size_t size)
     // FIXME: Once resolve_path is fixed to deal with .. and . , remove the use of FileSystemPath::canonical_path.
     FileSystemPath canonical_path(custody->absolute_path());
     if (!canonical_path.is_valid()) {
-        printf("FileSystemPath failed to canonicalize '%s'\n", custody->absolute_path());
-        return 1;
+        dbg() << "FileSystemPath failed to canonicalize " << custody->absolute_path();
+        ASSERT_NOT_REACHED();
     }
 
     strncpy(buffer, canonical_path.string().characters(), size);
