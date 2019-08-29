@@ -11,6 +11,11 @@ Lockable<HashMap<IPv4Address, MACAddress>>& arp_table()
     return *the;
 }
 
+bool RoutingDecision::is_zero() const
+{
+    return adapter.is_null() || next_hop.is_zero();
+}
+
 RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
 {
     auto target_addr = target.to_u32();

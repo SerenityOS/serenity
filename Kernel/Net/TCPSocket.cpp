@@ -126,7 +126,7 @@ int TCPSocket::protocol_send(const void* data, int data_length)
 void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size)
 {
     auto routing_decision = route_to(peer_address(), local_address());
-    ASSERT(!!routing_decision.adapter);
+    ASSERT(!routing_decision.is_zero());
 
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.pointer());
@@ -242,7 +242,7 @@ KResult TCPSocket::protocol_listen()
 KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock should_block)
 {
     auto routing_decision = route_to(peer_address(), local_address());
-    if (!routing_decision.adapter || routing_decision.next_hop.is_zero())
+    if (routing_decision.is_zero())
         return KResult(-EHOSTUNREACH);
     if (!has_specific_local_address())
         set_local_address(routing_decision.adapter->ipv4_address());
