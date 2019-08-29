@@ -370,7 +370,7 @@ u8 FloppyDiskDevice::read_msr() const
 
 void FloppyDiskDevice::motor_enable(bool slave) const
 {
-    u8 val = slave ? 0x1C : 0x2D;
+    u8 val = slave ? 0x2D : 0x1C;
     write_dor(val);
 }
 
