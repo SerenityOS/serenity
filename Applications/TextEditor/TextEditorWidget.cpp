@@ -262,6 +262,7 @@ void TextEditorWidget::open_sesame(const String& path)
         return;
     }
 
+    m_document_dirty = false;
     m_editor->set_text(file.read_all());
     set_path(FileSystemPath(path));
 }
