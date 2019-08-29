@@ -167,17 +167,17 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Terminal");
-    app_menu->add_action(GAction::create("Settings...",
+    app_menu->add_action(GAction::create("Settings...", load_png("/res/icons/gear16.png"),
         [&settings_window, terminal, &config](const GAction&) {
             if (!settings_window)
                 settings_window = create_settings_window(*terminal, config)->make_weak_ptr();
             settings_window->show();
             settings_window->move_to_front();
         }));
+    app_menu->add_separator();
     app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
-        return;
     }));
     menubar->add_menu(move(app_menu));
 
