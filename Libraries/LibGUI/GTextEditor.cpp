@@ -108,12 +108,18 @@ void GTextEditor::set_text(const StringView& text)
 void GTextEditor::update_content_size()
 {
     int content_width = 0;
-    for (auto& line : m_lines)
-        content_width = max(line.width(font()), content_width);
+    int content_height = 0;
+    for (auto& line : m_lines) {
+        line.for_each_visual_line([&](const Rect& rect, const StringView&, int) {
+            content_width = max(rect.width(), content_width);
+            content_height += rect.height();
+            return IterationDecision::Continue;
+        });
+    }
     content_width += m_horizontal_content_padding * 2;
     if (is_right_text_alignment(m_text_alignment))
         content_width = max(frame_inner_rect().width(), content_width);
-    int content_height = line_count() * line_height();
+
     set_content_size({ content_width, content_height });
     set_size_occupied_by_fixed_elements({ ruler_width(), 0 });
 }
@@ -1360,6 +1366,10 @@ void GTextEditor::recompute_all_visual_lines()
         line.m_visual_rect.set_y(y_offset);
         y_offset += line.m_visual_rect.height();
     }
+    if (content_size().height() == y_offset)
+        return;
+
+    update_content_size();
 }
 
 void GTextEditor::Line::recompute_visual_lines()
