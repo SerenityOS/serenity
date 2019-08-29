@@ -275,6 +275,8 @@ public:
     Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
 
+    Region& allocate_split_region(const Region& source_region, const Range&);
+
     void set_being_inspected(bool b) { m_being_inspected = b; }
     bool is_being_inspected() const { return m_being_inspected; }
 
@@ -348,7 +350,8 @@ private:
 
     TTY* m_tty { nullptr };
 
-    Region* region_from_range(VirtualAddress, size_t);
+    Region* region_from_range(const Range&);
+    Region* region_containing(const Range&);
 
     NonnullRefPtrVector<Region> m_regions;
 

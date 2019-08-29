@@ -9,14 +9,14 @@
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/FileSystem/Custody.h>
-#include <Kernel/FileSystem/Ext2FileSystem.h>
-#include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
-#include <Kernel/FileSystem/TmpFS.h>
+#include <Kernel/FileSystem/Ext2FileSystem.h>
 #include <Kernel/FileSystem/FIFO.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
+#include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/SharedMemory.h>
+#include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/IO.h>
 #include <Kernel/KBufferBuilder.h>
@@ -108,6 +108,12 @@ static unsigned prot_to_region_access_flags(int prot)
     return access;
 }
 
+Region& Process::allocate_split_region(const Region& source_region, const Range& range)
+{
+    m_regions.append(Region::create_user_accessible(range, source_region.name(), source_region.access()));
+    return m_regions.last();
+}
+
 Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, bool commit)
 {
     auto range = allocate_range(vaddr, size);
@@ -154,11 +160,20 @@ bool Process::deallocate_region(Region& region)
     return false;
 }
 
-Region* Process::region_from_range(VirtualAddress vaddr, size_t size)
+Region* Process::region_from_range(const Range& range)
 {
-    size = PAGE_ROUND_UP(size);
+    size_t size = PAGE_ROUND_UP(range.size());
     for (auto& region : m_regions) {
-        if (region.vaddr() == vaddr && region.size() == size)
+        if (region.vaddr() == range.base() && region.size() == size)
+            return &region;
+    }
+    return nullptr;
+}
+
+Region* Process::region_containing(const Range& range)
+{
+    for (auto& region : m_regions) {
+        if (region.contains(range))
             return &region;
     }
     return nullptr;
@@ -168,7 +183,7 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
     if (!validate_read_str(name))
         return -EFAULT;
-    auto* region = region_from_range(VirtualAddress((u32)addr), size);
+    auto* region = region_from_range({ VirtualAddress((u32)addr), size });
     if (!region)
         return -EINVAL;
     region->set_name(String(name));
@@ -220,17 +235,46 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 
 int Process::sys$munmap(void* addr, size_t size)
 {
-    auto* region = region_from_range(VirtualAddress((u32)addr), size);
-    if (!region)
-        return -EINVAL;
-    if (!deallocate_region(*region))
-        return -EINVAL;
-    return 0;
+    Range range_to_unmap { VirtualAddress((u32)addr), size };
+    if (auto* whole_region = region_from_range(range_to_unmap)) {
+        bool success = deallocate_region(*whole_region);
+        ASSERT(success);
+        return 0;
+    }
+
+    if (auto* old_region = region_containing(range_to_unmap)) {
+        Range old_region_range = old_region->range();
+        auto remaining_ranges_after_unmap = old_region_range.carve(range_to_unmap);
+        ASSERT(!remaining_ranges_after_unmap.is_empty());
+        auto make_replacement_region = [&](const Range& new_range) -> Region& {
+            auto& new_region = allocate_split_region(*old_region, new_range);
+            ASSERT(new_range.base() >= old_region_range.base());
+            size_t new_range_offset_in_old_region = new_range.base().get() - old_region_range.base().get();
+            size_t first_physical_page_of_new_region_in_old_region = new_range_offset_in_old_region / PAGE_SIZE;
+            for (size_t i = 0; i < new_region.page_count(); ++i) {
+                new_region.vmo().physical_pages()[i] = old_region->vmo().physical_pages()[first_physical_page_of_new_region_in_old_region + i];
+            }
+            return new_region;
+        };
+        Vector<Region*, 2> new_regions;
+        for (auto& new_range : remaining_ranges_after_unmap) {
+            new_regions.unchecked_append(&make_replacement_region(new_range));
+        }
+        deallocate_region(*old_region);
+        for (auto* new_region : new_regions) {
+            MM.map_region(*this, *new_region);
+        }
+        return 0;
+    }
+
+    // FIXME: We should also support munmap() across multiple regions. (#175)
+
+    return -EINVAL;
 }
 
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
-    auto* region = region_from_range(VirtualAddress((u32)addr), size);
+    auto* region = region_from_range({ VirtualAddress((u32)addr), size });
     if (!region)
         return -EINVAL;
     region->set_writable(prot & PROT_WRITE);
@@ -2930,4 +2974,3 @@ int Process::sys$get_process_name(char* buffer, int buffer_size)
     strncpy(buffer, m_name.characters(), buffer_size);
     return 0;
 }
-
