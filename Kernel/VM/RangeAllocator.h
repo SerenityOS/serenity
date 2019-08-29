@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/AKString.h>
 #include <AK/Vector.h>
 #include <Kernel/VM/VirtualAddress.h>
 
@@ -61,3 +62,8 @@ private:
 
     Vector<Range> m_available_ranges;
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const Range& value)
+{
+    return stream << String::format("Range(%x-%x)", value.base().get(), value.end().get() - 1);
+}
