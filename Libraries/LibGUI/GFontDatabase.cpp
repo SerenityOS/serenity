@@ -1,6 +1,7 @@
+#include <AK/QuickSort.h>
 #include <LibCore/CDirIterator.h>
-#include <LibGUI/GFontDatabase.h>
 #include <LibDraw/Font.h>
+#include <LibGUI/GFontDatabase.h>
 #include <dirent.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -40,17 +41,26 @@ GFontDatabase::~GFontDatabase()
 
 void GFontDatabase::for_each_font(Function<void(const StringView&)> callback)
 {
-    for (auto& it : m_name_to_metadata) {
-        callback(it.key);
-    }
+    Vector<String> names;
+    names.ensure_capacity(m_name_to_metadata.size());
+    for (auto& it : m_name_to_metadata)
+        names.append(it.key);
+    quick_sort(names.begin(), names.end(), AK::is_less_than<String>);
+    for (auto& name : names)
+        callback(name);
 }
 
 void GFontDatabase::for_each_fixed_width_font(Function<void(const StringView&)> callback)
 {
+    Vector<String> names;
+    names.ensure_capacity(m_name_to_metadata.size());
     for (auto& it : m_name_to_metadata) {
         if (it.value.is_fixed_width)
-            callback(it.key);
+            names.append(it.key);
     }
+    quick_sort(names.begin(), names.end(), AK::is_less_than<String>);
+    for (auto& name : names)
+        callback(name);
 }
 
 RefPtr<Font> GFontDatabase::get_by_name(const StringView& name)
