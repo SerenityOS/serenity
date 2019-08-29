@@ -170,7 +170,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
     }
 
     auto routing_decision = route_to(m_peer_address, m_local_address);
-    if (!routing_decision.adapter || routing_decision.next_hop.is_zero())
+    if (routing_decision.is_zero())
         return -EHOSTUNREACH;
 
     if (m_local_address.to_u32() == 0)
