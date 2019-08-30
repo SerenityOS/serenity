@@ -47,6 +47,7 @@ private:
     void delete_selected_widgets();
     template<typename Callback>
     void for_each_selected_widget(Callback);
+    void set_cursor_type_from_grabber(Direction grabber);
 
     VBWidget* single_selected_widget();
 
@@ -59,5 +60,6 @@ private:
     Point m_transform_event_origin;
     Point m_next_insertion_position;
     Direction m_resize_direction { Direction::None };
+    Direction m_mouse_direction_type { Direction::None };
     OwnPtr<GMenu> m_context_menu;
 };
