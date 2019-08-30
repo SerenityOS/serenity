@@ -288,6 +288,12 @@ void VBForm::mousemove_event(GMouseEvent& event)
             new_rect.set_height(new_rect.height() - (new_rect.height() % m_grid_size) + 1);
             widget.set_rect(new_rect);
         });
+
+        set_cursor_type_from_grabber(m_resize_direction);
+    } else {
+        for_each_selected_widget([&](auto& widget) {
+            set_cursor_type_from_grabber(widget.grabber_at(event.position()));
+        });
     }
 }
 
@@ -392,6 +398,36 @@ void VBForm::for_each_selected_widget(Callback callback)
 {
     for (auto& widget : m_selected_widgets)
         callback(*widget);
+}
+
+void VBForm::set_cursor_type_from_grabber(Direction grabber)
+{
+    if (grabber == m_mouse_direction_type)
+        return;
+
+    switch (grabber) {
+    case Direction::Up:
+    case Direction::Down:
+        window()->set_override_cursor(GStandardCursor::ResizeVertical);
+        break;
+    case Direction::Left:
+    case Direction::Right:
+        window()->set_override_cursor(GStandardCursor::ResizeHorizontal);
+        break;
+    case Direction::UpLeft:
+    case Direction::DownRight:
+        window()->set_override_cursor(GStandardCursor::ResizeDiagonalTLBR);
+        break;
+    case Direction::UpRight:
+    case Direction::DownLeft:
+        window()->set_override_cursor(GStandardCursor::ResizeDiagonalBLTR);
+        break;
+    case Direction::None:
+        window()->set_override_cursor(GStandardCursor::None);
+        break;
+    }
+
+    m_mouse_direction_type = grabber;
 }
 
 VBWidget* VBForm::single_selected_widget()
