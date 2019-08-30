@@ -27,6 +27,10 @@ struct Subcommand {
     Vector<Rewiring> rewirings;
 };
 
+struct Command {
+    Vector<Subcommand> subcommands;
+};
+
 class Parser {
 public:
     explicit Parser(const String& input)
@@ -34,11 +38,12 @@ public:
     {
     }
 
-    Vector<Subcommand> parse();
+    Vector<Command> parse();
 
 private:
     void commit_token();
     void commit_subcommand();
+    void commit_command();
     void do_pipe();
     void begin_redirect_read(int fd);
     void begin_redirect_write(int fd);
@@ -53,6 +58,7 @@ private:
     State m_state { Free };
     String m_input;
 
+    Vector<Command> m_commands;
     Vector<Subcommand> m_subcommands;
     Vector<String> m_tokens;
     Vector<Redirection> m_redirections;

@@ -22,6 +22,13 @@ void Parser::commit_subcommand()
     m_subcommands.append({ move(m_tokens), move(m_redirections), {} });
 }
 
+void Parser::commit_command()
+{
+    if (m_subcommands.is_empty())
+        return;
+    m_commands.append({ move(m_subcommands) });
+}
+
 void Parser::do_pipe()
 {
     m_redirections.append({ Redirection::Pipe, STDOUT_FILENO });
@@ -38,7 +45,7 @@ void Parser::begin_redirect_write(int fd)
     m_redirections.append({ Redirection::FileWrite, fd });
 }
 
-Vector<Subcommand> Parser::parse()
+Vector<Command> Parser::parse()
 {
     for (int i = 0; i < m_input.length(); ++i) {
         char ch = m_input.characters()[i];
@@ -46,6 +53,12 @@ Vector<Subcommand> Parser::parse()
         case State::Free:
             if (ch == ' ') {
                 commit_token();
+                break;
+            }
+            if (ch == ';') {
+                commit_token();
+                commit_subcommand();
+                commit_command();
                 break;
             }
             if (ch == '|') {
@@ -140,6 +153,7 @@ Vector<Subcommand> Parser::parse()
     }
     commit_token();
     commit_subcommand();
+    commit_command();
 
     if (!m_subcommands.is_empty()) {
         for (auto& redirection : m_subcommands.last().redirections) {
@@ -150,5 +164,5 @@ Vector<Subcommand> Parser::parse()
         }
     }
 
-    return move(m_subcommands);
+    return move(m_commands);
 }
