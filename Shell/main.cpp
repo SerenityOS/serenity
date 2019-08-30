@@ -20,7 +20,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-//#define SH_DEBUG
+#define SH_DEBUG
 
 GlobalState g;
 static LineEditor editor;
@@ -320,96 +320,42 @@ static int run_command(const String& cmd)
     if (cmd.is_empty())
         return 0;
 
-    auto subcommands = Parser(cmd).parse();
+    auto commands = Parser(cmd).parse();
 
 #ifdef SH_DEBUG
-    for (int i = 0; i < subcommands.size(); ++i) {
-        for (int j = 0; j < i; ++j)
-            dbgprintf("    ");
-        for (auto& arg : subcommands[i].args) {
-            dbgprintf("<%s> ", arg.characters());
-        }
-        dbgprintf("\n");
-        for (auto& redirecton : subcommands[i].redirections) {
+    for (auto& command : commands) {
+        for (int i = 0; i < command.subcommands.size(); ++i) {
             for (int j = 0; j < i; ++j)
                 dbgprintf("    ");
-            dbgprintf("  ");
-            switch (redirecton.type) {
-            case Redirection::Pipe:
-                dbgprintf("Pipe\n");
-                break;
-            case Redirection::FileRead:
-                dbgprintf("fd:%d = FileRead: %s\n", redirecton.fd, redirecton.path.characters());
-                break;
-            case Redirection::FileWrite:
-                dbgprintf("fd:%d = FileWrite: %s\n", redirecton.fd, redirecton.path.characters());
-                break;
-            case Redirection::FileWriteAppend:
-                dbgprintf("fd:%d = FileWriteAppend: %s\n", redirecton.fd, redirecton.path.characters());
-                break;
-            default:
-                break;
+            for (auto& arg : command.subcommands[i].args) {
+                dbgprintf("<%s> ", arg.characters());
+            }
+            dbgprintf("\n");
+            for (auto& redirecton : command.subcommands[i].redirections) {
+                for (int j = 0; j < i; ++j)
+                    dbgprintf("    ");
+                dbgprintf("  ");
+                switch (redirecton.type) {
+                case Redirection::Pipe:
+                    dbgprintf("Pipe\n");
+                    break;
+                case Redirection::FileRead:
+                    dbgprintf("fd:%d = FileRead: %s\n", redirecton.fd, redirecton.path.characters());
+                    break;
+                case Redirection::FileWrite:
+                    dbgprintf("fd:%d = FileWrite: %s\n", redirecton.fd, redirecton.path.characters());
+                    break;
+                case Redirection::FileWriteAppend:
+                    dbgprintf("fd:%d = FileWriteAppend: %s\n", redirecton.fd, redirecton.path.characters());
+                    break;
+                default:
+                    break;
+                }
             }
         }
+        dbgprintf("\n");
     }
 #endif
-
-    if (subcommands.is_empty())
-        return 0;
-
-    FileDescriptionCollector fds;
-
-    for (int i = 0; i < subcommands.size(); ++i) {
-        auto& subcommand = subcommands[i];
-        for (auto& redirection : subcommand.redirections) {
-            switch (redirection.type) {
-            case Redirection::Pipe: {
-                int pipefd[2];
-                int rc = pipe(pipefd);
-                if (rc < 0) {
-                    perror("pipe");
-                    return 1;
-                }
-                subcommand.rewirings.append({ STDOUT_FILENO, pipefd[1] });
-                auto& next_command = subcommands[i + 1];
-                next_command.rewirings.append({ STDIN_FILENO, pipefd[0] });
-                fds.add(pipefd[0]);
-                fds.add(pipefd[1]);
-                break;
-            }
-            case Redirection::FileWriteAppend: {
-                int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
-                if (fd < 0) {
-                    perror("open");
-                    return 1;
-                }
-                subcommand.rewirings.append({ redirection.fd, fd });
-                fds.add(fd);
-                break;
-            }
-            case Redirection::FileWrite: {
-                int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
-                if (fd < 0) {
-                    perror("open");
-                    return 1;
-                }
-                subcommand.rewirings.append({ redirection.fd, fd });
-                fds.add(fd);
-                break;
-            }
-            case Redirection::FileRead: {
-                int fd = open(redirection.path.characters(), O_RDONLY);
-                if (fd < 0) {
-                    perror("open");
-                    return 1;
-                }
-                subcommand.rewirings.append({ redirection.fd, fd });
-                fds.add(fd);
-                break;
-            }
-            }
-        }
-    }
 
     struct termios trm;
     tcgetattr(0, &trm);
@@ -419,99 +365,159 @@ static int run_command(const String& cmd)
         pid_t pid;
     };
 
-    Vector<SpawnedProcess> children;
-
-    CommandTimer timer;
-
-    for (int i = 0; i < subcommands.size(); ++i) {
-        auto& subcommand = subcommands[i];
-        Vector<String> argv_string = process_arguments(subcommand.args);
-        Vector<const char*> argv;
-        argv.ensure_capacity(argv_string.size());
-        for (const auto& s : argv_string) {
-            argv.append(s.characters());
-        }
-        argv.append(nullptr);
-
-#ifdef SH_DEBUG
-        for (auto& arg : argv) {
-            dbgprintf("<%s> ", arg);
-        }
-        dbgprintf("\n");
-#endif
-
-        int retval = 0;
-        if (handle_builtin(argv.size() - 1, const_cast<char**>(argv.data()), retval))
-            return retval;
-
-        pid_t child = fork();
-        if (!child) {
-            setpgid(0, 0);
-            tcsetpgrp(0, getpid());
-            for (auto& rewiring : subcommand.rewirings) {
-#ifdef SH_DEBUG
-                dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), redirection.rewire_fd, redirection.fd);
-#endif
-                int rc = dup2(rewiring.rewire_fd, rewiring.fd);
-                if (rc < 0) {
-                    perror("dup2");
-                    return 1;
-                }
-            }
-
-            fds.collect();
-
-            int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
-            if (rc < 0) {
-                if (errno == ENOENT)
-                    fprintf(stderr, "%s: Command not found.\n", argv[0]);
-                else
-                    fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(errno));
-                exit(1);
-            }
-            ASSERT_NOT_REACHED();
-        }
-        children.append({ argv[0], child });
-    }
-
-#ifdef SH_DEBUG
-    dbgprintf("Closing fds in shell process:\n");
-#endif
-    fds.collect();
-
-#ifdef SH_DEBUG
-    dbgprintf("Now we gotta wait on children:\n");
-    for (auto& child : children)
-        dbgprintf("  %d\n", child);
-#endif
-
-    int wstatus = 0;
     int return_value = 0;
 
-    for (int i = 0; i < children.size(); ++i) {
-        auto& child = children[i];
-        do {
-            int rc = waitpid(child.pid, &wstatus, WEXITED | WSTOPPED);
-            if (rc < 0 && errno != EINTR) {
-                if (errno != ECHILD)
-                    perror("waitpid");
-                break;
-            }
-            if (WIFEXITED(wstatus)) {
-                if (WEXITSTATUS(wstatus) != 0)
-                    dbg() << "Shell: " << child.name << ":" << child.pid << " exited with status " << WEXITSTATUS(wstatus);
-                if (i == 0)
-                    return_value = WEXITSTATUS(wstatus);
-            } else if (WIFSTOPPED(wstatus)) {
-                printf("Shell: %s(%d) stopped.\n", child.name.characters(), child.pid);
-            } else {
-                if (WIFSIGNALED(wstatus)) {
-                    printf("Shell: %s(%d) exited due to signal '%s'\n", child.name.characters(), child.pid, strsignal(WTERMSIG(wstatus)));
-                } else {
-                    printf("Shell: %s(%d) exited abnormally\n", child.name.characters(), child.pid);
+    for (auto& command : commands) {
+        if (command.subcommands.is_empty())
+            continue;
+
+        FileDescriptionCollector fds;
+
+        for (int i = 0; i < command.subcommands.size(); ++i) {
+            auto& subcommand = command.subcommands[i];
+            for (auto& redirection : subcommand.redirections) {
+                switch (redirection.type) {
+                case Redirection::Pipe: {
+                    int pipefd[2];
+                    int rc = pipe(pipefd);
+                    if (rc < 0) {
+                        perror("pipe");
+                        return 1;
+                    }
+                    subcommand.rewirings.append({ STDOUT_FILENO, pipefd[1] });
+                    auto& next_command = command.subcommands[i + 1];
+                    next_command.rewirings.append({ STDIN_FILENO, pipefd[0] });
+                    fds.add(pipefd[0]);
+                    fds.add(pipefd[1]);
+                    break;
+                }
+                case Redirection::FileWriteAppend: {
+                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_APPEND, 0666);
+                    if (fd < 0) {
+                        perror("open");
+                        return 1;
+                    }
+                    subcommand.rewirings.append({ redirection.fd, fd });
+                    fds.add(fd);
+                    break;
+                }
+                case Redirection::FileWrite: {
+                    int fd = open(redirection.path.characters(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
+                    if (fd < 0) {
+                        perror("open");
+                        return 1;
+                    }
+                    subcommand.rewirings.append({ redirection.fd, fd });
+                    fds.add(fd);
+                    break;
+                }
+                case Redirection::FileRead: {
+                    int fd = open(redirection.path.characters(), O_RDONLY);
+                    if (fd < 0) {
+                        perror("open");
+                        return 1;
+                    }
+                    subcommand.rewirings.append({ redirection.fd, fd });
+                    fds.add(fd);
+                    break;
+                }
                 }
             }
-        } while (errno == EINTR);
+        }
+
+        Vector<SpawnedProcess> children;
+
+        CommandTimer timer;
+
+        for (int i = 0; i < command.subcommands.size(); ++i) {
+            auto& subcommand = command.subcommands[i];
+            Vector<String> argv_string = process_arguments(subcommand.args);
+            Vector<const char*> argv;
+            argv.ensure_capacity(argv_string.size());
+            for (const auto& s : argv_string) {
+                argv.append(s.characters());
+            }
+            argv.append(nullptr);
+
+#ifdef SH_DEBUG
+            for (auto& arg : argv) {
+                dbgprintf("<%s> ", arg);
+            }
+            dbgprintf("\n");
+#endif
+
+            int retval = 0;
+            if (handle_builtin(argv.size() - 1, const_cast<char**>(argv.data()), retval))
+                return retval;
+
+            pid_t child = fork();
+            if (!child) {
+                setpgid(0, 0);
+                tcsetpgrp(0, getpid());
+                for (auto& rewiring : subcommand.rewirings) {
+#ifdef SH_DEBUG
+                    dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), rewiring.rewire_fd, rewiring.fd);
+#endif
+                    int rc = dup2(rewiring.rewire_fd, rewiring.fd);
+                    if (rc < 0) {
+                        perror("dup2");
+                        return 1;
+                    }
+                }
+
+                fds.collect();
+
+                int rc = execvp(argv[0], const_cast<char* const*>(argv.data()));
+                if (rc < 0) {
+                    if (errno == ENOENT)
+                        fprintf(stderr, "%s: Command not found.\n", argv[0]);
+                    else
+                        fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(errno));
+                    exit(1);
+                }
+                ASSERT_NOT_REACHED();
+            }
+            children.append({ argv[0], child });
+        }
+
+#ifdef SH_DEBUG
+        dbgprintf("Closing fds in shell process:\n");
+#endif
+        fds.collect();
+
+#ifdef SH_DEBUG
+        dbgprintf("Now we gotta wait on children:\n");
+        for (auto& child : children)
+            dbgprintf("  %d\n", child);
+#endif
+
+        int wstatus = 0;
+
+        for (int i = 0; i < children.size(); ++i) {
+            auto& child = children[i];
+            do {
+                int rc = waitpid(child.pid, &wstatus, WEXITED | WSTOPPED);
+                if (rc < 0 && errno != EINTR) {
+                    if (errno != ECHILD)
+                        perror("waitpid");
+                    break;
+                }
+                if (WIFEXITED(wstatus)) {
+                    if (WEXITSTATUS(wstatus) != 0)
+                        dbg() << "Shell: " << child.name << ":" << child.pid << " exited with status " << WEXITSTATUS(wstatus);
+                    if (i == 0)
+                        return_value = WEXITSTATUS(wstatus);
+                } else if (WIFSTOPPED(wstatus)) {
+                    printf("Shell: %s(%d) stopped.\n", child.name.characters(), child.pid);
+                } else {
+                    if (WIFSIGNALED(wstatus)) {
+                        printf("Shell: %s(%d) exited due to signal '%s'\n", child.name.characters(), child.pid, strsignal(WTERMSIG(wstatus)));
+                    } else {
+                        printf("Shell: %s(%d) exited abnormally\n", child.name.characters(), child.pid);
+                    }
+                }
+            } while (errno == EINTR);
+        }
     }
 
     // FIXME: Should I really have to tcsetpgrp() after my child has exited?
