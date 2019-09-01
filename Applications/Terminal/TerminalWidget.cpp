@@ -161,6 +161,13 @@ void TerminalWidget::keydown_event(GKeyEvent& event)
     char ch = !event.text().is_empty() ? event.text()[0] : 0;
     if (ch) {
         if (event.ctrl()) {
+            if (ch == 'e') {
+                write(m_ptm_fd, "\033[F", 3);
+                return;
+            } else if (ch == 'a') {
+                write(m_ptm_fd, "\033[H", 3);
+                return;
+            }
             if (ch >= 'a' && ch <= 'z') {
                 ch = ch - 'a' + 1;
             } else if (ch == '\\') {
