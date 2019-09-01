@@ -1419,6 +1419,7 @@ void GTextEditor::set_line_wrapping_enabled(bool enabled)
         return;
 
     m_line_wrapping_enabled = enabled;
+    horizontal_scrollbar().set_visible(!m_line_wrapping_enabled);
     update_content_size();
     recompute_all_visual_lines();
     update();
