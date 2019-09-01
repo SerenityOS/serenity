@@ -226,6 +226,22 @@ String LineEditor::get_line(const String& prompt)
                 fflush(stdout);
                 continue;
             }
+            if (ch == 0x01) { // ^A
+                if (m_cursor > 0) {
+                    printf("\033[%dD", m_cursor);
+                    fflush(stdout);
+                    m_cursor = 0;
+                }
+                continue;
+            }
+            if (ch == 0x05) { // ^E
+                if (m_cursor < m_buffer.size()) {
+                    printf("\033[%dC", m_buffer.size() - m_cursor);
+                    fflush(stdout);
+                    m_cursor = m_buffer.size();
+                }
+                continue;
+            }
             putchar(ch);
             fflush(stdout);
             if (ch == '\n') {
