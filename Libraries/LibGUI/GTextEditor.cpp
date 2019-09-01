@@ -1448,3 +1448,9 @@ void GTextEditor::add_custom_context_menu_action(GAction& action)
 {
     m_custom_context_menu_actions.append(action);
 }
+
+void GTextEditor::did_change_font()
+{
+    vertical_scrollbar().set_step(line_height());
+    GWidget::did_change_font();
+}

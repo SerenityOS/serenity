@@ -14,8 +14,8 @@
 
 GWidget::GWidget(GWidget* parent)
     : CObject(parent, true)
+    , m_font(Font::default_font())
 {
-    set_font(nullptr);
     m_background_color = Color::WarmGray;
     m_foreground_color = Color::Black;
 }
@@ -372,12 +372,17 @@ void GWidget::set_focus(bool focus)
     }
 }
 
-void GWidget::set_font(Font* font)
+void GWidget::set_font(const Font* font)
 {
+    if (m_font.ptr() == font)
+        return;
+
     if (!font)
         m_font = Font::default_font();
     else
-        m_font = font;
+        m_font = *font;
+
+    did_change_font();
     update();
 }
 
