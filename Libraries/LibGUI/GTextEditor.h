@@ -165,6 +165,9 @@ public:
 
     void add_custom_context_menu_action(GAction&);
 
+protected:
+    virtual void did_change_font() override;
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
