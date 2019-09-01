@@ -402,7 +402,7 @@ void WSWindowManager::close_current_menu()
         m_current_menu->menu_window()->set_visible(false);
     m_current_menu = nullptr;
     for (auto& menu : m_menu_manager.open_menu_stack()) {
-        if (menu)
+        if (menu && menu->menu_window())
             menu->menu_window()->set_visible(false);
     }
     m_menu_manager.open_menu_stack().clear();
