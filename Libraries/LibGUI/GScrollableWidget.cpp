@@ -33,11 +33,9 @@ void GScrollableWidget::mousewheel_event(GMouseEvent& event)
     vertical_scrollbar().set_value(vertical_scrollbar().value() + event.wheel_delta() * 20);
 }
 
-void GScrollableWidget::resize_event(GResizeEvent& event)
+void GScrollableWidget::custom_layout()
 {
-    auto inner_rect = frame_inner_rect_for_size(event.size());
-    update_scrollbar_ranges();
-
+    auto inner_rect = frame_inner_rect_for_size(size());
     int height_wanted_by_horizontal_scrollbar = m_horizontal_scrollbar->is_visible() ? m_horizontal_scrollbar->preferred_size().height() : 0;
     int width_wanted_by_vertical_scrollbar = m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->preferred_size().width() : 0;
 
@@ -49,6 +47,12 @@ void GScrollableWidget::resize_event(GResizeEvent& event)
         Rect corner_rect { m_horizontal_scrollbar->relative_rect().right() + 1, m_vertical_scrollbar->relative_rect().bottom() + 1, width_occupied_by_vertical_scrollbar(), height_occupied_by_horizontal_scrollbar() };
         m_corner_widget->set_relative_rect(corner_rect);
     }
+}
+
+void GScrollableWidget::resize_event(GResizeEvent& event)
+{
+    GFrame::resize_event(event);
+    update_scrollbar_ranges();
 }
 
 Size GScrollableWidget::available_size() const

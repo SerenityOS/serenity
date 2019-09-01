@@ -144,6 +144,7 @@ void GWidget::set_layout(OwnPtr<GLayout>&& layout)
 
 void GWidget::do_layout()
 {
+    custom_layout();
     if (!m_layout)
         return;
     m_layout->run(*this);
@@ -157,8 +158,7 @@ void GWidget::notify_layout_changed(Badge<GLayout>)
 
 void GWidget::handle_resize_event(GResizeEvent& event)
 {
-    if (layout())
-        do_layout();
+    do_layout();
     return resize_event(event);
 }
 

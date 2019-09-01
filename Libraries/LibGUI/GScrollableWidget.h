@@ -40,12 +40,12 @@ public:
 
 protected:
     explicit GScrollableWidget(GWidget* parent);
+    virtual void custom_layout() override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousewheel_event(GMouseEvent&) override;
     virtual void did_scroll() {}
     void set_content_size(const Size&);
     void set_size_occupied_by_fixed_elements(const Size&);
-
 
 private:
     void update_scrollbar_ranges();

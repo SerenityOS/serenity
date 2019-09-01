@@ -219,6 +219,8 @@ public:
 
     virtual void save_to(AK::JsonObject&) override;
 
+protected:
+    virtual void custom_layout() {}
     virtual void did_change_font() {}
 
 private:
