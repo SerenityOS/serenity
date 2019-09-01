@@ -199,7 +199,6 @@ private:
         StringView view() const { return { characters(), length() }; }
         const char* characters() const { return m_text.data(); }
         int length() const { return m_text.size() - 1; }
-        int width(const Font&) const;
         void set_text(const StringView&);
         void append(char);
         void prepend(char);
