@@ -45,9 +45,6 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(file_menu));
 
-    auto edit_menu = make<GMenu>("Edit");
-    menubar->add_menu(move(edit_menu));
-
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
