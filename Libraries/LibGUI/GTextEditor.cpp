@@ -139,7 +139,8 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
             if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
                 line_index = i;
                 break;
-            }
+            } else if (position.y() > rect.bottom())
+                line_index = m_lines.size() - 1;
         }
     } else {
         line_index = position.y() / line_height();
