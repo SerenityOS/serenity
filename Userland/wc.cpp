@@ -65,7 +65,7 @@ int count_words(const char* s)
 int main(int argc, char** argv)
 {
     if (argc < 2) {
-        printf("usage: wc [-c|-m] [-lw] [file...]");
+        printf("usage: wc [-c|-m] [-lw] [file...]\n");
         return 0;
     }
 
@@ -94,7 +94,7 @@ int main(int argc, char** argv)
 
     Vector<String> files = args.get_single_values();
     if (files.is_empty()) {
-        fprintf(stderr, "wc: No files provided");
+        fprintf(stderr, "wc: No files provided\n");
         return 1;
     }
 
