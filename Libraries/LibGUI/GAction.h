@@ -4,17 +4,26 @@
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
-#include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/RefCounted.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
-#include <LibGUI/GShortcut.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GShortcut.h>
+#include <LibGUI/GWindow.h>
 
+class GAction;
 class GActionGroup;
 class GButton;
 class GMenuItem;
 class GWidget;
+
+namespace GCommonActions {
+NonnullRefPtr<GAction> make_cut_action(Function<void()>, GWidget* widget);
+NonnullRefPtr<GAction> make_copy_action(Function<void()>, GWidget* widget);
+NonnullRefPtr<GAction> make_paste_action(Function<void()>, GWidget* widget);
+NonnullRefPtr<GAction> make_quit_action(Function<void()>);
+};
 
 class GAction : public RefCounted<GAction>
     , public Weakable<GAction> {
@@ -41,7 +50,6 @@ public:
         return adopt(*new GAction(text, shortcut, move(icon), move(callback), widget));
     }
     ~GAction();
-
     GWidget* widget() { return m_widget.ptr(); }
     const GWidget* widget() const { return m_widget.ptr(); }
 

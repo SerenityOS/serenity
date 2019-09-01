@@ -4,6 +4,40 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GMenuItem.h>
 
+NonnullRefPtr<GAction> GCommonActions::make_cut_action(Function<void()> callback, GWidget* widget)
+{
+    return GAction::create(
+        "Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [callback = move(callback)](const GAction&) {
+            callback();
+        },
+        widget);
+}
+
+NonnullRefPtr<GAction> GCommonActions::make_copy_action(Function<void()> callback, GWidget* widget)
+{
+    return GAction::create(
+        "Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [callback = move(callback)](const GAction&) {
+            callback();
+        },
+        widget);
+}
+
+NonnullRefPtr<GAction> GCommonActions::make_paste_action(Function<void()> callback, GWidget* widget)
+{
+    return GAction::create(
+        "Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [callback = move(callback)](const GAction&) {
+            callback();
+        },
+        widget);
+}
+
+NonnullRefPtr<GAction> GCommonActions::make_quit_action(Function<void()> callback)
+{
+    return GAction::create("Quit", { Mod_Alt, Key_F4 }, [callback = move(callback)](const GAction&) {
+        callback();
+    });
+}
+
 GAction::GAction(const StringView& text, Function<void(GAction&)> on_activation_callback, GWidget* widget)
     : on_activation(move(on_activation_callback))
     , m_text(text)
