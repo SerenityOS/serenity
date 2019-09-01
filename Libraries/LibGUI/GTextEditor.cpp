@@ -156,7 +156,7 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
         column_index = (position.x() + glyph_width() / 2) / glyph_width();
         if (is_line_wrapping_enabled()) {
             line.for_each_visual_line([&](const Rect& rect, const StringView&, int start_of_line) {
-                if (rect.contains(position)) {
+                if (rect.contains_vertically(position.y())) {
                     column_index += start_of_line;
                     return IterationDecision::Break;
                 }
@@ -405,7 +405,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
                     int selection_right = selection_ends_on_current_visual_line
                         ? content_x_for_position({ line_index, selection_end_column_within_line })
-                        : visual_line_rect.right();
+                        : visual_line_rect.right() + 1;
 
                     Rect selection_rect {
                         selection_left,
@@ -1412,7 +1412,7 @@ void GTextEditor::Line::for_each_visual_line(Callback callback) const
         Rect visual_line_rect {
             m_visual_rect.x(),
             m_visual_rect.y() + (line_index * m_editor.line_height()),
-            m_visual_rect.width(),
+            m_editor.font().width(visual_line_view),
             m_editor.line_height()
         };
         if (callback(visual_line_rect, visual_line_view, start_of_line) == IterationDecision::Break)
