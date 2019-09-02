@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <stdarg.h>
 
@@ -348,6 +349,8 @@ template<typename PutChFunc>
             case 'p':
                 ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, false, true, 8);
                 break;
+            default:
+                ASSERT_NOT_REACHED();
             }
         } else {
             putch(bufptr, *p);
