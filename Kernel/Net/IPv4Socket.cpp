@@ -82,8 +82,17 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
         return KResult(-EINVAL);
 
     auto& ia = *(const sockaddr_in*)address;
+
+    auto requested_local_port = ntohs(ia.sin_port);
+    if (!current->process().is_superuser()) {
+        if (requested_local_port < 1024) {
+            dbg() << current->process() << " (uid " << current->process().uid() << ") attempted to bind " << class_name() << " to port " << requested_local_port;
+            return KResult(-EACCES);
+        }
+    }
+
     m_local_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
-    m_local_port = ntohs(ia.sin_port);
+    m_local_port = requested_local_port;
 
     dbgprintf("IPv4Socket::bind %s{%p} to %s:%u\n", class_name(), this, m_local_address.to_string().characters(), m_local_port);
 
