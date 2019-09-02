@@ -17,6 +17,7 @@
 #include <Kernel/KParams.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkAdapter.h>
+#include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI.h>
@@ -59,6 +60,7 @@ enum ProcFileType {
     FI_Root_sys_variable,
 
     FI_Root_net_adapters,
+    FI_Root_net_arp,
     FI_Root_net_tcp,
     FI_Root_net_udp,
     FI_Root_net_local,
@@ -331,6 +333,20 @@ Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
         obj.add("bytes_out", adapter.bytes_out());
         obj.add("link_up", adapter.link_up());
     });
+    array.finish();
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$net_arp(InodeIdentifier)
+{
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    LOCKER(arp_table().lock());
+    for (auto& it : arp_table().resource()) {
+        JsonObjectSerializer obj = array.add_object();
+        obj.add("mac_address", it.value.to_string());
+        obj.add("ip_address", it.key.to_string());
+    }
     array.finish();
     return builder.build();
 }
@@ -1022,6 +1038,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
 
     case FI_Root_net:
         callback({ "adapters", 8, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_adapters), 0 });
+        callback({ "arp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_arp), 0 });
         callback({ "tcp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_tcp), 0 });
         callback({ "udp", 3, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_udp), 0 });
         callback({ "local", 5, to_identifier(fsid(), PDI_Root_net, 0, FI_Root_net_local), 0 });
@@ -1109,6 +1126,8 @@ InodeIdentifier ProcFSInode::lookup(StringView name)
     if (proc_file_type == FI_Root_net) {
         if (name == "adapters")
             return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_adapters);
+        if (name == "arp")
+            return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_arp);
         if (name == "tcp")
             return to_identifier(fsid(), PDI_Root, 0, FI_Root_net_tcp);
         if (name == "udp")
@@ -1244,6 +1263,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_net] = { "net", FI_Root_net };
 
     m_entries[FI_Root_net_adapters] = { "adapters", FI_Root_net_adapters, procfs$net_adapters };
+    m_entries[FI_Root_net_arp] = { "arp", FI_Root_net_arp, procfs$net_arp };
     m_entries[FI_Root_net_tcp] = { "tcp", FI_Root_net_tcp, procfs$net_tcp };
     m_entries[FI_Root_net_udp] = { "udp", FI_Root_net_udp, procfs$net_udp };
     m_entries[FI_Root_net_local] = { "local", FI_Root_net_local, procfs$net_local };
