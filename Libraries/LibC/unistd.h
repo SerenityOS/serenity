@@ -107,6 +107,7 @@ char* realpath(const char* pathname, char* buffer);
 
 enum {
     _PC_NAME_MAX,
+    _PC_PATH_MAX,
 };
 
 #define HOST_NAME_MAX 64
