@@ -2,6 +2,8 @@
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
+#include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
@@ -206,8 +208,8 @@ TextEditorWidget::TextEditorWidget()
     menubar->add_menu(move(view_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("TextEditor", load_png("/res/icons/32x32/app-texteditor.png"), window());
     }));
     menubar->add_menu(move(help_menu));
 
