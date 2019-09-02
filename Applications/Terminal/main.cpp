@@ -3,6 +3,7 @@
 #include <LibCore/CArgsParser.h>
 #include <LibCore/CUserInfo.h>
 #include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -206,8 +207,8 @@ int main(int argc, char** argv)
     menubar->add_menu(move(font_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("Terminal", load_png("/res/icons/32x32/app-terminal.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
