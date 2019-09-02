@@ -290,6 +290,7 @@ template<typename PutChFunc>
             } break;
 
             case 'd':
+            case 'i':
                 ret += print_signed_number(putch, bufptr, va_arg(ap, int), left_pad, zeroPad, fieldWidth);
                 break;
 
