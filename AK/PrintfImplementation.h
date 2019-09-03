@@ -39,6 +39,7 @@ template<typename PutChFunc, typename T>
         putch(bufptr, '0');
         putch(bufptr, 'x');
         ret += 2;
+        width += 2;
     }
 
     if (zeroPad) {
@@ -348,7 +349,7 @@ template<typename PutChFunc>
 
             case 'P':
             case 'p':
-                ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, false, true, 8);
+                ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, true, true, 8);
                 break;
             default:
                 ASSERT_NOT_REACHED();
