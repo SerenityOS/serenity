@@ -1,7 +1,10 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <LibC/fd_set.h>
+
+#ifdef __serenity__
+#    include <LibC/fd_set.h>
+#endif
 
 extern "C" {
 struct timeval;
