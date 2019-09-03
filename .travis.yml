@@ -12,6 +12,10 @@ cache:
 
 notifications:
   irc: "chat.freenode.net#serenityos"
+    template:
+      - "%{repository_slug}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
+      - "Subject: %{commit_subject}"
+      - "Details: %{build_url}"
 
 before_install:
 - sudo add-apt-repository -y ppa:ubuntu-toolchain-r/test
