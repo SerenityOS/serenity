@@ -245,6 +245,9 @@ void RTL8139NetworkAdapter::reset()
     // bytes, interframe gap time of the only allowable value. the DMA burst
     // size is important - silent failures have been observed with 2048 bytes.
     out32(REG_TXCFG, TXCFG_TXRR_ZERO | TXCFG_MAX_DMA_1K | TXCFG_IFG11);
+    // tell the chip where we want it to DMA from for outgoing packets.
+    for (int i = 0; i < 4; i++)
+        out32(REG_TXADDR0 + (i * 4), m_tx_buffer_addr[i]);
     // re-lock config registers
     out8(REG_CFG9346, CFG9346_NONE);
     // enable rx/tx again in case they got turned off (apparently some cards
@@ -299,7 +302,6 @@ void RTL8139NetworkAdapter::send_raw(const u8* data, int length)
     memcpy((void*)(m_tx_buffer_addr[hw_buffer]), data, length);
     memset((void*)(m_tx_buffer_addr[hw_buffer] + length), 0, TX_BUFFER_SIZE - length);
 
-    out32(REG_TXADDR0 + (hw_buffer * 4), m_tx_buffer_addr[hw_buffer]);
     out32(REG_TXSTATUS0 + (hw_buffer * 4), length);
 }
 
