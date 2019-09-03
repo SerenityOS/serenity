@@ -1,10 +1,11 @@
-#include "IRCAppWindow.h"
 #include "IRCClient.h"
+#include "IRCAppWindow.h"
 #include "IRCChannel.h"
 #include "IRCLogBuffer.h"
 #include "IRCQuery.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
+#include <AK/StringBuilder.h>
 #include <LibCore/CNotifier.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
@@ -291,6 +292,11 @@ void IRCClient::send_privmsg(const String& target, const String& text)
     send(String::format("PRIVMSG %s :%s\r\n", target.characters(), text.characters()));
 }
 
+void IRCClient::send_notice(const String& target, const String& text)
+{
+    send(String::format("NOTICE %s :%s\r\n", target.characters(), text.characters()));
+}
+
 void IRCClient::handle_user_input_in_channel(const String& channel_name, const String& input)
 {
     if (input.is_empty())
@@ -330,6 +336,11 @@ bool IRCClient::is_nick_prefix(char ch) const
     return false;
 }
 
+static bool has_ctcp_payload(const StringView& string)
+{
+    return string.length() >= 2 && string[0] == 0x01 && string[string.length() - 1] == 0x01;
+}
+
 void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice type)
 {
     if (msg.arguments.size() < 2)
@@ -340,9 +351,12 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
     auto sender_nick = parts[0];
     auto target = msg.arguments[0];
 
+    bool is_ctcp = has_ctcp_payload(msg.arguments[1]);
+
 #ifdef IRC_DEBUG
-    printf("handle_privmsg_or_notice: type='%s', sender_nick='%s', target='%s'\n",
+    printf("handle_privmsg_or_notice: type='%s'%s, sender_nick='%s', target='%s'\n",
         type == PrivmsgOrNotice::Privmsg ? "privmsg" : "notice",
+        is_ctcp ? " (ctcp)" : "",
         sender_nick.characters(),
         target.characters());
 #endif
@@ -356,15 +370,31 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
         sender_nick = sender_nick.substring(1, sender_nick.length() - 1);
     }
 
+    String message_text = msg.arguments[1];
+    auto message_color = Color::Black;
+
+    if (is_ctcp) {
+        auto ctcp_payload = msg.arguments[1].substring_view(1, msg.arguments[1].length() - 2);
+        if (type == PrivmsgOrNotice::Privmsg)
+            handle_ctcp_request(sender_nick, ctcp_payload);
+        else
+            handle_ctcp_response(sender_nick, ctcp_payload);
+        StringBuilder builder;
+        builder.append("(CTCP) ");
+        builder.append(ctcp_payload);
+        message_text = builder.to_string();
+        message_color = Color::Blue;
+    }
+
     {
         auto it = m_channels.find(target);
         if (it != m_channels.end()) {
-            (*it).value->add_message(sender_prefix, sender_nick, msg.arguments[1]);
+            (*it).value->add_message(sender_prefix, sender_nick, message_text, message_color);
             return;
         }
     }
     auto& query = ensure_query(sender_nick);
-    query.add_message(sender_prefix, sender_nick, msg.arguments[1]);
+    query.add_message(sender_prefix, sender_nick, message_text, message_color);
 }
 
 IRCQuery& IRCClient::ensure_query(const String& name)
@@ -670,4 +700,35 @@ void IRCClient::did_part_from_channel(Badge<IRCChannel>, IRCChannel& channel)
 {
     if (on_part_from_channel)
         on_part_from_channel(channel);
+}
+
+void IRCClient::send_ctcp_response(const StringView& peer, const StringView& payload)
+{
+    StringBuilder builder;
+    builder.append(0x01);
+    builder.append(payload);
+    builder.append(0x01);
+    auto message = builder.to_string();
+    send_notice(peer, message);
+}
+
+void IRCClient::handle_ctcp_request(const StringView& peer, const StringView& payload)
+{
+    dbg() << "handle_ctcp_request: " << payload;
+
+    if (payload == "VERSION") {
+        send_ctcp_response(peer, "VERSION IRC Client [x86] / Serenity OS");
+        return;
+    }
+
+    // FIXME: Add StringView::starts_with()
+    if (String(payload).starts_with("PING")) {
+        send_ctcp_response(peer, payload);
+        return;
+    }
+}
+
+void IRCClient::handle_ctcp_response(const StringView& peer, const StringView& payload)
+{
+    dbg() << "handle_ctcp_response(" << peer << "): " << payload;
 }
