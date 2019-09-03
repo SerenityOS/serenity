@@ -302,6 +302,17 @@ void RTL8139NetworkAdapter::send_raw(const u8* data, int length)
     memcpy((void*)(m_tx_buffer_addr[hw_buffer]), data, length);
     memset((void*)(m_tx_buffer_addr[hw_buffer] + length), 0, TX_BUFFER_SIZE - length);
 
+    // the rtl8139 will not actually emit packets onto the network if they're
+    // smaller than 64 bytes. the rtl8139 adds a checksum to the end of each
+    // packet, and that checksum is four bytes long, so we pad the packet to
+    // 60 bytes if necessary to make sure the whole thing is large enough.
+    if (length < 60) {
+#ifdef RTL8139_DEBUG
+        kprintf("RTL8139NetworkAdapter: adjusting payload size from %d to 60\n", length);
+#endif
+        length = 60;
+    }
+
     out32(REG_TXSTATUS0 + (hw_buffer * 4), length);
 }
 
