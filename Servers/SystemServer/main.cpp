@@ -13,21 +13,21 @@ void start_process(const String& program, const Vector<String>& arguments, int p
     pid_t pid = 0;
 
     while (true) {
-        dbgprintf("Forking for %s...\n", program.characters());
+        dbg() << "Forking for " << program << "...";
         int pid = fork();
         if (pid < 0) {
-            dbgprintf("Fork %s failed! %s\n", program.characters(), strerror(errno));
+            dbg() << "Fork " << program << " failed! " << strerror(errno);
             continue;
         } else if (pid > 0) {
             // parent...
-            dbgprintf("Process %s hopefully started with priority %d...\n", program.characters(), prio);
+            dbg() << "Process " << program << " hopefully started with priority " << prio << "...";
             return;
         }
         break;
     }
 
     while (true) {
-        dbgprintf("Executing for %s... at prio %d\n", program.characters(), prio);
+        dbg() << "Executing for " << program << "... at prio " << prio;
         struct sched_param p;
         p.sched_priority = prio;
         int ret = sched_setparam(pid, &p);
@@ -47,7 +47,7 @@ void start_process(const String& program, const Vector<String>& arguments, int p
         progv[arguments.size() + 1] = nullptr;
         ret = execv(progv[0], progv);
         if (ret < 0) {
-            dbgprintf("Exec %s failed! %s", progv[0], strerror(errno));
+            dbg() << "Exec " << progv[0] << " failed! " << strerror(errno);
             continue;
         }
         break;
@@ -58,23 +58,23 @@ static void check_for_test_mode()
 {
     CFile f("/proc/cmdline");
     if (!f.open(CIODevice::ReadOnly)) {
-        dbgprintf("Failed to read command line: %s\n", f.error_string());
+        dbg() << "Failed to read command line: " << f.error_string();
         ASSERT(false);
     }
     const String cmd = String::copy(f.read_all());
-    dbgprintf("Read command line: %s\n", cmd.characters());
+    dbg() << "Read command line: " << cmd;
     if (cmd.matches("*testmode=1*")) {
         // Eventually, we should run a test binary and wait for it to finish
         // before shutting down. But this is good enough for now.
-        dbgprintf("Waiting for testmode shutdown...\n");
+        dbg() << "Waiting for testmode shutdown...";
         sleep(5);
-        dbgprintf("Shutting down due to testmode...\n");
+        dbg() << "Shutting down due to testmode...";
         if (fork() == 0) {
             execl("/bin/shutdown", "/bin/shutdown", "-n", nullptr);
             ASSERT_NOT_REACHED();
         }
     } else {
-        dbgprintf("Continuing normally\n");
+        dbg() << "Continuing normally";
     }
 }
 
