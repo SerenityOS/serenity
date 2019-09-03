@@ -281,9 +281,9 @@ void IRCClient::handle(const Message& msg)
         add_server_message(String::format("[%s] %s", msg.command.characters(), msg.arguments[1].characters()));
 }
 
-void IRCClient::add_server_message(const String& text)
+void IRCClient::add_server_message(const String& text, Color color)
 {
-    m_log->add_message(0, "", text);
+    m_log->add_message(0, "", text, color);
     m_server_subwindow->did_add_message();
 }
 
@@ -393,8 +393,25 @@ void IRCClient::handle_privmsg_or_notice(const Message& msg, PrivmsgOrNotice typ
             return;
         }
     }
-    auto& query = ensure_query(sender_nick);
-    query.add_message(sender_prefix, sender_nick, message_text, message_color);
+
+    // For NOTICE or CTCP messages, only put them in query if one already exists.
+    // Otherwise, put them in the server window. This seems to match other clients.
+    IRCQuery* query = nullptr;
+    if (is_ctcp || type == PrivmsgOrNotice::Notice) {
+        query = query_with_name(sender_nick);
+    } else {
+        query = &ensure_query(sender_nick);
+    }
+    if (query)
+        query->add_message(sender_prefix, sender_nick, message_text, message_color);
+    else {
+        add_server_message(String::format("<%s> %s", sender_nick.characters(), message_text.characters()), message_color);
+    }
+}
+
+IRCQuery* IRCClient::query_with_name(const String& name)
+{
+    return m_queries.get(name).value_or(nullptr);
 }
 
 IRCQuery& IRCClient::ensure_query(const String& name)
