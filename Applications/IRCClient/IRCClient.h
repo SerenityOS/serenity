@@ -82,10 +82,11 @@ public:
     void handle_part_action(const String&);
     void handle_change_nick_action(const String&);
 
+    IRCQuery* query_with_name(const String&);
     IRCQuery& ensure_query(const String& name);
     IRCChannel& ensure_channel(const String& name);
 
-    void add_server_message(const String&);
+    void add_server_message(const String&, Color = Color::Black);
 
 private:
     struct Message {
