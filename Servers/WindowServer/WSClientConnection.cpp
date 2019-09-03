@@ -289,6 +289,9 @@ bool WSClientConnection::handle_message(const WSAPI_ClientMessage& message, cons
     case WSAPI_ClientMessage::Type::GetWallpaper:
         CEventLoop::current().post_event(*this, make<WSAPIGetWallpaperRequest>(client_id()));
         break;
+    case WSAPI_ClientMessage::Type::SetResolution:
+        CEventLoop::current().post_event(*this, make<WSAPISetResolutionRequest>(client_id(), message.wm_conf.resolution.width, message.wm_conf.resolution.height));
+        break;
     case WSAPI_ClientMessage::Type::SetWindowOverrideCursor:
         CEventLoop::current().post_event(*this, make<WSAPISetWindowOverrideCursorRequest>(client_id(), message.window_id, (WSStandardCursor)message.cursor.cursor));
         break;
@@ -554,6 +557,15 @@ void WSClientConnection::handle_request(const WSAPIGetWallpaperRequest&)
     ASSERT(path.length() < (int)sizeof(response.text));
     memcpy(response.text, path.characters(), path.length() + 1);
     response.text_length = path.length();
+    post_message(response);
+}
+
+void WSClientConnection::handle_request(const WSAPISetResolutionRequest& request)
+{
+    WSWindowManager::the().set_resolution(request.resolution().width(), request.resolution().height());
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidSetResolution;
+    response.value = true;
     post_message(response);
 }
 
@@ -984,6 +996,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPISetWallpaperRequest&>(request));
     case WSEvent::APIGetWallpaperRequest:
         return handle_request(static_cast<const WSAPIGetWallpaperRequest&>(request));
+    case WSEvent::APISetResolutionRequest:
+        return handle_request(static_cast<const WSAPISetResolutionRequest&>(request));
     case WSEvent::APISetWindowOverrideCursorRequest:
         return handle_request(static_cast<const WSAPISetWindowOverrideCursorRequest&>(request));
     case WSEvent::WMAPISetActiveWindowRequest:

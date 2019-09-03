@@ -86,6 +86,7 @@ cp ../Applications/SystemDialog/SystemDialog mnt/bin/SystemDialog
 cp ../Applications/ChanViewer/ChanViewer mnt/bin/ChanViewer
 cp ../Applications/Calculator/Calculator mnt/bin/Calculator
 cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
+cp ../Applications/DisplayProperties/DisplayProperties mnt/bin/DisplayProperties
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
