@@ -7,6 +7,7 @@
 #include <LibDraw/Point.h>
 #include <LibDraw/Rect.h>
 #include <WindowServer/WSCursor.h>
+#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSWindowType.h>
 
 class WSEvent : public CEvent {
@@ -60,6 +61,7 @@ public:
         APIGetClipboardContentsRequest,
         APISetWallpaperRequest,
         APIGetWallpaperRequest,
+        APISetResolutionRequest,
         APISetWindowOverrideCursorRequest,
         APISetWindowHasAlphaChannelRequest,
         APIMoveWindowToFrontRequest,
@@ -439,6 +441,20 @@ public:
         : WSAPIClientRequest(WSEvent::APIGetWallpaperRequest, client_id)
     {
     }
+};
+
+class WSAPISetResolutionRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetResolutionRequest(int client_id, int width, int height)
+        : WSAPIClientRequest(WSEvent::APISetResolutionRequest, client_id),
+          m_resolution(width, height)
+    {
+    }
+
+    Size resolution() const { return m_resolution; }
+
+private:
+    Size m_resolution;
 };
 
 class WSAPISetWindowTitleRequest final : public WSAPIClientRequest {

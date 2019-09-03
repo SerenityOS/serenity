@@ -109,6 +109,7 @@ struct WSAPI_ServerMessage {
         DidSetWindowBackingStore,
         DidSetWallpaper,
         DidGetWallpaper,
+        DidSetResolution,
         DidSetWindowHasAlphaChannel,
         ScreenRectChanged,
 
@@ -224,6 +225,7 @@ struct WSAPI_ClientMessage {
         Greeting,
         SetWallpaper,
         GetWallpaper,
+        SetResolution,
         SetWindowOverrideCursor,
         WM_SetActiveWindow,
         WM_SetWindowMinimized,
@@ -260,6 +262,9 @@ struct WSAPI_ClientMessage {
             bool minimized;
             WSAPI_Point position;
         } wm;
+        struct {
+            WSAPI_Size resolution;
+        } wm_conf;
         struct {
             int menubar_id;
             int menu_id;
