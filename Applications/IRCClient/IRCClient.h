@@ -105,6 +105,7 @@ private:
     void send_nick();
     void send_pong(const String& server);
     void send_privmsg(const String& target, const String&);
+    void send_notice(const String& target, const String&);
     void send_whois(const String&);
     void process_line(ByteBuffer&&);
     void handle_join(const Message&);
@@ -125,6 +126,9 @@ private:
     void handle_nick(const Message&);
     void handle(const Message&);
     void handle_user_command(const String&);
+    void handle_ctcp_request(const StringView& peer, const StringView& payload);
+    void handle_ctcp_response(const StringView& peer, const StringView& payload);
+    void send_ctcp_response(const StringView& peer, const StringView& payload);
 
     void on_socket_connected();
 
