@@ -29,6 +29,30 @@ public:
         value.serialize(m_builder);
     }
 
+    void add(const StringView& key, const StringView& value)
+    {
+        begin_item(key);
+        m_builder.append('"');
+        m_builder.append(value);
+        m_builder.append('"');
+    }
+
+    void add(const StringView& key, const String& value)
+    {
+        begin_item(key);
+        m_builder.append('"');
+        m_builder.append(value);
+        m_builder.append('"');
+    }
+
+    void add(const StringView& key, const char* value)
+    {
+        begin_item(key);
+        m_builder.append('"');
+        m_builder.append(value);
+        m_builder.append('"');
+    }
+
     JsonArraySerializer<Builder> add_array(const StringView& key)
     {
         begin_item(key);
