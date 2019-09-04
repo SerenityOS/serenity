@@ -735,6 +735,29 @@ void Process::sys$exit(int status)
     ASSERT_NOT_REACHED();
 }
 
+// The trampoline preserves the current eax, pushes the signal code and
+// then calls the signal handler. We do this because, when interrupting a
+// blocking syscall, that syscall may return some special error code in eax;
+// This error code would likely be overwritten by the signal handler, so it's
+// neccessary to preserve it here.
+asm(
+    ".intel_syntax noprefix\n"
+    "asm_signal_trampoline:\n"
+    "push ebp\n"
+    "mov ebp, esp\n"
+    "push eax\n" // we have to store eax 'cause it might be the return value from a syscall
+    "mov eax, [ebp+12]\n" // push the signal code
+    "push eax\n"
+    "call [ebp+8]\n" // call the signal handler
+    "add esp, 4\n"
+    "mov eax, 0x2d\n" // FIXME: We shouldn't be hardcoding this.
+    "int 0x82\n" // sigreturn syscall
+    "asm_signal_trampoline_end:\n"
+    ".att_syntax");
+
+extern "C" void asm_signal_trampoline(void);
+extern "C" void asm_signal_trampoline_end(void);
+
 void create_signal_trampolines()
 {
     InterruptDisabler disabler;
@@ -743,42 +766,12 @@ void create_signal_trampolines()
     auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines").leak_ref();
     g_return_to_ring3_from_signal_trampoline = trampoline_region->vaddr();
 
+    u8* trampoline = (u8*)asm_signal_trampoline;
+    u8* trampoline_end = (u8*)asm_signal_trampoline_end;
+    size_t trampoline_size = trampoline_end - trampoline;
+
     u8* code_ptr = (u8*)trampoline_region->vaddr().as_ptr();
-    *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
-    *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
-    *code_ptr++ = 0xb8; // mov eax, <u32>
-    *(u32*)code_ptr = Syscall::SC_restore_signal_mask;
-    code_ptr += sizeof(u32);
-    *code_ptr++ = 0xcd; // int 0x82
-    *code_ptr++ = 0x82;
-
-    *code_ptr++ = 0x83; // add esp, (stack alignment padding)
-    *code_ptr++ = 0xc4;
-    *code_ptr++ = sizeof(u32) * 3;
-
-    *code_ptr++ = 0x61; // popa
-    *code_ptr++ = 0x9d; // popf
-    *code_ptr++ = 0xc3; // ret
-    *code_ptr++ = 0x0f; // ud2
-    *code_ptr++ = 0x0b;
-
-    g_return_to_ring0_from_signal_trampoline = VirtualAddress((u32)code_ptr);
-    *code_ptr++ = 0x58; // pop eax (Argument to signal handler (ignored here))
-    *code_ptr++ = 0x5a; // pop edx (Original signal mask to restore)
-    *code_ptr++ = 0xb8; // mov eax, <u32>
-    *(u32*)code_ptr = Syscall::SC_restore_signal_mask;
-    code_ptr += sizeof(u32);
-    *code_ptr++ = 0xcd; // int 0x82
-    // NOTE: Stack alignment padding doesn't matter when returning to ring0.
-    //       Nothing matters really, as we're returning by replacing the entire TSS.
-    *code_ptr++ = 0x82;
-    *code_ptr++ = 0xb8; // mov eax, <u32>
-    *(u32*)code_ptr = Syscall::SC_sigreturn;
-    code_ptr += sizeof(u32);
-    *code_ptr++ = 0xcd; // int 0x82
-    *code_ptr++ = 0x82;
-    *code_ptr++ = 0x0f; // ud2
-    *code_ptr++ = 0x0b;
+    memcpy(code_ptr, trampoline, trampoline_size);
 
     trampoline_region->set_writable(false);
     MM.remap_region(*trampoline_region->page_directory(), *trampoline_region);
@@ -790,21 +783,27 @@ int Process::sys$restore_signal_mask(u32 mask)
     return 0;
 }
 
-void Process::sys$sigreturn()
+int Process::sys$sigreturn(RegisterDump& registers)
 {
-    InterruptDisabler disabler;
-    Scheduler::prepare_to_modify_tss(*current);
-    current->m_tss = *current->m_tss_to_resume_kernel;
-    current->m_tss_to_resume_kernel.clear();
-#ifdef SIGNAL_DEBUG
-    kprintf("sys$sigreturn in %s(%u)\n", name().characters(), pid());
-    auto& tss = current->tss();
-    kprintf(" -> resuming execution at %w:%x stack %w:%x flags %x cr3 %x\n", tss.cs, tss.eip, tss.ss, tss.esp, tss.eflags, tss.cr3);
-#endif
-    current->set_state(Thread::State::Skip1SchedulerPass);
-    Scheduler::yield();
-    kprintf("sys$sigreturn failed in %s(%u)\n", name().characters(), pid());
-    ASSERT_NOT_REACHED();
+    //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
+    u32* stack_ptr = (u32*)registers.esp_if_crossRing;
+    u32 smuggled_eax = *stack_ptr;
+
+    //pop the stored eax, ebp, return address, handler and signal code
+    stack_ptr += 5;
+
+    current->m_signal_mask = *stack_ptr;
+    stack_ptr++;
+
+    //pop edi, esi, ebp, esp, ebx, edx, ecx, eax and eip
+    memcpy(&registers.edi, stack_ptr, 9 * sizeof(u32));
+    stack_ptr += 9;
+
+    registers.eflags = *stack_ptr;
+    stack_ptr++;
+
+    registers.esp_if_crossRing = registers.esp;
+    return smuggled_eax;
 }
 
 void Process::crash(int signal, u32 eip)

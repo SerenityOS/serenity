@@ -181,11 +181,7 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
     case Syscall::SC_setgroups:
         return current->process().sys$setgroups((ssize_t)arg1, (const gid_t*)arg2);
     case Syscall::SC_sigreturn:
-        if (auto* tracer = current->process().tracer())
-            tracer->did_syscall(function, arg1, arg2, arg3, 0);
-        current->process().sys$sigreturn();
-        ASSERT_NOT_REACHED();
-        return 0;
+        return current->process().sys$sigreturn(regs);
     case Syscall::SC_sigprocmask:
         return current->process().sys$sigprocmask((int)arg1, (const sigset_t*)arg2, (sigset_t*)arg3);
     case Syscall::SC_pipe:
