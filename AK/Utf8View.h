@@ -26,6 +26,7 @@ private:
 
 class Utf8View {
 public:
+    explicit Utf8View(const String&);
     explicit Utf8View(const StringView&);
     ~Utf8View() {}
 
@@ -33,6 +34,12 @@ public:
 
     Utf8CodepointIterator begin() const;
     Utf8CodepointIterator end() const;
+
+    const unsigned char* bytes() const { return begin_ptr(); }
+    int byte_length() const { return m_string.length(); }
+    int byte_offset_of(const Utf8CodepointIterator&) const;
+    Utf8View substring_view(int byte_offset, int byte_length) const;
+    bool is_empty() const { return m_string.is_empty(); }
 
     bool validate() const;
 
