@@ -40,7 +40,6 @@ public:
     IRCWindow* current_window() { return aid_get_active_window(); }
     const IRCWindow* current_window() const { return aid_get_active_window(); }
 
-    Function<void()> on_connect;
     Function<void()> on_disconnect;
     Function<void()> on_server_message;
     Function<void(const String&)> on_nickname_changed;
