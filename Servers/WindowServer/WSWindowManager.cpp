@@ -56,7 +56,7 @@ WSWindowManager::WSWindowManager()
         { "/bin/SystemMonitor", "Open SystemMonitor...", "/res/icons/16x16/app-system-monitor.png" }
     };
 
-    u8 system_menu_name[] = { 0xf8, 0 };
+    u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
     m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
 
     int appIndex = 1;

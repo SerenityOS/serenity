@@ -2,6 +2,7 @@
 #include "GlyphEditorWidget.h"
 #include "GlyphMapWidget.h"
 #include "UI_FontEditorBottom.h"
+#include <AK/StringBuilder.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GGroupBox.h>
@@ -77,7 +78,16 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_fon
     m_glyph_map_widget->on_glyph_selected = [this](u8 glyph) {
         m_glyph_editor_widget->set_glyph(glyph);
         m_ui->width_spinbox->set_value(m_edited_font->glyph_width(m_glyph_map_widget->selected_glyph()));
-        m_ui->info_label->set_text(String::format("0x%b (%c)", glyph, glyph));
+        StringBuilder builder;
+        builder.appendf("0x%b (", glyph);
+        if (glyph < 128) {
+            builder.append(glyph);
+        } else {
+            builder.append(128 | 64 | (glyph / 64));
+            builder.append(128 | (glyph % 64));
+        }
+        builder.append(')');
+        m_ui->info_label->set_text(builder.to_string());
     };
 
     m_ui->fixed_width_checkbox->on_checked = [this, update_demo](bool checked) {
