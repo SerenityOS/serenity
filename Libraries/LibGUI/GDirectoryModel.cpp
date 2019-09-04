@@ -33,6 +33,7 @@ GDirectoryModel::GDirectoryModel()
     m_socket_icon = GIcon::default_icon("filetype-socket");
     m_executable_icon = GIcon::default_icon("filetype-executable");
     m_filetype_image_icon = GIcon::default_icon("filetype-image");
+    m_filetype_sound_icon = GIcon::default_icon("filetype-sound");
 
     setpwent();
     while (auto* passwd = getpwent())
@@ -156,6 +157,8 @@ GIcon GDirectoryModel::icon_for(const Entry& entry) const
         return m_socket_icon;
     if (entry.mode & S_IXUSR)
         return m_executable_icon;
+    if (entry.name.to_lowercase().ends_with(".wav"))
+        return m_filetype_sound_icon;
     if (entry.name.to_lowercase().ends_with(".png")) {
         if (!entry.thumbnail) {
             if (!const_cast<GDirectoryModel*>(this)->fetch_thumbnail_for(entry))
