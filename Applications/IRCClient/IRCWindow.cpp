@@ -22,6 +22,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     auto* container = new GSplitter(Orientation::Horizontal, this);
 
     m_table_view = new GTableView(container);
+    m_table_view->set_size_columns_to_fit_content(true);
     m_table_view->set_headers_visible(false);
     m_table_view->set_font(Font::default_fixed_width_font());
     m_table_view->set_alternating_row_colors(false);
