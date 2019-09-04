@@ -179,6 +179,7 @@ void IRCAppWindow::setup_widgets()
     m_window_list = new GTableView(horizontal_container);
     m_window_list->set_headers_visible(false);
     m_window_list->set_alternating_row_colors(false);
+    m_window_list->set_size_columns_to_fit_content(true);
     m_window_list->set_model(m_client.client_window_list_model());
     m_window_list->set_activates_on_selection(true);
     m_window_list->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
