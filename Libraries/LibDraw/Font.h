@@ -6,6 +6,7 @@
 #include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <LibDraw/Rect.h>
+#include <AK/Utf8View.h>
 
 // FIXME: Make a MutableGlyphBitmap buddy class for FontEditor instead?
 class GlyphBitmap {
@@ -58,11 +59,13 @@ public:
     GlyphBitmap glyph_bitmap(char ch) const { return GlyphBitmap(&m_rows[(u8)ch * m_glyph_height], { glyph_width(ch), m_glyph_height }); }
 
     u8 glyph_width(char ch) const { return m_fixed_width ? m_glyph_width : m_glyph_widths[(u8)ch]; }
+    int glyph_or_emoji_width(u32 codepoint) const;
     u8 glyph_height() const { return m_glyph_height; }
     u8 min_glyph_width() const { return m_min_glyph_width; }
     u8 max_glyph_width() const { return m_max_glyph_width; }
     u8 glyph_spacing() const { return m_fixed_width ? 0 : 1; }
-    int width(const StringView& string) const;
+    int width(const StringView&) const;
+    int width(const Utf8View&) const;
 
     String name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }
