@@ -11,7 +11,9 @@ cache:
   - /var/cache/apt/archives/*.deb
 
 notifications:
-  irc: "chat.freenode.net#serenityos"
+  irc:
+    channels:
+      - "chat.freenode.net#serenityos"
     template:
       - "%{repository_slug}#%{build_number} (%{branch} - %{commit} : %{author}): %{message}"
       - "Subject: %{commit_subject}"
