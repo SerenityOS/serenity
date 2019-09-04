@@ -85,6 +85,7 @@ cp ../Applications/Piano/Piano mnt/bin/Piano
 cp ../Applications/SystemDialog/SystemDialog mnt/bin/SystemDialog
 cp ../Applications/ChanViewer/ChanViewer mnt/bin/ChanViewer
 cp ../Applications/Calculator/Calculator mnt/bin/Calculator
+cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
@@ -123,6 +124,7 @@ ln -s SystemDialog mnt/bin/sd
 ln -s ChanViewer mnt/bin/cv
 ln -s Calculator mnt/bin/calc
 ln -s Inspector mnt/bin/ins
+ln -s SoundPlayer mnt/bin/sp
 echo "done"
 
 # Run local sync script, if it exists
