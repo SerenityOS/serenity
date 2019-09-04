@@ -172,7 +172,7 @@ TextEditorWidget::TextEditorWidget()
     app_menu->add_action(*m_save_action);
     app_menu->add_action(*m_save_as_action);
     app_menu->add_separator();
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [this](const GAction&) {
+    app_menu->add_action(GCommonActions::make_quit_action([this] {
         if (!request_close())
             return;
         GApplication::the().quit(0);
