@@ -1,4 +1,5 @@
 #include <AK/Utf8View.h>
+#include <AK/LogStream.h>
 
 namespace AK {
 
@@ -134,7 +135,13 @@ u32 Utf8CodepointIterator::operator*() const
     int codepoint_length_in_bytes;
 
     bool first_byte_makes_sense = decode_first_byte(m_ptr[0], codepoint_length_in_bytes, codepoint_value_so_far);
+    if (!first_byte_makes_sense) {
+        dbg() << "First byte doesn't make sense, bytes = " << (const char*)m_ptr;
+    }
     ASSERT(first_byte_makes_sense);
+    if (codepoint_length_in_bytes > m_length) {
+        dbg() << "Not enough bytes (need " << codepoint_length_in_bytes << ", have " << m_length << "), first byte is: " << m_ptr[0] << " " << (const char*)m_ptr;
+    }
     ASSERT(codepoint_length_in_bytes <= m_length);
 
     for (int offset = 1; offset < codepoint_length_in_bytes; offset++) {
