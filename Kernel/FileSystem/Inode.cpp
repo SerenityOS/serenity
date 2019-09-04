@@ -79,14 +79,14 @@ void Inode::will_be_destroyed()
 
 void Inode::inode_contents_changed(off_t offset, ssize_t size, const u8* data)
 {
-    if (m_vmo)
-        m_vmo->inode_contents_changed({}, offset, size, data);
+    if (m_vmobject)
+        m_vmobject->inode_contents_changed({}, offset, size, data);
 }
 
 void Inode::inode_size_changed(size_t old_size, size_t new_size)
 {
-    if (m_vmo)
-        m_vmo->inode_size_changed({}, old_size, new_size);
+    if (m_vmobject)
+        m_vmobject->inode_size_changed({}, old_size, new_size);
 }
 
 int Inode::set_atime(time_t)
@@ -116,7 +116,7 @@ int Inode::decrement_link_count()
 
 void Inode::set_vmo(VMObject& vmo)
 {
-    m_vmo = vmo.make_weak_ptr();
+    m_vmobject = vmo.make_weak_ptr();
 }
 
 bool Inode::bind_socket(LocalSocket& socket)

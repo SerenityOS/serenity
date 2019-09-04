@@ -38,8 +38,8 @@ public:
 
     void set_name(const String& name) { m_name = name; }
 
-    const VMObject& vmo() const { return *m_vmo; }
-    VMObject& vmo() { return *m_vmo; }
+    const VMObject& vmobject() const { return *m_vmobject; }
+    VMObject& vmobject() { return *m_vmobject; }
 
     bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }
@@ -120,7 +120,7 @@ private:
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;
     size_t m_offset_in_vmo { 0 };
-    NonnullRefPtr<VMObject> m_vmo;
+    NonnullRefPtr<VMObject> m_vmobject;
     String m_name;
     u8 m_access { 0 };
     bool m_shared { false };

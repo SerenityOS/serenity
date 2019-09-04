@@ -6,8 +6,8 @@
 NonnullRefPtr<InodeVMObject> InodeVMObject::create_with_inode(Inode& inode)
 {
     InterruptDisabler disabler;
-    if (inode.vmo())
-        return *inode.vmo();
+    if (inode.vmobject())
+        return *inode.vmobject();
     auto vmo = adopt(*new InodeVMObject(inode));
     vmo->inode().set_vmo(*vmo);
     return vmo;
@@ -32,7 +32,7 @@ InodeVMObject::InodeVMObject(const InodeVMObject& other)
 
 InodeVMObject::~InodeVMObject()
 {
-    ASSERT(inode().vmo() == this);
+    ASSERT(inode().vmobject() == this);
 }
 
 void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size)
@@ -111,11 +111,11 @@ void VMObject::for_each_region(Callback callback)
     // FIXME: Figure out a better data structure so we don't have to walk every single region every time an inode changes.
     //        Perhaps VMObject could have a Vector<Region*> with all of his mappers?
     for (auto& region : MM.m_user_regions) {
-        if (&region.vmo() == this)
+        if (&region.vmobject() == this)
             callback(region);
     }
     for (auto& region : MM.m_kernel_regions) {
-        if (&region.vmo() == this)
+        if (&region.vmobject() == this)
             callback(region);
     }
 }

@@ -282,7 +282,7 @@ const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAd
 bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto& vmo = region.vmo();
+    auto& vmo = region.vmobject();
     auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
     sti();
     LOCKER(vmo.m_paging_lock);
@@ -307,7 +307,7 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto& vmo = region.vmo();
+    auto& vmo = region.vmobject();
     if (vmo.physical_pages()[page_index_in_region]->ref_count() == 1) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
@@ -338,7 +338,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_region)
 {
     ASSERT(region.page_directory());
-    auto& vmo = region.vmo();
+    auto& vmo = region.vmobject();
     ASSERT(vmo.is_inode());
 
     auto& inode_vmobject = static_cast<InodeVMObject&>(vmo);
@@ -425,7 +425,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     }
     auto page_index_in_region = region->page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
-        if (region->vmo().is_inode()) {
+        if (region->vmobject().is_inode()) {
 #ifdef PAGE_FAULT_DEBUG
             dbgprintf("NP(inode) fault in Region{%p}[%u]\n", region, page_index_in_region);
 #endif
@@ -657,7 +657,7 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
     InterruptDisabler disabler;
     auto page_vaddr = region.vaddr().offset(page_index_in_region * PAGE_SIZE);
     auto& pte = ensure_pte(*region.page_directory(), page_vaddr);
-    auto& physical_page = region.vmo().physical_pages()[page_index_in_region];
+    auto& physical_page = region.vmobject().physical_pages()[page_index_in_region];
     ASSERT(physical_page);
     pte.set_physical_page_base(physical_page->paddr().get());
     pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
@@ -683,7 +683,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
 {
     InterruptDisabler disabler;
     region.set_page_directory(page_directory);
-    auto& vmo = region.vmo();
+    auto& vmo = region.vmobject();
 #ifdef MM_DEBUG
     dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", region.first_page_index(), region.last_page_index(), vmo.page_count());
 #endif
@@ -725,7 +725,7 @@ bool MemoryManager::unmap_region(Region& region)
         pte.set_user_allowed(false);
         region.page_directory()->flush(vaddr);
 #ifdef MM_DEBUG
-        auto& physical_page = region.vmo().physical_pages()[region.first_page_index() + i];
+        auto& physical_page = region.vmobject().physical_pages()[region.first_page_index() + i];
         dbgprintf("MM: >> Unmapped V%p => P%x <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }

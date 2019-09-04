@@ -17,8 +17,8 @@ public:
 
     const String& name() const { return m_name; }
     virtual KResult truncate(off_t) override;
-    AnonymousVMObject* vmo() { return m_vmo.ptr(); }
-    const AnonymousVMObject* vmo() const { return m_vmo.ptr(); }
+    AnonymousVMObject* vmobject() { return m_vmobject.ptr(); }
+    const AnonymousVMObject* vmobject() const { return m_vmobject.ptr(); }
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
 
@@ -39,5 +39,5 @@ private:
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
     mode_t m_mode { 0 };
-    RefPtr<AnonymousVMObject> m_vmo;
+    RefPtr<AnonymousVMObject> m_vmobject;
 };
