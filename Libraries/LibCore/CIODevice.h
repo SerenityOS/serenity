@@ -21,6 +21,7 @@ public:
 
     int fd() const { return m_fd; }
     unsigned mode() const { return m_mode; }
+    bool is_open() const { return m_mode != NotOpen; }
     bool eof() const { return m_eof; }
 
     int error() const { return m_error; }
