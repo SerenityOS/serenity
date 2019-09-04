@@ -341,9 +341,9 @@ void GTableView::paint_headers(Painter& painter)
             builder.append(model()->column_name(column_index));
             auto sort_order = model()->sort_order();
             if (sort_order == GSortOrder::Ascending)
-                builder.append(" \xf6");
+                builder.append(" \xc3\xb6");
             else if (sort_order == GSortOrder::Descending)
-                builder.append(" \xf7");
+                builder.append(" \xc3\xb7");
             text = builder.to_string();
         } else {
             text = model()->column_name(column_index);
