@@ -9,7 +9,8 @@ OBJS = \
     Painter.o \
     PNGLoader.o \
     Rect.o \
-    StylePainter.o
+    StylePainter.o \
+    Emoji.o
 
 LIBRARY = libdraw.a
 DEFINES += -DUSERLAND
