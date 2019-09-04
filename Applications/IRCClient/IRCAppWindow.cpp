@@ -154,9 +154,10 @@ void IRCAppWindow::setup_widgets()
     widget->set_fill_with_background_color(true);
     widget->set_background_color(Color::WarmGray);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    widget->layout()->set_margins({ 4, 4, 4, 4 });
+    widget->layout()->set_spacing(0);
 
     auto* toolbar = new GToolBar(widget);
+    toolbar->set_has_frame(false);
     toolbar->add_action(*m_change_nick_action);
     toolbar->add_separator();
     toolbar->add_action(*m_join_action);
@@ -166,7 +167,11 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_open_query_action);
     toolbar->add_action(*m_close_query_action);
 
-    auto* horizontal_container = new GSplitter(Orientation::Horizontal, widget);
+    auto* outer_container = new GWidget(widget);
+    outer_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    outer_container->layout()->set_margins({ 2, 0, 2, 2 });
+
+    auto* horizontal_container = new GSplitter(Orientation::Horizontal, outer_container);
 
     m_window_list = new GTableView(horizontal_container);
     m_window_list->set_headers_visible(false);
