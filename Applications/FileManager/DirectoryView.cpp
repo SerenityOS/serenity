@@ -35,6 +35,16 @@ void DirectoryView::handle_activation(const GModelIndex& index)
         return;
     }
 
+    if (path.to_lowercase().ends_with(".wav")) {
+        if (fork() == 0) {
+            int rc = execl("/bin/SoundPlayer", "/bin/SoundPlayer", path.characters(), nullptr);
+            if (rc < 0)
+                perror("exec");
+            ASSERT_NOT_REACHED();
+        }
+        return;
+    }
+
     if (fork() == 0) {
         int rc = execl("/bin/TextEditor", "/bin/TextEditor", path.characters(), nullptr);
         if (rc < 0)
