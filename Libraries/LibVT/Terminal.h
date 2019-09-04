@@ -82,6 +82,8 @@ public:
         void clear(Attribute);
         bool has_only_one_background_color() const;
         void set_length(u16);
+        StringView text() const { return { characters, m_length }; }
+
         u8* characters { nullptr };
         Attribute* attributes { nullptr };
         bool dirty { false };
