@@ -8,6 +8,9 @@
 #include <LibC/mman.h>
 #include <LibC/stdio.h>
 #include <LibC/unistd.h>
+#include <AK/Utf8View.h>
+#include "Emoji.h"
+#include "GraphicsBitmap.h"
 
 struct [[gnu::packed]] FontFileHeader
 {
@@ -170,17 +173,37 @@ bool Font::write_to_file(const StringView& path)
     return true;
 }
 
-int Font::width(const StringView& string) const
+int Font::glyph_or_emoji_width(u32 codepoint) const
 {
-    if (!string.length())
-        return 0;
+    if (codepoint < 256)
+        return glyph_width((char)codepoint);
 
     if (m_fixed_width)
-        return string.length() * m_glyph_width;
+        return m_glyph_width;
 
+    auto emoji = Emoji::emoji_for_codepoint(codepoint);
+    if (emoji == nullptr)
+        return glyph_width('?');
+    return emoji->bitmap().size().width();
+}
+
+int Font::width(const StringView& string) const
+{
+    Utf8View utf8 { string };
+    return width(utf8);
+}
+
+int Font::width(const Utf8View& utf8) const
+{
+    bool first = true;
     int width = 0;
-    for (int i = 0; i < string.length(); ++i)
-        width += glyph_width(string.characters_without_null_termination()[i]) + 1;
 
-    return width - 1;
+    for (u32 codepoint : utf8) {
+        if (!first)
+            width += glyph_spacing();
+        first = false;
+        width += glyph_or_emoji_width(codepoint);
+    }
+
+    return width;
 }

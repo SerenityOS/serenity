@@ -12,7 +12,8 @@ AK_OBJS = \
     ../../AK/JsonObject.o \
     ../../AK/JsonParser.o \
     ../../AK/LogStream.o \
-    ../../AK/MappedFile.o
+    ../../AK/MappedFile.o \
+    ../../AK/Utf8View.o
 
 LIBC_OBJS = \
        SharedBuffer.o \
