@@ -7,11 +7,13 @@
 #include <AK/AKString.h>
 #include <LibDraw/TextAlignment.h>
 #include <LibDraw/TextElision.h>
+#include <AK/Utf8View.h>
 
 class CharacterBitmap;
 class GlyphBitmap;
 class GraphicsBitmap;
 class Font;
+class Emoji;
 
 class Painter {
 public:
@@ -34,6 +36,8 @@ public:
     void draw_text(const Rect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_glyph(const Point&, char, Color);
     void draw_glyph(const Point&, char, const Font&, Color);
+    void draw_emoji(const Point&, const Emoji&, const Font&);
+    void draw_glyph_or_emoji(const Point&, u32 codepoint, const Font&, Color);
 
     const Font& font() const { return *state().font; }
     void set_font(const Font& font) { state().font = &font; }
@@ -70,7 +74,7 @@ protected:
     void blit_with_opacity(const Point&, const GraphicsBitmap&, const Rect& src_rect, float opacity);
     void draw_pixel(const Point&, Color, int thickness = 1);
 
-    void draw_text_line(const Rect&, const StringView&, const Font&, TextAlignment, Color, TextElision);
+    void draw_text_line(const Rect&, const Utf8View&, const Font&, TextAlignment, Color, TextElision);
 
     struct State {
         const Font* font;
