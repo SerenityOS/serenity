@@ -25,6 +25,13 @@ void AClientConnection::enqueue(const ABuffer& buffer)
     }
 }
 
+bool AClientConnection::try_enqueue(const ABuffer& buffer)
+{
+    const_cast<ABuffer&>(buffer).shared_buffer().share_with(server_pid());
+    auto response = send_sync<AudioServer::EnqueueBuffer>(buffer.shared_buffer_id());
+    return response->success();
+}
+
 int AClientConnection::get_main_mix_volume()
 {
     return send_sync<AudioServer::GetMainMixVolume>()->volume();
