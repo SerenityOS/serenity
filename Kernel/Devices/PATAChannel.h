@@ -58,6 +58,7 @@ private:
     // Data members
     u8 m_channel_number { 0 }; // Channel number. 0 = master, 1 = slave
     u16 m_io_base { 0x1F0 };
+    u16 m_control_base { 0 };
     volatile u8 m_device_error { 0 };
     volatile bool m_interrupted { false };
 
