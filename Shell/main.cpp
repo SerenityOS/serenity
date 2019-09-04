@@ -527,13 +527,13 @@ static int run_command(const String& cmd)
     return return_value;
 }
 
-CFile get_history_file()
+CFile get_history_file(CIODevice::OpenMode mode)
 {
     StringBuilder sb;
     sb.append(g.home);
     sb.append("/.history");
     CFile f(sb.to_string());
-    if (!f.open(CIODevice::ReadWrite)) {
+    if (!f.open(mode)) {
         fprintf(stderr, "Error opening file '%s': '%s'\n", f.filename().characters(), f.error_string());
         exit(1);
     }
@@ -542,7 +542,7 @@ CFile get_history_file()
 
 void load_history()
 {
-    CFile history_file = get_history_file();
+    CFile history_file = get_history_file(CIODevice::ReadOnly);
     while (history_file.can_read_line()) {
         const auto&b = history_file.read_line(1024);
         // skip the newline and terminating bytes
@@ -552,7 +552,7 @@ void load_history()
 
 void save_history()
 {
-    CFile history_file = get_history_file();
+    CFile history_file = get_history_file(CIODevice::WriteOnly);
     for (const auto& line : editor.history()) {
         history_file.write(line);
         history_file.write("\n");
