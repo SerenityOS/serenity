@@ -8,20 +8,20 @@
 
 Region::Region(const Range& range, const String& name, u8 access, bool cow)
     : m_range(range)
-    , m_vmo(AnonymousVMObject::create_with_size(size()))
+    , m_vmobject(AnonymousVMObject::create_with_size(size()))
     , m_name(name)
     , m_access(access)
-    , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
+    , m_cow_map(Bitmap::create(m_vmobject->page_count(), cow))
 {
     MM.register_region(*this);
 }
 
 Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8 access, bool cow)
     : m_range(range)
-    , m_vmo(InodeVMObject::create_with_inode(*inode))
+    , m_vmobject(InodeVMObject::create_with_inode(*inode))
     , m_name(name)
     , m_access(access)
-    , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
+    , m_cow_map(Bitmap::create(m_vmobject->page_count(), cow))
 {
     MM.register_region(*this);
 }
@@ -29,10 +29,10 @@ Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8
 Region::Region(const Range& range, NonnullRefPtr<VMObject> vmo, size_t offset_in_vmo, const String& name, u8 access, bool cow)
     : m_range(range)
     , m_offset_in_vmo(offset_in_vmo)
-    , m_vmo(move(vmo))
+    , m_vmobject(move(vmo))
     , m_name(name)
     , m_access(access)
-    , m_cow_map(Bitmap::create(m_vmo->page_count(), cow))
+    , m_cow_map(Bitmap::create(m_vmobject->page_count(), cow))
 {
     MM.register_region(*this);
 }
@@ -62,7 +62,7 @@ NonnullRefPtr<Region> Region::clone()
             vaddr().get());
 #endif
         // Create a new region backed by the same VMObject.
-        return Region::create_user_accessible(m_range, m_vmo, m_offset_in_vmo, m_name, m_access);
+        return Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmo, m_name, m_access);
     }
 
 #ifdef MM_DEBUG
@@ -75,24 +75,24 @@ NonnullRefPtr<Region> Region::clone()
     // Set up a COW region. The parent (this) region becomes COW as well!
     m_cow_map.fill(true);
     MM.remap_region(current->process().page_directory(), *this);
-    return Region::create_user_accessible(m_range, m_vmo->clone(), m_offset_in_vmo, m_name, m_access, true);
+    return Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmo, m_name, m_access, true);
 }
 
 int Region::commit()
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
-    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at V%p\n", vmo().page_count(), this, &vmo(), vaddr().get());
+    dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at V%p\n", vmobject().page_count(), this, &vmobject(), vaddr().get());
 #endif
     for (size_t i = first_page_index(); i <= last_page_index(); ++i) {
-        if (!vmo().physical_pages()[i].is_null())
+        if (!vmobject().physical_pages()[i].is_null())
             continue;
         auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (!physical_page) {
             kprintf("MM: commit was unable to allocate a physical page\n");
             return -ENOMEM;
         }
-        vmo().physical_pages()[i] = move(physical_page);
+        vmobject().physical_pages()[i] = move(physical_page);
         MM.remap_region_page(*this, i);
     }
     return 0;
@@ -102,7 +102,7 @@ size_t Region::amount_resident() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
-        if (m_vmo->physical_pages()[first_page_index() + i])
+        if (m_vmobject->physical_pages()[first_page_index() + i])
             bytes += PAGE_SIZE;
     }
     return bytes;
@@ -112,7 +112,7 @@ size_t Region::amount_shared() const
 {
     size_t bytes = 0;
     for (size_t i = 0; i < page_count(); ++i) {
-        auto& physical_page = m_vmo->physical_pages()[first_page_index() + i];
+        auto& physical_page = m_vmobject->physical_pages()[first_page_index() + i];
         if (physical_page && physical_page->ref_count() > 1)
             bytes += PAGE_SIZE;
     }

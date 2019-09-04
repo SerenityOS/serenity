@@ -417,11 +417,11 @@ Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
             region.size(),
             region.name().characters());
         builder.appendf("VMO: %s @ %x(%u)\n",
-            region.vmo().is_anonymous() ? "anonymous" : "file-backed",
-            &region.vmo(),
-            region.vmo().ref_count());
-        for (size_t i = 0; i < region.vmo().page_count(); ++i) {
-            auto& physical_page = region.vmo().physical_pages()[i];
+            region.vmobject().is_anonymous() ? "anonymous" : "file-backed",
+            &region.vmobject(),
+            region.vmobject().ref_count());
+        for (size_t i = 0; i < region.vmobject().page_count(); ++i) {
+            auto& physical_page = region.vmobject().physical_pages()[i];
             builder.appendf("P%x%s(%u) ",
                 physical_page ? physical_page->paddr().get() : 0,
                 region.should_cow(i) ? "!" : "",

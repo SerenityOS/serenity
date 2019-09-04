@@ -72,8 +72,8 @@ public:
     void will_be_destroyed();
 
     void set_vmo(VMObject&);
-    InodeVMObject* vmo() { return m_vmo.ptr(); }
-    const InodeVMObject* vmo() const { return m_vmo.ptr(); }
+    InodeVMObject* vmobject() { return m_vmobject.ptr(); }
+    const InodeVMObject* vmobject() const { return m_vmobject.ptr(); }
 
     static void sync();
 
@@ -95,7 +95,7 @@ protected:
 private:
     FS& m_fs;
     unsigned m_index { 0 };
-    WeakPtr<InodeVMObject> m_vmo;
+    WeakPtr<InodeVMObject> m_vmobject;
     RefPtr<LocalSocket> m_socket;
     HashTable<InodeWatcher*> m_watchers;
     bool m_metadata_dirty { false };

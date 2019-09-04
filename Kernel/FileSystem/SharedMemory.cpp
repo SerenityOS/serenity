@@ -54,12 +54,12 @@ SharedMemory::~SharedMemory()
 KResult SharedMemory::truncate(int length)
 {
     if (!length) {
-        m_vmo = nullptr;
+        m_vmobject = nullptr;
         return KSuccess;
     }
 
-    if (!m_vmo) {
-        m_vmo = AnonymousVMObject::create_with_size(length);
+    if (!m_vmobject) {
+        m_vmobject = AnonymousVMObject::create_with_size(length);
         return KSuccess;
     }
 
@@ -91,7 +91,7 @@ int SharedMemory::write(FileDescription&, const u8* data, int data_size)
 
 KResultOr<Region*> SharedMemory::mmap(Process& process, FileDescription&, VirtualAddress vaddr, size_t offset, size_t size, int prot)
 {
-    if (!vmo())
+    if (!vmobject())
         return KResult(-ENODEV);
-    return process.allocate_region_with_vmo(vaddr, size, *vmo(), offset, name(), prot);
+    return process.allocate_region_with_vmo(vaddr, size, *vmobject(), offset, name(), prot);
 }

@@ -20,7 +20,7 @@ private:
 public:
     SharedBuffer(int id, int size)
         : m_shared_buffer_id(id)
-        , m_vmo(AnonymousVMObject::create_with_size(size))
+        , m_vmobject(AnonymousVMObject::create_with_size(size))
     {
 #ifdef SHARED_BUFFER_DEBUG
         dbgprintf("Created shared buffer %d of size %d\n", m_shared_buffer_id, size);
@@ -41,7 +41,7 @@ public:
     void share_globally() { m_global = true; }
     void deref_for_process(Process& process);
     void disown(pid_t pid);
-    size_t size() const { return m_vmo->size(); }
+    size_t size() const { return m_vmobject->size(); }
     void destroy_if_unused();
     void seal();
     int id() const { return m_shared_buffer_id; }
@@ -49,7 +49,7 @@ public:
     int m_shared_buffer_id { -1 };
     bool m_writable { true };
     bool m_global { false };
-    NonnullRefPtr<AnonymousVMObject> m_vmo;
+    NonnullRefPtr<AnonymousVMObject> m_vmobject;
     Vector<Reference, 2> m_refs;
     unsigned m_total_refs { 0 };
 };

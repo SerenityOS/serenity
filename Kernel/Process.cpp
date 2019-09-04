@@ -252,7 +252,7 @@ int Process::sys$munmap(void* addr, size_t size)
             size_t new_range_offset_in_old_region = new_range.base().get() - old_region_range.base().get();
             size_t first_physical_page_of_new_region_in_old_region = new_range_offset_in_old_region / PAGE_SIZE;
             for (size_t i = 0; i < new_region.page_count(); ++i) {
-                new_region.vmo().physical_pages()[i] = old_region->vmo().physical_pages()[first_physical_page_of_new_region_in_old_region + i];
+                new_region.vmobject().physical_pages()[i] = old_region->vmobject().physical_pages()[first_physical_page_of_new_region_in_old_region + i];
             }
             return new_region;
         };
