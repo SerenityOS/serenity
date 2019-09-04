@@ -47,22 +47,19 @@ void GTextEditor::create_actions()
         },
         this);
 
-    m_cut_action = GAction::create(
-        "Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [&](const GAction&) {
-            cut();
-        },
+    m_cut_action = GCommonActions::make_cut_action([&] {
+        cut();
+    },
         this);
 
-    m_copy_action = GAction::create(
-        "Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
-            copy();
-        },
+    m_copy_action = GCommonActions::make_copy_action([&] {
+        copy();
+    },
         this);
 
-    m_paste_action = GAction::create(
-        "Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
-            paste();
-        },
+    m_paste_action = GCommonActions::make_paste_action([&] {
+        paste();
+    },
         this);
 
     m_delete_action = GAction::create(
