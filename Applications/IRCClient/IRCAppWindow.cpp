@@ -2,6 +2,7 @@
 #include "IRCChannel.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -26,6 +27,8 @@ IRCAppWindow::IRCAppWindow()
 {
     ASSERT(!s_the);
     s_the = this;
+
+    set_icon(load_png("/res/icons/16x16/app-irc-client.png"));
 
     update_title();
     set_rect(200, 200, 600, 400);
