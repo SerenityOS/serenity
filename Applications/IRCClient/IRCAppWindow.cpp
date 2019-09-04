@@ -3,6 +3,7 @@
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
 #include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -142,8 +143,8 @@ void IRCAppWindow::setup_menus()
     menubar->add_menu(move(server_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
+    help_menu->add_action(GAction::create("About", [this](const GAction&) {
+        GAboutDialog::show("IRC Client", load_png("/res/icons/32x32/app-irc-client.png"), this);
     }));
     menubar->add_menu(move(help_menu));
 
