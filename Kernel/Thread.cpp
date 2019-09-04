@@ -57,14 +57,16 @@ Thread::Thread(Process& process)
         // FIXME: This memory is leaked.
         // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
         m_kernel_stack_base = (u32)kmalloc_eternal(default_kernel_stack_size);
-        m_tss.esp = (m_kernel_stack_base + default_kernel_stack_size) & 0xfffffff8u;
+        m_kernel_stack_top = (m_kernel_stack_base + default_kernel_stack_size) & 0xfffffff8u;
+        m_tss.esp = m_kernel_stack_top;
 
     } else {
         // Ring3 processes need a separate stack for Ring0.
         m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid));
         m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
+        m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
         m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
+        m_tss.esp0 = m_kernel_stack_top;
     }
 
     // HACK: Ring2 SS in the TSS is the current PID.

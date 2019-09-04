@@ -273,6 +273,7 @@ public:
     u32 ticks_left() const { return m_ticks_left; }
 
     u32 kernel_stack_base() const { return m_kernel_stack_base; }
+    u32 kernel_stack_top() const { return m_kernel_stack_top; }
     u32 kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->vaddr().get() : 0; }
 
     void set_selector(u16 s) { m_far_ptr.selector = s; }
@@ -329,6 +330,7 @@ private:
     u32 m_pending_signals { 0 };
     u32 m_signal_mask { 0 };
     u32 m_kernel_stack_base { 0 };
+    u32 m_kernel_stack_top { 0 };
     RefPtr<Region> m_userspace_stack_region;
     RefPtr<Region> m_kernel_stack_region;
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
