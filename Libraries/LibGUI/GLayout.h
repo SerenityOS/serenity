@@ -49,5 +49,5 @@ protected:
     Vector<Entry> m_entries;
 
     GMargins m_margins;
-    int m_spacing { 4 };
+    int m_spacing { 3 };
 };
