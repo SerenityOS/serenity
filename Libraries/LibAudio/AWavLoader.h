@@ -15,10 +15,11 @@ class ByteBuffer;
 class AWavLoader {
 public:
     explicit AWavLoader(const StringView& path);
-    RefPtr<ABuffer> load_wav(const StringView& path);
+
+    bool has_error() const { return !m_error_string.is_null(); }
     const char* error_string() { return m_error_string.characters(); }
 
-    RefPtr<ABuffer> get_more_samples();
+    RefPtr<ABuffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KB);
 
     int loaded_samples() const { return m_loaded_samples; }
     int total_samples() const { return m_total_samples; }
