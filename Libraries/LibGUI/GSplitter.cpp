@@ -9,7 +9,7 @@ GSplitter::GSplitter(Orientation orientation, GWidget* parent)
     set_layout(make<GBoxLayout>(orientation));
     set_fill_with_background_color(true);
     set_background_color(Color::WarmGray);
-    layout()->set_spacing(4);
+    layout()->set_spacing(3);
 }
 
 GSplitter::~GSplitter()
