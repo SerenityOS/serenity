@@ -141,7 +141,7 @@ public:
     int sys$lseek(int fd, off_t, int whence);
     int sys$kill(pid_t pid, int sig);
     [[noreturn]] void sys$exit(int status);
-    [[noreturn]] void sys$sigreturn();
+    int sys$sigreturn(RegisterDump& registers);
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);

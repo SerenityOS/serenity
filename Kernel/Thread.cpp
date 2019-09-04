@@ -316,6 +316,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(signal > 0 && signal <= 32);
+    ASSERT(!process().is_ring0());
 
 #ifdef SIGNAL_DEBUG
     kprintf("dispatch_signal %s(%u) <- %u\n", process().name().characters(), pid(), signal);
@@ -366,6 +367,12 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         return ShouldUnblockThread::Yes;
     }
 
+    ProcessPagingScope paging_scope(m_process);
+    // The userspace registers should be stored at the top of the stack
+    // We have to subtract 2 because the processor decrements the kernel
+    // stack before pushing the args.
+    auto& regs = *(RegisterDump*)(kernel_stack_top() - sizeof(RegisterDump) - 2);
+
     u32 old_signal_mask = m_signal_mask;
     u32 new_signal_mask = action.mask;
     if (action.flags & SA_NODEFER)
@@ -375,78 +382,49 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     m_signal_mask |= new_signal_mask;
 
-    Scheduler::prepare_to_modify_tss(*this);
+    u32 old_esp = regs.esp_if_crossRing;
+    u32 ret_eip = regs.eip;
+    u32 ret_eflags = regs.eflags;
 
-    u16 ret_cs = m_tss.cs;
-    u32 ret_eip = m_tss.eip;
-    u32 ret_eflags = m_tss.eflags;
-    bool interrupting_in_kernel = (ret_cs & 3) == 0;
+    push_value_on_user_stack(regs, ret_eflags);
 
-    ProcessPagingScope paging_scope(m_process);
-
-    if (interrupting_in_kernel) {
-#ifdef SIGNAL_DEBUG
-        kprintf("dispatch_signal to %s(%u) in state=%s with return to %w:%x\n", process().name().characters(), pid(), to_string(state()), ret_cs, ret_eip);
-#endif
-        ASSERT(is_blocked());
-        m_tss_to_resume_kernel = make<TSS32>(m_tss);
-#ifdef SIGNAL_DEBUG
-        kprintf("resume tss pc: %w:%x stack: %w:%x flags: %x cr3: %x\n", m_tss_to_resume_kernel->cs, m_tss_to_resume_kernel->eip, m_tss_to_resume_kernel->ss, m_tss_to_resume_kernel->esp, m_tss_to_resume_kernel->eflags, m_tss_to_resume_kernel->cr3);
-#endif
-
-        if (!m_signal_stack_user_region) {
-            m_signal_stack_user_region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("User Signal Stack (Thread %d)", m_tid));
-            ASSERT(m_signal_stack_user_region);
-        }
-        if (!m_kernel_stack_for_signal_handler_region)
-            m_kernel_stack_for_signal_handler_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Signal Stack (Thread %d)", m_tid));
-        m_tss.ss = 0x23;
-        m_tss.esp = m_signal_stack_user_region->vaddr().offset(default_userspace_stack_size).get();
-        m_tss.ss0 = 0x10;
-        m_tss.esp0 = m_kernel_stack_for_signal_handler_region->vaddr().offset(default_kernel_stack_size).get();
-
-        push_value_on_stack(0);
-    } else {
-        push_value_on_stack(ret_eip);
-        push_value_on_stack(ret_eflags);
-
-        // PUSHA
-        u32 old_esp = m_tss.esp;
-        push_value_on_stack(m_tss.eax);
-        push_value_on_stack(m_tss.ecx);
-        push_value_on_stack(m_tss.edx);
-        push_value_on_stack(m_tss.ebx);
-        push_value_on_stack(old_esp);
-        push_value_on_stack(m_tss.ebp);
-        push_value_on_stack(m_tss.esi);
-        push_value_on_stack(m_tss.edi);
-
-        // Align the stack.
-        m_tss.esp -= 12;
-    }
+    push_value_on_user_stack(regs, ret_eip);
+    push_value_on_user_stack(regs, regs.eax);
+    push_value_on_user_stack(regs, regs.ecx);
+    push_value_on_user_stack(regs, regs.edx);
+    push_value_on_user_stack(regs, regs.ebx);
+    push_value_on_user_stack(regs, old_esp);
+    push_value_on_user_stack(regs, regs.ebp);
+    push_value_on_user_stack(regs, regs.esi);
+    push_value_on_user_stack(regs, regs.edi);
 
     // PUSH old_signal_mask
-    push_value_on_stack(old_signal_mask);
+    push_value_on_user_stack(regs, old_signal_mask);
 
-    m_tss.cs = 0x1b;
-    m_tss.ds = 0x23;
-    m_tss.es = 0x23;
-    m_tss.fs = 0x23;
-    m_tss.gs = 0x23;
-    m_tss.eip = handler_vaddr.get();
+    push_value_on_user_stack(regs, signal);
+    push_value_on_user_stack(regs, handler_vaddr.get());
+    push_value_on_user_stack(regs, 0); //push fake return address
+
+    regs.eip = g_return_to_ring3_from_signal_trampoline.get();
 
     // FIXME: Should we worry about the stack being 16 byte aligned when entering a signal handler?
-    push_value_on_stack(signal);
 
-    if (interrupting_in_kernel)
-        push_value_on_stack(g_return_to_ring0_from_signal_trampoline.get());
-    else
-        push_value_on_stack(g_return_to_ring3_from_signal_trampoline.get());
-
-    ASSERT((m_tss.esp % 16) == 0);
-
-    // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
-    set_state(Skip1SchedulerPass);
+    // If we're not blocking we need to update the tss so
+    // that the far jump in Scheduler goes to the proper location.
+    // When we are blocking we don't update the TSS as we want to
+    // resume at the blocker and descend the stack, cleaning up nicely.
+    if (!in_kernel()) {
+        Scheduler::prepare_to_modify_tss(*this);
+        m_tss.cs = 0x1b;
+        m_tss.ds = 0x23;
+        m_tss.es = 0x23;
+        m_tss.fs = 0x23;
+        m_tss.gs = 0x23;
+        m_tss.eip = regs.eip;
+        m_tss.esp = regs.esp_if_crossRing;
+        // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
+        set_state(Skip1SchedulerPass);
+    }
 
 #ifdef SIGNAL_DEBUG
     kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", process().name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
@@ -460,6 +438,13 @@ void Thread::set_default_signal_dispositions()
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
     m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((u32)SIG_IGN);
     m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((u32)SIG_IGN);
+}
+
+void Thread::push_value_on_user_stack(RegisterDump& registers, u32 value)
+{
+    registers.esp_if_crossRing -= 4;
+    u32* stack_ptr = (u32*)registers.esp_if_crossRing;
+    *stack_ptr = value;
 }
 
 void Thread::push_value_on_stack(u32 value)

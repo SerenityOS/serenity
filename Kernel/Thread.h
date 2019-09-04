@@ -6,9 +6,9 @@
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
 #include <AK/Vector.h>
-#include <Kernel/Scheduler.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KResult.h>
+#include <Kernel/Scheduler.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/Region.h>
 #include <LibC/fd_set.h>
@@ -73,6 +73,7 @@ public:
         virtual const char* state_string() const = 0;
         void set_interrupted_by_signal() { m_was_interrupted_while_blocked = true; }
         bool was_interrupted_by_signal() const { return m_was_interrupted_while_blocked; }
+
     private:
         bool m_was_interrupted_while_blocked { false };
         friend class Thread;
@@ -220,8 +221,8 @@ public:
         InterruptedBySignal,
     };
 
-    template <typename T, class... Args>
-    [[nodiscard]] BlockResult block(Args&& ... args)
+    template<typename T, class... Args>
+    [[nodiscard]] BlockResult block(Args&&... args)
     {
         // We should never be blocking a blocked (or otherwise non-active) thread.
         ASSERT(state() == Thread::Running);
@@ -295,6 +296,7 @@ public:
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
 
     void set_default_signal_dispositions();
+    void push_value_on_user_stack(RegisterDump&, u32);
     void push_value_on_stack(u32);
     void make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
     void make_userspace_stack_for_secondary_thread(void* argument);
