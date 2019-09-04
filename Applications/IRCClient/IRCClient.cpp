@@ -62,15 +62,12 @@ void IRCClient::on_socket_connected()
     send_user();
     send_nick();
 
-    if (on_connect) {
-        auto channel_str = m_config->read_entry("Connection", "AutoJoinChannels", "#test");
-        dbgprintf("IRCClient: Channels to autojoin: %s\n", channel_str.characters());
-        auto channels = channel_str.split(',');
-        for (auto& channel : channels) {
-            join_channel(channel);
-            dbgprintf("IRCClient: Auto joining channel: %s\n", channel.characters());
-        }
-        on_connect();
+    auto channel_str = m_config->read_entry("Connection", "AutoJoinChannels", "#test");
+    dbgprintf("IRCClient: Channels to autojoin: %s\n", channel_str.characters());
+    auto channels = channel_str.split(',');
+    for (auto& channel : channels) {
+        join_channel(channel);
+        dbgprintf("IRCClient: Auto joining channel: %s\n", channel.characters());
     }
 }
 
