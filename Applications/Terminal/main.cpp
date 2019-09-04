@@ -187,7 +187,7 @@ int main(int argc, char** argv)
             settings_window->move_to_front();
         }));
     app_menu->add_separator();
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
+    app_menu->add_action(GCommonActions::make_quit_action([] {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
     }));
