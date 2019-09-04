@@ -2,6 +2,11 @@
 
 namespace AK {
 
+Utf8View::Utf8View(const String& string)
+    : m_string(string)
+{
+}
+
 Utf8View::Utf8View(const StringView& string)
     : m_string(string)
 {
@@ -14,7 +19,7 @@ const unsigned char* Utf8View::begin_ptr() const
 
 const unsigned char* Utf8View::end_ptr() const
 {
-    return (const unsigned char*)m_string.characters_without_null_termination() + m_string.length();
+    return begin_ptr() + m_string.length();
 }
 
 Utf8CodepointIterator Utf8View::begin() const
@@ -25,6 +30,20 @@ Utf8CodepointIterator Utf8View::begin() const
 Utf8CodepointIterator Utf8View::end() const
 {
     return { end_ptr(), 0 };
+}
+
+int Utf8View::byte_offset_of(const Utf8CodepointIterator& it) const
+{
+    ASSERT(it.m_ptr >= begin_ptr());
+    ASSERT(it.m_ptr <= end_ptr());
+
+    return it.m_ptr - begin_ptr();
+}
+
+Utf8View Utf8View::substring_view(int byte_offset, int byte_length) const
+{
+    StringView string = m_string.substring_view(byte_offset, byte_length);
+    return Utf8View { string };
 }
 
 static inline bool decode_first_byte(
