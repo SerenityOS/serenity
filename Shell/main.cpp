@@ -527,21 +527,18 @@ static int run_command(const String& cmd)
     return return_value;
 }
 
-CFile get_history_file(CIODevice::OpenMode mode)
+static String get_history_path()
 {
-    StringBuilder sb;
-    sb.append(g.home);
-    sb.append("/.history");
-    CFile f(sb.to_string());
-    if (!f.open(mode))
-        return {};
-    return f;
+    StringBuilder builder;
+    builder.append(g.home);
+    builder.append("/.history");
+    return builder.to_string();
 }
 
 void load_history()
 {
-    auto history_file = get_history_file(CIODevice::ReadOnly);
-    if (!history_file.is_open())
+    CFile history_file(get_history_path());
+    if (!history_file.open(CIODevice::ReadOnly))
         return;
     while (history_file.can_read_line()) {
         auto b = history_file.read_line(1024);
@@ -552,8 +549,8 @@ void load_history()
 
 void save_history()
 {
-    auto history_file = get_history_file(CIODevice::WriteOnly);
-    if (!history_file.is_open())
+    CFile history_file(get_history_path());
+    if (!history_file.open(CIODevice::WriteOnly))
         return;
     for (const auto& line : editor.history()) {
         history_file.write(line);
