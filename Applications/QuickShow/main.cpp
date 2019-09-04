@@ -16,7 +16,7 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("QuickShow");
-    app_menu->add_action(GAction::create("Quit", { Mod_Alt, Key_F4 }, [](const GAction&) {
+    app_menu->add_action(GCommonActions::make_quit_action([] {
         GApplication::the().quit(0);
         return;
     }));
