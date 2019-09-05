@@ -39,6 +39,10 @@ Region::Region(const Range& range, NonnullRefPtr<VMObject> vmo, size_t offset_in
 
 Region::~Region()
 {
+    // Make sure we disable interrupts so we don't get interrupted between unmapping and unregistering.
+    // Unmapping the region will give the VM back to the RangeAllocator, so an interrupt handler would
+    // find the address<->region mappings in an invalid state there.
+    InterruptDisabler disabler;
     if (m_page_directory) {
         MM.unmap_region(*this);
         ASSERT(!m_page_directory);
