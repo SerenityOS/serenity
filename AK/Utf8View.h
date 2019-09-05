@@ -28,6 +28,7 @@ class Utf8View {
 public:
     explicit Utf8View(const String&);
     explicit Utf8View(const StringView&);
+    explicit Utf8View(const char*);
     ~Utf8View() {}
 
     const StringView& as_string() const { return m_string; }
