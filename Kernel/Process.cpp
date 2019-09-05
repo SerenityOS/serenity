@@ -746,10 +746,11 @@ asm(
     "push ebp\n"
     "mov ebp, esp\n"
     "push eax\n" // we have to store eax 'cause it might be the return value from a syscall
+    "sub esp, 4\n" // align the stack to 16 bytes
     "mov eax, [ebp+12]\n" // push the signal code
     "push eax\n"
     "call [ebp+8]\n" // call the signal handler
-    "add esp, 4\n"
+    "add esp, 8\n"
     "mov eax, 0x2d\n" // FIXME: We shouldn't be hardcoding this.
     "int 0x82\n" // sigreturn syscall
     "asm_signal_trampoline_end:\n"
