@@ -39,8 +39,17 @@ void GScrollableWidget::custom_layout()
     int height_wanted_by_horizontal_scrollbar = m_horizontal_scrollbar->is_visible() ? m_horizontal_scrollbar->preferred_size().height() : 0;
     int width_wanted_by_vertical_scrollbar = m_vertical_scrollbar->is_visible() ? m_vertical_scrollbar->preferred_size().width() : 0;
 
-    m_vertical_scrollbar->set_relative_rect(inner_rect.right() + 1 - m_vertical_scrollbar->preferred_size().width(), inner_rect.top(), m_vertical_scrollbar->preferred_size().width(), inner_rect.height() - height_wanted_by_horizontal_scrollbar);
-    m_horizontal_scrollbar->set_relative_rect(inner_rect.left(), inner_rect.bottom() + 1 - m_horizontal_scrollbar->preferred_size().height(), inner_rect.width() - m_vertical_scrollbar->preferred_size().width(), width_wanted_by_vertical_scrollbar);
+    m_vertical_scrollbar->set_relative_rect(
+        inner_rect.right() + 1 - m_vertical_scrollbar->preferred_size().width(),
+        inner_rect.top(),
+        m_vertical_scrollbar->preferred_size().width(),
+        inner_rect.height() - height_wanted_by_horizontal_scrollbar);
+
+    m_horizontal_scrollbar->set_relative_rect(
+        inner_rect.left(),
+        inner_rect.bottom() + 1 - m_horizontal_scrollbar->preferred_size().height(),
+        inner_rect.width() - width_wanted_by_vertical_scrollbar,
+        m_horizontal_scrollbar->preferred_size().height());
 
     m_corner_widget->set_visible(m_vertical_scrollbar->is_visible() && m_horizontal_scrollbar->is_visible());
     if (m_corner_widget->is_visible()) {
@@ -69,8 +78,14 @@ void GScrollableWidget::update_scrollbar_ranges()
     int excess_height = max(0, m_content_size.height() - available_size.height());
     m_vertical_scrollbar->set_range(0, excess_height);
 
+    if (should_hide_unnecessary_scrollbars())
+        m_vertical_scrollbar->set_visible(excess_height > 0);
+
     int excess_width = max(0, m_content_size.width() - available_size.width());
     m_horizontal_scrollbar->set_range(0, excess_width);
+
+    if (should_hide_unnecessary_scrollbars())
+        m_horizontal_scrollbar->set_visible(excess_width > 0);
 
     m_vertical_scrollbar->set_big_step(visible_content_rect().height() - m_vertical_scrollbar->step());
 }

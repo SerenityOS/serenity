@@ -29,6 +29,8 @@ GTreeView::GTreeView(GWidget* parent)
 
     m_expand_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-expand.png");
     m_collapse_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-collapse.png");
+
+    set_should_hide_unnecessary_scrollbars(true);
 }
 
 GTreeView::~GTreeView()
