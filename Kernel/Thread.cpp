@@ -386,6 +386,12 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     u32 ret_eip = regs.eip;
     u32 ret_eflags = regs.eflags;
 
+    // Align the stack to 16 bytes.
+    // Note that we push 56 bytes (4 * 14) on to the stack,
+    // so we need to account for this here.
+    u32 stack_alignment = (regs.esp_if_crossRing - 56) % 16;
+    regs.esp_if_crossRing -= stack_alignment;
+
     push_value_on_user_stack(regs, ret_eflags);
 
     push_value_on_user_stack(regs, ret_eip);
@@ -407,7 +413,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     regs.eip = g_return_to_ring3_from_signal_trampoline.get();
 
-    // FIXME: Should we worry about the stack being 16 byte aligned when entering a signal handler?
+    ASSERT((regs.esp_if_crossRing % 16) == 0);
 
     // If we're not blocking we need to update the tss so
     // that the far jump in Scheduler goes to the proper location.
