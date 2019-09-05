@@ -38,6 +38,9 @@ public:
     int width_occupied_by_vertical_scrollbar() const;
     int height_occupied_by_horizontal_scrollbar() const;
 
+    void set_should_hide_unnecessary_scrollbars(bool b) { m_should_hide_unnecessary_scrollbars = b; }
+    bool should_hide_unnecessary_scrollbars() const { return m_should_hide_unnecessary_scrollbars; }
+
 protected:
     explicit GScrollableWidget(GWidget* parent);
     virtual void custom_layout() override;
@@ -56,4 +59,5 @@ private:
     Size m_content_size;
     Size m_size_occupied_by_fixed_elements;
     bool m_scrollbars_enabled { true };
+    bool m_should_hide_unnecessary_scrollbars { false };
 };

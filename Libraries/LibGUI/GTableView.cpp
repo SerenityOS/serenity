@@ -15,6 +15,8 @@ GTableView::GTableView(GWidget* parent)
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
+
+    set_should_hide_unnecessary_scrollbars(true);
 }
 
 GTableView::~GTableView()
