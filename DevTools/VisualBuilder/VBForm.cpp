@@ -291,9 +291,12 @@ void VBForm::mousemove_event(GMouseEvent& event)
 
         set_cursor_type_from_grabber(m_resize_direction);
     } else {
-        for_each_selected_widget([&](auto& widget) {
-            set_cursor_type_from_grabber(widget.grabber_at(event.position()));
-        });
+        for (auto& widget : m_selected_widgets) {
+            auto grabber_at = widget->grabber_at(event.position());
+            set_cursor_type_from_grabber(grabber_at);
+            if (grabber_at != Direction::None)
+                break;
+        }
     }
 }
 
