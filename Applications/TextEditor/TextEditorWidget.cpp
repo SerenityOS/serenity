@@ -116,8 +116,20 @@ TextEditorWidget::TextEditorWidget()
         statusbar->set_text(builder.to_string());
     };
 
-    m_new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [](const GAction&) {
-        dbgprintf("FIXME: Implement File/New\n");
+    m_new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GAction&) {
+        if (m_document_dirty) {
+            GMessageBox save_document_first_box("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window()); 
+            auto save_document_first_result = save_document_first_box.exec();
+
+            if (save_document_first_result != GDialog::ExecResult::ExecOK)
+               return; 
+            m_save_action->activate();
+        }
+        
+        m_document_dirty = false;
+        m_editor->set_text(StringView());
+        set_path(FileSystemPath());
+        update_title();
     });
 
     m_open_action = GAction::create("Open...", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [this](const GAction&) {
