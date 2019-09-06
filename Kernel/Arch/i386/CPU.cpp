@@ -139,7 +139,7 @@ static void dump(const DumpType& regs)
     kprintf("  pc=%04x:%08x ds=%04x es=%04x fs=%04x gs=%04x\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
     kprintf(" stk=%04x:%08x\n", ss, esp);
     if (current)
-        kprintf("kstk=%04x:%08x, base=%08x, sigbase=%08x\n", current->tss().ss0, current->tss().esp0, current->kernel_stack_base(), current->kernel_stack_for_signal_handler_base());
+        kprintf("kstk=%04x:%08x, base=%08x\n", current->tss().ss0, current->tss().esp0, current->kernel_stack_base());
     kprintf("eax=%08x ebx=%08x ecx=%08x edx=%08x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%08x esp=%08x esi=%08x edi=%08x\n", regs.ebp, esp, regs.esi, regs.edi);
 
