@@ -340,10 +340,10 @@ void GTextEditor::paint_event(GPaintEvent& event)
             bool is_current_line = i == m_cursor.line();
             auto ruler_line_rect = ruler_content_rect(i);
             painter.draw_text(
-                ruler_line_rect.shrunken(2, 0),
+                ruler_line_rect.shrunken(2, 0).translated(0, m_line_spacing / 2),
                 String::number(i + 1),
                 is_current_line ? Font::default_bold_font() : font(),
-                TextAlignment::CenterRight,
+                TextAlignment::TopRight,
                 is_current_line ? Color::DarkGray : Color::MidGray);
         }
     }
