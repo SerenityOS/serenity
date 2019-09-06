@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Assertions.h>
+#include <AK/LogStream.h>
 #include <AK/Types.h>
 #include <stdarg.h>
 
@@ -10,7 +11,7 @@ static constexpr const char* printf_hex_digits_upper = "0123456789ABCDEF";
 #ifdef __serenity__
 extern "C" size_t strlen(const char*);
 #else
-#include <string.h>
+#    include <string.h>
 #endif
 
 template<typename PutChFunc, typename T>
@@ -266,9 +267,9 @@ template<typename PutChFunc>
                     goto one_more;
             }
             if (*p == '*') {
-              fieldWidth = va_arg(ap, int);
-              if (*(p + 1))
-                goto one_more;
+                fieldWidth = va_arg(ap, int);
+                if (*(p + 1))
+                    goto one_more;
             }
             if (*p == 'l') {
                 ++long_qualifiers;
@@ -352,6 +353,7 @@ template<typename PutChFunc>
                 ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, true, true, 8);
                 break;
             default:
+                dbg() << "printf_internal: Unimplemented format specifier " << *p;
                 ASSERT_NOT_REACHED();
             }
         } else {
