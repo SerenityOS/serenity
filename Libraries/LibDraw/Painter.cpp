@@ -1,15 +1,15 @@
 #include "Painter.h"
+#include "Emoji.h"
 #include "Font.h"
 #include "GraphicsBitmap.h"
-#include "Emoji.h"
 #include <AK/Assertions.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <LibDraw/CharacterBitmap.h>
 #include <math.h>
 #include <stdio.h>
 #include <unistd.h>
-#include <AK/Utf8View.h>
 
 #pragma GCC optimize("O3")
 
@@ -623,18 +623,22 @@ void Painter::draw_text_line(const Rect& a_rect, const Utf8View& text, const Fon
         }
     }
 
-    if (alignment == TextAlignment::TopLeft) {
-        // No-op.
-    } else if (alignment == TextAlignment::CenterLeft) {
-        // No-op.
-    } else if (alignment == TextAlignment::CenterRight) {
+    switch (alignment) {
+    case TextAlignment::TopLeft:
+    case TextAlignment::CenterLeft:
+        break;
+    case TextAlignment::TopRight:
+    case TextAlignment::CenterRight:
         rect.set_x(rect.right() - font.width(final_text));
-    } else if (alignment == TextAlignment::Center) {
+        break;
+    case TextAlignment::Center: {
         auto shrunken_rect = rect;
         shrunken_rect.set_width(font.width(final_text));
         shrunken_rect.center_within(rect);
         rect = shrunken_rect;
-    } else {
+        break;
+    }
+    default:
         ASSERT_NOT_REACHED();
     }
 
@@ -687,15 +691,23 @@ void Painter::draw_text(const Rect& rect, const StringView& raw_text, const Font
             bounding_rect.set_width(line_width);
     }
 
-    if (alignment == TextAlignment::TopLeft) {
+    switch (alignment) {
+    case TextAlignment::TopLeft:
         bounding_rect.set_location(rect.location());
-    } else if (alignment == TextAlignment::CenterLeft) {
+        break;
+    case TextAlignment::TopRight:
+        bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.y() });
+        break;
+    case TextAlignment::CenterLeft:
         bounding_rect.set_location({ rect.x(), rect.center().y() - (bounding_rect.height() / 2) });
-    } else if (alignment == TextAlignment::CenterRight) {
+        break;
+    case TextAlignment::CenterRight:
         bounding_rect.set_location({ (rect.right() + 1) - bounding_rect.width(), rect.center().y() - (bounding_rect.height() / 2) });
-    } else if (alignment == TextAlignment::Center) {
+        break;
+    case TextAlignment::Center:
         bounding_rect.center_within(rect);
-    } else {
+        break;
+    default:
         ASSERT_NOT_REACHED();
     }
 

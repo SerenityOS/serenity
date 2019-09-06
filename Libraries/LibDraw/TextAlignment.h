@@ -4,13 +4,15 @@ enum class TextAlignment {
     TopLeft,
     CenterLeft,
     Center,
-    CenterRight
+    CenterRight,
+    TopRight,
 };
 
 inline bool is_right_text_alignment(TextAlignment alignment)
 {
     switch (alignment) {
     case TextAlignment::CenterRight:
+    case TextAlignment::TopRight:
         return true;
     default:
         return false;
