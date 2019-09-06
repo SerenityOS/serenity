@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/Types.h>

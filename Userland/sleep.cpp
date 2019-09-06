@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <signal.h>
 #include <stdio.h>
 #include <unistd.h>

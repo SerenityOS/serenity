@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <LibCore/CFile.h>

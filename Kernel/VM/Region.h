@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/Bitmap.h>
 #include <AK/InlineLinkedList.h>
 #include <Kernel/VM/PageDirectory.h>

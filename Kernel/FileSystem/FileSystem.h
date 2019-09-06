@@ -3,7 +3,7 @@
 #include "InodeIdentifier.h"
 #include "InodeMetadata.h"
 #include "UnixTypes.h"
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>

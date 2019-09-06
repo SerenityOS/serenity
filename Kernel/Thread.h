@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/OwnPtr.h>

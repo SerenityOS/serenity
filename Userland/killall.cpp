@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <LibCore/CProcessStatisticsReader.h>
 #include <signal.h>
 #include <stdio.h>

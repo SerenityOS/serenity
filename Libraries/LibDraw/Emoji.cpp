@@ -1,7 +1,7 @@
-#include "Emoji.h"
-#include "GraphicsBitmap.h"
-#include <AK/AKString.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
+#include <LibDraw/Emoji.h>
+#include <LibDraw/GraphicsBitmap.h>
 
 static HashMap<u32, Emoji> s_emojis;
 

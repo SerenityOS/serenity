@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CNotifier.h>
 #include <LibCore/CTimer.h>

@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 
 namespace AK {

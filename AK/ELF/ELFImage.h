@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/ELF/exec_elf.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>

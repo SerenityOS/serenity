@@ -12,9 +12,9 @@
 #define ASSERT_NOT_REACHED() fprintf(stderr, "\033[31;1mASSERT_NOT_REACHED\033[0m\n");
 #define RELEASE_ASSERT ASSERT
 
-#include "AKString.h"
-#include "Function.h"
-#include "NonnullRefPtrVector.h"
+#include <AK/Function.h>
+#include <AK/NonnullRefPtrVector.h>
+#include <AK/String.h>
 #include <chrono>
 
 namespace AK {

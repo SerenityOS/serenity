@@ -1,6 +1,6 @@
 #include <AK/TestSuite.h>
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/Queue.h>
 
 TEST_CASE(construct)

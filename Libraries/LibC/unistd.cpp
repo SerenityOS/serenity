@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/ScopedValueRollback.h>
 #include <AK/Vector.h>
 #include <Kernel/Syscall.h>

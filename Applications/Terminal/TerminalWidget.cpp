@@ -1,6 +1,6 @@
 #include "TerminalWidget.h"
 #include "XtermColors.h"
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>

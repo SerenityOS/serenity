@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>

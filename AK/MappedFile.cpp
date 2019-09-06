@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/MappedFile.h>
 #include <fcntl.h>
 #include <stdio.h>

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/IPv4Address.h>
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>

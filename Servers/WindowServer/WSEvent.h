@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/KeyCode.h>
 #include <LibCore/CEvent.h>

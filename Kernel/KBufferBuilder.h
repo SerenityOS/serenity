@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <Kernel/KBuffer.h>
 #include <stdarg.h>
 

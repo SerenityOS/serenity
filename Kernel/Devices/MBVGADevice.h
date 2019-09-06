@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/BlockDevice.h>
 #include <Kernel/VM/PhysicalAddress.h>

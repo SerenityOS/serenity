@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 
 // This type implements number typing and
 // displaying mechanics. It does not perform

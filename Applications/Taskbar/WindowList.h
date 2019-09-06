@@ -1,7 +1,7 @@
 #pragma once
 
 #include "WindowIdentifier.h"
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/HashMap.h>
 #include <LibGUI/GButton.h>
 #include <LibDraw/Rect.h>

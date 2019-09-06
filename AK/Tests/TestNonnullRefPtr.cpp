@@ -1,7 +1,7 @@
 #include <AK/TestSuite.h>
 
 #include <AK/NonnullRefPtr.h>
-#include <AK/AKString.h>
+#include <AK/String.h>
 
 struct Object : public RefCounted<Object> {
     int x;
