@@ -107,11 +107,8 @@ void GTextEditor::update_content_size()
     int content_width = 0;
     int content_height = 0;
     for (auto& line : m_lines) {
-        line.for_each_visual_line([&](const Rect& rect, const StringView&, int) {
-            content_width = max(rect.width(), content_width);
-            content_height += rect.height();
-            return IterationDecision::Continue;
-        });
+        content_width = max(line.m_visual_rect.width(), content_width);
+        content_height += line.m_visual_rect.height();
     }
     content_width += m_horizontal_content_padding * 2;
     if (is_right_text_alignment(m_text_alignment))
