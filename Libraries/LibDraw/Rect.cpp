@@ -86,6 +86,10 @@ void Rect::align_within(const Rect& other, TextAlignment alignment)
     case TextAlignment::TopLeft:
         set_location(other.location());
         return;
+    case TextAlignment::TopRight:
+        set_x(other.x() + other.width() - width());
+        set_y(other.y());
+        return;
     case TextAlignment::CenterLeft:
         set_x(other.x());
         center_vertically_within(other);
