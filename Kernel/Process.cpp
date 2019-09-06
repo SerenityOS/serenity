@@ -473,8 +473,6 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (metadata.is_setgid())
         m_egid = metadata.gid;
 
-    current->m_kernel_stack_for_signal_handler_region = nullptr;
-    current->m_signal_stack_user_region = nullptr;
     current->set_default_signal_dispositions();
     current->m_signal_mask = 0;
     current->m_pending_signals = 0;
