@@ -285,7 +285,7 @@ void GScrollBar::mousewheel_event(GMouseEvent& event)
 {
     if (!is_scrollable())
         return;
-    set_value(value() + event.wheel_delta());
+    set_value(value() + event.wheel_delta() * m_step);
     GWidget::mousewheel_event(event);
 }
 
