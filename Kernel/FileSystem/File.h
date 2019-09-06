@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/RefCounted.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/Types.h>

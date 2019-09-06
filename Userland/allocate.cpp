@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <LibCore/CElapsedTimer.h>
 #include <stdio.h>
 #include <unistd.h>

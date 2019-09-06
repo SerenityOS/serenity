@@ -1,5 +1,5 @@
 #include <AK/TestSuite.h>
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/Weakable.h>
 #include <AK/WeakPtr.h>
 

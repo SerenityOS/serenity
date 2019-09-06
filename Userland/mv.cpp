@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/FileSystemPath.h>
 #include <stdio.h>
 #include <sys/stat.h>

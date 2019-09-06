@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/Assertions.h>
 #include <AK/ScopeGuard.h>
 #include <Kernel/Net/IPv4.h>

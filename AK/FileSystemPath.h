@@ -1,6 +1,6 @@
 #pragma once
 
-#include "AKString.h"
+#include <AK/String.h>
 
 namespace AK {
 
@@ -35,5 +35,5 @@ String canonicalized_path(const StringView&);
 
 };
 
-using AK::FileSystemPath;
 using AK::canonicalized_path;
+using AK::FileSystemPath;

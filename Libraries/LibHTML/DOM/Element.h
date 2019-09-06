@@ -1,7 +1,7 @@
 #pragma once
 
 #include <LibHTML/DOM/ParentNode.h>
-#include <AK/AKString.h>
+#include <AK/String.h>
 
 class Attribute {
 public:

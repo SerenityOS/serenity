@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 

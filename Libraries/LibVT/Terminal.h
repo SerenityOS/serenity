@@ -1,6 +1,6 @@
 #pragma once
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/Vector.h>
 #include <LibVT/Position.h>

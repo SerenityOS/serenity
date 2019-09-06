@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>

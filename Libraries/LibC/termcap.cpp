@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/HashMap.h>
 #include <assert.h>
 #include <stdio.h>

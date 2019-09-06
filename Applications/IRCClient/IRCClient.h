@@ -2,7 +2,7 @@
 
 #include "IRCLogBuffer.h"
 #include "IRCWindow.h"
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/CircularQueue.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>

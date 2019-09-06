@@ -1,4 +1,4 @@
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>

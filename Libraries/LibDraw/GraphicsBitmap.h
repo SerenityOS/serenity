@@ -3,7 +3,7 @@
 #include "Color.h"
 #include "Rect.h"
 #include "Size.h"
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>

@@ -1,6 +1,6 @@
 #include "DNSPacket.h"
 #include "DNSRecord.h"
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>

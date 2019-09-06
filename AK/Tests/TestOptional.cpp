@@ -1,6 +1,6 @@
 #include <AK/TestSuite.h>
 
-#include <AK/AKString.h>
+#include <AK/String.h>
 #include <AK/Optional.h>
 
 TEST_CASE(basic_optional)

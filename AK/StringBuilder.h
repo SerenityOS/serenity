@@ -1,7 +1,7 @@
 #pragma once
 
-#include "AKString.h"
-#include "Vector.h"
+#include <AK/String.h>
+#include <AK/Vector.h>
 #include <stdarg.h>
 
 namespace AK {
