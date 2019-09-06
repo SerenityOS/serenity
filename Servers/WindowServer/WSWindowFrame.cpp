@@ -197,13 +197,22 @@ void WSWindowFrame::paint(Painter& painter)
     auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last().relative_rect();
 
     painter.fill_rect_with_gradient(titlebar_rect, border_color, border_color2);
-    for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
-        painter.draw_line({ titlebar_title_rect.right() + 4, titlebar_inner_rect.y() + i }, { leftmost_button_rect.left() - 3, titlebar_inner_rect.y() + i }, border_color);
+
+    int stripe_left = titlebar_title_rect.right() + 4;
+    int stripe_right = leftmost_button_rect.left() - 3;
+    if (stripe_left && stripe_right && stripe_left < stripe_right) {
+        for (int i = 2; i <= titlebar_inner_rect.height() - 2; i += 2) {
+            painter.draw_line({ stripe_left, titlebar_inner_rect.y() + i }, { stripe_right, titlebar_inner_rect.y() + i }, border_color);
+        }
     }
 
-    painter.draw_text(titlebar_title_rect.translated(1, 2), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, border_color.darkened(0.4));
-    // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
-    painter.draw_text(titlebar_title_rect.translated(0, 1), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, title_color);
+    auto clipped_title_rect = titlebar_title_rect;
+    clipped_title_rect.set_width(stripe_right - clipped_title_rect.x());
+    if (!clipped_title_rect.is_empty()) {
+        painter.draw_text(clipped_title_rect.translated(1, 2), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, border_color.darkened(0.4), TextElision::Right);
+        // FIXME: The translated(0, 1) wouldn't be necessary if we could center text based on its baseline.
+        painter.draw_text(clipped_title_rect.translated(0, 1), window.title(), wm.window_title_font(), TextAlignment::CenterLeft, title_color, TextElision::Right);
+    }
 
     painter.blit(titlebar_icon_rect.location(), window.icon(), window.icon().rect());
 
