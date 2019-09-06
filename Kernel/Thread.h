@@ -281,7 +281,6 @@ public:
 
     u32 kernel_stack_base() const { return m_kernel_stack_base; }
     u32 kernel_stack_top() const { return m_kernel_stack_top; }
-    u32 kernel_stack_for_signal_handler_base() const { return m_kernel_stack_for_signal_handler_region ? m_kernel_stack_for_signal_handler_region->vaddr().get() : 0; }
 
     void set_selector(u16 s) { m_far_ptr.selector = s; }
     void set_state(State);
@@ -332,7 +331,6 @@ private:
     Process& m_process;
     int m_tid { -1 };
     TSS32 m_tss;
-    OwnPtr<TSS32> m_tss_to_resume_kernel;
     FarPtr m_far_ptr;
     u32 m_ticks { 0 };
     u32 m_ticks_left { 0 };
@@ -343,10 +341,8 @@ private:
     u32 m_kernel_stack_top { 0 };
     RefPtr<Region> m_userspace_stack_region;
     RefPtr<Region> m_kernel_stack_region;
-    RefPtr<Region> m_kernel_stack_for_signal_handler_region;
     VirtualAddress m_thread_specific_data;
     SignalActionData m_signal_action_data[32];
-    Region* m_signal_stack_user_region { nullptr };
     IntrusiveList<Blocker, &Blocker::m_blocker_list_node> m_blockers;
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };

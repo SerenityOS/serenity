@@ -124,9 +124,6 @@ Thread::~Thread()
 
     if (m_kernel_stack_region)
         m_process.deallocate_region(*m_kernel_stack_region);
-
-    if (m_kernel_stack_for_signal_handler_region)
-        m_process.deallocate_region(*m_kernel_stack_for_signal_handler_region);
 }
 
 void Thread::unblock()
