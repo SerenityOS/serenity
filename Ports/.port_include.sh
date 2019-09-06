@@ -3,6 +3,9 @@
 # This script contains common helpers for all ports.
 set -e
 
+export CC=i686-pc-serenity-gcc
+export CXX=i686-pc-serenity-g++
+
 if [ -z "$MAKEOPTS" ]; then
     MAKEOPTS="-j $(nproc)"
 fi
