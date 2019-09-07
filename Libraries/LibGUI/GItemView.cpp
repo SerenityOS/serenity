@@ -76,7 +76,7 @@ void GItemView::mousedown_event(GMouseEvent& event)
             if (item_rect(i).contains(adjusted_position)) {
                 auto index = model()->index(i, 0);
                 if (event.modifiers() & Mod_Ctrl)
-                    selection().add(index);
+                    selection().toggle(index);
                 else
                     selection().set(index);
                 return;
