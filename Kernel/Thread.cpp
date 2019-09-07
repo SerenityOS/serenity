@@ -637,5 +637,6 @@ void Thread::make_thread_specific_region(Badge<Process>)
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
     m_thread_specific_data = VirtualAddress((u32)thread_specific_data);
     thread_specific_data->self = thread_specific_data;
-    memcpy(thread_local_storage, process().m_master_tls_region->vaddr().as_ptr(), process().m_master_tls_size);
+    if (process().m_master_tls_size)
+        memcpy(thread_local_storage, process().m_master_tls_region->vaddr().as_ptr(), process().m_master_tls_size);
 }
