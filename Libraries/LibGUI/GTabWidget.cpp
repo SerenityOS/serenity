@@ -208,3 +208,14 @@ void GTabWidget::set_tab_position(TabPosition tab_position)
         m_active_widget->set_relative_rect(child_rect_for_size(size()));
     update();
 }
+
+int GTabWidget::get_active_tab() const
+{
+    for(int i = 0; i < m_tabs.size(); i++)
+    {
+        if(m_tabs.at(i).widget == m_active_widget)
+            return i;
+    }
+
+    return -1;
+}
