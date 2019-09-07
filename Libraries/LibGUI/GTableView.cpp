@@ -174,8 +174,15 @@ void GTableView::mousedown_event(GMouseEvent& event)
         return;
     }
 
-    model()->set_selected_index(index_at_event_position(event.position()));
-    update();
+    auto index = index_at_event_position(event.position());
+    if (!index.is_valid()) {
+        selection().clear();
+        return;
+    }
+    if (event.modifiers() & Mod_Ctrl)
+        selection().toggle(index);
+    else
+        selection().set(index);
 }
 
 GModelIndex GTableView::index_at_event_position(const Point& position) const
@@ -257,7 +264,7 @@ void GTableView::paint_event(GPaintEvent& event)
     int y_offset = header_height();
 
     for (int row_index = 0; row_index < model()->row_count(); ++row_index) {
-        bool is_selected_row = row_index == model()->selected_index().row();
+        bool is_selected_row = selection().contains_row(row_index);
         int y = y_offset + painted_item_index * item_height();
 
         Color background_color;
@@ -369,17 +376,21 @@ void GTableView::keydown_event(GKeyEvent& event)
         return;
     auto& model = *this->model();
     if (event.key() == KeyCode::Key_Return) {
-        activate(model.selected_index());
+        selection().for_each_index([this](auto& index) {
+            activate(index);
+        });
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
         GModelIndex new_index;
-        if (model.selected_index().is_valid())
-            new_index = model.index(model.selected_index().row() - 1, model.selected_index().column());
-        else
+        if (!selection().is_empty()) {
+            auto old_index = selection().first();
+            new_index = model.index(old_index.row() - 1, old_index.column());
+        } else {
             new_index = model.index(0, 0);
+        }
         if (model.is_valid(new_index)) {
-            model.set_selected_index(new_index);
+            selection().set(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -387,12 +398,14 @@ void GTableView::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_Down) {
         GModelIndex new_index;
-        if (model.selected_index().is_valid())
-            new_index = model.index(model.selected_index().row() + 1, model.selected_index().column());
-        else
+        if (!selection().is_empty()) {
+            auto old_index = selection().first();
+            new_index = model.index(old_index.row() + 1, old_index.column());
+        } else {
             new_index = model.index(0, 0);
+        }
         if (model.is_valid(new_index)) {
-            model.set_selected_index(new_index);
+            selection().set(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -400,9 +413,10 @@ void GTableView::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_PageUp) {
         int items_per_page = visible_content_rect().height() / item_height();
-        auto new_index = model.index(max(0, model.selected_index().row() - items_per_page), model.selected_index().column());
+        auto old_index = selection().first();
+        auto new_index = model.index(max(0, old_index.row() - items_per_page), old_index.column());
         if (model.is_valid(new_index)) {
-            model.set_selected_index(new_index);
+            selection().set(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -410,9 +424,10 @@ void GTableView::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_PageDown) {
         int items_per_page = visible_content_rect().height() / item_height();
-        auto new_index = model.index(min(model.row_count() - 1, model.selected_index().row() + items_per_page), model.selected_index().column());
+        auto old_index = selection().first();
+        auto new_index = model.index(min(model.row_count() - 1, old_index.row() + items_per_page), old_index.column());
         if (model.is_valid(new_index)) {
-            model.set_selected_index(new_index);
+            selection().set(new_index);
             scroll_into_view(new_index, Orientation::Vertical);
             update();
         }
@@ -453,15 +468,17 @@ void GTableView::doubleclick_event(GMouseEvent& event)
 {
     if (!model())
         return;
-    auto& model = *this->model();
     if (event.button() == GMouseButton::Left) {
         if (event.y() < header_height())
             return;
-        if (model.selected_index().is_valid()) {
-            if (is_editable())
-                begin_editing(model.selected_index());
-            else
-                activate(model.selected_index());
+        if (!selection().is_empty()) {
+            if (is_editable()) {
+                begin_editing(selection().first());
+            } else {
+                selection().for_each_index([this](auto& index) {
+                    activate(index);
+                });
+            }
         }
     }
 }
@@ -504,7 +521,7 @@ void GTableView::context_menu_event(GContextMenuEvent& event)
         return;
     dbgprintf("context menu requested for index (%d,%d) '%s'\n", index.row(), index.column(), model()->data(index).to_string().characters());
 
-    model()->set_selected_index(index);
+    selection().set(index);
     update();
     if (on_context_menu_request)
         on_context_menu_request(index, event);
