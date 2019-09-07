@@ -369,6 +369,10 @@ private:
     RefPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
 
+    RefPtr<Region> m_master_tls_region;
+    size_t m_master_tls_size { 0 };
+    size_t m_master_tls_alignment { 0 };
+
     Lock m_big_lock { "Process" };
 
     u64 m_alarm_deadline { 0 };

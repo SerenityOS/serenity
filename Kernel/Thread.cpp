@@ -9,6 +9,28 @@
 
 //#define SIGNAL_DEBUG
 
+u16 thread_specific_selector()
+{
+    static u16 selector;
+    if (!selector) {
+        selector = gdt_alloc_entry();
+        auto& descriptor = get_gdt_entry(selector);
+        descriptor.dpl = 3;
+        descriptor.segment_present = 1;
+        descriptor.granularity = 0;
+        descriptor.zero = 0;
+        descriptor.operation_size = 1;
+        descriptor.descriptor_type = 1;
+        descriptor.type = 2;
+    }
+    return selector;
+}
+
+Descriptor& thread_specific_descriptor()
+{
+    return get_gdt_entry(thread_specific_selector());
+}
+
 HashTable<Thread*>& thread_table()
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -32,22 +54,24 @@ Thread::Thread(Process& process)
 
     // Only IF is set when a process boots.
     m_tss.eflags = 0x0202;
-    u16 cs, ds, ss;
+    u16 cs, ds, ss, gs;
 
     if (m_process.is_ring0()) {
         cs = 0x08;
         ds = 0x10;
         ss = 0x10;
+        gs = 0;
     } else {
         cs = 0x1b;
         ds = 0x23;
         ss = 0x23;
+        gs = thread_specific_selector() | 3;
     }
 
     m_tss.ds = ds;
     m_tss.es = ds;
     m_tss.fs = ds;
-    m_tss.gs = ds;
+    m_tss.gs = gs;
     m_tss.ss = ss;
     m_tss.cs = cs;
 
@@ -425,7 +449,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         m_tss.ds = 0x23;
         m_tss.es = 0x23;
         m_tss.fs = 0x23;
-        m_tss.gs = 0x23;
+        m_tss.gs = thread_specific_selector() | 3;
         m_tss.eip = regs.eip;
         m_tss.esp = regs.esp_if_crossRing;
         // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
@@ -525,6 +549,7 @@ Thread* Thread::clone(Process& process)
     clone->m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
     memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));
     clone->m_has_used_fpu = m_has_used_fpu;
+    clone->m_thread_specific_data = m_thread_specific_data;
     return clone;
 }
 
@@ -601,4 +626,16 @@ String Thread::backtrace_impl() const
             builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
     }
     return builder.to_string();
+}
+
+void Thread::make_thread_specific_region(Badge<Process>)
+{
+    size_t thread_specific_region_alignment = max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
+    size_t thread_specific_region_size = align_up_to(process().m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
+    auto* region = process().allocate_region({}, thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
+    auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment)).as_ptr();
+    auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
+    m_thread_specific_data = VirtualAddress((u32)thread_specific_data);
+    thread_specific_data->self = thread_specific_data;
+    memcpy(thread_local_storage, process().m_master_tls_region->vaddr().as_ptr(), process().m_master_tls_size);
 }
