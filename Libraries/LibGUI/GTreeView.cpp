@@ -77,6 +77,24 @@ void GTreeView::mousedown_event(GMouseEvent& event)
         toggle_index(index);
 }
 
+void GTreeView::doubleclick_event(GMouseEvent& event)
+{
+    if (!model())
+        return;
+    auto& model = *this->model();
+    auto adjusted_position = event.position().translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
+    bool is_toggle;
+    auto index = index_at_content_position(adjusted_position, is_toggle);
+    if (!index.is_valid())
+        return;
+
+    if (selection().first() != index)
+        selection().set(index);
+
+    if (model.row_count(index))
+        toggle_index(index);
+}
+
 void GTreeView::toggle_index(const GModelIndex& index)
 {
     ASSERT(model()->row_count(index));

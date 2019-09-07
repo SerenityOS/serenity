@@ -13,6 +13,7 @@ public:
 protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void doubleclick_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void did_update_selection() override;
     virtual void did_update_model() override;
