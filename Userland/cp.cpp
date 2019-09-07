@@ -1,6 +1,7 @@
 #include <AK/String.h>
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/CArgsParser.h>
 #include <assert.h>
 #include <fcntl.h>
 #include <stdio.h>
@@ -9,12 +10,18 @@
 
 int main(int argc, char** argv)
 {
-    if (argc != 3) {
-        printf("usage: cp <source> <destination>\n");
+    CArgsParser args_parser("cp");
+    args_parser.add_required_single_value("source");
+    args_parser.add_required_single_value("destination");
+
+    CArgsParserResult args = args_parser.parse(argc, argv);
+    Vector<String> values = args.get_single_values();
+    if (values.size() == 0) {
+        args_parser.print_usage();
         return 0;
     }
-    String src_path = argv[1];
-    String dst_path = argv[2];
+    String src_path = values[0];
+    String dst_path = values[1];
 
     int src_fd = open(src_path.characters(), O_RDONLY);
     if (src_fd < 0) {
