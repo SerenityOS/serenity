@@ -36,6 +36,7 @@ public:
     void set_activates_on_selection(bool b) { m_activates_on_selection = b; }
     bool activates_on_selection() const { return m_activates_on_selection; }
 
+    Function<void()> on_selection_change;
     Function<void(const GModelIndex&)> on_activation;
     Function<void(const GModelIndex&)> on_selection;
     Function<void(const GModelIndex&, const GContextMenuEvent&)> on_context_menu_request;
