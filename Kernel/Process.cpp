@@ -310,6 +310,9 @@ Process* Process::fork(RegisterDump& regs)
         auto cloned_region = region.clone();
         child->m_regions.append(move(cloned_region));
         MM.map_region(*child, child->m_regions.last());
+
+        if (&region == m_master_tls_region)
+            child->m_master_tls_region = child->m_regions.last();
     }
 
     for (auto gid : m_gids)
@@ -403,6 +406,10 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, description->absolute_path(), PROT_READ);
     ASSERT(region);
 
+    RefPtr<Region> master_tls_region;
+    size_t master_tls_size = 0;
+    size_t master_tls_alignment = 0;
+
     OwnPtr<ELFLoader> loader;
     {
         // Okay, here comes the sleight of hand, pay close attention..
@@ -433,6 +440,13 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
             (void)allocate_region(vaddr, size, String(name), prot);
             return vaddr.as_ptr();
         };
+        loader->tls_section_hook = [&](size_t size, size_t alignment) {
+            ASSERT(size);
+            master_tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
+            master_tls_size = size;
+            master_tls_alignment = alignment;
+            return master_tls_region->vaddr().as_ptr();
+        };
         bool success = loader->load();
         if (!success || !loader->entry().get()) {
             m_page_directory = move(old_page_directory);
@@ -450,6 +464,9 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     m_elf_loader = move(loader);
     m_executable = description->custody();
+
+    // Copy of the master TLS region that we will clone for new threads
+    m_master_tls_region = master_tls_region.ptr();
 
     if (metadata.is_setuid())
         m_euid = metadata.uid;
@@ -483,6 +500,11 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     // ss0 sp!!!!!!!!!
     u32 old_esp0 = main_thread().m_tss.esp0;
 
+    m_master_tls_size = master_tls_size;
+    m_master_tls_alignment = master_tls_alignment;
+
+    main_thread().make_thread_specific_region({});
+
     memset(&main_thread().m_tss, 0, sizeof(main_thread().m_tss));
     main_thread().m_tss.eflags = 0x0202;
     main_thread().m_tss.eip = entry_eip;
@@ -490,7 +512,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     main_thread().m_tss.ds = 0x23;
     main_thread().m_tss.es = 0x23;
     main_thread().m_tss.fs = 0x23;
-    main_thread().m_tss.gs = 0x23;
+    main_thread().m_tss.gs = thread_specific_selector() | 3;
     main_thread().m_tss.ss = 0x23;
     main_thread().m_tss.cr3 = page_directory().cr3();
     main_thread().make_userspace_stack_for_main_thread(move(arguments), move(environment));
@@ -2661,7 +2683,7 @@ int Process::sys$create_thread(int (*entry)(void*), void* argument)
     tss.eflags = 0x0202;
     tss.cr3 = page_directory().cr3();
     thread->make_userspace_stack_for_secondary_thread(argument);
-
+    thread->make_thread_specific_region({});
     thread->set_state(Thread::State::Runnable);
     return thread->tid();
 }

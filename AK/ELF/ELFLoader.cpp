@@ -35,6 +35,11 @@ bool ELFLoader::layout()
 {
     bool failed = false;
     m_image.for_each_program_header([&](const ELFImage::ProgramHeader& program_header) {
+        if (program_header.type() == PT_TLS) {
+            auto* tls_image = tls_section_hook(program_header.size_in_memory(), program_header.alignment());
+            memcpy(tls_image, program_header.raw_data(), program_header.size_in_image());
+            return;
+        }
         if (program_header.type() != PT_LOAD)
             return;
 #ifdef ELFLOADER_DEBUG

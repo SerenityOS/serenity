@@ -460,6 +460,12 @@ bool Scheduler::context_switch(Thread& thread)
         descriptor.descriptor_type = 0;
     }
 
+    if (!thread.thread_specific_data().is_null()) {
+        auto& descriptor = thread_specific_descriptor();
+        descriptor.set_base(thread.thread_specific_data().as_ptr());
+        descriptor.set_limit(sizeof(ThreadSpecificData*));
+    }
+
     auto& descriptor = get_gdt_entry(thread.selector());
     descriptor.type = 11; // Busy TSS
     flush_gdt();

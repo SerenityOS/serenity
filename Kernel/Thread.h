@@ -30,6 +30,10 @@ struct SignalActionData {
     int flags { 0 };
 };
 
+struct ThreadSpecificData {
+    ThreadSpecificData* self;
+};
+
 class Thread {
     friend class Process;
     friend class Scheduler;
@@ -214,6 +218,8 @@ public:
     const char* state_string() const;
     u32 ticks() const { return m_ticks; }
 
+    VirtualAddress thread_specific_data() const { return m_thread_specific_data; }
+
     u64 sleep(u32 ticks);
 
     enum class BlockResult {
@@ -301,6 +307,8 @@ public:
     void make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
     void make_userspace_stack_for_secondary_thread(void* argument);
 
+    void make_thread_specific_region(Badge<Process>);
+
     Thread* clone(Process&);
 
     template<typename Callback>
@@ -336,6 +344,7 @@ private:
     RefPtr<Region> m_userspace_stack_region;
     RefPtr<Region> m_kernel_stack_region;
     RefPtr<Region> m_kernel_stack_for_signal_handler_region;
+    VirtualAddress m_thread_specific_data;
     SignalActionData m_signal_action_data[32];
     Region* m_signal_stack_user_region { nullptr };
     IntrusiveList<Blocker, &Blocker::m_blocker_list_node> m_blockers;
@@ -432,3 +441,6 @@ inline IterationDecision Scheduler::for_each_nonrunnable(Callback callback)
 
     return IterationDecision::Continue;
 }
+
+u16 thread_specific_selector();
+Descriptor& thread_specific_descriptor();
