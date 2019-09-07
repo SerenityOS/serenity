@@ -6,7 +6,7 @@ extern "C" {
 
 int main(int, char**);
 
-int errno;
+__thread int errno;
 char** environ;
 bool __environ_is_malloced;
 
