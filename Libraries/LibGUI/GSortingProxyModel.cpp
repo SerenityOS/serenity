@@ -73,7 +73,6 @@ void GSortingProxyModel::set_key_column_and_sort_order(int column, GSortOrder so
 
 void GSortingProxyModel::resort()
 {
-    int previously_selected_target_row = map_to_target(selected_index()).row();
     int row_count = target().row_count();
     m_row_mappings.resize(row_count);
     for (int i = 0; i < row_count; ++i)
@@ -94,16 +93,5 @@ void GSortingProxyModel::resort()
 	    is_less_than = data1 < data2;
         return m_sort_order == GSortOrder::Ascending ? is_less_than : !is_less_than;
     });
-    if (previously_selected_target_row != -1) {
-        // Preserve selection.
-        ASSERT(m_row_mappings.size() == row_count);
-        for (int i = 0; i < row_count; ++i) {
-            if (m_row_mappings[i] == previously_selected_target_row) {
-                set_selected_index(index(i, 0));
-                break;
-            }
-        }
-    }
-
     did_update();
 }
