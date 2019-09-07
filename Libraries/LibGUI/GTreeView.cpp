@@ -69,9 +69,8 @@ void GTreeView::mousedown_event(GMouseEvent& event)
     if (!index.is_valid())
         return;
 
-    if (model.selected_index() != index) {
-        model.set_selected_index(index);
-        update();
+    if (selection().first() != index) {
+        selection().set(index);
     }
 
     if (is_toggle && model.row_count(index))
@@ -170,7 +169,7 @@ void GTreeView::paint_event(GPaintEvent& event)
             icon_rect.right() + 1 + icon_spacing(), rect.y(),
             rect.width() - icon_size() - icon_spacing(), rect.height()
         };
-        if (index == model.selected_index()) {
+        if (selection().contains(index)) {
             background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
             text_color = Color::from_rgb(0xffffff);
             painter.fill_rect(text_rect, background_color);
@@ -232,8 +231,7 @@ void GTreeView::did_update_model()
 void GTreeView::did_update_selection()
 {
     ASSERT(model());
-    auto& model = *this->model();
-    auto index = model.selected_index();
+    auto index = selection().first();
     if (!index.is_valid())
         return;
     bool opened_any = false;
@@ -267,7 +265,7 @@ void GTreeView::keydown_event(GKeyEvent& event)
 {
     if (!model())
         return;
-    auto cursor_index = model()->selected_index();
+    auto cursor_index = selection().first();
 
     if (event.key() == KeyCode::Key_Space) {
         if (model()->row_count(cursor_index))
@@ -287,7 +285,7 @@ void GTreeView::keydown_event(GKeyEvent& event)
             return IterationDecision::Continue;
         });
         if (found_index.is_valid()) {
-            model()->set_selected_index(found_index);
+            selection().set(found_index);
             update();
         }
         return;
@@ -304,7 +302,7 @@ void GTreeView::keydown_event(GKeyEvent& event)
             return IterationDecision::Continue;
         });
         if (found_index.is_valid())
-            model()->set_selected_index(found_index);
+            selection().set(found_index);
         return;
     }
 }
