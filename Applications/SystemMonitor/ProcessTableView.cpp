@@ -28,7 +28,7 @@ void ProcessTableView::refresh()
 
 pid_t ProcessTableView::selected_pid() const
 {
-    if (!model()->selected_index().is_valid())
+    if (selection().is_empty())
         return -1;
-    return model()->data(model()->index(model()->selected_index().row(), ProcessModel::Column::PID), GModel::Role::Sort).as_int();
+    return model()->data(model()->index(selection().first().row(), ProcessModel::Column::PID), GModel::Role::Sort).as_int();
 }
