@@ -18,3 +18,9 @@
 #define PRIx16 "w"
 #define PRIx32 "x"
 #define PRIx64 "llx"
+
+#define __PRI64_PREFIX "ll"
+#define __PRIPTR_PREFIX
+
+#define PRIdPTR __PRIPTR_PREFIX "d"
+#define PRIiPTR __PRIPTR_PREFIX "i"
