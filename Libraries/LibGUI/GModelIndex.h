@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
 
 class GModel;
 
@@ -47,4 +47,11 @@ private:
 inline const LogStream& operator<<(const LogStream& stream, const GModelIndex& value)
 {
     return stream << String::format("GModelIndex(%d,%d)", value.row(), value.column());
+}
+
+namespace AK {
+template<>
+struct Traits<GModelIndex> : public GenericTraits<GModelIndex> {
+    static unsigned hash(const GModelIndex& index) { return pair_int_hash(index.row(), index.column()); }
+};
 }
