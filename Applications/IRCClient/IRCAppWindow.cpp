@@ -202,7 +202,7 @@ void IRCAppWindow::set_active_window(IRCWindow& window)
     m_container->set_active_widget(&window);
     window.clear_unread_count();
     auto index = m_window_list->model()->index(m_client.window_index(window));
-    m_window_list->model()->set_selected_index(index);
+    m_window_list->selection().set(index);
 }
 
 void IRCAppWindow::update_part_action()
