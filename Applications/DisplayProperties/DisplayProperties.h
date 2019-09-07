@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/AKString.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibCore/CConfigFile.h>
 #include <LibDraw/Color.h>
