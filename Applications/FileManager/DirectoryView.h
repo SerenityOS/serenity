@@ -34,6 +34,25 @@ public:
     void set_view_mode(ViewMode);
     ViewMode view_mode() const { return m_view_mode; }
 
+    const GAbstractView& current_view() const
+    {
+        switch (m_view_mode) {
+        case ViewMode::List:
+            return *m_table_view;
+        case ViewMode::Icon:
+            return *m_item_view;
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
+    template<typename Callback>
+    void for_each_view_implementation(Callback callback)
+    {
+        callback(*m_table_view);
+        callback(*m_item_view);
+    }
+
 private:
     GDirectoryModel& model() { return *m_model; }
     const GDirectoryModel& model() const { return *m_model; }
