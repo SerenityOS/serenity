@@ -8,6 +8,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
+bool copy_file(String, String);
+
 int main(int argc, char** argv)
 {
     CArgsParser args_parser("cp");
@@ -22,30 +24,38 @@ int main(int argc, char** argv)
     }
     String src_path = values[0];
     String dst_path = values[1];
+    return copy_file(src_path, dst_path) ? 0 : 1;
+}
 
+/**
+ * Copy a source file to a destination file. Returns true if successful, false 
+ * otherwise. If there is an error, its description is output to stderr.
+ */
+bool copy_file(String src_path, String dst_path)
+{
     int src_fd = open(src_path.characters(), O_RDONLY);
     if (src_fd < 0) {
         perror("open src");
-        return 1;
+        return false;
     }
 
     struct stat src_stat;
     int rc = fstat(src_fd, &src_stat);
     if (rc < 0) {
         perror("stat src");
-        return 1;
+        return false;
     }
 
     if (S_ISDIR(src_stat.st_mode)) {
         fprintf(stderr, "cp: FIXME: Copying directories is not yet supported\n");
-        return 1;
+        return false;
     }
 
     int dst_fd = creat(dst_path.characters(), 0666);
     if (dst_fd < 0) {
         if (errno != EISDIR) {
             perror("open dst");
-            return 1;
+            return false;
         }
         StringBuilder builder;
         builder.append(dst_path);
@@ -55,7 +65,7 @@ int main(int argc, char** argv)
         dst_fd = creat(dst_path.characters(), 0666);
         if (dst_fd < 0) {
             perror("open dst");
-            return 1;
+            return false;
         }
     }
 
@@ -64,7 +74,7 @@ int main(int argc, char** argv)
         ssize_t nread = read(src_fd, buffer, sizeof(buffer));
         if (nread < 0) {
             perror("read src");
-            return 1;
+            return false;
         }
         if (nread == 0)
             break;
@@ -74,7 +84,7 @@ int main(int argc, char** argv)
             ssize_t nwritten = write(dst_fd, bufptr, remaining_to_write);
             if (nwritten < 0) {
                 perror("write dst");
-                return 1;
+                return false;
             }
             assert(nwritten > 0);
             remaining_to_write -= nwritten;
@@ -87,10 +97,10 @@ int main(int argc, char** argv)
     rc = fchmod(dst_fd, src_stat.st_mode & ~my_umask);
     if (rc < 0) {
         perror("fchmod dst");
-        return 1;
+        return false;
     }
 
     close(src_fd);
     close(dst_fd);
-    return 0;
+    return true;
 }
