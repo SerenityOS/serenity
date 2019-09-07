@@ -349,5 +349,4 @@ void GDirectoryModel::open(const StringView& a_path)
         ASSERT(rc >= 0);
     };
     update();
-    set_selected_index(index(0, 0));
 }
