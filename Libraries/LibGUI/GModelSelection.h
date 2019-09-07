@@ -14,9 +14,18 @@ public:
 
     bool is_empty() const { return m_indexes.is_empty(); }
     bool contains(const GModelIndex& index) const { return m_indexes.contains(index); }
+    bool contains_row(int row) const
+    {
+        for (auto& index : m_indexes) {
+            if (index.row() == row)
+                return true;
+        }
+        return false;
+    }
 
     void set(const GModelIndex&);
     void add(const GModelIndex&);
+    void toggle(const GModelIndex&);
     bool remove(const GModelIndex&);
     void clear();
 
