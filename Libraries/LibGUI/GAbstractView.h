@@ -2,6 +2,7 @@
 
 #include <AK/Function.h>
 #include <LibGUI/GModel.h>
+#include <LibGUI/GModelSelection.h>
 #include <LibGUI/GScrollableWidget.h>
 
 class GModelEditingDelegate;
@@ -9,6 +10,7 @@ class GModelEditingDelegate;
 class GAbstractView : public GScrollableWidget {
     C_OBJECT(GAbstractView)
     friend class GModel;
+
 public:
     explicit GAbstractView(GWidget* parent);
     virtual ~GAbstractView() override;
@@ -16,6 +18,9 @@ public:
     void set_model(RefPtr<GModel>&&);
     GModel* model() { return m_model.ptr(); }
     const GModel* model() const { return m_model.ptr(); }
+
+    GModelSelection& selection() { return m_selection; }
+    const GModelSelection& selection() const { return m_selection; }
 
     bool is_editable() const { return m_editable; }
     void set_editable(bool editable) { m_editable = editable; }
@@ -37,6 +42,8 @@ public:
 
     Function<OwnPtr<GModelEditingDelegate>(const GModelIndex&)> aid_create_editing_delegate;
 
+    void notify_selection_changed(Badge<GModelSelection>);
+
 protected:
     virtual void did_scroll() override;
     void activate(const GModelIndex&);
@@ -50,5 +57,6 @@ protected:
 private:
     RefPtr<GModel> m_model;
     OwnPtr<GModelEditingDelegate> m_editing_delegate;
+    GModelSelection m_selection;
     bool m_activates_on_selection { false };
 };

@@ -8,6 +8,7 @@
 
 GAbstractView::GAbstractView(GWidget* parent)
     : GScrollableWidget(parent)
+    , m_selection(*this)
 {
 }
 
@@ -95,4 +96,9 @@ void GAbstractView::activate(const GModelIndex& index)
 {
     if (on_activation)
         on_activation(index);
+}
+
+void GAbstractView::notify_selection_changed(Badge<GModelSelection>)
+{
+    update();
 }
