@@ -57,9 +57,6 @@ public:
         return index.row() >= 0 && index.row() < row_count() && index.column() >= 0 && index.column() < column_count();
     }
 
-    void set_selected_index(const GModelIndex&);
-    GModelIndex selected_index() const { return m_selected_index; }
-
     virtual int key_column() const { return -1; }
     virtual GSortOrder sort_order() const { return GSortOrder::None; }
     virtual void set_key_column_and_sort_order(int, GSortOrder) {}
@@ -80,7 +77,6 @@ protected:
 
 private:
     HashTable<GAbstractView*> m_views;
-    GModelIndex m_selected_index;
 };
 
 inline GModelIndex GModelIndex::parent() const

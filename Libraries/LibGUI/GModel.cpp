@@ -34,18 +34,6 @@ void GModel::did_update()
     });
 }
 
-void GModel::set_selected_index(const GModelIndex& index)
-{
-    if (m_selected_index == index)
-        return;
-    m_selected_index = index;
-    if (on_selection_changed)
-        on_selection_changed(index);
-    for_each_view([](auto& view) {
-        view.did_update_selection();
-    });
-}
-
 GModelIndex GModel::create_index(int row, int column, const void* data) const
 {
     return GModelIndex(*this, row, column, const_cast<void*>(data));
