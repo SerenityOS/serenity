@@ -15,7 +15,8 @@ public:
 
     TabPosition tab_position() const { return m_tab_position; }
     void set_tab_position(TabPosition);
-    int get_active_tab() const;
+
+    int active_tab_index() const;
 
     GWidget* active_widget() const { return m_active_widget; }
     void set_active_widget(GWidget*);
