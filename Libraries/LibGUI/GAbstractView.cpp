@@ -100,5 +100,8 @@ void GAbstractView::activate(const GModelIndex& index)
 
 void GAbstractView::notify_selection_changed(Badge<GModelSelection>)
 {
+    did_update_selection();
+    if (on_selection_change)
+        on_selection_change();
     update();
 }

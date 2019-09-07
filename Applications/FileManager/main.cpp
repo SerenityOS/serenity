@@ -77,8 +77,8 @@ int main(int argc, char** argv)
         directory_view->open(location_textbox->text());
     };
 
-    file_system_model->on_selection_changed = [&](auto& index) {
-        auto path = file_system_model->path(index);
+    tree_view->on_selection_change = [&] {
+        auto path = file_system_model->path(tree_view->selection().first());
         if (directory_view->path() == path)
             return;
         directory_view->open(path);
