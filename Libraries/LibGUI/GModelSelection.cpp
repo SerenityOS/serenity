@@ -20,6 +20,16 @@ void GModelSelection::add(const GModelIndex& index)
     m_view.notify_selection_changed({});
 }
 
+void GModelSelection::toggle(const GModelIndex& index)
+{
+    ASSERT(index.is_valid());
+    if (m_indexes.contains(index))
+        m_indexes.remove(index);
+    else
+        m_indexes.set(index);
+    m_view.notify_selection_changed({});
+}
+
 bool GModelSelection::remove(const GModelIndex& index)
 {
     ASSERT(index.is_valid());
