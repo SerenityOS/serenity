@@ -12,7 +12,7 @@ GComboBox::GComboBox(GWidget* parent)
     m_editor = new GTextEditor(GTextEditor::Type::SingleLine, this);
     m_editor->on_change = [this] {
         if (on_change)
-            on_change(m_editor->text(), model()->selected_index());
+            on_change(m_editor->text(), m_list_view->selection().first());
     };
     m_editor->on_return_pressed = [this] {
         if (on_return_pressed)
