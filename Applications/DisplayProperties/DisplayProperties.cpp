@@ -113,7 +113,7 @@ void DisplayPropertiesWidget::create_frame()
     apply_button->set_size_policy(Orientation::Horizontal, SizePolicy::Fixed);
     apply_button->set_preferred_size(60, 22);
     apply_button->on_click = [this, tab_widget](GButton&) {
-        send_settings_to_window_server(tab_widget->get_active_tab());
+        send_settings_to_window_server(tab_widget->active_tab_index());
     };
 
     auto* ok_button = new GButton(bottom_widget);
@@ -122,7 +122,7 @@ void DisplayPropertiesWidget::create_frame()
     ok_button->set_size_policy(Orientation::Horizontal, SizePolicy::Fixed);
     ok_button->set_preferred_size(60, 22);
     ok_button->on_click = [this, tab_widget](GButton&) {
-        send_settings_to_window_server(tab_widget->get_active_tab());
+        send_settings_to_window_server(tab_widget->active_tab_index());
         GApplication::the().quit();
     };
 
