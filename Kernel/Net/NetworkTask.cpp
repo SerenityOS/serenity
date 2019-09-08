@@ -374,12 +374,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     kprintf("handle_tcp: got socket; state=%s\n", socket->tuple().to_string().characters(), TCPSocket::to_string(socket->state()));
 #endif
 
-    if (tcp_packet.ack_number() != socket->sequence_number()) {
-        kprintf("handle_tcp: ack/seq mismatch: got %u, wanted %u\n", tcp_packet.ack_number(), socket->sequence_number());
-        return;
-    }
-
-    socket->record_incoming_data(ipv4_packet.payload_size());
+    socket->receive_tcp_packet(tcp_packet, ipv4_packet.payload_size());
 
     switch (socket->state()) {
     case TCPSocket::State::Closed:

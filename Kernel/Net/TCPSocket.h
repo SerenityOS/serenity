@@ -1,6 +1,8 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/HashMap.h>
+#include <AK/SinglyLinkedList.h>
 #include <AK/WeakPtr.h>
 #include <Kernel/Net/IPv4Socket.h>
 
@@ -119,7 +121,8 @@ public:
     u32 bytes_out() const { return m_bytes_out; }
 
     void send_tcp_packet(u16 flags, const void* = nullptr, int = 0);
-    void record_incoming_data(int);
+    void send_outgoing_packets();
+    void receive_tcp_packet(const TCPPacket&, u16 size);
 
     static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
     static RefPtr<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
@@ -159,4 +162,13 @@ private:
     u32 m_bytes_in { 0 };
     u32 m_packets_out { 0 };
     u32 m_bytes_out { 0 };
+
+    struct OutgoingPacket {
+        u32 ack_number;
+        ByteBuffer buffer;
+        int tx_counter { 0 };
+        timeval tx_time;
+    };
+
+    SinglyLinkedList<OutgoingPacket> m_not_acked;
 };
