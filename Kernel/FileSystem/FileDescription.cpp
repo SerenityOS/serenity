@@ -219,7 +219,6 @@ String FileDescription::absolute_path() const
 {
     if (m_custody)
         return m_custody->absolute_path();
-    dbgprintf("FileDescription::absolute_path() for FD without custody, File type: %s\n", m_file->class_name());
     return m_file->absolute_path(*this);
 }
 
