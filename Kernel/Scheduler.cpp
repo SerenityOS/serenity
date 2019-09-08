@@ -195,6 +195,11 @@ Thread::WaitBlocker::WaitBlocker(int wait_options, pid_t& waitee_pid)
 bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
 {
     bool should_unblock = false;
+    if (m_waitee_pid != -1) {
+        auto* peer = Process::from_pid(m_waitee_pid);
+        if (!peer)
+            return true;
+    }
     thread.process().for_each_child([&](Process& child) {
         if (m_waitee_pid != -1 && m_waitee_pid != child.pid())
             return IterationDecision::Continue;
