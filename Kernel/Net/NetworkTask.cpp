@@ -406,7 +406,6 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
-            client->set_sequence_number(1001);
             client->set_state(TCPSocket::State::SynReceived);
             return;
         }
