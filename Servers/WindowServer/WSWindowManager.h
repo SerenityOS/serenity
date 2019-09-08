@@ -205,18 +205,26 @@ private:
     InlineLinkedList<WSWindow> m_windows_in_order;
 
     struct DoubleClickInfo {
-        CElapsedTimer& click_clock(MouseButton);
+        struct ClickMetadata {
+            CElapsedTimer clock;
+            Point last_position;
+        };
+
+        ClickMetadata& metadata_for_button(MouseButton);
+
         void reset()
         {
-            m_left_click_clock = CElapsedTimer();
-            m_right_click_clock = CElapsedTimer();
-            m_middle_click_clock = CElapsedTimer();
+            m_left = {};
+            m_right = {};
+            m_middle = {};
         }
 
         WeakPtr<WSWindow> m_clicked_window;
-        CElapsedTimer m_left_click_clock;
-        CElapsedTimer m_right_click_clock;
-        CElapsedTimer m_middle_click_clock;
+
+    private:
+        ClickMetadata m_left;
+        ClickMetadata m_right;
+        ClickMetadata m_middle;
     };
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
