@@ -389,7 +389,9 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     case TCPSocket::State::Listen:
         switch (tcp_packet.flags()) {
         case TCPFlags::SYN: {
+#ifdef TCP_DEBUG
             kprintf("handle_tcp: incoming connection\n");
+#endif
             auto& local_address = ipv4_packet.destination();
             auto& peer_address = ipv4_packet.source();
             auto client = socket->create_client(local_address, tcp_packet.destination_port(), peer_address, tcp_packet.source_port());
@@ -397,7 +399,9 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
                 kprintf("handle_tcp: couldn't create client socket\n");
                 return;
             }
+#ifdef TCP_DEBUG
             kprintf("handle_tcp: created new client socket with tuple %s\n", client->tuple().to_string().characters());
+#endif
             client->set_sequence_number(1000);
             client->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
             client->send_tcp_packet(TCPFlags::SYN | TCPFlags::ACK);
