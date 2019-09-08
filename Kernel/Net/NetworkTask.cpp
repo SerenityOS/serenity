@@ -160,6 +160,19 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
         packet.target_protocol_address().to_string().characters());
 #endif
 
+    if (!packet.sender_hardware_address().is_zero() && !packet.sender_protocol_address().is_zero()) {
+        // Someone has this IPv4 address. I guess we can try to remember that.
+        // FIXME: Protect against ARP spamming.
+        // FIXME: Support static ARP table entries.
+        LOCKER(arp_table().lock());
+        arp_table().resource().set(packet.sender_protocol_address(), packet.sender_hardware_address());
+
+        kprintf("ARP table (%d entries):\n", arp_table().resource().size());
+        for (auto& it : arp_table().resource()) {
+            kprintf("%s :: %s\n", it.value.to_string().characters(), it.key.to_string().characters());
+        }
+    }
+
     if (packet.operation() == ARPOperation::Request) {
         // Who has this IP address?
         if (auto adapter = NetworkAdapter::from_ipv4_address(packet.target_protocol_address())) {
@@ -176,19 +189,6 @@ void handle_arp(const EthernetFrameHeader& eth, size_t frame_size)
             adapter->send(packet.sender_hardware_address(), response);
         }
         return;
-    }
-
-    if (packet.operation() == ARPOperation::Response) {
-        // Someone has this IPv4 address. I guess we can try to remember that.
-        // FIXME: Protect against ARP spamming.
-        // FIXME: Support static ARP table entries.
-        LOCKER(arp_table().lock());
-        arp_table().resource().set(packet.sender_protocol_address(), packet.sender_hardware_address());
-
-        kprintf("ARP table (%d entries):\n", arp_table().resource().size());
-        for (auto& it : arp_table().resource()) {
-            kprintf("%s :: %s\n", it.value.to_string().characters(), it.key.to_string().characters());
-        }
     }
 }
 
