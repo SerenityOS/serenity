@@ -300,16 +300,42 @@ static Vector<String> expand_globs(const StringView& path, const StringView& bas
     return res;
 }
 
+static Vector<String> expand_parameters(const StringView& param)
+{
+    bool is_variable = param.length() > 1 && param[0] == '$';
+    if (!is_variable)
+        return { param };
+
+    String variable_name = String(param.substring_view(1, param.length() - 1));
+
+    char* env_value = getenv(variable_name.characters());
+    if (env_value == nullptr)
+        return { "" };
+
+    Vector<String> res;
+    String str_env_value = String(env_value);
+    const auto& split_text = str_env_value.split_view(' ');
+    for (auto& part : split_text)
+        res.append(part);
+    return res;
+}
+
 static Vector<String> process_arguments(const Vector<String>& args)
 {
     Vector<String> argv_string;
     for (auto& arg : args) {
-        auto expanded = expand_globs(arg, "");
-        if (expanded.is_empty())
-            argv_string.append(arg);
-        else
-            for (auto& path : expand_globs(arg, ""))
+        // This will return the text passed in if it wasn't a variable
+        // This lets us just loop over its values
+        auto expanded_parameters = expand_parameters(arg);
+
+        for (auto& exp_arg : expanded_parameters) {
+            auto expanded_globs = expand_globs(exp_arg, "");
+            for (auto& path : expanded_globs)
                 argv_string.append(path);
+
+            if (expanded_globs.is_empty())
+                argv_string.append(exp_arg);
+        }
     }
 
     return argv_string;
