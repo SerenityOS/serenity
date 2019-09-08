@@ -219,13 +219,17 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
     if (packet.has_ack()) {
         u32 ack_number = packet.ack_number();
 
+#ifdef TCP_SOCKET_DEBUG
         dbg() << "TCPSocket: receive_tcp_packet: " << ack_number;
+#endif
 
         int removed = 0;
         while (!m_not_acked.is_empty()) {
             auto& packet = m_not_acked.first();
 
+#ifdef TCP_SOCKET_DEBUG
             dbg() << "TCPSocket: iterate: " << packet.ack_number;
+#endif
 
             if (packet.ack_number <= ack_number) {
                 m_not_acked.take_first();
@@ -235,7 +239,9 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
             }
         }
 
+#ifdef TCP_SOCKET_DEBUG
         dbg() << "TCPSocket: receive_tcp_packet acknowledged " << removed << " packets";
+#endif
     }
 
     m_packets_in++;
