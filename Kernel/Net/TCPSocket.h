@@ -122,10 +122,10 @@ public:
     void record_incoming_data(int);
 
     static Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& sockets_by_tuple();
-    static SocketHandle<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
-    static SocketHandle<TCPSocket> from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
+    static RefPtr<TCPSocket> from_tuple(const IPv4SocketTuple& tuple);
+    static RefPtr<TCPSocket> from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
-    SocketHandle<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
+    RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
 protected:
     void set_direction(Direction direction) { m_direction = direction; }
