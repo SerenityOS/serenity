@@ -126,6 +126,9 @@ public:
     static RefPtr<TCPSocket> from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
     RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
+    void set_originator(RefPtr<TCPSocket> originator) { m_originator = originator; }
+    void release_to_originator();
+    void release_for_accept(RefPtr<TCPSocket>);
 
 protected:
     void set_direction(Direction direction) { m_direction = direction; }
@@ -144,6 +147,8 @@ private:
     virtual KResult protocol_bind() override;
     virtual KResult protocol_listen() override;
 
+    RefPtr<TCPSocket> m_originator;
+    HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
     Error m_error { Error::None };
     WeakPtr<NetworkAdapter> m_adapter;

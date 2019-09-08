@@ -459,6 +459,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
                 socket->set_setup_state(Socket::SetupState::Completed);
                 socket->set_connected(true);
             }
+            socket->release_to_originator();
             return;
         default:
             kprintf("handle_tcp: unexpected flags in SynReceived state\n");
