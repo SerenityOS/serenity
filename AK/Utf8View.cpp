@@ -123,11 +123,18 @@ bool Utf8CodepointIterator::operator!=(const Utf8CodepointIterator& other) const
 
 Utf8CodepointIterator& Utf8CodepointIterator::operator++()
 {
-    do {
-        ASSERT(m_length > 0);
-        m_length--;
-        m_ptr++;
-    } while (m_ptr[0] >> 6 == 2);
+    ASSERT(m_length > 0);
+
+    int codepoint_length_in_bytes;
+    u32 value;
+    bool first_byte_makes_sense = decode_first_byte(*m_ptr, codepoint_length_in_bytes, value);
+
+    ASSERT(first_byte_makes_sense);
+    (void)value;
+
+    ASSERT(codepoint_length_in_bytes <= m_length);
+    m_ptr += codepoint_length_in_bytes;
+    m_length -= codepoint_length_in_bytes;
 
     return *this;
 }
