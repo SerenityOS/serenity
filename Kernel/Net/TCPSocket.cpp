@@ -37,7 +37,7 @@ Lockable<HashMap<IPv4SocketTuple, TCPSocket*>>& TCPSocket::sockets_by_tuple()
     return *s_map;
 }
 
-SocketHandle<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
+RefPtr<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
 {
     LOCKER(sockets_by_tuple().lock());
 
@@ -58,12 +58,12 @@ SocketHandle<TCPSocket> TCPSocket::from_tuple(const IPv4SocketTuple& tuple)
     return {};
 }
 
-SocketHandle<TCPSocket> TCPSocket::from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port)
+RefPtr<TCPSocket> TCPSocket::from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port)
 {
     return from_tuple(IPv4SocketTuple(local_address, local_port, peer_address, peer_port));
 }
 
-SocketHandle<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
+RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address, u16 new_local_port, const IPv4Address& new_peer_address, u16 new_peer_port)
 {
     auto tuple = IPv4SocketTuple(new_local_address, new_local_port, new_peer_address, new_peer_port);
 
