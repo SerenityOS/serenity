@@ -20,6 +20,7 @@
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>
 #include <errno.h>
+#include <math.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -598,15 +599,15 @@ void WSWindowManager::set_cursor_tracking_button(WSButton* button)
     m_cursor_tracking_button = button ? button->make_weak_ptr() : nullptr;
 }
 
-CElapsedTimer& WSWindowManager::DoubleClickInfo::click_clock(MouseButton button)
+auto WSWindowManager::DoubleClickInfo::metadata_for_button(MouseButton button) -> ClickMetadata&
 {
     switch (button) {
     case MouseButton::Left:
-        return m_left_click_clock;
+        return m_left;
     case MouseButton::Right:
-        return m_right_click_clock;
+        return m_right;
     case MouseButton::Middle:
-        return m_middle_click_clock;
+        return m_middle;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -629,31 +630,38 @@ void WSWindowManager::process_event_for_doubleclick(WSWindow& window, WSMouseEve
         m_double_click_info.reset();
     }
 
-    auto& clock = m_double_click_info.click_clock(event.button());
+    auto& metadata = m_double_click_info.metadata_for_button(event.button());
 
     // if the clock is invalid, we haven't clicked with this button on this
     // window yet, so there's nothing to do.
-    if (!clock.is_valid()) {
-        clock.start();
+    if (!metadata.clock.is_valid()) {
+        metadata.clock.start();
     } else {
-        int elapsed_since_last_click = clock.elapsed();
-        clock.start();
-
-        // FIXME: It might be a sensible idea to also add a distance travel check.
-        // If the pointer moves too far, it's not a double click.
+        int elapsed_since_last_click = metadata.clock.elapsed();
+        metadata.clock.start();
         if (elapsed_since_last_click < m_double_click_speed) {
+            auto diff = event.position() - metadata.last_position;
+            auto distance_travelled = (int)sqrt(diff.x() * diff.x() + diff.y() * diff.y());
+
+            if (distance_travelled > 4) {
+                // too far; try again
+                metadata.clock.start();
+            } else {
 #if defined(DOUBLECLICK_DEBUG)
-            dbg() << "Transforming MouseUp to MouseDoubleClick (" << elapsed_since_last_click << " < " << m_double_click_speed << ")!";
+                dbg() << "Transforming MouseUp to MouseDoubleClick (" << elapsed_since_last_click << " < " << m_double_click_speed << ")!";
 #endif
-            event = WSMouseEvent(WSEvent::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
-            // invalidate this now we've delivered a doubleclick, otherwise
-            // tripleclick will deliver two doubleclick events (incorrectly).
-            clock = CElapsedTimer();
+                event = WSMouseEvent(WSEvent::MouseDoubleClick, event.position(), event.buttons(), event.button(), event.modifiers(), event.wheel_delta());
+                // invalidate this now we've delivered a doubleclick, otherwise
+                // tripleclick will deliver two doubleclick events (incorrectly).
+                metadata.clock = {};
+            }
         } else {
             // too slow; try again
-            clock.start();
+            metadata.clock.start();
         }
     }
+
+    metadata.last_position = event.position();
 }
 
 void WSWindowManager::deliver_mouse_event(WSWindow& window, WSMouseEvent& event)
