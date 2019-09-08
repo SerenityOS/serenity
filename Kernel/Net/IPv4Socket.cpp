@@ -106,6 +106,7 @@ KResult IPv4Socket::listen(int backlog)
         return KResult(-EADDRINUSE);
 
     set_backlog(backlog);
+    m_role = Role::Listener;
 
     kprintf("IPv4Socket{%p} listening with backlog=%d\n", this, backlog);
 
