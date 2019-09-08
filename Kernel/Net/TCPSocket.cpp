@@ -138,9 +138,6 @@ int TCPSocket::protocol_send(const void* data, int data_length)
 
 void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size)
 {
-    auto routing_decision = route_to(peer_address(), local_address());
-    ASSERT(!routing_decision.is_zero());
-
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
     auto& tcp_packet = *(TCPPacket*)(buffer.pointer());
     ASSERT(local_port());
@@ -162,29 +159,87 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
 
     memcpy(tcp_packet.payload(), payload, payload_size);
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
-#ifdef TCP_SOCKET_DEBUG
-    kprintf("sending tcp packet from %s:%u to %s:%u with (%s%s%s%s) seq_no=%u, ack_no=%u\n",
-        local_address().to_string().characters(),
-        local_port(),
-        peer_address().to_string().characters(),
-        peer_port(),
-        tcp_packet.has_syn() ? "SYN " : "",
-        tcp_packet.has_ack() ? "ACK " : "",
-        tcp_packet.has_fin() ? "FIN " : "",
-        tcp_packet.has_rst() ? "RST " : "",
-        tcp_packet.sequence_number(),
-        tcp_packet.ack_number());
-#endif
-    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::TCP, buffer.data(), buffer.size());
 
-    m_packets_out++;
-    m_bytes_out += buffer.size();
+    if (tcp_packet.has_syn() || payload_size > 0) {
+        m_not_acked.append({ m_sequence_number, buffer, 0, {} });
+        send_outgoing_packets();
+    } else {
+        auto routing_decision = route_to(peer_address(), local_address());
+        ASSERT(!routing_decision.is_zero());
+
+        routing_decision.adapter->send_ipv4(
+            routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
+            buffer.data(), buffer.size());
+
+        m_packets_out++;
+        m_bytes_out += buffer.size();
+    }
 }
 
-void TCPSocket::record_incoming_data(int size)
+void TCPSocket::send_outgoing_packets()
 {
+    auto routing_decision = route_to(peer_address(), local_address());
+    ASSERT(!routing_decision.is_zero());
+
+    auto now = kgettimeofday();
+
+    for (auto& packet : m_not_acked) {
+        if (now.tv_sec <= packet.tx_time.tv_sec)
+            continue;
+
+        packet.tx_time = now;
+        packet.tx_counter++;
+
+#ifdef TCP_SOCKET_DEBUG
+        auto& tcp_packet = *(TCPPacket*)(packet.buffer.pointer());
+        kprintf("sending tcp packet from %s:%u to %s:%u with (%s%s%s%s) seq_no=%u, ack_no=%u, tx_counter=%u\n",
+            local_address().to_string().characters(),
+            local_port(),
+            peer_address().to_string().characters(),
+            peer_port(),
+            tcp_packet.has_syn() ? "SYN " : "",
+            tcp_packet.has_ack() ? "ACK " : "",
+            tcp_packet.has_fin() ? "FIN " : "",
+            tcp_packet.has_rst() ? "RST " : "",
+            tcp_packet.sequence_number(),
+            tcp_packet.ack_number(),
+            packet.tx_counter);
+#endif
+        routing_decision.adapter->send_ipv4(
+            routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
+            packet.buffer.data(), packet.buffer.size());
+
+        m_packets_out++;
+        m_bytes_out += packet.buffer.size();
+    }
+}
+
+void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
+{
+    if (packet.has_ack()) {
+        u32 ack_number = packet.ack_number();
+
+        dbg() << "TCPSocket: receive_tcp_packet: " << ack_number;
+
+        int removed = 0;
+        while (!m_not_acked.is_empty()) {
+            auto& packet = m_not_acked.first();
+
+            dbg() << "TCPSocket: iterate: " << packet.ack_number;
+
+            if (packet.ack_number <= ack_number) {
+                m_not_acked.take_first();
+                removed++;
+            } else {
+                break;
+            }
+        }
+
+        dbg() << "TCPSocket: receive_tcp_packet acknowledged " << removed << " packets";
+    }
+
     m_packets_in++;
-    m_bytes_in += size;
+    m_bytes_in += packet.header_size() + size;
 }
 
 NetworkOrdered<u16> TCPSocket::compute_tcp_checksum(const IPv4Address& source, const IPv4Address& destination, const TCPPacket& packet, u16 payload_size)
