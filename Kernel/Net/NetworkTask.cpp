@@ -455,10 +455,9 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         case TCPFlags::ACK:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
             socket->set_state(TCPSocket::State::Established);
-            if (socket->direction() == TCPSocket::Direction::Outgoing) {
-                socket->set_setup_state(Socket::SetupState::Completed);
+            socket->set_setup_state(Socket::SetupState::Completed);
+            if (socket->direction() == TCPSocket::Direction::Outgoing)
                 socket->set_connected(true);
-            }
             socket->release_to_originator();
             return;
         default:
