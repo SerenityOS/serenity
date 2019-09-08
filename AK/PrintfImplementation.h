@@ -331,11 +331,11 @@ template<typename PutChFunc>
                 break;
 
             case 'w':
-                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, left_pad, zeroPad, 4);
+                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, true, true, 4);
                 break;
 
             case 'b':
-                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, left_pad, zeroPad, 2);
+                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, true, true, 2);
                 break;
 
             case 'c':
