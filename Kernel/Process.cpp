@@ -1554,6 +1554,9 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 
     // NOTE: If waitee was -1, m_waitee_pid will have been filled in by the scheduler.
     Process* waitee_process = Process::from_pid(waitee_pid);
+    if (!waitee_process)
+        return -ECHILD;
+
     ASSERT(waitee_process);
     if (waitee_process->is_dead()) {
         exit_status = reap(*waitee_process);
