@@ -453,11 +453,32 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
         switch (tcp_packet.flags()) {
         case TCPFlags::ACK:
             socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
-            socket->set_state(TCPSocket::State::Established);
-            socket->set_setup_state(Socket::SetupState::Completed);
-            if (socket->direction() == TCPSocket::Direction::Outgoing)
+
+            switch (socket->direction()) {
+            case TCPSocket::Direction::Incoming:
+                if (!socket->has_originator()) {
+                    kprintf("handle_tcp: connection doesn't have an originating socket; maybe it went away?\n");
+                    socket->send_tcp_packet(TCPFlags::RST);
+                    socket->set_state(TCPSocket::State::Closed);
+                    return;
+                }
+
+                socket->set_state(TCPSocket::State::Established);
+                socket->set_setup_state(Socket::SetupState::Completed);
+                socket->release_to_originator();
+                return;
+            case TCPSocket::Direction::Outgoing:
+                socket->set_state(TCPSocket::State::Established);
+                socket->set_setup_state(Socket::SetupState::Completed);
                 socket->set_connected(true);
-            socket->release_to_originator();
+                return;
+            default:
+                kprintf("handle_tcp: got ACK in SynReceived state but direction is invalid (%s)\n", TCPSocket::to_string(socket->direction()));
+                socket->send_tcp_packet(TCPFlags::RST);
+                socket->set_state(TCPSocket::State::Closed);
+                return;
+            }
+
             return;
         default:
             kprintf("handle_tcp: unexpected flags in SynReceived state\n");
