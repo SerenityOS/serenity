@@ -185,7 +185,7 @@ const char* Thread::state_string() const
         ASSERT(!m_blockers.is_empty());
         return m_blockers.first()->state_string();
     }
-    kprintf("to_string(Thread::State): Invalid state: %u\n", state());
+    kprintf("Thread::state_string(): Invalid state: %u\n", state());
     ASSERT_NOT_REACHED();
     return nullptr;
 }
@@ -457,7 +457,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     }
 
 #ifdef SIGNAL_DEBUG
-    kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", process().name().characters(), pid(), to_string(state()), m_tss.cs, m_tss.eip);
+    kprintf("signal: Okay, %s(%u) {%s} has been primed with signal handler %w:%x\n", process().name().characters(), pid(), state_string(), m_tss.cs, m_tss.eip);
 #endif
     return ShouldUnblockThread::Yes;
 }
