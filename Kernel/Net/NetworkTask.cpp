@@ -437,7 +437,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
             socket->set_setup_state(Socket::SetupState::Completed);
             return;
         case TCPFlags::ACK | TCPFlags::RST:
-            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
             socket->send_tcp_packet(TCPFlags::ACK);
             socket->set_state(TCPSocket::State::Closed);
             socket->set_error(TCPSocket::Error::RSTDuringConnect);
@@ -454,7 +454,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     case TCPSocket::State::SynReceived:
         switch (tcp_packet.flags()) {
         case TCPFlags::ACK:
-            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
             socket->set_state(TCPSocket::State::Established);
             if (socket->direction() == TCPSocket::Direction::Outgoing) {
                 socket->set_setup_state(Socket::SetupState::Completed);
@@ -478,7 +478,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     case TCPSocket::State::LastAck:
         switch (tcp_packet.flags()) {
         case TCPFlags::ACK:
-            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
             socket->set_state(TCPSocket::State::Closed);
             return;
         default:
@@ -490,7 +490,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     case TCPSocket::State::FinWait1:
         switch (tcp_packet.flags()) {
         case TCPFlags::ACK:
-            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
             socket->set_state(TCPSocket::State::FinWait2);
             return;
         case TCPFlags::FIN:
@@ -518,7 +518,7 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     case TCPSocket::State::Closing:
         switch (tcp_packet.flags()) {
         case TCPFlags::ACK:
-            socket->set_ack_number(tcp_packet.sequence_number() + payload_size + 1);
+            socket->set_ack_number(tcp_packet.sequence_number() + payload_size);
             socket->set_state(TCPSocket::State::TimeWait);
             return;
         default:
