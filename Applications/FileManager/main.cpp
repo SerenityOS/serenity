@@ -198,10 +198,8 @@ int main(int argc, char** argv)
         window->set_title(String::format("File Manager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
         auto new_index = file_system_model->index(new_path);
-        directory_view->for_each_view_implementation([&](auto& view) {
-            view.selection().set(new_index);
-        });
-        tree_view->scroll_into_view(directory_view->current_view().selection().first(), Orientation::Vertical);
+        tree_view->selection().set(new_index);
+        tree_view->scroll_into_view(new_index, Orientation::Vertical);
         tree_view->update();
 
         go_forward_action->set_enabled(directory_view->path_history_position()
