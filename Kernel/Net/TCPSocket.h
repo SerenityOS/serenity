@@ -6,7 +6,8 @@
 #include <AK/WeakPtr.h>
 #include <Kernel/Net/IPv4Socket.h>
 
-class TCPSocket final : public IPv4Socket {
+class TCPSocket final : public IPv4Socket
+    , public Weakable<TCPSocket> {
 public:
     static void for_each(Function<void(TCPSocket&)>);
     static NonnullRefPtr<TCPSocket> create(int protocol);
@@ -129,7 +130,8 @@ public:
     static RefPtr<TCPSocket> from_endpoints(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
 
     RefPtr<TCPSocket> create_client(const IPv4Address& local_address, u16 local_port, const IPv4Address& peer_address, u16 peer_port);
-    void set_originator(RefPtr<TCPSocket> originator) { m_originator = originator; }
+    void set_originator(TCPSocket& originator) { m_originator = originator.make_weak_ptr(); }
+    bool has_originator() { return !!m_originator; }
     void release_to_originator();
     void release_for_accept(RefPtr<TCPSocket>);
 
@@ -150,7 +152,7 @@ private:
     virtual KResult protocol_bind() override;
     virtual KResult protocol_listen() override;
 
-    RefPtr<TCPSocket> m_originator;
+    WeakPtr<TCPSocket> m_originator;
     HashMap<IPv4SocketTuple, NonnullRefPtr<TCPSocket>> m_pending_release_for_accept;
     Direction m_direction { Direction::Unspecified };
     Error m_error { Error::None };
