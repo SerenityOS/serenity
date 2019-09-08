@@ -79,12 +79,25 @@ RefPtr<TCPSocket> TCPSocket::create_client(const IPv4Address& new_local_address,
     client->set_peer_address(new_peer_address);
     client->set_peer_port(new_peer_port);
     client->set_direction(Direction::Incoming);
+    client->set_originator(*this);
 
-    queue_connection_from(client);
-
+    m_pending_release_for_accept.set(tuple, client);
     sockets_by_tuple().resource().set(tuple, client);
 
     return from_tuple(tuple);
+}
+
+void TCPSocket::release_to_originator()
+{
+    ASSERT(!!m_originator);
+    m_originator->release_for_accept(this);
+}
+
+void TCPSocket::release_for_accept(RefPtr<TCPSocket> socket)
+{
+    ASSERT(m_pending_release_for_accept.contains(socket->tuple()));
+    m_pending_release_for_accept.remove(socket->tuple());
+    queue_connection_from(*socket);
 }
 
 TCPSocket::TCPSocket(int protocol)
