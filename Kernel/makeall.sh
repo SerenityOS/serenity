@@ -72,6 +72,7 @@ build_targets="$build_targets ../Games/Snake"
 
 build_targets="$build_targets ../Servers/SystemServer"
 build_targets="$build_targets ../Servers/TTYServer"
+build_targets="$build_targets ../Servers/TelnetServer"
 build_targets="$build_targets ../Servers/WindowServer"
 
 build_targets="$build_targets ../Shell"
