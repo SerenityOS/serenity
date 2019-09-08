@@ -70,10 +70,6 @@ static void console_putch(char*&, char ch)
 {
     if (serial_debug)
         serial_putch(ch);
-    if (!current) {
-        IO::out8(0xe9, ch);
-        return;
-    }
     Console::the().put_char(ch);
 }
 
