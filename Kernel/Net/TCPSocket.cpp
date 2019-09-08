@@ -1,3 +1,4 @@
+#include <AK/Time.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -184,7 +185,9 @@ void TCPSocket::send_outgoing_packets()
     auto now = kgettimeofday();
 
     for (auto& packet : m_not_acked) {
-        if (now.tv_sec <= packet.tx_time.tv_sec)
+        timeval diff;
+        timeval_sub(packet.tx_time, now, diff);
+        if (diff.tv_sec < 1 && diff.tv_usec <= 500000)
             continue;
 
         packet.tx_time = now;
