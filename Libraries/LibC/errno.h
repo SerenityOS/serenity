@@ -19,4 +19,6 @@ extern const char* sys_errlist[];
 extern int sys_nerr;
 extern __thread int errno;
 
+#define errno errno
+
 __END_DECLS
