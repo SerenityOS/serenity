@@ -20,7 +20,6 @@
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>
 #include <errno.h>
-#include <math.h>
 #include <stdio.h>
 #include <time.h>
 #include <unistd.h>
@@ -641,9 +640,8 @@ void WSWindowManager::process_event_for_doubleclick(WSWindow& window, WSMouseEve
         metadata.clock.start();
         if (elapsed_since_last_click < m_double_click_speed) {
             auto diff = event.position() - metadata.last_position;
-            auto distance_travelled = (int)sqrt(diff.x() * diff.x() + diff.y() * diff.y());
-
-            if (distance_travelled > 4) {
+            auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
+            if (distance_travelled_squared > (m_max_distance_for_double_click * m_max_distance_for_double_click)) {
                 // too far; try again
                 metadata.clock.start();
             } else {
