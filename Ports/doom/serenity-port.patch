@@ -1,0 +1,337 @@
+commit 393753ace53e70ba759c5e5f04d1475425dd5194
+Author: Andreas Kling <awesomekling@gmail.com>
+Date:   Mon Sep 9 18:51:34 2019 +0200
+
+    Port doomgeneric to Serenity OS.
+    
+    Thanks for the awesome doomgeneric project, ozkl!
+
+diff --git a/doomgeneric/Makefile b/doomgeneric/Makefile
+index f1d8df5..e43dde2 100644
+--- a/doomgeneric/Makefile
++++ b/doomgeneric/Makefile
+@@ -12,17 +12,19 @@ else
+ endif
+ 
+ 
+-CC=gcc  # gcc or g++
++CC=i686-pc-serenity-gcc
++CXX=i686-pc-serenity-g++
+ CFLAGS+=-ggdb3 -Os
++CXXFLAGS=$(CFLAGS) -std=c++17 -fno-rtti -fno-exceptions
+ LDFLAGS+=-Wl,--gc-sections
+ CFLAGS+=-ggdb3 -Wall -DNORMALUNIX -DLINUX -DSNDSERV # -DUSEASM
+-LIBS+=-lm -lc -lX11
++LIBS+=-lm -lc -lgui -lcore -ldraw
+ 
+ # subdirectory for objects
+ OBJDIR=build
+-OUTPUT=doomgeneric
++OUTPUT=doom
+ 
+-SRC_DOOM = i_main.o dummy.o am_map.o doomdef.o doomstat.o dstrings.o d_event.o d_items.o d_iwad.o d_loop.o d_main.o d_mode.o d_net.o f_finale.o f_wipe.o g_game.o hu_lib.o hu_stuff.o info.o i_cdmus.o i_endoom.o i_joystick.o i_scale.o i_sound.o i_system.o i_timer.o memio.o m_argv.o m_bbox.o m_cheat.o m_config.o m_controls.o m_fixed.o m_menu.o m_misc.o m_random.o p_ceilng.o p_doors.o p_enemy.o p_floor.o p_inter.o p_lights.o p_map.o p_maputl.o p_mobj.o p_plats.o p_pspr.o p_saveg.o p_setup.o p_sight.o p_spec.o p_switch.o p_telept.o p_tick.o p_user.o r_bsp.o r_data.o r_draw.o r_main.o r_plane.o r_segs.o r_sky.o r_things.o sha1.o sounds.o statdump.o st_lib.o st_stuff.o s_sound.o tables.o v_video.o wi_stuff.o w_checksum.o w_file.o w_main.o w_wad.o z_zone.o w_file_stdc.o i_input.o i_video.o doomgeneric.o doomgeneric_xlib.o
++SRC_DOOM = i_main.o dummy.o am_map.o doomdef.o doomstat.o dstrings.o d_event.o d_items.o d_iwad.o d_loop.o d_main.o d_mode.o d_net.o f_finale.o f_wipe.o g_game.o hu_lib.o hu_stuff.o info.o i_cdmus.o i_endoom.o i_joystick.o i_scale.o i_sound.o i_system.o i_timer.o memio.o m_argv.o m_bbox.o m_cheat.o m_config.o m_controls.o m_fixed.o m_menu.o m_misc.o m_random.o p_ceilng.o p_doors.o p_enemy.o p_floor.o p_inter.o p_lights.o p_map.o p_maputl.o p_mobj.o p_plats.o p_pspr.o p_saveg.o p_setup.o p_sight.o p_spec.o p_switch.o p_telept.o p_tick.o p_user.o r_bsp.o r_data.o r_draw.o r_main.o r_plane.o r_segs.o r_sky.o r_things.o sha1.o sounds.o statdump.o st_lib.o st_stuff.o s_sound.o tables.o v_video.o wi_stuff.o w_checksum.o w_file.o w_main.o w_wad.o z_zone.o w_file_stdc.o i_input.o i_video.o doomgeneric.o doomgeneric_serenity.o
+ OBJS += $(addprefix $(OBJDIR)/, $(SRC_DOOM))
+ 
+ all:	 $(OUTPUT)
+@@ -35,7 +37,7 @@ clean:
+ 
+ $(OUTPUT):	$(OBJS)
+ 	@echo [Linking $@]
+-	$(VB)$(CC) $(CFLAGS) $(LDFLAGS) $(OBJS) \
++	$(VB)$(CXX) $(CXXFLAGS) $(LDFLAGS) $(OBJS) \
+ 	-o $(OUTPUT) $(LIBS) -Wl,-Map,$(OUTPUT).map
+ 	@echo [Size]
+ 	-$(CROSS_COMPILE)size $(OUTPUT)
+@@ -49,6 +51,13 @@ $(OBJDIR)/%.o:	%.c
+ 	@echo [Compiling $<]
+ 	$(VB)$(CC) $(CFLAGS) -c $< -o $@
+ 
++$(OBJDIR)/%.o:	%.cpp
++	@echo [Compiling $<]
++	$(VB)$(CXX) $(CXXFLAGS) -c $< -o $@
++
+ print:
+ 	@echo OBJS: $(OBJS)
+ 
++install:
++	cp $(OUTPUT) $(DESTDIR)/bin
++
+diff --git a/doomgeneric/doomgeneric.h b/doomgeneric/doomgeneric.h
+index 2588710..468fbbf 100644
+--- a/doomgeneric/doomgeneric.h
++++ b/doomgeneric/doomgeneric.h
+@@ -3,9 +3,12 @@
+ 
+ #include <stdint.h>
+ 
+-#define DOOMGENERIC_RESX 640
+-#define DOOMGENERIC_RESY 400
++#define DOOMGENERIC_RESX 320
++#define DOOMGENERIC_RESY 200
+ 
++#ifdef __cplusplus
++extern "C" {
++#endif
+ 
+ extern uint32_t* DG_ScreenBuffer;
+ 
+@@ -17,4 +20,8 @@ uint32_t DG_GetTicksMs();
+ int DG_GetKey(int* pressed, unsigned char* key);
+ void DG_SetWindowTitle(const char * title);
+ 
++#ifdef __cplusplus
++}
++#endif
++
+ #endif //DOOM_GENERIC
+diff --git a/doomgeneric/doomgeneric_serenity.cpp b/doomgeneric/doomgeneric_serenity.cpp
+new file mode 100644
+index 0000000..fe749a6
+--- /dev/null
++++ b/doomgeneric/doomgeneric_serenity.cpp
+@@ -0,0 +1,183 @@
++#include "doomkeys.h"
++#include "doomgeneric.h"
++
++#include <stdio.h>
++#include <string.h>
++#include <unistd.h>
++#include <ctype.h>
++#include <sys/time.h>
++
++#include <LibDraw/GraphicsBitmap.h>
++#include <LibGUI/GWindow.h>
++#include <LibGUI/GWidget.h>
++#include <LibGUI/GEvent.h>
++#include <LibGUI/GPainter.h>
++#include <LibCore/CEventLoop.h>
++#include <LibCore/CTimer.h>
++
++static GWindow* g_window;
++static RefPtr<GraphicsBitmap> g_bitmap;
++
++#define KEYQUEUE_SIZE 16
++
++static unsigned short s_KeyQueue[KEYQUEUE_SIZE];
++static unsigned int s_KeyQueueWriteIndex = 0;
++static unsigned int s_KeyQueueReadIndex = 0;
++
++static unsigned char convertToDoomKey(const GKeyEvent& event)
++{
++    unsigned char key = 0;
++	switch (event.key()) {
++    case Key_Return:
++		key = KEY_ENTER;
++		break;
++    case Key_Escape:
++		key = KEY_ESCAPE;
++		break;
++    case Key_Left:
++		key = KEY_LEFTARROW;
++		break;
++    case Key_Right:
++		key = KEY_RIGHTARROW;
++		break;
++    case Key_Up:
++		key = KEY_UPARROW;
++		break;
++    case Key_Down:
++		key = KEY_DOWNARROW;
++		break;
++    case Key_Control:
++		key = KEY_FIRE;
++		break;
++    case Key_Space:
++		key = KEY_USE;
++		break;
++    case Key_LeftShift:
++    case Key_RightShift:
++		key = KEY_RSHIFT;
++		break;
++	default:
++        if (!event.text().is_empty())
++		    key = tolower(event.text()[0]);
++		break;
++	}
++
++	return key;
++}
++
++static void addKeyToQueue(const GKeyEvent& event)
++{
++    bool pressed = event.type() == GEvent::KeyDown;
++	unsigned char key = convertToDoomKey(event);
++
++	unsigned short keyData = (pressed << 8) | key;
++
++	s_KeyQueue[s_KeyQueueWriteIndex] = keyData;
++	s_KeyQueueWriteIndex++;
++	s_KeyQueueWriteIndex %= KEYQUEUE_SIZE;
++}
++
++class DoomWidget final : public GWidget {
++    C_OBJECT(DoomWidget)
++public:
++    DoomWidget(GWidget* parent = nullptr)
++        : GWidget(parent)
++    {
++    }
++
++    virtual void keydown_event(GKeyEvent&) override;
++    virtual void keyup_event(GKeyEvent&) override;
++    virtual void paint_event(GPaintEvent&) override;
++};
++
++void DoomWidget::keydown_event(GKeyEvent& event)
++{
++    addKeyToQueue(event);
++    GWidget::keydown_event(event);
++}
++
++void DoomWidget::keyup_event(GKeyEvent& event)
++{
++    addKeyToQueue(event);
++    GWidget::keyup_event(event);
++}
++
++void DoomWidget::paint_event(GPaintEvent& event)
++{
++    GPainter painter(*this);
++    painter.add_clip_rect(event.rect());
++
++    painter.draw_scaled_bitmap(rect(), *g_bitmap, g_bitmap->rect());
++}
++
++static DoomWidget* g_doom_widget;
++
++extern "C" void DG_Init()
++{
++	memset(s_KeyQueue, 0, KEYQUEUE_SIZE * sizeof(unsigned short));
++
++    // window creation
++
++    g_bitmap = GraphicsBitmap::create_wrapper(GraphicsBitmap::Format::RGB32, Size(DOOMGENERIC_RESX, DOOMGENERIC_RESY), DOOMGENERIC_RESX * 4, DG_ScreenBuffer);
++
++    g_window = new GWindow;
++    g_window->set_double_buffering_enabled(false);
++    g_window->set_rect(100, 100, DOOMGENERIC_RESX * 2, DOOMGENERIC_RESY * 2);
++
++    g_doom_widget = new DoomWidget;
++    g_window->set_main_widget(g_doom_widget);
++
++    new CTimer(33, [] {
++        g_doom_widget->update();
++    });
++
++    g_window->show();
++}
++
++
++extern "C" void DG_DrawFrame()
++{
++    CEventLoop::current().pump(CEventLoop::WaitMode::PollForEvents);
++}
++
++extern "C" void DG_SleepMs(uint32_t ms)
++{
++    usleep (ms * 1000);
++}
++
++extern "C" uint32_t DG_GetTicksMs()
++{
++    struct timeval  tp;
++    struct timezone tzp;
++
++    gettimeofday(&tp, &tzp);
++
++    return (tp.tv_sec * 1000) + (tp.tv_usec / 1000); /* return milliseconds */
++}
++
++extern "C" int DG_GetKey(int* pressed, unsigned char* doomKey)
++{
++	if (s_KeyQueueReadIndex == s_KeyQueueWriteIndex)
++	{
++		//key queue is empty
++
++		return 0;
++	}
++	else
++	{
++		unsigned short keyData = s_KeyQueue[s_KeyQueueReadIndex];
++		s_KeyQueueReadIndex++;
++		s_KeyQueueReadIndex %= KEYQUEUE_SIZE;
++
++		*pressed = keyData >> 8;
++		*doomKey = keyData & 0xFF;
++
++		return 1;
++	}
++}
++
++extern "C" void DG_SetWindowTitle(const char * title)
++{
++    if (g_window)
++        g_window->set_title(title);
++}
+diff --git a/doomgeneric/hu_stuff.c b/doomgeneric/hu_stuff.c
+index b63cac7..e61a243 100644
+--- a/doomgeneric/hu_stuff.c
++++ b/doomgeneric/hu_stuff.c
+@@ -294,7 +294,7 @@ void HU_Init(void)
+     j = HU_FONTSTART;
+     for (i=0;i<HU_FONTSIZE;i++)
+     {
+-	DEH_snprintf(buffer, 9, "STCFN%.3d", j++);
++	DEH_snprintf(buffer, 9, "STCFN%03d", j++);
+ 	hu_font[i] = (patch_t *) W_CacheLumpName(buffer, PU_STATIC);
+     }
+ 
+diff --git a/doomgeneric/i_main.c b/doomgeneric/i_main.cpp
+similarity index 93%
+rename from doomgeneric/i_main.c
+rename to doomgeneric/i_main.cpp
+index b192227..0663ed8 100644
+--- a/doomgeneric/i_main.c
++++ b/doomgeneric/i_main.cpp
+@@ -18,10 +18,14 @@
+ 
+ //#include "config.h"
+ 
++#include <LibGUI/GApplication.h>
++
+ #include <stdio.h>
+ 
++extern "C" {
+ //#include "doomtype.h"
+ //#include "i_system.h"
++
+ #include "m_argv.h"
+ 
+ //
+@@ -35,10 +39,11 @@ void D_DoomMain (void);
+ void M_FindResponseFile(void);
+ 
+ void dg_Create();
+-
++}
+ 
+ int main(int argc, char **argv)
+ {
++    GApplication app(argc, argv);
+     // save arguments
+ 
+     myargc = argc;
+diff --git a/doomgeneric/wi_stuff.c b/doomgeneric/wi_stuff.c
+index ddb9a66..1b19f6f 100644
+--- a/doomgeneric/wi_stuff.c
++++ b/doomgeneric/wi_stuff.c
+@@ -1593,7 +1593,7 @@ static void WI_loadUnloadData(load_callback_t callback)
+ 		    if (wbs->epsd != 1 || j != 8)
+ 		    {
+ 			// animations
+-			DEH_snprintf(name, 9, "WIA%d%.2d%.2d", wbs->epsd, j, i);
++			DEH_snprintf(name, 9, "WIA%d%02d%02d", wbs->epsd, j, i);
+                         callback(name, &a->p[i]);
+ 		    }
+ 		    else
