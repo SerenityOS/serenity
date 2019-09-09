@@ -309,6 +309,8 @@ static Vector<String> expand_parameters(const StringView& param)
     String variable_name = String(param.substring_view(1, param.length() - 1));
     if (variable_name == "?")
         return { String::number(g.last_return_code) };
+    else if (variable_name == "$")
+        return { String::number(getpid()) };
 
     char* env_value = getenv(variable_name.characters());
     if (env_value == nullptr)
