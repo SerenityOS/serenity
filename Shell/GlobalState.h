@@ -14,6 +14,7 @@ struct GlobalState {
     struct termios termios;
     bool was_interrupted { false };
     bool was_resized { false };
+    int last_return_code { 0 };
 };
 
 extern GlobalState g;
