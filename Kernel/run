@@ -45,7 +45,7 @@ elif [ "$1" = "qgrub" ]; then
         -device VGA,vgamem_mb=64 \
         -debugcon stdio \
         -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
-        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888 \
+        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh \
         -hda _disk_image \
         -soundhw pcspk
@@ -57,7 +57,7 @@ else
         -device VGA,vgamem_mb=64 \
         -debugcon stdio \
         -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
-        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888 \
+        -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh \
         -kernel kernel \
         -append "${SERENITY_KERNEL_CMDLINE}" \
