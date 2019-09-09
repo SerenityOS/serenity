@@ -307,6 +307,8 @@ static Vector<String> expand_parameters(const StringView& param)
         return { param };
 
     String variable_name = String(param.substring_view(1, param.length() - 1));
+    if (variable_name == "?")
+        return { String::number(g.last_return_code) };
 
     char* env_value = getenv(variable_name.characters());
     if (env_value == nullptr)
@@ -545,6 +547,8 @@ static int run_command(const String& cmd)
             } while (errno == EINTR);
         }
     }
+
+    g.last_return_code = return_value;
 
     // FIXME: Should I really have to tcsetpgrp() after my child has exited?
     //        Is the terminal controlling pgrp really still the PGID of the dead process?
