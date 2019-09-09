@@ -81,7 +81,6 @@ public:
     private:
         bool m_was_interrupted_while_blocked { false };
         friend class Thread;
-        IntrusiveListNode m_blocker_list_node;
     };
 
     class FileDescriptionBlocker : public Blocker {
@@ -232,9 +231,10 @@ public:
     {
         // We should never be blocking a blocked (or otherwise non-active) thread.
         ASSERT(state() == Thread::Running);
+        ASSERT(m_blocker == nullptr);
 
         T t(AK::forward<Args>(args)...);
-        m_blockers.prepend(t);
+        m_blocker = &t;
 
         // Enter blocked state.
         set_state(Thread::Blocked);
@@ -245,20 +245,8 @@ public:
         // We should no longer be blocked once we woke up
         ASSERT(state() != Thread::Blocked);
 
-        // We should be the first blocker, otherwise we're waking up in a
-        // different order than we are waiting: scheduler bug?
-        ASSERT(m_blockers.first() == &t);
-
         // Remove ourselves...
-        m_blockers.remove(t);
-
-        // If there are still pending blockers that need to be waited for, then
-        // set state back to Blocked, for the next one to be handled.
-        // Otherwise, we're good now, and done with blocking state.
-        if (!m_blockers.is_empty()) {
-            if (!m_blockers.first()->was_interrupted_by_signal())
-                set_state(Thread::Blocked);
-        }
+        m_blocker = nullptr;
 
         if (t.was_interrupted_by_signal())
             return BlockResult::InterruptedBySignal;
@@ -343,7 +331,7 @@ private:
     RefPtr<Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
     SignalActionData m_signal_action_data[32];
-    IntrusiveList<Blocker, &Blocker::m_blocker_list_node> m_blockers;
+    Blocker* m_blocker { nullptr };
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };
     bool m_has_used_fpu { false };

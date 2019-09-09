@@ -179,8 +179,8 @@ const char* Thread::state_string() const
     case Thread::Skip0SchedulerPasses:
         return "Skip0";
     case Thread::Blocked:
-        ASSERT(!m_blockers.is_empty());
-        return m_blockers.first()->state_string();
+        ASSERT(m_blocker != nullptr);
+        return m_blocker->state_string();
     }
     kprintf("Thread::state_string(): Invalid state: %u\n", state());
     ASSERT_NOT_REACHED();
@@ -576,7 +576,7 @@ void Thread::set_state(State new_state)
     InterruptDisabler disabler;
     if (new_state == Blocked) {
         // we should always have a Blocker while blocked
-        ASSERT(!m_blockers.is_empty());
+        ASSERT(m_blocker != nullptr);
     }
 
     m_state = new_state;
