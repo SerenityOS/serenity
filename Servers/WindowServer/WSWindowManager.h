@@ -228,6 +228,7 @@ private:
     };
     DoubleClickInfo m_double_click_info;
     int m_double_click_speed { 0 };
+    int m_max_distance_for_double_click { 4 };
 
     WeakPtr<WSWindow> m_active_window;
     WeakPtr<WSWindow> m_hovered_window;
