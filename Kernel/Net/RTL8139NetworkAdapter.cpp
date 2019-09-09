@@ -296,7 +296,7 @@ void RTL8139NetworkAdapter::send_raw(const u8* data, int length)
 #ifdef RTL8139_DEBUG
         kprintf("RTL8139NetworkAdapter: chose buffer %d @ %p\n", hw_buffer, m_tx_buffer_addr[hw_buffer]);
 #endif
-        m_tx_next_buffer = hw_buffer + 1 % 4;
+        m_tx_next_buffer = (hw_buffer + 1) % 4;
     }
 
     memcpy((void*)(m_tx_buffer_addr[hw_buffer]), data, length);
