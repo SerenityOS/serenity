@@ -1,11 +1,14 @@
 #include "DirectoryView.h"
+#include "FileUtils.h"
 #include <AK/FileSystemPath.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/CUserInfo.h>
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GClipboard.h>
 #include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GLabel.h>
@@ -36,6 +39,8 @@ int main(int argc, char** argv)
     }
 
     GApplication app(argc, argv);
+
+    Optional<Vector<String>> selected_file_paths;
 
     auto* window = new GWindow;
     window->set_title("File Manager");
@@ -88,6 +93,16 @@ int main(int argc, char** argv)
         directory_view->open_parent_directory();
     });
 
+    directory_view->on_selection = [&](GAbstractView& view) {
+        Vector<String> paths;
+        auto model = static_cast<GDirectoryModel*>(view.model());
+        view.selection().for_each_index([&](const GModelIndex& index) {
+            auto path = model->entry(index.row()).full_path(*model);
+            paths.append(path);
+        });
+        selected_file_paths = paths;
+    };
+
     auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GAction&) {
         GInputBox input_box("Enter name:", "New directory", window);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
@@ -126,8 +141,40 @@ int main(int argc, char** argv)
 
     view_as_icons_action->set_checked(true);
 
-    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [](const GAction&) {
+    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
         dbgprintf("'Copy' action activated!\n");
+        if (!selected_file_paths.has_value()) {
+            return;
+        }
+        StringBuilder copy_text;
+        copy_text.append("copy\n");
+        for (String& path : selected_file_paths.value()) {
+            copy_text.appendf("%s\n", path.characters());
+        }
+        GClipboard::the().set_data(copy_text.build());
+    });
+
+    auto paste_action = GAction::create("Paste", GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
+        dbgprintf("'Paste' action activated!\n");
+        auto copied_lines = GClipboard::the().data().split('\n');
+        if (copied_lines.is_empty() || copied_lines.first() != "copy") {
+            GMessageBox::show("No files cut or copied.", "File Manager", GMessageBox::Type::Information);
+            return;
+        }
+        for (int i = 1; i < copied_lines.size(); ++i) {
+            auto current_path = copied_lines[i];
+            if (current_path.is_empty())
+                continue;
+            auto current_directory = directory_view->path();
+            auto new_path = String::format("%s/%s",
+                current_directory.characters(),
+                FileSystemPath(current_path).basename().characters());
+            if (!FileUtils::copy_file_or_directory(current_path, new_path)) {
+                auto error_message = String::format("Could not paste %s.",
+                    current_path.characters());
+                GMessageBox::show(error_message, "File Manager", GMessageBox::Type::Error);
+            }
+        }
     });
 
     auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
@@ -153,6 +200,7 @@ int main(int argc, char** argv)
     auto app_menu = make<GMenu>("File Manager");
     app_menu->add_action(mkdir_action);
     app_menu->add_action(copy_action);
+    app_menu->add_action(paste_action);
     app_menu->add_action(delete_action);
     app_menu->add_separator();
     app_menu->add_action(GCommonActions::make_quit_action([] {
@@ -188,6 +236,7 @@ int main(int argc, char** argv)
     main_toolbar->add_separator();
     main_toolbar->add_action(mkdir_action);
     main_toolbar->add_action(copy_action);
+    main_toolbar->add_action(paste_action);
     main_toolbar->add_action(delete_action);
 
     main_toolbar->add_separator();
