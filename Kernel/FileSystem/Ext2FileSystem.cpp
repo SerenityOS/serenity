@@ -767,6 +767,9 @@ KResult Ext2FSInode::add_child(InodeIdentifier child_id, const StringView& name,
     LOCKER(m_lock);
     ASSERT(is_directory());
 
+    if (name.length() > EXT2_NAME_LEN)
+        return KResult(-ENAMETOOLONG);
+
 #ifdef EXT2_DEBUG
     dbg() << "Ext2FSInode::add_child(): Adding inode " << child_id.index() << " with name '" << name << " and mode " << mode << " to directory " << index();
 #endif

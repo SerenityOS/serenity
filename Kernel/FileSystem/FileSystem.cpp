@@ -41,6 +41,7 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, u8 ft)
     , inode(i)
     , file_type(ft)
 {
+    ASSERT(name_length < (int)sizeof(name));
     memcpy(name, n, name_length);
     name[name_length] = '\0';
 }
@@ -50,6 +51,7 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, int nl, InodeIdentifier i, u8 
     , inode(i)
     , file_type(ft)
 {
+    ASSERT(name_length < (int)sizeof(name));
     memcpy(name, n, nl);
     name[nl] = '\0';
 }
