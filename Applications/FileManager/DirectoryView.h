@@ -23,6 +23,7 @@ public:
     void refresh();
 
     Function<void(const StringView&)> on_path_change;
+    Function<void(GAbstractView&)> on_selection;
     Function<void(const StringView&)> on_status_message;
     Function<void(int done, int total)> on_thumbnail_progress;
 

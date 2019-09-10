@@ -92,6 +92,15 @@ DirectoryView::DirectoryView(GWidget* parent)
         handle_activation(filter_model.map_to_target(index));
     };
 
+    m_table_view->on_selection = [this](const GModelIndex&) {
+        if (on_selection)
+            on_selection(*m_table_view);
+    };
+    m_item_view->on_selection = [this](const GModelIndex&) {
+        if (on_selection)
+            on_selection(*m_item_view);
+    };
+
     set_view_mode(ViewMode::Icon);
 }
 
