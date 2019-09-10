@@ -425,8 +425,9 @@ int snprintf(char* buffer, size_t size, const char* fmt, ...)
 
 void perror(const char* s)
 {
-    dbg() << "perror(): " << strerror(errno);
-    fprintf(stderr, "%s: %s\n", s, strerror(errno));
+    int saved_errno = errno;
+    dbg() << "perror(): " << strerror(saved_errno);
+    fprintf(stderr, "%s: %s\n", s, strerror(saved_errno));
 }
 
 FILE* fopen(const char* pathname, const char* mode)
