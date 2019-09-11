@@ -63,8 +63,25 @@ bool CSocket::connect(const CSocketAddress& address, int port)
     m_destination_address = address;
     m_destination_port = port;
 
-    fflush(stdout);
-    int rc = ::connect(fd(), (struct sockaddr*)&addr, sizeof(addr));
+    return common_connect((struct sockaddr*)&addr, sizeof(addr));
+}
+
+bool CSocket::connect(const CSocketAddress& address)
+{
+    ASSERT(!is_connected());
+    ASSERT(address.type() == CSocketAddress::Type::Local);
+    dbg() << *this << " connecting to " << address << "...";
+
+    sockaddr_un saddr;
+    saddr.sun_family = AF_LOCAL;
+    strcpy(saddr.sun_path, address.to_string().characters());
+
+    return common_connect((const sockaddr*)&saddr, sizeof(saddr));
+}
+
+bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
+{
+    int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
         if (errno == EINPROGRESS) {
             dbg() << *this << " connection in progress (EINPROGRESS)";
@@ -78,33 +95,10 @@ bool CSocket::connect(const CSocketAddress& address, int port)
             };
             return true;
         }
-        perror("connect");
-        exit(1);
-    } else {
-        dbg() << *this << " connected ok!";
-        m_connected = true;
-        if (on_connected)
-            on_connected();
-    }
-    return true;
-}
-
-bool CSocket::connect(const CSocketAddress& address)
-{
-    ASSERT(!is_connected());
-    ASSERT(address.type() == CSocketAddress::Type::Local);
-    dbg() << *this << " connecting to " << address << "...";
-
-    sockaddr_un saddr;
-    saddr.sun_family = AF_LOCAL;
-    strcpy(saddr.sun_path, address.to_string().characters());
-
-    int rc = ::connect(fd(), (const sockaddr*)&saddr, sizeof(saddr));
-    if (rc < 0) {
-        perror("connect");
+        perror("CSocket::common_connect: connect");
         return false;
     }
-
+    dbg() << *this << " connected ok!";
     m_connected = true;
     if (on_connected)
         on_connected();
