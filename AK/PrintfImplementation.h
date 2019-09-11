@@ -331,11 +331,11 @@ template<typename PutChFunc>
                 break;
 
             case 'w':
-                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, true, true, 4);
+                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, false, true, 4);
                 break;
 
             case 'b':
-                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, true, true, 2);
+                ret += print_hex(putch, bufptr, va_arg(ap, int), false, alternate_form, false, true, 2);
                 break;
 
             case 'c':
@@ -350,7 +350,7 @@ template<typename PutChFunc>
 
             case 'P':
             case 'p':
-                ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, true, true, 8);
+                ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, false, true, 8);
                 break;
             default:
                 dbg() << "printf_internal: Unimplemented format specifier " << *p;
