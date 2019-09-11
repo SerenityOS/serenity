@@ -1202,6 +1202,19 @@ int Process::sys$chdir(const char* path)
     return 0;
 }
 
+int Process::sys$fchdir(int fd)
+{
+    auto* description = file_description(fd);
+    if (!description)
+        return -EBADF;
+
+    if (!description->is_directory())
+   	return -ENOTDIR;
+
+    m_cwd = description->custody();
+    return 0;
+}
+
 int Process::sys$getcwd(char* buffer, ssize_t size)
 {
     if (size < 0)
