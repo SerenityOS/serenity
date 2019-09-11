@@ -194,6 +194,7 @@ public:
     }
 
     static String format(const char*, ...);
+    static String number(size_t);
     static String number(unsigned);
     static String number(int);
 
