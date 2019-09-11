@@ -184,6 +184,11 @@ unsigned String::to_uint(bool& ok) const
     return value;
 }
 
+String String::number(size_t value)
+{
+    return String::format("%zu", value);
+}
+
 String String::number(unsigned value)
 {
     return String::format("%u", value);
