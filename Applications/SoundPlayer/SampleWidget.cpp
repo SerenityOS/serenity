@@ -31,7 +31,7 @@ void SampleWidget::paint_event(GPaintEvent& event)
     for (int x = 0; x < samples_to_draw; ++x) {
         // FIXME: This might look nicer if drawn as lines.
         auto& sample = m_buffer->samples()[x];
-        Point p = { x, frame_inner_rect().center().y() + (int)(sample.left * frame_inner_rect().height()) };
+        Point p = { x, frame_inner_rect().center().y() + (int)(sample.left * frame_inner_rect().height() / 2) };
         painter.set_pixel(p, Color::Green);
     }
 }
