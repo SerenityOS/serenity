@@ -25,6 +25,8 @@ const char* CIODevice::error_string() const
 int CIODevice::read(u8* buffer, int length)
 {
     auto read_buffer = read(length);
+    if (read_buffer.is_null())
+        return 0;
     memcpy(buffer, read_buffer.data(), length);
     return read_buffer.size();
 }
