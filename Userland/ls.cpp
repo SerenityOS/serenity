@@ -24,6 +24,7 @@ static bool flag_long = false;
 static bool flag_show_dotfiles = false;
 static bool flag_show_inode = false;
 static bool flag_print_numeric = false;
+static bool flag_human_readable = false;
 
 static int terminal_rows = 0;
 static int terminal_columns = 0;
@@ -39,7 +40,7 @@ int main(int argc, char** argv)
         output_is_terminal = true;
     }
 
-    static const char* valid_option_characters = "laiGn";
+    static const char* valid_option_characters = "laiGnh";
     int opt;
     while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
         switch (opt) {
@@ -58,7 +59,9 @@ int main(int argc, char** argv)
         case 'n':
             flag_print_numeric = true;
             break;
-
+        case 'h':
+            flag_human_readable = true;
+            break;
         default:
             fprintf(stderr, "usage: ls [-%s] [paths...]\n", valid_option_characters);
             return 1;
@@ -125,6 +128,25 @@ int print_name(struct stat& st, const char* name, const char* path_for_link_reso
     return nprinted;
 }
 
+// FIXME: Remove this hackery once printf() supports floats.
+// FIXME: Also, we should probably round the sizes in ls -lh output.
+static String number_string_with_one_decimal(float number, const char* suffix)
+{
+    float decimals = number - (int)number;
+    return String::format("%d.%d%s", (int)number, (int)(decimals * 10), suffix);
+}
+
+static String human_readable_size(size_t size)
+{
+    if (size < 1 * KB)
+        return String::number(size);
+    if (size < 1 * MB)
+        return number_string_with_one_decimal((float)size / (float)KB, "K");
+    if (size < 1 * GB)
+        return number_string_with_one_decimal((float)size / (float)MB, "M");
+    return number_string_with_one_decimal((float)size / (float)GB, "G");
+}
+
 bool print_filesystem_object(const char* path, const char* name)
 {
     struct stat st;
@@ -182,10 +204,16 @@ bool print_filesystem_object(const char* path, const char* name)
         printf(" %5u", st.st_gid);
     }
 
-    if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
+    if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode)) {
         printf(" %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
-    else
-        printf(" %10u ", st.st_size);
+    } else {
+        if (flag_human_readable) {
+            ASSERT(st.st_size > 0);
+            printf(" %10s ", human_readable_size((size_t)st.st_size).characters());
+        } else {
+            printf(" %10u ", st.st_size);
+        }
+    }
 
     auto* tm = localtime(&st.st_mtime);
     printf("  %4u-%02u-%02u %02u:%02u:%02u  ",
