@@ -1,10 +1,11 @@
 #pragma once
 
-#include "StdLibExtras.h"
-#include "Types.h"
+#include <AK/LogStream.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/StdLibExtras.h>
+#include <AK/Types.h>
 #include <AK/kmalloc.h>
 
 namespace AK {
@@ -270,6 +271,12 @@ inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::wrap(const void* data, int 
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::adopt(void* data, int size)
 {
     return ::adopt(*new ByteBufferImpl(data, size, Adopt));
+}
+
+inline const LogStream& operator<<(const LogStream& stream, const ByteBuffer& value)
+{
+    stream.write((const char*)value.data(), value.size());
+    return stream;
 }
 
 }
