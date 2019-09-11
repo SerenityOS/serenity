@@ -127,7 +127,7 @@ ByteBuffer CIODevice::read_all()
         int nread = ::read(m_fd, read_buffer, sizeof(read_buffer));
         if (nread < 0) {
             set_error(errno);
-            return ByteBuffer::copy(data.data(), data.size());
+            break;
         }
         if (nread == 0) {
             set_eof(true);
@@ -135,6 +135,8 @@ ByteBuffer CIODevice::read_all()
         }
         data.append((const u8*)read_buffer, nread);
     }
+    if (data.is_empty())
+        return {};
     return ByteBuffer::copy(data.data(), data.size());
 }
 
