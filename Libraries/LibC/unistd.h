@@ -68,6 +68,7 @@ int close(int fd);
 pid_t waitpid(pid_t, int* wstatus, int options);
 pid_t wait(int* wstatus);
 int chdir(const char* path);
+int fchdir(int fd);
 char* getcwd(char* buffer, size_t size);
 char* getwd(char* buffer);
 int fstat(int fd, struct stat* statbuf);

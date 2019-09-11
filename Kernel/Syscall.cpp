@@ -136,6 +136,8 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
         break;
     case Syscall::SC_chdir:
         return current->process().sys$chdir((const char*)arg1);
+    case Syscall::SC_fchdir:
+        return current->process().sys$fchdir((int)arg1);
     case Syscall::SC_uname:
         return current->process().sys$uname((utsname*)arg1);
     case Syscall::SC_set_mmap_name:
