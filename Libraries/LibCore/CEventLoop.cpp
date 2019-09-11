@@ -31,6 +31,96 @@ int CEventLoop::s_next_timer_id = 1;
 int CEventLoop::s_wake_pipe_fds[2];
 CLocalServer CEventLoop::s_rpc_server;
 
+class RPCClient : public CObject {
+    C_OBJECT(RPCClient)
+public:
+    explicit RPCClient(CLocalSocket& socket)
+        : m_socket(socket)
+    {
+        add_child(socket);
+
+        m_socket.on_ready_to_read = [this] {
+            i32 length;
+            int nread = m_socket.read((u8*)&length, sizeof(length));
+            if (nread == 0) {
+                dbg() << "RPC client disconnected";
+                delete_later();
+                return;
+            }
+            ASSERT(nread == sizeof(length));
+            auto request = m_socket.read(length);
+
+            auto request_json = JsonValue::from_string(request);
+            if (!request_json.is_object()) {
+                dbg() << "RPC client sent invalid request";
+                delete_later();
+                return;
+            }
+
+            handle_request(request_json.as_object());
+        };
+    }
+    virtual ~RPCClient() override
+    {
+    }
+
+    void send_response(const JsonObject& response)
+    {
+        auto serialized = response.to_string();
+        i32 length = serialized.length();
+        m_socket.write((const u8*)&length, sizeof(length));
+        m_socket.write(serialized);
+    }
+
+    void handle_request(const JsonObject& request)
+    {
+        auto type = request.get("type").as_string_or({});
+
+        if (type.is_null()) {
+            dbg() << "RPC client sent request without type field";
+            return;
+        }
+
+        if (type == "Identify") {
+            JsonObject response;
+            response.set("type", type);
+            response.set("pid", getpid());
+#ifdef __serenity__
+            char buffer[1024];
+            if (get_process_name(buffer, sizeof(buffer)) >= 0) {
+                response.set("process_name", buffer);
+            } else {
+                response.set("process_name", JsonValue());
+            }
+#endif
+            send_response(response);
+            return;
+        }
+
+        if (type == "GetAllObjects") {
+            JsonObject response;
+            response.set("type", type);
+            JsonArray objects;
+            for (auto& object : CObject::all_objects()) {
+                JsonObject json_object;
+                object.save_to(json_object);
+                objects.append(move(json_object));
+            }
+            response.set("objects", move(objects));
+            send_response(response);
+            return;
+        }
+
+        if (type == "Disconnect") {
+            delete_later();
+            return;
+        }
+    }
+
+private:
+    CLocalSocket& m_socket;
+};
+
 CEventLoop::CEventLoop()
 {
     if (!s_event_loop_stack) {
@@ -45,7 +135,6 @@ CEventLoop::CEventLoop()
         ASSERT(rc == 0);
         s_event_loop_stack->append(this);
 
-
         auto rpc_path = String::format("/tmp/rpc.%d", getpid());
         rc = unlink(rpc_path.characters());
         if (rc < 0 && errno != ENOENT) {
@@ -56,16 +145,9 @@ CEventLoop::CEventLoop()
         ASSERT(listening);
 
         s_rpc_server.on_ready_to_accept = [&] {
-            auto* client = s_rpc_server.accept();
-            ASSERT(client);
-            JsonArray objects;
-            for (auto& object : CObject::all_objects()) {
-                JsonObject json_object;
-                object.save_to(json_object);
-                objects.append(move(json_object));
-            }
-            client->write(objects.to_string());
-            client->delete_later();
+            auto* client_socket = s_rpc_server.accept();
+            ASSERT(client_socket);
+            new RPCClient(*client_socket);
         };
     }
 
