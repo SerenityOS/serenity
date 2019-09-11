@@ -1,6 +1,7 @@
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CLocalSocket.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 int main(int argc, char** argv)
 {
@@ -14,11 +15,6 @@ int main(int argc, char** argv)
     int pid = atoi(argv[1]);
 
     CLocalSocket socket;
-    auto success = socket.connect(CSocketAddress::local(String::format("/tmp/rpc.%d", pid)));
-    if (!success) {
-        fprintf(stderr, "Couldn't connect to PID %d\n", pid);
-        return 1;
-    }
 
     socket.on_connected = [&] {
         dbg() << "Connected to PID " << pid;
@@ -37,6 +33,12 @@ int main(int argc, char** argv)
             putchar(data[i]);
         printf("\n");
     };
+
+    auto success = socket.connect(CSocketAddress::local(String::format("/tmp/rpc.%d", pid)));
+    if (!success) {
+        fprintf(stderr, "Couldn't connect to PID %d\n", pid);
+        return 1;
+    }
 
     return loop.exec();
 }
