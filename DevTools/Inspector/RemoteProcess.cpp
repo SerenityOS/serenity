@@ -3,6 +3,7 @@
 #include "RemoteObjectGraphModel.h"
 #include "RemoteObjectPropertyModel.h"
 #include <stdio.h>
+#include <stdlib.h>
 
 RemoteProcess::RemoteProcess(pid_t pid)
     : m_pid(pid)
@@ -12,12 +13,6 @@ RemoteProcess::RemoteProcess(pid_t pid)
 
 void RemoteProcess::update()
 {
-    auto success = m_socket.connect(CSocketAddress::local(String::format("/tmp/rpc.%d", m_pid)));
-    if (!success) {
-        fprintf(stderr, "Couldn't connect to PID %d\n", m_pid);
-        exit(1);
-    }
-
     m_socket.on_connected = [this] {
         dbg() << "Connected to PID " << m_pid;
     };
@@ -63,4 +58,10 @@ void RemoteProcess::update()
 
         m_object_graph_model->update();
     };
+
+    auto success = m_socket.connect(CSocketAddress::local(String::format("/tmp/rpc.%d", m_pid)));
+    if (!success) {
+        fprintf(stderr, "Couldn't connect to PID %d\n", m_pid);
+        exit(1);
+    }
 }
