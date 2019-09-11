@@ -265,6 +265,12 @@ int chdir(const char* path)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int fchdir(int fd)
+{
+    int rc = syscall(SC_fchdir, fd);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 char* getcwd(char* buffer, size_t size)
 {
     if (!buffer) {
