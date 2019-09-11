@@ -16,6 +16,8 @@ struct Count {
     unsigned long lines = 0;
 };
 
+int wc(const String& filename, Vector<Count>& counts);
+
 void report(const Count& count)
 {
     if (output_lines) {
@@ -93,36 +95,50 @@ int main(int argc, char** argv)
     }
 
     Vector<String> files = args.get_single_values();
-    if (files.is_empty()) {
-        fprintf(stderr, "wc: No files provided\n");
-        return 1;
-    }
-
     Vector<Count> counts;
-    for (const auto& f : files) {
-        FILE* fp = fopen(f.characters(), "r");
+    int status;
+    if (files.is_empty()) {
+        status = wc("", counts);
+        if (status != 0)
+            return status;
+    } else {
+        for (const auto& f : files) {
+            status = wc(f, counts);
+            if (status != 0)
+                return status;
+        }
+    }
+    report(counts);
+    return 0;
+}
+
+int wc(const String& filename, Vector<Count>& counts)
+{
+    FILE* fp = nullptr;
+    if (filename == "" || filename == "-") {
+        fp = stdin;
+    } else {
+        fp = fopen(filename.characters(), "r");
         if (fp == nullptr) {
-            fprintf(stderr, "wc: Could not open file '%s'\n", f.characters());
+            fprintf(stderr, "wc: Could not open file '%s'\n", filename.characters());
             return 1;
         }
-
-        Count count { f };
-        char* line = nullptr;
-        size_t len = 0;
-        ssize_t n_read = 0;
-        while ((n_read = getline(&line, &len, fp)) != -1) {
-            count.lines++;
-            count.words += count_words(line);
-            count.chars += n_read;
-        }
-
-        counts.append(count);
-        fclose(fp);
-        if (line) {
-            free(line);
-        }
     }
 
-    report(counts);
+    Count count { filename };
+    char* line = nullptr;
+    size_t len = 0;
+    ssize_t n_read = 0;
+    while ((n_read = getline(&line, &len, fp)) != -1) {
+        count.lines++;
+        count.words += count_words(line);
+        count.chars += n_read;
+    }
+
+    counts.append(count);
+    fclose(fp);
+    if (line) {
+        free(line);
+    }
     return 0;
 }
