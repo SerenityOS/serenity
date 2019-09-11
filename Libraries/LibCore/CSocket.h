@@ -50,6 +50,8 @@ protected:
 
 private:
     virtual bool open(CIODevice::OpenMode) override { ASSERT_NOT_REACHED(); }
+    bool common_connect(const struct sockaddr*, socklen_t);
+
     Type m_type { Type::Invalid };
     OwnPtr<CNotifier> m_notifier;
     OwnPtr<CNotifier> m_read_notifier;
