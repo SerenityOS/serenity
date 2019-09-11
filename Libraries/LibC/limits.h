@@ -5,6 +5,9 @@
 #define PAGE_SIZE 4096
 
 #define PATH_MAX 4096
+#if !defined MAXPATHLEN && defined PATH_MAX
+# define MAXPATHLEN  PATH_MAX
+#endif
 
 #define INT_MAX INT32_MAX
 #define INT_MIN INT32_MIN
