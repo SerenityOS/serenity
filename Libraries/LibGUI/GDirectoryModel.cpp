@@ -238,6 +238,10 @@ GVariant GDirectoryModel::data(const GModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
     auto& entry = this->entry(index.row());
+    if (role == Role::Custom) {
+        ASSERT(index.column() == Column::Name);
+        return entry.full_path(*this);
+    }
     if (role == Role::Sort) {
         switch (index.column()) {
         case Column::Icon:
