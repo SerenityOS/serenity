@@ -735,8 +735,7 @@ void IRCClient::handle_ctcp_request(const StringView& peer, const StringView& pa
         return;
     }
 
-    // FIXME: Add StringView::starts_with()
-    if (String(payload).starts_with("PING")) {
+    if (payload.starts_with("PING")) {
         send_ctcp_response(peer, payload);
         return;
     }
