@@ -83,10 +83,16 @@ static int sh_cd(int argc, char** argv)
     if (argc == 1) {
         strcpy(pathbuf, g.home.characters());
     } else {
-        if (argv[1][0] == '/')
+        if (strcmp(argv[1], "-") == 0) {
+            char* oldpwd = getenv("OLDPWD");
+            size_t len = strlen(oldpwd);
+            ASSERT(len + 1 <= PATH_MAX);
+            memcpy(pathbuf, oldpwd, len + 1);
+        } else if (argv[1][0] == '/') {
             memcpy(pathbuf, argv[1], strlen(argv[1]) + 1);
-        else
+        } else {
             sprintf(pathbuf, "%s/%s", g.cwd.characters(), argv[1]);
+        }
     }
 
     FileSystemPath canonical_path(pathbuf);
@@ -111,7 +117,9 @@ static int sh_cd(int argc, char** argv)
         printf("chdir(%s) failed: %s\n", path, strerror(errno));
         return 1;
     }
+    setenv("OLDPWD", g.cwd.characters(), 1);
     g.cwd = canonical_path.string();
+    setenv("PWD", g.cwd.characters(), 1);
     return 0;
 }
 
@@ -635,6 +643,7 @@ int main(int argc, char** argv)
     {
         auto* cwd = getcwd(nullptr, 0);
         g.cwd = cwd;
+        setenv("PWD", cwd, 1);
         free(cwd);
     }
 
