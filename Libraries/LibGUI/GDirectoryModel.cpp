@@ -317,8 +317,7 @@ void GDirectoryModel::update()
         auto& entries = S_ISDIR(st.st_mode) ? m_directories : m_files;
         entries.append(move(entry));
 
-        if (S_ISREG(entry.mode))
-            m_bytes_in_files += st.st_size;
+        m_bytes_in_files += st.st_size;
     }
 
     did_update();
