@@ -12,6 +12,7 @@ public:
     {
     }
 
+    int size() const { return m_indexes.size(); }
     bool is_empty() const { return m_indexes.is_empty(); }
     bool contains(const GModelIndex& index) const { return m_indexes.contains(index); }
     bool contains_row(int row) const
@@ -31,6 +32,13 @@ public:
 
     template<typename Callback>
     void for_each_index(Callback callback)
+    {
+        for (auto& index : m_indexes)
+            callback(index);
+    }
+
+    template<typename Callback>
+    void for_each_index(Callback callback) const
     {
         for (auto& index : m_indexes)
             callback(index);
