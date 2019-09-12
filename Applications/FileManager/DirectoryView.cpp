@@ -69,12 +69,7 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_item_view->set_model_column(GDirectoryModel::Column::Name);
 
     m_table_view->model()->on_update = [this] {
-        set_status_message(String::format("%d item%s (%u byte%s)",
-            model().row_count(),
-            model().row_count() != 1 ? "s" : "",
-            model().bytes_in_files(),
-            model().bytes_in_files() != 1 ? "s" : ""));
-
+        update_statusbar();
         if (on_path_change)
             on_path_change(model().path());
     };
@@ -92,13 +87,15 @@ DirectoryView::DirectoryView(GWidget* parent)
         handle_activation(filter_model.map_to_target(index));
     };
 
-    m_table_view->on_selection = [this](const GModelIndex&) {
-        if (on_selection)
-            on_selection(*m_table_view);
+    m_table_view->on_selection_change = [this] {
+        update_statusbar();
+        if (on_selection_change)
+            on_selection_change(*m_table_view);
     };
-    m_item_view->on_selection = [this](const GModelIndex&) {
-        if (on_selection)
-            on_selection(*m_item_view);
+    m_item_view->on_selection_change = [this] {
+        update_statusbar();
+        if (on_selection_change)
+            on_selection_change(*m_item_view);
     };
 
     set_view_mode(ViewMode::Icon);
@@ -171,4 +168,31 @@ void DirectoryView::open_next_directory()
         m_path_history_position++;
         model().open(m_path_history[m_path_history_position]);
     }
+}
+
+void DirectoryView::update_statusbar()
+{
+    if (current_view().selection().is_empty()) {
+        set_status_message(String::format("%d item%s (%u byte%s)",
+            model().row_count(),
+            model().row_count() != 1 ? "s" : "",
+            model().bytes_in_files(),
+            model().bytes_in_files() != 1 ? "s" : ""));
+        return;
+    }
+
+    int selected_item_count = current_view().selection().size();
+    size_t selected_byte_count = 0;
+
+    current_view().selection().for_each_index([&](auto& index) {
+        auto size_index = current_view().model()->index(index.row(), GDirectoryModel::Column::Size);
+        auto file_size = current_view().model()->data(size_index).to_int();
+        selected_byte_count += file_size;
+    });
+
+    set_status_message(String::format("%d item%s selected (%u byte%s)",
+        selected_item_count,
+        selected_item_count != 1 ? "s" : "",
+        selected_byte_count,
+        selected_byte_count != 1 ? "s" : ""));
 }
