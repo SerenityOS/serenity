@@ -1,7 +1,7 @@
 #include "PaintableWidget.h"
 #include "Tool.h"
-#include <LibGUI/GPainter.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GPainter.h>
 
 static PaintableWidget* s_the;
 
@@ -57,20 +57,27 @@ Color PaintableWidget::color_for(const GMouseEvent& event)
 
 void PaintableWidget::mousedown_event(GMouseEvent& event)
 {
-    if (m_tool)
-        m_tool->on_mousedown(event);
+    if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
+        if (m_tool)
+            m_tool->on_mousedown(event);
+    }
+    GWidget::mousedown_event(event);
 }
 
 void PaintableWidget::mouseup_event(GMouseEvent& event)
 {
-    if (m_tool)
-        m_tool->on_mouseup(event);
+    if (event.button() == GMouseButton::Left || event.button() == GMouseButton::Right) {
+        if (m_tool)
+            m_tool->on_mouseup(event);
+    }
+    GWidget::mouseup_event(event);
 }
 
 void PaintableWidget::mousemove_event(GMouseEvent& event)
 {
     if (m_tool)
         m_tool->on_mousemove(event);
+    GWidget::mousemove_event(event);
 }
 
 void PaintableWidget::set_primary_color(Color color)
