@@ -38,6 +38,7 @@ long labs(long);
 double atof(const char*);
 int system(const char* command);
 char* mktemp(char*);
+char* mkdtemp(char*);
 void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
 
 #define RAND_MAX 32767

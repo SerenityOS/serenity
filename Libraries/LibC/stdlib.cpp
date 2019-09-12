@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -278,8 +279,7 @@ char* mktemp(char* pattern)
 {
     int length = strlen(pattern);
 
-    // FIXME: Check for an invalid template pattern and return EINVAL.
-    if (length < 6) {
+    if (length < 6 || !String(pattern).ends_with("XXXXXX")) {
         pattern[0] = '\0';
         errno = EINVAL;
         return pattern;
@@ -300,6 +300,35 @@ char* mktemp(char* pattern)
     pattern[0] = '\0';
     errno = EEXIST;
     return pattern;
+}
+
+char* mkdtemp(char* pattern)
+{
+    int length = strlen(pattern);
+
+    if (length < 6 || !String(pattern).ends_with("XXXXXX")) {
+        errno = EINVAL;
+        return nullptr;
+    }
+
+    int start = length - 6;
+
+    static constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (int attempt = 0; attempt < 100; ++attempt) {
+        for (int i = 0; i < 6; ++i)
+            pattern[start + i] = random_characters[(rand() % sizeof(random_characters))];
+        struct stat st;
+        int rc = lstat(pattern, &st);
+        if (rc < 0 && errno == ENOENT) {
+	    if (mkdir(pattern, 0700) < 0)
+                return nullptr;
+	    return pattern;
+	}
+    }
+
+    errno = EEXIST;
+    return nullptr;
 }
 
 void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
