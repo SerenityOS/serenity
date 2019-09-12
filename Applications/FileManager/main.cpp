@@ -93,11 +93,12 @@ int main(int argc, char** argv)
         directory_view->open_parent_directory();
     });
 
-    directory_view->on_selection = [&](GAbstractView& view) {
+    directory_view->on_selection_change = [&](GAbstractView& view) {
         Vector<String> paths;
-        auto model = static_cast<GDirectoryModel*>(view.model());
+        auto& model = *view.model();
         view.selection().for_each_index([&](const GModelIndex& index) {
-            auto path = model->entry(index.row()).full_path(*model);
+            auto name_index = model.index(index.row(), GDirectoryModel::Column::Name);
+            auto path = model.data(name_index, GModel::Role::Custom).to_string();
             paths.append(path);
         });
         selected_file_paths = paths;
