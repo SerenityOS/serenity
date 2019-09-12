@@ -33,4 +33,13 @@ TEST_CASE(compare_views)
     EXPECT_EQ(view1, "foo");
 }
 
+TEST_CASE(starts_with)
+{
+    String test_string = "ABCDEF";
+    StringView test_string_view = test_string.view();
+    EXPECT(test_string_view.starts_with("AB"));
+    EXPECT(test_string_view.starts_with("ABCDEF"));
+    EXPECT(!test_string_view.starts_with("DEF"));
+}
+
 TEST_MAIN(StringView)
