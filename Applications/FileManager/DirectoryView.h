@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 
 class DirectoryView final : public GStackWidget {
+    C_OBJECT(DirectoryView)
 public:
     explicit DirectoryView(GWidget* parent);
     virtual ~DirectoryView() override;
