@@ -71,4 +71,6 @@
 #define EPROTOTYPE 68
 #define EINPROGRESS 69
 #define ENOTHREAD 70
-#define EMAXERRNO 71
+#define EPROTO 71
+#define ENOTSUP 72
+#define EMAXERRNO 73
