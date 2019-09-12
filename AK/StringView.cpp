@@ -40,6 +40,19 @@ Vector<StringView> StringView::split_view(const char separator) const
     return v;
 }
 
+bool StringView::starts_with(const StringView& str) const
+{
+    if (str.is_empty())
+        return true;
+    if (is_empty())
+        return false;
+    if (str.length() > length())
+        return false;
+    if (characters_without_null_termination() == str.characters_without_null_termination())
+        return true;
+    return !memcmp(characters_without_null_termination(), str.characters_without_null_termination(), str.length());
+}
+
 StringView StringView::substring_view(int start, int length) const
 {
     if (!length)
