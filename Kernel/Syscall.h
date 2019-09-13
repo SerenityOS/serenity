@@ -32,7 +32,6 @@ struct timeval;
     __ENUMERATE_SYSCALL(gettimeofday)           \
     __ENUMERATE_SYSCALL(gethostname)            \
     __ENUMERATE_SYSCALL(chdir)                  \
-    __ENUMERATE_SYSCALL(fchdir)                 \
     __ENUMERATE_SYSCALL(uname)                  \
     __ENUMERATE_SYSCALL(set_mmap_name)          \
     __ENUMERATE_SYSCALL(readlink)               \
@@ -130,7 +129,8 @@ struct timeval;
     __ENUMERATE_SYSCALL(set_process_icon)       \
     __ENUMERATE_SYSCALL(mprotect)               \
     __ENUMERATE_SYSCALL(realpath)               \
-    __ENUMERATE_SYSCALL(get_process_name)
+    __ENUMERATE_SYSCALL(get_process_name)       \
+    __ENUMERATE_SYSCALL(fchdir)
 
 namespace Syscall {
 
