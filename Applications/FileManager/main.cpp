@@ -142,8 +142,7 @@ int main(int argc, char** argv)
 
     view_as_icons_action->set_checked(true);
 
-    auto copy_action = GAction::create("Copy", GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
-        dbgprintf("'Copy' action activated!\n");
+    auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
         if (!selected_file_paths.has_value()) {
             return;
         }
@@ -155,7 +154,7 @@ int main(int argc, char** argv)
         GClipboard::the().set_data(copy_text.build());
     });
 
-    auto paste_action = GAction::create("Paste", GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
+    auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V },GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
         dbgprintf("'Paste' action activated!\n");
         auto copied_lines = GClipboard::the().data().split('\n');
         if (copied_lines.is_empty() || copied_lines.first() != "copy") {
@@ -180,16 +179,16 @@ int main(int argc, char** argv)
 
     auto properties_action = GAction::create("Properties...", { Mod_Alt, Key_Return }, [](auto&) {});
 
-    auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
+    auto delete_action = GAction::create("Delete", { Mod_None, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
         dbgprintf("'Delete' action activated!\n");
     });
 
-    auto go_back_action = GAction::create("Go Back", GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [directory_view](const GAction&) {
+    auto go_back_action = GAction::create("Go Back", { Mod_Alt, Key_Left }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [directory_view](const GAction&) {
         dbgprintf("'Go Back' action activated!\n");
         directory_view->open_previous_directory();
     });
 
-    auto go_forward_action = GAction::create("Go Forward", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [directory_view](const GAction&) {
+    auto go_forward_action = GAction::create("Go Forward", { Mod_Alt, Key_Right }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [directory_view](const GAction&) {
         dbgprintf("'Go Forward' action activated!\n");
         directory_view->open_next_directory();
     });
