@@ -30,9 +30,11 @@ private:
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
+    virtual void context_menu_event(GContextMenuEvent&) override;
 
     int item_count() const;
     Rect item_rect(int item_index) const;
+    int item_at_event_position(const Point&) const;
     void update_content_size();
 
     int m_horizontal_padding { 5 };

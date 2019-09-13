@@ -66,24 +66,51 @@ Rect GItemView::item_rect(int item_index) const
     };
 }
 
+int GItemView::item_at_event_position(const Point& position) const
+{
+    // FIXME: Since all items are the same size, just compute the clicked item index
+    //        instead of iterating over everything.
+    auto adjusted_position = position.translated(0, vertical_scrollbar().value());
+    for (int i = 0; i < item_count(); ++i) {
+        if (item_rect(i).contains(adjusted_position))
+            return i;
+    }
+    return -1;
+}
+
 void GItemView::mousedown_event(GMouseEvent& event)
 {
+    int item_index = item_at_event_position(event.position());
+
     if (event.button() == GMouseButton::Left) {
-        // FIXME: Since all items are the same size, just compute the clicked item index
-        //        instead of iterating over everything.
-        auto adjusted_position = event.position().translated(0, vertical_scrollbar().value());
-        for (int i = 0; i < item_count(); ++i) {
-            if (item_rect(i).contains(adjusted_position)) {
-                auto index = model()->index(i, 0);
-                if (event.modifiers() & Mod_Ctrl)
-                    selection().toggle(index);
-                else
-                    selection().set(index);
-                return;
-            }
+        if (item_index == -1) {
+            selection().clear();
+        } else {
+            auto index = model()->index(item_index, m_model_column);
+            if (event.modifiers() & Mod_Ctrl)
+                selection().toggle(index);
+            else
+                selection().set(index);
         }
-        selection().clear();
     }
+
+    GAbstractView::mousedown_event(event);
+}
+
+void GItemView::context_menu_event(GContextMenuEvent& event)
+{
+    if (!model())
+        return;
+    auto item_index = item_at_event_position(event.position());
+    GModelIndex index;
+    if (item_index != -1) {
+        index = model()->index(item_index, m_model_column);
+        selection().add(index);
+        update();
+    }
+    if (on_context_menu_request)
+        on_context_menu_request(index, event);
+    GAbstractView::context_menu_event(event);
 }
 
 void GItemView::doubleclick_event(GMouseEvent& event)
@@ -112,7 +139,7 @@ void GItemView::paint_event(GPaintEvent& event)
     const Font& font = column_metadata.font ? *column_metadata.font : this->font();
 
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
-        bool is_selected_item = selection().contains(model()->index(item_index));
+        bool is_selected_item = selection().contains(model()->index(item_index, m_model_column));
         Color background_color;
         if (is_selected_item) {
             background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
