@@ -4,7 +4,7 @@
 #include "kmalloc.h"
 
 #ifndef __serenity__
-#    include <new>
+#include <new>
 #endif
 
 //#define DEBUG_STRINGIMPL
@@ -170,21 +170,6 @@ void StringImpl::compute_hash() const
     else
         m_hash = string_hash(characters(), m_length);
     m_has_hash = true;
-}
-
-NonnullRefPtr<StringImpl> StringImpl::reversed() const
-{
-    if (m_length == 0)
-        return the_empty_stringimpl();
-
-    char* buffer;
-    const char* pos = &m_inline_buffer[m_length - 1];
-    auto new_impl = create_uninitialized(m_length, buffer);
-
-    for (int i = 0; i < m_length; i++)
-        buffer[i] = *pos--;
-
-    return new_impl;
 }
 
 }
