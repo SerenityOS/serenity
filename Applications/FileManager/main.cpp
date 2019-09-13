@@ -144,7 +144,7 @@ int main(int argc, char** argv)
     });
     copy_action->set_enabled(false);
 
-    auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V },GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
+    auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
         dbgprintf("'Paste' action activated!\n");
         auto copied_lines = GClipboard::the().data().split('\n');
         if (copied_lines.is_empty() || copied_lines.first() != "copy") {
@@ -167,7 +167,7 @@ int main(int argc, char** argv)
         }
     });
 
-    auto properties_action = GAction::create("Properties...", { Mod_Alt, Key_Return }, [](auto&) {});
+    auto properties_action = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [](auto&) {});
 
     auto delete_action = GAction::create("Delete", { Mod_None, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
         dbgprintf("'Delete' action activated!\n");
