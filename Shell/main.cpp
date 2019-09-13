@@ -85,6 +85,8 @@ static int sh_cd(int argc, char** argv)
     } else {
         if (strcmp(argv[1], "-") == 0) {
             char* oldpwd = getenv("OLDPWD");
+            if (oldpwd == nullptr)
+                return 1;
             size_t len = strlen(oldpwd);
             ASSERT(len + 1 <= PATH_MAX);
             memcpy(pathbuf, oldpwd, len + 1);
