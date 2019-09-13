@@ -178,6 +178,8 @@ int main(int argc, char** argv)
         }
     });
 
+    auto properties_action = GAction::create("Properties...", { Mod_Alt, Key_Return }, [](auto&) {});
+
     auto delete_action = GAction::create("Delete", GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
         dbgprintf("'Delete' action activated!\n");
     });
@@ -269,6 +271,17 @@ int main(int argc, char** argv)
         progressbar->set_range(0, total);
         progressbar->set_value(done);
         progressbar->set_visible(true);
+    };
+
+    auto context_menu = make<GMenu>();
+    context_menu->add_action(copy_action);
+    context_menu->add_action(paste_action);
+    context_menu->add_action(delete_action);
+    context_menu->add_separator();
+    context_menu->add_action(properties_action);
+
+    directory_view->on_context_menu_request = [&](const GAbstractView&, const GModelIndex&, const GContextMenuEvent& event) {
+        context_menu->popup(event.screen_position());
     };
 
     // our initial location is defined as, in order of precedence:
