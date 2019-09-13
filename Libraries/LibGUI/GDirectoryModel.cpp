@@ -351,5 +351,7 @@ void GDirectoryModel::open(const StringView& a_path)
         int rc = read(m_notifier->fd(), buffer, sizeof(buffer));
         ASSERT(rc >= 0);
     };
+    if (on_path_change)
+        on_path_change();
     update();
 }

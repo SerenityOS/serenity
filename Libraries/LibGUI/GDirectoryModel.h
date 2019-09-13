@@ -34,6 +34,7 @@ public:
     size_t bytes_in_files() const { return m_bytes_in_files; }
 
     Function<void(int done, int total)> on_thumbnail_progress;
+    Function<void()> on_path_change;
 
     struct Entry {
         String name;
