@@ -517,12 +517,12 @@ void GTableView::context_menu_event(GContextMenuEvent& event)
     }
 
     auto index = index_at_event_position(event.position());
-    if (!index.is_valid())
-        return;
-    dbgprintf("context menu requested for index (%d,%d) '%s'\n", index.row(), index.column(), model()->data(index).to_string().characters());
-
-    selection().set(index);
-    update();
+    if (index.is_valid()) {
+        if (!selection().contains(index))
+            selection().set(index);
+    } else {
+        selection().clear();
+    }
     if (on_context_menu_request)
         on_context_menu_request(index, event);
 }

@@ -105,8 +105,10 @@ void GItemView::context_menu_event(GContextMenuEvent& event)
     GModelIndex index;
     if (item_index != -1) {
         index = model()->index(item_index, m_model_column);
-        selection().add(index);
-        update();
+        if (!selection().contains(index))
+            selection().set(index);
+    } else {
+        selection().clear();
     }
     if (on_context_menu_request)
         on_context_menu_request(index, event);
