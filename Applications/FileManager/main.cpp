@@ -93,17 +93,6 @@ int main(int argc, char** argv)
         directory_view->open_parent_directory();
     });
 
-    directory_view->on_selection_change = [&](GAbstractView& view) {
-        Vector<String> paths;
-        auto& model = *view.model();
-        view.selection().for_each_index([&](const GModelIndex& index) {
-            auto name_index = model.index(index.row(), GDirectoryModel::Column::Name);
-            auto path = model.data(name_index, GModel::Role::Custom).to_string();
-            paths.append(path);
-        });
-        selected_file_paths = paths;
-    };
-
     auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GAction&) {
         GInputBox input_box("Enter name:", "New directory", window);
         if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty()) {
@@ -153,6 +142,7 @@ int main(int argc, char** argv)
         }
         GClipboard::the().set_data(copy_text.build());
     });
+    copy_action->set_enabled(false);
 
     auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V },GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
         dbgprintf("'Paste' action activated!\n");
@@ -182,6 +172,7 @@ int main(int argc, char** argv)
     auto delete_action = GAction::create("Delete", { Mod_None, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
         dbgprintf("'Delete' action activated!\n");
     });
+    delete_action->set_enabled(false);
 
     auto go_back_action = GAction::create("Go Back", { Mod_Alt, Key_Left }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [directory_view](const GAction&) {
         dbgprintf("'Go Back' action activated!\n");
@@ -270,6 +261,20 @@ int main(int argc, char** argv)
         progressbar->set_range(0, total);
         progressbar->set_value(done);
         progressbar->set_visible(true);
+    };
+
+    directory_view->on_selection_change = [&](GAbstractView& view) {
+        Vector<String> paths;
+        auto& model = *view.model();
+        view.selection().for_each_index([&](const GModelIndex& index) {
+            auto name_index = model.index(index.row(), GDirectoryModel::Column::Name);
+            auto path = model.data(name_index, GModel::Role::Custom).to_string();
+            paths.append(path);
+        });
+        // FIXME: Figure out how we can enable/disable the paste action, based on clipboard contents.
+        copy_action->set_enabled(!view.selection().is_empty());
+        delete_action->set_enabled(!view.selection().is_empty());
+        selected_file_paths = paths;
     };
 
     auto context_menu = make<GMenu>();
