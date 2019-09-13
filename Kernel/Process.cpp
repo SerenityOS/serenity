@@ -1211,6 +1211,9 @@ int Process::sys$fchdir(int fd)
     if (!description->is_directory())
    	return -ENOTDIR;
 
+    if (!description->metadata().may_execute(*this))
+        return -EACCES;
+
     m_cwd = description->custody();
     return 0;
 }
