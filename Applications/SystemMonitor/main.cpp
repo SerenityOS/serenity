@@ -151,7 +151,7 @@ int main(int argc, char** argv)
     process_menu->add_action(continue_action);
     menubar->add_menu(move(process_menu));
 
-    auto process_context_menu = make<GMenu>("Process context menu");
+    auto process_context_menu = make<GMenu>();
     process_context_menu->add_action(kill_action);
     process_context_menu->add_action(stop_action);
     process_context_menu->add_action(continue_action);
