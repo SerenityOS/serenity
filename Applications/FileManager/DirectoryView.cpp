@@ -68,10 +68,19 @@ DirectoryView::DirectoryView(GWidget* parent)
 
     m_item_view->set_model_column(GDirectoryModel::Column::Name);
 
-    m_table_view->model()->on_update = [this] {
-        update_statusbar();
+    m_model->on_path_change = [this] {
+        m_table_view->selection().clear();
+        m_item_view->selection().clear();
         if (on_path_change)
             on_path_change(model().path());
+    };
+
+    //  NOTE: We're using the on_update hook on the GSortingProxyModel here instead of
+    //        the GDirectoryModel's hook. This is because GSortingProxyModel has already
+    //        installed an on_update hook on the GDirectoryModel internally.
+    // FIXME: This is an unfortunate design. We should come up with something better.
+    m_table_view->model()->on_update = [this] {
+        update_statusbar();
     };
 
     m_model->on_thumbnail_progress = [this](int done, int total) {
@@ -96,6 +105,15 @@ DirectoryView::DirectoryView(GWidget* parent)
         update_statusbar();
         if (on_selection_change)
             on_selection_change(*m_item_view);
+    };
+
+    m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
+        if (on_context_menu_request)
+            on_context_menu_request(*m_table_view, index, event);
+    };
+    m_item_view->on_context_menu_request = [this](auto& index, auto& event) {
+        if (on_context_menu_request)
+            on_context_menu_request(*m_item_view, index, event);
     };
 
     set_view_mode(ViewMode::Icon);
