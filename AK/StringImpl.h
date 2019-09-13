@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/RefCounted.h>
 #include <AK/Types.h>
 #include <AK/kmalloc.h>
 
@@ -43,8 +43,6 @@ public:
             compute_hash();
         return m_hash;
     }
-
-    NonnullRefPtr<StringImpl> reversed() const;
 
 private:
     enum ConstructTheEmptyStringImplTag {

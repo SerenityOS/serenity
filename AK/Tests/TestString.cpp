@@ -41,7 +41,6 @@ TEST_CASE(compare)
     EXPECT(!("a" >= String("b")));
     EXPECT("a" <= String("a"));
     EXPECT(!("b" <= String("a")));
-    EXPECT(!strcmp(test_string.reversed().characters(), "FEDCBA"));
 }
 
 TEST_CASE(index_access)
