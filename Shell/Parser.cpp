@@ -84,6 +84,16 @@ Vector<Command> Parser::parse()
                 m_state = State::InRedirectionPath;
                 break;
             }
+            if (ch == '\\') {
+                if (i == m_input.length() - 1) {
+                    fprintf(stderr, "Syntax error: Nothing to escape (\\)\n");
+                    return {};
+                }
+                char next_ch = m_input.characters()[i + 1];
+                m_token.append(next_ch);
+                ++i;
+                break;
+            }
             if (ch == '\'') {
                 m_state = State::InSingleQuotes;
                 break;
@@ -145,6 +155,21 @@ Vector<Command> Parser::parse()
             if (ch == '\"') {
                 commit_token();
                 m_state = State::Free;
+                break;
+            }
+            if (ch == '\\') {
+                if (i == m_input.length() - 1) {
+                    fprintf(stderr, "Syntax error: Nothing to escape (\\)\n");
+                    return {};
+                }
+                char next_ch = m_input.characters()[i + 1];
+                if (next_ch == '$' || next_ch == '`'
+                    || next_ch == '"' || next_ch == '\\') {
+                    m_token.append(next_ch);
+                    ++i;
+                    continue;
+                }
+                m_token.append('\\');
                 break;
             }
             m_token.append(ch);
