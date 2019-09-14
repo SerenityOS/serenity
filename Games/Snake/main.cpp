@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [&](const GAction&) {
         game->reset();
     }));
-    app_menu->add_action(GCommonActions::make_quit_action([] {
+    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         GApplication::the().quit(0);
     }));
 

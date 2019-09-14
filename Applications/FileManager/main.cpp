@@ -131,7 +131,7 @@ int main(int argc, char** argv)
 
     view_as_icons_action->set_checked(true);
 
-    auto copy_action = GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [&](const GAction&) {
+    auto copy_action = GCommonActions::make_copy_action([&](const GAction&) {
         if (!selected_file_paths.has_value()) {
             return;
         }
@@ -143,7 +143,7 @@ int main(int argc, char** argv)
     });
     copy_action->set_enabled(false);
 
-    auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
+    auto paste_action = GCommonActions::make_paste_action([&](const GAction&) {
         auto data_and_type = GClipboard::the().data_and_type();
         if (data_and_type.type != "file-list") {
             dbg() << "Cannot paste clipboard type " << data_and_type.type;
@@ -177,7 +177,7 @@ int main(int argc, char** argv)
     auto properties_action
         = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [](auto&) {});
 
-    auto delete_action = GAction::create("Delete", { Mod_None, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
+    auto delete_action = GCommonActions::make_delete_action([](const GAction&) {
         dbgprintf("'Delete' action activated!\n");
     });
     delete_action->set_enabled(false);
@@ -204,7 +204,7 @@ int main(int argc, char** argv)
     app_menu->add_action(paste_action);
     app_menu->add_action(delete_action);
     app_menu->add_separator();
-    app_menu->add_action(GCommonActions::make_quit_action([] {
+    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         GApplication::the().quit(0);
     }));
     menubar->add_menu(move(app_menu));

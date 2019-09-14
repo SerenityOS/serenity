@@ -124,7 +124,7 @@ void IRCAppWindow::setup_menus()
 {
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("IRC Client");
-    app_menu->add_action(GCommonActions::make_quit_action([] {
+    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
         return;

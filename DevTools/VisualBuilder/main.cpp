@@ -30,7 +30,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Visual Builder");
-    app_menu->add_action(GCommonActions::make_quit_action([] {
+    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         GApplication::the().quit(0);
         return;
     }));

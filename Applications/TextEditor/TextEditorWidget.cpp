@@ -118,14 +118,14 @@ TextEditorWidget::TextEditorWidget()
 
     m_new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GAction&) {
         if (m_document_dirty) {
-            GMessageBox save_document_first_box("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window()); 
+            GMessageBox save_document_first_box("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
             auto save_document_first_result = save_document_first_box.exec();
 
             if (save_document_first_result != GDialog::ExecResult::ExecOK)
-               return; 
+                return;
             m_save_action->activate();
         }
-        
+
         m_document_dirty = false;
         m_editor->set_text(StringView());
         set_path(FileSystemPath());
@@ -184,7 +184,7 @@ TextEditorWidget::TextEditorWidget()
     app_menu->add_action(*m_save_action);
     app_menu->add_action(*m_save_as_action);
     app_menu->add_separator();
-    app_menu->add_action(GCommonActions::make_quit_action([this] {
+    app_menu->add_action(GCommonActions::make_quit_action([this](auto&) {
         if (!request_close())
             return;
         GApplication::the().quit(0);

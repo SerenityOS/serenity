@@ -67,7 +67,7 @@ int main(int argc, char** argv)
     app_menu->add_action(*chord_toggler_action);
     app_menu->add_separator();
 
-    app_menu->add_action(GCommonActions::make_quit_action([] {
+    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         GApplication::the().quit(0);
         return;
     }));
