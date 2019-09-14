@@ -48,7 +48,8 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, size_t pitch, RG
     , m_pitch(pitch)
     , m_format(format)
 {
-    ASSERT(format != Format::Indexed8);
+    if (format == Format::Indexed8)
+        m_palette = new RGBA32[256];
 }
 
 GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, MappedFile&& mapped_file)
