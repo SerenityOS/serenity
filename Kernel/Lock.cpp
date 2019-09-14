@@ -49,11 +49,13 @@ bool Lock::unlock_if_locked()
     for (;;) {
         if (CAS(&m_lock, 1, 0) == 0) {
             if (m_level == 0) {
-                memory_barrier();
                 m_lock = 0;
                 return false;
             }
-            ASSERT(m_holder == current);
+            if (m_holder != current) {
+                m_lock = 0;
+                return false;
+            }
             ASSERT(m_level);
             --m_level;
             if (m_level) {
