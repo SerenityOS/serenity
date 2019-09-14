@@ -19,6 +19,8 @@ class GMenuItem;
 class GWidget;
 
 namespace GCommonActions {
+NonnullRefPtr<GAction> make_undo_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_redo_action(Function<void(GAction&)>, GWidget* widget = nullptr);
 NonnullRefPtr<GAction> make_cut_action(Function<void(GAction&)>, GWidget* widget = nullptr);
 NonnullRefPtr<GAction> make_copy_action(Function<void(GAction&)>, GWidget* widget = nullptr);
 NonnullRefPtr<GAction> make_paste_action(Function<void(GAction&)>, GWidget* widget = nullptr);

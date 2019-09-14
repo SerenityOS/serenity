@@ -35,18 +35,12 @@ GTextEditor::~GTextEditor()
 
 void GTextEditor::create_actions()
 {
-    m_undo_action = GAction::create(
-        "Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), [&](const GAction&) {
-            // FIXME: Undo
-        },
-        this);
-
-    m_redo_action = GAction::create(
-        "Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), [&](const GAction&) {
-            // FIXME: Redo
-        },
-        this);
-
+    m_undo_action = GCommonActions::make_undo_action([&](auto&) {
+        // FIXME: Undo
+    });
+    m_redo_action = GCommonActions::make_redo_action([&](auto&) {
+        // FIXME: Undo
+    });
     m_cut_action = GCommonActions::make_cut_action([&](auto&) { cut(); }, this);
     m_copy_action = GCommonActions::make_copy_action([&](auto&) { copy(); }, this);
     m_paste_action = GCommonActions::make_paste_action([&](auto&) { paste(); }, this);
