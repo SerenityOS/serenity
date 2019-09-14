@@ -360,6 +360,9 @@ static int run_command(const String& cmd)
     if (cmd.is_empty())
         return 0;
 
+    if (cmd.starts_with("#"))
+        return 0;
+
     auto commands = Parser(cmd).parse();
 
 #ifdef SH_DEBUG
@@ -639,6 +642,21 @@ int main(int argc, char** argv)
     if (argc > 2 && !strcmp(argv[1], "-c")) {
         dbgprintf("sh -c '%s'\n", argv[2]);
         run_command(argv[2]);
+        return 0;
+    }
+
+    if (argc == 2 && argv[1][0] != '-') {
+        CFile file(argv[1]);
+        if (!file.open(CIODevice::ReadOnly)) {
+            fprintf(stderr, "Failed to open %s: %s\n", file.filename().characters(), file.error_string());
+            return 1;
+        }
+        for (;;) {
+            auto line = file.read_line(4096);
+            if (line.is_null())
+                break;
+            run_command(String::copy(line, Chomp));
+        }
         return 0;
     }
 
