@@ -136,23 +136,25 @@ int main(int argc, char** argv)
             return;
         }
         StringBuilder copy_text;
-        copy_text.append("copy\n");
         for (String& path : selected_file_paths.value()) {
             copy_text.appendf("%s\n", path.characters());
         }
-        GClipboard::the().set_data(copy_text.build());
+        GClipboard::the().set_data(copy_text.build(), "file-list");
     });
     copy_action->set_enabled(false);
 
     auto paste_action = GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [&](const GAction&) {
-        dbgprintf("'Paste' action activated!\n");
-        auto copied_lines = GClipboard::the().data().split('\n');
-        if (copied_lines.is_empty() || copied_lines.first() != "copy") {
-            GMessageBox::show("No files cut or copied.", "File Manager", GMessageBox::Type::Information);
+        auto data_and_type = GClipboard::the().data_and_type();
+        if (data_and_type.type != "file-list") {
+            dbg() << "Cannot paste clipboard type " << data_and_type.type;
             return;
         }
-        for (int i = 1; i < copied_lines.size(); ++i) {
-            auto current_path = copied_lines[i];
+        auto copied_lines = data_and_type.data.split('\n');
+        if (copied_lines.is_empty()) {
+            dbg() << "No files to paste";
+            return;
+        }
+        for (auto& current_path : copied_lines) {
             if (current_path.is_empty())
                 continue;
             auto current_directory = directory_view->path();
@@ -166,8 +168,14 @@ int main(int argc, char** argv)
             }
         }
     });
+    paste_action->set_enabled(GClipboard::the().type() == "file-list");
 
-    auto properties_action = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [](auto&) {});
+    GClipboard::the().on_content_change = [&](const String& data_type) {
+        paste_action->set_enabled(data_type == "file-list");
+    };
+
+    auto properties_action
+        = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [](auto&) {});
 
     auto delete_action = GAction::create("Delete", { Mod_None, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [](const GAction&) {
         dbgprintf("'Delete' action activated!\n");
