@@ -187,7 +187,7 @@ int main(int argc, char** argv)
             settings_window->move_to_front();
         }));
     app_menu->add_separator();
-    app_menu->add_action(GCommonActions::make_quit_action([] {
+    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
     }));

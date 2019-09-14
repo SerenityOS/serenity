@@ -19,10 +19,11 @@ class GMenuItem;
 class GWidget;
 
 namespace GCommonActions {
-NonnullRefPtr<GAction> make_cut_action(Function<void()>, GWidget* widget);
-NonnullRefPtr<GAction> make_copy_action(Function<void()>, GWidget* widget);
-NonnullRefPtr<GAction> make_paste_action(Function<void()>, GWidget* widget);
-NonnullRefPtr<GAction> make_quit_action(Function<void()>);
+NonnullRefPtr<GAction> make_cut_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_copy_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_paste_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_delete_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_quit_action(Function<void(GAction&)>);
 };
 
 class GAction : public RefCounted<GAction>

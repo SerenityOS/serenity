@@ -4,38 +4,33 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GMenuItem.h>
 
-NonnullRefPtr<GAction> GCommonActions::make_cut_action(Function<void()> callback, GWidget* widget)
+namespace GCommonActions {
+
+NonnullRefPtr<GAction> make_delete_action(Function<void(GAction&)> callback, GWidget* widget)
 {
-    return GAction::create(
-        "Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), [callback = move(callback)](const GAction&) {
-            callback();
-        },
-        widget);
+    return GAction::create("Delete", { Mod_None, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), move(callback), widget);
 }
 
-NonnullRefPtr<GAction> GCommonActions::make_copy_action(Function<void()> callback, GWidget* widget)
+NonnullRefPtr<GAction> make_cut_action(Function<void(GAction&)> callback, GWidget* widget)
 {
-    return GAction::create(
-        "Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [callback = move(callback)](const GAction&) {
-            callback();
-        },
-        widget);
+    return GAction::create("Cut", { Mod_Ctrl, Key_X }, GraphicsBitmap::load_from_file("/res/icons/cut16.png"), move(callback), widget);
 }
 
-NonnullRefPtr<GAction> GCommonActions::make_paste_action(Function<void()> callback, GWidget* widget)
+NonnullRefPtr<GAction> make_copy_action(Function<void(GAction&)> callback, GWidget* widget)
 {
-    return GAction::create(
-        "Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [callback = move(callback)](const GAction&) {
-            callback();
-        },
-        widget);
+    return GAction::create("Copy", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), move(callback), widget);
 }
 
-NonnullRefPtr<GAction> GCommonActions::make_quit_action(Function<void()> callback)
+NonnullRefPtr<GAction> make_paste_action(Function<void(GAction&)> callback, GWidget* widget)
 {
-    return GAction::create("Quit", { Mod_Alt, Key_F4 }, [callback = move(callback)](const GAction&) {
-        callback();
-    });
+    return GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), move(callback), widget);
+}
+
+NonnullRefPtr<GAction> make_quit_action(Function<void(GAction&)> callback)
+{
+    return GAction::create("Quit", { Mod_Alt, Key_F4 }, move(callback));
+}
+
 }
 
 GAction::GAction(const StringView& text, Function<void(GAction&)> on_activation_callback, GWidget* widget)

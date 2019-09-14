@@ -47,26 +47,10 @@ void GTextEditor::create_actions()
         },
         this);
 
-    m_cut_action = GCommonActions::make_cut_action([&] {
-        cut();
-    },
-        this);
-
-    m_copy_action = GCommonActions::make_copy_action([&] {
-        copy();
-    },
-        this);
-
-    m_paste_action = GCommonActions::make_paste_action([&] {
-        paste();
-    },
-        this);
-
-    m_delete_action = GAction::create(
-        "Delete", { 0, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), [&](const GAction&) {
-            do_delete();
-        },
-        this);
+    m_cut_action = GCommonActions::make_cut_action([&](auto&) { cut(); }, this);
+    m_copy_action = GCommonActions::make_copy_action([&](auto&) { copy(); }, this);
+    m_paste_action = GCommonActions::make_paste_action([&](auto&) { paste(); }, this);
+    m_delete_action = GCommonActions::make_delete_action([&](auto&) { do_delete(); }, this);
 }
 
 void GTextEditor::set_text(const StringView& text)
@@ -554,13 +538,13 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         } else if (m_cursor.line() != line_count() - 1) {
             new_line = m_cursor.line() + 1;
             new_column = 0;
-        } 
+        }
         toggle_selection_if_needed_for_event(event);
         set_cursor(new_line, new_column);
         if (m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
-        } 
+        }
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
