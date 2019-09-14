@@ -6,6 +6,16 @@
 
 namespace GCommonActions {
 
+NonnullRefPtr<GAction> make_move_to_front_action(Function<void(GAction&)> callback, GWidget* widget)
+{
+    return GAction::create("Move to front", { Mod_Ctrl | Mod_Shift, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/move-to-front.png"), move(callback), widget);
+}
+
+NonnullRefPtr<GAction> make_move_to_back_action(Function<void(GAction&)> callback, GWidget* widget)
+{
+    return GAction::create("Move to back", { Mod_Ctrl | Mod_Shift, Key_Down }, GraphicsBitmap::load_from_file("/res/icons/16x16/move-to-back.png"), move(callback), widget);
+}
+
 NonnullRefPtr<GAction> make_undo_action(Function<void(GAction&)> callback, GWidget* widget)
 {
     return GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), move(callback), widget);

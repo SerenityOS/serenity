@@ -27,11 +27,11 @@ VBForm::VBForm(const String& name, GWidget* parent)
     set_greedy_for_hits(true);
 
     m_context_menu = make<GMenu>();
-    m_context_menu->add_action(GAction::create("Move to front", [this](auto&) {
+    m_context_menu->add_action(GCommonActions::make_move_to_front_action([this](auto&) {
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_front();
     }));
-    m_context_menu->add_action(GAction::create("Move to back", [this](auto&) {
+    m_context_menu->add_action(GCommonActions::make_move_to_back_action([this](auto&) {
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_back();
     }));
