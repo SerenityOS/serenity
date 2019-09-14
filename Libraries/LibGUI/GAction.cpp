@@ -6,6 +6,16 @@
 
 namespace GCommonActions {
 
+NonnullRefPtr<GAction> make_undo_action(Function<void(GAction&)> callback, GWidget* widget)
+{
+    return GAction::create("Undo", { Mod_Ctrl, Key_Z }, GraphicsBitmap::load_from_file("/res/icons/16x16/undo.png"), move(callback), widget);
+}
+
+NonnullRefPtr<GAction> make_redo_action(Function<void(GAction&)> callback, GWidget* widget)
+{
+    return GAction::create("Redo", { Mod_Ctrl, Key_Y }, GraphicsBitmap::load_from_file("/res/icons/16x16/redo.png"), move(callback), widget);
+}
+
 NonnullRefPtr<GAction> make_delete_action(Function<void(GAction&)> callback, GWidget* widget)
 {
     return GAction::create("Delete", { Mod_None, Key_Delete }, GraphicsBitmap::load_from_file("/res/icons/16x16/delete.png"), move(callback), widget);
