@@ -35,7 +35,7 @@ VBForm::VBForm(const String& name, GWidget* parent)
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_back();
     }));
-    m_context_menu->add_action(GAction::create("Delete", [this](auto&) {
+    m_context_menu->add_action(GCommonActions::make_delete_action([this](auto&) {
         delete_selected_widgets();
     }));
 }
