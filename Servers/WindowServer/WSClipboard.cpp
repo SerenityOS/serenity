@@ -36,9 +36,13 @@ void WSClipboard::clear()
     m_contents_size = 0;
 }
 
-void WSClipboard::set_data(NonnullRefPtr<SharedBuffer>&& data, int contents_size)
+void WSClipboard::set_data(NonnullRefPtr<SharedBuffer>&& data, int contents_size, const String& data_type)
 {
-    dbgprintf("WSClipboard::set_data <- %p (%u bytes)\n", data->data(), contents_size);
+    dbg() << "WSClipboard::set_data <- [" << data_type << "] " << data->data() << " (" << contents_size << " bytes)";
     m_shared_buffer = move(data);
     m_contents_size = contents_size;
+    m_data_type = data_type;
+
+    if (on_content_change)
+        on_content_change();
 }

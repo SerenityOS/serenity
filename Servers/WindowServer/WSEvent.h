@@ -504,19 +504,22 @@ private:
 
 class WSAPISetClipboardContentsRequest final : public WSAPIClientRequest {
 public:
-    explicit WSAPISetClipboardContentsRequest(int client_id, int shared_buffer_id, int size)
+    explicit WSAPISetClipboardContentsRequest(int client_id, int shared_buffer_id, int size, const String& data_type)
         : WSAPIClientRequest(WSEvent::APISetClipboardContentsRequest, client_id)
         , m_shared_buffer_id(shared_buffer_id)
         , m_size(size)
+        , m_data_type(data_type)
     {
     }
 
     int shared_buffer_id() const { return m_shared_buffer_id; }
     int size() const { return m_size; }
+    const String& data_type() const { return m_data_type; }
 
 private:
     int m_shared_buffer_id { 0 };
     int m_size { 0 };
+    String m_data_type;
 };
 
 class WSAPIGetClipboardContentsRequest final : public WSAPIClientRequest {
