@@ -490,8 +490,10 @@ void handle_irq()
         }
     }
 
-    if (s_irq_handler[irq])
+    if (s_irq_handler[irq]) {
         s_irq_handler[irq]->handle_irq();
+        Scheduler::stop_idling();
+    }
     PIC::eoi(irq);
 }
 

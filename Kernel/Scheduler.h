@@ -30,6 +30,8 @@ public:
     static Process* colonel();
     static bool is_active();
     static void beep();
+    static void idle_loop();
+    static void stop_idling();
 
     template<typename Callback>
     static inline IterationDecision for_each_runnable(Callback);

@@ -277,8 +277,6 @@ extern "C" [[noreturn]] void init()
 
     sti();
 
-    // This now becomes the idle process :^)
-    for (;;) {
-        asm("hlt");
-    }
+    Scheduler::idle_loop();
+    ASSERT_NOT_REACHED();
 }

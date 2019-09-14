@@ -575,3 +575,24 @@ void Scheduler::timer_tick(RegisterDump& regs)
         "orl $0x00004000, (%esp)\n"
         "popf\n");
 }
+
+static bool s_should_stop_idling = false;
+
+void Scheduler::stop_idling()
+{
+    if (current != &s_colonel_process->main_thread())
+        return;
+
+    s_should_stop_idling = true;
+}
+
+void Scheduler::idle_loop()
+{
+    for (;;) {
+        asm("hlt");
+        if (s_should_stop_idling) {
+            s_should_stop_idling = false;
+            yield();
+        }
+    }
+}
