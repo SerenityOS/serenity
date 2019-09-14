@@ -35,6 +35,7 @@ public:
     void for_each_window(Callback);
 
     void notify_about_new_screen_rect(const Rect&);
+    void notify_about_clipboard_contents_changed();
     void post_paint_message(WSWindow&);
 
     WSMenu* find_menu_by_id(int menu_id)

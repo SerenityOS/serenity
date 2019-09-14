@@ -1,3 +1,4 @@
+#include "WSClipboard.h"
 #include <Kernel/KeyCode.h>
 #include <Kernel/MousePacket.h>
 #include <LibCore/CLocalSocket.h>
@@ -47,6 +48,12 @@ WSEventLoop::WSEventLoop()
 
     m_mouse_notifier = make<CNotifier>(m_mouse_fd, CNotifier::Read);
     m_mouse_notifier->on_ready_to_read = [this] { drain_mouse(); };
+
+    WSClipboard::the().on_content_change = [&] {
+        WSClientConnection::for_each_client([&](auto& client) {
+            client.notify_about_clipboard_contents_changed();
+        });
+    };
 }
 
 WSEventLoop::~WSEventLoop()

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/String.h>
 #include <SharedBuffer.h>
 
@@ -13,15 +14,19 @@ public:
         return m_shared_buffer;
     }
 
+    const String& data_type() const { return m_data_type; }
     const u8* data() const;
     int size() const;
 
     void clear();
-    void set_data(NonnullRefPtr<SharedBuffer>&&, int contents_size);
+    void set_data(NonnullRefPtr<SharedBuffer>&&, int contents_size, const String& data_type);
+
+    Function<void()> on_content_change;
 
 private:
     WSClipboard();
 
+    String m_data_type;
     RefPtr<SharedBuffer> m_shared_buffer;
     int m_contents_size { 0 };
 };

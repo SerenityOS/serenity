@@ -15,6 +15,7 @@
 #include <LibCore/CObject.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GClipboard.h>
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GWidget.h>
@@ -241,6 +242,11 @@ void GWindowServerConnection::postprocess_bundles(Vector<IncomingMessageBundle>&
 
         if (event.type == WSAPI_ServerMessage::Type::ScreenRectChanged) {
             GDesktop::the().did_receive_screen_rect({}, event.screen.rect);
+            continue;
+        }
+
+        if (event.type == WSAPI_ServerMessage::Type::ClipboardContentsChanged) {
+            GClipboard::the().did_receive_clipboard_contents_changed({}, String(event.text, event.text_length));
             continue;
         }
 

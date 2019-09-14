@@ -15,7 +15,7 @@ GClipboard::GClipboard()
 {
 }
 
-String GClipboard::data() const
+GClipboard::DataAndType GClipboard::data_and_type() const
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::GetClipboardContents;
@@ -31,10 +31,12 @@ String GClipboard::data() const
         dbgprintf("GClipboard::data() clipping contents size is greater than shared buffer size\n");
         return {};
     }
-    return String((const char*)shared_buffer->data(), response.clipboard.contents_size);
+    auto data = String((const char*)shared_buffer->data(), response.clipboard.contents_size);
+    auto type = String(response.text, response.text_length);
+    return { data, type };
 }
 
-void GClipboard::set_data(const StringView& data)
+void GClipboard::set_data(const StringView& data, const String& type)
 {
     WSAPI_ClientMessage request;
     request.type = WSAPI_ClientMessage::Type::SetClipboardContents;
@@ -51,6 +53,18 @@ void GClipboard::set_data(const StringView& data)
     shared_buffer->share_with(GWindowServerConnection::the().server_pid());
     request.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
     request.clipboard.contents_size = data.length();
+
+    ASSERT(type.length() < (ssize_t)sizeof(request.text));
+    if (!type.is_null())
+        strcpy(request.text, type.characters());
+    request.text_length = type.length();
+
     auto response = GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidSetClipboardContents);
     ASSERT(response.clipboard.shared_buffer_id == shared_buffer->shared_buffer_id());
+}
+
+void GClipboard::did_receive_clipboard_contents_changed(Badge<GWindowServerConnection>, const String& data_type)
+{
+    if (on_content_change)
+        on_content_change(data_type);
 }

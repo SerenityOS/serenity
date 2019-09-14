@@ -112,6 +112,7 @@ struct WSAPI_ServerMessage {
         DidSetResolution,
         DidSetWindowHasAlphaChannel,
         ScreenRectChanged,
+        ClipboardContentsChanged,
 
         __Begin_WM_Events__,
         WM_WindowRemoved,

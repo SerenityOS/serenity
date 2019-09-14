@@ -87,6 +87,19 @@ void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
     post_message(message);
 }
 
+void WSClientConnection::notify_about_clipboard_contents_changed()
+{
+    auto& clipboard = WSClipboard::the();
+    WSAPI_ServerMessage message;
+    message.type = WSAPI_ServerMessage::Type::ClipboardContentsChanged;
+    message.clipboard.shared_buffer_id = -1;
+    message.clipboard.contents_size = -1;
+    ASSERT(clipboard.data_type().length() < (ssize_t)sizeof(message.text));
+    strcpy(message.text, clipboard.data_type().characters());
+    message.text_length = clipboard.data_type().length();
+    post_message(message);
+}
+
 void WSClientConnection::event(CEvent& event)
 {
     if (static_cast<WSEvent&>(event).is_client_request()) {
@@ -247,7 +260,11 @@ bool WSClientConnection::handle_message(const WSAPI_ClientMessage& message, cons
         CEventLoop::current().post_event(*this, make<WSAPIGetWindowRectRequest>(client_id(), message.window_id));
         break;
     case WSAPI_ClientMessage::Type::SetClipboardContents:
-        CEventLoop::current().post_event(*this, make<WSAPISetClipboardContentsRequest>(client_id(), message.clipboard.shared_buffer_id, message.clipboard.contents_size));
+        if (message.text_length > (int)sizeof(message.text)) {
+            did_misbehave();
+            return false;
+        }
+        CEventLoop::current().post_event(*this, make<WSAPISetClipboardContentsRequest>(client_id(), message.clipboard.shared_buffer_id, message.clipboard.contents_size, String(message.text, message.text_length)));
         break;
     case WSAPI_ClientMessage::Type::GetClipboardContents:
         CEventLoop::current().post_event(*this, make<WSAPIGetClipboardContentsRequest>(client_id()));
@@ -661,7 +678,7 @@ void WSClientConnection::handle_request(const WSAPISetClipboardContentsRequest& 
         post_error("WSAPISetClipboardContentsRequest: Bad shared buffer ID");
         return;
     }
-    WSClipboard::the().set_data(*shared_buffer, request.size());
+    WSClipboard::the().set_data(*shared_buffer, request.size(), request.data_type());
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidSetClipboardContents;
     response.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
@@ -670,26 +687,31 @@ void WSClientConnection::handle_request(const WSAPISetClipboardContentsRequest& 
 
 void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
 {
+    auto& clipboard = WSClipboard::the();
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidGetClipboardContents;
     response.clipboard.shared_buffer_id = -1;
     response.clipboard.contents_size = 0;
-    if (WSClipboard::the().size()) {
+    if (clipboard.size()) {
         // FIXME: Optimize case where an app is copy/pasting within itself.
         //        We can just reuse the SharedBuffer then, since it will have the same peer PID.
         //        It would be even nicer if a SharedBuffer could have an arbitrary number of clients..
-        RefPtr<SharedBuffer> shared_buffer = SharedBuffer::create_with_size(WSClipboard::the().size());
+        RefPtr<SharedBuffer> shared_buffer = SharedBuffer::create_with_size(clipboard.size());
         ASSERT(shared_buffer);
-        memcpy(shared_buffer->data(), WSClipboard::the().data(), WSClipboard::the().size());
+        memcpy(shared_buffer->data(), clipboard.data(), clipboard.size());
         shared_buffer->seal();
         shared_buffer->share_with(client_pid());
         response.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
-        response.clipboard.contents_size = WSClipboard::the().size();
+        response.clipboard.contents_size = clipboard.size();
 
         // FIXME: This is a workaround for the fact that SharedBuffers will go away if neither side is retaining them.
         //        After we respond to GetClipboardContents, we have to wait for the client to ref the buffer on his side.
         m_last_sent_clipboard_content = move(shared_buffer);
     }
+    ASSERT(clipboard.data_type().length() < (ssize_t)sizeof(response.text));
+    if (!clipboard.data_type().is_null())
+        strcpy(response.text, clipboard.data_type().characters());
+    response.text_length = clipboard.data_type().length();
     post_message(response);
 }
 
