@@ -1,9 +1,7 @@
 #!/bin/sh
-PORT_DIR=doom
+PORT_DIR=SerenityDOOM
 fetch() {
-    run_fetch_git "https://github.com/ozkl/doomgeneric.git"
-
-    run_patch serenity-port.patch -p1
+    run_fetch_git "https://github.com/SerenityOS/SerenityDOOM.git"
 }
 configure() {
     echo ""
