@@ -167,6 +167,7 @@ void GItemView::paint_event(GPaintEvent& event)
         Rect text_rect { 0, icon_rect.bottom() + 6 + 1, font.width(item_text.to_string()), font.glyph_height() };
         text_rect.center_horizontally_within(item_rect);
         text_rect.inflate(6, 4);
+        text_rect.intersect(item_rect);
 
         Color text_color;
         if (is_selected_item)
@@ -174,7 +175,7 @@ void GItemView::paint_event(GPaintEvent& event)
         else
             text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(Color::Black);
         painter.fill_rect(text_rect, background_color);
-        painter.draw_text(text_rect, item_text.to_string(), font, TextAlignment::Center, text_color);
+        painter.draw_text(text_rect, item_text.to_string(), font, TextAlignment::Center, text_color, TextElision::Right);
     };
 }
 
