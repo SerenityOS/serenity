@@ -148,7 +148,7 @@ u32 Utf8CodepointIterator::operator*() const
 
     bool first_byte_makes_sense = decode_first_byte(m_ptr[0], codepoint_length_in_bytes, codepoint_value_so_far);
     if (!first_byte_makes_sense) {
-        dbg() << "First byte doesn't make sense, bytes = " << (const char*)m_ptr;
+        dbg() << "First byte doesn't make sense, bytes: " << StringView((const char*)m_ptr, m_length);
     }
     ASSERT(first_byte_makes_sense);
     if (codepoint_length_in_bytes > m_length) {
