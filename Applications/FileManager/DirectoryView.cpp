@@ -4,6 +4,24 @@
 #include <stdio.h>
 #include <unistd.h>
 
+// FIXME: Remove this hackery once printf() supports floats.
+static String number_string_with_one_decimal(float number, const char* suffix)
+{
+    float decimals = number - (int)number;
+    return String::format("%d.%d %s", (int)number, (int)(decimals * 10), suffix);
+}
+
+static String human_readable_size(size_t size)
+{
+    if (size < 1 * KB)
+        return String::format("%zu bytes", size);
+    if (size < 1 * MB)
+        return number_string_with_one_decimal((float)size / (float)KB, "KB");
+    if (size < 1 * GB)
+        return number_string_with_one_decimal((float)size / (float)MB, "MB");
+    return number_string_with_one_decimal((float)size / (float)GB, "GB");
+}
+
 void DirectoryView::handle_activation(const GModelIndex& index)
 {
     if (!index.is_valid())
@@ -191,11 +209,10 @@ void DirectoryView::open_next_directory()
 void DirectoryView::update_statusbar()
 {
     if (current_view().selection().is_empty()) {
-        set_status_message(String::format("%d item%s (%u byte%s)",
+        set_status_message(String::format("%d item%s (%s)",
             model().row_count(),
             model().row_count() != 1 ? "s" : "",
-            model().bytes_in_files(),
-            model().bytes_in_files() != 1 ? "s" : ""));
+            human_readable_size(model().bytes_in_files()).characters()));
         return;
     }
 
@@ -208,9 +225,8 @@ void DirectoryView::update_statusbar()
         selected_byte_count += file_size;
     });
 
-    set_status_message(String::format("%d item%s selected (%u byte%s)",
+    set_status_message(String::format("%d item%s selected (%s)",
         selected_item_count,
         selected_item_count != 1 ? "s" : "",
-        selected_byte_count,
-        selected_byte_count != 1 ? "s" : ""));
+        human_readable_size(selected_byte_count).characters()));
 }
