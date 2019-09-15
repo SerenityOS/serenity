@@ -112,6 +112,14 @@ RefPtr<GraphicsBitmap> load_png(const StringView& path)
     return bitmap;
 }
 
+RefPtr<GraphicsBitmap> load_png_from_memory(const u8* data, size_t length)
+{
+    auto bitmap = load_png_impl(data, length);
+    if (bitmap)
+        bitmap->set_mmap_name(String::format("GraphicsBitmap [%dx%d] - Decoded PNG: <memory>", bitmap->width(), bitmap->height()));
+    return bitmap;
+}
+
 [[gnu::always_inline]] static inline u8 paeth_predictor(int a, int b, int c)
 {
     int p = a + b - c;
