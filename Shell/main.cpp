@@ -175,7 +175,7 @@ static int sh_popd(int argc, char** argv)
         return 0;
     }
 
-    for (int i = 0; i < argc; i++) {
+    for (int i = 1; i < argc; i++) {
         const char* arg = argv[i];
         if (!strcmp(arg, "-n")) {
             should_switch = false;
@@ -189,7 +189,6 @@ static int sh_popd(int argc, char** argv)
     }
 
     const char* real_path = canonical_path.string().characters();
-    g.directory_stack.append(g.cwd.characters());
 
     struct stat st;
     int rc = stat(real_path, &st);
@@ -247,13 +246,16 @@ static int sh_pushd(int argc, char** argv)
 
     // Let's assume the user's typed in 'pushd <dir>'
     if (argc == 2) {
+        g.directory_stack.append(g.cwd.characters());
         if (argv[1][0] == '/') {
             path_builder.append(argv[1]);
         }
-        else 
+        else {
             path_builder.appendf("%s/%s", g.cwd.characters(), argv[1]);
+        }
     } else if (argc == 3) {
-        for (int i = 0; i < argc; i++) {
+        g.directory_stack.append(g.cwd.characters());
+        for (int i = 1; i < argc; i++) {
             const char* arg = argv[i];
 
             if (arg[0] != '-') {
@@ -276,7 +278,6 @@ static int sh_pushd(int argc, char** argv)
     }
 
     const char* real_path = canonical_path.string().characters();
-    g.directory_stack.append(real_path);
 
     struct stat st;
     int rc = stat(real_path, &st);
