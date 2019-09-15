@@ -151,16 +151,6 @@ void MemoryManager::initialize_paging()
 #endif
 }
 
-RefPtr<PhysicalPage> MemoryManager::allocate_page_table(PageDirectory& page_directory, unsigned index)
-{
-    ASSERT(!page_directory.m_physical_pages.contains(index));
-    auto physical_page = allocate_supervisor_physical_page();
-    if (!physical_page)
-        return nullptr;
-    page_directory.m_physical_pages.set(index, physical_page);
-    return physical_page;
-}
-
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -186,7 +176,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             pde.set_writable(true);
         } else {
             //ASSERT(&page_directory != m_kernel_page_directory.ptr());
-            auto page_table = allocate_page_table(page_directory, page_directory_index);
+            auto page_table = allocate_supervisor_physical_page();
 #ifdef MM_DEBUG
             dbgprintf("MM: PD K%x (%s) at P%x allocated page table #%u (for V%p) at P%x\n",
                 &page_directory,
