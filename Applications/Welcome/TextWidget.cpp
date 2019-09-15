@@ -24,7 +24,7 @@ void TextWidget::set_text(const StringView& text)
 {
     if (text == m_text)
         return;
-    m_text = move(text);
+    m_text = text;
     wrap_and_set_height();
     update();
 }
