@@ -39,11 +39,36 @@ void DisplayPropertiesWidget::create_resolution_list()
     m_resolutions.append({ 800, 600 });
     m_resolutions.append({ 1024, 768 });
     m_resolutions.append({ 1280, 1024 });
-    m_resolutions.append({ 1366, 768 });
     m_resolutions.append({ 1440, 900 });
     m_resolutions.append({ 1600, 900 });
     m_resolutions.append({ 1920, 1080 });
     m_resolutions.append({ 2560, 1080 });
+
+    Size find_size;
+
+    bool okay = false;
+    // Let's attempt to find the current resolution and select it!
+    find_size.set_width(m_wm_config->read_entry("Screen", "Width", "1024").to_int(okay));
+    if(!okay) {
+        perror("DisplayProperties: failed to convert width to int!");
+        return;
+    }
+
+    find_size.set_height(m_wm_config->read_entry("Screen", "Height", "768").to_int(okay));
+    if(!okay) {
+        perror("DisplayProperties: failed to convert height to int!");
+        return;
+    }
+
+    int index = 0;
+    for(auto& resolution : m_resolutions) {
+        if(resolution == find_size) {
+            m_selected_resolution = m_resolutions.at(index);
+            return; // We don't need to do anything else
+        }
+
+        index++;
+    }
 
     m_selected_resolution = m_resolutions.at(0);
 }
