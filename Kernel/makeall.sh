@@ -57,6 +57,7 @@ build_targets="$build_targets ../Applications/Taskbar"
 build_targets="$build_targets ../Applications/Terminal"
 build_targets="$build_targets ../Applications/TextEditor"
 build_targets="$build_targets ../Applications/SoundPlayer"
+build_targets="$build_targets ../Applications/Welcome"
 
 build_targets="$build_targets ../Demos/Fire"
 build_targets="$build_targets ../Demos/HelloWorld"
