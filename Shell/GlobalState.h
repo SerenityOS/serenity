@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Vector.h>
 #include <termios.h>
 
 struct GlobalState {
@@ -15,6 +16,7 @@ struct GlobalState {
     bool was_interrupted { false };
     bool was_resized { false };
     int last_return_code { 0 };
+    Vector<String> directory_stack;
 };
 
 extern GlobalState g;

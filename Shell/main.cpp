@@ -153,6 +153,200 @@ static int sh_umask(int argc, char** argv)
     return 0;
 }
 
+static int sh_popd(int argc, char** argv)
+{
+    if (g.directory_stack.size() <= 1) {
+        fprintf(stderr, "Shell: popd: directory stack empty\n");
+        return 1;
+    }
+
+    bool should_switch = true;
+    String path = g.directory_stack.take_last();
+
+    // When no arguments are given, popd removes the top directory from the stack and performs a cd to the new top directory.
+    if (argc == 1) {
+        int rc = chdir(path.characters());
+        if (rc < 0) {
+            fprintf(stderr, "chdir(%s) failed: %s", path.characters(), strerror(errno));
+            return 1;
+        }
+
+        g.cwd = path;
+        return 0;
+    }
+
+    for (int i = 0; i < argc; i++) {
+        const char* arg = argv[i];
+        if (!strcmp(arg, "-n")) {
+            should_switch = false;
+        }
+    }
+
+    FileSystemPath canonical_path(path.characters());
+    if (!canonical_path.is_valid()) {
+        fprintf(stderr, "FileSystemPath failed to canonicalize '%s'\n", path.characters());
+        return 1;
+    }
+
+    const char* real_path = canonical_path.string().characters();
+    g.directory_stack.append(g.cwd.characters());
+
+    struct stat st;
+    int rc = stat(real_path, &st);
+    if (rc < 0) {
+        fprintf(stderr, "stat(%s) failed: %s\n", real_path, strerror(errno));
+        return 1;
+    }
+
+    if (!S_ISDIR(st.st_mode)) {
+        fprintf(stderr, "Not a directory: %s\n", real_path);
+        return 1;
+    }
+
+    if (should_switch) {
+        int rc = chdir(real_path);
+        if (rc < 0) {
+            fprintf(stderr, "chdir(%s) failed: %s\n", real_path, strerror(errno));
+            return 1;
+        }
+
+        g.cwd = canonical_path.string();
+    }
+
+    return 0;
+}
+
+static int sh_pushd(int argc, char** argv)
+{
+    StringBuilder path_builder;
+    bool should_switch = true;
+
+    // From the BASH reference manual: https://www.gnu.org/software/bash/manual/html_node/Directory-Stack-Builtins.html
+    // With no arguments, pushd exchanges the top two directories and makes the new top the current directory.
+    if (argc == 1) {
+        if (g.directory_stack.size() < 2) {
+            fprintf(stderr, "pushd: no other directory\n");
+            return 1;
+        }
+
+        String dir1 = g.directory_stack.take_first();
+        String dir2 = g.directory_stack.take_first();
+        g.directory_stack.insert(0, dir2);
+        g.directory_stack.insert(1, dir1);
+
+        int rc = chdir(dir2.characters());
+        if (rc < 0) {
+            fprintf(stderr, "chdir(%s) failed: %s", dir2.characters(), strerror(errno));
+            return 1;
+        }
+
+        g.cwd = dir2;
+
+        return 0;
+    }
+
+    // Let's assume the user's typed in 'pushd <dir>'
+    if (argc == 2) {
+        if (argv[1][0] == '/') {
+            path_builder.append(argv[1]);
+        }
+        else 
+            path_builder.appendf("%s/%s", g.cwd.characters(), argv[1]);
+    } else if (argc == 3) {
+        for (int i = 0; i < argc; i++) {
+            const char* arg = argv[i];
+
+            if (arg[0] != '-') {
+                if (arg[0] == '/') {
+                    path_builder.append(arg);
+                }
+                else
+                    path_builder.appendf("%s/%s", g.cwd.characters(), arg);
+            }
+
+            if (!strcmp(arg, "-n"))
+                should_switch = false;
+        }
+    }
+
+    FileSystemPath canonical_path(path_builder.to_string());
+    if (!canonical_path.is_valid()) {
+        fprintf(stderr, "FileSystemPath failed to canonicalize '%s'\n", path_builder.to_string().characters());
+        return 1;
+    }
+
+    const char* real_path = canonical_path.string().characters();
+    g.directory_stack.append(real_path);
+
+    struct stat st;
+    int rc = stat(real_path, &st);
+    if (rc < 0) {
+        fprintf(stderr, "stat(%s) failed: %s\n", real_path, strerror(errno));
+        return 1;
+    }
+
+    if (!S_ISDIR(st.st_mode)) {
+        fprintf(stderr, "Not a directory: %s\n", real_path);
+        return 1;
+    }
+
+    if (should_switch) {
+        int rc = chdir(real_path);
+        if (rc < 0) {
+            fprintf(stderr, "chdir(%s) failed: %s\n", real_path, strerror(errno));
+            return 1;
+        }
+
+        g.cwd = canonical_path.string();
+    }
+
+    return 0;
+}
+
+static int sh_dirs(int argc, char** argv)
+{
+    // The first directory in the stack is ALWAYS the current directory
+    g.directory_stack.at(0) = g.cwd.characters();
+
+    if (argc == 1) {
+        for (String dir : g.directory_stack)
+            printf("%s ", dir.characters());
+
+        printf("\n");
+        return 0;
+    }
+
+    bool printed = false;
+    for (int i = 0; i < argc; i++) {
+        const char* arg = argv[i];
+        if (!strcmp(arg, "-c")) {
+            for (int i = 1; i < g.directory_stack.size(); i++)
+                g.directory_stack.remove(i);
+
+            printed = true;
+            continue;
+        }
+        if (!strcmp(arg, "-p") && !printed) {
+            for (auto& directory : g.directory_stack)
+                printf("%s\n", directory.characters());
+
+            printed = true;
+            continue;
+        }
+        if (!strcmp(arg, "-v") && !printed) {
+            int idx = 0;
+            for (auto& directory : g.directory_stack) {
+                printf("%d %s\n", idx++, directory.characters());
+            }
+
+            printed = true;
+            continue;
+        }
+    }
+
+    return 0;
+}
+
 static bool handle_builtin(int argc, char** argv, int& retval)
 {
     if (argc == 0)
@@ -183,6 +377,18 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     }
     if (!strcmp(argv[0], "umask")) {
         retval = sh_umask(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "dirs")) {
+        retval = sh_dirs(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "pushd")) {
+        retval = sh_pushd(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "popd")) {
+        retval = sh_popd(argc, argv);
         return true;
     }
     return false;
@@ -228,7 +434,7 @@ static bool is_glob(const StringView& s)
     return false;
 }
 
-static Vector<StringView> split_path(const StringView &path)
+static Vector<StringView> split_path(const StringView& path)
 {
     Vector<StringView> parts;
 
@@ -666,6 +872,8 @@ int main(int argc, char** argv)
         setenv("PWD", cwd, 1);
         free(cwd);
     }
+
+    g.directory_stack.append(g.cwd);
 
     load_history();
     atexit(save_history);
