@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/LogStream.h>
 #include <AK/Types.h>
 
 class PhysicalAddress {
@@ -32,3 +33,8 @@ public:
 private:
     u32 m_address { 0 };
 };
+
+inline const LogStream& operator<<(const LogStream& stream, PhysicalAddress value)
+{
+    return stream << 'P' << value.as_ptr();
+}
