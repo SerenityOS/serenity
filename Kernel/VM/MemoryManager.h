@@ -104,8 +104,6 @@ private:
     void flush_entire_tlb();
     void flush_tlb(VirtualAddress);
 
-    RefPtr<PhysicalPage> allocate_page_table(PageDirectory&, unsigned index);
-
     void map_protected(VirtualAddress, size_t length);
 
     void create_identity_mapping(PageDirectory&, VirtualAddress, size_t length);
