@@ -527,8 +527,46 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     return 0;
 }
 
+KResultOr<String> Process::find_shebang_interpreter_for_executable(const String& executable_path)
+{
+    // FIXME: It's a bit sad that we'll open the executable twice (in case there's no shebang)
+    //        Maybe we can find a way to plumb this opened FileDescription to the rest of the
+    //        exec implementation..
+    auto result = VFS::the().open(executable_path, 0, 0, current_directory());
+    if (result.is_error())
+        return result.error();
+    auto description = result.value();
+    auto metadata = description->metadata();
+
+    if (!metadata.may_execute(m_euid, m_gids))
+        return KResult(-EACCES);
+
+    if (metadata.size < 3)
+        return KResult(-ENOEXEC);
+
+    char first_page[PAGE_SIZE];
+    int nread = description->read((u8*)&first_page, sizeof(first_page));
+    int interpreter_length = 0;
+    if (nread > 2 && first_page[0] == '#' && first_page[1] == '!') {
+        for (int i = 2; i < nread; ++i) {
+            if (first_page[i] == '\n') {
+                interpreter_length = i - 2;
+                break;
+            }
+        }
+        if (interpreter_length > 0)
+            return String(&first_page[2], interpreter_length);
+    }
+
+    return KResult(-ENOEXEC);
+}
+
 int Process::exec(String path, Vector<String> arguments, Vector<String> environment)
 {
+    auto result = find_shebang_interpreter_for_executable(path);
+    if (!result.is_error())
+        return exec(result.value(), { result.value(), path }, move(environment));
+
     // The bulk of exec() is done by do_exec(), which ensures that all locals
     // are cleaned up by the time we yield-teleport below.
     int rc = do_exec(move(path), move(arguments), move(environment));
