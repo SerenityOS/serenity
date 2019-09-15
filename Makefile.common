@@ -33,6 +33,7 @@ CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARC
 CXX = $(PRE_CXX) i686-pc-serenity-g++
 LD = i686-pc-serenity-g++
 AS = i686-pc-serenity-as
+LINK = i686-pc-serenity-ld
 
 DEFINES = -DSANITIZE_PTRS -DDEBUG
 
