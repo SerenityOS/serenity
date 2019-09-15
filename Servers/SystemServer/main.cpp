@@ -93,8 +93,8 @@ int main(int, char**)
     start_process("/bin/TTYServer", { "tty3" }, highest_prio, "/dev/tty3");
 
     // Drop privileges.
-    setuid(100);
     setgid(100);
+    setuid(100);
 
     start_process("/bin/LookupServer", {}, lowest_prio);
     start_process("/bin/WindowServer", {}, highest_prio);
