@@ -39,11 +39,36 @@ void DisplayPropertiesWidget::create_resolution_list()
     m_resolutions.append({ 800, 600 });
     m_resolutions.append({ 1024, 768 });
     m_resolutions.append({ 1280, 1024 });
-    m_resolutions.append({ 1366, 768 });
     m_resolutions.append({ 1440, 900 });
     m_resolutions.append({ 1600, 900 });
     m_resolutions.append({ 1920, 1080 });
     m_resolutions.append({ 2560, 1080 });
+
+    Size find_size;
+
+    bool okay = false;
+    // Let's attempt to find the current resolution and select it!
+    find_size.set_width(m_wm_config->read_entry("Screen", "Width", "1024").to_int(okay));
+    if (!okay) {
+        fprintf(stderr, "DisplayProperties: failed to convert width to int!");
+        return;
+    }
+
+    find_size.set_height(m_wm_config->read_entry("Screen", "Height", "768").to_int(okay));
+    if (!okay) {
+        fprintf(stderr, "DisplayProperties: failed to convert height to int!");
+        return;
+    }
+
+    int index = 0;
+    for (auto& resolution : m_resolutions) {
+        if (resolution == find_size) {
+            m_selected_resolution = m_resolutions.at(index);
+            return; // We don't need to do anything else
+        }
+
+        index++;
+    }
 
     m_selected_resolution = m_resolutions.at(0);
 }
@@ -97,7 +122,6 @@ void DisplayPropertiesWidget::create_frame()
 
     auto* settings_content = new GWidget(settings_splitter);
     settings_content->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    settings_content->layout()->add_spacer();
     settings_content->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto* resolution_list = new GListView(settings_content);
@@ -107,6 +131,8 @@ void DisplayPropertiesWidget::create_frame()
     resolution_list->on_selection = [this](auto& index) {
         m_selected_resolution = m_resolutions.at(index.row());
     };
+
+    settings_content->layout()->add_spacer();
 
     // Add the apply and cancel buttons
     auto* bottom_widget = new GWidget(m_root_widget);
