@@ -27,6 +27,7 @@ NonnullRefPtr<GAction> make_paste_action(Function<void(GAction&)>, GWidget* widg
 NonnullRefPtr<GAction> make_delete_action(Function<void(GAction&)>, GWidget* widget = nullptr);
 NonnullRefPtr<GAction> make_move_to_front_action(Function<void(GAction&)>, GWidget* widget = nullptr);
 NonnullRefPtr<GAction> make_move_to_back_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_fullscreen_action(Function<void(GAction&)>, GWidget* widget = nullptr);
 NonnullRefPtr<GAction> make_quit_action(Function<void(GAction&)>);
 };
 
