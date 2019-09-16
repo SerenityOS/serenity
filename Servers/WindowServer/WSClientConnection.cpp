@@ -330,6 +330,9 @@ bool WSClientConnection::handle_message(const WSAPI_ClientMessage& message, cons
     case WSAPI_ClientMessage::Type::MoveWindowToFront:
         CEventLoop::current().post_event(*this, make<WSAPIMoveWindowToFrontRequest>(client_id(), message.window_id));
         break;
+    case WSAPI_ClientMessage::Type::SetFullscreen:
+        CEventLoop::current().post_event(*this, make<WSAPISetFullscreenRequest>(client_id(), message.window_id, message.value));
+        break;
     default:
         break;
     }
@@ -542,6 +545,23 @@ void WSClientConnection::handle_request(const WSAPIMoveWindowToFrontRequest& req
     }
     auto& window = *(*it).value;
     WSWindowManager::the().move_to_front_and_make_active(window);
+}
+
+void WSClientConnection::handle_request(const WSAPISetFullscreenRequest& request)
+{
+    int window_id = request.window_id();
+    auto it = m_windows.find(window_id);
+    if (it == m_windows.end()) {
+        post_error("WSAPISetFullscreenRequest: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    window.set_fullscreen(request.fullscreen());
+
+    WSAPI_ServerMessage response;
+    response.type = WSAPI_ServerMessage::Type::DidSetFullscreen;
+    response.window_id = window_id;
+    post_message(response);
 }
 
 void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& request)
@@ -1038,6 +1058,8 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPISetWindowHasAlphaChannelRequest&>(request));
     case WSEvent::APIMoveWindowToFrontRequest:
         return handle_request(static_cast<const WSAPIMoveWindowToFrontRequest&>(request));
+    case WSEvent::APISetFullscreenRequest:
+        return handle_request(static_cast<const WSAPISetFullscreenRequest&>(request));
     default:
         break;
     }

@@ -65,6 +65,7 @@ public:
         APISetWindowOverrideCursorRequest,
         APISetWindowHasAlphaChannelRequest,
         APIMoveWindowToFrontRequest,
+        APISetFullscreenRequest,
         WMAPISetActiveWindowRequest,
         WMAPISetWindowMinimizedRequest,
         WMAPIStartWindowResizeRequest,
@@ -500,6 +501,23 @@ public:
 
 private:
     int m_window_id { 0 };
+};
+
+class WSAPISetFullscreenRequest final : public WSAPIClientRequest {
+public:
+    explicit WSAPISetFullscreenRequest(int client_id, int window_id, bool fullscreen)
+        : WSAPIClientRequest(WSEvent::APISetFullscreenRequest, client_id)
+        , m_window_id(window_id)
+        , m_fullscreen(fullscreen)
+    {
+    }
+
+    int window_id() const { return m_window_id; }
+    bool fullscreen() const { return m_fullscreen; }
+
+private:
+    int m_window_id { 0 };
+    bool m_fullscreen;
 };
 
 class WSAPISetClipboardContentsRequest final : public WSAPIClientRequest {

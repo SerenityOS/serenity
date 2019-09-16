@@ -33,7 +33,7 @@ public:
     void set_modal(bool);
 
     bool is_fullscreen() const { return m_fullscreen; }
-    void set_fullscreen(bool fullscreen) { m_fullscreen = fullscreen; }
+    void set_fullscreen(bool);
 
     bool is_resizable() const { return m_resizable; }
     void set_resizable(bool resizable) { m_resizable = resizable; }
