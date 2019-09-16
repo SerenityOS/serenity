@@ -644,6 +644,11 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     json.add("super_physical_available", MM.super_physical_pages());
     json.add("kmalloc_call_count", g_kmalloc_call_count);
     json.add("kfree_call_count", g_kfree_call_count);
+    slab_alloc_stats([&json](size_t slab_size, size_t num_allocated, size_t num_free) {
+        auto prefix = String::format("slab_%zu", slab_size);
+        json.add(String::format("%s_num_allocated", prefix.characters()), num_allocated);
+        json.add(String::format("%s_num_free", prefix.characters()), num_free);
+    });
     json.finish();
     return builder.build();
 }

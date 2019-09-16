@@ -1,18 +1,20 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Bitmap.h>
 #include <AK/InlineLinkedList.h>
+#include <AK/String.h>
+#include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/VM/PageDirectory.h>
 #include <Kernel/VM/RangeAllocator.h>
 
 class Inode;
 class VMObject;
 
-class Region : public RefCounted<Region>
+class Region final : public RefCounted<Region>
     , public InlineLinkedListNode<Region> {
     friend class MemoryManager;
 
+    MAKE_SLAB_ALLOCATED(Region)
 public:
     enum Access {
         Read = 1,
