@@ -13,6 +13,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+//#define DEBUG_GTEXTEDITOR
+
 GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
     , m_type(type)
@@ -357,10 +359,11 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
         int visual_line_index = 0;
         line.for_each_visual_line([&](const Rect& visual_line_rect, const StringView& visual_line_text, int start_of_visual_line) {
-            // FIXME: Make sure we always fill the entire line.
-            //line_rect.set_width(exposed_width);
             if (is_multi_line() && line_index == m_cursor.line())
                 painter.fill_rect(visual_line_rect, Color(230, 230, 230));
+#ifdef DEBUG_GTEXTEDITOR
+            painter.draw_rect(visual_line_rect, Color::Cyan);
+#endif
             painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, Color::Black);
             bool physical_line_has_selection = has_selection && line_index >= selection.start().line() && line_index <= selection.end().line();
             if (physical_line_has_selection) {
@@ -1368,6 +1371,7 @@ void GTextEditor::Line::recompute_visual_lines()
 template<typename Callback>
 void GTextEditor::Line::for_each_visual_line(Callback callback) const
 {
+    auto editor_visible_text_rect = m_editor.visible_text_rect_in_inner_coordinates();
     int start_of_line = 0;
     int line_index = 0;
     for (auto visual_line_break : m_visual_line_breaks) {
@@ -1378,6 +1382,10 @@ void GTextEditor::Line::for_each_visual_line(Callback callback) const
             m_editor.font().width(visual_line_view),
             m_editor.line_height()
         };
+        if (is_right_text_alignment(m_editor.text_alignment()))
+            visual_line_rect.set_right_without_resize(editor_visible_text_rect.right());
+        if (!m_editor.is_multi_line())
+            visual_line_rect.center_vertically_within(editor_visible_text_rect);
         if (callback(visual_line_rect, visual_line_view, start_of_line) == IterationDecision::Break)
             break;
         start_of_line = visual_line_break;
