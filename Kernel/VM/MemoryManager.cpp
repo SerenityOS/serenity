@@ -99,6 +99,9 @@ void MemoryManager::initialize_paging()
         if (mmap->addr < (1 * MB))
             continue;
 
+        if ((mmap->addr + mmap->len) > 0xffffffff)
+            continue;
+
 #ifdef MM_DEBUG
         kprintf("MM: considering memory at %p - %p\n",
             (u32)mmap->addr, (u32)(mmap->addr + mmap->len));
