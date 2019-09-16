@@ -192,6 +192,18 @@ public:
         set_height(bottom - y() + 1);
     }
 
+    void set_right_without_resize(int new_right)
+    {
+        int delta = new_right - right();
+        move_by(delta, 0);
+    }
+
+    void set_bottom_without_resize(int new_bottom)
+    {
+        int delta = new_bottom - bottom();
+        move_by(0, delta);
+    }
+
     bool intersects(const Rect& other) const
     {
         return left() <= other.right()
