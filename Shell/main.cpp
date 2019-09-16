@@ -25,6 +25,8 @@
 GlobalState g;
 static LineEditor editor;
 
+static int run_command(const String&);
+
 static String prompt()
 {
     if (g.uid == 0)
@@ -131,6 +133,25 @@ static int sh_history(int, char**)
         printf("%6d  %s\n", i, editor.history()[i].characters());
     }
     return 0;
+}
+
+static int sh_time(int argc, char** argv)
+{
+    if (argc == 1) {
+        printf("usage: time <command>\n");
+        return 0;
+    }
+    StringBuilder builder;
+    for (int i = 1; i < argc; ++i) {
+        builder.append(argv[i]);
+        if (i != argc - 1)
+            builder.append(' ');
+    }
+    CElapsedTimer timer;
+    timer.start();
+    int exit_code = run_command(builder.to_string());
+    printf("Time: %d ms\n", timer.elapsed());
+    return exit_code;
 }
 
 static int sh_umask(int argc, char** argv)
@@ -390,6 +411,10 @@ static bool handle_builtin(int argc, char** argv, int& retval)
     }
     if (!strcmp(argv[0], "popd")) {
         retval = sh_popd(argc, argv);
+        return true;
+    }
+    if (!strcmp(argv[0], "time")) {
+        retval = sh_time(argc, argv);
         return true;
     }
     return false;
