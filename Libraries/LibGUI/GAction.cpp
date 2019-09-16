@@ -46,6 +46,11 @@ NonnullRefPtr<GAction> make_paste_action(Function<void(GAction&)> callback, GWid
     return GAction::create("Paste", { Mod_Ctrl, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), move(callback), widget);
 }
 
+NonnullRefPtr<GAction> make_fullscreen_action(Function<void(GAction&)> callback, GWidget* widget)
+{
+    return GAction::create("Fullscreen", { Mod_None, Key_F11 }, move(callback), widget);
+}
+
 NonnullRefPtr<GAction> make_quit_action(Function<void(GAction&)> callback)
 {
     return GAction::create("Quit", { Mod_Alt, Key_F4 }, move(callback));
