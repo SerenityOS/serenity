@@ -10,7 +10,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/kmalloc.h>
+#include <Kernel/Heap/kmalloc.h>
 
 #define SANITIZE_KMALLOC
 
@@ -20,7 +20,7 @@ struct [[gnu::packed]] allocation_t
     size_t nchunk;
 };
 
-#define CHUNK_SIZE 32
+#define CHUNK_SIZE 8
 #define POOL_SIZE (1024 * 1024)
 
 #define ETERNAL_BASE_PHYSICAL (1 * MB)

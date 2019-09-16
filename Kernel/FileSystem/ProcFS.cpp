@@ -22,7 +22,7 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/kmalloc.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <LibC/errno_numbers.h>
 
 enum ProcParentDirectory {

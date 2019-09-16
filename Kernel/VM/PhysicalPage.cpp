@@ -1,6 +1,6 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
-#include <Kernel/kmalloc.h>
+#include <Kernel/Heap/kmalloc.h>
 
 NonnullRefPtr<PhysicalPage> PhysicalPage::create(PhysicalAddress paddr, bool supervisor, bool may_return_to_freelist)
 {

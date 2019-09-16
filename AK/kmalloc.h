@@ -11,7 +11,7 @@
 #endif
 
 #ifdef KERNEL
-#    include <Kernel/kmalloc.h>
+#    include <Kernel/Heap/kmalloc.h>
 #else
 #    include <stdlib.h>
 

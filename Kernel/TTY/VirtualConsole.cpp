@@ -1,7 +1,7 @@
 #include "VirtualConsole.h"
 #include "IO.h"
 #include "StdLib.h"
-#include "kmalloc.h"
+#include <Kernel/Heap/kmalloc.h>
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/KeyboardDevice.h>

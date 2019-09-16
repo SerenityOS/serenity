@@ -2,7 +2,7 @@ include ../Makefile.common
 
 KERNEL_OBJS = \
        init.o \
-       kmalloc.o \
+       Heap/kmalloc.o \
        StdLib.o \
        Lock.o \
        Arch/i386/CPU.o \

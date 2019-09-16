@@ -1,6 +1,6 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
-#include <Kernel/kmalloc.h>
+#include <Kernel/Heap/kmalloc.h>
 
 extern "C" {
 

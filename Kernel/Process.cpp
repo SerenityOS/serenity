@@ -32,7 +32,7 @@
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/VM/InodeVMObject.h>
-#include <Kernel/kmalloc.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 
