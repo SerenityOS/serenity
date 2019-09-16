@@ -714,3 +714,18 @@ void GWindow::save_to(AK::JsonObject& json)
     json.set("size_increment", size_increment().to_string());
     CObject::save_to(json);
 }
+
+void GWindow::set_fullscreen(bool fullscreen)
+{
+    if (m_fullscreen == fullscreen)
+        return;
+    m_fullscreen = fullscreen;
+    if (!m_window_id)
+        return;
+
+    WSAPI_ClientMessage request;
+    request.type = WSAPI_ClientMessage::Type::SetFullscreen;
+    request.window_id = m_window_id;
+    request.value = fullscreen;
+    GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidSetFullscreen);
+}

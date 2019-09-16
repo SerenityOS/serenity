@@ -113,6 +113,7 @@ struct WSAPI_ServerMessage {
         DidSetWindowHasAlphaChannel,
         ScreenRectChanged,
         ClipboardContentsChanged,
+        DidSetFullscreen,
 
         __Begin_WM_Events__,
         WM_WindowRemoved,
@@ -237,6 +238,7 @@ struct WSAPI_ClientMessage {
         SetWindowHasAlphaChannel,
         MoveWindowToFront,
         SetWindowIconBitmap,
+        SetFullscreen,
     };
     Type type { Invalid };
     int window_id { -1 };

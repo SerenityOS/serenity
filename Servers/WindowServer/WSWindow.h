@@ -38,6 +38,7 @@ public:
     void set_maximized(bool);
 
     bool is_fullscreen() const { return m_fullscreen; }
+    void set_fullscreen(bool);
 
     bool show_titlebar() const { return m_show_titlebar; }
     void set_show_titlebar(bool show) { m_show_titlebar = show; }
@@ -155,6 +156,7 @@ private:
     WSClientConnection* m_client { nullptr };
     String m_title;
     Rect m_rect;
+    Rect m_saved_nonfullscreen_rect;
     WSWindowType m_type { WSWindowType::Normal };
     bool m_global_cursor_tracking_enabled { false };
     bool m_automatic_cursor_tracking_enabled { false };

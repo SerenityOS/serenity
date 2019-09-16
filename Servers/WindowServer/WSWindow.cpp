@@ -1,6 +1,7 @@
 #include "WSWindow.h"
 #include "WSEvent.h"
 #include "WSEventLoop.h"
+#include "WSScreen.h"
 #include "WSWindowManager.h"
 #include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
@@ -353,4 +354,20 @@ void WSWindow::request_close()
 {
     WSEvent close_request(WSEvent::WindowCloseRequest);
     event(close_request);
+}
+
+void WSWindow::set_fullscreen(bool fullscreen)
+{
+    if (m_fullscreen == fullscreen)
+        return;
+    m_fullscreen = fullscreen;
+    Rect new_window_rect = m_rect;
+    if (m_fullscreen) {
+        m_saved_nonfullscreen_rect = m_rect;
+        new_window_rect = WSScreen::the().rect();
+    } else if (!m_saved_nonfullscreen_rect.is_empty()) {
+        new_window_rect = m_saved_nonfullscreen_rect;
+    }
+    CEventLoop::current().post_event(*this, make<WSResizeEvent>(m_rect, new_window_rect));
+    set_rect(new_window_rect);
 }

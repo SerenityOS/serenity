@@ -84,6 +84,7 @@ private:
     void handle_request(const WSAPIDismissMenuRequest&);
     void handle_request(const WSAPISetWindowHasAlphaChannelRequest&);
     void handle_request(const WSAPIMoveWindowToFrontRequest&);
+    void handle_request(const WSAPISetFullscreenRequest&);
 
     void post_error(const String&);
 
