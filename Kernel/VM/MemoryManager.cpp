@@ -178,7 +178,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             //ASSERT(&page_directory != m_kernel_page_directory.ptr());
             auto page_table = allocate_supervisor_physical_page();
 #ifdef MM_DEBUG
-            dbgprintf("MM: PD K%x (%s) at P%x allocated page table #%u (for V%p) at P%x\n",
+            dbgprintf("MM: PD K%p (%s) at P%p allocated page table #%u (for V%p) at P%p\n",
                 &page_directory,
                 &page_directory == m_kernel_page_directory ? "Kernel" : "User",
                 page_directory.cr3(),
@@ -286,7 +286,7 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
     }
     auto physical_page = allocate_user_physical_page(ShouldZeroFill::Yes);
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("      >> ZERO P%x\n", physical_page->paddr().get());
+    dbgprintf("      >> ZERO P%p\n", physical_page->paddr().get());
 #endif
     region.set_should_cow(page_index_in_region, false);
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
@@ -315,7 +315,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
     u8* dest_ptr = quickmap_page(*physical_page);
     const u8* src_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("      >> COW P%x <- P%x\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
+    dbgprintf("      >> COW P%p <- P%p\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
 #endif
     memcpy(dest_ptr, src_ptr, PAGE_SIZE);
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
@@ -617,7 +617,7 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
     flush_tlb(page_vaddr);
     ASSERT((u32)pte.physical_page_base() == physical_page.paddr().get());
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> quickmap_page V%p => P%x @ PTE=%p\n", page_vaddr, physical_page.paddr().get(), pte.ptr());
+    dbg() << "MM: >> quickmap_page " << page_vaddr << " => " << physical_page.paddr() << " @ PTE=" << (void*)pte.raw() << " {" << &pte << "}";
 #endif
     return page_vaddr.as_ptr();
 }
@@ -636,7 +636,7 @@ void MemoryManager::unquickmap_page()
     pte.set_writable(false);
     flush_tlb(page_vaddr);
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> unquickmap_page V%p =/> P%x\n", page_vaddr, old_physical_address);
+    dbg() << "MM: >> unquickmap_page " << page_vaddr << " =/> " << old_physical_address;
 #endif
     m_quickmap_in_use = false;
 }
@@ -658,7 +658,7 @@ void MemoryManager::remap_region_page(Region& region, unsigned page_index_in_reg
     pte.set_user_allowed(region.is_user_accessible());
     region.page_directory()->flush(page_vaddr);
 #ifdef MM_DEBUG
-    dbgprintf("MM: >> remap_region_page (PD=%x, PTE=P%x) '%s' V%p => P%x (@%p)\n", region.page_directory()->cr3(), pte.ptr(), region.name().characters(), page_vaddr.get(), physical_page->paddr().get(), physical_page.ptr());
+    dbg() << "MM: >> remap_region_page (PD=" << region.page_directory()->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << region.name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
 #endif
 }
 
@@ -697,7 +697,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
         pte.set_user_allowed(region.is_user_accessible());
         page_directory.flush(page_vaddr);
 #ifdef MM_DEBUG
-        dbgprintf("MM: >> map_region_at_address (PD=%x) '%s' V%p => P%x (@%p)\n", &page_directory, region.name().characters(), page_vaddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
+        dbgprintf("MM: >> map_region_at_address (PD=%p) '%s' V%p => P%p (@%p)\n", &page_directory, region.name().characters(), page_vaddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
 #endif
     }
 }
@@ -716,7 +716,7 @@ bool MemoryManager::unmap_region(Region& region)
         region.page_directory()->flush(vaddr);
 #ifdef MM_DEBUG
         auto& physical_page = region.vmobject().physical_pages()[region.first_page_index() + i];
-        dbgprintf("MM: >> Unmapped V%p => P%x <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
+        dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
     region.page_directory()->range_allocator().deallocate({ region.vaddr(), region.size() });
