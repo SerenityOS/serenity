@@ -3,7 +3,6 @@
 #include "Process.h"
 #include "RTC.h"
 #include "Scheduler.h"
-#include "kmalloc.h"
 #include "kstdio.h"
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
@@ -30,6 +29,7 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
@@ -168,7 +168,7 @@ extern "C" [[noreturn]] void init()
     // this is only used one time, directly below here. we can't use this part
     // of libc at this point in the boot process, or we'd just pull strstr in
     // from <string.h>.
-    auto bad_prefix_check = [](const char *str, const char *search) -> bool {
+    auto bad_prefix_check = [](const char* str, const char* search) -> bool {
         while (*search)
             if (*search++ != *str++)
                 return false;
@@ -230,8 +230,7 @@ extern "C" [[noreturn]] void init()
             address.slot(),
             address.function(),
             id.vendor_id,
-            id.device_id
-        );
+            id.device_id);
     });
 
     if (multiboot_info_ptr->framebuffer_type == 1) {
@@ -239,8 +238,7 @@ extern "C" [[noreturn]] void init()
             PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
             multiboot_info_ptr->framebuffer_pitch,
             multiboot_info_ptr->framebuffer_width,
-            multiboot_info_ptr->framebuffer_height
-        );
+            multiboot_info_ptr->framebuffer_height);
     } else {
         new BXVGADevice;
     }

@@ -5,7 +5,7 @@
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/kmalloc.h>
+#include <Kernel/Heap/kmalloc.h>
 
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {
