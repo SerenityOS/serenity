@@ -2,6 +2,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <Kernel/Assertions.h>
+#include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/VM/PhysicalAddress.h>
 
 class PhysicalPage {
@@ -9,6 +10,7 @@ class PhysicalPage {
     friend class PageDirectory;
     friend class VMObject;
 
+    MAKE_SLAB_ALLOCATED(PhysicalPage)
 public:
     PhysicalAddress paddr() const { return m_paddr; }
 

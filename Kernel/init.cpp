@@ -29,6 +29,7 @@
 #include <Kernel/FileSystem/ProcFS.h>
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Heap/SlabAllocator.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KParams.h>
 #include <Kernel/Multiboot.h>
@@ -187,6 +188,7 @@ extern "C" [[noreturn]] void init()
     sse_init();
 
     kmalloc_init();
+    slab_alloc_init();
     init_ksyms();
 
     // must come after kmalloc_init because we use AK_MAKE_ETERNAL in KParams
