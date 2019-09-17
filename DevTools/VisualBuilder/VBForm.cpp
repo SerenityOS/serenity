@@ -6,6 +6,7 @@
 #include <AK/JsonObject.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GMenu.h>
@@ -37,13 +38,13 @@ VBForm::VBForm(const String& name, GWidget* parent)
             widget->gwidget()->move_to_back();
     }));
     m_context_menu->add_separator();
-    m_context_menu->add_action(GAction::create("Lay out horizontally", [this](auto&) {
+    m_context_menu->add_action(GAction::create("Lay out horizontally", load_png("/res/icons/16x16/layout-horizontally.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a horizontal box layout";
             widget->gwidget()->set_layout(make<GBoxLayout>(Orientation::Horizontal));
         }
     }));
-    m_context_menu->add_action(GAction::create("Lay out vertically", [this](auto&) {
+    m_context_menu->add_action(GAction::create("Lay out vertically", load_png("/res/icons/16x16/layout-vertically.png"), [this](auto&) {
         if (auto* widget = single_selected_widget()) {
             dbg() << "Giving " << *widget->gwidget() << " a vertical box layout";
             widget->gwidget()->set_layout(make<GBoxLayout>(Orientation::Vertical));
