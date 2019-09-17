@@ -77,7 +77,7 @@ void PhysicalRegion::return_page_at(PhysicalAddress addr)
 
     int local_offset = addr.get() - m_lower.get();
     ASSERT(local_offset >= 0);
-    ASSERT(local_offset < (int)(m_pages * PAGE_SIZE));
+    ASSERT((u32)local_offset < (u32)(m_pages * PAGE_SIZE));
 
     auto page = (unsigned)local_offset / PAGE_SIZE;
     if (page < m_last)
