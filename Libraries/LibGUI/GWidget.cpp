@@ -333,9 +333,9 @@ GWidget* GWidget::child_at(const Point& point) const
     return nullptr;
 }
 
-GWidget::HitTestResult GWidget::hit_test(const Point& position)
+GWidget::HitTestResult GWidget::hit_test(const Point& position, ShouldRespectGreediness should_respect_greediness)
 {
-    if (is_greedy_for_hits())
+    if (should_respect_greediness == ShouldRespectGreediness::Yes && is_greedy_for_hits())
         return { this, position };
     if (auto* child = child_at(position))
         return child->hit_test(position - child->relative_position());
