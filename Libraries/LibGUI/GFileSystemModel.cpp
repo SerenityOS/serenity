@@ -31,6 +31,15 @@ struct GFileSystemModel::Node {
         ASSERT_NOT_REACHED();
     }
 
+    void cleanup()
+    {
+        for (auto& child: children) {
+            child->cleanup();
+            delete child;
+        }
+        children.clear();
+    }
+
     void traverse_if_needed(const GFileSystemModel& model)
     {
         if (type != Node::Directory || has_traversed)
@@ -146,13 +155,20 @@ GFileSystemModel::~GFileSystemModel()
 
 void GFileSystemModel::update()
 {
-    // FIXME: Support refreshing the model!
-    if (m_root)
-        return;
+    cleanup();
 
     m_root = new Node;
     m_root->name = m_root_path;
     m_root->reify_if_needed(*this);
+}
+
+void GFileSystemModel::cleanup()
+{
+    if (m_root) {
+        m_root->cleanup();
+        delete m_root;
+        m_root = nullptr;
+    }
 }
 
 int GFileSystemModel::row_count(const GModelIndex& index) const
