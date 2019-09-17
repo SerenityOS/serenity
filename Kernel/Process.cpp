@@ -793,26 +793,29 @@ void Process::sys$exit(int status)
     ASSERT_NOT_REACHED();
 }
 
-// The trampoline preserves the current eax, pushes the signal code and
-// then calls the signal handler. We do this because, when interrupting a
-// blocking syscall, that syscall may return some special error code in eax;
-// This error code would likely be overwritten by the signal handler, so it's
-// neccessary to preserve it here.
-asm(
-    ".intel_syntax noprefix\n"
-    "asm_signal_trampoline:\n"
-    "push ebp\n"
-    "mov ebp, esp\n"
-    "push eax\n" // we have to store eax 'cause it might be the return value from a syscall
-    "sub esp, 4\n" // align the stack to 16 bytes
-    "mov eax, [ebp+12]\n" // push the signal code
-    "push eax\n"
-    "call [ebp+8]\n" // call the signal handler
-    "add esp, 8\n"
-    "mov eax, 0x2d\n" // FIXME: We shouldn't be hardcoding this.
-    "int 0x82\n" // sigreturn syscall
-    "asm_signal_trampoline_end:\n"
-    ".att_syntax");
+void signal_trampoline_dummy(void)
+{
+    // The trampoline preserves the current eax, pushes the signal code and
+    // then calls the signal handler. We do this because, when interrupting a
+    // blocking syscall, that syscall may return some special error code in eax;
+    // This error code would likely be overwritten by the signal handler, so it's
+    // neccessary to preserve it here.
+    asm(
+        ".intel_syntax noprefix\n"
+        "asm_signal_trampoline:\n"
+        "push ebp\n"
+        "mov ebp, esp\n"
+        "push eax\n"          // we have to store eax 'cause it might be the return value from a syscall
+        "sub esp, 4\n"        // align the stack to 16 bytes
+        "mov eax, [ebp+12]\n" // push the signal code
+        "push eax\n"
+        "call [ebp+8]\n" // call the signal handler
+        "add esp, 8\n"
+        "mov eax, %P0\n"
+        "int 0x82\n" // sigreturn syscall
+        "asm_signal_trampoline_end:\n"
+        ".att_syntax" ::"i"(Syscall::SC_sigreturn));
+}
 
 extern "C" void asm_signal_trampoline(void);
 extern "C" void asm_signal_trampoline_end(void);
