@@ -113,7 +113,13 @@ VBWidget* VBForm::widget_at(const Point& position)
     auto result = hit_test(position, GWidget::ShouldRespectGreediness::No);
     if (!result.widget)
         return nullptr;
-    return m_gwidget_map.get(result.widget).value_or(nullptr);
+    auto* gwidget = result.widget;
+    while (gwidget) {
+        if (auto* widget = m_gwidget_map.get(gwidget).value_or(nullptr))
+            return widget;
+        gwidget = gwidget->parent_widget();
+    }
+    return nullptr;
 }
 
 void VBForm::grabber_mousedown_event(GMouseEvent& event, Direction grabber)
@@ -411,9 +417,12 @@ void VBForm::delete_selected_widgets()
     for_each_selected_widget([&](auto& widget) {
         to_delete.append(&widget);
     });
+    if (to_delete.is_empty())
+        return;
     for (auto& widget : to_delete)
         m_widgets.remove_first_matching([&widget](auto& entry) { return entry == widget; });
     on_widget_selected(single_selected_widget());
+    update();
 }
 
 template<typename Callback>
