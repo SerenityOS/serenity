@@ -48,7 +48,12 @@ FileDescription::~FileDescription()
 
 KResult FileDescription::fstat(stat& buffer)
 {
-    ASSERT(!is_fifo());
+    if (is_fifo()) {
+        memset(&buffer, 0, sizeof(buffer));
+        buffer.st_mode = 001000;
+        return KSuccess;
+    }
+
     if (!m_inode)
         return KResult(-EBADF);
     return metadata().stat(buffer);
