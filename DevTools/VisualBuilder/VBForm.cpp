@@ -96,7 +96,11 @@ void VBForm::second_paint_event(GPaintEvent& event)
     for (auto& widget : m_widgets) {
         if (widget.is_selected()) {
             for_each_direction([&](auto direction) {
-                painter.fill_rect(widget.grabber_rect(direction), Color::Black);
+                bool in_layout = widget.is_in_layout();
+                auto grabber_rect = widget.grabber_rect(direction);
+                painter.fill_rect(grabber_rect, in_layout ? Color::White : Color::Black);
+                if (in_layout)
+                    painter.draw_rect(grabber_rect, Color::Black);
             });
         }
     }
@@ -211,6 +215,8 @@ void VBForm::mousedown_event(GMouseEvent& event)
     if (m_resize_direction == Direction::None) {
         bool hit_grabber = false;
         for_each_selected_widget([&](auto& widget) {
+            if (widget.is_in_layout())
+                return;
             auto grabber = widget.grabber_at(event.position());
             if (grabber != Direction::None) {
                 hit_grabber = true;
@@ -245,6 +251,8 @@ void VBForm::mousemove_event(GMouseEvent& event)
             update();
             auto delta = event.position() - m_transform_event_origin;
             for_each_selected_widget([&](auto& widget) {
+                if (widget.is_in_layout())
+                    return;
                 auto new_rect = widget.transform_origin_rect().translated(delta);
                 new_rect.set_x(new_rect.x() - (new_rect.x() % m_grid_size));
                 new_rect.set_y(new_rect.y() - (new_rect.y() % m_grid_size));
@@ -301,6 +309,8 @@ void VBForm::mousemove_event(GMouseEvent& event)
 
         update();
         for_each_selected_widget([&](auto& widget) {
+            if (widget.is_in_layout())
+                return;
             auto new_rect = widget.transform_origin_rect();
             Size minimum_size { 5, 5 };
             new_rect.set_x(new_rect.x() + change_x);
@@ -317,6 +327,8 @@ void VBForm::mousemove_event(GMouseEvent& event)
         set_cursor_type_from_grabber(m_resize_direction);
     } else {
         for (auto& widget : m_selected_widgets) {
+            if (widget->is_in_layout())
+                continue;
             auto grabber_at = widget->grabber_at(event.position());
             set_cursor_type_from_grabber(grabber_at);
             if (grabber_at != Direction::None)

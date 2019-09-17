@@ -105,7 +105,8 @@ void VBWidget::add_property(const String& name, Function<GVariant(const GWidget&
 }
 
 #define VB_ADD_PROPERTY(gclass, name, getter, setter, variant_type)                \
-    add_property(name,                                                             \
+    add_property(                                                                  \
+        name,                                                                      \
         [](auto& widget) -> GVariant { return ((const gclass&)widget).getter(); }, \
         [](auto& widget, auto& value) { ((gclass&)widget).setter(value.to_##variant_type()); })
 
@@ -205,4 +206,13 @@ void VBWidget::property_did_change()
 void VBWidget::capture_transform_origin_rect()
 {
     m_transform_origin_rect = rect();
+}
+
+bool VBWidget::is_in_layout() const
+{
+    if (auto* parent_widget = m_gwidget->parent_widget()) {
+        if (parent_widget->layout())
+            return true;
+    }
+    return false;
 }
