@@ -36,6 +36,20 @@ VBForm::VBForm(const String& name, GWidget* parent)
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_back();
     }));
+    m_context_menu->add_separator();
+    m_context_menu->add_action(GAction::create("Lay out horizontally", [this](auto&) {
+        if (auto* widget = single_selected_widget()) {
+            dbg() << "Giving " << *widget->gwidget() << " a horizontal box layout";
+            widget->gwidget()->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+        }
+    }));
+    m_context_menu->add_action(GAction::create("Lay out vertically", [this](auto&) {
+        if (auto* widget = single_selected_widget()) {
+            dbg() << "Giving " << *widget->gwidget() << " a vertical box layout";
+            widget->gwidget()->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        }
+    }));
+    m_context_menu->add_separator();
     m_context_menu->add_action(GCommonActions::make_delete_action([this](auto&) {
         delete_selected_widgets();
     }));
