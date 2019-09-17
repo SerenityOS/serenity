@@ -164,19 +164,35 @@ void VBForm::keydown_event(GKeyEvent& event)
         switch (event.key()) {
         case KeyCode::Key_Up:
             update();
-            for_each_selected_widget([this](auto& widget) { widget.gwidget()->move_by(0, -m_grid_size); });
+            for_each_selected_widget([this](auto& widget) {
+                if (widget.is_in_layout())
+                    return;
+                widget.gwidget()->move_by(0, -m_grid_size);
+            });
             break;
         case KeyCode::Key_Down:
             update();
-            for_each_selected_widget([this](auto& widget) { widget.gwidget()->move_by(0, m_grid_size); });
+            for_each_selected_widget([this](auto& widget) {
+                if (widget.is_in_layout())
+                    return;
+                widget.gwidget()->move_by(0, m_grid_size);
+            });
             break;
         case KeyCode::Key_Left:
             update();
-            for_each_selected_widget([this](auto& widget) { widget.gwidget()->move_by(-m_grid_size, 0); });
+            for_each_selected_widget([this](auto& widget) {
+                if (widget.is_in_layout())
+                    return;
+                widget.gwidget()->move_by(-m_grid_size, 0);
+            });
             break;
         case KeyCode::Key_Right:
             update();
-            for_each_selected_widget([this](auto& widget) { widget.gwidget()->move_by(m_grid_size, 0); });
+            for_each_selected_widget([this](auto& widget) {
+                if (widget.is_in_layout())
+                    return;
+                widget.gwidget()->move_by(m_grid_size, 0);
+            });
             break;
         }
         return;
