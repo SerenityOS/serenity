@@ -2,6 +2,8 @@
 #include "VBPropertiesWindow.h"
 #include "VBWidget.h"
 #include "VBWidgetPropertyModel.h"
+#include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -45,20 +47,20 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(file_menu));
 
-    auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
-    }));
-    menubar->add_menu(move(help_menu));
-
-    app.set_menubar(move(menubar));
-
     auto* window = new GWindow;
     window->set_title(form1->name());
     window->set_rect(120, 200, 640, 400);
     window->set_main_widget(form1);
 
     window->show();
+
+    auto help_menu = make<GMenu>("Help");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("Visual Builder", load_png("/res/icons/32x32/app-visual-builder.png"), window);
+    }));
+    menubar->add_menu(move(help_menu));
+
+    app.set_menubar(move(menubar));
 
     auto* toolbox = make_toolbox_window();
     toolbox->show();
