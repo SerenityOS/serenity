@@ -15,12 +15,13 @@
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextEditor.h>
 
-VBWidget::VBWidget(VBWidgetType type, VBForm& form)
+VBWidget::VBWidget(VBWidgetType type, VBForm& form, VBWidget* parent)
     : m_type(type)
     , m_form(form)
     , m_property_model(VBWidgetPropertyModel::create(*this))
 {
-    m_gwidget = VBWidgetRegistry::build_gwidget(*this, type, &form, m_properties);
+    auto* widget_parent = parent ? parent->gwidget() : &form;
+    m_gwidget = VBWidgetRegistry::build_gwidget(*this, type, widget_parent, m_properties);
     m_form.m_gwidget_map.set(m_gwidget, this);
     setup_properties();
 }
@@ -34,14 +35,17 @@ VBWidget::~VBWidget()
 
 Rect VBWidget::rect() const
 {
-    return m_gwidget->relative_rect();
+    return m_gwidget->window_relative_rect();
 }
 
 void VBWidget::set_rect(const Rect& rect)
 {
-    if (rect == m_gwidget->relative_rect())
+    if (rect == m_gwidget->window_relative_rect())
         return;
-    m_gwidget->set_relative_rect(rect);
+    auto new_window_relative_rect = rect;
+    if (m_gwidget->parent())
+        new_window_relative_rect.move_by(-m_gwidget->parent_widget()->window_relative_rect().location());
+    m_gwidget->set_relative_rect(new_window_relative_rect);
     synchronize_properties();
 }
 

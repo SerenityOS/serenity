@@ -7,6 +7,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GPainter.h>
@@ -47,8 +48,12 @@ void VBForm::context_menu_event(GContextMenuEvent& event)
 
 void VBForm::insert_widget(VBWidgetType type)
 {
-    auto widget = VBWidget::create(type, *this);
-    widget->set_rect({ m_next_insertion_position, { m_grid_size * 10 + 1, m_grid_size * 5 + 1 } });
+    auto* insertion_parent = single_selected_widget();
+    auto widget = VBWidget::create(type, *this, insertion_parent);
+    Point insertion_position = m_next_insertion_position;
+    if (insertion_parent)
+        insertion_position.move_by(insertion_parent->gwidget()->window_relative_rect().location());
+    widget->set_rect({ insertion_position, { m_grid_size * 10 + 1, m_grid_size * 5 + 1 } });
     m_next_insertion_position.move_by(m_grid_size, m_grid_size);
     m_widgets.append(move(widget));
 }
@@ -91,10 +96,10 @@ bool VBForm::is_selected(const VBWidget& widget) const
 
 VBWidget* VBForm::widget_at(const Point& position)
 {
-    auto* gwidget = child_at(position);
-    if (!gwidget)
+    auto result = hit_test(position, GWidget::ShouldRespectGreediness::No);
+    if (!result.widget)
         return nullptr;
-    return m_gwidget_map.get(gwidget).value_or(nullptr);
+    return m_gwidget_map.get(result.widget).value_or(nullptr);
 }
 
 void VBForm::grabber_mousedown_event(GMouseEvent& event, Direction grabber)
@@ -323,7 +328,8 @@ void VBForm::load_from_file(const String& path)
         auto& widget_object = widget_value.as_object();
         auto widget_class = widget_object.get("class").as_string();
         auto widget_type = widget_type_from_class_name(widget_class);
-        auto vbwidget = VBWidget::create(widget_type, *this);
+        // FIXME: Construct VBWidget within the right parent..
+        auto vbwidget = VBWidget::create(widget_type, *this, nullptr);
         widget_object.for_each_member([&](auto& property_name, const JsonValue& property_value) {
             (void)property_name;
             (void)property_value;
