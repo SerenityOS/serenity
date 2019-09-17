@@ -45,7 +45,7 @@ class VBWidget : public RefCounted<VBWidget>
     friend class VBWidgetPropertyModel;
 
 public:
-    static NonnullRefPtr<VBWidget> create(VBWidgetType type, VBForm& form) { return adopt(*new VBWidget(type, form)); }
+    static NonnullRefPtr<VBWidget> create(VBWidgetType type, VBForm& form, VBWidget* parent) { return adopt(*new VBWidget(type, form, parent)); }
     ~VBWidget();
 
     bool is_selected() const;
@@ -73,7 +73,7 @@ public:
     void capture_transform_origin_rect();
 
 private:
-    VBWidget(VBWidgetType, VBForm&);
+    VBWidget(VBWidgetType, VBForm&, VBWidget* parent);
 
     void add_property(const String& name, Function<GVariant(const GWidget&)>&& getter, Function<void(GWidget&, const GVariant&)>&& setter);
 
