@@ -799,7 +799,7 @@ void Terminal::on_char(u8 ch)
         m_client.beep();
         return;
     case '\t': {
-        for (unsigned i = m_cursor_column; i < columns(); ++i) {
+        for (unsigned i = m_cursor_column + 1; i < columns(); ++i) {
             if (m_horizontal_tabs[i]) {
                 set_cursor(m_cursor_row, i);
                 return;
