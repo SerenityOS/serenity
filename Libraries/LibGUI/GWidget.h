@@ -119,11 +119,12 @@ public:
     bool is_focused() const;
     void set_focus(bool);
 
+    enum class ShouldRespectGreediness { No = 0, Yes };
     struct HitTestResult {
         GWidget* widget { nullptr };
         Point local_position;
     };
-    HitTestResult hit_test(const Point&);
+    HitTestResult hit_test(const Point&, ShouldRespectGreediness = ShouldRespectGreediness::Yes);
     GWidget* child_at(const Point&) const;
 
     void set_relative_rect(const Rect&);
