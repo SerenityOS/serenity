@@ -33,15 +33,25 @@ public:
     template<typename Callback>
     void for_each_index(Callback callback)
     {
-        for (auto& index : m_indexes)
+        for (auto& index : indexes())
             callback(index);
     }
 
     template<typename Callback>
     void for_each_index(Callback callback) const
     {
-        for (auto& index : m_indexes)
+        for (auto& index : indexes())
             callback(index);
+    }
+
+    Vector<GModelIndex> indexes() const
+    {
+        Vector<GModelIndex> selected_indexes;
+
+        for (auto& index : m_indexes)
+            selected_indexes.append(index);
+            
+        return selected_indexes;
     }
 
     // FIXME: This doesn't guarantee that what you get is the lowest or "first" index selected..

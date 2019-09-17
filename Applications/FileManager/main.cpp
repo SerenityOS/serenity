@@ -104,6 +104,20 @@ int main(int argc, char** argv)
             if (rc < 0) {
                 GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
             } else {
+                file_system_model->update();
+
+                auto current_path = directory_view->path();
+
+                // not exactly sure why i have to reselect the root node first, but the index() fails if I dont
+                auto root_index = file_system_model->index(file_system_model->root_path());
+                tree_view->selection().set(root_index);
+
+                // reselect the existing folder in the tree
+                auto new_index = file_system_model->index(current_path);
+                tree_view->selection().set(new_index);
+                tree_view->scroll_into_view(new_index, Orientation::Vertical);
+                tree_view->update();
+
                 directory_view->refresh();
             }
         }

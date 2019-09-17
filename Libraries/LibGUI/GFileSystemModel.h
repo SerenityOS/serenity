@@ -37,6 +37,7 @@ private:
 
     struct Node;
     Node* m_root { nullptr };
+    void cleanup();
 
     GIcon m_open_folder_icon;
     GIcon m_closed_folder_icon;
