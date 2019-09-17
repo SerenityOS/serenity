@@ -64,7 +64,11 @@ mkdir -p "$DIR/Build/binutils"
 mkdir -p "$DIR/Build/gcc"
 
 if [ -z "$MAKEJOBS" ]; then
-    MAKEJOBS=$(nproc)
+    if ["$(shell uname -s)"=="Linux"]; then
+        MAKEJOBS=$(nproc)
+    else
+        MAKEJOBS=$(sysctl -n hw.physicalcpu)
+    fi
 fi
 
 pushd "$DIR/Build/"
