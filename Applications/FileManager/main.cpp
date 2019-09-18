@@ -40,8 +40,6 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    Optional<Vector<String>> selected_file_paths;
-
     auto* window = new GWindow;
     window->set_title("File Manager");
     window->set_rect(20, 200, 640, 480);
@@ -145,12 +143,24 @@ int main(int argc, char** argv)
 
     view_as_icons_action->set_checked(true);
 
+    auto selected_file_paths = [&] {
+        Vector<String> paths;
+        auto& view = directory_view->current_view();
+        auto& model = *view.model();
+        view.selection().for_each_index([&](const GModelIndex& index) {
+            auto name_index = model.index(index.row(), GDirectoryModel::Column::Name);
+            auto path = model.data(name_index, GModel::Role::Custom).to_string();
+            paths.append(path);
+        });
+        return paths;
+    };
+
     auto copy_action = GCommonActions::make_copy_action([&](const GAction&) {
-        if (!selected_file_paths.has_value()) {
+        auto paths = selected_file_paths();
+        if (paths.is_empty())
             return;
-        }
         StringBuilder copy_text;
-        for (String& path : selected_file_paths.value()) {
+        for (auto& path : paths) {
             copy_text.appendf("%s\n", path.characters());
         }
         GClipboard::the().set_data(copy_text.build(), "file-list");
@@ -191,8 +201,40 @@ int main(int argc, char** argv)
     auto properties_action
         = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [](auto&) {});
 
-    auto delete_action = GCommonActions::make_delete_action([](const GAction&) {
-        dbgprintf("'Delete' action activated!\n");
+    auto delete_action = GCommonActions::make_delete_action([&](const GAction&) {
+        auto paths = selected_file_paths();
+        if (paths.is_empty())
+            return;
+        {
+            String message;
+            if (paths.size() == 1) {
+                message = String::format("Really delete %s?", FileSystemPath(paths[0]).basename().characters());
+            } else {
+                message = String::format("Really delete %d files?", paths.size());
+            }
+
+            GMessageBox box(
+                message,
+                "Confirm deletion",
+                GMessageBox::Type::Warning,
+                GMessageBox::InputType::OKCancel,
+                window);
+            auto result = box.exec();
+            if (result == GMessageBox::ExecCancel)
+                return;
+        }
+        for (auto& path : paths) {
+            if (unlink(path.characters()) < 0) {
+                int saved_errno = errno;
+                GMessageBox::show(
+                    String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
+                    "Delete failed",
+                    GMessageBox::Type::Error,
+                    GMessageBox::InputType::OK,
+                    window);
+                break;
+            }
+        }
     });
     delete_action->set_enabled(false);
 
@@ -286,17 +328,9 @@ int main(int argc, char** argv)
     };
 
     directory_view->on_selection_change = [&](GAbstractView& view) {
-        Vector<String> paths;
-        auto& model = *view.model();
-        view.selection().for_each_index([&](const GModelIndex& index) {
-            auto name_index = model.index(index.row(), GDirectoryModel::Column::Name);
-            auto path = model.data(name_index, GModel::Role::Custom).to_string();
-            paths.append(path);
-        });
         // FIXME: Figure out how we can enable/disable the paste action, based on clipboard contents.
         copy_action->set_enabled(!view.selection().is_empty());
         delete_action->set_enabled(!view.selection().is_empty());
-        selected_file_paths = paths;
     };
 
     auto context_menu = make<GMenu>();
