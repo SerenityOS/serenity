@@ -38,9 +38,6 @@ WSCompositor::WSCompositor()
 
     init_bitmaps();
 
-    m_wallpaper_path = "/res/wallpapers/retro.rgb";
-    m_wallpaper = GraphicsBitmap::load_from_file(GraphicsBitmap::Format::RGBA32, m_wallpaper_path, { 1024, 768 });
-
     m_compose_timer.on_timeout = [=]() {
 #if defined(COMPOSITOR_DEBUG)
         dbgprintf("WSCompositor: delayed frame callback: %d rects\n", m_dirty_rects.size());
