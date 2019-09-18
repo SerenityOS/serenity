@@ -8,6 +8,8 @@
 #include <sys/types.h>
 #include <unistd.h>
 
+//#define SPAWN_MULTIPLE_VIRTUAL_CONSOLES
+
 void start_process(const String& program, const Vector<String>& arguments, int prio, const char* tty = nullptr)
 {
     pid_t pid = 0;
@@ -89,8 +91,10 @@ int main(int, char**)
 
     // NOTE: We don't start anything on tty0 since that's the "active" TTY while WindowServer is up.
     start_process("/bin/TTYServer", { "tty1" }, highest_prio, "/dev/tty1");
+#ifdef SPAWN_MULTIPLE_VIRTUAL_CONSOLES
     start_process("/bin/TTYServer", { "tty2" }, highest_prio, "/dev/tty2");
     start_process("/bin/TTYServer", { "tty3" }, highest_prio, "/dev/tty3");
+#endif
 
     // Drop privileges.
     setgid(100);
