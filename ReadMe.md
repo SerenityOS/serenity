@@ -22,7 +22,7 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 
 ## Screenshot
 
-![Screenshot as of 191112e](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-191112e.png)
+![Screenshot as of 9145a72](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-9145a72.png)
 
 ## Current features
 
@@ -43,6 +43,7 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * Low-level utility library (LibCore)
 * Mid-level 2D graphics library (LibDraw)
 * High-level GUI library (LibGUI)
+* Emojis (UTF-8)
 * HTTP downloads
 * SoundBlaster 16 driver
 * Software-mixing sound daemon
@@ -83,7 +84,7 @@ Later on, when you `git pull` to get the latest changes, there's no need to rebu
 
 ## Notes on WSL
 
-SerenityOS can also be build and run under WSL Version 2. WSL Version 1 is not supported since Version 1 does not support ext2, which is needed for the setup.
+SerenityOS can also be built and run under WSL Version 2. WSL Version 1 is not supported since Version 1 does not support ext2, which is needed for the setup.
 
 WSL Version 2 is currently only available for Insider Builds of Windows which are more unstable and prone to crashes. Therefore, running SerenityOS on WSL Version 2 and running Insider Builds, in general, is not recommended on production systems.
 
@@ -109,8 +110,10 @@ Come chat in `#serenityos` on the Freenode IRC network.
 ## Contributors
 
 * **Robin Burchell** - [rburchell](https://github.com/rburchell)
+* **Conrad Pankoff** - [deoxxa](https://github.com/deoxxa)
+* **Sergey Bugaev** - [bugaevc](https://github.com/bugaevc)
 
-Feel free to append yourself here if you've made some sweet contributions. :)
+(And many more!) Feel free to append yourself here if you've made some sweet contributions. :)
 
 ## License
 
