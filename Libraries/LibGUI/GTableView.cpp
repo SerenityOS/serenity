@@ -260,10 +260,19 @@ void GTableView::paint_event(GPaintEvent& event)
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     int exposed_width = max(content_size().width(), width());
-    int painted_item_index = 0;
     int y_offset = header_height();
 
-    for (int row_index = 0; row_index < model()->row_count(); ++row_index) {
+    int first_visible_row = index_at_event_position(frame_inner_rect().top_left()).row();
+    int last_visible_row = index_at_event_position(frame_inner_rect().bottom_right()).row();
+
+    if (first_visible_row == -1)
+        first_visible_row = 0;
+    if (last_visible_row == -1)
+        last_visible_row = model()->row_count() - 1;
+
+    int painted_item_index = first_visible_row;
+
+    for (int row_index = first_visible_row; row_index <= last_visible_row; ++row_index) {
         bool is_selected_row = selection().contains_row(row_index);
         int y = y_offset + painted_item_index * item_height();
 
