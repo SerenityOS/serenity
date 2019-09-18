@@ -8,6 +8,7 @@
 #include "ProcessTableView.h"
 #include <LibCore/CTimer.h>
 #include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -137,6 +138,11 @@ int main(int argc, char** argv)
     toolbar->add_action(stop_action);
     toolbar->add_action(continue_action);
 
+    auto* window = new GWindow;
+    window->set_title("System Monitor");
+    window->set_rect(20, 200, 680, 400);
+    window->set_main_widget(keeper);
+
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("System Monitor");
     app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
@@ -179,8 +185,8 @@ int main(int argc, char** argv)
     menubar->add_menu(move(frequency_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("SystemMonitor", load_png("/res/icons/32x32/app-system-monitor.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
@@ -202,11 +208,6 @@ int main(int argc, char** argv)
         stacks_widget->set_pid(pid);
         memory_map_widget->set_pid(pid);
     };
-
-    auto* window = new GWindow;
-    window->set_title("System Monitor");
-    window->set_rect(20, 200, 680, 400);
-    window->set_main_widget(keeper);
 
     window->show();
 
