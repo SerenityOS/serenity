@@ -111,6 +111,6 @@ int main(int, char**)
     check_for_test_mode();
 
     while (1) {
-        sleep(1);
+        sleep(3600);
     }
 }
