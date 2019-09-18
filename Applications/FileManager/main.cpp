@@ -201,7 +201,9 @@ int main(int argc, char** argv)
     auto properties_action
         = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [](auto&) {});
 
-    auto delete_action = GCommonActions::make_delete_action([&](const GAction&) {
+    enum class ConfirmBeforeDelete { No, Yes };
+
+    auto do_delete = [&](ConfirmBeforeDelete confirm) {
         auto paths = selected_file_paths();
         if (paths.is_empty())
             return;
@@ -213,15 +215,17 @@ int main(int argc, char** argv)
                 message = String::format("Really delete %d files?", paths.size());
             }
 
-            GMessageBox box(
-                message,
-                "Confirm deletion",
-                GMessageBox::Type::Warning,
-                GMessageBox::InputType::OKCancel,
-                window);
-            auto result = box.exec();
-            if (result == GMessageBox::ExecCancel)
-                return;
+            if (confirm == ConfirmBeforeDelete::Yes) {
+                GMessageBox box(
+                    message,
+                    "Confirm deletion",
+                    GMessageBox::Type::Warning,
+                    GMessageBox::InputType::OKCancel,
+                    window);
+                auto result = box.exec();
+                if (result == GMessageBox::ExecCancel)
+                    return;
+            }
         }
         for (auto& path : paths) {
             if (unlink(path.characters()) < 0) {
@@ -235,6 +239,14 @@ int main(int argc, char** argv)
                 break;
             }
         }
+    };
+
+    auto force_delete_action = GAction::create("Delete without confirmation", { Mod_Shift, Key_Delete }, [&](const GAction&) {
+        do_delete(ConfirmBeforeDelete::No);
+    });
+
+    auto delete_action = GCommonActions::make_delete_action([&](const GAction&) {
+        do_delete(ConfirmBeforeDelete::Yes);
     });
     delete_action->set_enabled(false);
 
