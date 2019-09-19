@@ -76,8 +76,8 @@ public:
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int flags, const sockaddr*, socklen_t) = 0;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
-    KResult setsockopt(int level, int option, const void*, socklen_t);
-    KResult getsockopt(int level, int option, void*, socklen_t*);
+    virtual KResult setsockopt(int level, int option, const void*, socklen_t);
+    virtual KResult getsockopt(int level, int option, void*, socklen_t*);
 
     pid_t origin_pid() const { return m_origin_pid; }
     pid_t acceptor_pid() const { return m_acceptor_pid; }

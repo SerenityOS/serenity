@@ -337,9 +337,12 @@ struct pollfd {
 #define SO_KEEPALIVE 3
 #define SO_ERROR 4
 
+#define IPPROTO_IP 0
 #define IPPROTO_ICMP 1
 #define IPPROTO_TCP 6
 #define IPPROTO_UDP 17
+
+#define IP_TTL 2
 
 struct sockaddr {
     u16 sa_family;

@@ -34,7 +34,7 @@ public:
     void set_ipv4_gateway(const IPv4Address&);
 
     void send(const MACAddress&, const ARPPacket&);
-    void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const u8* payload, size_t payload_size);
+    void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const u8* payload, size_t payload_size, u8 ttl);
 
     Optional<KBuffer> dequeue_packet();
 

@@ -77,7 +77,7 @@ int UDPSocket::protocol_send(const void* data, int data_length)
         local_port(),
         peer_address().to_string().characters(),
         peer_port());
-    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, buffer.data(), buffer.size());
+    routing_decision.adapter->send_ipv4(routing_decision.next_hop, peer_address(), IPv4Protocol::UDP, buffer.data(), buffer.size(), ttl());
     return data_length;
 }
 
