@@ -31,6 +31,8 @@ public:
     virtual bool can_write(FileDescription&) const override;
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
+    virtual KResult setsockopt(int level, int option, const void*, socklen_t) override;
+    virtual KResult getsockopt(int level, int option, void*, socklen_t*) override;
 
     void did_receive(const IPv4Address& peer_address, u16 peer_port, KBuffer&&);
 
@@ -46,6 +48,8 @@ public:
     IPv4SocketTuple tuple() const { return IPv4SocketTuple(m_local_address, m_local_port, m_peer_address, m_peer_port); }
 
     String absolute_path(const FileDescription& description) const override;
+
+    u8 ttl() const { return m_ttl; }
 
 protected:
     IPv4Socket(int type, int protocol);
@@ -82,6 +86,8 @@ private:
     u16 m_peer_port { 0 };
 
     u32 m_bytes_received { 0 };
+
+    u8 m_ttl { 64 };
 
     bool m_can_read { false };
 };

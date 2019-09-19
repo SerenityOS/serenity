@@ -195,7 +195,7 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
 #endif
 
     if (type() == SOCK_RAW) {
-        routing_decision.adapter->send_ipv4(routing_decision.next_hop, m_peer_address, (IPv4Protocol)protocol(), (const u8*)data, data_length);
+        routing_decision.adapter->send_ipv4(routing_decision.next_hop, m_peer_address, (IPv4Protocol)protocol(), (const u8*)data, data_length, m_ttl);
         return data_length;
     }
 
@@ -312,4 +312,39 @@ String IPv4Socket::absolute_path(const FileDescription&) const
     }
 
     return builder.to_string();
+}
+
+KResult IPv4Socket::setsockopt(int level, int option, const void* value, socklen_t value_size)
+{
+    if (level != IPPROTO_IP)
+        return Socket::setsockopt(level, option, value, value_size);
+
+    switch (option) {
+    case IP_TTL:
+        if (value_size < sizeof(int))
+            return KResult(-EINVAL);
+        if (*(const int*)value < 0 || *(const int*)value > 255)
+            return KResult(-EINVAL);
+        m_ttl = (u8)*(const int*)value;
+        return KSuccess;
+    default:
+        return KResult(-ENOPROTOOPT);
+    }
+}
+
+KResult IPv4Socket::getsockopt(int level, int option, void* value, socklen_t* value_size)
+{
+    if (level != IPPROTO_IP)
+        return Socket::getsockopt(level, option, value, value_size);
+
+
+    switch (option) {
+    case IP_TTL:
+        if (*value_size < sizeof(int))
+            return KResult(-EINVAL);
+        *(int*)value = m_ttl;
+        return KSuccess;
+    default:
+        return KResult(-ENOPROTOOPT);
+    }
 }
