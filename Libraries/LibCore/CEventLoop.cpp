@@ -245,7 +245,7 @@ void CEventLoop::pump(WaitMode mode)
 #endif
             static_cast<CDeferredInvocationEvent&>(event).m_invokee(*receiver);
         } else {
-            receiver->event(event);
+            receiver->dispatch_event(event);
         }
 
         if (m_exit_requested) {

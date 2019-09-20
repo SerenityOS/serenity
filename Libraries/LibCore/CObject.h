@@ -48,6 +48,8 @@ public:
     template<typename T, typename Callback>
     void for_each_child_of_type(Callback callback);
 
+    bool is_ancestor_of(const CObject&) const;
+
     CObject* parent() { return m_parent; }
     const CObject* parent() const { return m_parent; }
 
@@ -70,6 +72,8 @@ public:
     virtual void save_to(AK::JsonObject&);
 
     static IntrusiveList<CObject, &CObject::m_all_objects_list_node>& all_objects();
+
+    void dispatch_event(CEvent&, CObject* stay_within = nullptr);
 
 protected:
     explicit CObject(CObject* parent = nullptr, bool is_widget = false);

@@ -191,14 +191,14 @@ void GWindow::event(CEvent& event)
             auto window_relative_rect = m_global_cursor_tracking_widget->window_relative_rect();
             Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<GMouseEvent>((GEvent::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
-            m_global_cursor_tracking_widget->event(*local_event);
+            m_global_cursor_tracking_widget->dispatch_event(*local_event, this);
             return;
         }
         if (m_automatic_cursor_tracking_widget) {
             auto window_relative_rect = m_automatic_cursor_tracking_widget->window_relative_rect();
             Point local_point { mouse_event.x() - window_relative_rect.x(), mouse_event.y() - window_relative_rect.y() };
             auto local_event = make<GMouseEvent>((GEvent::Type)event.type(), local_point, mouse_event.buttons(), mouse_event.button(), mouse_event.modifiers(), mouse_event.wheel_delta());
-            m_automatic_cursor_tracking_widget->event(*local_event);
+            m_automatic_cursor_tracking_widget->dispatch_event(*local_event, this);
             if (mouse_event.buttons() == 0)
                 m_automatic_cursor_tracking_widget = nullptr;
             return;
@@ -212,7 +212,7 @@ void GWindow::event(CEvent& event)
         if (mouse_event.buttons() != 0 && !m_automatic_cursor_tracking_widget)
             m_automatic_cursor_tracking_widget = result.widget->make_weak_ptr();
         if (result.widget != m_global_cursor_tracking_widget.ptr())
-            return result.widget->event(*local_event);
+            return result.widget->dispatch_event(*local_event, this);
         return;
     }
 
@@ -241,7 +241,7 @@ void GWindow::event(CEvent& event)
         }
 
         for (auto& rect : rects)
-            m_main_widget->event(*make<GPaintEvent>(rect));
+            m_main_widget->dispatch_event(*make<GPaintEvent>(rect), this);
 
         paint_keybinds();
 
@@ -290,9 +290,9 @@ void GWindow::event(CEvent& event)
                 if (found_widget != m_keyboard_activation_targets.end()) {
                     m_keybind_mode = false;
                     auto event = make<GMouseEvent>(GEvent::MouseDown, Point(), 0, GMouseButton::Left, 0, 0);
-                    found_widget->value->event(*event);
+                    found_widget->value->dispatch_event(*event, this);
                     event = make<GMouseEvent>(GEvent::MouseUp, Point(), 0, GMouseButton::Left, 0, 0);
-                    found_widget->value->event(*event);
+                    found_widget->value->dispatch_event(*event, this);
                 } else if (m_entered_keybind.length() >= m_max_keybind_length) {
                     m_keybind_mode = false;
                 }
@@ -300,9 +300,9 @@ void GWindow::event(CEvent& event)
             }
         } else {
             if (m_focused_widget)
-                return m_focused_widget->event(event);
+                return m_focused_widget->dispatch_event(event, this);
             if (m_main_widget)
-                return m_main_widget->event(event);
+                return m_main_widget->dispatch_event(event, this);
         }
         return;
     }
@@ -315,7 +315,7 @@ void GWindow::event(CEvent& event)
 
         m_is_active = event.type() == GEvent::WindowBecameActive;
         if (m_main_widget)
-            m_main_widget->event(event);
+            m_main_widget->dispatch_event(event, this);
         if (m_focused_widget)
             m_focused_widget->update();
         return;

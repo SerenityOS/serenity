@@ -178,7 +178,8 @@ void WSWindow::event(CEvent& event)
 {
     if (!m_client) {
         ASSERT(parent());
-        return parent()->event(event);
+        event.ignore();
+        return;
     }
 
     if (is_blocked_by_modal_window())

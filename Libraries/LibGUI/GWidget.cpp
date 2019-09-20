@@ -122,7 +122,7 @@ void GWidget::handle_paint_event(GPaintEvent& event)
             return IterationDecision::Continue;
         if (child.relative_rect().intersects(event.rect())) {
             GPaintEvent local_event(event.rect().intersected(child.relative_rect()).translated(-child.relative_position()));
-            child.event(local_event);
+            child.dispatch_event(local_event, this);
         }
         return IterationDecision::Continue;
     });
@@ -231,7 +231,10 @@ void GWidget::keydown_event(GKeyEvent& event)
             focus_previous_widget();
         else
             focus_next_widget();
+        event.accept();
+        return;
     }
+    event.ignore();
 }
 
 void GWidget::keyup_event(GKeyEvent&)

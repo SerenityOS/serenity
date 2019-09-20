@@ -134,3 +134,24 @@ void CObject::save_to(JsonObject& json)
     json.set("name", name());
     json.set("parent", String::format("%p", parent()));
 }
+
+bool CObject::is_ancestor_of(const CObject& other) const
+{
+    if (&other == this)
+        return false;
+    for (auto* ancestor = other.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor == this)
+            return true;
+    }
+    return false;
+}
+
+void CObject::dispatch_event(CEvent& e, CObject* stay_within)
+{
+    ASSERT(!stay_within || stay_within == this || stay_within->is_ancestor_of(*this));
+    auto* target = this;
+    do {
+        target->event(e);
+        target = target->parent();
+    } while (target && target != stay_within && !e.is_accepted());
+}
