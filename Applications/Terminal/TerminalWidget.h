@@ -88,7 +88,7 @@ private:
 
     bool m_in_active_window { false };
 
-    CNotifier m_notifier;
+    ObjectPtr<CNotifier> m_notifier;
 
     u8 m_opacity { 255 };
     bool m_needs_background_fill { true };

@@ -82,7 +82,7 @@ private:
     HashMap<uid_t, String> m_user_names;
     HashMap<gid_t, String> m_group_names;
 
-    OwnPtr<CNotifier> m_notifier;
+    ObjectPtr<CNotifier> m_notifier;
 
     unsigned m_thumbnail_progress { 0 };
     unsigned m_thumbnail_progress_total { 0 };

@@ -344,7 +344,7 @@ void GDirectoryModel::open(const StringView& a_path)
         perror("watch_file");
         ASSERT_NOT_REACHED();
     }
-    m_notifier = make<CNotifier>(watch_fd, CNotifier::Event::Read);
+    m_notifier = CNotifier::create(watch_fd, CNotifier::Event::Read);
     m_notifier->on_ready_to_read = [this] {
         update();
         char buffer[32];

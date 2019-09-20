@@ -39,5 +39,5 @@ private:
     Parser m_parser;
     // pty resources
     int m_ptm_fd { -1 };
-    CNotifier m_ptm_notifier;
+    ObjectPtr<CNotifier> m_ptm_notifier;
 };

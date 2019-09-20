@@ -51,11 +51,11 @@ namespace Client {
     public:
         Connection(const StringView& address)
             : m_connection(this)
-            , m_notifier(m_connection.fd(), CNotifier::Read, this)
+            , m_notifier(CNotifier::create(m_connection.fd(), CNotifier::Read, this))
         {
             // We want to rate-limit our clients
             m_connection.set_blocking(true);
-            m_notifier.on_ready_to_read = [this] {
+            m_notifier->on_ready_to_read = [this] {
                 drain_messages_from_server();
                 CEventLoop::current().post_event(*this, make<PostProcessEvent>(m_connection.fd()));
             };
@@ -230,7 +230,7 @@ namespace Client {
         }
 
         CLocalSocket m_connection;
-        CNotifier m_notifier;
+        ObjectPtr<CNotifier> m_notifier;
         Vector<IncomingMessageBundle> m_unprocessed_bundles;
         int m_server_pid { -1 };
         int m_my_client_id { -1 };
@@ -242,11 +242,11 @@ namespace Client {
     public:
         ConnectionNG(const StringView& address)
             : m_connection(this)
-            , m_notifier(m_connection.fd(), CNotifier::Read, this)
+            , m_notifier(CNotifier::create(m_connection.fd(), CNotifier::Read, this))
         {
             // We want to rate-limit our clients
             m_connection.set_blocking(true);
-            m_notifier.on_ready_to_read = [this] {
+            m_notifier->on_ready_to_read = [this] {
                 drain_messages_from_server();
                 CEventLoop::current().post_event(*this, make<PostProcessEvent>(m_connection.fd()));
             };
@@ -374,7 +374,7 @@ namespace Client {
         }
 
         CLocalSocket m_connection;
-        CNotifier m_notifier;
+        ObjectPtr<CNotifier> m_notifier;
         Vector<OwnPtr<IMessage>> m_unprocessed_messages;
         int m_server_pid { -1 };
         int m_my_client_id { -1 };

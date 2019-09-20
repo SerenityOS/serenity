@@ -22,7 +22,7 @@
 TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
     : m_terminal(*this)
     , m_ptm_fd(ptm_fd)
-    , m_notifier(ptm_fd, CNotifier::Read)
+    , m_notifier(CNotifier::create(ptm_fd, CNotifier::Read))
     , m_config(move(config))
 {
     m_cursor_blink_timer = CTimer::create();
@@ -53,7 +53,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
     else
         set_font(Font::load_from_file(font_entry));
 
-    m_notifier.on_ready_to_read = [this] {
+    m_notifier->on_ready_to_read = [this] {
         u8 buffer[BUFSIZ];
         ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
         if (nread < 0) {
