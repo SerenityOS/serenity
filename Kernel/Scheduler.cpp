@@ -1,3 +1,4 @@
+#include <AK/SinglyLinkedList.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Devices/PCSpeaker.h>
@@ -7,6 +8,7 @@
 #include <Kernel/Scheduler.h>
 
 SchedulerData* g_scheduler_data;
+SinglyLinkedList<Timer>* g_timer_queue;
 
 void Scheduler::init_thread(Thread& thread)
 {
@@ -48,12 +50,26 @@ Thread* g_last_fpu_thread;
 Thread* g_finalizer;
 static Process* s_colonel_process;
 u64 g_uptime;
-static u64 s_beep_timeout;
+static u64 s_next_timer_due;
 
 struct TaskRedirectionData {
     u16 selector;
     TSS32 tss;
 };
+
+struct Timer {
+    u64 expires;
+    void (*callback)();
+    inline bool operator<(const Timer& rhs)
+    {
+    	return expires < rhs.expires;
+    }
+    inline bool operator>( const Timer& rhs)
+    {
+    	return expires > rhs.expires;
+    }
+};
+
 static TaskRedirectionData s_redirection;
 static bool s_active;
 
@@ -65,7 +81,14 @@ bool Scheduler::is_active()
 void Scheduler::beep()
 {
     PCSpeaker::tone_on(440);
-    s_beep_timeout = g_uptime + 100;
+
+    auto timer = Timer();
+    timer.expires = g_uptime + 100;
+    timer.callback = []() {
+        PCSpeaker::tone_off();
+	dbgprintf("tone off");
+    };
+    add_timer(timer);
 }
 
 Thread::FileDescriptionBlocker::FileDescriptionBlocker(const FileDescription& description)
@@ -523,6 +546,38 @@ void Scheduler::initialize()
     // Make sure the colonel uses a smallish time slice.
     s_colonel_process->set_priority(Process::IdlePriority);
     load_task_register(s_redirection.selector);
+
+    g_timer_queue = new SinglyLinkedList<Timer>();
+
+    auto timer = Timer();
+    timer.expires = g_uptime + 10000;
+    timer.callback = []() {
+	dbgprintf("10 secs\n");
+    };
+    add_timer(timer);
+    
+    
+    timer = Timer();
+    timer.expires = g_uptime + 12000;
+    timer.callback = []() {
+	dbgprintf("12 secs\n");
+    };
+    add_timer(timer);
+
+    timer = Timer();
+    timer.expires = g_uptime + 11000;
+    timer.callback = []() {
+	dbgprintf("11 secs\n");
+    };
+    add_timer(timer);
+    
+    timer = Timer();
+    timer.expires = g_uptime + 5000;
+    timer.callback = []() {
+	dbgprintf("5 secs\n");
+    };
+    add_timer(timer);
+
 }
 
 void Scheduler::timer_tick(RegisterDump& regs)
@@ -531,10 +586,24 @@ void Scheduler::timer_tick(RegisterDump& regs)
         return;
 
     ++g_uptime;
-
+/*
     if (s_beep_timeout && g_uptime > s_beep_timeout) {
         PCSpeaker::tone_off();
         s_beep_timeout = 0;
+    }
+*/    
+    if ( s_next_timer_due && g_uptime > s_next_timer_due) {
+        
+	ASSERT(s_next_timer_due == g_timer_queue->first().expires);
+	while (! g_timer_queue->is_empty() && g_uptime > g_timer_queue->first().expires)
+	{
+            auto timer = g_timer_queue->take_first();
+            timer.callback();
+	}
+	if (! g_timer_queue->is_empty())
+            s_next_timer_due = g_timer_queue->first().expires;
+	else
+            s_next_timer_due = 0;
     }
 
     if (current->tick())
@@ -574,6 +643,13 @@ void Scheduler::timer_tick(RegisterDump& regs)
         "pushf\n"
         "orl $0x00004000, (%esp)\n"
         "popf\n");
+}
+
+void Scheduler::add_timer(Timer& timer)
+{
+    ASSERT(timer.expires > g_uptime);
+    g_timer_queue->sorted_insert_slow(timer);
+    s_next_timer_due = g_timer_queue->first().expires;
 }
 
 static bool s_should_stop_idling = false;
