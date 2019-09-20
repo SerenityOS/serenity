@@ -643,7 +643,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
     if (path.is_empty())
         return KResult(-EINVAL);
 
-    auto parts = path.split_view('/');
+    auto parts = path.split_view('/', true);
     InodeIdentifier crumb_id;
 
     NonnullRefPtrVector<Custody, 32> custody_chain;
@@ -675,7 +675,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
 
         auto& part = parts[i];
         if (part.is_empty())
-            break;
+            continue;
 
         auto& current_parent = custody_chain.last();
         crumb_id = crumb_inode->lookup(part);
