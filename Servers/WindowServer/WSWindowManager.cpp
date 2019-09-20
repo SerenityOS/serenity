@@ -664,11 +664,11 @@ void WSWindowManager::process_event_for_doubleclick(WSWindow& window, WSMouseEve
 
 void WSWindowManager::deliver_mouse_event(WSWindow& window, WSMouseEvent& event)
 {
-    window.event(event);
+    window.dispatch_event(event);
     if (event.type() == WSEvent::MouseUp) {
         process_event_for_doubleclick(window, event);
         if (event.type() == WSEvent::MouseDoubleClick)
-            window.event(event);
+            window.dispatch_event(event);
     }
 }
 
@@ -703,7 +703,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
 
     // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
     if (!active_window_is_modal() && menubar_rect().contains(event.position())) {
-        m_menu_manager.event(event);
+        m_menu_manager.dispatch_event(event);
         return;
     }
 
@@ -915,7 +915,7 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
         if (m_active_window)
-            return m_active_window->event(event);
+            return m_active_window->dispatch_event(event);
         return;
     }
 

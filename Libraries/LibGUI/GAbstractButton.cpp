@@ -134,8 +134,11 @@ void GAbstractButton::leave_event(CEvent&)
 
 void GAbstractButton::keydown_event(GKeyEvent& event)
 {
-    if (event.key() == KeyCode::Key_Return)
+    if (event.key() == KeyCode::Key_Return) {
         click();
+        event.accept();
+        return;
+    }
     GWidget::keydown_event(event);
 }
 
