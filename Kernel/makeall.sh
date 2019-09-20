@@ -38,6 +38,7 @@ build_targets="$build_targets ../Libraries/LibHTML"
 build_targets="$build_targets ../Libraries/LibM"
 build_targets="$build_targets ../Libraries/LibPCIDB"
 build_targets="$build_targets ../Libraries/LibVT"
+build_targets="$build_targets ../Libraries/LibMarkdown"
 
 build_targets="$build_targets ../Applications/About"
 build_targets="$build_targets ../Applications/Calculator"
