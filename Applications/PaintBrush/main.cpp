@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto file_menu = make<GMenu>("File");
-    file_menu->add_action(GAction::create("Open...", { Mod_Ctrl, Key_O }, [&](auto&) {
+    file_menu->add_action(GCommonActions::make_open_action([&](auto&) {
         GFilePicker picker;
         if (picker.exec() == GFilePicker::ExecOK) {
             auto filename = picker.selected_file().string();

@@ -132,7 +132,7 @@ TextEditorWidget::TextEditorWidget()
         update_title();
     });
 
-    m_open_action = GAction::create("Open...", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [this](const GAction&) {
+    m_open_action = GCommonActions::make_open_action([this](auto&) {
         Optional<String> open_path = GFilePicker::get_open_filepath();
 
         if (!open_path.has_value())
