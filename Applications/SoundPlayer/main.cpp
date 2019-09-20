@@ -52,7 +52,7 @@ int main(int argc, char** argv)
 
     auto next_sample_buffer = loader.get_more_samples();
 
-    new CTimer(100, [&] {
+    auto timer = CTimer::create(100, [&] {
         if (!next_sample_buffer) {
             sample_widget->set_buffer(nullptr);
             return;

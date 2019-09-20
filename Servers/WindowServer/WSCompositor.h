@@ -46,8 +46,8 @@ private:
 
     unsigned m_compose_count { 0 };
     unsigned m_flush_count { 0 };
-    CTimer m_compose_timer;
-    CTimer m_immediate_compose_timer;
+    ObjectPtr<CTimer> m_compose_timer;
+    ObjectPtr<CTimer> m_immediate_compose_timer;
     bool m_flash_flush { false };
     bool m_buffers_are_flipped { false };
     bool m_screen_can_set_buffer { false };

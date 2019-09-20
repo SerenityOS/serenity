@@ -101,11 +101,12 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
     , m_on_size_changed(move(on_size_changed))
 {
     srand(time(nullptr));
-    m_timer.on_timeout = [this] {
+    m_timer = CTimer::create();
+    m_timer->on_timeout = [this] {
         ++m_time_elapsed;
         m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));
     };
-    m_timer.set_interval(100);
+    m_timer->set_interval(100);
     set_frame_thickness(2);
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
@@ -187,7 +188,7 @@ void Field::reset()
     m_time_label.set_text("0");
     m_flags_left = m_mine_count;
     m_flag_label.set_text(String::number(m_flags_left));
-    m_timer.stop();
+    m_timer->stop();
     set_greedy_for_hits(false);
     set_face(Face::Default);
 
@@ -325,8 +326,8 @@ void Field::on_square_clicked_impl(Square& square, bool should_flood_fill)
         return;
     if (square.is_considering)
         return;
-    if (!m_timer.is_active())
-        m_timer.start();
+    if (!m_timer->is_active())
+        m_timer->start();
     update();
     square.is_swept = true;
     square.button->set_visible(false);
@@ -417,7 +418,7 @@ void Field::on_square_middle_clicked(Square& square)
 
 void Field::win()
 {
-    m_timer.stop();
+    m_timer->stop();
     set_greedy_for_hits(true);
     set_face(Face::Good);
     for_each_square([&](auto& square) {
@@ -429,7 +430,7 @@ void Field::win()
 
 void Field::game_over()
 {
-    m_timer.stop();
+    m_timer->stop();
     set_greedy_for_hits(true);
     set_face(Face::Bad);
     reveal_mines();

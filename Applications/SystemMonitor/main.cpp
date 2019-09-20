@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     auto* process_table_view = new ProcessTableView(*cpu_graph, process_table_container);
     auto* memory_stats_widget = new MemoryStatsWidget(*memory_graph, graphs_container);
 
-    auto* refresh_timer = new CTimer(1000, [&] {
+    auto refresh_timer = CTimer::create(1000, [&] {
         process_table_view->refresh();
         memory_stats_widget->refresh();
     });
@@ -167,19 +167,19 @@ int main(int argc, char** argv)
     };
 
     auto frequency_menu = make<GMenu>("Frequency");
-    frequency_menu->add_action(GAction::create("0.25 sec", [refresh_timer](auto&) {
+    frequency_menu->add_action(GAction::create("0.25 sec", [&](auto&) {
         refresh_timer->restart(250);
     }));
-    frequency_menu->add_action(GAction::create("0.5 sec", [refresh_timer](auto&) {
+    frequency_menu->add_action(GAction::create("0.5 sec", [&](auto&) {
         refresh_timer->restart(500);
     }));
-    frequency_menu->add_action(GAction::create("1 sec", [refresh_timer](auto&) {
+    frequency_menu->add_action(GAction::create("1 sec", [&](auto&) {
         refresh_timer->restart(1000);
     }));
-    frequency_menu->add_action(GAction::create("3 sec", [refresh_timer](auto&) {
+    frequency_menu->add_action(GAction::create("3 sec", [&](auto&) {
         refresh_timer->restart(3000);
     }));
-    frequency_menu->add_action(GAction::create("5 sec", [refresh_timer](auto&) {
+    frequency_menu->add_action(GAction::create("5 sec", [&](auto&) {
         refresh_timer->restart(5000);
     }));
     menubar->add_menu(move(frequency_menu));

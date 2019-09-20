@@ -16,5 +16,5 @@ private:
 
     GTableView* m_adapter_table_view { nullptr };
     GTableView* m_socket_table_view { nullptr };
-    CTimer* m_update_timer { nullptr };
+    ObjectPtr<CTimer> m_update_timer;
 };

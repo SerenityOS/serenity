@@ -60,8 +60,8 @@ static CharacterBitmap* s_right_arrow_bitmap;
 GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     : GWidget(parent)
     , m_orientation(orientation)
-    , m_automatic_scrolling_timer(this)
 {
+    m_automatic_scrolling_timer = CTimer::create(this);
     if (!s_up_arrow_bitmap)
         s_up_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_down_arrow_bitmap)
@@ -77,8 +77,8 @@ GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
         set_preferred_size(0, 15);
     }
 
-    m_automatic_scrolling_timer.set_interval(100);
-    m_automatic_scrolling_timer.on_timeout = [this] {
+    m_automatic_scrolling_timer->set_interval(100);
+    m_automatic_scrolling_timer->on_timeout = [this] {
         on_automatic_scrolling_timer_fired();
     };
 }
@@ -293,9 +293,9 @@ void GScrollBar::set_automatic_scrolling_active(bool active)
 {
     if (active) {
         on_automatic_scrolling_timer_fired();
-        m_automatic_scrolling_timer.start();
+        m_automatic_scrolling_timer->start();
     } else {
-        m_automatic_scrolling_timer.stop();
+        m_automatic_scrolling_timer->stop();
     }
 }
 

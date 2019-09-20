@@ -11,7 +11,7 @@ ProcessStacksWidget::ProcessStacksWidget(GWidget* parent)
     m_stacks_editor = new GTextEditor(GTextEditor::Type::MultiLine, this);
     m_stacks_editor->set_readonly(true);
 
-    m_timer = new CTimer(1000, [this] { refresh(); }, this);
+    m_timer = CTimer::create(1000, [this] { refresh(); }, this);
 }
 
 ProcessStacksWidget::~ProcessStacksWidget()

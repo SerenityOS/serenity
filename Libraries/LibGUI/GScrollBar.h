@@ -82,5 +82,5 @@ private:
     };
 
     AutomaticScrollingDirection m_automatic_scrolling_direction { AutomaticScrollingDirection::None };
-    CTimer m_automatic_scrolling_timer;
+    ObjectPtr<CTimer> m_automatic_scrolling_timer;
 };
