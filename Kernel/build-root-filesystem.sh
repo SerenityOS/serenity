@@ -88,6 +88,7 @@ cp ../Applications/Calculator/Calculator mnt/bin/Calculator
 cp ../Applications/SoundPlayer/SoundPlayer mnt/bin/SoundPlayer
 cp ../Applications/DisplayProperties/DisplayProperties mnt/bin/DisplayProperties
 cp ../Applications/Welcome/Welcome mnt/bin/Welcome
+cp ../Applications/Help/Help mnt/bin/Help
 cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
@@ -127,6 +128,7 @@ ln -s ChanViewer mnt/bin/cv
 ln -s Calculator mnt/bin/calc
 ln -s Inspector mnt/bin/ins
 ln -s SoundPlayer mnt/bin/sp
+ln -s Help mnt/bin/help
 echo "done"
 
 mkdir -p mnt/boot/
