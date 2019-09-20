@@ -1,5 +1,6 @@
 #pragma once
 
+#include <LibCore/ObjectPtr.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GWidget.h>
 
@@ -17,5 +18,5 @@ public:
 private:
     pid_t m_pid { -1 };
     GTextEditor* m_stacks_editor { nullptr };
-    CTimer* m_timer { nullptr };
+    ObjectPtr<CTimer> m_timer;
 };

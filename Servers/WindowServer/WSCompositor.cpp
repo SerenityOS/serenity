@@ -31,29 +31,30 @@ WallpaperMode mode_to_enum(const String& name)
 }
 
 WSCompositor::WSCompositor()
-    : m_compose_timer(this)
-    , m_immediate_compose_timer(this)
 {
+    m_compose_timer = CTimer::create(this);
+    m_immediate_compose_timer = CTimer::create(this);
+
     m_screen_can_set_buffer = WSScreen::the().can_set_buffer();
 
     init_bitmaps();
 
-    m_compose_timer.on_timeout = [=]() {
+    m_compose_timer->on_timeout = [&]() {
 #if defined(COMPOSITOR_DEBUG)
         dbgprintf("WSCompositor: delayed frame callback: %d rects\n", m_dirty_rects.size());
 #endif
         compose();
     };
-    m_compose_timer.set_single_shot(true);
-    m_compose_timer.set_interval(1000 / 60);
-    m_immediate_compose_timer.on_timeout = [=]() {
+    m_compose_timer->set_single_shot(true);
+    m_compose_timer->set_interval(1000 / 60);
+    m_immediate_compose_timer->on_timeout = [=]() {
 #if defined(COMPOSITOR_DEBUG)
         dbgprintf("WSCompositor: immediate frame callback: %d rects\n", m_dirty_rects.size());
 #endif
         compose();
     };
-    m_immediate_compose_timer.set_single_shot(true);
-    m_immediate_compose_timer.set_interval(0);
+    m_immediate_compose_timer->set_single_shot(true);
+    m_immediate_compose_timer->set_interval(0);
 }
 
 void WSCompositor::init_bitmaps()
@@ -248,12 +249,12 @@ void WSCompositor::invalidate(const Rect& a_rect)
     // We delay composition by a timer interval, but to not affect latency too
     // much, if a pending compose is not already scheduled, we also schedule an
     // immediate compose the next spin of the event loop.
-    if (!m_compose_timer.is_active()) {
+    if (!m_compose_timer->is_active()) {
 #if defined(COMPOSITOR_DEBUG)
         dbgprintf("Invalidated (starting immediate frame): %dx%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());
 #endif
-        m_compose_timer.start();
-        m_immediate_compose_timer.start();
+        m_compose_timer->start();
+        m_immediate_compose_timer->start();
     } else {
 #if defined(COMPOSITOR_DEBUG)
         dbgprintf("Invalidated (frame callback pending): %dx%d %dx%d\n", a_rect.x(), a_rect.y(), a_rect.width(), a_rect.height());

@@ -25,6 +25,9 @@ TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
     , m_notifier(ptm_fd, CNotifier::Read)
     , m_config(move(config))
 {
+    m_cursor_blink_timer = CTimer::create();
+    m_visual_beep_timer = CTimer::create();
+
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
@@ -36,10 +39,10 @@ TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
     };
 
     dbgprintf("Terminal: Load config file from %s\n", m_config->file_name().characters());
-    m_cursor_blink_timer.set_interval(m_config->read_num_entry("Text",
+    m_cursor_blink_timer->set_interval(m_config->read_num_entry("Text",
         "CursorBlinkInterval",
         500));
-    m_cursor_blink_timer.on_timeout = [this] {
+    m_cursor_blink_timer->on_timeout = [this] {
         m_cursor_blink_state = !m_cursor_blink_state;
         update_cursor();
     };
@@ -103,10 +106,10 @@ void TerminalWidget::event(CEvent& event)
     if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
         m_in_active_window = event.type() == GEvent::WindowBecameActive;
         if (!m_in_active_window) {
-            m_cursor_blink_timer.stop();
+            m_cursor_blink_timer->stop();
         } else {
             m_cursor_blink_state = true;
-            m_cursor_blink_timer.start();
+            m_cursor_blink_timer->start();
         }
         invalidate_cursor();
         update();
@@ -117,9 +120,9 @@ void TerminalWidget::event(CEvent& event)
 void TerminalWidget::keydown_event(GKeyEvent& event)
 {
     // Reset timer so cursor doesn't blink while typing.
-    m_cursor_blink_timer.stop();
+    m_cursor_blink_timer->stop();
     m_cursor_blink_state = true;
-    m_cursor_blink_timer.start();
+    m_cursor_blink_timer->start();
 
     switch (event.key()) {
     case KeyCode::Key_Up:
@@ -196,7 +199,7 @@ void TerminalWidget::paint_event(GPaintEvent& event)
 
     painter.add_clip_rect(event.rect());
 
-    if (m_visual_beep_timer.is_active())
+    if (m_visual_beep_timer->is_active())
         painter.fill_rect(frame_inner_rect(), Color::Red);
     else
         painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(m_opacity));
@@ -223,7 +226,7 @@ void TerminalWidget::paint_event(GPaintEvent& event)
             continue;
         auto& line = line_for_visual_row(row);
         bool has_only_one_background_color = line.has_only_one_background_color();
-        if (m_visual_beep_timer.is_active())
+        if (m_visual_beep_timer->is_active())
             painter.fill_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
             painter.fill_rect(row_rect, lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
@@ -563,9 +566,9 @@ void TerminalWidget::beep()
         sysbeep();
         return;
     }
-    m_visual_beep_timer.restart(200);
-    m_visual_beep_timer.set_single_shot(true);
-    m_visual_beep_timer.on_timeout = [this] {
+    m_visual_beep_timer->restart(200);
+    m_visual_beep_timer->set_single_shot(true);
+    m_visual_beep_timer->on_timeout = [this] {
         force_repaint();
     };
     force_repaint();

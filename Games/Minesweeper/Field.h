@@ -95,7 +95,7 @@ private:
     GButton& m_face_button;
     GLabel& m_flag_label;
     GLabel& m_time_label;
-    CTimer m_timer;
+    ObjectPtr<CTimer> m_timer;
     int m_time_elapsed { 0 };
     int m_flags_left { 0 };
     Face m_face { Face::Default };

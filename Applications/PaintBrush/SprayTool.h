@@ -19,7 +19,7 @@ public:
 private:
     virtual const char* class_name() const override { return "SprayTool"; }
     void paint_it();
-    CTimer m_timer;
+    ObjectPtr<CTimer> m_timer;
     Point m_last_pos;
     Color m_color;
     OwnPtr<GMenu> m_context_menu;

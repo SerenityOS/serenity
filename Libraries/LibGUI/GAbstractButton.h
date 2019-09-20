@@ -61,7 +61,7 @@ private:
     bool m_exclusive { false };
 
     int m_auto_repeat_interval { 0 };
-    CTimer m_auto_repeat_timer;
+    ObjectPtr<CTimer> m_auto_repeat_timer;
 };
 
 template<>

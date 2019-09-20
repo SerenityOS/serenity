@@ -2,12 +2,21 @@
 
 #include <AK/Function.h>
 #include <LibCore/CObject.h>
+#include <LibCore/ObjectPtr.h>
 
 class CTimer final : public CObject {
     C_OBJECT(CTimer)
 public:
-    explicit CTimer(CObject* parent = nullptr);
-    CTimer(int interval, Function<void()>&& timeout_handler, CObject* parent = nullptr);
+    static ObjectPtr<CTimer> create(CObject* parent = nullptr)
+    {
+        return new CTimer(parent);
+    }
+
+    static ObjectPtr<CTimer> create(int interval, Function<void()>&& timeout_handler, CObject* parent = nullptr)
+    {
+        return new CTimer(interval, move(timeout_handler), parent);
+    }
+
     virtual ~CTimer() override;
 
     void start();
@@ -31,6 +40,9 @@ public:
     Function<void()> on_timeout;
 
 private:
+    explicit CTimer(CObject* parent = nullptr);
+    CTimer(int interval, Function<void()>&& timeout_handler, CObject* parent = nullptr);
+
     virtual void timer_event(CTimerEvent&) override;
 
     bool m_active { false };

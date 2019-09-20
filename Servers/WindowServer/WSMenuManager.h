@@ -2,6 +2,7 @@
 
 #include "WSMenu.h"
 #include <LibCore/CObject.h>
+#include <LibCore/CTimer.h>
 #include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSWindow.h>
 
@@ -32,6 +33,7 @@ private:
     OwnPtr<WSWindow> m_window;
     WSCPUMonitor m_cpu_monitor;
     String m_username;
+    ObjectPtr<CTimer> m_timer;
 
     Vector<WeakPtr<WSMenu>> m_open_menu_stack;
 };

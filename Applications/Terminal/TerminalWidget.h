@@ -96,8 +96,8 @@ private:
 
     int m_glyph_width { 0 };
 
-    CTimer m_cursor_blink_timer;
-    CTimer m_visual_beep_timer;
+    ObjectPtr<CTimer> m_cursor_blink_timer;
+    ObjectPtr<CTimer> m_visual_beep_timer;
     RefPtr<CConfigFile> m_config;
 
     GScrollBar* m_scrollbar { nullptr };

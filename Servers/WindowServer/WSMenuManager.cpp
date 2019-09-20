@@ -10,7 +10,7 @@ WSMenuManager::WSMenuManager()
 {
     m_username = getlogin();
 
-    new CTimer(300, [this] {
+    m_timer = CTimer::create(300, [this] {
         static time_t last_update_time;
         time_t now = time(nullptr);
         if (now != last_update_time || m_cpu_monitor.is_dirty()) {

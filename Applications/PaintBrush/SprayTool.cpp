@@ -11,10 +11,11 @@
 
 SprayTool::SprayTool()
 {
-    m_timer.on_timeout = [=]() {
+    m_timer = CTimer::create();
+    m_timer->on_timeout = [&]() {
         paint_it();
     };
-    m_timer.set_interval(200);
+    m_timer->set_interval(200);
 }
 
 SprayTool::~SprayTool()
@@ -54,22 +55,22 @@ void SprayTool::on_mousedown(GMouseEvent& event)
 
     m_color = m_widget->color_for(event);
     m_last_pos = event.position();
-    m_timer.start();
+    m_timer->start();
     paint_it();
 }
 
 void SprayTool::on_mousemove(GMouseEvent& event)
 {
     m_last_pos = event.position();
-    if (m_timer.is_active()) {
+    if (m_timer->is_active()) {
         paint_it();
-        m_timer.restart(m_timer.interval());
+        m_timer->restart(m_timer->interval());
     }
 }
 
 void SprayTool::on_mouseup(GMouseEvent&)
 {
-    m_timer.stop();
+    m_timer->stop();
 }
 
 void SprayTool::on_contextmenu(GContextMenuEvent& event)
