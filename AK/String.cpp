@@ -110,7 +110,7 @@ Vector<String> String::split_limit(const char separator, int limit) const
     return v;
 }
 
-Vector<StringView> String::split_view(const char separator) const
+Vector<StringView> String::split_view(const char separator, bool keep_empty) const
 {
     if (is_empty())
         return {};
@@ -121,15 +121,15 @@ Vector<StringView> String::split_view(const char separator) const
         char ch = characters()[i];
         if (ch == separator) {
             int sublen = i - substart;
-            if (sublen != 0)
+            if (sublen != 0 || keep_empty)
                 v.append(substring_view(substart, sublen));
             substart = i + 1;
         }
     }
     int taillen = length() - substart;
-    if (taillen != 0)
+    if (taillen != 0 || keep_empty)
         v.append(substring_view(substart, taillen));
-    if (characters()[length() - 1] == separator)
+    if (characters()[length() - 1] == separator && keep_empty)
         v.append(empty());
     return v;
 }

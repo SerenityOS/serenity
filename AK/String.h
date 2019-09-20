@@ -114,7 +114,7 @@ public:
     Vector<String> split(char separator) const;
     String substring(int start, int length) const;
 
-    Vector<StringView> split_view(char separator) const;
+    Vector<StringView> split_view(char separator, bool keep_empty = false) const;
     StringView substring_view(int start, int length) const;
 
     bool is_null() const { return !m_impl; }

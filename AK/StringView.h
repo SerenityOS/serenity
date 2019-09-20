@@ -44,7 +44,7 @@ public:
     bool starts_with(const StringView&) const;
 
     StringView substring_view(int start, int length) const;
-    Vector<StringView> split_view(char) const;
+    Vector<StringView> split_view(char, bool keep_empty = false) const;
 
     // FIXME: These should be shared between String and StringView somehow!
     unsigned to_uint(bool& ok) const;
