@@ -16,7 +16,7 @@ StringView::StringView(const ByteBuffer& buffer)
 {
 }
 
-Vector<StringView> StringView::split_view(const char separator) const
+Vector<StringView> StringView::split_view(const char separator, bool keep_empty) const
 {
     if (is_empty())
         return {};
@@ -27,15 +27,15 @@ Vector<StringView> StringView::split_view(const char separator) const
         char ch = characters_without_null_termination()[i];
         if (ch == separator) {
             ssize_t sublen = i - substart;
-            if (sublen != 0)
+            if (sublen != 0 || keep_empty)
                 v.append(substring_view(substart, sublen));
             substart = i + 1;
         }
     }
     ssize_t taillen = length() - substart;
-    if (taillen != 0)
+    if (taillen != 0 || keep_empty)
         v.append(substring_view(substart, taillen));
-    if (characters_without_null_termination()[length() - 1] == separator)
+    if (characters_without_null_termination()[length() - 1] == separator && keep_empty)
         v.append(String::empty());
     return v;
 }
