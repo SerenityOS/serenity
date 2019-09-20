@@ -2,12 +2,13 @@
 
 #include "IRCLogBuffer.h"
 #include "IRCWindow.h"
-#include <AK/String.h>
 #include <AK/CircularQueue.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CTCPSocket.h>
+#include <LibCore/ObjectPtr.h>
 
 class IRCChannel;
 class IRCQuery;
@@ -18,6 +19,7 @@ class IRCClient final : public CObject {
     C_OBJECT(IRCClient)
     friend class IRCChannel;
     friend class IRCQuery;
+
 public:
     IRCClient();
     virtual ~IRCClient() override;
@@ -138,7 +140,7 @@ private:
     CTCPSocket* m_socket { nullptr };
 
     String m_nickname;
-    OwnPtr<CNotifier> m_notifier;
+    ObjectPtr<CNotifier> m_notifier;
     HashMap<String, RefPtr<IRCChannel>, CaseInsensitiveStringTraits> m_channels;
     HashMap<String, RefPtr<IRCQuery>, CaseInsensitiveStringTraits> m_queries;
 

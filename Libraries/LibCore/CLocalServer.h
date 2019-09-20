@@ -21,5 +21,5 @@ public:
 private:
     int m_fd { -1 };
     bool m_listening { false };
-    OwnPtr<CNotifier> m_notifier;
+    ObjectPtr<CNotifier> m_notifier;
 };

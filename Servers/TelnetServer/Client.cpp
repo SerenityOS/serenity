@@ -14,10 +14,10 @@ Client::Client(int id, CTCPSocket* socket, int ptm_fd)
     : m_id(id)
     , m_socket(socket)
     , m_ptm_fd(ptm_fd)
-    , m_ptm_notifier(ptm_fd, CNotifier::Read)
+    , m_ptm_notifier(CNotifier::create(ptm_fd, CNotifier::Read))
 {
     m_socket->on_ready_to_read = [this] { drain_socket(); };
-    m_ptm_notifier.on_ready_to_read = [this] { drain_pty(); };
+    m_ptm_notifier->on_ready_to_read = [this] { drain_pty(); };
     m_parser.on_command = [this](const Command& command) { handle_command(command); };
     m_parser.on_data = [this](const StringView& data) { handle_data(data); };
     m_parser.on_error = [this]() { handle_error(); };
@@ -154,7 +154,7 @@ void Client::send_commands(Vector<Command> commands)
 
 void Client::quit()
 {
-    m_ptm_notifier.set_enabled(false);
+    m_ptm_notifier->set_enabled(false);
     close(m_ptm_fd);
     m_socket->close();
     if (on_exit)

@@ -1,7 +1,8 @@
 #pragma once
 
 #include <AK/Function.h>
-#include "CObject.h"
+#include <LibCore/CObject.h>
+#include <LibCore/ObjectPtr.h>
 
 class CNotifier : public CObject {
     C_OBJECT(CNotifier)
@@ -12,7 +13,12 @@ public:
         Write = 2,
         Exceptional = 4,
     };
-    CNotifier(int fd, unsigned event_mask, CObject* parent = nullptr);
+
+    static ObjectPtr<CNotifier> create(int fd, unsigned event_mask, CObject* parent = nullptr)
+    {
+        return new CNotifier(fd, event_mask, parent);
+    }
+
     virtual ~CNotifier() override;
 
     void set_enabled(bool);
@@ -27,6 +33,8 @@ public:
     void event(CEvent&) override;
 
 private:
+    CNotifier(int fd, unsigned event_mask, CObject* parent);
+
     int m_fd { -1 };
     unsigned m_event_mask { 0 };
 };
