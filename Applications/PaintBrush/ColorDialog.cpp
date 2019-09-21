@@ -53,7 +53,7 @@ void ColorDialog::build()
     };
 
     auto make_spinbox = [&](RGBComponent component, int initial_value) {
-         auto* spinbox = new GSpinBox(left_vertical_container);
+         auto spinbox = GSpinBox::construct(left_vertical_container);
          spinbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
          spinbox->set_preferred_size(0, 20);
          spinbox->set_min(0);

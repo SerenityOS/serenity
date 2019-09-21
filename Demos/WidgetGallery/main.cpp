@@ -61,9 +61,9 @@ int main(int argc, char** argv)
     textbox2->set_text("GTextBox 2");
     textbox2->set_enabled(false);
 
-    auto* spinbox1 = new GSpinBox(main_widget);
+    auto spinbox1 = GSpinBox::construct(main_widget);
     (void)spinbox1;
-    auto* spinbox2 = new GSpinBox(main_widget);
+    auto spinbox2 = GSpinBox::construct(main_widget);
     spinbox2->set_enabled(false);
 
     auto* vertical_slider_container = new GWidget(main_widget);

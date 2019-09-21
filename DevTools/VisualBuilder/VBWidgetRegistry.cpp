@@ -89,7 +89,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
         return button;
     }
     case VBWidgetType::GSpinBox: {
-        auto* box = new GSpinBox(parent);
+        auto box = GSpinBox::construct(parent);
         box->set_range(0, 100);
         box->set_value(0);
         return box;
