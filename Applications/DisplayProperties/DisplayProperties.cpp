@@ -101,19 +101,19 @@ void DisplayPropertiesWidget::create_frame()
     background_content->set_layout(make<GBoxLayout>(Orientation::Vertical));
     background_content->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* wallpaper_preview = new GLabel(background_splitter);
+    m_wallpaper_preview = GLabel::construct(background_splitter);
 
     auto* wallpaper_list = new GListView(background_content);
     wallpaper_list->set_background_color(Color::White);
     wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
     wallpaper_list->horizontal_scrollbar().set_visible(false);
-    wallpaper_list->on_selection = [this, wallpaper_preview](auto& index) {
+    wallpaper_list->on_selection = [this](auto& index) {
         StringBuilder builder;
         m_selected_wallpaper = m_wallpapers.at(index.row());
         builder.append("/res/wallpapers/");
         builder.append(m_selected_wallpaper);
-        wallpaper_preview->set_icon(load_png(builder.to_string()));
-        wallpaper_preview->set_should_stretch_icon(true);
+        m_wallpaper_preview->set_icon(load_png(builder.to_string()));
+        m_wallpaper_preview->set_should_stretch_icon(true);
     };
 
     // Let's add the settings tab

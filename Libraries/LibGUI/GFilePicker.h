@@ -47,8 +47,8 @@ private:
     FileSystemPath m_selected_file;
 
     GTextBox* m_filename_textbox { nullptr };
-    GLabel* m_preview_image_label { nullptr };
-    GLabel* m_preview_name_label { nullptr };
-    GLabel* m_preview_geometry_label { nullptr };
+    ObjectPtr<GLabel> m_preview_image_label;
+    ObjectPtr<GLabel> m_preview_name_label;
+    ObjectPtr<GLabel> m_preview_geometry_label;
     Mode m_mode { Mode::Open };
 };

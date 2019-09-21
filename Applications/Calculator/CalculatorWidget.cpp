@@ -13,7 +13,7 @@ CalculatorWidget::CalculatorWidget(GWidget* parent)
     m_entry->set_relative_rect(5, 5, 244, 26);
     m_entry->set_text_alignment(TextAlignment::CenterRight);
 
-    m_label = new GLabel(this);
+    m_label = GLabel::construct(this);
     m_label->set_relative_rect(12, 42, 27, 27);
     m_label->set_foreground_color(Color::NamedColor::Red);
     m_label->set_frame_shadow(FrameShadow::Sunken);

@@ -29,16 +29,16 @@ int main(int argc, char** argv)
     container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     container->set_preferred_size(0, 36);
     container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
-    auto* flag_icon_label = new GLabel(container);
+    auto flag_icon_label = GLabel::construct(container);
     flag_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png"));
-    auto* flag_label = new GLabel(container);
+    auto flag_label = GLabel::construct(container);
     auto* face_button = new GButton(container);
     face_button->set_button_style(ButtonStyle::CoolBar);
     face_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     face_button->set_preferred_size(36, 0);
-    auto* time_icon_label = new GLabel(container);
+    auto time_icon_label = GLabel::construct(container);
     time_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/timer.png"));
-    auto* time_label = new GLabel(container);
+    auto time_label = GLabel::construct(container);
     auto* field = new Field(*flag_label, *time_label, *face_button, widget, [&](Size size) {
         size.set_height(size.height() + container->preferred_size().height());
         window->resize(size);

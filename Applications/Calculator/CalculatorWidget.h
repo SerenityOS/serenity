@@ -26,5 +26,5 @@ private:
     Keypad m_keypad;
 
     GTextBox* m_entry { nullptr };
-    GLabel* m_label { nullptr };
+    ObjectPtr<GLabel> m_label;
 };

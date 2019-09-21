@@ -34,7 +34,7 @@ void GInputBox::build()
     widget->layout()->set_margins({ 8, 8, 8, 8 });
     widget->layout()->set_spacing(8);
 
-    auto* label = new GLabel(m_prompt, widget);
+    auto label = GLabel::construct(m_prompt, widget);
     label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     label->set_preferred_size(text_width, 16);
 

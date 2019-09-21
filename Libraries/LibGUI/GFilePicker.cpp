@@ -128,7 +128,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     filename_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     filename_container->set_preferred_size(0, 20);
     filename_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
-    auto* filename_label = new GLabel("File name:", filename_container);
+    auto filename_label = GLabel::construct("File name:", filename_container);
     filename_label->set_text_alignment(TextAlignment::CenterLeft);
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     filename_label->set_preferred_size(60, 0);
@@ -201,17 +201,17 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     preview_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     preview_container->layout()->set_margins({ 8, 8, 8, 8 });
 
-    m_preview_image_label = new GLabel(preview_container);
+    m_preview_image_label = GLabel::construct(preview_container);
     m_preview_image_label->set_should_stretch_icon(true);
     m_preview_image_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     m_preview_image_label->set_preferred_size(160, 160);
 
-    m_preview_name_label = new GLabel(preview_container);
+    m_preview_name_label = GLabel::construct(preview_container);
     m_preview_name_label->set_font(Font::default_bold_font());
     m_preview_name_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_preview_name_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
 
-    m_preview_geometry_label = new GLabel(preview_container);
+    m_preview_geometry_label = GLabel::construct(preview_container);
     m_preview_geometry_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_preview_geometry_label->set_preferred_size(0, m_preview_name_label->font().glyph_height());
 }

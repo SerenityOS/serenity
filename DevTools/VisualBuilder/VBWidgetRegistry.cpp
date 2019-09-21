@@ -78,7 +78,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
     case VBWidgetType::GGroupBox:
         return new GGroupBox("groupbox_1", parent);
     case VBWidgetType::GLabel: {
-        auto* label = new GLabel(parent);
+        auto label = GLabel::construct(parent);
         label->set_fill_with_background_color(true);
         label->set_text("label_1");
         return label;

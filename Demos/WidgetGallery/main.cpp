@@ -50,9 +50,9 @@ int main(int argc, char** argv)
             progress1->set_value(progress1->min());
     });
 
-    auto* label1 = new GLabel("GLabel 1", main_widget);
+    auto label1 = GLabel::construct("GLabel 1", main_widget);
     (void)label1;
-    auto* label2 = new GLabel("GLabel 2", main_widget);
+    auto label2 = GLabel::construct("GLabel 2", main_widget);
     label2->set_enabled(false);
 
     auto* textbox1 = new GTextBox(main_widget);

@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     window->set_resizable(true);
     window->set_rect(window_rect);
 
-    auto* background = new GLabel;
+    auto background = GLabel::construct();
     window->set_main_widget(background);
     background->set_fill_with_background_color(true);
     background->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     // header
     //
 
-    auto* header = new GLabel(background);
+    auto header = GLabel::construct(background);
     header->set_font(Font::default_bold_font());
     header->set_text("Welcome to Serenity");
     header->set_text_alignment(TextAlignment::CenterLeft);
@@ -117,7 +117,7 @@ int main(int argc, char** argv)
         content->layout()->set_spacing(8);
         content->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
-        auto* content_title = new GLabel(content);
+        auto content_title = GLabel::construct(content);
         content_title->set_font(Font::default_bold_font());
         content_title->set_text(page.title);
         content_title->set_text_alignment(TextAlignment::CenterLeft);
