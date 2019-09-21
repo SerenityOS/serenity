@@ -8,8 +8,6 @@ class GraphicsBitmap;
 class GLabel : public GFrame {
     C_OBJECT(GLabel)
 public:
-    explicit GLabel(GWidget* parent = nullptr);
-    GLabel(const StringView& text, GWidget* parent = nullptr);
     virtual ~GLabel() override;
 
     String text() const { return m_text; }
@@ -27,9 +25,13 @@ public:
 
     void size_to_fit();
 
-private:
+protected:
+    explicit GLabel(GWidget* parent = nullptr);
+    GLabel(const StringView& text, GWidget* parent = nullptr);
+
     virtual void paint_event(GPaintEvent&) override;
 
+private:
     String m_text;
     RefPtr<GraphicsBitmap> m_icon;
     TextAlignment m_text_alignment { TextAlignment::Center };
