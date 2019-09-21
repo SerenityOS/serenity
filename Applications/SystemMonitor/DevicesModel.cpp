@@ -95,11 +95,11 @@ GVariant DevicesModel::data(const GModelIndex& index, Role) const
 
 void DevicesModel::update()
 {
-    CFile proc_devices { "/proc/devices" };
-    if (!proc_devices.open(CIODevice::OpenMode::ReadOnly))
+    auto proc_devices = CFile::construct("/proc/devices");
+    if (!proc_devices->open(CIODevice::OpenMode::ReadOnly))
         ASSERT_NOT_REACHED();
 
-    auto json = JsonValue::from_string(proc_devices.read_all()).as_array();
+    auto json = JsonValue::from_string(proc_devices->read_all()).as_array();
 
     m_devices.clear();
     json.for_each([this](auto& value) {

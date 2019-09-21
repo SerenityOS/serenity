@@ -356,13 +356,13 @@ void VBForm::mousemove_event(GMouseEvent& event)
 
 void VBForm::load_from_file(const String& path)
 {
-    CFile file(path);
-    if (!file.open(CIODevice::ReadOnly)) {
+    auto file = CFile::construct(path);
+    if (!file->open(CIODevice::ReadOnly)) {
         GMessageBox::show(String::format("Could not open '%s' for reading", path.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
         return;
     }
 
-    auto file_contents = file.read_all();
+    auto file_contents = file->read_all();
     auto form_json = JsonValue::from_string(file_contents);
 
     if (!form_json.is_object()) {
@@ -392,8 +392,8 @@ void VBForm::load_from_file(const String& path)
 
 void VBForm::write_to_file(const String& path)
 {
-    CFile file(path);
-    if (!file.open(CIODevice::WriteOnly)) {
+    auto file = CFile::construct(path);
+    if (!file->open(CIODevice::WriteOnly)) {
         GMessageBox::show(String::format("Could not open '%s' for writing", path.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
         return;
     }
@@ -414,7 +414,7 @@ void VBForm::write_to_file(const String& path)
         widget_array.append(widget_object);
     }
     form_object.set("widgets", widget_array);
-    file.write(form_object.to_string());
+    file->write(form_object.to_string());
 }
 
 void VBForm::dump()

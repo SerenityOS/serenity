@@ -270,14 +270,14 @@ void TextEditorWidget::update_title()
 
 void TextEditorWidget::open_sesame(const String& path)
 {
-    CFile file(path);
-    if (!file.open(CIODevice::ReadOnly)) {
+    auto file = CFile::construct(path);
+    if (!file->open(CIODevice::ReadOnly)) {
         GMessageBox::show(String::format("Opening \"%s\" failed: %s", path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
         return;
     }
 
     m_document_dirty = false;
-    m_editor->set_text(file.read_all());
+    m_editor->set_text(file->read_all());
     set_path(FileSystemPath(path));
 }
 

@@ -11,15 +11,15 @@ bool mount_all()
     // Mount all filesystems listed in /etc/fstab.
     dbg() << "Mounting all filesystems...";
 
-    CFile fstab { "/etc/fstab" };
-    if (!fstab.open(CIODevice::OpenMode::ReadOnly)) {
-        fprintf(stderr, "Failed to open /etc/fstab: %s\n", fstab.error_string());
+    auto fstab = CFile::construct("/etc/fstab");
+    if (!fstab->open(CIODevice::OpenMode::ReadOnly)) {
+        fprintf(stderr, "Failed to open /etc/fstab: %s\n", fstab->error_string());
         return false;
     }
 
     bool all_ok = true;
-    while (fstab.can_read_line()) {
-        ByteBuffer buffer = fstab.read_line(1024);
+    while (fstab->can_read_line()) {
+        ByteBuffer buffer = fstab->read_line(1024);
         StringView line_view = (const char*)buffer.data();
 
         // Trim the trailing newline, if any.
@@ -59,13 +59,13 @@ bool mount_all()
 bool print_mounts()
 {
     // Output info about currently mounted filesystems.
-    CFile df("/proc/df");
-    if (!df.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Failed to open /proc/df: %s\n", df.error_string());
+    auto df = CFile::construct("/proc/df");
+    if (!df->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Failed to open /proc/df: %s\n", df->error_string());
         return false;
     }
 
-    auto content = df.read_all();
+    auto content = df->read_all();
     auto json = JsonValue::from_string(content).as_array();
 
     json.for_each([](auto& value) {

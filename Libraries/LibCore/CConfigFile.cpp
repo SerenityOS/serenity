@@ -36,14 +36,14 @@ void CConfigFile::reparse()
 {
     m_groups.clear();
 
-    CFile file(m_file_name);
-    if (!file.open(CIODevice::OpenMode::ReadOnly))
+    auto file = CFile::construct(m_file_name);
+    if (!file->open(CIODevice::OpenMode::ReadOnly))
         return;
 
     HashMap<String, String>* current_group = nullptr;
 
-    while (file.can_read_line()) {
-        auto line = file.read_line(BUFSIZ);
+    while (file->can_read_line()) {
+        auto line = file->read_line(BUFSIZ);
         auto* cp = (const char*)line.pointer();
 
         while (*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))

@@ -63,7 +63,7 @@ public:
 private:
     Vector<NonnullRefPtr<ASBufferQueue>> m_pending_mixing;
 
-    CFile m_device;
+    ObjectPtr<CFile> m_device;
     LibThread::Lock m_lock;
 
     LibThread::Thread m_sound_thread;

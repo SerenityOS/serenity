@@ -95,13 +95,13 @@ int main(int argc, char* argv[])
         line_count = DEFAULT_LINE_COUNT;
     }
 
-    CFile f(values[0]);
-    if (!f.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Error opening file %s: %s\n", f.filename().characters(), strerror(errno));
+    auto f = CFile::construct(values[0]);
+    if (!f->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Error opening file %s: %s\n", f->filename().characters(), strerror(errno));
         exit(1);
     }
 
     bool flag_follow = args.is_present("f");
-    auto pos = find_seek_pos(f, line_count);
-    return tail_from_pos(f, pos, flag_follow);
+    auto pos = find_seek_pos(*f, line_count);
+    return tail_from_pos(*f, pos, flag_follow);
 }

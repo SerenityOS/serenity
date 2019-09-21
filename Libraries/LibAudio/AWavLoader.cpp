@@ -6,10 +6,10 @@
 #include <limits>
 
 AWavLoader::AWavLoader(const StringView& path)
-    : m_file(path)
+    : m_file(CFile::construct(path))
 {
-    if (!m_file.open(CIODevice::ReadOnly)) {
-        m_error_string = String::format("Can't open file: %s", m_file.error_string());
+    if (!m_file->open(CIODevice::ReadOnly)) {
+        m_error_string = String::format("Can't open file: %s", m_file->error_string());
         return;
     }
 
@@ -22,7 +22,7 @@ RefPtr<ABuffer> AWavLoader::get_more_samples(size_t max_bytes_to_read_from_input
     dbgprintf("Read WAV of format PCM with num_channels %u sample rate %u, bits per sample %u\n", m_num_channels, m_sample_rate, m_bits_per_sample);
 #endif
 
-    auto raw_samples = m_file.read(max_bytes_to_read_from_input);
+    auto raw_samples = m_file->read(max_bytes_to_read_from_input);
     if (raw_samples.is_empty())
         return nullptr;
 
@@ -33,7 +33,7 @@ RefPtr<ABuffer> AWavLoader::get_more_samples(size_t max_bytes_to_read_from_input
 
 bool AWavLoader::parse_header()
 {
-    CIODeviceStreamReader stream(m_file);
+    CIODeviceStreamReader stream(*m_file);
 
 #define CHECK_OK(msg)                                                           \
     do {                                                                        \

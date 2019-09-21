@@ -21,13 +21,13 @@ int main(int argc, char** argv)
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
 
-    CFile file("/proc/net/adapters");
-    if (!file.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Error: %s\n", file.error_string());
+    auto file = CFile::construct("/proc/net/adapters");
+    if (!file->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Error: %s\n", file->error_string());
         return 1;
     }
 
-    auto file_contents = file.read_all();
+    auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents).as_array();
     json.for_each([](auto& value) {
         auto if_object = value.as_object();

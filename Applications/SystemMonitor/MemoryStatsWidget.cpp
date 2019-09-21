@@ -11,9 +11,9 @@
 MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
     : GWidget(parent)
     , m_graph(graph)
-    , m_proc_memstat("/proc/memstat")
+    , m_proc_memstat(CFile::construct("/proc/memstat"))
 {
-    if (!m_proc_memstat.open(CIODevice::OpenMode::ReadOnly))
+    if (!m_proc_memstat->open(CIODevice::OpenMode::ReadOnly))
         ASSERT_NOT_REACHED();
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 72);
@@ -59,9 +59,9 @@ static inline size_t bytes_to_kb(size_t bytes)
 
 void MemoryStatsWidget::refresh()
 {
-    m_proc_memstat.seek(0);
+    m_proc_memstat->seek(0);
 
-    auto file_contents = m_proc_memstat.read_all();
+    auto file_contents = m_proc_memstat->read_all();
     auto json = JsonValue::from_string(file_contents).as_object();
 
     unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
