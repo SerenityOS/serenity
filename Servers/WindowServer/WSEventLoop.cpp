@@ -22,15 +22,16 @@
 //#define WSMESSAGELOOP_DEBUG
 
 WSEventLoop::WSEventLoop()
+    : m_server(CLocalServer::construct())
 {
     m_keyboard_fd = open("/dev/keyboard", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
     m_mouse_fd = open("/dev/psaux", O_RDONLY | O_NONBLOCK | O_CLOEXEC);
 
     unlink("/tmp/wsportal");
-    m_server_sock.listen("/tmp/wsportal");
+    m_server->listen("/tmp/wsportal");
 
-    m_server_sock.on_ready_to_accept = [this] {
-        auto client_socket = m_server_sock.accept();
+    m_server->on_ready_to_accept = [this] {
+        auto client_socket = m_server->accept();
         if (!client_socket) {
             dbg() << "WindowServer: accept failed.";
             return;

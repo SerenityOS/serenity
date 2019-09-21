@@ -5,11 +5,12 @@
 #include <unistd.h>
 
 ASEventLoop::ASEventLoop()
+    : m_server(CLocalServer::construct())
 {
     unlink("/tmp/asportal");
-    m_server_sock.listen("/tmp/asportal");
-    m_server_sock.on_ready_to_accept = [this] {
-        auto client_socket = m_server_sock.accept();
+    m_server->listen("/tmp/asportal");
+    m_server->on_ready_to_accept = [this] {
+        auto client_socket = m_server->accept();
         if (!client_socket) {
             dbg() << "AudioServer: accept failed.";
             return;
