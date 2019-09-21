@@ -5,12 +5,13 @@
 class GTreeView : public GAbstractView {
     C_OBJECT(GTreeView)
 public:
-    explicit GTreeView(GWidget*);
     virtual ~GTreeView() override;
 
     virtual void scroll_into_view(const GModelIndex&, Orientation);
 
 protected:
+    explicit GTreeView(GWidget*);
+
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
