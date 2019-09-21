@@ -85,6 +85,12 @@ public:
 
     void dispatch_event(CEvent&, CObject* stay_within = nullptr);
 
+    void remove_from_parent()
+    {
+        if (m_parent)
+            m_parent->remove_child(*this);
+    }
+
 protected:
     explicit CObject(CObject* parent = nullptr, bool is_widget = false);
 
