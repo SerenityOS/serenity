@@ -189,7 +189,7 @@ void IRCAppWindow::setup_widgets()
         set_active_window(m_client.window_at(index.row()));
     };
 
-    m_container = new GStackWidget(horizontal_container);
+    m_container = GStackWidget::construct(horizontal_container);
     m_container->on_active_widget_change = [this](auto*) {
         update_part_action();
     };

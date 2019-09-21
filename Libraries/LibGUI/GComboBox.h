@@ -9,7 +9,6 @@ class GTextEditor;
 class GComboBox : public GWidget {
     C_OBJECT(GComboBox)
 public:
-    explicit GComboBox(GWidget* parent = nullptr);
     virtual ~GComboBox() override;
 
     String text() const;
@@ -33,6 +32,7 @@ public:
     Function<void()> on_return_pressed;
 
 protected:
+    explicit GComboBox(GWidget* parent = nullptr);
     virtual void resize_event(GResizeEvent&) override;
 
 private:
