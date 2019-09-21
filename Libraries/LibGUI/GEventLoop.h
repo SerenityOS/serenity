@@ -11,6 +11,7 @@ class CNotifier;
 class GWindow;
 
 class GWindowServerConnection : public IPC::Client::Connection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
+    C_OBJECT(GWindowServerConnection)
 public:
     GWindowServerConnection()
         : Connection("/tmp/wsportal")

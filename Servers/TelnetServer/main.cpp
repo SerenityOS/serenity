@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     server.on_ready_to_accept = [&next_id, &clients, &server] {
         int id = next_id++;
 
-        auto* client_socket = server.accept();
+        auto client_socket = server.accept();
         if (!client_socket) {
             perror("accept");
             return;
