@@ -67,7 +67,6 @@ void CObject::add_child(CObject& object)
 void CObject::remove_child(CObject& object)
 {
     for (int i = 0; i < m_children.size(); ++i) {
-        dbg() << i << "] " << m_children.at(i);
         if (m_children.ptr_at(i).ptr() == &object) {
             // NOTE: We protect the child so it survives the handling of ChildRemoved.
             NonnullRefPtr<CObject> protector = object;
