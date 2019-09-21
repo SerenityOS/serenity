@@ -43,8 +43,8 @@ int main(int argc, char** argv)
     auto* button2 = new GButton("GButton 2", main_widget);
     button2->set_enabled(false);
 
-    auto* progress1 = new GProgressBar(main_widget);
-    auto timer = CTimer::create(100, [progress1] {
+    auto progress1 = GProgressBar::construct(main_widget);
+    auto timer = CTimer::create(100, [&] {
         progress1->set_value(progress1->value() + 1);
         if (progress1->value() == progress1->max())
             progress1->set_value(progress1->min());
