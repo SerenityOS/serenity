@@ -75,7 +75,7 @@ public:
     TooltipWindow()
     {
         set_window_type(GWindowType::Tooltip);
-        m_label = new GLabel;
+        m_label = GLabel::construct();
         m_label->set_background_color(Color::from_rgb(0xdac7b5));
         m_label->set_fill_with_background_color(true);
         m_label->set_frame_thickness(1);
@@ -92,7 +92,7 @@ public:
         m_label->set_text(tooltip);
     }
 
-    GLabel* m_label { nullptr };
+    ObjectPtr<GLabel> m_label;
 };
 
 void GApplication::show_tooltip(const StringView& tooltip, const Point& screen_location)

@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     location_toolbar->layout()->set_margins({ 6, 3, 6, 3 });
     location_toolbar->set_preferred_size(0, 25);
 
-    auto* location_label = new GLabel("Location: ", location_toolbar);
+    auto location_label = GLabel::construct("Location: ", location_toolbar);
     location_label->size_to_fit();
 
     auto* location_textbox = new GTextEditor(GTextEditor::SingleLine, location_toolbar);

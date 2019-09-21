@@ -69,14 +69,14 @@ void GMessageBox::build()
         message_container->layout()->set_margins({ 8, 0, 8, 0 });
         message_container->layout()->set_spacing(8);
 
-        auto* icon_label = new GLabel(message_container);
+        auto icon_label = GLabel::construct(message_container);
         icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         icon_label->set_preferred_size(32, 32);
         icon_label->set_icon(icon());
         icon_width = icon_label->icon()->width();
     }
 
-    auto* label = new GLabel(m_text, message_container);
+    auto label = GLabel::construct(m_text, message_container);
     label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     label->set_preferred_size(text_width, 16);
 

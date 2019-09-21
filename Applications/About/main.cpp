@@ -24,12 +24,12 @@ int main(int argc, char** argv)
     widget->layout()->set_margins({ 0, 8, 0, 8 });
     widget->layout()->set_spacing(8);
 
-    auto* icon_label = new GLabel(widget);
+    auto icon_label = GLabel::construct(widget);
     icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/serenity.png"));
     icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     icon_label->set_preferred_size(icon_label->icon()->size());
 
-    auto* label = new GLabel(widget);
+    auto label = GLabel::construct(widget);
     label->set_font(Font::default_bold_font());
     label->set_text("Serenity Operating System");
     label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     int rc = uname(&uts);
     ASSERT(rc == 0);
 
-    auto* version_label = new GLabel(widget);
+    auto version_label = GLabel::construct(widget);
     version_label->set_text(String::format("Version %s", uts.release));
     version_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     version_label->set_preferred_size(0, 11);

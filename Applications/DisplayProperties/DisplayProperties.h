@@ -7,6 +7,7 @@
 #include <LibDraw/Color.h>
 #include <LibDraw/Size.h>
 #include <LibGUI/GWidget.h>
+#include <LibGUI/GLabel.h>
 
 class DisplayPropertiesWidget final {
 public:
@@ -41,6 +42,7 @@ private:
     GWidget* m_root_widget { nullptr };
     Vector<Size> m_resolutions;
     Vector<String> m_wallpapers;
+    ObjectPtr<GLabel> m_wallpaper_preview;
 
     Size m_selected_resolution;
     String m_selected_wallpaper;

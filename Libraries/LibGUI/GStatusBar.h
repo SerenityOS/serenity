@@ -17,6 +17,6 @@ public:
 private:
     virtual void paint_event(GPaintEvent&) override;
 
-    GLabel* m_label { nullptr };
+    ObjectPtr<GLabel> m_label;
     GResizeCorner* m_corner { nullptr };
 };

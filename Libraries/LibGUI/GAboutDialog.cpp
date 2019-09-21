@@ -22,7 +22,7 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
     left_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     left_container->set_preferred_size(48, 0);
     left_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    auto* icon_label = new GLabel(left_container);
+    auto icon_label = GLabel::construct(left_container);
     icon_label->set_icon(m_icon);
     icon_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     icon_label->set_preferred_size(40, 40);
@@ -33,7 +33,7 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
     right_container->layout()->set_margins({ 0, 4, 4, 4 });
 
     auto make_label = [&](const StringView& text, bool bold = false) {
-        auto* label = new GLabel(text, right_container);
+        auto label = GLabel::construct(text, right_container);
         label->set_text_alignment(TextAlignment::CenterLeft);
         label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         label->set_preferred_size(0, 14);

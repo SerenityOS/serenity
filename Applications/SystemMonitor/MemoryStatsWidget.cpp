@@ -22,15 +22,15 @@ MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
     layout()->set_margins({ 0, 8, 0, 0 });
     layout()->set_spacing(3);
 
-    auto build_widgets_for_label = [this](const String& description) -> GLabel* {
+    auto build_widgets_for_label = [this](const String& description) -> ObjectPtr<GLabel> {
         auto* container = new GWidget(this);
         container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
         container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
         container->set_preferred_size(275, 12);
-        auto* description_label = new GLabel(description, container);
+        auto description_label = GLabel::construct(description, container);
         description_label->set_font(Font::default_bold_font());
         description_label->set_text_alignment(TextAlignment::CenterLeft);
-        auto* label = new GLabel(container);
+        auto label = GLabel::construct(container);
         label->set_text_alignment(TextAlignment::CenterRight);
         return label;
     };
