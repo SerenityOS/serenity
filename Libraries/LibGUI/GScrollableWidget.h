@@ -55,7 +55,7 @@ private:
 
     ObjectPtr<GScrollBar> m_vertical_scrollbar;
     ObjectPtr<GScrollBar> m_horizontal_scrollbar;
-    GWidget* m_corner_widget { nullptr };
+    ObjectPtr<GWidget> m_corner_widget;
     Size m_content_size;
     Size m_size_occupied_by_fixed_elements;
     bool m_scrollbars_enabled { true };

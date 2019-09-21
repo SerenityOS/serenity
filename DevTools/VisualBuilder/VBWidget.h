@@ -8,10 +8,10 @@
 #include <AK/RefCounted.h>
 #include <AK/Weakable.h>
 #include <LibDraw/Rect.h>
+#include <LibGUI/GWidget.h>
 
 class GPainter;
 class GVariant;
-class GWidget;
 class VBForm;
 class VBProperty;
 class VBWidgetPropertyModel;
@@ -81,7 +81,7 @@ private:
 
     VBWidgetType m_type { VBWidgetType::None };
     VBForm& m_form;
-    GWidget* m_gwidget { nullptr };
+    ObjectPtr<GWidget> m_gwidget;
     NonnullOwnPtrVector<VBProperty> m_properties;
     NonnullRefPtr<VBWidgetPropertyModel> m_property_model;
     Rect m_transform_origin_rect;

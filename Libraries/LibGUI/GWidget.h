@@ -45,10 +45,10 @@ enum class VerticalDirection {
 class GWidget : public CObject {
     C_OBJECT(GWidget)
 public:
-    explicit GWidget(GWidget* parent = nullptr);
     virtual ~GWidget() override;
 
     GLayout* layout() { return m_layout.ptr(); }
+    const GLayout* layout() const { return m_layout.ptr(); }
     void set_layout(OwnPtr<GLayout>&&);
 
     SizePolicy horizontal_size_policy() const { return m_horizontal_size_policy; }
@@ -72,25 +72,6 @@ public:
     void set_updates_enabled(bool);
 
     virtual void event(CEvent&) override;
-    virtual void paint_event(GPaintEvent&);
-    virtual void resize_event(GResizeEvent&);
-    virtual void show_event(GShowEvent&);
-    virtual void hide_event(GHideEvent&);
-    virtual void keydown_event(GKeyEvent&);
-    virtual void keyup_event(GKeyEvent&);
-    virtual void mousemove_event(GMouseEvent&);
-    virtual void mousedown_event(GMouseEvent&);
-    virtual void mouseup_event(GMouseEvent&);
-    virtual void mousewheel_event(GMouseEvent&);
-    virtual void click_event(GMouseEvent&);
-    virtual void doubleclick_event(GMouseEvent&);
-    virtual void context_menu_event(GContextMenuEvent&);
-    virtual void focusin_event(CEvent&);
-    virtual void focusout_event(CEvent&);
-    virtual void enter_event(CEvent&);
-    virtual void leave_event(CEvent&);
-    virtual void child_event(CChildEvent&) override;
-    virtual void change_event(GEvent&);
 
     // This is called after children have been painted.
     virtual void second_paint_event(GPaintEvent&);
@@ -221,8 +202,29 @@ public:
     virtual void save_to(AK::JsonObject&) override;
 
 protected:
+    explicit GWidget(GWidget* parent = nullptr);
+
     virtual void custom_layout() {}
     virtual void did_change_font() {}
+    virtual void paint_event(GPaintEvent&);
+    virtual void resize_event(GResizeEvent&);
+    virtual void show_event(GShowEvent&);
+    virtual void hide_event(GHideEvent&);
+    virtual void keydown_event(GKeyEvent&);
+    virtual void keyup_event(GKeyEvent&);
+    virtual void mousemove_event(GMouseEvent&);
+    virtual void mousedown_event(GMouseEvent&);
+    virtual void mouseup_event(GMouseEvent&);
+    virtual void mousewheel_event(GMouseEvent&);
+    virtual void click_event(GMouseEvent&);
+    virtual void doubleclick_event(GMouseEvent&);
+    virtual void context_menu_event(GContextMenuEvent&);
+    virtual void focusin_event(CEvent&);
+    virtual void focusout_event(CEvent&);
+    virtual void enter_event(CEvent&);
+    virtual void leave_event(CEvent&);
+    virtual void child_event(CChildEvent&) override;
+    virtual void change_event(GEvent&);
 
 private:
     void handle_paint_event(GPaintEvent&);

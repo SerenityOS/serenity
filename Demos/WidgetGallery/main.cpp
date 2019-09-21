@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 320, 620);
     window->set_title("Widget Gallery");
 
-    auto* main_widget = new GWidget;
+    auto main_widget = GWidget::construct();
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
     main_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     auto spinbox2 = GSpinBox::construct(main_widget);
     spinbox2->set_enabled(false);
 
-    auto* vertical_slider_container = new GWidget(main_widget);
+    auto vertical_slider_container = GWidget::construct(main_widget);
     vertical_slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     vertical_slider_container->set_preferred_size(0, 100);
     vertical_slider_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));

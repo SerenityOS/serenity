@@ -13,7 +13,7 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 240, 160);
     window->set_title("Hello World!");
 
-    auto* main_widget = new GWidget;
+    auto main_widget = GWidget::construct();
     window->set_main_widget(main_widget);
     main_widget->set_fill_with_background_color(true);
     main_widget->set_background_color(Color::White);

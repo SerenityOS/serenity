@@ -34,7 +34,7 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    m_find_widget = new GWidget(this);
+    m_find_widget = GWidget::construct(this);
     m_find_widget->set_fill_with_background_color(true);
     m_find_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_find_widget->set_preferred_size(0, 22);

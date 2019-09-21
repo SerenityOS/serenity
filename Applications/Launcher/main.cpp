@@ -75,7 +75,7 @@ GWindow* make_launcher_window()
     window->set_show_titlebar(false);
     window->set_window_type(GWindowType::Launcher);
 
-    auto* widget = new GWidget;
+    auto widget = GWidget::construct();
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(vertical ? Orientation::Vertical : Orientation::Horizontal));
     widget->layout()->set_spacing(0);

@@ -1,12 +1,12 @@
 #pragma once
 
 #include "VBWidgetType.h"
-#include <AK/String.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
+#include <LibGUI/GWidget.h>
 
-class GWidget;
 class VBProperty;
 class VBWidget;
 
@@ -19,7 +19,7 @@ public:
             callback((VBWidgetType)i);
     }
 
-    static GWidget* build_gwidget(VBWidget&, VBWidgetType, GWidget* parent, NonnullOwnPtrVector<VBProperty>&);
+    static ObjectPtr<GWidget> build_gwidget(VBWidget&, VBWidgetType, GWidget* parent, NonnullOwnPtrVector<VBProperty>&);
 };
 
 String to_class_name(VBWidgetType);

@@ -19,7 +19,7 @@ GScrollableWidget::GScrollableWidget(GWidget* parent)
         update();
     };
 
-    m_corner_widget = new GWidget(this);
+    m_corner_widget = GWidget::construct(this);
     m_corner_widget->set_fill_with_background_color(true);
 }
 

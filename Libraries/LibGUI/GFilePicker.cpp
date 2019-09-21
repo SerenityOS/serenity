@@ -50,18 +50,18 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
 {
     set_title(m_mode == Mode::Open ? "Open File" : "Save File");
     set_rect(200, 200, 700, 400);
-    auto* horizontal_container = new GWidget;
+    auto horizontal_container = GWidget::construct();
     set_main_widget(horizontal_container);
     horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     horizontal_container->set_fill_with_background_color(true);
     horizontal_container->set_background_color(Color::WarmGray);
 
-    auto* vertical_container = new GWidget(horizontal_container);
+    auto vertical_container = GWidget::construct(horizontal_container);
     vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     vertical_container->layout()->set_spacing(4);
 
-    auto* upper_container = new GWidget(vertical_container);
+    auto upper_container = GWidget::construct(vertical_container);
     upper_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     upper_container->layout()->set_spacing(4);
     upper_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -118,13 +118,13 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     });
     toolbar->add_action(*mkdir_action);
 
-    auto* lower_container = new GWidget(vertical_container);
+    auto lower_container = GWidget::construct(vertical_container);
     lower_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     lower_container->layout()->set_spacing(4);
     lower_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     lower_container->set_preferred_size(0, 60);
 
-    auto* filename_container = new GWidget(lower_container);
+    auto filename_container = GWidget::construct(lower_container);
     filename_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     filename_container->set_preferred_size(0, 20);
     filename_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
@@ -155,7 +155,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
         set_preview(path);
     };
 
-    auto* button_container = new GWidget(lower_container);
+    auto button_container = GWidget::construct(lower_container);
     button_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container->set_preferred_size(0, 20);
     button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));

@@ -81,16 +81,16 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
         set_secondary_color(color);
     };
 
-    auto* color_container = new GWidget(this);
+    auto color_container = GWidget::construct(this);
     color_container->set_relative_rect(m_secondary_color_widget->relative_rect().right() + 2, 2, 500, 32);
     color_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     color_container->layout()->set_spacing(1);
 
-    auto* top_color_container = new GWidget(color_container);
+    auto top_color_container = GWidget::construct(color_container);
     top_color_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     top_color_container->layout()->set_spacing(1);
 
-    auto* bottom_color_container = new GWidget(color_container);
+    auto bottom_color_container = GWidget::construct(color_container);
     bottom_color_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     bottom_color_container->layout()->set_spacing(1);
 

@@ -14,7 +14,7 @@ int main(int argc, char** argv)
     window->set_title("Display Properties");
     window->resize(400, 448);
     window->set_resizable(false);
-    window->set_main_widget(instance.get_root_widget());
+    window->set_main_widget(instance.root_widget());
     window->set_icon(load_png("/res/icons/16x16/app-display-properties.png"));
 
     window->show();

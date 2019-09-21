@@ -19,14 +19,14 @@ int main(int argc, char** argv)
     window->set_title("PaintBrush");
     window->set_rect(100, 100, 640, 480);
 
-    auto* horizontal_container = new GWidget(nullptr);
+    auto horizontal_container = GWidget::construct(nullptr);
     window->set_main_widget(horizontal_container);
     horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     horizontal_container->layout()->set_spacing(0);
 
     new ToolboxWidget(horizontal_container);
 
-    auto* vertical_container = new GWidget(horizontal_container);
+    auto vertical_container = GWidget::construct(horizontal_container);
     vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     vertical_container->layout()->set_spacing(0);
 

@@ -30,7 +30,7 @@ VBWidget::~VBWidget()
 {
     m_form.m_gwidget_map.remove(m_gwidget);
     m_form.m_selected_widgets.remove(this);
-    delete m_gwidget;
+    m_gwidget->parent()->remove_child(*m_gwidget);
 }
 
 Rect VBWidget::rect() const
