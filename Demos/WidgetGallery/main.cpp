@@ -33,9 +33,9 @@ int main(int argc, char** argv)
     auto* checkbox2 = new GCheckBox("GCheckBox 2", main_widget);
     checkbox2->set_enabled(false);
 
-    auto* radio1 = new GRadioButton("GRadioButton 1", main_widget);
+    auto radio1 = GRadioButton::construct("GRadioButton 1", main_widget);
     (void)radio1;
-    auto* radio2 = new GRadioButton("GRadioButton 2", main_widget);
+    auto radio2 = GRadioButton::construct("GRadioButton 2", main_widget);
     radio2->set_enabled(false);
 
     auto* button1 = new GButton("GButton 1", main_widget);

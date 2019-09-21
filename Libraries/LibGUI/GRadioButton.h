@@ -5,12 +5,12 @@
 class GRadioButton : public GAbstractButton {
     C_OBJECT(GRadioButton)
 public:
-    GRadioButton(const StringView& text, GWidget* parent);
     virtual ~GRadioButton() override;
 
     virtual void click() override;
 
 protected:
+    GRadioButton(const StringView& text, GWidget* parent);
     virtual void paint_event(GPaintEvent&) override;
 
 private:
