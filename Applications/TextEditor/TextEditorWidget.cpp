@@ -22,7 +22,7 @@ TextEditorWidget::TextEditorWidget()
     layout()->set_spacing(0);
 
     auto* toolbar = new GToolBar(this);
-    m_editor = new GTextEditor(GTextEditor::MultiLine, this);
+    m_editor = GTextEditor::construct(GTextEditor::MultiLine, this);
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);
     m_editor->set_line_wrapping_enabled(true);
@@ -42,7 +42,7 @@ TextEditorWidget::TextEditorWidget()
     m_find_widget->layout()->set_margins({ 2, 2, 2, 2 });
     m_find_widget->set_visible(false);
 
-    m_find_textbox = new GTextBox(m_find_widget);
+    m_find_textbox = GTextBox::construct(m_find_widget);
 
     m_find_next_action = GAction::create("Find next", { Mod_Ctrl, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();

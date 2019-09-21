@@ -26,7 +26,7 @@ protected:
     virtual void resize_event(GResizeEvent&) override;
 
 private:
-    GTextEditor* m_editor { nullptr };
+    ObjectPtr<GTextEditor> m_editor;
     GButton* m_increment_button { nullptr };
     GButton* m_decrement_button { nullptr };
 

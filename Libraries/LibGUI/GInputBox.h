@@ -20,5 +20,5 @@ private:
 
     GButton* m_ok_button { nullptr };
     GButton* m_cancel_button { nullptr };
-    GTextEditor* m_text_editor { nullptr };
+    ObjectPtr<GTextEditor> m_text_editor;
 };

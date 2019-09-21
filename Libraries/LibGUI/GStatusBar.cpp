@@ -19,7 +19,7 @@ GStatusBar::GStatusBar(GWidget* parent)
     m_label->set_frame_thickness(1);
     m_label->set_text_alignment(TextAlignment::CenterLeft);
 
-    m_corner = new GResizeCorner(this);
+    m_corner = GResizeCorner::construct(this);
 }
 
 GStatusBar::~GStatusBar()

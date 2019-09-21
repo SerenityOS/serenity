@@ -36,7 +36,7 @@ protected:
     virtual void resize_event(GResizeEvent&) override;
 
 private:
-    GTextEditor* m_editor { nullptr };
+    ObjectPtr<GTextEditor> m_editor;
     GButton* m_open_button { nullptr };
     GWindow* m_list_window { nullptr };
     GListView* m_list_view { nullptr };

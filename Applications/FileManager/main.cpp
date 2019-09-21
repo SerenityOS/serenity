@@ -56,7 +56,7 @@ int main(int argc, char** argv)
     auto location_label = GLabel::construct("Location: ", location_toolbar);
     location_label->size_to_fit();
 
-    auto* location_textbox = new GTextEditor(GTextEditor::SingleLine, location_toolbar);
+    auto location_textbox = GTextEditor::construct(GTextEditor::SingleLine, location_toolbar);
 
     auto* splitter = new GSplitter(Orientation::Horizontal, widget);
     auto* tree_view = new GTreeView(splitter);
@@ -312,7 +312,7 @@ int main(int argc, char** argv)
     main_toolbar->add_action(*view_as_icons_action);
     main_toolbar->add_action(*view_as_table_action);
 
-    directory_view->on_path_change = [window, location_textbox, &file_system_model, tree_view, &go_forward_action, &go_back_action, directory_view](const String& new_path) {
+    directory_view->on_path_change = [&](const String& new_path) {
         window->set_title(String::format("File Manager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
         auto new_index = file_system_model->index(new_path);

@@ -38,7 +38,7 @@ void GInputBox::build()
     label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     label->set_preferred_size(text_width, 16);
 
-    m_text_editor = new GTextEditor(GTextEditor::SingleLine, widget);
+    m_text_editor = GTextEditor::construct(GTextEditor::SingleLine, widget);
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
 

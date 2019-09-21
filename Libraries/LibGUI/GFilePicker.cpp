@@ -72,7 +72,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     toolbar->set_preferred_size(85, 0);
     toolbar->set_has_frame(false);
 
-    auto* location_textbox = new GTextBox(upper_container);
+    auto location_textbox = GTextBox::construct(upper_container);
     location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     location_textbox->set_preferred_size(0, 20);
 
@@ -132,7 +132,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     filename_label->set_text_alignment(TextAlignment::CenterLeft);
     filename_label->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     filename_label->set_preferred_size(60, 0);
-    m_filename_textbox = new GTextBox(filename_container);
+    m_filename_textbox = GTextBox::construct(filename_container);
     if (m_mode == Mode::Save) {
         m_filename_textbox->set_text(file_name);
         m_filename_textbox->set_focus(true);

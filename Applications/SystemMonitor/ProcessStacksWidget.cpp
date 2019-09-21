@@ -8,7 +8,7 @@ ProcessStacksWidget::ProcessStacksWidget(GWidget* parent)
 {
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_margins({ 4, 4, 4, 4 });
-    m_stacks_editor = new GTextEditor(GTextEditor::Type::MultiLine, this);
+    m_stacks_editor = GTextEditor::construct(GTextEditor::Type::MultiLine, this);
     m_stacks_editor->set_readonly(true);
 
     m_timer = CTimer::create(1000, [this] { refresh(); }, this);

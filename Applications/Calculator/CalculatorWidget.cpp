@@ -9,7 +9,7 @@ CalculatorWidget::CalculatorWidget(GWidget* parent)
 {
     set_fill_with_background_color(true);
 
-    m_entry = new GTextBox(this);
+    m_entry = GTextBox::construct(this);
     m_entry->set_relative_rect(5, 5, 244, 26);
     m_entry->set_text_alignment(TextAlignment::CenterRight);
 

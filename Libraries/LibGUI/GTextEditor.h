@@ -93,7 +93,6 @@ public:
         MultiLine,
         SingleLine
     };
-    GTextEditor(Type, GWidget* parent);
     virtual ~GTextEditor() override;
 
     bool is_readonly() const { return m_readonly; }
@@ -166,9 +165,9 @@ public:
     void add_custom_context_menu_action(GAction&);
 
 protected:
-    virtual void did_change_font() override;
+    GTextEditor(Type, GWidget* parent);
 
-private:
+    virtual void did_change_font() override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
@@ -183,6 +182,8 @@ private:
     virtual void leave_event(CEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
+
+private:
 
     void create_actions();
     void paint_ruler(Painter&);

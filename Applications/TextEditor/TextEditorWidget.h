@@ -22,7 +22,7 @@ private:
     void set_path(const FileSystemPath& file);
     void update_title();
 
-    GTextEditor* m_editor { nullptr };
+    ObjectPtr<GTextEditor> m_editor;
     String m_path;
     String m_name;
     String m_extension;
@@ -35,7 +35,7 @@ private:
     RefPtr<GAction> m_find_next_action;
     RefPtr<GAction> m_find_previous_action;
 
-    GTextBox* m_find_textbox { nullptr };
+    ObjectPtr<GTextBox> m_find_textbox;
     GButton* m_find_previous_button { nullptr };
     GButton* m_find_next_button { nullptr };
     GWidget* m_find_widget { nullptr };
