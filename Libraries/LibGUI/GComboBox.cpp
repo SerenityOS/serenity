@@ -33,7 +33,7 @@ GComboBox::GComboBox(GWidget* parent)
     m_list_window->set_window_type(GWindowType::Tooltip);
     m_list_window->set_should_destroy_on_close(false);
 
-    m_list_view = new GListView(nullptr);
+    m_list_view = GListView::construct(nullptr);
     m_list_view->horizontal_scrollbar().set_visible(false);
     m_list_window->set_main_widget(m_list_view);
 
