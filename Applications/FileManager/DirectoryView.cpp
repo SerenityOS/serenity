@@ -76,7 +76,7 @@ DirectoryView::DirectoryView(GWidget* parent)
     , m_model(GDirectoryModel::create())
 {
     set_active_widget(nullptr);
-    m_item_view = new GItemView(this);
+    m_item_view = GItemView::construct(this);
     m_item_view->set_model(model());
 
     m_table_view = new GTableView(this);

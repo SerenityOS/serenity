@@ -73,5 +73,5 @@ private:
     void add_path_to_history(const StringView& path);
 
     GTableView* m_table_view { nullptr };
-    GItemView* m_item_view { nullptr };
+    ObjectPtr<GItemView> m_item_view;
 };
