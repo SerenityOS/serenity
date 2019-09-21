@@ -12,8 +12,6 @@ class GAction;
 class GButton : public GAbstractButton {
     C_OBJECT(GButton)
 public:
-    GButton(const StringView& text, GWidget* parent);
-    explicit GButton(GWidget* parent);
     virtual ~GButton() override;
 
     void set_icon(RefPtr<GraphicsBitmap>&&);
@@ -39,6 +37,8 @@ public:
     void set_focusable(bool b) { m_focusable = b; }
 
 protected:
+    GButton(const StringView& text, GWidget* parent);
+    explicit GButton(GWidget* parent);
     virtual void paint_event(GPaintEvent&) override;
 
 private:
