@@ -24,5 +24,5 @@ private:
     ObjectPtr<CNotifier> m_keyboard_notifier;
     int m_mouse_fd { -1 };
     ObjectPtr<CNotifier> m_mouse_notifier;
-    CLocalServer m_server_sock;
+    ObjectPtr<CLocalServer> m_server;
 };

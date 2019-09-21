@@ -8,7 +8,6 @@ class CLocalSocket;
 class CLocalServer : public CObject {
     C_OBJECT(CLocalServer)
 public:
-    explicit CLocalServer(CObject* parent = nullptr);
     virtual ~CLocalServer() override;
 
     bool is_listening() const { return m_listening; }
@@ -19,6 +18,8 @@ public:
     Function<void()> on_ready_to_accept;
 
 private:
+    explicit CLocalServer(CObject* parent = nullptr);
+
     int m_fd { -1 };
     bool m_listening { false };
     ObjectPtr<CNotifier> m_notifier;

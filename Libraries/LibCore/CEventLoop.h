@@ -87,5 +87,5 @@ private:
 
     static HashTable<CNotifier*>* s_notifiers;
 
-    static CLocalServer s_rpc_server;
+    static ObjectPtr<CLocalServer> s_rpc_server;
 };

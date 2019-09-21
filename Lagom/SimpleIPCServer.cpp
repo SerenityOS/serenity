@@ -27,10 +27,10 @@ int main(int, char**)
     CEventLoop event_loop;
 
     unlink("/tmp/simple-ipc");
-    CLocalServer server_sock;
-    server_sock.listen("/tmp/simple-ipc");
-    server_sock.on_ready_to_accept = [&] {
-        auto* client_socket = server_sock.accept();
+    auto server = CLocalServer::construct();
+    server->listen("/tmp/simple-ipc");
+    server->on_ready_to_accept = [&] {
+        auto client_socket = server->accept();
         ASSERT(client_socket);
         static int next_client_id = 0;
         IPC::Server::new_connection_ng_for_client<SimpleIPCServer>(*client_socket, ++next_client_id);

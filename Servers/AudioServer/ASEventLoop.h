@@ -1,17 +1,17 @@
 #pragma once
 
+#include "ASMixer.h"
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CLocalServer.h>
 #include <LibCore/CNotifier.h>
-#include "ASMixer.h"
 
-class ASEventLoop
-{
+class ASEventLoop {
 public:
     ASEventLoop();
     int exec() { return m_event_loop.exec(); }
+
 private:
     CEventLoop m_event_loop;
-    CLocalServer m_server_sock;
+    ObjectPtr<CLocalServer> m_server;
     ASMixer m_mixer;
 };

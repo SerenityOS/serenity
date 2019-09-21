@@ -29,7 +29,7 @@ HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
 HashTable<CNotifier*>* CEventLoop::s_notifiers;
 int CEventLoop::s_next_timer_id = 1;
 int CEventLoop::s_wake_pipe_fds[2];
-CLocalServer CEventLoop::s_rpc_server;
+ObjectPtr<CLocalServer> CEventLoop::s_rpc_server;
 
 class RPCClient : public CObject {
     C_OBJECT(RPCClient)
@@ -140,11 +140,13 @@ CEventLoop::CEventLoop()
             perror("unlink");
             ASSERT_NOT_REACHED();
         }
-        bool listening = s_rpc_server.listen(rpc_path);
+        s_rpc_server = CLocalServer::construct();
+        s_rpc_server->set_name("CEventLoop_RPC_server");
+        bool listening = s_rpc_server->listen(rpc_path);
         ASSERT(listening);
 
-        s_rpc_server.on_ready_to_accept = [&] {
-            auto client_socket = s_rpc_server.accept();
+        s_rpc_server->on_ready_to_accept = [&] {
+            auto client_socket = s_rpc_server->accept();
             ASSERT(client_socket);
             new RPCClient(move(client_socket));
         };
