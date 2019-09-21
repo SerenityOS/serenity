@@ -32,7 +32,7 @@ TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
 
-    m_scrollbar = new GScrollBar(Orientation::Vertical, this);
+    m_scrollbar = GScrollBar::construct(Orientation::Vertical, this);
     m_scrollbar->set_relative_rect(0, 0, 16, 0);
     m_scrollbar->on_change = [this](int) {
         force_repaint();

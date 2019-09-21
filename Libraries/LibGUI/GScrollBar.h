@@ -7,7 +7,6 @@
 class GScrollBar final : public GWidget {
     C_OBJECT(GScrollBar)
 public:
-    explicit GScrollBar(Orientation, GWidget* parent);
     virtual ~GScrollBar() override;
 
     Orientation orientation() const { return m_orientation; }
@@ -39,6 +38,8 @@ public:
     };
 
 private:
+    explicit GScrollBar(Orientation, GWidget* parent);
+
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;

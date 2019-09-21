@@ -53,8 +53,8 @@ protected:
 private:
     void update_scrollbar_ranges();
 
-    GScrollBar* m_vertical_scrollbar { nullptr };
-    GScrollBar* m_horizontal_scrollbar { nullptr };
+    ObjectPtr<GScrollBar> m_vertical_scrollbar;
+    ObjectPtr<GScrollBar> m_horizontal_scrollbar;
     GWidget* m_corner_widget { nullptr };
     Size m_content_size;
     Size m_size_occupied_by_fixed_elements;

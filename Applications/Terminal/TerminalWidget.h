@@ -100,5 +100,5 @@ private:
     ObjectPtr<CTimer> m_visual_beep_timer;
     RefPtr<CConfigFile> m_config;
 
-    GScrollBar* m_scrollbar { nullptr };
+    ObjectPtr<GScrollBar> m_scrollbar;
 };
