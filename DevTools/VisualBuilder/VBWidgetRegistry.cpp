@@ -107,7 +107,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
         return bar;
     }
     case VBWidgetType::GSlider: {
-        auto* slider = new GSlider(Orientation::Horizontal, parent);
+        auto slider = GSlider::construct(Orientation::Horizontal, parent);
         slider->set_range(0, 100);
         slider->set_value(50);
         return slider;
