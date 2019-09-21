@@ -3,13 +3,13 @@
 #include <LibGUI/GWidget.h>
 
 class GSlider : public GWidget {
+    C_OBJECT(GSlider)
 public:
     enum class KnobSizeMode {
         Fixed,
         Proportional,
     };
 
-    GSlider(Orientation, GWidget*);
     virtual ~GSlider() override;
 
     Orientation orientation() const { return m_orientation; }
@@ -43,6 +43,8 @@ public:
     Function<void(int)> on_value_changed;
 
 protected:
+    GSlider(Orientation, GWidget*);
+
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
