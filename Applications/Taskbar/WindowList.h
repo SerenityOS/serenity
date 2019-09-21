@@ -15,6 +15,8 @@ public:
 
     ~Window()
     {
+        if (m_button)
+            m_button->remove_from_parent();
     }
 
     WindowIdentifier identifier() const { return m_identifier; }
