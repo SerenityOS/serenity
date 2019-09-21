@@ -34,21 +34,20 @@ CLocalServer CEventLoop::s_rpc_server;
 class RPCClient : public CObject {
     C_OBJECT(RPCClient)
 public:
-    explicit RPCClient(CLocalSocket& socket)
-        : m_socket(socket)
+    explicit RPCClient(ObjectPtr<CLocalSocket> socket)
+        : m_socket(move(socket))
     {
-        add_child(socket);
-
-        m_socket.on_ready_to_read = [this] {
+        add_child(*m_socket);
+        m_socket->on_ready_to_read = [this] {
             i32 length;
-            int nread = m_socket.read((u8*)&length, sizeof(length));
+            int nread = m_socket->read((u8*)&length, sizeof(length));
             if (nread == 0) {
                 dbg() << "RPC client disconnected";
                 delete_later();
                 return;
             }
             ASSERT(nread == sizeof(length));
-            auto request = m_socket.read(length);
+            auto request = m_socket->read(length);
 
             auto request_json = JsonValue::from_string(request);
             if (!request_json.is_object()) {
@@ -68,8 +67,8 @@ public:
     {
         auto serialized = response.to_string();
         i32 length = serialized.length();
-        m_socket.write((const u8*)&length, sizeof(length));
-        m_socket.write(serialized);
+        m_socket->write((const u8*)&length, sizeof(length));
+        m_socket->write(serialized);
     }
 
     void handle_request(const JsonObject& request)
@@ -118,7 +117,7 @@ public:
     }
 
 private:
-    CLocalSocket& m_socket;
+    ObjectPtr<CLocalSocket> m_socket;
 };
 
 CEventLoop::CEventLoop()
@@ -145,9 +144,9 @@ CEventLoop::CEventLoop()
         ASSERT(listening);
 
         s_rpc_server.on_ready_to_accept = [&] {
-            auto* client_socket = s_rpc_server.accept();
+            auto client_socket = s_rpc_server.accept();
             ASSERT(client_socket);
-            new RPCClient(*client_socket);
+            new RPCClient(move(client_socket));
         };
     }
 

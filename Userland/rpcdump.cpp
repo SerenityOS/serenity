@@ -16,27 +16,27 @@ int main(int argc, char** argv)
 
     int pid = atoi(argv[1]);
 
-    CLocalSocket socket;
+    auto socket = CLocalSocket::construct();
 
-    socket.on_connected = [&] {
+    socket->on_connected = [&] {
         dbg() << "Connected to PID " << pid;
 
         JsonObject request;
         request.set("type", "GetAllObjects");
         auto serialized = request.to_string();
         i32 length = serialized.length();
-        socket.write((const u8*)&length, sizeof(length));
-        socket.write(serialized);
+        socket->write((const u8*)&length, sizeof(length));
+        socket->write(serialized);
     };
 
-    socket.on_ready_to_read = [&] {
-        if (socket.eof()) {
+    socket->on_ready_to_read = [&] {
+        if (socket->eof()) {
             dbg() << "Disconnected from PID " << pid;
             loop.quit(0);
             return;
         }
 
-        auto data = socket.read_all();
+        auto data = socket->read_all();
 
         for (int i = 0; i < data.size(); ++i)
             putchar(data[i]);
@@ -45,7 +45,7 @@ int main(int argc, char** argv)
         loop.quit(0);
     };
 
-    auto success = socket.connect(CSocketAddress::local(String::format("/tmp/rpc.%d", pid)));
+    auto success = socket->connect(CSocketAddress::local(String::format("/tmp/rpc.%d", pid)));
     if (!success) {
         fprintf(stderr, "Couldn't connect to PID %d\n", pid);
         return 1;

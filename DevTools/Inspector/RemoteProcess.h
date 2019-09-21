@@ -32,6 +32,6 @@ private:
     pid_t m_pid { -1 };
     String m_process_name;
     NonnullRefPtr<RemoteObjectGraphModel> m_object_graph_model;
-    CLocalSocket m_socket;
+    ObjectPtr<CLocalSocket> m_socket;
     NonnullOwnPtrVector<RemoteObject> m_roots;
 };

@@ -9,6 +9,7 @@ class ObjectPtr {
 public:
     ObjectPtr() {}
     ObjectPtr(T* ptr) : m_ptr(ptr) {}
+    ObjectPtr(T& ptr) : m_ptr(&ptr) {}
     ~ObjectPtr()
     {
         if (m_ptr && !m_ptr->parent())
