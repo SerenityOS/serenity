@@ -18,8 +18,20 @@ public:
     }
     ~ObjectPtr()
     {
+        clear();
+    }
+
+    void clear()
+    {
         if (m_ptr && !m_ptr->parent())
             delete m_ptr;
+        m_ptr = nullptr;
+    }
+
+    ObjectPtr& operator=(std::nullptr_t)
+    {
+        clear();
+        return *this;
     }
 
     template<typename U>
@@ -52,13 +64,17 @@ public:
 
     ObjectPtr& operator=(const ObjectPtr& other)
     {
-        m_ptr = other.m_ptr;
+        if (this != &other) {
+            clear();
+            m_ptr = other.m_ptr;
+        }
         return *this;
     }
 
     ObjectPtr& operator=(ObjectPtr&& other)
     {
         if (this != &other) {
+            clear();
             m_ptr = exchange(other.m_ptr, nullptr);
         }
         return *this;
