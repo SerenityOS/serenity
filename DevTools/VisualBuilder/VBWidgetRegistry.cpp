@@ -76,7 +76,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
     case VBWidgetType::GScrollBar:
         return GScrollBar::construct(Orientation::Vertical, parent);
     case VBWidgetType::GGroupBox:
-        return new GGroupBox("groupbox_1", parent);
+        return GGroupBox::construct("groupbox_1", parent);
     case VBWidgetType::GLabel: {
         auto label = GLabel::construct(parent);
         label->set_fill_with_background_color(true);

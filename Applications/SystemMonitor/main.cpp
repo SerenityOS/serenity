@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     graphs_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     graphs_container->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* cpu_graph_group_box = new GGroupBox("CPU usage", graphs_container);
+    auto cpu_graph_group_box = GGroupBox::construct("CPU usage", graphs_container);
     cpu_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
     cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     cpu_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -79,7 +79,7 @@ int main(int argc, char** argv)
         return String::format("%d%%", value);
     };
 
-    auto* memory_graph_group_box = new GGroupBox("Memory usage", graphs_container);
+    auto memory_graph_group_box = GGroupBox::construct("Memory usage", graphs_container);
     memory_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
     memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
