@@ -139,7 +139,7 @@ int main(int argc, char** argv)
         menu_option->set_text_alignment(TextAlignment::CenterLeft);
         menu_option->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         menu_option->set_preferred_size(0, 20);
-        menu_option->on_click = [&](auto&) {
+        menu_option->on_click = [content = content.ptr(), &stack](auto&) {
             stack->set_active_widget(content);
             content->invalidate_layout();
         };
