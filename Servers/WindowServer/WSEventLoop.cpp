@@ -30,7 +30,7 @@ WSEventLoop::WSEventLoop()
     m_server_sock.listen("/tmp/wsportal");
 
     m_server_sock.on_ready_to_accept = [this] {
-        auto* client_socket = m_server_sock.accept();
+        auto client_socket = m_server_sock.accept();
         if (!client_socket) {
             dbg() << "WindowServer: accept failed.";
             return;

@@ -9,7 +9,7 @@ ASEventLoop::ASEventLoop()
     unlink("/tmp/asportal");
     m_server_sock.listen("/tmp/asportal");
     m_server_sock.on_ready_to_accept = [this] {
-        auto* client_socket = m_server_sock.accept();
+        auto client_socket = m_server_sock.accept();
         if (!client_socket) {
             dbg() << "AudioServer: accept failed.";
             return;

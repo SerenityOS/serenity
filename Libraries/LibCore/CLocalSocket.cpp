@@ -2,7 +2,7 @@
 #include <sys/socket.h>
 #include <errno.h>
 
-CLocalSocket::CLocalSocket(Badge<CLocalServer>, int fd, CObject* parent)
+CLocalSocket::CLocalSocket(int fd, CObject* parent)
     : CSocket(CSocket::Type::Local, parent)
 {
     set_fd(fd);

@@ -70,7 +70,7 @@ namespace Server {
             , m_client_id(client_id)
         {
             add_child(socket);
-            m_socket.on_ready_to_read = [this] { drain_client(); };
+            m_socket->on_ready_to_read = [this] { drain_client(); };
 #if defined(CIPC_DEBUG)
             dbg() << "S: Created new Connection " << fd << client_id << " and said hello";
 #endif
@@ -79,7 +79,7 @@ namespace Server {
         ~Connection()
         {
 #if defined(CIPC_DEBUG)
-            dbg() << "S: Destroyed Connection " << m_socket.fd() << client_id();
+            dbg() << "S: Destroyed Connection " << m_socket->fd() << client_id();
 #endif
         }
 
@@ -103,7 +103,7 @@ namespace Server {
                 ++iov_count;
             }
 
-            int nwritten = writev(m_socket.fd(), iov, iov_count);
+            int nwritten = writev(m_socket->fd(), iov, iov_count);
             if (nwritten < 0) {
                 switch (errno) {
                 case EPIPE:
@@ -131,7 +131,7 @@ namespace Server {
             for (;;) {
                 ClientMessage message;
                 // FIXME: Don't go one message at a time, that's so much context switching, oof.
-                ssize_t nread = recv(m_socket.fd(), &message, sizeof(ClientMessage), MSG_DONTWAIT);
+                ssize_t nread = recv(m_socket->fd(), &message, sizeof(ClientMessage), MSG_DONTWAIT);
                 if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
                     if (!messages_received) {
                         // TODO: is delete_later() sufficient?
@@ -151,7 +151,7 @@ namespace Server {
                     }
                     extra_data = ByteBuffer::create_uninitialized(message.extra_size);
                     // FIXME: We should allow this to time out. Maybe use a socket timeout?
-                    int extra_nread = read(m_socket.fd(), extra_data.data(), extra_data.size());
+                    int extra_nread = read(m_socket->fd(), extra_data.data(), extra_data.size());
                     if (extra_nread != (int)message.extra_size) {
                         dbgprintf("extra_nread(%d) != extra_size(%d)\n", extra_nread, extra_data.size());
                         if (extra_nread < 0)
@@ -171,7 +171,7 @@ namespace Server {
         void did_misbehave()
         {
             dbgprintf("Connection{%p} (id=%d, pid=%d) misbehaved, disconnecting.\n", this, client_id(), m_client_pid);
-            m_socket.close();
+            m_socket->close();
             delete_later();
         }
 
@@ -198,7 +198,7 @@ namespace Server {
         virtual bool handle_message(const ClientMessage&, const ByteBuffer&& = {}) = 0;
 
     private:
-        CLocalSocket& m_socket;
+        ObjectPtr<CLocalSocket> m_socket;
         int m_client_id { -1 };
         int m_client_pid { -1 };
     };
@@ -212,7 +212,7 @@ namespace Server {
             , m_client_id(client_id)
         {
             add_child(socket);
-            m_socket.on_ready_to_read = [this] { drain_client(); };
+            m_socket->on_ready_to_read = [this] { drain_client(); };
         }
 
         virtual ~ConnectionNG() override
@@ -223,7 +223,7 @@ namespace Server {
         {
             auto buffer = message.encode();
 
-            int nwritten = write(m_socket.fd(), buffer.data(), (size_t)buffer.size());
+            int nwritten = write(m_socket->fd(), buffer.data(), (size_t)buffer.size());
             if (nwritten < 0) {
                 switch (errno) {
                 case EPIPE:
@@ -249,7 +249,7 @@ namespace Server {
             unsigned messages_received = 0;
             for (;;) {
                 u8 buffer[4096];
-                ssize_t nread = recv(m_socket.fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
+                ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
                 if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
                     if (!messages_received) {
                         // TODO: is delete_later() sufficient?
@@ -278,7 +278,7 @@ namespace Server {
         void did_misbehave()
         {
             dbg() << "Connection{" << this << "} (id=" << m_client_id << ", pid=" << m_client_pid << ") misbehaved, disconnecting.";
-            m_socket.close();
+            m_socket->close();
             delete_later();
         }
 
@@ -301,7 +301,7 @@ namespace Server {
 
     private:
         Endpoint& m_endpoint;
-        CLocalSocket& m_socket;
+        ObjectPtr<CLocalSocket> m_socket;
         int m_client_id { -1 };
         int m_client_pid { -1 };
     };

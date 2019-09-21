@@ -8,6 +8,7 @@
 RemoteProcess::RemoteProcess(pid_t pid)
     : m_pid(pid)
     , m_object_graph_model(RemoteObjectGraphModel::create(*this))
+    , m_socket(CLocalSocket::construct())
 {
 }
 
@@ -65,13 +66,13 @@ void RemoteProcess::send_request(const JsonObject& request)
 {
     auto serialized = request.to_string();
     i32 length = serialized.length();
-    m_socket.write((const u8*)&length, sizeof(length));
-    m_socket.write(serialized);
+    m_socket->write((const u8*)&length, sizeof(length));
+    m_socket->write(serialized);
 }
 
 void RemoteProcess::update()
 {
-    m_socket.on_connected = [this] {
+    m_socket->on_connected = [this] {
         dbg() << "Connected to PID " << m_pid;
 
         {
@@ -87,18 +88,18 @@ void RemoteProcess::update()
         }
     };
 
-    m_socket.on_ready_to_read = [this] {
-        if (m_socket.eof()) {
+    m_socket->on_ready_to_read = [this] {
+        if (m_socket->eof()) {
             dbg() << "Disconnected from PID " << m_pid;
-            m_socket.close();
+            m_socket->close();
             return;
         }
 
         i32 length;
-        int nread = m_socket.read((u8*)&length, sizeof(length));
+        int nread = m_socket->read((u8*)&length, sizeof(length));
         ASSERT(nread == sizeof(length));
 
-        auto data = m_socket.read(length);
+        auto data = m_socket->read(length);
         ASSERT(data.size() == length);
 
         dbg() << "Got packet size " << length << " and read that many bytes";
@@ -125,7 +126,7 @@ void RemoteProcess::update()
         }
     };
 
-    auto success = m_socket.connect(CSocketAddress::local(String::format("/tmp/rpc.%d", m_pid)));
+    auto success = m_socket->connect(CSocketAddress::local(String::format("/tmp/rpc.%d", m_pid)));
     if (!success) {
         fprintf(stderr, "Couldn't connect to PID %d\n", m_pid);
         exit(1);
