@@ -103,7 +103,7 @@ void DisplayPropertiesWidget::create_frame()
 
     m_wallpaper_preview = GLabel::construct(background_splitter);
 
-    auto* wallpaper_list = new GListView(background_content);
+    auto wallpaper_list = GListView::construct(background_content);
     wallpaper_list->set_background_color(Color::White);
     wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
     wallpaper_list->horizontal_scrollbar().set_visible(false);
@@ -124,7 +124,7 @@ void DisplayPropertiesWidget::create_frame()
     settings_content->set_layout(make<GBoxLayout>(Orientation::Vertical));
     settings_content->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* resolution_list = new GListView(settings_content);
+    auto resolution_list = GListView::construct(settings_content);
     resolution_list->set_background_color(Color::White);
     resolution_list->set_model(*ItemListModel<Size>::create(m_resolutions));
     resolution_list->horizontal_scrollbar().set_visible(false);

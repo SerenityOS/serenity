@@ -39,6 +39,6 @@ private:
     ObjectPtr<GTextEditor> m_editor;
     GButton* m_open_button { nullptr };
     GWindow* m_list_window { nullptr };
-    GListView* m_list_view { nullptr };
+    ObjectPtr<GListView> m_list_view;
     bool m_only_allow_values_from_model { false };
 };
