@@ -28,9 +28,9 @@ int main(int argc, char** argv)
     main_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     main_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* checkbox1 = new GCheckBox("GCheckBox 1", main_widget);
+    auto checkbox1 = GCheckBox::construct("GCheckBox 1", main_widget);
     (void)checkbox1;
-    auto* checkbox2 = new GCheckBox("GCheckBox 2", main_widget);
+    auto checkbox2 = GCheckBox::construct("GCheckBox 2", main_widget);
     checkbox2->set_enabled(false);
 
     auto radio1 = GRadioButton::construct("GRadioButton 1", main_widget);
