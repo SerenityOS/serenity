@@ -3,11 +3,13 @@
 #include <LibGUI/GFrame.h>
 
 class GSplitter : public GFrame {
+    C_OBJECT(GSplitter)
 public:
-    GSplitter(Orientation, GWidget* parent);
     virtual ~GSplitter() override;
 
 protected:
+    GSplitter(Orientation, GWidget* parent);
+
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;

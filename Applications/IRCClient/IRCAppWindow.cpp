@@ -175,7 +175,7 @@ void IRCAppWindow::setup_widgets()
     outer_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     outer_container->layout()->set_margins({ 2, 0, 2, 2 });
 
-    auto* horizontal_container = new GSplitter(Orientation::Horizontal, outer_container);
+    auto horizontal_container = GSplitter::construct(Orientation::Horizontal, outer_container);
 
     m_window_list = GTableView::construct(horizontal_container);
     m_window_list->set_headers_visible(false);

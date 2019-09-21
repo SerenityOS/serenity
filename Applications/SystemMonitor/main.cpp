@@ -55,7 +55,7 @@ int main(int argc, char** argv)
 
     auto* tabwidget = new GTabWidget(keeper);
 
-    auto* process_container_splitter = new GSplitter(Orientation::Vertical, nullptr);
+    auto process_container_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
     tabwidget->add_widget("Processes", process_container_splitter);
 
     auto* process_table_container = new GWidget(process_container_splitter);
