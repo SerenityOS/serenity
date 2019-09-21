@@ -68,11 +68,11 @@ VBWidgetType widget_type_from_class_name(const StringView& name)
     ASSERT_NOT_REACHED();
 }
 
-static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
+static ObjectPtr<GWidget> build_gwidget(VBWidgetType type, GWidget* parent)
 {
     switch (type) {
     case VBWidgetType::GWidget:
-        return new GWidget(parent);
+        return GWidget::construct(parent);
     case VBWidgetType::GScrollBar:
         return GScrollBar::construct(Orientation::Vertical, parent);
     case VBWidgetType::GGroupBox:
@@ -113,21 +113,21 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
         return slider;
     }
     case VBWidgetType::GCheckBox: {
-        auto* box = new GCheckBox(parent);
+        auto box = GCheckBox::construct(parent);
         box->set_text("checkbox_1");
         return box;
     }
     case VBWidgetType::GRadioButton:
-        return new GRadioButton("radio_1", parent);
+        return GRadioButton::construct("radio_1", parent);
     default:
         ASSERT_NOT_REACHED();
         return nullptr;
     }
 }
 
-GWidget* VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GWidget* parent, NonnullOwnPtrVector<VBProperty>& properties)
+ObjectPtr<GWidget> VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GWidget* parent, NonnullOwnPtrVector<VBProperty>& properties)
 {
-    auto* gwidget = ::build_gwidget(type, parent);
+    auto gwidget = ::build_gwidget(type, parent);
     auto add_readonly_property = [&](const String& name, const GVariant& value) {
         auto property = make<VBProperty>(widget, name, value);
         property->set_readonly(true);

@@ -80,7 +80,7 @@ GWindow* make_toolbox_window()
     window->set_title("Widgets");
     window->set_rect(20, 200, 80, 300);
 
-    auto* widget = new GWidget;
+    auto widget = GWidget::construct();
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);

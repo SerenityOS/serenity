@@ -8,7 +8,8 @@ public:
     explicit GStackWidget(GWidget* parent);
     virtual ~GStackWidget() override;
 
-    GWidget* active_widget() const { return m_active_widget; }
+    GWidget* active_widget() { return m_active_widget.ptr(); }
+    const GWidget* active_widget() const { return m_active_widget.ptr(); }
     void set_active_widget(GWidget*);
 
     Function<void(GWidget*)> on_active_widget_change;
@@ -18,5 +19,5 @@ protected:
     virtual void resize_event(GResizeEvent&) override;
 
 private:
-    GWidget* m_active_widget { nullptr };
+    ObjectPtr<GWidget> m_active_widget;
 };

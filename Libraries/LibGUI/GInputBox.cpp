@@ -19,7 +19,7 @@ GInputBox::~GInputBox()
 
 void GInputBox::build()
 {
-    auto* widget = new GWidget;
+    auto widget = GWidget::construct();
     set_main_widget(widget);
 
     int text_width = widget->font().width(m_prompt);
@@ -42,12 +42,12 @@ void GInputBox::build()
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
 
-    auto* button_container_outer = new GWidget(widget);
+    auto button_container_outer = GWidget::construct(widget);
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container_outer->set_preferred_size(0, 20);
     button_container_outer->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto* button_container_inner = new GWidget(button_container_outer);
+    auto button_container_inner = GWidget::construct(button_container_outer);
     button_container_inner->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     button_container_inner->layout()->set_spacing(8);
 

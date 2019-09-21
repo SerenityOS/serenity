@@ -19,16 +19,16 @@ ColorDialog::~ColorDialog()
 
 void ColorDialog::build()
 {
-    auto* horizontal_container = new GWidget;
+    auto horizontal_container = GWidget::construct();
     horizontal_container->set_fill_with_background_color(true);
     horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     set_main_widget(horizontal_container);
 
-    auto* left_vertical_container = new GWidget(horizontal_container);
+    auto left_vertical_container = GWidget::construct(horizontal_container);
     left_vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto* right_vertical_container = new GWidget(horizontal_container);
+    auto right_vertical_container = GWidget::construct(horizontal_container);
     right_vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     enum RGBComponent {

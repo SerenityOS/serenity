@@ -29,7 +29,8 @@ public:
     void send_settings_to_window_server(int tabIndex);
     void create_frame();
 
-    inline GWidget* get_root_widget() const { return m_root_widget; }
+    const GWidget* root_widget() const { return m_root_widget; }
+    GWidget* root_widget() { return m_root_widget; }
 
 private:
     void create_wallpaper_list();
@@ -39,7 +40,7 @@ private:
 private:
     String m_wallpaper_path;
     RefPtr<CConfigFile> m_wm_config;
-    GWidget* m_root_widget { nullptr };
+    ObjectPtr<GWidget> m_root_widget;
     Vector<Size> m_resolutions;
     Vector<String> m_wallpapers;
     ObjectPtr<GLabel> m_wallpaper_preview;

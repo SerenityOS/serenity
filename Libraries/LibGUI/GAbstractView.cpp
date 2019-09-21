@@ -14,7 +14,6 @@ GAbstractView::GAbstractView(GWidget* parent)
 
 GAbstractView::~GAbstractView()
 {
-    delete m_edit_widget;
 }
 
 void GAbstractView::set_model(RefPtr<GModel>&& model)
@@ -63,8 +62,10 @@ void GAbstractView::begin_editing(const GModelIndex& index)
         return;
     if (!model()->is_editable(index))
         return;
-    if (m_edit_widget)
-        delete m_edit_widget;
+    if (m_edit_widget) {
+        remove_child(*m_edit_widget);
+        m_edit_widget = nullptr;
+    }
     m_edit_index = index;
 
     ASSERT(aid_create_editing_delegate);
@@ -88,8 +89,10 @@ void GAbstractView::begin_editing(const GModelIndex& index)
 void GAbstractView::stop_editing()
 {
     m_edit_index = {};
-    delete m_edit_widget;
-    m_edit_widget = nullptr;
+    if (m_edit_widget) {
+        remove_child(*m_edit_widget);
+        m_edit_widget = nullptr;
+    }
 }
 
 void GAbstractView::activate(const GModelIndex& index)

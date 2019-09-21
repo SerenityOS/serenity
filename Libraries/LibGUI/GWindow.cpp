@@ -698,7 +698,7 @@ Vector<GWidget*> GWindow::focusable_widgets() const
         });
     };
 
-    collect_focusable_widgets(*m_main_widget);
+    collect_focusable_widgets(const_cast<GWidget&>(*m_main_widget));
     return collected_widgets;
 }
 

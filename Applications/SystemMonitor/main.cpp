@@ -47,7 +47,7 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* keeper = new GWidget;
+    auto keeper = GWidget::construct();
     keeper->set_layout(make<GBoxLayout>(Orientation::Vertical));
     keeper->set_fill_with_background_color(true);
     keeper->set_background_color(Color::WarmGray);
@@ -58,9 +58,9 @@ int main(int argc, char** argv)
     auto process_container_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
     tabwidget->add_widget("Processes", process_container_splitter);
 
-    auto* process_table_container = new GWidget(process_container_splitter);
+    auto process_table_container = GWidget::construct(process_container_splitter);
 
-    auto* graphs_container = new GWidget;
+    auto graphs_container = GWidget::construct();
     graphs_container->set_fill_with_background_color(true);
     graphs_container->set_background_color(Color::WarmGray);
     graphs_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -236,7 +236,7 @@ public:
 
 GWidget* build_file_systems_tab()
 {
-    auto* fs_widget = new GWidget(nullptr);
+    auto fs_widget = GWidget::construct();
     fs_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     fs_widget->layout()->set_margins({ 4, 4, 4, 4 });
     auto fs_table_view = GTableView::construct(fs_widget);
@@ -301,7 +301,7 @@ GWidget* build_file_systems_tab()
 
 GWidget* build_pci_devices_tab()
 {
-    auto* pci_widget = new GWidget(nullptr);
+    auto pci_widget = GWidget::construct(nullptr);
     pci_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     pci_widget->layout()->set_margins({ 4, 4, 4, 4 });
     auto pci_table_view = GTableView::construct(pci_widget);
@@ -355,7 +355,7 @@ GWidget* build_pci_devices_tab()
 
 GWidget* build_devices_tab()
 {
-    auto* devices_widget = new GWidget(nullptr);
+    auto devices_widget = GWidget::construct();
     devices_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     devices_widget->layout()->set_margins({ 4, 4, 4, 4 });
 

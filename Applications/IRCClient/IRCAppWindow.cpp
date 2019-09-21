@@ -153,7 +153,7 @@ void IRCAppWindow::setup_menus()
 
 void IRCAppWindow::setup_widgets()
 {
-    auto* widget = new GWidget(nullptr);
+    auto widget = GWidget::construct();
     set_main_widget(widget);
     widget->set_fill_with_background_color(true);
     widget->set_background_color(Color::WarmGray);
@@ -171,7 +171,7 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_open_query_action);
     toolbar->add_action(*m_close_query_action);
 
-    auto* outer_container = new GWidget(widget);
+    auto outer_container = GWidget::construct(widget);
     outer_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     outer_container->layout()->set_margins({ 2, 0, 2, 2 });
 

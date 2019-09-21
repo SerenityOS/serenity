@@ -18,7 +18,8 @@ public:
 
     int active_tab_index() const;
 
-    GWidget* active_widget() const { return m_active_widget; }
+    GWidget* active_widget() { return m_active_widget.ptr(); }
+    const GWidget* active_widget() const { return m_active_widget.ptr(); }
     void set_active_widget(GWidget*);
 
     int bar_height() const { return 21; }
@@ -41,7 +42,7 @@ private:
     Rect container_rect() const;
     void update_bar();
 
-    GWidget* m_active_widget { nullptr };
+    ObjectPtr<GWidget> m_active_widget;
 
     struct TabData {
         Rect rect(const Font&) const;

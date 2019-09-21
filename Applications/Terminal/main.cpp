@@ -94,7 +94,7 @@ GWindow* create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> co
     window->set_title("Terminal Settings");
     window->set_rect(50, 50, 200, 140);
 
-    auto* settings = new GWidget;
+    auto settings = GWidget::construct();
     window->set_main_widget(settings);
     settings->set_fill_with_background_color(true);
     settings->set_layout(make<GBoxLayout>(Orientation::Vertical));

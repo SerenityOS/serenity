@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     window->set_title("SoundPlayer");
     window->set_rect(300, 300, 300, 200);
 
-    auto* widget = new GWidget;
+    auto widget = GWidget::construct();
     window->set_main_widget(widget);
 
     widget->set_fill_with_background_color(true);

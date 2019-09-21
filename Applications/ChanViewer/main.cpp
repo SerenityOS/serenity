@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 800, 500);
     window->set_icon(load_png("/res/icons/16x16/app-chanviewer.png"));
 
-    auto* widget = new GWidget;
+    auto widget = GWidget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));

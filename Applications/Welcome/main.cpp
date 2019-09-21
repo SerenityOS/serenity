@@ -94,13 +94,13 @@ int main(int argc, char** argv)
     // main section
     //
 
-    auto* main_section = new GWidget(background);
+    auto main_section = GWidget::construct(background);
     main_section->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);
     main_section->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
-    auto* menu = new GWidget(main_section);
+    auto menu = GWidget::construct(main_section);
     menu->set_layout(make<GBoxLayout>(Orientation::Vertical));
     menu->layout()->set_margins({ 0, 0, 0, 0 });
     menu->layout()->set_spacing(8);
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     stack->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
     for (auto& page : pages) {
-        auto* content = new GWidget(stack);
+        auto content = GWidget::construct(stack);
         content->set_layout(make<GBoxLayout>(Orientation::Vertical));
         content->layout()->set_margins({ 0, 0, 0, 0 });
         content->layout()->set_spacing(8);
@@ -139,7 +139,7 @@ int main(int argc, char** argv)
         menu_option->set_text_alignment(TextAlignment::CenterLeft);
         menu_option->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         menu_option->set_preferred_size(0, 20);
-        menu_option->on_click = [stack, content](GButton&) {
+        menu_option->on_click = [&](auto&) {
             stack->set_active_widget(content);
             content->invalidate_layout();
         };

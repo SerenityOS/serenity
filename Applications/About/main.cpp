@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->set_rect(window_rect);
 
-    auto* widget = new GWidget;
+    auto widget = GWidget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));

@@ -52,7 +52,7 @@ protected:
 
     bool m_editable { false };
     GModelIndex m_edit_index;
-    GWidget* m_edit_widget { nullptr };
+    ObjectPtr<GWidget> m_edit_widget;
     Rect m_edit_widget_content_rect;
 
 private:

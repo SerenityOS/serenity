@@ -44,7 +44,7 @@ int main(int argc, char** argv)
     window->set_title("File Manager");
     window->set_rect(20, 200, 640, 480);
 
-    auto* widget = new GWidget;
+    auto widget = GWidget::construct();
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
 

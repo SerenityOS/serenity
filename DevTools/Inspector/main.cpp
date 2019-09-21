@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     window->set_title("Inspector");
     window->set_rect(150, 150, 300, 500);
 
-    auto* widget = new GWidget;
+    auto widget = GWidget::construct();
     window->set_main_widget(widget);
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
