@@ -12,7 +12,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
     set_fill_with_background_color(true);
     set_background_color(Color::WarmGray);
 
-    auto* adapters_group_box = new GGroupBox("Adapters", this);
+    auto adapters_group_box = GGroupBox::construct("Adapters", this);
     adapters_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
     adapters_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     adapters_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -32,7 +32,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
     net_adapters_fields.empend("bytes_out", "Bytes Out", TextAlignment::CenterRight);
     m_adapter_table_view->set_model(GJsonArrayModel::create("/proc/net/adapters", move(net_adapters_fields)));
 
-    auto* sockets_group_box = new GGroupBox("Sockets", this);
+    auto sockets_group_box = GGroupBox::construct("Sockets", this);
     sockets_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
     sockets_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     sockets_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);

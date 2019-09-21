@@ -100,7 +100,7 @@ GWindow* create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> co
     settings->set_layout(make<GBoxLayout>(Orientation::Vertical));
     settings->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* radio_container = new GGroupBox("Bell Mode", settings);
+    auto radio_container = GGroupBox::construct("Bell Mode", settings);
     radio_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     radio_container->layout()->set_margins({ 6, 16, 6, 6 });
     radio_container->set_fill_with_background_color(true);
@@ -115,7 +115,7 @@ GWindow* create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> co
         terminal.set_should_beep(checked);
     };
 
-    auto* slider_container = new GGroupBox("Background Opacity", settings);
+    auto slider_container = GGroupBox::construct("Background Opacity", settings);
     slider_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     slider_container->layout()->set_margins({ 6, 16, 6, 6 });
     slider_container->set_fill_with_background_color(true);
