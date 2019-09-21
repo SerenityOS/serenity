@@ -1,3 +1,4 @@
+#include "Client.h"
 #include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/HashMap.h>
@@ -11,9 +12,8 @@
 #include <fcntl.h>
 #include <getopt.h>
 #include <stdio.h>
+#include <stdlib.h>
 #include <sys/ioctl.h>
-
-#include "Client.h"
 
 static void run_command(int ptm_fd, String command)
 {
@@ -81,7 +81,7 @@ static void run_command(int ptm_fd, String command)
 int main(int argc, char** argv)
 {
     CEventLoop event_loop;
-    CTCPServer server;
+    auto server = CTCPServer::construct();
 
     int opt;
     u16 port = 23;
@@ -96,7 +96,7 @@ int main(int argc, char** argv)
         }
     }
 
-    if (!server.listen({}, port)) {
+    if (!server->listen({}, port)) {
         perror("listen");
         exit(1);
     }
@@ -104,10 +104,10 @@ int main(int argc, char** argv)
     HashMap<int, NonnullRefPtr<Client>> clients;
     int next_id = 0;
 
-    server.on_ready_to_accept = [&next_id, &clients, &server] {
+    server->on_ready_to_accept = [&next_id, &clients, &server] {
         int id = next_id++;
 
-        auto client_socket = server.accept();
+        auto client_socket = server->accept();
         if (!client_socket) {
             perror("accept");
             return;
@@ -122,7 +122,7 @@ int main(int argc, char** argv)
 
         run_command(ptm_fd, "");
 
-        auto client = Client::create(id, client_socket, ptm_fd);
+        auto client = Client::create(id, move(client_socket), ptm_fd);
         client->on_exit = [&clients, id] { clients.remove(id); };
         clients.set(id, client);
     };

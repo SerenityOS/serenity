@@ -9,7 +9,6 @@ class CTCPSocket;
 class CTCPServer : public CObject {
     C_OBJECT(CTCPServer)
 public:
-    explicit CTCPServer(CObject* parent = nullptr);
     virtual ~CTCPServer() override;
 
     bool is_listening() const { return m_listening; }
@@ -20,7 +19,9 @@ public:
     Function<void()> on_ready_to_accept;
 
 private:
+    explicit CTCPServer(CObject* parent = nullptr);
+
     int m_fd { -1 };
     bool m_listening { false };
-    OwnPtr<CNotifier> m_notifier;
+    ObjectPtr<CNotifier> m_notifier;
 };
