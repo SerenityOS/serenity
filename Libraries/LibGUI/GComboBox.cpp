@@ -9,7 +9,7 @@
 GComboBox::GComboBox(GWidget* parent)
     : GWidget(parent)
 {
-    m_editor = new GTextEditor(GTextEditor::Type::SingleLine, this);
+    m_editor = GTextEditor::construct(GTextEditor::Type::SingleLine, this);
     m_editor->on_change = [this] {
         if (on_change)
             on_change(m_editor->text(), m_list_view->selection().first());

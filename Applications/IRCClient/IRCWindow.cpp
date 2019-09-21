@@ -41,7 +41,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
         member_view->set_activates_on_selection(true);
     }
 
-    m_text_editor = new GTextEditor(GTextEditor::SingleLine, this);
+    m_text_editor = GTextEditor::construct(GTextEditor::SingleLine, this);
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
     m_text_editor->on_return_pressed = [this] {

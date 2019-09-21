@@ -15,7 +15,7 @@ public:
             return;
         m_model = model;
         m_index = index;
-        m_widget = create_widget()->make_weak_ptr();
+        m_widget = create_widget();
     }
 
     GWidget* widget() { return m_widget; }
@@ -29,7 +29,7 @@ public:
     virtual void will_begin_editing() { }
 
 protected:
-    virtual GWidget* create_widget() = 0;
+    virtual ObjectPtr<GWidget> create_widget() = 0;
     void commit()
     {
         if (on_commit)
@@ -39,7 +39,7 @@ protected:
 private:
     RefPtr<GModel> m_model;
     GModelIndex m_index;
-    WeakPtr<GWidget> m_widget;
+    ObjectPtr<GWidget> m_widget;
 };
 
 class GStringModelEditingDelegate : public GModelEditingDelegate {
@@ -47,9 +47,9 @@ public:
     GStringModelEditingDelegate() {}
     virtual ~GStringModelEditingDelegate() override {}
 
-    virtual GWidget* create_widget() override
+    virtual ObjectPtr<GWidget> create_widget() override
     {
-        auto* textbox = new GTextBox(nullptr);
+        auto textbox = GTextBox::construct(nullptr);
         textbox->on_return_pressed = [this] {
             commit();
         };

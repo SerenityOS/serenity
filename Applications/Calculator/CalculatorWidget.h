@@ -25,6 +25,6 @@ private:
     Calculator m_calculator;
     Keypad m_keypad;
 
-    GTextBox* m_entry { nullptr };
+    ObjectPtr<GTextBox> m_entry;
     ObjectPtr<GLabel> m_label;
 };

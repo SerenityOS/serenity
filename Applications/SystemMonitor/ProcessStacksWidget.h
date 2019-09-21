@@ -17,6 +17,6 @@ public:
 
 private:
     pid_t m_pid { -1 };
-    GTextEditor* m_stacks_editor { nullptr };
+    ObjectPtr<GTextEditor> m_stacks_editor;
     ObjectPtr<CTimer> m_timer;
 };

@@ -95,7 +95,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
         return box;
     }
     case VBWidgetType::GTextEditor: {
-        auto* editor = new GTextEditor(GTextEditor::Type::MultiLine, parent);
+        auto editor = GTextEditor::construct(GTextEditor::Type::MultiLine, parent);
         editor->set_ruler_visible(false);
         return editor;
     }

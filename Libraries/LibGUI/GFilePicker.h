@@ -46,7 +46,7 @@ private:
     NonnullRefPtr<GDirectoryModel> m_model;
     FileSystemPath m_selected_file;
 
-    GTextBox* m_filename_textbox { nullptr };
+    ObjectPtr<GTextBox> m_filename_textbox;
     ObjectPtr<GLabel> m_preview_image_label;
     ObjectPtr<GLabel> m_preview_name_label;
     ObjectPtr<GLabel> m_preview_geometry_label;

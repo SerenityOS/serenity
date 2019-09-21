@@ -31,7 +31,7 @@ public:
     BoolModelEditingDelegate() {}
     virtual ~BoolModelEditingDelegate() override {}
 
-    virtual GWidget* create_widget() override
+    virtual ObjectPtr<GWidget> create_widget() override
     {
         auto* combo = new GComboBox(nullptr);
         combo->set_only_allow_values_from_model(true);
