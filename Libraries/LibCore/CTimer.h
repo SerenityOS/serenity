@@ -7,16 +7,6 @@
 class CTimer final : public CObject {
     C_OBJECT(CTimer)
 public:
-    static ObjectPtr<CTimer> create(CObject* parent = nullptr)
-    {
-        return new CTimer(parent);
-    }
-
-    static ObjectPtr<CTimer> create(int interval, Function<void()>&& timeout_handler, CObject* parent = nullptr)
-    {
-        return new CTimer(interval, move(timeout_handler), parent);
-    }
-
     virtual ~CTimer() override;
 
     void start();

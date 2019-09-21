@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     auto* process_table_view = new ProcessTableView(*cpu_graph, process_table_container);
     auto* memory_stats_widget = new MemoryStatsWidget(*memory_graph, graphs_container);
 
-    auto refresh_timer = CTimer::create(1000, [&] {
+    auto refresh_timer = CTimer::construct(1000, [&] {
         process_table_view->refresh();
         memory_stats_widget->refresh();
     });
