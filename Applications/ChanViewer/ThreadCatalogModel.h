@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/JsonArray.h>
+#include <LibCore/CHttpJob.h>
 #include <LibGUI/GModel.h>
 
 class ThreadCatalogModel final : public GModel {
@@ -36,4 +37,5 @@ private:
 
     String m_board { "g" };
     JsonArray m_catalog;
+    ObjectPtr<CHttpJob> m_pending_job;
 };
