@@ -151,7 +151,7 @@ private:
     RefPtr<GraphicsBitmap> m_icon;
     int m_window_id { 0 };
     float m_opacity_when_windowless { 1.0f };
-    ObjectPtr<GWidget> m_main_widget;
+    RefPtr<GWidget> m_main_widget;
     WeakPtr<GWidget> m_focused_widget;
     WeakPtr<GWidget> m_global_cursor_tracking_widget;
     WeakPtr<GWidget> m_automatic_cursor_tracking_widget;

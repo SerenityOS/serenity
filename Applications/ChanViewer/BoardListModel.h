@@ -25,5 +25,5 @@ private:
     BoardListModel();
 
     JsonArray m_boards;
-    ObjectPtr<CHttpJob> m_pending_job;
+    RefPtr<CHttpJob> m_pending_job;
 };

@@ -68,7 +68,7 @@ VBWidgetType widget_type_from_class_name(const StringView& name)
     ASSERT_NOT_REACHED();
 }
 
-static ObjectPtr<GWidget> build_gwidget(VBWidgetType type, GWidget* parent)
+static RefPtr<GWidget> build_gwidget(VBWidgetType type, GWidget* parent)
 {
     switch (type) {
     case VBWidgetType::GWidget:
@@ -125,7 +125,7 @@ static ObjectPtr<GWidget> build_gwidget(VBWidgetType type, GWidget* parent)
     }
 }
 
-ObjectPtr<GWidget> VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GWidget* parent, NonnullOwnPtrVector<VBProperty>& properties)
+RefPtr<GWidget> VBWidgetRegistry::build_gwidget(VBWidget& widget, VBWidgetType type, GWidget* parent, NonnullOwnPtrVector<VBProperty>& properties)
 {
     auto gwidget = ::build_gwidget(type, parent);
     auto add_readonly_property = [&](const String& name, const GVariant& value) {

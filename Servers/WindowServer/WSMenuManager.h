@@ -33,7 +33,7 @@ private:
     RefPtr<WSWindow> m_window;
     WSCPUMonitor m_cpu_monitor;
     String m_username;
-    ObjectPtr<CTimer> m_timer;
+    RefPtr<CTimer> m_timer;
 
     Vector<WeakPtr<WSMenu>> m_open_menu_stack;
 };

@@ -8,7 +8,6 @@
 #include <AK/String.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CTCPSocket.h>
-#include <LibCore/ObjectPtr.h>
 
 class IRCChannel;
 class IRCQuery;
@@ -137,10 +136,10 @@ private:
     String m_hostname;
     int m_port { 6667 };
 
-    ObjectPtr<CTCPSocket> m_socket;
+    RefPtr<CTCPSocket> m_socket;
 
     String m_nickname;
-    ObjectPtr<CNotifier> m_notifier;
+    RefPtr<CNotifier> m_notifier;
     HashMap<String, RefPtr<IRCChannel>, CaseInsensitiveStringTraits> m_channels;
     HashMap<String, RefPtr<IRCQuery>, CaseInsensitiveStringTraits> m_queries;
 

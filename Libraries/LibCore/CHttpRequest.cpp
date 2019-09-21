@@ -10,7 +10,7 @@ CHttpRequest::~CHttpRequest()
 {
 }
 
-ObjectPtr<CNetworkJob> CHttpRequest::schedule()
+RefPtr<CNetworkJob> CHttpRequest::schedule()
 {
     auto job = CHttpJob::construct(*this);
     job->start();

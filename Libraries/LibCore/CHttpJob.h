@@ -27,7 +27,7 @@ private:
     };
 
     CHttpRequest m_request;
-    ObjectPtr<CTCPSocket> m_socket;
+    RefPtr<CTCPSocket> m_socket;
     State m_state { State::InStatus };
     int m_code { -1 };
     HashMap<String, String> m_headers;

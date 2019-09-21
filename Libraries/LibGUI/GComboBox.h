@@ -36,9 +36,9 @@ protected:
     virtual void resize_event(GResizeEvent&) override;
 
 private:
-    ObjectPtr<GTextEditor> m_editor;
-    ObjectPtr<GButton> m_open_button;
-    ObjectPtr<GWindow> m_list_window;
-    ObjectPtr<GListView> m_list_view;
+    RefPtr<GTextEditor> m_editor;
+    RefPtr<GButton> m_open_button;
+    RefPtr<GWindow> m_list_window;
+    RefPtr<GListView> m_list_view;
     bool m_only_allow_values_from_model { false };
 };

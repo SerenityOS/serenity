@@ -19,7 +19,7 @@ public:
             callback((VBWidgetType)i);
     }
 
-    static ObjectPtr<GWidget> build_gwidget(VBWidget&, VBWidgetType, GWidget* parent, NonnullOwnPtrVector<VBProperty>&);
+    static RefPtr<GWidget> build_gwidget(VBWidget&, VBWidgetType, GWidget* parent, NonnullOwnPtrVector<VBProperty>&);
 };
 
 String to_class_name(VBWidgetType);

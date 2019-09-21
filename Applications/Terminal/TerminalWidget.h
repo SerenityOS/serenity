@@ -88,7 +88,7 @@ private:
 
     bool m_in_active_window { false };
 
-    ObjectPtr<CNotifier> m_notifier;
+    RefPtr<CNotifier> m_notifier;
 
     u8 m_opacity { 255 };
     bool m_needs_background_fill { true };
@@ -96,9 +96,9 @@ private:
 
     int m_glyph_width { 0 };
 
-    ObjectPtr<CTimer> m_cursor_blink_timer;
-    ObjectPtr<CTimer> m_visual_beep_timer;
+    RefPtr<CTimer> m_cursor_blink_timer;
+    RefPtr<CTimer> m_visual_beep_timer;
     RefPtr<CConfigFile> m_config;
 
-    ObjectPtr<GScrollBar> m_scrollbar;
+    RefPtr<GScrollBar> m_scrollbar;
 };

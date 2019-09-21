@@ -40,10 +40,10 @@ private:
 private:
     String m_wallpaper_path;
     RefPtr<CConfigFile> m_wm_config;
-    ObjectPtr<GWidget> m_root_widget;
+    RefPtr<GWidget> m_root_widget;
     Vector<Size> m_resolutions;
     Vector<String> m_wallpapers;
-    ObjectPtr<GLabel> m_wallpaper_preview;
+    RefPtr<GLabel> m_wallpaper_preview;
 
     Size m_selected_resolution;
     String m_selected_wallpaper;

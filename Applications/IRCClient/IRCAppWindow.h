@@ -27,8 +27,8 @@ private:
 
     IRCWindow& create_window(void* owner, IRCWindow::Type, const String& name);
     IRCClient m_client;
-    ObjectPtr<GStackWidget> m_container;
-    ObjectPtr<GTableView> m_window_list;
+    RefPtr<GStackWidget> m_container;
+    RefPtr<GTableView> m_window_list;
     RefPtr<GAction> m_join_action;
     RefPtr<GAction> m_part_action;
     RefPtr<GAction> m_whois_action;

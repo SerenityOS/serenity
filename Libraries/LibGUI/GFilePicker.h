@@ -42,13 +42,13 @@ private:
         }
     }
 
-    ObjectPtr<GTableView> m_view;
+    RefPtr<GTableView> m_view;
     NonnullRefPtr<GDirectoryModel> m_model;
     FileSystemPath m_selected_file;
 
-    ObjectPtr<GTextBox> m_filename_textbox;
-    ObjectPtr<GLabel> m_preview_image_label;
-    ObjectPtr<GLabel> m_preview_name_label;
-    ObjectPtr<GLabel> m_preview_geometry_label;
+    RefPtr<GTextBox> m_filename_textbox;
+    RefPtr<GLabel> m_preview_image_label;
+    RefPtr<GLabel> m_preview_name_label;
+    RefPtr<GLabel> m_preview_geometry_label;
     Mode m_mode { Mode::Open };
 };

@@ -10,7 +10,7 @@
 
 #include "Client.h"
 
-Client::Client(int id, ObjectPtr<CTCPSocket> socket, int ptm_fd)
+Client::Client(int id, RefPtr<CTCPSocket> socket, int ptm_fd)
     : m_id(id)
     , m_socket(move(socket))
     , m_ptm_fd(ptm_fd)

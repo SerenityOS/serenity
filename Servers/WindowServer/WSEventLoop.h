@@ -21,8 +21,8 @@ private:
 
     CEventLoop m_event_loop;
     int m_keyboard_fd { -1 };
-    ObjectPtr<CNotifier> m_keyboard_notifier;
+    RefPtr<CNotifier> m_keyboard_notifier;
     int m_mouse_fd { -1 };
-    ObjectPtr<CNotifier> m_mouse_notifier;
-    ObjectPtr<CLocalServer> m_server;
+    RefPtr<CNotifier> m_mouse_notifier;
+    RefPtr<CLocalServer> m_server;
 };

@@ -17,5 +17,5 @@ private:
     void build();
 
     Color m_color;
-    ObjectPtr<GFrame> m_preview_widget;
+    RefPtr<GFrame> m_preview_widget;
 };

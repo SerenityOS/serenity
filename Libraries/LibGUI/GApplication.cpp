@@ -92,7 +92,7 @@ public:
         m_label->set_text(tooltip);
     }
 
-    ObjectPtr<GLabel> m_label;
+    RefPtr<GLabel> m_label;
 };
 
 void GApplication::show_tooltip(const StringView& tooltip, const Point& screen_location)

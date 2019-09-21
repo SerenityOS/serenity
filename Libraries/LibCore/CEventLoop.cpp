@@ -29,12 +29,12 @@ HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
 HashTable<CNotifier*>* CEventLoop::s_notifiers;
 int CEventLoop::s_next_timer_id = 1;
 int CEventLoop::s_wake_pipe_fds[2];
-ObjectPtr<CLocalServer> CEventLoop::s_rpc_server;
+RefPtr<CLocalServer> CEventLoop::s_rpc_server;
 
 class RPCClient : public CObject {
     C_OBJECT(RPCClient)
 public:
-    explicit RPCClient(ObjectPtr<CLocalSocket> socket)
+    explicit RPCClient(RefPtr<CLocalSocket> socket)
         : m_socket(move(socket))
     {
         add_child(*m_socket);
@@ -123,7 +123,7 @@ public:
     }
 
 private:
-    ObjectPtr<CLocalSocket> m_socket;
+    RefPtr<CLocalSocket> m_socket;
 };
 
 CEventLoop::CEventLoop()
