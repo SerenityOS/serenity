@@ -10,6 +10,7 @@
 class GButton;
 class GTextBox;
 class GTextEditor;
+class GStatusBar;
 
 class TextEditorWidget final : public GWidget {
 public:
@@ -34,6 +35,8 @@ private:
     RefPtr<GAction> m_line_wrapping_setting_action;
     RefPtr<GAction> m_find_next_action;
     RefPtr<GAction> m_find_previous_action;
+
+    ObjectPtr<GStatusBar> m_statusbar;
 
     ObjectPtr<GTextBox> m_find_textbox;
     GButton* m_find_previous_button { nullptr };

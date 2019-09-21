@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     catalog_view->set_model(ThreadCatalogModel::create());
     auto& catalog_model = *static_cast<ThreadCatalogModel*>(catalog_view->model());
 
-    auto* statusbar = new GStatusBar(widget);
+    auto statusbar = GStatusBar::construct(widget);
 
     board_combo->on_change = [&] (auto&, const GModelIndex& index) {
         auto selected_board = board_combo->model()->data(index, GModel::Role::Custom);
