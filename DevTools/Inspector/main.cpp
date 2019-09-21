@@ -37,7 +37,7 @@ int main(int argc, char** argv)
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto* splitter = new GSplitter(Orientation::Horizontal, widget);
+    auto splitter = GSplitter::construct(Orientation::Horizontal, widget);
 
     RemoteProcess remote_process(pid);
 

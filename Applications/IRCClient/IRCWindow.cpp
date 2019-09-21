@@ -19,7 +19,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     // Make a container for the log buffer view + (optional) member list.
-    auto* container = new GSplitter(Orientation::Horizontal, this);
+    auto container = GSplitter::construct(Orientation::Horizontal, this);
 
     m_table_view = GTableView::construct(container);
     m_table_view->set_size_columns_to_fit_content(true);

@@ -94,7 +94,7 @@ void DisplayPropertiesWidget::create_frame()
     auto* tab_widget = new GTabWidget(m_root_widget);
 
     // First, let's create the "Background" tab
-    auto* background_splitter = new GSplitter(Orientation::Vertical, nullptr);
+    auto background_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
     tab_widget->add_widget("Wallpaper", background_splitter);
 
     auto* background_content = new GWidget(background_splitter);
@@ -117,7 +117,7 @@ void DisplayPropertiesWidget::create_frame()
     };
 
     // Let's add the settings tab
-    auto* settings_splitter = new GSplitter(Orientation::Vertical, nullptr);
+    auto settings_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
     tab_widget->add_widget("Settings", settings_splitter);
 
     auto* settings_content = new GWidget(settings_splitter);
