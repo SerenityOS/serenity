@@ -134,5 +134,7 @@ void CHttpJob::shutdown()
         return;
     m_socket->on_ready_to_read = nullptr;
     m_socket->on_connected = nullptr;
+    remove_child(*m_socket);
     m_socket = nullptr;
 }
+
