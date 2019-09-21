@@ -15,7 +15,6 @@ public:
         Timer,
         NotifierRead,
         NotifierWrite,
-        DeferredDestroy,
         DeferredInvoke,
         ChildAdded,
         ChildRemoved,

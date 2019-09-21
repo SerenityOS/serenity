@@ -27,7 +27,7 @@ WSMenuManager::~WSMenuManager()
 
 void WSMenuManager::setup()
 {
-    m_window = make<WSWindow>(*this, WSWindowType::Menubar);
+    m_window = WSWindow::construct(*this, WSWindowType::Menubar);
     m_window->set_rect(WSWindowManager::the().menubar_rect());
 }
 

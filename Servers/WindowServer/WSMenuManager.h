@@ -30,7 +30,7 @@ private:
     void draw();
     void tick_clock();
 
-    OwnPtr<WSWindow> m_window;
+    RefPtr<WSWindow> m_window;
     WSCPUMonitor m_cpu_monitor;
     String m_username;
     ObjectPtr<CTimer> m_timer;

@@ -87,11 +87,11 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     color_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     color_container->layout()->set_spacing(1);
 
-    auto top_color_container = GWidget::construct(color_container);
+    auto top_color_container = GWidget::construct(color_container.ptr());
     top_color_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     top_color_container->layout()->set_spacing(1);
 
-    auto bottom_color_container = GWidget::construct(color_container);
+    auto bottom_color_container = GWidget::construct(color_container.ptr());
     bottom_color_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     bottom_color_container->layout()->set_spacing(1);
 

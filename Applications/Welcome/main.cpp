@@ -83,7 +83,7 @@ int main(int argc, char** argv)
     // header
     //
 
-    auto header = GLabel::construct(background);
+    auto header = GLabel::construct(background.ptr());
     header->set_font(Font::default_bold_font());
     header->set_text("Welcome to Serenity");
     header->set_text_alignment(TextAlignment::CenterLeft);
@@ -94,13 +94,13 @@ int main(int argc, char** argv)
     // main section
     //
 
-    auto main_section = GWidget::construct(background);
+    auto main_section = GWidget::construct(background.ptr());
     main_section->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     main_section->layout()->set_margins({ 0, 0, 0, 0 });
     main_section->layout()->set_spacing(8);
     main_section->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
-    auto menu = GWidget::construct(main_section);
+    auto menu = GWidget::construct(main_section.ptr());
     menu->set_layout(make<GBoxLayout>(Orientation::Vertical));
     menu->layout()->set_margins({ 0, 0, 0, 0 });
     menu->layout()->set_spacing(8);
@@ -111,7 +111,7 @@ int main(int argc, char** argv)
     stack->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
     for (auto& page : pages) {
-        auto content = GWidget::construct(stack);
+        auto content = GWidget::construct(stack.ptr());
         content->set_layout(make<GBoxLayout>(Orientation::Vertical));
         content->layout()->set_margins({ 0, 0, 0, 0 });
         content->layout()->set_spacing(8);

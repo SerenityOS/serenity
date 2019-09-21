@@ -42,12 +42,12 @@ void GInputBox::build()
     m_text_editor->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_text_editor->set_preferred_size(0, 19);
 
-    auto button_container_outer = GWidget::construct(widget);
+    auto button_container_outer = GWidget::construct(widget.ptr());
     button_container_outer->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button_container_outer->set_preferred_size(0, 20);
     button_container_outer->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto button_container_inner = GWidget::construct(button_container_outer);
+    auto button_container_inner = GWidget::construct(button_container_outer.ptr());
     button_container_inner->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     button_container_inner->layout()->set_spacing(8);
 

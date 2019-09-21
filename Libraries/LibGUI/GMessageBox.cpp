@@ -64,7 +64,7 @@ void GMessageBox::build()
 
     ObjectPtr<GWidget> message_container = widget;
     if (m_type != Type::None) {
-        message_container = GWidget::construct(widget);
+        message_container = GWidget::construct(widget.ptr());
         message_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
         message_container->layout()->set_margins({ 8, 0, 8, 0 });
         message_container->layout()->set_spacing(8);
@@ -80,7 +80,7 @@ void GMessageBox::build()
     label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     label->set_preferred_size(text_width, 16);
 
-    auto button_container = GWidget::construct(widget);
+    auto button_container = GWidget::construct(widget.ptr());
     button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     button_container->layout()->set_spacing(5);
     button_container->layout()->set_margins({ 15, 0, 15, 0 });

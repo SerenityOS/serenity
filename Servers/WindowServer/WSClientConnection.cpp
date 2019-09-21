@@ -20,7 +20,7 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
-HashMap<int, WSClientConnection*>* s_connections;
+HashMap<int, NonnullRefPtr<WSClientConnection>>* s_connections;
 
 void WSClientConnection::for_each_client(Function<void(WSClientConnection&)> callback)
 {
@@ -38,24 +38,20 @@ WSClientConnection* WSClientConnection::from_client_id(int client_id)
     auto it = s_connections->find(client_id);
     if (it == s_connections->end())
         return nullptr;
-    return (*it).value;
+    return (*it).value.ptr();
 }
 
 WSClientConnection::WSClientConnection(CLocalSocket& client_socket, int client_id)
     : Connection(client_socket, client_id)
 {
     if (!s_connections)
-        s_connections = new HashMap<int, WSClientConnection*>;
-    s_connections->set(client_id, this);
+        s_connections = new HashMap<int, NonnullRefPtr<WSClientConnection>>;
+    s_connections->set(client_id, *this);
 }
 
 WSClientConnection::~WSClientConnection()
 {
-    // NOTE: Move the windows out of 'm_windows' before teardown. This prevents code
-    //       that runs in response to window destruction from trying to iterate over
-    //       a partially destroyed window list.
     auto windows = move(m_windows);
-    s_connections->remove(client_id());
 }
 
 void WSClientConnection::send_greeting()
@@ -66,6 +62,11 @@ void WSClientConnection::send_greeting()
     message.greeting.your_client_id = client_id();
     message.greeting.screen_rect = WSScreen::the().rect();
     post_message(message);
+}
+
+void WSClientConnection::die()
+{
+    s_connections->remove(client_id());
 }
 
 void WSClientConnection::post_error(const String& error_message)
@@ -370,7 +371,7 @@ void WSClientConnection::handle_request(const WSAPIDestroyMenubarRequest& reques
 void WSClientConnection::handle_request(const WSAPICreateMenuRequest& request)
 {
     int menu_id = m_next_menu_id++;
-    auto menu = make<WSMenu>(this, menu_id, request.text());
+    auto menu = WSMenu::construct(this, menu_id, request.text());
     m_menus.set(menu_id, move(menu));
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidCreateMenu;
@@ -389,6 +390,7 @@ void WSClientConnection::handle_request(const WSAPIDestroyMenuRequest& request)
     auto& menu = *(*it).value;
     WSWindowManager::the().close_menu(menu);
     m_menus.remove(it);
+    remove_child(menu);
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidDestroyMenu;
     response.menu.menu_id = menu_id;
@@ -738,7 +740,7 @@ void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
 void WSClientConnection::handle_request(const WSAPICreateWindowRequest& request)
 {
     int window_id = m_next_window_id++;
-    auto window = make<WSWindow>(*this, request.window_type(), window_id, request.is_modal(), request.is_resizable(), request.is_fullscreen());
+    auto window = WSWindow::construct(*this, request.window_type(), window_id, request.is_modal(), request.is_resizable(), request.is_fullscreen());
     window->set_background_color(request.background_color());
     window->set_has_alpha_channel(request.has_alpha_channel());
     window->set_title(request.title());
@@ -766,11 +768,15 @@ void WSClientConnection::handle_request(const WSAPIDestroyWindowRequest& request
     }
     auto& window = *(*it).value;
     WSWindowManager::the().invalidate(window);
-    m_windows.remove(it);
     WSAPI_ServerMessage response;
     response.type = WSAPI_ServerMessage::Type::DidDestroyWindow;
     response.window_id = window.window_id();
     post_message(response);
+
+    dbg() << *this << " removing window child " << window << " refs: " << window.ref_count() << " parent: " << window.parent();
+    remove_child(window);
+    ASSERT(it->value.ptr() == &window);
+    m_windows.remove(window_id);
 }
 
 void WSClientConnection::post_paint_message(WSWindow& window)

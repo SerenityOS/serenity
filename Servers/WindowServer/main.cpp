@@ -24,7 +24,7 @@ int main(int, char**)
     WSScreen screen(wm_config->read_num_entry("Screen", "Width", 1024),
         wm_config->read_num_entry("Screen", "Height", 768));
     WSCompositor::the();
-    WSWindowManager window_manager;
+    auto wm = WSWindowManager::construct();
 
     dbgprintf("Entering WindowServer main loop.\n");
     loop.exec();

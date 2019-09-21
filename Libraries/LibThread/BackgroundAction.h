@@ -4,7 +4,6 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Optional.h>
 #include <AK/Queue.h>
-#include <AK/RefCounted.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CObject.h>
 #include <LibThread/Lock.h>
@@ -28,11 +27,8 @@ private:
 
 template<typename Result>
 class BackgroundAction final : public CObject
-    , public RefCounted<BackgroundAction<Result>>
     , private BackgroundActionBase {
-
     C_OBJECT(BackgroundAction);
-
 public:
     static NonnullRefPtr<BackgroundAction<Result>> create(
         Function<Result()> action,
@@ -47,7 +43,7 @@ public:
 private:
 
     BackgroundAction(Function<Result()> action, Function<void(Result)> on_complete)
-        : CObject(background_thread())
+        : CObject(&background_thread())
         , m_action(move(action))
         , m_on_complete(move(on_complete))
     {

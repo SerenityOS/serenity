@@ -58,7 +58,7 @@ int main(int argc, char** argv)
     auto process_container_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
     tabwidget->add_widget("Processes", process_container_splitter);
 
-    auto process_table_container = GWidget::construct(process_container_splitter);
+    auto process_table_container = GWidget::construct(process_container_splitter.ptr());
 
     auto graphs_container = GWidget::construct();
     graphs_container->set_fill_with_background_color(true);
@@ -301,7 +301,7 @@ ObjectPtr<GWidget> build_file_systems_tab()
 
 ObjectPtr<GWidget> build_pci_devices_tab()
 {
-    auto pci_widget = GWidget::construct(nullptr);
+    auto pci_widget = GWidget::construct();
     pci_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     pci_widget->layout()->set_margins({ 4, 4, 4, 4 });
     auto pci_table_view = GTableView::construct(pci_widget);

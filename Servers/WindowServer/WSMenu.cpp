@@ -116,7 +116,7 @@ WSWindow& WSMenu::ensure_menu_window()
             next_item_location.move_by(0, height);
         }
 
-        auto window = make<WSWindow>(*this, WSWindowType::Menu);
+        auto window = WSWindow::construct(*this, WSWindowType::Menu);
         window->set_rect(0, 0, width, height());
         m_menu_window = move(window);
         draw();

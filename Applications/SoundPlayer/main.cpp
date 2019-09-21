@@ -27,8 +27,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    AClientConnection audio_client;
-    audio_client.handshake();
+    auto audio_client = AClientConnection::construct();
+    audio_client->handshake();
 
     auto window = GWindow::construct();
     window->set_title("SoundPlayer");
@@ -57,7 +57,7 @@ int main(int argc, char** argv)
             sample_widget->set_buffer(nullptr);
             return;
         }
-        bool enqueued = audio_client.try_enqueue(*next_sample_buffer);
+        bool enqueued = audio_client->try_enqueue(*next_sample_buffer);
         if (!enqueued)
             return;
         sample_widget->set_buffer(next_sample_buffer);

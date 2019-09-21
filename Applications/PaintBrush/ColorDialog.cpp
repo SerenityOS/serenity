@@ -25,10 +25,10 @@ void ColorDialog::build()
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     set_main_widget(horizontal_container);
 
-    auto left_vertical_container = GWidget::construct(horizontal_container);
+    auto left_vertical_container = GWidget::construct(horizontal_container.ptr());
     left_vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto right_vertical_container = GWidget::construct(horizontal_container);
+    auto right_vertical_container = GWidget::construct(horizontal_container.ptr());
     right_vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     enum RGBComponent {

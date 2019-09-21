@@ -2,6 +2,8 @@
 
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
+#include <AK/Noncopyable.h>
+#include <AK/NonnullRefPtrVector.h>
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -21,13 +23,18 @@ class CTimerEvent;
 public:                                                                \
     virtual const char* class_name() const override { return #klass; } \
     template<class... Args>                                            \
-    static inline ObjectPtr<klass> construct(Args&&... args)           \
+    static inline NonnullRefPtr<klass> construct(Args&&... args)       \
     {                                                                  \
-        return ObjectPtr<klass>(new klass(forward<Args>(args)...));    \
+        return adopt(*new klass(forward<Args>(args)...));              \
     }
 
-class CObject : public Weakable<CObject> {
+class CObject
+    : public RefCounted<CObject>
+    , public Weakable<CObject> {
     // NOTE: No C_OBJECT macro for CObject itself.
+
+    AK_MAKE_NONCOPYABLE(CObject)
+    AK_MAKE_NONMOVABLE(CObject)
 public:
     IntrusiveListNode m_all_objects_list_node;
 
@@ -39,14 +46,14 @@ public:
     const String& name() const { return m_name; }
     void set_name(const StringView& name) { m_name = name; }
 
-    Vector<CObject*>& children() { return m_children; }
-    const Vector<CObject*>& children() const { return m_children; }
+    NonnullRefPtrVector<CObject>& children() { return m_children; }
+    const NonnullRefPtrVector<CObject>& children() const { return m_children; }
 
     template<typename Callback>
     void for_each_child(Callback callback)
     {
-        for (auto* child : m_children) {
-            if (callback(*child) == IterationDecision::Break)
+        for (auto& child : m_children) {
+            if (callback(child) == IterationDecision::Break)
                 return;
         }
     }
@@ -65,8 +72,6 @@ public:
 
     void add_child(CObject&);
     void remove_child(CObject&);
-
-    void delete_later();
 
     void dump_tree(int indent = 0);
 
@@ -95,7 +100,7 @@ private:
     String m_name;
     int m_timer_id { 0 };
     bool m_widget { false };
-    Vector<CObject*> m_children;
+    NonnullRefPtrVector<CObject> m_children;
 };
 
 template<typename T>

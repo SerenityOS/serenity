@@ -97,7 +97,7 @@ void DisplayPropertiesWidget::create_frame()
     auto background_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
     tab_widget->add_widget("Wallpaper", background_splitter);
 
-    auto background_content = GWidget::construct(background_splitter);
+    auto background_content = GWidget::construct(background_splitter.ptr());
     background_content->set_layout(make<GBoxLayout>(Orientation::Vertical));
     background_content->layout()->set_margins({ 4, 4, 4, 4 });
 
@@ -120,7 +120,7 @@ void DisplayPropertiesWidget::create_frame()
     auto settings_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
     tab_widget->add_widget("Settings", settings_splitter);
 
-    auto settings_content = GWidget::construct(settings_splitter);
+    auto settings_content = GWidget::construct(settings_splitter.ptr());
     settings_content->set_layout(make<GBoxLayout>(Orientation::Vertical));
     settings_content->layout()->set_margins({ 4, 4, 4, 4 });
 
@@ -135,7 +135,7 @@ void DisplayPropertiesWidget::create_frame()
     settings_content->layout()->add_spacer();
 
     // Add the apply and cancel buttons
-    auto bottom_widget = GWidget::construct(m_root_widget);
+    auto bottom_widget = GWidget::construct(m_root_widget.ptr());
     bottom_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     bottom_widget->layout()->add_spacer();
     bottom_widget->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);

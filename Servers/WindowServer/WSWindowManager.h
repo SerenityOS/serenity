@@ -248,7 +248,7 @@ private:
 
     u8 m_keyboard_modifiers { 0 };
 
-    OwnPtr<WSMenu> m_system_menu;
+    RefPtr<WSMenu> m_system_menu;
     Color m_menu_selection_color;
     WeakPtr<WSMenuBar> m_current_menubar;
     WeakPtr<WSMenu> m_current_menu;

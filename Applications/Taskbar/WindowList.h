@@ -15,7 +15,6 @@ public:
 
     ~Window()
     {
-        delete m_button;
     }
 
     WindowIdentifier identifier() const { return m_identifier; }
@@ -41,7 +40,7 @@ private:
     WindowIdentifier m_identifier;
     String m_title;
     Rect m_rect;
-    GButton* m_button { nullptr };
+    RefPtr<GButton> m_button;
     RefPtr<GraphicsBitmap> m_icon;
     bool m_active { false };
     bool m_minimized { false };
@@ -62,7 +61,7 @@ public:
     Window& ensure_window(const WindowIdentifier&);
     void remove_window(const WindowIdentifier&);
 
-    Function<GButton*(const WindowIdentifier&)> aid_create_button;
+    Function<NonnullRefPtr<GButton>(const WindowIdentifier&)> aid_create_button;
 
 private:
     HashMap<WindowIdentifier, NonnullOwnPtr<Window>> m_windows;

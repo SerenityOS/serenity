@@ -182,5 +182,5 @@ private:
     unsigned m_wm_event_mask { 0 };
     DisjointRectSet m_pending_paint_rects;
     Rect m_unmaximized_rect;
-    OwnPtr<WSMenu> m_window_menu;
+    RefPtr<WSMenu> m_window_menu;
 };

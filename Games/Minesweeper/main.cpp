@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
 
-    auto container = GWidget::construct(widget);
+    auto container = GWidget::construct(widget.ptr());
     container->set_fill_with_background_color(true);
     container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     container->set_preferred_size(0, 36);

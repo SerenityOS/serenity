@@ -15,6 +15,8 @@ public:
     ~ASClientConnection() override;
     void did_finish_playing_buffer(Badge<ASMixer>, int buffer_id);
 
+    virtual void die() override;
+
 private:
     virtual OwnPtr<AudioServer::GreetResponse> handle(const AudioServer::Greet&) override;
     virtual OwnPtr<AudioServer::GetMainMixVolumeResponse> handle(const AudioServer::GetMainMixVolume&) override;

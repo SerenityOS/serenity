@@ -2,7 +2,7 @@
 #include <LibAudio/AClientConnection.h>
 #include <LibAudio/AWavLoader.h>
 #include <LibCore/CEventLoop.h>
-#include <cstdio>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
@@ -12,8 +12,8 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    AClientConnection a_conn;
-    a_conn.handshake();
+    auto audio_client = AClientConnection::construct();
+    audio_client->handshake();
     AWavLoader loader(argv[1]);
 
     printf("\033[34;1m Playing\033[0m: %s\n", argv[1]);
@@ -29,7 +29,7 @@ int main(int argc, char** argv)
         printf("\033[u");
         printf("%d/%d", loader.loaded_samples(), loader.total_samples());
         fflush(stdout);
-        a_conn.enqueue(*samples);
+        audio_client->enqueue(*samples);
     }
     printf("\n");
     return 0;

@@ -328,7 +328,7 @@ void WSWindow::request_update(const Rect& rect)
 void WSWindow::popup_window_menu(const Point& position)
 {
     if (!m_window_menu) {
-        m_window_menu = make<WSMenu>(nullptr, -1, "(Window Menu)");
+        m_window_menu = WSMenu::construct(nullptr, -1, "(Window Menu)");
         m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 1, "Minimize"));
         m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 2, "Unminimize"));
         m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, WSMenuItem::Type::Separator));
