@@ -56,7 +56,7 @@ void IRCClient::set_server(const String& hostname, int port)
 
 void IRCClient::on_socket_connected()
 {
-    m_notifier = CNotifier::create(m_socket->fd(), CNotifier::Read);
+    m_notifier = CNotifier::construct(m_socket->fd(), CNotifier::Read);
     m_notifier->on_ready_to_read = [this] { receive_from_server(); };
 
     send_user();

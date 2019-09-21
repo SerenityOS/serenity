@@ -85,7 +85,7 @@ bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
     if (rc < 0) {
         if (errno == EINPROGRESS) {
             dbg() << *this << " connection in progress (EINPROGRESS)";
-            m_notifier = CNotifier::create(fd(), CNotifier::Event::Write, this);
+            m_notifier = CNotifier::construct(fd(), CNotifier::Event::Write, this);
             m_notifier->on_ready_to_write = [this] {
                 dbg() << *this << " connected!";
                 m_connected = true;
@@ -132,7 +132,7 @@ void CSocket::did_update_fd(int fd)
         m_read_notifier = nullptr;
         return;
     }
-    m_read_notifier = CNotifier::create(fd, CNotifier::Event::Read, this);
+    m_read_notifier = CNotifier::construct(fd, CNotifier::Event::Read, this);
     m_read_notifier->on_ready_to_read = [this] {
         if (on_ready_to_read)
             on_ready_to_read();

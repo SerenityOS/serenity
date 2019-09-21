@@ -44,10 +44,10 @@ WSEventLoop::WSEventLoop()
     ASSERT(m_keyboard_fd >= 0);
     ASSERT(m_mouse_fd >= 0);
 
-    m_keyboard_notifier = CNotifier::create(m_keyboard_fd, CNotifier::Read);
+    m_keyboard_notifier = CNotifier::construct(m_keyboard_fd, CNotifier::Read);
     m_keyboard_notifier->on_ready_to_read = [this] { drain_keyboard(); };
 
-    m_mouse_notifier = CNotifier::create(m_mouse_fd, CNotifier::Read);
+    m_mouse_notifier = CNotifier::construct(m_mouse_fd, CNotifier::Read);
     m_mouse_notifier->on_ready_to_read = [this] { drain_mouse(); };
 
     WSClipboard::the().on_content_change = [&] {

@@ -14,7 +14,7 @@ Client::Client(int id, ObjectPtr<CTCPSocket> socket, int ptm_fd)
     : m_id(id)
     , m_socket(move(socket))
     , m_ptm_fd(ptm_fd)
-    , m_ptm_notifier(CNotifier::create(ptm_fd, CNotifier::Read))
+    , m_ptm_notifier(CNotifier::construct(ptm_fd, CNotifier::Read))
 {
     m_socket->on_ready_to_read = [this] { drain_socket(); };
     m_ptm_notifier->on_ready_to_read = [this] { drain_pty(); };

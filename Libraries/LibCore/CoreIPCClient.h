@@ -51,7 +51,7 @@ namespace Client {
     public:
         Connection(const StringView& address)
             : m_connection(CLocalSocket::construct(this))
-            , m_notifier(CNotifier::create(m_connection->fd(), CNotifier::Read, this))
+            , m_notifier(CNotifier::construct(m_connection->fd(), CNotifier::Read, this))
         {
             // We want to rate-limit our clients
             m_connection->set_blocking(true);
@@ -241,7 +241,7 @@ namespace Client {
     public:
         ConnectionNG(const StringView& address)
             : m_connection(CLocalSocket::construct(this))
-            , m_notifier(CNotifier::create(m_connection->fd(), CNotifier::Read, this))
+            , m_notifier(CNotifier::construct(m_connection->fd(), CNotifier::Read, this))
         {
             // We want to rate-limit our clients
             m_connection->set_blocking(true);
