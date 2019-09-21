@@ -59,7 +59,7 @@ int main(int argc, char** argv)
     auto location_textbox = GTextEditor::construct(GTextEditor::SingleLine, location_toolbar);
 
     auto* splitter = new GSplitter(Orientation::Horizontal, widget);
-    auto* tree_view = new GTreeView(splitter);
+    auto tree_view = GTreeView::construct(splitter);
     auto file_system_model = GFileSystemModel::create("/", GFileSystemModel::Mode::DirectoriesOnly);
     tree_view->set_model(file_system_model);
     tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);

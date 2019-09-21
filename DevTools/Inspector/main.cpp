@@ -46,7 +46,7 @@ int main(int argc, char** argv)
             window->set_title(String::format("Inspector: %s (%d)", remote_process.process_name().characters(), remote_process.pid()));
     };
 
-    auto* tree_view = new GTreeView(splitter);
+    auto tree_view = GTreeView::construct(splitter);
     tree_view->set_model(remote_process.object_graph_model());
     tree_view->set_activates_on_selection(true);
 
