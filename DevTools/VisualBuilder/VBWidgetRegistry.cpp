@@ -84,7 +84,7 @@ static ObjectPtr<GWidget> build_gwidget(VBWidgetType type, GWidget* parent)
         return label;
     }
     case VBWidgetType::GButton: {
-        auto* button = new GButton(parent);
+        auto button = GButton::construct(parent);
         button->set_text("button_1");
         return button;
     }

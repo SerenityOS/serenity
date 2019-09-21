@@ -39,13 +39,13 @@ void ColorDialog::build()
     m_preview_widget->set_background_color(m_color);
     m_preview_widget->set_fill_with_background_color(true);
     right_vertical_container->layout()->add_spacer();
-    auto* cancel_button = new GButton("Cancel", right_vertical_container);
+    auto cancel_button = GButton::construct("Cancel", right_vertical_container);
     cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     cancel_button->set_preferred_size(0, 20);
     cancel_button->on_click = [&](auto&) {
         done(GDialog::ExecCancel);
     };
-    auto* ok_button = new GButton("Okay", right_vertical_container);
+    auto ok_button = GButton::construct("Okay", right_vertical_container);
     ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     ok_button->set_preferred_size(0, 20);
     ok_button->on_click = [&](auto&) {

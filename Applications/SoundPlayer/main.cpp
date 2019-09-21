@@ -43,7 +43,7 @@ int main(int argc, char** argv)
 
     auto* sample_widget = new SampleWidget(widget);
 
-    auto* button = new GButton("Quit", widget);
+    auto button = GButton::construct("Quit", widget);
     button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button->set_preferred_size(0, 20);
     button->on_click = [&](auto&) {

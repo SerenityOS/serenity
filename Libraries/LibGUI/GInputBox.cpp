@@ -51,7 +51,7 @@ void GInputBox::build()
     button_container_inner->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     button_container_inner->layout()->set_spacing(8);
 
-    m_cancel_button = new GButton(button_container_inner);
+    m_cancel_button = GButton::construct(button_container_inner);
     m_cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_cancel_button->set_preferred_size(0, 20);
     m_cancel_button->set_text("Cancel");
@@ -60,7 +60,7 @@ void GInputBox::build()
         done(ExecCancel);
     };
 
-    m_ok_button = new GButton(button_container_inner);
+    m_ok_button = GButton::construct(button_container_inner);
     m_ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_ok_button->set_preferred_size(0, 20);
     m_ok_button->set_text("OK");

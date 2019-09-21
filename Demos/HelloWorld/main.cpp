@@ -23,7 +23,7 @@ int main(int argc, char** argv)
     auto label = GLabel::construct(main_widget);
     label->set_text("Hello\nWorld!");
 
-    auto* button = new GButton(main_widget);
+    auto button = GButton::construct(main_widget);
     button->set_text("Good-bye");
     button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button->set_preferred_size(0, 20);

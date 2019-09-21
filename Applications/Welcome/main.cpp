@@ -133,7 +133,7 @@ int main(int argc, char** argv)
             content_text->wrap_and_set_height();
         }
 
-        auto* menu_option = new GButton(menu);
+        auto menu_option = GButton::construct(menu);
         menu_option->set_font(Font::default_font());
         menu_option->set_text(page.menu_name);
         menu_option->set_text_alignment(TextAlignment::CenterLeft);

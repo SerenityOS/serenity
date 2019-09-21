@@ -162,7 +162,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     button_container->layout()->set_spacing(4);
     button_container->layout()->add_spacer();
 
-    auto* cancel_button = new GButton(button_container);
+    auto cancel_button = GButton::construct(button_container);
     cancel_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     cancel_button->set_preferred_size(80, 0);
     cancel_button->set_text("Cancel");
@@ -170,7 +170,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
         done(ExecCancel);
     };
 
-    auto* ok_button = new GButton(button_container);
+    auto ok_button = GButton::construct(button_container);
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     ok_button->set_preferred_size(80, 0);
     ok_button->set_text(ok_button_name(m_mode));

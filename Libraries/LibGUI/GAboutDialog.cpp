@@ -51,7 +51,7 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
     button_container->set_preferred_size(0, 20);
     button_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     button_container->layout()->add_spacer();
-    auto* ok_button = new GButton("OK", button_container);
+    auto ok_button = GButton::construct("OK", button_container);
     ok_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     ok_button->set_preferred_size(80, 20);
     ok_button->on_click = [this](auto&) {
