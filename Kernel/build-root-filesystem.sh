@@ -130,6 +130,9 @@ ln -s Inspector mnt/bin/ins
 ln -s SoundPlayer mnt/bin/sp
 echo "done"
 
+mkdir -p mnt/boot/
+cp kernel mnt/boot/
+
 # Run local sync script, if it exists
 if [ -f sync-local.sh ]; then
     sh sync-local.sh
