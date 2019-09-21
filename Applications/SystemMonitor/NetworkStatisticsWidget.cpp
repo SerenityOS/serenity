@@ -18,7 +18,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
     adapters_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     adapters_group_box->set_preferred_size(0, 120);
 
-    m_adapter_table_view = new GTableView(adapters_group_box);
+    m_adapter_table_view = GTableView::construct(adapters_group_box);
     m_adapter_table_view->set_size_columns_to_fit_content(true);
 
     Vector<GJsonArrayModel::FieldSpec> net_adapters_fields;
@@ -38,7 +38,7 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
     sockets_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
     sockets_group_box->set_preferred_size(0, 0);
 
-    m_socket_table_view = new GTableView(sockets_group_box);
+    m_socket_table_view = GTableView::construct(sockets_group_box);
     m_socket_table_view->set_size_columns_to_fit_content(true);
 
     Vector<GJsonArrayModel::FieldSpec> net_tcp_fields;

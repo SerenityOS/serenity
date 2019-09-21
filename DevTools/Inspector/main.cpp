@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     tree_view->set_model(remote_process.object_graph_model());
     tree_view->set_activates_on_selection(true);
 
-    auto* properties_table_view = new GTableView(splitter);
+    auto properties_table_view = GTableView::construct(splitter);
     properties_table_view->set_size_columns_to_fit_content(true);
 
     tree_view->on_activation = [&](auto& index) {

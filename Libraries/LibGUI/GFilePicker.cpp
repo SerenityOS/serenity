@@ -76,7 +76,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     location_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     location_textbox->set_preferred_size(0, 20);
 
-    m_view = new GTableView(vertical_container);
+    m_view = GTableView::construct(vertical_container);
     m_view->set_model(GSortingProxyModel::create(*m_model));
     m_view->set_column_hidden(GDirectoryModel::Column::Owner, true);
     m_view->set_column_hidden(GDirectoryModel::Column::Group, true);

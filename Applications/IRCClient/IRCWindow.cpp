@@ -21,7 +21,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     // Make a container for the log buffer view + (optional) member list.
     auto* container = new GSplitter(Orientation::Horizontal, this);
 
-    m_table_view = new GTableView(container);
+    m_table_view = GTableView::construct(container);
     m_table_view->set_size_columns_to_fit_content(true);
     m_table_view->set_headers_visible(false);
     m_table_view->set_font(Font::default_fixed_width_font());
@@ -32,7 +32,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     }
 
     if (m_type == Channel) {
-        auto* member_view = new GTableView(container);
+        auto member_view = GTableView::construct(container);
         member_view->set_headers_visible(false);
         member_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
         member_view->set_preferred_size(100, 0);

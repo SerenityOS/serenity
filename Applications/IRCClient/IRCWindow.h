@@ -46,7 +46,7 @@ private:
     void* m_owner { nullptr };
     Type m_type;
     String m_name;
-    GTableView* m_table_view { nullptr };
+    ObjectPtr<GTableView> m_table_view;
     ObjectPtr<GTextEditor> m_text_editor;
     RefPtr<IRCLogBuffer> m_log_buffer;
     int m_unread_count { 0 };

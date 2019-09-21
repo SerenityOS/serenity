@@ -8,7 +8,7 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GWidget* parent)
 {
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_margins({ 4, 4, 4, 4 });
-    m_table_view = new GTableView(this);
+    m_table_view = GTableView::construct(this);
     m_table_view->set_size_columns_to_fit_content(true);
 
     Vector<GJsonArrayModel::FieldSpec> pid_fds_fields;

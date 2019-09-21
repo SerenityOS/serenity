@@ -14,7 +14,7 @@ public:
 private:
     void update_models();
 
-    GTableView* m_adapter_table_view { nullptr };
-    GTableView* m_socket_table_view { nullptr };
+    ObjectPtr<GTableView> m_adapter_table_view;
+    ObjectPtr<GTableView> m_socket_table_view;
     ObjectPtr<CTimer> m_update_timer;
 };

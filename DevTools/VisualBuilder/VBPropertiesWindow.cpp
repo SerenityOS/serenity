@@ -61,7 +61,7 @@ VBPropertiesWindow::VBPropertiesWindow()
     widget->layout()->set_margins({ 2, 2, 2, 2 });
     set_main_widget(widget);
 
-    m_table_view = new GTableView(widget);
+    m_table_view = GTableView::construct(widget);
     m_table_view->set_headers_visible(false);
     m_table_view->set_editable(true);
 

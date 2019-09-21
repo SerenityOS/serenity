@@ -19,7 +19,6 @@ public:
 class GTableView : public GAbstractView {
     C_OBJECT(GTableView)
 public:
-    explicit GTableView(GWidget* parent);
     virtual ~GTableView() override;
 
     int header_height() const { return m_headers_visible ? 16 : 0; }
@@ -48,7 +47,9 @@ public:
 
     void set_cell_painting_delegate(int column, OwnPtr<GTableCellPaintingDelegate>&&);
 
-private:
+protected:
+    explicit GTableView(GWidget* parent);
+
     virtual void did_update_model() override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
