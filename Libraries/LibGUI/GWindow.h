@@ -24,7 +24,6 @@ enum class GStandardCursor {
 class GWindow : public CObject {
     C_OBJECT(GWindow)
 public:
-    GWindow(CObject* parent = nullptr);
     virtual ~GWindow() override;
 
     static GWindow* from_window_id(int);
@@ -135,6 +134,7 @@ public:
     virtual void save_to(AK::JsonObject&) override;
 
 protected:
+    GWindow(CObject* parent = nullptr);
     virtual void wm_event(GWMEvent&);
 
 private:

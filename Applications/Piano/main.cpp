@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     AClientConnection audio_connection;
     audio_connection.handshake();
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("Piano");
     window->set_rect(100, 100, 512, 512);
 

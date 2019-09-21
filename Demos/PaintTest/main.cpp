@@ -38,7 +38,7 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_rect(100, 100, 400, 400);
     window->set_title("Paint test");
 

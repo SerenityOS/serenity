@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static GWindow* make_toolbox_window();
+static ObjectPtr<GWindow> make_toolbox_window();
 
 int main(int argc, char** argv)
 {
@@ -47,7 +47,7 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(file_menu));
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title(form1->name());
     window->set_rect(120, 200, 640, 400);
     window->set_main_widget(form1);
@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    auto* toolbox = make_toolbox_window();
+    auto toolbox = make_toolbox_window();
     toolbox->show();
 
     propbox->show();
@@ -74,9 +74,9 @@ int main(int argc, char** argv)
     return app.exec();
 }
 
-GWindow* make_toolbox_window()
+ObjectPtr<GWindow> make_toolbox_window()
 {
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("Widgets");
     window->set_rect(20, 200, 80, 300);
 

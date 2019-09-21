@@ -30,7 +30,7 @@ int main(int argc, char** argv)
     AClientConnection audio_client;
     audio_client.handshake();
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("SoundPlayer");
     window->set_rect(300, 300, 300, 200);
 

@@ -28,7 +28,7 @@ GComboBox::GComboBox(GWidget* parent)
             open();
     };
 
-    m_list_window = new GWindow(this);
+    m_list_window = GWindow::construct(this);
     // FIXME: This is obviously not a tooltip window, but it's the closest thing to what we want atm.
     m_list_window->set_window_type(GWindowType::Tooltip);
     m_list_window->set_should_destroy_on_close(false);
