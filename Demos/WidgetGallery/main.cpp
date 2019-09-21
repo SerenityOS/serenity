@@ -38,9 +38,9 @@ int main(int argc, char** argv)
     auto radio2 = GRadioButton::construct("GRadioButton 2", main_widget);
     radio2->set_enabled(false);
 
-    auto* button1 = new GButton("GButton 1", main_widget);
+    auto button1 = GButton::construct("GButton 1", main_widget);
     (void)button1;
-    auto* button2 = new GButton("GButton 2", main_widget);
+    auto button2 = GButton::construct("GButton 2", main_widget);
     button2->set_enabled(false);
 
     auto progress1 = GProgressBar::construct(main_widget);

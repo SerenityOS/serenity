@@ -32,7 +32,7 @@ int main(int argc, char** argv)
     auto flag_icon_label = GLabel::construct(container);
     flag_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/flag.png"));
     auto flag_label = GLabel::construct(container);
-    auto* face_button = new GButton(container);
+    auto face_button = GButton::construct(container);
     face_button->set_button_style(ButtonStyle::CoolBar);
     face_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     face_button->set_preferred_size(36, 0);

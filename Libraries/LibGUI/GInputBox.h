@@ -18,7 +18,7 @@ private:
     String m_prompt;
     String m_text_value;
 
-    GButton* m_ok_button { nullptr };
-    GButton* m_cancel_button { nullptr };
+    ObjectPtr<GButton> m_ok_button;
+    ObjectPtr<GButton> m_cancel_button;
     ObjectPtr<GTextEditor> m_text_editor;
 };

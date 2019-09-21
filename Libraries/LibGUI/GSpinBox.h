@@ -28,8 +28,8 @@ protected:
 
 private:
     ObjectPtr<GTextEditor> m_editor;
-    GButton* m_increment_button { nullptr };
-    GButton* m_decrement_button { nullptr };
+    ObjectPtr<GButton> m_increment_button;
+    ObjectPtr<GButton> m_decrement_button;
 
     int m_min { 0 };
     int m_max { 100 };

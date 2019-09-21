@@ -18,7 +18,7 @@ GComboBox::GComboBox(GWidget* parent)
         if (on_return_pressed)
             on_return_pressed();
     };
-    m_open_button = new GButton(this);
+    m_open_button = GButton::construct(this);
     m_open_button->set_focusable(false);
     m_open_button->set_text("\xc3\xb7");
     m_open_button->on_click = [this](auto&) {

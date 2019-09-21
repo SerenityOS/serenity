@@ -86,7 +86,7 @@ void GMessageBox::build()
     button_container->layout()->set_margins({ 15, 0, 15, 0 });
 
     if (should_include_ok_button()) {
-        auto* ok_button = new GButton(button_container);
+        auto ok_button = GButton::construct(button_container);
         ok_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         ok_button->set_preferred_size(0, 20);
         ok_button->set_text("OK");
@@ -97,7 +97,7 @@ void GMessageBox::build()
     }
 
     if (should_include_cancel_button()) {
-        auto* cancel_button = new GButton(button_container);
+        auto cancel_button = GButton::construct(button_container);
         cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         cancel_button->set_preferred_size(0, 20);
         cancel_button->set_text("Cancel");

@@ -37,7 +37,7 @@ protected:
 
 private:
     ObjectPtr<GTextEditor> m_editor;
-    GButton* m_open_button { nullptr };
+    ObjectPtr<GButton> m_open_button;
     ObjectPtr<GWindow> m_list_window;
     ObjectPtr<GListView> m_list_view;
     bool m_only_allow_values_from_model { false };
