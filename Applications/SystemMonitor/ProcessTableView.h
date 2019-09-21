@@ -8,8 +8,8 @@ class GraphWidget;
 class ProcessModel;
 
 class ProcessTableView final : public GTableView {
+    C_OBJECT(ProcessTableView)
 public:
-    ProcessTableView(GraphWidget&, GWidget* parent);
     virtual ~ProcessTableView() override;
 
     pid_t selected_pid() const;
@@ -17,4 +17,7 @@ public:
     void refresh();
 
     Function<void(pid_t)> on_process_selected;
+
+private:
+    ProcessTableView(GraphWidget&, GWidget* parent);
 };
