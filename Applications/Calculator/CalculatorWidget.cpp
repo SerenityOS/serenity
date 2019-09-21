@@ -23,7 +23,8 @@ CalculatorWidget::CalculatorWidget(GWidget* parent)
     update_display();
 
     for (int i = 0; i < 10; i++) {
-        auto& button = *new GButton(this);
+        m_digit_button[i] = GButton::construct(this);
+        auto& button = *m_digit_button[i];
         int p = i ? i + 2 : 0;
         int x = 55 + (p % 3) * 39;
         int y = 177 - (p / 3) * 33;
@@ -32,130 +33,130 @@ CalculatorWidget::CalculatorWidget(GWidget* parent)
         add_button(button, i);
     }
 
-    auto& button_mem_add = *new GButton(this);
-    button_mem_add.move_to(9, 177);
-    button_mem_add.set_foreground_color(Color::NamedColor::Red);
-    button_mem_add.set_text("M+");
-    add_button(button_mem_add, Calculator::Operation::MemAdd);
+    m_mem_add_button = GButton::construct(this);
+    m_mem_add_button->move_to(9, 177);
+    m_mem_add_button->set_foreground_color(Color::NamedColor::Red);
+    m_mem_add_button->set_text("M+");
+    add_button(*m_mem_add_button, Calculator::Operation::MemAdd);
 
-    auto& button_mem_save = *new GButton(this);
-    button_mem_save.move_to(9, 144);
-    button_mem_save.set_foreground_color(Color::NamedColor::Red);
-    button_mem_save.set_text("MS");
-    add_button(button_mem_save, Calculator::Operation::MemSave);
+    m_mem_save_button = GButton::construct(this);
+    m_mem_save_button->move_to(9, 144);
+    m_mem_save_button->set_foreground_color(Color::NamedColor::Red);
+    m_mem_save_button->set_text("MS");
+    add_button(*m_mem_save_button, Calculator::Operation::MemSave);
 
-    auto& button_mem_recall = *new GButton(this);
-    button_mem_recall.move_to(9, 111);
-    button_mem_recall.set_foreground_color(Color::NamedColor::Red);
-    button_mem_recall.set_text("MR");
-    add_button(button_mem_recall, Calculator::Operation::MemRecall);
+    m_mem_recall_button = GButton::construct(this);
+    m_mem_recall_button->move_to(9, 111);
+    m_mem_recall_button->set_foreground_color(Color::NamedColor::Red);
+    m_mem_recall_button->set_text("MR");
+    add_button(*m_mem_recall_button, Calculator::Operation::MemRecall);
 
-    auto& button_mem_clear = *new GButton(this);
-    button_mem_clear.move_to(9, 78);
-    button_mem_clear.set_foreground_color(Color::NamedColor::Red);
-    button_mem_clear.set_text("MC");
-    add_button(button_mem_clear, Calculator::Operation::MemClear);
+    m_mem_clear_button = GButton::construct(this);
+    m_mem_clear_button->move_to(9, 78);
+    m_mem_clear_button->set_foreground_color(Color::NamedColor::Red);
+    m_mem_clear_button->set_text("MC");
+    add_button(*m_mem_clear_button, Calculator::Operation::MemClear);
 
-    auto& button_clear = *new GButton(this);
-    button_clear.set_foreground_color(Color::NamedColor::Red);
-    button_clear.set_text("C");
-    button_clear.on_click = [this](GButton&) {
+    m_clear_button = GButton::construct(this);
+    m_clear_button->set_foreground_color(Color::NamedColor::Red);
+    m_clear_button->set_text("C");
+    m_clear_button->on_click = [this](GButton&) {
         m_keypad.set_value(0.0);
         m_calculator.clear_operation();
         update_display();
     };
-    add_button(button_clear);
-    button_clear.set_relative_rect(187, 40, 60, 28);
+    add_button(*m_clear_button);
+    m_clear_button->set_relative_rect(187, 40, 60, 28);
 
-    auto& button_clear_error = *new GButton(this);
-    button_clear_error.set_foreground_color(Color::NamedColor::Red);
-    button_clear_error.set_text("CE");
-    button_clear_error.on_click = [this](GButton&) {
+    m_clear_error_button = GButton::construct(this);
+    m_clear_error_button->set_foreground_color(Color::NamedColor::Red);
+    m_clear_error_button->set_text("CE");
+    m_clear_error_button->on_click = [this](GButton&) {
         m_calculator.clear_error();
         update_display();
     };
-    add_button(button_clear_error);
-    button_clear_error.set_relative_rect(124, 40, 59, 28);
+    add_button(*m_clear_error_button);
+    m_clear_error_button->set_relative_rect(124, 40, 59, 28);
 
-    auto& button_backspace = *new GButton(this);
-    button_backspace.set_foreground_color(Color::NamedColor::Red);
-    button_backspace.set_text("Backspace");
-    button_backspace.on_click = [this](GButton&) {
+    m_backspace_button = GButton::construct(this);
+    m_backspace_button->set_foreground_color(Color::NamedColor::Red);
+    m_backspace_button->set_text("Backspace");
+    m_backspace_button->on_click = [this](GButton&) {
         m_keypad.type_backspace();
         update_display();
     };
-    add_button(button_backspace);
-    button_backspace.set_relative_rect(55, 40, 65, 28);
+    add_button(*m_backspace_button);
+    m_backspace_button->set_relative_rect(55, 40, 65, 28);
 
-    auto& button_decimal_point = *new GButton(this);
-    button_decimal_point.move_to(133, 177);
-    button_decimal_point.set_foreground_color(Color::NamedColor::Blue);
-    button_decimal_point.set_text(".");
-    button_decimal_point.on_click = [this](GButton&) {
+    m_decimal_point_button = GButton::construct(this);
+    m_decimal_point_button->move_to(133, 177);
+    m_decimal_point_button->set_foreground_color(Color::NamedColor::Blue);
+    m_decimal_point_button->set_text(".");
+    m_decimal_point_button->on_click = [this](GButton&) {
         m_keypad.type_decimal_point();
         update_display();
     };
-    add_button(button_decimal_point);
+    add_button(*m_decimal_point_button);
 
-    auto& button_toggle_sign = *new GButton(this);
-    button_toggle_sign.move_to(94, 177);
-    button_toggle_sign.set_foreground_color(Color::NamedColor::Blue);
-    button_toggle_sign.set_text("+/-");
-    add_button(button_toggle_sign, Calculator::Operation::ToggleSign);
+    m_sign_button = GButton::construct(this);
+    m_sign_button->move_to(94, 177);
+    m_sign_button->set_foreground_color(Color::NamedColor::Blue);
+    m_sign_button->set_text("+/-");
+    add_button(*m_sign_button, Calculator::Operation::ToggleSign);
 
-    auto& button_add = *new GButton(this);
-    button_add.move_to(172, 177);
-    button_add.set_foreground_color(Color::NamedColor::Red);
-    button_add.set_text("+");
-    add_button(button_add, Calculator::Operation::Add);
+    m_add_button = GButton::construct(this);
+    m_add_button->move_to(172, 177);
+    m_add_button->set_foreground_color(Color::NamedColor::Red);
+    m_add_button->set_text("+");
+    add_button(*m_add_button, Calculator::Operation::Add);
 
-    auto& button_subtract = *new GButton(this);
-    button_subtract.move_to(172, 144);
-    button_subtract.set_foreground_color(Color::NamedColor::Red);
-    button_subtract.set_text("-");
-    add_button(button_subtract, Calculator::Operation::Subtract);
+    m_subtract_button = GButton::construct(this);
+    m_subtract_button->move_to(172, 144);
+    m_subtract_button->set_foreground_color(Color::NamedColor::Red);
+    m_subtract_button->set_text("-");
+    add_button(*m_subtract_button, Calculator::Operation::Subtract);
 
-    auto& button_multiply = *new GButton(this);
-    button_multiply.move_to(172, 111);
-    button_multiply.set_foreground_color(Color::NamedColor::Red);
-    button_multiply.set_text("*");
-    add_button(button_multiply, Calculator::Operation::Multiply);
+    m_multiply_button = GButton::construct(this);
+    m_multiply_button->move_to(172, 111);
+    m_multiply_button->set_foreground_color(Color::NamedColor::Red);
+    m_multiply_button->set_text("*");
+    add_button(*m_multiply_button, Calculator::Operation::Multiply);
 
-    auto& button_divide = *new GButton(this);
-    button_divide.move_to(172, 78);
-    button_divide.set_foreground_color(Color::NamedColor::Red);
-    button_divide.set_text("/");
-    add_button(button_divide, Calculator::Operation::Divide);
+    m_divide_button = GButton::construct(this);
+    m_divide_button->move_to(172, 78);
+    m_divide_button->set_foreground_color(Color::NamedColor::Red);
+    m_divide_button->set_text("/");
+    add_button(*m_divide_button, Calculator::Operation::Divide);
 
-    auto& button_sqrt = *new GButton(this);
-    button_sqrt.move_to(211, 78);
-    button_sqrt.set_foreground_color(Color::NamedColor::Blue);
-    button_sqrt.set_text("sqrt");
-    add_button(button_sqrt, Calculator::Operation::Sqrt);
+    m_sqrt_button = GButton::construct(this);
+    m_sqrt_button->move_to(211, 78);
+    m_sqrt_button->set_foreground_color(Color::NamedColor::Blue);
+    m_sqrt_button->set_text("sqrt");
+    add_button(*m_sqrt_button, Calculator::Operation::Sqrt);
 
-    auto& button_inverse = *new GButton(this);
-    button_inverse.move_to(211, 144);
-    button_inverse.set_foreground_color(Color::NamedColor::Blue);
-    button_inverse.set_text("1/x");
-    add_button(button_inverse, Calculator::Operation::Inverse);
+    m_inverse_button = GButton::construct(this);
+    m_inverse_button->move_to(211, 144);
+    m_inverse_button->set_foreground_color(Color::NamedColor::Blue);
+    m_inverse_button->set_text("1/x");
+    add_button(*m_inverse_button, Calculator::Operation::Inverse);
 
-    auto& button_percent = *new GButton(this);
-    button_percent.move_to(211, 111);
-    button_percent.set_foreground_color(Color::NamedColor::Blue);
-    button_percent.set_text("%");
-    add_button(button_percent, Calculator::Operation::Percent);
+    m_percent_button = GButton::construct(this);
+    m_percent_button->move_to(211, 111);
+    m_percent_button->set_foreground_color(Color::NamedColor::Blue);
+    m_percent_button->set_text("%");
+    add_button(*m_percent_button, Calculator::Operation::Percent);
 
-    auto& button_equals = *new GButton(this);
-    button_equals.move_to(211, 177);
-    button_equals.set_foreground_color(Color::NamedColor::Red);
-    button_equals.set_text("=");
-    button_equals.on_click = [this](GButton&) {
+    m_equals_button = GButton::construct(this);
+    m_equals_button->move_to(211, 177);
+    m_equals_button->set_foreground_color(Color::NamedColor::Red);
+    m_equals_button->set_text("=");
+    m_equals_button->on_click = [this](GButton&) {
         double argument = m_keypad.value();
         double res = m_calculator.finish_operation(argument);
         m_keypad.set_value(res);
         update_display();
     };
-    add_button(button_equals);
+    add_button(*m_equals_button);
 }
 
 CalculatorWidget::~CalculatorWidget()
