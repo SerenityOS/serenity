@@ -13,6 +13,7 @@ public:
     virtual ~CHttpJob() override;
 
     virtual void start() override;
+    virtual void shutdown() override;
 
 private:
     void on_socket_connected();

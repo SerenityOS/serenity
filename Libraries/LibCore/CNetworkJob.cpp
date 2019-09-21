@@ -16,7 +16,7 @@ void CNetworkJob::did_finish(NonnullRefPtr<CNetworkResponse>&& response)
     dbg() << *this << " job did_finish!";
     ASSERT(on_finish);
     on_finish(true);
-    delete_later();
+    shutdown();
 }
 
 void CNetworkJob::did_fail(Error error)
@@ -25,7 +25,7 @@ void CNetworkJob::did_fail(Error error)
     dbgprintf("%s{%p} job did_fail! error: %u (%s)\n", class_name(), this, (unsigned)error, to_string(error));
     ASSERT(on_finish);
     on_finish(false);
-    delete_later();
+    shutdown();
 }
 
 const char* to_string(CNetworkJob::Error error)
@@ -37,6 +37,8 @@ const char* to_string(CNetworkJob::Error error)
         return "ConnectionFailed";
     case CNetworkJob::Error::TransmissionFailed:
         return "TransmissionFailed";
+    case CNetworkJob::Error::Cancelled:
+        return "Cancelled";
     default:
         return "(Unknown error)";
     }

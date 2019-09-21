@@ -21,6 +21,8 @@ void BoardListModel::update()
     CHttpRequest request;
     request.set_url("http://a.4cdn.org/boards.json");
 
+    if (m_pending_job)
+        m_pending_job->cancel();
     m_pending_job = request.schedule();
 
     m_pending_job->on_finish = [this](bool success) {

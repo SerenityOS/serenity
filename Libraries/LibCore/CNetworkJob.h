@@ -13,17 +13,26 @@ public:
         ConnectionFailed,
         TransmissionFailed,
         ProtocolFailed,
+        Cancelled,
     };
     virtual ~CNetworkJob() override;
 
     Function<void(bool success)> on_finish;
 
+    bool is_cancelled() const { return m_error == Error::Cancelled; }
     bool has_error() const { return m_error != Error::None; }
     Error error() const { return m_error; }
     CNetworkResponse* response() { return m_response.ptr(); }
     const CNetworkResponse* response() const { return m_response.ptr(); }
 
     virtual void start() = 0;
+    virtual void shutdown() = 0;
+
+    void cancel()
+    {
+        shutdown();
+        m_error = Error::Cancelled;
+    }
 
 protected:
     CNetworkJob();

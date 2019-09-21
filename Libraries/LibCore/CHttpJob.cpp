@@ -26,6 +26,8 @@ void CHttpJob::on_socket_connected()
         return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::TransmissionFailed); });
 
     m_socket->on_ready_to_read = [&] {
+        if (is_cancelled())
+            return;
         if (m_state == State::InStatus) {
             if (!m_socket->can_read_line())
                 return;
@@ -124,4 +126,13 @@ void CHttpJob::start()
     bool success = m_socket->connect(m_request.url().host(), m_request.url().port());
     if (!success)
         return did_fail(CNetworkJob::Error::ConnectionFailed);
+}
+
+void CHttpJob::shutdown()
+{
+    if (!m_socket)
+        return;
+    m_socket->on_ready_to_read = nullptr;
+    m_socket->on_connected = nullptr;
+    m_socket = nullptr;
 }
