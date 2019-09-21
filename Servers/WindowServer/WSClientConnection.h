@@ -17,9 +17,9 @@ class WSMenuBar;
 class WSClientConnection final : public IPC::Server::Connection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
     C_OBJECT(WSClientConnection)
 public:
-    explicit WSClientConnection(CLocalSocket&, int client_id);
     ~WSClientConnection() override;
-    void send_greeting() override;
+    virtual void send_greeting() override;
+    virtual void die() override;
     bool handle_message(const WSAPI_ClientMessage&, const ByteBuffer&& = {}) override;
 
     static WSClientConnection* from_client_id(int client_id);
@@ -40,11 +40,14 @@ public:
 
     WSMenu* find_menu_by_id(int menu_id)
     {
-        // FIXME: Remove this const_cast when Optional knows how to vend a non-const fallback value somehow.
-        return const_cast<WSMenu*>(m_menus.get(menu_id).value_or(nullptr));
+        auto menu = m_menus.get(menu_id);
+        if (!menu.has_value())
+            return nullptr;
+        return const_cast<WSMenu*>(menu.value().ptr());
     }
 
 private:
+    explicit WSClientConnection(CLocalSocket&, int client_id);
     virtual void event(CEvent&) override;
 
     void on_request(const WSAPIClientRequest&);
@@ -88,9 +91,9 @@ private:
 
     void post_error(const String&);
 
-    HashMap<int, NonnullOwnPtr<WSWindow>> m_windows;
+    HashMap<int, NonnullRefPtr<WSWindow>> m_windows;
     HashMap<int, NonnullOwnPtr<WSMenuBar>> m_menubars;
-    HashMap<int, NonnullOwnPtr<WSMenu>> m_menus;
+    HashMap<int, NonnullRefPtr<WSMenu>> m_menus;
     WeakPtr<WSMenuBar> m_app_menubar;
 
     int m_next_menubar_id { 10000 };

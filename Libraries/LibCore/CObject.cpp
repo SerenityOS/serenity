@@ -23,13 +23,18 @@ CObject::CObject(CObject* parent, bool is_widget)
 
 CObject::~CObject()
 {
+    // NOTE: We move our children out to a stack vector to prevent other
+    //       code from trying to iterate over them.
+    auto children = move(m_children);
+    // NOTE: We also unparent the children, so that they won't try to unparent
+    //       themselves in their own destructors.
+    for (auto& child : children)
+        child.m_parent = nullptr;
+
     all_objects().remove(*this);
     stop_timer();
     if (m_parent)
         m_parent->remove_child(*this);
-    auto children_to_delete = move(m_children);
-    for (auto* child : children_to_delete)
-        delete child;
 }
 
 void CObject::event(CEvent& event)
@@ -37,9 +42,6 @@ void CObject::event(CEvent& event)
     switch (event.type()) {
     case CEvent::Timer:
         return timer_event(static_cast<CTimerEvent&>(event));
-    case CEvent::DeferredDestroy:
-        delete this;
-        break;
     case CEvent::ChildAdded:
     case CEvent::ChildRemoved:
         return child_event(static_cast<CChildEvent&>(event));
@@ -58,19 +60,24 @@ void CObject::add_child(CObject& object)
     // FIXME: Should we support reparenting objects?
     ASSERT(!object.parent() || object.parent() == this);
     object.m_parent = this;
-    m_children.append(&object);
+    m_children.append(object);
     event(*make<CChildEvent>(CEvent::ChildAdded, object));
 }
 
 void CObject::remove_child(CObject& object)
 {
-    for (ssize_t i = 0; i < m_children.size(); ++i) {
-        if (m_children[i] == &object) {
+    for (int i = 0; i < m_children.size(); ++i) {
+        dbg() << i << "] " << m_children.at(i);
+        if (m_children.ptr_at(i).ptr() == &object) {
+            // NOTE: We protect the child so it survives the handling of ChildRemoved.
+            NonnullRefPtr<CObject> protector = object;
+            object.m_parent = nullptr;
             m_children.remove(i);
             event(*make<CChildEvent>(CEvent::ChildRemoved, object));
             return;
         }
     }
+    ASSERT_NOT_REACHED();
 }
 
 void CObject::timer_event(CTimerEvent&)
@@ -102,11 +109,6 @@ void CObject::stop_timer()
     bool success = CEventLoop::unregister_timer(m_timer_id);
     ASSERT(success);
     m_timer_id = 0;
-}
-
-void CObject::delete_later()
-{
-    CEventLoop::current().post_event(*this, make<CEvent>(CEvent::DeferredDestroy));
 }
 
 void CObject::dump_tree(int indent)

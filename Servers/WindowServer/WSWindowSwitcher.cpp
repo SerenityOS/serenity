@@ -135,7 +135,7 @@ void WSWindowSwitcher::refresh()
     m_rect.set_height(window_count * item_height() + padding() * 2);
     m_rect.center_within(WSScreen::the().rect());
     if (!m_switcher_window)
-        m_switcher_window = make<WSWindow>(*this, WSWindowType::WindowSwitcher);
+        m_switcher_window = WSWindow::construct(*this, WSWindowType::WindowSwitcher);
     m_switcher_window->set_rect(m_rect);
     draw();
 }

@@ -43,7 +43,7 @@ public:
             int nread = m_socket->read((u8*)&length, sizeof(length));
             if (nread == 0) {
                 dbg() << "RPC client disconnected";
-                delete_later();
+                shutdown();
                 return;
             }
             ASSERT(nread == sizeof(length));
@@ -52,7 +52,7 @@ public:
             auto request_json = JsonValue::from_string(request);
             if (!request_json.is_object()) {
                 dbg() << "RPC client sent invalid request";
-                delete_later();
+                shutdown();
                 return;
             }
 
@@ -111,9 +111,15 @@ public:
         }
 
         if (type == "Disconnect") {
-            delete_later();
+            shutdown();
             return;
         }
+    }
+
+    void shutdown()
+    {
+        // FIXME: This is quite a hackish way to clean ourselves up.
+        delete this;
     }
 
 private:
@@ -148,7 +154,8 @@ CEventLoop::CEventLoop()
         s_rpc_server->on_ready_to_accept = [&] {
             auto client_socket = s_rpc_server->accept();
             ASSERT(client_socket);
-            new RPCClient(move(client_socket));
+            // NOTE: RPCClient will delete itself in RPCClient::shutdown().
+            (void)RPCClient::construct(move(client_socket)).leak_ref();
         };
     }
 
@@ -246,6 +253,7 @@ void CEventLoop::pump(WaitMode mode)
 #endif
             static_cast<CDeferredInvocationEvent&>(event).m_invokee(*receiver);
         } else {
+            NonnullRefPtr<CObject> protector(*receiver);
             receiver->dispatch_event(event);
         }
 

@@ -5,15 +5,15 @@
 int main(int argc, char** argv)
 {
     CEventLoop loop;
-    AClientConnection a_conn;
-    a_conn.handshake();
+    auto audio_client = AClientConnection::construct();
+    audio_client->handshake();
 
     if (argc > 1) {
         int new_volume = atoi(argv[1]);
-        a_conn.set_main_mix_volume(new_volume);
+        audio_client->set_main_mix_volume(new_volume);
     }
 
-    int volume = a_conn.get_main_mix_volume();
+    int volume = audio_client->get_main_mix_volume();
     printf("Volume: %d\n", volume);
     return 0;
 }

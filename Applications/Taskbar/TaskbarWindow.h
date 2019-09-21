@@ -12,7 +12,7 @@ public:
 
 private:
     void on_screen_rect_change(const Rect&);
-    GButton* create_button(const WindowIdentifier&);
+    NonnullRefPtr<GButton> create_button(const WindowIdentifier&);
 
     virtual void wm_event(GWMEvent&) override;
 };

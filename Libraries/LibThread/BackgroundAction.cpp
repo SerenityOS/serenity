@@ -28,7 +28,7 @@ static int background_thread_func()
 static void init()
 {
     s_all_actions = new LibThread::Lockable<Queue<Function<void()>>>();
-    s_background_thread = new LibThread::Thread(background_thread_func);
+    s_background_thread = &LibThread::Thread::construct(background_thread_func).leak_ref();
     s_background_thread->set_name("Background thread");
     s_background_thread->start();
 }

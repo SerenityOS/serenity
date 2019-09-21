@@ -49,22 +49,22 @@ namespace Server {
     };
 
     template<typename T, class... Args>
-    T* new_connection_for_client(Args&&... args)
+    NonnullRefPtr<T> new_connection_for_client(Args&&... args)
     {
-        auto conn = new T(AK::forward<Args>(args)...) /* arghs */;
+        auto conn = T::construct(forward<Args>(args)...);
         conn->send_greeting();
         return conn;
     }
 
     template<typename T, class... Args>
-    T* new_connection_ng_for_client(Args&&... args)
+    NonnullRefPtr<T> new_connection_ng_for_client(Args&&... args)
     {
-        return new T(AK::forward<Args>(args)...) /* arghs */;
+        return T::construct(forward<Args>(args)...) /* arghs */;
     }
 
     template<typename ServerMessage, typename ClientMessage>
     class Connection : public CObject {
-    public:
+    protected:
         Connection(CLocalSocket& socket, int client_id)
             : m_socket(socket)
             , m_client_id(client_id)
@@ -76,6 +76,7 @@ namespace Server {
 #endif
         }
 
+    public:
         ~Connection()
         {
 #if defined(CIPC_DEBUG)
@@ -108,14 +109,12 @@ namespace Server {
                 switch (errno) {
                 case EPIPE:
                     dbgprintf("Connection::post_message: Disconnected from peer.\n");
-                    delete_later();
+                    shutdown();
                     return;
-                    break;
                 case EAGAIN:
                     dbgprintf("Connection::post_message: Client buffer overflowed.\n");
                     did_misbehave();
                     return;
-                    break;
                 default:
                     perror("Connection::post_message writev");
                     ASSERT_NOT_REACHED();
@@ -134,7 +133,6 @@ namespace Server {
                 ssize_t nread = recv(m_socket->fd(), &message, sizeof(ClientMessage), MSG_DONTWAIT);
                 if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
                     if (!messages_received) {
-                        // TODO: is delete_later() sufficient?
                         CEventLoop::current().post_event(*this, make<DisconnectedEvent>(client_id()));
                     }
                     break;
@@ -171,8 +169,13 @@ namespace Server {
         void did_misbehave()
         {
             dbgprintf("Connection{%p} (id=%d, pid=%d) misbehaved, disconnecting.\n", this, client_id(), m_client_pid);
+            shutdown();
+        }
+
+        void shutdown()
+        {
             m_socket->close();
-            delete_later();
+            die();
         }
 
         int client_id() const { return m_client_id; }
@@ -182,13 +185,15 @@ namespace Server {
         // ### having this public is sad
         virtual void send_greeting() = 0;
 
+        virtual void die() = 0;
+
     protected:
         void event(CEvent& event)
         {
             if (event.type() == Event::Disconnected) {
                 int client_id = static_cast<const DisconnectedEvent&>(event).client_id();
                 dbgprintf("Connection: Client disconnected: %d\n", client_id);
-                delete this;
+                die();
                 return;
             }
 
@@ -228,13 +233,12 @@ namespace Server {
                 switch (errno) {
                 case EPIPE:
                     dbg() << "Connection::post_message: Disconnected from peer";
-                    delete_later();
+                    shutdown();
                     return;
                 case EAGAIN:
                     dbg() << "Connection::post_message: Client buffer overflowed.";
                     did_misbehave();
                     return;
-                    break;
                 default:
                     perror("Connection::post_message write");
                     ASSERT_NOT_REACHED();
@@ -252,7 +256,6 @@ namespace Server {
                 ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
                 if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
                     if (!messages_received) {
-                        // TODO: is delete_later() sufficient?
                         CEventLoop::current().post_event(*this, make<DisconnectedEvent>(client_id()));
                     }
                     break;
@@ -278,13 +281,20 @@ namespace Server {
         void did_misbehave()
         {
             dbg() << "Connection{" << this << "} (id=" << m_client_id << ", pid=" << m_client_pid << ") misbehaved, disconnecting.";
+            shutdown();
+        }
+
+        void shutdown()
+        {
             m_socket->close();
-            delete_later();
+            die();
         }
 
         int client_id() const { return m_client_id; }
         pid_t client_pid() const { return m_client_pid; }
         void set_client_pid(pid_t pid) { m_client_pid = pid; }
+
+        virtual void die() = 0;
 
     protected:
         void event(CEvent& event) override
@@ -292,7 +302,7 @@ namespace Server {
             if (event.type() == Event::Disconnected) {
                 int client_id = static_cast<const DisconnectedEvent&>(event).client_id();
                 dbgprintf("Connection: Client disconnected: %d\n", client_id);
-                delete this;
+                die();
                 return;
             }
 

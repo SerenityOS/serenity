@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     auto spinbox2 = GSpinBox::construct(main_widget);
     spinbox2->set_enabled(false);
 
-    auto vertical_slider_container = GWidget::construct(main_widget);
+    auto vertical_slider_container = GWidget::construct(main_widget.ptr());
     vertical_slider_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     vertical_slider_container->set_preferred_size(0, 100);
     vertical_slider_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));

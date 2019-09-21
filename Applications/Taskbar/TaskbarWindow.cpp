@@ -46,7 +46,7 @@ void TaskbarWindow::on_screen_rect_change(const Rect& rect)
     set_rect(new_rect);
 }
 
-GButton* TaskbarWindow::create_button(const WindowIdentifier& identifier)
+NonnullRefPtr<GButton> TaskbarWindow::create_button(const WindowIdentifier& identifier)
 {
     auto button = TaskbarButton::construct(identifier, main_widget());
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);

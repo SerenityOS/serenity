@@ -171,7 +171,7 @@ void IRCAppWindow::setup_widgets()
     toolbar->add_action(*m_open_query_action);
     toolbar->add_action(*m_close_query_action);
 
-    auto outer_container = GWidget::construct(widget);
+    auto outer_container = GWidget::construct(widget.ptr());
     outer_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     outer_container->layout()->set_margins({ 2, 0, 2, 2 });
 

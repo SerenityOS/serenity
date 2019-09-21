@@ -88,5 +88,5 @@ private:
     WSMenuBar* m_menubar { nullptr };
     WSMenuItem* m_hovered_item { nullptr };
     NonnullOwnPtrVector<WSMenuItem> m_items;
-    OwnPtr<WSWindow> m_menu_window;
+    RefPtr<WSWindow> m_menu_window;
 };

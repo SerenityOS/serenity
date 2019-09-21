@@ -12,14 +12,22 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
+static HashMap<int, RefPtr<ASClientConnection>> s_connections;
+
 ASClientConnection::ASClientConnection(CLocalSocket& client_socket, int client_id, ASMixer& mixer)
     : ConnectionNG(*this, client_socket, client_id)
     , m_mixer(mixer)
 {
+    s_connections.set(client_id, *this);
 }
 
 ASClientConnection::~ASClientConnection()
 {
+}
+
+void ASClientConnection::die()
+{
+    s_connections.remove(client_id());
 }
 
 void ASClientConnection::did_finish_playing_buffer(Badge<ASMixer>, int buffer_id)

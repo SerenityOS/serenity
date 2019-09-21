@@ -325,13 +325,13 @@ Rect GWidget::screen_relative_rect() const
 GWidget* GWidget::child_at(const Point& point) const
 {
     for (int i = children().size() - 1; i >= 0; --i) {
-        if (!is<GWidget>(*children()[i]))
+        if (!is<GWidget>(children()[i]))
             continue;
-        auto& child = to<GWidget>(*children()[i]);
+        auto& child = to<GWidget>(children()[i]);
         if (!child.is_visible())
             continue;
         if (child.relative_rect().contains(point))
-            return &child;
+            return const_cast<GWidget*>(&child);
     }
     return nullptr;
 }
@@ -492,7 +492,7 @@ void GWidget::move_to_front()
     parent->children().remove_first_matching([this](auto& entry) {
         return entry == this;
     });
-    parent->children().append(this);
+    parent->children().append(*this);
     parent->update();
 }
 
@@ -506,7 +506,7 @@ void GWidget::move_to_back()
     parent->children().remove_first_matching([this](auto& entry) {
         return entry == this;
     });
-    parent->children().prepend(this);
+    parent->children().prepend(*this);
     parent->update();
 }
 
@@ -515,7 +515,7 @@ bool GWidget::is_frontmost() const
     auto* parent = parent_widget();
     if (!parent)
         return true;
-    return parent->children().last() == this;
+    return &parent->children().last() == this;
 }
 
 bool GWidget::is_backmost() const
@@ -523,7 +523,7 @@ bool GWidget::is_backmost() const
     auto* parent = parent_widget();
     if (!parent)
         return true;
-    return parent->children().first() == this;
+    return &parent->children().first() == this;
 }
 
 GAction* GWidget::action_for_key_event(const GKeyEvent& event)

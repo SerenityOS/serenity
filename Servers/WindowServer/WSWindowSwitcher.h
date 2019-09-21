@@ -41,7 +41,7 @@ public:
     WSWindow* switcher_window() { return m_switcher_window.ptr(); }
 
 private:
-    OwnPtr<WSWindow> m_switcher_window;
+    RefPtr<WSWindow> m_switcher_window;
     Rect m_rect;
     bool m_visible { false };
     Vector<WeakPtr<WSWindow>> m_windows;

@@ -110,7 +110,6 @@ void GApplication::hide_tooltip()
 {
     if (m_tooltip_window) {
         m_tooltip_window->hide();
-        delete m_tooltip_window;
         m_tooltip_window = nullptr;
     }
 }

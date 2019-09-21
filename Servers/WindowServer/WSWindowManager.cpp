@@ -57,7 +57,7 @@ WSWindowManager::WSWindowManager()
     };
 
     u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
-    m_system_menu = make<WSMenu>(nullptr, -1, String((const char*)system_menu_name));
+    m_system_menu = WSMenu::construct(nullptr, -1, String((const char*)system_menu_name));
 
     int appIndex = 1;
     for (const auto& app : apps) {
