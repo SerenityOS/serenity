@@ -74,7 +74,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
     case VBWidgetType::GWidget:
         return new GWidget(parent);
     case VBWidgetType::GScrollBar:
-        return new GScrollBar(Orientation::Vertical, parent);
+        return GScrollBar::construct(Orientation::Vertical, parent);
     case VBWidgetType::GGroupBox:
         return new GGroupBox("groupbox_1", parent);
     case VBWidgetType::GLabel: {

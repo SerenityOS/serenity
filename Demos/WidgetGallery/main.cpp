@@ -86,13 +86,13 @@ int main(int argc, char** argv)
     slider3->set_max(5);
     slider3->set_knob_size_mode(GSlider::KnobSizeMode::Proportional);
 
-    auto* scrollbar1 = new GScrollBar(Orientation::Horizontal, main_widget);
+    auto scrollbar1 = GScrollBar::construct(Orientation::Horizontal, main_widget);
     scrollbar1->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     scrollbar1->set_preferred_size(0, 16);
     scrollbar1->set_min(0);
     scrollbar1->set_max(100);
     scrollbar1->set_value(50);
-    auto* scrollbar2 = new GScrollBar(Orientation::Horizontal, main_widget);
+    auto scrollbar2 = GScrollBar::construct(Orientation::Horizontal, main_widget);
     scrollbar2->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     scrollbar2->set_preferred_size(0, 16);
     scrollbar2->set_enabled(false);
