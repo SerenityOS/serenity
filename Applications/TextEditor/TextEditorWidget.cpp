@@ -108,12 +108,12 @@ TextEditorWidget::TextEditorWidget()
     m_editor->add_custom_context_menu_action(*m_find_next_action);
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
-    auto* statusbar = new GStatusBar(this);
+    m_statusbar = GStatusBar::construct(this);
 
-    m_editor->on_cursor_change = [statusbar, this] {
+    m_editor->on_cursor_change = [this] {
         StringBuilder builder;
         builder.appendf("Line: %d, Column: %d", m_editor->cursor().line() + 1, m_editor->cursor().column());
-        statusbar->set_text(builder.to_string());
+        m_statusbar->set_text(builder.to_string());
     };
 
     m_new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GAction&) {

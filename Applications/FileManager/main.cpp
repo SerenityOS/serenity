@@ -66,7 +66,7 @@ int main(int argc, char** argv)
     tree_view->set_preferred_size(200, 0);
     auto* directory_view = new DirectoryView(splitter);
 
-    auto* statusbar = new GStatusBar(widget);
+    auto statusbar = GStatusBar::construct(widget);
 
     auto* progressbar = new GProgressBar(statusbar);
     progressbar->set_caption("Generating thumbnails: ");
@@ -325,7 +325,7 @@ int main(int argc, char** argv)
         go_back_action->set_enabled(directory_view->path_history_position() > 0);
     };
 
-    directory_view->on_status_message = [statusbar](const StringView& message) {
+    directory_view->on_status_message = [&](const StringView& message) {
         statusbar->set_text(message);
     };
 
