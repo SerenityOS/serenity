@@ -31,7 +31,6 @@ GComboBox::GComboBox(GWidget* parent)
     m_list_window = GWindow::construct(this);
     // FIXME: This is obviously not a tooltip window, but it's the closest thing to what we want atm.
     m_list_window->set_window_type(GWindowType::Tooltip);
-    m_list_window->set_should_destroy_on_close(false);
 
     m_list_view = GListView::construct(nullptr);
     m_list_view->horizontal_scrollbar().set_visible(false);

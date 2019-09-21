@@ -38,15 +38,11 @@ GWindow::~GWindow()
 {
     all_windows.remove(this);
     hide();
-    if (all_windows.is_empty()) {
-        GApplication::the().did_delete_last_window({});
-    }
 }
 
 void GWindow::close()
 {
-    if (should_destroy_on_close())
-        delete_later();
+    hide();
 }
 
 void GWindow::move_to_front()
@@ -104,6 +100,16 @@ void GWindow::hide()
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
+
+    bool app_has_visible_windows = false;
+    for (auto& window : all_windows) {
+        if (window->is_visible()) {
+            app_has_visible_windows = true;
+            break;
+        }
+    }
+    if (!app_has_visible_windows)
+        GApplication::the().did_delete_last_window({});
 }
 
 void GWindow::set_title(const StringView& title)

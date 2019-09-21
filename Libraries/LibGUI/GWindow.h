@@ -53,9 +53,6 @@ public:
     Color background_color() const { return m_background_color; }
     void set_background_color(Color color) { m_background_color = color; }
 
-    bool should_destroy_on_close() { return m_destroy_on_close; }
-    void set_should_destroy_on_close(bool b) { m_destroy_on_close = b; }
-
     enum class CloseRequestDecision {
         StayOpen,
         Close,
@@ -167,7 +164,6 @@ private:
     Color m_background_color { Color::WarmGray };
     GWindowType m_window_type { GWindowType::Normal };
     bool m_is_active { false };
-    bool m_destroy_on_close { true };
     bool m_has_alpha_channel { false };
     bool m_double_buffering_enabled { true };
     bool m_modal { false };
