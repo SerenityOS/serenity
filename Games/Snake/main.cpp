@@ -18,7 +18,7 @@ int main(int argc, char** argv)
     window->set_title("Snake");
     window->set_rect(100, 100, 320, 320);
 
-    auto* game = new SnakeGame;
+    auto game = SnakeGame::construct();
     window->set_main_widget(game);
 
     auto menubar = make<GMenuBar>();

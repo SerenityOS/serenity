@@ -6,13 +6,14 @@
 class GPainter;
 
 class PianoWidget final : public GWidget {
+    C_OBJECT(PianoWidget)
 public:
-    PianoWidget();
     virtual ~PianoWidget() override;
 
     void fill_audio_buffer(uint8_t* stream, int len);
 
 private:
+    PianoWidget();
     virtual void paint_event(GPaintEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void keyup_event(GKeyEvent&) override;

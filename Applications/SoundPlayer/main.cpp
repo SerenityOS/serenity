@@ -41,7 +41,7 @@ int main(int argc, char** argv)
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_margins({ 2, 2, 2, 2 });
 
-    auto* sample_widget = new SampleWidget(widget);
+    auto sample_widget = SampleWidget::construct(widget);
 
     auto button = GButton::construct("Quit", widget);
     button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);

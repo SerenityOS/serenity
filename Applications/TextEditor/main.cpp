@@ -9,7 +9,7 @@ int main(int argc, char** argv)
     window->set_title("Text Editor");
     window->set_rect(20, 200, 640, 400);
 
-    auto* text_widget = new TextEditorWidget();
+    auto text_widget = TextEditorWidget::construct();
     window->set_main_widget(text_widget);
 
     window->on_close_request = [&]() -> GWindow::CloseRequestDecision {

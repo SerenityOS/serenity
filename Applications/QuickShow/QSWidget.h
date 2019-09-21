@@ -6,8 +6,8 @@ class GLabel;
 class QSLabel;
 
 class QSWidget final : public GFrame {
+    C_OBJECT(QSWidget)
 public:
-    QSWidget(GWidget* parent);
     virtual ~QSWidget() override;
 
     void set_bitmap(NonnullRefPtr<GraphicsBitmap>);
@@ -15,6 +15,7 @@ public:
     Function<void(int)> on_scale_change;
 
 private:
+    explicit QSWidget(GWidget* parent = nullptr);
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;

@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 400, 400);
     window->set_title("Paint test");
 
-    auto* test_widget = new TestWidget(nullptr);
+    auto test_widget = new TestWidget(nullptr);
     window->set_main_widget(test_widget);
 
     test_widget->set_bitmap(load_png("/res/icons/gear16.png"));

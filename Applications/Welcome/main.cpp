@@ -125,7 +125,7 @@ int main(int argc, char** argv)
         content_title->set_preferred_size(0, 10);
 
         for (auto& paragraph : page.content) {
-            auto* content_text = new TextWidget(content);
+            auto content_text = TextWidget::construct(content);
             content_text->set_font(Font::default_font());
             content_text->set_text(paragraph);
             content_text->set_text_alignment(TextAlignment::TopLeft);

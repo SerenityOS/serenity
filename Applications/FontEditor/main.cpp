@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     auto window = GWindow::construct();
     window->set_title("Font Editor");
     window->set_rect({ 50, 50, 390, 342 });
-    auto* font_editor = new FontEditorWidget(path, move(edited_font));
+    auto font_editor = FontEditorWidget::construct(path, move(edited_font));
     window->set_main_widget(font_editor);
     window->show();
     window->set_icon(load_png("/res/icons/16x16/app-font-editor.png"));

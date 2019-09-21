@@ -5,8 +5,8 @@
 #include <LibGUI/GWidget.h>
 
 class VBForm : public GWidget {
+    C_OBJECT(VBForm)
     friend class VBWidget;
-
 public:
     explicit VBForm(const String& name, GWidget* parent = nullptr);
     virtual ~VBForm() override;

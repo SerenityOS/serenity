@@ -6,6 +6,7 @@ class GTableView;
 class GTextBox;
 
 class VBPropertiesWindow final : public GWindow {
+    C_OBJECT(VBPropertiesWindow)
 public:
     VBPropertiesWindow();
     virtual ~VBPropertiesWindow() override;

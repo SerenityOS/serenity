@@ -21,12 +21,12 @@ int main(int argc, char** argv)
     window->set_title("Piano");
     window->set_rect(100, 100, 512, 512);
 
-    auto* piano_widget = new PianoWidget;
+    auto piano_widget = PianoWidget::construct();
     window->set_main_widget(piano_widget);
     window->show();
     window->set_icon(load_png("/res/icons/16x16/app-piano.png"));
 
-    LibThread::Thread sound_thread([piano_widget] {
+    LibThread::Thread sound_thread([piano_widget = piano_widget.ptr()] {
         CFile audio("/dev/audio");
         if (!audio.open(CIODevice::WriteOnly)) {
             dbgprintf("Can't open audio device: %s", audio.error_string());
@@ -38,7 +38,7 @@ int main(int argc, char** argv)
             piano_widget->fill_audio_buffer(buffer, sizeof(buffer));
             audio.write(buffer, sizeof(buffer));
             GEventLoop::current().post_event(*piano_widget, make<CCustomEvent>(0));
-            GEventLoop::current().wake();
+            GEventLoop::wake();
         }
     });
     sound_thread.start();

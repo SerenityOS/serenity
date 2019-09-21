@@ -10,6 +10,7 @@
 #include <LibDraw/PNGLoader.h>
 
 class ToolButton final : public GButton {
+    C_OBJECT(ToolButton)
 public:
     ToolButton(const String& name, GWidget* parent, OwnPtr<Tool>&& tool)
         : GButton(parent)
@@ -47,7 +48,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
     layout()->set_margins({ 4, 4, 4, 4 });
 
     auto add_tool = [&](const StringView& name, const StringView& icon_name, OwnPtr<Tool>&& tool) {
-        auto* button = new ToolButton(name, this, move(tool));
+        auto button = ToolButton::construct(name, this, move(tool));
         button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
         button->set_preferred_size(0, 32);
         button->set_checkable(true);
@@ -55,7 +56,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
 
         button->set_icon(load_png(String::format("/res/icons/paintbrush/%s.png", String(icon_name).characters())));
 
-        button->on_checked = [button](auto checked) {
+        button->on_checked = [button = button.ptr()](auto checked) {
             if (checked)
                 PaintableWidget::the().set_tool(&button->tool());
             else

@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     update_window_title(100);
     window->set_rect(200, 200, bitmap->width(), bitmap->height());
 
-    auto* widget = new QSWidget(nullptr);
+    auto widget = QSWidget::construct();
     widget->on_scale_change = [&](int scale) {
         update_window_title(scale);
     };

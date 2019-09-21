@@ -30,8 +30,8 @@ int main(int argc, char** argv)
     vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
     vertical_container->layout()->set_spacing(0);
 
-    auto* paintable_widget = new PaintableWidget(vertical_container);
-    new PaletteWidget(*paintable_widget, vertical_container);
+    auto paintable_widget = PaintableWidget::construct(vertical_container);
+    PaletteWidget::construct(*paintable_widget, vertical_container);
 
     window->show();
 

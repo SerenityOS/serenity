@@ -12,10 +12,10 @@ class GLabel;
 class CalculatorWidget final : public GWidget {
     C_OBJECT(CalculatorWidget)
 public:
-    explicit CalculatorWidget(GWidget*);
     virtual ~CalculatorWidget() override;
 
 private:
+    explicit CalculatorWidget(GWidget*);
     void add_button(GButton&, Calculator::Operation);
     void add_button(GButton&, int);
     void add_button(GButton&);

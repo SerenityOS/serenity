@@ -10,7 +10,6 @@
 class DirectoryView final : public GStackWidget {
     C_OBJECT(DirectoryView)
 public:
-    explicit DirectoryView(GWidget* parent);
     virtual ~DirectoryView() override;
 
     void open(const StringView& path);
@@ -57,6 +56,7 @@ public:
     }
 
 private:
+    explicit DirectoryView(GWidget* parent);
     GDirectoryModel& model() { return *m_model; }
     const GDirectoryModel& model() const { return *m_model; }
 

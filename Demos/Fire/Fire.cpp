@@ -64,12 +64,13 @@ static int my_rand(void)
  * Fire Widget
 */
 class Fire : public GWidget {
+    C_OBJECT(Fire)
 public:
-    explicit Fire(GWidget* parent = nullptr);
     virtual ~Fire() override;
     void set_stat_label(GLabel* l) { stats = l; };
 
 private:
+    explicit Fire(GWidget* parent = nullptr);
     RefPtr<GraphicsBitmap> bitmap;
     GLabel* stats;
 
@@ -220,7 +221,7 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->set_rect(100, 100, 640, 400);
 
-    auto* fire = new Fire;
+    auto fire = Fire::construct();
     window->set_main_widget(fire);
 
     auto time = GLabel::construct(fire);
