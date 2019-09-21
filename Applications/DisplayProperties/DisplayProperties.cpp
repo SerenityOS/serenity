@@ -91,7 +91,7 @@ void DisplayPropertiesWidget::create_wallpaper_list()
 
 void DisplayPropertiesWidget::create_frame()
 {
-    auto* tab_widget = new GTabWidget(m_root_widget);
+    auto tab_widget = GTabWidget::construct(m_root_widget);
 
     // First, let's create the "Background" tab
     auto background_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
@@ -141,7 +141,7 @@ void DisplayPropertiesWidget::create_frame()
     bottom_widget->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
     bottom_widget->set_preferred_size(1, 22);
 
-    auto* apply_button = new GButton(bottom_widget);
+    auto apply_button = GButton::construct(bottom_widget);
     apply_button->set_text("Apply");
     apply_button->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
     apply_button->set_size_policy(Orientation::Horizontal, SizePolicy::Fixed);
@@ -150,7 +150,7 @@ void DisplayPropertiesWidget::create_frame()
         send_settings_to_window_server(tab_widget->active_tab_index());
     };
 
-    auto* ok_button = new GButton(bottom_widget);
+    auto ok_button = GButton::construct(bottom_widget);
     ok_button->set_text("OK");
     ok_button->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
     ok_button->set_size_policy(Orientation::Horizontal, SizePolicy::Fixed);
@@ -160,7 +160,7 @@ void DisplayPropertiesWidget::create_frame()
         GApplication::the().quit();
     };
 
-    auto* cancel_button = new GButton(bottom_widget);
+    auto cancel_button = GButton::construct(bottom_widget);
     cancel_button->set_text("Cancel");
     cancel_button->set_size_policy(Orientation::Vertical, SizePolicy::Fixed);
     cancel_button->set_size_policy(Orientation::Horizontal, SizePolicy::Fixed);
