@@ -22,8 +22,8 @@
 
 /* for MULTIBOOT_VIDEO_MODE */
 .long 0x00000000    /* mode_type */
-.long 1024          /* width */
-.long 768           /* height */
+.long 1280          /* width */
+.long 1024          /* height */
 .long 32            /* depth */
 
 .section .stack, "aw", @nobits
