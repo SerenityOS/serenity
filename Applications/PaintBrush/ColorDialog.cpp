@@ -35,9 +35,9 @@ void ColorDialog::build()
         Red, Green, Blue
     };
 
-    auto* preview_widget = new GFrame(right_vertical_container);
-    preview_widget->set_background_color(m_color);
-    preview_widget->set_fill_with_background_color(true);
+    m_preview_widget = GFrame::construct(right_vertical_container);
+    m_preview_widget->set_background_color(m_color);
+    m_preview_widget->set_fill_with_background_color(true);
     right_vertical_container->layout()->add_spacer();
     auto* cancel_button = new GButton("Cancel", right_vertical_container);
     cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -60,7 +60,7 @@ void ColorDialog::build()
          spinbox->set_max(255);
          spinbox->set_value(initial_value);
 
-         spinbox->on_change = [=](auto value) {
+         spinbox->on_change = [this, component](auto value) {
              if (component == Red)
                 m_color.set_red(value);
              if (component == Green)
@@ -68,8 +68,8 @@ void ColorDialog::build()
              if (component == Blue)
                 m_color.set_blue(value);
 
-             preview_widget->set_background_color(m_color);
-             preview_widget->update();
+             m_preview_widget->set_background_color(m_color);
+             m_preview_widget->update();
          };
          return spinbox;
     };

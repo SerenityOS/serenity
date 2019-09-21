@@ -192,7 +192,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
         }
     };
 
-    auto* preview_container = new GFrame(horizontal_container);
+    auto preview_container = GFrame::construct(horizontal_container);
     preview_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     preview_container->set_preferred_size(180, 0);
     preview_container->set_frame_shape(FrameShape::Container);

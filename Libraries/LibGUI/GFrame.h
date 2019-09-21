@@ -6,7 +6,6 @@
 class GFrame : public GWidget {
     C_OBJECT(GFrame)
 public:
-    explicit GFrame(GWidget* parent = nullptr);
     virtual ~GFrame() override;
 
     int frame_thickness() const { return m_thickness; }
@@ -22,6 +21,7 @@ public:
     Rect frame_inner_rect() const { return frame_inner_rect_for_size(size()); }
 
 protected:
+    explicit GFrame(GWidget* parent = nullptr);
     void paint_event(GPaintEvent&) override;
 
 private:
