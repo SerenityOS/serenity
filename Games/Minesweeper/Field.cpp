@@ -101,7 +101,7 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
     , m_on_size_changed(move(on_size_changed))
 {
     srand(time(nullptr));
-    m_timer = CTimer::create();
+    m_timer = CTimer::construct();
     m_timer->on_timeout = [this] {
         ++m_time_elapsed;
         m_time_label.set_text(String::format("%u.%u", m_time_elapsed / 10, m_time_elapsed % 10));

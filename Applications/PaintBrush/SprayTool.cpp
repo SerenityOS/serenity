@@ -11,7 +11,7 @@
 
 SprayTool::SprayTool()
 {
-    m_timer = CTimer::create();
+    m_timer = CTimer::construct();
     m_timer->on_timeout = [&]() {
         paint_it();
     };

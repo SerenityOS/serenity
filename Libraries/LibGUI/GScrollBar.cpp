@@ -61,7 +61,7 @@ GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     : GWidget(parent)
     , m_orientation(orientation)
 {
-    m_automatic_scrolling_timer = CTimer::create(this);
+    m_automatic_scrolling_timer = CTimer::construct(this);
     if (!s_up_arrow_bitmap)
         s_up_arrow_bitmap = &CharacterBitmap::create_from_ascii(s_up_arrow_bitmap_data, 9, 9).leak_ref();
     if (!s_down_arrow_bitmap)

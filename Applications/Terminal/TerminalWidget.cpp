@@ -25,8 +25,8 @@ TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
     , m_notifier(CNotifier::construct(ptm_fd, CNotifier::Read))
     , m_config(move(config))
 {
-    m_cursor_blink_timer = CTimer::create();
-    m_visual_beep_timer = CTimer::create();
+    m_cursor_blink_timer = CTimer::construct();
+    m_visual_beep_timer = CTimer::construct();
 
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
