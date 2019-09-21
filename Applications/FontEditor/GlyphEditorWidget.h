@@ -2,8 +2,8 @@
 #include <LibGUI/GFrame.h>
 
 class GlyphEditorWidget final : public GFrame {
+    C_OBJECT(GlyphEditorWidget)
 public:
-    GlyphEditorWidget(Font&, GWidget* parent);
     virtual ~GlyphEditorWidget() override;
 
     u8 glyph() const { return m_glyph; }
@@ -18,6 +18,7 @@ public:
     Function<void(u8)> on_glyph_altered;
 
 private:
+    GlyphEditorWidget(Font&, GWidget* parent);
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;

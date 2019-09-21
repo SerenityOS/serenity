@@ -4,8 +4,8 @@
 #include <LibGUI/GFrame.h>
 
 class GlyphMapWidget final : public GFrame {
+    C_OBJECT(GlyphMapWidget)
 public:
-    GlyphMapWidget(Font&, GWidget* parent);
     virtual ~GlyphMapWidget() override;
 
     u8 selected_glyph() const { return m_selected_glyph; }
@@ -25,6 +25,7 @@ public:
     Function<void(u8)> on_glyph_selected;
 
 private:
+    GlyphMapWidget(Font&, GWidget* parent);
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
 

@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    auto* board_combo = new GComboBox(widget);
+    auto board_combo = GComboBox::construct(widget);
     board_combo->set_only_allow_values_from_model(true);
     board_combo->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     board_combo->set_preferred_size(0, 20);

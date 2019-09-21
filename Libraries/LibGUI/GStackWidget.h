@@ -5,7 +5,6 @@
 class GStackWidget : public GWidget {
     C_OBJECT(GStackWidget)
 public:
-    explicit GStackWidget(GWidget* parent);
     virtual ~GStackWidget() override;
 
     GWidget* active_widget() { return m_active_widget.ptr(); }
@@ -15,6 +14,7 @@ public:
     Function<void(GWidget*)> on_active_widget_change;
 
 protected:
+    explicit GStackWidget(GWidget* parent);
     virtual void child_event(CChildEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
 

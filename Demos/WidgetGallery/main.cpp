@@ -55,9 +55,9 @@ int main(int argc, char** argv)
     auto label2 = GLabel::construct("GLabel 2", main_widget);
     label2->set_enabled(false);
 
-    auto textbox1 = new GTextBox(main_widget);
+    auto textbox1 = GTextBox::construct(main_widget);
     textbox1->set_text("GTextBox 1");
-    auto textbox2 = new GTextBox(main_widget);
+    auto textbox2 = GTextBox::construct(main_widget);
     textbox2->set_text("GTextBox 2");
     textbox2->set_enabled(false);
 

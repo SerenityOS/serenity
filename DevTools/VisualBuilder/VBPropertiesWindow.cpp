@@ -33,7 +33,7 @@ public:
 
     virtual ObjectPtr<GWidget> create_widget() override
     {
-        auto* combo = new GComboBox(nullptr);
+        auto combo = GComboBox::construct(nullptr);
         combo->set_only_allow_values_from_model(true);
         combo->set_model(adopt(*new BoolValuesModel));
         combo->on_return_pressed = [this] { commit(); };

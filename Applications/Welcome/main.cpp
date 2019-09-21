@@ -107,7 +107,7 @@ int main(int argc, char** argv)
     menu->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     menu->set_preferred_size(200, 0);
 
-    auto* stack = new GStackWidget(main_section);
+    auto stack = GStackWidget::construct(main_section);
     stack->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
 
     for (auto& page : pages) {
