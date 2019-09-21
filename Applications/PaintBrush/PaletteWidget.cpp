@@ -22,9 +22,9 @@ public:
     virtual void mousedown_event(GMouseEvent& event) override
     {
         if (event.modifiers() & KeyModifier::Mod_Ctrl && event.button() == GMouseButton::Left) {
-            ColorDialog dialog(m_color, window());
-            if (dialog.exec() == GDialog::ExecOK) {
-                m_color = dialog.color();
+            auto dialog = ColorDialog::construct(m_color, window());
+            if (dialog->exec() == GDialog::ExecOK) {
+                m_color = dialog->color();
                 set_background_color(m_color);
                 update();
             }
@@ -55,7 +55,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 34);
 
-    m_secondary_color_widget = new GFrame(this);
+    m_secondary_color_widget = GFrame::construct(this);
     m_secondary_color_widget->set_frame_thickness(2);
     m_secondary_color_widget->set_frame_shape(FrameShape::Container);
     m_secondary_color_widget->set_frame_shadow(FrameShadow::Sunken);
@@ -63,7 +63,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     m_secondary_color_widget->set_fill_with_background_color(true);
     set_secondary_color(paintable_widget.secondary_color());
 
-    m_primary_color_widget = new GFrame(this);
+    m_primary_color_widget = GFrame::construct(this);
     m_primary_color_widget->set_frame_thickness(2);
     m_primary_color_widget->set_frame_shape(FrameShape::Container);
     m_primary_color_widget->set_frame_shadow(FrameShadow::Sunken);

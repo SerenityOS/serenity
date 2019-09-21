@@ -15,6 +15,6 @@ public:
 
 private:
     PaintableWidget& m_paintable_widget;
-    GFrame* m_primary_color_widget { nullptr };
-    GFrame* m_secondary_color_widget { nullptr };
+    ObjectPtr<GFrame> m_primary_color_widget;
+    ObjectPtr<GFrame> m_secondary_color_widget;
 };

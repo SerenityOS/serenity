@@ -21,7 +21,7 @@ TaskbarWindow::TaskbarWindow()
 
     GDesktop::the().on_rect_change = [this](const Rect& rect) { on_screen_rect_change(rect); };
 
-    auto* widget = new GFrame;
+    auto widget = GFrame::construct();
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     widget->layout()->set_margins({ 3, 2, 3, 2 });
