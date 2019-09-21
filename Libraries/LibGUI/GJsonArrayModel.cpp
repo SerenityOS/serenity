@@ -4,13 +4,13 @@
 
 void GJsonArrayModel::update()
 {
-    CFile file(m_json_path);
-    if (!file.open(CIODevice::ReadOnly)) {
-        dbg() << "Unable to open " << file.filename();
+    auto file = CFile::construct(m_json_path);
+    if (!file->open(CIODevice::ReadOnly)) {
+        dbg() << "Unable to open " << file->filename();
         return;
     }
 
-    auto json = JsonValue::from_string(file.read_all());
+    auto json = JsonValue::from_string(file->read_all());
 
     ASSERT(json.is_array());
     m_array = json.as_array();

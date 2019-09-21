@@ -58,12 +58,12 @@ void start_process(const String& program, const Vector<String>& arguments, int p
 
 static void check_for_test_mode()
 {
-    CFile f("/proc/cmdline");
-    if (!f.open(CIODevice::ReadOnly)) {
-        dbg() << "Failed to read command line: " << f.error_string();
+    auto f = CFile::construct("/proc/cmdline");
+    if (!f->open(CIODevice::ReadOnly)) {
+        dbg() << "Failed to read command line: " << f->error_string();
         ASSERT(false);
     }
-    const String cmd = String::copy(f.read_all());
+    const String cmd = String::copy(f->read_all());
     dbg() << "Read command line: " << cmd;
     if (cmd.matches("*testmode=1*")) {
         // Eventually, we should run a test binary and wait for it to finish

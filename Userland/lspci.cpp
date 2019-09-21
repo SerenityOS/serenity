@@ -14,13 +14,13 @@ int main(int argc, char** argv)
     if (!db)
         fprintf(stderr, "Couldn't open PCI ID database\n");
 
-    CFile proc_pci("/proc/pci");
-    if (!proc_pci.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Error: %s\n", proc_pci.error_string());
+    auto proc_pci = CFile::construct("/proc/pci");
+    if (!proc_pci->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Error: %s\n", proc_pci->error_string());
         return 1;
     }
 
-    auto file_contents = proc_pci.read_all();
+    auto file_contents = proc_pci->read_all();
     auto json = JsonValue::from_string(file_contents).as_array();
     json.for_each([db](auto& value) {
         auto dev = value.as_object();

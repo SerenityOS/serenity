@@ -814,11 +814,11 @@ static String get_history_path()
 
 void load_history()
 {
-    CFile history_file(get_history_path());
-    if (!history_file.open(CIODevice::ReadOnly))
+    auto history_file = CFile::construct(get_history_path());
+    if (!history_file->open(CIODevice::ReadOnly))
         return;
-    while (history_file.can_read_line()) {
-        auto b = history_file.read_line(1024);
+    while (history_file->can_read_line()) {
+        auto b = history_file->read_line(1024);
         // skip the newline and terminating bytes
         editor.add_to_history(String(reinterpret_cast<const char*>(b.pointer()), b.size() - 2));
     }
@@ -826,12 +826,12 @@ void load_history()
 
 void save_history()
 {
-    CFile history_file(get_history_path());
-    if (!history_file.open(CIODevice::WriteOnly))
+    auto history_file = CFile::construct(get_history_path());
+    if (!history_file->open(CIODevice::WriteOnly))
         return;
     for (const auto& line : editor.history()) {
-        history_file.write(line);
-        history_file.write("\n");
+        history_file->write(line);
+        history_file->write("\n");
     }
 }
 
@@ -878,13 +878,13 @@ int main(int argc, char** argv)
     }
 
     if (argc == 2 && argv[1][0] != '-') {
-        CFile file(argv[1]);
-        if (!file.open(CIODevice::ReadOnly)) {
-            fprintf(stderr, "Failed to open %s: %s\n", file.filename().characters(), file.error_string());
+        auto file = CFile::construct(argv[1]);
+        if (!file->open(CIODevice::ReadOnly)) {
+            fprintf(stderr, "Failed to open %s: %s\n", file->filename().characters(), file->error_string());
             return 1;
         }
         for (;;) {
-            auto line = file.read_line(4096);
+            auto line = file->read_line(4096);
             if (line.is_null())
                 break;
             run_command(String::copy(line, Chomp));

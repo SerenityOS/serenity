@@ -18,13 +18,13 @@ int main(int argc, char** argv)
         fprintf(stderr, "usage: jp <file>\n");
         return 0;
     }
-    CFile file(argv[1]);
-    if (!file.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file.error_string());
+    auto file = CFile::construct(argv[1]);
+    if (!file->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file->error_string());
         return 1;
     }
 
-    auto file_contents = file.read_all();
+    auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
 
     print(json);

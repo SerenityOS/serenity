@@ -19,14 +19,14 @@ struct FileSystem {
 
 int main(int, char**)
 {
-    CFile file("/proc/df");
-    if (!file.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Failed to open /proc/df: %s\n", file.error_string());
+    auto file = CFile::construct("/proc/df");
+    if (!file->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Failed to open /proc/df: %s\n", file->error_string());
         return 1;
     }
     printf("Filesystem    Blocks        Used    Available   Mount point\n");
 
-    auto file_contents = file.read_all();
+    auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents).as_array();
     json.for_each([](auto& value) {
         auto fs_object = value.as_object();

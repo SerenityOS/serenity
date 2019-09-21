@@ -13,13 +13,13 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    CFile file(argv[1]);
-    if (!file.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Error: Cannot open %s: %s\n", argv[1], file.error_string());
+    auto file = CFile::construct(argv[1]);
+    if (!file->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Error: Cannot open %s: %s\n", argv[1], file->error_string());
         return 1;
     }
 
-    auto file_contents = file.read_all();
+    auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents);
 
     if (!json.is_object()) {

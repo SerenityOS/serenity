@@ -27,16 +27,16 @@ int main(int argc, char** argv)
     window->set_icon(load_png("/res/icons/16x16/app-piano.png"));
 
     LibThread::Thread sound_thread([piano_widget = piano_widget.ptr()] {
-        CFile audio("/dev/audio");
-        if (!audio.open(CIODevice::WriteOnly)) {
-            dbgprintf("Can't open audio device: %s", audio.error_string());
+        auto audio = CFile::construct("/dev/audio");
+        if (!audio->open(CIODevice::WriteOnly)) {
+            dbgprintf("Can't open audio device: %s", audio->error_string());
             return 1;
         }
 
         for (;;) {
             u8 buffer[4096];
             piano_widget->fill_audio_buffer(buffer, sizeof(buffer));
-            audio.write(buffer, sizeof(buffer));
+            audio->write(buffer, sizeof(buffer));
             GEventLoop::current().post_event(*piano_widget, make<CCustomEvent>(0));
             GEventLoop::wake();
         }

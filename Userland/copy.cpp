@@ -68,13 +68,13 @@ Options parse_options(int argc, char* argv[])
         options.data = builder.to_string();
     } else {
         // Copy our stdin.
-        CFile c_stdin;
-        bool success = c_stdin.open(
+        auto c_stdin = CFile::construct();
+        bool success = c_stdin->open(
             STDIN_FILENO,
             CIODevice::OpenMode::ReadOnly,
             CFile::ShouldCloseFileDescription::No);
         ASSERT(success);
-        auto buffer = c_stdin.read_all();
+        auto buffer = c_stdin->read_all();
         dbg() << "Read size " << buffer.size();
         options.data = String((char*)buffer.data(), buffer.size());
     }

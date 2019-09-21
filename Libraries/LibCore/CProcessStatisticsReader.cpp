@@ -10,15 +10,15 @@ HashMap<uid_t, String> CProcessStatisticsReader::s_usernames;
 
 HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
 {
-    CFile file("/proc/all");
-    if (!file.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "CProcessStatisticsReader: Failed to open /proc/all: %s\n", file.error_string());
+    auto file = CFile::construct("/proc/all");
+    if (!file->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "CProcessStatisticsReader: Failed to open /proc/all: %s\n", file->error_string());
         return {};
     }
 
     HashMap<pid_t, CProcessStatistics> map;
 
-    auto file_contents = file.read_all();
+    auto file_contents = file->read_all();
     auto json = JsonValue::from_string({ file_contents.data(), file_contents.size() });
     json.as_array().for_each([&](auto& value) {
         const JsonObject& process_object = value.as_object();

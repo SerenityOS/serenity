@@ -22,5 +22,5 @@ private:
     ObjectPtr<GLabel> m_supervisor_physical_pages_label;
     ObjectPtr<GLabel> m_kmalloc_label;
     ObjectPtr<GLabel> m_kmalloc_count_label;
-    CFile m_proc_memstat;
+    ObjectPtr<CFile> m_proc_memstat;
 };

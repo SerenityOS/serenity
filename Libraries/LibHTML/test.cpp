@@ -12,9 +12,9 @@
 
 int main(int argc, char** argv)
 {
-    CFile f(argc == 1 ? "/home/anon/small.html" : argv[1]);
-    if (!f.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Error: %s\n", f.error_string());
+    auto f = CFile::construct(argc == 1 ? "/home/anon/small.html" : argv[1]);
+    if (!f->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Error: %s\n", f->error_string());
         return 1;
     }
 
@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     auto sheet = parse_css(css);
     dump_sheet(sheet);
 
-    String html = String::copy(f.read_all());
+    String html = String::copy(f->read_all());
     auto document = parse_html(html);
     dump_tree(document);
     document->add_sheet(*sheet);

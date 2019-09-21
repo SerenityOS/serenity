@@ -4,14 +4,14 @@
 #include <limits>
 
 ASMixer::ASMixer()
-    : m_device("/dev/audio", this)
+    : m_device(CFile::construct("/dev/audio", this))
     , m_sound_thread([this] {
         mix();
         return 0;
     })
 {
-    if (!m_device.open(CIODevice::WriteOnly)) {
-        dbgprintf("Can't open audio device: %s\n", m_device.error_string());
+    if (!m_device->open(CIODevice::WriteOnly)) {
+        dbgprintf("Can't open audio device: %s\n", m_device->error_string());
         return;
     }
 
@@ -88,7 +88,7 @@ void ASMixer::mix()
 
         if (stream.offset() != 0) {
             buffer.trim(stream.offset());
-            m_device.write(buffer);
+            m_device->write(buffer);
         }
     }
 }

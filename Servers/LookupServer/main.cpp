@@ -35,11 +35,11 @@ static String parse_dns_name(const u8*, int& offset, int max_offset);
 static void load_etc_hosts()
 {
     dbgprintf("LookupServer: Loading hosts from /etc/hosts\n");
-    CFile file("/etc/hosts");
-    if (!file.open(CIODevice::ReadOnly))
+    auto file = CFile::construct("/etc/hosts");
+    if (!file->open(CIODevice::ReadOnly))
         return;
-    while (!file.eof()) {
-        auto line = file.read_line(1024);
+    while (!file->eof()) {
+        auto line = file->read_line(1024);
         if (line.is_empty())
             break;
         auto str_line = String((const char*)line.pointer(), line.size() - 1, Chomp);

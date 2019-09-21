@@ -17,14 +17,14 @@ static String read_var(const String& name)
     builder.append("/proc/sys/");
     builder.append(name);
     auto path = builder.to_string();
-    CFile f(path);
-    if (!f.open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "open: %s", f.error_string());
+    auto f = CFile::construct(path);
+    if (!f->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "open: %s", f->error_string());
         exit(1);
     }
-    const auto& b = f.read_all();
-    if (f.error() < 0) {
-        fprintf(stderr, "read: %s", f.error_string());
+    const auto& b = f->read_all();
+    if (f->error() < 0) {
+        fprintf(stderr, "read: %s", f->error_string());
         exit(1);
     }
     return String((const char*)b.pointer(), b.size(), Chomp);
@@ -36,14 +36,14 @@ static void write_var(const String& name, const String& value)
     builder.append("/proc/sys/");
     builder.append(name);
     auto path = builder.to_string();
-    CFile f(path);
-    if (!f.open(CIODevice::WriteOnly)) {
-        fprintf(stderr, "open: %s", f.error_string());
+    auto f = CFile::construct(path);
+    if (!f->open(CIODevice::WriteOnly)) {
+        fprintf(stderr, "open: %s", f->error_string());
         exit(1);
     }
-    f.write(value);
-    if (f.error() < 0) {
-        fprintf(stderr, "write: %s", f.error_string());
+    f->write(value);
+    if (f->error() < 0) {
+        fprintf(stderr, "write: %s", f->error_string());
         exit(1);
     }
 }
