@@ -8,7 +8,6 @@ class GTextEditor;
 class GSpinBox : public GWidget {
     C_OBJECT(GSpinBox)
 public:
-    GSpinBox(GWidget* parent = nullptr);
     virtual ~GSpinBox() override;
 
     int value() const { return m_value; }
@@ -23,6 +22,8 @@ public:
     Function<void(int value)> on_change;
 
 protected:
+    explicit GSpinBox(GWidget* parent = nullptr);
+
     virtual void resize_event(GResizeEvent&) override;
 
 private:
