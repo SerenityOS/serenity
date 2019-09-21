@@ -773,7 +773,6 @@ void WSClientConnection::handle_request(const WSAPIDestroyWindowRequest& request
     response.window_id = window.window_id();
     post_message(response);
 
-    dbg() << *this << " removing window child " << window << " refs: " << window.ref_count() << " parent: " << window.parent();
     remove_child(window);
     ASSERT(it->value.ptr() == &window);
     m_windows.remove(window_id);
