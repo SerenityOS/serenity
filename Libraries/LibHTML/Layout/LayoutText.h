@@ -1,11 +1,11 @@
 #pragma once
 
-#include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/DOM/Text.h>
+#include <LibHTML/Layout/LayoutNode.h>
 
 class LayoutText : public LayoutNode {
 public:
-    LayoutText(const Text&, const StyledNode&);
+    LayoutText(const Text&, StyleProperties&&);
     virtual ~LayoutText() override;
 
     const Text& node() const { return static_cast<const Text&>(*LayoutNode::node()); }

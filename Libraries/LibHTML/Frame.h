@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibHTML/DOM/Document.h>
 #include <LibDraw/Size.h>
+#include <LibHTML/DOM/Document.h>
 
 class Frame {
 public:
@@ -16,8 +16,7 @@ public:
     void layout();
 
 private:
-    RefPtr<StyledNode> generate_style_tree();
-    RefPtr<LayoutNode> generate_layout_tree(const StyledNode&);
+    RefPtr<LayoutNode> generate_layout_tree();
 
     RefPtr<Document> m_document;
     Size m_size;
