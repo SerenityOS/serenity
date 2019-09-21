@@ -29,6 +29,7 @@ int GDialog::exec()
     auto result = m_event_loop->exec();
     m_event_loop = nullptr;
     dbgprintf("%s: event loop returned with result %d\n", class_name(), result);
+    remove_from_parent();
     return result;
 }
 
