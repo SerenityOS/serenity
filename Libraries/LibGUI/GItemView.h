@@ -11,7 +11,6 @@ class Painter;
 class GItemView : public GAbstractView {
     C_OBJECT(GItemView)
 public:
-    explicit GItemView(GWidget* parent);
     virtual ~GItemView() override;
 
     int content_width() const;
@@ -24,6 +23,8 @@ public:
     void set_model_column(int column) { m_model_column = column; }
 
 private:
+    explicit GItemView(GWidget* parent);
+
     virtual void did_update_model() override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
