@@ -14,5 +14,5 @@ public:
     const GTableView& table_view() const { return *m_table_view; }
 
 private:
-    GTableView* m_table_view { nullptr };
+    ObjectPtr<GTableView> m_table_view;
 };

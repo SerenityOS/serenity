@@ -72,6 +72,6 @@ private:
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);
 
-    GTableView* m_table_view { nullptr };
+    ObjectPtr<GTableView> m_table_view;
     ObjectPtr<GItemView> m_item_view;
 };

@@ -79,7 +79,7 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_item_view = GItemView::construct(this);
     m_item_view->set_model(model());
 
-    m_table_view = new GTableView(this);
+    m_table_view = GTableView::construct(this);
     m_table_view->set_model(GSortingProxyModel::create(m_model));
 
     m_table_view->model()->set_key_column_and_sort_order(GDirectoryModel::Column::Name, GSortOrder::Ascending);

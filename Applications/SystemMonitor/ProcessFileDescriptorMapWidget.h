@@ -13,6 +13,6 @@ public:
     void set_pid(pid_t);
 
 private:
-    GTableView* m_table_view { nullptr };
+    ObjectPtr<GTableView> m_table_view;
     pid_t m_pid { -1 };
 };

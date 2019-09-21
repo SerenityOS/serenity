@@ -28,7 +28,7 @@ int main(int argc, char** argv)
     board_combo->set_preferred_size(0, 20);
     board_combo->set_model(BoardListModel::create());
 
-    auto* catalog_view = new GTableView(widget);
+    auto catalog_view = GTableView::construct(widget);
     catalog_view->set_model(ThreadCatalogModel::create());
     auto& catalog_model = *static_cast<ThreadCatalogModel*>(catalog_view->model());
 

@@ -42,7 +42,7 @@ private:
         }
     }
 
-    GTableView* m_view { nullptr };
+    ObjectPtr<GTableView> m_view;
     NonnullRefPtr<GDirectoryModel> m_model;
     FileSystemPath m_selected_file;
 

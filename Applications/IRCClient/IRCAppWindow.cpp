@@ -177,7 +177,7 @@ void IRCAppWindow::setup_widgets()
 
     auto* horizontal_container = new GSplitter(Orientation::Horizontal, outer_container);
 
-    m_window_list = new GTableView(horizontal_container);
+    m_window_list = GTableView::construct(horizontal_container);
     m_window_list->set_headers_visible(false);
     m_window_list->set_alternating_row_colors(false);
     m_window_list->set_size_columns_to_fit_content(true);

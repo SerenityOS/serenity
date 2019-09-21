@@ -239,7 +239,7 @@ GWidget* build_file_systems_tab()
     auto* fs_widget = new GWidget(nullptr);
     fs_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     fs_widget->layout()->set_margins({ 4, 4, 4, 4 });
-    auto* fs_table_view = new GTableView(fs_widget);
+    auto fs_table_view = GTableView::construct(fs_widget);
     fs_table_view->set_size_columns_to_fit_content(true);
 
     Vector<GJsonArrayModel::FieldSpec> df_fields;
@@ -304,7 +304,7 @@ GWidget* build_pci_devices_tab()
     auto* pci_widget = new GWidget(nullptr);
     pci_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     pci_widget->layout()->set_margins({ 4, 4, 4, 4 });
-    auto* pci_table_view = new GTableView(pci_widget);
+    auto pci_table_view = GTableView::construct(pci_widget);
     pci_table_view->set_size_columns_to_fit_content(true);
 
     auto db = PCIDB::Database::open();
@@ -359,7 +359,7 @@ GWidget* build_devices_tab()
     devices_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     devices_widget->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* devices_table_view = new GTableView(devices_widget);
+    auto devices_table_view = GTableView::construct(devices_widget);
     devices_table_view->set_size_columns_to_fit_content(true);
     devices_table_view->set_model(GSortingProxyModel::create(DevicesModel::create()));
     devices_table_view->model()->update();
