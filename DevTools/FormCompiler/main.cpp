@@ -44,14 +44,14 @@ int main(int argc, char** argv)
     });
 
     dbg() << "struct UI_" << name << " {";
-    dbg() << "    GWidget* main_widget;";
+    dbg() << "    ObjectPtr<GWidget> main_widget;";
 
     widgets.as_array().for_each([&](auto& value) {
         ASSERT(value.is_object());
         const JsonObject& widget_object = value.as_object();
         auto name = widget_object.get("name").to_string();
         auto class_name = widget_object.get("class").to_string();
-        dbg() << "    " << class_name << "* " << name << ";";
+        dbg() << "    ObjectPtr<" << class_name << "> " << name << ";";
     });
 
     dbg() << "    UI_" << name << "();";
@@ -61,7 +61,7 @@ int main(int argc, char** argv)
     dbg() << "UI_" << name << "::UI_" << name << "()";
     dbg() << "{";
 
-    dbg() << "    main_widget = new GWidget(nullptr);";
+    dbg() << "    main_widget = GWidget::construct(nullptr);";
     dbg() << "    main_widget->set_fill_with_background_color(true);";
 
     widgets.as_array().for_each([&](auto& value) {
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
         const JsonObject& widget_object = value.as_object();
         auto name = widget_object.get("name").to_string();
         auto class_name = widget_object.get("class").to_string();
-        dbg() << "    " << name << " = new " << class_name << "(main_widget);";
+        dbg() << "    " << name << " = " << class_name << "::construct(main_widget);";
 
         widget_object.for_each_member([&](auto& property_name, const JsonValue& property_value) {
             if (property_name == "class")
