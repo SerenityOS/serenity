@@ -64,7 +64,7 @@ int main(int argc, char** argv)
     tree_view->set_model(file_system_model);
     tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     tree_view->set_preferred_size(200, 0);
-    auto* directory_view = new DirectoryView(splitter);
+    auto directory_view = DirectoryView::construct(splitter);
 
     auto statusbar = GStatusBar::construct(widget);
 
@@ -76,7 +76,7 @@ int main(int argc, char** argv)
     progressbar->set_frame_shadow(FrameShadow::Sunken);
     progressbar->set_frame_thickness(1);
 
-    location_textbox->on_return_pressed = [directory_view, location_textbox] {
+    location_textbox->on_return_pressed = [&] {
         directory_view->open(location_textbox->text());
     };
 
@@ -87,7 +87,7 @@ int main(int argc, char** argv)
         directory_view->open(path);
     };
 
-    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [directory_view](const GAction&) {
+    auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GAction&) {
         directory_view->open_parent_directory();
     });
 
@@ -250,17 +250,17 @@ int main(int argc, char** argv)
     });
     delete_action->set_enabled(false);
 
-    auto go_back_action = GAction::create("Go Back", { Mod_Alt, Key_Left }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [directory_view](const GAction&) {
+    auto go_back_action = GAction::create("Go Back", { Mod_Alt, Key_Left }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [&](const GAction&) {
         dbgprintf("'Go Back' action activated!\n");
         directory_view->open_previous_directory();
     });
 
-    auto go_forward_action = GAction::create("Go Forward", { Mod_Alt, Key_Right }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [directory_view](const GAction&) {
+    auto go_forward_action = GAction::create("Go Forward", { Mod_Alt, Key_Right }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](const GAction&) {
         dbgprintf("'Go Forward' action activated!\n");
         directory_view->open_next_directory();
     });
 
-    auto go_home_action = GAction::create("Go to Home Directory", GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), [directory_view](auto&) {
+    auto go_home_action = GAction::create("Go to Home Directory", GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), [&](auto&) {
         directory_view->open(get_current_user_home_path());
     });
 

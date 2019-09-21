@@ -23,10 +23,10 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* propbox = new VBPropertiesWindow;
+    auto propbox = VBPropertiesWindow::construct();
 
-    auto* form1 = new VBForm("Form1");
-    form1->on_widget_selected = [propbox](VBWidget* widget) {
+    auto form1 = VBForm::construct("Form1");
+    form1->on_widget_selected = [&](VBWidget* widget) {
         propbox->table_view().set_model(widget ? &widget->property_model() : nullptr);
     };
 
@@ -42,7 +42,7 @@ int main(int argc, char** argv)
     file_menu->add_action(GAction::create("Dump Form", [&](auto&) {
         form1->dump();
     }));
-    file_menu->add_action(GAction::create("Save Form...", { Mod_Ctrl, Key_S }, [form1](auto&) {
+    file_menu->add_action(GAction::create("Save Form...", { Mod_Ctrl, Key_S }, [&](auto&) {
         form1->write_to_file("/tmp/form.frm");
     }));
     menubar->add_menu(move(file_menu));

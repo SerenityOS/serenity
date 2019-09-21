@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     auto time_icon_label = GLabel::construct(container);
     time_icon_label->set_icon(GraphicsBitmap::load_from_file("/res/icons/minesweeper/timer.png"));
     auto time_label = GLabel::construct(container);
-    auto* field = new Field(*flag_label, *time_label, *face_button, widget, [&](Size size) {
+    auto field = Field::construct(*flag_label, *time_label, *face_button, widget, [&](Size size) {
         size.set_height(size.height() + container->preferred_size().height());
         window->resize(size);
     });
@@ -48,7 +48,7 @@ int main(int argc, char** argv)
 
     auto app_menu = make<GMenu>("Minesweeper");
 
-    app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [field](const GAction&) {
+    app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [&](const GAction&) {
         field->reset();
     }));
 
@@ -74,16 +74,16 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto difficulty_menu = make<GMenu>("Difficulty");
-    difficulty_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [field](const GAction&) {
+    difficulty_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [&](const GAction&) {
         field->set_field_size(9, 9, 10);
     }));
-    difficulty_menu->add_action(GAction::create("Intermediate", { Mod_Ctrl, Key_I }, [field](const GAction&) {
+    difficulty_menu->add_action(GAction::create("Intermediate", { Mod_Ctrl, Key_I }, [&](const GAction&) {
         field->set_field_size(16, 16, 40);
     }));
-    difficulty_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [field](const GAction&) {
+    difficulty_menu->add_action(GAction::create("Expert", { Mod_Ctrl, Key_E }, [&](const GAction&) {
         field->set_field_size(16, 30, 99);
     }));
-    difficulty_menu->add_action(GAction::create("Madwoman", { Mod_Ctrl, Key_M }, [field](const GAction&) {
+    difficulty_menu->add_action(GAction::create("Madwoman", { Mod_Ctrl, Key_M }, [&](const GAction&) {
         field->set_field_size(32, 60, 350);
     }));
     menubar->add_menu(move(difficulty_menu));

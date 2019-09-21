@@ -13,13 +13,14 @@ class GTextEditor;
 class GStatusBar;
 
 class TextEditorWidget final : public GWidget {
+    C_OBJECT(TextEditorWidget)
 public:
-    TextEditorWidget();
     virtual ~TextEditorWidget() override;
     void open_sesame(const String& path);
     bool request_close();
 
 private:
+    TextEditorWidget();
     void set_path(const FileSystemPath& file);
     void update_title();
 

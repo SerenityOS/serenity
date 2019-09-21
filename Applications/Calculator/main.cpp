@@ -11,7 +11,7 @@ int main(int argc, char** argv)
     window->set_resizable(false);
     window->set_rect({ 300, 200, 254, 213 });
 
-    auto* calc_widget = new CalculatorWidget(nullptr);
+    auto calc_widget = CalculatorWidget::construct(nullptr);
     window->set_main_widget(calc_widget);
 
     window->show();

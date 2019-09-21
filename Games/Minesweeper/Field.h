@@ -32,9 +32,9 @@ public:
 };
 
 class Field final : public GFrame {
+    C_OBJECT(Field)
     friend class Square;
     friend class SquareLabel;
-
 public:
     Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidget* parent, Function<void(Size)> on_size_changed);
     virtual ~Field() override;

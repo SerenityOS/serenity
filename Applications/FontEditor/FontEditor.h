@@ -10,11 +10,12 @@ class GTextBox;
 struct UI_FontEditorBottom;
 
 class FontEditorWidget final : public GWidget {
+    C_OBJECT(FontEditorWidget)
 public:
-    FontEditorWidget(const String& path, RefPtr<Font>&&, GWidget* parent = nullptr);
     virtual ~FontEditorWidget() override;
 
 private:
+    FontEditorWidget(const String& path, RefPtr<Font>&&, GWidget* parent = nullptr);
     RefPtr<Font> m_edited_font;
 
     GlyphMapWidget* m_glyph_map_widget { nullptr };

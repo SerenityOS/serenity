@@ -5,13 +5,14 @@
 #include <LibGUI/GWidget.h>
 
 class SnakeGame : public GWidget {
+    C_OBJECT(SnakeGame)
 public:
-    explicit SnakeGame(GWidget* parent = nullptr);
     virtual ~SnakeGame() override;
 
     void reset();
 
 private:
+    explicit SnakeGame(GWidget* parent = nullptr);
     virtual void paint_event(GPaintEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void timer_event(CTimerEvent&) override;

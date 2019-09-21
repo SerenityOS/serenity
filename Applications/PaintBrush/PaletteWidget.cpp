@@ -4,6 +4,7 @@
 #include <LibGUI/GBoxLayout.h>
 
 class ColorWidget : public GFrame {
+    C_OBJECT(ColorWidget)
 public:
     explicit ColorWidget(Color color, PaletteWidget& palette_widget, GWidget* parent)
         : GFrame(parent)
@@ -95,7 +96,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     bottom_color_container->layout()->set_spacing(1);
 
     auto add_color_widget = [&](GWidget* container, Color color) {
-        auto* color_widget = new ColorWidget(color, *this, container);
+        auto color_widget = ColorWidget::construct(color, *this, container);
         color_widget->set_fill_with_background_color(true);
         color_widget->set_background_color(color);
     };

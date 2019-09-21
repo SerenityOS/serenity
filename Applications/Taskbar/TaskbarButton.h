@@ -4,6 +4,7 @@
 #include <LibGUI/GButton.h>
 
 class TaskbarButton final : public GButton {
+    C_OBJECT(TaskbarButton)
 public:
     TaskbarButton(const WindowIdentifier&, GWidget* parent);
     virtual ~TaskbarButton() override;
