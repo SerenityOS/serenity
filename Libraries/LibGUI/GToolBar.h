@@ -8,7 +8,6 @@ class GAction;
 class GToolBar : public GWidget {
     C_OBJECT(GToolBar)
 public:
-    explicit GToolBar(GWidget* parent);
     virtual ~GToolBar() override;
 
     void add_action(GAction&);
@@ -17,9 +16,12 @@ public:
     bool has_frame() const { return m_has_frame; }
     void set_has_frame(bool has_frame) { m_has_frame = has_frame; }
 
-private:
+protected:
+    explicit GToolBar(GWidget* parent);
+
     virtual void paint_event(GPaintEvent&) override;
 
+private:
     struct Item {
         enum Type {
             Invalid,

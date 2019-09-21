@@ -48,8 +48,8 @@ int main(int argc, char** argv)
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
 
-    auto* main_toolbar = new GToolBar(widget);
-    auto* location_toolbar = new GToolBar(widget);
+    auto main_toolbar = GToolBar::construct(widget);
+    auto location_toolbar = GToolBar::construct(widget);
     location_toolbar->layout()->set_margins({ 6, 3, 6, 3 });
     location_toolbar->set_preferred_size(0, 25);
 

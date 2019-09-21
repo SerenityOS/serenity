@@ -106,7 +106,7 @@ int main(int argc, char** argv)
     process_table_container->layout()->set_margins({ 4, 0, 4, 4 });
     process_table_container->layout()->set_spacing(0);
 
-    auto* toolbar = new GToolBar(process_table_container);
+    auto toolbar = GToolBar::construct(process_table_container);
     toolbar->set_has_frame(false);
     auto* process_table_view = new ProcessTableView(*cpu_graph, process_table_container);
     auto* memory_stats_widget = new MemoryStatsWidget(*memory_graph, graphs_container);
