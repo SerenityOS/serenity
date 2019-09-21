@@ -1,6 +1,5 @@
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/CSS/StyleSheet.h>
-#include <LibHTML/CSS/StyledNode.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Dump.h>
@@ -53,19 +52,14 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
     return matching_rules;
 }
 
-NonnullRefPtr<StyledNode> StyleResolver::create_styled_node(const Document& document)
+StyleProperties StyleResolver::resolve_style(const Element& element)
 {
-    return StyledNode::create(document);
-}
-
-NonnullRefPtr<StyledNode> StyleResolver::create_styled_node(const Element& element)
-{
-    auto style = StyledNode::create(element);
+    StyleProperties style_properties;
     auto matching_rules = collect_matching_rules(element);
     for (auto& rule : matching_rules) {
         for (auto& declaration : rule.declarations()) {
-            style->set_property(declaration.property_name(), declaration.value());
+            style_properties.set_property(declaration.property_name(), declaration.value());
         }
     }
-    return style;
+    return style_properties;
 }
