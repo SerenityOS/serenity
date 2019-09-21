@@ -21,10 +21,10 @@ void BoardListModel::update()
     CHttpRequest request;
     request.set_url("http://a.4cdn.org/boards.json");
 
-    auto* job = request.schedule();
+    m_pending_job = request.schedule();
 
-    job->on_finish = [job, this](bool success) {
-        auto* response = job->response();
+    m_pending_job->on_finish = [this](bool success) {
+        auto* response = m_pending_job->response();
         dbg() << "Board list download finished, success=" << success << ", response=" << response;
 
         if (!success)

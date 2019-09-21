@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/JsonArray.h>
+#include <LibCore/CHttpJob.h>
 #include <LibGUI/GModel.h>
 
 class BoardListModel final : public GModel {
@@ -24,4 +25,5 @@ private:
     BoardListModel();
 
     JsonArray m_boards;
+    ObjectPtr<CHttpJob> m_pending_job;
 };
