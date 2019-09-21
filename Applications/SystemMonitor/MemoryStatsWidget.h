@@ -7,6 +7,7 @@ class GLabel;
 class GraphWidget;
 
 class MemoryStatsWidget final : public GWidget {
+    C_OBJECT(MemoryStatsWidget)
 public:
     MemoryStatsWidget(GraphWidget& graph, GWidget* parent);
     virtual ~MemoryStatsWidget() override;

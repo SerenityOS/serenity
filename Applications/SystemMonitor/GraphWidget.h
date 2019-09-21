@@ -2,8 +2,8 @@
 #include <LibGUI/GFrame.h>
 
 class GraphWidget final : public GFrame {
+    C_OBJECT(GraphWidget)
 public:
-    explicit GraphWidget(GWidget* parent);
     virtual ~GraphWidget() override;
 
     void set_max(int max) { m_max = max; }
@@ -15,6 +15,8 @@ public:
     Function<String(int value, int max)> text_formatter;
 
 private:
+    explicit GraphWidget(GWidget* parent);
+
     virtual void paint_event(GPaintEvent&) override;
 
     int m_max { 100 };

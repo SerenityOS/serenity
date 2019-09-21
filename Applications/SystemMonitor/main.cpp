@@ -53,7 +53,7 @@ int main(int argc, char** argv)
     keeper->set_background_color(Color::WarmGray);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
-    auto* tabwidget = new GTabWidget(keeper);
+    auto tabwidget = GTabWidget::construct(keeper);
 
     auto process_container_splitter = GSplitter::construct(Orientation::Vertical, nullptr);
     tabwidget->add_widget("Processes", process_container_splitter);
@@ -71,7 +71,7 @@ int main(int argc, char** argv)
     cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     cpu_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     cpu_graph_group_box->set_preferred_size(0, 120);
-    auto* cpu_graph = new GraphWidget(cpu_graph_group_box);
+    auto cpu_graph = GraphWidget::construct(cpu_graph_group_box);
     cpu_graph->set_max(100);
     cpu_graph->set_text_color(Color::Green);
     cpu_graph->set_graph_color(Color::from_rgb(0x00bb00));
@@ -84,7 +84,7 @@ int main(int argc, char** argv)
     memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
     memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     memory_graph_group_box->set_preferred_size(0, 120);
-    auto* memory_graph = new GraphWidget(memory_graph_group_box);
+    auto memory_graph = GraphWidget::construct(memory_graph_group_box);
     memory_graph->set_text_color(Color::Cyan);
     memory_graph->set_graph_color(Color::from_rgb(0x00bbbb));
     memory_graph->text_formatter = [](int value, int max) {
@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 
     tabwidget->add_widget("Devices", build_devices_tab());
 
-    auto* network_stats_widget = new NetworkStatisticsWidget(nullptr);
+    auto network_stats_widget = NetworkStatisticsWidget::construct(nullptr);
     tabwidget->add_widget("Network", network_stats_widget);
 
     process_table_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -108,8 +108,8 @@ int main(int argc, char** argv)
 
     auto toolbar = GToolBar::construct(process_table_container);
     toolbar->set_has_frame(false);
-    auto* process_table_view = new ProcessTableView(*cpu_graph, process_table_container);
-    auto* memory_stats_widget = new MemoryStatsWidget(*memory_graph, graphs_container);
+    auto process_table_view = ProcessTableView::construct(*cpu_graph, process_table_container);
+    auto memory_stats_widget = MemoryStatsWidget::construct(*memory_graph, graphs_container);
 
     auto refresh_timer = CTimer::construct(1000, [&] {
         process_table_view->refresh();
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
     toolbar->add_action(stop_action);
     toolbar->add_action(continue_action);
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("System Monitor");
     window->set_rect(20, 200, 680, 400);
     window->set_main_widget(keeper);
@@ -192,15 +192,15 @@ int main(int argc, char** argv)
 
     app.set_menubar(move(menubar));
 
-    auto* process_tab_widget = new GTabWidget(process_container_splitter);
+    auto process_tab_widget = GTabWidget::construct(process_container_splitter);
 
-    auto* open_files_widget = new ProcessFileDescriptorMapWidget(nullptr);
+    auto open_files_widget = ProcessFileDescriptorMapWidget::construct(nullptr);
     process_tab_widget->add_widget("Open files", open_files_widget);
 
-    auto* memory_map_widget = new ProcessMemoryMapWidget(nullptr);
+    auto memory_map_widget = ProcessMemoryMapWidget::construct(nullptr);
     process_tab_widget->add_widget("Memory map", memory_map_widget);
 
-    auto* stacks_widget = new ProcessStacksWidget(nullptr);
+    auto stacks_widget = ProcessStacksWidget::construct(nullptr);
     process_tab_widget->add_widget("Stacks", stacks_widget);
 
     process_table_view->on_process_selected = [&](pid_t pid) {

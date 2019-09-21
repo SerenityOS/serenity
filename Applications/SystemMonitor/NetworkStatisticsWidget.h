@@ -8,10 +8,10 @@ class GTableView;
 class NetworkStatisticsWidget final : public GWidget {
     C_OBJECT(NetworkStatisticsWidget)
 public:
-    explicit NetworkStatisticsWidget(GWidget* parent = nullptr);
     virtual ~NetworkStatisticsWidget() override;
 
 private:
+    explicit NetworkStatisticsWidget(GWidget* parent = nullptr);
     void update_models();
 
     ObjectPtr<GTableView> m_adapter_table_view;
