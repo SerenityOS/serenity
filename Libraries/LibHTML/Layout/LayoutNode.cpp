@@ -1,10 +1,9 @@
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutNode.h>
-#include <LibHTML/CSS/StyledNode.h>
 
-LayoutNode::LayoutNode(const Node* node, const StyledNode* styled_node)
+LayoutNode::LayoutNode(const Node* node, StyleProperties&& style_properties)
     : m_node(node)
-    , m_styled_node(styled_node)
+    , m_style_properties(style_properties)
 {
 }
 

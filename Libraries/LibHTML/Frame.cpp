@@ -1,6 +1,5 @@
 #include <AK/Function.h>
 #include <LibHTML/CSS/StyleResolver.h>
-#include <LibHTML/CSS/StyledNode.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/Frame.h>
@@ -23,71 +22,46 @@ void Frame::set_document(Document* document)
     m_document = document;
 }
 
-RefPtr<StyledNode> Frame::generate_style_tree()
+RefPtr<LayoutNode> Frame::generate_layout_tree()
 {
-    if (!m_document)
-        return nullptr;
+    auto resolver = m_document->style_resolver();
+    auto create_layout_node = [&](const Node& node) -> RefPtr<LayoutNode> {
+        if (node.is_document())
+            return adopt(*new LayoutDocument(static_cast<const Document&>(node), {}));
 
-    auto& resolver = m_document->style_resolver();
-    Function<RefPtr<StyledNode>(const Node&, StyledNode*)> resolve_style = [&](const Node& node, StyledNode* parent_styled_node) -> RefPtr<StyledNode> {
-        RefPtr<StyledNode> styled_node;
-        if (node.is_element())
-            styled_node = resolver.create_styled_node(static_cast<const Element&>(node));
-        else if (node.is_document())
-            styled_node = resolver.create_styled_node(static_cast<const Document&>(node));
-        if (!styled_node)
-            return nullptr;
-        if (parent_styled_node)
-            parent_styled_node->append_child(*styled_node);
-        static_cast<const ParentNode&>(node).for_each_child([&](const Node& child) {
-            if (!child.is_element())
-                return;
-            auto styled_child_node = resolve_style(static_cast<const Element&>(child), styled_node.ptr());
-            printf("Created StyledNode{%p} for Element{%p}\n", styled_child_node.ptr(), &node);
-        });
-        return styled_node;
-    };
-    auto styled_root = resolve_style(*m_document, nullptr);
-    dump_tree(*styled_root);
-    return styled_root;
-}
+        auto style_properties = resolver.resolve_style(static_cast<const Element&>(node));
+        auto display_property = style_properties.property("display");
+        String display = display_property.has_value() ? display_property.release_value()->to_string() : "inline";
 
-RefPtr<LayoutNode> Frame::generate_layout_tree(const StyledNode& styled_root)
-{
-    auto create_layout_node = [](const StyledNode& styled_node) -> RefPtr<LayoutNode> {
-        if (styled_node.node() && styled_node.node()->is_document())
-            return adopt(*new LayoutDocument(static_cast<const Document&>(*styled_node.node()), styled_node));
-        switch (styled_node.display()) {
-        case Display::None:
+        if (display == "none")
             return nullptr;
-        case Display::Block:
-            return adopt(*new LayoutBlock(styled_node.node(), &styled_node));
-        case Display::Inline:
-            return adopt(*new LayoutInline(*styled_node.node(), styled_node));
-        default:
-            ASSERT_NOT_REACHED();
-        }
+        if (display == "block")
+            return adopt(*new LayoutBlock(&node, move(style_properties)));
+        if (display == "inline")
+            return adopt(*new LayoutInline(node, move(style_properties)));
+
+        ASSERT_NOT_REACHED();
     };
 
-    Function<RefPtr<LayoutNode>(const StyledNode&)> build_layout_tree;
-    build_layout_tree = [&](const StyledNode& styled_node) -> RefPtr<LayoutNode> {
-        auto layout_node = create_layout_node(styled_node);
+    Function<RefPtr<LayoutNode>(const Node&)> build_layout_tree;
+    build_layout_tree = [&](const Node& node) -> RefPtr<LayoutNode> {
+        auto layout_node = create_layout_node(node);
         if (!layout_node)
             return nullptr;
-        if (!styled_node.has_children())
+        if (!node.has_children())
             return layout_node;
-        for (auto* styled_child = styled_node.first_child(); styled_child; styled_child = styled_child->next_sibling()) {
-            auto layout_child = build_layout_tree(*styled_child);
+        static_cast<const ParentNode&>(node).for_each_child([&](const Node& child) {
+            auto layout_child = build_layout_tree(child);
             if (!layout_child)
-                continue;
+                return;
             if (layout_child->is_inline())
                 layout_node->inline_wrapper().append_child(*layout_child);
             else
                 layout_node->append_child(*layout_child);
-        }
+        });
         return layout_node;
     };
-    return build_layout_tree(styled_root);
+    return build_layout_tree(*m_document);
 }
 
 void Frame::layout()
@@ -95,8 +69,7 @@ void Frame::layout()
     if (!m_document)
         return;
 
-    auto styled_root = generate_style_tree();
-    auto layout_root = generate_layout_tree(*styled_root);
+    auto layout_root = generate_layout_tree();
 
     layout_root->style().size().set_width(m_size.width());
 

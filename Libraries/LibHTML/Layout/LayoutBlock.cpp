@@ -1,9 +1,8 @@
-#include <LibHTML/CSS/StyledNode.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 
-LayoutBlock::LayoutBlock(const Node* node, const StyledNode* styled_node)
-    : LayoutNode(node, styled_node)
+LayoutBlock::LayoutBlock(const Node* node, StyleProperties&& style_properties)
+    : LayoutNode(node, move(style_properties))
 {
 }
 
@@ -14,7 +13,7 @@ LayoutBlock::~LayoutBlock()
 LayoutNode& LayoutBlock::inline_wrapper()
 {
     if (!last_child() || !last_child()->is_block()) {
-        append_child(adopt(*new LayoutBlock(nullptr, nullptr)));
+        append_child(adopt(*new LayoutBlock(nullptr, {})));
     }
     return *last_child();
 }
@@ -42,21 +41,17 @@ void LayoutBlock::layout()
 
 void LayoutBlock::compute_width()
 {
-    if (!styled_node()) {
-        // I guess the size is "auto" in this case.
-        return;
-    }
+    auto& style_properties = this->style_properties();
 
-    auto& styled_node = *this->styled_node();
     auto auto_value = Length();
     auto zero_value = Length(0, Length::Type::Absolute);
-    auto width = styled_node.length_or_fallback("width", auto_value);
-    auto margin_left = styled_node.length_or_fallback("margin-left", zero_value);
-    auto margin_right = styled_node.length_or_fallback("margin-right", zero_value);
-    auto border_left = styled_node.length_or_fallback("border-left", zero_value);
-    auto border_right = styled_node.length_or_fallback("border-right", zero_value);
-    auto padding_left = styled_node.length_or_fallback("padding-left", zero_value);
-    auto padding_right = styled_node.length_or_fallback("padding-right", zero_value);
+    auto width = style_properties.length_or_fallback("width", auto_value);
+    auto margin_left = style_properties.length_or_fallback("margin-left", zero_value);
+    auto margin_right = style_properties.length_or_fallback("margin-right", zero_value);
+    auto border_left = style_properties.length_or_fallback("border-left", zero_value);
+    auto border_right = style_properties.length_or_fallback("border-right", zero_value);
+    auto padding_left = style_properties.length_or_fallback("padding-left", zero_value);
+    auto padding_right = style_properties.length_or_fallback("padding-right", zero_value);
 
     dbg() << " Left: " << margin_left << "+" << border_left << "+" << padding_left;
     dbg() << "Right: " << margin_right << "+" << border_right << "+" << padding_right;
@@ -116,32 +111,27 @@ void LayoutBlock::compute_width()
 
 void LayoutBlock::compute_position()
 {
-    if (!styled_node()) {
-        // I guess the size is "auto" in this case.
-        return;
-    }
+    auto& style_properties = this->style_properties();
 
-    auto& styled_node = *this->styled_node();
     auto auto_value = Length();
     auto zero_value = Length(0, Length::Type::Absolute);
 
-    auto width = styled_node.length_or_fallback("width", auto_value);
-    style().margin().top = styled_node.length_or_fallback("margin-top", zero_value);
-    style().margin().bottom = styled_node.length_or_fallback("margin-bottom", zero_value);
-    style().border().top = styled_node.length_or_fallback("border-top", zero_value);
-    style().border().bottom = styled_node.length_or_fallback("border-bottom", zero_value);
-    style().padding().top = styled_node.length_or_fallback("padding-top", zero_value);
-    style().padding().bottom = styled_node.length_or_fallback("padding-bottom", zero_value);
+    auto width = style_properties.length_or_fallback("width", auto_value);
+    style().margin().top = style_properties.length_or_fallback("margin-top", zero_value);
+    style().margin().bottom = style_properties.length_or_fallback("margin-bottom", zero_value);
+    style().border().top = style_properties.length_or_fallback("border-top", zero_value);
+    style().border().bottom = style_properties.length_or_fallback("border-bottom", zero_value);
+    style().padding().top = style_properties.length_or_fallback("padding-top", zero_value);
+    style().padding().bottom = style_properties.length_or_fallback("padding-bottom", zero_value);
     rect().set_x(containing_block()->rect().x() + style().margin().left.to_px() + style().border().left.to_px() + style().padding().left.to_px());
     rect().set_y(containing_block()->rect().y() + style().margin().top.to_px() + style().border().top.to_px() + style().padding().top.to_px());
 }
 
 void LayoutBlock::compute_height()
 {
-    if (!styled_node())
-        return;
-    auto& styled_node = *this->styled_node();
-    auto height_property = styled_node.property("height");
+    auto& style_properties = this->style_properties();
+
+    auto height_property = style_properties.property("height");
     if (!height_property.has_value())
         return;
     auto height_length = height_property.value()->to_length();

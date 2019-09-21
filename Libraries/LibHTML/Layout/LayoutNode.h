@@ -2,13 +2,13 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
+#include <LibDraw/Rect.h>
+#include <LibHTML/CSS/StyleProperties.h>
 #include <LibHTML/Layout/ComputedStyle.h>
 #include <LibHTML/TreeNode.h>
-#include <LibDraw/Rect.h>
 
 class Node;
 class LayoutBlock;
-class StyledNode;
 
 class LayoutNode : public TreeNode<LayoutNode> {
 public:
@@ -49,16 +49,15 @@ public:
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 
-    StyledNode* styled_node() { return m_styled_node; }
-    const StyledNode* styled_node() const { return m_styled_node; }
+    const StyleProperties& style_properties() const { return m_style_properties; }
 
 protected:
-    explicit LayoutNode(const Node*, const StyledNode*);
+    explicit LayoutNode(const Node*, StyleProperties&&);
 
 private:
     const Node* m_node { nullptr };
-    RefPtr<StyledNode> m_styled_node;
 
+    StyleProperties m_style_properties;
     ComputedStyle m_style;
     Rect m_rect;
 };

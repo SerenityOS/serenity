@@ -1,8 +1,8 @@
 #include <LibHTML/Layout/LayoutText.h>
 #include <ctype.h>
 
-LayoutText::LayoutText(const Text& text, const StyledNode& styled_node)
-    : LayoutNode(&text, &styled_node)
+LayoutText::LayoutText(const Text& text, StyleProperties&& style_properties)
+    : LayoutNode(&text, move(style_properties))
 {
 }
 
@@ -29,7 +29,6 @@ const String& LayoutText::text() const
 
 void LayoutText::compute_runs()
 {
-
 }
 
 void LayoutText::layout()

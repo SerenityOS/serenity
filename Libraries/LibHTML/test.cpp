@@ -1,6 +1,5 @@
 #include <LibCore/CFile.h>
 #include <LibHTML/CSS/StyleResolver.h>
-#include <LibHTML/CSS/StyledNode.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/Frame.h>
