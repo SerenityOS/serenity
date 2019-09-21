@@ -21,7 +21,7 @@ TextEditorWidget::TextEditorWidget()
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_spacing(0);
 
-    auto* toolbar = new GToolBar(this);
+    auto toolbar = GToolBar::construct(this);
     m_editor = GTextEditor::construct(GTextEditor::MultiLine, this);
     m_editor->set_ruler_visible(true);
     m_editor->set_automatic_indentation_enabled(true);

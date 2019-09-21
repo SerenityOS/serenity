@@ -160,7 +160,7 @@ void IRCAppWindow::setup_widgets()
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
 
-    auto* toolbar = new GToolBar(widget);
+    auto toolbar = GToolBar::construct(widget);
     toolbar->set_has_frame(false);
     toolbar->add_action(*m_change_nick_action);
     toolbar->add_separator();

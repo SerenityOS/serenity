@@ -67,7 +67,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     upper_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     upper_container->set_preferred_size(0, 26);
 
-    auto* toolbar = new GToolBar(upper_container);
+    auto toolbar = GToolBar::construct(upper_container);
     toolbar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     toolbar->set_preferred_size(85, 0);
     toolbar->set_has_frame(false);
