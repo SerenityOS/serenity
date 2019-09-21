@@ -29,6 +29,8 @@ void ThreadCatalogModel::update()
     CHttpRequest request;
     request.set_url(String::format("http://a.4cdn.org/%s/catalog.json", m_board.characters()));
 
+    if (m_pending_job)
+        m_pending_job->cancel();
     m_pending_job = request.schedule();
 
     if (on_load_started)

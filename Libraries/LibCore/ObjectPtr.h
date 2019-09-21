@@ -76,6 +76,8 @@ public:
     T* ptr() const { return m_ptr; }
     T* leak_ptr() { return exchange(m_ptr, nullptr); }
 
+    operator bool() const { return !!m_ptr; }
+
 private:
     T* m_ptr { nullptr };
 };
