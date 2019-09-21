@@ -10,9 +10,9 @@
 
 #include "Client.h"
 
-Client::Client(int id, CTCPSocket* socket, int ptm_fd)
+Client::Client(int id, ObjectPtr<CTCPSocket> socket, int ptm_fd)
     : m_id(id)
-    , m_socket(socket)
+    , m_socket(move(socket))
     , m_ptm_fd(ptm_fd)
     , m_ptm_notifier(CNotifier::create(ptm_fd, CNotifier::Read))
 {

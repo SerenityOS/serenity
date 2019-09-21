@@ -1,11 +1,12 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
+#include <LibCore/ObjectPtr.h>
 
 namespace AK {
 class JsonObject;
@@ -16,9 +17,14 @@ class CChildEvent;
 class CCustomEvent;
 class CTimerEvent;
 
-#define C_OBJECT(klass) \
-public:                 \
-    virtual const char* class_name() const override { return #klass; }
+#define C_OBJECT(klass)                                                \
+public:                                                                \
+    virtual const char* class_name() const override { return #klass; } \
+    template<class... Args>                                            \
+    static inline ObjectPtr<klass> construct(Args&&... args)           \
+    {                                                                  \
+        return ObjectPtr<klass>(new klass(forward<Args>(args)...));    \
+    }
 
 class CObject : public Weakable<CObject> {
     // NOTE: No C_OBJECT macro for CObject itself.

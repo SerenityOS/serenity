@@ -64,7 +64,6 @@ namespace Server {
 
     template<typename ServerMessage, typename ClientMessage>
     class Connection : public CObject {
-        C_OBJECT(Connection)
     public:
         Connection(CLocalSocket& socket, int client_id)
             : m_socket(socket)
@@ -206,7 +205,6 @@ namespace Server {
 
     template<typename Endpoint>
     class ConnectionNG : public CObject {
-        C_OBJECT(Connection)
     public:
         ConnectionNG(Endpoint& endpoint, CLocalSocket& socket, int client_id)
             : m_endpoint(endpoint)

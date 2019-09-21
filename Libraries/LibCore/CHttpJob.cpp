@@ -116,7 +116,7 @@ void CHttpJob::finish_up()
 void CHttpJob::start()
 {
     ASSERT(!m_socket);
-    m_socket = new CTCPSocket(this);
+    m_socket = CTCPSocket::construct(this);
     m_socket->on_connected = [this] {
         dbg() << "CHttpJob: on_connected callback";
         on_socket_connected();

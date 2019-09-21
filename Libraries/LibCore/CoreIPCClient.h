@@ -47,7 +47,6 @@ namespace Client {
 
     template<typename ServerMessage, typename ClientMessage>
     class Connection : public CObject {
-        C_OBJECT(Connection)
     public:
         Connection(const StringView& address)
             : m_connection(this)
@@ -238,7 +237,6 @@ namespace Client {
 
     template<typename Endpoint>
     class ConnectionNG : public CObject {
-        C_OBJECT(Connection)
     public:
         ConnectionNG(const StringView& address)
             : m_connection(this)

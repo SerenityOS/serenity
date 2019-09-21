@@ -2,7 +2,7 @@
 #include <sys/socket.h>
 #include <errno.h>
 
-CTCPSocket::CTCPSocket(Badge<CTCPServer>, int fd, CObject* parent)
+CTCPSocket::CTCPSocket(int fd, CObject* parent)
     : CSocket(CSocket::Type::TCP, parent)
 {
     set_fd(fd);

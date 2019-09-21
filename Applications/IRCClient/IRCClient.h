@@ -137,7 +137,7 @@ private:
     String m_hostname;
     int m_port { 6667 };
 
-    CTCPSocket* m_socket { nullptr };
+    ObjectPtr<CTCPSocket> m_socket;
 
     String m_nickname;
     ObjectPtr<CNotifier> m_notifier;

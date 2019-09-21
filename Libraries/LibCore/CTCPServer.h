@@ -15,7 +15,7 @@ public:
     bool is_listening() const { return m_listening; }
     bool listen(const IPv4Address& address, u16 port);
 
-    CTCPSocket* accept();
+    ObjectPtr<CTCPSocket> accept();
 
     Function<void()> on_ready_to_accept;
 

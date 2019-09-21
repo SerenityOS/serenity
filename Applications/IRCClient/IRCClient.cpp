@@ -35,7 +35,7 @@ IRCClient::IRCClient()
     , m_log(IRCLogBuffer::create())
     , m_config(CConfigFile::get_for_app("IRCClient"))
 {
-    m_socket = new CTCPSocket(this);
+    m_socket = CTCPSocket::construct(this);
     m_nickname = m_config->read_entry("User", "Nickname", "seren1ty");
     m_hostname = m_config->read_entry("Connection", "Server", "");
     m_port = m_config->read_num_entry("Connection", "Port", 6667);
