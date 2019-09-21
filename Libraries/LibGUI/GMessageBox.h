@@ -20,7 +20,7 @@ public:
     explicit GMessageBox(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, CObject* parent = nullptr);
     virtual ~GMessageBox() override;
 
-    static void show(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, CObject* parent = nullptr);
+    static int show(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, CObject* parent = nullptr);
 
 private:
     bool should_include_ok_button() const;

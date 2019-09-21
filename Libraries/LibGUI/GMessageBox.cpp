@@ -4,10 +4,10 @@
 #include <LibGUI/GMessageBox.h>
 #include <stdio.h>
 
-void GMessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, CObject* parent)
+int GMessageBox::show(const StringView& text, const StringView& title, Type type, InputType input_type, CObject* parent)
 {
-    GMessageBox box(text, title, type, input_type, parent);
-    box.exec();
+    auto box = GMessageBox::construct(text, title, type, input_type, parent);
+    return box->exec();
 }
 
 GMessageBox::GMessageBox(const StringView& text, const StringView& title, Type type, InputType input_type, CObject* parent)

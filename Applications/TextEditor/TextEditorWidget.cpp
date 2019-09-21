@@ -285,7 +285,6 @@ bool TextEditorWidget::request_close()
 {
     if (!m_document_dirty)
         return true;
-    GMessageBox box("The document has been modified. Quit without saving?", "Quit without saving?", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
-    auto result = box.exec();
+    auto result = GMessageBox::show("The document has been modified. Quit without saving?", "Quit without saving?", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
     return result == GMessageBox::ExecOK;
 }

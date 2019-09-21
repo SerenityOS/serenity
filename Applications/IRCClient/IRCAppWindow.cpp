@@ -68,12 +68,12 @@ void IRCAppWindow::setup_client()
     };
 
     if (m_client.hostname().is_empty()) {
-        GInputBox input_box("Enter server:", "Connect to server", this);
-        auto result = input_box.exec();
+        auto input_box = GInputBox::construct("Enter server:", "Connect to server", this);
+        auto result = input_box->exec();
         if (result == GInputBox::ExecCancel)
             ::exit(0);
 
-        m_client.set_server(input_box.text_value(), 6667);
+        m_client.set_server(input_box->text_value(), 6667);
     }
     update_title();
     bool success = m_client.connect();
@@ -83,9 +83,9 @@ void IRCAppWindow::setup_client()
 void IRCAppWindow::setup_actions()
 {
     m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
-        GInputBox input_box("Enter channel name:", "Join channel", this);
-        if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
-            m_client.handle_join_action(input_box.text_value());
+        auto input_box = GInputBox::construct("Enter channel name:", "Join channel", this);
+        if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client.handle_join_action(input_box->text_value());
     });
 
     m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
@@ -98,15 +98,15 @@ void IRCAppWindow::setup_actions()
     });
 
     m_whois_action = GAction::create("Whois user", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-whois.png"), [&](auto&) {
-        GInputBox input_box("Enter nickname:", "IRC WHOIS lookup", this);
-        if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
-            m_client.handle_whois_action(input_box.text_value());
+        auto input_box = GInputBox::construct("Enter nickname:", "IRC WHOIS lookup", this);
+        if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client.handle_whois_action(input_box->text_value());
     });
 
     m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
-        GInputBox input_box("Enter nickname:", "Open IRC query with...", this);
-        if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
-            m_client.handle_open_query_action(input_box.text_value());
+        auto input_box = GInputBox::construct("Enter nickname:", "Open IRC query with...", this);
+        if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client.handle_open_query_action(input_box->text_value());
     });
 
     m_close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
@@ -114,9 +114,9 @@ void IRCAppWindow::setup_actions()
     });
 
     m_change_nick_action = GAction::create("Change nickname", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-nick.png"), [this](auto&) {
-        GInputBox input_box("Enter nickname:", "Change nickname", this);
-        if (input_box.exec() == GInputBox::ExecOK && !input_box.text_value().is_empty())
-            m_client.handle_change_nick_action(input_box.text_value());
+        auto input_box = GInputBox::construct("Enter nickname:", "Change nickname", this);
+        if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty())
+            m_client.handle_change_nick_action(input_box->text_value());
     });
 }
 
