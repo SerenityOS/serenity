@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("ChanViewer");
     window->set_rect(100, 100, 800, 500);
     window->set_icon(load_png("/res/icons/16x16/app-chanviewer.png"));

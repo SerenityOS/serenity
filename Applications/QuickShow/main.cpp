@@ -50,7 +50,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
 
     auto update_window_title = [&](int scale) {
         window->set_title(String::format("QuickShow: %s %s %d%%", path, bitmap->size().to_string().characters(), scale));

@@ -9,7 +9,7 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_rect(100, 100, 240, 160);
     window->set_title("Hello World!");
 

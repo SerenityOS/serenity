@@ -28,7 +28,7 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("Inspector");
     window->set_rect(150, 150, 300, 500);
 

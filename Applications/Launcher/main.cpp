@@ -12,7 +12,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static GWindow* make_launcher_window();
+static ObjectPtr<GWindow> make_launcher_window();
 
 void handle_sigchld(int)
 {
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
     signal(SIGCHLD, handle_sigchld);
 
-    auto* launcher_window = make_launcher_window();
+    auto launcher_window = make_launcher_window();
     launcher_window->show();
 
     return app.exec();
@@ -63,12 +63,12 @@ private:
     String m_executable_path;
 };
 
-GWindow* make_launcher_window()
+ObjectPtr<GWindow> make_launcher_window()
 {
     auto config = CConfigFile::get_for_app("Launcher");
     auto vertical = config->read_bool_entry("Launcher", "Vertical", true);
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("Launcher");
     int launcher_size = (config->groups().size() - 1) * 50;
     window->set_rect(50, 50, vertical ? 50 : launcher_size, vertical ? launcher_size : 50);

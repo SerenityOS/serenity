@@ -62,7 +62,7 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("Welcome to Serenity");
     Rect window_rect { 0, 0, 640, 360 };
     window_rect.center_within(GDesktop::the().rect());

@@ -214,7 +214,7 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_double_buffering_enabled(false);
     window->set_title("Fire");
     window->set_resizable(false);

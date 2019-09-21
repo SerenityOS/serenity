@@ -88,9 +88,9 @@ static void run_command(int ptm_fd, String command)
     }
 }
 
-GWindow* create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> config)
+ObjectPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> config)
 {
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("Terminal Settings");
     window->set_rect(50, 50, 200, 140);
 
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
 
     run_command(ptm_fd, args.get("e"));
 
-    auto* window = new GWindow;
+    auto window = GWindow::construct();
     window->set_title("Terminal");
     window->set_background_color(Color::Black);
     window->set_double_buffering_enabled(false);
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
     window->set_icon(load_png("/res/icons/16x16/app-terminal.png"));
     terminal->set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
-    WeakPtr<GWindow> settings_window;
+    ObjectPtr<GWindow> settings_window;
 
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
     terminal->set_opacity(new_opacity);
@@ -180,9 +180,9 @@ int main(int argc, char** argv)
 
     auto app_menu = make<GMenu>("Terminal");
     app_menu->add_action(GAction::create("Settings...", load_png("/res/icons/gear16.png"),
-        [&settings_window, terminal, &config](const GAction&) {
+        [&](const GAction&) {
             if (!settings_window)
-                settings_window = create_settings_window(*terminal, config)->make_weak_ptr();
+                settings_window = create_settings_window(*terminal, config);
             settings_window->show();
             settings_window->move_to_front();
         }));
