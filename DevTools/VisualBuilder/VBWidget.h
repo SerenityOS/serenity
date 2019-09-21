@@ -81,7 +81,7 @@ private:
 
     VBWidgetType m_type { VBWidgetType::None };
     VBForm& m_form;
-    ObjectPtr<GWidget> m_gwidget;
+    RefPtr<GWidget> m_gwidget;
     NonnullOwnPtrVector<VBProperty> m_properties;
     NonnullRefPtr<VBWidgetPropertyModel> m_property_model;
     Rect m_transform_origin_rect;

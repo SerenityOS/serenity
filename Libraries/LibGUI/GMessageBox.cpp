@@ -62,7 +62,7 @@ void GMessageBox::build()
     widget->layout()->set_margins({ 0, 15, 0, 15 });
     widget->layout()->set_spacing(15);
 
-    ObjectPtr<GWidget> message_container = widget;
+    RefPtr<GWidget> message_container = widget;
     if (m_type != Type::None) {
         message_container = GWidget::construct(widget.ptr());
         message_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));

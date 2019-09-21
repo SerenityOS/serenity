@@ -29,7 +29,7 @@ public:
 
 private:
     bool parse_header();
-    ObjectPtr<CFile> m_file;
+    RefPtr<CFile> m_file;
     String m_error_string;
 
     u32 m_sample_rate { 0 };

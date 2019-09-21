@@ -39,7 +39,7 @@ bool CLocalServer::listen(const String& address)
     return true;
 }
 
-ObjectPtr<CLocalSocket> CLocalServer::accept()
+RefPtr<CLocalSocket> CLocalServer::accept()
 {
     ASSERT(m_listening);
     sockaddr_un un;

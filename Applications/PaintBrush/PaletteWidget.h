@@ -15,6 +15,6 @@ public:
 
 private:
     PaintableWidget& m_paintable_widget;
-    ObjectPtr<GFrame> m_primary_color_widget;
-    ObjectPtr<GFrame> m_secondary_color_widget;
+    RefPtr<GFrame> m_primary_color_widget;
+    RefPtr<GFrame> m_secondary_color_widget;
 };

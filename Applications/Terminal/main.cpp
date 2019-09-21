@@ -88,7 +88,7 @@ static void run_command(int ptm_fd, String command)
     }
 }
 
-ObjectPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> config)
+RefPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigFile> config)
 {
     auto window = GWindow::construct();
     window->set_title("Terminal Settings");
@@ -170,7 +170,7 @@ int main(int argc, char** argv)
     window->set_icon(load_png("/res/icons/16x16/app-terminal.png"));
     terminal->set_should_beep(config->read_bool_entry("Window", "AudibleBeep", false));
 
-    ObjectPtr<GWindow> settings_window;
+    RefPtr<GWindow> settings_window;
 
     auto new_opacity = config->read_num_entry("Window", "Opacity", 255);
     terminal->set_opacity(new_opacity);

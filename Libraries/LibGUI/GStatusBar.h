@@ -18,6 +18,6 @@ protected:
     virtual void paint_event(GPaintEvent&) override;
 
 private:
-    ObjectPtr<GLabel> m_label;
-    ObjectPtr<GResizeCorner> m_corner;
+    RefPtr<GLabel> m_label;
+    RefPtr<GResizeCorner> m_corner;
 };

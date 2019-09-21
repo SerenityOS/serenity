@@ -203,7 +203,7 @@ namespace Server {
         virtual bool handle_message(const ClientMessage&, const ByteBuffer&& = {}) = 0;
 
     private:
-        ObjectPtr<CLocalSocket> m_socket;
+        RefPtr<CLocalSocket> m_socket;
         int m_client_id { -1 };
         int m_client_pid { -1 };
     };
@@ -311,7 +311,7 @@ namespace Server {
 
     private:
         Endpoint& m_endpoint;
-        ObjectPtr<CLocalSocket> m_socket;
+        RefPtr<CLocalSocket> m_socket;
         int m_client_id { -1 };
         int m_client_pid { -1 };
     };

@@ -29,7 +29,7 @@ public:
     virtual void will_begin_editing() { }
 
 protected:
-    virtual ObjectPtr<GWidget> create_widget() = 0;
+    virtual RefPtr<GWidget> create_widget() = 0;
     void commit()
     {
         if (on_commit)
@@ -39,7 +39,7 @@ protected:
 private:
     RefPtr<GModel> m_model;
     GModelIndex m_index;
-    ObjectPtr<GWidget> m_widget;
+    RefPtr<GWidget> m_widget;
 };
 
 class GStringModelEditingDelegate : public GModelEditingDelegate {
@@ -47,7 +47,7 @@ public:
     GStringModelEditingDelegate() {}
     virtual ~GStringModelEditingDelegate() override {}
 
-    virtual ObjectPtr<GWidget> create_widget() override
+    virtual RefPtr<GWidget> create_widget() override
     {
         auto textbox = GTextBox::construct(nullptr);
         textbox->on_return_pressed = [this] {

@@ -42,7 +42,7 @@ private:
     Rect container_rect() const;
     void update_bar();
 
-    ObjectPtr<GWidget> m_active_widget;
+    RefPtr<GWidget> m_active_widget;
 
     struct TabData {
         Rect rect(const Font&) const;

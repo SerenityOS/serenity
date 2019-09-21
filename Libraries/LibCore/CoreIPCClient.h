@@ -229,8 +229,8 @@ namespace Client {
             }
         }
 
-        ObjectPtr<CLocalSocket> m_connection;
-        ObjectPtr<CNotifier> m_notifier;
+        RefPtr<CLocalSocket> m_connection;
+        RefPtr<CNotifier> m_notifier;
         Vector<IncomingMessageBundle> m_unprocessed_bundles;
         int m_server_pid { -1 };
         int m_my_client_id { -1 };
@@ -372,8 +372,8 @@ namespace Client {
             }
         }
 
-        ObjectPtr<CLocalSocket> m_connection;
-        ObjectPtr<CNotifier> m_notifier;
+        RefPtr<CLocalSocket> m_connection;
+        RefPtr<CNotifier> m_notifier;
         Vector<OwnPtr<IMessage>> m_unprocessed_messages;
         int m_server_pid { -1 };
         int m_my_client_id { -1 };

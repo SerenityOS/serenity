@@ -18,9 +18,9 @@ private:
     virtual void timer_event(CTimerEvent&) override;
 
     GraphWidget& m_graph;
-    ObjectPtr<GLabel> m_user_physical_pages_label;
-    ObjectPtr<GLabel> m_supervisor_physical_pages_label;
-    ObjectPtr<GLabel> m_kmalloc_label;
-    ObjectPtr<GLabel> m_kmalloc_count_label;
-    ObjectPtr<CFile> m_proc_memstat;
+    RefPtr<GLabel> m_user_physical_pages_label;
+    RefPtr<GLabel> m_supervisor_physical_pages_label;
+    RefPtr<GLabel> m_kmalloc_label;
+    RefPtr<GLabel> m_kmalloc_count_label;
+    RefPtr<CFile> m_proc_memstat;
 };

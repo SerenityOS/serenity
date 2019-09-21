@@ -2,7 +2,6 @@
 
 #include <AK/String.h>
 #include <AK/URL.h>
-#include <LibCore/ObjectPtr.h>
 
 class CNetworkJob;
 
@@ -27,7 +26,7 @@ public:
     String method_name() const;
     ByteBuffer to_raw_request() const;
 
-    ObjectPtr<CNetworkJob> schedule();
+    RefPtr<CNetworkJob> schedule();
 
 private:
     URL m_url;

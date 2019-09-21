@@ -39,9 +39,9 @@ static String human_readable_size(u32 size)
     return String::format("%u GB", size / GB);
 }
 
-static ObjectPtr<GWidget> build_file_systems_tab();
-static ObjectPtr<GWidget> build_pci_devices_tab();
-static ObjectPtr<GWidget> build_devices_tab();
+static RefPtr<GWidget> build_file_systems_tab();
+static RefPtr<GWidget> build_pci_devices_tab();
+static RefPtr<GWidget> build_devices_tab();
 
 int main(int argc, char** argv)
 {
@@ -234,7 +234,7 @@ public:
     }
 };
 
-ObjectPtr<GWidget> build_file_systems_tab()
+RefPtr<GWidget> build_file_systems_tab()
 {
     auto fs_widget = GWidget::construct();
     fs_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -299,7 +299,7 @@ ObjectPtr<GWidget> build_file_systems_tab()
     return fs_widget;
 }
 
-ObjectPtr<GWidget> build_pci_devices_tab()
+RefPtr<GWidget> build_pci_devices_tab()
 {
     auto pci_widget = GWidget::construct();
     pci_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
@@ -353,7 +353,7 @@ ObjectPtr<GWidget> build_pci_devices_tab()
     return pci_widget;
 }
 
-ObjectPtr<GWidget> build_devices_tab()
+RefPtr<GWidget> build_devices_tab()
 {
     auto devices_widget = GWidget::construct();
     devices_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));

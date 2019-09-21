@@ -37,5 +37,5 @@ private:
 
     String m_board { "g" };
     JsonArray m_catalog;
-    ObjectPtr<CHttpJob> m_pending_job;
+    RefPtr<CHttpJob> m_pending_job;
 };

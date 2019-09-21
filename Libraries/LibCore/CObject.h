@@ -8,7 +8,6 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
-#include <LibCore/ObjectPtr.h>
 
 namespace AK {
 class JsonObject;

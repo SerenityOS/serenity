@@ -11,7 +11,7 @@
 
 class Client : public RefCounted<Client> {
 public:
-    static NonnullRefPtr<Client> create(int id, ObjectPtr<CTCPSocket> socket, int ptm_fd)
+    static NonnullRefPtr<Client> create(int id, RefPtr<CTCPSocket> socket, int ptm_fd)
     {
         return adopt(*new Client(id, move(socket), ptm_fd));
     }
@@ -19,7 +19,7 @@ public:
     Function<void()> on_exit;
 
 protected:
-    Client(int id, ObjectPtr<CTCPSocket> socket, int ptm_fd);
+    Client(int id, RefPtr<CTCPSocket> socket, int ptm_fd);
 
     void drain_socket();
     void drain_pty();
@@ -35,9 +35,9 @@ private:
     // client id
     int m_id { 0 };
     // client resources
-    ObjectPtr<CTCPSocket> m_socket;
+    RefPtr<CTCPSocket> m_socket;
     Parser m_parser;
     // pty resources
     int m_ptm_fd { -1 };
-    ObjectPtr<CNotifier> m_ptm_notifier;
+    RefPtr<CNotifier> m_ptm_notifier;
 };

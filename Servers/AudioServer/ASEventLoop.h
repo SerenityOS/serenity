@@ -12,6 +12,6 @@ public:
 
 private:
     CEventLoop m_event_loop;
-    ObjectPtr<CLocalServer> m_server;
+    RefPtr<CLocalServer> m_server;
     ASMixer m_mixer;
 };

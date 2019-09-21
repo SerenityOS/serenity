@@ -53,9 +53,9 @@ protected:
 private:
     void update_scrollbar_ranges();
 
-    ObjectPtr<GScrollBar> m_vertical_scrollbar;
-    ObjectPtr<GScrollBar> m_horizontal_scrollbar;
-    ObjectPtr<GWidget> m_corner_widget;
+    RefPtr<GScrollBar> m_vertical_scrollbar;
+    RefPtr<GScrollBar> m_horizontal_scrollbar;
+    RefPtr<GWidget> m_corner_widget;
     Size m_content_size;
     Size m_size_occupied_by_fixed_elements;
     bool m_scrollbars_enabled { true };

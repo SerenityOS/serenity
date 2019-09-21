@@ -2,7 +2,6 @@
 
 #include <LibCore/CIODevice.h>
 #include <LibCore/CSocketAddress.h>
-#include <LibCore/ObjectPtr.h>
 
 class CNotifier;
 
@@ -54,6 +53,6 @@ private:
     bool common_connect(const struct sockaddr*, socklen_t);
 
     Type m_type { Type::Invalid };
-    ObjectPtr<CNotifier> m_notifier;
-    ObjectPtr<CNotifier> m_read_notifier;
+    RefPtr<CNotifier> m_notifier;
+    RefPtr<CNotifier> m_read_notifier;
 };

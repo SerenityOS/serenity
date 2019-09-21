@@ -14,7 +14,7 @@ private:
     explicit NetworkStatisticsWidget(GWidget* parent = nullptr);
     void update_models();
 
-    ObjectPtr<GTableView> m_adapter_table_view;
-    ObjectPtr<GTableView> m_socket_table_view;
-    ObjectPtr<CTimer> m_update_timer;
+    RefPtr<GTableView> m_adapter_table_view;
+    RefPtr<GTableView> m_socket_table_view;
+    RefPtr<CTimer> m_update_timer;
 };

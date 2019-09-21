@@ -17,7 +17,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-static ObjectPtr<GWindow> make_toolbox_window();
+static RefPtr<GWindow> make_toolbox_window();
 
 int main(int argc, char** argv)
 {
@@ -74,7 +74,7 @@ int main(int argc, char** argv)
     return app.exec();
 }
 
-ObjectPtr<GWindow> make_toolbox_window()
+RefPtr<GWindow> make_toolbox_window()
 {
     auto window = GWindow::construct();
     window->set_title("Widgets");

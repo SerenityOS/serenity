@@ -19,5 +19,5 @@ protected:
     virtual void resize_event(GResizeEvent&) override;
 
 private:
-    ObjectPtr<GWidget> m_active_widget;
+    RefPtr<GWidget> m_active_widget;
 };

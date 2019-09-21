@@ -2,7 +2,6 @@
 
 #include <AK/Function.h>
 #include <LibCore/CObject.h>
-#include <LibCore/ObjectPtr.h>
 
 class CTimer final : public CObject {
     C_OBJECT(CTimer)

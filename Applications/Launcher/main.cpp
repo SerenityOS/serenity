@@ -12,7 +12,7 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-static ObjectPtr<GWindow> make_launcher_window();
+static RefPtr<GWindow> make_launcher_window();
 
 void handle_sigchld(int)
 {
@@ -63,7 +63,7 @@ private:
     String m_executable_path;
 };
 
-ObjectPtr<GWindow> make_launcher_window()
+RefPtr<GWindow> make_launcher_window()
 {
     auto config = CConfigFile::get_for_app("Launcher");
     auto vertical = config->read_bool_entry("Launcher", "Vertical", true);

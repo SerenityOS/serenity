@@ -40,7 +40,7 @@ bool CTCPServer::listen(const IPv4Address& address, u16 port)
     return true;
 }
 
-ObjectPtr<CTCPSocket> CTCPServer::accept()
+RefPtr<CTCPSocket> CTCPServer::accept()
 {
     ASSERT(m_listening);
     sockaddr_in in;

@@ -13,6 +13,6 @@ public:
 
 private:
     explicit ProcessMemoryMapWidget(GWidget* parent);
-    ObjectPtr<GTableView> m_table_view;
+    RefPtr<GTableView> m_table_view;
     pid_t m_pid { -1 };
 };

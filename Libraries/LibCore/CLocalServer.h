@@ -13,7 +13,7 @@ public:
     bool is_listening() const { return m_listening; }
     bool listen(const String& address);
 
-    ObjectPtr<CLocalSocket> accept();
+    RefPtr<CLocalSocket> accept();
 
     Function<void()> on_ready_to_accept;
 
@@ -22,5 +22,5 @@ private:
 
     int m_fd { -1 };
     bool m_listening { false };
-    ObjectPtr<CNotifier> m_notifier;
+    RefPtr<CNotifier> m_notifier;
 };
