@@ -68,7 +68,7 @@ int main(int argc, char** argv)
 
     auto statusbar = GStatusBar::construct(widget);
 
-    auto* progressbar = new GProgressBar(statusbar);
+    auto progressbar = GProgressBar::construct(statusbar);
     progressbar->set_caption("Generating thumbnails: ");
     progressbar->set_format(GProgressBar::Format::ValueSlashMax);
     progressbar->set_visible(false);

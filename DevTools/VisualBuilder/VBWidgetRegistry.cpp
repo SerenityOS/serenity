@@ -100,7 +100,7 @@ static GWidget* build_gwidget(VBWidgetType type, GWidget* parent)
         return editor;
     }
     case VBWidgetType::GProgressBar: {
-        auto* bar = new GProgressBar(parent);
+        auto bar = GProgressBar::construct(parent);
         bar->set_format(GProgressBar::Format::NoText);
         bar->set_range(0, 100);
         bar->set_value(50);

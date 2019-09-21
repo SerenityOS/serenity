@@ -3,8 +3,8 @@
 #include <LibGUI/GFrame.h>
 
 class GProgressBar : public GFrame {
+    C_OBJECT(GProgressBar)
 public:
-    explicit GProgressBar(GWidget* parent);
     virtual ~GProgressBar() override;
 
     void set_range(int min, int max);
@@ -28,6 +28,8 @@ public:
     void set_format(Format format) { m_format = format; }
 
 protected:
+    explicit GProgressBar(GWidget* parent);
+
     virtual void paint_event(GPaintEvent&) override;
 
 private:
