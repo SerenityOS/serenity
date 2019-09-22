@@ -190,6 +190,8 @@ ssize_t getline(char **lineptr, size_t *n, FILE *stream)
 int ungetc(int c, FILE* stream)
 {
     ASSERT(stream);
+    if (c == EOF)
+        return EOF;
     if (stream->have_ungotten)
         return EOF;
     stream->have_ungotten = true;
