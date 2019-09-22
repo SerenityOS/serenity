@@ -1190,7 +1190,7 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
 #endif
 
     auto needed_blocks = ceil_div(size, block_size());
-    if ((size_t)needed_blocks < super_block().s_free_blocks_count) {
+    if ((size_t)needed_blocks > super_block().s_free_blocks_count) {
         dbg() << "Ext2FS: create_inode: not enough free blocks";
         error = -ENOSPC;
         return {};
