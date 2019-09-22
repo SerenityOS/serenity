@@ -5,6 +5,8 @@
 CLocalSocket::CLocalSocket(int fd, CObject* parent)
     : CSocket(CSocket::Type::Local, parent)
 {
+    // NOTE: This constructor is used by CLocalServer::accept(), so the socket is already connected.
+    m_connected = true;
     set_fd(fd);
     set_mode(CIODevice::ReadWrite);
     set_error(0);

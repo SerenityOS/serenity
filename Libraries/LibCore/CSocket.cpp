@@ -89,6 +89,7 @@ bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
             m_notifier->on_ready_to_write = [this] {
                 dbg() << *this << " connected!";
                 m_connected = true;
+                ensure_read_notifier();
                 m_notifier->set_event_mask(CNotifier::Event::None);
                 if (on_connected)
                     on_connected();
@@ -100,6 +101,7 @@ bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
     }
     dbg() << *this << " connected ok!";
     m_connected = true;
+    ensure_read_notifier();
     if (on_connected)
         on_connected();
     return true;
@@ -132,7 +134,18 @@ void CSocket::did_update_fd(int fd)
         m_read_notifier = nullptr;
         return;
     }
-    m_read_notifier = CNotifier::construct(fd, CNotifier::Event::Read, this);
+    if (m_connected) {
+        ensure_read_notifier();
+    } else {
+        // I don't think it would be right if we updated the fd while not connected *but* while having a notifier..
+        ASSERT(!m_read_notifier);
+    }
+}
+
+void CSocket::ensure_read_notifier()
+{
+    ASSERT(m_connected);
+    m_read_notifier = CNotifier::construct(fd(), CNotifier::Event::Read, this);
     m_read_notifier->on_ready_to_read = [this] {
         if (on_ready_to_read)
             on_ready_to_read();

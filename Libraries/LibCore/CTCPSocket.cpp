@@ -5,6 +5,8 @@
 CTCPSocket::CTCPSocket(int fd, CObject* parent)
     : CSocket(CSocket::Type::TCP, parent)
 {
+    // NOTE: This constructor is used by CTCPServer::accept(), so the socket is already connected.
+    m_connected = true;
     set_fd(fd);
     set_mode(CIODevice::ReadWrite);
     set_error(0);
