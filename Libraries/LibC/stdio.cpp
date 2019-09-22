@@ -320,7 +320,9 @@ long ftell(FILE* stream)
 
 void rewind(FILE* stream)
 {
-    fseek(stream, 0, SEEK_SET);
+    ASSERT(stream);
+    int rc = fseek(stream, 0, SEEK_SET);
+    ASSERT(rc == 0);
 }
 
 int dbgprintf(const char* fmt, ...)
