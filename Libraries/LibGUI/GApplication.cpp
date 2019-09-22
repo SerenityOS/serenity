@@ -21,7 +21,8 @@ GApplication::GApplication(int argc, char** argv)
     (void)argv;
     ASSERT(!s_the);
     s_the = this;
-    m_event_loop = make<GEventLoop>();
+    m_event_loop = make<CEventLoop>();
+    GWindowServerConnection::the();
 }
 
 GApplication::~GApplication()

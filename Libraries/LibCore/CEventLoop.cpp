@@ -181,6 +181,7 @@ CEventLoop& CEventLoop::current()
 
 void CEventLoop::quit(int code)
 {
+    dbg() << "CEventLoop::quit(" << code << ")";
     m_exit_requested = true;
     m_exit_code = code;
 }

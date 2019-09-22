@@ -5,8 +5,8 @@
 #include <AK/OwnPtr.h>
 #include <LibGUI/GShortcut.h>
 
+class CEventLoop;
 class GAction;
-class GEventLoop;
 class GKeyEvent;
 class GMenuBar;
 class GWindow;
@@ -36,7 +36,7 @@ public:
     void did_delete_last_window(Badge<GWindow>);
 
 private:
-    OwnPtr<GEventLoop> m_event_loop;
+    OwnPtr<CEventLoop> m_event_loop;
     OwnPtr<GMenuBar> m_menubar;
     HashMap<GShortcut, GAction*> m_global_shortcut_actions;
     class TooltipWindow;
