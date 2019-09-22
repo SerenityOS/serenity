@@ -229,32 +229,34 @@ ssize_t LocalSocket::sendto(FileDescription& description, const void* data, size
     ASSERT_NOT_REACHED();
 }
 
-ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
+DoubleBuffer& LocalSocket::buffer_for(FileDescription& description)
 {
     auto role = this->role(description);
-    if (role == Role::Accepted) {
-        if (!description.is_blocking()) {
-            if (m_for_server.is_empty()) {
-                if (!has_attached_peer(description))
-                    return 0;
-                return -EAGAIN;
-            }
-        }
-        ASSERT(!m_for_server.is_empty());
-        return m_for_server.read((u8*)buffer, buffer_size);
-    }
-    if (role == Role::Connected) {
-        if (!description.is_blocking()) {
-            if (m_for_client.is_empty()) {
-                if (!has_attached_peer(description))
-                    return 0;
-                return -EAGAIN;
-            }
-        }
-        ASSERT(!m_for_client.is_empty());
-        return m_for_client.read((u8*)buffer, buffer_size);
-    }
+    if (role == Role::Accepted)
+        return m_for_server;
+    if (role == Role::Connected)
+        return m_for_client;
     ASSERT_NOT_REACHED();
+}
+
+ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t buffer_size, int, sockaddr*, socklen_t*)
+{
+    auto& buffer_for_me = buffer_for(description);
+    if (!description.is_blocking()) {
+        if (buffer_for_me.is_empty()) {
+            if (!has_attached_peer(description))
+                return 0;
+            return -EAGAIN;
+        }
+    } else if (!can_read(description)) {
+        auto result = current->block<Thread::ReceiveBlocker>(description);
+        if (result == Thread::BlockResult::InterruptedBySignal)
+            return -EINTR;
+    }
+    if (!has_attached_peer(description) && buffer_for_me.is_empty())
+        return 0;
+    ASSERT(!buffer_for_me.is_empty());
+    return buffer_for_me.read((u8*)buffer, buffer_size);
 }
 
 StringView LocalSocket::socket_path() const
