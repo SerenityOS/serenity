@@ -98,8 +98,10 @@ private:
     virtual RefPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
+    BlockIndex first_block_index() const;
     InodeIndex allocate_inode(GroupIndex preferred_group, off_t expected_size);
-    Vector<BlockIndex> allocate_blocks(GroupIndex, int count);
+    Vector<BlockIndex> allocate_blocks(GroupIndex preferred_group_index, int count);
+    BlockIndex allocate_block(GroupIndex preferred_group_index);
     GroupIndex group_index_from_inode(InodeIndex) const;
     GroupIndex group_index_from_block_index(BlockIndex) const;
 

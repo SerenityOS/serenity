@@ -216,8 +216,6 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     Vector<BlockIndex> new_meta_blocks;
     if (new_shape.meta_blocks > old_shape.meta_blocks) {
         new_meta_blocks = allocate_blocks(group_index_from_inode(inode_index), new_shape.meta_blocks - old_shape.meta_blocks);
-        for (auto block_index : new_meta_blocks)
-            set_block_allocation_state(block_index, true);
     }
 
     e2inode.i_blocks = (blocks.size() + new_shape.meta_blocks) * (block_size() / 512);
@@ -559,8 +557,6 @@ bool Ext2FSInode::resize(u64 new_size)
     auto block_list = fs().block_list_for_inode(m_raw_inode);
     if (blocks_needed_after > blocks_needed_before) {
         auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
-        for (auto new_block_index : new_blocks)
-            fs().set_block_allocation_state(new_block_index, true);
         block_list.append(move(new_blocks));
     } else if (blocks_needed_after < blocks_needed_before) {
 #ifdef EXT2_DEBUG
@@ -873,7 +869,40 @@ bool Ext2FS::write_ext2_inode(unsigned inode, const ext2_inode& e2inode)
     return success;
 }
 
-Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex group_index, int count)
+Ext2FS::BlockIndex Ext2FS::allocate_block(GroupIndex preferred_group_index)
+{
+    LOCKER(m_lock);
+#ifdef EXT2_DEBUG
+    dbg() << "Ext2FS: allocate_block() preferred_group_index: " << preferred_group_index;
+#endif
+    bool found_a_group = false;
+    GroupIndex group_index = preferred_group_index;
+
+    if (group_descriptor(preferred_group_index).bg_free_blocks_count) {
+        found_a_group = true;
+    } else {
+        for (group_index = 1; group_index < m_block_group_count; ++group_index) {
+            if (group_descriptor(group_index).bg_free_blocks_count) {
+                found_a_group = true;
+                break;
+            }
+        }
+    }
+    ASSERT(found_a_group);
+    auto& bgd = group_descriptor(group_index);
+
+    auto bitmap_block = read_block(bgd.bg_block_bitmap);
+    int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
+    auto block_bitmap = Bitmap::wrap(bitmap_block.pointer(), blocks_in_group);
+    BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index();
+    int first_unset_bit_index = block_bitmap.find_first_unset();
+    ASSERT(first_unset_bit_index != -1);
+    BlockIndex block_index = (unsigned)first_unset_bit_index + first_block_in_group;
+    set_block_allocation_state(block_index, true);
+    return block_index;
+}
+
+Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_index, int count)
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
@@ -882,32 +911,16 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex group_index, int c
     if (count == 0)
         return {};
 
-    auto& bgd = group_descriptor(group_index);
-    if (bgd.bg_free_blocks_count < count) {
-        kprintf("Ext2FS: allocate_blocks can't allocate out of group %u, wanted %u but only %u available\n", group_index, count, bgd.bg_free_blocks_count);
-        return {};
-    }
-
-    // FIXME: Implement a scan that finds consecutive blocks if possible.
     Vector<BlockIndex> blocks;
-    auto bitmap_block = read_block(bgd.bg_block_bitmap);
-    int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
-    auto block_bitmap = Bitmap::wrap(bitmap_block.pointer(), blocks_in_group);
-    BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + 1;
-    for (int i = 0; i < block_bitmap.size(); ++i) {
-        if (!block_bitmap.get(i)) {
-            blocks.append(first_block_in_group + i);
-            if (blocks.size() == count)
-                break;
-        }
+    dbg() << "Ext2FS: allocate_blocks:";
+    blocks.ensure_capacity(count);
+    for (int i = 0; i < count; ++i) {
+        auto block_index = allocate_block(preferred_group_index);
+        blocks.unchecked_append(block_index);
+        dbg() << "  > " << block_index;
     }
 
     ASSERT(blocks.size() == count);
-    dbgprintf("Ext2FS: allocate_block found these blocks:\n");
-    for (auto& bi : blocks) {
-        dbgprintf("  > %u\n", bi);
-    }
-
     return blocks;
 }
 
@@ -1059,6 +1072,11 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     return true;
 }
 
+Ext2FS::BlockIndex Ext2FS::first_block_index() const
+{
+    return block_size() == 1024 ? 1 : 0;
+}
+
 bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 {
     LOCKER(m_lock);
@@ -1067,7 +1085,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 #endif
     unsigned group_index = group_index_from_block_index(block_index);
     auto& bgd = group_descriptor(group_index);
-    BlockIndex index_in_group = (block_index - 1) - ((group_index - 1) * blocks_per_group());
+    BlockIndex index_in_group = (block_index - first_block_index()) - ((group_index - 1) * blocks_per_group());
     unsigned bit_index = index_in_group % blocks_per_group();
 #ifdef EXT2_DEBUG
     dbgprintf("  index_in_group: %u\n", index_in_group);
@@ -1171,6 +1189,13 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     dbgprintf("Ext2FS: Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
 #endif
 
+    auto needed_blocks = ceil_div(size, block_size());
+    if ((size_t)needed_blocks < super_block().s_free_blocks_count) {
+        dbg() << "Ext2FS: create_inode: not enough free blocks";
+        error = -ENOSPC;
+        return {};
+    }
+
     // NOTE: This doesn't commit the inode allocation just yet!
     auto inode_id = allocate_inode(0, size);
     if (!inode_id) {
@@ -1179,7 +1204,6 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
         return {};
     }
 
-    auto needed_blocks = ceil_div(size, block_size());
     auto blocks = allocate_blocks(group_index_from_inode(inode_id), needed_blocks);
     if (blocks.size() != needed_blocks) {
         kprintf("Ext2FS: create_inode: allocate_blocks failed\n");
@@ -1197,11 +1221,6 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     // Looks like we're good, time to update the inode bitmap and group+global inode counters.
     bool success = set_inode_allocation_state(inode_id, true);
     ASSERT(success);
-
-    for (auto block_index : blocks) {
-        success = set_block_allocation_state(block_index, true);
-        ASSERT(success);
-    }
 
     unsigned initial_links_count;
     if (is_directory(mode))
