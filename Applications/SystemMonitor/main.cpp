@@ -13,9 +13,11 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GGroupBox.h>
+#include <LibGUI/GInputBox.h>
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GMenuBar.h>
+#include <LibGUI/GMessageBox.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GSortingProxyModel.h>
 #include <LibGUI/GSplitter.h>
@@ -26,6 +28,7 @@
 #include <LibPCIDB/Database.h>
 #include <signal.h>
 #include <stdio.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 static String human_readable_size(u32 size)
@@ -42,6 +45,8 @@ static String human_readable_size(u32 size)
 static GWidget* build_file_systems_tab();
 static GWidget* build_pci_devices_tab();
 static GWidget* build_devices_tab();
+
+static auto devices_context_menu = make<GMenu>();
 
 int main(int argc, char** argv)
 {
@@ -363,6 +368,80 @@ GWidget* build_devices_tab()
     devices_table_view->set_size_columns_to_fit_content(true);
     devices_table_view->set_model(GSortingProxyModel::create(DevicesModel::create()));
     devices_table_view->model()->update();
+
+    auto create_device = GAction::create("Create Device", [devices_table_view](const GAction&) {
+        if (getuid() != 0) {
+            GMessageBox::show("Only root can do that!", "Error", GMessageBox::Type::Error);
+            return;
+        }
+
+        auto model = devices_table_view->model();
+        String mount_point = model->data(model->index(devices_table_view->selection().first().row(), DevicesModel::Column::Device), GModel::Role::Sort).as_string();
+        unsigned major = model->data(model->index(devices_table_view->selection().first().row(), DevicesModel::Column::Major), GModel::Role::Sort).as_uint();
+        unsigned minor = model->data(model->index(devices_table_view->selection().first().row(), DevicesModel::Column::Minor), GModel::Role::Sort).as_uint();
+        String type = model->data(model->index(devices_table_view->selection().first().row(), DevicesModel::Column::Type), GModel::Role::Sort).to_string();
+
+        // FIXME: Paths seem to not be empty for a non-created device??? This is a nasty hack.
+        if (mount_point.starts_with("/")) {
+            GMessageBox::show("This device already exists!", "Error", GMessageBox::Type::Error);
+            return;
+        }
+
+        // Alright, the device doesn't exist so let's go!
+        GInputBox dev_path("Where should this device be created at?", "");
+        int dialog_return = dev_path.exec();
+        mount_point = dev_path.text_value();
+
+        // No assertions failed in THIS dojo!
+        if (dialog_return == GDialog::ExecResult::ExecCancel)
+            return;
+
+        if (mount_point.split('/').at(0) != "dev") {
+            GMessageBox::show("Devices must be mounted in /dev/!", "Error", GMessageBox::Type::Error);
+            return;
+        }
+
+        if (mount_point.is_empty()) {
+            GMessageBox::show("That's not a valid mount point!", "Error", GMessageBox::Type::Error);
+            return;
+        }
+
+        if (type.to_lowercase() == "block" || type.to_lowercase() == "character") {
+            // We have all the right info, so let's mount the device by calling 'mknod'
+            StringBuilder string_args;
+            string_args.append(mount_point);
+            string_args.append(" ");
+            string_args.append(type.to_lowercase() == "character" ? "c" : "b");
+            string_args.append(" ");
+            string_args.appendf("%d", major);
+            string_args.append(" ");
+            string_args.appendf("%d", minor);
+
+            Vector<String> args = string_args.to_string().split(' ');
+            pid_t child = fork();
+            if (child == 0) {
+                int rc = execl("/bin/mknod", "/bin/mknod", args.at(0).characters(), args.at(1).characters(), args.at(2).characters(), args.at(3).characters(), nullptr);
+                if (rc < 0)
+                    GMessageBox::show(strerror(rc), "Error", GMessageBox::Type::Error);
+            }
+
+            int wstatus;
+            waitpid(child, &wstatus, WEXITED | WSTOPPED);
+            if (WIFEXITED(wstatus))
+                if (WEXITSTATUS(wstatus) != 0)
+                    GMessageBox::show(strerror(errno), "Error", GMessageBox::Type::Error);
+        } else {
+            GMessageBox::show("Invalid device type!", "Error", GMessageBox::Type::Error);
+            return;
+        }
+    });
+    create_device->set_enabled(true);
+    create_device->set_icon(load_png("/res/icons/16x16/inspector-object.png"));
+
+    devices_context_menu->add_action(create_device);
+    devices_table_view->on_context_menu_request = [&](const GModelIndex&, const GContextMenuEvent& event) {
+        devices_context_menu->popup(event.screen_position());
+    };
 
     return devices_widget;
 }
