@@ -18,7 +18,7 @@ class CNotifier;
 class CEventLoop {
 public:
     CEventLoop();
-    virtual ~CEventLoop();
+    ~CEventLoop();
 
     int exec();
 

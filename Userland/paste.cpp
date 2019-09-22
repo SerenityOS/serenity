@@ -1,7 +1,9 @@
 #include <AK/String.h>
+#include <LibCore/CEventLoop.h>
 #include <LibGUI/GClipboard.h>
-#include <LibGUI/GEventLoop.h>
 #include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct Options {
     bool print_type { false };
@@ -62,7 +64,7 @@ int main(int argc, char* argv[])
 {
     Options options = parse_options(argc, argv);
 
-    new GEventLoop;
+    CEventLoop loop;
 
     GClipboard& clipboard = GClipboard::the();
     auto data_and_type = clipboard.data_and_type();

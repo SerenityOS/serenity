@@ -1,10 +1,12 @@
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/CEventLoop.h>
 #include <LibCore/CFile.h>
 #include <LibGUI/GClipboard.h>
-#include <LibGUI/GEventLoop.h>
 #include <getopt.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 struct Options {
     String data;
@@ -86,7 +88,7 @@ int main(int argc, char* argv[])
 {
     Options options = parse_options(argc, argv);
 
-    new GEventLoop;
+    CEventLoop loop;
 
     GClipboard& clipboard = GClipboard::the();
     clipboard.set_data(options.data, options.type);

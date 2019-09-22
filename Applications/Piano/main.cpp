@@ -37,8 +37,8 @@ int main(int argc, char** argv)
             u8 buffer[4096];
             piano_widget->fill_audio_buffer(buffer, sizeof(buffer));
             audio->write(buffer, sizeof(buffer));
-            GEventLoop::current().post_event(*piano_widget, make<CCustomEvent>(0));
-            GEventLoop::wake();
+            CEventLoop::current().post_event(*piano_widget, make<CCustomEvent>(0));
+            CEventLoop::wake();
         }
     });
     sound_thread.start();

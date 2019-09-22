@@ -33,14 +33,3 @@ private:
     void handle_wm_event(const WSAPI_ServerMessage&, GWindow&);
     void handle_greeting(WSAPI_ServerMessage&);
 };
-
-class GEventLoop final : public CEventLoop {
-public:
-    GEventLoop();
-    virtual ~GEventLoop() override;
-
-    static GEventLoop& current() { return static_cast<GEventLoop&>(CEventLoop::current()); }
-
-private:
-    void process_unprocessed_bundles();
-};

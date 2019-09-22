@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibGUI/GEventLoop.h>
+#include <LibCore/CEventLoop.h>
 #include <LibGUI/GWindow.h>
 
 class GDialog : public GWindow {
@@ -25,6 +25,6 @@ protected:
     explicit GDialog(CObject* parent);
 
 private:
-    OwnPtr<GEventLoop> m_event_loop;
+    OwnPtr<CEventLoop> m_event_loop;
     int m_result { ExecAborted };
 };

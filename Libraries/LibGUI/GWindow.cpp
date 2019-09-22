@@ -497,12 +497,12 @@ void GWindow::set_focused_widget(GWidget* widget)
     if (m_focused_widget == widget)
         return;
     if (m_focused_widget) {
-        GEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
+        CEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusOut));
         m_focused_widget->update();
     }
     m_focused_widget = widget ? widget->make_weak_ptr() : nullptr;
     if (m_focused_widget) {
-        GEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
+        CEventLoop::current().post_event(*m_focused_widget, make<GEvent>(GEvent::FocusIn));
         m_focused_widget->update();
     }
 }
@@ -567,12 +567,12 @@ void GWindow::set_hovered_widget(GWidget* widget)
         return;
 
     if (m_hovered_widget)
-        GEventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Leave));
+        CEventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Leave));
 
     m_hovered_widget = widget ? widget->make_weak_ptr() : nullptr;
 
     if (m_hovered_widget)
-        GEventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
+        CEventLoop::current().post_event(*m_hovered_widget, make<GEvent>(GEvent::Enter));
 }
 
 void GWindow::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_immediately)

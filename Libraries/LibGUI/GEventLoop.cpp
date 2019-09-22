@@ -43,17 +43,6 @@ void GWindowServerConnection::handshake()
     handle_greeting(response);
 }
 
-GEventLoop::GEventLoop()
-{
-    // ensure the WS connection is up, as our users might be expecting it to be
-    // valid very early (via e.g. GDesktop) :)
-    GWindowServerConnection::the();
-}
-
-GEventLoop::~GEventLoop()
-{
-}
-
 void GWindowServerConnection::handle_paint_event(const WSAPI_ServerMessage& event, GWindow& window, const ByteBuffer& extra_data)
 {
 #ifdef GEVENTLOOP_DEBUG
