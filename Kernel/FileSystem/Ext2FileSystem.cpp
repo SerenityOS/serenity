@@ -1204,19 +1204,15 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
         return {};
     }
 
-    auto blocks = allocate_blocks(group_index_from_inode(inode_id), needed_blocks);
-    if (blocks.size() != needed_blocks) {
-        kprintf("Ext2FS: create_inode: allocate_blocks failed\n");
-        error = -ENOSPC;
-        return {};
-    }
-
     // Try adding it to the directory first, in case the name is already in use.
     auto result = parent_inode->add_child({ fsid(), inode_id }, name, mode);
     if (result.is_error()) {
         error = result;
         return {};
     }
+
+    auto blocks = allocate_blocks(group_index_from_inode(inode_id), needed_blocks);
+    ASSERT(blocks.size() == needed_blocks);
 
     // Looks like we're good, time to update the inode bitmap and group+global inode counters.
     bool success = set_inode_allocation_state(inode_id, true);
