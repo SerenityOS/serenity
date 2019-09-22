@@ -59,12 +59,14 @@ void RangeAllocator::carve_at_index(int index, const Range& range)
 
 Range RangeAllocator::allocate_anywhere(size_t size)
 {
+    // NOTE: We pad VM allocations with a guard page on each side.
+    size_t padded_size = size + PAGE_SIZE * 2;
     for (int i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
-        if (available_range.size() < size)
+        if (available_range.size() < padded_size)
             continue;
-        Range allocated_range(available_range.base(), size);
-        if (available_range.size() == size) {
+        Range allocated_range(available_range.base().offset(PAGE_SIZE), size);
+        if (available_range.size() == padded_size) {
 #ifdef VRA_DEBUG
             dbgprintf("VRA: Allocated perfect-fit anywhere(%u): %x\n", size, allocated_range.base().get());
 #endif
