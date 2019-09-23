@@ -1,9 +1,12 @@
-#include <AK/String.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <LibCore/CFile.h>
+#include <net/if.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
+#include <sys/socket.h>
 
 String si_bytes(unsigned bytes)
 {
@@ -18,8 +21,35 @@ String si_bytes(unsigned bytes)
 
 int main(int argc, char** argv)
 {
-    UNUSED_PARAM(argc);
-    UNUSED_PARAM(argv);
+    if (argc == 3) {
+        String ifname = argv[1];
+        auto address = IPv4Address::from_string(argv[2]);
+
+        if (!address.has_value()) {
+            fprintf(stderr, "Invalid IPv4 address: '%s'\n", argv[2]);
+            return 1;
+        }
+
+        int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_IP);
+        if (fd < 0) {
+            perror("socket");
+            return 1;
+        }
+
+        struct ifreq ifr;
+        memset(&ifr, 0, sizeof(ifr));
+
+        strncpy(ifr.ifr_name, ifname.characters(), IFNAMSIZ);
+        ifr.ifr_addr.sa_family = AF_INET;
+        ((sockaddr_in&)ifr.ifr_addr).sin_addr.s_addr = address.value().to_in_addr_t();
+
+        int rc = ioctl(fd, SIOCSIFADDR, &ifr);
+        if (rc < 0) {
+            perror("ioctl(SIOCSIFADDR)");
+            return 1;
+        }
+        return 0;
+    }
 
     auto file = CFile::construct("/proc/net/adapters");
     if (!file->open(CIODevice::ReadOnly)) {
