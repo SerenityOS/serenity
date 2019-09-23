@@ -1,5 +1,5 @@
 #include <AK/String.h>
-#include <LibCore/CEventLoop.h>
+#include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>
 #include <getopt.h>
 #include <stdio.h>
@@ -62,9 +62,9 @@ Options parse_options(int argc, char* argv[])
 
 int main(int argc, char* argv[])
 {
-    Options options = parse_options(argc, argv);
+    GApplication app(argc, argv);
 
-    CEventLoop loop;
+    Options options = parse_options(argc, argv);
 
     GClipboard& clipboard = GClipboard::the();
     auto data_and_type = clipboard.data_and_type();
@@ -78,4 +78,6 @@ int main(int argc, char* argv[])
     } else {
         printf("%s\n", data_and_type.type.characters());
     }
+
+    return 0;
 }
