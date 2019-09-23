@@ -36,8 +36,19 @@ GModelIndex RemoteObjectGraphModel::parent_index(const GModelIndex& index) const
     auto& remote_object = *static_cast<RemoteObject*>(index.internal_data());
     if (!remote_object.parent)
         return {};
-    for (int row = 0; row < remote_object.parent->children.size(); ++row) {
-        if (&remote_object.parent->children[row] == &remote_object)
+
+    // NOTE: If the parent has no parent, it's a root, so we have to look among the remote roots.
+    if (!remote_object.parent->parent) {
+        for (int row = 0; row < m_process.roots().size(); ++row) {
+            if (&m_process.roots()[row] == remote_object.parent)
+                return create_index(row, 0, remote_object.parent);
+        }
+        ASSERT_NOT_REACHED();
+        return {};
+    }
+
+    for (int row = 0; row < remote_object.parent->parent->children.size(); ++row) {
+        if (&remote_object.parent->parent->children[row] == remote_object.parent)
             return create_index(row, 0, remote_object.parent);
     }
 
