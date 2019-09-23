@@ -18,6 +18,7 @@ class NetworkAdapter : public Weakable<NetworkAdapter> {
 public:
     static void for_each(Function<void(NetworkAdapter&)>);
     static WeakPtr<NetworkAdapter> from_ipv4_address(const IPv4Address&);
+    static WeakPtr<NetworkAdapter> lookup_by_name(const StringView&);
     virtual ~NetworkAdapter();
 
     virtual const char* class_name() const = 0;

@@ -32,6 +32,16 @@ WeakPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& add
     return nullptr;
 }
 
+WeakPtr<NetworkAdapter> NetworkAdapter::lookup_by_name(const StringView& name)
+{
+    NetworkAdapter* found_adapter = nullptr;
+    for_each([&](auto& adapter) {
+        if (adapter.name() == name)
+            found_adapter = &adapter;
+    });
+    return found_adapter ? found_adapter->make_weak_ptr() : nullptr;
+}
+
 NetworkAdapter::NetworkAdapter()
 {
     // FIXME: I wanna lock :(

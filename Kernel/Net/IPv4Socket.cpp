@@ -13,6 +13,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
+#include <LibC/sys/ioctl_numbers.h>
 
 //#define IPV4_SOCKET_DEBUG
 
@@ -337,7 +338,6 @@ KResult IPv4Socket::getsockopt(int level, int option, void* value, socklen_t* va
     if (level != IPPROTO_IP)
         return Socket::getsockopt(level, option, value, value_size);
 
-
     switch (option) {
     case IP_TTL:
         if (*value_size < sizeof(int))
@@ -347,4 +347,37 @@ KResult IPv4Socket::getsockopt(int level, int option, void* value, socklen_t* va
     default:
         return KResult(-ENOPROTOOPT);
     }
+}
+
+int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
+{
+    auto* ifr = (ifreq*)arg;
+    if (!current->process().validate_read_typed(ifr))
+        return -EFAULT;
+
+    char namebuf[IFNAMSIZ + 1];
+    memcpy(namebuf, ifr->ifr_name, IFNAMSIZ);
+    namebuf[sizeof(namebuf) - 1] = '\0';
+    auto adapter = NetworkAdapter::lookup_by_name(namebuf);
+    if (!adapter)
+        return -ENODEV;
+
+    switch (request) {
+    case SIOCSIFADDR:
+        if (!current->process().is_superuser())
+            return -EPERM;
+        if (ifr->ifr_addr.sa_family != AF_INET)
+            return -EAFNOSUPPORT;
+        adapter->set_ipv4_address(IPv4Address(((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr));
+        return 0;
+
+    case SIOCGIFADDR:
+        if (!current->process().validate_write_typed(ifr))
+            return -EFAULT;
+        ifr->ifr_addr.sa_family = AF_INET;
+        ((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr = adapter->ipv4_address().to_u32();
+        return 0;
+    }
+
+    return -EINVAL;
 }

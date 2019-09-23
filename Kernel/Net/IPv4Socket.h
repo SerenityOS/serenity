@@ -34,6 +34,8 @@ public:
     virtual KResult setsockopt(int level, int option, const void*, socklen_t) override;
     virtual KResult getsockopt(int level, int option, void*, socklen_t*) override;
 
+    virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
+
     void did_receive(const IPv4Address& peer_address, u16 peer_port, KBuffer&&);
 
     const IPv4Address& local_address() const { return m_local_address; }
