@@ -7,11 +7,15 @@
 #endif
 
 #ifdef __cplusplus
-#    define __BEGIN_DECLS extern "C" {
-#    define __END_DECLS }
+#    ifndef __BEGIN_DECLS
+#        define __BEGIN_DECLS extern "C" {
+#        define __END_DECLS }
+#    endif
 #else
-#    define __BEGIN_DECLS
-#    define __END_DECLS
+#    ifndef __BEGIN_DECLS
+#        define __BEGIN_DECLS
+#        define __END_DECLS
+#    endif
 #endif
 
 #undef __P
