@@ -134,27 +134,23 @@ public:
         auto* new_node = new Node(move(value));
         new_node->value = value;
 
-        if (!m_head) {
-            m_head = new_node;
-            m_tail = new_node;
+        if (!m_head || m_head->value > new_node->value) {
+            new_node->next = m_head;
+        if (!m_head)
+                m_tail = new_node;
+        m_head = new_node;
             return;
         }
 
-	if (!m_head->next && new_node->value < m_head->value) {
-           new_node->next = m_head;
-	   m_head = new_node;
-	   return;
-	}
-
         Node* curr = m_head;
-	while (curr->next && curr->next->value < new_node->value) 
-	{
-	    curr = curr->next;
+        while (curr->next && curr->next->value < new_node->value) 
+        {
+            curr = curr->next;
         }
 
         new_node->next = curr->next;
-	curr->next = new_node;
-	if(m_tail == curr)
+        curr->next = new_node;
+        if(m_tail == curr)
             m_tail = new_node;
 
     }   
@@ -164,23 +160,24 @@ public:
         auto* new_node = new Node(move(value));
         new_node->value = value;
 
-        if (!m_head) {
+        if (!m_head || m_head->value > new_node->value) {
+            new_node->next = m_head;
+            if (!m_head)
+                m_tail = new_node;
             m_head = new_node;
-            m_tail = new_node;
             return;
         }
-	
+
         Node* curr = m_head;
-	while (curr->next && curr->next->value < new_node->value)
+        while (curr->next && curr->next->value < new_node->value)
         {
-	    curr = curr->next;
+            curr = curr->next;
         }
 
         new_node->next = curr->next;
-	curr->next = new_node;
-	if(m_tail == curr)
+        curr->next = new_node;
+        if(m_tail == curr)
             m_tail = new_node;
-
     }
 
     bool contains_slow(const T& value) const

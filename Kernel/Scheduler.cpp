@@ -62,11 +62,11 @@ struct Timer {
     void (*callback)();
     inline bool operator<(const Timer& rhs)
     {
-    	return expires < rhs.expires;
+        return expires < rhs.expires;
     }
     inline bool operator>( const Timer& rhs)
     {
-    	return expires > rhs.expires;
+        return expires > rhs.expires;
     }
 };
 
@@ -86,7 +86,7 @@ void Scheduler::beep()
     timer.expires = g_uptime + 100;
     timer.callback = []() {
         PCSpeaker::tone_off();
-	dbgprintf("tone off");
+    dbgprintf("tone off");
     };
     add_timer(timer);
 }
@@ -548,36 +548,6 @@ void Scheduler::initialize()
     load_task_register(s_redirection.selector);
 
     g_timer_queue = new SinglyLinkedList<Timer>();
-
-    auto timer = Timer();
-    timer.expires = g_uptime + 10000;
-    timer.callback = []() {
-	dbgprintf("10 secs\n");
-    };
-    add_timer(timer);
-    
-    
-    timer = Timer();
-    timer.expires = g_uptime + 12000;
-    timer.callback = []() {
-	dbgprintf("12 secs\n");
-    };
-    add_timer(timer);
-
-    timer = Timer();
-    timer.expires = g_uptime + 11000;
-    timer.callback = []() {
-	dbgprintf("11 secs\n");
-    };
-    add_timer(timer);
-    
-    timer = Timer();
-    timer.expires = g_uptime + 5000;
-    timer.callback = []() {
-	dbgprintf("5 secs\n");
-    };
-    add_timer(timer);
-
 }
 
 void Scheduler::timer_tick(RegisterDump& regs)
@@ -586,23 +556,18 @@ void Scheduler::timer_tick(RegisterDump& regs)
         return;
 
     ++g_uptime;
-/*
-    if (s_beep_timeout && g_uptime > s_beep_timeout) {
-        PCSpeaker::tone_off();
-        s_beep_timeout = 0;
-    }
-*/    
+   
     if ( s_next_timer_due && g_uptime > s_next_timer_due) {
         
-	ASSERT(s_next_timer_due == g_timer_queue->first().expires);
-	while (! g_timer_queue->is_empty() && g_uptime > g_timer_queue->first().expires)
-	{
+        ASSERT(s_next_timer_due == g_timer_queue->first().expires);
+        while (! g_timer_queue->is_empty() && g_uptime > g_timer_queue->first().expires)
+        {
             auto timer = g_timer_queue->take_first();
             timer.callback();
-	}
-	if (! g_timer_queue->is_empty())
+        }
+        if (! g_timer_queue->is_empty())
             s_next_timer_due = g_timer_queue->first().expires;
-	else
+        else
             s_next_timer_due = 0;
     }
 
