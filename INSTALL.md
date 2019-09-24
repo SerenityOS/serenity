@@ -7,7 +7,7 @@ Whilst it is possible to run Serenity on physical x86-compatible hardware, it is
 
 ## Hardware support and requirements
 
-The main requirement for running Serenity on real hardware is having a >= 500 MB parallel ATA IDE disk attached to your machine. There is currently no support for SATA, SCSI, SAS or NVME. You must be willing to wipe its contents to allow for writing the Serenity image so be sure to back up any wanted data on your disk first! Serenity uses the GRUB2 bootloader so it should be possible to multiboot it with any other OS that can be booted from GRUB2 post-installation.
+Storage-wise Serenity requires a >= 500 MB parallel ATA IDE disk. You may also be able to use a SATA disk if your BIOS has the option to run your SATA controller in IDE (sometimes referred to as Legacy or PATA) mode. SATA AHCI, SCSI, SAS, eMMC and NVME are all presently unsupported. You must be willing to wipe your disks contents to allow for writing the Serenity image so be sure to back up any wanted data on your disk first! Serenity uses the GRUB2 bootloader so it should be possible to multiboot it with any other OS that can be booted from GRUB2 post-installation.
 
 Serenity currently has no support for USB but some machines will emulate PS/2 keyboards and mice in the BIOS via USB. BIOS USB PS/2 emulation can be buggy so having real PS/2 input devices is recommended. A minimum of 32 MB RAM and a Pentium III class CPU are required.
 
