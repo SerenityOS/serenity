@@ -1,123 +1,207 @@
-#!/bin/sh
-
-# This script contains common helpers for all ports.
-set -e
+#!/bin/bash
+if [ -z "$SERENITY_ROOT" ]; then
+    echo "You must source UseIt.sh to build ports."
+    exit 1
+fi
+set -eu
+prefix=$(pwd)/..
 
 export CC=i686-pc-serenity-gcc
 export CXX=i686-pc-serenity-g++
 
-if [ -z "$MAKEOPTS" ]; then
-    MAKEOPTS="-j $(nproc)"
-fi
-if [ -z "$INSTALLOPTS" ]; then
-    INSTALLOPTS=""
-fi
-if [ -z "$SERENITY_ROOT" ]; then
-    echo "You must have source'd UseIt.sh to build any ports!"
-    exit 1
-fi
+. "$@"
+shift
 
-if [ -z "$PORT_DIR" ]; then
-    echo "Must set PORT_DIR to where the source should be cloned."
-    exit 1
-fi
+: "${makeopts:=-j$(nproc)}"
+: "${installopts:=}"
+: "${workdir:=$port-$version}"
+: "${configscript:=configure}"
+: "${configopts:=}"
+: "${useconfigure:=false}"
+: "${depends:=}"
+: "${patchlevel:=1}"
 
-run_command() {
-    echo "+ $@"
-    (cd "$PORT_DIR" && "$@")
-    echo "+ FINISHED: $@"
-}
-
-run_command_nocd() {
+run_nocd() {
     echo "+ $@ (nocd)"
     ("$@")
-    echo "+ FINISHED (nocd): $@"
 }
-
-run_fetch_git() {
-    if [ -d "$PORT_DIR/.git" ]; then
-        run_command git fetch
-        run_command git reset --hard FETCH_HEAD
-        run_command git clean -fx
+run() {
+    echo "+ $@"
+    (cd "$workdir" && "$@")
+}
+run_replace_in_file(){
+    run perl -p -i -e "$1" $2
+}
+# Checks if a function is defined. In this case, if the function is not defined in the port's script, then we will use our defaults. This way, ports don't need to include these functions every time, but they can override our defaults if needed.
+func_defined() {
+    PATH= command -V "$1"  > /dev/null 2>&1
+}
+func_defined fetch || fetch() {
+    OLDIFS=$IFS
+    IFS=$'\n'
+    for f in $files; do
+        IFS=$OLDIFS
+        read url filename <<< $(echo "$f")
+        run_nocd curl ${curlopts:-} "$url" -o "$filename"
+        case "$filename" in
+            *.tar*|.tbz*|*.txz|*.tgz)
+                run_nocd tar xf "$filename"
+                ;;
+            *.gz)
+                run_nocd gunzip "$filename"
+                ;;
+            *)
+                echo "Note: no case for file $filename."
+                ;;
+        esac
+    done    
+    if [ -d patches ]; then
+        for f in patches/*; do
+            run patch -p"$patchlevel" < "$f"
+        done
+    fi
+}
+func_defined configure || configure() {
+    run ./"$configscript" --host=i686-pc-serenity $configopts
+}
+func_defined build || build() {
+    run make $makeopts
+}
+func_defined install || install() {
+    run make DESTDIR="$SERENITY_ROOT"/Root $installopts install
+}
+func_defined clean || clean() {
+    rm -rf "$workdir" *.out
+}
+func_defined clean_dist || clean_dist() {
+    OLDIFS=$IFS
+    IFS=$'\n'
+    for f in $files; do
+        IFS=$OLDIFS
+        read url filename hash <<< $(echo "$f")
+        rm -f "$filename"
+    done
+}
+func_defined clean_all || clean_all() {
+    rm -rf "$workdir" *.out
+    OLDIFS=$IFS
+    IFS=$'\n'
+    for f in $files; do
+        IFS=$OLDIFS
+        read url filename hash <<< $(echo "$f")
+        rm -f "$filename"
+    done
+}
+addtodb() {
+    if [ ! -f "$prefix"/packages.db ]; then
+        echo "Note: $prefix/packages.db does not exist. Creating."
+        touch "$prefix"/packages.db
+    fi
+    if ! grep -E "^(auto|manual) $port $version" "$prefix"/packages.db > /dev/null; then
+        echo "Adding $port $version to database of installed ports!"
+        if [ "${1:-}" = "--auto" ]; then
+            echo "auto $port $version" >> "$prefix"/packages.db
+        else
+            echo "manual $port $version" >> "$prefix"/packages.db
+            if [ ! -z "${dependlist:-}" ]; then
+                echo "dependency $port$dependlist" >> "$prefix/packages.db"
+            fi
+        fi
     else
-        run_command_nocd git clone "$1" "$PORT_DIR"
+        >&2 echo "Warning: $port $version already installed. Not adding to database of installed ports!"
     fi
 }
-
-run_fetch_web() {
-    if [ -d "$PORT_DIR" ]; then
-        run_command_nocd rm -rf "$PORT_DIR"
+installdepends() {
+    for depend in $depends; do
+        dependlist="${dependlist:-} $depend"
+    done
+    for depend in $depends; do
+        if ! grep "$depend" "$prefix"/packages.db > /dev/null; then
+            (cd "../$depend" && ./package.sh --auto)
+        fi
+    done
+}
+uninstall() {
+    if grep "^manual $port " "$prefix"/packages.db > /dev/null; then
+        if [ -f plist ]; then
+            for f in `cat plist`; do
+                case $f in
+                    */)
+                        run rmdir "$prefix"/$f || true
+                        ;;
+                    *)
+                        run rm -rf "$prefix"/$f
+                        ;;
+                esac
+            done
+            # Without || true, mv will not be executed if you are uninstalling your only remaining port.
+            grep -v "^manual $port " "$prefix"/packages.db > packages.dbtmp || true
+            mv packages.dbtmp "$prefix"/packages.db
+        else
+            >&2 echo "Error: This port does not have a plist yet. Cannot uninstall."
+        fi
+    else
+        >&2 echo "Error: $port is not installed. Cannot uninstall."
     fi
-    file=$(basename "$1")
-    run_command_nocd curl -L "$1" -o "$file"
-    mkdir "$PORT_DIR"
-
-    # may need to make strip-components configurable, as I bet some sick person
-    # out there has an archive that isn't in a directory :shrug:
-    run_command_nocd tar xavf "$file" -C "$PORT_DIR" --strip-components=1
 }
-
-run_export_env() {
-    export $1="$2"
-}
-
-run_replace_in_file() {
-    run_command perl -p -i -e "$1" $2
-}
-
-run_patch() {
-    echo "+ Applying patch $1"
-    run_command patch "$2" < "$1"
-}
-
-run_configure_cmake() {
-    run_command cmake -DCMAKE_TOOLCHAIN_FILE="$SERENITY_ROOT/Toolchain/CMakeToolchain.txt" $CMAKEOPTS .
-}
-
-run_configure_autotools() {
-    run_command ./configure --host=i686-pc-serenity "$@"
-}
-
-run_make() {
-    run_command make $MAKEOPTS "$@"
-}
-
-run_make_install() {
-    run_command make $INSTALLOPTS install "$@"
-}
-
-run_send_to_file() {
-    echo "+ rewrite '$1'"
-	(cd "$PORT_DIR" && echo "$2" > "$1")
-    echo "+ FINISHED"
-}
-
-if [ -z "$1" ]; then
-    echo "+ Fetching..."
+do_fetch() {
+    installdepends
+    echo "Fetching $port!"
     fetch
-    echo "+ Configuring..."
-    configure
-    echo "+ Building..."
+}
+do_configure() {
+    if [ "$useconfigure" = "true" ]; then
+        echo "Configuring $port!"
+        configure
+    else
+        echo "This port does not use a configure script. Skipping configure step."
+    fi
+}
+do_build() {
+    echo "Building $port!"
     build
-    echo "+ Installing..."
+}
+do_install() {
+    echo "Installing $port!"
     install
-    exit 0
-fi
+    addtodb "${1:-}"
+}
+do_clean() {
+    echo "Cleaning workdir and .out files in $port!"
+    clean
+}
+do_clean_dist() {
+    echo "Cleaning dist in $port!"
+    clean_dist
+}
+do_clean_all() {
+    echo "Cleaning all in $port!"
+    clean_all
+}
+do_uninstall() {
+    echo "Uninstalling $port!"
+    uninstall
+}
+do_all() {
+    do_fetch
+    do_configure
+    do_build
+    do_install "${1:-}"
+}
 
-if [ "$1" = "fetch" ]; then
-    echo "+ Fetching..."
-    fetch
-elif [ "$1" = "configure" ]; then
-    echo "+ Configuring..."
-    configure
-elif [ "$1" = "build" ]; then
-    echo "+ Building..."
-    build
-elif [ "$1" = "install" ]; then
-    echo "+ Installing..."
-    install
+if [ -z "${1:-}" ]; then
+    do_all
 else
-    echo "Unknown verb: $1"
-    echo "Supported: (one of) fetch configure build install"
-    exit 1
+    case "$1" in
+        fetch|configure|build|install|clean|clean_dist|clean_all|uninstall)
+            do_$1
+            ;;
+        --auto)
+            do_all $1
+            ;;
+        *)
+            >&2 echo "I don't understand $1! Supported arguments: fetch, configure, build, install, clean, clean_dist, clean_all, uninstall."
+            exit 1
+            ;;
+    esac
 fi
