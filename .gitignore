@@ -29,3 +29,4 @@ Toolchain/Local
 compile_commands.json
 .clang_complete
 *Endpoint.h
+Ports/packages.db
