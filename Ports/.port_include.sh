@@ -127,10 +127,10 @@ uninstall() {
             for f in `cat plist`; do
                 case $f in
                     */)
-                        run rmdir "$prefix"/$f || true
+                        run rmdir "$SERENITY_ROOT/Root/$f" || true
                         ;;
                     *)
-                        run rm -rf "$prefix"/$f
+                        run rm -rf "$SERENITY_ROOT/Root/$f"
                         ;;
                 esac
             done
