@@ -33,7 +33,6 @@ public:
     static void beep();
     static void idle_loop();
     static void stop_idling();
-    static void add_timer(Timer& timer);
 
     template<typename Callback>
     static inline IterationDecision for_each_runnable(Callback);

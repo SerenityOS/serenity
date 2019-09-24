@@ -8,7 +8,6 @@
 #include <Kernel/Scheduler.h>
 
 SchedulerData* g_scheduler_data;
-SinglyLinkedList<Timer>* g_timer_queue;
 
 void Scheduler::init_thread(Thread& thread)
 {
@@ -55,19 +54,6 @@ static u64 s_next_timer_due;
 struct TaskRedirectionData {
     u16 selector;
     TSS32 tss;
-};
-
-struct Timer {
-    u64 expires;
-    void (*callback)();
-    inline bool operator<(const Timer& rhs)
-    {
-        return expires < rhs.expires;
-    }
-    inline bool operator>( const Timer& rhs)
-    {
-        return expires > rhs.expires;
-    }
 };
 
 static TaskRedirectionData s_redirection;
@@ -557,18 +543,8 @@ void Scheduler::timer_tick(RegisterDump& regs)
 
     ++g_uptime;
    
-    if ( s_next_timer_due && g_uptime > s_next_timer_due) {
-        
-        ASSERT(s_next_timer_due == g_timer_queue->first().expires);
-        while (! g_timer_queue->is_empty() && g_uptime > g_timer_queue->first().expires)
-        {
-            auto timer = g_timer_queue->take_first();
-            timer.callback();
-        }
-        if (! g_timer_queue->is_empty())
-            s_next_timer_due = g_timer_queue->first().expires;
-        else
-            s_next_timer_due = 0;
+    if ( TimerQueue::s_next_timer_due && g_uptime > TimerQueue::s_next_timer_due) {
+            TimerQueue::fire_timer();
     }
 
     if (current->tick())
@@ -608,13 +584,6 @@ void Scheduler::timer_tick(RegisterDump& regs)
         "pushf\n"
         "orl $0x00004000, (%esp)\n"
         "popf\n");
-}
-
-void Scheduler::add_timer(Timer& timer)
-{
-    ASSERT(timer.expires > g_uptime);
-    g_timer_queue->sorted_insert_slow(timer);
-    s_next_timer_due = g_timer_queue->first().expires;
 }
 
 static bool s_should_stop_idling = false;
