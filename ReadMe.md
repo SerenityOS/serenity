@@ -80,6 +80,8 @@ Once you've done both of those, go into the `Kernel/` directory, then run
 **./makeall.sh**, and if nothing breaks too much, take it for a spin by using
 **./run**.
 
+Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/INSTALL.md) 
+
 Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply rerun **./makeall.sh** in the `Kernel/` directory and you'll be good to **./run** again.
 
 ## Notes on WSL
