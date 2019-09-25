@@ -26,3 +26,11 @@ const LayoutBlock* LayoutNode::containing_block() const
     }
     return nullptr;
 }
+
+void LayoutNode::render(RenderingContext& context)
+{
+    // TODO: render our background and border
+    for_each_child([&](auto& child) {
+        child.render(context);
+    });
+}
