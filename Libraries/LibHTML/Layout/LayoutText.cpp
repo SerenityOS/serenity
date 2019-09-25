@@ -60,7 +60,11 @@ void LayoutText::load_font()
         dbg() << "My text is " << node().data();
         ASSERT_NOT_REACHED();
     }
+
+#ifdef HTML_DEBUG
     dbg() << "Found font " << file_name << " for family " << font_family << " weight " << font_weight;
+#endif
+
     m_font = Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
 }
 
