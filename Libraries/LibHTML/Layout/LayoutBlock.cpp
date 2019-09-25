@@ -1,3 +1,4 @@
+#include <LibGUI/GPainter.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 
@@ -142,4 +143,20 @@ void LayoutBlock::compute_height()
     auto height_length = height_property.value()->to_length();
     if (height_length.is_absolute())
         rect().set_height(height_length.to_px());
+}
+
+void LayoutBlock::render(RenderingContext& context)
+{
+    LayoutNode::render(context);
+
+    // FIXME: position this properly
+    if (style_properties().string_or_fallback("display", "block") == "list-item") {
+        Rect bullet_rect {
+            rect().x() - 8,
+            rect().y() + 4,
+            3,
+            3
+        };
+        context.painter().fill_rect(bullet_rect, Color::Black);
+    }
 }
