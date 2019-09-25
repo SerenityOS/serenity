@@ -34,6 +34,7 @@ public:
     const T* last_child() const { return m_last_child; }
 
     void append_child(NonnullRefPtr<T> node);
+    void donate_all_children_to(T& node);
 
 protected:
     TreeNode() { }
@@ -58,4 +59,22 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node)
     m_last_child = &node.leak_ref();
     if (!m_first_child)
         m_first_child = m_last_child;
+}
+
+template<typename T>
+inline void TreeNode<T>::donate_all_children_to(T& node)
+{
+    for (T* child = m_first_child; child != nullptr;) {
+        T* next_child = child->m_next_sibling;
+
+        child->m_parent = nullptr;
+        child->m_next_sibling = nullptr;
+        child->m_previous_sibling = nullptr;
+
+        node.append_child(adopt(*child));
+        child = next_child;
+    }
+
+    m_first_child = nullptr;
+    m_last_child = nullptr;
 }
