@@ -17,12 +17,10 @@ public:
     Color text_color() const { return m_text_color; }
     Color background_color() const { return m_background_color; }
 
-    LengthBox& offset() { return m_offset; }
     LengthBox& margin() { return m_margin; }
     LengthBox& padding() { return m_padding; }
     LengthBox& border() { return m_border; }
 
-    const LengthBox& offset() const { return m_offset; }
     const LengthBox& margin() const { return m_margin; }
     const LengthBox& padding() const { return m_padding; }
     const LengthBox& border() const { return m_border; }
@@ -36,7 +34,6 @@ private:
     Color m_text_color;
     Color m_background_color;
 
-    LengthBox m_offset;
     LengthBox m_margin;
     LengthBox m_padding;
     LengthBox m_border;
