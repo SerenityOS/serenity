@@ -17,6 +17,7 @@ public:
     Optional<NonnullRefPtr<StyleValue>> property(const String& name) const;
 
     Length length_or_fallback(const StringView& property_name, const Length& fallback) const;
+    String string_or_fallback(const StringView& property_name, const StringView& fallback) const;
 
 private:
     HashMap<String, NonnullRefPtr<StyleValue>> m_property_values;

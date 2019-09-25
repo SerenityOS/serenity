@@ -20,3 +20,11 @@ Length StyleProperties::length_or_fallback(const StringView& property_name, cons
         return fallback;
     return value.value()->to_length();
 }
+
+String StyleProperties::string_or_fallback(const StringView& property_name, const StringView& fallback) const
+{
+    auto value = property(property_name);
+    if (!value.has_value())
+        return fallback;
+    return value.value()->to_string();
+}
