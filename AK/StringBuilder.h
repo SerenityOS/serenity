@@ -24,6 +24,9 @@ public:
     String to_string();
     ByteBuffer to_byte_buffer();
 
+    StringView string_view() const;
+    void clear();
+
 private:
     void will_append(int);
 

@@ -68,9 +68,19 @@ ByteBuffer StringBuilder::to_byte_buffer()
 String StringBuilder::to_string()
 {
     auto string = String((const char*)m_buffer.pointer(), m_length);
+    clear();
+    return string;
+}
+
+StringView StringBuilder::string_view() const
+{
+    return StringView { (const char*)m_buffer.pointer(), m_length };
+}
+
+void StringBuilder::clear()
+{
     m_buffer.clear();
     m_length = 0;
-    return string;
 }
 
 }
