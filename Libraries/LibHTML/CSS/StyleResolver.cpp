@@ -52,9 +52,18 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
     return matching_rules;
 }
 
-StyleProperties StyleResolver::resolve_style(const Element& element)
+StyleProperties StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_properties) const
 {
     StyleProperties style_properties;
+
+    if (parent_properties) {
+        parent_properties->for_each_property([&](const StringView& name, auto& value) {
+            // TODO: proper inheritance
+            if (name.starts_with("font") || name == "white-space")
+                style_properties.set_property(name, value);
+        });
+    }
+
     auto matching_rules = collect_matching_rules(element);
     for (auto& rule : matching_rules) {
         for (auto& declaration : rule.declarations()) {
