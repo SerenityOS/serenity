@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibHTML/CSS/LengthBox.h>
 #include <LibDraw/Color.h>
 #include <LibDraw/Size.h>
+#include <LibHTML/CSS/LengthBox.h>
 
 enum FontStyle {
     Normal,
@@ -29,6 +29,15 @@ public:
 
     const Size& size() const { return m_size; }
     Size& size() { return m_size; }
+
+    struct PixelBox {
+        int top;
+        int right;
+        int bottom;
+        int left;
+    };
+
+    PixelBox full_margin() const;
 
 private:
     Color m_text_color;
