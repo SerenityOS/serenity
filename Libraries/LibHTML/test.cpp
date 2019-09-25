@@ -1,8 +1,10 @@
 #include <LibCore/CFile.h>
+#include <LibGUI/GApplication.h>
+#include <LibGUI/GWindow.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Dump.h>
-#include <LibHTML/Frame.h>
+#include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
 #include <LibHTML/Parser/CSSParser.h>
@@ -11,6 +13,8 @@
 
 int main(int argc, char** argv)
 {
+    GApplication app(argc, argv);
+
     auto f = CFile::construct(argc == 1 ? "/home/anon/small.html" : argv[1]);
     if (!f->open(CIODevice::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", f->error_string());
@@ -28,8 +32,11 @@ int main(int argc, char** argv)
     dump_tree(document);
     document->add_sheet(*sheet);
 
-    auto frame = make<Frame>();
-    frame->set_document(document);
-    frame->layout();
-    return 0;
+    auto window = GWindow::construct();
+    auto widget = HtmlView::construct();
+    widget->set_document(document);
+    window->set_main_widget(widget);
+    window->show();
+
+    return app.exec();
 }
