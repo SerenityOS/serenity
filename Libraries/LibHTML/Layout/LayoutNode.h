@@ -5,6 +5,7 @@
 #include <LibDraw/Rect.h>
 #include <LibHTML/CSS/StyleProperties.h>
 #include <LibHTML/Layout/ComputedStyle.h>
+#include <LibHTML/RenderingContext.h>
 #include <LibHTML/TreeNode.h>
 
 class Node;
@@ -44,6 +45,7 @@ public:
     virtual bool is_inline() const { return false; }
 
     virtual void layout();
+    virtual void render(RenderingContext&);
 
     const LayoutBlock* containing_block() const;
 

@@ -1,6 +1,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/CDirIterator.h>
 #include <LibDraw/Font.h>
+#include <LibGUI/GPainter.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutText.h>
 #include <ctype.h>
@@ -215,4 +216,20 @@ void LayoutText::layout()
     const Run& last_run = m_runs[m_runs.size() - 1];
     rect().set_right(last_run.pos.x() + m_font->width(last_run.text));
     rect().set_bottom(last_run.pos.y() + m_font->glyph_height());
+}
+
+void LayoutText::render(RenderingContext& context)
+{
+    auto& painter = context.painter();
+    painter.set_font(*m_font);
+
+    for (auto& run : m_runs) {
+        Rect rect {
+            run.pos.x(),
+            run.pos.y(),
+            m_font->width(run.text),
+            m_font->glyph_height()
+        };
+        painter.draw_text(rect, run.text);
+    }
 }

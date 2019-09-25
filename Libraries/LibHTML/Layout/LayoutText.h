@@ -17,6 +17,7 @@ public:
     virtual const char* class_name() const override { return "LayoutText"; }
     virtual bool is_text() const final { return true; }
     virtual void layout() override;
+    virtual void render(RenderingContext&) override;
 
     struct Run {
         Point pos;

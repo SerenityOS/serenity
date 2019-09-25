@@ -12,6 +12,7 @@ public:
     virtual const char* class_name() const override { return "LayoutBlock"; }
 
     virtual void layout() override;
+    virtual void render(RenderingContext&) override;
 
     virtual LayoutNode& inline_wrapper() override;
 
