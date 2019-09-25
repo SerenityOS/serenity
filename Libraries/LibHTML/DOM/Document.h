@@ -16,6 +16,8 @@ public:
     Document();
     virtual ~Document() override;
 
+    void normalize();
+
     StyleResolver& style_resolver();
 
     void add_sheet(const StyleSheet& sheet) { m_sheets.append(sheet); }
