@@ -104,7 +104,6 @@ cp ../Servers/AudioServer/AudioServer mnt/bin/AudioServer
 cp ../Servers/TTYServer/TTYServer mnt/bin/TTYServer
 cp ../Servers/TelnetServer/TelnetServer mnt/bin/TelnetServer
 cp ../Shell/Shell mnt/bin/Shell
-cp ../Libraries/LibHTML/tho mnt/bin/tho
 echo "done"
 
 echo -n "installing shortcuts... "
