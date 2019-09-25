@@ -13,6 +13,9 @@ enum class NodeType : unsigned {
 };
 
 class ParentNode;
+class LayoutNode;
+class StyleResolver;
+class StyleProperties;
 
 class Node : public TreeNode<Node> {
 public:
@@ -23,6 +26,9 @@ public:
     bool is_text() const { return type() == NodeType::TEXT_NODE; }
     bool is_document() const { return type() == NodeType::DOCUMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document(); }
+
+    RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const;
+    RefPtr<LayoutNode> create_layout_tree(const StyleResolver&, const StyleProperties* parent_properties) const;
 
 protected:
     explicit Node(NodeType);
