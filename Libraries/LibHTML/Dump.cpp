@@ -78,8 +78,10 @@ void dump_tree(const LayoutNode& layout_node)
         layout_node.style().border().bottom.to_px(),
         layout_node.style().margin().bottom.to_px());
 
-    if (layout_node.is_text())
-        printf(" \"%s\"", static_cast<const LayoutText&>(layout_node).text().characters());
+    if (layout_node.is_text()) {
+        const LayoutText& layout_text = static_cast<const LayoutText&>(layout_node);
+        printf(" \"%s\", %d runs", layout_text.text().characters(), layout_text.runs().size());
+    }
 
     printf("\n");
 

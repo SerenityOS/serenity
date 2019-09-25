@@ -3,6 +3,8 @@
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
+class Font;
+
 class LayoutText : public LayoutNode {
 public:
     LayoutText(const Text&, StyleProperties&&);
@@ -24,7 +26,9 @@ public:
     const Vector<Run>& runs() const { return m_runs; }
 
 private:
+    void load_font();
     void compute_runs();
 
     Vector<Run> m_runs;
+    RefPtr<Font> m_font;
 };
