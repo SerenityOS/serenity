@@ -12,7 +12,7 @@ LayoutBlock::~LayoutBlock()
 
 LayoutNode& LayoutBlock::inline_wrapper()
 {
-    if (!last_child() || !last_child()->is_block()) {
+    if (!last_child() || !last_child()->is_block() || last_child()->node() != nullptr) {
         append_child(adopt(*new LayoutBlock(nullptr, {})));
     }
     return *last_child();
