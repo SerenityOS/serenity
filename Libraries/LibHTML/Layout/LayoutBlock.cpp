@@ -26,13 +26,7 @@ void LayoutBlock::layout()
     int content_height = 0;
     for_each_child([&](auto& child) {
         child.layout();
-        content_height += child.rect().height()
-            + child.style().margin().top.to_px()
-            + child.style().border().top.to_px()
-            + child.style().padding().top.to_px()
-            + child.style().margin().bottom.to_px()
-            + child.style().border().bottom.to_px()
-            + child.style().padding().bottom.to_px();
+        content_height = child.rect().bottom() + child.style().full_margin().bottom - rect().top();
     });
     rect().set_height(content_height);
 
@@ -117,6 +111,7 @@ void LayoutBlock::compute_position()
     auto zero_value = Length(0, Length::Type::Absolute);
 
     auto width = style_properties.length_or_fallback("width", auto_value);
+
     style().margin().top = style_properties.length_or_fallback("margin-top", zero_value);
     style().margin().bottom = style_properties.length_or_fallback("margin-bottom", zero_value);
     style().border().top = style_properties.length_or_fallback("border-top", zero_value);
@@ -124,7 +119,17 @@ void LayoutBlock::compute_position()
     style().padding().top = style_properties.length_or_fallback("padding-top", zero_value);
     style().padding().bottom = style_properties.length_or_fallback("padding-bottom", zero_value);
     rect().set_x(containing_block()->rect().x() + style().margin().left.to_px() + style().border().left.to_px() + style().padding().left.to_px());
-    rect().set_y(containing_block()->rect().y() + style().margin().top.to_px() + style().border().top.to_px() + style().padding().top.to_px());
+
+    int top_border = -1;
+    if (previous_sibling() != nullptr) {
+        auto& previous_sibling_rect = previous_sibling()->rect();
+        auto& previous_sibling_style = previous_sibling()->style();
+        top_border = previous_sibling_rect.y() + previous_sibling_rect.height();
+        top_border += previous_sibling_style.full_margin().bottom;
+    } else {
+        top_border = containing_block()->rect().y();
+    }
+    rect().set_y(top_border + style().full_margin().top);
 }
 
 void LayoutBlock::compute_height()
