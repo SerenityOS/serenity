@@ -26,10 +26,7 @@ LIBHTML_OBJS = \
 GENERATED_SOURCES = \
     CSS/DefaultStyleSheetSource.cpp
 
-TEST_OBJS = test.o
-TEST_PROGRAM = tho
-
-OBJS = $(EXTRA_OBJS) $(LIBHTML_OBJS) $(TEST_OBJS)
+OBJS = $(EXTRA_OBJS) $(LIBHTML_OBJS)
 
 LIBRARY = libhtml.a
 DEFINES += -DUSERLAND
@@ -43,5 +40,5 @@ CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSourc
 -include $(OBJS:%.o=%.d)
 
 clean:
-	@echo "CLEAN"; rm -f $(TEST_PROGRAM) $(LIBRARY) $(OBJS) *.d $(GENERATED_SOURCES)
+	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d $(GENERATED_SOURCES)
 

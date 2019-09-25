@@ -2,12 +2,9 @@ include ../../Makefile.common
 
 LIBRARY = libhtml.a
 
-all: $(LIBRARY) tho
+all: $(LIBRARY)
 
 include Makefile.shared
-
-tho: $(TEST_OBJS) $(LIBRARY)
-	$(LD) -o $@ $(LDFLAGS) -L. $(TEST_OBJS) -lhtml -lgui -ldraw -lcore -lc
 
 $(LIBRARY): $(LIBHTML_OBJS)
 	@echo "LIB $@"; $(AR) rcs $@ $(LIBHTML_OBJS)
