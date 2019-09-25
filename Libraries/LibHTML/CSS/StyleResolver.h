@@ -18,7 +18,7 @@ public:
     Document& document() { return m_document; }
     const Document& document() const { return m_document; }
 
-    StyleProperties resolve_style(const Element&);
+    StyleProperties resolve_style(const Element&, const StyleProperties* parent_properties) const;
 
     NonnullRefPtrVector<StyleRule> collect_matching_rules(const Element&) const;
 
