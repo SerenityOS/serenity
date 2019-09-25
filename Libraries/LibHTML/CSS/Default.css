@@ -15,15 +15,26 @@ body {
     margin-bottom: 8;
 }
 
-h1 {
+h1, h2 {
     display: block;
     font-family: Pebbleton;
+}
+
+h3 {
+    display: block;
     font-weight: bold;
 }
 
 pre {
     display: block;
+    margin-bottom: 8;
+    margin-top: 8;
+    white-space: pre;
+}
+
+code {
     font-family: Csilla;
+    font-weight: lighter;
 }
 
 u, ins {
@@ -31,11 +42,24 @@ u, ins {
 }
 
 strong, b {
-    font-family: KaticaBold;
+    font-weight: bold;
 }
 
 p {
     display: block;
     margin-bottom: 8;
     margin-top: 8;
+}
+
+ul, ol {
+    display: block;
+    margin-top: 8;
+    margin-bottom: 8;
+}
+
+li {
+    display: list-item;
+    margin-left: 8;
+    margin-top: 2;
+    margin-bottom: 2;
 }
