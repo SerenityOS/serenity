@@ -1,4 +1,5 @@
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Parser/HTMLParser.h>
@@ -54,7 +55,7 @@ NonnullRefPtr<Document> parse_html(const String& html)
 
     auto state = State::Free;
 
-    Vector<char, 256> text_buffer;
+    StringBuilder text_buffer;
 
     Vector<char, 32> tag_name_buffer;
 
@@ -74,9 +75,8 @@ NonnullRefPtr<Document> parse_html(const String& html)
             attribute_name_buffer.clear();
         if (new_state == State::BeforeAttributeValue)
             attribute_value_buffer.clear();
-        if (state == State::Free && !text_buffer.is_empty()) {
-            auto text_node = adopt(*new Text(String::copy(text_buffer)));
-            text_buffer.clear();
+        if (state == State::Free && !text_buffer.string_view().is_empty()) {
+            auto text_node = adopt(*new Text(text_buffer.to_string()));
             node_stack.last().append_child(text_node);
         }
         state = new_state;
@@ -120,7 +120,31 @@ NonnullRefPtr<Document> parse_html(const String& html)
                 move_to_state(State::BeforeTagName);
                 break;
             }
-            text_buffer.append(ch);
+            if (ch != '&') {
+                text_buffer.append(ch);
+            } else {
+                struct Escape {
+                    const char* code;
+                    const char* value;
+                };
+                static Escape escapes[] = {
+                    { "&lt;", "<" },
+                    { "&gt;", ">" },
+                    { "&amp;", "&" }
+                };
+                auto rest_of_html = html.substring_view(i, html.length() - i);
+                bool found = false;
+                for (auto& escape : escapes) {
+                    if (rest_of_html.starts_with(escape.code)) {
+                        text_buffer.append(escape.value);
+                        found = true;
+                        i += strlen(escape.code) - 1;
+                        break;
+                    }
+                }
+                if (!found)
+                    dbg() << "Unhandled escape sequence";
+            }
             break;
         case State::BeforeTagName:
             if (ch == '/') {
