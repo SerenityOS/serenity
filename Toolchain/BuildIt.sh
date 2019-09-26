@@ -21,7 +21,7 @@ pushd "$DIR/Tarballs"
     echo "bu md5='$md5'"
     if [ ! -e "binutils-2.32.tar.gz" ] || [ "$md5" != "d1119c93fc0ed3007be4a84dd186af55" ] ; then
         rm -f binutils-2.32.tar.gz
-        wget "http://ftp.gnu.org/gnu/binutils/binutils-2.32.tar.gz"
+        curl -O "http://ftp.gnu.org/gnu/binutils/binutils-2.32.tar.gz"
     else
         echo "Skipped downloading binutils"
     fi
@@ -30,7 +30,7 @@ pushd "$DIR/Tarballs"
     echo "gc md5='$md5'"
     if [ ! -e "gcc-8.3.0.tar.gz" ] || [ "$md5" != "9972f8c24c02ebcb5a342c1b30de69ff" ] ; then
         rm -f gcc-8.3.0.tar.gz
-        wget "http://ftp.gnu.org/gnu/gcc/gcc-8.3.0/gcc-8.3.0.tar.gz"
+        curl -O "http://ftp.gnu.org/gnu/gcc/gcc-8.3.0/gcc-8.3.0.tar.gz"
     else
         echo "Skipped downloading gcc"
     fi
