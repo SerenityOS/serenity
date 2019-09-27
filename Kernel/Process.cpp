@@ -303,7 +303,7 @@ Process* Process::fork(RegisterDump& regs)
 
     for (auto& region : m_regions) {
 #ifdef FORK_DEBUG
-        dbgprintf("fork: cloning Region{%p} \"%s\" V%08x\n", region.ptr(), region->name().characters(), region->vaddr().get());
+        dbg() << "fork: cloning Region{" << &region << "} '" << region.name() << "' @ " << region.vaddr();
 #endif
         auto cloned_region = region.clone();
         child->m_regions.append(move(cloned_region));
