@@ -1,8 +1,8 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/InlineLinkedList.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/WeakPtr.h>
@@ -234,7 +234,7 @@ public:
     void set_tty(TTY* tty) { m_tty = tty; }
 
     size_t region_count() const { return m_regions.size(); }
-    const NonnullRefPtrVector<Region>& regions() const { return m_regions; }
+    const NonnullOwnPtrVector<Region>& regions() const { return m_regions; }
     void dump_regions();
 
     ProcessTracer* tracer() { return m_tracer.ptr(); }
@@ -356,7 +356,7 @@ private:
     Region* region_from_range(const Range&);
     Region* region_containing(const Range&);
 
-    NonnullRefPtrVector<Region> m_regions;
+    NonnullOwnPtrVector<Region> m_regions;
 
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
@@ -372,7 +372,7 @@ private:
     RefPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
 
-    RefPtr<Region> m_master_tls_region;
+    Region* m_master_tls_region { nullptr };
     size_t m_master_tls_size { 0 };
     size_t m_master_tls_alignment { 0 };
 

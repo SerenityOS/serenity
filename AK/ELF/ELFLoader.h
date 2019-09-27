@@ -54,7 +54,7 @@ private:
         const char* name;
     };
 #ifdef KERNEL
-    mutable RefPtr<Region> m_sorted_symbols_region;
+    mutable OwnPtr<Region> m_sorted_symbols_region;
 #else
     mutable Vector<SortedSymbol> m_sorted_symbols;
 #endif
