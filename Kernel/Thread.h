@@ -327,8 +327,8 @@ private:
     u32 m_signal_mask { 0 };
     u32 m_kernel_stack_base { 0 };
     u32 m_kernel_stack_top { 0 };
-    RefPtr<Region> m_userspace_stack_region;
-    RefPtr<Region> m_kernel_stack_region;
+    Region* m_userspace_stack_region { nullptr };
+    OwnPtr<Region> m_kernel_stack_region;
     VirtualAddress m_thread_specific_data;
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };

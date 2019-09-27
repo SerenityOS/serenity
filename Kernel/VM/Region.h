@@ -10,8 +10,7 @@
 class Inode;
 class VMObject;
 
-class Region final : public RefCounted<Region>
-    , public InlineLinkedListNode<Region> {
+class Region final : public InlineLinkedListNode<Region> {
     friend class MemoryManager;
 
     MAKE_SLAB_ALLOCATED(Region)
@@ -22,10 +21,10 @@ public:
         Execute = 4,
     };
 
-    static NonnullRefPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access, bool cow = false);
-    static NonnullRefPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cow = false);
-    static NonnullRefPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access, bool cow = false);
-    static NonnullRefPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access, bool cow = false);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access, bool cow = false);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cow = false);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access, bool cow = false);
+    static NonnullOwnPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access, bool cow = false);
 
     ~Region();
 
@@ -48,7 +47,7 @@ public:
 
     bool is_user_accessible() const { return m_user_accessible; }
 
-    NonnullRefPtr<Region> clone();
+    NonnullOwnPtr<Region> clone();
 
     bool contains(VirtualAddress vaddr) const
     {
@@ -114,11 +113,12 @@ public:
     Region* m_next { nullptr };
     Region* m_prev { nullptr };
 
-private:
+    // NOTE: These are public so we can make<> them.
     Region(const Range&, const String&, u8 access, bool cow = false);
     Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String&, u8 access, bool cow = false);
     Region(const Range&, RefPtr<Inode>&&, const String&, u8 access, bool cow = false);
 
+private:
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;
     size_t m_offset_in_vmo { 0 };

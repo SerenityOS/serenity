@@ -50,7 +50,7 @@ Region::~Region()
     MM.unregister_region(*this);
 }
 
-NonnullRefPtr<Region> Region::clone()
+NonnullOwnPtr<Region> Region::clone()
 {
     ASSERT(current);
 
@@ -123,30 +123,30 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-NonnullRefPtr<Region> Region::create_user_accessible(const Range& range, const StringView& name, u8 access, bool cow)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, const StringView& name, u8 access, bool cow)
 {
-    auto region = adopt(*new Region(range, name, access, cow));
+    auto region = make<Region>(range, name, access, cow);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullRefPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cow)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cow)
 {
-    auto region = adopt(*new Region(range, move(vmobject), offset_in_vmobject, name, access, cow));
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cow);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullRefPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<Inode> inode, const StringView& name, u8 access, bool cow)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<Inode> inode, const StringView& name, u8 access, bool cow)
 {
-    auto region = adopt(*new Region(range, move(inode), name, access, cow));
+    auto region = make<Region>(range, move(inode), name, access, cow);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullRefPtr<Region> Region::create_kernel_only(const Range& range, const StringView& name, u8 access, bool cow)
+NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const StringView& name, u8 access, bool cow)
 {
-    auto region = adopt(*new Region(range, name, access, cow));
+    auto region = make<Region>(range, name, access, cow);
     region->m_user_accessible = false;
     return region;
 }

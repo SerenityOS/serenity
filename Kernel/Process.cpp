@@ -152,7 +152,6 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
-            MM.unmap_region(region);
             m_regions.remove(i);
             return true;
         }
@@ -305,12 +304,11 @@ Process* Process::fork(RegisterDump& regs)
 #ifdef FORK_DEBUG
         dbg() << "fork: cloning Region{" << &region << "} '" << region.name() << "' @ " << region.vaddr();
 #endif
-        auto cloned_region = region.clone();
-        child->m_regions.append(move(cloned_region));
+        child->m_regions.append(region.clone());
         MM.map_region(*child, child->m_regions.last());
 
         if (&region == m_master_tls_region)
-            child->m_master_tls_region = child->m_regions.last();
+            child->m_master_tls_region = &child->m_regions.last();
     }
 
     for (auto gid : m_gids)
@@ -401,10 +399,14 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     ASSERT(description->inode());
     auto vmo = InodeVMObject::create_with_inode(*description->inode());
-    RefPtr<Region> region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, description->absolute_path(), PROT_READ);
+    auto* region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, description->absolute_path(), PROT_READ);
     ASSERT(region);
 
-    RefPtr<Region> master_tls_region;
+    // NOTE: We yank this out of 'm_regions' since we're about to manipulate the vector
+    //       and we don't want it getting lost.
+    auto executable_region = m_regions.take_last();
+
+    Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
 
@@ -412,7 +414,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     {
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
-        m_regions.append(*region);
+        m_regions.append(move(executable_region));
         loader = make<ELFLoader>(region->vaddr().as_ptr());
         loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) {
             ASSERT(size);
@@ -451,6 +453,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
             // FIXME: RAII this somehow instead.
             ASSERT(&current->process() == this);
             MM.enter_process_paging_scope(*this);
+            executable_region = m_regions.take_first();
             m_regions = move(old_regions);
             kprintf("do_exec: Failure loading %s\n", path.characters());
             return -ENOEXEC;
@@ -464,7 +467,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     m_executable = description->custody();
 
     // Copy of the master TLS region that we will clone for new threads
-    m_master_tls_region = master_tls_region.ptr();
+    m_master_tls_region = master_tls_region;
 
     if (metadata.is_setuid())
         m_euid = metadata.uid;
@@ -823,7 +826,7 @@ void create_signal_trampolines()
     InterruptDisabler disabler;
 
     // NOTE: We leak this region.
-    auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines").leak_ref();
+    auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines").leak_ptr();
     g_return_to_ring3_from_signal_trampoline = trampoline_region->vaddr();
 
     u8* trampoline = (u8*)asm_signal_trampoline;

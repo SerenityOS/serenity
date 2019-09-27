@@ -444,13 +444,13 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return PageFaultResponse::ShouldCrash;
 }
 
-RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, bool user_accessible, bool should_commit)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, bool user_accessible, bool should_commit)
 {
     InterruptDisabler disabler;
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
-    RefPtr<Region> region;
+    OwnPtr<Region> region;
     if (user_accessible)
         region = Region::create_user_accessible(range, name, PROT_READ | PROT_WRITE | PROT_EXEC, false);
     else
@@ -462,7 +462,7 @@ RefPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     return region;
 }
 
-RefPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name)
+OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name)
 {
     return allocate_kernel_region(size, name, true);
 }

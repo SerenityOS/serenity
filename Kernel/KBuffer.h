@@ -21,7 +21,7 @@ public:
     {
         auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), "KBuffer", false, false);
         ASSERT(region);
-        return adopt(*new KBufferImpl(*region, size));
+        return adopt(*new KBufferImpl(region.release_nonnull(), size));
     }
 
     static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size)
@@ -43,14 +43,14 @@ public:
     }
 
 private:
-    explicit KBufferImpl(NonnullRefPtr<Region>&& region, size_t size)
+    explicit KBufferImpl(NonnullOwnPtr<Region>&& region, size_t size)
         : m_size(size)
         , m_region(move(region))
     {
     }
 
     size_t m_size { 0 };
-    NonnullRefPtr<Region> m_region;
+    NonnullOwnPtr<Region> m_region;
 };
 
 class KBuffer {
