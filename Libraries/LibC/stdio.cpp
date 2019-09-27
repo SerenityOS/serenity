@@ -96,6 +96,8 @@ int fflush(FILE* stream)
     stream->buffer_index = 0;
     stream->error = 0;
     stream->eof = 0;
+    stream->have_ungotten = false;
+    stream->ungotten = 0;
     if (rc < 0) {
         stream->error = errno;
         return EOF;
