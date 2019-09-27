@@ -263,12 +263,18 @@ void srandom(unsigned seed)
 
 int system(const char* command)
 {
+    if (!command)
+        return 1;
+
     auto child = fork();
+    if (child < 0)
+        return -1;
+
     if (!child) {
         int rc = execl("/bin/sh", "sh", "-c", command, nullptr);
-        if (rc < 0)
-            perror("execl");
-        exit(0);
+        ASSERT(rc < 0);
+        perror("execl");
+        exit(127);
     }
     int wstatus;
     waitpid(child, &wstatus, 0);
