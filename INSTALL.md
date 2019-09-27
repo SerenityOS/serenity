@@ -20,9 +20,25 @@ Before creating a Serenity disk image, you need to build the OS as described in 
 The final step is copying **_disk_image** onto the disk you wish to boot Serenity off using a command such as:
 
 ```
-sudo dd if=_disk_image of=/dev/sdx bs=8M
+$ sudo dd if=_disk_image of=/dev/sdx bs=8M
 ```
 
 Replace **/dev/sdx** with the target device. The **bs=8M** argument is optional but will speed up the data transfer.
 
 Serenity doesn't output any kernel boot messages to the display device so if it fails to boot you will need a serial port and a null modem cable to discover the cause of the failure.
+
+## Debugging Serenity boot issues using Linux
+
+Many guides on the internet recommend using `screen` to monitor or interact with a serial console under Linux. Using `screen` is an option but it is quite tricky to copy and paste the output from a `screen` console when there is more than one screens worth of text. So, unless you are already experienced with `screen` it is recommended you use `cu`.
+
+After installing `cu`, you will not be able to connect to your serial console device until you have added your user to the **dialout** group. You must log out and log back in again after running a command such as:
+
+```
+$ sudo usermod -aG dialout YourLinuxUserName
+```
+
+Once you are logged in with a user who is a member of the **dialout** group, you can connect to a USB serial console using a command like:
+
+```
+$ cu -s 57600 -l /dev/ttyUSB0
+```
