@@ -4,6 +4,7 @@
 #include <AK/ELF/exec_elf.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
+#include <Kernel/VM/VirtualAddress.h>
 
 class ELFImage {
 public:
