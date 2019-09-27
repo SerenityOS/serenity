@@ -62,7 +62,22 @@ public:
     }
 
     Point operator-() const { return { -m_x, -m_y }; }
+
     Point operator-(const Point& other) const { return { m_x - other.m_x, m_y - other.m_y }; }
+    Point& operator-=(const Point& other)
+    {
+        m_x -= other.m_x;
+        m_y -= other.m_y;
+        return *this;
+    }
+
+    Point& operator+=(const Point& other)
+    {
+        m_x += other.m_x;
+        m_y += other.m_y;
+        return *this;
+    }
+    Point operator+(const Point& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
 
     operator WSAPI_Point() const;
     String to_string() const { return String::format("[%d,%d]", x(), y()); }
