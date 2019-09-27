@@ -36,8 +36,10 @@ bool ELFLoader::layout()
     bool failed = false;
     m_image.for_each_program_header([&](const ELFImage::ProgramHeader& program_header) {
         if (program_header.type() == PT_TLS) {
+#ifdef KERNEL
             auto* tls_image = tls_section_hook(program_header.size_in_memory(), program_header.alignment());
             memcpy(tls_image, program_header.raw_data(), program_header.size_in_image());
+#endif
             return;
         }
         if (program_header.type() != PT_LOAD)
@@ -45,6 +47,7 @@ bool ELFLoader::layout()
 #ifdef ELFLOADER_DEBUG
         kprintf("PH: V%p %u r:%u w:%u\n", program_header.vaddr().get(), program_header.size_in_memory(), program_header.is_readable(), program_header.is_writable());
 #endif
+#ifdef KERNEL
         if (program_header.is_writable()) {
             alloc_section_hook(
                 program_header.vaddr(),
@@ -65,6 +68,7 @@ bool ELFLoader::layout()
                 program_header.is_executable(),
                 String::format("elf-map-%s%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "", program_header.is_executable() ? "x" : ""));
         }
+#endif
     });
     return !failed;
 }
@@ -78,7 +82,7 @@ char* ELFLoader::symbol_ptr(const char* name)
         if (strcmp(symbol.name(), name))
             return IterationDecision::Continue;
         if (m_image.is_executable())
-            found_ptr = (char*)symbol.value();
+            found_ptr = (char*)(size_t)symbol.value();
         else
             ASSERT_NOT_REACHED();
         return IterationDecision::Break;
