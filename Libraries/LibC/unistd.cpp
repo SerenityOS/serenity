@@ -591,13 +591,9 @@ int umount(const char* mountpoint)
 
 char* realpath(const char* pathname, char* buffer)
 {
-    size_t size;
-    if (buffer == nullptr) {
-        size = PATH_MAX;
+    size_t size = PATH_MAX;
+    if (buffer == nullptr)
         buffer = (char*)malloc(size);
-    } else {
-        size = sizeof(buffer);
-    }
     int rc = syscall(SC_realpath, pathname, buffer, size);
     if (rc < 0) {
         errno = -rc;
