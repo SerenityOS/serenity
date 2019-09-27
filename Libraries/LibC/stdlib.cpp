@@ -348,6 +348,11 @@ div_t div(int numerator, int denominator)
     div_t result;
     result.quot = numerator / denominator;
     result.rem = numerator % denominator;
+
+    if (numerator >= 0 && result.rem < 0) {
+        result.quot++;
+        result.rem -= denominator;
+    }
     return result;
 }
 
@@ -356,6 +361,11 @@ ldiv_t ldiv(long numerator, long denominator)
     ldiv_t result;
     result.quot = numerator / denominator;
     result.rem = numerator % denominator;
+
+    if (numerator >= 0 && result.rem < 0) {
+        result.quot++;
+        result.rem -= denominator;
+    }
     return result;
 }
 
