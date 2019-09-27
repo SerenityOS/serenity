@@ -276,7 +276,7 @@ public:
     Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
 
-    Region& allocate_split_region(const Region& source_region, const Range&);
+    Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmo);
 
     void set_being_inspected(bool b) { m_being_inspected = b; }
     bool is_being_inspected() const { return m_being_inspected; }

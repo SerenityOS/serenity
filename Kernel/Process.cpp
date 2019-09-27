@@ -108,9 +108,9 @@ static unsigned prot_to_region_access_flags(int prot)
     return access;
 }
 
-Region& Process::allocate_split_region(const Region& source_region, const Range& range)
+Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmo)
 {
-    m_regions.append(Region::create_user_accessible(range, source_region.name(), source_region.access()));
+    m_regions.append(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmo, source_region.name(), source_region.access()));
     return m_regions.last();
 }
 
@@ -244,20 +244,24 @@ int Process::sys$munmap(void* addr, size_t size)
         auto remaining_ranges_after_unmap = old_region_range.carve(range_to_unmap);
         ASSERT(!remaining_ranges_after_unmap.is_empty());
         auto make_replacement_region = [&](const Range& new_range) -> Region& {
-            auto& new_region = allocate_split_region(*old_region, new_range);
             ASSERT(new_range.base() >= old_region_range.base());
+            ASSERT(new_range.end() <= old_region_range.end());
             size_t new_range_offset_in_old_region = new_range.base().get() - old_region_range.base().get();
-            size_t first_physical_page_of_new_region_in_old_region = new_range_offset_in_old_region / PAGE_SIZE;
-            for (size_t i = 0; i < new_region.page_count(); ++i) {
-                new_region.vmobject().physical_pages()[i] = old_region->vmobject().physical_pages()[first_physical_page_of_new_region_in_old_region + i];
-            }
-            return new_region;
+            return allocate_split_region(*old_region, new_range, new_range_offset_in_old_region);
         };
         Vector<Region*, 2> new_regions;
         for (auto& new_range : remaining_ranges_after_unmap) {
             new_regions.unchecked_append(&make_replacement_region(new_range));
         }
+
+        // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
+        MM.unmap_region(*old_region, false);
         deallocate_region(*old_region);
+
+        // Instead we give back the unwanted VM manually.
+        page_directory().range_allocator().deallocate(range_to_unmap);
+
+        // And finally we map the new region(s).
         for (auto* new_region : new_regions) {
             MM.map_region(*this, *new_region);
         }

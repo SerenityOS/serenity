@@ -705,7 +705,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
     }
 }
 
-bool MemoryManager::unmap_region(Region& region)
+bool MemoryManager::unmap_region(Region& region, bool deallocate_range)
 {
     ASSERT(region.page_directory());
     InterruptDisabler disabler;
@@ -722,7 +722,8 @@ bool MemoryManager::unmap_region(Region& region)
         dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
-    region.page_directory()->range_allocator().deallocate({ region.vaddr(), region.size() });
+    if (deallocate_range)
+        region.page_directory()->range_allocator().deallocate(region.range());
     region.release_page_directory();
     return true;
 }
