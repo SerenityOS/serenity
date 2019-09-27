@@ -121,9 +121,6 @@ Thread::~Thread()
 
     if (m_userspace_stack_region)
         m_process.deallocate_region(*m_userspace_stack_region);
-
-    if (m_kernel_stack_region)
-        m_process.deallocate_region(*m_kernel_stack_region);
 }
 
 void Thread::unblock()
