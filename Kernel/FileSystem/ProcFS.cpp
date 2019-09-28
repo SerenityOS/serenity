@@ -211,12 +211,16 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
         auto* description = process.file_description(i);
         if (!description)
             continue;
+        bool cloexec = process.fd_flags(i) & FD_CLOEXEC;
+
         JsonObjectSerializer description_object = array.add_object();
         description_object.add("fd", i);
         description_object.add("absolute_path", description->absolute_path());
         description_object.add("seekable", description->file().is_seekable());
         description_object.add("class", description->file().class_name());
         description_object.add("offset", description->offset());
+        description_object.add("cloexec", cloexec);
+        description_object.add("blocking", description->is_blocking());
     }
     array.finish();
     return builder.build();
