@@ -1,6 +1,20 @@
 #include <AK/StringBuilder.h>
 #include <LibMarkdown/MDText.h>
 
+static String unescape(const StringView& text)
+{
+    StringBuilder builder;
+    for (int i = 0; i < text.length(); ++i) {
+        if (text[i] == '\\' && i != text.length() - 1) {
+            builder.append(text[i + 1]);
+            i++;
+            continue;
+        }
+        builder.append(text[i]);
+    }
+    return builder.build();
+}
+
 String MDText::render_to_html() const
 {
     StringBuilder builder;
@@ -97,6 +111,12 @@ bool MDText::parse(const StringView& str)
     for (int offset = 0; offset < str.length(); offset++) {
         char ch = str[offset];
 
+        bool is_escape = ch == '\\';
+        if (is_escape && offset != str.length() - 1) {
+            offset++;
+            continue;
+        }
+
         bool is_special_character = false;
         is_special_character |= ch == '`';
         if (!current_style.code)
@@ -128,7 +148,7 @@ bool MDText::parse(const StringView& str)
 
     if (current_span_start < str.length()) {
         Span span {
-            str.substring_view(current_span_start, str.length() - current_span_start),
+            unescape(str.substring_view(current_span_start, str.length() - current_span_start)),
             current_style
         };
         m_spans.append(move(span));
