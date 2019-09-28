@@ -10,6 +10,8 @@ public:
 
     const String& data() const { return m_data; }
 
+    virtual String tag_name() const override { return "#text"; }
+
 private:
     String m_data;
 };

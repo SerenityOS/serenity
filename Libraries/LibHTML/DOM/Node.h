@@ -2,6 +2,7 @@
 
 #include <AK/Badge.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibHTML/TreeNode.h>
 
@@ -29,6 +30,8 @@ public:
 
     RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const;
     RefPtr<LayoutNode> create_layout_tree(const StyleResolver&, const StyleProperties* parent_properties) const;
+
+    virtual String tag_name() const = 0;
 
 protected:
     explicit Node(NodeType);
