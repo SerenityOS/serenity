@@ -1,5 +1,6 @@
 #include "ManualSectionNode.h"
 #include "ManualPageNode.h"
+#include <AK/FileSystemPath.h>
 #include <AK/String.h>
 #include <LibCore/CDirIterator.h>
 
@@ -17,9 +18,10 @@ void ManualSectionNode::reify_if_needed() const
     CDirIterator dir_iter { path(), CDirIterator::Flags::SkipDots };
 
     while (dir_iter.has_next()) {
-        String file_name = dir_iter.next_path();
-        ASSERT(file_name.ends_with(".md"));
-        String page_name = file_name.substring(0, file_name.length() - 3);
+        FileSystemPath file_path(dir_iter.next_path());
+        if (file_path.extension() != "md")
+            continue;
+        String page_name = file_path.title();
         NonnullOwnPtr<ManualNode> child = make<ManualPageNode>(*this, move(page_name));
         m_children.append(move(child));
     }
