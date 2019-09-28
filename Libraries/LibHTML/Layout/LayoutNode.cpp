@@ -1,3 +1,4 @@
+#include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
@@ -33,4 +34,17 @@ void LayoutNode::render(RenderingContext& context)
     for_each_child([&](auto& child) {
         child.render(context);
     });
+}
+
+HitTestResult LayoutNode::hit_test(const Point& position) const
+{
+    if (!m_rect.contains(position))
+        return {};
+    HitTestResult result { this };
+    for_each_child([&](auto& child) {
+        auto child_result = child.hit_test(position);
+        if (child_result.layout_node)
+            result = child_result;
+    });
+    return result;
 }

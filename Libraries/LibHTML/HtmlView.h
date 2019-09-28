@@ -17,6 +17,7 @@ protected:
 
     virtual void resize_event(GResizeEvent&) override;
     virtual void paint_event(GPaintEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
 
 private:
     void layout_and_sync_size();

@@ -1,5 +1,6 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
+#include <LibHTML/DOM/Element.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutNode.h>
@@ -77,4 +78,18 @@ void HtmlView::paint_event(GPaintEvent& event)
 
     RenderingContext context { painter };
     m_layout_root->render(context);
+}
+
+void HtmlView::mousemove_event(GMouseEvent& event)
+{
+    if (!m_layout_root)
+        return GScrollableWidget::mousemove_event(event);
+
+    auto result = m_layout_root->hit_test(event.position());
+    if (result.layout_node) {
+        if (auto* node = result.layout_node->node()) {
+            dbg() << "HtmlView: mousemove: " << node->tag_name() << "{" << node << "}";
+        }
+    }
+    event.accept();
 }
