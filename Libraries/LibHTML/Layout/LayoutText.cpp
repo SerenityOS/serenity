@@ -228,6 +228,9 @@ void LayoutText::render(RenderingContext& context)
     painter.set_font(*m_font);
 
     auto color = style_properties().color_or_fallback("color", Color::Black);
+    auto text_decoration = style_properties().string_or_fallback("text-decoration", "none");
+
+    bool is_underline = text_decoration == "underline";
 
     for (auto& run : m_runs) {
         Rect rect {
@@ -237,5 +240,8 @@ void LayoutText::render(RenderingContext& context)
             m_font->glyph_height()
         };
         painter.draw_text(rect, run.text, TextAlignment::TopLeft, color);
+
+        if (is_underline)
+            painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), color);
     }
 }
