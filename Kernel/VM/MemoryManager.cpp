@@ -102,6 +102,22 @@ void MemoryManager::initialize_paging()
         if ((mmap->addr + mmap->len) > 0xffffffff)
             continue;
 
+        auto diff = (u32)mmap->addr % PAGE_SIZE;
+        if (diff != 0) {
+            kprintf("MM: got an unaligned region base from the bootloader; correcting %p by %d bytes\n", mmap->addr, diff);
+            diff = PAGE_SIZE - diff;
+            mmap->addr += diff;
+            mmap->len -= diff;
+        }
+        if ((mmap->len % PAGE_SIZE) != 0) {
+            kprintf("MM: got an unaligned region length from the bootloader; correcting %d by %d bytes\n", mmap->len, mmap->len % PAGE_SIZE);
+            mmap->len -= mmap->len % PAGE_SIZE;
+        }
+        if (mmap->len < PAGE_SIZE) {
+            kprintf("MM: memory region from bootloader is too small; we want >= %d bytes, but got %d bytes\n", PAGE_SIZE, mmap->len);
+            continue;
+        }
+
 #ifdef MM_DEBUG
         kprintf("MM: considering memory at %p - %p\n",
             (u32)mmap->addr, (u32)(mmap->addr + mmap->len));
