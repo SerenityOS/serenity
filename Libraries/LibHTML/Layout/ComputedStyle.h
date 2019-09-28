@@ -1,6 +1,5 @@
 #pragma once
 
-#include <LibDraw/Color.h>
 #include <LibDraw/Size.h>
 #include <LibHTML/CSS/LengthBox.h>
 
@@ -13,9 +12,6 @@ class ComputedStyle {
 public:
     ComputedStyle();
     ~ComputedStyle();
-
-    Color text_color() const { return m_text_color; }
-    Color background_color() const { return m_background_color; }
 
     LengthBox& margin() { return m_margin; }
     LengthBox& padding() { return m_padding; }
@@ -40,9 +36,6 @@ public:
     PixelBox full_margin() const;
 
 private:
-    Color m_text_color;
-    Color m_background_color;
-
     LengthBox m_margin;
     LengthBox m_padding;
     LengthBox m_border;

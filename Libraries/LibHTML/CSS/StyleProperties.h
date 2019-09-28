@@ -4,6 +4,8 @@
 #include <AK/NonnullRefPtr.h>
 #include <LibHTML/CSS/StyleValue.h>
 
+class Color;
+
 class StyleProperties {
 public:
     template<typename Callback>
@@ -18,6 +20,7 @@ public:
 
     Length length_or_fallback(const StringView& property_name, const Length& fallback) const;
     String string_or_fallback(const StringView& property_name, const StringView& fallback) const;
+    Color color_or_fallback(const StringView& property_name, Color fallback) const;
 
 private:
     HashMap<String, NonnullRefPtr<StyleValue>> m_property_values;
