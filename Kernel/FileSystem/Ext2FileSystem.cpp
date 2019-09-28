@@ -181,26 +181,38 @@ Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks)
     BlockListShape shape;
     const unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
     unsigned blocks_remaining = blocks;
+
     shape.direct_blocks = min((unsigned)EXT2_NDIR_BLOCKS, blocks_remaining);
     blocks_remaining -= shape.direct_blocks;
     if (!blocks_remaining)
         return shape;
+
     shape.indirect_blocks = min(blocks_remaining, entries_per_block);
     blocks_remaining -= shape.indirect_blocks;
     shape.meta_blocks += 1;
     if (!blocks_remaining)
         return shape;
-    ASSERT_NOT_REACHED();
-    // FIXME: Support dind/tind blocks.
+
     shape.doubly_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block);
     blocks_remaining -= shape.doubly_indirect_blocks;
+    shape.meta_blocks += 1;
+    shape.meta_blocks += shape.doubly_indirect_blocks / entries_per_block;
+    if ((shape.doubly_indirect_blocks % entries_per_block) != 0)
+        shape.meta_blocks += 1;
     if (!blocks_remaining)
         return shape;
+
+    dbg() << "we don't know how to compute tind ext2fs blocks yet!";
+    ASSERT_NOT_REACHED();
+
     shape.triply_indirect_blocks = min(blocks_remaining, entries_per_block * entries_per_block * entries_per_block);
     blocks_remaining -= shape.triply_indirect_blocks;
-    // FIXME: What do we do for files >= 16GB?
-    ASSERT(!blocks_remaining);
-    return shape;
+    if (!blocks_remaining)
+        return shape;
+
+    ASSERT_NOT_REACHED();
+
+    return {};
 }
 
 bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2inode, const Vector<BlockIndex>& blocks)
@@ -232,8 +244,8 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
         --remaining_blocks;
     }
     if (inode_dirty) {
-        dbgprintf("Ext2FS: Writing %u direct block(s) to i_block array of inode %u\n", min(EXT2_NDIR_BLOCKS, blocks.size()), inode_index);
 #ifdef EXT2_DEBUG
+        dbgprintf("Ext2FS: Writing %u direct block(s) to i_block array of inode %u\n", min(EXT2_NDIR_BLOCKS, blocks.size()), inode_index);
         for (int i = 0; i < min(EXT2_NDIR_BLOCKS, blocks.size()); ++i)
             dbgprintf("   + %u\n", blocks[i]);
 #endif
@@ -244,13 +256,18 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     if (!remaining_blocks)
         return true;
 
-    if (!e2inode.i_block[EXT2_IND_BLOCK]) {
+    const unsigned entries_per_block = EXT2_ADDR_PER_BLOCK(&super_block());
+
+    bool ind_block_new = !e2inode.i_block[EXT2_IND_BLOCK];
+    if (ind_block_new) {
         BlockIndex new_indirect_block = new_meta_blocks.take_last();
         if (e2inode.i_block[EXT2_IND_BLOCK] != new_indirect_block)
             inode_dirty = true;
         e2inode.i_block[EXT2_IND_BLOCK] = new_indirect_block;
         if (inode_dirty) {
+#ifdef EXT2_DEBUG
             dbgprintf("Ext2FS: Adding the indirect block to i_block array of inode %u\n", inode_index);
+#endif
             write_ext2_inode(inode_index, e2inode);
             inode_dirty = false;
         }
@@ -259,10 +276,11 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     if (old_shape.indirect_blocks == new_shape.indirect_blocks) {
         // No need to update the singly indirect block array.
         remaining_blocks -= new_shape.indirect_blocks;
+        output_block_index += new_shape.indirect_blocks;
     } else {
         auto block_contents = ByteBuffer::create_uninitialized(block_size());
         BufferStream stream(block_contents);
-        ASSERT(new_shape.indirect_blocks <= EXT2_ADDR_PER_BLOCK(&super_block()));
+        ASSERT(new_shape.indirect_blocks <= entries_per_block);
         for (unsigned i = 0; i < new_shape.indirect_blocks; ++i) {
             stream << blocks[output_block_index++];
             --remaining_blocks;
@@ -275,7 +293,102 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
     if (!remaining_blocks)
         return true;
 
+    bool dind_block_dirty = false;
+
+    bool dind_block_new = !e2inode.i_block[EXT2_DIND_BLOCK];
+    if (dind_block_new) {
+        BlockIndex new_dindirect_block = new_meta_blocks.take_last();
+        if (e2inode.i_block[EXT2_DIND_BLOCK] != new_dindirect_block)
+            inode_dirty = true;
+        e2inode.i_block[EXT2_DIND_BLOCK] = new_dindirect_block;
+        if (inode_dirty) {
+#ifdef EXT2_DEBUG
+            dbgprintf("Ext2FS: Adding the doubly-indirect block to i_block array of inode %u\n", inode_index);
+#endif
+            write_ext2_inode(inode_index, e2inode);
+            inode_dirty = false;
+        }
+    }
+
+    if (old_shape.doubly_indirect_blocks == new_shape.doubly_indirect_blocks) {
+        // No need to update the doubly indirect block data.
+        remaining_blocks -= new_shape.doubly_indirect_blocks;
+        output_block_index += new_shape.doubly_indirect_blocks;
+    } else {
+        unsigned indirect_block_count = new_shape.doubly_indirect_blocks / entries_per_block;
+        if ((new_shape.doubly_indirect_blocks % entries_per_block) != 0)
+            indirect_block_count++;
+
+        auto dind_block_contents = read_block(e2inode.i_block[EXT2_DIND_BLOCK]);
+        if (dind_block_new) {
+            memset(dind_block_contents.pointer(), 0, dind_block_contents.size());
+            dind_block_dirty = true;
+        }
+        auto* dind_block_as_pointers = (unsigned*)dind_block_contents.pointer();
+
+        ASSERT(indirect_block_count <= entries_per_block);
+        for (unsigned i = 0; i < indirect_block_count; ++i) {
+            bool ind_block_dirty = false;
+
+            BlockIndex indirect_block_index = dind_block_as_pointers[i];
+
+            bool ind_block_new = !indirect_block_index;
+            if (ind_block_new) {
+                indirect_block_index = new_meta_blocks.take_last();
+                dind_block_as_pointers[i] = indirect_block_index;
+                dind_block_dirty = true;
+            }
+
+            auto ind_block_contents = read_block(indirect_block_index);
+            if (ind_block_new) {
+                memset(ind_block_contents.pointer(), 0, dind_block_contents.size());
+                ind_block_dirty = true;
+            }
+            auto* ind_block_as_pointers = (unsigned*)ind_block_contents.pointer();
+
+            unsigned entries_to_write = new_shape.doubly_indirect_blocks - (i * entries_per_block);
+            if (entries_to_write > entries_per_block)
+                entries_to_write = entries_per_block;
+
+            ASSERT(entries_to_write <= entries_per_block);
+            for (unsigned j = 0; j < entries_to_write; ++j) {
+                BlockIndex output_block = blocks[output_block_index++];
+                if (ind_block_as_pointers[j] != output_block) {
+                    ind_block_as_pointers[j] = output_block;
+                    ind_block_dirty = true;
+                }
+                --remaining_blocks;
+            }
+            for (unsigned j = entries_to_write; j < entries_per_block; ++j) {
+                if (ind_block_as_pointers[j] != 0) {
+                    ind_block_as_pointers[j] = 0;
+                    ind_block_dirty = true;
+                }
+            }
+
+            if (ind_block_dirty) {
+                bool success = write_block(indirect_block_index, ind_block_contents);
+                ASSERT(success);
+            }
+        }
+        for (unsigned i = indirect_block_count; i < entries_per_block; ++i) {
+            if (dind_block_as_pointers[i] != 0) {
+                dind_block_as_pointers[i] = 0;
+                dind_block_dirty = true;
+            }
+        }
+
+        if (dind_block_dirty) {
+            bool success = write_block(e2inode.i_block[EXT2_DIND_BLOCK], dind_block_contents);
+            ASSERT(success);
+        }
+    }
+
+    if (!remaining_blocks)
+        return true;
+
     // FIXME: Implement!
+    dbg() << "we don't know how to write tind ext2fs blocks yet!";
     ASSERT_NOT_REACHED();
 }
 
@@ -906,18 +1019,22 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: allocate_blocks(group: %u, count: %u)\n", group_index, count);
+    dbgprintf("Ext2FS: allocate_blocks(preferred group: %u, count: %u)\n", preferred_group_index, count);
 #endif
     if (count == 0)
         return {};
 
     Vector<BlockIndex> blocks;
+#ifdef EXT2_DEBUG
     dbg() << "Ext2FS: allocate_blocks:";
+#endif
     blocks.ensure_capacity(count);
     for (int i = 0; i < count; ++i) {
         auto block_index = allocate_block(preferred_group_index);
         blocks.unchecked_append(block_index);
+#ifdef EXT2_DEBUG
         dbg() << "  > " << block_index;
+#endif
     }
 
     ASSERT(blocks.size() == count);
