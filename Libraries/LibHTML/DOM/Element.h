@@ -26,7 +26,7 @@ public:
     explicit Element(const String& tag_name);
     virtual ~Element() override;
 
-    const String& tag_name() const { return m_tag_name; }
+    virtual String tag_name() const override { return m_tag_name; }
 
     String attribute(const String& name) const;
     void set_attribute(const String& name, const String& value);

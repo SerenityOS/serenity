@@ -23,6 +23,8 @@ public:
     void add_sheet(const StyleSheet& sheet) { m_sheets.append(sheet); }
     const NonnullRefPtrVector<StyleSheet>& stylesheets() const { return m_sheets; }
 
+    virtual String tag_name() const override { return "#document"; }
+
 private:
     OwnPtr<StyleResolver> m_style_resolver;
     NonnullRefPtrVector<StyleSheet> m_sheets;
