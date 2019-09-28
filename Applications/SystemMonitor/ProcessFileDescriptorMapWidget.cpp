@@ -19,6 +19,12 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GWidget* parent)
     pid_fds_fields.empend("Access", TextAlignment::CenterLeft, [](auto& object) {
         return object.get("seekable").to_bool() ? "Seekable" : "Sequential";
     });
+    pid_fds_fields.empend("Blocking", TextAlignment::CenterLeft, [](auto& object) {
+        return object.get("blocking").to_bool() ? "Blocking" : "Nonblocking";
+    });
+    pid_fds_fields.empend("On exec", TextAlignment::CenterLeft, [](auto& object) {
+        return object.get("cloexec").to_bool() ? "Close" : "Keep";
+    });
 
     m_table_view->set_model(GJsonArrayModel::create({}, move(pid_fds_fields)));
 }
