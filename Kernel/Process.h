@@ -95,6 +95,7 @@ public:
 
     FileDescription* file_description(int fd);
     const FileDescription* file_description(int fd) const;
+    int fd_flags(int fd) const;
 
     template<typename Callback>
     static void for_each(Callback);
