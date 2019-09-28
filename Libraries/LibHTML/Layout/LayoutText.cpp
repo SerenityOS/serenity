@@ -227,6 +227,8 @@ void LayoutText::render(RenderingContext& context)
     auto& painter = context.painter();
     painter.set_font(*m_font);
 
+    auto color = style_properties().color_or_fallback("color", Color::Black);
+
     for (auto& run : m_runs) {
         Rect rect {
             run.pos.x(),
@@ -234,6 +236,6 @@ void LayoutText::render(RenderingContext& context)
             m_font->width(run.text),
             m_font->glyph_height()
         };
-        painter.draw_text(rect, run.text);
+        painter.draw_text(rect, run.text, TextAlignment::TopLeft, color);
     }
 }

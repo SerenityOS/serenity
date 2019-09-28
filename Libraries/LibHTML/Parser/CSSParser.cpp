@@ -3,6 +3,16 @@
 #include <ctype.h>
 #include <stdio.h>
 
+static Optional<Color> parse_css_color(const StringView& view)
+{
+    auto color = Color::from_string(view);
+    if (color.has_value())
+        return color;
+
+    // FIXME: Parse all valid color strings :^)
+    return {};
+}
+
 NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
 {
     String string(view);
@@ -19,6 +29,11 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
         return InitialStyleValue::create();
     if (string == "auto")
         return LengthStyleValue::create(Length());
+
+    auto color = parse_css_color(view);
+    if (color.has_value())
+        return ColorStyleValue::create(color.value());
+
     return StringStyleValue::create(string);
 }
 

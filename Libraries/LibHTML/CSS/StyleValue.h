@@ -1,9 +1,10 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
+#include <LibDraw/Color.h>
 #include <LibHTML/CSS/Length.h>
 
 class StyleValue : public RefCounted<StyleValue> {
@@ -16,6 +17,7 @@ public:
         Initial,
         String,
         Length,
+        Color,
     };
 
     Type type() const { return m_type; }
@@ -106,4 +108,25 @@ private:
         : StyleValue(Type::Inherit)
     {
     }
+};
+
+class ColorStyleValue : public StyleValue {
+public:
+    static NonnullRefPtr<ColorStyleValue> create(Color color)
+    {
+        return adopt(*new ColorStyleValue(color));
+    }
+    virtual ~ColorStyleValue() override {}
+
+    Color color() const { return m_color; }
+    String to_string() const override { return String::format("COLOR: %s", m_color.to_string().characters()); }
+
+private:
+    explicit ColorStyleValue(Color color)
+        : StyleValue(Type::Color)
+        , m_color(color)
+    {
+    }
+
+    Color m_color;
 };
