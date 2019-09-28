@@ -917,6 +917,15 @@ const FileDescription* Process::file_description(int fd) const
     return nullptr;
 }
 
+int Process::fd_flags(int fd) const
+{
+    if (fd < 0)
+        return -1;
+    if (fd < m_fds.size())
+        return m_fds[fd].flags;
+    return -1;
+}
+
 ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
 {
     if (size < 0)
