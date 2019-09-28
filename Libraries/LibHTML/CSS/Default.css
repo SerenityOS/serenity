@@ -18,6 +18,7 @@ body {
 h1, h2 {
     display: block;
     font-family: Pebbleton;
+    font-weight: bold;
 }
 
 h3 {
