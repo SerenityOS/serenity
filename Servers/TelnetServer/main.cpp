@@ -85,13 +85,17 @@ int main(int argc, char** argv)
 
     int opt;
     u16 port = 23;
-    while ((opt = getopt(argc, argv, "p:")) != -1) {
+    const char* command = "";
+    while ((opt = getopt(argc, argv, "p:c:")) != -1) {
         switch (opt) {
         case 'p':
             port = atoi(optarg);
             break;
+        case 'c':
+            command = optarg;
+            break;
         default:
-            fprintf(stderr, "Usage: %s [-p port]", argv[0]);
+            fprintf(stderr, "Usage: %s [-p port] [-c command]", argv[0]);
             exit(1);
         }
     }
@@ -104,7 +108,7 @@ int main(int argc, char** argv)
     HashMap<int, NonnullRefPtr<Client>> clients;
     int next_id = 0;
 
-    server->on_ready_to_accept = [&next_id, &clients, &server] {
+    server->on_ready_to_accept = [&next_id, &clients, &server, command] {
         int id = next_id++;
 
         auto client_socket = server->accept();
@@ -120,7 +124,7 @@ int main(int argc, char** argv)
             return;
         }
 
-        run_command(ptm_fd, "");
+        run_command(ptm_fd, command);
 
         auto client = Client::create(id, move(client_socket), ptm_fd);
         client->on_exit = [&clients, id] { clients.remove(id); };
