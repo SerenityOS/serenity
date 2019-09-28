@@ -8,11 +8,6 @@ static time_t s_boot_time;
 
 void initialize()
 {
-    u8 cmos_mode = CMOS::read(0x0b);
-    cmos_mode |= 2; // 24 hour mode
-    cmos_mode |= 4; // No BCD mode
-    CMOS::write(0x0b, cmos_mode);
-
     s_boot_time = now();
 }
 
@@ -87,17 +82,39 @@ static unsigned days_in_years_since_epoch(unsigned year)
     return days;
 }
 
+u8 bcd_to_binary(u8 bcd)
+{
+    return (bcd & 0x0F) + ((bcd >> 4) * 10);
+}
+
 void read_registers(unsigned& year, unsigned& month, unsigned& day, unsigned& hour, unsigned& minute, unsigned& second)
 {
     while (update_in_progress())
         ;
 
-    year = (CMOS::read(0x32) * 100) + CMOS::read(0x09);
-    month = CMOS::read(0x08);
-    day = CMOS::read(0x07);
-    hour = CMOS::read(0x04);
-    minute = CMOS::read(0x02);
+    u8 status_b = CMOS::read(0x0b);
+
     second = CMOS::read(0x00);
+    minute = CMOS::read(0x02);
+    hour = CMOS::read(0x04);
+    day = CMOS::read(0x07);
+    month = CMOS::read(0x08);
+    year = CMOS::read(0x09);
+
+    if (!(status_b & 0x04)) {
+        second = bcd_to_binary(second);
+        minute = bcd_to_binary(minute);
+        hour = bcd_to_binary(hour & 0x70);
+        day = bcd_to_binary(day);
+        month = bcd_to_binary(month);
+        year = bcd_to_binary(year);
+    }
+
+    if (!(status_b & 0x02) && (hour & 0x80)) {
+        hour = ((hour & 0x7F) + 12) % 24;
+    }
+
+    year += 2000;
 }
 
 time_t now()
