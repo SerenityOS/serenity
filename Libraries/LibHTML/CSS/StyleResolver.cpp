@@ -63,7 +63,7 @@ StyleProperties StyleResolver::resolve_style(const Element& element, const Style
     if (parent_properties) {
         parent_properties->for_each_property([&](const StringView& name, auto& value) {
             // TODO: proper inheritance
-            if (name.starts_with("font") || name == "white-space" || name == "color")
+            if (name.starts_with("font") || name == "white-space" || name == "color" || name == "text-decoration")
                 style_properties.set_property(name, value);
         });
     }
