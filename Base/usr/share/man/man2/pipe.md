@@ -2,7 +2,7 @@
 
 pipe, pipe2 - create a pipe
 
-## Synposis
+## Synopsis
 
 ```**c++
 #include <unistd.h>

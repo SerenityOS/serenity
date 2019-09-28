@@ -2,7 +2,7 @@
 
 md - render markdown documents
 
-## Synposis
+## Synopsis
 
 ```**sh
 $ md [--html] [input-file.md]
