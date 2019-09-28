@@ -9,7 +9,13 @@
 #include <LibHTML/TreeNode.h>
 
 class Node;
+class Element;
 class LayoutBlock;
+class LayoutNode;
+
+struct HitTestResult {
+    RefPtr<LayoutNode> layout_node;
+};
 
 class LayoutNode : public TreeNode<LayoutNode> {
 public:
@@ -21,6 +27,8 @@ public:
 
     ComputedStyle& style() { return m_style; }
     const ComputedStyle& style() const { return m_style; }
+
+    virtual HitTestResult hit_test(const Point&) const;
 
     bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }
