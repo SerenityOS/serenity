@@ -55,3 +55,10 @@ HitTestResult LayoutNode::hit_test(const Point& position) const
     });
     return result;
 }
+
+const Document& LayoutNode::document() const
+{
+    if (is_anonymous())
+        return parent()->document();
+    return node()->document();
+}
