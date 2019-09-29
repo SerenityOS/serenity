@@ -1,5 +1,9 @@
 #include <LibCore/CFile.h>
+#include <LibGUI/GAboutDialog.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Element.h>
@@ -47,6 +51,24 @@ int main(int argc, char** argv)
         window->set_title("HTML");
     window->set_main_widget(widget);
     window->show();
+
+    auto menubar = make<GMenuBar>();
+
+    auto app_menu = make<GMenu>("HTML");
+    app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
+        app.quit();
+    }));
+    menubar->add_menu(move(app_menu));
+
+    auto help_menu = make<GMenu>("Help");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("HTML", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
+    }));
+    menubar->add_menu(move(help_menu));
+
+    app.set_menubar(move(menubar));
+
+    window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
 
     return app.exec();
 }
