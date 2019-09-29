@@ -86,12 +86,16 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
     auto parse_selector = [&] {
         consume_whitespace();
         Selector::Component::Type type;
-        if (peek() == '.')
+
+        if (peek() == '.') {
             type = Selector::Component::Type::Class;
-        else if (peek() == '#')
+            consume_one();
+        } else if (peek() == '#') {
             type = Selector::Component::Type::Id;
-        else
+            consume_one();
+        } else {
             type = Selector::Component::Type::TagName;
+        }
 
         while (is_valid_selector_char(peek()))
             buffer.append(consume_one());
@@ -160,6 +164,7 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
         parse_declarations();
         consume_specific('}');
         rules.append(StyleRule::create(move(current_rule.selectors), move(current_rule.declarations)));
+        consume_whitespace();
     };
 
     while (index < css.length()) {
