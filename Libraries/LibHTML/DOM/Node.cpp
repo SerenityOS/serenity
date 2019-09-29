@@ -1,5 +1,6 @@
 #include <LibHTML/DOM/Node.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/HTMLAnchorElement.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/Layout/LayoutBlock.h>
@@ -72,4 +73,11 @@ RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const
             layout_node->append_child(*layout_child);
         }
     return layout_node;
+}
+
+const HTMLAnchorElement* Node::enclosing_link_element() const
+{
+    if (is_element() && tag_name().to_lowercase() == "a")
+        return static_cast<const HTMLAnchorElement*>(this);
+    return parent() ? parent()->enclosing_link_element() : nullptr;
 }

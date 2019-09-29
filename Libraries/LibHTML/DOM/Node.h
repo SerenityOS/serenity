@@ -14,6 +14,7 @@ enum class NodeType : unsigned {
 };
 
 class Document;
+class HTMLAnchorElement;
 class ParentNode;
 class LayoutNode;
 class StyleResolver;
@@ -36,6 +37,8 @@ public:
 
     Document& document() { return m_document; }
     const Document& document() const { return m_document; }
+
+    const HTMLAnchorElement* enclosing_link_element() const;
 
 protected:
     Node(Document&, NodeType);

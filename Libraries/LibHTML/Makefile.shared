@@ -2,6 +2,8 @@ LIBHTML_OBJS = \
     DOM/Node.o \
     DOM/ParentNode.o \
     DOM/Element.o \
+    DOM/HTMLElement.o \
+    DOM/HTMLAnchorElement.o \
     DOM/Document.o \
     DOM/Text.o \
     CSS/Selector.o \

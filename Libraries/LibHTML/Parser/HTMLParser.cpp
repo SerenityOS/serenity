@@ -1,6 +1,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/HTMLAnchorElement.h>
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Parser/HTMLParser.h>
 #include <ctype.h>
@@ -8,6 +9,8 @@
 
 static NonnullRefPtr<Element> create_element(Document& document, const String& tag_name)
 {
+    if (tag_name.to_lowercase() == "a")
+        return adopt(*new HTMLAnchorElement(document, tag_name));
     return adopt(*new Element(document, tag_name));
 }
 
