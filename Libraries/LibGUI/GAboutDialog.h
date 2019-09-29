@@ -5,16 +5,17 @@
 class GAboutDialog final : public GDialog {
     C_OBJECT(GAboutDialog)
 public:
-    GAboutDialog(const StringView& name, const GraphicsBitmap* icon = nullptr, CObject* parent = nullptr);
     virtual ~GAboutDialog() override;
 
     static void show(const StringView& name, const GraphicsBitmap* icon = nullptr, CObject* parent = nullptr)
     {
-        GAboutDialog dialog(name, icon, parent);
-        dialog.exec();
+        auto dialog = GAboutDialog::construct(name, icon, parent);
+        dialog->exec();
     }
 
 private:
+    GAboutDialog(const StringView& name, const GraphicsBitmap* icon = nullptr, CObject* parent = nullptr);
+
     String m_name;
     RefPtr<GraphicsBitmap> m_icon;
 };
