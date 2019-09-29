@@ -81,3 +81,10 @@ const HTMLAnchorElement* Node::enclosing_link_element() const
         return static_cast<const HTMLAnchorElement*>(this);
     return parent() ? parent()->enclosing_link_element() : nullptr;
 }
+
+const HTMLElement* Node::enclosing_html_element() const
+{
+    if (is_html_element())
+        return static_cast<const HTMLElement*>(this);
+    return parent() ? parent()->enclosing_html_element() : nullptr;
+}
