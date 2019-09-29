@@ -46,7 +46,7 @@ strong, b {
     font-weight: bold;
 }
 
-p {
+div, p {
     display: block;
     margin-bottom: 8;
     margin-top: 8;
