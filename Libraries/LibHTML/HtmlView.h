@@ -12,12 +12,15 @@ public:
     const Document* document() const { return m_document; }
     void set_document(Document*);
 
+    Function<void(const String&)> on_link_click;
+
 protected:
     HtmlView(GWidget* parent = nullptr);
 
     virtual void resize_event(GResizeEvent&) override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
+    virtual void mousedown_event(GMouseEvent&) override;
 
 private:
     void layout_and_sync_size();
