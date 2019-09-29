@@ -222,6 +222,21 @@ void LayoutText::layout()
     rect().set_bottom(last_run.pos.y() + m_font->glyph_height());
 }
 
+template<typename Callback>
+void LayoutText::for_each_run(Callback callback) const
+{
+    for (auto& run : m_runs) {
+        Rect rect {
+            run.pos.x(),
+            run.pos.y(),
+            m_font->width(run.text),
+            m_font->glyph_height()
+        };
+        if (callback(run, rect) == IterationDecision::Break)
+            break;
+    }
+}
+
 void LayoutText::render(RenderingContext& context)
 {
     auto& painter = context.painter();
@@ -232,16 +247,23 @@ void LayoutText::render(RenderingContext& context)
 
     bool is_underline = text_decoration == "underline";
 
-    for (auto& run : m_runs) {
-        Rect rect {
-            run.pos.x(),
-            run.pos.y(),
-            m_font->width(run.text),
-            m_font->glyph_height()
-        };
+    for_each_run([&](auto& run, auto& rect) {
         painter.draw_text(rect, run.text, TextAlignment::TopLeft, color);
-
         if (is_underline)
             painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), color);
-    }
+        return IterationDecision::Continue;
+    });
+}
+
+HitTestResult LayoutText::hit_test(const Point& position) const
+{
+    HitTestResult result;
+    for_each_run([&](auto&, auto& rect) {
+        if (rect.contains(position)) {
+            result.layout_node = this;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return result;
 }

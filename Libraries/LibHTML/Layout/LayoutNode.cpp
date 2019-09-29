@@ -1,6 +1,9 @@
+#include <LibGUI/GPainter.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutNode.h>
+
+//#define DRAW_BOXES_AROUND_LAYOUT_NODES
 
 LayoutNode::LayoutNode(const Node* node, StyleProperties&& style_properties)
     : m_node(node)
@@ -30,6 +33,9 @@ const LayoutBlock* LayoutNode::containing_block() const
 
 void LayoutNode::render(RenderingContext& context)
 {
+#ifdef DRAW_BOXES_AROUND_LAYOUT_NODES
+    context.painter().draw_rect(m_rect, Color::Blue);
+#endif
     // TODO: render our background and border
     for_each_child([&](auto& child) {
         child.render(context);
@@ -38,9 +44,10 @@ void LayoutNode::render(RenderingContext& context)
 
 HitTestResult LayoutNode::hit_test(const Point& position) const
 {
-    if (!m_rect.contains(position))
-        return {};
-    HitTestResult result { this };
+    // FIXME: It would be nice if we could confidently skip over hit testing
+    //        parts of the layout tree, but currently we can't just check
+    //        m_rect.contains() since inline text rects can't be trusted..
+    HitTestResult result { m_rect.contains(position) ? this : nullptr };
     for_each_child([&](auto& child) {
         auto child_result = child.hit_test(position);
         if (child_result.layout_node)
