@@ -146,7 +146,7 @@ void* malloc(size_t size)
     LOCKER(malloc_lock());
 
     if (s_log_malloc)
-        dbgprintf("LibC: malloc(%u)\n", size);
+        dbgprintf("LibC: malloc(%zu)\n", size);
 
     if (!size)
         return nullptr;
@@ -190,13 +190,13 @@ void* malloc(size_t size)
     block->m_freelist = block->m_freelist->next;
     if (block->is_full()) {
 #ifdef MALLOC_DEBUG
-        dbgprintf("Block %p is now full in size class %u\n", block, good_size);
+        dbgprintf("Block %p is now full in size class %zu\n", block, good_size);
 #endif
         allocator->usable_blocks.remove(block);
         allocator->full_blocks.append(block);
     }
 #ifdef MALLOC_DEBUG
-    dbgprintf("LibC: allocated %p (chunk in block %p, size %u)\n", ptr, block, block->bytes_per_chunk());
+    dbgprintf("LibC: allocated %p (chunk in block %p, size %zu)\n", ptr, block, block->bytes_per_chunk());
 #endif
     if (s_scrub_malloc)
         memset(ptr, MALLOC_SCRUB_BYTE, block->m_size);
