@@ -2,7 +2,10 @@
 #include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
+#include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/HTMLHeadingElement.h>
+#include <LibHTML/DOM/HTMLHtmlElement.h>
+#include <LibHTML/DOM/HTMLTitleElement.h>
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Parser/HTMLParser.h>
 #include <ctype.h>
@@ -13,6 +16,12 @@ static NonnullRefPtr<Element> create_element(Document& document, const String& t
     auto lowercase_tag_name = tag_name.to_lowercase();
     if (lowercase_tag_name == "a")
         return adopt(*new HTMLAnchorElement(document, tag_name));
+    if (lowercase_tag_name == "html")
+        return adopt(*new HTMLHtmlElement(document, tag_name));
+    if (lowercase_tag_name == "head")
+        return adopt(*new HTMLHeadElement(document, tag_name));
+    if (lowercase_tag_name == "title")
+        return adopt(*new HTMLTitleElement(document, tag_name));
     if (lowercase_tag_name == "h1"
         || lowercase_tag_name == "h2"
         || lowercase_tag_name == "h3"

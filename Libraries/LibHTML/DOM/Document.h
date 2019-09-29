@@ -1,12 +1,14 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
+#include <AK/String.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/ParentNode.h>
 
+class HTMLHtmlElement;
+class HTMLHeadElement;
 class LayoutNode;
 class StyleResolver;
 class StyleSheet;
@@ -28,6 +30,11 @@ public:
     void set_hovered_node(Node* node) { m_hovered_node = node; }
     Node* hovered_node() { return m_hovered_node; }
     const Node* hovered_node() const { return m_hovered_node; }
+
+    const HTMLHtmlElement* document_element() const;
+    const HTMLHeadElement* head() const;
+
+    String title() const;
 
 private:
     OwnPtr<StyleResolver> m_style_resolver;

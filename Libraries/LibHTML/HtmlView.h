@@ -13,6 +13,7 @@ public:
     void set_document(Document*);
 
     Function<void(const String&)> on_link_click;
+    Function<void(const String&)> on_title_change;
 
 protected:
     HtmlView(GWidget* parent = nullptr);
