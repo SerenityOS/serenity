@@ -24,7 +24,12 @@ RefPtr<LayoutNode> Node::create_layout_node(const StyleResolver& resolver, const
     if (is_document())
         return adopt(*new LayoutDocument(static_cast<const Document&>(*this), {}));
 
-    auto style_properties = resolver.resolve_style(static_cast<const Element&>(*this), parent_properties);
+    StyleProperties style_properties;
+    if (is_element())
+        style_properties = resolver.resolve_style(static_cast<const Element&>(*this), parent_properties);
+    else
+        style_properties = *parent_properties;
+
     auto display_property = style_properties.property("display");
     String display = display_property.has_value() ? display_property.release_value()->to_string() : "inline";
 
