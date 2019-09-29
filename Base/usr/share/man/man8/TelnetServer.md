@@ -14,6 +14,7 @@ $ TelnetServer [options]
 runs on port 23 and provides a shell upon connection.
 
 ## Options
+
 * `-p`: Choose different port for TelnetServer to attach to.
 * `-c`: Choose different program for TelnetServer to run on connection.
 
