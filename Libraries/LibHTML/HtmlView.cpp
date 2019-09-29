@@ -1,3 +1,4 @@
+#include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibHTML/DOM/Element.h>
@@ -90,8 +91,8 @@ void HtmlView::mousemove_event(GMouseEvent& event)
     auto result = m_layout_root->hit_test(event.position());
     if (result.layout_node) {
         auto* node = result.layout_node->node();
+        hovered_node_changed = node != m_document->hovered_node();
         m_document->set_hovered_node(const_cast<Node*>(node));
-        hovered_node_changed = node == m_document->hovered_node();
         if (node) {
             dbg() << "HtmlView: mousemove: " << node->tag_name() << "{" << node << "}";
             if (auto* link = node->enclosing_link_element()) {
@@ -99,8 +100,16 @@ void HtmlView::mousemove_event(GMouseEvent& event)
             }
         }
     }
-    if (hovered_node_changed)
+    if (hovered_node_changed) {
         update();
+        auto* hovered_html_element = m_document->hovered_node() ? m_document->hovered_node()->enclosing_html_element() : nullptr;
+        if (hovered_html_element && !hovered_html_element->title().is_null()) {
+            auto screen_position = screen_relative_rect().location().translated(event.position());
+            GApplication::the().show_tooltip(hovered_html_element->title(), screen_position.translated(4, 4));
+        } else {
+            GApplication::the().hide_tooltip();
+        }
+    }
     event.accept();
 }
 
@@ -113,8 +122,8 @@ void HtmlView::mousedown_event(GMouseEvent& event)
     auto result = m_layout_root->hit_test(event.position());
     if (result.layout_node) {
         auto* node = result.layout_node->node();
+        hovered_node_changed = node != m_document->hovered_node();
         m_document->set_hovered_node(const_cast<Node*>(node));
-        hovered_node_changed = node == m_document->hovered_node();
         if (node) {
             dbg() << "HtmlView: mousedown: " << node->tag_name() << "{" << node << "}";
             if (auto* link = node->enclosing_link_element()) {
