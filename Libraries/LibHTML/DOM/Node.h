@@ -36,6 +36,8 @@ public:
 
     virtual String tag_name() const = 0;
 
+    virtual String text_content() const;
+
     Document& document() { return m_document; }
     const Document& document() const { return m_document; }
 

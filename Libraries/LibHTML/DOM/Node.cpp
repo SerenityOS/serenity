@@ -1,11 +1,12 @@
-#include <LibHTML/DOM/Node.h>
+#include <AK/StringBuilder.h>
+#include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
-#include <LibHTML/CSS/StyleResolver.h>
-#include <LibHTML/Layout/LayoutNode.h>
+#include <LibHTML/DOM/Node.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutDocument.h>
 #include <LibHTML/Layout/LayoutInline.h>
+#include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/Layout/LayoutText.h>
 
 Node::Node(Document& document, NodeType type)
@@ -38,7 +39,6 @@ RefPtr<LayoutNode> Node::create_layout_node(const StyleResolver& resolver, const
 
     ASSERT_NOT_REACHED();
 }
-
 
 RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const StyleProperties* parent_properties) const
 {
@@ -87,4 +87,20 @@ const HTMLElement* Node::enclosing_html_element() const
     if (is_html_element())
         return static_cast<const HTMLElement*>(this);
     return parent() ? parent()->enclosing_html_element() : nullptr;
+}
+
+String Node::text_content() const
+{
+    Vector<String> strings;
+    StringBuilder builder;
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        auto text = child->text_content();
+        if (!text.is_empty()) {
+            builder.append(child->text_content());
+            builder.append(' ');
+        }
+    }
+    if (builder.length() > 1)
+        builder.trim(1);
+    return builder.to_string();
 }

@@ -12,6 +12,8 @@ public:
 
     virtual String tag_name() const override { return "#text"; }
 
+    virtual String text_content() const override { return m_data; }
+
 private:
     String m_data;
 };
