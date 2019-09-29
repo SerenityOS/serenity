@@ -6,7 +6,8 @@
 
 static ManualSectionNode s_sections[] = {
     { "1", "Command-line programs" },
-    { "2", "System calls" }
+    { "2", "System calls" },
+    { "8", "System administration commands and daemons" }
 };
 
 ManualModel::ManualModel()
