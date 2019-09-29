@@ -8,10 +8,11 @@
 #include <LibHTML/RenderingContext.h>
 #include <LibHTML/TreeNode.h>
 
-class Node;
+class Document;
 class Element;
 class LayoutBlock;
 class LayoutNode;
+class Node;
 
 struct HitTestResult {
     RefPtr<LayoutNode> layout_node;
@@ -32,6 +33,8 @@ public:
 
     bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }
+
+    const Document& document() const;
 
     template<typename Callback>
     inline void for_each_child(Callback callback) const
