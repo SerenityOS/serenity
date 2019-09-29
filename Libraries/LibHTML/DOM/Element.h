@@ -23,7 +23,7 @@ private:
 
 class Element : public ParentNode {
 public:
-    explicit Element(const String& tag_name);
+    Element(Document&, const String& tag_name);
     virtual ~Element() override;
 
     virtual String tag_name() const override { return m_tag_name; }

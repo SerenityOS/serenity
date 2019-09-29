@@ -1,8 +1,8 @@
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Layout/LayoutText.h>
 
-Text::Text(const String& data)
-    : Node(NodeType::TEXT_NODE)
+Text::Text(Document& document, const String& data)
+    : Node(document, NodeType::TEXT_NODE)
     , m_data(data)
 {
 }

@@ -5,7 +5,7 @@
 #include <stdio.h>
 
 Document::Document()
-    : ParentNode(NodeType::DOCUMENT_NODE)
+    : ParentNode(*this, NodeType::DOCUMENT_NODE)
 {
 }
 
@@ -28,8 +28,8 @@ void Document::normalize()
             return;
     }
 
-    NonnullRefPtr<Element> body = adopt(*new Element("body"));
-    NonnullRefPtr<Element> html = adopt(*new Element("html"));
+    NonnullRefPtr<Element> body = adopt(*new Element(*this, "body"));
+    NonnullRefPtr<Element> html = adopt(*new Element(*this, "html"));
     html->append_child(body);
     this->donate_all_children_to(body);
     this->append_child(html);

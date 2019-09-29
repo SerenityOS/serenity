@@ -6,9 +6,9 @@
 #include <ctype.h>
 #include <stdio.h>
 
-static NonnullRefPtr<Element> create_element(const String& tag_name)
+static NonnullRefPtr<Element> create_element(Document& document, const String& tag_name)
 {
-    return adopt(*new Element(tag_name));
+    return adopt(*new Element(document, tag_name));
 }
 
 static bool is_valid_in_attribute_name(char ch)
@@ -38,8 +38,8 @@ NonnullRefPtr<Document> parse_html(const String& html)
 {
     NonnullRefPtrVector<ParentNode> node_stack;
 
-    auto doc = adopt(*new Document);
-    node_stack.append(doc);
+    auto document = adopt(*new Document);
+    node_stack.append(document);
 
     enum class State {
         Free = 0,
@@ -76,7 +76,7 @@ NonnullRefPtr<Document> parse_html(const String& html)
         if (new_state == State::BeforeAttributeValue)
             attribute_value_buffer.clear();
         if (state == State::Free && !text_buffer.string_view().is_empty()) {
-            auto text_node = adopt(*new Text(text_buffer.to_string()));
+            auto text_node = adopt(*new Text(document, text_buffer.to_string()));
             node_stack.last().append_child(text_node);
         }
         state = new_state;
@@ -89,7 +89,7 @@ NonnullRefPtr<Document> parse_html(const String& html)
     };
 
     auto open_tag = [&] {
-        auto new_element = create_element(String::copy(tag_name_buffer));
+        auto new_element = create_element(document, String::copy(tag_name_buffer));
         tag_name_buffer.clear();
         new_element->set_attributes(move(attributes));
         node_stack.append(new_element);
@@ -256,5 +256,5 @@ NonnullRefPtr<Document> parse_html(const String& html)
             ASSERT_NOT_REACHED();
         }
     }
-    return doc;
+    return document;
 }
