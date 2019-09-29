@@ -93,12 +93,14 @@ void HtmlView::mousemove_event(GMouseEvent& event)
         auto* node = result.layout_node->node();
         hovered_node_changed = node != m_document->hovered_node();
         m_document->set_hovered_node(const_cast<Node*>(node));
+#ifdef HTML_DEBUG
         if (node) {
             dbg() << "HtmlView: mousemove: " << node->tag_name() << "{" << node << "}";
             if (auto* link = node->enclosing_link_element()) {
                 dbg() << "HtmlView: hovering over a link to " << link->href();
             }
         }
+#endif
     }
     if (hovered_node_changed) {
         update();
@@ -125,7 +127,9 @@ void HtmlView::mousedown_event(GMouseEvent& event)
         hovered_node_changed = node != m_document->hovered_node();
         m_document->set_hovered_node(const_cast<Node*>(node));
         if (node) {
+#ifdef HTML_DEBUG
             dbg() << "HtmlView: mousedown: " << node->tag_name() << "{" << node << "}";
+#endif
             if (auto* link = node->enclosing_link_element()) {
                 dbg() << "HtmlView: clicking on a link to " << link->href();
                 if (on_link_click)
