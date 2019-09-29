@@ -64,6 +64,9 @@ public:
 
     const StyleProperties& style_properties() const { return m_style_properties; }
 
+    void inserted_into(LayoutNode&) {}
+    void removed_from(LayoutNode&) {}
+
 protected:
     explicit LayoutNode(const Node*, StyleProperties&&);
 
