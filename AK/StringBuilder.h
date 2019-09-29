@@ -27,6 +27,9 @@ public:
     StringView string_view() const;
     void clear();
 
+    int length() const { return m_length; }
+    void trim(int count) { m_length -= count; }
+
 private:
     void will_append(int);
 
