@@ -27,7 +27,37 @@ static_assert(sizeof(PNG_IHDR) == 13);
 
 struct Scanline {
     u8 filter { 0 };
-    ByteBuffer data { };
+    ByteBuffer data {};
+};
+
+struct [[gnu::packed]] PaletteEntry
+{
+    u8 r;
+    u8 g;
+    u8 b;
+    //u8 a;
+};
+
+struct [[gnu::packed]] Triplet
+{
+    u8 r;
+    u8 g;
+    u8 b;
+};
+
+struct [[gnu::packed]] Triplet16
+{
+    u16 r;
+    u16 g;
+    u16 b;
+};
+
+struct [[gnu::packed]] Quad16
+{
+    u16 r;
+    u16 g;
+    u16 b;
+    u16 a;
 };
 
 struct PNGLoadingContext {
@@ -40,12 +70,14 @@ struct PNGLoadingContext {
     u8 interlace_method { 0 };
     u8 bytes_per_pixel { 0 };
     bool has_seen_zlib_header { false };
-    bool has_alpha() const { return color_type & 4; }
+    bool has_alpha() const { return color_type & 4 || palette_transparency_data.size() > 0; }
     Vector<Scanline> scanlines;
     RefPtr<GraphicsBitmap> bitmap;
     u8* decompression_buffer { nullptr };
     int decompression_buffer_size { 0 };
     Vector<u8> compressed_data;
+    Vector<PaletteEntry> palette_data;
+    Vector<u8> palette_transparency_data;
 };
 
 class Streamer {
@@ -237,26 +269,66 @@ template<bool has_alpha, u8 filter_type>
         // First unpack the scanlines to RGBA:
         switch (context.color_type) {
         case 2:
-            for (int y = 0; y < context.height; ++y) {
-                struct [[gnu::packed]] Triplet
-                {
-                    u8 r;
-                    u8 g;
-                    u8 b;
-                };
-                auto* triplets = (Triplet*)context.scanlines[y].data.pointer();
-                for (int i = 0; i < context.width; ++i) {
-                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                    pixel.r = triplets[i].r;
-                    pixel.g = triplets[i].g;
-                    pixel.b = triplets[i].b;
-                    pixel.a = 0xff;
+            if (context.bit_depth == 8) {
+                for (int y = 0; y < context.height; ++y) {
+                    auto* triplets = (Triplet*)context.scanlines[y].data.pointer();
+                    for (int i = 0; i < context.width; ++i) {
+                        auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                        pixel.r = triplets[i].r;
+                        pixel.g = triplets[i].g;
+                        pixel.b = triplets[i].b;
+                        pixel.a = 0xff;
+                    }
                 }
+            } else if (context.bit_depth == 16) {
+                for (int y = 0; y < context.height; ++y) {
+                    auto* triplets = (Triplet16*)context.scanlines[y].data.pointer();
+                    for (int i = 0; i < context.width; ++i) {
+                        auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                        pixel.r = triplets[i].r & 0xFF;
+                        pixel.g = triplets[i].g & 0xFF;
+                        pixel.b = triplets[i].b & 0xFF;
+                        pixel.a = 0xff;
+                    }
+                }
+            } else {
+                ASSERT_NOT_REACHED();
             }
             break;
         case 6:
+            if (context.bit_depth == 8) {
+                for (int y = 0; y < context.height; ++y) {
+                    memcpy(context.bitmap->scanline(y), context.scanlines[y].data.pointer(), context.scanlines[y].data.size());
+                }
+            } else if (context.bit_depth == 16) {
+                for (int y = 0; y < context.height; ++y) {
+                    auto* triplets = (Quad16*)context.scanlines[y].data.pointer();
+                    for (int i = 0; i < context.width; ++i) {
+                        auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                        pixel.r = triplets[i].r & 0xFF;
+                        pixel.g = triplets[i].g & 0xFF;
+                        pixel.b = triplets[i].b & 0xFF;
+                        pixel.a = triplets[i].a & 0xFF;
+                    }
+                }
+            } else {
+                ASSERT_NOT_REACHED();
+            }
+            break;
+        case 3:
             for (int y = 0; y < context.height; ++y) {
-                memcpy(context.bitmap->scanline(y), context.scanlines[y].data.pointer(), context.scanlines[y].data.size());
+                auto* palette_index = (u8*)context.scanlines[y].data.pointer();
+                for (int i = 0; i < context.width; ++i) {
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    auto& color = context.palette_data.at((int)palette_index[i]);
+                    auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1
+                        ? (int)context.palette_transparency_data.data()[palette_index[i]]
+                        : 0xFF;
+                    pixel.r = color.r;
+                    pixel.g = color.g;
+                    pixel.b = color.b;
+                    pixel.a = transparency;
+                }
             }
             break;
         default:
@@ -402,22 +474,43 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
     context.filter_method = ihdr.filter_method;
     context.interlace_method = ihdr.interlace_method;
 
+#ifdef PNG_DEBUG
+    printf("PNG: %dx%d (%d bpp)\n", context.width, context.height, context.bit_depth);
+    printf("     Color type: %d\n", context.color_type);
+    printf("Compress Method: %d\n", context.compression_method);
+    printf("  Filter Method: %d\n", context.filter_method);
+    printf(" Interlace type: %d\n", context.interlace_method);
+#endif
+
+    // FIXME: Implement Adam7 deinterlacing
+    if (context.interlace_method != 0) {
+        dbgprintf("PNGLoader::process_IHDR: Interlaced PNGs not currently supported.\n");
+        return false;
+    }
+
     switch (context.color_type) {
+    case 0: // Each pixel is a grayscale sample.
+    case 4: // Each pixel is a grayscale sample, followed by an alpha sample.
+        // FIXME: Implement grayscale PNG support.
+        dbgprintf("PNGLoader::process_IHDR: Unsupported grayscale format.\n");
+        return false;
     case 2:
-        context.bytes_per_pixel = 3;
+        context.bytes_per_pixel = 3 * (ihdr.bit_depth / 8);
+        break;
+    case 3: // Each pixel is a palette index; a PLTE chunk must appear.
+        // FIXME: Implement support for 1/2/4 bit palette based images.
+        if (ihdr.bit_depth != 8) {
+            dbgprintf("PNGLoader::process_IHDR: Unsupported index-based format (%d bpp).\n", context.bit_depth);
+            return false;
+        }
+        context.bytes_per_pixel = 1;
         break;
     case 6:
-        context.bytes_per_pixel = 4;
+        context.bytes_per_pixel = 4 * (ihdr.bit_depth / 8);
         break;
     default:
         ASSERT_NOT_REACHED();
     }
-
-#ifdef PNG_DEBUG
-    printf("PNG: %dx%d (%d bpp)\n", context.width, context.height, context.bit_depth);
-    printf("     Color type: %b\n", context.color_type);
-    printf(" Interlace type: %b\n", context.interlace_method);
-#endif
 
     context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
     context.decompression_buffer = (u8*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
@@ -427,6 +520,22 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
 static bool process_IDAT(const ByteBuffer& data, PNGLoadingContext& context)
 {
     context.compressed_data.append(data.pointer(), data.size());
+    return true;
+}
+
+static bool process_PLTE(const ByteBuffer& data, PNGLoadingContext& context)
+{
+    context.palette_data.append((const PaletteEntry*)data.pointer(), data.size() / 3);
+    return true;
+}
+
+static bool process_tRNS(const ByteBuffer& data, PNGLoadingContext& context)
+{
+    switch (context.color_type) {
+    case 3:
+        context.palette_transparency_data.append(data.pointer(), data.size());
+        break;
+    }
     return true;
 }
 
@@ -461,5 +570,9 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
         return process_IHDR(chunk_data, context);
     if (!strcmp((const char*)chunk_type, "IDAT"))
         return process_IDAT(chunk_data, context);
+    if (!strcmp((const char*)chunk_type, "PLTE"))
+        return process_PLTE(chunk_data, context);
+    if (!strcmp((const char*)chunk_type, "tRNS"))
+        return process_tRNS(chunk_data, context);
     return true;
 }
