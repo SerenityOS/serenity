@@ -6,6 +6,7 @@
 #include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/HTMLHeadingElement.h>
 #include <LibHTML/DOM/HTMLHtmlElement.h>
+#include <LibHTML/DOM/HTMLStyleElement.h>
 #include <LibHTML/DOM/HTMLTitleElement.h>
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Parser/HTMLParser.h>
@@ -21,6 +22,8 @@ static NonnullRefPtr<Element> create_element(Document& document, const String& t
         return adopt(*new HTMLHtmlElement(document, tag_name));
     if (lowercase_tag_name == "head")
         return adopt(*new HTMLHeadElement(document, tag_name));
+    if (lowercase_tag_name == "style")
+        return adopt(*new HTMLStyleElement(document, tag_name));
     if (lowercase_tag_name == "title")
         return adopt(*new HTMLTitleElement(document, tag_name));
     if (lowercase_tag_name == "h1"
