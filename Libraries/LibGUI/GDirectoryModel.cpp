@@ -34,6 +34,7 @@ GDirectoryModel::GDirectoryModel()
     m_executable_icon = GIcon::default_icon("filetype-executable");
     m_filetype_image_icon = GIcon::default_icon("filetype-image");
     m_filetype_sound_icon = GIcon::default_icon("filetype-sound");
+    m_filetype_html_icon = GIcon::default_icon("filetype-html");
 
     setpwent();
     while (auto* passwd = getpwent())
@@ -159,6 +160,8 @@ GIcon GDirectoryModel::icon_for(const Entry& entry) const
         return m_executable_icon;
     if (entry.name.to_lowercase().ends_with(".wav"))
         return m_filetype_sound_icon;
+    if (entry.name.to_lowercase().ends_with(".html"))
+        return m_filetype_html_icon;
     if (entry.name.to_lowercase().ends_with(".png")) {
         if (!entry.thumbnail) {
             if (!const_cast<GDirectoryModel*>(this)->fetch_thumbnail_for(entry))

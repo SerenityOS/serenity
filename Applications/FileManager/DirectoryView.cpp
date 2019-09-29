@@ -53,6 +53,16 @@ void DirectoryView::handle_activation(const GModelIndex& index)
         return;
     }
 
+    if (path.to_lowercase().ends_with(".html")) {
+        if (fork() == 0) {
+            int rc = execl("/bin/html", "/bin/html", path.characters(), nullptr);
+            if (rc < 0)
+                perror("exec");
+            ASSERT_NOT_REACHED();
+        }
+        return;
+    }
+
     if (path.to_lowercase().ends_with(".wav")) {
         if (fork() == 0) {
             int rc = execl("/bin/SoundPlayer", "/bin/SoundPlayer", path.characters(), nullptr);
