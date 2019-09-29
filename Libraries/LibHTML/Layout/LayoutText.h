@@ -26,7 +26,12 @@ public:
 
     const Vector<Run>& runs() const { return m_runs; }
 
+    virtual HitTestResult hit_test(const Point&) const override;
+
 private:
+    template<typename Callback>
+    void for_each_run(Callback) const;
+
     void load_font();
     void compute_runs();
 
