@@ -8,8 +8,8 @@ public:
     template<typename F> void for_each_child(F);
 
 protected:
-    explicit ParentNode(NodeType type)
-        : Node(type)
+    explicit ParentNode(Document& document, NodeType type)
+        : Node(document, type)
     {
     }
 };

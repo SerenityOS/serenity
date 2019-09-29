@@ -13,6 +13,7 @@ enum class NodeType : unsigned {
     DOCUMENT_NODE = 9,
 };
 
+class Document;
 class ParentNode;
 class LayoutNode;
 class StyleResolver;
@@ -33,8 +34,12 @@ public:
 
     virtual String tag_name() const = 0;
 
-protected:
-    explicit Node(NodeType);
+    Document& document() { return m_document; }
+    const Document& document() const { return m_document; }
 
+protected:
+    Node(Document&, NodeType);
+
+    Document& m_document;
     NodeType m_type { NodeType::INVALID };
 };

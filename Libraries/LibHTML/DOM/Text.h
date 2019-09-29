@@ -5,7 +5,7 @@
 
 class Text final : public Node {
 public:
-    explicit Text(const String&);
+    explicit Text(Document&, const String&);
     virtual ~Text() override;
 
     const String& data() const { return m_data; }

@@ -2,8 +2,8 @@
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
 
-Element::Element(const String& tag_name)
-    : ParentNode(NodeType::ELEMENT_NODE)
+Element::Element(Document& document, const String& tag_name)
+    : ParentNode(document, NodeType::ELEMENT_NODE)
     , m_tag_name(tag_name)
 {
 }

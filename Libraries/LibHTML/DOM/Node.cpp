@@ -7,8 +7,9 @@
 #include <LibHTML/Layout/LayoutInline.h>
 #include <LibHTML/Layout/LayoutText.h>
 
-Node::Node(NodeType type)
-    : m_type(type)
+Node::Node(Document& document, NodeType type)
+    : m_document(document)
+    , m_type(type)
 {
 }
 
