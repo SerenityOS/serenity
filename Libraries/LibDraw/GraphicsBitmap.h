@@ -47,10 +47,10 @@ public:
         case Format::RGB32:
         case Format::RGBA32:
             return 32;
-        case Format::Invalid:
-            return 0;
         default:
             ASSERT_NOT_REACHED();
+        case Format::Invalid:
+            return 0;
         }
     }
 
@@ -157,6 +157,7 @@ inline Color GraphicsBitmap::get_pixel(int x, int y) const
         return get_pixel<Format::Indexed8>(x, y);
     default:
         ASSERT_NOT_REACHED();
+        return { };
     }
 }
 
