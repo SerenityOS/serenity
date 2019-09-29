@@ -1,3 +1,4 @@
+#include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Element.h>
@@ -99,7 +100,7 @@ NonnullRefPtr<Document> parse_html(const String& html)
             attribute_value_buffer.clear();
         if (state == State::Free && !text_buffer.string_view().is_empty()) {
             auto text_node = adopt(*new Text(document, text_buffer.to_string()));
-            node_stack.last().append_child(text_node);
+            node_stack.last().append_child(text_node, false);
         }
         state = new_state;
         text_buffer.clear();
@@ -116,7 +117,7 @@ NonnullRefPtr<Document> parse_html(const String& html)
         new_element->set_attributes(move(attributes));
         node_stack.append(new_element);
         if (node_stack.size() != 1)
-            node_stack[node_stack.size() - 2].append_child(new_element);
+            node_stack[node_stack.size() - 2].append_child(new_element, false);
 
         if (is_self_closing_tag(new_element->tag_name()))
             close_tag();
@@ -278,5 +279,16 @@ NonnullRefPtr<Document> parse_html(const String& html)
             ASSERT_NOT_REACHED();
         }
     }
+
+    Function<void(Node&)> fire_insertion_callbacks = [&](Node& node) {
+        for (auto* child = node.first_child(); child; child = child->next_sibling()) {
+            fire_insertion_callbacks(*child);
+        }
+        if (node.parent())
+            node.inserted_into(*node.parent());
+    };
+
+    fire_insertion_callbacks(*document);
+
     return document;
 }

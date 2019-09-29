@@ -55,6 +55,9 @@ public:
         return nullptr;
     }
 
+    virtual void inserted_into(Node&) {}
+    virtual void removed_from(Node&) {}
+
 protected:
     Node(Document&, NodeType);
 
