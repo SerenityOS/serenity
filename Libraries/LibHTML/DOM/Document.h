@@ -25,7 +25,12 @@ public:
 
     virtual String tag_name() const override { return "#document"; }
 
+    void set_hovered_node(Node* node) { m_hovered_node = node; }
+    Node* hovered_node() { return m_hovered_node; }
+    const Node* hovered_node() const { return m_hovered_node; }
+
 private:
     OwnPtr<StyleResolver> m_style_resolver;
     NonnullRefPtrVector<StyleSheet> m_sheets;
+    RefPtr<Node> m_hovered_node;
 };

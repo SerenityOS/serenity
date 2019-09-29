@@ -85,11 +85,17 @@ void HtmlView::mousemove_event(GMouseEvent& event)
     if (!m_layout_root)
         return GScrollableWidget::mousemove_event(event);
 
+    bool hovered_node_changed = false;
     auto result = m_layout_root->hit_test(event.position());
     if (result.layout_node) {
-        if (auto* node = result.layout_node->node()) {
+        auto* node = result.layout_node->node();
+        m_document->set_hovered_node(const_cast<Node*>(node));
+        hovered_node_changed = node == m_document->hovered_node();
+        if (node) {
             dbg() << "HtmlView: mousemove: " << node->tag_name() << "{" << node << "}";
         }
     }
+    if (hovered_node_changed)
+        update();
     event.accept();
 }
