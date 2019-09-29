@@ -1,6 +1,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/HTMLAnchorElement.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutNode.h>
@@ -93,6 +94,9 @@ void HtmlView::mousemove_event(GMouseEvent& event)
         hovered_node_changed = node == m_document->hovered_node();
         if (node) {
             dbg() << "HtmlView: mousemove: " << node->tag_name() << "{" << node << "}";
+            if (auto* link = node->enclosing_link_element()) {
+                dbg() << "HtmlView: hovering over a link to " << link->href();
+            }
         }
     }
     if (hovered_node_changed)
