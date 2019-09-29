@@ -21,8 +21,14 @@ The Serenity manual is split into the following *sections*, or *chapters*:
 
 1. Command-line programs
 2. System calls
+3. Libraries
+4. Special files
+5. File formats
+6. Games
+7. Miscellanea
+8. Sysadmin tools
 
-More sections will be added in the future.
+Sections are subject to change in the future.
 
 ## Examples
 

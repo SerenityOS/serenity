@@ -6,7 +6,13 @@
 
 static ManualSectionNode s_sections[] = {
     { "1", "Command-line programs" },
-    { "2", "System calls" }
+    { "2", "System calls" },
+    { "3", "Libraries" },
+    { "4", "Special files" },
+    { "5", "File formats" },
+    { "6", "Games" },
+    { "7", "Miscellanea" },
+    { "8", "Sysadmin tools" }
 };
 
 ManualModel::ManualModel()
