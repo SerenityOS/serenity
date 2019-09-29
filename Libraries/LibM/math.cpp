@@ -1,6 +1,5 @@
 #include <LibC/assert.h>
 #include <LibM/math.h>
-#include <limits>
 #include <stdint.h>
 #include <stdlib.h>
 
@@ -122,7 +121,7 @@ double exp(double exponent)
             if (integer_part & 8) result *= e_to_power<8>();
             if (integer_part & 16) result *= e_to_power<16>();
             if (integer_part & 32) result *= e_to_power<32>();
-            if (integer_part >= 64) return std::numeric_limits<double>::infinity();
+            if (integer_part >= 64) return __builtin_huge_val();
         }
         exponent -= integer_part;
     } else if (exponent < 0)
