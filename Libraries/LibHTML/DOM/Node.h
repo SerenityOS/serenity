@@ -46,6 +46,15 @@ public:
 
     virtual bool is_html_element() const { return false; }
 
+    const Node* first_child_with_tag_name(const StringView& tag_name) const
+    {
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->tag_name() == tag_name)
+                return child;
+        }
+        return nullptr;
+    }
+
 protected:
     Node(Document&, NodeType);
 
