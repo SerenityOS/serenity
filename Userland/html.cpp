@@ -41,7 +41,10 @@ int main(int argc, char** argv)
     auto window = GWindow::construct();
     auto widget = HtmlView::construct();
     widget->set_document(document);
-    window->set_title("HTML");
+    if (!widget->document()->title().is_null())
+        window->set_title(String::format("%s - HTML", widget->document()->title().characters()));
+    else
+        window->set_title("HTML");
     window->set_main_widget(widget);
     window->show();
 
