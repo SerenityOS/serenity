@@ -24,9 +24,11 @@ public:
 
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
+    bool is_color() const { return type() == Type::Color; }
 
     virtual String to_string() const = 0;
     virtual Length to_length() const { return {}; }
+    virtual Color to_color() const { return {}; }
 
     virtual bool is_auto() const { return false; }
 
@@ -120,6 +122,7 @@ public:
 
     Color color() const { return m_color; }
     String to_string() const override { return String::format("COLOR: %s", m_color.to_string().characters()); }
+    Color to_color() const override { return m_color; }
 
 private:
     explicit ColorStyleValue(Color color)

@@ -42,7 +42,12 @@ void LayoutNode::render(RenderingContext& context)
     if (!is_anonymous() && node() == document().hovered_node())
         context.painter().draw_rect(m_rect, Color::Red);
 #endif
-    // TODO: render our background and border
+
+    auto bgcolor = style_properties().property("background-color");
+    if (bgcolor.has_value() && bgcolor.value()->is_color())
+        context.painter().fill_rect(rect(), bgcolor.value()->to_color());
+
+    // TODO: render our border
     for_each_child([&](auto& child) {
         child.render(context);
     });
