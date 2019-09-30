@@ -123,8 +123,8 @@ void dump_rule(const StyleRule& rule)
         }
     }
     printf("  Declarations:\n");
-    for (auto& declaration : rule.declarations()) {
-        printf("    '%s': '%s'\n", declaration.property_name().characters(), declaration.value().to_string().characters());
+    for (auto& property : rule.declaration().properties()) {
+        printf("    '%s': '%s'\n", property.name.characters(), property.value->to_string().characters());
     }
 }
 
