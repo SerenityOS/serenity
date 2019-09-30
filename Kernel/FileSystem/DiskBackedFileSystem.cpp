@@ -81,15 +81,13 @@ DiskBackedFS::~DiskBackedFS()
 {
 }
 
-bool DiskBackedFS::write_block(unsigned index, const ByteBuffer& data)
+bool DiskBackedFS::write_block(unsigned index, const u8* data)
 {
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::write_block %u, size=%u\n", index, data.size());
 #endif
-    ASSERT(data.size() == block_size());
-
     auto& entry = cache().get(index);
-    memcpy(entry.data, data.data(), data.size());
+    memcpy(entry.data, data, block_size());
     entry.is_dirty = true;
     entry.has_data = true;
 
@@ -97,13 +95,13 @@ bool DiskBackedFS::write_block(unsigned index, const ByteBuffer& data)
     return true;
 }
 
-bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const ByteBuffer& data)
+bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const u8* data)
 {
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::write_blocks %u x%u\n", index, count);
 #endif
     for (unsigned i = 0; i < count; ++i)
-        write_block(index + i, data.slice(i * block_size(), block_size()));
+        write_block(index + i, data + i * block_size());
     return true;
 }
 

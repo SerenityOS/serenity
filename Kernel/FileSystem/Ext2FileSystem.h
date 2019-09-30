@@ -87,7 +87,7 @@ private:
     unsigned inode_size() const;
 
     bool write_ext2_inode(InodeIndex, const ext2_inode&);
-    ByteBuffer read_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset) const;
+    bool read_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset, u8* buffer) const;
 
     ByteBuffer read_super_block() const;
     bool write_super_block(const ext2_super_block&);
