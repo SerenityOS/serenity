@@ -19,8 +19,8 @@ public:
 protected:
     explicit DiskBackedFS(NonnullRefPtr<DiskDevice>&&);
 
-    ByteBuffer read_block(unsigned index) const;
-    ByteBuffer read_blocks(unsigned index, unsigned count) const;
+    bool read_block(unsigned index, u8* buffer) const;
+    bool read_blocks(unsigned index, unsigned count, u8* buffer) const;
 
     bool write_block(unsigned index, const ByteBuffer&);
     bool write_blocks(unsigned index, unsigned count, const ByteBuffer&);

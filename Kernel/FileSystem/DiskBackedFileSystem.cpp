@@ -107,7 +107,7 @@ bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const ByteBuffer
     return true;
 }
 
-ByteBuffer DiskBackedFS::read_block(unsigned index) const
+bool DiskBackedFS::read_block(unsigned index, u8* buffer) const
 {
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::read_block %u\n", index);
@@ -120,27 +120,25 @@ ByteBuffer DiskBackedFS::read_block(unsigned index) const
         entry.has_data = true;
         ASSERT(success);
     }
-    return ByteBuffer::copy(entry.data, block_size());
+    memcpy(buffer, entry.data, block_size());
+    return true;
 }
 
-ByteBuffer DiskBackedFS::read_blocks(unsigned index, unsigned count) const
+bool DiskBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer) const
 {
     if (!count)
-        return nullptr;
+        return false;
     if (count == 1)
-        return read_block(index);
-    auto blocks = ByteBuffer::create_uninitialized(count * block_size());
-    u8* out = blocks.data();
+        return read_block(index, buffer);
+    u8* out = buffer;
 
     for (unsigned i = 0; i < count; ++i) {
-        auto block = read_block(index + i);
-        if (!block)
-            return nullptr;
-        memcpy(out, block.data(), block.size());
+        if (!read_block(index + i, out))
+            return false;
         out += block_size();
     }
 
-    return blocks;
+    return true;
 }
 
 void DiskBackedFS::flush_writes()

@@ -95,7 +95,8 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
         kprintf("ext2fs: block group count: %u, blocks-to-read: %u\n", m_block_group_count, blocks_to_read);
         kprintf("ext2fs: first block of BGDT: %u\n", first_block_of_bgdt);
 #endif
-        m_cached_group_descriptor_table = read_blocks(first_block_of_bgdt, blocks_to_read);
+        m_cached_group_descriptor_table = ByteBuffer::create_uninitialized(block_size() * blocks_to_read);
+        read_blocks(first_block_of_bgdt, blocks_to_read, m_cached_group_descriptor_table.data());
     }
     return reinterpret_cast<ext2_group_desc*>(m_cached_group_descriptor_table.data())[group_index - 1];
 }
@@ -173,7 +174,10 @@ ByteBuffer Ext2FS::read_block_containing_inode(unsigned inode, unsigned& block_i
     block_index = bgd.bg_inode_table + (offset >> EXT2_BLOCK_SIZE_BITS(&super_block));
     offset &= block_size() - 1;
 
-    return read_block(block_index);
+    auto buffer = ByteBuffer::create_uninitialized(block_size());
+    if (!read_block(block_index, buffer.data()))
+        return {};
+    return buffer;
 }
 
 Ext2FS::BlockListShape Ext2FS::compute_block_list_shape(unsigned blocks)
@@ -319,7 +323,8 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
         if ((new_shape.doubly_indirect_blocks % entries_per_block) != 0)
             indirect_block_count++;
 
-        auto dind_block_contents = read_block(e2inode.i_block[EXT2_DIND_BLOCK]);
+        auto dind_block_contents = ByteBuffer::create_uninitialized(block_size());
+        read_block(e2inode.i_block[EXT2_DIND_BLOCK], dind_block_contents.data());
         if (dind_block_new) {
             memset(dind_block_contents.data(), 0, dind_block_contents.size());
             dind_block_dirty = true;
@@ -339,7 +344,8 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
                 dind_block_dirty = true;
             }
 
-            auto ind_block_contents = read_block(indirect_block_index);
+            auto ind_block_contents = ByteBuffer::create_uninitialized(block_size());
+            read_block(indirect_block_index, ind_block_contents.data());
             if (ind_block_new) {
                 memset(ind_block_contents.data(), 0, dind_block_contents.size());
                 ind_block_dirty = true;
@@ -428,7 +434,8 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
     auto process_block_array = [&](unsigned array_block_index, auto&& callback) {
         if (include_block_list_blocks)
             callback(array_block_index);
-        auto array_block = read_block(array_block_index);
+        auto array_block = ByteBuffer::create_uninitialized(block_size());
+        read_block(array_block_index, array_block.data());
         ASSERT(array_block);
         auto* array = reinterpret_cast<const __u32*>(array_block.data());
         unsigned count = min(blocks_remaining, entries_per_block);
@@ -637,16 +644,20 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     //kprintf("ok let's do it, read(%u, %u) -> blocks %u thru %u, oifb: %u\n", offset, count, first_block_logical_index, last_block_logical_index, offset_into_first_block);
 #endif
 
+    // Biggest block size should be 4096..
+    u8 block[4096];
+    ASSERT(block_size < (int)sizeof(block));
+
     for (int bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
-        auto block = fs().read_block(m_block_list[bi]);
-        if (!block) {
+        bool success = fs().read_block(m_block_list[bi], block);
+        if (!success) {
             kprintf("ext2fs: read_bytes: read_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
             return -EIO;
         }
 
         int offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         int num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
-        memcpy(out, block.data() + offset_into_block, num_bytes_to_copy);
+        memcpy(out, block + offset_into_block, num_bytes_to_copy);
         remaining_count -= num_bytes_to_copy;
         nread += num_bytes_to_copy;
         out += num_bytes_to_copy;
@@ -747,8 +758,9 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
 
         ByteBuffer block;
         if (offset_into_block != 0 || num_bytes_to_copy != block_size) {
-            block = fs().read_block(m_block_list[bi]);
-            if (!block) {
+            block = ByteBuffer::create_uninitialized(block_size);
+            bool success = fs().read_block(m_block_list[bi], block.data());
+            if (!success) {
                 kprintf("Ext2FSInode::write_bytes: read_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
                 return -EIO;
             }
@@ -1004,7 +1016,8 @@ Ext2FS::BlockIndex Ext2FS::allocate_block(GroupIndex preferred_group_index)
     ASSERT(found_a_group);
     auto& bgd = group_descriptor(group_index);
 
-    auto bitmap_block = read_block(bgd.bg_block_bitmap);
+    auto bitmap_block = ByteBuffer::create_uninitialized(block_size());
+    read_block(bgd.bg_block_bitmap, bitmap_block.data());
     int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
     auto block_bitmap = Bitmap::wrap(bitmap_block.data(), blocks_in_group);
     BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index();
@@ -1085,7 +1098,8 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 
     unsigned first_inode_in_group = (group_index - 1) * inodes_per_group() + 1;
 
-    auto bitmap_block = read_block(bgd.bg_inode_bitmap);
+    auto bitmap_block = ByteBuffer::create_uninitialized(block_size());
+    read_block(bgd.bg_inode_bitmap, bitmap_block.data());
     auto inode_bitmap = Bitmap::wrap(bitmap_block.data(), inodes_in_group);
     for (int i = 0; i < inode_bitmap.size(); ++i) {
         if (inode_bitmap.get(i))
@@ -1134,8 +1148,9 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     auto& bgd = group_descriptor(group_index);
     unsigned index_in_group = index - ((group_index - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
-    auto block = read_block(bgd.bg_inode_bitmap);
-    ASSERT(block);
+    auto block = ByteBuffer::create_uninitialized(block_size());
+    bool success = read_block(bgd.bg_inode_bitmap, block.data());
+    ASSERT(success);
     auto bitmap = Bitmap::wrap(block.data(), inodes_per_group());
     return bitmap.get(bit_index);
 }
@@ -1147,8 +1162,9 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     auto& bgd = group_descriptor(group_index);
     unsigned index_in_group = inode_index - ((group_index - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
-    auto block = read_block(bgd.bg_inode_bitmap);
-    ASSERT(block);
+    auto block = ByteBuffer::create_uninitialized(block_size());
+    bool success = read_block(bgd.bg_inode_bitmap, block.data());
+    ASSERT(success);
     auto bitmap = Bitmap::wrap(block.data(), inodes_per_group());
     bool current_state = bitmap.get(bit_index);
 #ifdef EXT2_DEBUG
@@ -1161,7 +1177,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     }
 
     bitmap.set(bit_index, new_state);
-    bool success = write_block(bgd.bg_inode_bitmap, block);
+    success = write_block(bgd.bg_inode_bitmap, block);
     ASSERT(success);
 
     // Update superblock
@@ -1210,8 +1226,9 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     dbgprintf("  bit_index: %u\n", bit_index);
     dbgprintf("  read_block(%u)\n", bgd.bg_block_bitmap);
 #endif
-    auto block = read_block(bgd.bg_block_bitmap);
-    ASSERT(block);
+    auto block = ByteBuffer::create_uninitialized(block_size());
+    bool success = read_block(bgd.bg_block_bitmap, block.data());
+    ASSERT(success);
     auto bitmap = Bitmap::wrap(block.data(), blocks_per_group());
     bool current_state = bitmap.get(bit_index);
 #ifdef EXT2_DEBUG
@@ -1224,7 +1241,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     }
 
     bitmap.set(bit_index, new_state);
-    bool success = write_block(bgd.bg_block_bitmap, block);
+    success = write_block(bgd.bg_block_bitmap, block);
     ASSERT(success);
 
     // Update superblock
