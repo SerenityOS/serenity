@@ -3,6 +3,7 @@
 #include <Kernel/kstdio.h>
 
 //#define VRA_DEBUG
+#define VM_GUARD_PAGES
 
 RangeAllocator::RangeAllocator(VirtualAddress base, size_t size)
 {
@@ -59,14 +60,20 @@ void RangeAllocator::carve_at_index(int index, const Range& range)
 
 Range RangeAllocator::allocate_anywhere(size_t size)
 {
+#ifdef VM_GUARD_PAGES
     // NOTE: We pad VM allocations with a guard page on each side.
-    size_t padded_size = size + PAGE_SIZE * 2;
+    size_t effective_size = size + PAGE_SIZE * 2;
+    size_t offset_from_effective_base = PAGE_SIZE;
+#else
+    size_t effective_size = size;
+    size_t offset_from_effective_base = 0;
+#endif
     for (int i = 0; i < m_available_ranges.size(); ++i) {
         auto& available_range = m_available_ranges[i];
-        if (available_range.size() < padded_size)
+        if (available_range.size() < effective_size)
             continue;
-        Range allocated_range(available_range.base().offset(PAGE_SIZE), size);
-        if (available_range.size() == padded_size) {
+        Range allocated_range(available_range.base().offset(offset_from_effective_base), size);
+        if (available_range.size() == effective_size) {
 #ifdef VRA_DEBUG
             dbgprintf("VRA: Allocated perfect-fit anywhere(%u): %x\n", size, allocated_range.base().get());
 #endif
