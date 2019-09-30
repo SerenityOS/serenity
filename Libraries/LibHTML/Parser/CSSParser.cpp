@@ -37,53 +37,45 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
     return StringStyleValue::create(string);
 }
 
-NonnullRefPtr<StyleSheet> parse_css(const String& css)
-{
-    NonnullRefPtrVector<StyleRule> rules;
+class CSSParser {
+public:
+    CSSParser(const StringView& input)
+        : css(input)
+    {
+    }
 
-    enum class State {
-        Free,
-        InSelectorComponent,
-        InPropertyName,
-        InPropertyValue,
-    };
-
-    struct CurrentRule {
-        Vector<Selector> selectors;
-        Vector<StyleProperty> properties;
-    };
-
-    CurrentRule current_rule;
-    Vector<char> buffer;
-
-    int index = 0;
-
-    auto peek = [&]() -> char {
+    char peek() const
+    {
         if (index < css.length())
             return css[index];
         return 0;
-    };
+    }
 
-    auto consume_specific = [&](char ch) {
+    char consume_specific(char ch)
+    {
         ASSERT(peek() == ch);
         ++index;
         return ch;
-    };
+    }
 
-    auto consume_one = [&]() -> char {
+    char consume_one()
+    {
         return css[index++];
     };
 
-    auto consume_whitespace = [&] {
+    void consume_whitespace()
+    {
         while (isspace(peek()))
             ++index;
-    };
+    }
 
-    auto is_valid_selector_char = [](char ch) {
+    bool is_valid_selector_char(char ch) const
+    {
         return isalnum(ch) || ch == '-' || ch == '_';
-    };
+    }
 
-    auto parse_selector = [&] {
+    void parse_selector()
+    {
         consume_whitespace();
         Selector::Component::Type type;
 
@@ -110,7 +102,8 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
         current_rule.selectors.append(Selector(move(components)));
     };
 
-    auto parse_selector_list = [&] {
+    void parse_selector_list()
+    {
         for (;;) {
             parse_selector();
             consume_whitespace();
@@ -121,17 +114,20 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
             if (peek() == '{')
                 break;
         }
-    };
+    }
 
-    auto is_valid_property_name_char = [](char ch) {
+    bool is_valid_property_name_char(char ch) const
+    {
         return !isspace(ch) && ch != ':';
-    };
+    }
 
-    auto is_valid_property_value_char = [](char ch) {
+    bool is_valid_property_value_char(char ch) const
+    {
         return !isspace(ch) && ch != ';';
-    };
+    }
 
-    auto parse_declaration = [&] {
+    void parse_property()
+    {
         consume_whitespace();
         buffer.clear();
         while (is_valid_property_name_char(peek()))
@@ -147,29 +143,80 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
         buffer.clear();
         consume_specific(';');
         current_rule.properties.append({ property_name, parse_css_value(property_value) });
-    };
+    }
 
-    auto parse_declarations = [&] {
+    void parse_declaration()
+    {
         for (;;) {
-            parse_declaration();
+            parse_property();
             consume_whitespace();
             if (peek() == '}')
                 break;
         }
-    };
+    }
 
-    auto parse_rule = [&] {
+    void parse_rule()
+    {
         parse_selector_list();
         consume_specific('{');
-        parse_declarations();
+        parse_declaration();
         consume_specific('}');
         rules.append(StyleRule::create(move(current_rule.selectors), StyleDeclaration::create(move(current_rule.properties))));
         consume_whitespace();
-    };
-
-    while (index < css.length()) {
-        parse_rule();
     }
 
-    return StyleSheet::create(move(rules));
+    NonnullRefPtr<StyleSheet> parse_sheet()
+    {
+        while (index < css.length()) {
+            parse_rule();
+        }
+
+        return StyleSheet::create(move(rules));
+    }
+
+    NonnullRefPtr<StyleDeclaration> parse_standalone_declaration()
+    {
+        consume_whitespace();
+        for (;;) {
+            parse_property();
+            consume_whitespace();
+            if (!peek())
+                break;
+        }
+        return StyleDeclaration::create(move(current_rule.properties));
+    }
+
+private:
+    NonnullRefPtrVector<StyleRule> rules;
+
+    enum class State {
+        Free,
+        InSelectorComponent,
+        InPropertyName,
+        InPropertyValue,
+    };
+
+    struct CurrentRule {
+        Vector<Selector> selectors;
+        Vector<StyleProperty> properties;
+    };
+
+    CurrentRule current_rule;
+    Vector<char> buffer;
+
+    int index = 0;
+
+    String css;
+};
+
+NonnullRefPtr<StyleSheet> parse_css(const String& css)
+{
+    CSSParser parser(css);
+    return parser.parse_sheet();
+}
+
+NonnullRefPtr<StyleDeclaration> parse_css_declaration(const String& css)
+{
+    CSSParser parser(css);
+    return parser.parse_standalone_declaration();
 }
