@@ -3,6 +3,8 @@
 #include "FileSystem.h"
 #include <AK/ByteBuffer.h>
 
+class DiskCache;
+
 class DiskBackedFS : public FS {
 public:
     virtual ~DiskBackedFS() override;
@@ -24,6 +26,8 @@ protected:
     bool write_blocks(unsigned index, unsigned count, const ByteBuffer&);
 
 private:
+    DiskCache& cache() const;
+
     NonnullRefPtr<DiskDevice> m_device;
-    HashMap<unsigned, ByteBuffer> m_write_cache;
+    mutable OwnPtr<DiskCache> m_cache;
 };

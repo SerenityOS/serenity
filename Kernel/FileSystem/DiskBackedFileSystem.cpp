@@ -1,49 +1,76 @@
-#include "DiskBackedFileSystem.h"
-#include <AK/InlineLRUCache.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/FileSystem/DiskBackedFileSystem.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/Process.h>
 
 //#define DBFS_DEBUG
 
-struct BlockIdentifier {
-    unsigned fsid { 0 };
-    unsigned index { 0 };
-
-    bool operator==(const BlockIdentifier& other) const { return fsid == other.fsid && index == other.index; }
+struct CacheEntry {
+    u32 timestamp { 0 };
+    u32 block_index { 0 };
+    u8* data { nullptr };
+    bool has_data { false };
+    bool is_dirty { false };
 };
 
-namespace AK {
-
-template<>
-struct Traits<BlockIdentifier> : public GenericTraits<BlockIdentifier> {
-    static unsigned hash(const BlockIdentifier& block_id) { return pair_int_hash(block_id.fsid, block_id.index); }
-    static void dump(const BlockIdentifier& block_id) { kprintf("[block %02u:%08u]", block_id.fsid, block_id.index); }
-};
-
-}
-
-class CachedBlock : public InlineLinkedListNode<CachedBlock> {
+class DiskCache {
 public:
-    CachedBlock(const BlockIdentifier& block_id, const ByteBuffer& buffer)
-        : m_key(block_id)
-        , m_buffer(buffer)
+    explicit DiskCache(size_t block_size)
+        : m_cached_block_data(KBuffer::create_with_size(m_entry_count * block_size))
     {
+        m_entries = (CacheEntry*)kmalloc_eternal(m_entry_count * sizeof(CacheEntry));
+        for (size_t i = 0; i < m_entry_count; ++i) {
+            m_entries[i].data = m_cached_block_data.data() + i * block_size;
+        }
     }
 
-    BlockIdentifier m_key;
-    CachedBlock* m_next { nullptr };
-    CachedBlock* m_prev { nullptr };
+    ~DiskCache() {}
 
-    ByteBuffer m_buffer;
+    bool is_dirty() const { return m_dirty; }
+    void set_dirty(bool b) { m_dirty = b; }
+
+    CacheEntry& get(u32 block_index) const
+    {
+        auto now = kgettimeofday().tv_sec;
+
+        CacheEntry* oldest_clean_entry = nullptr;
+        for (size_t i = 0; i < m_entry_count; ++i) {
+            auto& entry = m_entries[i];
+            if (entry.block_index == block_index) {
+                entry.timestamp = now;
+                return entry;
+            }
+            if (!entry.is_dirty) {
+                if (!oldest_clean_entry)
+                    oldest_clean_entry = &entry;
+                else if (entry.timestamp < oldest_clean_entry->timestamp)
+                    oldest_clean_entry = &entry;
+            }
+        }
+        // FIXME: What if every single entry was dirty though :(
+        ASSERT(oldest_clean_entry);
+
+        // Replace the oldest clean entry.
+        auto& new_entry = *oldest_clean_entry;
+        new_entry.timestamp = now;
+        new_entry.block_index = block_index;
+        new_entry.has_data = false;
+        new_entry.is_dirty = false;
+        return new_entry;
+    }
+
+    template<typename Callback>
+    void for_each_entry(Callback callback)
+    {
+        for (size_t i = 0; i < m_entry_count; ++i)
+            callback(m_entries[i]);
+    }
+
+    size_t m_entry_count { 10000 };
+    KBuffer m_cached_block_data;
+    CacheEntry* m_entries { nullptr };
+    bool m_dirty { false };
 };
-
-Lockable<InlineLRUCache<BlockIdentifier, CachedBlock>>& block_cache()
-{
-    static Lockable<InlineLRUCache<BlockIdentifier, CachedBlock>>* s_cache;
-    if (!s_cache)
-        s_cache = new Lockable<InlineLRUCache<BlockIdentifier, CachedBlock>>;
-    return *s_cache;
-}
 
 DiskBackedFS::DiskBackedFS(NonnullRefPtr<DiskDevice>&& device)
     : m_device(move(device))
@@ -61,18 +88,12 @@ bool DiskBackedFS::write_block(unsigned index, const ByteBuffer& data)
 #endif
     ASSERT(data.size() == block_size());
 
-    {
-        LOCKER(block_cache().lock());
-        if (auto* cached_block = block_cache().resource().get({ fsid(), index }))
-            cached_block->m_buffer = data;
-    }
+    auto& entry = cache().get(index);
+    memcpy(entry.data, data.data(), data.size());
+    entry.is_dirty = true;
+    entry.has_data = true;
 
-    LOCKER(m_lock);
-    m_write_cache.set(index, data.isolated_copy());
-
-    if (m_write_cache.size() >= 32)
-        flush_writes();
-
+    cache().set_dirty(true);
     return true;
 }
 
@@ -92,31 +113,14 @@ ByteBuffer DiskBackedFS::read_block(unsigned index) const
     kprintf("DiskBackedFileSystem::read_block %u\n", index);
 #endif
 
-    {
-        LOCKER(m_lock);
-        if (auto it = m_write_cache.find(index); it != m_write_cache.end())
-            return it->value;
+    auto& entry = cache().get(index);
+    if (!entry.has_data) {
+        DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
+        bool success = device().read(base_offset, block_size(), entry.data);
+        entry.has_data = true;
+        ASSERT(success);
     }
-
-    {
-        LOCKER(block_cache().lock());
-        if (auto* cached_block = block_cache().resource().get({ fsid(), index }))
-            return cached_block->m_buffer;
-    }
-
-    auto buffer = ByteBuffer::create_uninitialized(block_size());
-    //kprintf("created block buffer with size %u\n", block_size());
-    DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
-    auto* buffer_pointer = buffer.data();
-    bool success = device().read(base_offset, block_size(), buffer_pointer);
-    ASSERT(success);
-    ASSERT(buffer.size() == block_size());
-
-    {
-        LOCKER(block_cache().lock());
-        block_cache().resource().put({ fsid(), index }, CachedBlock({ fsid(), index }, buffer));
-    }
-    return buffer;
+    return ByteBuffer::copy(entry.data, block_size());
 }
 
 ByteBuffer DiskBackedFS::read_blocks(unsigned index, unsigned count) const
@@ -142,9 +146,24 @@ ByteBuffer DiskBackedFS::read_blocks(unsigned index, unsigned count) const
 void DiskBackedFS::flush_writes()
 {
     LOCKER(m_lock);
-    for (auto& it : m_write_cache) {
-        DiskOffset base_offset = static_cast<DiskOffset>(it.key) * static_cast<DiskOffset>(block_size());
-        device().write(base_offset, block_size(), it.value.data());
-    }
-    m_write_cache.clear();
+    if (!cache().is_dirty())
+        return;
+    u32 count = 0;
+    cache().for_each_entry([&](CacheEntry& entry) {
+        if (!entry.is_dirty)
+            return;
+        DiskOffset base_offset = static_cast<DiskOffset>(entry.block_index) * static_cast<DiskOffset>(block_size());
+        device().write(base_offset, block_size(), entry.data);
+        ++count;
+        entry.is_dirty = false;
+    });
+    cache().set_dirty(false);
+    dbg() << class_name() << ": " << "Flushed " << count << " blocks to disk";
+}
+
+DiskCache& DiskBackedFS::cache() const
+{
+    if (!m_cache)
+        m_cache = make<DiskCache>(block_size());
+    return *m_cache;
 }
