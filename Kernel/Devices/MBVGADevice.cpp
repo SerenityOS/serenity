@@ -19,6 +19,7 @@ MBVGADevice::MBVGADevice(PhysicalAddress addr, int pitch, int width, int height)
     , m_framebuffer_width(width)
     , m_framebuffer_height(height)
 {
+    dbg() << "MBVGADevice address=" << addr << ", pitch=" << pitch << ", width=" << width << ", height=" << height;
     s_the = this;
 }
 
