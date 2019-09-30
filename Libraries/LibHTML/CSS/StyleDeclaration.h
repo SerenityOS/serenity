@@ -3,21 +3,24 @@
 #include <AK/String.h>
 #include <LibHTML/CSS/StyleValue.h>
 
+struct StyleProperty {
+    String name;
+    NonnullRefPtr<StyleValue> value;
+};
+
 class StyleDeclaration : public RefCounted<StyleDeclaration> {
 public:
-    static NonnullRefPtr<StyleDeclaration> create(const String& property_name, NonnullRefPtr<StyleValue>&& value)
+    static NonnullRefPtr<StyleDeclaration> create(Vector<StyleProperty>&& properties)
     {
-        return adopt(*new StyleDeclaration(property_name, move(value)));
+        return adopt(*new StyleDeclaration(move(properties)));
     }
 
     ~StyleDeclaration();
 
-    const String& property_name() const { return m_property_name; }
-    const StyleValue& value() const { return *m_value; }
+    const Vector<StyleProperty>& properties() const { return m_properties; }
 
 public:
-    StyleDeclaration(const String& property_name, NonnullRefPtr<StyleValue>&&);
+    explicit StyleDeclaration(Vector<StyleProperty>&&);
 
-    String m_property_name;
-    NonnullRefPtr<StyleValue> m_value;
+    Vector<StyleProperty> m_properties;
 };

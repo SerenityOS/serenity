@@ -70,8 +70,8 @@ StyleProperties StyleResolver::resolve_style(const Element& element, const Style
 
     auto matching_rules = collect_matching_rules(element);
     for (auto& rule : matching_rules) {
-        for (auto& declaration : rule.declarations()) {
-            style_properties.set_property(declaration.property_name(), declaration.value());
+        for (auto& property : rule.declaration().properties()) {
+            style_properties.set_property(property.name, property.value);
         }
     }
     return style_properties;

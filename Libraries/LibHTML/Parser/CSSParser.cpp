@@ -50,7 +50,7 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
 
     struct CurrentRule {
         Vector<Selector> selectors;
-        NonnullRefPtrVector<StyleDeclaration> declarations;
+        Vector<StyleProperty> properties;
     };
 
     CurrentRule current_rule;
@@ -146,7 +146,7 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
         auto property_value = String::copy(buffer);
         buffer.clear();
         consume_specific(';');
-        current_rule.declarations.append(StyleDeclaration::create(property_name, parse_css_value(property_value)));
+        current_rule.properties.append({ property_name, parse_css_value(property_value) });
     };
 
     auto parse_declarations = [&] {
@@ -163,7 +163,7 @@ NonnullRefPtr<StyleSheet> parse_css(const String& css)
         consume_specific('{');
         parse_declarations();
         consume_specific('}');
-        rules.append(StyleRule::create(move(current_rule.selectors), move(current_rule.declarations)));
+        rules.append(StyleRule::create(move(current_rule.selectors), StyleDeclaration::create(move(current_rule.properties))));
         consume_whitespace();
     };
 
