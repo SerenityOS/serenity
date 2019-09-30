@@ -118,8 +118,8 @@ TextEditorWidget::TextEditorWidget()
 
     m_new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GAction&) {
         if (m_document_dirty) {
-            GMessageBox save_document_first_box("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
-            auto save_document_first_result = save_document_first_box.exec();
+            auto save_document_first_box = GMessageBox::construct("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
+            auto save_document_first_result = save_document_first_box->exec();
 
             if (save_document_first_result != GDialog::ExecResult::ExecOK)
                 return;

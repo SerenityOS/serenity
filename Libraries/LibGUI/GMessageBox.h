@@ -17,12 +17,13 @@ public:
         OKCancel,
     };
 
-    explicit GMessageBox(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, CObject* parent = nullptr);
     virtual ~GMessageBox() override;
 
     static int show(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, CObject* parent = nullptr);
 
 private:
+    explicit GMessageBox(const StringView& text, const StringView& title, Type type = Type::None, InputType = InputType::OK, CObject* parent = nullptr);
+
     bool should_include_ok_button() const;
     bool should_include_cancel_button() const;
     void build();
