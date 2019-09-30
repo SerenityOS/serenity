@@ -20,7 +20,7 @@ int main(int argc, char** argv)
         auto& response = static_cast<const CHttpResponse&>(*job->response());
         printf("%s{%p}: on_receive: code=%d\n", job->class_name(), job.ptr(), response.code());
         //printf("payload:\n");
-        //printf("%s", response.payload().pointer());
+        //printf("%s", response.payload().data());
         printf("payload was %d bytes\n", response.payload().size());
     };
 

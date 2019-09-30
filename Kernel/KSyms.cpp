@@ -34,7 +34,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
 {
     ksym_lowest_address = 0xffffffff;
     ksym_highest_address = 0;
-    auto* bufptr = (const char*)buffer.pointer();
+    auto* bufptr = (const char*)buffer.data();
     auto* start_of_name = bufptr;
     u32 address = 0;
 

@@ -54,7 +54,7 @@ GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, size_t pitch, RG
 
 GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, MappedFile&& mapped_file)
     : m_size(size)
-    , m_data((RGBA32*)mapped_file.pointer())
+    , m_data((RGBA32*)mapped_file.data())
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
     , m_mapped_file(move(mapped_file))

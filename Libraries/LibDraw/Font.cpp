@@ -134,7 +134,7 @@ RefPtr<Font> Font::load_from_file(const StringView& path)
     if (!mapped_file.is_valid())
         return nullptr;
 
-    auto font = load_from_memory((const u8*)mapped_file.pointer());
+    auto font = load_from_memory((const u8*)mapped_file.data());
     font->m_mapped_file = move(mapped_file);
     return font;
 }
@@ -166,7 +166,7 @@ bool Font::write_to_file(const StringView& path)
     stream << ByteBuffer::wrap(m_glyph_widths, 256);
 
     ASSERT(stream.at_end());
-    ssize_t nwritten = write(fd, buffer.pointer(), buffer.size());
+    ssize_t nwritten = write(fd, buffer.data(), buffer.size());
     ASSERT(nwritten == (ssize_t)buffer.size());
     int rc = close(fd);
     ASSERT(rc == 0);

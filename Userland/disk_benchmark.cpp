@@ -129,7 +129,7 @@ Result benchmark(const String& filename, int file_size, int block_size, ByteBuff
     timer.start();
     int nwrote = 0;
     for (int j = 0; j < file_size; j += block_size) {
-        int n = write(fd, buffer.pointer(), block_size);
+        int n = write(fd, buffer.data(), block_size);
         if (n < 0) {
             perror("write");
             cleanup_and_exit();
@@ -146,7 +146,7 @@ Result benchmark(const String& filename, int file_size, int block_size, ByteBuff
     timer.start();
     int nread = 0;
     while (nread < file_size) {
-        int n = read(fd, buffer.pointer(), block_size);
+        int n = read(fd, buffer.data(), block_size);
         if (n < 0) {
             perror("read");
             cleanup_and_exit();

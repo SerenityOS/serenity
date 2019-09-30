@@ -43,8 +43,8 @@ public:
     bool is_empty() const { return !m_size; }
     int size() const { return m_size; }
 
-    u8* pointer() { return m_data; }
-    const u8* pointer() const { return m_data; }
+    u8* data() { return m_data; }
+    const u8* data() const { return m_data; }
 
     u8* offset_pointer(int offset) { return m_data + offset; }
     const u8* offset_pointer(int offset) const { return m_data + offset; }
@@ -130,11 +130,8 @@ public:
     bool is_empty() const { return !m_impl || m_impl->is_empty(); }
     int size() const { return m_impl ? m_impl->size() : 0; }
 
-    u8* data() { return pointer(); }
-    const u8* data() const { return pointer(); }
-
-    u8* pointer() { return m_impl ? m_impl->pointer() : nullptr; }
-    const u8* pointer() const { return m_impl ? m_impl->pointer() : nullptr; }
+    u8* data() { return m_impl ? m_impl->data() : nullptr; }
+    const u8* data() const { return m_impl ? m_impl->data() : nullptr; }
 
     u8* offset_pointer(int offset) { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
     const u8* offset_pointer(int offset) const { return m_impl ? m_impl->offset_pointer(offset) : nullptr; }
@@ -146,7 +143,7 @@ public:
     {
         if (!m_impl)
             return {};
-        return copy(m_impl->pointer(), m_impl->size());
+        return copy(m_impl->data(), m_impl->size());
     }
 
     // NOTE: trim() does not reallocate.
@@ -190,7 +187,7 @@ public:
     {
         int old_size = size();
         grow(size() + data_size);
-        memcpy(pointer() + old_size, data, data_size);
+        memcpy(this->data() + old_size, data, data_size);
     }
 
 private:
@@ -249,7 +246,7 @@ inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_uninitialized(int si
 inline NonnullRefPtr<ByteBufferImpl> ByteBufferImpl::create_zeroed(int size)
 {
     auto buffer = ::adopt(*new ByteBufferImpl(size));
-    memset(buffer->pointer(), 0, size);
+    memset(buffer->data(), 0, size);
     return buffer;
 }
 

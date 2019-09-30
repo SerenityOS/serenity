@@ -108,7 +108,7 @@ int Database::init()
     if (!m_file.is_valid())
         return -1;
 
-    m_view = StringView((const char*)m_file.pointer(), m_file.size());
+    m_view = StringView((const char*)m_file.data(), m_file.size());
 
     ParseMode mode = ParseMode::UnknownMode;
 

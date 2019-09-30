@@ -207,9 +207,9 @@ void PATAChannel::detect_disks()
 
         ByteBuffer wbuf = ByteBuffer::create_uninitialized(512);
         ByteBuffer bbuf = ByteBuffer::create_uninitialized(512);
-        u8* b = bbuf.pointer();
-        u16* w = (u16*)wbuf.pointer();
-        const u16* wbufbase = (u16*)wbuf.pointer();
+        u8* b = bbuf.data();
+        u16* w = (u16*)wbuf.data();
+        const u16* wbufbase = (u16*)wbuf.data();
 
         for (u32 i = 0; i < 256; ++i) {
             u16 data = IO::in16(m_io_base + ATA_REG_DATA);
@@ -228,7 +228,7 @@ void PATAChannel::detect_disks()
 
         kprintf(
             "PATAChannel: Name=\"%s\", C/H/Spt=%u/%u/%u\n",
-            bbuf.pointer() + 54,
+            bbuf.data() + 54,
             cyls,
             heads,
             spt);

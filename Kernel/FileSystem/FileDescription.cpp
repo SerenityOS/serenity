@@ -168,7 +168,7 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
     if (size < temp_buffer.size())
         return -1;
 
-    memcpy(buffer, temp_buffer.pointer(), temp_buffer.size());
+    memcpy(buffer, temp_buffer.data(), temp_buffer.size());
     return stream.offset();
 }
 

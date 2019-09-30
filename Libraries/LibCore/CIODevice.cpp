@@ -38,7 +38,7 @@ ByteBuffer CIODevice::read(int max_size)
     if (!max_size)
         return {};
     auto buffer = ByteBuffer::create_uninitialized(max_size);
-    auto* buffer_ptr = (char*)buffer.pointer();
+    auto* buffer_ptr = (char*)buffer.data();
     int remaining_buffer_space = buffer.size();
     int taken_from_buffered = 0;
     if (!m_buffered_data.is_empty()) {

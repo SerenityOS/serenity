@@ -119,7 +119,7 @@ ByteBuffer CSocket::receive(int max_size)
 
 bool CSocket::send(const ByteBuffer& data)
 {
-    int nsent = ::send(fd(), data.pointer(), data.size(), 0);
+    int nsent = ::send(fd(), data.data(), data.size(), 0);
     if (nsent < 0) {
         set_error(errno);
         return false;

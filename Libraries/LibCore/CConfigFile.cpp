@@ -44,7 +44,7 @@ void CConfigFile::reparse()
 
     while (file->can_read_line()) {
         auto line = file->read_line(BUFSIZ);
-        auto* cp = (const char*)line.pointer();
+        auto* cp = (const char*)line.data();
 
         while (*cp && (*cp == ' ' || *cp == '\t' || *cp == '\n'))
             ++cp;

@@ -21,7 +21,7 @@ void StringBuilder::append(const StringView& str)
     if (str.is_empty())
         return;
     will_append(str.length());
-    memcpy(m_buffer.pointer() + m_length, str.characters_without_null_termination(), str.length());
+    memcpy(m_buffer.data() + m_length, str.characters_without_null_termination(), str.length());
     m_length += str.length();
 }
 
@@ -30,14 +30,14 @@ void StringBuilder::append(const char* characters, int length)
     if (!length)
         return;
     will_append(length);
-    memcpy(m_buffer.pointer() + m_length, characters, length);
+    memcpy(m_buffer.data() + m_length, characters, length);
     m_length += length;
 }
 
 void StringBuilder::append(char ch)
 {
     will_append(1);
-    m_buffer.pointer()[m_length] = ch;
+    m_buffer.data()[m_length] = ch;
     m_length += 1;
 }
 
@@ -67,14 +67,14 @@ ByteBuffer StringBuilder::to_byte_buffer()
 
 String StringBuilder::to_string()
 {
-    auto string = String((const char*)m_buffer.pointer(), m_length);
+    auto string = String((const char*)m_buffer.data(), m_length);
     clear();
     return string;
 }
 
 StringView StringBuilder::string_view() const
 {
-    return StringView { (const char*)m_buffer.pointer(), m_length };
+    return StringView { (const char*)m_buffer.data(), m_length };
 }
 
 void StringBuilder::clear()

@@ -264,7 +264,7 @@ void handle_icmp(const EthernetFrameHeader& eth, const IPv4Packet& ipv4_packet)
             (u16)request.sequence_number);
         size_t icmp_packet_size = ipv4_packet.payload_size();
         auto buffer = ByteBuffer::create_zeroed(icmp_packet_size);
-        auto& response = *(ICMPEchoPacket*)buffer.pointer();
+        auto& response = *(ICMPEchoPacket*)buffer.data();
         response.header.set_type(ICMPType::EchoReply);
         response.header.set_code(0);
         response.identifier = request.identifier;

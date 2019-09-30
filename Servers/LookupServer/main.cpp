@@ -42,7 +42,7 @@ static void load_etc_hosts()
         auto line = file->read_line(1024);
         if (line.is_empty())
             break;
-        auto str_line = String((const char*)line.pointer(), line.size() - 1, Chomp);
+        auto str_line = String((const char*)line.data(), line.size() - 1, Chomp);
         auto fields = str_line.split('\t');
 
         auto sections = fields[0].split('.');
@@ -254,7 +254,7 @@ Vector<String> lookup(const String& hostname, bool& did_timeout, const String& D
     dst_addr.sin_port = htons(53);
     rc = inet_pton(AF_INET, DNS_IP.characters(), &dst_addr.sin_addr);
 
-    int nsent = sendto(fd, buffer.pointer(), buffer.size(), 0, (const struct sockaddr*)&dst_addr, sizeof(dst_addr));
+    int nsent = sendto(fd, buffer.data(), buffer.size(), 0, (const struct sockaddr*)&dst_addr, sizeof(dst_addr));
     if (nsent < 0) {
         perror("sendto");
         return {};

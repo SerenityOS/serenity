@@ -140,7 +140,7 @@ int TCPSocket::protocol_send(const void* data, int data_length)
 void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size)
 {
     auto buffer = ByteBuffer::create_zeroed(sizeof(TCPPacket) + payload_size);
-    auto& tcp_packet = *(TCPPacket*)(buffer.pointer());
+    auto& tcp_packet = *(TCPPacket*)(buffer.data());
     ASSERT(local_port());
     tcp_packet.set_source_port(local_port());
     tcp_packet.set_destination_port(peer_port());
@@ -194,7 +194,7 @@ void TCPSocket::send_outgoing_packets()
         packet.tx_counter++;
 
 #ifdef TCP_SOCKET_DEBUG
-        auto& tcp_packet = *(TCPPacket*)(packet.buffer.pointer());
+        auto& tcp_packet = *(TCPPacket*)(packet.buffer.data());
         kprintf("sending tcp packet from %s:%u to %s:%u with (%s%s%s%s) seq_no=%u, ack_no=%u, tx_counter=%u\n",
             local_address().to_string().characters(),
             local_port(),
