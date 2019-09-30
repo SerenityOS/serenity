@@ -15,12 +15,13 @@ struct CacheEntry {
 
 class DiskCache {
 public:
-    explicit DiskCache(size_t block_size)
-        : m_cached_block_data(KBuffer::create_with_size(m_entry_count * block_size))
+    explicit DiskCache(DiskBackedFS& fs)
+        : m_fs(fs)
+        , m_cached_block_data(KBuffer::create_with_size(m_entry_count * m_fs.block_size()))
     {
         m_entries = (CacheEntry*)kmalloc_eternal(m_entry_count * sizeof(CacheEntry));
         for (size_t i = 0; i < m_entry_count; ++i) {
-            m_entries[i].data = m_cached_block_data.data() + i * block_size;
+            m_entries[i].data = m_cached_block_data.data() + i * m_fs.block_size();
         }
     }
 
@@ -47,8 +48,11 @@ public:
                     oldest_clean_entry = &entry;
             }
         }
-        // FIXME: What if every single entry was dirty though :(
-        ASSERT(oldest_clean_entry);
+        if (!oldest_clean_entry) {
+            // Not a single clean entry! Flush writes and try again.
+            m_fs.flush_writes();
+            return get(block_index);
+        }
 
         // Replace the oldest clean entry.
         auto& new_entry = *oldest_clean_entry;
@@ -66,6 +70,8 @@ public:
             callback(m_entries[i]);
     }
 
+private:
+    DiskBackedFS& m_fs;
     size_t m_entry_count { 10000 };
     KBuffer m_cached_block_data;
     CacheEntry* m_entries { nullptr };
@@ -160,6 +166,6 @@ void DiskBackedFS::flush_writes()
 DiskCache& DiskBackedFS::cache() const
 {
     if (!m_cache)
-        m_cache = make<DiskCache>(block_size());
+        m_cache = make<DiskCache>(const_cast<DiskBackedFS&>(*this));
     return *m_cache;
 }
