@@ -22,8 +22,8 @@ protected:
     bool read_block(unsigned index, u8* buffer) const;
     bool read_blocks(unsigned index, unsigned count, u8* buffer) const;
 
-    bool write_block(unsigned index, const ByteBuffer&);
-    bool write_blocks(unsigned index, unsigned count, const ByteBuffer&);
+    bool write_block(unsigned index, const u8*);
+    bool write_blocks(unsigned index, unsigned count, const u8*);
 
 private:
     DiskCache& cache() const;
