@@ -3,6 +3,7 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Dump.h>
+#include <LibHTML/Parser/CSSParser.h>
 #include <stdio.h>
 
 StyleResolver::StyleResolver(Document& document)
@@ -74,5 +75,15 @@ StyleProperties StyleResolver::resolve_style(const Element& element, const Style
             style_properties.set_property(property.name, property.value);
         }
     }
+
+    auto style_attribute = element.attribute("style");
+    if (!style_attribute.is_null()) {
+        if (auto declaration = parse_css_declaration(style_attribute)) {
+            for (auto& property : declaration->properties()) {
+                style_properties.set_property(property.name, property.value);
+            }
+        }
+    }
+
     return style_properties;
 }
