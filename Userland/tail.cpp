@@ -28,7 +28,7 @@ int tail_from_pos(CFile& file, off_t startline, bool want_follow)
             }
         }
 
-        if (write(STDOUT_FILENO, b.pointer(), b.size()) < 0)
+        if (write(STDOUT_FILENO, b.data(), b.size()) < 0)
             return 1;
     }
 
@@ -57,7 +57,7 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
             // Presumably the file got truncated?
             // Keep trying to read backwards...
         } else {
-            if (*ch.pointer() == '\n' && (end - pos) > 1) {
+            if (*ch.data() == '\n' && (end - pos) > 1) {
                 lines++;
                 if (lines == wanted_lines)
                     break;

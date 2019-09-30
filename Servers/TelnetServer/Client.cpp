@@ -149,7 +149,7 @@ void Client::send_commands(Vector<Command> commands)
     for (auto& command : commands)
         stream << (u8)IAC << command.command << command.subcommand;
     stream.snip();
-    m_socket->write(buffer.pointer(), buffer.size());
+    m_socket->write(buffer.data(), buffer.size());
 }
 
 void Client::quit()

@@ -714,7 +714,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
 
             // FIXME: We should limit the recursion here and return -ELOOP if it goes to deep.
             auto symlink_target = resolve_path(
-                StringView(symlink_contents.pointer(),
+                StringView(symlink_contents.data(),
                     symlink_contents.size()),
                 current_parent,
                 parent_custody,

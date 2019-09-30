@@ -38,7 +38,7 @@ void CHttpJob::on_socket_connected()
             }
             auto parts = String::copy(line, Chomp).split(' ');
             if (parts.size() < 3) {
-                fprintf(stderr, "CHttpJob: Expected 3-part HTTP status, got '%s'\n", line.pointer());
+                fprintf(stderr, "CHttpJob: Expected 3-part HTTP status, got '%s'\n", line.data());
                 return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             bool ok;

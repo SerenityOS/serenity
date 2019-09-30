@@ -1240,7 +1240,7 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
-    memcpy(buffer, contents.pointer(), min(size, (ssize_t)contents.size()));
+    memcpy(buffer, contents.data(), min(size, (ssize_t)contents.size()));
     if (contents.size() + 1 < size)
         buffer[contents.size()] = '\0';
     return 0;

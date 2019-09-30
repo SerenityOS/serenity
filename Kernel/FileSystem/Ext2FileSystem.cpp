@@ -49,7 +49,7 @@ ByteBuffer Ext2FS::read_super_block() const
 {
     LOCKER(m_lock);
     auto buffer = ByteBuffer::create_uninitialized(1024);
-    bool success = device().read_block(2, buffer.pointer());
+    bool success = device().read_block(2, buffer.data());
     ASSERT(success);
     success = device().read_block(3, buffer.offset_pointer(512));
     ASSERT(success);
@@ -79,7 +79,7 @@ const ext2_super_block& Ext2FS::super_block() const
 {
     if (!m_cached_super_block)
         m_cached_super_block = read_super_block();
-    return *reinterpret_cast<ext2_super_block*>(m_cached_super_block.pointer());
+    return *reinterpret_cast<ext2_super_block*>(m_cached_super_block.data());
 }
 
 const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
@@ -97,7 +97,7 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 #endif
         m_cached_group_descriptor_table = read_blocks(first_block_of_bgdt, blocks_to_read);
     }
-    return reinterpret_cast<ext2_group_desc*>(m_cached_group_descriptor_table.pointer())[group_index - 1];
+    return reinterpret_cast<ext2_group_desc*>(m_cached_group_descriptor_table.data())[group_index - 1];
 }
 
 bool Ext2FS::initialize()
@@ -321,10 +321,10 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
 
         auto dind_block_contents = read_block(e2inode.i_block[EXT2_DIND_BLOCK]);
         if (dind_block_new) {
-            memset(dind_block_contents.pointer(), 0, dind_block_contents.size());
+            memset(dind_block_contents.data(), 0, dind_block_contents.size());
             dind_block_dirty = true;
         }
-        auto* dind_block_as_pointers = (unsigned*)dind_block_contents.pointer();
+        auto* dind_block_as_pointers = (unsigned*)dind_block_contents.data();
 
         ASSERT(indirect_block_count <= entries_per_block);
         for (unsigned i = 0; i < indirect_block_count; ++i) {
@@ -341,10 +341,10 @@ bool Ext2FS::write_block_list_for_inode(InodeIndex inode_index, ext2_inode& e2in
 
             auto ind_block_contents = read_block(indirect_block_index);
             if (ind_block_new) {
-                memset(ind_block_contents.pointer(), 0, dind_block_contents.size());
+                memset(ind_block_contents.data(), 0, dind_block_contents.size());
                 ind_block_dirty = true;
             }
-            auto* ind_block_as_pointers = (unsigned*)ind_block_contents.pointer();
+            auto* ind_block_as_pointers = (unsigned*)ind_block_contents.data();
 
             unsigned entries_to_write = new_shape.doubly_indirect_blocks - (i * entries_per_block);
             if (entries_to_write > entries_per_block)
@@ -430,7 +430,7 @@ Vector<Ext2FS::BlockIndex> Ext2FS::block_list_for_inode(const ext2_inode& e2inod
             callback(array_block_index);
         auto array_block = read_block(array_block_index);
         ASSERT(array_block);
-        auto* array = reinterpret_cast<const __u32*>(array_block.pointer());
+        auto* array = reinterpret_cast<const __u32*>(array_block.data());
         unsigned count = min(blocks_remaining, entries_per_block);
         for (unsigned i = 0; i < count; ++i) {
             if (!array[i]) {
@@ -646,7 +646,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
         int offset_into_block = (bi == first_block_logical_index) ? offset_into_first_block : 0;
         int num_bytes_to_copy = min(block_size - offset_into_block, remaining_count);
-        memcpy(out, block.pointer() + offset_into_block, num_bytes_to_copy);
+        memcpy(out, block.data() + offset_into_block, num_bytes_to_copy);
         remaining_count -= num_bytes_to_copy;
         nread += num_bytes_to_copy;
         out += num_bytes_to_copy;
@@ -755,14 +755,14 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
         } else
             block = buffer_block;
 
-        memcpy(block.pointer() + offset_into_block, in, num_bytes_to_copy);
+        memcpy(block.data() + offset_into_block, in, num_bytes_to_copy);
         if (bi == last_logical_block_index_in_file && num_bytes_to_copy < block_size) {
             int padding_start = new_size % block_size;
             int padding_bytes = block_size - padding_start;
 #ifdef EXT2_DEBUG
             dbgprintf("Ext2FSInode::write_bytes padding last block of file with zero x %u (new_size=%u, offset_into_block=%u, num_bytes_to_copy=%u)\n", padding_bytes, new_size, offset_into_block, num_bytes_to_copy);
 #endif
-            memset(block.pointer() + padding_start, 0, padding_bytes);
+            memset(block.data() + padding_start, 0, padding_bytes);
         }
 #ifdef EXT2_DEBUG
         dbgprintf("Ext2FSInode::write_bytes: writing block %u (offset_into_block: %u)\n", m_block_list[bi], offset_into_block);
@@ -799,7 +799,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
 
     auto buffer = read_entire();
     ASSERT(buffer);
-    auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.pointer());
+    auto* entry = reinterpret_cast<ext2_dir_entry_2*>(buffer.data());
 
     while (entry < buffer.end_pointer()) {
         if (entry->inode != 0) {
@@ -867,7 +867,7 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
 
     stream.fill_to_end(0);
 
-    ssize_t nwritten = write_bytes(0, directory_data.size(), directory_data.pointer(), nullptr);
+    ssize_t nwritten = write_bytes(0, directory_data.size(), directory_data.data(), nullptr);
     return nwritten == directory_data.size();
 }
 
@@ -1006,7 +1006,7 @@ Ext2FS::BlockIndex Ext2FS::allocate_block(GroupIndex preferred_group_index)
 
     auto bitmap_block = read_block(bgd.bg_block_bitmap);
     int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
-    auto block_bitmap = Bitmap::wrap(bitmap_block.pointer(), blocks_in_group);
+    auto block_bitmap = Bitmap::wrap(bitmap_block.data(), blocks_in_group);
     BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index();
     int first_unset_bit_index = block_bitmap.find_first_unset();
     ASSERT(first_unset_bit_index != -1);
@@ -1136,7 +1136,7 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
     auto block = read_block(bgd.bg_inode_bitmap);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_group());
+    auto bitmap = Bitmap::wrap(block.data(), inodes_per_group());
     return bitmap.get(bit_index);
 }
 
@@ -1149,7 +1149,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
     auto block = read_block(bgd.bg_inode_bitmap);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), inodes_per_group());
+    auto bitmap = Bitmap::wrap(block.data(), inodes_per_group());
     bool current_state = bitmap.get(bit_index);
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: set_inode_allocation_state(%u) %u -> %u\n", inode_index, current_state, new_state);
@@ -1165,7 +1165,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     ASSERT(success);
 
     // Update superblock
-    auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.pointer());
+    auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.data());
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: superblock free inode count %u -> %u\n", sb.s_free_inodes_count, sb.s_free_inodes_count - 1);
 #endif
@@ -1212,7 +1212,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 #endif
     auto block = read_block(bgd.bg_block_bitmap);
     ASSERT(block);
-    auto bitmap = Bitmap::wrap(block.pointer(), blocks_per_group());
+    auto bitmap = Bitmap::wrap(block.data(), blocks_per_group());
     bool current_state = bitmap.get(bit_index);
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: block %u state: %u -> %u\n", block_index, current_state, new_state);
@@ -1228,7 +1228,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     ASSERT(success);
 
     // Update superblock
-    auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.pointer());
+    auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.data());
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: superblock free block count %u -> %u\n", sb.s_free_blocks_count, sb.s_free_blocks_count - 1);
 #endif

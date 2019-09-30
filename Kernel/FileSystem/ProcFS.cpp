@@ -796,7 +796,7 @@ static ssize_t write_sys_string(InodeIdentifier inode_id, const ByteBuffer& data
     {
         auto* lockable_string = reinterpret_cast<Lockable<String>*>(variable.address);
         LOCKER(lockable_string->lock());
-        lockable_string->resource() = String((const char*)data.pointer(), data.size());
+        lockable_string->resource() = String((const char*)data.data(), data.size());
     }
     variable.notify();
     return data.size();

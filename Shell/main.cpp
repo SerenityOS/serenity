@@ -820,7 +820,7 @@ void load_history()
     while (history_file->can_read_line()) {
         auto b = history_file->read_line(1024);
         // skip the newline and terminating bytes
-        editor.add_to_history(String(reinterpret_cast<const char*>(b.pointer()), b.size() - 2));
+        editor.add_to_history(String(reinterpret_cast<const char*>(b.data()), b.size() - 2));
     }
 }
 

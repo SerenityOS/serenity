@@ -27,7 +27,7 @@ static String read_var(const String& name)
         fprintf(stderr, "read: %s", f->error_string());
         exit(1);
     }
-    return String((const char*)b.pointer(), b.size(), Chomp);
+    return String((const char*)b.data(), b.size(), Chomp);
 }
 
 static void write_var(const String& name, const String& value)

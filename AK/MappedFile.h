@@ -18,8 +18,8 @@ public:
     bool is_valid() const { return m_map != (void*)-1; }
     void unmap();
 
-    void* pointer() { return m_map; }
-    const void* pointer() const { return m_map; }
+    void* data() { return m_map; }
+    const void* data() const { return m_map; }
     size_t size() const { return m_size; }
 
 private:
