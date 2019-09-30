@@ -50,8 +50,7 @@ int main(int argc, char** argv)
             auto filename = picker.selected_file().string();
             auto bitmap = load_png(filename);
             if (!bitmap) {
-                GMessageBox msgbox(String::format("Failed to load '%s'", filename.characters()), "Open failed", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
-                msgbox.exec();
+                GMessageBox::show(String::format("Failed to load '%s'", filename.characters()), "Open failed", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
                 return;
             }
             paintable_widget->set_bitmap(*bitmap);
