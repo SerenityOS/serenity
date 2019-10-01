@@ -3,6 +3,7 @@
 #include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
+#include <LibHTML/DOM/HTMLHRElement.h>
 #include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/HTMLHeadingElement.h>
 #include <LibHTML/DOM/HTMLHtmlElement.h>
@@ -22,6 +23,8 @@ static NonnullRefPtr<Element> create_element(Document& document, const String& t
         return adopt(*new HTMLHtmlElement(document, tag_name));
     if (lowercase_tag_name == "head")
         return adopt(*new HTMLHeadElement(document, tag_name));
+    if (lowercase_tag_name == "hr")
+        return adopt(*new HTMLHRElement(document, tag_name));
     if (lowercase_tag_name == "style")
         return adopt(*new HTMLStyleElement(document, tag_name));
     if (lowercase_tag_name == "title")

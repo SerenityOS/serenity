@@ -89,3 +89,9 @@ a {
     color: #0000ff;
     text-decoration: underline;
 }
+
+hr {
+    border-width: 1;
+    border-color: #888888;
+    border-style: inset;
+}
