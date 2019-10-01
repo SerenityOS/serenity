@@ -79,6 +79,11 @@ public:
         return size() / PAGE_SIZE;
     }
 
+    size_t offset_in_vmobject() const
+    {
+        return m_offset_in_vmo;
+    }
+
     int commit();
 
     size_t amount_resident() const;
