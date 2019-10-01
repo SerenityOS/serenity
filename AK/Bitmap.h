@@ -131,7 +131,6 @@ public:
         return -1;
     }
 
-private:
     explicit Bitmap()
         : m_size(0)
         , m_owned(true)
@@ -154,6 +153,8 @@ private:
         , m_owned(false)
     {
     }
+
+private:
 
     int size_in_bytes() const { return ceil_div(m_size, 8); }
 
