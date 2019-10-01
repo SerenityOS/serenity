@@ -206,6 +206,8 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         return (void*)-EINVAL;
     if ((u32)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
+    if ((flags & MAP_SHARED) && (flags & MAP_PRIVATE))
+        return (void*)-EINVAL;
     if (flags & MAP_ANONYMOUS) {
         auto* region = allocate_region(VirtualAddress((u32)addr), size, name ? name : "mmap", prot, false);
         if (!region)
