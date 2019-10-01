@@ -44,8 +44,16 @@ void LayoutNode::render(RenderingContext& context)
 #endif
 
     auto bgcolor = style_properties().property("background-color");
-    if (bgcolor.has_value() && bgcolor.value()->is_color())
-        context.painter().fill_rect(rect(), bgcolor.value()->to_color());
+    if (bgcolor.has_value() && bgcolor.value()->is_color()) {
+
+        Rect background_rect;
+        background_rect.set_x(rect().x() - style().padding().left.to_px());
+        background_rect.set_width(rect().width() + style().padding().left.to_px() + style().padding().right.to_px());
+        background_rect.set_y(rect().y() - style().padding().top.to_px());
+        background_rect.set_height(rect().height() + style().padding().top.to_px() + style().padding().bottom.to_px());
+
+        context.painter().fill_rect(background_rect, bgcolor.value()->to_color());
+    }
 
     // TODO: render our border
     for_each_child([&](auto& child) {
