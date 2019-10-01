@@ -307,7 +307,6 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("      >> ZERO P%p\n", physical_page->paddr().get());
 #endif
-    region.set_should_cow(page_index_in_region, false);
     vmo.physical_pages()[page_index_in_region] = move(physical_page);
     remap_region_page(region, page_index_in_region);
     return true;
@@ -468,9 +467,9 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     ASSERT(range.is_valid());
     OwnPtr<Region> region;
     if (user_accessible)
-        region = Region::create_user_accessible(range, name, PROT_READ | PROT_WRITE | PROT_EXEC, false);
+        region = Region::create_user_accessible(range, name, PROT_READ | PROT_WRITE | PROT_EXEC);
     else
-        region = Region::create_kernel_only(range, name, PROT_READ | PROT_WRITE | PROT_EXEC, false);
+        region = Region::create_kernel_only(range, name, PROT_READ | PROT_WRITE | PROT_EXEC);
     MM.map_region_at_address(*m_kernel_page_directory, *region, range.base());
     // FIXME: It would be cool if these could zero-fill on demand instead.
     if (should_commit)

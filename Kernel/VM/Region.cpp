@@ -6,33 +6,30 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
-Region::Region(const Range& range, const String& name, u8 access, bool cow)
+Region::Region(const Range& range, const String& name, u8 access)
     : m_range(range)
     , m_vmobject(AnonymousVMObject::create_with_size(size()))
     , m_name(name)
     , m_access(access)
-    , m_cow_map(Bitmap::create(m_vmobject->page_count(), cow))
 {
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8 access, bool cow)
+Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8 access)
     : m_range(range)
     , m_vmobject(InodeVMObject::create_with_inode(*inode))
     , m_name(name)
     , m_access(access)
-    , m_cow_map(Bitmap::create(m_vmobject->page_count(), cow))
 {
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject> vmo, size_t offset_in_vmo, const String& name, u8 access, bool cow)
+Region::Region(const Range& range, NonnullRefPtr<VMObject> vmo, size_t offset_in_vmo, const String& name, u8 access)
     : m_range(range)
     , m_offset_in_vmo(offset_in_vmo)
     , m_vmobject(move(vmo))
     , m_name(name)
     , m_access(access)
-    , m_cow_map(Bitmap::create(m_vmobject->page_count(), cow))
 {
     MM.register_region(*this);
 }
@@ -77,9 +74,11 @@ NonnullOwnPtr<Region> Region::clone()
         vaddr().get());
 #endif
     // Set up a COW region. The parent (this) region becomes COW as well!
-    m_cow_map.fill(true);
+    ensure_cow_map().fill(true);
     MM.remap_region(current->process().page_directory(), *this);
-    return Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmo, m_name, m_access, true);
+    auto clone_region = Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmo, m_name, m_access);
+    clone_region->ensure_cow_map();
+    return clone_region;
 }
 
 int Region::commit()
@@ -123,30 +122,50 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, const StringView& name, u8 access, bool cow)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, const StringView& name, u8 access)
 {
-    auto region = make<Region>(range, name, access, cow);
+    auto region = make<Region>(range, name, access);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cow)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cow);
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<Inode> inode, const StringView& name, u8 access, bool cow)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<Inode> inode, const StringView& name, u8 access)
 {
-    auto region = make<Region>(range, move(inode), name, access, cow);
+    auto region = make<Region>(range, move(inode), name, access);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const StringView& name, u8 access, bool cow)
+NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const StringView& name, u8 access)
 {
-    auto region = make<Region>(range, name, access, cow);
+    auto region = make<Region>(range, name, access);
     region->m_user_accessible = false;
     return region;
+}
+
+bool Region::should_cow(size_t page_index) const
+{
+    if (m_shared)
+        return false;
+    return m_cow_map && m_cow_map->get(page_index);
+}
+
+void Region::set_should_cow(size_t page_index, bool cow)
+{
+    ASSERT(!m_shared);
+    ensure_cow_map().set(page_index, cow);
+}
+
+Bitmap& Region::ensure_cow_map() const
+{
+    if (!m_cow_map)
+        m_cow_map = make<Bitmap>(page_count(), true);
+    return *m_cow_map;
 }

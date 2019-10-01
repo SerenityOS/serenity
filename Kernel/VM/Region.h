@@ -21,10 +21,10 @@ public:
         Execute = 4,
     };
 
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access, bool cow = false);
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cow = false);
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access, bool cow = false);
-    static NonnullOwnPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access, bool cow = false);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access);
+    static NonnullOwnPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access);
 
     ~Region();
 
@@ -103,8 +103,8 @@ public:
         m_page_directory.clear();
     }
 
-    bool should_cow(size_t page_index) const { return m_cow_map.get(page_index); }
-    void set_should_cow(size_t page_index, bool cow) { m_cow_map.set(page_index, cow); }
+    bool should_cow(size_t page_index) const;
+    void set_should_cow(size_t page_index, bool);
 
     void set_writable(bool b)
     {
@@ -119,11 +119,13 @@ public:
     Region* m_prev { nullptr };
 
     // NOTE: These are public so we can make<> them.
-    Region(const Range&, const String&, u8 access, bool cow = false);
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String&, u8 access, bool cow = false);
-    Region(const Range&, RefPtr<Inode>&&, const String&, u8 access, bool cow = false);
+    Region(const Range&, const String&, u8 access);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String&, u8 access);
+    Region(const Range&, RefPtr<Inode>&&, const String&, u8 access);
 
 private:
+    Bitmap& ensure_cow_map() const;
+
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;
     size_t m_offset_in_vmo { 0 };
@@ -132,5 +134,5 @@ private:
     u8 m_access { 0 };
     bool m_shared { false };
     bool m_user_accessible { false };
-    Bitmap m_cow_map;
+    mutable OwnPtr<Bitmap> m_cow_map;
 };
