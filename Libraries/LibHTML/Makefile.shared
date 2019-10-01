@@ -6,6 +6,7 @@ LIBHTML_OBJS = \
     DOM/HTMLAnchorElement.o \
     DOM/HTMLHeadingElement.o \
     DOM/HTMLHeadElement.o \
+    DOM/HTMLHRElement.o \
     DOM/HTMLHtmlElement.o \
     DOM/HTMLStyleElement.o \
     DOM/HTMLTitleElement.o \

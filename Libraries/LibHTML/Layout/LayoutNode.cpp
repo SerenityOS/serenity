@@ -56,13 +56,34 @@ void LayoutNode::render(RenderingContext& context)
 
     auto border_width_value = style_properties().property("border-width");
     auto border_color_value = style_properties().property("border-color");
+    auto border_style_value = style_properties().property("border-style");
     if (border_width_value.has_value() && border_color_value.has_value()) {
         int border_width = border_width_value.value()->to_length().to_px();
         Color border_color = border_color_value.value()->to_color();
-        context.painter().draw_line(padded_rect.top_left(), padded_rect.top_right(), border_color, border_width);
-        context.painter().draw_line(padded_rect.top_right(), padded_rect.bottom_right(), border_color, border_width);
-        context.painter().draw_line(padded_rect.bottom_right(), padded_rect.bottom_left(), border_color, border_width);
-        context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), border_color, border_width);
+
+        if (border_style_value.has_value() && border_style_value.value()->to_string() == "inset") {
+            // border-style: inset
+            auto shadow_color = Color::from_rgb(0x888888);
+            auto highlight_color = Color::from_rgb(0x5a5a5a);
+            context.painter().draw_line(padded_rect.top_left(), padded_rect.top_right(), highlight_color, border_width);
+            context.painter().draw_line(padded_rect.top_right(), padded_rect.bottom_right(), shadow_color, border_width);
+            context.painter().draw_line(padded_rect.bottom_right(), padded_rect.bottom_left(), shadow_color, border_width);
+            context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), highlight_color, border_width);
+        } else if (border_style_value.has_value() && border_style_value.value()->to_string() == "outset") {
+            // border-style: outset
+            auto highlight_color = Color::from_rgb(0x888888);
+            auto shadow_color = Color::from_rgb(0x5a5a5a);
+            context.painter().draw_line(padded_rect.top_left(), padded_rect.top_right(), highlight_color, border_width);
+            context.painter().draw_line(padded_rect.top_right(), padded_rect.bottom_right(), shadow_color, border_width);
+            context.painter().draw_line(padded_rect.bottom_right(), padded_rect.bottom_left(), shadow_color, border_width);
+            context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), highlight_color, border_width);
+        } else {
+            // border-style: solid
+            context.painter().draw_line(padded_rect.top_left(), padded_rect.top_right(), border_color, border_width);
+            context.painter().draw_line(padded_rect.top_right(), padded_rect.bottom_right(), border_color, border_width);
+            context.painter().draw_line(padded_rect.bottom_right(), padded_rect.bottom_left(), border_color, border_width);
+            context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), border_color, border_width);
+        }
     }
 
     // TODO: render our border
