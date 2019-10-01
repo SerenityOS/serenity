@@ -8,8 +8,6 @@ SHARED_TEST_OBJS = \
 	../StringBuilder.o \
 	../StringView.o \
 	../LogStream.o \
-	../JsonArray.o \
-	../JsonObject.o \
 	../JsonValue.o \
 	../JsonParser.o \
     ../FileSystemPath.o \

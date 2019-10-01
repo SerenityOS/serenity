@@ -6,9 +6,7 @@ OBJS = \
     ../../AK/StringImpl.o \
     ../../AK/StringBuilder.o \
     ../../AK/StringView.o \
-    ../../AK/JsonObject.o \
     ../../AK/JsonValue.o \
-    ../../AK/JsonArray.o \
     ../../AK/JsonParser.o \
     ../../AK/LogStream.o \
     ../../Libraries/LibCore/CIODevice.o \
