@@ -1,5 +1,4 @@
 html {
-    display: block;
     font-family: Katica;
 }
 
@@ -8,7 +7,6 @@ head, link, meta, script, style, title {
 }
 
 body {
-    display: block;
     margin-left: 8;
     margin-top: 8;
     margin-right: 8;
@@ -16,18 +14,15 @@ body {
 }
 
 h1, h2 {
-    display: block;
     font-family: Pebbleton;
     font-weight: bold;
 }
 
 h3 {
-    display: block;
     font-weight: bold;
 }
 
 pre {
-    display: block;
     margin-bottom: 8;
     margin-top: 8;
     white-space: pre;
@@ -46,16 +41,41 @@ strong, b {
     font-weight: bold;
 }
 
-div, p {
+html, address,
+blockquote,
+body, dd, div,
+dl, dt, fieldset, form,
+frame, frameset,
+h1, h2, h3, h4,
+h5, h6, noframes,
+ol, p, ul, center,
+dir, hr, menu, pre {
     display: block;
-    margin-bottom: 8;
-    margin-top: 8;
 }
 
-ul, ol {
-    display: block;
+h1, h2, h3 {
     margin-top: 8;
     margin-bottom: 8;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+h4, p,
+blockquote, ul,
+fieldset, form,
+ol, dl, dir,
+menu {
+    margin-top: 4;
+    margin-bottom: 4;
+    margin-left: 0;
+    margin-right: 0;
+}
+
+h5, h6 {
+    margin-top: 2;
+    margin-bottom: 2;
+    margin-left: 0;
+    margin-right: 0;
 }
 
 li {
