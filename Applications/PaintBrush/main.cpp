@@ -1,6 +1,8 @@
 #include "PaintableWidget.h"
 #include "PaletteWidget.h"
 #include "ToolboxWidget.h"
+#include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -9,7 +11,6 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GWindow.h>
-#include <LibDraw/PNGLoader.h>
 
 int main(int argc, char** argv)
 {
@@ -18,6 +19,7 @@ int main(int argc, char** argv)
     auto window = GWindow::construct();
     window->set_title("PaintBrush");
     window->set_rect(100, 100, 640, 480);
+    window->set_icon(load_png("/res/icons/16x16/app-paintbrush.png"));
 
     auto horizontal_container = GWidget::construct();
     window->set_main_widget(horizontal_container);
@@ -37,33 +39,34 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("PaintBrush");
+
+    app_menu->add_action(GCommonActions::make_open_action([&](auto&) {
+        Optional<String> open_path = GFilePicker::get_open_filepath();
+
+        if (!open_path.has_value())
+            return;
+
+        auto bitmap = load_png(open_path.value());
+        if (!bitmap) {
+            GMessageBox::show(String::format("Failed to load '%s'", open_path.value().characters()), "Open failed", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
+            return;
+        }
+        paintable_widget->set_bitmap(*bitmap);
+    }));
+    app_menu->add_separator();
     app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         GApplication::the().quit(0);
         return;
     }));
-    menubar->add_menu(move(app_menu));
 
-    auto file_menu = make<GMenu>("File");
-    file_menu->add_action(GCommonActions::make_open_action([&](auto&) {
-        GFilePicker picker;
-        if (picker.exec() == GFilePicker::ExecOK) {
-            auto filename = picker.selected_file().string();
-            auto bitmap = load_png(filename);
-            if (!bitmap) {
-                GMessageBox::show(String::format("Failed to load '%s'", filename.characters()), "Open failed", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
-                return;
-            }
-            paintable_widget->set_bitmap(*bitmap);
-        }
-    }));
-    menubar->add_menu(move(file_menu));
+    menubar->add_menu(move(app_menu));
 
     auto edit_menu = make<GMenu>("Edit");
     menubar->add_menu(move(edit_menu));
 
     auto help_menu = make<GMenu>("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
+    help_menu->add_action(GAction::create("About", [&](auto&) {
+        GAboutDialog::show("PaintBrush", load_png("/res/icons/32x32/app-paintbrush.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

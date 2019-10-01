@@ -15,10 +15,10 @@
 
 Optional<String> GFilePicker::get_open_filepath()
 {
-    GFilePicker picker(Mode::Open);
+    auto picker = GFilePicker::construct(Mode::Open);
 
-    if (picker.exec() == GDialog::ExecOK) {
-        String file_path = picker.selected_file().string();
+    if (picker->exec() == GDialog::ExecOK) {
+        String file_path = picker->selected_file().string();
 
         if (file_path.is_null())
             return {};
