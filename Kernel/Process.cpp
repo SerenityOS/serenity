@@ -246,8 +246,8 @@ int Process::sys$munmap(void* addr, size_t size)
         auto make_replacement_region = [&](const Range& new_range) -> Region& {
             ASSERT(new_range.base() >= old_region_range.base());
             ASSERT(new_range.end() <= old_region_range.end());
-            size_t new_range_offset_in_old_region = new_range.base().get() - old_region_range.base().get();
-            return allocate_split_region(*old_region, new_range, new_range_offset_in_old_region);
+            size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
+            return allocate_split_region(*old_region, new_range, new_range_offset_in_vmobject);
         };
         Vector<Region*, 2> new_regions;
         for (auto& new_range : remaining_ranges_after_unmap) {
