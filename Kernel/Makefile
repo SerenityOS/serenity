@@ -96,9 +96,7 @@ AK_OBJS = \
     ../AK/StringBuilder.o \
     ../AK/StringView.o \
     ../AK/FileSystemPath.o \
-    ../AK/JsonObject.o \
     ../AK/JsonValue.o \
-    ../AK/JsonArray.o \
     ../AK/JsonParser.o \
     ../AK/LogStream.o \
     ../AK/ELF/ELFImage.o \

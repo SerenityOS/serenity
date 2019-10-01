@@ -11,8 +11,6 @@ EXTRA_OBJS = \
     ../../AK/LogStream.o \
     ../../AK/JsonValue.o \
     ../../AK/JsonParser.o \
-    ../../AK/JsonArray.o \
-    ../../AK/JsonObject.o \
     ../LibCore/CEventLoop.o \
     ../LibCore/CObject.o \
     ../LibCore/CEvent.o \

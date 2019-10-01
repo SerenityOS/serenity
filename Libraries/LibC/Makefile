@@ -8,8 +8,6 @@ AK_OBJS = \
     ../../AK/FileSystemPath.o \
     ../../AK/URL.o \
     ../../AK/JsonValue.o \
-    ../../AK/JsonArray.o \
-    ../../AK/JsonObject.o \
     ../../AK/JsonParser.o \
     ../../AK/LogStream.o \
     ../../AK/MappedFile.o \
