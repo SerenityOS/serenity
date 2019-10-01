@@ -20,7 +20,6 @@ public:
     static Optional<String> get_save_filepath(const String& title, const String& extension);
     static bool file_exists(const StringView& path);
 
-    GFilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = String(get_current_user_home_path()), CObject* parent = nullptr);
     virtual ~GFilePicker() override;
 
     FileSystemPath selected_file() const { return m_selected_file; }
@@ -29,6 +28,8 @@ private:
     void set_preview(const FileSystemPath&);
     void clear_preview();
     void on_file_return();
+
+    GFilePicker(Mode type = Mode::Open, const StringView& file_name = "Untitled", const StringView& path = String(get_current_user_home_path()), CObject* parent = nullptr);
 
     static String ok_button_name(Mode mode)
     {
