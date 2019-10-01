@@ -43,16 +43,26 @@ void LayoutNode::render(RenderingContext& context)
         context.painter().draw_rect(m_rect, Color::Red);
 #endif
 
+    Rect padded_rect;
+    padded_rect.set_x(rect().x() - style().padding().left.to_px());
+    padded_rect.set_width(rect().width() + style().padding().left.to_px() + style().padding().right.to_px());
+    padded_rect.set_y(rect().y() - style().padding().top.to_px());
+    padded_rect.set_height(rect().height() + style().padding().top.to_px() + style().padding().bottom.to_px());
+
     auto bgcolor = style_properties().property("background-color");
     if (bgcolor.has_value() && bgcolor.value()->is_color()) {
+        context.painter().fill_rect(padded_rect, bgcolor.value()->to_color());
+    }
 
-        Rect background_rect;
-        background_rect.set_x(rect().x() - style().padding().left.to_px());
-        background_rect.set_width(rect().width() + style().padding().left.to_px() + style().padding().right.to_px());
-        background_rect.set_y(rect().y() - style().padding().top.to_px());
-        background_rect.set_height(rect().height() + style().padding().top.to_px() + style().padding().bottom.to_px());
-
-        context.painter().fill_rect(background_rect, bgcolor.value()->to_color());
+    auto border_width_value = style_properties().property("border-width");
+    auto border_color_value = style_properties().property("border-color");
+    if (border_width_value.has_value() && border_color_value.has_value()) {
+        int border_width = border_width_value.value()->to_length().to_px();
+        Color border_color = border_color_value.value()->to_color();
+        context.painter().draw_line(padded_rect.top_left(), padded_rect.top_right(), border_color, border_width);
+        context.painter().draw_line(padded_rect.top_right(), padded_rect.bottom_right(), border_color, border_width);
+        context.painter().draw_line(padded_rect.bottom_right(), padded_rect.bottom_left(), border_color, border_width);
+        context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), border_color, border_width);
     }
 
     // TODO: render our border
