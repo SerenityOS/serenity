@@ -55,6 +55,7 @@ OBJS = \
     GJsonArrayModel.o \
     GAboutDialog.o \
     GModelSelection.o \
+    GLazyWidget.o \
     GWindow.o
 
 LIBRARY = libgui.a
