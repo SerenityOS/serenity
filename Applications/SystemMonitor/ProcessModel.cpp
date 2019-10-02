@@ -8,9 +8,18 @@
 #include <fcntl.h>
 #include <stdio.h>
 
-ProcessModel::ProcessModel(GraphWidget& graph)
-    : m_graph(graph)
+static ProcessModel* s_the;
+
+ProcessModel& ProcessModel::the()
 {
+    ASSERT(s_the);
+    return *s_the;
+}
+
+ProcessModel::ProcessModel()
+{
+    ASSERT(!s_the);
+    s_the = this;
     m_generic_process_icon = GraphicsBitmap::load_from_file("/res/icons/gear16.png");
     m_high_priority_icon = GraphicsBitmap::load_from_file("/res/icons/highpriority16.png");
     m_low_priority_icon = GraphicsBitmap::load_from_file("/res/icons/lowpriority16.png");
@@ -263,7 +272,8 @@ void ProcessModel::update()
     for (auto pid : pids_to_remove)
         m_processes.remove(pid);
 
-    m_graph.add_value(total_cpu_percent);
+    if (on_new_cpu_data_point)
+        on_new_cpu_data_point(total_cpu_percent);
 
     did_update();
 }

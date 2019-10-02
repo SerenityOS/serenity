@@ -3,11 +3,11 @@
 #include <LibGUI/GSortingProxyModel.h>
 #include <stdio.h>
 
-ProcessTableView::ProcessTableView(GraphWidget& graph, GWidget* parent)
+ProcessTableView::ProcessTableView(GWidget* parent)
     : GTableView(parent)
 {
     set_size_columns_to_fit_content(true);
-    set_model(GSortingProxyModel::create(ProcessModel::create(graph)));
+    set_model(GSortingProxyModel::create(ProcessModel::create()));
     model()->set_key_column_and_sort_order(ProcessModel::Column::CPU, GSortOrder::Descending);
     refresh();
 

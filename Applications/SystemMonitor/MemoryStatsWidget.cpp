@@ -1,18 +1,28 @@
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
+#include <LibDraw/StylePainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
-#include <LibDraw/StylePainter.h>
 #include <stdio.h>
 #include <stdlib.h>
+
+static MemoryStatsWidget* s_the;
+
+MemoryStatsWidget* MemoryStatsWidget::the()
+{
+    return s_the;
+}
 
 MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
     : GWidget(parent)
     , m_graph(graph)
     , m_proc_memstat(CFile::construct("/proc/memstat"))
 {
+    ASSERT(!s_the);
+    s_the = this;
+
     if (!m_proc_memstat->open(CIODevice::OpenMode::ReadOnly))
         ASSERT_NOT_REACHED();
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);

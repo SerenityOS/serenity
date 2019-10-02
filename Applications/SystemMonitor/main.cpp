@@ -4,6 +4,7 @@
 #include "NetworkStatisticsWidget.h"
 #include "ProcessFileDescriptorMapWidget.h"
 #include "ProcessMemoryMapWidget.h"
+#include "ProcessModel.h"
 #include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
 #include <LibCore/CTimer.h>
@@ -15,6 +16,7 @@
 #include <LibGUI/GGroupBox.h>
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GLabel.h>
+#include <LibGUI/GLazyWidget.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GSortingProxyModel.h>
@@ -42,6 +44,7 @@ static String human_readable_size(u32 size)
 static RefPtr<GWidget> build_file_systems_tab();
 static RefPtr<GWidget> build_pci_devices_tab();
 static RefPtr<GWidget> build_devices_tab();
+static NonnullRefPtr<GWidget> build_graphs_tab();
 
 int main(int argc, char** argv)
 {
@@ -60,38 +63,7 @@ int main(int argc, char** argv)
 
     auto process_table_container = GWidget::construct(process_container_splitter.ptr());
 
-    auto graphs_container = GWidget::construct();
-    graphs_container->set_fill_with_background_color(true);
-    graphs_container->set_background_color(Color::WarmGray);
-    graphs_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    graphs_container->layout()->set_margins({ 4, 4, 4, 4 });
-
-    auto cpu_graph_group_box = GGroupBox::construct("CPU usage", graphs_container);
-    cpu_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-    cpu_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    cpu_graph_group_box->set_preferred_size(0, 120);
-    auto cpu_graph = GraphWidget::construct(cpu_graph_group_box);
-    cpu_graph->set_max(100);
-    cpu_graph->set_text_color(Color::Green);
-    cpu_graph->set_graph_color(Color::from_rgb(0x00bb00));
-    cpu_graph->text_formatter = [](int value, int) {
-        return String::format("%d%%", value);
-    };
-
-    auto memory_graph_group_box = GGroupBox::construct("Memory usage", graphs_container);
-    memory_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
-    memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    memory_graph_group_box->set_preferred_size(0, 120);
-    auto memory_graph = GraphWidget::construct(memory_graph_group_box);
-    memory_graph->set_text_color(Color::Cyan);
-    memory_graph->set_graph_color(Color::from_rgb(0x00bbbb));
-    memory_graph->text_formatter = [](int value, int max) {
-        return String::format("%d / %d KB", value, max);
-    };
-
-    tabwidget->add_widget("Graphs", graphs_container);
+    tabwidget->add_widget("Graphs", build_graphs_tab());
 
     tabwidget->add_widget("File systems", build_file_systems_tab());
 
@@ -108,12 +80,12 @@ int main(int argc, char** argv)
 
     auto toolbar = GToolBar::construct(process_table_container);
     toolbar->set_has_frame(false);
-    auto process_table_view = ProcessTableView::construct(*cpu_graph, process_table_container);
-    auto memory_stats_widget = MemoryStatsWidget::construct(*memory_graph, graphs_container);
+    auto process_table_view = ProcessTableView::construct(process_table_container);
 
     auto refresh_timer = CTimer::construct(1000, [&] {
         process_table_view->refresh();
-        memory_stats_widget->refresh();
+        if (auto* memory_stats_widget = MemoryStatsWidget::the())
+            memory_stats_widget->refresh();
     });
 
     auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GAction&) {
@@ -236,133 +208,186 @@ public:
 
 RefPtr<GWidget> build_file_systems_tab()
 {
-    auto fs_widget = GWidget::construct();
-    fs_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    fs_widget->layout()->set_margins({ 4, 4, 4, 4 });
-    auto fs_table_view = GTableView::construct(fs_widget);
-    fs_table_view->set_size_columns_to_fit_content(true);
+    auto fs_widget = GLazyWidget::construct();
 
-    Vector<GJsonArrayModel::FieldSpec> df_fields;
-    df_fields.empend("mount_point", "Mount point", TextAlignment::CenterLeft);
-    df_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
-    df_fields.empend(
-        "Size", TextAlignment::CenterRight,
-        [](const JsonObject& object) {
-            return human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32());
-        },
-        [](const JsonObject& object) {
-            return object.get("total_block_count").to_u32() * object.get("block_size").to_u32();
-        });
-    df_fields.empend(
-        "Used", TextAlignment::CenterRight,
-        [](const JsonObject& object) {
+    fs_widget->on_first_show = [](auto& self) {
+        self.set_layout(make<GBoxLayout>(Orientation::Vertical));
+        self.layout()->set_margins({ 4, 4, 4, 4 });
+        auto fs_table_view = GTableView::construct(&self);
+        fs_table_view->set_size_columns_to_fit_content(true);
+
+        Vector<GJsonArrayModel::FieldSpec> df_fields;
+        df_fields.empend("mount_point", "Mount point", TextAlignment::CenterLeft);
+        df_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
+        df_fields.empend(
+            "Size", TextAlignment::CenterRight,
+            [](const JsonObject& object) {
+                return human_readable_size(object.get("total_block_count").to_u32() * object.get("block_size").to_u32());
+            },
+            [](const JsonObject& object) {
+                return object.get("total_block_count").to_u32() * object.get("block_size").to_u32();
+            });
+        df_fields.empend(
+            "Used", TextAlignment::CenterRight,
+            [](const JsonObject& object) {
             auto total_blocks = object.get("total_block_count").to_u32();
             auto free_blocks = object.get("free_block_count").to_u32();
             auto used_blocks = total_blocks - free_blocks;
             return human_readable_size(used_blocks * object.get("block_size").to_u32()); },
-        [](const JsonObject& object) {
-            auto total_blocks = object.get("total_block_count").to_u32();
-            auto free_blocks = object.get("free_block_count").to_u32();
-            auto used_blocks = total_blocks - free_blocks;
-            return used_blocks * object.get("block_size").to_u32();
-        },
-        [](const JsonObject& object) {
-            auto total_blocks = object.get("total_block_count").to_u32();
-            if (total_blocks == 0)
-                return 0;
-            auto free_blocks = object.get("free_block_count").to_u32();
-            auto used_blocks = total_blocks - free_blocks;
-            int percentage = (int)((float)used_blocks / (float)total_blocks * 100.0f);
-            return percentage;
+            [](const JsonObject& object) {
+                auto total_blocks = object.get("total_block_count").to_u32();
+                auto free_blocks = object.get("free_block_count").to_u32();
+                auto used_blocks = total_blocks - free_blocks;
+                return used_blocks * object.get("block_size").to_u32();
+            },
+            [](const JsonObject& object) {
+                auto total_blocks = object.get("total_block_count").to_u32();
+                if (total_blocks == 0)
+                    return 0;
+                auto free_blocks = object.get("free_block_count").to_u32();
+                auto used_blocks = total_blocks - free_blocks;
+                int percentage = (int)((float)used_blocks / (float)total_blocks * 100.0f);
+                return percentage;
+            });
+        df_fields.empend(
+            "Available", TextAlignment::CenterRight,
+            [](const JsonObject& object) {
+                return human_readable_size(object.get("free_block_count").to_u32() * object.get("block_size").to_u32());
+            },
+            [](const JsonObject& object) {
+                return object.get("free_block_count").to_u32() * object.get("block_size").to_u32();
+            });
+        df_fields.empend("Access", TextAlignment::CenterLeft, [](const JsonObject& object) {
+            return object.get("readonly").to_bool() ? "Read-only" : "Read/Write";
         });
-    df_fields.empend(
-        "Available", TextAlignment::CenterRight,
-        [](const JsonObject& object) {
-            return human_readable_size(object.get("free_block_count").to_u32() * object.get("block_size").to_u32());
-        },
-        [](const JsonObject& object) {
-            return object.get("free_block_count").to_u32() * object.get("block_size").to_u32();
-        });
-    df_fields.empend("Access", TextAlignment::CenterLeft, [](const JsonObject& object) {
-        return object.get("readonly").to_bool() ? "Read-only" : "Read/Write";
-    });
-    df_fields.empend("free_block_count", "Free blocks", TextAlignment::CenterRight);
-    df_fields.empend("total_block_count", "Total blocks", TextAlignment::CenterRight);
-    df_fields.empend("free_inode_count", "Free inodes", TextAlignment::CenterRight);
-    df_fields.empend("total_inode_count", "Total inodes", TextAlignment::CenterRight);
-    df_fields.empend("block_size", "Block size", TextAlignment::CenterRight);
-    fs_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/df", move(df_fields))));
+        df_fields.empend("free_block_count", "Free blocks", TextAlignment::CenterRight);
+        df_fields.empend("total_block_count", "Total blocks", TextAlignment::CenterRight);
+        df_fields.empend("free_inode_count", "Free inodes", TextAlignment::CenterRight);
+        df_fields.empend("total_inode_count", "Total inodes", TextAlignment::CenterRight);
+        df_fields.empend("block_size", "Block size", TextAlignment::CenterRight);
+        fs_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/df", move(df_fields))));
 
-    fs_table_view->set_cell_painting_delegate(3, make<ProgressBarPaintingDelegate>());
+        fs_table_view->set_cell_painting_delegate(3, make<ProgressBarPaintingDelegate>());
 
-    fs_table_view->model()->update();
+        fs_table_view->model()->update();
+    };
     return fs_widget;
 }
 
 RefPtr<GWidget> build_pci_devices_tab()
 {
-    auto pci_widget = GWidget::construct();
-    pci_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    pci_widget->layout()->set_margins({ 4, 4, 4, 4 });
-    auto pci_table_view = GTableView::construct(pci_widget);
-    pci_table_view->set_size_columns_to_fit_content(true);
+    auto pci_widget = GLazyWidget::construct();
 
-    auto db = PCIDB::Database::open();
+    pci_widget->on_first_show = [](auto& self) {
+        self.set_layout(make<GBoxLayout>(Orientation::Vertical));
+        self.layout()->set_margins({ 4, 4, 4, 4 });
+        auto pci_table_view = GTableView::construct(&self);
+        pci_table_view->set_size_columns_to_fit_content(true);
 
-    Vector<GJsonArrayModel::FieldSpec> pci_fields;
-    pci_fields.empend(
-        "Address", TextAlignment::CenterLeft,
-        [](const JsonObject& object) {
-            auto bus = object.get("bus").to_u32();
-            auto slot = object.get("slot").to_u32();
-            auto function = object.get("function").to_u32();
-            return String::format("%02x:%02x.%d", bus, slot, function);
-        });
-    pci_fields.empend(
-        "Class", TextAlignment::CenterLeft,
-        [db](const JsonObject& object) {
-            auto class_id = object.get("class").to_u32();
-            String class_name = db->get_class(class_id);
-            return class_name == "" ? String::format("%04x", class_id) : class_name;
-        });
-    pci_fields.empend(
-        "Vendor", TextAlignment::CenterLeft,
-        [db](const JsonObject& object) {
-            auto vendor_id = object.get("vendor_id").to_u32();
-            String vendor_name = db->get_vendor(vendor_id);
-            return vendor_name == "" ? String::format("%02x", vendor_id) : vendor_name;
-        });
-    pci_fields.empend(
-        "Device", TextAlignment::CenterLeft,
-        [db](const JsonObject& object) {
-            auto vendor_id = object.get("vendor_id").to_u32();
-            auto device_id = object.get("device_id").to_u32();
-            String device_name = db->get_device(vendor_id, device_id);
-            return device_name == "" ? String::format("%02x", device_id) : device_name;
-        });
-    pci_fields.empend(
-        "Revision", TextAlignment::CenterRight,
-        [](const JsonObject& object) {
-            auto revision_id = object.get("revision_id").to_u32();
-            return String::format("%02x", revision_id);
-        });
+        auto db = PCIDB::Database::open();
 
-    pci_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/pci", move(pci_fields))));
-    pci_table_view->model()->update();
+        Vector<GJsonArrayModel::FieldSpec> pci_fields;
+        pci_fields.empend(
+            "Address", TextAlignment::CenterLeft,
+            [](const JsonObject& object) {
+                auto bus = object.get("bus").to_u32();
+                auto slot = object.get("slot").to_u32();
+                auto function = object.get("function").to_u32();
+                return String::format("%02x:%02x.%d", bus, slot, function);
+            });
+        pci_fields.empend(
+            "Class", TextAlignment::CenterLeft,
+            [db](const JsonObject& object) {
+                auto class_id = object.get("class").to_u32();
+                String class_name = db->get_class(class_id);
+                return class_name == "" ? String::format("%04x", class_id) : class_name;
+            });
+        pci_fields.empend(
+            "Vendor", TextAlignment::CenterLeft,
+            [db](const JsonObject& object) {
+                auto vendor_id = object.get("vendor_id").to_u32();
+                String vendor_name = db->get_vendor(vendor_id);
+                return vendor_name == "" ? String::format("%02x", vendor_id) : vendor_name;
+            });
+        pci_fields.empend(
+            "Device", TextAlignment::CenterLeft,
+            [db](const JsonObject& object) {
+                auto vendor_id = object.get("vendor_id").to_u32();
+                auto device_id = object.get("device_id").to_u32();
+                String device_name = db->get_device(vendor_id, device_id);
+                return device_name == "" ? String::format("%02x", device_id) : device_name;
+            });
+        pci_fields.empend(
+            "Revision", TextAlignment::CenterRight,
+            [](const JsonObject& object) {
+                auto revision_id = object.get("revision_id").to_u32();
+                return String::format("%02x", revision_id);
+            });
+
+        pci_table_view->set_model(GSortingProxyModel::create(GJsonArrayModel::create("/proc/pci", move(pci_fields))));
+        pci_table_view->model()->update();
+    };
 
     return pci_widget;
 }
 
 RefPtr<GWidget> build_devices_tab()
 {
-    auto devices_widget = GWidget::construct();
-    devices_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    devices_widget->layout()->set_margins({ 4, 4, 4, 4 });
+    auto devices_widget = GLazyWidget::construct();
 
-    auto devices_table_view = GTableView::construct(devices_widget);
-    devices_table_view->set_size_columns_to_fit_content(true);
-    devices_table_view->set_model(GSortingProxyModel::create(DevicesModel::create()));
-    devices_table_view->model()->update();
+    devices_widget->on_first_show = [](auto& self) {
+        self.set_layout(make<GBoxLayout>(Orientation::Vertical));
+        self.layout()->set_margins({ 4, 4, 4, 4 });
+
+        auto devices_table_view = GTableView::construct(&self);
+        devices_table_view->set_size_columns_to_fit_content(true);
+        devices_table_view->set_model(GSortingProxyModel::create(DevicesModel::create()));
+        devices_table_view->model()->update();
+    };
 
     return devices_widget;
+}
+
+NonnullRefPtr<GWidget> build_graphs_tab()
+{
+    auto graphs_container = GLazyWidget::construct();
+
+    graphs_container->on_first_show = [](auto& self) {
+        self.set_fill_with_background_color(true);
+        self.set_background_color(Color::WarmGray);
+        self.set_layout(make<GBoxLayout>(Orientation::Vertical));
+        self.layout()->set_margins({ 4, 4, 4, 4 });
+
+        auto cpu_graph_group_box = GGroupBox::construct("CPU usage", &self);
+        cpu_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        cpu_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
+        cpu_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        cpu_graph_group_box->set_preferred_size(0, 120);
+        auto cpu_graph = GraphWidget::construct(cpu_graph_group_box);
+        cpu_graph->set_max(100);
+        cpu_graph->set_text_color(Color::Green);
+        cpu_graph->set_graph_color(Color::from_rgb(0x00bb00));
+        cpu_graph->text_formatter = [](int value, int) {
+            return String::format("%d%%", value);
+        };
+
+        ProcessModel::the().on_new_cpu_data_point = [graph = cpu_graph.ptr()](float cpu_percent) {
+            graph->add_value(cpu_percent);
+        };
+
+        auto memory_graph_group_box = GGroupBox::construct("Memory usage", &self);
+        memory_graph_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        memory_graph_group_box->layout()->set_margins({ 6, 16, 6, 6 });
+        memory_graph_group_box->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        memory_graph_group_box->set_preferred_size(0, 120);
+        auto memory_graph = GraphWidget::construct(memory_graph_group_box);
+        memory_graph->set_text_color(Color::Cyan);
+        memory_graph->set_graph_color(Color::from_rgb(0x00bbbb));
+        memory_graph->text_formatter = [](int value, int max) {
+            return String::format("%d / %d KB", value, max);
+        };
+
+        auto memory_stats_widget = MemoryStatsWidget::construct(*memory_graph, &self);
+    };
+    return graphs_container;
 }

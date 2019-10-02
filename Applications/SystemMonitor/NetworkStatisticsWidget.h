@@ -1,11 +1,11 @@
 #pragma once
 
 #include <LibCore/CTimer.h>
-#include <LibGUI/GWidget.h>
+#include <LibGUI/GLazyWidget.h>
 
 class GTableView;
 
-class NetworkStatisticsWidget final : public GWidget {
+class NetworkStatisticsWidget final : public GLazyWidget {
     C_OBJECT(NetworkStatisticsWidget)
 public:
     virtual ~NetworkStatisticsWidget() override;
