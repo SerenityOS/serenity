@@ -456,6 +456,14 @@ void GWidget::set_visible(bool visible)
         parent->invalidate_layout();
     if (m_visible)
         update();
+
+    if (m_visible) {
+        GShowEvent e;
+        event(e);
+    } else {
+        GHideEvent e;
+        event(e);
+    }
 }
 
 bool GWidget::spans_entire_window_horizontally() const
