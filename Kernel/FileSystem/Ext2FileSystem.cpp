@@ -802,7 +802,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
 bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)> callback) const
 {
     LOCKER(m_lock);
-    ASSERT(metadata().is_directory());
+    ASSERT(is_directory());
 
 #ifdef EXT2_DEBUG
     kprintf("Ext2Inode::traverse_as_directory: inode=%u:\n", index());
