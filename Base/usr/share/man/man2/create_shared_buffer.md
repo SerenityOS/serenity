@@ -21,3 +21,7 @@ If a region is successfully created, `create_shared_buffer()` stores a pointer t
 
 * `EINVAL`: `size` is zero or negative.
 * `EFAULT`: `buffer` is not a valid address.
+
+## See also
+
+* [`share_buffer_with`(2)](share_buffer_with.md)
