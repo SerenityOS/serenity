@@ -51,7 +51,8 @@ LIBC_OBJS = \
        arpa/inet.o \
        netdb.o \
        sched.o \
-       dlfcn.o
+       dlfcn.o \
+       libgen.o
 
 ASM_OBJS = setjmp.ao crti.ao crtn.ao
 
