@@ -126,13 +126,19 @@ bool GDirectoryModel::fetch_thumbnail_for(const Entry& entry)
     s_thumbnail_cache.set(path, nullptr);
     m_thumbnail_progress_total++;
 
+    auto directory_model = make_weak_ptr();
+
     LibThread::BackgroundAction<RefPtr<GraphicsBitmap>>::create(
         [path] {
             return render_thumbnail(path);
         },
 
-        [this, path](auto thumbnail) {
+        [this, path, directory_model](auto thumbnail) {
             s_thumbnail_cache.set(path, move(thumbnail));
+
+            // class was destroyed, no need to update progress or call any event handlers.
+            if (directory_model.is_null())
+                return;
 
             m_thumbnail_progress++;
             if (on_thumbnail_progress)
