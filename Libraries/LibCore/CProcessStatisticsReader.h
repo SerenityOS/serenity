@@ -24,6 +24,9 @@ struct CProcessStatistics {
     unsigned ticks;
     String priority;
     unsigned syscall_count;
+    unsigned inode_faults;
+    unsigned zero_faults;
+    unsigned cow_faults;
     int icon_id;
 
     // synthetic

@@ -685,6 +685,9 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("ticks", process.main_thread().ticks());
         process_object.add("priority", to_string(process.priority()));
         process_object.add("syscall_count", process.syscall_count());
+        process_object.add("inode_faults", process.inode_faults());
+        process_object.add("zero_faults", process.zero_faults());
+        process_object.add("cow_faults", process.cow_faults());
         process_object.add("icon_id", process.icon_id());
     };
     build_process(*Scheduler::colonel());

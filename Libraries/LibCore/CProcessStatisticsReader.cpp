@@ -43,6 +43,9 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
         process.ticks = process_object.get("ticks").to_u32();
         process.priority = process_object.get("priority").to_string();
         process.syscall_count = process_object.get("syscall_count").to_u32();
+        process.inode_faults = process_object.get("inode_faults").to_u32();
+        process.zero_faults = process_object.get("zero_faults").to_u32();
+        process.cow_faults = process_object.get("cow_faults").to_u32();
         process.icon_id = process_object.get("icon_id").to_int();
 
         // and synthetic data last

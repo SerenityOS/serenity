@@ -21,6 +21,9 @@ public:
         Virtual,
         Physical,
         Syscalls,
+        InodeFaults,
+        ZeroFaults,
+        CowFaults,
         __Count
     };
 
@@ -49,6 +52,9 @@ private:
         size_t amount_virtual;
         size_t amount_resident;
         unsigned syscall_count;
+        unsigned inode_faults;
+        unsigned zero_faults;
+        unsigned cow_faults;
         float cpu_percent;
         int icon_id;
     };
