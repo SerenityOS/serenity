@@ -9,6 +9,7 @@ public:
         bool emph { false };
         bool strong { false };
         bool code { false };
+        String href;
     };
 
     struct Span {
