@@ -23,6 +23,7 @@ LDFLAGS = \
     -L$(SERENITY_BASE_DIR)/Libraries/LibDraw \
     -L$(SERENITY_BASE_DIR)/Libraries/LibGUI \
     -L$(SERENITY_BASE_DIR)/Libraries/LibHTML \
+    -L$(SERENITY_BASE_DIR)/Libraries/LibMarkdown \
     -L$(SERENITY_BASE_DIR)/Libraries/LibThread \
     -L$(SERENITY_BASE_DIR)/Libraries/LibVT \
     -L$(SERENITY_BASE_DIR)/Libraries/LibAudio
