@@ -167,6 +167,8 @@ int putenv(char* new_var)
     return 0;
 }
 
+}
+
 double strtod(const char* str, char** endptr)
 {
     (void)str;
@@ -174,6 +176,15 @@ double strtod(const char* str, char** endptr)
     dbgprintf("LibC: strtod: '%s'\n", str);
     ASSERT_NOT_REACHED();
 }
+
+long double strtold(const char* str, char** endptr)
+{
+    (void)str;
+    (void)endptr;
+    dbgprintf("LibC: strtold: '%s'\n", str);
+    ASSERT_NOT_REACHED();
+}
+
 
 float strtof(const char* str, char** endptr)
 {
@@ -374,7 +385,8 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     ASSERT_NOT_REACHED();
 }
 
-long strtol(const char* nptr, char** endptr, int base)
+template<typename T, T min_value, T max_value>
+static T strtol_impl(const char* nptr, char** endptr, int base)
 {
     errno = 0;
 
@@ -411,8 +423,8 @@ long strtol(const char* nptr, char** endptr, int base)
         }
     }
 
-    long cutoff_point = is_negative ? (LONG_MIN / base) : (LONG_MAX / base);
-    int max_valid_digit_at_cutoff_point = is_negative ? (LONG_MIN % base) : (LONG_MAX % base);
+    long cutoff_point = is_negative ? (min_value / base) : (max_value / base);
+    int max_valid_digit_at_cutoff_point = is_negative ? (min_value % base) : (max_value % base);
 
     long num = 0;
 
@@ -441,7 +453,7 @@ long strtol(const char* nptr, char** endptr, int base)
 
         if (is_past_cutoff || (num == cutoff_point && digit > max_valid_digit_at_cutoff_point)) {
             has_overflowed = true;
-            num = is_negative ? LONG_MIN : LONG_MAX;
+            num = is_negative ? min_value : max_value;
             errno = ERANGE;
         } else {
             num *= base;
@@ -459,10 +471,27 @@ long strtol(const char* nptr, char** endptr, int base)
     return num;
 }
 
+long strtol(const char* str, char** endptr, int base)
+{
+    return strtol_impl<long, LONG_MIN, LONG_MAX>(str, endptr, base);
+}
+
 unsigned long strtoul(const char* str, char** endptr, int base)
 {
     auto value = strtol(str, endptr, base);
     ASSERT(value >= 0);
     return value;
 }
+
+long long strtoll(const char* str, char** endptr, int base)
+{
+    return strtol_impl<long long, LONG_LONG_MIN, LONG_LONG_MAX>(str, endptr, base);
 }
+
+unsigned long long strtoull(const char* str, char** endptr, int base)
+{
+    auto value = strtoll(str, endptr, base);
+    ASSERT(value >= 0);
+    return value;
+}
+
