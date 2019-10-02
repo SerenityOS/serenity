@@ -240,7 +240,6 @@ void TerminalWidget::paint_event(GPaintEvent& event)
         // the character itself in the center of the columns
         // its bytes take up as far as the terminal is concerned.
 
-        ASSERT(line.text().length() == m_terminal.columns());
         Utf8View utf8_view { line.text() };
 
         for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
