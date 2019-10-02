@@ -5,7 +5,8 @@
 #include <LibGUI/GModel.h>
 #include <sys/stat.h>
 
-class GDirectoryModel final : public GModel {
+class GDirectoryModel final : public GModel
+    , public Weakable<GDirectoryModel> {
 public:
     static NonnullRefPtr<GDirectoryModel> create() { return adopt(*new GDirectoryModel); }
     virtual ~GDirectoryModel() override;
