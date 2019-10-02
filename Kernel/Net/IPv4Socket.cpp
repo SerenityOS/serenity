@@ -377,6 +377,16 @@ int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
         ifr->ifr_addr.sa_family = AF_INET;
         ((sockaddr_in&)ifr->ifr_addr).sin_addr.s_addr = adapter->ipv4_address().to_u32();
         return 0;
+
+    case SIOCGIFHWADDR:
+        if (!current->process().validate_write_typed(ifr))
+            return -EFAULT;
+        ifr->ifr_hwaddr.sa_family = AF_INET;
+        {
+            auto mac_address = adapter->mac_address();
+            memcpy(ifr->ifr_hwaddr.sa_data, &mac_address, sizeof(MACAddress));
+        }
+        return 0;
     }
 
     return -EINVAL;
