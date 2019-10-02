@@ -17,3 +17,7 @@ Create a new empty directory at the given *path*.
 ```sh
 $ mkdir /tmp/foo
 ```
+
+## See also
+
+* [`mkdir`(2)](../man2/mkdir.md)
