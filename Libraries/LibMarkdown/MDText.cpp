@@ -33,6 +33,8 @@ String MDText::render_to_html() const
             { "code", &Style::code }
         };
         auto it = open_tags.find([&](const String& open_tag) {
+            if (open_tag == "a" && current_style.href != span.style.href)
+                return true;
             for (auto& tag_and_flag : tags_and_flags) {
                 if (open_tag == tag_and_flag.tag && !(span.style.*tag_and_flag.flag))
                     return true;
@@ -48,11 +50,19 @@ String MDText::render_to_html() const
             for (auto it2 = --open_tags.end(); it2 >= it; --it2) {
                 const String& tag = *it2;
                 builder.appendf("</%s>", tag.characters());
+                if (tag == "a") {
+                    current_style.href = {};
+                    continue;
+                }
                 for (auto& tag_and_flag : tags_and_flags)
                     if (tag == tag_and_flag.tag)
                         current_style.*tag_and_flag.flag = false;
             }
             open_tags.shrink(it.index());
+        }
+        if (current_style.href.is_null() && !span.style.href.is_null()) {
+            open_tags.append("a");
+            builder.appendf("<a href=\"%s\">", span.style.href.characters());
         }
         for (auto& tag_and_flag : tags_and_flags) {
             if (current_style.*tag_and_flag.flag != span.style.*tag_and_flag.flag) {
@@ -98,6 +108,15 @@ String MDText::render_for_terminal() const
 
         if (needs_styling)
             builder.append("\033[0m");
+
+        if (!span.style.href.is_null()) {
+            // When rendering for the terminal, ignore any
+            // non-absolute links, because the user has no
+            // chance to follow them anyway.
+            if (strstr(span.style.href.characters(), "://") != nullptr) {
+                builder.appendf(" <%s>", span.style.href.characters());
+            }
+        }
     }
 
     return builder.build();
@@ -107,6 +126,17 @@ bool MDText::parse(const StringView& str)
 {
     Style current_style;
     int current_span_start = 0;
+    int first_span_in_the_current_link = -1;
+
+    auto append_span_if_needed = [&](int offset) {
+        if (current_span_start != offset) {
+            Span span {
+                unescape(str.substring_view(current_span_start, offset - current_span_start)),
+                current_style
+            };
+            m_spans.append(move(span));
+        }
+    };
 
     for (int offset = 0; offset < str.length(); offset++) {
         char ch = str[offset];
@@ -120,39 +150,55 @@ bool MDText::parse(const StringView& str)
         bool is_special_character = false;
         is_special_character |= ch == '`';
         if (!current_style.code)
-            is_special_character |= ch == '*' || ch == '_';
+            is_special_character |= ch == '*' || ch == '_' || ch == '[' || ch == ']';
         if (!is_special_character)
             continue;
 
-        if (current_span_start != offset) {
-            Span span {
-                str.substring_view(current_span_start, offset - current_span_start),
-                current_style
-            };
-            m_spans.append(move(span));
-        }
+        append_span_if_needed(offset);
 
-        if (ch == '`') {
+        switch (ch) {
+        case '`':
             current_style.code = !current_style.code;
-        } else {
+            break;
+        case '*':
+        case '_':
             if (offset + 1 < str.length() && str[offset + 1] == ch) {
                 offset++;
                 current_style.strong = !current_style.strong;
             } else {
                 current_style.emph = !current_style.emph;
             }
+            break;
+        case '[':
+            ASSERT(first_span_in_the_current_link == -1);
+            first_span_in_the_current_link = m_spans.size();
+            break;
+        case ']': {
+            ASSERT(first_span_in_the_current_link != -1);
+            ASSERT(offset + 2 < str.length());
+            offset++;
+            ASSERT(str[offset] == '(');
+            offset++;
+            int start_of_href = offset;
+
+            do
+                offset++;
+            while (offset < str.length() && str[offset] != ')');
+
+            const StringView href = str.substring_view(start_of_href, offset - start_of_href);
+            for (int i = first_span_in_the_current_link; i < m_spans.size(); i++)
+                m_spans[i].style.href = href;
+            first_span_in_the_current_link = -1;
+            break;
+        }
+        default:
+            ASSERT_NOT_REACHED();
         }
 
         current_span_start = offset + 1;
     }
 
-    if (current_span_start < str.length()) {
-        Span span {
-            unescape(str.substring_view(current_span_start, str.length() - current_span_start)),
-            current_style
-        };
-        m_spans.append(move(span));
-    }
+    append_span_if_needed(str.length());
 
     return true;
 }
