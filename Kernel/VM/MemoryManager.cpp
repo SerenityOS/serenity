@@ -296,6 +296,7 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
     sti();
     LOCKER(vmo.m_paging_lock);
     cli();
+
     if (!vmo_page.is_null()) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
@@ -303,6 +304,10 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
         remap_region_page(region, page_index_in_region);
         return true;
     }
+
+    if (current)
+        current->process().did_zero_fault();
+
     auto physical_page = allocate_user_physical_page(ShouldZeroFill::Yes);
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("      >> ZERO P%p\n", physical_page->paddr().get());
@@ -324,6 +329,9 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
         remap_region_page(region, page_index_in_region);
         return true;
     }
+
+    if (current)
+        current->process().did_cow_fault();
 
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("    >> It's a COW page and it's time to COW!\n");
@@ -366,6 +374,9 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
         remap_region_page(region, page_index_in_region);
         return true;
     }
+
+    if (current)
+        current->process().did_inode_fault();
 
 #ifdef MM_DEBUG
     dbgprintf("MM: page_in_from_inode ready to read from inode\n");

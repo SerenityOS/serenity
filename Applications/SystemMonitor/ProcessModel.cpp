@@ -54,6 +54,12 @@ String ProcessModel::column_name(int column) const
         return "Name";
     case Column::Syscalls:
         return "Syscalls";
+    case Column::InodeFaults:
+        return "F:Inode";
+    case Column::ZeroFaults:
+        return "F:Zero";
+    case Column::CowFaults:
+        return "F:CoW";
     default:
         ASSERT_NOT_REACHED();
     }
@@ -81,6 +87,12 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
     case Column::Name:
         return { 140, TextAlignment::CenterLeft };
     case Column::Syscalls:
+        return { 60, TextAlignment::CenterRight };
+    case Column::InodeFaults:
+        return { 60, TextAlignment::CenterRight };
+    case Column::ZeroFaults:
+        return { 60, TextAlignment::CenterRight };
+    case Column::CowFaults:
         return { 60, TextAlignment::CenterRight };
     default:
         ASSERT_NOT_REACHED();
@@ -131,6 +143,12 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
         // FIXME: GVariant with unsigned?
         case Column::Syscalls:
             return (int)process.current_state.syscall_count;
+        case Column::InodeFaults:
+            return (int)process.current_state.inode_faults;
+        case Column::ZeroFaults:
+            return (int)process.current_state.zero_faults;
+        case Column::CowFaults:
+            return (int)process.current_state.cow_faults;
         }
         ASSERT_NOT_REACHED();
         return {};
@@ -175,6 +193,12 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
         // FIXME: It's weird that GVariant doesn't support unsigned ints. Should it?
         case Column::Syscalls:
             return (int)process.current_state.syscall_count;
+        case Column::InodeFaults:
+            return (int)process.current_state.inode_faults;
+        case Column::ZeroFaults:
+            return (int)process.current_state.zero_faults;
+        case Column::CowFaults:
+            return (int)process.current_state.cow_faults;
         }
     }
 
@@ -198,6 +222,9 @@ void ProcessModel::update()
         state.user = it.value.username;
         state.priority = it.value.priority;
         state.syscall_count = it.value.syscall_count;
+        state.inode_faults = it.value.inode_faults;
+        state.zero_faults = it.value.zero_faults;
+        state.cow_faults = it.value.cow_faults;
         state.state = it.value.state;
         state.name = it.value.name;
         state.amount_virtual = it.value.amount_virtual;
