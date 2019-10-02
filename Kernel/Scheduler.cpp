@@ -540,33 +540,35 @@ void Scheduler::timer_tick(RegisterDump& regs)
     if (current->tick())
         return;
 
-    current->tss().gs = regs.gs;
-    current->tss().fs = regs.fs;
-    current->tss().es = regs.es;
-    current->tss().ds = regs.ds;
-    current->tss().edi = regs.edi;
-    current->tss().esi = regs.esi;
-    current->tss().ebp = regs.ebp;
-    current->tss().ebx = regs.ebx;
-    current->tss().edx = regs.edx;
-    current->tss().ecx = regs.ecx;
-    current->tss().eax = regs.eax;
-    current->tss().eip = regs.eip;
-    current->tss().cs = regs.cs;
-    current->tss().eflags = regs.eflags;
-
-    // Compute process stack pointer.
-    // Add 12 for CS, EIP, EFLAGS (interrupt mechanic)
-    current->tss().esp = regs.esp + 12;
-    current->tss().ss = regs.ss;
-
-    if ((current->tss().cs & 3) != 0) {
-        current->tss().ss = regs.ss_if_crossRing;
-        current->tss().esp = regs.esp_if_crossRing;
-    }
+    auto& outgoing_tss = current->tss();
 
     if (!pick_next())
         return;
+
+    outgoing_tss.gs = regs.gs;
+    outgoing_tss.fs = regs.fs;
+    outgoing_tss.es = regs.es;
+    outgoing_tss.ds = regs.ds;
+    outgoing_tss.edi = regs.edi;
+    outgoing_tss.esi = regs.esi;
+    outgoing_tss.ebp = regs.ebp;
+    outgoing_tss.ebx = regs.ebx;
+    outgoing_tss.edx = regs.edx;
+    outgoing_tss.ecx = regs.ecx;
+    outgoing_tss.eax = regs.eax;
+    outgoing_tss.eip = regs.eip;
+    outgoing_tss.cs = regs.cs;
+    outgoing_tss.eflags = regs.eflags;
+
+    // Compute process stack pointer.
+    // Add 12 for CS, EIP, EFLAGS (interrupt mechanic)
+    outgoing_tss.esp = regs.esp + 12;
+    outgoing_tss.ss = regs.ss;
+
+    if ((outgoing_tss.cs & 3) != 0) {
+        outgoing_tss.ss = regs.ss_if_crossRing;
+        outgoing_tss.esp = regs.esp_if_crossRing;
+    }
     prepare_for_iret_to_new_process();
 
     // Set the NT (nested task) flag.
