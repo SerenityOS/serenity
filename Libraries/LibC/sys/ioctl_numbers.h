@@ -35,4 +35,5 @@ enum IOCtlNumber {
     FB_IOCTL_SET_BUFFER,
     SIOCSIFADDR,
     SIOCGIFADDR,
+    SIOCGIFHWADDR,
 };

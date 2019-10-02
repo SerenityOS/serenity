@@ -12,6 +12,7 @@ struct ifreq {
         struct sockaddr ifru_addr;
         struct sockaddr ifru_dstaddr;
         struct sockaddr ifru_broadaddr;
+        struct sockaddr ifru_hwaddr;
         short ifru_flags;
         int ifru_metric;
         int64_t ifru_vnetid;
@@ -33,6 +34,7 @@ struct ifreq {
 #define ifr_data ifr_ifru.ifru_data           // for use by interface
 #define ifr_index ifr_ifru.ifru_index         // interface index
 #define ifr_llprio ifr_ifru.ifru_metric       // link layer priority
+#define ifr_hwaddr ifr_ifru.ifru_hwaddr       // MAC address
 };
 
 __END_DECLS
