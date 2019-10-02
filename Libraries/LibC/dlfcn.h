@@ -4,6 +4,7 @@
 
 __BEGIN_DECLS
 
+#define RTLD_DEFAULT 0
 #define RTLD_LAZY 1
 #define RTLD_NOW 2
 #define RTLD_GLOBAL 3
