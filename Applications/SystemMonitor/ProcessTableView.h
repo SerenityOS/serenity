@@ -19,5 +19,5 @@ public:
     Function<void(pid_t)> on_process_selected;
 
 private:
-    ProcessTableView(GraphWidget&, GWidget* parent);
+    explicit ProcessTableView(GWidget* parent = nullptr);
 };

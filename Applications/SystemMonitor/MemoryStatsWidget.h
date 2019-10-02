@@ -9,12 +9,15 @@ class GraphWidget;
 class MemoryStatsWidget final : public GWidget {
     C_OBJECT(MemoryStatsWidget)
 public:
-    MemoryStatsWidget(GraphWidget& graph, GWidget* parent);
+    static MemoryStatsWidget* the();
+
     virtual ~MemoryStatsWidget() override;
 
     void refresh();
 
 private:
+    MemoryStatsWidget(GraphWidget& graph, GWidget* parent);
+
     virtual void timer_event(CTimerEvent&) override;
 
     GraphWidget& m_graph;

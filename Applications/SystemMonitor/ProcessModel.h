@@ -27,7 +27,9 @@ public:
         __Count
     };
 
-    static NonnullRefPtr<ProcessModel> create(GraphWidget& graph) { return adopt(*new ProcessModel(graph)); }
+    static ProcessModel& the();
+
+    static NonnullRefPtr<ProcessModel> create() { return adopt(*new ProcessModel); }
     virtual ~ProcessModel() override;
 
     virtual int row_count(const GModelIndex&) const override;
@@ -37,10 +39,10 @@ public:
     virtual GVariant data(const GModelIndex&, Role = Role::Display) const override;
     virtual void update() override;
 
-private:
-    explicit ProcessModel(GraphWidget&);
+    Function<void(float)> on_new_cpu_data_point;
 
-    GraphWidget& m_graph;
+private:
+    ProcessModel();
 
     struct ProcessState {
         pid_t pid;
