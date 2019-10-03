@@ -121,7 +121,7 @@ public:
     virtual ~ColorStyleValue() override {}
 
     Color color() const { return m_color; }
-    String to_string() const override { return String::format("COLOR: %s", m_color.to_string().characters()); }
+    String to_string() const override { return m_color.to_string(); }
     Color to_color() const override { return m_color; }
 
 private:
