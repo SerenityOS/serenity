@@ -1,6 +1,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
+#include <LibHTML/Layout/LayoutInline.h>
 
 LayoutBlock::LayoutBlock(const Node* node, StyleProperties&& style_properties)
     : LayoutNode(node, move(style_properties))
@@ -24,14 +25,52 @@ void LayoutBlock::layout()
     compute_width();
     compute_position();
 
+    if (children_are_inline())
+        layout_inline_children();
+    else
+        layout_block_children();
+
+    compute_height();
+}
+
+void LayoutBlock::layout_block_children()
+{
+    ASSERT(!children_are_inline());
     int content_height = 0;
     for_each_child([&](auto& child) {
         child.layout();
         content_height = child.rect().bottom() + child.style().full_margin().bottom - rect().top();
     });
     rect().set_height(content_height);
+}
 
-    compute_height();
+void LayoutBlock::layout_inline_children()
+{
+    ASSERT(children_are_inline());
+    m_line_boxes.clear();
+    for_each_child([&](auto& child) {
+        ASSERT(child.is_inline());
+        static_cast<LayoutInline&>(child).split_into_lines(*this);
+    });
+
+    int content_height = 0;
+
+    for (auto& line_box : m_line_boxes) {
+        int max_height = 0;
+        for (auto& fragment : line_box.fragments()) {
+            max_height = max(max_height, fragment.rect().height());
+        }
+        for (auto& fragment : line_box.fragments()) {
+            // Vertically align everyone's bottom to the line.
+            // FIXME: Support other kinds of vertical alignment.
+            fragment.rect().set_x(rect().x() + fragment.rect().x());
+            fragment.rect().set_y(rect().y() + content_height + (max_height - fragment.rect().height()));
+        }
+
+        content_height += max_height;
+    }
+
+    rect().set_height(content_height);
 }
 
 void LayoutBlock::compute_width()
@@ -163,4 +202,33 @@ void LayoutBlock::render(RenderingContext& context)
         };
         context.painter().fill_rect(bullet_rect, Color::Black);
     }
+
+    if (children_are_inline()) {
+        for (auto& line_box : m_line_boxes) {
+            for (auto& fragment : line_box.fragments()) {
+                fragment.render(context);
+            }
+        }
+    }
+}
+
+bool LayoutBlock::children_are_inline() const
+{
+    return first_child() && !first_child()->is_block();
+}
+
+HitTestResult LayoutBlock::hit_test(const Point& position) const
+{
+    if (!children_are_inline())
+        return LayoutNode::hit_test(position);
+
+    HitTestResult result;
+    for (auto& line_box : m_line_boxes) {
+        for (auto& fragment : line_box.fragments()) {
+            if (fragment.rect().contains(position)) {
+                return { fragment.layout_node() };
+            }
+        }
+    }
+    return {};
 }
