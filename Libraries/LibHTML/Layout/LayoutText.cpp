@@ -97,7 +97,7 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
 
     bool is_underline = text_decoration == "underline";
     if (is_underline)
-        painter.draw_line(fragment.rect().bottom_left().translated(0, 1), fragment.rect().bottom_right().translated(0, 1), color);
+        painter.draw_line(fragment.rect().bottom_left().translated(0, -1), fragment.rect().bottom_right().translated(0, -1), color);
 
     painter.draw_text(fragment.rect(), node().data().substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
 }
@@ -198,7 +198,6 @@ void LayoutText::split_into_lines(LayoutBlock& container)
 
     for_each_word([&](const Utf8View& view, int start, int length) {
         words.append({ Utf8View(view), start, length });
-        dbg() << "Added _" << words.last().view.as_string() << "_";
     });
 
     for (int i = 0; i < words.size(); ++i) {
