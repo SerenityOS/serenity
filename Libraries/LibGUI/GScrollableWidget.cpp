@@ -180,3 +180,11 @@ Rect GScrollableWidget::widget_inner_rect() const
     rect.set_height(rect.height() - height_occupied_by_horizontal_scrollbar());
     return rect;
 }
+
+Point GScrollableWidget::to_content_position(const Point& widget_position) const
+{
+    auto content_position = widget_position;
+    content_position.move_by(horizontal_scrollbar().value(), vertical_scrollbar().value());
+    content_position.move_by(-frame_thickness(), -frame_thickness());
+    return content_position;
+}
