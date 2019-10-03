@@ -198,7 +198,6 @@ void LayoutText::split_into_lines(LayoutBlock& container)
 
     for_each_word([&](const Utf8View& view, int start, int length) {
         words.append({ Utf8View(view), start, length });
-
     });
 
     for (int i = 0; i < words.size(); ++i) {
@@ -210,7 +209,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         if (is_whitespace)
             word_width = space_width;
         else
-            word_width = m_font->width(word.view);
+            word_width = m_font->width(word.view) + m_font->glyph_spacing();
 
         if (word_width > available_width) {
             line_boxes.append(LineBox());
