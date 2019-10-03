@@ -32,7 +32,7 @@ void HtmlView::set_document(Document* document)
 
 #ifdef HTML_DEBUG
     if (document != nullptr) {
-        printf("\033[33;1mLayout tree before layout:\033[0m\n");
+        dbgprintf("\033[33;1mLayout tree before layout:\033[0m\n");
         ::dump_tree(*m_layout_root);
     }
 #endif
@@ -51,7 +51,7 @@ void HtmlView::layout_and_sync_size()
     set_content_size(m_layout_root->rect().size());
 
 #ifdef HTML_DEBUG
-    printf("\033[33;1mLayout tree after layout:\033[0m\n");
+    dbgprintf("\033[33;1mLayout tree after layout:\033[0m\n");
     ::dump_tree(*m_layout_root);
 #endif
 }

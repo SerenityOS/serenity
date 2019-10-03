@@ -11,17 +11,17 @@ void dump_tree(const Node& node)
 {
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
-        printf("  ");
+        dbgprintf("  ");
     if (node.is_document()) {
-        printf("*Document*\n");
+        dbgprintf("*Document*\n");
     } else if (node.is_element()) {
-        printf("<%s", static_cast<const Element&>(node).tag_name().characters());
+        dbgprintf("<%s", static_cast<const Element&>(node).tag_name().characters());
         static_cast<const Element&>(node).for_each_attribute([](auto& name, auto& value) {
-            printf(" %s=%s", name.characters(), value.characters());
+            dbgprintf(" %s=%s", name.characters(), value.characters());
         });
-        printf(">\n");
+        dbgprintf(">\n");
     } else if (node.is_text()) {
-        printf("\"%s\"\n", static_cast<const Text&>(node).data().characters());
+        dbgprintf("\"%s\"\n", static_cast<const Text&>(node).data().characters());
     }
     ++indent;
     if (node.is_parent_node()) {
@@ -36,7 +36,7 @@ void dump_tree(const LayoutNode& layout_node)
 {
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
-        printf("    ");
+        dbgprintf("    ");
 
     String tag_name;
     if (layout_node.is_anonymous())
@@ -50,7 +50,7 @@ void dump_tree(const LayoutNode& layout_node)
     else
         tag_name = "???";
 
-    printf("%s {%s} at (%d,%d) size %dx%d",
+    dbgprintf("%s {%s} at (%d,%d) size %dx%d",
         layout_node.class_name(),
         tag_name.characters(),
         layout_node.rect().x(),
@@ -59,7 +59,7 @@ void dump_tree(const LayoutNode& layout_node)
         layout_node.rect().height());
 
     // Dump the horizontal box properties
-    printf(" [%d+%d+%d %d %d+%d+%d]",
+    dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
         layout_node.style().margin().left.to_px(),
         layout_node.style().border().left.to_px(),
         layout_node.style().padding().left.to_px(),
@@ -69,7 +69,7 @@ void dump_tree(const LayoutNode& layout_node)
         layout_node.style().margin().right.to_px());
 
     // And the vertical box properties
-    printf(" [%d+%d+%d %d %d+%d+%d]",
+    dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
         layout_node.style().margin().top.to_px(),
         layout_node.style().border().top.to_px(),
         layout_node.style().padding().top.to_px(),
@@ -80,15 +80,15 @@ void dump_tree(const LayoutNode& layout_node)
 
     if (layout_node.is_text()) {
         const LayoutText& layout_text = static_cast<const LayoutText&>(layout_node);
-        printf(" \"%s\", %d runs", layout_text.text().characters(), layout_text.runs().size());
+        dbgprintf(" \"%s\", %d runs", layout_text.text().characters(), layout_text.runs().size());
     }
 
-    printf("\n");
+    dbgprintf("\n");
 
     layout_node.style_properties().for_each_property([&](auto& key, auto& value) {
         for (int i = 0; i < indent; ++i)
-            printf("    ");
-        printf("  (%s: %s)\n", key.characters(), value.to_string().characters());
+            dbgprintf("    ");
+        dbgprintf("  (%s: %s)\n", key.characters(), value.to_string().characters());
     });
 
     ++indent;
@@ -100,9 +100,9 @@ void dump_tree(const LayoutNode& layout_node)
 
 void dump_rule(const StyleRule& rule)
 {
-    printf("Rule:\n");
+    dbgprintf("Rule:\n");
     for (auto& selector : rule.selectors()) {
-        printf("  Selector:\n");
+        dbgprintf("  Selector:\n");
         for (auto& component : selector.components()) {
             const char* type_description = "Unknown";
             switch (component.type) {
@@ -119,18 +119,18 @@ void dump_rule(const StyleRule& rule)
                 type_description = "TagName";
                 break;
             }
-            printf("    %s:%s\n", type_description, component.value.characters());
+            dbgprintf("    %s:%s\n", type_description, component.value.characters());
         }
     }
-    printf("  Declarations:\n");
+    dbgprintf("  Declarations:\n");
     for (auto& property : rule.declaration().properties()) {
-        printf("    '%s': '%s'\n", property.name.characters(), property.value->to_string().characters());
+        dbgprintf("    '%s': '%s'\n", property.name.characters(), property.value->to_string().characters());
     }
 }
 
 void dump_sheet(const StyleSheet& sheet)
 {
-    printf("StyleSheet{%p}: %d rule(s)\n", &sheet, sheet.rules().size());
+    dbgprintf("StyleSheet{%p}: %d rule(s)\n", &sheet, sheet.rules().size());
 
     for (auto& rule : sheet.rules()) {
         dump_rule(rule);
