@@ -198,13 +198,16 @@ void LayoutText::split_into_lines(LayoutBlock& container)
 
     for_each_word([&](const Utf8View& view, int start, int length) {
         words.append({ Utf8View(view), start, length });
+
     });
 
     for (int i = 0; i < words.size(); ++i) {
         auto& word = words[i];
 
         int word_width;
-        if (isspace(*word.view.begin()))
+        bool is_whitespace = isspace(*word.view.begin());
+
+        if (is_whitespace)
             word_width = space_width;
         else
             word_width = m_font->width(word.view);
@@ -214,7 +217,15 @@ void LayoutText::split_into_lines(LayoutBlock& container)
             available_width = container.rect().width();
         }
 
+        if (is_whitespace && line_boxes.last().fragments().is_empty())
+            continue;
+
         line_boxes.last().add_fragment(*this, word.start, word.length, word_width, line_height);
         available_width -= word_width;
+
+        if (available_width < 0) {
+            line_boxes.append(LineBox());
+            available_width = container.rect().width();
+        }
     }
 }
