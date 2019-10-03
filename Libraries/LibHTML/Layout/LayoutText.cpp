@@ -157,10 +157,14 @@ void LayoutText::for_each_source_line(Callback callback) const
     };
 
     for (auto it = view.begin(); it != view.end();) {
-        if (*it == '\n')
+        bool did_commit = false;
+        if (*it == '\n') {
             commit_line(it);
+            did_commit = true;
+        }
         ++it;
-        start_of_line = it;
+        if (did_commit)
+            start_of_line = it;
     }
     if (start_of_line != view.end())
         commit_line(view.end());
