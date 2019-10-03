@@ -48,7 +48,7 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
     }
 
 #ifdef HTML_DEBUG
-    printf("Rules matching Element{%p}\n", &element);
+    dbgprintf("Rules matching Element{%p}\n", &element);
     for (auto& rule : matching_rules) {
         dump_rule(rule);
     }
