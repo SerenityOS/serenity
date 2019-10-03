@@ -3,6 +3,7 @@
 #include <LibHTML/Layout/LayoutNode.h>
 
 class Element;
+class LayoutBlock;
 
 class LayoutInline : public LayoutNode {
 public:
@@ -13,6 +14,8 @@ public:
     virtual bool is_inline() const override { return true; }
 
     virtual void layout() override;
+
+    virtual void split_into_lines(LayoutBlock& container);
 
 private:
 };

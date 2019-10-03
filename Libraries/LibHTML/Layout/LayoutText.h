@@ -1,11 +1,12 @@
 #pragma once
 
 #include <LibHTML/DOM/Text.h>
-#include <LibHTML/Layout/LayoutNode.h>
+#include <LibHTML/Layout/LayoutInline.h>
 
 class Font;
+class LineBoxFragment;
 
-class LayoutText : public LayoutNode {
+class LayoutText : public LayoutInline {
 public:
     LayoutText(const Text&, StyleProperties&&);
     virtual ~LayoutText() override;
@@ -16,25 +17,19 @@ public:
 
     virtual const char* class_name() const override { return "LayoutText"; }
     virtual bool is_text() const final { return true; }
-    virtual void layout() override;
-    virtual void render(RenderingContext&) override;
 
-    struct Run {
-        Point pos;
-        String text;
-    };
+    void render_fragment(RenderingContext&, const LineBoxFragment&) const;
 
-    const Vector<Run>& runs() const { return m_runs; }
-
-    virtual HitTestResult hit_test(const Point&) const override;
+    virtual void split_into_lines(LayoutBlock& container) override;
 
 private:
     template<typename Callback>
-    void for_each_run(Callback) const;
+    void for_each_word(Callback) const;
+    template<typename Callback>
+    void for_each_source_line(Callback) const;
 
     void load_font();
     void compute_runs();
 
-    Vector<Run> m_runs;
     RefPtr<Font> m_font;
 };

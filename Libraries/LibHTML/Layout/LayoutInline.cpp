@@ -1,4 +1,5 @@
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
 
 LayoutInline::LayoutInline(const Node& node, StyleProperties&& style_properties)
@@ -33,5 +34,16 @@ void LayoutInline::layout()
         child.layout();
         rect().set_right(child.rect().right() + child.style().full_margin().right);
         rect().set_bottom(child.rect().bottom() + child.style().full_margin().bottom);
+    });
+}
+
+void LayoutInline::split_into_lines(LayoutBlock& container)
+{
+    for_each_child([&](auto& child) {
+        if (child.is_inline()) {
+            static_cast<LayoutInline&>(child).split_into_lines(container);
+        } else {
+            // FIXME: Support block children of inlines.
+        }
     });
 }

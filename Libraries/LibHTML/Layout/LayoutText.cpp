@@ -1,4 +1,5 @@
 #include <AK/StringBuilder.h>
+#include <AK/Utf8View.h>
 #include <LibCore/CDirIterator.h>
 #include <LibDraw/Font.h>
 #include <LibGUI/GPainter.h>
@@ -7,7 +8,7 @@
 #include <ctype.h>
 
 LayoutText::LayoutText(const Text& text, StyleProperties&& style_properties)
-    : LayoutNode(&text, move(style_properties))
+    : LayoutInline(text, move(style_properties))
 {
 }
 
@@ -86,158 +87,7 @@ const String& LayoutText::text() const
     return node().data();
 }
 
-static void split_first_word(const StringView& str, StringView& out_space, StringView& out_word)
-{
-    int first_nonspace = -1;
-    for (int i = 0; i < str.length(); i++)
-        if (!isspace(str[i])) {
-            first_nonspace = i;
-            break;
-        }
-
-    if (first_nonspace == -1) {
-        out_space = str;
-        out_word = {};
-        return;
-    }
-
-    int first_space = str.length();
-    for (int i = first_nonspace + 1; i < str.length(); i++)
-        if (isspace(str[i])) {
-            first_space = i;
-            break;
-        }
-
-    out_space = str.substring_view(0, first_nonspace);
-    out_word = str.substring_view(first_nonspace, first_space - first_nonspace);
-}
-
-void LayoutText::compute_runs()
-{
-    StringView remaining_text = node().data();
-    if (remaining_text.is_empty())
-        return;
-
-    int right_border = containing_block()->rect().x() + containing_block()->rect().width();
-
-    StringBuilder builder;
-    Point run_origin = rect().location();
-
-    int total_right_margin = style().full_margin().right;
-    bool is_preformatted = style_properties().string_or_fallback("white-space", "normal") != "normal";
-
-    while (!remaining_text.is_empty()) {
-        String saved_text = builder.string_view();
-
-        // Try to append a new word.
-        StringView space;
-        StringView word;
-        split_first_word(remaining_text, space, word);
-
-        int forced_line_break_index = -1;
-        if (is_preformatted)
-            for (int i = 0; i < space.length(); i++)
-                if (space[i] == '\n') {
-                    forced_line_break_index = i;
-                    break;
-                }
-
-        if (!space.is_empty()) {
-            if (!is_preformatted) {
-                builder.append(' ');
-            } else if (forced_line_break_index != -1) {
-                builder.append(space.substring_view(0, forced_line_break_index));
-            } else {
-                builder.append(space);
-            }
-        }
-        if (forced_line_break_index == -1)
-            builder.append(word);
-
-        if (forced_line_break_index != -1)
-            remaining_text = remaining_text.substring_view(forced_line_break_index + 1, remaining_text.length() - forced_line_break_index - 1);
-        else if (!word.is_null())
-            remaining_text = remaining_text.substring_view_starting_after_substring(word);
-        else
-            remaining_text = {};
-
-        // See if that fits.
-        int width = m_font->width(builder.string_view());
-        if (forced_line_break_index == -1 && run_origin.x() + width + total_right_margin < right_border)
-            continue;
-
-        // If it doesn't, create a run from
-        // what we had there previously.
-        if (forced_line_break_index == -1)
-            m_runs.append({ run_origin, move(saved_text) });
-        else
-            m_runs.append({ run_origin, builder.string_view() });
-
-        // Start a new run at the new line.
-        int line_spacing = 4;
-        run_origin.set_x(containing_block()->rect().x() + style().full_margin().left);
-        run_origin.move_by(0, m_font->glyph_height() + line_spacing);
-        builder = StringBuilder();
-        if (forced_line_break_index != -1)
-            continue;
-        if (is_preformatted)
-            builder.append(space);
-        builder.append(word);
-    }
-
-    // Add the last run.
-    m_runs.append({ run_origin, builder.build() });
-}
-
-void LayoutText::layout()
-{
-    ASSERT(!has_children());
-
-    if (!m_font)
-        load_font();
-
-    int origin_x = -1;
-    int origin_y = -1;
-    if (previous_sibling() != nullptr) {
-        auto& previous_sibling_rect = previous_sibling()->rect();
-        auto& previous_sibling_style = previous_sibling()->style();
-        origin_x = previous_sibling_rect.x() + previous_sibling_rect.width();
-        origin_x += previous_sibling_style.full_margin().right;
-        origin_y = previous_sibling_rect.y() + previous_sibling_rect.height() - m_font->glyph_height() - previous_sibling_style.full_margin().top;
-    } else {
-        origin_x = parent()->rect().x();
-        origin_y = parent()->rect().y();
-    }
-    rect().set_x(origin_x + style().full_margin().left);
-    rect().set_y(origin_y + style().full_margin().top);
-
-    m_runs.clear();
-    compute_runs();
-
-    if (m_runs.is_empty())
-        return;
-
-    const Run& last_run = m_runs[m_runs.size() - 1];
-    rect().set_right(last_run.pos.x() + m_font->width(last_run.text));
-    rect().set_bottom(last_run.pos.y() + m_font->glyph_height());
-}
-
-template<typename Callback>
-void LayoutText::for_each_run(Callback callback) const
-{
-    for (auto& run : m_runs) {
-        Rect rect {
-            run.pos.x(),
-            run.pos.y(),
-            m_font->width(run.text),
-            m_font->glyph_height()
-        };
-        if (callback(run, rect) == IterationDecision::Break)
-            break;
-    }
-}
-
-void LayoutText::render(RenderingContext& context)
+void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragment& fragment) const
 {
     auto& painter = context.painter();
     painter.set_font(*m_font);
@@ -246,24 +96,126 @@ void LayoutText::render(RenderingContext& context)
     auto text_decoration = style_properties().string_or_fallback("text-decoration", "none");
 
     bool is_underline = text_decoration == "underline";
+    if (is_underline)
+        painter.draw_line(fragment.rect().bottom_left().translated(0, 1), fragment.rect().bottom_right().translated(0, 1), color);
 
-    for_each_run([&](auto& run, auto& rect) {
-        painter.draw_text(rect, run.text, TextAlignment::TopLeft, color);
-        if (is_underline)
-            painter.draw_line(rect.bottom_left().translated(0, 1), rect.bottom_right().translated(0, 1), color);
-        return IterationDecision::Continue;
-    });
+    painter.draw_text(fragment.rect(), node().data().substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
 }
 
-HitTestResult LayoutText::hit_test(const Point& position) const
+template<typename Callback>
+void LayoutText::for_each_word(Callback callback) const
 {
-    HitTestResult result;
-    for_each_run([&](auto&, auto& rect) {
-        if (rect.contains(position)) {
-            result.layout_node = this;
-            return IterationDecision::Break;
+    Utf8View view(node().data());
+    if (view.is_empty())
+        return;
+
+    auto start_of_word = view.begin();
+
+    auto commit_word = [&](auto it) {
+        int start = view.byte_offset_of(start_of_word);
+        int length = view.byte_offset_of(it) - view.byte_offset_of(start_of_word);
+
+        if (length > 0) {
+            callback(view.substring_view(start, length), start, length);
         }
-        return IterationDecision::Continue;
+
+        start_of_word = it;
+    };
+
+    bool last_was_space = isspace(*view.begin());
+
+    for (auto it = view.begin(); it != view.end();) {
+        bool is_space = isspace(*it);
+        if (is_space == last_was_space) {
+            ++it;
+            continue;
+        }
+        last_was_space = is_space;
+        commit_word(it);
+        ++it;
+    }
+    if (start_of_word != view.end())
+        commit_word(view.end());
+}
+
+template<typename Callback>
+void LayoutText::for_each_source_line(Callback callback) const
+{
+    Utf8View view(node().data());
+    if (view.is_empty())
+        return;
+
+    auto start_of_line = view.begin();
+
+    auto commit_line = [&](auto it) {
+        int start = view.byte_offset_of(start_of_line);
+        int length = view.byte_offset_of(it) - view.byte_offset_of(start_of_line);
+
+        if (length > 0) {
+            callback(view.substring_view(start, length), start, length);
+        }
+    };
+
+    for (auto it = view.begin(); it != view.end();) {
+        if (*it == '\n')
+            commit_line(it);
+        ++it;
+        start_of_line = it;
+    }
+    if (start_of_line != view.end())
+        commit_line(view.end());
+}
+
+void LayoutText::split_into_lines(LayoutBlock& container)
+{
+    if (!m_font)
+        load_font();
+
+    int space_width = m_font->glyph_width(' ') + m_font->glyph_spacing();
+    // FIXME: Allow overriding the line-height. We currently default to 140% which seems to look nice.
+    int line_height = (int)(m_font->glyph_height() * 1.4f);
+
+    auto& line_boxes = container.line_boxes();
+    if (line_boxes.is_empty())
+        line_boxes.append(LineBox());
+    int available_width = container.rect().width() - line_boxes.last().width();
+
+    bool is_preformatted = style_properties().string_or_fallback("white-space", "normal") == "pre";
+    if (is_preformatted) {
+        for_each_source_line([&](const Utf8View& view, int start, int length) {
+            line_boxes.last().add_fragment(*this, start, length, m_font->width(view), line_height);
+            line_boxes.append(LineBox());
+        });
+        return;
+    }
+
+    struct Word {
+        Utf8View view;
+        int start;
+        int length;
+    };
+    Vector<Word> words;
+
+    for_each_word([&](const Utf8View& view, int start, int length) {
+        words.append({ Utf8View(view), start, length });
+        dbg() << "Added _" << words.last().view.as_string() << "_";
     });
-    return result;
+
+    for (int i = 0; i < words.size(); ++i) {
+        auto& word = words[i];
+
+        int word_width;
+        if (isspace(*word.view.begin()))
+            word_width = space_width;
+        else
+            word_width = m_font->width(word.view);
+
+        if (word_width > available_width) {
+            line_boxes.append(LineBox());
+            available_width = container.rect().width();
+        }
+
+        line_boxes.last().add_fragment(*this, word.start, word.length, word_width, line_height);
+        available_width -= word_width;
+    }
 }

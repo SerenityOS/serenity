@@ -1,8 +1,10 @@
+#include <AK/Utf8View.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Dump.h>
+#include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/Layout/LayoutText.h>
 #include <stdio.h>
@@ -78,12 +80,39 @@ void dump_tree(const LayoutNode& layout_node)
         layout_node.style().border().bottom.to_px(),
         layout_node.style().margin().bottom.to_px());
 
-    if (layout_node.is_text()) {
-        const LayoutText& layout_text = static_cast<const LayoutText&>(layout_node);
-        dbgprintf(" \"%s\", %d runs", layout_text.text().characters(), layout_text.runs().size());
-    }
-
     dbgprintf("\n");
+
+    if (layout_node.is_block() && static_cast<const LayoutBlock&>(layout_node).children_are_inline()) {
+        auto& block = static_cast<const LayoutBlock&>(layout_node);
+        for (int i = 0; i < indent; ++i)
+            dbgprintf("    ");
+        dbgprintf("  Line boxes (%d):\n", block.line_boxes().size());
+        for (int line_box_index = 0; line_box_index < block.line_boxes().size(); ++line_box_index) {
+            auto& line_box = block.line_boxes()[line_box_index];
+            for (int i = 0; i < indent; ++i)
+                dbgprintf("    ");
+            dbgprintf("    [%d] width: %d\n", line_box_index, line_box.width());
+            for (int fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
+                auto& fragment = line_box.fragments()[fragment_index];
+                for (int i = 0; i < indent; ++i)
+                    dbgprintf("    ");
+                dbgprintf("      [%d] layout_node: %s{%p}, start: %d, length: %d, rect: %s\n",
+                    fragment_index,
+                    fragment.layout_node().class_name(),
+                    &fragment.layout_node(),
+                    fragment.start(),
+                    fragment.length(),
+                    fragment.rect().to_string().characters());
+                if (fragment.layout_node().is_text()) {
+                    for (int i = 0; i < indent; ++i)
+                        dbgprintf("    ");
+                    auto& layout_text = static_cast<const LayoutText&>(fragment.layout_node());
+                    dbgprintf("        text: \"%s\"\n",
+                        String(Utf8View(layout_text.node().data()).substring_view(fragment.start(), fragment.length()).as_string()).characters());
+                }
+            }
+        }
+    }
 
     layout_node.style_properties().for_each_property([&](auto& key, auto& value) {
         for (int i = 0; i < indent; ++i)

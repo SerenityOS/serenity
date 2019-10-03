@@ -28,6 +28,8 @@ LIBHTML_OBJS = \
     Layout/LayoutInline.o \
     Layout/LayoutDocument.o \
     Layout/ComputedStyle.o \
+    Layout/LineBox.o \
+    Layout/LineBoxFragment.o \
     HtmlView.o \
     Dump.o
 
