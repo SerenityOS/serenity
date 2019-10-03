@@ -88,7 +88,7 @@ void HtmlView::mousemove_event(GMouseEvent& event)
         return GScrollableWidget::mousemove_event(event);
 
     bool hovered_node_changed = false;
-    auto result = m_layout_root->hit_test(event.position());
+    auto result = m_layout_root->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
         auto* node = result.layout_node->node();
         hovered_node_changed = node != m_document->hovered_node();
@@ -121,7 +121,7 @@ void HtmlView::mousedown_event(GMouseEvent& event)
         return GScrollableWidget::mousemove_event(event);
 
     bool hovered_node_changed = false;
-    auto result = m_layout_root->hit_test(event.position());
+    auto result = m_layout_root->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
         auto* node = result.layout_node->node();
         hovered_node_changed = node != m_document->hovered_node();
