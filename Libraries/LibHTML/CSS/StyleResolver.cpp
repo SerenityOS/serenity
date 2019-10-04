@@ -57,14 +57,46 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
     return matching_rules;
 }
 
+static bool is_inherited_property(const StringView& name)
+{
+    static HashTable<String> inherited_properties;
+    if (inherited_properties.is_empty()) {
+        inherited_properties.set("border-collapse");
+        inherited_properties.set("border-spacing");
+        inherited_properties.set("color");
+        inherited_properties.set("font-family");
+        inherited_properties.set("font-size");
+        inherited_properties.set("font-style");
+        inherited_properties.set("font-variant");
+        inherited_properties.set("font-weight");
+        inherited_properties.set("font");
+        inherited_properties.set("letter-spacing");
+        inherited_properties.set("line-height");
+        inherited_properties.set("list-style-image");
+        inherited_properties.set("list-style-position");
+        inherited_properties.set("list-style-type");
+        inherited_properties.set("list-style");
+        inherited_properties.set("text-align");
+        inherited_properties.set("text-indent");
+        inherited_properties.set("text-transform");
+        inherited_properties.set("visibility");
+        inherited_properties.set("white-space");
+        inherited_properties.set("word-spacing");
+
+        // FIXME: This property is not supposed to be inherited, but we currently
+        //        rely on inheritance to propagate decorations into line boxes.
+        inherited_properties.set("text-decoraton");
+    }
+    return inherited_properties.contains(name);
+}
+
 NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_properties) const
 {
     auto style_properties = StyleProperties::create();
 
     if (parent_properties) {
         parent_properties->for_each_property([&](const StringView& name, auto& value) {
-            // TODO: proper inheritance
-            if (name.starts_with("font") || name == "white-space" || name == "color" || name == "text-decoration")
+            if (is_inherited_property(name))
                 style_properties->set_property(name, value);
         });
     }
