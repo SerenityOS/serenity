@@ -3,11 +3,6 @@
 #include <LibDraw/Size.h>
 #include <LibHTML/CSS/LengthBox.h>
 
-enum FontStyle {
-    Normal,
-    Bold,
-};
-
 class ComputedStyle {
 public:
     ComputedStyle();
@@ -20,8 +15,6 @@ public:
     const LengthBox& margin() const { return m_margin; }
     const LengthBox& padding() const { return m_padding; }
     const LengthBox& border() const { return m_border; }
-
-    FontStyle font_style() const { return m_font_style; }
 
     const Size& size() const { return m_size; }
     Size& size() { return m_size; }
@@ -41,6 +34,4 @@ private:
     LengthBox m_border;
 
     Size m_size;
-
-    FontStyle m_font_style { FontStyle::Normal };
 };
