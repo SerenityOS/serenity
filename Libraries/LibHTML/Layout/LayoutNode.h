@@ -62,11 +62,11 @@ public:
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 
-    const StyleProperties& style_properties() const
+    const StyleProperties& style() const
     {
         if (m_style_properties)
             return *m_style_properties;
-        return parent()->style_properties();
+        return parent()->style();
     }
 
     void inserted_into(LayoutNode&) {}

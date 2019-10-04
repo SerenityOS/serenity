@@ -18,8 +18,8 @@ LayoutText::~LayoutText()
 
 void LayoutText::load_font()
 {
-    auto font_family = style_properties().string_or_fallback("font-family", "Katica");
-    auto font_weight = style_properties().string_or_fallback("font-weight", "normal");
+    auto font_family = style().string_or_fallback("font-family", "Katica");
+    auto font_weight = style().string_or_fallback("font-weight", "normal");
 
     String weight;
     if (font_weight == "lighter")
@@ -78,11 +78,11 @@ static bool is_all_whitespace(const String& string)
     return true;
 }
 
-const String& LayoutText::text_for_style(const StyleProperties& style_properties) const
+const String& LayoutText::text_for_style(const StyleProperties& style) const
 {
     static String one_space = " ";
     if (is_all_whitespace(node().data())) {
-        if (style_properties.string_or_fallback("white-space", "normal") == "normal")
+        if (style.string_or_fallback("white-space", "normal") == "normal")
             return one_space;
     }
     return node().data();
@@ -93,8 +93,8 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     auto& painter = context.painter();
     painter.set_font(*m_font);
 
-    auto color = style_properties().color_or_fallback("color", Color::Black);
-    auto text_decoration = style_properties().string_or_fallback("text-decoration", "none");
+    auto color = style().color_or_fallback("color", Color::Black);
+    auto text_decoration = style().string_or_fallback("text-decoration", "none");
 
     bool is_underline = text_decoration == "underline";
     if (is_underline)
@@ -185,7 +185,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         line_boxes.append(LineBox());
     int available_width = container.rect().width() - line_boxes.last().width();
 
-    bool is_preformatted = style_properties().string_or_fallback("white-space", "normal") == "pre";
+    bool is_preformatted = style().string_or_fallback("white-space", "normal") == "pre";
     if (is_preformatted) {
         for_each_source_line([&](const Utf8View& view, int start, int length) {
             line_boxes.last().add_fragment(*this, start, length, m_font->width(view), line_height);

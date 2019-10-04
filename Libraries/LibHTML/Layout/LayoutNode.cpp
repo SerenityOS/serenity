@@ -49,14 +49,14 @@ void LayoutNode::render(RenderingContext& context)
     padded_rect.set_y(rect().y() - box_model().padding().top.to_px());
     padded_rect.set_height(rect().height() + box_model().padding().top.to_px() + box_model().padding().bottom.to_px());
 
-    auto bgcolor = style_properties().property("background-color");
+    auto bgcolor = style().property("background-color");
     if (bgcolor.has_value() && bgcolor.value()->is_color()) {
         context.painter().fill_rect(padded_rect, bgcolor.value()->to_color());
     }
 
-    auto border_width_value = style_properties().property("border-width");
-    auto border_color_value = style_properties().property("border-color");
-    auto border_style_value = style_properties().property("border-style");
+    auto border_width_value = style().property("border-width");
+    auto border_color_value = style().property("border-color");
+    auto border_style_value = style().property("border-style");
     if (border_width_value.has_value() && border_color_value.has_value()) {
         int border_width = border_width_value.value()->to_length().to_px();
         Color border_color = border_color_value.value()->to_color();
