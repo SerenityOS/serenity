@@ -3,14 +3,19 @@
 #include <LibGUI/GScrollableWidget.h>
 #include <LibHTML/DOM/Document.h>
 
+class Frame;
+
 class HtmlView : public GScrollableWidget {
     C_OBJECT(HtmlView)
 public:
-    virtual ~HtmlView() override {}
+    virtual ~HtmlView() override;
 
     Document* document() { return m_document; }
     const Document* document() const { return m_document; }
     void set_document(Document*);
+
+    Frame& main_frame() { return *m_main_frame; }
+    const Frame& main_frame() const { return *m_main_frame; }
 
     Function<void(const String&)> on_link_click;
     Function<void(const String&)> on_title_change;
@@ -26,6 +31,7 @@ protected:
 private:
     void layout_and_sync_size();
 
+    RefPtr<Frame> m_main_frame;
     RefPtr<Document> m_document;
     RefPtr<LayoutNode> m_layout_root;
 };

@@ -1,3 +1,4 @@
+#include <LibHTML/Frame.h>
 #include <LibHTML/Layout/LayoutDocument.h>
 
 LayoutDocument::LayoutDocument(const Document& document, NonnullRefPtr<StyleProperties> style_properties)
@@ -11,7 +12,8 @@ LayoutDocument::~LayoutDocument()
 
 void LayoutDocument::layout()
 {
-    rect().set_width(style().size().width());
+    ASSERT(document().frame());
+    rect().set_width(document().frame()->size().width());
 
     LayoutNode::layout();
 

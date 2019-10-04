@@ -16,9 +16,6 @@ public:
     const LengthBox& padding() const { return m_padding; }
     const LengthBox& border() const { return m_border; }
 
-    const Size& size() const { return m_size; }
-    Size& size() { return m_size; }
-
     struct PixelBox {
         int top;
         int right;
@@ -32,6 +29,4 @@ private:
     LengthBox m_margin;
     LengthBox m_padding;
     LengthBox m_border;
-
-    Size m_size;
 };

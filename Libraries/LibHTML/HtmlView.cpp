@@ -4,6 +4,7 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
 #include <LibHTML/Dump.h>
+#include <LibHTML/Frame.h>
 #include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/RenderingContext.h>
@@ -11,6 +12,7 @@
 
 HtmlView::HtmlView(GWidget* parent)
     : GScrollableWidget(parent)
+    , m_main_frame(Frame::create())
 {
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
@@ -19,11 +21,17 @@ HtmlView::HtmlView(GWidget* parent)
     set_background_color(Color::White);
 }
 
+HtmlView::~HtmlView()
+{
+}
+
 void HtmlView::set_document(Document* document)
 {
     if (document == m_document)
         return;
     m_document = document;
+
+    main_frame().set_document(document);
 
     if (document == nullptr)
         m_layout_root = nullptr;
@@ -46,7 +54,7 @@ void HtmlView::layout_and_sync_size()
     if (!m_layout_root)
         return;
 
-    m_layout_root->style().size().set_width(available_size().width());
+    main_frame().set_size(available_size());
     m_layout_root->layout();
     set_content_size(m_layout_root->rect().size());
 
