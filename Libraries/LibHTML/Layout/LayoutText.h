@@ -22,7 +22,7 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container) override;
 
-    const StyleProperties& style_properties() const { return parent()->style_properties(); }
+    const StyleProperties& style() const { return parent()->style(); }
 
 private:
     template<typename Callback>

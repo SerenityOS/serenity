@@ -114,7 +114,7 @@ void dump_tree(const LayoutNode& layout_node)
         }
     }
 
-    layout_node.style_properties().for_each_property([&](auto& key, auto& value) {
+    layout_node.style().for_each_property([&](auto& key, auto& value) {
         for (int i = 0; i < indent; ++i)
             dbgprintf("    ");
         dbgprintf("  (%s: %s)\n", key.characters(), value.to_string().characters());

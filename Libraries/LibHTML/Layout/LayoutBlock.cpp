@@ -15,7 +15,7 @@ LayoutBlock::~LayoutBlock()
 LayoutNode& LayoutBlock::inline_wrapper()
 {
     if (!last_child() || !last_child()->is_block() || last_child()->node() != nullptr) {
-        append_child(adopt(*new LayoutBlock(nullptr, style_properties())));
+        append_child(adopt(*new LayoutBlock(nullptr, style())));
     }
     return *last_child();
 }
@@ -75,7 +75,7 @@ void LayoutBlock::layout_inline_children()
 
 void LayoutBlock::compute_width()
 {
-    auto& style_properties = this->style_properties();
+    auto& style_properties = this->style();
 
     auto auto_value = Length();
     auto zero_value = Length(0, Length::Type::Absolute);
@@ -149,7 +149,7 @@ void LayoutBlock::compute_width()
 
 void LayoutBlock::compute_position()
 {
-    auto& style_properties = this->style_properties();
+    auto& style_properties = this->style();
 
     auto auto_value = Length();
     auto zero_value = Length(0, Length::Type::Absolute);
@@ -178,7 +178,7 @@ void LayoutBlock::compute_position()
 
 void LayoutBlock::compute_height()
 {
-    auto& style_properties = this->style_properties();
+    auto& style_properties = this->style();
 
     auto height_property = style_properties.property("height");
     if (!height_property.has_value())
@@ -193,7 +193,7 @@ void LayoutBlock::render(RenderingContext& context)
     LayoutNode::render(context);
 
     // FIXME: position this properly
-    if (style_properties().string_or_fallback("display", "block") == "list-item") {
+    if (style().string_or_fallback("display", "block") == "list-item") {
         Rect bullet_rect {
             rect().x() - 8,
             rect().y() + 4,

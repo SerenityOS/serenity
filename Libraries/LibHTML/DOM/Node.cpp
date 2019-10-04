@@ -56,7 +56,7 @@ RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const
     bool have_block_children = false;
 
     static_cast<const ParentNode&>(*this).for_each_child([&](const Node& child) {
-        auto layout_child = child.create_layout_tree(resolver, &layout_node->style_properties());
+        auto layout_child = child.create_layout_tree(resolver, &layout_node->style());
         if (!layout_child)
             return;
         if (!layout_child->is_block())
