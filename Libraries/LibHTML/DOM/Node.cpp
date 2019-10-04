@@ -27,6 +27,8 @@ RefPtr<LayoutNode> Node::create_layout_node(const StyleResolver& resolver, const
     if (is_text())
         return adopt(*new LayoutText(static_cast<const Text&>(*this)));
 
+    ASSERT(is_element());
+
     auto style_properties = resolver.resolve_style(static_cast<const Element&>(*this), parent_properties);
 
     auto display_property = style_properties->property("display");

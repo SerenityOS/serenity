@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibHTML/DOM/ParentNode.h>
 #include <AK/String.h>
+#include <LibHTML/DOM/ParentNode.h>
 
 class Attribute {
 public:
@@ -42,6 +42,8 @@ public:
 
     bool has_class(const StringView&) const;
 
+    virtual void apply_presentational_hints(StyleProperties&) const {}
+
 private:
     Attribute* find_attribute(const String& name);
     const Attribute* find_attribute(const String& name) const;
@@ -49,4 +51,3 @@ private:
     String m_tag_name;
     Vector<Attribute> m_attributes;
 };
-

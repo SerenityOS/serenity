@@ -1,6 +1,7 @@
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/HTMLBodyElement.h>
 #include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/HTMLHtmlElement.h>
 #include <LibHTML/DOM/HTMLTitleElement.h>
@@ -52,6 +53,14 @@ const HTMLHeadElement* Document::head() const
     return static_cast<const HTMLHeadElement*>(html->first_child_with_tag_name("head"));
 }
 
+const HTMLBodyElement* Document::body() const
+{
+    auto* html = document_element();
+    if (!html)
+        return nullptr;
+    return static_cast<const HTMLBodyElement*>(html->first_child_with_tag_name("body"));
+}
+
 String Document::title() const
 {
     auto* head_element = head();
@@ -72,4 +81,21 @@ void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 
 void Document::detach_from_frame(Badge<Frame>, Frame&)
 {
+}
+
+Color Document::background_color() const
+{
+    auto* body_element = body();
+    if (!body_element)
+        return Color::White;
+
+    auto* body_layout_node = body_element->layout_node();
+    if (!body_layout_node)
+        return Color::White;
+
+    auto background_color = body_layout_node->style().property("background-color");
+    if (!background_color.has_value() || !background_color.value()->is_color())
+        return Color::White;
+
+    return background_color.value()->to_color();
 }
