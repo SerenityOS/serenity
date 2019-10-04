@@ -13,6 +13,7 @@ extern volatile RegisterDump* syscallRegDump;
 asm(
     ".globl syscall_trap_handler \n"
     "syscall_trap_handler:\n"
+    "    pushl $0x0\n"
     "    pusha\n"
     "    pushw %ds\n"
     "    pushw %es\n"
@@ -35,6 +36,7 @@ asm(
     "    popw %es\n"
     "    popw %ds\n"
     "    popa\n"
+    "    add $0x4, %esp\n"
     "    iret\n");
 
 namespace Syscall {
