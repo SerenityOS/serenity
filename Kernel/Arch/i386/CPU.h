@@ -347,29 +347,6 @@ struct [[gnu::packed]] RegisterDump
     u32 edx;
     u32 ecx;
     u32 eax;
-    u32 eip;
-    u16 cs;
-    u16 __csPadding;
-    u32 eflags;
-    u32 esp_if_crossRing;
-    u16 ss_if_crossRing;
-};
-
-struct [[gnu::packed]] RegisterDumpWithExceptionCode
-{
-    u16 ss;
-    u16 gs;
-    u16 fs;
-    u16 es;
-    u16 ds;
-    u32 edi;
-    u32 esi;
-    u32 ebp;
-    u32 esp;
-    u32 ebx;
-    u32 edx;
-    u32 ecx;
-    u32 eax;
     u16 exception_code;
     u16 __exception_code_padding;
     u32 eip;
@@ -379,6 +356,7 @@ struct [[gnu::packed]] RegisterDumpWithExceptionCode
     u32 esp_if_crossRing;
     u16 ss_if_crossRing;
 };
+
 
 struct [[gnu::aligned(16)]] FPUState
 {

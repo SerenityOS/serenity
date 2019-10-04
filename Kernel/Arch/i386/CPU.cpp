@@ -46,6 +46,7 @@ extern "C" void asm_irq_entry();
 asm(
     ".globl asm_irq_entry\n"
     "asm_irq_entry: \n"
+    "    pushl $0x0\n"
     "    pusha\n"
     "    pushw %ds\n"
     "    pushw %es\n"
@@ -57,10 +58,11 @@ asm(
     "    popw %es\n"
     "    popw %ds\n"
     "    popa\n"
+    "    add $0x4, %esp\n"
     "    iret\n");
 
 #define EH_ENTRY(ec)                                                          \
-    extern "C" void exception_##ec##_handler(RegisterDumpWithExceptionCode&); \
+    extern "C" void exception_##ec##_handler(RegisterDump&); \
     extern "C" void exception_##ec##_entry();                                 \
     asm(                                                                      \
         ".globl exception_" #ec "_entry\n"                                    \
@@ -96,6 +98,7 @@ asm(
     asm(                                                     \
         ".globl exception_" #ec "_entry\n"                   \
         "exception_" #ec "_entry: \n"                        \
+        "    pushl $0x0\n"                                   \
         "    pusha\n"                                        \
         "    pushw %ds\n"                                    \
         "    pushw %es\n"                                    \
@@ -118,10 +121,10 @@ asm(
         "    popw %es\n"                                     \
         "    popw %ds\n"                                     \
         "    popa\n"                                         \
+        "    add $0x4, %esp\n"                               \
         "    iret\n");
 
-template<typename DumpType>
-static void dump(const DumpType& regs)
+static void dump(const RegisterDump& regs)
 {
     u16 ss;
     u32 esp;
@@ -133,9 +136,7 @@ static void dump(const DumpType& regs)
         esp = regs.esp_if_crossRing;
     }
 
-    if constexpr (IsSame<DumpType, RegisterDumpWithExceptionCode>::value) {
-        kprintf("exception code: %04x\n", regs.exception_code);
-    }
+    kprintf("exception code: %04x\n", regs.exception_code);
     kprintf("  pc=%04x:%08x ds=%04x es=%04x fs=%04x gs=%04x\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
     kprintf(" stk=%04x:%08x\n", ss, esp);
     if (current)
@@ -157,8 +158,7 @@ static void dump(const DumpType& regs)
     }
 }
 
-template<typename RegisterDumpType>
-static void handle_crash(RegisterDumpType& regs, const char* description, int signal)
+static void handle_crash(RegisterDump& regs, const char* description, int signal)
 {
     if (!current) {
         kprintf("%s with !current\n", description);
@@ -195,7 +195,7 @@ void exception_0_handler(RegisterDump& regs)
 }
 
 EH_ENTRY(13);
-void exception_13_handler(RegisterDumpWithExceptionCode& regs)
+void exception_13_handler(RegisterDump& regs)
 {
     handle_crash(regs, "General protection fault", SIGSEGV);
 }
@@ -232,7 +232,7 @@ void exception_7_handler(RegisterDump& regs)
 
 // 14: Page Fault
 EH_ENTRY(14);
-void exception_14_handler(RegisterDumpWithExceptionCode& regs)
+void exception_14_handler(RegisterDump& regs)
 {
     ASSERT(current);
 
