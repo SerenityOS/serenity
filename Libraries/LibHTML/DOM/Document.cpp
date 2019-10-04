@@ -4,6 +4,7 @@
 #include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/HTMLHtmlElement.h>
 #include <LibHTML/DOM/HTMLTitleElement.h>
+#include <LibHTML/Frame.h>
 #include <LibHTML/Layout/LayoutDocument.h>
 #include <stdio.h>
 
@@ -62,4 +63,13 @@ String Document::title() const
         return {};
 
     return title_element->text_content();
+}
+
+void Document::attach_to_frame(Badge<Frame>, Frame& frame)
+{
+    m_frame = frame.make_weak_ptr();
+}
+
+void Document::detach_from_frame(Badge<Frame>, Frame&)
+{
 }

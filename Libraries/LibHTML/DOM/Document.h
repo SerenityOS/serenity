@@ -3,10 +3,12 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/WeakPtr.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/ParentNode.h>
 
+class Frame;
 class HTMLHtmlElement;
 class HTMLHeadElement;
 class LayoutNode;
@@ -36,8 +38,15 @@ public:
 
     String title() const;
 
+    void attach_to_frame(Badge<Frame>, Frame&);
+    void detach_from_frame(Badge<Frame>, Frame&);
+
+    Frame* frame() { return m_frame.ptr(); }
+    const Frame* frame() const { return m_frame.ptr(); }
+
 private:
     OwnPtr<StyleResolver> m_style_resolver;
     NonnullRefPtrVector<StyleSheet> m_sheets;
     RefPtr<Node> m_hovered_node;
+    WeakPtr<Frame> m_frame;
 };
