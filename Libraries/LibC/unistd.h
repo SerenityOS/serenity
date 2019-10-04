@@ -1,3 +1,10 @@
+/* standard symbolic constants and types
+ *
+ * values from POSIX standard unix specification
+ *
+ * https://pubs.opengroup.org/onlinepubs/9699919799/basedefs/unistd.h.html
+ */
+
 #pragma once
 
 #include <errno.h>
@@ -11,6 +18,14 @@ __BEGIN_DECLS
 #define STDIN_FILENO 0
 #define STDOUT_FILENO 1
 #define STDERR_FILENO 2
+
+/* lseek whence values */
+#ifndef _STDIO_H /* also defined in stdio.h */
+#define SEEK_SET 0 /* from beginning of file.  */
+#define SEEK_CUR 1 /* from current position in file.  */
+#define SEEK_END 2 /* from the end of the file.  */
+#endif
+
 
 extern char** environ;
 
