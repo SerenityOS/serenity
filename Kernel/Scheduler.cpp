@@ -561,8 +561,8 @@ void Scheduler::timer_tick(RegisterDump& regs)
     outgoing_tss.eflags = regs.eflags;
 
     // Compute process stack pointer.
-    // Add 12 for CS, EIP, EFLAGS (interrupt mechanic)
-    outgoing_tss.esp = regs.esp + 12;
+    // Add 16 for CS, EIP, EFLAGS, exception code (interrupt mechanic)
+    outgoing_tss.esp = regs.esp + 16;
     outgoing_tss.ss = regs.ss;
 
     if ((outgoing_tss.cs & 3) != 0) {

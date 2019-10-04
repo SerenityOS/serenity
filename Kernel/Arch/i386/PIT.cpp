@@ -12,6 +12,7 @@ extern "C" void timer_interrupt_handler(RegisterDump&);
 asm(
     ".globl timer_interrupt_entry \n"
     "timer_interrupt_entry: \n"
+    "    pushl $0x0\n"
     "    pusha\n"
     "    pushw %ds\n"
     "    pushw %es\n"
@@ -34,6 +35,7 @@ asm(
     "    popw %es\n"
     "    popw %ds\n"
     "    popa\n"
+    "    add $0x4, %esp\n"
     "    iret\n");
 
 static u32 s_ticks_this_second;

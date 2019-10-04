@@ -864,9 +864,12 @@ int Process::sys$sigreturn(RegisterDump& registers)
     current->m_signal_mask = *stack_ptr;
     stack_ptr++;
 
-    //pop edi, esi, ebp, esp, ebx, edx, ecx, eax and eip
-    memcpy(&registers.edi, stack_ptr, 9 * sizeof(u32));
-    stack_ptr += 9;
+    //pop edi, esi, ebp, esp, ebx, edx, ecx and eax
+    memcpy(&registers.edi, stack_ptr, 8 * sizeof(u32));
+    stack_ptr += 8;
+
+    registers.eip = *stack_ptr;
+    stack_ptr++;
 
     registers.eflags = *stack_ptr;
     stack_ptr++;
