@@ -7,7 +7,7 @@ class Element;
 
 class LayoutBlock : public LayoutNode {
 public:
-    LayoutBlock(const Node*, StyleProperties&&);
+    LayoutBlock(const Node*, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutBlock() override;
 
     virtual const char* class_name() const override { return "LayoutBlock"; }

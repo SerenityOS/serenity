@@ -62,18 +62,23 @@ public:
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 
-    const StyleProperties& style_properties() const { return m_style_properties; }
+    const StyleProperties& style_properties() const
+    {
+        if (m_style_properties)
+            return *m_style_properties;
+        return parent()->style_properties();
+    }
 
     void inserted_into(LayoutNode&) {}
     void removed_from(LayoutNode&) {}
 
 protected:
-    explicit LayoutNode(const Node*, StyleProperties&&);
+    explicit LayoutNode(const Node*, RefPtr<StyleProperties>);
 
 private:
     const Node* m_node { nullptr };
 
-    StyleProperties m_style_properties;
+    RefPtr<StyleProperties> m_style_properties;
     ComputedStyle m_style;
     Rect m_rect;
 };

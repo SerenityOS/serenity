@@ -7,8 +7,8 @@
 #include <LibHTML/Layout/LayoutText.h>
 #include <ctype.h>
 
-LayoutText::LayoutText(const Text& text, StyleProperties&& style_properties)
-    : LayoutInline(text, move(style_properties))
+LayoutText::LayoutText(const Text& text)
+    : LayoutInline(text, {})
 {
 }
 
@@ -78,12 +78,13 @@ static bool is_all_whitespace(const String& string)
     return true;
 }
 
-const String& LayoutText::text() const
+const String& LayoutText::text_for_style(const StyleProperties& style_properties) const
 {
     static String one_space = " ";
-    if (is_all_whitespace(node().data()))
-        if (style_properties().string_or_fallback("white-space", "normal") == "normal")
+    if (is_all_whitespace(node().data())) {
+        if (style_properties.string_or_fallback("white-space", "normal") == "normal")
             return one_space;
+    }
     return node().data();
 }
 

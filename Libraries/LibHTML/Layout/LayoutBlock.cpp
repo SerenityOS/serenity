@@ -3,7 +3,7 @@
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
 
-LayoutBlock::LayoutBlock(const Node* node, StyleProperties&& style_properties)
+LayoutBlock::LayoutBlock(const Node* node, NonnullRefPtr<StyleProperties> style_properties)
     : LayoutNode(node, move(style_properties))
 {
 }
@@ -15,7 +15,7 @@ LayoutBlock::~LayoutBlock()
 LayoutNode& LayoutBlock::inline_wrapper()
 {
     if (!last_child() || !last_child()->is_block() || last_child()->node() != nullptr) {
-        append_child(adopt(*new LayoutBlock(nullptr, {})));
+        append_child(adopt(*new LayoutBlock(nullptr, style_properties())));
     }
     return *last_child();
 }
