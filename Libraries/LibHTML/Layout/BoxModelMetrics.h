@@ -3,10 +3,10 @@
 #include <LibDraw/Size.h>
 #include <LibHTML/CSS/LengthBox.h>
 
-class ComputedStyle {
+class BoxModelMetrics {
 public:
-    ComputedStyle();
-    ~ComputedStyle();
+    BoxModelMetrics();
+    ~BoxModelMetrics();
 
     LengthBox& margin() { return m_margin; }
     LengthBox& padding() { return m_padding; }

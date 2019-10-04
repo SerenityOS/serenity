@@ -39,7 +39,7 @@ void LayoutBlock::layout_block_children()
     int content_height = 0;
     for_each_child([&](auto& child) {
         child.layout();
-        content_height = child.rect().bottom() + child.style().full_margin().bottom - rect().top();
+        content_height = child.rect().bottom() + child.box_model().full_margin().bottom - rect().top();
     });
     rect().set_height(content_height);
 }
@@ -139,12 +139,12 @@ void LayoutBlock::compute_width()
     }
 
     rect().set_width(width.to_px());
-    style().margin().left = margin_left;
-    style().margin().right = margin_right;
-    style().border().left = border_left;
-    style().border().right = border_right;
-    style().padding().left = padding_left;
-    style().padding().right = padding_right;
+    box_model().margin().left = margin_left;
+    box_model().margin().right = margin_right;
+    box_model().border().left = border_left;
+    box_model().border().right = border_right;
+    box_model().padding().left = padding_left;
+    box_model().padding().right = padding_right;
 }
 
 void LayoutBlock::compute_position()
@@ -156,24 +156,24 @@ void LayoutBlock::compute_position()
 
     auto width = style_properties.length_or_fallback("width", auto_value);
 
-    style().margin().top = style_properties.length_or_fallback("margin-top", zero_value);
-    style().margin().bottom = style_properties.length_or_fallback("margin-bottom", zero_value);
-    style().border().top = style_properties.length_or_fallback("border-top", zero_value);
-    style().border().bottom = style_properties.length_or_fallback("border-bottom", zero_value);
-    style().padding().top = style_properties.length_or_fallback("padding-top", zero_value);
-    style().padding().bottom = style_properties.length_or_fallback("padding-bottom", zero_value);
-    rect().set_x(containing_block()->rect().x() + style().margin().left.to_px() + style().border().left.to_px() + style().padding().left.to_px());
+    box_model().margin().top = style_properties.length_or_fallback("margin-top", zero_value);
+    box_model().margin().bottom = style_properties.length_or_fallback("margin-bottom", zero_value);
+    box_model().border().top = style_properties.length_or_fallback("border-top", zero_value);
+    box_model().border().bottom = style_properties.length_or_fallback("border-bottom", zero_value);
+    box_model().padding().top = style_properties.length_or_fallback("padding-top", zero_value);
+    box_model().padding().bottom = style_properties.length_or_fallback("padding-bottom", zero_value);
+    rect().set_x(containing_block()->rect().x() + box_model().margin().left.to_px() + box_model().border().left.to_px() + box_model().padding().left.to_px());
 
     int top_border = -1;
     if (previous_sibling() != nullptr) {
         auto& previous_sibling_rect = previous_sibling()->rect();
-        auto& previous_sibling_style = previous_sibling()->style();
+        auto& previous_sibling_style = previous_sibling()->box_model();
         top_border = previous_sibling_rect.y() + previous_sibling_rect.height();
         top_border += previous_sibling_style.full_margin().bottom;
     } else {
         top_border = containing_block()->rect().y();
     }
-    rect().set_y(top_border + style().full_margin().top);
+    rect().set_y(top_border + box_model().full_margin().top);
 }
 
 void LayoutBlock::compute_height()

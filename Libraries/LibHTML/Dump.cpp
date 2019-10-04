@@ -62,23 +62,23 @@ void dump_tree(const LayoutNode& layout_node)
 
     // Dump the horizontal box properties
     dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
-        layout_node.style().margin().left.to_px(),
-        layout_node.style().border().left.to_px(),
-        layout_node.style().padding().left.to_px(),
+        layout_node.box_model().margin().left.to_px(),
+        layout_node.box_model().border().left.to_px(),
+        layout_node.box_model().padding().left.to_px(),
         layout_node.rect().width(),
-        layout_node.style().padding().right.to_px(),
-        layout_node.style().border().right.to_px(),
-        layout_node.style().margin().right.to_px());
+        layout_node.box_model().padding().right.to_px(),
+        layout_node.box_model().border().right.to_px(),
+        layout_node.box_model().margin().right.to_px());
 
     // And the vertical box properties
     dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
-        layout_node.style().margin().top.to_px(),
-        layout_node.style().border().top.to_px(),
-        layout_node.style().padding().top.to_px(),
+        layout_node.box_model().margin().top.to_px(),
+        layout_node.box_model().border().top.to_px(),
+        layout_node.box_model().padding().top.to_px(),
         layout_node.rect().height(),
-        layout_node.style().padding().bottom.to_px(),
-        layout_node.style().border().bottom.to_px(),
-        layout_node.style().margin().bottom.to_px());
+        layout_node.box_model().padding().bottom.to_px(),
+        layout_node.box_model().border().bottom.to_px(),
+        layout_node.box_model().margin().bottom.to_px());
 
     dbgprintf("\n");
 
