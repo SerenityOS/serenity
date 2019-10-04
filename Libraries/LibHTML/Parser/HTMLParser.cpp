@@ -3,8 +3,9 @@
 #include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
-#include <LibHTML/DOM/HTMLHRElement.h>
 #include <LibHTML/DOM/HTMLBodyElement.h>
+#include <LibHTML/DOM/HTMLFontElement.h>
+#include <LibHTML/DOM/HTMLHRElement.h>
 #include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/HTMLHeadingElement.h>
 #include <LibHTML/DOM/HTMLHtmlElement.h>
@@ -26,6 +27,8 @@ static NonnullRefPtr<Element> create_element(Document& document, const String& t
         return adopt(*new HTMLHeadElement(document, tag_name));
     if (lowercase_tag_name == "body")
         return adopt(*new HTMLBodyElement(document, tag_name));
+    if (lowercase_tag_name == "font")
+        return adopt(*new HTMLFontElement(document, tag_name));
     if (lowercase_tag_name == "hr")
         return adopt(*new HTMLHRElement(document, tag_name));
     if (lowercase_tag_name == "style")
