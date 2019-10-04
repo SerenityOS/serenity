@@ -27,7 +27,7 @@ LIBHTML_OBJS = \
     Layout/LayoutBlock.o \
     Layout/LayoutInline.o \
     Layout/LayoutDocument.o \
-    Layout/ComputedStyle.o \
+    Layout/BoxModelMetrics.o \
     Layout/LineBox.o \
     Layout/LineBoxFragment.o \
     HtmlView.o \

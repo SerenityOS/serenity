@@ -4,7 +4,7 @@
 #include <AK/Vector.h>
 #include <LibDraw/Rect.h>
 #include <LibHTML/CSS/StyleProperties.h>
-#include <LibHTML/Layout/ComputedStyle.h>
+#include <LibHTML/Layout/BoxModelMetrics.h>
 #include <LibHTML/RenderingContext.h>
 #include <LibHTML/TreeNode.h>
 
@@ -26,8 +26,8 @@ public:
     Rect& rect() { return m_rect; }
     void set_rect(const Rect& rect) { m_rect = rect; }
 
-    ComputedStyle& style() { return m_style; }
-    const ComputedStyle& style() const { return m_style; }
+    BoxModelMetrics& box_model() { return m_style; }
+    const BoxModelMetrics& box_model() const { return m_style; }
 
     virtual HitTestResult hit_test(const Point&) const;
 
@@ -79,6 +79,6 @@ private:
     const Node* m_node { nullptr };
 
     RefPtr<StyleProperties> m_style_properties;
-    ComputedStyle m_style;
+    BoxModelMetrics m_style;
     Rect m_rect;
 };

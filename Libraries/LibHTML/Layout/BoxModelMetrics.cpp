@@ -1,14 +1,14 @@
-#include <LibHTML/Layout/ComputedStyle.h>
+#include <LibHTML/Layout/BoxModelMetrics.h>
 
-ComputedStyle::ComputedStyle()
+BoxModelMetrics::BoxModelMetrics()
 {
 }
 
-ComputedStyle::~ComputedStyle()
+BoxModelMetrics::~BoxModelMetrics()
 {
 }
 
-ComputedStyle::PixelBox ComputedStyle::full_margin() const
+BoxModelMetrics::PixelBox BoxModelMetrics::full_margin() const
 {
     return {
         m_margin.top.to_px() + m_border.top.to_px() + m_padding.top.to_px(),
