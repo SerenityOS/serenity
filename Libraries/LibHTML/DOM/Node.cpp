@@ -22,19 +22,16 @@ Node::~Node()
 RefPtr<LayoutNode> Node::create_layout_node(const StyleResolver& resolver, const StyleProperties* parent_properties) const
 {
     if (is_document())
-        return adopt(*new LayoutDocument(static_cast<const Document&>(*this), {}));
-
-    StyleProperties style_properties;
-    if (is_element())
-        style_properties = resolver.resolve_style(static_cast<const Element&>(*this), parent_properties);
-    else
-        style_properties = *parent_properties;
-
-    auto display_property = style_properties.property("display");
-    String display = display_property.has_value() ? display_property.release_value()->to_string() : "inline";
+        return adopt(*new LayoutDocument(static_cast<const Document&>(*this), StyleProperties::create()));
 
     if (is_text())
-        return adopt(*new LayoutText(static_cast<const Text&>(*this), move(style_properties)));
+        return adopt(*new LayoutText(static_cast<const Text&>(*this)));
+
+    auto style_properties = resolver.resolve_style(static_cast<const Element&>(*this), parent_properties);
+
+    auto display_property = style_properties->property("display");
+    String display = display_property.has_value() ? display_property.release_value()->to_string() : "inline";
+
     if (display == "none")
         return nullptr;
     if (display == "block" || display == "list-item")
@@ -71,7 +68,7 @@ RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const
 
     for (auto layout_child : layout_children)
         if (have_block_children && have_inline_children && !layout_child->is_block()) {
-            if (layout_child->is_text() && static_cast<const LayoutText&>(*layout_child).text() == " ")
+            if (layout_child->is_text() && static_cast<const LayoutText&>(*layout_child).text_for_style(*parent_properties) == " ")
                 continue;
             layout_node->inline_wrapper().append_child(*layout_child);
         } else {

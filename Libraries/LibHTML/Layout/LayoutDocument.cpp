@@ -1,6 +1,6 @@
 #include <LibHTML/Layout/LayoutDocument.h>
 
-LayoutDocument::LayoutDocument(const Document& document, StyleProperties&& style_properties)
+LayoutDocument::LayoutDocument(const Document& document, NonnullRefPtr<StyleProperties> style_properties)
     : LayoutBlock(&document, move(style_properties))
 {
 }

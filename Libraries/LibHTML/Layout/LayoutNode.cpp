@@ -7,9 +7,9 @@
 //#define DRAW_BOXES_AROUND_LAYOUT_NODES
 //#define DRAW_BOXES_AROUND_HOVERED_NODES
 
-LayoutNode::LayoutNode(const Node* node, StyleProperties&& style_properties)
+LayoutNode::LayoutNode(const Node* node, RefPtr<StyleProperties> style_properties)
     : m_node(node)
-    , m_style_properties(style_properties)
+    , m_style_properties(move(style_properties))
 {
 }
 

@@ -57,22 +57,22 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
     return matching_rules;
 }
 
-StyleProperties StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_properties) const
+NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_properties) const
 {
-    StyleProperties style_properties;
+    auto style_properties = StyleProperties::create();
 
     if (parent_properties) {
         parent_properties->for_each_property([&](const StringView& name, auto& value) {
             // TODO: proper inheritance
             if (name.starts_with("font") || name == "white-space" || name == "color" || name == "text-decoration")
-                style_properties.set_property(name, value);
+                style_properties->set_property(name, value);
         });
     }
 
     auto matching_rules = collect_matching_rules(element);
     for (auto& rule : matching_rules) {
         for (auto& property : rule.declaration().properties()) {
-            style_properties.set_property(property.name, property.value);
+            style_properties->set_property(property.name, property.value);
         }
     }
 
@@ -80,7 +80,7 @@ StyleProperties StyleResolver::resolve_style(const Element& element, const Style
     if (!style_attribute.is_null()) {
         if (auto declaration = parse_css_declaration(style_attribute)) {
             for (auto& property : declaration->properties()) {
-                style_properties.set_property(property.name, property.value);
+                style_properties->set_property(property.name, property.value);
             }
         }
     }

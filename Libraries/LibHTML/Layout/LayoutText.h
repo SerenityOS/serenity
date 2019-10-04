@@ -8,12 +8,12 @@ class LineBoxFragment;
 
 class LayoutText : public LayoutInline {
 public:
-    LayoutText(const Text&, StyleProperties&&);
+    explicit LayoutText(const Text&);
     virtual ~LayoutText() override;
 
     const Text& node() const { return static_cast<const Text&>(*LayoutNode::node()); }
 
-    const String& text() const;
+    const String& text_for_style(const StyleProperties&) const;
 
     virtual const char* class_name() const override { return "LayoutText"; }
     virtual bool is_text() const final { return true; }
@@ -22,6 +22,8 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container) override;
 
+    const StyleProperties& style_properties() const { return parent()->style_properties(); }
+
 private:
     template<typename Callback>
     void for_each_word(Callback) const;
@@ -29,7 +31,6 @@ private:
     void for_each_source_line(Callback) const;
 
     void load_font();
-    void compute_runs();
 
     RefPtr<Font> m_font;
 };
