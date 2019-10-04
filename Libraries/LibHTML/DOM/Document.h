@@ -9,6 +9,7 @@
 #include <LibHTML/DOM/ParentNode.h>
 
 class Frame;
+class HTMLBodyElement;
 class HTMLHtmlElement;
 class HTMLHeadElement;
 class LayoutNode;
@@ -35,6 +36,7 @@ public:
 
     const HTMLHtmlElement* document_element() const;
     const HTMLHeadElement* head() const;
+    const HTMLBodyElement* body() const;
 
     String title() const;
 
@@ -43,6 +45,8 @@ public:
 
     Frame* frame() { return m_frame.ptr(); }
     const Frame* frame() const { return m_frame.ptr(); }
+
+    Color background_color() const;
 
 private:
     OwnPtr<StyleResolver> m_style_resolver;

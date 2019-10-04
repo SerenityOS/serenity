@@ -78,13 +78,15 @@ void HtmlView::paint_event(GPaintEvent& event)
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
 
-    painter.fill_rect(event.rect(), background_color());
+    if (!m_layout_root) {
+        painter.fill_rect(event.rect(), background_color());
+        return;
+    }
 
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    if (!m_layout_root)
-        return;
+    painter.fill_rect(rect(), m_document->background_color());
 
     RenderingContext context { painter };
     m_layout_root->render(context);

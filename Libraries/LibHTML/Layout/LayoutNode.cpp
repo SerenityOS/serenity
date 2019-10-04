@@ -11,10 +11,14 @@ LayoutNode::LayoutNode(const Node* node, RefPtr<StyleProperties> style_propertie
     : m_node(node)
     , m_style_properties(move(style_properties))
 {
+    if (m_node)
+        m_node->set_layout_node({}, this);
 }
 
 LayoutNode::~LayoutNode()
 {
+    if (m_node)
+        m_node->set_layout_node({}, nullptr);
 }
 
 void LayoutNode::layout()

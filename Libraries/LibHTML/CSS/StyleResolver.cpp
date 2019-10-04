@@ -69,6 +69,8 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
         });
     }
 
+    element.apply_presentational_hints(*style_properties);
+
     auto matching_rules = collect_matching_rules(element);
     for (auto& rule : matching_rules) {
         for (auto& property : rule.declaration().properties()) {

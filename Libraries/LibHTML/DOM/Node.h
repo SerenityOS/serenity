@@ -58,9 +58,15 @@ public:
     virtual void inserted_into(Node&) {}
     virtual void removed_from(Node&) {}
 
+    const LayoutNode* layout_node() const { return m_layout_node; }
+    LayoutNode* layout_node() { return m_layout_node; }
+
+    void set_layout_node(Badge<LayoutNode>, LayoutNode* layout_node) const { m_layout_node = layout_node; }
+
 protected:
     Node(Document&, NodeType);
 
     Document& m_document;
+    mutable LayoutNode* m_layout_node { nullptr };
     NodeType m_type { NodeType::INVALID };
 };
