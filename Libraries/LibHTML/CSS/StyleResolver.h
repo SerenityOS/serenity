@@ -23,5 +23,8 @@ public:
     NonnullRefPtrVector<StyleRule> collect_matching_rules(const Element&) const;
 
 private:
+    template<typename Callback>
+    void for_each_stylesheet(Callback) const;
+
     Document& m_document;
 };

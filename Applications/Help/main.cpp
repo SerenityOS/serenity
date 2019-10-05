@@ -46,10 +46,6 @@ int main(int argc, char* argv[])
 
     auto html_view = HtmlView::construct(splitter);
 
-    extern const char default_stylesheet_source[];
-    String css = default_stylesheet_source;
-    auto sheet = parse_css(css);
-
     History history;
 
     RefPtr<GAction> go_back_action;
@@ -86,7 +82,6 @@ int main(int argc, char* argv[])
         String html = md_document.render_to_html();
         auto html_document = parse_html(html);
         html_document->normalize();
-        html_document->add_sheet(sheet);
         html_view->set_document(html_document);
 
         String page_and_section = model->page_and_section(tree_view->selection().first());

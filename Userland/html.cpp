@@ -33,14 +33,9 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    extern const char default_stylesheet_source[];
-    String css = default_stylesheet_source;
-    auto sheet = parse_css(css);
-
     String html = String::copy(f->read_all());
     auto document = parse_html(html);
     document->normalize();
-    document->add_sheet(*sheet);
 
     auto window = GWindow::construct();
     auto widget = HtmlView::construct();
