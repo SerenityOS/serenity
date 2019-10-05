@@ -85,10 +85,10 @@ void HtmlView::paint_event(GPaintEvent& event)
         return;
     }
 
+    painter.fill_rect(event.rect(), m_document->background_color());
+
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
-
-    painter.fill_rect(rect(), m_document->background_color());
 
     RenderingContext context { painter };
     m_layout_root->render(context);
