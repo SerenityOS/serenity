@@ -60,6 +60,7 @@ build_targets="$build_targets ../Applications/TextEditor"
 build_targets="$build_targets ../Applications/SoundPlayer"
 build_targets="$build_targets ../Applications/Welcome"
 build_targets="$build_targets ../Applications/Help"
+build_targets="$build_targets ../Applications/Browser"
 
 build_targets="$build_targets ../Demos/Fire"
 build_targets="$build_targets ../Demos/HelloWorld"
