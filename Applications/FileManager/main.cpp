@@ -249,13 +249,11 @@ int main(int argc, char** argv)
     });
     delete_action->set_enabled(false);
 
-    auto go_back_action = GAction::create("Go Back", { Mod_Alt, Key_Left }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [&](const GAction&) {
-        dbgprintf("'Go Back' action activated!\n");
+    auto go_back_action = GCommonActions::make_go_back_action([&](auto&) {
         directory_view->open_previous_directory();
     });
 
-    auto go_forward_action = GAction::create("Go Forward", { Mod_Alt, Key_Right }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](const GAction&) {
-        dbgprintf("'Go Forward' action activated!\n");
+    auto go_forward_action = GCommonActions::make_go_forward_action([&](auto&) {
         directory_view->open_next_directory();
     });
 
