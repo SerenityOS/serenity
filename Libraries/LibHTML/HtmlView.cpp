@@ -175,4 +175,7 @@ void HtmlView::load(const URL& url)
     document->normalize();
 
     set_document(document);
+
+    if (on_title_change)
+        on_title_change(document->title());
 }
