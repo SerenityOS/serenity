@@ -71,6 +71,11 @@ NonnullRefPtr<GAction> make_go_forward_action(Function<void(GAction&)> callback,
     return GAction::create("Go forward", { Mod_Alt, Key_Right }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), move(callback), widget);
 }
 
+NonnullRefPtr<GAction> make_reload_action(Function<void(GAction&)> callback, GWidget* widget)
+{
+    return GAction::create("Reload", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/reload.png"), move(callback), widget);
+}
+
 }
 
 GAction::GAction(const StringView& text, Function<void(GAction&)> on_activation_callback, GWidget* widget)
