@@ -32,6 +32,7 @@ NonnullRefPtr<GAction> make_fullscreen_action(Function<void(GAction&)>, GWidget*
 NonnullRefPtr<GAction> make_quit_action(Function<void(GAction&)>);
 NonnullRefPtr<GAction> make_go_back_action(Function<void(GAction&)>, GWidget* widget = nullptr);
 NonnullRefPtr<GAction> make_go_forward_action(Function<void(GAction&)>, GWidget* widget = nullptr);
+NonnullRefPtr<GAction> make_reload_action(Function<void(GAction&)>, GWidget* widget = nullptr);
 };
 
 class GAction : public RefCounted<GAction>
