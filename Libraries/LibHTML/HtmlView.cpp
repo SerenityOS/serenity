@@ -1,3 +1,4 @@
+#include <LibCore/CFile.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
@@ -7,6 +8,7 @@
 #include <LibHTML/Frame.h>
 #include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutNode.h>
+#include <LibHTML/Parser/HTMLParser.h>
 #include <LibHTML/RenderingContext.h>
 #include <stdio.h>
 
@@ -146,4 +148,31 @@ void HtmlView::mousedown_event(GMouseEvent& event)
     if (hovered_node_changed)
         update();
     event.accept();
+}
+
+void HtmlView::reload()
+{
+    load(main_frame().document()->url());
+}
+
+void HtmlView::load(const URL& url)
+{
+    dbg() << "HtmlView::load: " << url;
+
+    if (on_load_start)
+        on_load_start(url);
+
+    auto f = CFile::construct();
+    f->set_filename(url.path());
+    if (!f->open(CIODevice::OpenMode::ReadOnly)) {
+        dbg() << "HtmlView::load: Error: " << f->error_string();
+        return;
+    }
+
+    String html = String::copy(f->read_all());
+    auto document = parse_html(html);
+    document->set_url(url);
+    document->normalize();
+
+    set_document(document);
 }

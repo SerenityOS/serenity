@@ -1,3 +1,5 @@
+#include <AK/FileSystemPath.h>
+#include <AK/StringBuilder.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
@@ -98,4 +100,28 @@ Color Document::background_color() const
         return Color::White;
 
     return background_color.value()->to_color();
+}
+
+URL Document::complete_url(const String& string) const
+{
+    URL url(string);
+    if (url.is_valid())
+        return url;
+
+    FileSystemPath fspath(m_url.path());
+    StringBuilder builder;
+    builder.append('/');
+    for (int i = 0; i < fspath.parts().size(); ++i) {
+        if (i == fspath.parts().size() - 1)
+            break;
+        builder.append(fspath.parts()[i]);
+        builder.append('/');
+    }
+    builder.append(string);
+    auto built = builder.to_string();
+    fspath = FileSystemPath(built);
+
+    url = m_url;
+    url.set_path(fspath.string());
+    return url;
 }
