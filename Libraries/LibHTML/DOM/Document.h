@@ -3,6 +3,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
+#include <AK/URL.h>
 #include <AK/WeakPtr.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/CSS/StyleSheet.h>
@@ -20,6 +21,11 @@ class Document : public ParentNode {
 public:
     Document();
     virtual ~Document() override;
+
+    void set_url(const URL& url) { m_url = url; }
+    const URL& url() const { return m_url; }
+
+    URL complete_url(const String&) const;
 
     void normalize();
 
@@ -53,4 +59,5 @@ private:
     NonnullRefPtrVector<StyleSheet> m_sheets;
     RefPtr<Node> m_hovered_node;
     WeakPtr<Frame> m_frame;
+    URL m_url;
 };

@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/URL.h>
 #include <LibGUI/GScrollableWidget.h>
 #include <LibHTML/DOM/Document.h>
 
@@ -17,8 +18,14 @@ public:
     Frame& main_frame() { return *m_main_frame; }
     const Frame& main_frame() const { return *m_main_frame; }
 
+    void reload();
+    void load(const URL&);
+
+    URL url() const;
+
     Function<void(const String&)> on_link_click;
     Function<void(const String&)> on_title_change;
+    Function<void(const URL&)> on_load_start;
 
 protected:
     HtmlView(GWidget* parent = nullptr);
