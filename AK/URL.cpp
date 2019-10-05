@@ -61,7 +61,10 @@ bool URL::parse(const StringView& string)
                 return false;
             m_protocol = String::copy(buffer);
             buffer.clear();
-            state = State::InHostname;
+            if (m_protocol == "file")
+                state = State::InPath;
+            else
+                state = State::InHostname;
             continue;
         case State::InHostname:
             if (is_valid_hostname_character(peek())) {
@@ -120,9 +123,11 @@ String URL::to_string() const
     StringBuilder builder;
     builder.append(m_protocol);
     builder.append("://");
-    builder.append(m_host);
-    builder.append(':');
-    builder.append(String::number(m_port));
+    if (protocol() != "file") {
+        builder.append(m_host);
+        builder.append(':');
+        builder.append(String::number(m_port));
+    }
     builder.append(m_path);
     return builder.to_string();
 }
