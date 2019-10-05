@@ -12,6 +12,7 @@ LIBHTML_OBJS = \
     DOM/HTMLTitleElement.o \
     DOM/HTMLBodyElement.o \
     DOM/HTMLFontElement.o \
+    DOM/HTMLImageElement.o \
     DOM/Document.o \
     DOM/Text.o \
     CSS/Selector.o \
@@ -29,6 +30,8 @@ LIBHTML_OBJS = \
     Layout/LayoutBlock.o \
     Layout/LayoutInline.o \
     Layout/LayoutDocument.o \
+    Layout/LayoutReplaced.o \
+    Layout/LayoutImage.o \
     Layout/BoxModelMetrics.o \
     Layout/LineBox.o \
     Layout/LineBoxFragment.o \
