@@ -55,6 +55,8 @@ public:
     Color background_color() const;
 
 private:
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const override;
+
     OwnPtr<StyleResolver> m_style_resolver;
     NonnullRefPtrVector<StyleSheet> m_sheets;
     RefPtr<Node> m_hovered_node;

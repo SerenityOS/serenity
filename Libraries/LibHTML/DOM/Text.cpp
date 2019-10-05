@@ -10,3 +10,8 @@ Text::Text(Document& document, const String& data)
 Text::~Text()
 {
 }
+
+RefPtr<LayoutNode> Text::create_layout_node(const StyleResolver&, const StyleProperties*) const
+{
+    return adopt(*new LayoutText(*this));
+}
