@@ -125,3 +125,8 @@ URL Document::complete_url(const String& string) const
     url.set_path(fspath.string());
     return url;
 }
+
+RefPtr<LayoutNode> Document::create_layout_node(const StyleResolver&, const StyleProperties*) const
+{
+    return adopt(*new LayoutDocument(*this, StyleProperties::create()));
+}

@@ -45,6 +45,8 @@ public:
     virtual void apply_presentational_hints(StyleProperties&) const {}
 
 private:
+    RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const override;
+
     Attribute* find_attribute(const String& name);
     const Attribute* find_attribute(const String& name) const;
 
