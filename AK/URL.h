@@ -24,6 +24,11 @@ public:
     String path() const { return m_path; }
     u16 port() const { return m_port; }
 
+    void set_protocol(const String& protocol) { m_protocol = protocol; }
+    void set_host(const String& host) { m_host = host; }
+    void set_path(const String& path) { m_path = path; }
+    void set_port(u16 port) { m_port = port; }
+
     String to_string() const;
 
 private:
