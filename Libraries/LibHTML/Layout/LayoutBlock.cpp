@@ -200,7 +200,8 @@ void LayoutBlock::render(RenderingContext& context)
             3,
             3
         };
-        context.painter().fill_rect(bullet_rect, Color::Black);
+
+        context.painter().fill_rect(bullet_rect, style().color_or_fallback("color", Color::Black));
     }
 
     if (children_are_inline()) {
