@@ -61,6 +61,10 @@ int main(int argc, char** argv)
         html_widget->load(html_widget->document()->complete_url(url));
     };
 
+    html_widget->on_title_change = [&](auto& title) {
+        window->set_title(String::format("%s - Browser", title.characters()));
+    };
+
     auto focus_location_box_action = GAction::create("Focus location box", { Mod_Ctrl, Key_L }, [&](auto&) {
         location_box->select_all();
         location_box->set_focus(true);
