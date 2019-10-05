@@ -1,4 +1,5 @@
 #include <LibGUI/GPainter.h>
+#include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
@@ -15,7 +16,7 @@ LayoutBlock::~LayoutBlock()
 LayoutNode& LayoutBlock::inline_wrapper()
 {
     if (!last_child() || !last_child()->is_block() || last_child()->node() != nullptr) {
-        append_child(adopt(*new LayoutBlock(nullptr, StyleProperties::create())));
+        append_child(adopt(*new LayoutBlock(nullptr, style_for_anonymous_block())));
     }
     return *last_child();
 }
@@ -235,4 +236,16 @@ HitTestResult LayoutBlock::hit_test(const Point& position) const
         }
     }
     return {};
+}
+
+NonnullRefPtr<StyleProperties> LayoutBlock::style_for_anonymous_block() const
+{
+    auto new_style = StyleProperties::create();
+
+    style().for_each_property([&](auto& name, auto& value) {
+        if (StyleResolver::is_inherited_property(name))
+            new_style->set_property(name, value);
+    });
+
+    return new_style;
 }

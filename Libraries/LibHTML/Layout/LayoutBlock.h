@@ -27,6 +27,8 @@ public:
 private:
     virtual bool is_block() const override { return true; }
 
+    NonnullRefPtr<StyleProperties> style_for_anonymous_block() const;
+
     void layout_inline_children();
     void layout_block_children();
 
