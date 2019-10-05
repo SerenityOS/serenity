@@ -4,6 +4,7 @@
 LayoutInline::LayoutInline(const Node& node, RefPtr<StyleProperties> style_properties)
     : LayoutNode(&node, move(style_properties))
 {
+    set_inline(true);
 }
 
 LayoutInline::~LayoutInline()

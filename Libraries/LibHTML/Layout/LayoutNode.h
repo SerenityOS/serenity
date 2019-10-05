@@ -53,7 +53,9 @@ public:
     virtual const char* class_name() const { return "LayoutNode"; }
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }
-    virtual bool is_inline() const { return false; }
+
+    bool is_inline() const { return m_inline; }
+    void set_inline(bool b) { m_inline = b; }
 
     virtual void layout();
     virtual void render(RenderingContext&);
@@ -81,4 +83,5 @@ private:
     RefPtr<StyleProperties> m_style_properties;
     BoxModelMetrics m_style;
     Rect m_rect;
+    bool m_inline { false };
 };
