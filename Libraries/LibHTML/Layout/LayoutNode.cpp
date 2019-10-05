@@ -116,3 +116,14 @@ const Document& LayoutNode::document() const
         return parent()->document();
     return node()->document();
 }
+
+void LayoutNode::split_into_lines(LayoutBlock& container)
+{
+    for_each_child([&](auto& child) {
+        if (child.is_inline()) {
+            child.split_into_lines(container);
+        } else {
+            // FIXME: Support block children of inlines.
+        }
+    });
+}

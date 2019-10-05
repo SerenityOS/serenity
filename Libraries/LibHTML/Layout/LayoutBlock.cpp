@@ -50,7 +50,7 @@ void LayoutBlock::layout_inline_children()
     m_line_boxes.clear();
     for_each_child([&](auto& child) {
         ASSERT(child.is_inline());
-        static_cast<LayoutInline&>(child).split_into_lines(*this);
+        child.split_into_lines(*this);
     });
 
     int content_height = 0;
@@ -65,6 +65,9 @@ void LayoutBlock::layout_inline_children()
             // FIXME: Support other kinds of vertical alignment.
             fragment.rect().set_x(rect().x() + fragment.rect().x());
             fragment.rect().set_y(rect().y() + content_height + (max_height - fragment.rect().height()));
+
+            if (fragment.layout_node().is_replaced())
+                const_cast<LayoutNode&>(fragment.layout_node()).set_rect(fragment.rect());
         }
 
         content_height += max_height;
