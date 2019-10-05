@@ -110,13 +110,13 @@ int main(int argc, char* argv[])
         free(path);
     };
 
-    go_back_action = GAction::create("Go Back", { Mod_Alt, Key_Left }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-back.png"), [&](const GAction&) {
+    go_back_action = GCommonActions::make_go_back_action([&](auto&) {
         history.go_back();
         update_actions();
         open_page(history.current());
     });
 
-    go_forward_action = GAction::create("Go Forward", { Mod_Alt, Key_Right }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](const GAction&) {
+    go_forward_action = GCommonActions::make_go_forward_action([&](auto&) {
         history.go_forward();
         update_actions();
         open_page(history.current());
