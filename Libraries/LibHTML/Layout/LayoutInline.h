@@ -11,7 +11,5 @@ public:
 
     virtual const char* class_name() const override { return "LayoutInline"; }
 
-    virtual void split_into_lines(LayoutBlock& container);
-
 private:
 };

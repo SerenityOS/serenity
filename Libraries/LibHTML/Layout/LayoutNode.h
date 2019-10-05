@@ -12,6 +12,7 @@ class Document;
 class Element;
 class LayoutBlock;
 class LayoutNode;
+class LineBoxFragment;
 class Node;
 
 struct HitTestResult {
@@ -53,6 +54,7 @@ public:
     virtual const char* class_name() const { return "LayoutNode"; }
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }
+    virtual bool is_replaced() const { return false; }
 
     bool is_inline() const { return m_inline; }
     void set_inline(bool b) { m_inline = b; }
@@ -73,6 +75,8 @@ public:
 
     void inserted_into(LayoutNode&) {}
     void removed_from(LayoutNode&) {}
+
+    virtual void split_into_lines(LayoutBlock& container);
 
 protected:
     explicit LayoutNode(const Node*, RefPtr<StyleProperties>);

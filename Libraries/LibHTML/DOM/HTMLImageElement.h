@@ -9,4 +9,7 @@ public:
 
     String alt() const { return attribute("alt"); }
     String src() const { return attribute("src"); }
+
+private:
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
 };
