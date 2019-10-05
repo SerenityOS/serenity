@@ -78,7 +78,7 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
     return matching_rules;
 }
 
-static bool is_inherited_property(const StringView& name)
+bool StyleResolver::is_inherited_property(const StringView& name)
 {
     static HashTable<String> inherited_properties;
     if (inherited_properties.is_empty()) {

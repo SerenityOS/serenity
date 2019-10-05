@@ -22,6 +22,8 @@ public:
 
     NonnullRefPtrVector<StyleRule> collect_matching_rules(const Element&) const;
 
+    static bool is_inherited_property(const StringView&);
+
 private:
     template<typename Callback>
     void for_each_stylesheet(Callback) const;
