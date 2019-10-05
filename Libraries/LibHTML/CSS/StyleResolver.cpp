@@ -33,10 +33,31 @@ static bool matches(const Selector& selector, const Element& element)
     }
 }
 
+static StyleSheet& default_stylesheet()
+{
+    static StyleSheet* sheet;
+    if (!sheet) {
+        extern const char default_stylesheet_source[];
+        String css = default_stylesheet_source;
+        sheet = &parse_css(css).leak_ref();
+    }
+    return *sheet;
+}
+
+template<typename Callback>
+void StyleResolver::for_each_stylesheet(Callback callback) const
+{
+    callback(default_stylesheet());
+    for (auto& sheet : document().stylesheets()) {
+        callback(sheet);
+    }
+}
+
 NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Element& element) const
 {
     NonnullRefPtrVector<StyleRule> matching_rules;
-    for (auto& sheet : document().stylesheets()) {
+
+    for_each_stylesheet([&](auto& sheet) {
         for (auto& rule : sheet.rules()) {
             for (auto& selector : rule.selectors()) {
                 if (matches(selector, element)) {
@@ -45,7 +66,7 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
                 }
             }
         }
-    }
+    });
 
 #ifdef HTML_DEBUG
     dbgprintf("Rules matching Element{%p}\n", &element);
