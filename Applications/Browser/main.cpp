@@ -90,7 +90,7 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
-    html_widget->load("file:///home/anon/www/phint.html");
+    html_widget->load("file:///home/anon/www/welcome.html");
 
     return app.exec();
 }
