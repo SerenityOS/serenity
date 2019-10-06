@@ -44,11 +44,16 @@ void Element::set_attribute(const String& name, const String& value)
         attribute->set_value(value);
     else
         m_attributes.empend(name, value);
+
+    parse_attribute(name, value);
 }
 
 void Element::set_attributes(Vector<Attribute>&& attributes)
 {
     m_attributes = move(attributes);
+
+    for (auto& attribute : m_attributes)
+        parse_attribute(attribute.name(), attribute.value());
 }
 
 bool Element::has_class(const StringView& class_name) const
@@ -79,4 +84,8 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleResolver& resolver, co
         return adopt(*new LayoutInline(*this, move(style_properties)));
 
     ASSERT_NOT_REACHED();
+}
+
+void Element::parse_attribute(const String&, const String&)
+{
 }
