@@ -81,7 +81,8 @@ void StyleProperties::load_font() const
 
     if (file_name.is_null()) {
         dbg() << "Failed to find a font for family " << font_family << " weight " << font_weight;
-        ASSERT_NOT_REACHED();
+        m_font = Font::default_font();
+        return;
     }
 
 #ifdef HTML_DEBUG
