@@ -95,7 +95,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     });
     toolbar->add_action(*open_parent_directory_action);
 
-    auto go_home_action = GAction::create("Go to Home Directory", GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), [this](auto&) {
+    auto go_home_action = GCommonActions::make_go_home_action([this](auto&) {
         m_model->open(get_current_user_home_path());
     });
     toolbar->add_action(go_home_action);

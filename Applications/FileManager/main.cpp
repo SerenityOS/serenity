@@ -257,7 +257,7 @@ int main(int argc, char** argv)
         directory_view->open_next_directory();
     });
 
-    auto go_home_action = GAction::create("Go to Home Directory", GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), [&](auto&) {
+    auto go_home_action = GCommonActions::make_go_home_action([&](auto&) {
         directory_view->open(get_current_user_home_path());
     });
 
