@@ -29,6 +29,32 @@ void HTMLImageElement::load_image(const String& src)
     }
 }
 
+int HTMLImageElement::preferred_width() const
+{
+    bool ok = false;
+    int width = attribute("width").to_int(ok);
+    if (ok)
+        return width;
+
+    if (m_bitmap)
+        return m_bitmap->width();
+
+    return 0;
+}
+
+int HTMLImageElement::preferred_height() const
+{
+    bool ok = false;
+    int height = attribute("height").to_int(ok);
+    if (ok)
+        return height;
+
+    if (m_bitmap)
+        return m_bitmap->height();
+
+    return 0;
+}
+
 RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleResolver& resolver, const StyleProperties* parent_style) const
 {
     auto style = resolver.resolve_style(*this, parent_style);

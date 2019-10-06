@@ -14,7 +14,10 @@ LayoutImage::~LayoutImage()
 
 void LayoutImage::layout()
 {
-    if (renders_as_alt_text()) {
+    if (node().preferred_width() && node().preferred_height()) {
+        rect().set_width(node().preferred_width());
+        rect().set_height(node().preferred_height());
+    } else if (renders_as_alt_text()) {
         auto& font = Font::default_font();
         auto alt = node().alt();
         if (alt.is_empty())
@@ -22,8 +25,8 @@ void LayoutImage::layout()
         rect().set_width(font.width(alt) + 16);
         rect().set_height(font.glyph_height() + 16);
     } else {
-        rect().set_width(node().bitmap()->width());
-        rect().set_height(node().bitmap()->height());
+        rect().set_width(16);
+        rect().set_height(16);
     }
 
     LayoutReplaced::layout();
