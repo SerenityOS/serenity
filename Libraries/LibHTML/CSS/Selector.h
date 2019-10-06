@@ -18,6 +18,7 @@ public:
         enum class Relation {
             None,
             ImmediateChild,
+            Descendant,
         };
         Relation relation { Relation::None };
 

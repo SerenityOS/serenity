@@ -88,7 +88,7 @@ public:
     {
         consume_whitespace();
         Selector::Component::Type type;
-        Selector::Component::Relation relation = Selector::Component::Relation::None;
+        Selector::Component::Relation relation = Selector::Component::Relation::Descendant;
 
         if (peek() == '{')
             return {};
@@ -148,6 +148,10 @@ public:
             if (peek() == ',' || peek() == '{')
                 break;
         }
+
+        if (components.is_empty())
+            return;
+        components.first().relation = Selector::Component::Relation::None;
 
         current_rule.selectors.append(Selector(move(components)));
     };
