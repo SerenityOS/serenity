@@ -93,7 +93,7 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     auto& painter = context.painter();
     painter.set_font(*m_font);
 
-    auto color = style().color_or_fallback("color", Color::Black);
+    auto color = style().color_or_fallback("color", document(), Color::Black);
     auto text_decoration = style().string_or_fallback("text-decoration", "none");
 
     bool is_underline = text_decoration == "underline";
