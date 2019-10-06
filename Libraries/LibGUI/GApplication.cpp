@@ -23,6 +23,10 @@ GApplication::GApplication(int argc, char** argv)
     s_the = this;
     m_event_loop = make<CEventLoop>();
     GWindowServerConnection::the();
+    if (argc > 0)
+        m_invoked_as = argv[0];
+    for (int i = 1; i < argc; i++)
+        m_args.append(argv[i]);
 }
 
 GApplication::~GApplication()

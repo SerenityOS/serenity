@@ -35,6 +35,9 @@ public:
 
     void did_delete_last_window(Badge<GWindow>);
 
+    const String& invoked_as() const { return m_invoked_as; }
+    const Vector<String>& args() const { return m_args; }
+
 private:
     OwnPtr<CEventLoop> m_event_loop;
     OwnPtr<GMenuBar> m_menubar;
@@ -42,4 +45,6 @@ private:
     class TooltipWindow;
     TooltipWindow* m_tooltip_window { nullptr };
     bool m_quit_when_last_window_deleted { true };
+    String m_invoked_as;
+    Vector<String> m_args;
 };
