@@ -20,6 +20,8 @@
 #include <LibHTML/Parser/HTMLParser.h>
 #include <stdio.h>
 
+static const char* home_url = "file:///home/anon/www/welcome.html";
+
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
@@ -43,7 +45,11 @@ int main(int argc, char** argv)
         // FIXME: Implement forward action
     }));
 
-    toolbar->add_action(GAction::create("Reload", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/reload.png"), [&](auto&) {
+    toolbar->add_action(GCommonActions::make_go_home_action([&](auto&) {
+        html_widget->load(home_url);
+    }));
+
+    toolbar->add_action(GCommonActions::make_reload_action([&](auto&) {
         html_widget->reload();
     }));
 
@@ -94,7 +100,7 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
-    String url_to_load = "file:///home/anon/www/welcome.html";
+    String url_to_load = home_url;
 
     if (app.args().size() >= 1)
         url_to_load = app.args()[0];
