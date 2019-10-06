@@ -50,6 +50,9 @@ public:
     template<typename T>
     const T* first_child_of_type() const;
 
+    template<typename T>
+    const T* first_ancestor_of_type() const;
+
     virtual void inserted_into(Node&) {}
     virtual void removed_from(Node&) {}
 
@@ -127,6 +130,16 @@ inline const T* Node::first_child_of_type() const
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<T>(*child))
             return to<T>(child);
+    }
+    return nullptr;
+}
+
+template<typename T>
+inline const T* Node::first_ancestor_of_type() const
+{
+    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (is<T>(*ancestor))
+            return to<T>(ancestor);
     }
     return nullptr;
 }
