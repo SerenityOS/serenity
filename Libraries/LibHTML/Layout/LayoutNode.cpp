@@ -55,7 +55,7 @@ void LayoutNode::render(RenderingContext& context)
 
     auto bgcolor = style().property("background-color");
     if (bgcolor.has_value() && bgcolor.value()->is_color()) {
-        context.painter().fill_rect(padded_rect, bgcolor.value()->to_color());
+        context.painter().fill_rect(padded_rect, bgcolor.value()->to_color(document()));
     }
 
     auto border_width_value = style().property("border-width");
@@ -63,7 +63,7 @@ void LayoutNode::render(RenderingContext& context)
     auto border_style_value = style().property("border-style");
     if (border_width_value.has_value() && border_color_value.has_value()) {
         int border_width = border_width_value.value()->to_length().to_px();
-        Color border_color = border_color_value.value()->to_color();
+        Color border_color = border_color_value.value()->to_color(document());
 
         if (border_style_value.has_value() && border_style_value.value()->to_string() == "inset") {
             // border-style: inset

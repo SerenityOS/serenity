@@ -86,7 +86,7 @@ li {
 }
 
 a {
-    color: #0000ff;
+    color: -libhtml-link;
     text-decoration: underline;
 }
 

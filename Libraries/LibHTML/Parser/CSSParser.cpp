@@ -41,6 +41,9 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
     if (color.has_value())
         return ColorStyleValue::create(color.value());
 
+    if (string == "-libhtml-link")
+        return IdentifierStyleValue::create(CSS::ValueID::VendorSpecificLink);
+
     return StringStyleValue::create(string);
 }
 

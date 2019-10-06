@@ -7,6 +7,15 @@
 #include <LibDraw/Color.h>
 #include <LibHTML/CSS/Length.h>
 
+class Document;
+
+namespace CSS {
+enum class ValueID {
+    Invalid,
+    VendorSpecificLink,
+};
+}
+
 class StyleValue : public RefCounted<StyleValue> {
 public:
     virtual ~StyleValue();
@@ -18,6 +27,7 @@ public:
         String,
         Length,
         Color,
+        Identifier,
     };
 
     Type type() const { return m_type; }
@@ -25,10 +35,11 @@ public:
     bool is_inherit() const { return type() == Type::Inherit; }
     bool is_initial() const { return type() == Type::Initial; }
     bool is_color() const { return type() == Type::Color; }
+    bool is_identifier() const { return type() == Type::Identifier; }
 
     virtual String to_string() const = 0;
     virtual Length to_length() const { return {}; }
-    virtual Color to_color() const { return {}; }
+    virtual Color to_color(const Document&) const { return {}; }
 
     virtual bool is_auto() const { return false; }
 
@@ -122,7 +133,7 @@ public:
 
     Color color() const { return m_color; }
     String to_string() const override { return m_color.to_string(); }
-    Color to_color() const override { return m_color; }
+    Color to_color(const Document&) const override { return m_color; }
 
 private:
     explicit ColorStyleValue(Color color)
@@ -132,4 +143,27 @@ private:
     }
 
     Color m_color;
+};
+
+class IdentifierStyleValue final : public StyleValue {
+public:
+    static NonnullRefPtr<IdentifierStyleValue> create(CSS::ValueID id)
+    {
+        return adopt(*new IdentifierStyleValue(id));
+    }
+    virtual ~IdentifierStyleValue() override {}
+
+    CSS::ValueID id() const { return m_id; }
+
+    virtual String to_string() const override;
+    virtual Color to_color(const Document&) const override;
+
+private:
+    explicit IdentifierStyleValue(CSS::ValueID id)
+        : StyleValue(Type::Identifier)
+        , m_id(id)
+    {
+    }
+
+    CSS::ValueID m_id { CSS::ValueID::Invalid };
 };

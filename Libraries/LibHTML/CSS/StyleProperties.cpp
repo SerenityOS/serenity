@@ -29,12 +29,10 @@ String StyleProperties::string_or_fallback(const StringView& property_name, cons
     return value.value()->to_string();
 }
 
-Color StyleProperties::color_or_fallback(const StringView& property_name, Color fallback) const
+Color StyleProperties::color_or_fallback(const StringView& property_name, const Document& document, Color fallback) const
 {
     auto value = property(property_name);
     if (!value.has_value())
         return fallback;
-    if (value.value()->type() != StyleValue::Type::Color)
-        return fallback;
-    return static_cast<ColorStyleValue&>(*value.value()).color();
+    return value.value()->to_color(document);
 }
