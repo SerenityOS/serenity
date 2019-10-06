@@ -14,6 +14,7 @@ enum class NodeType : unsigned {
 };
 
 class Document;
+class Element;
 class HTMLElement;
 class HTMLAnchorElement;
 class ParentNode;
@@ -62,6 +63,9 @@ public:
     LayoutNode* layout_node() { return m_layout_node; }
 
     void set_layout_node(Badge<LayoutNode>, LayoutNode* layout_node) const { m_layout_node = layout_node; }
+
+    const Element* previous_element_sibling() const;
+    const Element* next_element_sibling() const;
 
 protected:
     Node(Document&, NodeType);
