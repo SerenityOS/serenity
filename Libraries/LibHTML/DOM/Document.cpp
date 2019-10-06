@@ -99,7 +99,7 @@ Color Document::background_color() const
     if (!background_color.has_value() || !background_color.value()->is_color())
         return Color::White;
 
-    return background_color.value()->to_color();
+    return background_color.value()->to_color(*this);
 }
 
 URL Document::complete_url(const String& string) const
@@ -129,4 +129,19 @@ URL Document::complete_url(const String& string) const
 RefPtr<LayoutNode> Document::create_layout_node(const StyleResolver&, const StyleProperties*) const
 {
     return adopt(*new LayoutDocument(*this, StyleProperties::create()));
+}
+
+void Document::set_link_color(Color color)
+{
+    m_link_color = color;
+}
+
+void Document::set_active_link_color(Color color)
+{
+    m_active_link_color = color;
+}
+
+void Document::set_visited_link_color(Color color)
+{
+    m_visited_link_color = color;
 }

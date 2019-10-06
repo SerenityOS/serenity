@@ -54,6 +54,15 @@ public:
 
     Color background_color() const;
 
+    Color link_color() const { return m_link_color; }
+    void set_link_color(Color);
+
+    Color active_link_color() const { return m_active_link_color; }
+    void set_active_link_color(Color);
+
+    Color visited_link_color() const { return m_visited_link_color; }
+    void set_visited_link_color(Color);
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const override;
 
@@ -62,4 +71,8 @@ private:
     RefPtr<Node> m_hovered_node;
     WeakPtr<Frame> m_frame;
     URL m_url;
+
+    Color m_link_color { Color::Blue };
+    Color m_active_link_color { Color::Red };
+    Color m_visited_link_color { Color::Magenta };
 };
