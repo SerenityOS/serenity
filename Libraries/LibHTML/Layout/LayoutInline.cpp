@@ -1,8 +1,9 @@
+#include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
 
-LayoutInline::LayoutInline(const Node& node, RefPtr<StyleProperties> style_properties)
-    : LayoutNode(&node, move(style_properties))
+LayoutInline::LayoutInline(const Element& element, NonnullRefPtr<StyleProperties> style)
+    : LayoutNode(&element, move(style))
 {
     set_inline(true);
 }

@@ -6,7 +6,7 @@ class LayoutBlock;
 
 class LayoutInline : public LayoutNode {
 public:
-    LayoutInline(const Node&, RefPtr<StyleProperties>);
+    LayoutInline(const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutInline() override;
 
     virtual const char* class_name() const override { return "LayoutInline"; }
