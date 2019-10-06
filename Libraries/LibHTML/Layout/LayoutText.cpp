@@ -8,8 +8,9 @@
 #include <ctype.h>
 
 LayoutText::LayoutText(const Text& text)
-    : LayoutInline(text, {})
+    : LayoutNode(&text, {})
 {
+    set_inline(true);
 }
 
 LayoutText::~LayoutText()
