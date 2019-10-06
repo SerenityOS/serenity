@@ -91,6 +91,8 @@ a {
 }
 
 hr {
+    margin-top: 4;
+    margin-bottom: 4;
     border-width: 1;
     border-color: #888888;
     border-style: inset;
