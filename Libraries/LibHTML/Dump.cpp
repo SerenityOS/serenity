@@ -148,7 +148,15 @@ void dump_rule(const StyleRule& rule)
                 type_description = "TagName";
                 break;
             }
-            dbgprintf("    %s:%s\n", type_description, component.value.characters());
+            const char* relation_description = "";
+            switch (component.relation) {
+            case Selector::Component::Relation::None:
+                break;
+            case Selector::Component::Relation::ImmediateChild:
+                relation_description = "{ImmediateChild}";
+                break;
+            }
+            dbgprintf("    %s:%s %s\n", type_description, component.value.characters(), relation_description);
         }
     }
     dbgprintf("  Declarations:\n");

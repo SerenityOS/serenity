@@ -3,6 +3,13 @@
 #include <ctype.h>
 #include <stdio.h>
 
+#define PARSE_ASSERT(x) \
+    if (!(x)) { \
+        dbg() << "CSS PARSER ASSERTION FAILED: " << #x; \
+        dbg() << "At character# " << index << " in CSS: _" << css << "_"; \
+        ASSERT_NOT_REACHED(); \
+    }
+
 static Optional<Color> parse_css_color(const StringView& view)
 {
     auto color = Color::from_string(view);
@@ -53,7 +60,7 @@ public:
 
     char consume_specific(char ch)
     {
-        ASSERT(peek() == ch);
+        PARSE_ASSERT(peek() == ch);
         ++index;
         return ch;
     }
@@ -71,13 +78,23 @@ public:
 
     bool is_valid_selector_char(char ch) const
     {
-        return isalnum(ch) || ch == '-' || ch == '_';
+        return isalnum(ch) || ch == '-' || ch == '_' || ch == '(' || ch == ')' || ch == '@';
     }
 
-    void parse_selector()
+    Optional<Selector::Component> parse_selector_component()
     {
         consume_whitespace();
         Selector::Component::Type type;
+        Selector::Component::Relation relation = Selector::Component::Relation::None;
+
+        if (peek() == '{')
+            return {};
+
+        if (peek() == '>') {
+            relation = Selector::Component::Relation::ImmediateChild;
+            consume_one();
+            consume_whitespace();
+        }
 
         if (peek() == '.') {
             type = Selector::Component::Type::Class;
@@ -92,13 +109,43 @@ public:
         while (is_valid_selector_char(peek()))
             buffer.append(consume_one());
 
-        ASSERT(!buffer.is_null());
-
-        auto component_string = String::copy(buffer);
-
-        Vector<Selector::Component> components;
-        components.append({ type, component_string });
+        PARSE_ASSERT(!buffer.is_null());
+        Selector::Component component { type, relation, String::copy(buffer) };
         buffer.clear();
+
+        if (peek() == '[') {
+            // FIXME: Implement attribute selectors.
+            while (peek() != ']') {
+                consume_one();
+            }
+            consume_one();
+        }
+
+        if (peek() == ':') {
+            // FIXME: Implement pseudo stuff.
+            consume_one();
+            if (peek() == ':')
+                consume_one();
+            while (is_valid_selector_char(peek()))
+                consume_one();
+        }
+
+        return component;
+    }
+
+    void parse_selector()
+    {
+        Vector<Selector::Component> components;
+
+        for (;;) {
+            auto component = parse_selector_component();
+            if (component.has_value())
+                components.append(component.value());
+            consume_whitespace();
+            if (peek() == ',' || peek() == '{')
+                break;
+        }
+
         current_rule.selectors.append(Selector(move(components)));
     };
 
@@ -123,12 +170,16 @@ public:
 
     bool is_valid_property_value_char(char ch) const
     {
-        return !isspace(ch) && ch != ';';
+        return ch != '!' && ch != ';';
     }
 
-    void parse_property()
+    Optional<StyleProperty> parse_property()
     {
         consume_whitespace();
+        if (peek() == ';') {
+            consume_one();
+            return {};
+        }
         buffer.clear();
         while (is_valid_property_name_char(peek()))
             buffer.append(consume_one());
@@ -141,14 +192,32 @@ public:
             buffer.append(consume_one());
         auto property_value = String::copy(buffer);
         buffer.clear();
+        consume_whitespace();
+        bool is_important = false;
+        if (peek() == '!') {
+            consume_specific('!');
+            consume_specific('i');
+            consume_specific('m');
+            consume_specific('p');
+            consume_specific('o');
+            consume_specific('r');
+            consume_specific('t');
+            consume_specific('a');
+            consume_specific('n');
+            consume_specific('t');
+            consume_whitespace();
+            is_important = true;
+        }
         consume_specific(';');
-        current_rule.properties.append({ property_name, parse_css_value(property_value) });
+        return StyleProperty { property_name, parse_css_value(property_value), is_important };
     }
 
     void parse_declaration()
     {
         for (;;) {
-            parse_property();
+            auto property = parse_property();
+            if (property.has_value())
+                current_rule.properties.append(property.value());
             consume_whitespace();
             if (peek() == '}')
                 break;

@@ -11,9 +11,16 @@ public:
             Invalid,
             TagName,
             Id,
-            Class
+            Class,
         };
         Type type { Type::Invalid };
+
+        enum class Relation {
+            None,
+            ImmediateChild,
+        };
+        Relation relation { Relation::None };
+
         String value;
     };
 

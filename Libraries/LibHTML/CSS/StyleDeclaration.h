@@ -6,6 +6,7 @@
 struct StyleProperty {
     String name;
     NonnullRefPtr<StyleValue> value;
+    bool important { false };
 };
 
 class StyleDeclaration : public RefCounted<StyleDeclaration> {
