@@ -34,9 +34,10 @@ static bool matches(const Selector& selector, int component_index, const Element
     auto& component = selector.components()[component_index];
     if (!matches(component, element))
         return false;
-    if (component.relation == Selector::Component::Relation::None)
+    switch (component.relation) {
+    case Selector::Component::Relation::None:
         return true;
-    if (component.relation == Selector::Component::Relation::Descendant) {
+    case Selector::Component::Relation::Descendant:
         ASSERT(component_index != 0);
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
             if (!ancestor->is_element())
@@ -45,6 +46,11 @@ static bool matches(const Selector& selector, int component_index, const Element
                 return true;
         }
         return false;
+    case Selector::Component::Relation::ImmediateChild:
+        ASSERT(component_index != 0);
+        if (!element.parent() || !element.parent()->is_element())
+            return false;
+        return matches(selector, component_index - 1, static_cast<const Element&>(*element.parent()));
     }
     ASSERT_NOT_REACHED();
 }
