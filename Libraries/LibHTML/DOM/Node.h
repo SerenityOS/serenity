@@ -47,14 +47,8 @@ public:
 
     virtual bool is_html_element() const { return false; }
 
-    const Node* first_child_with_tag_name(const StringView& tag_name) const
-    {
-        for (auto* child = first_child(); child; child = child->next_sibling()) {
-            if (child->tag_name() == tag_name)
-                return child;
-        }
-        return nullptr;
-    }
+    template<typename T>
+    const T* first_child_of_type() const;
 
     virtual void inserted_into(Node&) {}
     virtual void removed_from(Node&) {}
@@ -107,8 +101,32 @@ inline const T& to(const Node& node)
 }
 
 template<typename T>
+inline T* to(Node* node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<T*>(node);
+}
+
+template<typename T>
+inline const T* to(const Node* node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<const T*>(node);
+}
+
+template<typename T>
 inline T& to(Node& node)
 {
     ASSERT(is<T>(node));
     return static_cast<T&>(node);
+}
+
+template<typename T>
+inline const T* Node::first_child_of_type() const
+{
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        if (is<T>(*child))
+            return to<T>(child);
+    }
+    return nullptr;
 }
