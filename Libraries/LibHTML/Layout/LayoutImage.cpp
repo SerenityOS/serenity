@@ -16,7 +16,10 @@ void LayoutImage::layout()
 {
     if (renders_as_alt_text()) {
         auto& font = Font::default_font();
-        rect().set_width(font.width(node().alt()) + 16);
+        auto alt = node().alt();
+        if (alt.is_empty())
+            alt = node().src();
+        rect().set_width(font.width(alt) + 16);
         rect().set_height(font.glyph_height() + 16);
     } else {
         rect().set_width(node().bitmap()->width());
@@ -31,7 +34,10 @@ void LayoutImage::render(RenderingContext& context)
     if (renders_as_alt_text()) {
         context.painter().set_font(Font::default_font());
         StylePainter::paint_frame(context.painter(), rect(), FrameShape::Container, FrameShadow::Sunken, 2);
-        context.painter().draw_text(rect(), node().alt(), TextAlignment::Center, Color::White);
+        auto alt = node().alt();
+        if (alt.is_empty())
+            alt = node().src();
+        context.painter().draw_text(rect(), alt, TextAlignment::Center, Color::White);
     } else {
         context.painter().draw_scaled_bitmap(rect(), *node().bitmap(), node().bitmap()->rect());
     }
