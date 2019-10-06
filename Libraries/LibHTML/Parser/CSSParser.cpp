@@ -215,7 +215,9 @@ public:
             consume_whitespace();
             is_important = true;
         }
-        consume_specific(';');
+        if (peek() != '}')
+            consume_specific(';');
+
         return StyleProperty { property_name, parse_css_value(property_value), is_important };
     }
 
@@ -254,7 +256,9 @@ public:
     {
         consume_whitespace();
         for (;;) {
-            parse_property();
+            auto property = parse_property();
+            if (property.has_value())
+                current_rule.properties.append(property.value());
             consume_whitespace();
             if (!peek())
                 break;
