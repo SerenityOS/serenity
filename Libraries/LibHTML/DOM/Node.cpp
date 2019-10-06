@@ -56,16 +56,12 @@ RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const
 
 const HTMLAnchorElement* Node::enclosing_link_element() const
 {
-    if (is<HTMLAnchorElement>(*this))
-        return static_cast<const HTMLAnchorElement*>(this);
-    return parent() ? parent()->enclosing_link_element() : nullptr;
+    return first_ancestor_of_type<HTMLAnchorElement>();
 }
 
 const HTMLElement* Node::enclosing_html_element() const
 {
-    if (is_html_element())
-        return static_cast<const HTMLElement*>(this);
-    return parent() ? parent()->enclosing_html_element() : nullptr;
+    return first_ancestor_of_type<HTMLElement>();
 }
 
 String Node::text_content() const
