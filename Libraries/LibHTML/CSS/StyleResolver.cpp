@@ -15,12 +15,8 @@ StyleResolver::~StyleResolver()
 {
 }
 
-static bool matches(const Selector& selector, const Element& element)
+static bool matches(const Selector::Component& component, const Element& element)
 {
-    // FIXME: Support compound selectors.
-    ASSERT(selector.components().size() == 1);
-
-    auto& component = selector.components().first();
     switch (component.type) {
     case Selector::Component::Type::Id:
         return component.value == element.attribute("id");
@@ -31,6 +27,32 @@ static bool matches(const Selector& selector, const Element& element)
     default:
         ASSERT_NOT_REACHED();
     }
+}
+
+static bool matches(const Selector& selector, int component_index, const Element& element)
+{
+    auto& component = selector.components()[component_index];
+    if (!matches(component, element))
+        return false;
+    if (component.relation == Selector::Component::Relation::None)
+        return true;
+    if (component.relation == Selector::Component::Relation::Descendant) {
+        ASSERT(component_index != 0);
+        for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
+            if (!ancestor->is_element())
+                continue;
+            if (matches(selector, component_index - 1, static_cast<const Element&>(*ancestor)))
+                return true;
+        }
+        return false;
+    }
+    ASSERT_NOT_REACHED();
+}
+
+static bool matches(const Selector& selector, const Element& element)
+{
+    ASSERT(!selector.components().is_empty());
+    return matches(selector, selector.components().size() - 1, element);
 }
 
 static StyleSheet& default_stylesheet()

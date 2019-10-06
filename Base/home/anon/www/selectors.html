@@ -1,0 +1,32 @@
+<html>
+<head>
+<title>Selector test</title>
+<style>
+#foo #bar #baz {
+    background-color: #00ff00;
+}
+.abc .def div {
+    background-color: #ffffff;
+    border-style: solid;
+    border-width: 1;
+    border-color: #00ff00;
+}
+</style>
+</head>
+<body>
+    <div id="foo">
+        <div id="bar">
+            <div id="baz">
+                I should have a green background.
+            </div>
+        </div>
+    </div>
+    <div class="abc">
+        <div class="def">
+            <div>hello</div>
+            <div>hello</div>
+            <div>hello</div>
+        </div>
+    </div>
+</body>
+</html>
