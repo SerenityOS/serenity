@@ -40,17 +40,17 @@ static bool matches(const Selector& selector, int component_index, const Element
     case Selector::Component::Relation::Descendant:
         ASSERT(component_index != 0);
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
-            if (!ancestor->is_element())
+            if (!is<Element>(*ancestor))
                 continue;
-            if (matches(selector, component_index - 1, static_cast<const Element&>(*ancestor)))
+            if (matches(selector, component_index - 1, to<Element>(*ancestor)))
                 return true;
         }
         return false;
     case Selector::Component::Relation::ImmediateChild:
         ASSERT(component_index != 0);
-        if (!element.parent() || !element.parent()->is_element())
+        if (!element.parent() || !is<Element>(*element.parent()))
             return false;
-        return matches(selector, component_index - 1, static_cast<const Element&>(*element.parent()));
+        return matches(selector, component_index - 1, to<Element>(*element.parent()));
     case Selector::Component::Relation::AdjacentSibling:
         ASSERT(component_index != 0);
         if (auto* sibling = element.previous_element_sibling())

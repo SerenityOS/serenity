@@ -12,3 +12,9 @@ public:
 private:
     virtual bool is_html_element() const final { return true; }
 };
+
+template<>
+inline bool is<HTMLElement>(const Node& node)
+{
+    return node.is_html_element();
+}

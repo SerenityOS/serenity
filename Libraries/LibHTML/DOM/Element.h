@@ -26,7 +26,7 @@ public:
     Element(Document&, const String& tag_name);
     virtual ~Element() override;
 
-    virtual String tag_name() const override { return m_tag_name; }
+    virtual String tag_name() const final { return m_tag_name; }
 
     String attribute(const String& name) const;
     void set_attribute(const String& name, const String& value);
@@ -54,3 +54,9 @@ private:
     String m_tag_name;
     Vector<Attribute> m_attributes;
 };
+
+template<>
+inline bool is<Element>(const Node& node)
+{
+    return node.is_element();
+}

@@ -6,7 +6,7 @@ public:
     LayoutReplaced(const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutReplaced() override;
 
-    const Element& node() const { return static_cast<const Element&>(*LayoutNode::node()); }
+    const Element& node() const { return to<Element>(*LayoutNode::node()); }
 
     virtual bool is_replaced() const final { return true; }
 

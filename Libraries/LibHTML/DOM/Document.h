@@ -80,3 +80,9 @@ private:
     Color m_active_link_color { Color::Red };
     Color m_visited_link_color { Color::Magenta };
 };
+
+template<>
+inline bool is<Document>(const Node& node)
+{
+    return node.is_document();
+}
