@@ -43,6 +43,7 @@ public:
     bool has_class(const StringView&) const;
 
     virtual void apply_presentational_hints(StyleProperties&) const {}
+    virtual void parse_attribute(const String& name, const String& value);
 
 private:
     RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const override;
