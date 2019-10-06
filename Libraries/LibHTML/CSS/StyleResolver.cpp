@@ -51,6 +51,18 @@ static bool matches(const Selector& selector, int component_index, const Element
         if (!element.parent() || !element.parent()->is_element())
             return false;
         return matches(selector, component_index - 1, static_cast<const Element&>(*element.parent()));
+    case Selector::Component::Relation::AdjacentSibling:
+        ASSERT(component_index != 0);
+        if (auto* sibling = element.previous_element_sibling())
+            return matches(selector, component_index - 1, *sibling);
+        return false;
+    case Selector::Component::Relation::GeneralSibling:
+        ASSERT(component_index != 0);
+        for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
+            if (matches(selector, component_index - 1, *sibling))
+                return true;
+        }
+        return false;
     }
     ASSERT_NOT_REACHED();
 }

@@ -158,6 +158,12 @@ void dump_rule(const StyleRule& rule)
             case Selector::Component::Relation::Descendant:
                 relation_description = "{Descendant}";
                 break;
+            case Selector::Component::Relation::AdjacentSibling:
+                relation_description = "{AdjacentSibling}";
+                break;
+            case Selector::Component::Relation::GeneralSibling:
+                relation_description = "{GeneralSibling}";
+                break;
             }
             dbgprintf("    %s:%s %s\n", type_description, component.value.characters(), relation_description);
         }

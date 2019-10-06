@@ -15,6 +15,11 @@ div > .boo > .bee {
     background-color: #000000;
     color: #ff00ff;
 }
+#gen_sib ~ div,
+#adj_sib + div {
+    background-color: #0000ff;
+    color: #ffffff;
+}
 </style>
 </head>
 <body>
@@ -45,5 +50,16 @@ div > .boo > .bee {
                 </div>
             </div>
         </div>
+    </div>
+    <div>
+        <div id="gen_sib">All the siblings of this &lt;div&gt; should be blue.</div>
+        <div>First sibling (should be blue)</div>
+        <div>Second sibling (should be blue)</div>
+    </div>
+    <div>
+        <div id="adj_sib">The first sibling of this &lt;div&gt; should be blue.</div>
+        <div>First sibling (should be blue)</div>
+        <div>Second sibling (should not be blue)</div>
+    </div>
 </body>
 </html>

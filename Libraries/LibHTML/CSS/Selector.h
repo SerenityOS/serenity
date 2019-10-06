@@ -19,6 +19,8 @@ public:
             None,
             ImmediateChild,
             Descendant,
+            AdjacentSibling,
+            GeneralSibling,
         };
         Relation relation { Relation::None };
 
