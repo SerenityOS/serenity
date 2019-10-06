@@ -1,12 +1,12 @@
 #pragma once
 
 #include <LibHTML/DOM/Text.h>
-#include <LibHTML/Layout/LayoutInline.h>
+#include <LibHTML/Layout/LayoutNode.h>
 
 class Font;
 class LineBoxFragment;
 
-class LayoutText : public LayoutInline {
+class LayoutText : public LayoutNode {
 public:
     explicit LayoutText(const Text&);
     virtual ~LayoutText() override;
