@@ -17,59 +17,6 @@ LayoutText::~LayoutText()
 {
 }
 
-void LayoutText::load_font()
-{
-    auto font_family = style().string_or_fallback("font-family", "Katica");
-    auto font_weight = style().string_or_fallback("font-weight", "normal");
-
-    String weight;
-    if (font_weight == "lighter")
-        weight = "Thin";
-    else if (font_weight == "normal")
-        weight = "";
-    else if (font_weight == "bold")
-        weight = "Bold";
-    else
-        ASSERT_NOT_REACHED();
-
-    auto look_for_file = [](const StringView& expected_name) -> String {
-        // TODO: handle font sizes properly?
-        CDirIterator it { "/res/fonts/", CDirIterator::Flags::SkipDots };
-        while (it.has_next()) {
-            String name = it.next_path();
-            ASSERT(name.ends_with(".font"));
-            if (!name.starts_with(expected_name))
-                continue;
-
-            // Check that a numeric size immediately
-            // follows the font name. This prevents,
-            // for example, matching KaticaBold when
-            // the regular Katica is requested.
-            if (!isdigit(name[expected_name.length()]))
-                continue;
-
-            return name;
-        }
-        return {};
-    };
-
-    String file_name = look_for_file(String::format("%s%s", font_family.characters(), weight.characters()));
-    if (file_name.is_null() && weight == "")
-        file_name = look_for_file(String::format("%sRegular", font_family.characters()));
-
-    if (file_name.is_null()) {
-        dbg() << "Failed to find a font for family " << font_family << " weight " << font_weight;
-        dbg() << "My text is " << node().data();
-        ASSERT_NOT_REACHED();
-    }
-
-#ifdef HTML_DEBUG
-    dbg() << "Found font " << file_name << " for family " << font_family << " weight " << font_weight;
-#endif
-
-    m_font = Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
-}
-
 static bool is_all_whitespace(const String& string)
 {
     for (int i = 0; i < string.length(); ++i) {
@@ -92,7 +39,7 @@ const String& LayoutText::text_for_style(const StyleProperties& style) const
 void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragment& fragment) const
 {
     auto& painter = context.painter();
-    painter.set_font(*m_font);
+    painter.set_font(style().font());
 
     auto color = style().color_or_fallback("color", document(), Color::Black);
     auto text_decoration = style().string_or_fallback("text-decoration", "none");
@@ -174,12 +121,10 @@ void LayoutText::for_each_source_line(Callback callback) const
 
 void LayoutText::split_into_lines(LayoutBlock& container)
 {
-    if (!m_font)
-        load_font();
-
-    int space_width = m_font->glyph_width(' ') + m_font->glyph_spacing();
+    auto& font = style().font();
+    int space_width = font.glyph_width(' ') + font.glyph_spacing();
     // FIXME: Allow overriding the line-height. We currently default to 140% which seems to look nice.
-    int line_height = (int)(m_font->glyph_height() * 1.4f);
+    int line_height = (int)(font.glyph_height() * 1.4f);
 
     auto& line_boxes = container.line_boxes();
     if (line_boxes.is_empty())
@@ -189,7 +134,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
     bool is_preformatted = style().string_or_fallback("white-space", "normal") == "pre";
     if (is_preformatted) {
         for_each_source_line([&](const Utf8View& view, int start, int length) {
-            line_boxes.last().add_fragment(*this, start, length, m_font->width(view), line_height);
+            line_boxes.last().add_fragment(*this, start, length, font.width(view), line_height);
             line_boxes.append(LineBox());
         });
         return;
@@ -215,7 +160,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         if (is_whitespace)
             word_width = space_width;
         else
-            word_width = m_font->width(word.view) + m_font->glyph_spacing();
+            word_width = font.width(word.view) + font.glyph_spacing();
 
         if (word_width > available_width) {
             line_boxes.append(LineBox());
