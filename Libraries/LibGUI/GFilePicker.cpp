@@ -30,10 +30,10 @@ Optional<String> GFilePicker::get_open_filepath()
 
 Optional<String> GFilePicker::get_save_filepath(const String& title, const String& extension)
 {
-    GFilePicker picker(Mode::Save, String::format("%s.%s", title.characters(), extension.characters()));
+    auto picker = GFilePicker::construct(Mode::Save, String::format("%s.%s", title.characters(), extension.characters()));
 
-    if (picker.exec() == GDialog::ExecOK) {
-        String file_path = picker.selected_file().string();
+    if (picker->exec() == GDialog::ExecOK) {
+        String file_path = picker->selected_file().string();
 
         if (file_path.is_null())
             return {};
