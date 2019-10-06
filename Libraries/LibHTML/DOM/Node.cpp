@@ -56,7 +56,7 @@ RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const
 
 const HTMLAnchorElement* Node::enclosing_link_element() const
 {
-    if (is_element() && tag_name().to_lowercase() == "a")
+    if (is<HTMLAnchorElement>(*this))
         return static_cast<const HTMLAnchorElement*>(this);
     return parent() ? parent()->enclosing_link_element() : nullptr;
 }

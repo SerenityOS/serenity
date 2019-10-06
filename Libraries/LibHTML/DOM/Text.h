@@ -19,3 +19,9 @@ private:
 
     String m_data;
 };
+
+template<>
+inline bool is<Text>(const Node& node)
+{
+    return node.is_text();
+}

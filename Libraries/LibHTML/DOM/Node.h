@@ -74,3 +74,41 @@ protected:
     mutable LayoutNode* m_layout_node { nullptr };
     NodeType m_type { NodeType::INVALID };
 };
+
+template<typename T>
+inline bool is(const Node&)
+{
+    return false;
+}
+
+template<typename T>
+inline bool is(const Node* node)
+{
+    return node && is<T>(*node);
+}
+
+template<>
+inline bool is<Node>(const Node&)
+{
+    return true;
+}
+
+template<>
+inline bool is<ParentNode>(const Node& node)
+{
+    return node.is_parent_node();
+}
+
+template<typename T>
+inline const T& to(const Node& node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<const T&>(node);
+}
+
+template<typename T>
+inline T& to(Node& node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<T&>(node);
+}

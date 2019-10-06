@@ -29,11 +29,8 @@ StyleResolver& Document::style_resolver()
 
 void Document::normalize()
 {
-    if (first_child() != nullptr && first_child()->is_element()) {
-        const Element& el = static_cast<const Element&>(*first_child());
-        if (el.tag_name() == "html")
-            return;
-    }
+    if (is<HTMLHtmlElement>(first_child()))
+        return;
 
     NonnullRefPtr<Element> body = adopt(*new Element(*this, "body"));
     NonnullRefPtr<Element> html = adopt(*new Element(*this, "html"));

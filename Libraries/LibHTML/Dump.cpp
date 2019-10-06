@@ -14,19 +14,19 @@ void dump_tree(const Node& node)
     static int indent = 0;
     for (int i = 0; i < indent; ++i)
         dbgprintf("  ");
-    if (node.is_document()) {
+    if (is<Document>(node)) {
         dbgprintf("*Document*\n");
-    } else if (node.is_element()) {
-        dbgprintf("<%s", static_cast<const Element&>(node).tag_name().characters());
-        static_cast<const Element&>(node).for_each_attribute([](auto& name, auto& value) {
+    } else if (is<Element>(node)) {
+        dbgprintf("<%s", to<Element>(node).tag_name().characters());
+        to<Element>(node).for_each_attribute([](auto& name, auto& value) {
             dbgprintf(" %s=%s", name.characters(), value.characters());
         });
         dbgprintf(">\n");
-    } else if (node.is_text()) {
+    } else if (is<Text>(node)) {
         dbgprintf("\"%s\"\n", static_cast<const Text&>(node).data().characters());
     }
     ++indent;
-    if (node.is_parent_node()) {
+    if (is<ParentNode>(node)) {
         static_cast<const ParentNode&>(node).for_each_child([](auto& child) {
             dump_tree(child);
         });
@@ -43,12 +43,12 @@ void dump_tree(const LayoutNode& layout_node)
     String tag_name;
     if (layout_node.is_anonymous())
         tag_name = "(anonymous)";
-    else if (layout_node.node()->is_text())
+    else if (is<Text>(layout_node.node()))
         tag_name = "#text";
-    else if (layout_node.node()->is_document())
+    else if (is<Document>(layout_node.node()))
         tag_name = "#document";
-    else if (layout_node.node()->is_element())
-        tag_name = static_cast<const Element&>(*layout_node.node()).tag_name();
+    else if (is<Element>(layout_node.node()))
+        tag_name = to<Element>(*layout_node.node()).tag_name();
     else
         tag_name = "???";
 
