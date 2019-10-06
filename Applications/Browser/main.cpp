@@ -94,7 +94,12 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
-    html_widget->load("file:///home/anon/www/welcome.html");
+    String url_to_load = "file:///home/anon/www/welcome.html";
+
+    if (app.args().size() >= 1)
+        url_to_load = app.args()[0];
+
+    html_widget->load(url_to_load);
 
     return app.exec();
 }
