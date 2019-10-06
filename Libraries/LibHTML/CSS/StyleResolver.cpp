@@ -106,7 +106,7 @@ bool StyleResolver::is_inherited_property(const StringView& name)
 
         // FIXME: This property is not supposed to be inherited, but we currently
         //        rely on inheritance to propagate decorations into line boxes.
-        inherited_properties.set("text-decoraton");
+        inherited_properties.set("text-decoration");
     }
     return inherited_properties.contains(name);
 }
