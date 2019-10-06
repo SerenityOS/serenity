@@ -72,11 +72,12 @@ static bool is_self_closing_tag(const String& tag_name)
         || tag_name == "wbr";
 }
 
-NonnullRefPtr<Document> parse_html(const String& html)
+NonnullRefPtr<Document> parse_html(const String& html, const URL& url)
 {
     NonnullRefPtrVector<ParentNode> node_stack;
 
     auto document = adopt(*new Document);
+    document->set_url(url);
     node_stack.append(document);
 
     enum class State {
