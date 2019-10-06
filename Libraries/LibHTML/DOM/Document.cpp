@@ -126,6 +126,12 @@ URL Document::complete_url(const String& string) const
     return url;
 }
 
+void Document::invalidate_layout()
+{
+    if (on_invalidate_layout)
+        on_invalidate_layout();
+}
+
 RefPtr<LayoutNode> Document::create_layout_node(const StyleResolver&, const StyleProperties*) const
 {
     return adopt(*new LayoutDocument(*this, StyleProperties::create()));

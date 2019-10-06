@@ -31,7 +31,12 @@ void HtmlView::set_document(Document* document)
 {
     if (document == m_document)
         return;
+
+    if (m_document)
+        m_document->on_invalidate_layout = nullptr;
+
     m_document = document;
+    m_document->on_invalidate_layout = [this]() { layout_and_sync_size(); };
 
     main_frame().set_document(document);
 
