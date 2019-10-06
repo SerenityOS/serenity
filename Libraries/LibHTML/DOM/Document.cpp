@@ -41,7 +41,7 @@ void Document::normalize()
 
 const HTMLHtmlElement* Document::document_element() const
 {
-    return static_cast<const HTMLHtmlElement*>(first_child_with_tag_name("html"));
+    return first_child_of_type<HTMLHtmlElement>();
 }
 
 const HTMLHeadElement* Document::head() const
@@ -49,7 +49,7 @@ const HTMLHeadElement* Document::head() const
     auto* html = document_element();
     if (!html)
         return nullptr;
-    return static_cast<const HTMLHeadElement*>(html->first_child_with_tag_name("head"));
+    return html->first_child_of_type<HTMLHeadElement>();
 }
 
 const HTMLBodyElement* Document::body() const
@@ -57,7 +57,7 @@ const HTMLBodyElement* Document::body() const
     auto* html = document_element();
     if (!html)
         return nullptr;
-    return static_cast<const HTMLBodyElement*>(html->first_child_with_tag_name("body"));
+    return html->first_child_of_type<HTMLBodyElement>();
 }
 
 String Document::title() const
@@ -66,7 +66,7 @@ String Document::title() const
     if (!head_element)
         return {};
 
-    auto* title_element = static_cast<const HTMLTitleElement*>(head_element->first_child_with_tag_name("title"));
+    auto* title_element = head_element->first_child_of_type<HTMLTitleElement>();
     if (!title_element)
         return {};
 

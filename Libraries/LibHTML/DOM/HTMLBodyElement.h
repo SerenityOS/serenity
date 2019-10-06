@@ -10,3 +10,9 @@ public:
     virtual void parse_attribute(const String&, const String&) override;
     virtual void apply_presentational_hints(StyleProperties&) const override;
 };
+
+template<>
+inline bool is<HTMLBodyElement>(const Node& node)
+{
+    return is<Element>(node) && to<Element>(node).tag_name().to_lowercase() == "body";
+}
