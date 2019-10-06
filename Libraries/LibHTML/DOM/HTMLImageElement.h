@@ -12,6 +12,8 @@ public:
 
     String alt() const { return attribute("alt"); }
     String src() const { return attribute("src"); }
+    int preferred_width() const;
+    int preferred_height() const;
 
     const GraphicsBitmap* bitmap() const;
 
