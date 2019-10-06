@@ -87,10 +87,38 @@ Optional<Color> Color::from_string(const StringView& string)
     if (string.is_empty())
         return {};
 
-    if (string[0] != '#')
-        return {};
+    struct ColorAndWebName {
+        RGBA32 color;
+        const char* name;
+    };
 
-    if (string.length() != 7 && string.length() != 9)
+    const ColorAndWebName web_colors[] = {
+        { 0x800000, "maroon", },
+        { 0xff0000, "red", },
+        { 0xffa500, "orange" },
+        { 0xffff00, "yellow" },
+        { 0x808000, "olive" },
+        { 0x800080, "purple" },
+        { 0xff00ff, "fuchsia" },
+        { 0xffffff, "white" },
+        { 0x00ff00, "lime" },
+        { 0x008000, "green" },
+        { 0x000080, "navy" },
+        { 0x0000ff, "blue" },
+        { 0x00ffff, "aqua" },
+        { 0x008080, "teal" },
+        { 0x000000, "black" },
+        { 0xc0c0c0, "silver" },
+        { 0x808080, "gray" },
+        { 0x000000, nullptr }
+    };
+
+    for (size_t i = 0; web_colors[i].name; ++i) {
+        if (string == web_colors[i].name)
+            return Color::from_rgb(web_colors[i].color);
+    }
+
+    if (string[0] != '#')
         return {};
 
     auto hex_nibble_to_u8 = [](char nibble) -> Optional<u8> {
@@ -100,6 +128,18 @@ Optional<Color> Color::from_string(const StringView& string)
             return nibble - '0';
         return 10 + (tolower(nibble) - 'a');
     };
+
+    if (string.length() == 4) {
+        Optional<u8> r = hex_nibble_to_u8(string[1]);
+        Optional<u8> g = hex_nibble_to_u8(string[2]);
+        Optional<u8> b = hex_nibble_to_u8(string[3]);
+        if (!r.has_value() || !g.has_value() || !b.has_value())
+            return {};
+        return Color(r.value() * 17, g.value() * 17, b.value() * 17);
+    }
+
+    if (string.length() != 7 && string.length() != 9)
+        return {};
 
     auto to_hex = [&](char c1, char c2) -> Optional<u8> {
         auto nib1 = hex_nibble_to_u8(c1);
