@@ -2,6 +2,7 @@
 
 #include <AK/HashMap.h>
 #include <AK/NonnullRefPtr.h>
+#include <LibDraw/Font.h>
 #include <LibHTML/CSS/StyleValue.h>
 
 class Color;
@@ -24,6 +25,17 @@ public:
     String string_or_fallback(const StringView& property_name, const StringView& fallback) const;
     Color color_or_fallback(const StringView& property_name, const Document&, Color fallback) const;
 
+    const Font& font() const
+    {
+        if (!m_font)
+            load_font();
+        return *m_font;
+    }
+
 private:
     HashMap<String, NonnullRefPtr<StyleValue>> m_property_values;
+
+    void load_font() const;
+
+    mutable RefPtr<Font> m_font;
 };

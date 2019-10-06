@@ -3,7 +3,6 @@
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
-class Font;
 class LineBoxFragment;
 
 class LayoutText : public LayoutNode {
@@ -29,8 +28,4 @@ private:
     void for_each_word(Callback) const;
     template<typename Callback>
     void for_each_source_line(Callback) const;
-
-    void load_font();
-
-    RefPtr<Font> m_font;
 };
