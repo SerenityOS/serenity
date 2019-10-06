@@ -84,6 +84,11 @@ public:
         return isalnum(ch) || ch == '-' || ch == '_' || ch == '(' || ch == ')' || ch == '@';
     }
 
+    bool is_combinator(char ch) const
+    {
+        return ch == '~' || ch == '>' || ch == '+';
+    }
+
     Optional<Selector::Component> parse_selector_component()
     {
         consume_whitespace();
@@ -93,8 +98,18 @@ public:
         if (peek() == '{')
             return {};
 
-        if (peek() == '>') {
-            relation = Selector::Component::Relation::ImmediateChild;
+        if (is_combinator(peek())) {
+            switch (peek()) {
+            case '>':
+                relation = Selector::Component::Relation::ImmediateChild;
+                break;
+            case '+':
+                relation = Selector::Component::Relation::AdjacentSibling;
+                break;
+            case '~':
+                relation = Selector::Component::Relation::GeneralSibling;
+                break;
+            }
             consume_one();
             consume_whitespace();
         }
