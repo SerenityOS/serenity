@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/String.h>
@@ -62,6 +63,9 @@ public:
 
     Color visited_link_color() const { return m_visited_link_color; }
     void set_visited_link_color(Color);
+
+    void invalidate_layout();
+    Function<void()> on_invalidate_layout;
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const override;
