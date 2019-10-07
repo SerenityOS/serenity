@@ -55,7 +55,7 @@ void DirectoryView::handle_activation(const GModelIndex& index)
 
     if (path.to_lowercase().ends_with(".html")) {
         if (fork() == 0) {
-            int rc = execl("/bin/html", "/bin/html", path.characters(), nullptr);
+            int rc = execl("/bin/Browser", "/bin/Browser", path.characters(), nullptr);
             if (rc < 0)
                 perror("exec");
             ASSERT_NOT_REACHED();
