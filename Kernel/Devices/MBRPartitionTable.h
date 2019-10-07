@@ -42,7 +42,6 @@ public:
 private:
     NonnullRefPtr<DiskDevice> m_device;
 
-    ByteBuffer read_header() const;
     const MBRPartitionHeader& header() const;
 
     u8 m_cached_header[512];
