@@ -342,10 +342,23 @@ int main(int argc, char** argv)
         delete_action->set_enabled(!view.selection().is_empty());
     };
 
+    auto open_in_text_editor_action = GAction::create("Open in TextEditor...", GraphicsBitmap::load_from_file("/res/icons/TextEditor16.png"), [&](auto&) {
+        for (auto& path : selected_file_paths()) {
+            if (!fork()) {
+                int rc = execl("/bin/TextEditor", "TextEditor", path.characters(), nullptr);
+                if (rc < 0)
+                    perror("execl");
+                exit(1);
+            }
+        }
+    });
+
     auto context_menu = make<GMenu>();
     context_menu->add_action(copy_action);
     context_menu->add_action(paste_action);
     context_menu->add_action(delete_action);
+    context_menu->add_separator();
+    context_menu->add_action(open_in_text_editor_action);
     context_menu->add_separator();
     context_menu->add_action(properties_action);
 
