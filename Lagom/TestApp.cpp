@@ -6,7 +6,7 @@ int main(int, char**)
 {
     CEventLoop event_loop;
 
-    CTimer timer(100, [&] {
+    auto timer = CTimer::construct(100, [&] {
         dbg() << "Timer fired, good-bye! :^)";
         event_loop.quit(0);
     });
