@@ -4,7 +4,7 @@
 
 class LayoutBlock;
 
-class LayoutInline : public LayoutNode {
+class LayoutInline : public LayoutNodeWithStyle {
 public:
     LayoutInline(const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutInline() override;

@@ -1,7 +1,7 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
-class LayoutReplaced : public LayoutNode {
+class LayoutReplaced : public LayoutNodeWithStyle {
 public:
     LayoutReplaced(const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutReplaced() override;

@@ -5,7 +5,7 @@
 
 class Element;
 
-class LayoutBlock : public LayoutNode {
+class LayoutBlock : public LayoutNodeWithStyle {
 public:
     LayoutBlock(const Node*, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutBlock() override;

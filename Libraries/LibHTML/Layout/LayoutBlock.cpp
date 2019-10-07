@@ -5,7 +5,7 @@
 #include <LibHTML/Layout/LayoutInline.h>
 
 LayoutBlock::LayoutBlock(const Node* node, NonnullRefPtr<StyleProperties> style)
-    : LayoutNode(node, move(style))
+    : LayoutNodeWithStyle(node, move(style))
 {
 }
 
