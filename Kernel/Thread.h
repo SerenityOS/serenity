@@ -273,6 +273,7 @@ public:
     void set_selector(u16 s) { m_far_ptr.selector = s; }
     void set_state(State);
 
+    void send_urgent_signal_to_self(u8 signal);
     void send_signal(u8 signal, Process* sender);
     void consider_unblock(time_t now_sec, long now_usec);
 
@@ -283,6 +284,7 @@ public:
     bool has_unmasked_pending_signals() const;
     void terminate_due_to_signal(u8 signal);
     bool should_ignore_signal(u8 signal) const;
+    bool has_signal_handler(u8 signal) const;
 
     FPUState& fpu_state() { return *m_fpu_state; }
     bool has_used_fpu() const { return m_has_used_fpu; }
