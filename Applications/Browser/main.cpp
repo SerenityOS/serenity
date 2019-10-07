@@ -100,10 +100,13 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
-    String url_to_load = home_url;
+    URL url_to_load = home_url;
 
-    if (app.args().size() >= 1)
-        url_to_load = app.args()[0];
+    if (app.args().size() >= 1) {
+        url_to_load = URL();
+        url_to_load.set_protocol("file");
+        url_to_load.set_path(app.args()[0]);
+    }
 
     html_widget->load(url_to_load);
 
