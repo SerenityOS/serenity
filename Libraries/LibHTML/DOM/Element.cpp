@@ -69,19 +69,19 @@ bool Element::has_class(const StringView& class_name) const
     return false;
 }
 
-RefPtr<LayoutNode> Element::create_layout_node(const StyleResolver& resolver, const StyleProperties* parent_properties) const
+RefPtr<LayoutNode> Element::create_layout_node(const StyleResolver& resolver, const StyleProperties* parent_style) const
 {
-    auto style_properties = resolver.resolve_style(*this, parent_properties);
+    auto style = resolver.resolve_style(*this, parent_style);
 
-    auto display_property = style_properties->property("display");
+    auto display_property = style->property("display");
     String display = display_property.has_value() ? display_property.release_value()->to_string() : "inline";
 
     if (display == "none")
         return nullptr;
     if (display == "block" || display == "list-item")
-        return adopt(*new LayoutBlock(this, move(style_properties)));
+        return adopt(*new LayoutBlock(this, move(style)));
     if (display == "inline")
-        return adopt(*new LayoutInline(*this, move(style_properties)));
+        return adopt(*new LayoutInline(*this, move(style)));
 
     ASSERT_NOT_REACHED();
 }

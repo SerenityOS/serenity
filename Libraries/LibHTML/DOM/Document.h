@@ -68,7 +68,7 @@ public:
     Function<void()> on_invalidate_layout;
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
 
     OwnPtr<StyleResolver> m_style_resolver;
     NonnullRefPtrVector<StyleSheet> m_sheets;

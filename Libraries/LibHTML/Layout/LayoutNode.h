@@ -27,8 +27,8 @@ public:
     Rect& rect() { return m_rect; }
     void set_rect(const Rect& rect) { m_rect = rect; }
 
-    BoxModelMetrics& box_model() { return m_style; }
-    const BoxModelMetrics& box_model() const { return m_style; }
+    BoxModelMetrics& box_model() { return m_box_metrics; }
+    const BoxModelMetrics& box_model() const { return m_box_metrics; }
 
     virtual HitTestResult hit_test(const Point&) const;
 
@@ -68,8 +68,8 @@ public:
 
     const StyleProperties& style() const
     {
-        if (m_style_properties)
-            return *m_style_properties;
+        if (m_style)
+            return *m_style;
         return parent()->style();
     }
 
@@ -84,8 +84,8 @@ protected:
 private:
     const Node* m_node { nullptr };
 
-    RefPtr<StyleProperties> m_style_properties;
-    BoxModelMetrics m_style;
+    RefPtr<StyleProperties> m_style;
+    BoxModelMetrics m_box_metrics;
     Rect m_rect;
     bool m_inline { false };
 };

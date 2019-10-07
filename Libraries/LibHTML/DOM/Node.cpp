@@ -19,9 +19,9 @@ Node::~Node()
 {
 }
 
-RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const StyleProperties* parent_properties) const
+RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const StyleProperties* parent_style) const
 {
-    auto layout_node = create_layout_node(resolver, parent_properties);
+    auto layout_node = create_layout_node(resolver, parent_style);
     if (!layout_node)
         return nullptr;
 
@@ -45,7 +45,7 @@ RefPtr<LayoutNode> Node::create_layout_tree(const StyleResolver& resolver, const
 
     for (auto layout_child : layout_children)
         if (have_block_children && have_inline_children && !layout_child->is_block()) {
-            if (layout_child->is_text() && static_cast<const LayoutText&>(*layout_child).text_for_style(*parent_properties) == " ")
+            if (layout_child->is_text() && static_cast<const LayoutText&>(*layout_child).text_for_style(*parent_style) == " ")
                 continue;
             layout_node->inline_wrapper().append_child(*layout_child);
         } else {

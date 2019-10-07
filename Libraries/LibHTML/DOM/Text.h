@@ -15,7 +15,7 @@ public:
     virtual String text_content() const override { return m_data; }
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_properties) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
 
     String m_data;
 };
