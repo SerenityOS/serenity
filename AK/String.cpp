@@ -184,17 +184,21 @@ unsigned String::to_uint(bool& ok) const
     return value;
 }
 
-String String::number(size_t value)
+String String::number(u64 value)
 {
-    return String::format("%zu", value);
+#ifdef __serenity__
+    return String::format("%Q", value);
+#else
+    return String::format("%llu", value);
+#endif
 }
 
-String String::number(unsigned value)
+String String::number(u32 value)
 {
     return String::format("%u", value);
 }
 
-String String::number(int value)
+String String::number(i32 value)
 {
     return String::format("%d", value);
 }

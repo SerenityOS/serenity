@@ -194,9 +194,16 @@ public:
     }
 
     static String format(const char*, ...);
-    static String number(size_t);
-    static String number(unsigned);
-    static String number(int);
+    static String number(u64);
+    static String number(u32);
+    static String number(i32);
+
+#ifdef __serenity__
+    static String number(size_t n)
+    {
+        return number((u32)n);
+    }
+#endif
 
     StringView view() const { return { characters(), length() }; }
 
