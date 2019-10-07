@@ -262,6 +262,11 @@ void exception_14_handler(RegisterDump& regs)
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
 
     if (response == PageFaultResponse::ShouldCrash) {
+	    if(current->has_signal_handler(SIGSEGV)){
+	        current->send_urgent_signal_to_self(SIGSEGV);
+	       	return;
+	    }
+
         kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s address %p\033[0m\n",
             current->process().name().characters(),
             current->pid(),
