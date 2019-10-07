@@ -37,6 +37,11 @@ bool MBRPartitionTable::initialize()
     return true;
 }
 
+bool MBRPartitionTable::is_protective_mbr() const
+{
+    return header().entry[0].type == MBR_PROTECTIVE;
+}
+
 RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
 {
     ASSERT(index >= 1 && index <= 4);
@@ -55,7 +60,7 @@ RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
 
     if (entry.offset == 0x00) {
 #ifdef MBR_DEBUG
-    kprintf("MBRPartitionTable::partition: missing partition requested index=%d\n", index);
+        kprintf("MBRPartitionTable::partition: missing partition requested index=%d\n", index);
 #endif
 
         return nullptr;
@@ -65,5 +70,5 @@ RefPtr<DiskPartition> MBRPartitionTable::partition(unsigned index)
     kprintf("MBRPartitionTable::partition: found partition index=%d type=%x\n", index, entry.type);
 #endif
 
-    return DiskPartition::create(m_device, entry.offset);
+    return DiskPartition::create(m_device, entry.offset, (entry.offset + entry.length));
 }

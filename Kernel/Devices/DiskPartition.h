@@ -5,7 +5,7 @@
 
 class DiskPartition final : public DiskDevice {
 public:
-    static NonnullRefPtr<DiskPartition> create(DiskDevice&, unsigned block_offset);
+    static NonnullRefPtr<DiskPartition> create(DiskDevice&, unsigned block_offset, unsigned block_limit);
     virtual ~DiskPartition();
 
     virtual bool read_block(unsigned index, u8* out) const override;
@@ -22,8 +22,9 @@ public:
 private:
     virtual const char* class_name() const override;
 
-    DiskPartition(DiskDevice&, unsigned block_offset);
+    DiskPartition(DiskDevice&, unsigned block_offset, unsigned block_limit);
 
     NonnullRefPtr<DiskDevice> m_device;
     unsigned m_block_offset;
+    unsigned m_block_limit;
 };
