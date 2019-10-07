@@ -246,6 +246,23 @@ void Thread::send_signal(u8 signal, Process* sender)
     m_pending_signals |= 1 << (signal - 1);
 }
 
+// Certain exceptions, such as SIGSEGV and SIGILL, put a
+// thread into a state where the signal handler must be
+// invoked immediately, otherwise it will continue to fault.
+// This function should be used in an exception handler to
+// ensure that when the thread resumes, it's executing in
+// the appropriate signal handler.
+void Thread::send_urgent_signal_to_self(u8 signal)
+{
+    // FIXME: because of a bug in dispatch_signal we can't
+    // setup a signal while we are the current thread. Because of
+    // this we use a work-around where we send the signal and then
+    // block, allowing the scheduler to properly dispatch the signal
+    // before the thread is next run.
+    send_signal(signal, &process());
+    (void)block<SemiPermanentBlocker>(SemiPermanentBlocker::Reason::Signal);
+}
+
 bool Thread::has_unmasked_pending_signals() const
 {
     return m_pending_signals & ~m_signal_mask;
@@ -328,6 +345,13 @@ bool Thread::should_ignore_signal(u8 signal) const
     if (action.handler_or_sigaction.as_ptr() == SIG_IGN)
         return true;
     return false;
+}
+
+bool Thread::has_signal_handler(u8 signal) const
+{
+    ASSERT(signal < 32);
+    auto& action = m_signal_action_data[signal];
+    return !action.handler_or_sigaction.is_null();
 }
 
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
