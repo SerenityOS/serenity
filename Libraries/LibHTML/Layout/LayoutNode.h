@@ -12,6 +12,7 @@ class Document;
 class Element;
 class LayoutBlock;
 class LayoutNode;
+class LayoutNodeWithStyle;
 class LineBoxFragment;
 class Node;
 
@@ -66,12 +67,9 @@ public:
 
     virtual LayoutNode& inline_wrapper() { return *this; }
 
-    const StyleProperties& style() const
-    {
-        if (m_style)
-            return *m_style;
-        return parent()->style();
-    }
+    const StyleProperties& style() const;
+
+    const LayoutNodeWithStyle* parent() const;
 
     void inserted_into(LayoutNode&) {}
     void removed_from(LayoutNode&) {}
@@ -79,13 +77,45 @@ public:
     virtual void split_into_lines(LayoutBlock& container);
 
 protected:
-    explicit LayoutNode(const Node*, RefPtr<StyleProperties>);
+    explicit LayoutNode(const Node*);
 
 private:
+    friend class LayoutNodeWithStyle;
+
     const Node* m_node { nullptr };
 
-    RefPtr<StyleProperties> m_style;
     BoxModelMetrics m_box_metrics;
     Rect m_rect;
     bool m_inline { false };
+    bool m_has_style { false };
 };
+
+class LayoutNodeWithStyle : public LayoutNode {
+public:
+    virtual ~LayoutNodeWithStyle() override {}
+
+    const StyleProperties& style() const { return m_style; }
+
+protected:
+    explicit LayoutNodeWithStyle(const Node* node, NonnullRefPtr<StyleProperties> style)
+        : LayoutNode(node)
+        , m_style(move(style))
+    {
+        m_has_style = true;
+    }
+
+private:
+    NonnullRefPtr<StyleProperties> m_style;
+};
+
+inline const StyleProperties& LayoutNode::style() const
+{
+    if (m_has_style)
+        return static_cast<const LayoutNodeWithStyle*>(this)->style();
+    return parent()->style();
+}
+
+inline const LayoutNodeWithStyle* LayoutNode::parent() const
+{
+    return static_cast<const LayoutNodeWithStyle*>(TreeNode<LayoutNode>::parent());
+}
