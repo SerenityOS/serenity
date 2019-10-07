@@ -53,3 +53,29 @@ RefPtr<CTCPSocket> CTCPServer::accept()
 
     return CTCPSocket::construct(accepted_fd);
 }
+
+IPv4Address CTCPServer::local_address()
+{
+    if (m_fd == -1)
+        return {};
+
+    sockaddr_in address;
+    socklen_t len = sizeof(address);
+    if (getsockname(m_fd, (sockaddr*)&address, &len) != 0)
+        return 0;
+
+    return IPv4Address(address.sin_addr.s_addr);
+}
+
+u16 CTCPServer::local_port()
+{
+    if (m_fd == -1)
+        return 0;
+
+    sockaddr_in address;
+    socklen_t len = sizeof(address);
+    if (getsockname(m_fd, (sockaddr*)&address, &len) != 0)
+        return 0;
+
+    return ntohs(address.sin_port);
+}
