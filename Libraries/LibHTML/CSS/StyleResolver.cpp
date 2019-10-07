@@ -151,23 +151,23 @@ bool StyleResolver::is_inherited_property(const StringView& name)
     return inherited_properties.contains(name);
 }
 
-NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_properties) const
+NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_style) const
 {
-    auto style_properties = StyleProperties::create();
+    auto style = StyleProperties::create();
 
-    if (parent_properties) {
-        parent_properties->for_each_property([&](const StringView& name, auto& value) {
+    if (parent_style) {
+        parent_style->for_each_property([&](const StringView& name, auto& value) {
             if (is_inherited_property(name))
-                style_properties->set_property(name, value);
+                style->set_property(name, value);
         });
     }
 
-    element.apply_presentational_hints(*style_properties);
+    element.apply_presentational_hints(*style);
 
     auto matching_rules = collect_matching_rules(element);
     for (auto& rule : matching_rules) {
         for (auto& property : rule.declaration().properties()) {
-            style_properties->set_property(property.name, property.value);
+            style->set_property(property.name, property.value);
         }
     }
 
@@ -175,10 +175,10 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     if (!style_attribute.is_null()) {
         if (auto declaration = parse_css_declaration(style_attribute)) {
             for (auto& property : declaration->properties()) {
-                style_properties->set_property(property.name, property.value);
+                style->set_property(property.name, property.value);
             }
         }
     }
 
-    return style_properties;
+    return style;
 }
