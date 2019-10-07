@@ -6,6 +6,7 @@
 #include <Kernel/Devices/DiskPartition.h>
 
 #define MBR_SIGNATURE 0xaa55
+#define MBR_PROTECTIVE 0xEE
 
 struct MBRPartitionEntry {
     u8 status;
@@ -35,6 +36,7 @@ public:
     ~MBRPartitionTable();
 
     bool initialize();
+    bool is_protective_mbr() const;
     RefPtr<DiskPartition> partition(unsigned index);
 
 private:

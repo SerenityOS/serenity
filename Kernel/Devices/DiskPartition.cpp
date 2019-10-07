@@ -2,15 +2,16 @@
 
 // #define OFFD_DEBUG
 
-NonnullRefPtr<DiskPartition> DiskPartition::create(DiskDevice& device, unsigned block_offset)
+NonnullRefPtr<DiskPartition> DiskPartition::create(DiskDevice& device, unsigned block_offset, unsigned block_limit)
 {
-    return adopt(*new DiskPartition(device, block_offset));
+    return adopt(*new DiskPartition(device, block_offset, block_limit));
 }
 
-DiskPartition::DiskPartition(DiskDevice& device, unsigned block_offset)
+DiskPartition::DiskPartition(DiskDevice& device, unsigned block_offset, unsigned block_limit)
     : DiskDevice(100, 0, device.block_size())
     , m_device(device)
     , m_block_offset(block_offset)
+    , m_block_limit(block_limit)
 {
 }
 

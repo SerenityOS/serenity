@@ -81,6 +81,7 @@ VFS_OBJS = \
     Devices/DebugLogDevice.o \
     Devices/DiskPartition.o \
     Devices/MBRPartitionTable.o \
+    Devices/GPTPartitionTable.o \
     FileSystem/InodeWatcher.o \
     FileSystem/FileSystem.o \
     FileSystem/DiskBackedFileSystem.o \

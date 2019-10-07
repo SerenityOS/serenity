@@ -14,6 +14,7 @@
 #include <Kernel/Devices/DiskPartition.h>
 #include <Kernel/Devices/FloppyDiskDevice.h>
 #include <Kernel/Devices/FullDevice.h>
+#include <Kernel/Devices/GPTPartitionTable.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/MBRPartitionTable.h>
 #include <Kernel/Devices/MBVGADevice.h>
@@ -96,18 +97,34 @@ VFS* vfs;
         }
 
         MBRPartitionTable mbr(root_dev);
+
         if (!mbr.initialize()) {
             kprintf("init_stage2: couldn't read MBR from disk\n");
             hang();
         }
 
-        auto partition = mbr.partition(partition_number);
-        if (!partition) {
-            kprintf("init_stage2: couldn't get partition %d\n", partition_number);
-            hang();
+        if (mbr.is_protective_mbr()) {
+            dbgprintf("GPT Partitioned Storage Detected!\n");
+            GPTPartitionTable gpt(root_dev);
+            if (!gpt.initialize()) {
+                kprintf("init_stage2: couldn't read GPT from disk\n");
+                hang();
+            }
+            auto partition = gpt.partition(partition_number);
+            if (!partition) {
+                kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+                hang();
+            }
+            root_dev = *partition;
+        } else {
+            dbgprintf("MBR Partitioned Storage Detected!\n");
+            auto partition = mbr.partition(partition_number);
+            if (!partition) {
+                kprintf("init_stage2: couldn't get partition %d\n", partition_number);
+                hang();
+            }
+            root_dev = *partition;
         }
-
-        root_dev = *partition;
     }
 
     auto e2fs = Ext2FS::create(root_dev);
