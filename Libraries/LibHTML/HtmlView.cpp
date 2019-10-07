@@ -36,11 +36,14 @@ void HtmlView::set_document(Document* document)
         m_document->on_invalidate_layout = nullptr;
 
     m_document = document;
-    m_document->on_invalidate_layout = [this]() {
-        m_layout_root = m_document->create_layout_tree(m_document->style_resolver(), nullptr);
-        layout_and_sync_size();
-        update();
-    };
+
+    if (m_document) {
+        m_document->on_invalidate_layout = [this]() {
+            m_layout_root = m_document->create_layout_tree(m_document->style_resolver(), nullptr);
+            layout_and_sync_size();
+            update();
+        };
+    }
 
     main_frame().set_document(document);
 
