@@ -13,6 +13,7 @@ LIBHTML_OBJS = \
     DOM/HTMLBodyElement.o \
     DOM/HTMLFontElement.o \
     DOM/HTMLImageElement.o \
+    DOM/HTMLLinkElement.o \
     DOM/Document.o \
     DOM/Text.o \
     CSS/Selector.o \
