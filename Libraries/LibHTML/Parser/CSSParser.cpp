@@ -301,16 +301,16 @@ private:
 
     int index = 0;
 
-    String css;
+    StringView css;
 };
 
-NonnullRefPtr<StyleSheet> parse_css(const String& css)
+NonnullRefPtr<StyleSheet> parse_css(const StringView& css)
 {
     CSSParser parser(css);
     return parser.parse_sheet();
 }
 
-NonnullRefPtr<StyleDeclaration> parse_css_declaration(const String& css)
+NonnullRefPtr<StyleDeclaration> parse_css_declaration(const StringView& css)
 {
     CSSParser parser(css);
     return parser.parse_standalone_declaration();

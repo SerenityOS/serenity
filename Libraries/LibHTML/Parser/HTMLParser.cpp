@@ -57,7 +57,7 @@ static bool is_valid_in_attribute_name(char ch)
     return isalnum(ch) || ch == '_' || ch == '-';
 }
 
-static bool is_self_closing_tag(const String& tag_name)
+static bool is_self_closing_tag(const StringView& tag_name)
 {
     return tag_name == "area"
         || tag_name == "base"
@@ -75,7 +75,7 @@ static bool is_self_closing_tag(const String& tag_name)
         || tag_name == "wbr";
 }
 
-NonnullRefPtr<Document> parse_html(const String& html, const URL& url)
+NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
 {
     NonnullRefPtrVector<ParentNode> node_stack;
 

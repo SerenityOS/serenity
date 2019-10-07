@@ -27,7 +27,7 @@ void HTMLLinkElement::inserted_into(Node&)
             return;
         }
         auto data = file->read_all();
-        auto sheet = parse_css(String::copy(data));
+        auto sheet = parse_css(data);
 
         if (!sheet) {
             dbg() << "Failed to parse " << url.to_string();

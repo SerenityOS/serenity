@@ -178,7 +178,7 @@ void HtmlView::load(const URL& url)
         return;
     }
 
-    String html = String::copy(f->read_all());
+    auto html = f->read_all();
     auto document = parse_html(html, url);
     document->normalize();
 
