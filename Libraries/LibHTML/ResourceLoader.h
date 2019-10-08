@@ -2,8 +2,10 @@
 
 #include <AK/Function.h>
 #include <AK/URL.h>
+#include <LibCore/CObject.h>
 
-class ResourceLoader {
+class ResourceLoader : public CObject {
+    C_OBJECT(ResourceLoader)
 public:
     static ResourceLoader& the();
 
