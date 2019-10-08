@@ -114,10 +114,10 @@ void dump_tree(const LayoutNode& layout_node)
         }
     }
 
-    layout_node.style().for_each_property([&](auto& key, auto& value) {
+    layout_node.style().for_each_property([&](auto property_id, auto& value) {
         for (int i = 0; i < indent; ++i)
             dbgprintf("    ");
-        dbgprintf("  (%s: %s)\n", key.characters(), value.to_string().characters());
+        dbgprintf("  (CSS::PropertyID(%u): %s)\n", (unsigned)property_id, value.to_string().characters());
     });
 
     ++indent;
@@ -170,7 +170,7 @@ void dump_rule(const StyleRule& rule)
     }
     dbgprintf("  Declarations:\n");
     for (auto& property : rule.declaration().properties()) {
-        dbgprintf("    '%s': '%s'\n", property.name.characters(), property.value->to_string().characters());
+        dbgprintf("    CSS::PropertyID(%u): '%s'\n", (unsigned)property.property_id, property.value->to_string().characters());
     }
 }
 

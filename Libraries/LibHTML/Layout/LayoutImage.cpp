@@ -40,7 +40,7 @@ void LayoutImage::render(RenderingContext& context)
         auto alt = node().alt();
         if (alt.is_empty())
             alt = node().src();
-        context.painter().draw_text(rect(), alt, TextAlignment::Center, style().color_or_fallback("color", document(), Color::Black), TextElision::Right);
+        context.painter().draw_text(rect(), alt, TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), TextElision::Right);
     } else {
         context.painter().draw_scaled_bitmap(rect(), *node().bitmap(), node().bitmap()->rect());
     }

@@ -83,13 +83,13 @@ void LayoutBlock::compute_width()
 
     auto auto_value = Length();
     auto zero_value = Length(0, Length::Type::Absolute);
-    auto width = style.length_or_fallback("width", auto_value);
-    auto margin_left = style.length_or_fallback("margin-left", zero_value);
-    auto margin_right = style.length_or_fallback("margin-right", zero_value);
-    auto border_left = style.length_or_fallback("border-left", zero_value);
-    auto border_right = style.length_or_fallback("border-right", zero_value);
-    auto padding_left = style.length_or_fallback("padding-left", zero_value);
-    auto padding_right = style.length_or_fallback("padding-right", zero_value);
+    auto width = style.length_or_fallback(CSS::PropertyID::Width, auto_value);
+    auto margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value);
+    auto margin_right = style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value);
+    auto border_left = style.length_or_fallback(CSS::PropertyID::BorderLeftWidth, zero_value);
+    auto border_right = style.length_or_fallback(CSS::PropertyID::BorderRightWidth, zero_value);
+    auto padding_left = style.length_or_fallback(CSS::PropertyID::PaddingLeft, zero_value);
+    auto padding_right = style.length_or_fallback(CSS::PropertyID::PaddingRight, zero_value);
 
 #ifdef HTML_DEBUG
     dbg() << " Left: " << margin_left << "+" << border_left << "+" << padding_left;
@@ -158,14 +158,14 @@ void LayoutBlock::compute_position()
     auto auto_value = Length();
     auto zero_value = Length(0, Length::Type::Absolute);
 
-    auto width = style.length_or_fallback("width", auto_value);
+    auto width = style.length_or_fallback(CSS::PropertyID::Width, auto_value);
 
-    box_model().margin().top = style.length_or_fallback("margin-top", zero_value);
-    box_model().margin().bottom = style.length_or_fallback("margin-bottom", zero_value);
-    box_model().border().top = style.length_or_fallback("border-top", zero_value);
-    box_model().border().bottom = style.length_or_fallback("border-bottom", zero_value);
-    box_model().padding().top = style.length_or_fallback("padding-top", zero_value);
-    box_model().padding().bottom = style.length_or_fallback("padding-bottom", zero_value);
+    box_model().margin().top = style.length_or_fallback(CSS::PropertyID::MarginTop, zero_value);
+    box_model().margin().bottom = style.length_or_fallback(CSS::PropertyID::MarginBottom, zero_value);
+    box_model().border().top = style.length_or_fallback(CSS::PropertyID::BorderTopWidth, zero_value);
+    box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
+    box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value);
+    box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value);
     rect().set_x(containing_block()->rect().x() + box_model().margin().left.to_px() + box_model().border().left.to_px() + box_model().padding().left.to_px());
 
     int top_border = -1;
@@ -184,7 +184,7 @@ void LayoutBlock::compute_height()
 {
     auto& style = this->style();
 
-    auto height_property = style.property("height");
+    auto height_property = style.property(CSS::PropertyID::Height);
     if (!height_property.has_value())
         return;
     auto height_length = height_property.value()->to_length();
@@ -197,7 +197,7 @@ void LayoutBlock::render(RenderingContext& context)
     LayoutNode::render(context);
 
     // FIXME: position this properly
-    if (style().string_or_fallback("display", "block") == "list-item") {
+    if (style().string_or_fallback(CSS::PropertyID::Display, "block") == "list-item") {
         Rect bullet_rect {
             rect().x() - 8,
             rect().y() + 4,
@@ -205,7 +205,7 @@ void LayoutBlock::render(RenderingContext& context)
             3
         };
 
-        context.painter().fill_rect(bullet_rect, style().color_or_fallback("color", document(), Color::Black));
+        context.painter().fill_rect(bullet_rect, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black));
     }
 
     if (children_are_inline()) {
@@ -242,9 +242,9 @@ NonnullRefPtr<StyleProperties> LayoutBlock::style_for_anonymous_block() const
 {
     auto new_style = StyleProperties::create();
 
-    style().for_each_property([&](auto& name, auto& value) {
-        if (StyleResolver::is_inherited_property(name))
-            new_style->set_property(name, value);
+    style().for_each_property([&](auto property_id, auto& value) {
+        if (StyleResolver::is_inherited_property(property_id))
+            new_style->set_property(property_id, value);
     });
 
     return new_style;

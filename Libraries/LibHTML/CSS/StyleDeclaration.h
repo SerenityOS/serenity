@@ -4,7 +4,7 @@
 #include <LibHTML/CSS/StyleValue.h>
 
 struct StyleProperty {
-    String name;
+    CSS::PropertyID property_id;
     NonnullRefPtr<StyleValue> value;
     bool important { false };
 };

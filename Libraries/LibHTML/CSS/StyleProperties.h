@@ -15,15 +15,15 @@ public:
     inline void for_each_property(Callback callback) const
     {
         for (auto& it : m_property_values)
-            callback(it.key, *it.value);
+            callback((CSS::PropertyID)it.key, *it.value);
     }
 
-    void set_property(const String& name, NonnullRefPtr<StyleValue> value);
-    Optional<NonnullRefPtr<StyleValue>> property(const String& name) const;
+    void set_property(CSS::PropertyID, NonnullRefPtr<StyleValue> value);
+    Optional<NonnullRefPtr<StyleValue>> property(CSS::PropertyID) const;
 
-    Length length_or_fallback(const StringView& property_name, const Length& fallback) const;
-    String string_or_fallback(const StringView& property_name, const StringView& fallback) const;
-    Color color_or_fallback(const StringView& property_name, const Document&, Color fallback) const;
+    Length length_or_fallback(CSS::PropertyID, const Length& fallback) const;
+    String string_or_fallback(CSS::PropertyID, const StringView& fallback) const;
+    Color color_or_fallback(CSS::PropertyID, const Document&, Color fallback) const;
 
     const Font& font() const
     {
@@ -33,7 +33,7 @@ public:
     }
 
 private:
-    HashMap<String, NonnullRefPtr<StyleValue>> m_property_values;
+    HashMap<unsigned, NonnullRefPtr<StyleValue>> m_property_values;
 
     void load_font() const;
 
