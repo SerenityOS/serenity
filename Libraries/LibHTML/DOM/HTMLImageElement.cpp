@@ -1,7 +1,9 @@
+#include <LibDraw/PNGLoader.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/HTMLImageElement.h>
 #include <LibHTML/Layout/LayoutImage.h>
+#include <LibHTML/ResourceLoader.h>
 
 HTMLImageElement::HTMLImageElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
@@ -21,12 +23,15 @@ void HTMLImageElement::parse_attribute(const String& name, const String& value)
 void HTMLImageElement::load_image(const String& src)
 {
     URL src_url = document().complete_url(src);
-    if (src_url.protocol() == "file") {
-        m_bitmap = GraphicsBitmap::load_from_file(src_url.path());
-    } else {
-        // FIXME: Implement! This whole thing should be at a different layer though..
-        ASSERT_NOT_REACHED();
-    }
+    ResourceLoader::the().load(src_url, [this](auto data) {
+        if (data.is_null()) {
+            dbg() << "HTMLImageElement: Failed to load " << this->src();
+            return;
+        }
+
+        m_bitmap = load_png_from_memory(data.data(), data.size());
+        document().invalidate_layout();
+    });
 }
 
 int HTMLImageElement::preferred_width() const

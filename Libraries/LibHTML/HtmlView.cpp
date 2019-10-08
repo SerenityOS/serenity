@@ -10,6 +10,7 @@
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/Parser/HTMLParser.h>
 #include <LibHTML/RenderingContext.h>
+#include <LibHTML/ResourceLoader.h>
 #include <stdio.h>
 
 HtmlView::HtmlView(GWidget* parent)
@@ -174,19 +175,18 @@ void HtmlView::load(const URL& url)
     if (on_load_start)
         on_load_start(url);
 
-    auto f = CFile::construct();
-    f->set_filename(url.path());
-    if (!f->open(CIODevice::OpenMode::ReadOnly)) {
-        dbg() << "HtmlView::load: Error: " << f->error_string();
-        return;
-    }
+    ResourceLoader::the().load(url, [=](auto data) {
+        if (data.is_null()) {
+            dbg() << "Load failed!";
+            ASSERT_NOT_REACHED();
+        }
 
-    auto html = f->read_all();
-    auto document = parse_html(html, url);
-    document->normalize();
+        auto document = parse_html(data, url);
+        document->normalize();
 
-    set_document(document);
+        set_document(document);
 
-    if (on_title_change)
-        on_title_change(document->title());
+        if (on_title_change)
+            on_title_change(document->title());
+    });
 }
