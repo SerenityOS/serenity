@@ -88,7 +88,6 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
 
     m_address = local_address;
     m_bound = true;
-    set_setup_state(SetupState::Completed);
     return KSuccess;
 }
 
