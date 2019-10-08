@@ -2351,6 +2351,9 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     //       I'm not sure if this matches other systems but it makes sense to me.
     accepted_socket_description->set_blocking(accepting_socket_description->is_blocking());
     m_fds[accepted_socket_fd].set(move(accepted_socket_description), m_fds[accepting_socket_fd].flags);
+
+    // NOTE: Moving this state to Completed is what causes connect() to unblock on the client side.
+    accepted_socket->set_setup_state(Socket::SetupState::Completed);
     return accepted_socket_fd;
 }
 
