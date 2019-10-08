@@ -24,6 +24,7 @@ LIBHTML_OBJS = \
     CSS/StyleProperties.o \
     CSS/StyleResolver.o \
     CSS/DefaultStyleSheetSource.o \
+    CSS/SelectorEngine.o \
     Parser/HTMLParser.o \
     Parser/CSSParser.o \
     Layout/LayoutNode.o \
