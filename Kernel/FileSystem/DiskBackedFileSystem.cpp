@@ -18,10 +18,10 @@ public:
     explicit DiskCache(DiskBackedFS& fs)
         : m_fs(fs)
         , m_cached_block_data(KBuffer::create_with_size(m_entry_count * m_fs.block_size()))
+        , m_entries(KBuffer::create_with_size(m_entry_count * sizeof(CacheEntry)))
     {
-        m_entries = (CacheEntry*)kmalloc_eternal(m_entry_count * sizeof(CacheEntry));
         for (size_t i = 0; i < m_entry_count; ++i) {
-            m_entries[i].data = m_cached_block_data.data() + i * m_fs.block_size();
+            entries()[i].data = m_cached_block_data.data() + i * m_fs.block_size();
         }
     }
 
@@ -36,7 +36,7 @@ public:
 
         CacheEntry* oldest_clean_entry = nullptr;
         for (size_t i = 0; i < m_entry_count; ++i) {
-            auto& entry = m_entries[i];
+            auto& entry = const_cast<CacheEntry&>(entries()[i]);
             if (entry.block_index == block_index) {
                 entry.timestamp = now;
                 return entry;
@@ -63,18 +63,21 @@ public:
         return new_entry;
     }
 
+    const CacheEntry* entries() const { return (const CacheEntry*)m_entries.data(); }
+    CacheEntry* entries() { return (CacheEntry*)m_entries.data(); }
+
     template<typename Callback>
     void for_each_entry(Callback callback)
     {
         for (size_t i = 0; i < m_entry_count; ++i)
-            callback(m_entries[i]);
+            callback(entries()[i]);
     }
 
 private:
     DiskBackedFS& m_fs;
     size_t m_entry_count { 10000 };
     KBuffer m_cached_block_data;
-    CacheEntry* m_entries { nullptr };
+    KBuffer m_entries;
     bool m_dirty { false };
 };
 
@@ -160,7 +163,8 @@ void DiskBackedFS::flush_writes()
         entry.is_dirty = false;
     });
     cache().set_dirty(false);
-    dbg() << class_name() << ": " << "Flushed " << count << " blocks to disk";
+    dbg() << class_name() << ": "
+          << "Flushed " << count << " blocks to disk";
 }
 
 DiskCache& DiskBackedFS::cache() const
