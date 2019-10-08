@@ -30,7 +30,7 @@ const String& LayoutText::text_for_style(const StyleProperties& style) const
 {
     static String one_space = " ";
     if (is_all_whitespace(node().data())) {
-        if (style.string_or_fallback("white-space", "normal") == "normal")
+        if (style.string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "normal")
             return one_space;
     }
     return node().data();
@@ -41,8 +41,8 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     auto& painter = context.painter();
     painter.set_font(style().font());
 
-    auto color = style().color_or_fallback("color", document(), Color::Black);
-    auto text_decoration = style().string_or_fallback("text-decoration", "none");
+    auto color = style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black);
+    auto text_decoration = style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
 
     bool is_underline = text_decoration == "underline";
     if (is_underline)
@@ -131,7 +131,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         line_boxes.append(LineBox());
     int available_width = container.rect().width() - line_boxes.last().width();
 
-    bool is_preformatted = style().string_or_fallback("white-space", "normal") == "pre";
+    bool is_preformatted = style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre";
     if (is_preformatted) {
         for_each_source_line([&](const Utf8View& view, int start, int length) {
             line_boxes.last().add_fragment(*this, start, length, font.width(view), line_height);

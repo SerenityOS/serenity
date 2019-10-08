@@ -1,13 +1,14 @@
+#include <AK/HashMap.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/Parser/CSSParser.h>
 #include <ctype.h>
 #include <stdio.h>
 
-#define PARSE_ASSERT(x) \
-    if (!(x)) { \
-        dbg() << "CSS PARSER ASSERTION FAILED: " << #x; \
+#define PARSE_ASSERT(x)                                                   \
+    if (!(x)) {                                                           \
+        dbg() << "CSS PARSER ASSERTION FAILED: " << #x;                   \
         dbg() << "At character# " << index << " in CSS: _" << css << "_"; \
-        ASSERT_NOT_REACHED(); \
+        ASSERT_NOT_REACHED();                                             \
     }
 
 static Optional<Color> parse_css_color(const StringView& view)
@@ -45,6 +46,55 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
         return IdentifierStyleValue::create(CSS::ValueID::VendorSpecificLink);
 
     return StringStyleValue::create(string);
+}
+
+static CSS::PropertyID parse_css_property_id(const StringView& string)
+{
+    static HashMap<String, CSS::PropertyID> map;
+    if (map.is_empty()) {
+        map.set("background-color", CSS::PropertyID::BackgroundColor);
+        map.set("border-bottom-style", CSS::PropertyID::BorderBottomStyle);
+        map.set("border-bottom-width", CSS::PropertyID::BorderBottomWidth);
+        map.set("border-collapse", CSS::PropertyID::BorderCollapse);
+        map.set("border-left-style", CSS::PropertyID::BorderLeftStyle);
+        map.set("border-left-width", CSS::PropertyID::BorderLeftWidth);
+        map.set("border-right-style", CSS::PropertyID::BorderRightStyle);
+        map.set("border-right-width", CSS::PropertyID::BorderRightWidth);
+        map.set("border-spacing", CSS::PropertyID::BorderSpacing);
+        map.set("border-top-style", CSS::PropertyID::BorderTopStyle);
+        map.set("border-top-width", CSS::PropertyID::BorderTopWidth);
+        map.set("color", CSS::PropertyID::Color);
+        map.set("display", CSS::PropertyID::Display);
+        map.set("font-family", CSS::PropertyID::FontFamily);
+        map.set("font-size", CSS::PropertyID::FontSize);
+        map.set("font-style", CSS::PropertyID::FontStyle);
+        map.set("font-variant", CSS::PropertyID::FontVariant);
+        map.set("font-weight", CSS::PropertyID::FontWeight);
+        map.set("height", CSS::PropertyID::Height);
+        map.set("letter-spacing", CSS::PropertyID::LetterSpacing);
+        map.set("line-height", CSS::PropertyID::LineHeight);
+        map.set("list-style", CSS::PropertyID::ListStyle);
+        map.set("list-style-image", CSS::PropertyID::ListStyleImage);
+        map.set("list-style-position", CSS::PropertyID::ListStylePosition);
+        map.set("list-style-type", CSS::PropertyID::ListStyleType);
+        map.set("margin-bottom", CSS::PropertyID::MarginBottom);
+        map.set("margin-left", CSS::PropertyID::MarginLeft);
+        map.set("margin-right", CSS::PropertyID::MarginRight);
+        map.set("margin-top", CSS::PropertyID::MarginTop);
+        map.set("padding-bottom", CSS::PropertyID::PaddingBottom);
+        map.set("padding-left", CSS::PropertyID::PaddingLeft);
+        map.set("padding-right", CSS::PropertyID::PaddingRight);
+        map.set("padding-top", CSS::PropertyID::PaddingTop);
+        map.set("text-align", CSS::PropertyID::TextAlign);
+        map.set("text-decoration", CSS::PropertyID::TextDecoration);
+        map.set("text-indent", CSS::PropertyID::TextIndent);
+        map.set("text-transform", CSS::PropertyID::TextTransform);
+        map.set("visibility", CSS::PropertyID::Visibility);
+        map.set("white-space", CSS::PropertyID::WhiteSpace);
+        map.set("width", CSS::PropertyID::Width);
+        map.set("word-spacing", CSS::PropertyID::WordSpacing);
+    }
+    return map.get(string).value_or(CSS::PropertyID::Invalid);
 }
 
 class CSSParser {
@@ -233,7 +283,7 @@ public:
         if (peek() != '}')
             consume_specific(';');
 
-        return StyleProperty { property_name, parse_css_value(property_value), is_important };
+        return StyleProperty { parse_css_property_id(property_name), parse_css_value(property_value), is_important };
     }
 
     void parse_declaration()

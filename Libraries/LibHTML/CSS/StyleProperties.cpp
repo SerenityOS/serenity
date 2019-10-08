@@ -2,38 +2,38 @@
 #include <LibHTML/CSS/StyleProperties.h>
 #include <ctype.h>
 
-void StyleProperties::set_property(const String& name, NonnullRefPtr<StyleValue> value)
+void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue> value)
 {
-    m_property_values.set(name, move(value));
+    m_property_values.set((unsigned)id, move(value));
 }
 
-Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(const String& name) const
+Optional<NonnullRefPtr<StyleValue>> StyleProperties::property(CSS::PropertyID id) const
 {
-    auto it = m_property_values.find(name);
+    auto it = m_property_values.find((unsigned)id);
     if (it == m_property_values.end())
         return {};
     return it->value;
 }
 
-Length StyleProperties::length_or_fallback(const StringView& property_name, const Length& fallback) const
+Length StyleProperties::length_or_fallback(CSS::PropertyID id, const Length& fallback) const
 {
-    auto value = property(property_name);
+    auto value = property(id);
     if (!value.has_value())
         return fallback;
     return value.value()->to_length();
 }
 
-String StyleProperties::string_or_fallback(const StringView& property_name, const StringView& fallback) const
+String StyleProperties::string_or_fallback(CSS::PropertyID id, const StringView& fallback) const
 {
-    auto value = property(property_name);
+    auto value = property(id);
     if (!value.has_value())
         return fallback;
     return value.value()->to_string();
 }
 
-Color StyleProperties::color_or_fallback(const StringView& property_name, const Document& document, Color fallback) const
+Color StyleProperties::color_or_fallback(CSS::PropertyID id, const Document& document, Color fallback) const
 {
-    auto value = property(property_name);
+    auto value = property(id);
     if (!value.has_value())
         return fallback;
     return value.value()->to_color(document);
@@ -41,8 +41,8 @@ Color StyleProperties::color_or_fallback(const StringView& property_name, const 
 
 void StyleProperties::load_font() const
 {
-    auto font_family = string_or_fallback("font-family", "Katica");
-    auto font_weight = string_or_fallback("font-weight", "normal");
+    auto font_family = string_or_fallback(CSS::PropertyID::FontFamily, "Katica");
+    auto font_weight = string_or_fallback(CSS::PropertyID::FontWeight, "normal");
 
     String weight;
     if (font_weight == "lighter")

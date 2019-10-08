@@ -22,7 +22,7 @@ public:
 
     NonnullRefPtrVector<StyleRule> collect_matching_rules(const Element&) const;
 
-    static bool is_inherited_property(const StringView&);
+    static bool is_inherited_property(CSS::PropertyID);
 
 private:
     template<typename Callback>

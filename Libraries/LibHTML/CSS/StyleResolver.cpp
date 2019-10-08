@@ -61,37 +61,36 @@ NonnullRefPtrVector<StyleRule> StyleResolver::collect_matching_rules(const Eleme
     return matching_rules;
 }
 
-bool StyleResolver::is_inherited_property(const StringView& name)
+bool StyleResolver::is_inherited_property(CSS::PropertyID property_id)
 {
-    static HashTable<String> inherited_properties;
+    static HashTable<CSS::PropertyID> inherited_properties;
     if (inherited_properties.is_empty()) {
-        inherited_properties.set("border-collapse");
-        inherited_properties.set("border-spacing");
-        inherited_properties.set("color");
-        inherited_properties.set("font-family");
-        inherited_properties.set("font-size");
-        inherited_properties.set("font-style");
-        inherited_properties.set("font-variant");
-        inherited_properties.set("font-weight");
-        inherited_properties.set("font");
-        inherited_properties.set("letter-spacing");
-        inherited_properties.set("line-height");
-        inherited_properties.set("list-style-image");
-        inherited_properties.set("list-style-position");
-        inherited_properties.set("list-style-type");
-        inherited_properties.set("list-style");
-        inherited_properties.set("text-align");
-        inherited_properties.set("text-indent");
-        inherited_properties.set("text-transform");
-        inherited_properties.set("visibility");
-        inherited_properties.set("white-space");
-        inherited_properties.set("word-spacing");
+        inherited_properties.set(CSS::PropertyID::BorderCollapse);
+        inherited_properties.set(CSS::PropertyID::BorderSpacing);
+        inherited_properties.set(CSS::PropertyID::Color);
+        inherited_properties.set(CSS::PropertyID::FontFamily);
+        inherited_properties.set(CSS::PropertyID::FontSize);
+        inherited_properties.set(CSS::PropertyID::FontStyle);
+        inherited_properties.set(CSS::PropertyID::FontVariant);
+        inherited_properties.set(CSS::PropertyID::FontWeight);
+        inherited_properties.set(CSS::PropertyID::LetterSpacing);
+        inherited_properties.set(CSS::PropertyID::LineHeight);
+        inherited_properties.set(CSS::PropertyID::ListStyle);
+        inherited_properties.set(CSS::PropertyID::ListStyleImage);
+        inherited_properties.set(CSS::PropertyID::ListStylePosition);
+        inherited_properties.set(CSS::PropertyID::ListStyleType);
+        inherited_properties.set(CSS::PropertyID::TextAlign);
+        inherited_properties.set(CSS::PropertyID::TextIndent);
+        inherited_properties.set(CSS::PropertyID::TextTransform);
+        inherited_properties.set(CSS::PropertyID::Visibility);
+        inherited_properties.set(CSS::PropertyID::WhiteSpace);
+        inherited_properties.set(CSS::PropertyID::WordSpacing);
 
         // FIXME: This property is not supposed to be inherited, but we currently
         //        rely on inheritance to propagate decorations into line boxes.
-        inherited_properties.set("text-decoration");
+        inherited_properties.set(CSS::PropertyID::TextDecoration);
     }
-    return inherited_properties.contains(name);
+    return inherited_properties.contains(property_id);
 }
 
 NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_style) const
@@ -99,9 +98,9 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     auto style = StyleProperties::create();
 
     if (parent_style) {
-        parent_style->for_each_property([&](const StringView& name, auto& value) {
-            if (is_inherited_property(name))
-                style->set_property(name, value);
+        parent_style->for_each_property([&](auto property_id, auto& value) {
+            if (is_inherited_property(property_id))
+                style->set_property(property_id, value);
         });
     }
 
@@ -110,7 +109,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     auto matching_rules = collect_matching_rules(element);
     for (auto& rule : matching_rules) {
         for (auto& property : rule.declaration().properties()) {
-            style->set_property(property.name, property.value);
+            style->set_property(property.property_id, property.value);
         }
     }
 
@@ -118,7 +117,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     if (!style_attribute.is_null()) {
         if (auto declaration = parse_css_declaration(style_attribute)) {
             for (auto& property : declaration->properties()) {
-                style->set_property(property.name, property.value);
+                style->set_property(property.property_id, property.value);
             }
         }
     }

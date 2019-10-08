@@ -92,7 +92,7 @@ Color Document::background_color() const
     if (!body_layout_node)
         return Color::White;
 
-    auto background_color = body_layout_node->style().property("background-color");
+    auto background_color = body_layout_node->style().property(CSS::PropertyID::BackgroundColor);
     if (!background_color.has_value() || !background_color.value()->is_color())
         return Color::White;
 

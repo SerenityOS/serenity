@@ -52,14 +52,15 @@ void LayoutNode::render(RenderingContext& context)
     padded_rect.set_y(rect().y() - box_model().padding().top.to_px());
     padded_rect.set_height(rect().height() + box_model().padding().top.to_px() + box_model().padding().bottom.to_px());
 
-    auto bgcolor = style().property("background-color");
+    auto bgcolor = style().property(CSS::PropertyID::BackgroundColor);
     if (bgcolor.has_value() && bgcolor.value()->is_color()) {
         context.painter().fill_rect(padded_rect, bgcolor.value()->to_color(document()));
     }
 
-    auto border_width_value = style().property("border-width");
-    auto border_color_value = style().property("border-color");
-    auto border_style_value = style().property("border-style");
+    // FIXME: Respect all individual border sides
+    auto border_width_value = style().property(CSS::PropertyID::BorderTopWidth);
+    auto border_color_value = style().property(CSS::PropertyID::BorderTopColor);
+    auto border_style_value = style().property(CSS::PropertyID::BorderTopStyle);
     if (border_width_value.has_value() && border_color_value.has_value()) {
         int border_width = border_width_value.value()->to_length().to_px();
         Color border_color = border_color_value.value()->to_color(document());

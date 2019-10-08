@@ -59,7 +59,7 @@ RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleResolver& res
 {
     auto style = resolver.resolve_style(*this, parent_style);
 
-    auto display_property = style->property("display");
+    auto display_property = style->property(CSS::PropertyID::Display);
     String display = display_property.has_value() ? display_property.release_value()->to_string() : "inline";
 
     if (display == "none")

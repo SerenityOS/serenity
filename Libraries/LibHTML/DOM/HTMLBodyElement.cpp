@@ -18,11 +18,11 @@ void HTMLBodyElement::apply_presentational_hints(StyleProperties& style) const
         if (name == "bgcolor") {
             auto color = Color::from_string(value);
             if (color.has_value())
-                style.set_property("background-color", ColorStyleValue::create(color.value()));
+                style.set_property(CSS::PropertyID::BackgroundColor, ColorStyleValue::create(color.value()));
         } else if (name == "text") {
             auto color = Color::from_string(value);
             if (color.has_value())
-                style.set_property("color", ColorStyleValue::create(color.value()));
+                style.set_property(CSS::PropertyID::Color, ColorStyleValue::create(color.value()));
         }
     });
 }

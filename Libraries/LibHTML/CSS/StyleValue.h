@@ -6,6 +6,7 @@
 #include <AK/StringView.h>
 #include <LibDraw/Color.h>
 #include <LibHTML/CSS/Length.h>
+#include <LibHTML/CSS/PropertyID.h>
 
 class Document;
 
