@@ -73,7 +73,7 @@ NonnullRefPtr<GAction> make_go_forward_action(Function<void(GAction&)> callback,
 
 NonnullRefPtr<GAction> make_go_home_action(Function<void(GAction&)> callback, GWidget* widget)
 {
-    return GAction::create("Go home", GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), move(callback), widget);
+    return GAction::create("Go home", { Mod_Alt, Key_Home }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-home.png"), move(callback), widget);
 }
 
 NonnullRefPtr<GAction> make_reload_action(Function<void(GAction&)> callback, GWidget* widget)
