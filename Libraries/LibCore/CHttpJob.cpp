@@ -124,8 +124,11 @@ void CHttpJob::start()
         on_socket_connected();
     };
     bool success = m_socket->connect(m_request.url().host(), m_request.url().port());
-    if (!success)
-        return did_fail(CNetworkJob::Error::ConnectionFailed);
+    if (!success) {
+        deferred_invoke([this](auto&) {
+            return did_fail(CNetworkJob::Error::ConnectionFailed);
+        });
+    }
 }
 
 void CHttpJob::shutdown()
