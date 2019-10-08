@@ -8,7 +8,7 @@ ResourceLoader& ResourceLoader::the()
 {
     static ResourceLoader* s_the;
     if (!s_the)
-        s_the = new ResourceLoader;
+        s_the = &ResourceLoader::construct().leak_ref();
     return *s_the;
 }
 
@@ -18,13 +18,15 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> call
         auto f = CFile::construct();
         f->set_filename(url.path());
         if (!f->open(CIODevice::OpenMode::ReadOnly)) {
-            dbg() << "HtmlView::load: Error: " << f->error_string();
+            dbg() << "ResourceLoader::load: Error: " << f->error_string();
             callback({});
             return;
         }
 
         auto data = f->read_all();
-        callback(data);
+        deferred_invoke([data = move(data), callback = move(callback)](auto&) {
+            callback(data);
+        });
         return;
     }
 
