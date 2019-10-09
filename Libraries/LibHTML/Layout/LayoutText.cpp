@@ -48,13 +48,13 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     if (is_underline)
         painter.draw_line(fragment.rect().bottom_left().translated(0, -1), fragment.rect().bottom_right().translated(0, -1), color);
 
-    painter.draw_text(fragment.rect(), node().data().substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
+    painter.draw_text(fragment.rect(), m_text_for_rendering.substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
 }
 
 template<typename Callback>
 void LayoutText::for_each_word(Callback callback) const
 {
-    Utf8View view(node().data());
+    Utf8View view(m_text_for_rendering);
     if (view.is_empty())
         return;
 
@@ -90,7 +90,7 @@ void LayoutText::for_each_word(Callback callback) const
 template<typename Callback>
 void LayoutText::for_each_source_line(Callback callback) const
 {
-    Utf8View view(node().data());
+    Utf8View view(m_text_for_rendering);
     if (view.is_empty())
         return;
 
@@ -133,12 +133,28 @@ void LayoutText::split_into_lines(LayoutBlock& container)
 
     bool is_preformatted = style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre";
     if (is_preformatted) {
+        m_text_for_rendering = node().data();
         for_each_source_line([&](const Utf8View& view, int start, int length) {
             line_boxes.last().add_fragment(*this, start, length, font.width(view), line_height);
             line_boxes.append(LineBox());
         });
         return;
     }
+
+    // Collapse whitespace into single spaces
+    auto& raw_text = node().data();
+    StringBuilder builder(raw_text.length());
+    for (int i = 0; i < raw_text.length(); ++i) {
+        if (!isspace(raw_text[i])) {
+            builder.append(raw_text[i]);
+        } else {
+            builder.append(' ');
+            while (i < raw_text.length() && isspace(raw_text[i]))
+                ++i;
+            --i;
+        }
+    }
+    m_text_for_rendering = builder.to_string();
 
     struct Word {
         Utf8View view;
@@ -170,7 +186,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         if (is_whitespace && line_boxes.last().fragments().is_empty())
             continue;
 
-        line_boxes.last().add_fragment(*this, word.start, word.length, word_width, line_height);
+        line_boxes.last().add_fragment(*this, word.start, is_whitespace ? 1 : word.length, word_width, line_height);
         available_width -= word_width;
 
         if (available_width < 0) {
