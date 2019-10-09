@@ -33,6 +33,8 @@ public:
     const T* first_child() const { return m_first_child; }
     const T* last_child() const { return m_last_child; }
 
+    bool is_ancestor_of(const TreeNode&) const;
+
     void prepend_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
     void append_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
     void donate_all_children_to(T& node);
@@ -97,4 +99,15 @@ inline void TreeNode<T>::donate_all_children_to(T& node)
 
     m_first_child = nullptr;
     m_last_child = nullptr;
+}
+
+
+template<typename T>
+inline bool TreeNode<T>::is_ancestor_of(const TreeNode<T>& other) const
+{
+    for (auto* ancestor = other.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor == this)
+            return true;
+    }
+    return false;
 }
