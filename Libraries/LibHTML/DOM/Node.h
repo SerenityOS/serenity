@@ -11,6 +11,7 @@ enum class NodeType : unsigned {
     ELEMENT_NODE = 1,
     TEXT_NODE = 3,
     DOCUMENT_NODE = 9,
+    DOCUMENT_TYPE_NODE = 10,
 };
 
 class Document;
@@ -30,9 +31,10 @@ public:
     bool is_element() const { return type() == NodeType::ELEMENT_NODE; }
     bool is_text() const { return type() == NodeType::TEXT_NODE; }
     bool is_document() const { return type() == NodeType::DOCUMENT_NODE; }
+    bool is_document_type() const { return type() == NodeType::DOCUMENT_TYPE_NODE; }
     bool is_parent_node() const { return is_element() || is_document(); }
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const = 0;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const;
     RefPtr<LayoutNode> create_layout_tree(const StyleResolver&, const StyleProperties* parent_style) const;
 
     virtual String tag_name() const = 0;

@@ -1,6 +1,7 @@
 #include <AK/Utf8View.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/Document.h>
+#include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Dump.h>
@@ -24,6 +25,8 @@ void dump_tree(const Node& node)
         dbgprintf(">\n");
     } else if (is<Text>(node)) {
         dbgprintf("\"%s\"\n", static_cast<const Text&>(node).data().characters());
+    } else if (is<DocumentType>(node)) {
+        dbgprintf("<!DOCTYPE>\n");
     }
     ++indent;
     if (is<ParentNode>(node)) {

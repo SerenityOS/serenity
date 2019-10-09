@@ -33,6 +33,7 @@ public:
     const T* first_child() const { return m_first_child; }
     const T* last_child() const { return m_last_child; }
 
+    void prepend_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
     void append_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
     void donate_all_children_to(T& node);
 
@@ -59,6 +60,22 @@ inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool call_inserted_
     m_last_child = node.ptr();
     if (!m_first_child)
         m_first_child = m_last_child;
+    if (call_inserted_into)
+        node->inserted_into(static_cast<T&>(*this));
+    (void)node.leak_ref();
+}
+
+template<typename T>
+inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node, bool call_inserted_into)
+{
+    ASSERT(!node->m_parent);
+    if (m_first_child)
+        m_first_child->m_previous_sibling = node.ptr();
+    node->m_next_sibling = m_first_child;
+    node->m_parent = static_cast<T*>(this);
+    m_first_child = node.ptr();
+    if (!m_last_child)
+        m_last_child = m_first_child;
     if (call_inserted_into)
         node->inserted_into(static_cast<T&>(*this));
     (void)node.leak_ref();

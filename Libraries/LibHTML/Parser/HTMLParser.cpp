@@ -1,6 +1,7 @@
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
+#include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
 #include <LibHTML/DOM/HTMLBodyElement.h>
@@ -10,9 +11,9 @@
 #include <LibHTML/DOM/HTMLHeadingElement.h>
 #include <LibHTML/DOM/HTMLHtmlElement.h>
 #include <LibHTML/DOM/HTMLImageElement.h>
+#include <LibHTML/DOM/HTMLLinkElement.h>
 #include <LibHTML/DOM/HTMLStyleElement.h>
 #include <LibHTML/DOM/HTMLTitleElement.h>
-#include <LibHTML/DOM/HTMLLinkElement.h>
 #include <LibHTML/DOM/Text.h>
 #include <LibHTML/Parser/HTMLParser.h>
 #include <ctype.h>
@@ -106,10 +107,12 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
     Vector<char, 256> attribute_value_buffer;
 
     bool is_slash_tag = false;
+    bool is_exclamation_tag = false;
 
     auto move_to_state = [&](State new_state) {
         if (new_state == State::BeforeTagName) {
             is_slash_tag = false;
+            is_exclamation_tag = false;
             tag_name_buffer.clear();
             attributes.clear();
         }
@@ -142,8 +145,19 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
             close_tag();
     };
 
+    auto handle_exclamation_tag = [&] {
+        auto name = String::copy(tag_name_buffer);
+        tag_name_buffer.clear();
+        ASSERT(name == "DOCTYPE");
+        if (node_stack.size() != 1)
+            node_stack[node_stack.size() - 2].append_child(adopt(*new DocumentType(document)), false);
+        close_tag();
+    };
+
     auto commit_tag = [&] {
-        if (is_slash_tag)
+        if (is_exclamation_tag)
+            handle_exclamation_tag();
+        else if (is_slash_tag)
             close_tag();
         else
             open_tag();
@@ -159,6 +173,7 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
         case State::Free:
             if (ch == '<') {
                 is_slash_tag = false;
+                is_exclamation_tag = false;
                 move_to_state(State::BeforeTagName);
                 break;
             }
@@ -191,6 +206,10 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
         case State::BeforeTagName:
             if (ch == '/') {
                 is_slash_tag = true;
+                break;
+            }
+            if (ch == '!') {
+                is_exclamation_tag = true;
                 break;
             }
             if (ch == '>') {
