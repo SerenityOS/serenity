@@ -52,11 +52,11 @@ void HtmlView::set_document(Document* document)
         };
     }
 
+    m_layout_root = nullptr;
+
     main_frame().set_document(document);
 
-    if (document == nullptr)
-        m_layout_root = nullptr;
-    else
+    if (document)
         m_layout_root = document->create_layout_tree(document->style_resolver(), nullptr);
 
 #ifdef HTML_DEBUG
