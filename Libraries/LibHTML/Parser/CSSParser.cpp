@@ -114,12 +114,14 @@ public:
     char consume_specific(char ch)
     {
         PARSE_ASSERT(peek() == ch);
+        PARSE_ASSERT(index < css.length());
         ++index;
         return ch;
     }
 
     char consume_one()
     {
+        PARSE_ASSERT(index < css.length());
         return css[index++];
     };
 
@@ -237,12 +239,12 @@ public:
 
     bool is_valid_property_name_char(char ch) const
     {
-        return !isspace(ch) && ch != ':';
+        return ch && !isspace(ch) && ch != ':';
     }
 
     bool is_valid_property_value_char(char ch) const
     {
-        return ch != '!' && ch != ';';
+        return ch && ch != '!' && ch != ';';
     }
 
     Optional<StyleProperty> parse_property()
@@ -280,7 +282,7 @@ public:
             consume_whitespace();
             is_important = true;
         }
-        if (peek() != '}')
+        if (peek() && peek() != '}')
             consume_specific(';');
 
         return StyleProperty { parse_css_property_id(property_name), parse_css_value(property_value), is_important };
