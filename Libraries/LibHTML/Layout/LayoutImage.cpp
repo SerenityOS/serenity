@@ -34,6 +34,9 @@ void LayoutImage::layout()
 
 void LayoutImage::render(RenderingContext& context)
 {
+    if (!is_visible())
+        return;
+
     if (renders_as_alt_text()) {
         context.painter().set_font(Font::default_font());
         StylePainter::paint_frame(context.painter(), rect(), FrameShape::Container, FrameShadow::Sunken, 2);

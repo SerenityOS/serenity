@@ -17,6 +17,12 @@ HtmlView::HtmlView(GWidget* parent)
     : GScrollableWidget(parent)
     , m_main_frame(Frame::create())
 {
+    main_frame().on_set_needs_display = [this](auto& content_rect) {
+        Rect adjusted_rect = content_rect;
+        adjusted_rect.set_location(to_widget_position(content_rect.location()));
+        update(adjusted_rect);
+    };
+
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);

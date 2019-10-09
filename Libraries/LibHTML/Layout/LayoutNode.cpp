@@ -1,6 +1,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/Frame.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
@@ -38,6 +39,9 @@ const LayoutBlock* LayoutNode::containing_block() const
 
 void LayoutNode::render(RenderingContext& context)
 {
+    if (!is_visible())
+        return;
+
 #ifdef DRAW_BOXES_AROUND_LAYOUT_NODES
     context.painter().draw_rect(m_rect, Color::Blue);
 #endif
@@ -125,5 +129,23 @@ void LayoutNode::split_into_lines(LayoutBlock& container)
         } else {
             // FIXME: Support block children of inlines.
         }
+    });
+}
+
+void LayoutNode::set_needs_display()
+{
+    auto* frame = document().frame();
+    ASSERT(frame);
+
+    if (!is_inline()) {
+        const_cast<Frame*>(frame)->set_needs_display(rect());
+        return;
+    }
+
+    for_each_fragment_of_this([&](auto& fragment) {
+        if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
+            const_cast<Frame*>(frame)->set_needs_display(fragment.rect());
+        }
+        return IterationDecision::Continue;
     });
 }
