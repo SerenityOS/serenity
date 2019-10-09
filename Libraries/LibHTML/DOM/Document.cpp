@@ -84,6 +84,7 @@ void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 
 void Document::detach_from_frame(Badge<Frame>, Frame&)
 {
+    m_frame = nullptr;
 }
 
 Color Document::background_color() const
