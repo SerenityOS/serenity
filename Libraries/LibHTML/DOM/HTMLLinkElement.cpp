@@ -3,6 +3,7 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/HTMLLinkElement.h>
 #include <LibHTML/Parser/CSSParser.h>
+#include <LibHTML/ResourceLoader.h>
 
 HTMLLinkElement::HTMLLinkElement(Document& document, const String& tag_name)
     : HTMLElement(document, tag_name)
@@ -17,25 +18,18 @@ void HTMLLinkElement::inserted_into(Node&)
 {
     if (rel() == "stylesheet") {
         URL url = document().complete_url(href());
-        if (url.protocol() != "file") {
-            ASSERT_NOT_REACHED();
-        }
-        auto file = CFile::construct(url.path());
-        if (!file->open(CIODevice::ReadOnly)) {
-            dbg() << "Failed to open " << url.to_string();
-            ASSERT_NOT_REACHED();
-            return;
-        }
-        auto data = file->read_all();
-        auto sheet = parse_css(data);
-
-        if (!sheet) {
-            dbg() << "Failed to parse " << url.to_string();
-            ASSERT_NOT_REACHED();
-            return;
-        }
-
-        document().add_sheet(*sheet);
-        document().invalidate_layout();
+        ResourceLoader::the().load(url, [&](auto data) {
+            if (data.is_null()) {
+                dbg() << "HTMLLinkElement: Failed to load stylesheet: " << href();
+                return;
+            }
+            auto sheet = parse_css(data);
+            if (!sheet) {
+                dbg() << "HTMLLinkElement: Failed to parse stylesheet: " << href();
+                return;
+            }
+            document().add_sheet(*sheet);
+            document().invalidate_layout();
+        });
     }
 }
