@@ -81,8 +81,6 @@ public:
 
     void set_needs_display();
 
-    bool is_ancestor_of(const LayoutNode&) const;
-
     template<typename Callback>
     void for_each_fragment_of_this(Callback);
 
@@ -129,13 +127,4 @@ inline const StyleProperties& LayoutNode::style() const
 inline const LayoutNodeWithStyle* LayoutNode::parent() const
 {
     return static_cast<const LayoutNodeWithStyle*>(TreeNode<LayoutNode>::parent());
-}
-
-inline bool LayoutNode::is_ancestor_of(const LayoutNode& other) const
-{
-    for (auto* ancestor = other.parent(); ancestor; ancestor = ancestor->parent()) {
-        if (ancestor == this)
-            return true;
-    }
-    return false;
 }
