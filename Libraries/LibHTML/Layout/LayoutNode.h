@@ -76,6 +76,16 @@ public:
 
     virtual void split_into_lines(LayoutBlock& container);
 
+    bool is_visible() const { return m_visible; }
+    void set_visible(bool visible) { m_visible = visible; }
+
+    void set_needs_display();
+
+    bool is_ancestor_of(const LayoutNode&) const;
+
+    template<typename Callback>
+    void for_each_fragment_of_this(Callback);
+
 protected:
     explicit LayoutNode(const Node*);
 
@@ -88,6 +98,7 @@ private:
     Rect m_rect;
     bool m_inline { false };
     bool m_has_style { false };
+    bool m_visible { true };
 };
 
 class LayoutNodeWithStyle : public LayoutNode {
@@ -118,4 +129,13 @@ inline const StyleProperties& LayoutNode::style() const
 inline const LayoutNodeWithStyle* LayoutNode::parent() const
 {
     return static_cast<const LayoutNodeWithStyle*>(TreeNode<LayoutNode>::parent());
+}
+
+inline bool LayoutNode::is_ancestor_of(const LayoutNode& other) const
+{
+    for (auto* ancestor = other.parent(); ancestor; ancestor = ancestor->parent()) {
+        if (ancestor == this)
+            return true;
+    }
+    return false;
 }

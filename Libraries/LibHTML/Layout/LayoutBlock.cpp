@@ -194,6 +194,9 @@ void LayoutBlock::compute_height()
 
 void LayoutBlock::render(RenderingContext& context)
 {
+    if (!is_visible())
+        return;
+
     LayoutNode::render(context);
 
     // FIXME: position this properly

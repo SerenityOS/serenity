@@ -29,3 +29,10 @@ void Frame::set_size(const Size& size)
         return;
     m_size = size;
 }
+
+void Frame::set_needs_display(const Rect& rect)
+{
+    if (!on_set_needs_display)
+        return;
+    on_set_needs_display(rect);
+}

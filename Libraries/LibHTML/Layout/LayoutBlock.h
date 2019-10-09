@@ -38,3 +38,15 @@ private:
 
     Vector<LineBox> m_line_boxes;
 };
+
+template<typename Callback>
+void LayoutNode::for_each_fragment_of_this(Callback callback)
+{
+    auto& block = *containing_block();
+    for (auto& line_box : block.line_boxes()) {
+        for (auto& fragment : line_box.fragments()) {
+            if (callback(fragment) == IterationDecision::Break)
+                return;
+        }
+    }
+}

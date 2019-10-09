@@ -97,3 +97,7 @@ hr {
     border-color: #888888;
     border-style: inset;
 }
+
+blink {
+    display: inline;
+}

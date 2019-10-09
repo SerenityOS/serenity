@@ -1,8 +1,10 @@
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
 #include <AK/Weakable.h>
+#include <LibDraw/Rect.h>
 #include <LibDraw/Size.h>
 #include <LibHTML/TreeNode.h>
 
@@ -22,6 +24,9 @@ public:
 
     const Size& size() const { return m_size; }
     void set_size(const Size&);
+
+    void set_needs_display(const Rect&);
+    Function<void(const Rect&)> on_set_needs_display;
 
 private:
     Frame();
