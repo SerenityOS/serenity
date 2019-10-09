@@ -42,6 +42,7 @@ public:
     bool should_hide_unnecessary_scrollbars() const { return m_should_hide_unnecessary_scrollbars; }
 
     Point to_content_position(const Point& widget_position) const;
+    Point to_widget_position(const Point& content_position) const;
 
 protected:
     explicit GScrollableWidget(GWidget* parent);

@@ -188,3 +188,11 @@ Point GScrollableWidget::to_content_position(const Point& widget_position) const
     content_position.move_by(-frame_thickness(), -frame_thickness());
     return content_position;
 }
+
+Point GScrollableWidget::to_widget_position(const Point& content_position) const
+{
+    auto widget_position = content_position;
+    widget_position.move_by(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+    widget_position.move_by(frame_thickness(), frame_thickness());
+    return widget_position;
+}
