@@ -2,6 +2,7 @@
 #include <AK/StringBuilder.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Document.h>
+#include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/HTMLBodyElement.h>
 #include <LibHTML/DOM/HTMLHeadElement.h>
@@ -29,11 +30,14 @@ StyleResolver& Document::style_resolver()
 
 void Document::fixup()
 {
-    if (is<HTMLHtmlElement>(first_child()))
+    if (!is<DocumentType>(first_child()))
+        prepend_child(adopt(*new DocumentType(*this)));
+
+    if (is<HTMLHtmlElement>(first_child()->next_sibling()))
         return;
 
-    NonnullRefPtr<Element> body = adopt(*new Element(*this, "body"));
-    NonnullRefPtr<Element> html = adopt(*new Element(*this, "html"));
+    auto body = adopt(*new HTMLBodyElement(*this, "body"));
+    auto html = adopt(*new HTMLHtmlElement(*this, "html"));
     html->append_child(body);
     this->donate_all_children_to(body);
     this->append_child(html);
