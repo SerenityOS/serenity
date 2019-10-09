@@ -28,7 +28,7 @@ public:
 
     URL complete_url(const String&) const;
 
-    void normalize();
+    void fixup();
 
     StyleResolver& style_resolver();
 

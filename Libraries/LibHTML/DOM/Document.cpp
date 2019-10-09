@@ -27,7 +27,7 @@ StyleResolver& Document::style_resolver()
     return *m_style_resolver;
 }
 
-void Document::normalize()
+void Document::fixup()
 {
     if (is<HTMLHtmlElement>(first_child()))
         return;
