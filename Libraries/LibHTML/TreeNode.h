@@ -15,8 +15,19 @@ public:
     void deref()
     {
         ASSERT(m_ref_count);
-        if (!--m_ref_count)
+        if (!--m_ref_count) {
+            if (m_next_sibling)
+                m_next_sibling->m_previous_sibling = m_previous_sibling;
+            if (m_previous_sibling)
+                m_previous_sibling->m_next_sibling = m_next_sibling;
+            T* next_child;
+            for (auto* child = m_first_child; child; child = next_child) {
+                next_child = child->m_next_sibling;
+                child->m_parent = nullptr;
+                child->deref();
+            }
             delete static_cast<T*>(this);
+        }
     }
     int ref_count() const { return m_ref_count; }
 
