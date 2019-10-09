@@ -28,4 +28,6 @@ private:
     void for_each_word(Callback) const;
     template<typename Callback>
     void for_each_source_line(Callback) const;
+
+    String m_text_for_rendering;
 };
