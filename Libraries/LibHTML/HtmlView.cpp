@@ -182,7 +182,6 @@ void HtmlView::load(const URL& url)
         }
 
         auto document = parse_html(data, url);
-        document->normalize();
 
         set_document(document);
 

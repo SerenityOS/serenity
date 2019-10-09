@@ -81,7 +81,6 @@ int main(int argc, char* argv[])
 
         String html = md_document.render_to_html();
         auto html_document = parse_html(html);
-        html_document->normalize();
         html_view->set_document(html_document);
 
         String page_and_section = model->page_and_section(tree_view->selection().first());

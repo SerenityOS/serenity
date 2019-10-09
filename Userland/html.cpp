@@ -35,7 +35,6 @@ int main(int argc, char** argv)
 
     String html = String::copy(f->read_all());
     auto document = parse_html(html);
-    document->normalize();
 
     auto window = GWindow::construct();
     auto widget = HtmlView::construct();

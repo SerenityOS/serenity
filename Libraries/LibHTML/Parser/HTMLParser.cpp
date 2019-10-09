@@ -309,5 +309,7 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
 
     fire_insertion_callbacks(*document);
 
+    document->fixup();
+
     return document;
 }
