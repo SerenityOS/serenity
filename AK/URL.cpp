@@ -125,8 +125,10 @@ String URL::to_string() const
     builder.append("://");
     if (protocol() != "file") {
         builder.append(m_host);
-        builder.append(':');
-        builder.append(String::number(m_port));
+        if (protocol() != "http" || port() != 80) {
+            builder.append(':');
+            builder.append(String::number(m_port));
+        }
     }
     builder.append(m_path);
     return builder.to_string();
