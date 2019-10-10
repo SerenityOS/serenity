@@ -35,7 +35,13 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> call
         request.set_url(url);
         request.set_method(CHttpRequest::Method::GET);
         auto job = request.schedule();
-        job->on_finish = [job, callback = move(callback)](bool success) {
+        ++m_pending_loads;
+        if (on_load_counter_change)
+            on_load_counter_change();
+        job->on_finish = [this, job, callback = move(callback)](bool success) {
+            --m_pending_loads;
+            if (on_load_counter_change)
+                on_load_counter_change();
             if (!success) {
                 dbg() << "HTTP job failed!";
                 ASSERT_NOT_REACHED();
