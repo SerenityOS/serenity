@@ -2,6 +2,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
+#include <LibGUI/GWindow.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
 #include <LibHTML/Dump.h>
@@ -119,19 +120,24 @@ void HtmlView::mousemove_event(GMouseEvent& event)
         return GScrollableWidget::mousemove_event(event);
 
     bool hovered_node_changed = false;
+    bool is_hovering_link = false;
     auto result = m_layout_root->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
         auto* node = result.layout_node->node();
         hovered_node_changed = node != m_document->hovered_node();
         m_document->set_hovered_node(const_cast<Node*>(node));
-#ifdef HTML_DEBUG
         if (node) {
             if (auto* link = node->enclosing_link_element()) {
+                UNUSED_PARAM(link);
+#ifdef HTML_DEBUG
                 dbg() << "HtmlView: hovering over a link to " << link->href();
+#endif
+                is_hovering_link = true;
             }
         }
-#endif
     }
+    if (window())
+        window()->set_override_cursor(is_hovering_link ? GStandardCursor::Hand : GStandardCursor::None);
     if (hovered_node_changed) {
         update();
         auto* hovered_html_element = m_document->hovered_node() ? m_document->hovered_node()->enclosing_html_element() : nullptr;
@@ -177,6 +183,9 @@ void HtmlView::reload()
 void HtmlView::load(const URL& url)
 {
     dbg() << "HtmlView::load: " << url;
+
+    if (window())
+        window()->set_override_cursor(GStandardCursor::None);
 
     if (on_load_start)
         on_load_start(url);
