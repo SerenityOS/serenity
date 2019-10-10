@@ -10,8 +10,9 @@ public:
 
     void init(size_t size)
     {
-        void* base = kmalloc_eternal(size);
-        FreeSlab* slabs = (FreeSlab*)base;
+        m_base = kmalloc_eternal(size);
+        m_end = (u8*)m_base + size;
+        FreeSlab* slabs = (FreeSlab*)m_base;
         size_t slab_count = size / templated_slab_size;
         for (size_t i = 1; i < slab_count; ++i) {
             slabs[i].next = &slabs[i - 1];
@@ -27,6 +28,8 @@ public:
     void* alloc()
     {
         InterruptDisabler disabler;
+        if (!m_freelist)
+            return kmalloc(slab_size());
         ASSERT(m_freelist);
         void* ptr = m_freelist;
         m_freelist = m_freelist->next;
@@ -39,6 +42,10 @@ public:
     {
         InterruptDisabler disabler;
         ASSERT(ptr);
+        if (ptr < m_base || ptr >= m_end) {
+            kfree(ptr);
+            return;
+        }
         ((FreeSlab*)ptr)->next = m_freelist;
         m_freelist = (FreeSlab*)ptr;
         ++m_num_allocated;
@@ -57,6 +64,8 @@ private:
     FreeSlab* m_freelist { nullptr };
     size_t m_num_allocated { 0 };
     size_t m_num_free { 0 };
+    void* m_base { nullptr };
+    void* m_end { nullptr };
 
     static_assert(sizeof(FreeSlab) == templated_slab_size);
 };
