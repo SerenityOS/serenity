@@ -113,8 +113,11 @@ URL Document::complete_url(const String& string) const
     FileSystemPath fspath(m_url.path());
     StringBuilder builder;
     builder.append('/');
+
+    bool document_url_ends_in_slash = m_url.path()[m_url.path().length() - 1] == '/';
+
     for (int i = 0; i < fspath.parts().size(); ++i) {
-        if (i == fspath.parts().size() - 1)
+        if (i == fspath.parts().size() - 1 && !document_url_ends_in_slash)
             break;
         builder.append(fspath.parts()[i]);
         builder.append('/');
