@@ -18,6 +18,7 @@
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/Parser/CSSParser.h>
 #include <LibHTML/Parser/HTMLParser.h>
+#include <LibHTML/ResourceLoader.h>
 #include <stdio.h>
 
 static const char* home_url = "file:///home/anon/www/welcome.html";
@@ -77,6 +78,14 @@ int main(int argc, char** argv)
     });
 
     auto statusbar = GStatusBar::construct(widget);
+
+    ResourceLoader::the().on_load_counter_change = [&] {
+        if (ResourceLoader::the().pending_loads() == 0) {
+            statusbar->set_text("");
+            return;
+        }
+        statusbar->set_text(String::format("Loading (%d pending resources...)", ResourceLoader::the().pending_loads()));
+    };
 
     auto menubar = make<GMenuBar>();
 

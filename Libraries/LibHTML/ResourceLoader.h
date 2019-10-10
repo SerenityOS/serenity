@@ -11,6 +11,12 @@ public:
 
     void load(const URL&, Function<void(const ByteBuffer&)>);
 
+    Function<void()> on_load_counter_change;
+
+    int pending_loads() const { return m_pending_loads; }
+
 private:
     ResourceLoader() {}
+
+    int m_pending_loads { 0 };
 };
