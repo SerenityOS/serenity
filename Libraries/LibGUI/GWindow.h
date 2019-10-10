@@ -19,6 +19,7 @@ enum class GStandardCursor {
     ResizeVertical,
     ResizeDiagonalTLBR,
     ResizeDiagonalBLTR,
+    Hand,
 };
 
 class GWindow : public CObject {
