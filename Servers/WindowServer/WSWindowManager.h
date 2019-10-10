@@ -90,6 +90,7 @@ public:
 
     const WSCursor& active_cursor() const;
     const WSCursor& arrow_cursor() const { return *m_arrow_cursor; }
+    const WSCursor& hand_cursor() const { return *m_hand_cursor; }
     const WSCursor& resize_horizontally_cursor() const { return *m_resize_horizontally_cursor; }
     const WSCursor& resize_vertically_cursor() const { return *m_resize_vertically_cursor; }
     const WSCursor& resize_diagonally_tlbr_cursor() const { return *m_resize_diagonally_tlbr_cursor; }
@@ -180,6 +181,7 @@ private:
     void pick_new_active_window();
 
     RefPtr<WSCursor> m_arrow_cursor;
+    RefPtr<WSCursor> m_hand_cursor;
     RefPtr<WSCursor> m_resize_horizontally_cursor;
     RefPtr<WSCursor> m_resize_vertically_cursor;
     RefPtr<WSCursor> m_resize_diagonally_tlbr_cursor;

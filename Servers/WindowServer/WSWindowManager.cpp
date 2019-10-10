@@ -143,6 +143,7 @@ void WSWindowManager::reload_config(bool set_screen)
             m_wm_config->read_num_entry("Screen", "Height", 1080));
 
     m_arrow_cursor = get_cursor("Arrow", { 2, 2 });
+    m_hand_cursor = get_cursor("Hand", { 8, 4 });
     m_resize_horizontally_cursor = get_cursor("ResizeH");
     m_resize_vertically_cursor = get_cursor("ResizeV");
     m_resize_diagonally_tlbr_cursor = get_cursor("ResizeDTLBR");
