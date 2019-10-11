@@ -4,11 +4,13 @@ set -e
 SERENITY_ROOT=../../
 
 mkdir -p $SERENITY_ROOT/Root/usr/include/sys/
+mkdir -p $SERENITY_ROOT/Root/usr/include/bits/
 mkdir -p $SERENITY_ROOT/Root/usr/include/netinet/
 mkdir -p $SERENITY_ROOT/Root/usr/include/arpa/
 mkdir -p $SERENITY_ROOT/Root/usr/lib/
 cp *.h $SERENITY_ROOT/Root/usr/include/
 cp sys/*.h $SERENITY_ROOT/Root/usr/include/sys/
+cp bits/*.h $SERENITY_ROOT/Root/usr/include/bits/
 cp arpa/*.h $SERENITY_ROOT/Root/usr/include/arpa/
 cp netinet/*.h $SERENITY_ROOT/Root/usr/include/netinet/
 cp libc.a $SERENITY_ROOT/Root/usr/lib/
