@@ -119,7 +119,8 @@ enum KeyModifier {
     Mod_Ctrl = 0x02,
     Mod_Shift = 0x04,
     Mod_Logo = 0x08,
-    Mod_Mask = 0x0f,
+    Mod_CapsLock = 0x10,
+    Mod_Mask = 0x1f,
 
     Is_Press = 0x80,
 };

@@ -48,6 +48,7 @@ private:
     CircularQueue<Event, 16> m_queue;
     u8 m_modifiers { 0 };
     bool m_last_state[0x100] { 0 };
+    bool m_caps_lock_on { false };
 };
 
 class KeyboardClient {
