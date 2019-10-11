@@ -36,6 +36,8 @@ LIBHTML_OBJS = \
     Layout/LayoutDocument.o \
     Layout/LayoutReplaced.o \
     Layout/LayoutImage.o \
+    Layout/LayoutListItem.o \
+    Layout/LayoutListItemMarker.o \
     Layout/BoxModelMetrics.o \
     Layout/LineBox.o \
     Layout/LineBoxFragment.o \

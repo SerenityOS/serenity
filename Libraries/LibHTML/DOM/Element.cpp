@@ -2,6 +2,7 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
+#include <LibHTML/Layout/LayoutListItem.h>
 
 Element::Element(Document& document, const String& tag_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
@@ -78,10 +79,12 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleResolver& resolver, co
 
     if (display == "none")
         return nullptr;
-    if (display == "block" || display == "list-item")
+    if (display == "block")
         return adopt(*new LayoutBlock(this, move(style)));
     if (display == "inline")
         return adopt(*new LayoutInline(*this, move(style)));
+    if (display == "list-item")
+        return adopt(*new LayoutListItem(*this, move(style)));
 
     ASSERT_NOT_REACHED();
 }

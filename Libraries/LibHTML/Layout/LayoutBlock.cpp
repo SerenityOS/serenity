@@ -199,18 +199,6 @@ void LayoutBlock::render(RenderingContext& context)
 
     LayoutNode::render(context);
 
-    // FIXME: position this properly
-    if (style().string_or_fallback(CSS::PropertyID::Display, "block") == "list-item") {
-        Rect bullet_rect {
-            rect().x() - 8,
-            rect().y() + 4,
-            3,
-            3
-        };
-
-        context.painter().fill_rect(bullet_rect, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black));
-    }
-
     if (children_are_inline()) {
         for (auto& line_box : m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
