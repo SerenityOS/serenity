@@ -210,7 +210,7 @@ void LayoutBlock::render(RenderingContext& context)
 
 bool LayoutBlock::children_are_inline() const
 {
-    return first_child() && !first_child()->is_block();
+    return first_child() && first_child()->is_inline();
 }
 
 HitTestResult LayoutBlock::hit_test(const Point& position) const
