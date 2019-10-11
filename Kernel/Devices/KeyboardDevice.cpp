@@ -237,15 +237,32 @@ static KeyCode shifted_key_map[0x100] = {
 
 void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
 {
+    bool just_pressed = false, just_released = false;
+    char character = (m_modifiers & Mod_Shift) ? shift_map[raw] : map[raw];
+    KeyCode key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
+
+    if (m_last_state[key] != pressed)
+    {
+        if (pressed)
+            just_pressed = true;
+        else
+            // FIXME: Very unreliable because release IRQ sometimes gets lost somewhere.
+            just_released = true;
+    }
+
     Event event;
-    event.key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
-    event.character = (m_modifiers & Mod_Shift) ? shift_map[raw] : map[raw];
+    event.key = key;
+    event.character = static_cast<u8>(character);
     event.flags = m_modifiers;
+    event.just_pressed = just_pressed;
+    event.just_released = just_released;
     if (pressed)
         event.flags |= Is_Press;
     if (m_client)
         m_client->on_key_pressed(event);
     m_queue.enqueue(event);
+
+    m_last_state[key] = pressed;
 }
 
 void KeyboardDevice::handle_irq()

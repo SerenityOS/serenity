@@ -128,6 +128,8 @@ struct KeyEvent {
     KeyCode key { Key_Invalid };
     u8 character { 0 };
     u8 flags { 0 };
+    bool just_pressed;
+    bool just_released;
     bool alt() const { return flags & Mod_Alt; }
     bool ctrl() const { return flags & Mod_Ctrl; }
     bool shift() const { return flags & Mod_Shift; }
