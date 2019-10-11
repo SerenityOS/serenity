@@ -1,6 +1,6 @@
 #pragma once
 
-#include <stdint.h>
+#include <bits/stdint.h>
 
 #define PAGE_SIZE 4096
 
