@@ -16,7 +16,9 @@ void LayoutListItem::layout()
 
     if (!m_marker) {
         m_marker = adopt(*new LayoutListItemMarker);
-        prepend_child(*m_marker);
+        if (first_child())
+            m_marker->set_inline(first_child()->is_inline());
+        append_child(*m_marker);
     }
 
     Rect marker_rect { rect().x() - 8, rect().y(), 4, rect().height() };
