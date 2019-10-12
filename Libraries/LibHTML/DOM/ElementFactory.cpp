@@ -16,34 +16,34 @@ NonnullRefPtr<Element> create_element(Document& document, const String& tag_name
 {
     auto lowercase_tag_name = tag_name.to_lowercase();
     if (lowercase_tag_name == "a")
-        return adopt(*new HTMLAnchorElement(document, tag_name));
+        return adopt(*new HTMLAnchorElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "html")
-        return adopt(*new HTMLHtmlElement(document, tag_name));
+        return adopt(*new HTMLHtmlElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "head")
-        return adopt(*new HTMLHeadElement(document, tag_name));
+        return adopt(*new HTMLHeadElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "body")
-        return adopt(*new HTMLBodyElement(document, tag_name));
+        return adopt(*new HTMLBodyElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "font")
-        return adopt(*new HTMLFontElement(document, tag_name));
+        return adopt(*new HTMLFontElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "hr")
-        return adopt(*new HTMLHRElement(document, tag_name));
+        return adopt(*new HTMLHRElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "style")
-        return adopt(*new HTMLStyleElement(document, tag_name));
+        return adopt(*new HTMLStyleElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "title")
-        return adopt(*new HTMLTitleElement(document, tag_name));
+        return adopt(*new HTMLTitleElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "link")
-        return adopt(*new HTMLLinkElement(document, tag_name));
+        return adopt(*new HTMLLinkElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "img")
-        return adopt(*new HTMLImageElement(document, tag_name));
+        return adopt(*new HTMLImageElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "blink")
-        return adopt(*new HTMLBlinkElement(document, tag_name));
+        return adopt(*new HTMLBlinkElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "h1"
         || lowercase_tag_name == "h2"
         || lowercase_tag_name == "h3"
         || lowercase_tag_name == "h4"
         || lowercase_tag_name == "h5"
         || lowercase_tag_name == "h6") {
-        return adopt(*new HTMLHeadingElement(document, tag_name));
+        return adopt(*new HTMLHeadingElement(document, lowercase_tag_name));
     }
-    return adopt(*new Element(document, tag_name));
+    return adopt(*new Element(document, lowercase_tag_name));
 }
