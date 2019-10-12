@@ -18,6 +18,7 @@ LIBHTML_OBJS = \
     DOM/Document.o \
     DOM/Text.o \
     DOM/DocumentType.o \
+    DOM/ElementFactory.o \
     CSS/Selector.o \
     CSS/StyleSheet.o \
     CSS/StyleRule.o \
