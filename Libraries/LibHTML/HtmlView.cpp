@@ -111,6 +111,7 @@ void HtmlView::paint_event(GPaintEvent& event)
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     RenderingContext context { painter };
+    context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     m_layout_root->render(context);
 }
 

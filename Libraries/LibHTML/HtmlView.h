@@ -23,6 +23,8 @@ public:
 
     URL url() const;
 
+    void set_should_show_line_box_borders(bool value) { m_should_show_line_box_borders = value; }
+
     Function<void(const String&)> on_link_click;
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_load_start;
@@ -41,4 +43,6 @@ private:
     RefPtr<Frame> m_main_frame;
     RefPtr<Document> m_document;
     RefPtr<LayoutNode> m_layout_root;
+
+    bool m_should_show_line_box_borders { false };
 };
