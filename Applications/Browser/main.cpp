@@ -95,6 +95,15 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(app_menu));
 
+    auto debug_menu = make<GMenu>("Debug");
+    debug_menu->add_action(GAction::create("Dump DOM tree", [&](auto&) {
+        dump_tree(*html_widget->document());
+    }));
+    debug_menu->add_action(GAction::create("Dump Layout tree", [&](auto&) {
+        dump_tree(*html_widget->document()->layout_node());
+    }));
+    menubar->add_menu(move(debug_menu));
+
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("Browser", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
