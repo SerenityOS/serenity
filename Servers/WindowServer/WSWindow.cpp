@@ -203,6 +203,8 @@ void WSWindow::event(CEvent& event)
         server_message.key.character = static_cast<const WSKeyEvent&>(event).character();
         server_message.key.key = static_cast<const WSKeyEvent&>(event).key();
         server_message.key.modifiers = static_cast<const WSKeyEvent&>(event).modifiers();
+        server_message.key.just_pressed = static_cast<const WSKeyEvent&>(event).just_pressed();
+        server_message.key.just_released = static_cast<const WSKeyEvent&>(event).just_released();
         break;
     case WSEvent::KeyUp:
         server_message.type = WSAPI_ServerMessage::Type::KeyUp;

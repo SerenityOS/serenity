@@ -175,6 +175,8 @@ struct WSAPI_ServerMessage {
             char character;
             u8 key;
             u8 modifiers;
+            bool just_pressed;
+            bool just_released;
             bool ctrl : 1;
             bool alt : 1;
             bool shift : 1;

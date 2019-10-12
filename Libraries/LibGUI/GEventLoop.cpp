@@ -87,7 +87,7 @@ void GWindowServerConnection::handle_key_event(const WSAPI_ServerMessage& event,
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%x KeyEvent character=0x%b\n", event.window_id, event.key.character);
 #endif
-    auto key_event = make<GKeyEvent>(event.type == WSAPI_ServerMessage::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key, event.key.modifiers);
+    auto key_event = make<GKeyEvent>(event.type == WSAPI_ServerMessage::Type::KeyDown ? GEvent::KeyDown : GEvent::KeyUp, event.key.key, event.key.just_pressed, event.key.just_released, event.key.modifiers);
     if (event.key.character != '\0')
         key_event->m_text = String(&event.key.character, 1);
 

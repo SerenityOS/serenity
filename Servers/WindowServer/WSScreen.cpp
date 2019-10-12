@@ -105,6 +105,6 @@ void WSScreen::on_receive_mouse_data(int dx, int dy, int dz, unsigned buttons)
 void WSScreen::on_receive_keyboard_data(KeyEvent kernel_event)
 {
     m_modifiers = kernel_event.modifiers();
-    auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSEvent::KeyDown : WSEvent::KeyUp, kernel_event.key, kernel_event.character, kernel_event.modifiers());
+    auto message = make<WSKeyEvent>(kernel_event.is_press() ? WSEvent::KeyDown : WSEvent::KeyUp, kernel_event.key, kernel_event.character, kernel_event.just_pressed, kernel_event.just_released, kernel_event.modifiers());
     CEventLoop::current().post_event(WSWindowManager::the(), move(message));
 }

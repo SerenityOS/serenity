@@ -766,9 +766,11 @@ enum class MouseButton : u8 {
 
 class WSKeyEvent final : public WSEvent {
 public:
-    WSKeyEvent(Type type, int key, char character, u8 modifiers)
+    WSKeyEvent(Type type, int key, char character, bool just_pressed, bool just_released, u8 modifiers)
         : WSEvent(type)
         , m_key(key)
+        , m_just_pressed(just_pressed)
+        , m_just_released(just_released)
         , m_character(character)
         , m_modifiers(modifiers)
     {
@@ -781,11 +783,15 @@ public:
     bool logo() const { return m_modifiers & Mod_Logo; }
     u8 modifiers() const { return m_modifiers; }
     char character() const { return m_character; }
+    bool just_pressed() const { return m_just_pressed; }
+    bool just_released() const { return m_just_released; }
 
 private:
     friend class WSEventLoop;
     friend class WSScreen;
     int m_key { 0 };
+    bool m_just_pressed { false };
+    bool m_just_released { false };
     char m_character { 0 };
     u8 m_modifiers { 0 };
 };
