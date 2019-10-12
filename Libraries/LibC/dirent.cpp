@@ -50,6 +50,47 @@ struct [[gnu::packed]] sys_dirent
     }
 };
 
+static void create_struct_dirent(sys_dirent* sys_ent, struct dirent* str_ent)
+{
+    str_ent->d_ino = sys_ent->ino;
+    str_ent->d_type = sys_ent->file_type;
+    str_ent->d_off = 0;
+    str_ent->d_reclen = sys_ent->total_size();
+    for (size_t i = 0; i < sys_ent->namelen; ++i)
+        str_ent->d_name[i] = sys_ent->name[i];
+    // FIXME: I think this null termination behavior is not supposed to be here.
+    str_ent->d_name[sys_ent->namelen] = '\0';
+}
+
+static int allocate_dirp_buffer(DIR* dirp)
+{
+    if (dirp->buffer) {
+        return 0;
+    }
+
+    struct stat st;
+    // preserve errno since this could be a reentrant call
+    int old_errno = errno;
+    int rc = fstat(dirp->fd, &st);
+    if (rc < 0) {
+        int new_errno = errno;
+        errno = old_errno;
+        return new_errno;
+    }
+    size_t size_to_allocate = max(st.st_size, 4096);
+    dirp->buffer = (char*)malloc(size_to_allocate);
+    ssize_t nread = syscall(SC_get_dir_entries, dirp->fd, dirp->buffer, size_to_allocate);
+    if (nread < 0) {
+        // uh-oh, the syscall returned an error
+        free(dirp->buffer);
+        dirp->buffer = nullptr;
+        return -nread;
+    }
+    dirp->buffer_size = nread;
+    dirp->nextptr = dirp->buffer;
+    return 0;
+}
+
 dirent* readdir(DIR* dirp)
 {
     if (!dirp)
@@ -57,33 +98,73 @@ dirent* readdir(DIR* dirp)
     if (dirp->fd == -1)
         return nullptr;
 
-    if (!dirp->buffer) {
-        struct stat st;
-        int rc = fstat(dirp->fd, &st);
-        if (rc < 0)
-            return nullptr;
-        size_t size_to_allocate = max(st.st_size, 4096);
-        dirp->buffer = (char*)malloc(size_to_allocate);
-        ssize_t nread = syscall(SC_get_dir_entries, dirp->fd, dirp->buffer, size_to_allocate);
-        dirp->buffer_size = nread;
-        dirp->nextptr = dirp->buffer;
+    if (int new_errno = allocate_dirp_buffer(dirp)) {
+        // readdir is allowed to mutate errno
+        errno = new_errno;
+        return nullptr;
     }
 
     if (dirp->nextptr >= (dirp->buffer + dirp->buffer_size))
         return nullptr;
 
     auto* sys_ent = (sys_dirent*)dirp->nextptr;
-    dirp->cur_ent.d_ino = sys_ent->ino;
-    dirp->cur_ent.d_type = sys_ent->file_type;
-    dirp->cur_ent.d_off = 0;
-    dirp->cur_ent.d_reclen = sys_ent->total_size();
-    for (size_t i = 0; i < sys_ent->namelen; ++i)
-        dirp->cur_ent.d_name[i] = sys_ent->name[i];
-    // FIXME: I think this null termination behavior is not supposed to be here.
-    dirp->cur_ent.d_name[sys_ent->namelen] = '\0';
+    create_struct_dirent(sys_ent, &dirp->cur_ent);
 
     dirp->nextptr += sys_ent->total_size();
     return &dirp->cur_ent;
+}
+
+static bool compare_sys_struct_dirent(sys_dirent* sys_ent, struct dirent* str_ent)
+{
+    size_t namelen = min((size_t)256, sys_ent->namelen);
+    // These fields are guaranteed by create_struct_dirent to be the same
+    return sys_ent->ino == str_ent->d_ino
+        && sys_ent->file_type == str_ent->d_type
+        && sys_ent->total_size() == str_ent->d_reclen
+        && strncmp(sys_ent->name, str_ent->d_name, namelen) == 0;
+}
+
+int readdir_r(DIR* dirp, struct dirent* entry, struct dirent** result)
+{
+    if (!dirp || dirp->fd == -1) {
+        *result = nullptr;
+        return EBADF;
+    }
+
+    if (int new_errno = allocate_dirp_buffer(dirp)) {
+        *result = nullptr;
+        return new_errno;
+    }
+
+    // This doesn't care about dirp state; seek until we find the entry.
+    // Unfortunately, we can't just compare struct dirent to sys_dirent, so
+    // manually compare the fields. This seems a bit risky, but could work.
+    auto* buffer = dirp->buffer;
+    auto* sys_ent = (sys_dirent*)buffer;
+    bool found = false;
+    while (!(found || buffer >= dirp->buffer + dirp->buffer_size)) {
+        found = compare_sys_struct_dirent(sys_ent, entry);
+
+        // Make sure if we found one, it's the one after (end of buffer or not)
+        buffer += sys_ent->total_size();
+        sys_ent = (sys_dirent*)buffer;
+    }
+
+    // If we found one, but hit end of buffer, then EOD
+    if (found && buffer >= dirp->buffer + dirp->buffer_size) {
+        *result = nullptr;
+        return 0;
+    }
+    // If we never found a match for entry in buffer, start from the beginning
+    else if (!found) {
+        buffer = dirp->buffer;
+        sys_ent = (sys_dirent*)buffer;
+    }
+
+    *result = entry;
+    create_struct_dirent(sys_ent, entry);
+
+    return 0;
 }
 
 int dirfd(DIR* dirp)
