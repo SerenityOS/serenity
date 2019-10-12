@@ -204,6 +204,8 @@ void LayoutBlock::render(RenderingContext& context)
     if (children_are_inline()) {
         for (auto& line_box : m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
+                if (context.should_show_line_box_borders())
+                    context.painter().draw_rect(fragment.rect(), Color::Green);
                 fragment.render(context);
             }
         }

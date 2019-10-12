@@ -102,6 +102,15 @@ int main(int argc, char** argv)
     debug_menu->add_action(GAction::create("Dump Layout tree", [&](auto&) {
         dump_tree(*html_widget->document()->layout_node());
     }));
+    debug_menu->add_separator();
+    auto line_box_borders_action = GAction::create("Line box borders", [&](auto& action) {
+        action.set_checked(!action.is_checked());
+        html_widget->set_should_show_line_box_borders(action.is_checked());
+        html_widget->update();
+    });
+    line_box_borders_action->set_checkable(true);
+    line_box_borders_action->set_checked(false);
+    debug_menu->add_action(line_box_borders_action);
     menubar->add_menu(move(debug_menu));
 
     auto help_menu = make<GMenu>("Help");
