@@ -91,3 +91,9 @@ void StyleProperties::load_font() const
 
     m_font = Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
 }
+
+int StyleProperties::line_height() const
+{
+    // FIXME: Allow overriding the line-height. We currently default to 140% which seems to look nice.
+    return (int)(font().glyph_height() * 1.4f);
+}

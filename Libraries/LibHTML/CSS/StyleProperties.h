@@ -32,6 +32,8 @@ public:
         return *m_font;
     }
 
+    int line_height() const;
+
 private:
     HashMap<unsigned, NonnullRefPtr<StyleValue>> m_property_values;
 

@@ -123,8 +123,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
 {
     auto& font = style().font();
     int space_width = font.glyph_width(' ') + font.glyph_spacing();
-    // FIXME: Allow overriding the line-height. We currently default to 140% which seems to look nice.
-    int line_height = (int)(font.glyph_height() * 1.4f);
+    int line_height = style().line_height();
 
     auto& line_boxes = container.line_boxes();
     if (line_boxes.is_empty())
