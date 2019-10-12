@@ -4,6 +4,7 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/ElementFactory.h>
 #include <LibHTML/DOM/HTMLBodyElement.h>
 #include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/HTMLHtmlElement.h>
@@ -36,8 +37,8 @@ void Document::fixup()
     if (is<HTMLHtmlElement>(first_child()->next_sibling()))
         return;
 
-    auto body = adopt(*new HTMLBodyElement(*this, "body"));
-    auto html = adopt(*new HTMLHtmlElement(*this, "html"));
+    auto body = create_element(*this, "body");
+    auto html = create_element(*this, "html");
     html->append_child(body);
     this->donate_all_children_to(body);
     this->append_child(html);
