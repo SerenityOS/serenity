@@ -104,10 +104,10 @@ public:
     {
     }
 
-    char peek() const
+    char peek(int offset = 0) const
     {
-        if (index < css.length())
-            return css[index];
+        if ((index + offset) < css.length())
+            return css[index + offset];
         return 0;
     }
 
@@ -125,10 +125,27 @@ public:
         return css[index++];
     };
 
-    void consume_whitespace()
+    void consume_whitespace_or_comments()
     {
-        while (isspace(peek()))
-            ++index;
+        bool in_comment = false;
+        for (; index < css.length(); ++index) {
+            char ch = peek();
+            if (isspace(ch))
+                continue;
+            if (!in_comment && ch == '/' && peek(1) == '*') {
+                in_comment = true;
+                ++index;
+                continue;
+            }
+            if (in_comment && ch == '*' && peek(1) == '/') {
+                in_comment = false;
+                ++index;
+                continue;
+            }
+            if (in_comment)
+                continue;
+            break;
+        }
     }
 
     bool is_valid_selector_char(char ch) const
@@ -143,7 +160,7 @@ public:
 
     Optional<Selector::Component> parse_selector_component()
     {
-        consume_whitespace();
+        consume_whitespace_or_comments();
         Selector::Component::Type type;
         Selector::Component::Relation relation = Selector::Component::Relation::Descendant;
 
@@ -163,7 +180,7 @@ public:
                 break;
             }
             consume_one();
-            consume_whitespace();
+            consume_whitespace_or_comments();
         }
 
         if (peek() == '.') {
@@ -211,7 +228,7 @@ public:
             auto component = parse_selector_component();
             if (component.has_value())
                 components.append(component.value());
-            consume_whitespace();
+            consume_whitespace_or_comments();
             if (peek() == ',' || peek() == '{')
                 break;
         }
@@ -227,7 +244,7 @@ public:
     {
         for (;;) {
             parse_selector();
-            consume_whitespace();
+            consume_whitespace_or_comments();
             if (peek() == ',') {
                 consume_one();
                 continue;
@@ -249,7 +266,7 @@ public:
 
     Optional<StyleProperty> parse_property()
     {
-        consume_whitespace();
+        consume_whitespace_or_comments();
         if (peek() == ';') {
             consume_one();
             return {};
@@ -259,14 +276,14 @@ public:
             buffer.append(consume_one());
         auto property_name = String::copy(buffer);
         buffer.clear();
-        consume_whitespace();
+        consume_whitespace_or_comments();
         consume_specific(':');
-        consume_whitespace();
+        consume_whitespace_or_comments();
         while (is_valid_property_value_char(peek()))
             buffer.append(consume_one());
         auto property_value = String::copy(buffer);
         buffer.clear();
-        consume_whitespace();
+        consume_whitespace_or_comments();
         bool is_important = false;
         if (peek() == '!') {
             consume_specific('!');
@@ -279,7 +296,7 @@ public:
             consume_specific('a');
             consume_specific('n');
             consume_specific('t');
-            consume_whitespace();
+            consume_whitespace_or_comments();
             is_important = true;
         }
         if (peek() && peek() != '}')
@@ -294,7 +311,7 @@ public:
             auto property = parse_property();
             if (property.has_value())
                 current_rule.properties.append(property.value());
-            consume_whitespace();
+            consume_whitespace_or_comments();
             if (peek() == '}')
                 break;
         }
@@ -307,7 +324,7 @@ public:
         parse_declaration();
         consume_specific('}');
         rules.append(StyleRule::create(move(current_rule.selectors), StyleDeclaration::create(move(current_rule.properties))));
-        consume_whitespace();
+        consume_whitespace_or_comments();
     }
 
     NonnullRefPtr<StyleSheet> parse_sheet()
@@ -321,12 +338,12 @@ public:
 
     NonnullRefPtr<StyleDeclaration> parse_standalone_declaration()
     {
-        consume_whitespace();
+        consume_whitespace_or_comments();
         for (;;) {
             auto property = parse_property();
             if (property.has_value())
                 current_rule.properties.append(property.value());
-            consume_whitespace();
+            consume_whitespace_or_comments();
             if (!peek())
                 break;
         }
@@ -335,13 +352,6 @@ public:
 
 private:
     NonnullRefPtrVector<StyleRule> rules;
-
-    enum class State {
-        Free,
-        InSelectorComponent,
-        InPropertyName,
-        InPropertyValue,
-    };
 
     struct CurrentRule {
         Vector<Selector> selectors;
