@@ -113,6 +113,11 @@ int GMenu::realize_menu()
             request.menu.enabled = true;
             request.menu.checkable = false;
             request.menu.checked = false;
+            
+            // no shortcut on submenu, make sure this is cleared out
+            request.menu.shortcut_text_length = 0;
+            strcpy(request.menu.shortcut_text, "\0");
+
             ASSERT(submenu.name().length() < (ssize_t)sizeof(request.text));
             strcpy(request.text, submenu.name().characters());
             request.text_length = submenu.name().length();
