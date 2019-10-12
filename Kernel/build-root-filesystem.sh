@@ -79,6 +79,7 @@ cp ../Applications/SystemMonitor/SystemMonitor mnt/bin/SystemMonitor
 cp ../Applications/Taskbar/Taskbar mnt/bin/Taskbar
 cp ../Applications/Terminal/Terminal mnt/bin/Terminal
 cp ../Applications/TextEditor/TextEditor mnt/bin/TextEditor
+cp ../Applications/HexEditor/HexEditor mnt/bin/HexEditor
 cp ../Applications/PaintBrush/PaintBrush mnt/bin/PaintBrush
 cp ../Applications/QuickShow/QuickShow mnt/bin/QuickShow
 cp ../Applications/Piano/Piano mnt/bin/Piano
@@ -121,6 +122,7 @@ ln -s Taskbar mnt/bin/tb
 ln -s VisualBuilder mnt/bin/vb
 ln -s WidgetGallery mnt/bin/wg
 ln -s TextEditor mnt/bin/te
+ln -s HexEditor mnt/bin/he
 ln -s PaintBrush mnt/bin/pb
 ln -s QuickShow mnt/bin/qs
 ln -s Piano mnt/bin/pi
