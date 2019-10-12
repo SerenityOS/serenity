@@ -2,23 +2,13 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <AK/Atomic.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Scheduler.h>
 
 class Thread;
 extern Thread* current;
-
-static inline u32 CAS(volatile u32* mem, u32 newval, u32 oldval)
-{
-    u32 ret;
-    asm volatile(
-        "cmpxchgl %2, %1"
-        : "=a"(ret), "+m"(*mem)
-        : "r"(newval), "0"(oldval)
-        : "cc", "memory");
-    return ret;
-}
 
 class Lock {
 public:
@@ -35,7 +25,7 @@ public:
     const char* name() const { return m_name; }
 
 private:
-    volatile u32 m_lock { 0 };
+    Atomic<bool> m_lock { false };
     u32 m_level { 0 };
     Thread* m_holder { nullptr };
     const char* m_name { nullptr };

@@ -4,21 +4,8 @@
 
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <AK/Atomic.h>
 #include <unistd.h>
-
-#define memory_barrier() asm volatile("" :: \
-                                          : "memory")
-
-static inline u32 CAS(volatile u32* mem, u32 newval, u32 oldval)
-{
-    u32 ret;
-    asm volatile(
-        "cmpxchgl %2, %1"
-        : "=a"(ret), "+m"(*mem)
-        : "r"(newval), "0"(oldval)
-        : "cc", "memory");
-    return ret;
-}
 
 namespace LibThread {
 
@@ -31,7 +18,7 @@ public:
     void unlock();
 
 private:
-    volatile u32 m_lock { 0 };
+    AK::Atomic<bool> m_lock { false };
     u32 m_level { 0 };
     int m_holder { -1 };
 };
@@ -55,15 +42,15 @@ private:
 {
     int tid = gettid();
     for (;;) {
-        if (CAS(&m_lock, 1, 0) == 0) {
+        bool expected = false;
+        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
             if (m_holder == -1 || m_holder == tid) {
                 m_holder = tid;
                 ++m_level;
-                memory_barrier();
-                m_lock = 0;
+                m_lock.store(false, AK::memory_order_release);
                 return;
             }
-            m_lock = 0;
+            m_lock.store(false, AK::memory_order_release);
         }
         donate(m_holder);
     }
@@ -72,18 +59,17 @@ private:
 inline void Lock::unlock()
 {
     for (;;) {
-        if (CAS(&m_lock, 1, 0) == 0) {
+        bool expected = false;
+        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
             ASSERT(m_holder == gettid());
             ASSERT(m_level);
             --m_level;
             if (m_level) {
-                memory_barrier();
-                m_lock = 0;
+                m_lock.store(false, AK::memory_order_release);
                 return;
             }
             m_holder = -1;
-            memory_barrier();
-            m_lock = 0;
+            m_lock.store(false, AK::memory_order_release);
             return;
         }
         donate(m_holder);
