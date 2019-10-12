@@ -7,7 +7,7 @@ public:
     explicit DocumentType(Document&);
     virtual ~DocumentType() override;
 
-    virtual String tag_name() const override { return "!DOCTYPE"; }
+    virtual String tag_name() const override { return "#doctype"; }
 };
 
 template<>

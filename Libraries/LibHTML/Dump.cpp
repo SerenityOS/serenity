@@ -1,5 +1,6 @@
 #include <AK/Utf8View.h>
 #include <LibHTML/CSS/StyleSheet.h>
+#include <LibHTML/DOM/Comment.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/Element.h>
@@ -27,6 +28,8 @@ void dump_tree(const Node& node)
         dbgprintf("\"%s\"\n", static_cast<const Text&>(node).data().characters());
     } else if (is<DocumentType>(node)) {
         dbgprintf("<!DOCTYPE>\n");
+    } else if (is<Comment>(node)) {
+        dbgprintf("<!--%s-->\n", to<Comment>(node).data().characters());
     }
     ++indent;
     if (is<ParentNode>(node)) {

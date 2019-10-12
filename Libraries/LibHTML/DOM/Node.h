@@ -10,6 +10,7 @@ enum class NodeType : unsigned {
     INVALID = 0,
     ELEMENT_NODE = 1,
     TEXT_NODE = 3,
+    COMMENT_NODE = 8,
     DOCUMENT_NODE = 9,
     DOCUMENT_TYPE_NODE = 10,
 };
@@ -32,6 +33,8 @@ public:
     bool is_text() const { return type() == NodeType::TEXT_NODE; }
     bool is_document() const { return type() == NodeType::DOCUMENT_NODE; }
     bool is_document_type() const { return type() == NodeType::DOCUMENT_TYPE_NODE; }
+    bool is_comment() const { return type() == NodeType::COMMENT_NODE; }
+    bool is_character_data() const { return type() == NodeType::TEXT_NODE || type() == NodeType::COMMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document(); }
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const;
@@ -65,6 +68,8 @@ public:
 
     const Element* previous_element_sibling() const;
     const Element* next_element_sibling() const;
+
+    virtual bool is_child_allowed(const Node&) const { return true; }
 
 protected:
     Node(Document&, NodeType);

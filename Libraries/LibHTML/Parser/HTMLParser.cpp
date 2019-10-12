@@ -1,6 +1,7 @@
 #include <AK/Function.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
+#include <LibHTML/DOM/Comment.h>
 #include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/ElementFactory.h>
@@ -44,6 +45,8 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
         Free = 0,
         BeforeTagName,
         InTagName,
+        InDoctype,
+        InComment,
         InAttributeList,
         InAttributeName,
         BeforeAttributeValue,
@@ -101,19 +104,16 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
             close_tag();
     };
 
-    auto handle_exclamation_tag = [&] {
-        auto name = String::copy(tag_name_buffer);
-        tag_name_buffer.clear();
-        ASSERT(name == "DOCTYPE");
-        if (node_stack.size() != 1)
-            node_stack[node_stack.size() - 2].append_child(adopt(*new DocumentType(document)), false);
-        close_tag();
+    auto commit_doctype = [&] {
+        node_stack.last().append_child(adopt(*new DocumentType(document)), false);
+    };
+
+    auto commit_comment = [&] {
+        node_stack.last().append_child(adopt(*new Comment(document, text_buffer.to_string())), false);
     };
 
     auto commit_tag = [&] {
-        if (is_exclamation_tag)
-            handle_exclamation_tag();
-        else if (is_slash_tag)
+        if (is_slash_tag)
             close_tag();
         else
             open_tag();
@@ -124,12 +124,16 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
     };
 
     for (int i = 0; i < html.length(); ++i) {
+        auto peek = [&](int offset) -> char {
+            if (i + offset >= html.length())
+                return '\0';
+            return html[i + offset];
+        };
         char ch = html[i];
         switch (state) {
         case State::Free:
             if (ch == '<') {
                 is_slash_tag = false;
-                is_exclamation_tag = false;
                 move_to_state(State::BeforeTagName);
                 break;
             }
@@ -165,7 +169,22 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
                 break;
             }
             if (ch == '!') {
-                is_exclamation_tag = true;
+                if (peek(1) == 'D'
+                    && peek(2) == 'O'
+                    && peek(3) == 'C'
+                    && peek(4) == 'T'
+                    && peek(5) == 'Y'
+                    && peek(6) == 'P'
+                    && peek(7) == 'E') {
+                    i += 7;
+                    move_to_state(State::InDoctype);
+                    break;
+                }
+                if (peek(1) == '-' && peek(2) == '-') {
+                    i += 2;
+                    move_to_state(State::InComment);
+                    break;
+                }
                 break;
             }
             if (ch == '>') {
@@ -187,6 +206,22 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
                 break;
             }
             tag_name_buffer.append(ch);
+            break;
+        case State::InDoctype:
+            if (ch == '>') {
+                commit_doctype();
+                move_to_state(State::Free);
+                break;
+            }
+            break;
+        case State::InComment:
+            if (ch == '-' && peek(1) == '-' && peek(2) == '>') {
+                commit_comment();
+                i += 2;
+                move_to_state(State::Free);
+                break;
+            }
+            text_buffer.append(ch);
             break;
         case State::InAttributeList:
             if (ch == '>') {

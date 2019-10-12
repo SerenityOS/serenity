@@ -17,6 +17,8 @@ LIBHTML_OBJS = \
     DOM/HTMLBlinkElement.o \
     DOM/HTMLBRElement.o \
     DOM/Document.o \
+    DOM/CharacterData.o \
+    DOM/Comment.o \
     DOM/Text.o \
     DOM/DocumentType.o \
     DOM/ElementFactory.o \

@@ -2,8 +2,7 @@
 #include <LibHTML/Layout/LayoutText.h>
 
 Text::Text(Document& document, const String& data)
-    : Node(document, NodeType::TEXT_NODE)
-    , m_data(data)
+    : CharacterData(document, NodeType::TEXT_NODE, data)
 {
 }
 

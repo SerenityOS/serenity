@@ -50,8 +50,10 @@ public:
     void append_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
     void donate_all_children_to(T& node);
 
+    bool is_child_allowed(const T&) const { return true; }
+
 protected:
-    TreeNode() { }
+    TreeNode() {}
 
 private:
     int m_ref_count { 1 };
@@ -66,6 +68,10 @@ template<typename T>
 inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool call_inserted_into)
 {
     ASSERT(!node->m_parent);
+
+    if (!static_cast<T*>(this)->is_child_allowed(*node))
+        return;
+
     if (m_last_child)
         m_last_child->m_next_sibling = node.ptr();
     node->m_previous_sibling = m_last_child;
@@ -82,6 +88,10 @@ template<typename T>
 inline void TreeNode<T>::prepend_child(NonnullRefPtr<T> node, bool call_inserted_into)
 {
     ASSERT(!node->m_parent);
+
+    if (!static_cast<T*>(this)->is_child_allowed(*node))
+        return;
+
     if (m_first_child)
         m_first_child->m_previous_sibling = node.ptr();
     node->m_next_sibling = m_first_child;
@@ -111,7 +121,6 @@ inline void TreeNode<T>::donate_all_children_to(T& node)
     m_first_child = nullptr;
     m_last_child = nullptr;
 }
-
 
 template<typename T>
 inline bool TreeNode<T>::is_ancestor_of(const TreeNode<T>& other) const
