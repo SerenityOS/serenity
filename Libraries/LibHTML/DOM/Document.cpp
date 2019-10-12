@@ -29,6 +29,23 @@ StyleResolver& Document::style_resolver()
     return *m_style_resolver;
 }
 
+bool Document::is_child_allowed(const Node& node) const
+{
+    switch (node.type()) {
+    case NodeType::DOCUMENT_NODE:
+    case NodeType::TEXT_NODE:
+        return false;
+    case NodeType::COMMENT_NODE:
+        return true;
+    case NodeType::DOCUMENT_TYPE_NODE:
+        return !first_child_of_type<DocumentType>();
+    case NodeType::ELEMENT_NODE:
+        return !first_child_of_type<Element>();
+    default:
+        return false;
+    }
+}
+
 void Document::fixup()
 {
     if (!is<DocumentType>(first_child()))

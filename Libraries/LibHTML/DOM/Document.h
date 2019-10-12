@@ -67,6 +67,8 @@ public:
     void invalidate_layout();
     Function<void()> on_invalidate_layout;
 
+    virtual bool is_child_allowed(const Node&) const override;
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
 

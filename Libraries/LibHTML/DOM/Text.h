@@ -1,23 +1,17 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibHTML/DOM/Node.h>
+#include <LibHTML/DOM/CharacterData.h>
 
-class Text final : public Node {
+class Text final : public CharacterData {
 public:
     explicit Text(Document&, const String&);
     virtual ~Text() override;
 
-    const String& data() const { return m_data; }
-
     virtual String tag_name() const override { return "#text"; }
-
-    virtual String text_content() const override { return m_data; }
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
-
-    String m_data;
 };
 
 template<>
