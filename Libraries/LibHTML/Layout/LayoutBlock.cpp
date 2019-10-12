@@ -54,10 +54,12 @@ void LayoutBlock::layout_inline_children()
         child.split_into_lines(*this);
     });
 
+    int min_line_height = style().line_height();
+
     int content_height = 0;
 
     for (auto& line_box : m_line_boxes) {
-        int max_height = 0;
+        int max_height = min_line_height;
         for (auto& fragment : line_box.fragments()) {
             max_height = max(max_height, fragment.rect().height());
         }

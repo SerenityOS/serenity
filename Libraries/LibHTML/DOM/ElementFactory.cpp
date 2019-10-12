@@ -1,5 +1,6 @@
 #include <LibHTML/DOM/ElementFactory.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
+#include <LibHTML/DOM/HTMLBRElement.h>
 #include <LibHTML/DOM/HTMLBlinkElement.h>
 #include <LibHTML/DOM/HTMLBodyElement.h>
 #include <LibHTML/DOM/HTMLFontElement.h>
@@ -37,6 +38,8 @@ NonnullRefPtr<Element> create_element(Document& document, const String& tag_name
         return adopt(*new HTMLImageElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "blink")
         return adopt(*new HTMLBlinkElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "br")
+        return adopt(*new HTMLBRElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "h1"
         || lowercase_tag_name == "h2"
         || lowercase_tag_name == "h3"
