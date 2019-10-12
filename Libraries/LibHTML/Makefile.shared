@@ -15,6 +15,7 @@ LIBHTML_OBJS = \
     DOM/HTMLImageElement.o \
     DOM/HTMLLinkElement.o \
     DOM/HTMLBlinkElement.o \
+    DOM/HTMLBRElement.o \
     DOM/Document.o \
     DOM/Text.o \
     DOM/DocumentType.o \
@@ -39,6 +40,7 @@ LIBHTML_OBJS = \
     Layout/LayoutImage.o \
     Layout/LayoutListItem.o \
     Layout/LayoutListItemMarker.o \
+    Layout/LayoutBreak.o \
     Layout/BoxModelMetrics.o \
     Layout/LineBox.o \
     Layout/LineBoxFragment.o \
