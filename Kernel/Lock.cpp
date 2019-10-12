@@ -9,15 +9,15 @@ void Lock::lock()
         hang();
     }
     for (;;) {
-        if (CAS(&m_lock, 1, 0) == 0) {
+        bool expected = false;
+        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
             if (!m_holder || m_holder == current) {
                 m_holder = current;
                 ++m_level;
-                memory_barrier();
-                m_lock = 0;
+                m_lock.store(false, AK::memory_order_release);
                 return;
             }
-            m_lock = 0;
+            m_lock.store(false, AK::memory_order_release);
         }
         Scheduler::donate_to(m_holder, m_name);
     }
@@ -26,18 +26,17 @@ void Lock::lock()
 void Lock::unlock()
 {
     for (;;) {
-        if (CAS(&m_lock, 1, 0) == 0) {
+        bool expected = false;
+        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
             ASSERT(m_holder == current);
             ASSERT(m_level);
             --m_level;
             if (m_level) {
-                memory_barrier();
-                m_lock = 0;
+                m_lock.store(false, AK::memory_order_release);
                 return;
             }
             m_holder = nullptr;
-            memory_barrier();
-            m_lock = 0;
+            m_lock.store(false, AK::memory_order_release);
             return;
         }
         Scheduler::donate_to(m_holder, m_name);
@@ -47,25 +46,24 @@ void Lock::unlock()
 bool Lock::unlock_if_locked()
 {
     for (;;) {
-        if (CAS(&m_lock, 1, 0) == 0) {
+        bool expected = false;
+        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
             if (m_level == 0) {
-                m_lock = 0;
+                m_lock.store(false, AK::memory_order_release);
                 return false;
             }
             if (m_holder != current) {
-                m_lock = 0;
+                m_lock.store(false, AK::memory_order_release);
                 return false;
             }
             ASSERT(m_level);
             --m_level;
             if (m_level) {
-                memory_barrier();
-                m_lock = 0;
+                m_lock.store(false, AK::memory_order_release);
                 return false;
             }
             m_holder = nullptr;
-            memory_barrier();
-            m_lock = 0;
+            m_lock.store(false, AK::memory_order_release);
             return true;
         }
     }
