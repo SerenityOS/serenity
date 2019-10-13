@@ -511,9 +511,6 @@ unsigned long long strtoull(const char* str, char** endptr, int base)
 uint32_t arc4random(void)
 {
     char buf[4];
-    // XXX: RandomDevice does return a uint32_t but the syscall works with
-    // a byte at a time. It could be better optimzied for this use case
-    // while remaining generic.
     syscall(SC_getrandom, buf, 4, 0);
     return *(uint32_t*)buf;
 }
