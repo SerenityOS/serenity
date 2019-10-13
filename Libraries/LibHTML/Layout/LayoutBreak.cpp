@@ -13,5 +13,5 @@ LayoutBreak::~LayoutBreak()
 
 void LayoutBreak::split_into_lines(LayoutBlock& block)
 {
-    block.line_boxes().append(LineBox());
+    block.add_line_box();
 }
