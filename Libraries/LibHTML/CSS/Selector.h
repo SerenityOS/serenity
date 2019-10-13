@@ -15,6 +15,13 @@ public:
         };
         Type type { Type::Invalid };
 
+        enum class PseudoClass {
+            None,
+            Link,
+            Hover,
+        };
+        PseudoClass pseudo_class { PseudoClass::None };
+
         enum class Relation {
             None,
             ImmediateChild,
