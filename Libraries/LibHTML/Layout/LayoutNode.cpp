@@ -51,10 +51,10 @@ void LayoutNode::render(RenderingContext& context)
 #endif
 
     Rect padded_rect;
-    padded_rect.set_x(rect().x() - box_model().padding().left.to_px());
-    padded_rect.set_width(rect().width() + box_model().padding().left.to_px() + box_model().padding().right.to_px());
-    padded_rect.set_y(rect().y() - box_model().padding().top.to_px());
-    padded_rect.set_height(rect().height() + box_model().padding().top.to_px() + box_model().padding().bottom.to_px());
+    padded_rect.set_x(x() - box_model().padding().left.to_px());
+    padded_rect.set_width(width() + box_model().padding().left.to_px() + box_model().padding().right.to_px());
+    padded_rect.set_y(y() - box_model().padding().top.to_px());
+    padded_rect.set_height(height() + box_model().padding().top.to_px() + box_model().padding().bottom.to_px());
 
     auto bgcolor = style().property(CSS::PropertyID::BackgroundColor);
     if (bgcolor.has_value() && bgcolor.value()->is_color()) {

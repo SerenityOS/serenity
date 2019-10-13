@@ -61,17 +61,17 @@ void dump_tree(const LayoutNode& layout_node)
     dbgprintf("%s {%s} at (%d,%d) size %dx%d",
         layout_node.class_name(),
         tag_name.characters(),
-        layout_node.rect().x(),
-        layout_node.rect().y(),
-        layout_node.rect().width(),
-        layout_node.rect().height());
+        layout_node.x(),
+        layout_node.y(),
+        layout_node.width(),
+        layout_node.height());
 
     // Dump the horizontal box properties
     dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
         layout_node.box_model().margin().left.to_px(),
         layout_node.box_model().border().left.to_px(),
         layout_node.box_model().padding().left.to_px(),
-        layout_node.rect().width(),
+        layout_node.width(),
         layout_node.box_model().padding().right.to_px(),
         layout_node.box_model().border().right.to_px(),
         layout_node.box_model().margin().right.to_px());
@@ -81,7 +81,7 @@ void dump_tree(const LayoutNode& layout_node)
         layout_node.box_model().margin().top.to_px(),
         layout_node.box_model().border().top.to_px(),
         layout_node.box_model().padding().top.to_px(),
-        layout_node.rect().height(),
+        layout_node.height(),
         layout_node.box_model().padding().bottom.to_px(),
         layout_node.box_model().border().bottom.to_px(),
         layout_node.box_model().margin().bottom.to_px());
