@@ -3088,12 +3088,25 @@ int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags 
 
     if (!validate_write(buffer, buffer_size))
         return -EFAULT;
-    // XXX: We probably lose a lot of entropy here, out of an already marginal
-    // PRNG. A better implementation would not throw away bits for the sake of
-    // array indexing, and use a better PRNG in the first place.
-    uint8_t* bytes = (uint8_t*)buffer;
-    for (size_t i = 0; i < buffer_size; i++)
-        bytes[i] = (uint8_t)(RandomDevice::random_value() % 255);
+
+    // We prefer to get whole words of entropy.
+    // If the length is unaligned, we can work with bytes instead.
+    // Mask out the bottom two bits for words.
+    size_t words_len = buffer_size & ~3;
+    if (words_len) {
+        uint32_t* words = (uint32_t*)buffer;
+        for (size_t i = 0; i < words_len / 4; i++)
+            words[i] = RandomDevice::random_value();
+    }
+    // The remaining non-whole word bytes we can fill in.
+    size_t bytes_len = buffer_size & 3;
+    if (bytes_len) {
+        uint8_t* bytes = (uint8_t*)buffer + words_len;
+        // Get a whole word of entropy to use.
+        uint32_t word = RandomDevice::random_value();
+        for (size_t i = 0; i < bytes_len; i++)
+            bytes[i] = ((uint8_t*)&word)[i];
+    }
 
     return 0;
 }
