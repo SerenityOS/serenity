@@ -66,8 +66,8 @@ void LayoutBlock::layout_inline_children()
         for (auto& fragment : line_box.fragments()) {
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
-            fragment.rect().set_x(rect().x() + fragment.rect().x());
-            fragment.rect().set_y(rect().y() + content_height + (max_height - fragment.rect().height()));
+            fragment.rect().set_x(x() + fragment.rect().x());
+            fragment.rect().set_y(y() + content_height + (max_height - fragment.rect().height()));
 
             if (fragment.layout_node().is_replaced())
                 const_cast<LayoutNode&>(fragment.layout_node()).set_rect(fragment.rect());
@@ -109,7 +109,7 @@ void LayoutBlock::compute_width()
 
     // 10.3.3 Block-level, non-replaced elements in normal flow
     // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
-    if (width.is_auto() && total_px > containing_block()->rect().width()) {
+    if (width.is_auto() && total_px > containing_block()->width()) {
         if (margin_left.is_auto())
             margin_left = zero_value;
         if (margin_right.is_auto())
@@ -117,7 +117,7 @@ void LayoutBlock::compute_width()
     }
 
     // 10.3.3 cont'd.
-    auto underflow_px = containing_block()->rect().width() - total_px;
+    auto underflow_px = containing_block()->width() - total_px;
 
     if (width.is_auto()) {
         if (margin_left.is_auto())
@@ -168,7 +168,7 @@ void LayoutBlock::compute_position()
     box_model().border().bottom = style.length_or_fallback(CSS::PropertyID::BorderBottomWidth, zero_value);
     box_model().padding().top = style.length_or_fallback(CSS::PropertyID::PaddingTop, zero_value);
     box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value);
-    rect().set_x(containing_block()->rect().x() + box_model().margin().left.to_px() + box_model().border().left.to_px() + box_model().padding().left.to_px());
+    rect().set_x(containing_block()->x() + box_model().margin().left.to_px() + box_model().border().left.to_px() + box_model().padding().left.to_px());
 
     int top_border = -1;
     if (previous_sibling() != nullptr) {
@@ -177,7 +177,7 @@ void LayoutBlock::compute_position()
         top_border = previous_sibling_rect.y() + previous_sibling_rect.height();
         top_border += previous_sibling_style.full_margin().bottom;
     } else {
-        top_border = containing_block()->rect().y();
+        top_border = containing_block()->y();
     }
     rect().set_y(top_border + box_model().full_margin().top);
 }

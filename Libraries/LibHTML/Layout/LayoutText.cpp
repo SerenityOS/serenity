@@ -128,7 +128,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
     auto& line_boxes = container.line_boxes();
     if (line_boxes.is_empty())
         line_boxes.append(LineBox());
-    int available_width = container.rect().width() - line_boxes.last().width();
+    int available_width = container.width() - line_boxes.last().width();
 
     bool is_preformatted = style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre";
     if (is_preformatted) {
@@ -179,7 +179,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
 
         if (word_width > available_width) {
             line_boxes.append(LineBox());
-            available_width = container.rect().width();
+            available_width = container.width();
         }
 
         if (is_whitespace && line_boxes.last().fragments().is_empty())
@@ -190,7 +190,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
 
         if (available_width < 0) {
             line_boxes.append(LineBox());
-            available_width = container.rect().width();
+            available_width = container.width();
         }
     }
 }
