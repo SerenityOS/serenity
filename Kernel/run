@@ -26,6 +26,7 @@ elif [ "$1" = "qtap" ]; then
     # ./run qtap: qemu with tap
     sudo $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
         $SERENITY_EXTRA_QEMU_ARGS \
+        -enable-kvm \
         -d cpu_reset,guest_errors \
         -device VGA,vgamem_mb=64 \
         -debugcon stdio \
@@ -41,6 +42,7 @@ elif [ "$1" = "qgrub" ]; then
     # ./run qgrub: qemu with grub
     $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
         $SERENITY_EXTRA_QEMU_ARGS \
+        -enable-kvm \
         -d cpu_reset,guest_errors \
         -device VGA,vgamem_mb=64 \
         -debugcon stdio \
@@ -53,6 +55,7 @@ else
     # ./run: qemu with user networking
     $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
         $SERENITY_EXTRA_QEMU_ARGS \
+        -enable-kvm \
         -d cpu_reset,guest_errors \
         -device VGA,vgamem_mb=64 \
         -debugcon stdio \
