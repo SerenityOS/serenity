@@ -104,7 +104,7 @@ static KeyCode unshifted_key_map[0x80] = {
     Key_Invalid,
     Key_Alt,     // 56
     Key_Space,   // 57
-    Key_Invalid, // 58
+    Key_CapsLock, // 58
     Key_F1,
     Key_F2,
     Key_F3,
@@ -199,7 +199,7 @@ static KeyCode shifted_key_map[0x100] = {
     Key_Invalid,
     Key_Alt,
     Key_Space,   // 57
-    Key_Invalid, // 58
+    Key_CapsLock, // 58
     Key_F1,
     Key_F2,
     Key_F3,
@@ -237,9 +237,23 @@ static KeyCode shifted_key_map[0x100] = {
 
 void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
 {
+    KeyCode key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
+    char character = (m_modifiers & Mod_Shift) ? shift_map[raw] : map[raw];
+
+    if (key == Key_CapsLock && pressed)
+        m_caps_lock_on = !m_caps_lock_on;
+
+    if (m_caps_lock_on && (m_modifiers == 0 || m_modifiers == Mod_Shift))
+    {
+        if (character >= 'a' && character <= 'z')
+            character &= ~0x20;
+        else if (character >= 'A' && character <= 'Z')
+            character |= 0x20;
+    }
+
     Event event;
-    event.key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
-    event.character = (m_modifiers & Mod_Shift) ? shift_map[raw] : map[raw];
+    event.key = key;
+    event.character = static_cast<u8>(character);
     event.flags = m_modifiers;
     if (pressed)
         event.flags |= Is_Press;
