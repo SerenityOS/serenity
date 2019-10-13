@@ -9,11 +9,17 @@ String MDDocument::render_to_html() const
 {
     StringBuilder builder;
 
+    builder.append("<!DOCTYPE html>\n");
+    builder.append("<html>\n");
+    builder.append("<body>\n");
+
     for (auto& block : m_blocks) {
         auto s = block.render_to_html();
         builder.append(s);
     }
 
+    builder.append("</body>\n");
+    builder.append("</html>\n");
     return builder.build();
 }
 
