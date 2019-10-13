@@ -67,6 +67,7 @@ public:
 
     void layout();
 
+    void invalidate_style();
     void invalidate_layout();
     Function<void()> on_invalidate_layout;
 

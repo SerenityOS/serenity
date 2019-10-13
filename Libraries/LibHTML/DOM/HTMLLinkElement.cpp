@@ -29,7 +29,7 @@ void HTMLLinkElement::inserted_into(Node&)
                 return;
             }
             document().add_sheet(*sheet);
-            document().invalidate_layout();
+            document().invalidate_style();
         });
     }
 }
