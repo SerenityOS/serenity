@@ -153,8 +153,15 @@ URL Document::complete_url(const String& string) const
 
 void Document::layout()
 {
-    m_layout_root = create_layout_tree(style_resolver(), nullptr);
+    if (!m_layout_root)
+        m_layout_root = create_layout_tree(style_resolver(), nullptr);
     m_layout_root->layout();
+}
+
+void Document::invalidate_style()
+{
+    m_layout_root = nullptr;
+    invalidate_layout();
 }
 
 void Document::invalidate_layout()
