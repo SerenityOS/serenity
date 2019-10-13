@@ -222,7 +222,7 @@ void exception_7_handler(RegisterDump& regs)
     } else {
         asm volatile("fninit");
         asm volatile("fxsave %0"
-                     : "=m"(g_last_fpu_thread->fpu_state()));
+                     : "=m"(current->fpu_state()));
         current->set_has_used_fpu(true);
     }
 
