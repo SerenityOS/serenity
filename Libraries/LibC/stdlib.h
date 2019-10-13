@@ -54,6 +54,10 @@ void srand(unsigned seed);
 long int random();
 void srandom(unsigned seed);
 
+uint32_t arc4random(void);
+void arc4random_buf(void*, size_t);
+uint32_t arc4random_uniform(uint32_t);
+
 typedef struct {
     int quot;
     int rem;
