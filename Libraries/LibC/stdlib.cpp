@@ -385,6 +385,16 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     ASSERT_NOT_REACHED();
 }
 
+size_t mbtowc(wchar_t*, const char*, size_t)
+{
+    ASSERT_NOT_REACHED();
+}
+
+int wctomb(char*, wchar_t)
+{
+    ASSERT_NOT_REACHED();
+}
+
 template<typename T, T min_value, T max_value>
 static T strtol_impl(const char* nptr, char** endptr, int base)
 {
