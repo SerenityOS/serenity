@@ -71,9 +71,20 @@ void HtmlView::layout_and_sync_size()
     if (!document())
         return;
 
+    bool had_vertical_scrollbar = vertical_scrollbar().is_visible();
+    bool had_horizontal_scrollbar = horizontal_scrollbar().is_visible();
+
     main_frame().set_size(available_size());
     document()->layout();
     set_content_size(layout_root()->rect().size());
+
+    // NOTE: If layout caused us to gain or lose scrollbars, we have to lay out again
+    //       since the scrollbars now take up some of the available space.
+    if (had_vertical_scrollbar != vertical_scrollbar().is_visible() || had_horizontal_scrollbar != horizontal_scrollbar().is_visible()) {
+        main_frame().set_size(available_size());
+        document()->layout();
+        set_content_size(layout_root()->rect().size());
+    }
 
 #ifdef HTML_DEBUG
     dbgprintf("\033[33;1mLayout tree after layout:\033[0m\n");
