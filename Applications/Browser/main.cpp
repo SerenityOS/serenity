@@ -14,6 +14,7 @@
 #include <LibHTML/Dump.h>
 #include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutBlock.h>
+#include <LibHTML/Layout/LayoutDocument.h>
 #include <LibHTML/Layout/LayoutInline.h>
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/Parser/CSSParser.h>

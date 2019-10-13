@@ -8,6 +8,7 @@
 #include <LibHTML/Dump.h>
 #include <LibHTML/Frame.h>
 #include <LibHTML/HtmlView.h>
+#include <LibHTML/Layout/LayoutDocument.h>
 #include <LibHTML/Layout/LayoutNode.h>
 #include <LibHTML/Parser/HTMLParser.h>
 #include <LibHTML/RenderingContext.h>
@@ -46,24 +47,18 @@ void HtmlView::set_document(Document* document)
     m_document = document;
 
     if (m_document) {
-        m_document->on_invalidate_layout = [this]() {
-            m_layout_root = m_document->create_layout_tree(m_document->style_resolver(), nullptr);
+        m_document->on_invalidate_layout = [this] {
             layout_and_sync_size();
             update();
         };
     }
 
-    m_layout_root = nullptr;
-
     main_frame().set_document(document);
-
-    if (document)
-        m_layout_root = document->create_layout_tree(document->style_resolver(), nullptr);
 
 #ifdef HTML_DEBUG
     if (document != nullptr) {
         dbgprintf("\033[33;1mLayout tree before layout:\033[0m\n");
-        ::dump_tree(*m_layout_root);
+        ::dump_tree(*layout_root());
     }
 #endif
 
@@ -73,16 +68,16 @@ void HtmlView::set_document(Document* document)
 
 void HtmlView::layout_and_sync_size()
 {
-    if (!m_layout_root)
+    if (!document())
         return;
 
     main_frame().set_size(available_size());
-    m_layout_root->layout();
-    set_content_size(m_layout_root->rect().size());
+    document()->layout();
+    set_content_size(layout_root()->rect().size());
 
 #ifdef HTML_DEBUG
     dbgprintf("\033[33;1mLayout tree after layout:\033[0m\n");
-    ::dump_tree(*m_layout_root);
+    ::dump_tree(*layout_root());
 #endif
 }
 
@@ -100,7 +95,7 @@ void HtmlView::paint_event(GPaintEvent& event)
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
 
-    if (!m_layout_root) {
+    if (!layout_root()) {
         painter.fill_rect(event.rect(), background_color());
         return;
     }
@@ -112,17 +107,17 @@ void HtmlView::paint_event(GPaintEvent& event)
 
     RenderingContext context { painter };
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
-    m_layout_root->render(context);
+    layout_root()->render(context);
 }
 
 void HtmlView::mousemove_event(GMouseEvent& event)
 {
-    if (!m_layout_root)
+    if (!layout_root())
         return GScrollableWidget::mousemove_event(event);
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
-    auto result = m_layout_root->hit_test(to_content_position(event.position()));
+    auto result = layout_root()->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
         auto* node = result.layout_node->node();
         hovered_node_changed = node != m_document->hovered_node();
@@ -154,11 +149,11 @@ void HtmlView::mousemove_event(GMouseEvent& event)
 
 void HtmlView::mousedown_event(GMouseEvent& event)
 {
-    if (!m_layout_root)
+    if (!layout_root())
         return GScrollableWidget::mousemove_event(event);
 
     bool hovered_node_changed = false;
-    auto result = m_layout_root->hit_test(to_content_position(event.position()));
+    auto result = layout_root()->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
         auto* node = result.layout_node->node();
         hovered_node_changed = node != m_document->hovered_node();
@@ -204,4 +199,16 @@ void HtmlView::load(const URL& url)
         if (on_title_change)
             on_title_change(document->title());
     });
+}
+
+const LayoutDocument* HtmlView::layout_root() const
+{
+    return document() ? document()->layout_node() : nullptr;
+}
+
+LayoutDocument* HtmlView::layout_root()
+{
+    if (!document())
+        return nullptr;
+    return const_cast<LayoutDocument*>(document()->layout_node());
 }

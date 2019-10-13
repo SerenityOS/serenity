@@ -14,6 +14,7 @@ class Frame;
 class HTMLBodyElement;
 class HTMLHtmlElement;
 class HTMLHeadElement;
+class LayoutDocument;
 class LayoutNode;
 class StyleResolver;
 class StyleSheet;
@@ -64,10 +65,14 @@ public:
     Color visited_link_color() const { return m_visited_link_color; }
     void set_visited_link_color(Color);
 
+    void layout();
+
     void invalidate_layout();
     Function<void()> on_invalidate_layout;
 
     virtual bool is_child_allowed(const Node&) const override;
+
+    const LayoutDocument* layout_node() const;
 
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
@@ -77,6 +82,8 @@ private:
     RefPtr<Node> m_hovered_node;
     WeakPtr<Frame> m_frame;
     URL m_url;
+
+    RefPtr<LayoutDocument> m_layout_root;
 
     Color m_link_color { Color::Blue };
     Color m_active_link_color { Color::Red };
