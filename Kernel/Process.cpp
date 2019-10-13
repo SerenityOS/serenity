@@ -8,6 +8,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
@@ -3074,5 +3075,25 @@ int Process::sys$get_process_name(char* buffer, int buffer_size)
         return -ENAMETOOLONG;
 
     strncpy(buffer, m_name.characters(), buffer_size);
+    return 0;
+}
+
+// We don't use the flag yet, but we could use it for distinguishing
+// random source like Linux, unlike the OpenBSD equivalent. However, if we
+// do, we should be able of the caveats that Linux has dealt with.
+int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags __attribute__((unused)))
+{
+    if (buffer_size <= 0)
+        return -EINVAL;
+
+    if (!validate_write(buffer, buffer_size))
+        return -EFAULT;
+    // XXX: We probably lose a lot of entropy here, out of an already marginal
+    // PRNG. A better implementation would not throw away bits for the sake of
+    // array indexing, and use a better PRNG in the first place.
+    uint8_t* bytes = (uint8_t*)buffer;
+    for (size_t i = 0; i < buffer_size; i++)
+        bytes[i] = (uint8_t)(RandomDevice::random_value() % 255);
+
     return 0;
 }

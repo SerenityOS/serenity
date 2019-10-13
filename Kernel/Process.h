@@ -225,6 +225,7 @@ public:
     int sys$reboot();
     int sys$set_process_icon(int icon_id);
     int sys$realpath(const char* pathname, char*, size_t);
+    ssize_t sys$getrandom(void*, size_t, unsigned int);
 
     static void initialize();
 

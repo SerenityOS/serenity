@@ -130,7 +130,8 @@ struct timeval;
     __ENUMERATE_SYSCALL(mprotect)               \
     __ENUMERATE_SYSCALL(realpath)               \
     __ENUMERATE_SYSCALL(get_process_name)       \
-    __ENUMERATE_SYSCALL(fchdir)
+    __ENUMERATE_SYSCALL(fchdir)                 \
+    __ENUMERATE_SYSCALL(getrandom)
 
 namespace Syscall {
 
