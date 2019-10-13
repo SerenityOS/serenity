@@ -17,7 +17,8 @@ void LayoutReplaced::split_into_lines(LayoutBlock& container)
 {
     layout();
 
-    if (container.line_boxes().is_empty())
-        container.line_boxes().append(LineBox());
-    container.line_boxes().last().add_fragment(*this, 0, 0, rect().width(), rect().height());
+    auto* line_box = &container.ensure_last_line_box();
+    if (line_box->width() + width() > container.width())
+        line_box = &container.add_line_box();
+    line_box->add_fragment(*this, 0, 0, width(), height());
 }

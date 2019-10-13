@@ -28,6 +28,9 @@ public:
     Rect& rect() { return m_rect; }
     void set_rect(const Rect& rect) { m_rect = rect; }
 
+    int width() const { return rect().width(); }
+    int height() const { return rect().height(); }
+
     BoxModelMetrics& box_model() { return m_box_metrics; }
     const BoxModelMetrics& box_model() const { return m_box_metrics; }
 

@@ -244,3 +244,16 @@ NonnullRefPtr<StyleProperties> LayoutBlock::style_for_anonymous_block() const
 
     return new_style;
 }
+
+LineBox& LayoutBlock::ensure_last_line_box()
+{
+    if (m_line_boxes.is_empty())
+        m_line_boxes.append(LineBox());
+    return m_line_boxes.last();
+}
+
+LineBox& LayoutBlock::add_line_box()
+{
+    m_line_boxes.append(LineBox());
+    return m_line_boxes.last();
+}

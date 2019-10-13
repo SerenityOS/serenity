@@ -22,6 +22,9 @@ public:
     Vector<LineBox>& line_boxes() { return m_line_boxes; }
     const Vector<LineBox>& line_boxes() const { return m_line_boxes; }
 
+    LineBox& ensure_last_line_box();
+    LineBox& add_line_box();
+
     virtual HitTestResult hit_test(const Point&) const override;
 
 private:
