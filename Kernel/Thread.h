@@ -379,10 +379,7 @@ inline IterationDecision Thread::for_each_in_state(State state, Callback callbac
     return Scheduler::for_each_nonrunnable(new_callback);
 }
 
-inline const LogStream& operator<<(const LogStream& stream, const Thread& value)
-{
-    return stream << "Thread{" << &value << "}(" << value.pid() << ":" << value.tid() << ")";
-}
+const LogStream& operator<<(const LogStream&, const Thread&);
 
 struct SchedulerData {
     typedef IntrusiveList<Thread, &Thread::m_runnable_list_node> ThreadList;

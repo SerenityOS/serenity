@@ -50,6 +50,7 @@ Thread::Thread(Process& process)
     dbgprintf("Thread{%p}: New thread TID=%u in %s(%u)\n", this, m_tid, process.name().characters(), process.pid());
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
+    memset(m_fpu_state, 0, sizeof(FPUState));
     memset(&m_tss, 0, sizeof(m_tss));
 
     // Only IF is set when a process boots.
@@ -564,7 +565,6 @@ Thread* Thread::clone(Process& process)
     auto* clone = new Thread(process);
     memcpy(clone->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
     clone->m_signal_mask = m_signal_mask;
-    clone->m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
     memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));
     clone->m_has_used_fpu = m_has_used_fpu;
     clone->m_thread_specific_data = m_thread_specific_data;
@@ -657,4 +657,9 @@ void Thread::make_thread_specific_region(Badge<Process>)
     thread_specific_data->self = thread_specific_data;
     if (process().m_master_tls_size)
         memcpy(thread_local_storage, process().m_master_tls_region->vaddr().as_ptr(), process().m_master_tls_size);
+}
+
+const LogStream& operator<<(const LogStream& stream, const Thread& value)
+{
+    return stream << value.process().name() << "(" << value.pid() << ":" << value.tid() << ")";
 }
