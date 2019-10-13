@@ -98,10 +98,12 @@ String Document::title() const
 void Document::attach_to_frame(Badge<Frame>, Frame& frame)
 {
     m_frame = frame.make_weak_ptr();
+    layout();
 }
 
 void Document::detach_from_frame(Badge<Frame>, Frame&)
 {
+    m_layout_root = nullptr;
     m_frame = nullptr;
 }
 
@@ -149,8 +151,15 @@ URL Document::complete_url(const String& string) const
     return url;
 }
 
+void Document::layout()
+{
+    m_layout_root = create_layout_tree(style_resolver(), nullptr);
+    m_layout_root->layout();
+}
+
 void Document::invalidate_layout()
 {
+    layout();
     if (on_invalidate_layout)
         on_invalidate_layout();
 }
@@ -173,4 +182,9 @@ void Document::set_active_link_color(Color color)
 void Document::set_visited_link_color(Color color)
 {
     m_visited_link_color = color;
+}
+
+const LayoutDocument* Document::layout_node() const
+{
+    return static_cast<const LayoutDocument*>(Node::layout_node());
 }

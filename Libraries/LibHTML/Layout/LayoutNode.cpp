@@ -17,7 +17,7 @@ LayoutNode::LayoutNode(const Node* node)
 
 LayoutNode::~LayoutNode()
 {
-    if (m_node)
+    if (m_node && m_node->layout_node() == this)
         m_node->set_layout_node({}, nullptr);
 }
 

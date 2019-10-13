@@ -15,6 +15,9 @@ public:
     const Document* document() const { return m_document; }
     void set_document(Document*);
 
+    const LayoutDocument* layout_root() const;
+    LayoutDocument* layout_root();
+
     Frame& main_frame() { return *m_main_frame; }
     const Frame& main_frame() const { return *m_main_frame; }
 
@@ -42,7 +45,6 @@ private:
 
     RefPtr<Frame> m_main_frame;
     RefPtr<Document> m_document;
-    RefPtr<LayoutNode> m_layout_root;
 
     bool m_should_show_line_box_borders { false };
 };
