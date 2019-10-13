@@ -197,7 +197,7 @@ public:
             buffer.append(consume_one());
 
         PARSE_ASSERT(!buffer.is_null());
-        Selector::Component component { type, relation, String::copy(buffer) };
+        Selector::Component component { type, Selector::Component::PseudoClass::None, relation, String::copy(buffer) };
         buffer.clear();
 
         if (peek() == '[') {
@@ -209,12 +209,23 @@ public:
         }
 
         if (peek() == ':') {
-            // FIXME: Implement pseudo stuff.
+            // FIXME: Implement pseudo elements.
+            [[maybe_unused]] bool is_pseudo_element = false;
             consume_one();
-            if (peek() == ':')
+            if (peek() == ':') {
+                is_pseudo_element = true;
                 consume_one();
+            }
             while (is_valid_selector_char(peek()))
-                consume_one();
+                buffer.append(consume_one());
+
+            auto pseudo_name = String::copy(buffer);
+            buffer.clear();
+
+            if (pseudo_name == "link")
+                component.pseudo_class = Selector::Component::PseudoClass::Link;
+            else if (pseudo_name == "hover")
+                component.pseudo_class = Selector::Component::PseudoClass::Hover;
         }
 
         return component;
