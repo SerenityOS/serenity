@@ -8,8 +8,8 @@
 #include <LibCore/CObject.h>
 #include <LibIPC/IEndpoint.h>
 #include <LibIPC/IMessage.h>
-
 #include <errno.h>
+#include <sched.h>
 #include <stdio.h>
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -104,21 +104,26 @@ namespace Server {
                 ++iov_count;
             }
 
-            int nwritten = writev(m_socket->fd(), iov, iov_count);
-            if (nwritten < 0) {
-                switch (errno) {
-                case EPIPE:
-                    dbgprintf("Connection::post_message: Disconnected from peer.\n");
-                    shutdown();
-                    return;
-                case EAGAIN:
-                    dbgprintf("Connection::post_message: Client buffer overflowed.\n");
-                    did_misbehave();
-                    return;
-                default:
-                    perror("Connection::post_message writev");
-                    ASSERT_NOT_REACHED();
+            int nwritten = 0;
+            for (;;) {
+                nwritten = writev(m_socket->fd(), iov, iov_count);
+                if (nwritten < 0) {
+                    switch (errno) {
+                    case EPIPE:
+                        dbgprintf("Connection::post_message: Disconnected from peer.\n");
+                        shutdown();
+                        return;
+                    case EAGAIN:
+                        // FIXME: It would be better to push these onto a queue so we can go back
+                        //        to servicing other clients.
+                        sched_yield();
+                        continue;
+                    default:
+                        perror("Connection::post_message writev");
+                        ASSERT_NOT_REACHED();
+                    }
                 }
+                break;
             }
 
             ASSERT(nwritten == (int)(sizeof(message) + extra_data.size()));
