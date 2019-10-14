@@ -67,9 +67,9 @@ public:
 
     void layout();
 
-    void invalidate_style();
-    void invalidate_layout();
-    Function<void()> on_invalidate_layout;
+    void update_style();
+    void update_layout();
+    Function<void()> on_layout_updated;
 
     virtual bool is_child_allowed(const Node&) const override;
 
