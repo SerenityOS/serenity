@@ -64,7 +64,7 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 Make sure you have all the dependencies installed:
 
 ```
-sudo apt install libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
+sudo apt install build-essential curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
 ```
 
 Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
