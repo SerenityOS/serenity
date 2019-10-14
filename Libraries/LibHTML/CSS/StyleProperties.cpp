@@ -97,3 +97,23 @@ int StyleProperties::line_height() const
     // FIXME: Allow overriding the line-height. We currently default to 140% which seems to look nice.
     return (int)(font().glyph_height() * 1.4f);
 }
+
+bool StyleProperties::operator==(const StyleProperties& other) const
+{
+    if (m_property_values.size() != other.m_property_values.size())
+        return false;
+
+    for (auto& it : m_property_values) {
+        auto jt = other.m_property_values.find(it.key);
+        if (jt == other.m_property_values.end())
+            return false;
+        auto& my_value = *it.value;
+        auto& other_value = *jt->value;
+        if (my_value.type() != other_value.type())
+            return false;
+        if (my_value.to_string() != other_value.to_string())
+            return false;
+    }
+
+    return true;
+}

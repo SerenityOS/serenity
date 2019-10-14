@@ -111,6 +111,7 @@ public:
     virtual ~LayoutNodeWithStyle() override {}
 
     const StyleProperties& style() const { return m_style; }
+    void set_style(const StyleProperties& style) { m_style = style; }
 
 protected:
     explicit LayoutNodeWithStyle(const Node* node, NonnullRefPtr<StyleProperties> style)

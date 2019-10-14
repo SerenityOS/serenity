@@ -102,3 +102,11 @@ RefPtr<LayoutNode> Node::create_layout_node(const StyleResolver&, const StylePro
 {
     return nullptr;
 }
+
+void Node::invalidate_style()
+{
+    for (auto* node = this; node; node = node->parent()) {
+        if (is<Element>(*node))
+            to<Element>(*node).recompute_style();
+    }
+}

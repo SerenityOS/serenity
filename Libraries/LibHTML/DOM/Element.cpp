@@ -1,4 +1,5 @@
 #include <LibHTML/CSS/StyleResolver.h>
+#include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
@@ -91,4 +92,49 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleResolver& resolver, co
 
 void Element::parse_attribute(const String&, const String&)
 {
+}
+
+enum class StyleDifference {
+    None,
+    NeedsRepaint,
+    NeedsRelayout,
+};
+
+static StyleDifference compute_style_difference(const StyleProperties& old_style, const StyleProperties& new_style, const Document& document)
+{
+    if (old_style == new_style)
+        return StyleDifference::None;
+
+    bool needs_repaint = false;
+    bool needs_relayout = false;
+
+    if (new_style.color_or_fallback(CSS::PropertyID::Color, document, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::Color, document, Color::Black))
+        needs_repaint = true;
+    else if (new_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document, Color::Black) != old_style.color_or_fallback(CSS::PropertyID::BackgroundColor, document, Color::Black))
+        needs_repaint = true;
+
+    if (needs_relayout)
+        return StyleDifference::NeedsRelayout;
+    if (needs_repaint)
+        return StyleDifference::NeedsRepaint;
+    return StyleDifference::None;
+}
+
+void Element::recompute_style()
+{
+    ASSERT(parent());
+    auto* parent_layout_node = parent()->layout_node();
+    ASSERT(parent_layout_node);
+    auto style = document().style_resolver().resolve_style(*this, &parent_layout_node->style());
+    ASSERT(layout_node());
+    auto diff = compute_style_difference(layout_node()->style(), *style, document());
+    if (diff == StyleDifference::None)
+        return;
+    layout_node()->set_style(*style);
+    if (diff == StyleDifference::NeedsRelayout) {
+        ASSERT_NOT_REACHED();
+    }
+    if (diff == StyleDifference::NeedsRepaint) {
+        layout_node()->set_needs_display();
+    }
 }
