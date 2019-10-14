@@ -6,6 +6,7 @@
 #include <LibCore/CNotifier.h>
 #include <LibCore/CSyscallUtils.h>
 #include <LibIPC/IMessage.h>
+#include <sched.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/select.h>
@@ -145,10 +146,19 @@ namespace Client {
                 ++iov_count;
             }
 
-            int nwritten = writev(m_connection->fd(), iov, iov_count);
-            if (nwritten < 0) {
-                perror("writev");
-                ASSERT_NOT_REACHED();
+            int nwritten;
+
+            for (;;) {
+                nwritten = writev(m_connection->fd(), iov, iov_count);
+                if (nwritten < 0) {
+                    if (errno == EAGAIN) {
+                        sched_yield();
+                        continue;
+                    }
+                    perror("writev");
+                    ASSERT_NOT_REACHED();
+                }
+                break;
             }
             ASSERT((size_t)nwritten == sizeof(message) + extra_data.size());
 
