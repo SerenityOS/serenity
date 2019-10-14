@@ -1,10 +1,33 @@
 #include <LibHTML/CSS/SelectorEngine.h>
+#include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 
 namespace SelectorEngine {
 
+static bool matches_hover_pseudo_class(const Element& element)
+{
+    auto* hovered_node = element.document().hovered_node();
+    if (!hovered_node)
+        return false;
+    if (&element == hovered_node)
+        return true;
+    return element.is_ancestor_of(*hovered_node);
+}
+
 bool matches(const Selector::Component& component, const Element& element)
 {
+    switch (component.pseudo_class) {
+    case Selector::Component::PseudoClass::None:
+        break;
+    case Selector::Component::PseudoClass::Link:
+        ASSERT_NOT_REACHED();
+        break;
+    case Selector::Component::PseudoClass::Hover:
+        if (!matches_hover_pseudo_class(element))
+            return false;
+        break;
+    }
+
     switch (component.type) {
     case Selector::Component::Type::Id:
         return component.value == element.attribute("id");
