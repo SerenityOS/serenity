@@ -53,7 +53,8 @@ LIBC_OBJS = \
        sched.o \
        dlfcn.o \
        libgen.o \
-       wchar.o
+       wchar.o \
+       syslog.o
 
 ASM_OBJS = setjmp.ao crti.ao crtn.ao
 
