@@ -201,7 +201,12 @@ void Document::set_hovered_node(Node* node)
     if (m_hovered_node == node)
         return;
 
+    RefPtr<Node> old_hovered_node = move(m_hovered_node);
     m_hovered_node = node;
-    update_style();
+
+    if (old_hovered_node)
+        old_hovered_node->invalidate_style();
+    if (m_hovered_node)
+        m_hovered_node->invalidate_style();
 }
 

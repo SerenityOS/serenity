@@ -34,6 +34,9 @@ public:
 
     int line_height() const;
 
+    bool operator==(const StyleProperties&) const;
+    bool operator!=(const StyleProperties& other) const { return !(*this == other); }
+
 private:
     HashMap<unsigned, NonnullRefPtr<StyleValue>> m_property_values;
 

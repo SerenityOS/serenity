@@ -71,6 +71,8 @@ public:
 
     virtual bool is_child_allowed(const Node&) const { return true; }
 
+    void invalidate_style();
+
 protected:
     Node(Document&, NodeType);
 
