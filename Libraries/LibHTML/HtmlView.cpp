@@ -42,12 +42,12 @@ void HtmlView::set_document(Document* document)
         return;
 
     if (m_document)
-        m_document->on_invalidate_layout = nullptr;
+        m_document->on_layout_updated = nullptr;
 
     m_document = document;
 
     if (m_document) {
-        m_document->on_invalidate_layout = [this] {
+        m_document->on_layout_updated = [this] {
             layout_and_sync_size();
             update();
         };

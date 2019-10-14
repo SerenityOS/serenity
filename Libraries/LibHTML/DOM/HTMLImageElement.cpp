@@ -30,7 +30,7 @@ void HTMLImageElement::load_image(const String& src)
         }
 
         m_bitmap = load_png_from_memory(data.data(), data.size());
-        document().invalidate_layout();
+        document().update_layout();
     });
 }
 

@@ -158,17 +158,17 @@ void Document::layout()
     m_layout_root->layout();
 }
 
-void Document::invalidate_style()
+void Document::update_style()
 {
     m_layout_root = nullptr;
-    invalidate_layout();
+    update_layout();
 }
 
-void Document::invalidate_layout()
+void Document::update_layout()
 {
     layout();
-    if (on_invalidate_layout)
-        on_invalidate_layout();
+    if (on_layout_updated)
+        on_layout_updated();
 }
 
 RefPtr<LayoutNode> Document::create_layout_node(const StyleResolver&, const StyleProperties*) const
@@ -202,6 +202,6 @@ void Document::set_hovered_node(Node* node)
         return;
 
     m_hovered_node = node;
-    invalidate_style();
+    update_style();
 }
 
