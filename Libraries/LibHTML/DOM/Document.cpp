@@ -195,3 +195,13 @@ const LayoutDocument* Document::layout_node() const
 {
     return static_cast<const LayoutDocument*>(Node::layout_node());
 }
+
+void Document::set_hovered_node(Node* node)
+{
+    if (m_hovered_node == node)
+        return;
+
+    m_hovered_node = node;
+    invalidate_style();
+}
+

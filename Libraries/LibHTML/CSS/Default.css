@@ -90,6 +90,10 @@ a {
     text-decoration: underline;
 }
 
+a:hover {
+    color: red;
+}
+
 hr {
     margin-top: 4;
     margin-bottom: 4;

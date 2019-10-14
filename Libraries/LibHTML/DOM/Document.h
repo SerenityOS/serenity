@@ -38,7 +38,7 @@ public:
 
     virtual String tag_name() const override { return "#document"; }
 
-    void set_hovered_node(Node* node) { m_hovered_node = node; }
+    void set_hovered_node(Node*);
     Node* hovered_node() { return m_hovered_node; }
     const Node* hovered_node() const { return m_hovered_node; }
 
