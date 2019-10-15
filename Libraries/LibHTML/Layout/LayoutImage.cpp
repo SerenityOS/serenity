@@ -37,6 +37,10 @@ void LayoutImage::render(RenderingContext& context)
     if (!is_visible())
         return;
 
+    // FIXME: This should be done at a different level. Also rect() does not include padding etc!
+    if (!context.viewport_rect().intersects(rect()))
+        return;
+
     if (renders_as_alt_text()) {
         context.painter().set_font(Font::default_font());
         StylePainter::paint_frame(context.painter(), rect(), FrameShape::Container, FrameShadow::Sunken, 2);
@@ -52,5 +56,5 @@ void LayoutImage::render(RenderingContext& context)
 
 bool LayoutImage::renders_as_alt_text() const
 {
-    return !node().bitmap();
+    return !node().image_loader();
 }

@@ -29,7 +29,8 @@ void HTMLImageElement::load_image(const String& src)
             return;
         }
 
-        m_bitmap = load_png_from_memory(data.data(), data.size());
+        m_image_data = data;
+        m_image_loader = ImageLoader::create(m_image_data.data(), m_image_data.size());
         document().update_layout();
     });
 }
@@ -41,8 +42,8 @@ int HTMLImageElement::preferred_width() const
     if (ok)
         return width;
 
-    if (m_bitmap)
-        return m_bitmap->width();
+    if (m_image_loader)
+        return m_image_loader->width();
 
     return 0;
 }
@@ -54,8 +55,8 @@ int HTMLImageElement::preferred_height() const
     if (ok)
         return height;
 
-    if (m_bitmap)
-        return m_bitmap->height();
+    if (m_image_loader)
+        return m_image_loader->height();
 
     return 0;
 }
@@ -71,5 +72,7 @@ RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* p
 
 const GraphicsBitmap* HTMLImageElement::bitmap() const
 {
-    return m_bitmap;
+    if (!m_image_loader)
+        return nullptr;
+    return m_image_loader->bitmap();
 }

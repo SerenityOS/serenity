@@ -1,6 +1,7 @@
 #pragma once
 
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/ImageLoader.h>
 #include <LibHTML/DOM/HTMLElement.h>
 
 class HTMLImageElement : public HTMLElement {
@@ -16,11 +17,14 @@ public:
     int preferred_height() const;
 
     const GraphicsBitmap* bitmap() const;
+    const ImageLoader* image_loader() const { return m_image_loader; }
 
 private:
     void load_image(const String& src);
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
+    RefPtr<ImageLoader> m_image_loader;
     mutable RefPtr<GraphicsBitmap> m_bitmap;
+    ByteBuffer m_image_data;
 };
