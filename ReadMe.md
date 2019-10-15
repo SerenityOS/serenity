@@ -4,6 +4,17 @@ Graphical Unix-like operating system for x86 computers.
 
 ![Travis CI status](https://api.travis-ci.com/SerenityOS/serenity.svg?branch=master)
 
+## Table of contents
+1. [About](#about)
+2. [Screenshot](#screenshot)
+3. [Current Features](#current-features)
+4. [How do I build and run this?](#how-do-i-build-and-run-this)
+5. [Notes on WSL](#notes-on-wsl)
+6. [IRC](#irc)
+7. [Author](#author)
+8. [Contributors](#contributors)
+9. [License](#license)
+
 ## About
 
 *I always wondered what it would be like to write my own operating system, but I never took it seriously. Until now.*
@@ -63,12 +74,12 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 
 Make sure you have all the dependencies installed:
 
-```bash
+```
 sudo apt install build-essential curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
 ```
 
 Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
-```bash
+```
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
 sudo apt-get install gcc-8 g++-8
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
@@ -96,7 +107,7 @@ Nevertheless, here is a guide on how to [get an Insider Build](https://insider.w
 
 WSL2 does not natively support graphical applications. This means that to actually **./run** SerenityOS, you need an X Server for windows. [Vcxsrv](https://sourceforge.net/projects/vcxsrv/) is a good option. When you start up Vcxsrv, make sure to set the Display number to 0, and to Disable access control. Before actually doing **./run**, you need to set the DISPLAY environmental variable as such:
 
-```bash
+```
 export DISPLAY=$(cat /etc/resolv.conf | grep nameserver | awk '{print $2}'):0
 ```
 This is due to a bug in WSL2. For more information, microsoft/WSL#4106.
