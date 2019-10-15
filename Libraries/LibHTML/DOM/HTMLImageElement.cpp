@@ -60,13 +60,10 @@ int HTMLImageElement::preferred_height() const
     return 0;
 }
 
-RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleResolver& resolver, const StyleProperties* parent_style) const
+RefPtr<LayoutNode> HTMLImageElement::create_layout_node(const StyleProperties* parent_style) const
 {
-    auto style = resolver.resolve_style(*this, parent_style);
-
-    auto display_property = style->property(CSS::PropertyID::Display);
-    String display = display_property.has_value() ? display_property.release_value()->to_string() : "inline";
-
+    auto style = document().style_resolver().resolve_style(*this, parent_style);
+    auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
     if (display == "none")
         return nullptr;
     return adopt(*new LayoutImage(*this, move(style)));

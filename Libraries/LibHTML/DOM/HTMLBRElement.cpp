@@ -10,7 +10,7 @@ HTMLBRElement::~HTMLBRElement()
 {
 }
 
-RefPtr<LayoutNode> HTMLBRElement::create_layout_node(const StyleResolver&, const StyleProperties*) const
+RefPtr<LayoutNode> HTMLBRElement::create_layout_node(const StyleProperties*) const
 {
     return adopt(*new LayoutBreak(*this));
 }
