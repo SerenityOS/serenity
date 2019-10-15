@@ -61,6 +61,14 @@ struct [[gnu::packed]] Quad16
 };
 
 struct PNGLoadingContext {
+    enum class State {
+        NotDecoded,
+        ChunksDecoded,
+        BitmapDecoded,
+    };
+    State state { State::NotDecoded };
+    const u8* data { nullptr };
+    size_t data_size { 0 };
     int width { -1 };
     int height { -1 };
     u8 bit_depth { 0 };
@@ -382,23 +390,22 @@ template<bool has_alpha, u8 filter_type>
     }
 }
 
-static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
+static bool decode_png_chunks(PNGLoadingContext& context)
 {
+    ASSERT(context.state == PNGLoadingContext::State::NotDecoded);
 #ifdef PNG_STOPWATCH_DEBUG
     Stopwatch sw("load_png_impl: total");
 #endif
-    const u8* data_ptr = data;
-    int data_remaining = data_size;
+    const u8* data_ptr = context.data;
+    int data_remaining = context.data_size;
 
     const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
-    if (memcmp(data, png_header, sizeof(png_header))) {
+    if (memcmp(context.data, png_header, sizeof(png_header))) {
         dbgprintf("Invalid PNG header\n");
-        return nullptr;
+        return false;
     }
 
-    PNGLoadingContext context;
-
-    context.compressed_data.ensure_capacity(data_size);
+    context.compressed_data.ensure_capacity(context.data_size);
 
     data_ptr += sizeof(png_header);
     data_remaining -= sizeof(png_header);
@@ -410,11 +417,18 @@ static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
         Streamer streamer(data_ptr, data_remaining);
         while (!streamer.at_end()) {
             if (!process_chunk(streamer, context)) {
-                return nullptr;
+                return false;
             }
         }
     }
 
+    context.state = PNGLoadingContext::State::ChunksDecoded;
+    return true;
+}
+
+static bool decode_png_bitmap(PNGLoadingContext& context)
+{
+    ASSERT(context.state == PNGLoadingContext::State::ChunksDecoded);
     {
 #ifdef PNG_STOPWATCH_DEBUG
         Stopwatch sw("load_png_impl: uncompress");
@@ -423,7 +437,7 @@ static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
         unsigned long destlen = context.decompression_buffer_size;
         int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
         if (ret < 0)
-            return nullptr;
+            return false;
         context.compressed_data.clear();
     }
 
@@ -436,12 +450,12 @@ static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
         for (int y = 0; y < context.height; ++y) {
             u8 filter;
             if (!streamer.read(filter))
-                return nullptr;
+                return false;
 
             context.scanlines.append({ filter });
             auto& scanline_buffer = context.scanlines.last().data;
             if (!streamer.wrap_bytes(scanline_buffer, context.width * context.bytes_per_pixel))
-                return nullptr;
+                return false;
         }
     }
 
@@ -457,6 +471,22 @@ static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
     munmap(context.decompression_buffer, context.decompression_buffer_size);
     context.decompression_buffer = nullptr;
     context.decompression_buffer_size = 0;
+
+    context.state = PNGLoadingContext::State::BitmapDecoded;
+    return true;
+}
+
+static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
+{
+    PNGLoadingContext context;
+    context.data = data;
+    context.data_size = data_size;
+
+    if (!decode_png_chunks(context))
+        return nullptr;
+
+    if (!decode_png_bitmap(context))
+        return nullptr;
 
     return context.bitmap;
 }
@@ -575,4 +605,38 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
     if (!strcmp((const char*)chunk_type, "tRNS"))
         return process_tRNS(chunk_data, context);
     return true;
+}
+
+PNGImageLoaderPlugin::PNGImageLoaderPlugin(const u8* data, size_t size)
+{
+    m_context = make<PNGLoadingContext>();
+    m_context->data = data;
+    m_context->data_size = size;
+}
+
+PNGImageLoaderPlugin::~PNGImageLoaderPlugin()
+{
+}
+
+Size PNGImageLoaderPlugin::size()
+{
+    if (m_context->state == PNGLoadingContext::State::NotDecoded) {
+        bool success = decode_png_chunks(*m_context);
+        ASSERT(success);
+    }
+
+    return { m_context->width, m_context->height };
+}
+
+RefPtr<GraphicsBitmap> PNGImageLoaderPlugin::bitmap()
+{
+    if (m_context->state != PNGLoadingContext::State::BitmapDecoded) {
+        // NOTE: This forces the chunk decoding to happen.
+        size();
+        bool success = decode_png_bitmap(*m_context);
+        ASSERT(success);
+    }
+
+    ASSERT(m_context->bitmap);
+    return m_context->bitmap;
 }
