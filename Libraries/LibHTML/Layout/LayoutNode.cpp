@@ -76,4 +76,13 @@ void LayoutNode::split_into_lines(LayoutBlock& container)
 
 void LayoutNode::set_needs_display()
 {
+    auto* frame = document().frame();
+    ASSERT(frame);
+
+    for_each_fragment_of_this([&](auto& fragment) {
+        if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
+            const_cast<Frame*>(frame)->set_needs_display(fragment.rect());
+        }
+        return IterationDecision::Continue;
+    });
 }
