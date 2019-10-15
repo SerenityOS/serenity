@@ -11,6 +11,7 @@
 #include <LibHTML/DOM/HTMLTitleElement.h>
 #include <LibHTML/Frame.h>
 #include <LibHTML/Layout/LayoutDocument.h>
+#include <LibHTML/Layout/LayoutTreeBuilder.h>
 #include <stdio.h>
 
 Document::Document()
@@ -153,8 +154,10 @@ URL Document::complete_url(const String& string) const
 
 void Document::layout()
 {
-    if (!m_layout_root)
-        m_layout_root = create_layout_tree(style_resolver(), nullptr);
+    if (!m_layout_root) {
+        LayoutTreeBuilder tree_builder;
+        m_layout_root = tree_builder.build(*this);
+    }
     m_layout_root->layout();
 }
 
@@ -209,4 +212,3 @@ void Document::set_hovered_node(Node* node)
     if (m_hovered_node)
         m_hovered_node->invalidate_style();
 }
-
