@@ -34,6 +34,7 @@ LIBHTML_OBJS = \
     Parser/HTMLParser.o \
     Parser/CSSParser.o \
     Layout/LayoutNode.o \
+    Layout/LayoutBox.o \
     Layout/LayoutText.o \
     Layout/LayoutBlock.o \
     Layout/LayoutInline.o \

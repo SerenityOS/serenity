@@ -3,7 +3,7 @@
 #include <LibHTML/DOM/HTMLBRElement.h>
 #include <LibHTML/Layout/LayoutNode.h>
 
-class LayoutBreak final : public LayoutNode {
+class LayoutBreak final : public LayoutNodeWithStyleAndBoxModelMetrics {
 public:
     explicit LayoutBreak(const HTMLBRElement&);
     virtual ~LayoutBreak() override;

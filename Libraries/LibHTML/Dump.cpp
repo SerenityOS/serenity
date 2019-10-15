@@ -58,35 +58,40 @@ void dump_tree(const LayoutNode& layout_node)
     else
         tag_name = "???";
 
-    dbgprintf("%s {%s} at (%d,%d) size %dx%d",
-        layout_node.class_name(),
-        tag_name.characters(),
-        layout_node.x(),
-        layout_node.y(),
-        layout_node.width(),
-        layout_node.height());
+    if (!layout_node.is_box()) {
+        dbgprintf("%s {%s}\n", layout_node.class_name(), tag_name.characters());
+    } else {
+        auto& layout_box = to<LayoutBox>(layout_node);
+        dbgprintf("%s {%s} at (%d,%d) size %dx%d",
+            layout_box.class_name(),
+            tag_name.characters(),
+            layout_box.x(),
+            layout_box.y(),
+            layout_box.width(),
+            layout_box.height());
 
-    // Dump the horizontal box properties
-    dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
-        layout_node.box_model().margin().left.to_px(),
-        layout_node.box_model().border().left.to_px(),
-        layout_node.box_model().padding().left.to_px(),
-        layout_node.width(),
-        layout_node.box_model().padding().right.to_px(),
-        layout_node.box_model().border().right.to_px(),
-        layout_node.box_model().margin().right.to_px());
+        // Dump the horizontal box properties
+        dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
+            layout_box.box_model().margin().left.to_px(),
+            layout_box.box_model().border().left.to_px(),
+            layout_box.box_model().padding().left.to_px(),
+            layout_box.width(),
+            layout_box.box_model().padding().right.to_px(),
+            layout_box.box_model().border().right.to_px(),
+            layout_box.box_model().margin().right.to_px());
 
-    // And the vertical box properties
-    dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
-        layout_node.box_model().margin().top.to_px(),
-        layout_node.box_model().border().top.to_px(),
-        layout_node.box_model().padding().top.to_px(),
-        layout_node.height(),
-        layout_node.box_model().padding().bottom.to_px(),
-        layout_node.box_model().border().bottom.to_px(),
-        layout_node.box_model().margin().bottom.to_px());
+        // And the vertical box properties
+        dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
+            layout_box.box_model().margin().top.to_px(),
+            layout_box.box_model().border().top.to_px(),
+            layout_box.box_model().padding().top.to_px(),
+            layout_box.height(),
+            layout_box.box_model().padding().bottom.to_px(),
+            layout_box.box_model().border().bottom.to_px(),
+            layout_box.box_model().margin().bottom.to_px());
 
-    dbgprintf("\n");
+        dbgprintf("\n");
+    }
 
     if (layout_node.is_block() && static_cast<const LayoutBlock&>(layout_node).children_are_inline()) {
         auto& block = static_cast<const LayoutBlock&>(layout_node);

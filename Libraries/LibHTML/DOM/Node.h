@@ -89,7 +89,7 @@ inline bool is(const Node&)
 template<typename T>
 inline bool is(const Node* node)
 {
-    return node && is<T>(*node);
+    return !node || is<T>(*node);
 }
 
 template<>

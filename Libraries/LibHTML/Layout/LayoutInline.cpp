@@ -3,7 +3,7 @@
 #include <LibHTML/Layout/LayoutInline.h>
 
 LayoutInline::LayoutInline(const Element& element, NonnullRefPtr<StyleProperties> style)
-    : LayoutNodeWithStyle(&element, move(style))
+    : LayoutNodeWithStyleAndBoxModelMetrics(&element, move(style))
 {
     set_inline(true);
 }

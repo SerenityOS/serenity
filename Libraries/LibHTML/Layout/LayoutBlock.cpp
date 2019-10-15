@@ -3,9 +3,10 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
+#include <LibHTML/Layout/LayoutReplaced.h>
 
 LayoutBlock::LayoutBlock(const Node* node, NonnullRefPtr<StyleProperties> style)
-    : LayoutNodeWithStyle(node, move(style))
+    : LayoutBox(node, move(style))
 {
 }
 
@@ -39,8 +40,10 @@ void LayoutBlock::layout_block_children()
     ASSERT(!children_are_inline());
     int content_height = 0;
     for_each_child([&](auto& child) {
-        child.layout();
-        content_height = child.rect().bottom() + child.box_model().full_margin().bottom - rect().top();
+        ASSERT(is<LayoutBlock>(child));
+        auto& child_block = static_cast<LayoutBlock&>(child);
+        child_block.layout();
+        content_height = child_block.rect().bottom() + child_block.box_model().full_margin().bottom - rect().top();
     });
     rect().set_height(content_height);
 }
@@ -69,8 +72,8 @@ void LayoutBlock::layout_inline_children()
             fragment.rect().set_x(x() + fragment.rect().x());
             fragment.rect().set_y(y() + content_height + (max_height - fragment.rect().height()));
 
-            if (fragment.layout_node().is_replaced())
-                const_cast<LayoutNode&>(fragment.layout_node()).set_rect(fragment.rect());
+            if (is<LayoutReplaced>(fragment.layout_node()))
+                const_cast<LayoutReplaced&>(to<LayoutReplaced>(fragment.layout_node())).set_rect(fragment.rect());
         }
 
         content_height += max_height;

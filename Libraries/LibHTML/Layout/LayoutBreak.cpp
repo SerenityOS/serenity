@@ -2,7 +2,7 @@
 #include <LibHTML/Layout/LayoutBreak.h>
 
 LayoutBreak::LayoutBreak(const HTMLBRElement& element)
-    : LayoutNode(&element)
+    : LayoutNodeWithStyleAndBoxModelMetrics(&element, StyleProperties::create())
 {
     set_inline(true);
 }

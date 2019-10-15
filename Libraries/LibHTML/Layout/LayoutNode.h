@@ -24,20 +24,6 @@ class LayoutNode : public TreeNode<LayoutNode> {
 public:
     virtual ~LayoutNode();
 
-    const Rect& rect() const { return m_rect; }
-    Rect& rect() { return m_rect; }
-    void set_rect(const Rect& rect) { m_rect = rect; }
-
-    int x() const { return rect().x(); }
-    int y() const { return rect().y(); }
-    int width() const { return rect().width(); }
-    int height() const { return rect().height(); }
-    Size size() const { return rect().size(); }
-    Point position() const { return rect().location(); }
-
-    BoxModelMetrics& box_model() { return m_box_metrics; }
-    const BoxModelMetrics& box_model() const { return m_box_metrics; }
-
     virtual HitTestResult hit_test(const Point&) const;
 
     bool is_anonymous() const { return !m_node; }
@@ -63,6 +49,7 @@ public:
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }
     virtual bool is_replaced() const { return false; }
+    virtual bool is_box() const { return false; }
     bool has_style() const { return m_has_style; }
 
     bool is_inline() const { return m_inline; }
@@ -87,7 +74,7 @@ public:
     bool is_visible() const { return m_visible; }
     void set_visible(bool visible) { m_visible = visible; }
 
-    void set_needs_display();
+    virtual void set_needs_display();
 
     template<typename Callback>
     void for_each_fragment_of_this(Callback);
@@ -100,8 +87,6 @@ private:
 
     const Node* m_node { nullptr };
 
-    BoxModelMetrics m_box_metrics;
-    Rect m_rect;
     bool m_inline { false };
     bool m_has_style { false };
     bool m_visible { true };
@@ -126,6 +111,21 @@ private:
     NonnullRefPtr<StyleProperties> m_style;
 };
 
+class LayoutNodeWithStyleAndBoxModelMetrics : public LayoutNodeWithStyle {
+public:
+    BoxModelMetrics& box_model() { return m_box_model; }
+    const BoxModelMetrics& box_model() const { return m_box_model; }
+
+protected:
+    LayoutNodeWithStyleAndBoxModelMetrics(const Node* node, NonnullRefPtr<StyleProperties> style)
+        : LayoutNodeWithStyle(node, move(style))
+    {
+    }
+
+private:
+    BoxModelMetrics m_box_model;
+};
+
 inline const StyleProperties& LayoutNode::style() const
 {
     if (m_has_style)
@@ -147,7 +147,7 @@ inline bool is(const LayoutNode&)
 template<typename T>
 inline bool is(const LayoutNode* node)
 {
-    return node && is<T>(*node);
+    return !node || is<T>(*node);
 }
 
 template<>
