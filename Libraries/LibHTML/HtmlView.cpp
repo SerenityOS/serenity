@@ -118,6 +118,7 @@ void HtmlView::paint_event(GPaintEvent& event)
 
     RenderingContext context { painter };
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
+    context.set_viewport_rect(visible_content_rect());
     layout_root()->render(context);
 }
 
