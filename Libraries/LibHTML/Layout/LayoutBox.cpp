@@ -9,6 +9,9 @@
 
 void LayoutBox::render(RenderingContext& context)
 {
+    if (!is_visible())
+        return;
+
 #ifdef DRAW_BOXES_AROUND_LAYOUT_NODES
     context.painter().draw_rect(m_rect, Color::Blue);
 #endif
@@ -60,6 +63,8 @@ void LayoutBox::render(RenderingContext& context)
             context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), border_color, border_width);
         }
     }
+
+    LayoutNodeWithStyleAndBoxModelMetrics::render(context);
 }
 
 HitTestResult LayoutBox::hit_test(const Point& position) const
