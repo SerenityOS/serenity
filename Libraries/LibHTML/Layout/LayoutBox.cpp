@@ -91,10 +91,5 @@ void LayoutBox::set_needs_display()
         return;
     }
 
-    for_each_fragment_of_this([&](auto& fragment) {
-        if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-            const_cast<Frame*>(frame)->set_needs_display(fragment.rect());
-        }
-        return IterationDecision::Continue;
-    });
+    LayoutNode::set_needs_display();
 }
