@@ -11,7 +11,7 @@ public:
     virtual String tag_name() const override { return "#text"; }
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 };
 
 template<>

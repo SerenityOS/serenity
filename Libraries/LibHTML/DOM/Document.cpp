@@ -16,18 +16,12 @@
 
 Document::Document()
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
+    , m_style_resolver(make<StyleResolver>(*this))
 {
 }
 
 Document::~Document()
 {
-}
-
-StyleResolver& Document::style_resolver()
-{
-    if (!m_style_resolver)
-        m_style_resolver = make<StyleResolver>(*this);
-    return *m_style_resolver;
 }
 
 bool Document::is_child_allowed(const Node& node) const
@@ -174,7 +168,7 @@ void Document::update_layout()
         on_layout_updated();
 }
 
-RefPtr<LayoutNode> Document::create_layout_node(const StyleResolver&, const StyleProperties*) const
+RefPtr<LayoutNode> Document::create_layout_node(const StyleProperties*) const
 {
     return adopt(*new LayoutDocument(*this, StyleProperties::create()));
 }

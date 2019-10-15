@@ -20,7 +20,7 @@ public:
 private:
     void load_image(const String& src);
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
     mutable RefPtr<GraphicsBitmap> m_bitmap;
 };

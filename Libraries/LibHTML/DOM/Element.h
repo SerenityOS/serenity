@@ -54,7 +54,7 @@ public:
     const LayoutNodeWithStyle* layout_node() const { return static_cast<const LayoutNodeWithStyle*>(Node::layout_node()); }
 
 private:
-    RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
+    RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
     Attribute* find_attribute(const String& name);
     const Attribute* find_attribute(const String& name) const;

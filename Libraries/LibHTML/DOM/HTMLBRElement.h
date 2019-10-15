@@ -7,7 +7,7 @@ public:
     HTMLBRElement(Document&, const String& tag_name);
     virtual ~HTMLBRElement() override;
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 };
 
 template<>

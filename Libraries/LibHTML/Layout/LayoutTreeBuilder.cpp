@@ -10,7 +10,7 @@ LayoutTreeBuilder::LayoutTreeBuilder()
 
 static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* parent_style)
 {
-    auto layout_node = node.create_layout_node(node.document().style_resolver(), parent_style);
+    auto layout_node = node.create_layout_node(parent_style);
     if (!layout_node)
         return nullptr;
 

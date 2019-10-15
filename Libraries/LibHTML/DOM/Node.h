@@ -37,7 +37,7 @@ public:
     bool is_character_data() const { return type() == NodeType::TEXT_NODE || type() == NodeType::COMMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document(); }
 
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const;
 
     virtual String tag_name() const = 0;
 

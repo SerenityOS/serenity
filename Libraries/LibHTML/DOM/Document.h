@@ -31,7 +31,8 @@ public:
 
     void fixup();
 
-    StyleResolver& style_resolver();
+    StyleResolver& style_resolver() { return *m_style_resolver; }
+    const StyleResolver& style_resolver() const { return *m_style_resolver; }
 
     void add_sheet(const StyleSheet& sheet) { m_sheets.append(sheet); }
     const NonnullRefPtrVector<StyleSheet>& stylesheets() const { return m_sheets; }
@@ -76,7 +77,7 @@ public:
     const LayoutDocument* layout_node() const;
 
 private:
-    virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const override;
+    virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
     OwnPtr<StyleResolver> m_style_resolver;
     NonnullRefPtrVector<StyleSheet> m_sheets;
