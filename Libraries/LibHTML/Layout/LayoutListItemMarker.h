@@ -1,8 +1,8 @@
 #pragma once
 
-#include <LibHTML/Layout/LayoutNode.h>
+#include <LibHTML/Layout/LayoutBox.h>
 
-class LayoutListItemMarker final : public LayoutNode {
+class LayoutListItemMarker final : public LayoutBox {
 public:
     LayoutListItemMarker();
     virtual ~LayoutListItemMarker() override;

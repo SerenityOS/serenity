@@ -2,7 +2,7 @@
 #include <LibHTML/Layout/LayoutListItemMarker.h>
 
 LayoutListItemMarker::LayoutListItemMarker()
-    : LayoutNode(nullptr)
+    : LayoutBox(nullptr, StyleProperties::create())
 {
 }
 

@@ -1,4 +1,5 @@
 #include <LibHTML/Frame.h>
+#include <LibHTML/Dump.h>
 #include <LibHTML/Layout/LayoutDocument.h>
 
 LayoutDocument::LayoutDocument(const Document& document, NonnullRefPtr<StyleProperties> style)
@@ -17,10 +18,14 @@ void LayoutDocument::layout()
 
     LayoutNode::layout();
 
+    ASSERT(!children_are_inline());
+
     int lowest_bottom = 0;
     for_each_child([&](auto& child) {
-        if (child.rect().bottom() > lowest_bottom)
-            lowest_bottom = child.rect().bottom();
+        ASSERT(is<LayoutBlock>(child));
+        auto& child_block = to<LayoutBlock>(child);
+        if (child_block.rect().bottom() > lowest_bottom)
+            lowest_bottom = child_block.rect().bottom();
     });
     rect().set_bottom(lowest_bottom);
 }
