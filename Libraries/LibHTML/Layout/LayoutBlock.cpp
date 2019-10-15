@@ -223,7 +223,7 @@ bool LayoutBlock::children_are_inline() const
 HitTestResult LayoutBlock::hit_test(const Point& position) const
 {
     if (!children_are_inline())
-        return LayoutNode::hit_test(position);
+        return LayoutBox::hit_test(position);
 
     HitTestResult result;
     for (auto& line_box : m_line_boxes) {
