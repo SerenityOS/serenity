@@ -28,7 +28,7 @@ void EraseTool::on_mousedown(GMouseEvent& event)
         return;
     Rect r = build_rect(event.position(), m_widget->bitmap().rect());
     GPainter painter(m_widget->bitmap());
-    painter.fill_rect(r, Color(Color::White));
+    painter.fill_rect(r, get_color());
     m_widget->update();
 }
 
@@ -40,7 +40,7 @@ void EraseTool::on_mousemove(GMouseEvent& event)
     if (event.buttons() & GMouseButton::Left || event.buttons() & GMouseButton::Right) {
         Rect r = build_rect(event.position(), m_widget->bitmap().rect());
         GPainter painter(m_widget->bitmap());
-        painter.fill_rect(r, Color(Color::White));
+        painter.fill_rect(r, get_color());
         m_widget->update();
     }
 }
@@ -49,6 +49,17 @@ void EraseTool::on_contextmenu(GContextMenuEvent& event)
 {
     if (!m_context_menu) {
         m_context_menu = make<GMenu>();
+
+        NonnullRefPtr<GAction> eraser_color_toggler = GAction::create("Use secondary color", [&](GAction& action) {
+            bool toggled = !m_use_secondary_color;
+            m_use_secondary_color = toggled;
+            action.set_checked(toggled);
+        });
+        eraser_color_toggler->set_checkable(true);
+        eraser_color_toggler->set_checked(m_use_secondary_color);
+
+        m_context_menu->add_action(eraser_color_toggler);
+        m_context_menu->add_separator();
         m_context_menu->add_action(GAction::create("1", [this](auto&) {
             m_thickness = 1;
         }));
@@ -62,6 +73,13 @@ void EraseTool::on_contextmenu(GContextMenuEvent& event)
             m_thickness = 4;
         }));
     }
+
     m_context_menu->popup(event.screen_position());
 }
 
+Color EraseTool::get_color() const
+{
+    if (m_use_secondary_color)
+        return m_widget->secondary_color();
+    return Color(Color::White);
+}
