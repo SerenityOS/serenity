@@ -31,8 +31,8 @@ void LayoutNode::layout()
 const LayoutBlock* LayoutNode::containing_block() const
 {
     for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
-        if (ancestor->is_block())
-            return static_cast<const LayoutBlock*>(ancestor);
+        if (is<LayoutBlock>(*ancestor))
+            return to<LayoutBlock>(ancestor);
     }
     return nullptr;
 }

@@ -10,8 +10,7 @@ void LineBoxFragment::render(RenderingContext& context)
             return;
     }
 
-    if (layout_node().is_text()) {
-        auto& layout_text = static_cast<const LayoutText&>(layout_node());
-        layout_text.render_fragment(context, *this);
+    if (is<LayoutText>(layout_node())) {
+        to<LayoutText>(layout_node()).render_fragment(context, *this);
     }
 }
