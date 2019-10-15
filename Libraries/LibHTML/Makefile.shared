@@ -46,6 +46,7 @@ LIBHTML_OBJS = \
     Layout/BoxModelMetrics.o \
     Layout/LineBox.o \
     Layout/LineBoxFragment.o \
+    Layout/LayoutTreeBuilder.o \
     ResourceLoader.o \
     HtmlView.o \
     Frame.o \

@@ -38,7 +38,6 @@ public:
     bool is_parent_node() const { return is_element() || is_document(); }
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleResolver&, const StyleProperties* parent_style) const;
-    RefPtr<LayoutNode> create_layout_tree(const StyleResolver&, const StyleProperties* parent_style) const;
 
     virtual String tag_name() const = 0;
 
