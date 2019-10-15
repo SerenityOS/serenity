@@ -202,7 +202,7 @@ void LayoutBlock::render(RenderingContext& context)
     if (!is_visible())
         return;
 
-    LayoutNode::render(context);
+    LayoutBox::render(context);
 
     if (children_are_inline()) {
         for (auto& line_box : m_line_boxes) {
