@@ -46,6 +46,10 @@ TextEditorWidget::TextEditorWidget()
 
     m_find_next_action = GAction::create("Find next", { Mod_Ctrl, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
+        if (needle.is_empty()) {
+            dbg() << "find_next(\"\")";
+            return;
+        }
         auto found_range = m_editor->find_next(needle, m_editor->normalized_selection().end());
         dbg() << "find_next(\"" << needle << "\") returned " << found_range;
         if (found_range.is_valid()) {
@@ -60,6 +64,10 @@ TextEditorWidget::TextEditorWidget()
     });
     m_find_previous_action = GAction::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
+        if (needle.is_empty()) {
+            dbg() << "find_prev(\"\")";
+            return;
+        }
 
         auto selection_start = m_editor->normalized_selection().start();
         if (!selection_start.is_valid())
