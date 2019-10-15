@@ -6,7 +6,7 @@ SECTIONS
 
 	.text BLOCK(4K) : ALIGN(4K)
 	{
-        Boot/boot.ao
+        Arch/i386/Boot/boot.ao
 		*(.multiboot)
 		*(.text)
 	}
