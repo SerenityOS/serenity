@@ -53,3 +53,9 @@ void LayoutNode::for_each_fragment_of_this(Callback callback)
         }
     }
 }
+
+template<>
+inline bool is<LayoutBlock>(const LayoutNode& node)
+{
+    return node.is_block();
+}

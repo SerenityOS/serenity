@@ -31,3 +31,9 @@ private:
 
     String m_text_for_rendering;
 };
+
+template<>
+inline bool is<LayoutText>(const LayoutNode& node)
+{
+    return node.is_text();
+}

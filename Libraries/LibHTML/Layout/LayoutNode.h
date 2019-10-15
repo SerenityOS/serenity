@@ -63,6 +63,7 @@ public:
     virtual bool is_text() const { return false; }
     virtual bool is_block() const { return false; }
     virtual bool is_replaced() const { return false; }
+    bool has_style() const { return m_has_style; }
 
     bool is_inline() const { return m_inline; }
     void set_inline(bool b) { m_inline = b; }
@@ -135,4 +136,56 @@ inline const StyleProperties& LayoutNode::style() const
 inline const LayoutNodeWithStyle* LayoutNode::parent() const
 {
     return static_cast<const LayoutNodeWithStyle*>(TreeNode<LayoutNode>::parent());
+}
+
+template<typename T>
+inline bool is(const LayoutNode&)
+{
+    return false;
+}
+
+template<typename T>
+inline bool is(const LayoutNode* node)
+{
+    return node && is<T>(*node);
+}
+
+template<>
+inline bool is<LayoutNode>(const LayoutNode&)
+{
+    return true;
+}
+
+template<>
+inline bool is<LayoutNodeWithStyle>(const LayoutNode& node)
+{
+    return node.has_style();
+}
+
+template<typename T>
+inline const T& to(const LayoutNode& node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<const T&>(node);
+}
+
+template<typename T>
+inline T* to(LayoutNode* node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<T*>(node);
+}
+
+template<typename T>
+inline const T* to(const LayoutNode* node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<const T*>(node);
+}
+
+template<typename T>
+inline T& to(LayoutNode& node)
+{
+    ASSERT(is<T>(node));
+    return static_cast<T&>(node);
 }

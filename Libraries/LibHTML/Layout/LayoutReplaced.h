@@ -15,3 +15,9 @@ private:
 
     virtual void split_into_lines(LayoutBlock& container) override;
 };
+
+template<>
+inline bool is<LayoutReplaced>(const LayoutNode& node)
+{
+    return node.is_replaced();
+}
