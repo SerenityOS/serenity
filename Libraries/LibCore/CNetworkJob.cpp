@@ -2,6 +2,8 @@
 #include <LibCore/CNetworkResponse.h>
 #include <stdio.h>
 
+//#define CNETWORKJOB_DEBUG
+
 CNetworkJob::CNetworkJob()
 {
 }
@@ -13,7 +15,9 @@ CNetworkJob::~CNetworkJob()
 void CNetworkJob::did_finish(NonnullRefPtr<CNetworkResponse>&& response)
 {
     m_response = move(response);
+#ifdef CNETWORKJOB_DEBUG
     dbg() << *this << " job did_finish!";
+#endif
     ASSERT(on_finish);
     on_finish(true);
     shutdown();
@@ -22,7 +26,9 @@ void CNetworkJob::did_finish(NonnullRefPtr<CNetworkResponse>&& response)
 void CNetworkJob::did_fail(Error error)
 {
     m_error = error;
+#ifdef CNETWORKJOB_DEBUG
     dbgprintf("%s{%p} job did_fail! error: %u (%s)\n", class_name(), this, (unsigned)error, to_string(error));
+#endif
     ASSERT(on_finish);
     on_finish(false);
     shutdown();
