@@ -4,6 +4,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+#define CHTTPJOB_DEBUG
+
 CHttpJob::CHttpJob(const CHttpRequest& request)
     : m_request(request)
 {
@@ -75,7 +77,9 @@ void CHttpJob::on_socket_connected()
             }
             auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);
             m_headers.set(name, value);
+#ifdef CHTTPJOB_DEBUG
             dbg() << "CHttpJob: [" << name << "] = '" << value << "'";
+#endif
             return;
         }
         ASSERT(m_state == State::InBody);
@@ -120,7 +124,9 @@ void CHttpJob::start()
     ASSERT(!m_socket);
     m_socket = CTCPSocket::construct(this);
     m_socket->on_connected = [this] {
+#ifdef CHTTPJOB_DEBUG
         dbg() << "CHttpJob: on_connected callback";
+#endif
         on_socket_connected();
     };
     bool success = m_socket->connect(m_request.url().host(), m_request.url().port());
