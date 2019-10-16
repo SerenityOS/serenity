@@ -71,7 +71,6 @@ hostent* gethostbyname(const char* name)
         return nullptr;
 
     auto close_fd_on_exit = ScopeGuard([fd] {
-        dbgprintf("closing fd\n");
         close(fd);
     });
 
