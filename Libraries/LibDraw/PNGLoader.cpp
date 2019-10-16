@@ -13,6 +13,8 @@
 
 //#define PNG_STOPWATCH_DEBUG
 
+static const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
+
 struct PNG_IHDR {
     NetworkOrdered<u32> width;
     NetworkOrdered<u32> height;
@@ -61,8 +63,10 @@ struct [[gnu::packed]] Quad16
 };
 
 struct PNGLoadingContext {
-    enum class State {
-        NotDecoded,
+    enum State {
+        NotDecoded = 0,
+        HeaderDecoded,
+        SizeDecoded,
         ChunksDecoded,
         BitmapDecoded,
     };
@@ -139,7 +143,7 @@ private:
 };
 
 static RefPtr<GraphicsBitmap> load_png_impl(const u8*, int);
-static bool process_chunk(Streamer&, PNGLoadingContext& context);
+static bool process_chunk(Streamer&, PNGLoadingContext& context, bool decode_size_only);
 
 RefPtr<GraphicsBitmap> load_png(const StringView& path)
 {
@@ -390,35 +394,66 @@ template<bool has_alpha, u8 filter_type>
     }
 }
 
-static bool decode_png_chunks(PNGLoadingContext& context)
+static bool decode_png_header(PNGLoadingContext& context)
 {
-    ASSERT(context.state == PNGLoadingContext::State::NotDecoded);
-#ifdef PNG_STOPWATCH_DEBUG
-    Stopwatch sw("load_png_impl: total");
-#endif
-    const u8* data_ptr = context.data;
-    int data_remaining = context.data_size;
+    if (context.state >= PNGLoadingContext::HeaderDecoded)
+        return true;
 
-    const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
-    if (memcmp(context.data, png_header, sizeof(png_header))) {
-        dbgprintf("Invalid PNG header\n");
+    if (memcmp(context.data, png_header, sizeof(png_header)) != 0) {
+        dbg() << "Invalid PNG header";
         return false;
     }
 
+    context.state = PNGLoadingContext::HeaderDecoded;
+    return true;
+}
+
+static bool decode_png_size(PNGLoadingContext& context)
+{
+    if (context.state >= PNGLoadingContext::SizeDecoded)
+        return true;
+
+    if (context.state < PNGLoadingContext::HeaderDecoded) {
+        if (!decode_png_header(context))
+            return false;
+    }
+
+    const u8* data_ptr = context.data + sizeof(png_header);
+    size_t data_remaining = context.data_size - sizeof(png_header);
+
+    Streamer streamer(data_ptr, data_remaining);
+    while (!streamer.at_end()) {
+        if (!process_chunk(streamer, context, true)) {
+            return false;
+        }
+        if (context.width && context.height) {
+            context.state = PNGLoadingContext::State::SizeDecoded;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+static bool decode_png_chunks(PNGLoadingContext& context)
+{
+    if (context.state >= PNGLoadingContext::State::ChunksDecoded)
+        return true;
+
+    if (context.state < PNGLoadingContext::HeaderDecoded) {
+        if (!decode_png_header(context))
+            return false;
+    }
+
+    const u8* data_ptr = context.data + sizeof(png_header);
+    int data_remaining = context.data_size - sizeof(png_header);
+
     context.compressed_data.ensure_capacity(context.data_size);
 
-    data_ptr += sizeof(png_header);
-    data_remaining -= sizeof(png_header);
-
-    {
-#ifdef PNG_STOPWATCH_DEBUG
-        Stopwatch sw("load_png_impl: read chunks");
-#endif
-        Streamer streamer(data_ptr, data_remaining);
-        while (!streamer.at_end()) {
-            if (!process_chunk(streamer, context)) {
-                return false;
-            }
+    Streamer streamer(data_ptr, data_remaining);
+    while (!streamer.at_end()) {
+        if (!process_chunk(streamer, context, false)) {
+            return false;
         }
     }
 
@@ -428,7 +463,14 @@ static bool decode_png_chunks(PNGLoadingContext& context)
 
 static bool decode_png_bitmap(PNGLoadingContext& context)
 {
-    ASSERT(context.state == PNGLoadingContext::State::ChunksDecoded);
+    if (context.state < PNGLoadingContext::State::ChunksDecoded) {
+        if (!decode_png_chunks(context))
+            return false;
+    }
+
+    if (context.state >= PNGLoadingContext::State::BitmapDecoded)
+        return true;
+
     {
 #ifdef PNG_STOPWATCH_DEBUG
         Stopwatch sw("load_png_impl: uncompress");
@@ -491,7 +533,7 @@ static RefPtr<GraphicsBitmap> load_png_impl(const u8* data, int data_size)
     return context.bitmap;
 }
 
-static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
+static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context, bool decode_size_only = false)
 {
     if (data.size() < (int)sizeof(PNG_IHDR))
         return false;
@@ -542,8 +584,10 @@ static bool process_IHDR(const ByteBuffer& data, PNGLoadingContext& context)
         ASSERT_NOT_REACHED();
     }
 
-    context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
-    context.decompression_buffer = (u8*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
+    if (!decode_size_only) {
+        context.decompression_buffer_size = (context.width * context.height * context.bytes_per_pixel + context.height);
+        context.decompression_buffer = (u8*)mmap_with_name(nullptr, context.decompression_buffer_size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "PNG decompression buffer");
+    }
     return true;
 }
 
@@ -569,7 +613,7 @@ static bool process_tRNS(const ByteBuffer& data, PNGLoadingContext& context)
     return true;
 }
 
-static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
+static bool process_chunk(Streamer& streamer, PNGLoadingContext& context, bool decode_size_only)
 {
     u32 chunk_size;
     if (!streamer.read(chunk_size)) {
@@ -597,7 +641,7 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context)
 #endif
 
     if (!strcmp((const char*)chunk_type, "IHDR"))
-        return process_IHDR(chunk_data, context);
+        return process_IHDR(chunk_data, context, decode_size_only);
     if (!strcmp((const char*)chunk_type, "IDAT"))
         return process_IDAT(chunk_data, context);
     if (!strcmp((const char*)chunk_type, "PLTE"))
@@ -620,8 +664,8 @@ PNGImageLoaderPlugin::~PNGImageLoaderPlugin()
 
 Size PNGImageLoaderPlugin::size()
 {
-    if (m_context->state == PNGLoadingContext::State::NotDecoded) {
-        bool success = decode_png_chunks(*m_context);
+    if (m_context->state < PNGLoadingContext::State::SizeDecoded) {
+        bool success = decode_png_size(*m_context);
         ASSERT(success);
     }
 
@@ -630,9 +674,8 @@ Size PNGImageLoaderPlugin::size()
 
 RefPtr<GraphicsBitmap> PNGImageLoaderPlugin::bitmap()
 {
-    if (m_context->state != PNGLoadingContext::State::BitmapDecoded) {
+    if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
-        size();
         bool success = decode_png_bitmap(*m_context);
         ASSERT(success);
     }
