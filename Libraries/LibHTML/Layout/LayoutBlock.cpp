@@ -58,18 +58,41 @@ void LayoutBlock::layout_inline_children()
     });
 
     int min_line_height = style().line_height();
-
     int content_height = 0;
+
+    // FIXME: This should be done by the CSS parser!
+    CSS::ValueID text_align = CSS::ValueID::Left;
+    auto text_align_string = style().string_or_fallback(CSS::PropertyID::TextAlign, "left");
+    if (text_align_string == "center")
+        text_align = CSS::ValueID::Center;
+    else if (text_align_string == "left")
+        text_align = CSS::ValueID::Left;
+    else if (text_align_string == "right")
+        text_align = CSS::ValueID::Right;
 
     for (auto& line_box : m_line_boxes) {
         int max_height = min_line_height;
         for (auto& fragment : line_box.fragments()) {
             max_height = max(max_height, fragment.rect().height());
         }
+
+        int x_offset = x();
+        switch (text_align) {
+        case CSS::ValueID::Center:
+            x_offset += (width() - line_box.width()) / 2;
+            break;
+        case CSS::ValueID::Right:
+            x_offset += (width() - line_box.width());
+            break;
+        case CSS::ValueID::Left:
+        default:
+            break;
+        }
+
         for (auto& fragment : line_box.fragments()) {
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
-            fragment.rect().set_x(x() + fragment.rect().x());
+            fragment.rect().set_x(x_offset + fragment.rect().x());
             fragment.rect().set_y(y() + content_height + (max_height - fragment.rect().height()));
 
             if (is<LayoutReplaced>(fragment.layout_node()))

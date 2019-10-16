@@ -14,6 +14,9 @@ namespace CSS {
 enum class ValueID {
     Invalid,
     VendorSpecificLink,
+    Center,
+    Left,
+    Right,
 };
 }
 
