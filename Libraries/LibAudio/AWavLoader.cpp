@@ -1,5 +1,4 @@
 #include <AK/BufferStream.h>
-#include <LibAudio/ABuffer.h>
 #include <LibAudio/AWavLoader.h>
 #include <LibCore/CFile.h>
 #include <LibCore/CIODeviceStreamReader.h>
@@ -14,6 +13,7 @@ AWavLoader::AWavLoader(const StringView& path)
     }
 
     parse_header();
+    m_resampler = make<AResampleHelper>(m_sample_rate, 44100);
 }
 
 RefPtr<ABuffer> AWavLoader::get_more_samples(size_t max_bytes_to_read_from_input)
@@ -26,7 +26,7 @@ RefPtr<ABuffer> AWavLoader::get_more_samples(size_t max_bytes_to_read_from_input
     if (raw_samples.is_empty())
         return nullptr;
 
-    auto buffer = ABuffer::from_pcm_data(raw_samples, m_num_channels, m_bits_per_sample, m_sample_rate);
+    auto buffer = ABuffer::from_pcm_data(raw_samples, *m_resampler, m_num_channels, m_bits_per_sample);
     m_loaded_samples += buffer->sample_count();
     return buffer;
 }
@@ -80,7 +80,7 @@ bool AWavLoader::parse_header()
 
     u16 audio_format;
     stream >> audio_format;
-    CHECK_OK("Audio format");     // incomplete read check
+    CHECK_OK("Audio format"); // incomplete read check
     ok = ok && audio_format == 1; // WAVE_FORMAT_PCM
     ASSERT(audio_format == 1);
     CHECK_OK("Audio format"); // value check
@@ -137,64 +137,62 @@ bool AWavLoader::parse_header()
     return true;
 }
 
-// Small helper to resample from one playback rate to another
-// This isn't really "smart", in that we just insert (or drop) samples.
-// Should do better...
-class AResampleHelper {
-public:
-    AResampleHelper(float source, float target);
-    bool read_sample();
-    void prepare();
-
-private:
-    const float m_ratio;
-    float m_current_ratio { 0 };
-};
-
 AResampleHelper::AResampleHelper(float source, float target)
     : m_ratio(source / target)
 {
 }
 
-void AResampleHelper::prepare()
+void AResampleHelper::process_sample(float sample_l, float sample_r)
 {
-    m_current_ratio += m_ratio;
+    m_last_sample_l = sample_l;
+    m_last_sample_r = sample_r;
+    m_current_ratio += 1;
 }
 
-bool AResampleHelper::read_sample()
+bool AResampleHelper::read_sample(float& next_l, float& next_r)
 {
-    if (m_current_ratio > 1) {
-        m_current_ratio--;
+    if (m_current_ratio > 0) {
+        m_current_ratio -= m_ratio;
+        next_l = m_last_sample_l;
+        next_r = m_last_sample_r;
         return true;
     }
 
     return false;
 }
 
-template<typename SampleReader>
-static void read_samples_from_stream(BufferStream& stream, SampleReader read_sample, Vector<ASample>& samples, int num_channels, int source_rate)
+template <typename SampleReader>
+static void read_samples_from_stream(BufferStream& stream, SampleReader read_sample, Vector<ASample>& samples, AResampleHelper& resampler, int num_channels)
 {
-    AResampleHelper resampler(source_rate, 44100);
     float norm_l = 0;
     float norm_r = 0;
+
     switch (num_channels) {
     case 1:
-        while (!stream.handle_read_failure()) {
-            resampler.prepare();
-            while (resampler.read_sample()) {
-                norm_l = read_sample(stream);
+        for(;;) {
+            while (resampler.read_sample(norm_l, norm_r)) {
+                samples.append(ASample(norm_l));
             }
-            samples.append(ASample(norm_l));
+            norm_l = read_sample(stream);
+
+            if (stream.handle_read_failure()) {
+                break;
+            }
+            resampler.process_sample(norm_l, norm_r);
         }
         break;
     case 2:
-        while (!stream.handle_read_failure()) {
-            resampler.prepare();
-            while (resampler.read_sample()) {
-                norm_l = read_sample(stream);
-                norm_r = read_sample(stream);
+        for(;;) {
+            while (resampler.read_sample(norm_l, norm_r)) {
+                samples.append(ASample(norm_l, norm_r));
             }
-            samples.append(ASample(norm_l, norm_r));
+            norm_l = read_sample(stream);
+            norm_r = read_sample(stream);
+
+            if (stream.handle_read_failure()) {
+                break;
+            }
+            resampler.process_sample(norm_l, norm_r);
         }
         break;
     default:
@@ -236,7 +234,7 @@ static float read_norm_sample_8(BufferStream& stream)
 // ### can't const this because BufferStream is non-const
 // perhaps we need a reading class separate from the writing one, that can be
 // entirely consted.
-RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, int num_channels, int bits_per_sample, int source_rate)
+RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, AResampleHelper& resampler, int num_channels, int bits_per_sample)
 {
     BufferStream stream(data);
     Vector<ASample> fdata;
@@ -248,13 +246,13 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, int num_channels, int b
 
     switch (bits_per_sample) {
     case 8:
-        read_samples_from_stream(stream, read_norm_sample_8, fdata, num_channels, source_rate);
+        read_samples_from_stream(stream, read_norm_sample_8, fdata, resampler, num_channels);
         break;
     case 16:
-        read_samples_from_stream(stream, read_norm_sample_16, fdata, num_channels, source_rate);
+        read_samples_from_stream(stream, read_norm_sample_16, fdata, resampler, num_channels);
         break;
     case 24:
-        read_samples_from_stream(stream, read_norm_sample_24, fdata, num_channels, source_rate);
+        read_samples_from_stream(stream, read_norm_sample_24, fdata, resampler, num_channels);
         break;
     default:
         ASSERT_NOT_REACHED();
@@ -264,11 +262,6 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, int num_channels, int b
     // just make sure we're good. Worst case we just write some 0s where they
     // don't belong.
     ASSERT(!stream.handle_read_failure());
-
-    // HACK: This is a total hack to remove an unnecessary sample at the end of the buffer.
-    // FIXME: Don't generate the extra sample... :^)
-    for (int i = 0; i < 1; ++i)
-        fdata.take_last();
 
     return ABuffer::create_with_samples(move(fdata));
 }

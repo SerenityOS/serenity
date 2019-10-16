@@ -4,6 +4,7 @@
 #include <AK/RefPtr.h>
 #include <AK/StringView.h>
 #include <LibCore/CFile.h>
+#include <LibAudio/ABuffer.h>
 
 class ABuffer;
 
@@ -31,6 +32,7 @@ private:
     bool parse_header();
     RefPtr<CFile> m_file;
     String m_error_string;
+    OwnPtr<AResampleHelper> m_resampler;
 
     u32 m_sample_rate { 0 };
     u16 m_num_channels { 0 };
