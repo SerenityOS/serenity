@@ -77,7 +77,7 @@ public:
 
     int head_index() const { return m_head; }
 
-private:
+protected:
     friend class ConstIterator;
     T m_elements[Capacity];
     int m_size { 0 };
