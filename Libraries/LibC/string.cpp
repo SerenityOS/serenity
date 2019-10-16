@@ -467,31 +467,33 @@ char* strtok(char* str, const char* delim)
     
     size_t token_start = 0;
     size_t token_end = 0;
+    size_t str_len = strlen(str);
+    size_t delim_len = strlen(delim);
     
-    for (size_t i = 0; i < strlen(str); ++i) {
-        bool is_delim = false;
-        for (size_t j = 0; j < strlen(delim); ++j) {
+    for (size_t i = 0; i < str_len; ++i) {
+        bool is_proper_delim = false;
+        
+        for (size_t j = 0; j < delim_len; ++j) {
             if (str[i] == delim[j]) {
-                is_delim = true;
-                ++token_start;
-                break;
+                // Skip beginning delimiters
+                if (token_end - token_start == 0) {
+                    ++token_start;
+                    break;
+                }
+                
+                is_proper_delim = true;
             }
         }
-        if (!is_delim) break;
-    }
-    
-    if (strlen(&str[token_start]) == 0)
-        return nullptr;
-    
-    for (size_t i = 0; i < strlen(delim); ++i) {
-        char* delim_ptr = strchr(&str[token_start], delim[i]);
-        if (!delim_ptr)
-            continue;
         
-        size_t delim_offset = static_cast<size_t>(delim_ptr - str);
-        if (!token_end || token_end > delim_offset)
-            token_end = delim_offset;
+        ++token_end;
+        if (is_proper_delim && token_end > 0) {
+            --token_end;
+            break;
+        }
     }
+    
+    if (str[token_start] == '\0')
+        return nullptr;
     
     if (token_end == 0) {
         saved_str = nullptr;
