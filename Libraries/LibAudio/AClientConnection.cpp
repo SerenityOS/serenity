@@ -18,7 +18,7 @@ void AClientConnection::enqueue(const ABuffer& buffer)
 {
     for (;;) {
         const_cast<ABuffer&>(buffer).shared_buffer().share_with(server_pid());
-        auto response = send_sync<AudioServer::EnqueueBuffer>(buffer.shared_buffer_id());
+        auto response = send_sync<AudioServer::EnqueueBuffer>(buffer.shared_buffer_id(), buffer.sample_count());
         if (response->success())
             break;
         sleep(1);
@@ -28,7 +28,7 @@ void AClientConnection::enqueue(const ABuffer& buffer)
 bool AClientConnection::try_enqueue(const ABuffer& buffer)
 {
     const_cast<ABuffer&>(buffer).shared_buffer().share_with(server_pid());
-    auto response = send_sync<AudioServer::EnqueueBuffer>(buffer.shared_buffer_id());
+    auto response = send_sync<AudioServer::EnqueueBuffer>(buffer.shared_buffer_id(), buffer.sample_count());
     return response->success();
 }
 
