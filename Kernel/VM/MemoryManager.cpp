@@ -622,13 +622,14 @@ void MemoryManager::flush_tlb(VirtualAddress vaddr)
                  : "memory");
 }
 
-void MemoryManager::map_for_kernel(VirtualAddress vaddr, PhysicalAddress paddr)
+void MemoryManager::map_for_kernel(VirtualAddress vaddr, PhysicalAddress paddr, bool cache_disabled)
 {
     auto& pte = ensure_pte(kernel_page_directory(), vaddr);
     pte.set_physical_page_base(paddr.get());
     pte.set_present(true);
     pte.set_writable(true);
     pte.set_user_allowed(false);
+    pte.set_cache_disabled(cache_disabled);
     flush_tlb(vaddr);
 }
 

@@ -1,6 +1,7 @@
 #include "Assertions.h"
 #include "IRQHandler.h"
 #include "PIC.h"
+#include "APIC.h"
 #include "Process.h"
 #include "Scheduler.h"
 #include <AK/Types.h>

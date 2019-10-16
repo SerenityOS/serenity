@@ -6,6 +6,7 @@
 #include "kstdio.h"
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Arch/i386/APIC.h>
 #include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/CMOS.h>
@@ -241,6 +242,10 @@ extern "C" [[noreturn]] void init()
     kprintf("Starting Serenity Operating System...\n");
 
     MemoryManager::initialize();
+
+    if (APIC::init())
+        APIC::enable(0);
+
     PIT::initialize();
 
     PCI::enumerate_all([](const PCI::Address& address, PCI::ID id) {

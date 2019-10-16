@@ -13,6 +13,7 @@ KERNEL_OBJS = \
        Arch/i386/PIT.o \
        Devices/KeyboardDevice.o \
        CMOS.o \
+       Arch/i386/APIC.o \
        Arch/i386/PIC.o \
        Syscall.o \
        Devices/PATAChannel.o \
