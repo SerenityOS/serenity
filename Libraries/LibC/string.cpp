@@ -457,9 +457,50 @@ char* strpbrk(const char* s, const char* accept)
 
 char* strtok(char* str, const char* delim)
 {
-    (void)str;
-    (void)delim;
-    ASSERT_NOT_REACHED();
+    static char* saved_str;
+    
+    if (!str) {
+        if (!saved_str)
+            return nullptr;
+        str = saved_str;
+    }
+    
+    size_t token_start = 0;
+    size_t token_end = 0;
+    
+    for (size_t i = 0; i < strlen(str); ++i) {
+        bool is_delim = false;
+        for (size_t j = 0; j < strlen(delim); ++j) {
+            if (str[i] == delim[j]) {
+                is_delim = true;
+                ++token_start;
+                break;
+            }
+        }
+        if (!is_delim) break;
+    }
+    
+    if (strlen(&str[token_start]) == 0)
+        return nullptr;
+    
+    for (size_t i = 0; i < strlen(delim); ++i) {
+        char* delim_ptr = strchr(&str[token_start], delim[i]);
+        if (!delim_ptr)
+            continue;
+        
+        size_t delim_offset = static_cast<size_t>(delim_ptr - str);
+        if (!token_end || token_end > delim_offset)
+            token_end = delim_offset;
+    }
+    
+    if (token_end == 0) {
+        saved_str = nullptr;
+        return &str[token_start];
+    }
+    
+    saved_str = &str[token_end + 1];
+    str[token_end] = '\0';
+    return &str[token_start];
 }
 
 int strcoll(const char* s1, const char* s2)
