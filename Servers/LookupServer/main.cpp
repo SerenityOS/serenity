@@ -162,12 +162,8 @@ int main(int argc, char** argv)
 
         Vector<String> responses;
 
-        for (auto& key : dns_custom_hostnames.keys()) {
-            dbgprintf("Known hostname: '%s'\n", key.characters());
-        }
         if (auto known_host = dns_custom_hostnames.get(hostname)) {
             responses.append(known_host.value());
-            dbg() << "LookupServer: Found preconfigured host (from /etc/hosts): " << known_host.value();
         } else if (!hostname.is_empty()) {
             bool did_timeout;
             int retries = 3;
