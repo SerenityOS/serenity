@@ -238,6 +238,24 @@ inline u32 cpu_flags()
     return flags;
 }
 
+inline u32 read_fs_u32(u32 offset)
+{
+    u32 val;
+    asm volatile(
+        "movl %%fs:%a[off], %k[val]"
+        : [val] "=r" (val)
+        : [off] "ir" (offset));
+    return val;
+}
+
+inline void write_fs_u32(u32 offset, u32 val)
+{
+    asm volatile(
+        "movl %k[val], %%fs:%a[off]"
+        :: [off] "ir" (offset), [val] "ir" (val)
+        : "memory");
+}
+
 inline bool are_interrupts_enabled()
 {
     return cpu_flags() & 0x200;
@@ -418,4 +436,36 @@ public:
 private:
     const char* m_name { nullptr };
     SplitQword m_start;
+};
+
+class MSR {
+    uint32_t m_msr;
+
+public:
+    static bool have()
+    {
+        CPUID id(1);
+        return (id.edx() & (1 << 5)) != 0;
+    }
+
+    MSR(const MSR&) = delete;
+    MSR& operator=(const MSR&) = delete;
+
+    MSR(uint32_t msr):
+        m_msr(msr)
+    {
+    }
+
+    void get(u32& low, u32& high)
+    {
+        asm volatile("rdmsr"
+            : "=a"(low), "=d"(high)
+            : "c"(m_msr));
+    }
+
+    void set(u32 low, u32 high)
+    {
+        asm volatile("wrmsr"
+            :: "a"(low), "d"(high), "c"(m_msr));
+    }
 };
