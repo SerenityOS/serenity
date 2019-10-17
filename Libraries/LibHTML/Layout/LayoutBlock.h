@@ -17,8 +17,6 @@ public:
 
     virtual LayoutNode& inline_wrapper() override;
 
-    bool children_are_inline() const;
-
     Vector<LineBox>& line_boxes() { return m_line_boxes; }
     const Vector<LineBox>& line_boxes() const { return m_line_boxes; }
 

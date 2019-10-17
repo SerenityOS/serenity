@@ -79,6 +79,9 @@ public:
     template<typename Callback>
     void for_each_fragment_of_this(Callback);
 
+    bool children_are_inline() const { return m_children_are_inline; }
+    void set_children_are_inline(bool value) { m_children_are_inline = value; }
+
 protected:
     explicit LayoutNode(const Node*);
 
@@ -90,6 +93,7 @@ private:
     bool m_inline { false };
     bool m_has_style { false };
     bool m_visible { true };
+    bool m_children_are_inline { false };
 };
 
 class LayoutNodeWithStyle : public LayoutNode {
