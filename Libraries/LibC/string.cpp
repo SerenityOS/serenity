@@ -334,7 +334,7 @@ char* strncat(char* dest, const char* src, size_t n)
     return dest;
 }
 
-const char* sys_errlist[] = {
+const char* const sys_errlist[] = {
     "Success (not an error)",
     "Operation not permitted",
     "No such file or directory",
