@@ -183,6 +183,40 @@ void HtmlView::mousedown_event(GMouseEvent& event)
     event.accept();
 }
 
+void HtmlView::keydown_event(GKeyEvent& event)
+{
+    if (event.modifiers() == 0) {
+        switch (event.key()) {
+        case Key_Home:
+            vertical_scrollbar().set_value(0);
+            break;
+        case Key_End:
+            vertical_scrollbar().set_value(vertical_scrollbar().max());
+            break;
+        case Key_Down:
+            vertical_scrollbar().set_value(vertical_scrollbar().value() + vertical_scrollbar().step());
+            break;
+        case Key_Up:
+            vertical_scrollbar().set_value(vertical_scrollbar().value() - vertical_scrollbar().step());
+            break;
+        case Key_Left:
+            horizontal_scrollbar().set_value(horizontal_scrollbar().value() + horizontal_scrollbar().step());
+            break;
+        case Key_Right:
+            horizontal_scrollbar().set_value(horizontal_scrollbar().value() - horizontal_scrollbar().step());
+            break;
+        case Key_PageDown:
+            vertical_scrollbar().set_value(vertical_scrollbar().value() + frame_inner_rect().height());
+            break;
+        case Key_PageUp:
+            vertical_scrollbar().set_value(vertical_scrollbar().value() - frame_inner_rect().height());
+            break;
+        }
+    }
+
+    event.accept();
+}
+
 void HtmlView::reload()
 {
     load(main_frame().document()->url());

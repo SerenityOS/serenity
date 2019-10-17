@@ -32,6 +32,8 @@ public:
     Function<void(const String&)> on_title_change;
     Function<void(const URL&)> on_load_start;
 
+    virtual bool accepts_focus() const override { return true; }
+
 protected:
     HtmlView(GWidget* parent = nullptr);
 
@@ -39,6 +41,7 @@ protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void keydown_event(GKeyEvent&) override;
 
 private:
     void layout_and_sync_size();
