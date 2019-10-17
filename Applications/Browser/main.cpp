@@ -1,3 +1,4 @@
+#include "History.h"
 #include <LibCore/CFile.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
@@ -39,13 +40,34 @@ int main(int argc, char** argv)
     auto toolbar = GToolBar::construct(widget);
     auto html_widget = HtmlView::construct(widget);
 
-    toolbar->add_action(GCommonActions::make_go_back_action([&](auto&) {
-        // FIXME: Implement back action
-    }));
+    History<URL> history;
 
-    toolbar->add_action(GCommonActions::make_go_forward_action([&](auto&) {
-        // FIXME: Implement forward action
-    }));
+    RefPtr<GAction> go_back_action;
+    RefPtr<GAction> go_forward_action;
+
+    auto update_actions = [&]() {
+        go_back_action->set_enabled(history.can_go_back());
+        go_forward_action->set_enabled(history.can_go_forward());
+    };
+
+    bool should_push_loads_to_history = true;
+
+    go_back_action = GCommonActions::make_go_back_action([&](auto&) {
+        history.go_back();
+        update_actions();
+        TemporaryChange<bool> change(should_push_loads_to_history, false);
+        html_widget->load(history.current());
+    });
+
+    go_forward_action = GCommonActions::make_go_forward_action([&](auto&) {
+        history.go_forward();
+        update_actions();
+        TemporaryChange<bool> change(should_push_loads_to_history, false);
+        html_widget->load(history.current());
+    });
+
+    toolbar->add_action(*go_back_action);
+    toolbar->add_action(*go_forward_action);
 
     toolbar->add_action(GCommonActions::make_go_home_action([&](auto&) {
         html_widget->load(home_url);
@@ -63,6 +85,9 @@ int main(int argc, char** argv)
 
     html_widget->on_load_start = [&](auto& url) {
         location_box->set_text(url.to_string());
+        if (should_push_loads_to_history)
+            history.push(url);
+        update_actions();
     };
 
     html_widget->on_link_click = [&](auto& url) {
