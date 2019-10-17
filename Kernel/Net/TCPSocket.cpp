@@ -162,19 +162,20 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
     if (tcp_packet.has_syn() || payload_size > 0) {
-        m_not_acked.append({ m_sequence_number, buffer, 0, {} });
+        m_not_acked.append({ m_sequence_number, move(buffer), 0, {} });
         send_outgoing_packets();
-    } else {
-        auto routing_decision = route_to(peer_address(), local_address());
-        ASSERT(!routing_decision.is_zero());
-
-        routing_decision.adapter->send_ipv4(
-            routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
-            buffer.data(), buffer.size(), ttl());
-
-        m_packets_out++;
-        m_bytes_out += buffer.size();
+        return;
     }
+
+    auto routing_decision = route_to(peer_address(), local_address());
+    ASSERT(!routing_decision.is_zero());
+
+    routing_decision.adapter->send_ipv4(
+        routing_decision.next_hop, peer_address(), IPv4Protocol::TCP,
+        buffer.data(), buffer.size(), ttl());
+
+    m_packets_out++;
+    m_bytes_out += buffer.size();
 }
 
 void TCPSocket::send_outgoing_packets()
