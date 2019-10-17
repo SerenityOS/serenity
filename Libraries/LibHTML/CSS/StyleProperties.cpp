@@ -51,8 +51,10 @@ void StyleProperties::load_font() const
         weight = "";
     else if (font_weight == "bold")
         weight = "Bold";
-    else
-        ASSERT_NOT_REACHED();
+    else {
+        dbg() << "Unknown font-weight: " << font_weight;
+        weight = "";
+    }
 
     auto look_for_file = [](const StringView& expected_name) -> String {
         // TODO: handle font sizes properly?
