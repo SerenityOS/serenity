@@ -50,6 +50,9 @@ public:
     virtual bool is_block() const { return false; }
     virtual bool is_replaced() const { return false; }
     virtual bool is_box() const { return false; }
+    virtual bool is_table() const { return false; }
+    virtual bool is_table_row() const { return false; }
+    virtual bool is_table_cell() const { return false; }
     bool has_style() const { return m_has_style; }
 
     bool is_inline() const { return m_inline; }
