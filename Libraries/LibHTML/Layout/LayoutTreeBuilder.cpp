@@ -1,6 +1,7 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/ParentNode.h>
 #include <LibHTML/Layout/LayoutNode.h>
+#include <LibHTML/Layout/LayoutTable.h>
 #include <LibHTML/Layout/LayoutText.h>
 #include <LibHTML/Layout/LayoutTreeBuilder.h>
 
@@ -44,6 +45,10 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
 
     if (have_inline_children && !have_block_children)
         layout_node->set_children_are_inline(true);
+
+    // FIXME: This is really hackish. Some layout nodes don't care about inline children.
+    if (is<LayoutTable>(layout_node))
+        layout_node->set_children_are_inline(false);
 
     return layout_node;
 }
