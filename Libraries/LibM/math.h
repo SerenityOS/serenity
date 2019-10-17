@@ -9,6 +9,8 @@ __BEGIN_DECLS
 #define M_PI 3.141592653589793
 #define M_PI_2 (M_PI / 2)
 #define M_TAU (M_PI * 2)
+#define M_LN2 0.69314718055995
+#define M_LN10 2.30258509299405
 
 double acos(double);
 float acosf(float);
