@@ -15,7 +15,7 @@
 
 __BEGIN_DECLS
 
-extern const char* sys_errlist[];
+extern const char* const sys_errlist[];
 extern int sys_nerr;
 extern __thread int errno;
 
