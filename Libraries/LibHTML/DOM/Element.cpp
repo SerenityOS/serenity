@@ -4,6 +4,9 @@
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
 #include <LibHTML/Layout/LayoutListItem.h>
+#include <LibHTML/Layout/LayoutTable.h>
+#include <LibHTML/Layout/LayoutTableCell.h>
+#include <LibHTML/Layout/LayoutTableRow.h>
 
 Element::Element(Document& document, const String& tag_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
@@ -84,6 +87,12 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
         return adopt(*new LayoutInline(*this, move(style)));
     if (display == "list-item")
         return adopt(*new LayoutListItem(*this, move(style)));
+    if (display == "table")
+        return adopt(*new LayoutTable(*this, move(style)));
+    if (display == "table-row")
+        return adopt(*new LayoutTableRow(*this, move(style)));
+    if (display == "table-cell")
+        return adopt(*new LayoutTableCell(*this, move(style)));
 
     ASSERT_NOT_REACHED();
 }
