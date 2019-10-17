@@ -18,6 +18,7 @@ LayoutNode& LayoutBlock::inline_wrapper()
 {
     if (!last_child() || !last_child()->is_block() || last_child()->node() != nullptr) {
         append_child(adopt(*new LayoutBlock(nullptr, style_for_anonymous_block())));
+        last_child()->set_children_are_inline(true);
     }
     return *last_child();
 }
@@ -40,7 +41,9 @@ void LayoutBlock::layout_block_children()
     ASSERT(!children_are_inline());
     int content_height = 0;
     for_each_child([&](auto& child) {
-        ASSERT(is<LayoutBlock>(child));
+        // FIXME: What should we do here? Something like a <table> might have a bunch of useless text children..
+        if (child.is_inline())
+            return;
         auto& child_block = static_cast<LayoutBlock&>(child);
         child_block.layout();
         content_height = child_block.rect().bottom() + child_block.box_model().full_margin().bottom - rect().top();
@@ -236,11 +239,6 @@ void LayoutBlock::render(RenderingContext& context)
             }
         }
     }
-}
-
-bool LayoutBlock::children_are_inline() const
-{
-    return first_child() && first_child()->is_inline();
 }
 
 HitTestResult LayoutBlock::hit_test(const Point& position) const

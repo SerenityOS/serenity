@@ -42,6 +42,9 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
         }
     }
 
+    if (have_inline_children && !have_block_children)
+        layout_node->set_children_are_inline(true);
+
     return layout_node;
 }
 
