@@ -49,7 +49,7 @@ private:
     u8 m_modifiers { 0 };
     bool m_caps_lock_on { false };
     bool m_num_lock_on { false };
-    bool m_is_numpad_key { false };
+    bool m_has_e0_prefix { false };
 };
 
 class KeyboardClient {

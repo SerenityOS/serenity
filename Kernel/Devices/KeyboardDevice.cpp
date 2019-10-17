@@ -247,7 +247,7 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     if (key == Key_NumLock && pressed)
         m_num_lock_on = !m_num_lock_on;
 
-    if (m_num_lock_on && m_is_numpad_key)
+    if (m_num_lock_on && !m_has_e0_prefix)
     {
         if (raw >= 0x47 && raw <= 0x53)
         {
@@ -283,7 +283,7 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
         m_client->on_key_pressed(event);
     m_queue.enqueue(event);
 
-    m_is_numpad_key = true;
+    m_has_e0_prefix = false;
 }
 
 void KeyboardDevice::handle_irq()
@@ -295,6 +295,11 @@ void KeyboardDevice::handle_irq()
         u8 raw = IO::in8(I8042_BUFFER);
         u8 ch = raw & 0x7f;
         bool pressed = !(raw & 0x80);
+
+        if (raw == 0xe0) {
+            m_has_e0_prefix = true;
+            return;
+        }
 
 #ifdef KEYBOARD_DEBUG
         dbgprintf("Keyboard::handle_irq: %b %s\n", ch, pressed ? "down" : "up");
@@ -313,10 +318,6 @@ void KeyboardDevice::handle_irq()
         case 0x36:
             update_modifier(Mod_Shift, pressed);
             break;
-        case 0x60:
-            // This flag means next key pressed could be but is not a numpad key.
-            m_is_numpad_key = false;
-            return;
         }
         switch (ch) {
         case I8042_ACK:
