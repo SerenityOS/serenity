@@ -32,14 +32,16 @@ static RefPtr<LayoutNode> create_layout_tree(Node& node, const StyleProperties* 
         layout_children.append(layout_child.release_nonnull());
     });
 
-    for (auto& layout_child : layout_children)
-        if (have_block_children && have_inline_children && !layout_child.is_block()) {
+    for (auto& layout_child : layout_children) {
+        if (have_block_children && have_inline_children && layout_child.is_inline()) {
             if (is<LayoutText>(layout_child) && to<LayoutText>(layout_child).text_for_style(*parent_style) == " ")
                 continue;
             layout_node->inline_wrapper().append_child(layout_child);
         } else {
             layout_node->append_child(layout_child);
         }
+    }
+
     return layout_node;
 }
 
