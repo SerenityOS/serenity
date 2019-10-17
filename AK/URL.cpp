@@ -109,6 +109,14 @@ bool URL::parse(const StringView& string)
             continue;
         }
     }
+    if (state == State::InHostname) {
+        // We're still in the hostname, so e.g "http://serenityos.org"
+        if (buffer.is_empty())
+            return false;
+        m_host = String::copy(buffer);
+        m_path = "/";
+        return true;
+    }
     m_path = String::copy(buffer);
     return true;
 }
