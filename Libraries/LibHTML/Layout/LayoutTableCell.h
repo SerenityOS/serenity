@@ -8,5 +8,12 @@ public:
     virtual ~LayoutTableCell() override;
 
 private:
+    virtual bool is_table_cell() const override { return true; }
     virtual const char* class_name() const override { return "LayoutTableCell"; }
 };
+
+template<>
+inline bool is<LayoutTableCell>(const LayoutNode& node)
+{
+    return node.is_table_cell();
+}

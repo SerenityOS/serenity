@@ -10,5 +10,12 @@ public:
     virtual void layout() override;
 
 private:
+    virtual bool is_table() const override { return true; }
     virtual const char* class_name() const override { return "LayoutTable"; }
 };
+
+template<>
+inline bool is<LayoutTable>(const LayoutNode& node)
+{
+    return node.is_table();
+}
