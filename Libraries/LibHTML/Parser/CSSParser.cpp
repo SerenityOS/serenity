@@ -292,6 +292,11 @@ public:
         consume_whitespace_or_comments();
         while (is_valid_property_value_char(peek()))
             buffer.append(consume_one());
+
+        // Remove trailing whitespace.
+        while (!buffer.is_empty() && isspace(buffer.last()))
+            buffer.take_last();
+
         auto property_value = String::copy(buffer);
         buffer.clear();
         consume_whitespace_or_comments();
