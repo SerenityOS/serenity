@@ -41,7 +41,7 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
     : TTY(4, index)
     , m_index(index)
 {
-    m_tty_name = String::format("/dev/tty%u", m_index);
+    ksprintf(m_tty_name, "/dev/tty%u", m_index);
     set_size(80, 25);
     m_horizontal_tabs = static_cast<u8*>(kmalloc(columns()));
     for (unsigned i = 0; i < columns(); ++i)
@@ -541,7 +541,7 @@ ssize_t VirtualConsole::on_tty_write(const u8* data, ssize_t size)
     return size;
 }
 
-String VirtualConsole::tty_name() const
+StringView VirtualConsole::tty_name() const
 {
     return m_tty_name;
 }

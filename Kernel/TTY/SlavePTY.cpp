@@ -10,7 +10,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     , m_master(master)
     , m_index(index)
 {
-    m_tty_name = String::format("/dev/pts/%u", m_index);
+    ksprintf(m_tty_name, "/dev/pts/%u", m_index);
     set_uid(current->process().uid());
     set_gid(current->process().gid());
     DevPtsFS::register_slave_pty(*this);
@@ -25,7 +25,7 @@ SlavePTY::~SlavePTY()
     DevPtsFS::unregister_slave_pty(*this);
 }
 
-String SlavePTY::tty_name() const
+StringView SlavePTY::tty_name() const
 {
     return m_tty_name;
 }

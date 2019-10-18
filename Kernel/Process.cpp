@@ -966,7 +966,8 @@ int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
     auto tty_name = description->tty()->tty_name();
     if (size < tty_name.length() + 1)
         return -ERANGE;
-    strcpy(buffer, tty_name.characters());
+    memcpy(buffer, tty_name.characters_without_null_termination(), tty_name.length());
+    buffer[tty_name.length()] = '\0';
     return 0;
 }
 

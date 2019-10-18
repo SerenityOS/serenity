@@ -14,7 +14,7 @@ public:
 
 private:
     // ^TTY
-    virtual String tty_name() const override;
+    virtual StringView tty_name() const override;
     virtual ssize_t on_tty_write(const u8*, ssize_t) override;
 
     // ^CharacterDevice
@@ -29,5 +29,5 @@ private:
 
     RefPtr<MasterPTY> m_master;
     unsigned m_index;
-    String m_tty_name;
+    char m_tty_name[32];
 };

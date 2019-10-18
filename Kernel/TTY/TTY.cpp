@@ -62,17 +62,17 @@ void TTY::emit(u8 ch)
 {
     if (should_generate_signals()) {
         if (ch == m_termios.c_cc[VINTR]) {
-            dbgprintf("%s: VINTR pressed!\n", tty_name().characters());
+            dbg() << tty_name() << ": VINTR pressed!";
             generate_signal(SIGINT);
             return;
         }
         if (ch == m_termios.c_cc[VQUIT]) {
-            dbgprintf("%s: VQUIT pressed!\n", tty_name().characters());
+            dbg() << tty_name() << ": VQUIT pressed!";
             generate_signal(SIGQUIT);
             return;
         }
         if (ch == m_termios.c_cc[VSUSP]) {
-            dbgprintf("%s: VSUSP pressed!\n", tty_name().characters());
+            dbg() << tty_name() << ": VSUSP pressed!";
             generate_signal(SIGTSTP);
             return;
         }
@@ -84,10 +84,10 @@ void TTY::generate_signal(int signal)
 {
     if (!pgid())
         return;
-    dbgprintf("%s: Send signal %d to everyone in pgrp %d\n", tty_name().characters(), signal, pgid());
+    dbg() << tty_name() << ": Send signal " << signal << " to everyone in pgrp " << pgid();
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
-        dbgprintf("%s: Send signal %d to %d\n", tty_name().characters(), signal, process.pid());
+        dbg() << tty_name() << ": Send signal " << signal << " to " << process;
         process.send_signal(signal, nullptr);
         return IterationDecision::Continue;
     });
@@ -96,22 +96,17 @@ void TTY::generate_signal(int signal)
 void TTY::set_termios(const termios& t)
 {
     m_termios = t;
-    dbgprintf("%s set_termios: ECHO=%u, ISIG=%u, ICANON=%u\n",
-        tty_name().characters(),
-        should_echo_input(),
-        should_generate_signals(),
-        in_canonical_mode());
-    dbgprintf("%s set_termios: ECHOE=%u, ECHOK=%u, ECHONL=%u\n",
-        tty_name().characters(),
-        (m_termios.c_lflag & ECHOE) != 0,
-        (m_termios.c_lflag & ECHOK) != 0,
-        (m_termios.c_lflag & ECHONL) != 0);
-    dbgprintf("%s set_termios: ISTRIP=%u, ICRNL=%u, INLCR=%u, IGNCR=%u\n",
-        tty_name().characters(),
-        (m_termios.c_iflag & ISTRIP) != 0,
-        (m_termios.c_iflag & ICRNL) != 0,
-        (m_termios.c_iflag & INLCR) != 0,
-        (m_termios.c_iflag & IGNCR) != 0);
+    dbg() << tty_name() << " set_termios: "
+          << "ECHO=" << should_echo_input()
+          << ", ISIG=" << should_generate_signals()
+          << ", ICANON=" << in_canonical_mode()
+          << ", ECHOE=" << ((m_termios.c_lflag & ECHOE) != 0)
+          << ", ECHOK=" << ((m_termios.c_lflag & ECHOK) != 0)
+          << ", ECHONL=" << ((m_termios.c_lflag & ECHONL) != 0)
+          << ", ISTRIP=" << ((m_termios.c_iflag & ISTRIP) != 0)
+          << ", ICRNL=" << ((m_termios.c_iflag & ICRNL) != 0)
+          << ", INLCR=" << ((m_termios.c_iflag & INLCR) != 0)
+          << ", IGNCR=" << ((m_termios.c_iflag & IGNCR) != 0);
 }
 
 int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)
