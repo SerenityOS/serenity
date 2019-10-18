@@ -2,12 +2,20 @@
 
 #include <LibHTML/Layout/LayoutBox.h>
 
+class LayoutTableCell;
+
 class LayoutTableRow final : public LayoutBox {
 public:
     LayoutTableRow(const Element&, NonnullRefPtr<StyleProperties>);
     virtual ~LayoutTableRow() override;
 
     virtual void layout() override;
+
+    LayoutTableCell* first_cell();
+    const LayoutTableCell* first_cell() const;
+
+    LayoutTableRow* next_row();
+    const LayoutTableRow* next_row() const;
 
 private:
     virtual bool is_table_row() const override { return true; }
