@@ -67,6 +67,7 @@ public:
 
     const StyleProperties& style() const;
 
+    LayoutNodeWithStyle* parent();
     const LayoutNodeWithStyle* parent() const;
 
     void inserted_into(LayoutNode&) {}
@@ -96,6 +97,12 @@ public:
 
     template<typename T>
     T* first_child_of_type();
+
+    template<typename T>
+    const T* first_ancestor_of_type() const;
+
+    template<typename T>
+    T* first_ancestor_of_type();
 
 protected:
     explicit LayoutNode(const Node*);
@@ -155,6 +162,11 @@ inline const StyleProperties& LayoutNode::style() const
 inline const LayoutNodeWithStyle* LayoutNode::parent() const
 {
     return static_cast<const LayoutNodeWithStyle*>(TreeNode<LayoutNode>::parent());
+}
+
+inline LayoutNodeWithStyle* LayoutNode::parent()
+{
+    return static_cast<LayoutNodeWithStyle*>(TreeNode<LayoutNode>::parent());
 }
 
 template<typename T>
@@ -245,6 +257,26 @@ inline T* LayoutNode::first_child_of_type()
     for (auto* child = first_child(); child; child = child->next_sibling()) {
         if (is<T>(*child))
             return &to<T>(*child);
+    }
+    return nullptr;
+}
+
+template<typename T>
+inline const T* LayoutNode::first_ancestor_of_type() const
+{
+    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (is<T>(*ancestor))
+            return &to<T>(*ancestor);
+    }
+    return nullptr;
+}
+
+template<typename T>
+inline T* LayoutNode::first_ancestor_of_type()
+{
+    for (auto* ancestor = parent(); ancestor; ancestor = ancestor->parent()) {
+        if (is<T>(*ancestor))
+            return &to<T>(*ancestor);
     }
     return nullptr;
 }
