@@ -181,6 +181,13 @@ public:
         return *this;
     }
 
+    u32 hash() const
+    {
+        if (!m_impl)
+            return 0;
+        return m_impl->hash();
+    }
+
     ByteBuffer to_byte_buffer() const;
 
     template<typename BufferType>
@@ -205,7 +212,10 @@ public:
     }
 #endif
 
-    StringView view() const { return { characters(), length() }; }
+    StringView view() const
+    {
+        return { characters(), length() };
+    }
 
 private:
     bool match_helper(const StringView& mask) const;
@@ -234,7 +244,6 @@ struct Traits<String> : public GenericTraits<String> {
 struct CaseInsensitiveStringTraits : public AK::Traits<String> {
     static unsigned hash(const String& s) { return s.impl() ? s.to_lowercase().impl()->hash() : 0; }
     static bool equals(const String& a, const String& b) { return a.to_lowercase() == b.to_lowercase(); }
-
 };
 
 inline bool operator<(const char* characters, const String& string)
@@ -271,5 +280,5 @@ inline bool operator<=(const char* characters, const String& string)
 
 }
 
-using AK::String;
 using AK::CaseInsensitiveStringTraits;
+using AK::String;
