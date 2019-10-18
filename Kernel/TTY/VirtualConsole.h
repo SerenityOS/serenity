@@ -32,7 +32,7 @@ private:
 
     // ^TTY
     virtual ssize_t on_tty_write(const u8*, ssize_t) override;
-    virtual String tty_name() const override;
+    virtual StringView tty_name() const override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "VirtualConsole"; }
@@ -87,5 +87,5 @@ private:
     Vector<u8> m_parameters;
     Vector<u8> m_intermediates;
     u8* m_horizontal_tabs { nullptr };
-    String m_tty_name;
+    char m_tty_name[32];
 };

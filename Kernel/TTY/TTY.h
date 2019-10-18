@@ -18,7 +18,7 @@ public:
     virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override final;
     virtual String absolute_path(const FileDescription&) const override { return tty_name(); }
 
-    virtual String tty_name() const = 0;
+    virtual StringView tty_name() const = 0;
 
     unsigned short rows() const { return m_rows; }
     unsigned short columns() const { return m_columns; }
