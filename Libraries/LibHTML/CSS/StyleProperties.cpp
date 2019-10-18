@@ -1,5 +1,6 @@
 #include <LibCore/CDirIterator.h>
 #include <LibHTML/CSS/StyleProperties.h>
+#include <LibHTML/FontCache.h>
 #include <ctype.h>
 
 void StyleProperties::set_property(CSS::PropertyID id, NonnullRefPtr<StyleValue> value)
@@ -43,6 +44,11 @@ void StyleProperties::load_font() const
 {
     auto font_family = string_or_fallback(CSS::PropertyID::FontFamily, "Katica");
     auto font_weight = string_or_fallback(CSS::PropertyID::FontWeight, "normal");
+
+    if (auto cached_font = FontCache::the().get({ font_family, font_weight })) {
+        m_font = cached_font;
+        return;
+    }
 
     String weight;
     if (font_weight == "lighter")
@@ -92,6 +98,7 @@ void StyleProperties::load_font() const
 #endif
 
     m_font = Font::load_from_file(String::format("/res/fonts/%s", file_name.characters()));
+    FontCache::the().set({ font_family, font_weight }, *m_font);
 }
 
 int StyleProperties::line_height() const
