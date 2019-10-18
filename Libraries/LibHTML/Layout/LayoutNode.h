@@ -85,6 +85,18 @@ public:
     bool children_are_inline() const { return m_children_are_inline; }
     void set_children_are_inline(bool value) { m_children_are_inline = value; }
 
+    template<typename U>
+    const U* next_sibling_of_type() const;
+
+    template<typename U>
+    U* next_sibling_of_type();
+
+    template<typename T>
+    const T* first_child_of_type() const;
+
+    template<typename T>
+    T* first_child_of_type();
+
 protected:
     explicit LayoutNode(const Node*);
 
@@ -195,4 +207,44 @@ inline T& to(LayoutNode& node)
 {
     ASSERT(is<T>(node));
     return static_cast<T&>(node);
+}
+
+template<typename T>
+inline const T* LayoutNode::next_sibling_of_type() const
+{
+    for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
+        if (is<T>(*sibling))
+            return &to<T>(*sibling);
+    }
+    return nullptr;
+}
+
+template<typename T>
+inline T* LayoutNode::next_sibling_of_type()
+{
+    for (auto* sibling = next_sibling(); sibling; sibling = sibling->next_sibling()) {
+        if (is<T>(*sibling))
+            return &to<T>(*sibling);
+    }
+    return nullptr;
+}
+
+template<typename T>
+inline const T* LayoutNode::first_child_of_type() const
+{
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        if (is<T>(*child))
+            return &to<T>(*child);
+    }
+    return nullptr;
+}
+
+template<typename T>
+inline T* LayoutNode::first_child_of_type()
+{
+    for (auto* child = first_child(); child; child = child->next_sibling()) {
+        if (is<T>(*child))
+            return &to<T>(*child);
+    }
+    return nullptr;
 }
