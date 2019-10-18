@@ -141,16 +141,19 @@ void LayoutText::split_into_lines(LayoutBlock& container)
     }
 
     // Collapse whitespace into single spaces
-    auto& raw_text = node().data();
-    StringBuilder builder(raw_text.length());
-    for (int i = 0; i < raw_text.length(); ++i) {
-        if (!isspace(raw_text[i])) {
-            builder.append(raw_text[i]);
+    auto utf8_view = Utf8View(node().data());
+    StringBuilder builder(node().data().length());
+    for (auto it = utf8_view.begin(); it != utf8_view.end(); ++it) {
+        if (!isspace(*it)) {
+            builder.append(utf8_view.as_string().characters_without_null_termination() + utf8_view.byte_offset_of(it), it.codepoint_length_in_bytes());
         } else {
             builder.append(' ');
-            while (i < raw_text.length() && isspace(raw_text[i]))
-                ++i;
-            --i;
+            auto prev = it;
+            while (it != utf8_view.end() && isspace(*it)) {
+                prev = it;
+                ++it;
+            }
+            it = prev;
         }
     }
     m_text_for_rendering = builder.to_string();
