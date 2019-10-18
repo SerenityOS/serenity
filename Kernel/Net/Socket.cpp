@@ -43,17 +43,6 @@ void Socket::set_setup_state(SetupState new_setup_state)
     m_setup_state = new_setup_state;
 }
 
-KResult Socket::listen(int backlog)
-{
-    LOCKER(m_lock);
-    if (m_type != SOCK_STREAM)
-        return KResult(-EOPNOTSUPP);
-    m_backlog = backlog;
-    m_role = Role::Listener;
-    kprintf("Socket{%p} listening with backlog=%d\n", this, m_backlog);
-    return KSuccess;
-}
-
 RefPtr<Socket> Socket::accept()
 {
     LOCKER(m_lock);

@@ -37,7 +37,9 @@ NonnullRefPtr<IPv4Socket> IPv4Socket::create(int type, int protocol)
 IPv4Socket::IPv4Socket(int type, int protocol)
     : Socket(AF_INET, type, protocol)
 {
+#ifdef IPV4_SOCKET_DEBUG
     kprintf("%s(%u) IPv4Socket{%p} created with type=%u, protocol=%d\n", current->process().name().characters(), current->pid(), this, type, protocol);
+#endif
     LOCKER(all_sockets().lock());
     all_sockets().resource().set(this);
 }
@@ -95,7 +97,9 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
     m_local_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
     m_local_port = requested_local_port;
 
+#ifdef IPV4_SOCKET_DEBUG
     dbgprintf("IPv4Socket::bind %s{%p} to %s:%u\n", class_name(), this, m_local_address.to_string().characters(), m_local_port);
+#endif
 
     return protocol_bind();
 }
@@ -109,7 +113,9 @@ KResult IPv4Socket::listen(int backlog)
     set_backlog(backlog);
     m_role = Role::Listener;
 
+#ifdef IPV4_SOCKET_DEBUG
     kprintf("IPv4Socket{%p} listening with backlog=%d\n", this, backlog);
+#endif
 
     return protocol_listen();
 }
@@ -253,7 +259,9 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
     auto& ipv4_packet = *(const IPv4Packet*)(packet.data.value().data());
 
     if (addr) {
+#ifdef IPV4_SOCKET_DEBUG
         dbgprintf("Incoming packet is from: %s:%u\n", packet.peer_address.to_string().characters(), packet.peer_port);
+#endif
         auto& ia = *(sockaddr_in*)addr;
         memcpy(&ia.sin_addr, &packet.peer_address, sizeof(IPv4Address));
         ia.sin_port = htons(packet.peer_port);
