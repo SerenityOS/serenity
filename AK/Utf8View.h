@@ -18,6 +18,8 @@ public:
     Utf8CodepointIterator& operator++();
     u32 operator*() const;
 
+    int codepoint_length_in_bytes() const;
+
 private:
     Utf8CodepointIterator(const unsigned char*, int);
     const unsigned char* m_ptr { nullptr };

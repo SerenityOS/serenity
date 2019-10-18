@@ -139,6 +139,16 @@ Utf8CodepointIterator& Utf8CodepointIterator::operator++()
     return *this;
 }
 
+int Utf8CodepointIterator::codepoint_length_in_bytes() const
+{
+    ASSERT(m_length > 0);
+    int codepoint_length_in_bytes;
+    u32 value;
+    bool first_byte_makes_sense = decode_first_byte(*m_ptr, codepoint_length_in_bytes, value);
+    ASSERT(first_byte_makes_sense);
+    return codepoint_length_in_bytes;
+}
+
 u32 Utf8CodepointIterator::operator*() const
 {
     ASSERT(m_length > 0);
