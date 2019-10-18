@@ -43,7 +43,7 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
 {
     ksprintf(m_tty_name, "/dev/tty%u", m_index);
     set_size(80, 25);
-    m_horizontal_tabs = static_cast<u8*>(kmalloc(columns()));
+    m_horizontal_tabs = static_cast<u8*>(kmalloc_eternal(columns()));
     for (unsigned i = 0; i < columns(); ++i)
         m_horizontal_tabs[i] = (i % 8) == 0;
     // Rightmost column is always last tab on line.
@@ -63,8 +63,7 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
 
 VirtualConsole::~VirtualConsole()
 {
-    kfree(m_horizontal_tabs);
-    m_horizontal_tabs = nullptr;
+    ASSERT_NOT_REACHED();
 }
 
 void VirtualConsole::clear()
