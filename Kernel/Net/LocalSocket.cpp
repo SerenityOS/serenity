@@ -158,7 +158,9 @@ KResult LocalSocket::listen(int backlog)
         return KResult(-EOPNOTSUPP);
     set_backlog(backlog);
     m_connect_side_role = m_role = Role::Listener;
+#ifdef DEBUG_LOCAL_SOCKET
     kprintf("LocalSocket{%p} listening with backlog=%d\n", this, backlog);
+#endif
     return KSuccess;
 }
 
