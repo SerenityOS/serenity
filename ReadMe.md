@@ -80,9 +80,9 @@ Once you've done both of those, go into the `Kernel/` directory, then run
 **./makeall.sh**, and if nothing breaks too much, take it for a spin by using
 **./run**.
 
-You can vastly reduce the build time of successive rebuilds of Serenity by installing `ccache` and `export`ing ```PRE_CXX=ccache``` 
+You can vastly reduce the build time of successive rebuilds of Serenity by installing `ccache` and `export`ing ```PRE_CXX=ccache```
 
-Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/INSTALL.md) 
+Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/INSTALL.md)
 
 Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply rerun **./makeall.sh** in the `Kernel/` directory and you'll be good to **./run** again.
 
@@ -92,7 +92,7 @@ SerenityOS can also be built and run under WSL Version 2. WSL Version 1 is not s
 
 WSL Version 2 is currently only available for Insider Builds of Windows which are more unstable and prone to crashes. Therefore, running SerenityOS on WSL Version 2 and running Insider Builds, in general, is not recommended on production systems.
 
-Nevertheless, here is a guide on how to [get an Insider Build](https://insider.windows.com/en-us/how-to-pc/) and how to [get WSL2](https://docs.microsoft.com/en-us/windows/wsl/wsl2-install). The installation then procedes as usual.
+Nevertheless, here is a guide on how to [get an Insider Build](https://insider.windows.com/en-us/how-to-pc/) and how to [get WSL2](https://docs.microsoft.com/en-us/windows/wsl/wsl2-install). The installation then proceeds as usual.
 
 WSL2 does not natively support graphical applications. This means that to actually **./run** SerenityOS, you need an X Server for windows. [Vcxsrv](https://sourceforge.net/projects/vcxsrv/) is a good option. When you start up Vcxsrv, make sure to set the Display number to 0, and to Disable access control. Before actually doing **./run**, you need to set the DISPLAY environmental variable as such:
 
@@ -122,4 +122,3 @@ Come chat in `#serenityos` on the Freenode IRC network.
 ## License
 
 Serenity is licensed under a 2-clause BSD license.
-
