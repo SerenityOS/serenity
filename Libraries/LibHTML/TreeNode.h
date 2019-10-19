@@ -2,9 +2,10 @@
 
 #include <AK/Assertions.h>
 #include <AK/NonnullRefPtr.h>
+#include <AK/Weakable.h>
 
 template<typename T>
-class TreeNode {
+class TreeNode : public Weakable<T> {
 public:
     void ref()
     {

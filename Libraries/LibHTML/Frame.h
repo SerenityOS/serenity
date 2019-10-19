@@ -3,16 +3,13 @@
 #include <AK/Function.h>
 #include <AK/Noncopyable.h>
 #include <AK/RefPtr.h>
-#include <AK/Weakable.h>
 #include <LibDraw/Rect.h>
 #include <LibDraw/Size.h>
 #include <LibHTML/TreeNode.h>
 
 class Document;
 
-class Frame
-    : public TreeNode<Frame>
-    , public Weakable<Frame> {
+class Frame : public TreeNode<Frame> {
 public:
     static NonnullRefPtr<Frame> create() { return adopt(*new Frame); }
     ~Frame();
