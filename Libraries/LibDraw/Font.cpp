@@ -181,10 +181,10 @@ int Font::glyph_or_emoji_width(u32 codepoint) const
     if (m_fixed_width)
         return m_glyph_width;
 
-    auto emoji = Emoji::emoji_for_codepoint(codepoint);
+    auto* emoji = Emoji::emoji_for_codepoint(codepoint);
     if (emoji == nullptr)
         return glyph_width('?');
-    return emoji->bitmap().size().width();
+    return emoji->size().width();
 }
 
 int Font::width(const StringView& string) const
