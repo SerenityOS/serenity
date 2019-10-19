@@ -317,9 +317,7 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
             node.inserted_into(*node.parent());
     };
 
-    fire_insertion_callbacks(*document);
-
     document->fixup();
-
+    fire_insertion_callbacks(*document);
     return document;
 }
