@@ -9,4 +9,6 @@ endpoint AudioServer
 
     // Buffer playback
     EnqueueBuffer(i32 buffer_id, int sample_count) => (bool success)
+
+    GetRemainingSamples() => (int remaining_samples)
 }

@@ -100,5 +100,6 @@ ASBufferQueue::ASBufferQueue(ASClientConnection& client)
 
 void ASBufferQueue::enqueue(NonnullRefPtr<ABuffer>&& buffer)
 {
+    m_remaining_samples += buffer->sample_count();
     m_queue.enqueue(move(buffer));
 }

@@ -22,6 +22,7 @@ private:
     virtual OwnPtr<AudioServer::GetMainMixVolumeResponse> handle(const AudioServer::GetMainMixVolume&) override;
     virtual OwnPtr<AudioServer::SetMainMixVolumeResponse> handle(const AudioServer::SetMainMixVolume&) override;
     virtual OwnPtr<AudioServer::EnqueueBufferResponse> handle(const AudioServer::EnqueueBuffer&) override;
+    virtual OwnPtr<AudioServer::GetRemainingSamplesResponse> handle(const AudioServer::GetRemainingSamples&) override;
 
     ASMixer& m_mixer;
     RefPtr<ASBufferQueue> m_queue;
