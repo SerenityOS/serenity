@@ -94,6 +94,8 @@ RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_sty
         return adopt(*new LayoutTableRow(*this, move(style)));
     if (display == "table-cell")
         return adopt(*new LayoutTableCell(*this, move(style)));
+    if (display == "inline-block")
+        return adopt(*new LayoutBlock(this, move(style)));
 
     ASSERT_NOT_REACHED();
 }
