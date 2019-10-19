@@ -7,21 +7,21 @@
 
 class GraphicsBitmap;
 
-class ImageLoaderPlugin {
+class ImageDecoderPlugin {
 public:
-    virtual ~ImageLoaderPlugin() {}
+    virtual ~ImageDecoderPlugin() {}
 
     virtual Size size() = 0;
     virtual RefPtr<GraphicsBitmap> bitmap() = 0;
 
 protected:
-    ImageLoaderPlugin() {}
+    ImageDecoderPlugin() {}
 };
 
-class ImageLoader : public RefCounted<ImageLoader> {
+class ImageDecoder : public RefCounted<ImageDecoder> {
 public:
-    static NonnullRefPtr<ImageLoader> create(const u8* data, size_t size) { return adopt(*new ImageLoader(data, size)); }
-    ~ImageLoader();
+    static NonnullRefPtr<ImageDecoder> create(const u8* data, size_t size) { return adopt(*new ImageDecoder(data, size)); }
+    ~ImageDecoder();
 
     Size size() const { return m_plugin->size(); }
     int width() const { return size().width(); }
@@ -29,7 +29,7 @@ public:
     RefPtr<GraphicsBitmap> bitmap() const { return m_plugin->bitmap(); }
 
 private:
-    ImageLoader(const u8*, size_t);
+    ImageDecoder(const u8*, size_t);
 
-    mutable OwnPtr<ImageLoaderPlugin> m_plugin;
+    mutable OwnPtr<ImageDecoderPlugin> m_plugin;
 };

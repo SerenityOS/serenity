@@ -34,7 +34,7 @@ void HTMLImageElement::load_image(const String& src)
         }
 
         m_image_data = data;
-        m_image_loader = ImageLoader::create(m_image_data.data(), m_image_data.size());
+        m_image_loader = ImageDecoder::create(m_image_data.data(), m_image_data.size());
         document().update_layout();
     });
 }
