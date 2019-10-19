@@ -31,6 +31,7 @@ public:
 
     virtual String tag_name() const final { return m_tag_name; }
 
+    bool has_attribute(const String& name) const { return !attribute(name).is_null(); }
     String attribute(const String& name) const;
     void set_attribute(const String& name, const String& value);
 

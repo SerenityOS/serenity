@@ -105,6 +105,10 @@ int main(int argc, char** argv)
 
     auto statusbar = GStatusBar::construct(widget);
 
+    html_widget->on_link_hover = [&](auto& href) {
+        statusbar->set_text(href);
+    };
+
     ResourceLoader::the().on_load_counter_change = [&] {
         if (ResourceLoader::the().pending_loads() == 0) {
             statusbar->set_text("");

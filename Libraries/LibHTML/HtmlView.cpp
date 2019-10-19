@@ -142,16 +142,18 @@ void HtmlView::mousemove_event(GMouseEvent& event)
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
+    bool was_hovering_link = m_document->hovered_node() && m_document->hovered_node()->is_link();
     auto result = layout_root()->hit_test(to_content_position(event.position()));
+    const HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
         auto* node = result.layout_node->node();
         hovered_node_changed = node != m_document->hovered_node();
         m_document->set_hovered_node(const_cast<Node*>(node));
         if (node) {
-            if (auto* link = node->enclosing_link_element()) {
-                UNUSED_PARAM(link);
+            hovered_link_element = node->enclosing_link_element();
+            if (hovered_link_element) {
 #ifdef HTML_DEBUG
-                dbg() << "HtmlView: hovering over a link to " << link->href();
+                dbg() << "HtmlView: hovering over a link to " << hovered_link_element->href();
 #endif
                 is_hovering_link = true;
             }
@@ -167,6 +169,11 @@ void HtmlView::mousemove_event(GMouseEvent& event)
             GApplication::the().show_tooltip(hovered_html_element->title(), screen_position.translated(4, 4));
         } else {
             GApplication::the().hide_tooltip();
+        }
+    }
+    if (is_hovering_link != was_hovering_link) {
+        if (on_link_hover) {
+            on_link_hover(hovered_link_element ? m_document->complete_url(hovered_link_element->href()).to_string() : String());
         }
     }
     event.accept();
