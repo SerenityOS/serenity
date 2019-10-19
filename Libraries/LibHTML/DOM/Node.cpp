@@ -21,7 +21,11 @@ Node::~Node()
 
 const HTMLAnchorElement* Node::enclosing_link_element() const
 {
-    return first_ancestor_of_type<HTMLAnchorElement>();
+    for (auto* node = this; node; node = node->parent()) {
+        if (is<HTMLAnchorElement>(*node) && to<HTMLAnchorElement>(*node).has_attribute("href"))
+            return to<HTMLAnchorElement>(node);
+    }
+    return nullptr;
 }
 
 const HTMLElement* Node::enclosing_html_element() const
@@ -75,4 +79,12 @@ void Node::invalidate_style()
             node.set_needs_style_update(true);
     });
     document().schedule_style_update();
+}
+
+bool Node::is_link() const
+{
+    auto* enclosing_link = enclosing_link_element();
+    if (!enclosing_link)
+        return false;
+    return enclosing_link->has_attribute("href");
 }

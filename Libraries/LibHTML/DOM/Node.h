@@ -75,6 +75,8 @@ public:
 
     void invalidate_style();
 
+    bool is_link() const;
+
 protected:
     Node(Document&, NodeType);
 
