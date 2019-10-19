@@ -44,6 +44,17 @@ bool String::operator<(const String& other) const
     return strcmp(characters(), other.characters()) < 0;
 }
 
+bool String::operator>(const String& other) const
+{
+    if (!m_impl)
+        return other.m_impl;
+
+    if (!other.m_impl)
+        return false;
+
+    return strcmp(characters(), other.characters()) > 0;
+}
+
 String String::empty()
 {
     return StringImpl::the_empty_stringimpl();
