@@ -36,7 +36,7 @@ public:
     void draw_text(const Rect&, const StringView&, TextAlignment = TextAlignment::TopLeft, Color = Color::Black, TextElision = TextElision::None);
     void draw_glyph(const Point&, char, Color);
     void draw_glyph(const Point&, char, const Font&, Color);
-    void draw_emoji(const Point&, const Emoji&, const Font&);
+    void draw_emoji(const Point&, const GraphicsBitmap&, const Font&);
     void draw_glyph_or_emoji(const Point&, u32 codepoint, const Font&, Color);
 
     const Font& font() const { return *state().font; }

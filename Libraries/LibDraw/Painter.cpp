@@ -556,10 +556,10 @@ void Painter::draw_scaled_bitmap(const Rect& a_dst_rect, const GraphicsBitmap& s
     draw_bitmap(point, font.glyph_bitmap(ch), color);
 }
 
-void Painter::draw_emoji(const Point& point, const Emoji& emoji, const Font& font)
+void Painter::draw_emoji(const Point& point, const GraphicsBitmap& emoji, const Font& font)
 {
     if (!font.is_fixed_width())
-        blit(point, emoji.bitmap(), emoji.bitmap().rect());
+        blit(point, emoji, emoji.rect());
     else {
         Rect dst_rect {
             point.x(),
@@ -567,7 +567,7 @@ void Painter::draw_emoji(const Point& point, const Emoji& emoji, const Font& fon
             font.glyph_width('x'),
             font.glyph_height()
         };
-        draw_scaled_bitmap(dst_rect, emoji.bitmap(), emoji.bitmap().rect());
+        draw_scaled_bitmap(dst_rect, emoji, emoji.rect());
     }
 }
 
@@ -580,9 +580,11 @@ void Painter::draw_glyph_or_emoji(const Point& point, u32 codepoint, const Font&
     }
 
     // Perhaps it's an emoji?
-    const Emoji* emoji = Emoji::emoji_for_codepoint(codepoint);
+    auto* emoji = Emoji::emoji_for_codepoint(codepoint);
     if (emoji == nullptr) {
+#ifdef EMOJI_DEBUG
         dbg() << "Failed to find an emoji for codepoint " << codepoint;
+#endif
         draw_glyph(point, '?', font, color);
         return;
     }
