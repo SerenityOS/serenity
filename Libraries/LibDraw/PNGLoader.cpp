@@ -661,18 +661,18 @@ static bool process_chunk(Streamer& streamer, PNGLoadingContext& context, bool d
     return true;
 }
 
-PNGImageLoaderPlugin::PNGImageLoaderPlugin(const u8* data, size_t size)
+PNGImageDecoderPlugin::PNGImageDecoderPlugin(const u8* data, size_t size)
 {
     m_context = make<PNGLoadingContext>();
     m_context->data = data;
     m_context->data_size = size;
 }
 
-PNGImageLoaderPlugin::~PNGImageLoaderPlugin()
+PNGImageDecoderPlugin::~PNGImageDecoderPlugin()
 {
 }
 
-Size PNGImageLoaderPlugin::size()
+Size PNGImageDecoderPlugin::size()
 {
     if (m_context->state == PNGLoadingContext::State::Error)
         return {};
@@ -686,7 +686,7 @@ Size PNGImageLoaderPlugin::size()
     return { m_context->width, m_context->height };
 }
 
-RefPtr<GraphicsBitmap> PNGImageLoaderPlugin::bitmap()
+RefPtr<GraphicsBitmap> PNGImageDecoderPlugin::bitmap()
 {
     if (m_context->state == PNGLoadingContext::State::Error)
         return nullptr;

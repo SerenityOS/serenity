@@ -8,7 +8,7 @@ OBJS = \
     GraphicsBitmap.o \
     Painter.o \
     PNGLoader.o \
-    ImageLoader.o \
+    ImageDecoder.o \
     Rect.o \
     StylePainter.o \
     Emoji.o
