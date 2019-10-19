@@ -150,9 +150,17 @@ void TerminalWidget::keydown_event(GKeyEvent& event)
         write(m_ptm_fd, "\033[F", 3);
         return;
     case KeyCode::Key_PageUp:
+        if (event.modifiers() == Mod_Shift) {
+            m_scrollbar->set_value(m_scrollbar->value() - m_terminal.rows());
+            return;
+        }
         write(m_ptm_fd, "\033[5~", 4);
         return;
     case KeyCode::Key_PageDown:
+        if (event.modifiers() == Mod_Shift) {
+            m_scrollbar->set_value(m_scrollbar->value() + m_terminal.rows());
+            return;
+        }
         write(m_ptm_fd, "\033[6~", 4);
         return;
     default:
