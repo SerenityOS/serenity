@@ -1,5 +1,6 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/CTimer.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/DocumentType.h>
@@ -18,10 +19,23 @@ Document::Document()
     : ParentNode(*this, NodeType::DOCUMENT_NODE)
     , m_style_resolver(make<StyleResolver>(*this))
 {
+    m_style_update_timer = CTimer::construct();
+    m_style_update_timer->set_single_shot(true);
+    m_style_update_timer->set_interval(0);
+    m_style_update_timer->on_timeout = [this] {
+        update_style();
+    };
 }
 
 Document::~Document()
 {
+}
+
+void Document::schedule_style_update()
+{
+    if (m_style_update_timer->is_active())
+        return;
+    m_style_update_timer->start();
 }
 
 bool Document::is_child_allowed(const Node& node) const
@@ -178,7 +192,11 @@ void Document::layout()
 
 void Document::update_style()
 {
-    m_layout_root = nullptr;
+    for_each_in_subtree([&](Node& node) {
+        if (!node.needs_style_update())
+            return;
+        to<Element>(node).recompute_style();
+    });
     update_layout();
 }
 
@@ -222,8 +240,5 @@ void Document::set_hovered_node(Node* node)
     RefPtr<Node> old_hovered_node = move(m_hovered_node);
     m_hovered_node = node;
 
-    if (old_hovered_node)
-        old_hovered_node->invalidate_style();
-    if (m_hovered_node)
-        m_hovered_node->invalidate_style();
+    invalidate_style();
 }

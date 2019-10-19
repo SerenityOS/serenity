@@ -7,6 +7,7 @@
 #include <LibHTML/Layout/LayoutTable.h>
 #include <LibHTML/Layout/LayoutTableCell.h>
 #include <LibHTML/Layout/LayoutTableRow.h>
+#include <LibHTML/Layout/LayoutTreeBuilder.h>
 
 Element::Element(Document& document, const String& tag_name)
     : ParentNode(document, NodeType::ELEMENT_NODE)
@@ -129,11 +130,21 @@ static StyleDifference compute_style_difference(const StyleProperties& old_style
 
 void Element::recompute_style()
 {
+    set_needs_style_update(false);
     ASSERT(parent());
     auto* parent_layout_node = parent()->layout_node();
+    if (!parent_layout_node)
+        return;
     ASSERT(parent_layout_node);
     auto style = document().style_resolver().resolve_style(*this, &parent_layout_node->style());
-    ASSERT(layout_node());
+    if (!layout_node()) {
+        if (style->string_or_fallback(CSS::PropertyID::Display, "inline") == "none")
+            return;
+        // We need a new layout tree here!
+        LayoutTreeBuilder tree_builder;
+        tree_builder.build(*this);
+        return;
+    }
     auto diff = compute_style_difference(layout_node()->style(), *style, document());
     if (diff == StyleDifference::None)
         return;
