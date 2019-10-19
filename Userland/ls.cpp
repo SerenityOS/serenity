@@ -1,5 +1,5 @@
-#include <AK/String.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/CDirIterator.h>
@@ -25,6 +25,8 @@ static bool flag_show_dotfiles = false;
 static bool flag_show_inode = false;
 static bool flag_print_numeric = false;
 static bool flag_human_readable = false;
+static bool flag_sort_by_timestamp = false;
+static bool flag_reverse_sort = false;
 
 static int terminal_rows = 0;
 static int terminal_columns = 0;
@@ -40,7 +42,7 @@ int main(int argc, char** argv)
         output_is_terminal = true;
     }
 
-    static const char* valid_option_characters = "laiGnh";
+    static const char* valid_option_characters = "ltraiGnh";
     int opt;
     while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
         switch (opt) {
@@ -49,6 +51,12 @@ int main(int argc, char** argv)
             break;
         case 'l':
             flag_long = true;
+            break;
+        case 't':
+            flag_sort_by_timestamp = true;
+            break;
+        case 'r':
+            flag_reverse_sort = true;
             break;
         case 'G':
             flag_colorize = false;
@@ -88,11 +96,11 @@ int main(int argc, char** argv)
     return status;
 }
 
-int print_name(struct stat& st, const char* name, const char* path_for_link_resolution = nullptr)
+int print_name(const struct stat& st, const String& name, const char* path_for_link_resolution = nullptr)
 {
-    int nprinted = strlen(name);
+    int nprinted = name.length();
     if (!flag_colorize || !output_is_terminal) {
-        printf("%s", name);
+        printf("%s", name.characters());
     } else {
         const char* begin_color = "";
         const char* end_color = "\033[0m";
@@ -107,11 +115,11 @@ int print_name(struct stat& st, const char* name, const char* path_for_link_reso
             begin_color = "\033[35;1m";
         else if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
             begin_color = "\033[33;1m";
-        printf("%s%s%s", begin_color, name, end_color);
+        printf("%s%s%s", begin_color, name.characters(), end_color);
     }
     if (S_ISLNK(st.st_mode)) {
         if (path_for_link_resolution) {
-            char linkbuf[256];
+            char linkbuf[PATH_MAX];
             ssize_t nread = readlink(path_for_link_resolution, linkbuf, sizeof(linkbuf));
             if (nread < 0)
                 perror("readlink failed");
@@ -147,15 +155,8 @@ static String human_readable_size(size_t size)
     return number_string_with_one_decimal((float)size / (float)GB, "G");
 }
 
-bool print_filesystem_object(const char* path, const char* name)
+bool print_filesystem_object(const String& path, const String& name, const struct stat& st)
 {
-    struct stat st;
-    int rc = lstat(path, &st);
-    if (rc == -1) {
-        printf("lstat(%s) failed: %s\n", path, strerror(errno));
-        return false;
-    }
-
     if (flag_show_inode)
         printf("%08u ", st.st_ino);
 
@@ -224,7 +225,7 @@ bool print_filesystem_object(const char* path, const char* name)
         tm->tm_min,
         tm->tm_sec);
 
-    print_name(st, name, path);
+    print_name(st, name, path.characters());
 
     printf("\n");
     return true;
@@ -235,7 +236,13 @@ int do_file_system_object_long(const char* path)
     CDirIterator di(path, !flag_show_dotfiles ? CDirIterator::SkipDots : CDirIterator::Flags::NoFlags);
     if (di.has_error()) {
         if (di.error() == ENOTDIR) {
-            if (print_filesystem_object(path, path))
+            struct stat stat;
+            int rc = lstat(path, &stat);
+            if (rc < 0) {
+                perror("lstat");
+                memset(&stat, 0, sizeof(stat));
+            }
+            if (print_filesystem_object(path, path, stat))
                 return 0;
             return 2;
         }
@@ -243,20 +250,47 @@ int do_file_system_object_long(const char* path)
         return 1;
     }
 
-    Vector<String, 1024> names;
-    while (di.has_next())
-        names.append(di.next_path());
-    quick_sort(names.begin(), names.end(), [](auto& a, auto& b) { return a < b; });
+    struct FileMetadata {
+        String name;
+        String path;
+        struct stat stat;
+    };
 
-    for (auto& name : names) {
-        ASSERT(!name.is_empty());
-        if (name[0] == '.' && !flag_show_dotfiles)
+    Vector<FileMetadata> files;
+    while (di.has_next()) {
+        FileMetadata metadata;
+        metadata.name = di.next_path();
+        ASSERT(!metadata.name.is_empty());
+        if (metadata.name[0] == '.' && !flag_show_dotfiles)
             continue;
         StringBuilder builder;
         builder.append(path);
         builder.append('/');
-        builder.append(name);
-        if (!print_filesystem_object(builder.to_string().characters(), name.characters()))
+        builder.append(metadata.name);
+        metadata.path = builder.to_string();
+        ASSERT(!metadata.path.is_null());
+        int rc = lstat(metadata.path.characters(), &metadata.stat);
+        if (rc < 0) {
+            perror("lstat");
+            memset(&metadata.stat, 0, sizeof(metadata.stat));
+        }
+        files.append(move(metadata));
+    }
+
+    quick_sort(files.begin(), files.end(), [](auto& a, auto& b) {
+        if (flag_sort_by_timestamp) {
+            if (flag_reverse_sort)
+                return a.stat.st_mtime > b.stat.st_mtime;
+            return a.stat.st_mtime < b.stat.st_mtime;
+        }
+        // Fine, sort by name then!
+        if (flag_reverse_sort)
+            return a.name > b.name;
+        return a.name < b.name;
+    });
+
+    for (auto& file : files) {
+        if (!print_filesystem_object(file.path, file.name, file.stat))
             return 2;
     }
     return 0;
@@ -291,7 +325,7 @@ int do_file_system_object_short(const char* path)
         return 1;
     }
 
-    Vector<String, 1024> names;
+    Vector<String> names;
     int longest_name = 0;
     while (di.has_next()) {
         String name = di.next_path();
