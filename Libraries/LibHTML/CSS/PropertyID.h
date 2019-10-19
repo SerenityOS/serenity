@@ -7,6 +7,7 @@ enum class PropertyID {
     Invalid,
 
     BackgroundColor,
+    BackgroundImage,
     BorderBottomColor,
     BorderBottomStyle,
     BorderBottomWidth,

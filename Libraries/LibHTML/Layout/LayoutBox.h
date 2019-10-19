@@ -18,6 +18,8 @@ public:
     virtual HitTestResult hit_test(const Point& position) const override;
     virtual void set_needs_display() override;
 
+    bool is_body() const;
+
 protected:
     LayoutBox(const Node* node, NonnullRefPtr<StyleProperties> style)
         : LayoutNodeWithStyleAndBoxModelMetrics(node, move(style))

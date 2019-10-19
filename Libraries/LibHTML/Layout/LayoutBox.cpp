@@ -1,5 +1,6 @@
 #include <LibGUI/GPainter.h>
 #include <LibHTML/DOM/Document.h>
+#include <LibHTML/DOM/HTMLBodyElement.h>
 #include <LibHTML/Frame.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutBox.h>
@@ -26,9 +27,19 @@ void LayoutBox::render(RenderingContext& context)
     padded_rect.set_y(y() - box_model().padding().top.to_px());
     padded_rect.set_height(height() + box_model().padding().top.to_px() + box_model().padding().bottom.to_px());
 
-    auto bgcolor = style().property(CSS::PropertyID::BackgroundColor);
-    if (bgcolor.has_value() && bgcolor.value()->is_color()) {
-        context.painter().fill_rect(padded_rect, bgcolor.value()->to_color(document()));
+    if (!is_body()) {
+        auto bgcolor = style().property(CSS::PropertyID::BackgroundColor);
+        if (bgcolor.has_value() && bgcolor.value()->is_color()) {
+            context.painter().fill_rect(padded_rect, bgcolor.value()->to_color(document()));
+        }
+
+        auto bgimage = style().property(CSS::PropertyID::BackgroundImage);
+        if (bgimage.has_value() && bgimage.value()->is_image()) {
+            auto& image_value = static_cast<const ImageStyleValue&>(*bgimage.value());
+            if (image_value.bitmap()) {
+                context.painter().draw_tiled_bitmap(padded_rect, *image_value.bitmap());
+            }
+        }
     }
 
     // FIXME: Respect all individual border sides
@@ -92,4 +103,9 @@ void LayoutBox::set_needs_display()
     }
 
     LayoutNode::set_needs_display();
+}
+
+bool LayoutBox::is_body() const
+{
+    return node() && node() == document().body();
 }

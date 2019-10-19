@@ -25,6 +25,10 @@ HtmlView::HtmlView(GWidget* parent)
     , m_main_frame(Frame::create())
 {
     main_frame().on_set_needs_display = [this](auto& content_rect) {
+        if (content_rect.is_empty()) {
+            update();
+            return;
+        }
         Rect adjusted_rect = content_rect;
         adjusted_rect.set_location(to_widget_position(content_rect.location()));
         update(adjusted_rect);
@@ -117,6 +121,10 @@ void HtmlView::paint_event(GPaintEvent& event)
     }
 
     painter.fill_rect(event.rect(), m_document->background_color());
+
+    if (auto background_bitmap = m_document->background_image()) {
+        painter.draw_tiled_bitmap(event.rect(), *background_bitmap);
+    }
 
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
