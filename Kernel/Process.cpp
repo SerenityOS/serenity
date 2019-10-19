@@ -19,6 +19,7 @@
 #include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/IO.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
@@ -33,7 +34,6 @@
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/VM/InodeVMObject.h>
-#include <Kernel/Heap/kmalloc.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 
@@ -423,7 +423,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         auto old_regions = move(m_regions);
         m_regions.append(move(executable_region));
         loader = make<ELFLoader>(region->vaddr().as_ptr());
-        loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) {
+        loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             int prot = 0;
@@ -433,10 +433,11 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            (void)allocate_region_with_vmo(vaddr, size, vmo, offset_in_image, String(name), prot);
+            if (!allocate_region_with_vmo(vaddr, size, vmo, offset_in_image, String(name), prot))
+                return nullptr;
             return vaddr.as_ptr();
         };
-        loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) {
+        loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
             int prot = 0;
@@ -444,7 +445,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_READ;
             if (is_writable)
                 prot |= PROT_WRITE;
-            (void)allocate_region(vaddr, size, String(name), prot);
+            if (!allocate_region(vaddr, size, String(name), prot))
+                return nullptr;
             return vaddr.as_ptr();
         };
         loader->tls_section_hook = [&](size_t size, size_t alignment) {
@@ -1271,7 +1273,7 @@ int Process::sys$fchdir(int fd)
         return -EBADF;
 
     if (!description->is_directory())
-   	return -ENOTDIR;
+        return -ENOTDIR;
 
     if (!description->metadata().may_execute(*this))
         return -EACCES;
