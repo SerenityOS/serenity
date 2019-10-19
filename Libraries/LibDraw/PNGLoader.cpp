@@ -65,6 +65,7 @@ struct [[gnu::packed]] Quad16
 struct PNGLoadingContext {
     enum State {
         NotDecoded = 0,
+        Error,
         HeaderDecoded,
         SizeDecoded,
         ChunksDecoded,
@@ -401,6 +402,7 @@ static bool decode_png_header(PNGLoadingContext& context)
 
     if (memcmp(context.data, png_header, sizeof(png_header)) != 0) {
         dbg() << "Invalid PNG header";
+        context.state = PNGLoadingContext::State::Error;
         return false;
     }
 
@@ -424,6 +426,7 @@ static bool decode_png_size(PNGLoadingContext& context)
     Streamer streamer(data_ptr, data_remaining);
     while (!streamer.at_end()) {
         if (!process_chunk(streamer, context, true)) {
+            context.state = PNGLoadingContext::State::Error;
             return false;
         }
         if (context.width && context.height) {
@@ -453,6 +456,7 @@ static bool decode_png_chunks(PNGLoadingContext& context)
     Streamer streamer(data_ptr, data_remaining);
     while (!streamer.at_end()) {
         if (!process_chunk(streamer, context, false)) {
+            context.state = PNGLoadingContext::State::Error;
             return false;
         }
     }
@@ -478,8 +482,10 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
         unsigned long srclen = context.compressed_data.size() - 6;
         unsigned long destlen = context.decompression_buffer_size;
         int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
-        if (ret < 0)
+        if (ret < 0) {
+            context.state = PNGLoadingContext::State::Error;
             return false;
+        }
         context.compressed_data.clear();
     }
 
@@ -491,13 +497,17 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
         Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
         for (int y = 0; y < context.height; ++y) {
             u8 filter;
-            if (!streamer.read(filter))
+            if (!streamer.read(filter)) {
+                context.state = PNGLoadingContext::State::Error;
                 return false;
+            }
 
             context.scanlines.append({ filter });
             auto& scanline_buffer = context.scanlines.last().data;
-            if (!streamer.wrap_bytes(scanline_buffer, context.width * context.bytes_per_pixel))
+            if (!streamer.wrap_bytes(scanline_buffer, context.width * context.bytes_per_pixel)) {
+                context.state = PNGLoadingContext::State::Error;
                 return false;
+            }
         }
     }
 
@@ -664,9 +674,13 @@ PNGImageLoaderPlugin::~PNGImageLoaderPlugin()
 
 Size PNGImageLoaderPlugin::size()
 {
+    if (m_context->state == PNGLoadingContext::State::Error)
+        return {};
+
     if (m_context->state < PNGLoadingContext::State::SizeDecoded) {
         bool success = decode_png_size(*m_context);
-        ASSERT(success);
+        if (!success)
+            return {};
     }
 
     return { m_context->width, m_context->height };
@@ -674,10 +688,14 @@ Size PNGImageLoaderPlugin::size()
 
 RefPtr<GraphicsBitmap> PNGImageLoaderPlugin::bitmap()
 {
+    if (m_context->state == PNGLoadingContext::State::Error)
+        return nullptr;
+
     if (m_context->state < PNGLoadingContext::State::BitmapDecoded) {
         // NOTE: This forces the chunk decoding to happen.
         bool success = decode_png_bitmap(*m_context);
-        ASSERT(success);
+        if (!success)
+            return nullptr;
     }
 
     ASSERT(m_context->bitmap);
