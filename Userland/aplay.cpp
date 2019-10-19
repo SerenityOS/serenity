@@ -24,12 +24,16 @@ int main(int argc, char** argv)
     printf("\033[34;1mProgress\033[0m: \033[s");
     for (;;) {
         auto samples = loader.get_more_samples();
-        if (!samples)
+        if (samples) {
+            printf("\033[u");
+            printf("%d/%d", loader.loaded_samples(), loader.total_samples());
+            fflush(stdout);
+            audio_client->enqueue(*samples);
+        } else if (audio_client->get_remaining_samples()) {
+            sleep(1);
+        } else {
             break;
-        printf("\033[u");
-        printf("%d/%d", loader.loaded_samples(), loader.total_samples());
-        fflush(stdout);
-        audio_client->enqueue(*samples);
+        }
     }
     printf("\n");
     return 0;
