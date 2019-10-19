@@ -104,6 +104,16 @@ public:
     {
     }
 
+    bool next_is(const char* str) const
+    {
+        int len = strlen(str);
+        for (int i = 0; i < len; ++i) {
+            if (peek(i) != str[i])
+                return false;
+        }
+        return true;
+    }
+
     char peek(int offset = 0) const
     {
         if ((index + offset) < css.length())
@@ -335,6 +345,25 @@ public:
 
     void parse_rule()
     {
+        // FIXME: We ignore @media rules for now.
+        if (next_is("@media")) {
+            while (peek() != '{')
+                consume_one();
+            int level = 0;
+            for (;;) {
+                auto ch = consume_one();
+                if (ch == '{') {
+                    ++level;
+                } else if (ch == '}') {
+                    --level;
+                    if (level == 0)
+                        break;
+                }
+            }
+            consume_whitespace_or_comments();
+            return;
+        }
+
         parse_selector_list();
         consume_specific('{');
         parse_declaration();
