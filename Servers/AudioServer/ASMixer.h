@@ -45,7 +45,6 @@ private:
     RefPtr<ABuffer> m_current;
     Queue<NonnullRefPtr<ABuffer>> m_queue;
     int m_position { 0 };
-    int m_playing_queued_buffer_id { -1 };
     WeakPtr<ASClientConnection> m_client;
 };
 
