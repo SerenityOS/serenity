@@ -57,7 +57,7 @@ bool Document::is_child_allowed(const Node& node) const
 
 void Document::fixup()
 {
-    if (!is<DocumentType>(first_child()))
+    if (!first_child() || !is<DocumentType>(*first_child()))
         prepend_child(adopt(*new DocumentType(*this)));
 
     if (is<HTMLHtmlElement>(first_child()->next_sibling()))
