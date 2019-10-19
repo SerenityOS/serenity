@@ -120,7 +120,7 @@ void WSCompositor::compose()
                 m_back_painter->blit_offset(dirty_rect.location(), *m_wallpaper,
                     dirty_rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
-                m_back_painter->blit_tiled(dirty_rect.location(), *m_wallpaper, dirty_rect);
+                m_back_painter->draw_tiled_bitmap(dirty_rect, *m_wallpaper);
             } else {
                 float hscale = (float)m_wallpaper->size().width() / (float)ws.size().width();
                 float vscale = (float)m_wallpaper->size().height() / (float)ws.size().height();
