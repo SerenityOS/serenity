@@ -1,10 +1,15 @@
+#include <AK/FileSystemPath.h>
 #include <LibCore/CFile.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GWindow.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/ElementFactory.h>
 #include <LibHTML/DOM/HTMLAnchorElement.h>
+#include <LibHTML/DOM/HTMLImageElement.h>
+#include <LibHTML/DOM/Text.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/Frame.h>
 #include <LibHTML/HtmlView.h>
@@ -222,6 +227,36 @@ void HtmlView::reload()
     load(main_frame().document()->url());
 }
 
+static RefPtr<Document> create_image_document(const ByteBuffer& data, const URL& url)
+{
+    auto document = adopt(*new Document);
+    document->set_url(url);
+
+    auto bitmap = load_png_from_memory(data.data(), data.size());
+    ASSERT(bitmap);
+
+    auto html_element = create_element(document, "html");
+    document->append_child(html_element);
+
+    auto head_element = create_element(document, "head");
+    html_element->append_child(head_element);
+    auto title_element = create_element(document, "title");
+    head_element->append_child(title_element);
+
+    auto basename = FileSystemPath(url.path()).basename();
+    auto title_text = adopt(*new Text(document, String::format("%s [%dx%d]", basename.characters(), bitmap->width(), bitmap->height())));
+    title_element->append_child(title_text);
+
+    auto body_element = create_element(document, "body");
+    html_element->append_child(body_element);
+
+    auto image_element = create_element(document, "img");
+    image_element->set_attribute("src", url.to_string());
+    body_element->append_child(image_element);
+
+    return document;
+}
+
 void HtmlView::load(const URL& url)
 {
     dbg() << "HtmlView::load: " << url;
@@ -238,10 +273,14 @@ void HtmlView::load(const URL& url)
             ASSERT_NOT_REACHED();
         }
 
-        auto document = parse_html(data, url);
-
+        RefPtr<Document> document;
+        if (url.path().ends_with(".png")) {
+            document = create_image_document(data, url);
+        } else {
+            document = parse_html(data, url);
+        }
+        ASSERT(document);
         set_document(document);
-
         if (on_title_change)
             on_title_change(document->title());
     });
