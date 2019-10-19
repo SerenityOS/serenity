@@ -70,6 +70,9 @@ public:
 
     virtual bool is_child_allowed(const Node&) const { return true; }
 
+    bool needs_style_update() const { return m_needs_style_update; }
+    void set_needs_style_update(bool value) { m_needs_style_update = value; }
+
     void invalidate_style();
 
 protected:
@@ -78,6 +81,7 @@ protected:
     Document& m_document;
     mutable LayoutNode* m_layout_node { nullptr };
     NodeType m_type { NodeType::INVALID };
+    bool m_needs_style_update { false };
 };
 
 template<typename T>

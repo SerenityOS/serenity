@@ -10,6 +10,7 @@
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/ParentNode.h>
 
+class CTimer;
 class Frame;
 class HTMLBodyElement;
 class HTMLHtmlElement;
@@ -77,6 +78,8 @@ public:
 
     const LayoutDocument* layout_node() const;
 
+    void schedule_style_update();
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
@@ -91,6 +94,8 @@ private:
     Color m_link_color { Color::Blue };
     Color m_active_link_color { Color::Red };
     Color m_visited_link_color { Color::Magenta };
+
+    RefPtr<CTimer> m_style_update_timer;
 };
 
 template<>
