@@ -119,6 +119,27 @@ Color Document::background_color() const
     return background_color.value()->to_color(*this);
 }
 
+RefPtr<GraphicsBitmap> Document::background_image() const
+{
+    auto* body_element = body();
+    if (!body_element)
+        return {};
+
+    auto* body_layout_node = body_element->layout_node();
+    if (!body_layout_node)
+        return {};
+
+    auto background_image = body_layout_node->style().property(CSS::PropertyID::BackgroundImage);
+    if (!background_image.has_value() || !background_image.value()->is_image())
+        return {};
+
+    auto& image_value = static_cast<const ImageStyleValue&>(*background_image.value());
+    if (!image_value.bitmap())
+        return {};
+
+    return *image_value.bitmap();
+}
+
 URL Document::complete_url(const String& string) const
 {
     URL url(string);

@@ -56,6 +56,7 @@ public:
     const Frame* frame() const { return m_frame.ptr(); }
 
     Color background_color() const;
+    RefPtr<GraphicsBitmap> background_image() const;
 
     Color link_color() const { return m_link_color; }
     void set_link_color(Color);

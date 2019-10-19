@@ -23,6 +23,8 @@ void HTMLBodyElement::apply_presentational_hints(StyleProperties& style) const
             auto color = Color::from_string(value);
             if (color.has_value())
                 style.set_property(CSS::PropertyID::Color, ColorStyleValue::create(color.value()));
+        } else if (name == "background") {
+            style.set_property(CSS::PropertyID::BackgroundImage, ImageStyleValue::create(document().complete_url(value), const_cast<Document&>(document())));
         }
     });
 }
