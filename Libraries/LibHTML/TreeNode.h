@@ -53,6 +53,15 @@ public:
 
     bool is_child_allowed(const T&) const { return true; }
 
+    template<typename Callback>
+    void for_each_in_subtree(Callback callback)
+    {
+        callback(static_cast<T&>(*this));
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            child->for_each_in_subtree(callback);
+        }
+    }
+
 protected:
     TreeNode() {}
 
