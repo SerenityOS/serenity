@@ -206,7 +206,7 @@ bool print_filesystem_object(const String& path, const String& name, const struc
     }
 
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode)) {
-        printf(" %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
+        printf("  %4u,%4u ", major(st.st_rdev), minor(st.st_rdev));
     } else {
         if (flag_human_readable) {
             ASSERT(st.st_size > 0);
