@@ -180,7 +180,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         else
             word_width = font.width(word.view) + font.glyph_spacing();
 
-        if (word_width > available_width) {
+        if (line_boxes.last().width() > 0 && word_width > available_width) {
             line_boxes.append(LineBox());
             available_width = container.width();
         }
