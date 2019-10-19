@@ -23,7 +23,11 @@ void HTMLImageElement::parse_attribute(const String& name, const String& value)
 void HTMLImageElement::load_image(const String& src)
 {
     URL src_url = document().complete_url(src);
-    ResourceLoader::the().load(src_url, [this](auto data) {
+    ResourceLoader::the().load(src_url, [this, weak_element = make_weak_ptr()](auto data) {
+        if (!weak_element) {
+            dbg() << "HTMLImageElement: Load completed after element destroyed.";
+            return;
+        }
         if (data.is_null()) {
             dbg() << "HTMLImageElement: Failed to load " << this->src();
             return;
