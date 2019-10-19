@@ -16,4 +16,6 @@ public:
 
     int get_main_mix_volume();
     void set_main_mix_volume(int);
+
+    int get_remaining_samples();
 };

@@ -24,9 +24,13 @@ public:
     {
         while (!m_current && !m_queue.is_empty())
             m_current = m_queue.dequeue();
+
         if (!m_current)
             return false;
+
         sample = m_current->samples()[m_position++];
+        m_remaining_samples--;
+
         if (m_position >= m_current->sample_count()) {
             m_current = nullptr;
             m_position = 0;
@@ -35,16 +39,20 @@ public:
     }
 
     ASClientConnection* client() { return m_client.ptr(); }
+
     void clear()
     {
         m_queue.clear();
         m_position = 0;
     }
 
+    int get_remaining_samples() const { return m_remaining_samples; }
+
 private:
     RefPtr<ABuffer> m_current;
     Queue<NonnullRefPtr<ABuffer>> m_queue;
     int m_position { 0 };
+    int m_remaining_samples { 0 };
     WeakPtr<ASClientConnection> m_client;
 };
 

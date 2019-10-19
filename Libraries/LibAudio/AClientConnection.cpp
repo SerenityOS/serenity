@@ -41,3 +41,8 @@ void AClientConnection::set_main_mix_volume(int volume)
 {
     send_sync<AudioServer::SetMainMixVolume>(volume);
 }
+
+int AClientConnection::get_remaining_samples()
+{
+    return send_sync<AudioServer::GetRemainingSamples>()->remaining_samples();
+}
