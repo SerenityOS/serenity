@@ -30,6 +30,13 @@ StringView SlavePTY::tty_name() const
     return m_tty_name;
 }
 
+void SlavePTY::echo(u8 ch)
+{
+    if (should_echo_input()) {
+        m_master->on_slave_write(&ch, 1);
+    }
+}
+
 void SlavePTY::on_master_write(const u8* buffer, ssize_t size)
 {
     for (ssize_t i = 0; i < size; ++i)

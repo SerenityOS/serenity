@@ -16,6 +16,7 @@ private:
     // ^TTY
     virtual StringView tty_name() const override;
     virtual ssize_t on_tty_write(const u8*, ssize_t) override;
+    virtual void echo(u8) override;
 
     // ^CharacterDevice
     virtual bool can_read(FileDescription&) const override;
