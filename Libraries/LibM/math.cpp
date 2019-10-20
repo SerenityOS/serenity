@@ -276,14 +276,20 @@ long double frexpl(long double, int*)
 
 float roundf(float value)
 {
-    // FIXME: Please fix me. I am sad.
-    return (int)value;
+    // FIXME: Please fix me. I am naive.
+    if (value >= 0.0f)
+        return (float)(int)(value + 0.5f);
+    return (float)(int)(value - 0.5f);
 }
 
 float ceilf(float value)
 {
-    // FIXME: Please fix me. I am sad.
-    return (int)value;
+    // FIXME: Please fix me. I am naive.
+    int as_int = (int)value;
+    if (value == (float)as_int) {
+        return (float)as_int;
+    }
+    return as_int + 1;
 }
 
 }
