@@ -1,10 +1,10 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KResult.h>
@@ -311,6 +311,9 @@ public:
     {
         return state == Thread::State::Running || state == Thread::State::Runnable;
     }
+
+    static constexpr u32 default_kernel_stack_size = 65536;
+    static constexpr u32 default_userspace_stack_size = 65536;
 
 private:
     IntrusiveListNode m_runnable_list_node;
