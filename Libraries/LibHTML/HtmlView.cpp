@@ -45,24 +45,25 @@ HtmlView::~HtmlView()
 {
 }
 
-void HtmlView::set_document(Document* document)
+void HtmlView::set_document(Document* new_document)
 {
-    if (document == m_document)
+    RefPtr<Document> old_document = document();
+
+    if (new_document == old_document)
         return;
 
-    if (m_document)
-        m_document->on_layout_updated = nullptr;
+    if (old_document)
+        old_document->on_layout_updated = nullptr;
 
-    m_document = document;
+    main_frame().set_document(new_document);
 
-    if (m_document) {
-        m_document->on_layout_updated = [this] {
+    if (new_document) {
+        new_document->on_layout_updated = [this] {
             layout_and_sync_size();
             update();
         };
     }
 
-    main_frame().set_document(document);
 
 #ifdef HTML_DEBUG
     if (document != nullptr) {
@@ -120,9 +121,9 @@ void HtmlView::paint_event(GPaintEvent& event)
         return;
     }
 
-    painter.fill_rect(event.rect(), m_document->background_color());
+    painter.fill_rect(event.rect(), document()->background_color());
 
-    if (auto background_bitmap = m_document->background_image()) {
+    if (auto background_bitmap = document()->background_image()) {
         painter.draw_tiled_bitmap(event.rect(), *background_bitmap);
     }
 
@@ -142,13 +143,13 @@ void HtmlView::mousemove_event(GMouseEvent& event)
 
     bool hovered_node_changed = false;
     bool is_hovering_link = false;
-    bool was_hovering_link = m_document->hovered_node() && m_document->hovered_node()->is_link();
+    bool was_hovering_link = document()->hovered_node() && document()->hovered_node()->is_link();
     auto result = layout_root()->hit_test(to_content_position(event.position()));
     const HTMLAnchorElement* hovered_link_element = nullptr;
     if (result.layout_node) {
         auto* node = result.layout_node->node();
-        hovered_node_changed = node != m_document->hovered_node();
-        m_document->set_hovered_node(const_cast<Node*>(node));
+        hovered_node_changed = node != document()->hovered_node();
+        document()->set_hovered_node(const_cast<Node*>(node));
         if (node) {
             hovered_link_element = node->enclosing_link_element();
             if (hovered_link_element) {
@@ -163,7 +164,7 @@ void HtmlView::mousemove_event(GMouseEvent& event)
         window()->set_override_cursor(is_hovering_link ? GStandardCursor::Hand : GStandardCursor::None);
     if (hovered_node_changed) {
         update();
-        auto* hovered_html_element = m_document->hovered_node() ? m_document->hovered_node()->enclosing_html_element() : nullptr;
+        auto* hovered_html_element = document()->hovered_node() ? document()->hovered_node()->enclosing_html_element() : nullptr;
         if (hovered_html_element && !hovered_html_element->title().is_null()) {
             auto screen_position = screen_relative_rect().location().translated(event.position());
             GApplication::the().show_tooltip(hovered_html_element->title(), screen_position.translated(4, 4));
@@ -173,7 +174,7 @@ void HtmlView::mousemove_event(GMouseEvent& event)
     }
     if (is_hovering_link != was_hovering_link) {
         if (on_link_hover) {
-            on_link_hover(hovered_link_element ? m_document->complete_url(hovered_link_element->href()).to_string() : String());
+            on_link_hover(hovered_link_element ? document()->complete_url(hovered_link_element->href()).to_string() : String());
         }
     }
     event.accept();
@@ -188,8 +189,8 @@ void HtmlView::mousedown_event(GMouseEvent& event)
     auto result = layout_root()->hit_test(to_content_position(event.position()));
     if (result.layout_node) {
         auto* node = result.layout_node->node();
-        hovered_node_changed = node != m_document->hovered_node();
-        m_document->set_hovered_node(const_cast<Node*>(node));
+        hovered_node_changed = node != document()->hovered_node();
+        document()->set_hovered_node(const_cast<Node*>(node));
         if (node) {
             if (auto* link = node->enclosing_link_element()) {
                 dbg() << "HtmlView: clicking on a link to " << link->href();
@@ -315,8 +316,11 @@ LayoutDocument* HtmlView::layout_root()
 
 void HtmlView::scroll_to_anchor(const StringView& name)
 {
+    if (!document())
+        return;
+
     HTMLAnchorElement* element = nullptr;
-    m_document->for_each_in_subtree([&](auto& node) {
+    document()->for_each_in_subtree([&](auto& node) {
         if (!is<HTMLAnchorElement>(node))
             return;
         auto& anchor_element = to<HTMLAnchorElement>(node);
@@ -335,4 +339,14 @@ void HtmlView::scroll_to_anchor(const StringView& name)
     auto& layout_node = *element->layout_node();
     scroll_into_view({ layout_node.box_type_agnostic_position(), visible_content_rect().size() }, true, true);
     window()->set_override_cursor(GStandardCursor::None);
+}
+
+Document* HtmlView::document()
+{
+    return main_frame().document();
+}
+
+const Document* HtmlView::document() const
+{
+    return main_frame().document();
 }
