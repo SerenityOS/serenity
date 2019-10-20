@@ -20,7 +20,8 @@ bool matches(const Selector::Component& component, const Element& element)
     case Selector::Component::PseudoClass::None:
         break;
     case Selector::Component::PseudoClass::Link:
-        ASSERT_NOT_REACHED();
+        if (!element.is_link())
+            return false;
         break;
     case Selector::Component::PseudoClass::Hover:
         if (!matches_hover_pseudo_class(element))
