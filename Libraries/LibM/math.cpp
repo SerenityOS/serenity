@@ -273,4 +273,17 @@ long double frexpl(long double, int*)
     ASSERT_NOT_REACHED();
     return 0;
 }
+
+float roundf(float value)
+{
+    // FIXME: Please fix me. I am sad.
+    return (int)value;
+}
+
+float ceilf(float value)
+{
+    // FIXME: Please fix me. I am sad.
+    return (int)value;
+}
+
 }
