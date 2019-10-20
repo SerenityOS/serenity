@@ -62,6 +62,10 @@ void LayoutBlock::layout_inline_children()
         child.split_into_lines(*this);
     });
 
+    for (auto& line_box : m_line_boxes) {
+        line_box.trim_trailing_whitespace();
+    }
+
     int min_line_height = style().line_height();
     int content_height = 0;
 
@@ -83,8 +87,8 @@ void LayoutBlock::layout_inline_children()
             max_height = max(max_height, enclosing_int_rect(fragment.rect()).height());
         }
 
-        int x_offset = x();
-        int excess_horizontal_space = width() - line_box.width();
+        float x_offset = x();
+        float excess_horizontal_space = (float)width() - line_box.width();
 
         switch (text_align) {
         case CSS::ValueID::Center:
@@ -99,7 +103,7 @@ void LayoutBlock::layout_inline_children()
             break;
         }
 
-        int excess_horizontal_space_including_whitespace = excess_horizontal_space;
+        float excess_horizontal_space_including_whitespace = excess_horizontal_space;
         int whitespace_count = 0;
         if (text_align == CSS::ValueID::Justify) {
             for (auto& fragment : line_box.fragments()) {
@@ -110,13 +114,13 @@ void LayoutBlock::layout_inline_children()
             }
         }
 
-        float justified_space_width = whitespace_count ? ((float)excess_horizontal_space_including_whitespace / (float)whitespace_count) : 0;
+        float justified_space_width = whitespace_count ? (excess_horizontal_space_including_whitespace / (float)whitespace_count) : 0;
 
         for (int i = 0; i < line_box.fragments().size(); ++i) {
             auto& fragment = line_box.fragments()[i];
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
-            fragment.rect().set_x(x_offset + fragment.rect().x());
+            fragment.rect().set_x(roundf(x_offset + fragment.rect().x()));
             fragment.rect().set_y(y() + content_height + (max_height - fragment.rect().height()));
 
             if (text_align == CSS::ValueID::Justify) {
@@ -134,6 +138,11 @@ void LayoutBlock::layout_inline_children()
 
             if (is<LayoutReplaced>(fragment.layout_node()))
                 const_cast<LayoutReplaced&>(to<LayoutReplaced>(fragment.layout_node())).set_rect(enclosing_int_rect(fragment.rect()));
+
+            float final_line_box_width = 0;
+            for (auto& fragment : line_box.fragments())
+                final_line_box_width += fragment.rect().width();
+            line_box.m_width = final_line_box_width;
         }
 
         content_height += max_height;

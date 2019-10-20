@@ -22,9 +22,12 @@ public:
     const FloatRect& rect() const { return m_rect; }
     FloatRect& rect() { return m_rect; }
 
+    float width() const { return m_rect.width(); }
+
     void render(RenderingContext&);
 
     bool is_justifiable_whitespace() const;
+    StringView text() const;
 
 private:
     const LayoutNode& m_layout_node;

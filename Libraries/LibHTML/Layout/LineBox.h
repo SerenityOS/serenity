@@ -14,7 +14,9 @@ public:
     const Vector<LineBoxFragment>& fragments() const { return m_fragments; }
     Vector<LineBoxFragment>& fragments() { return m_fragments; }
 
+    void trim_trailing_whitespace();
 private:
+    friend class LayoutBlock;
     Vector<LineBoxFragment> m_fragments;
     float m_width { 0 };
 };
