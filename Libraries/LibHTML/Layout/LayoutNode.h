@@ -80,9 +80,6 @@ public:
 
     virtual void set_needs_display();
 
-    template<typename Callback>
-    void for_each_fragment_of_this(Callback);
-
     bool children_are_inline() const { return m_children_are_inline; }
     void set_children_are_inline(bool value) { m_children_are_inline = value; }
 
@@ -103,6 +100,8 @@ public:
 
     template<typename T>
     T* first_ancestor_of_type();
+
+    Point box_type_agnostic_position() const;
 
 protected:
     explicit LayoutNode(const Node*);

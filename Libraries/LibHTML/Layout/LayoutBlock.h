@@ -30,6 +30,11 @@ public:
     LayoutBlock* next_sibling() { return to<LayoutBlock>(LayoutNode::next_sibling()); }
     const LayoutBlock* next_sibling() const { return to<LayoutBlock>(LayoutNode::next_sibling()); }
 
+    template<typename Callback>
+    void for_each_fragment(Callback);
+    template<typename Callback>
+    void for_each_fragment(Callback) const;
+
 private:
     virtual bool is_block() const override { return true; }
 
@@ -46,10 +51,20 @@ private:
 };
 
 template<typename Callback>
-void LayoutNode::for_each_fragment_of_this(Callback callback)
+void LayoutBlock::for_each_fragment(Callback callback)
 {
-    auto& block = *containing_block();
-    for (auto& line_box : block.line_boxes()) {
+    for (auto& line_box : line_boxes()) {
+        for (auto& fragment : line_box.fragments()) {
+            if (callback(fragment) == IterationDecision::Break)
+                return;
+        }
+    }
+}
+
+template<typename Callback>
+void LayoutBlock::for_each_fragment(Callback callback) const
+{
+    for (auto& line_box : line_boxes()) {
         for (auto& fragment : line_box.fragments()) {
             if (callback(fragment) == IterationDecision::Break)
                 return;
