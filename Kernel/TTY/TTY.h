@@ -1,7 +1,7 @@
 #pragma once
 
 #include "DoubleBuffer.h"
-#include <AK/CircularQueue.h>
+#include <AK/CircularDeque.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/UnixTypes.h>
 
@@ -40,14 +40,28 @@ protected:
 
     TTY(unsigned major, unsigned minor);
     void emit(u8);
+    virtual void echo(u8) = 0;
+
+    bool can_do_backspace() const;
+    void do_backspace();
+    void erase_word();
+    void kill_line();
+
+    bool is_eol(u8) const;
+    bool is_eof(u8) const;
+    bool is_kill(u8) const;
+    bool is_erase(u8) const;
+    bool is_werase(u8) const;
 
     void generate_signal(int signal);
+
+    int m_available_lines { 0 };
 
 private:
     // ^CharacterDevice
     virtual bool is_tty() const final override { return true; }
 
-    CircularQueue<u8, 1024> m_input_buffer;
+    CircularDeque<u8, 1024> m_input_buffer;
     pid_t m_pgid { 0 };
     termios m_termios;
     unsigned short m_rows { 0 };
