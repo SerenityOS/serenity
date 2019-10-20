@@ -56,5 +56,5 @@ void LayoutImage::render(RenderingContext& context)
 
 bool LayoutImage::renders_as_alt_text() const
 {
-    return !node().image_loader();
+    return !node().image_decoder();
 }

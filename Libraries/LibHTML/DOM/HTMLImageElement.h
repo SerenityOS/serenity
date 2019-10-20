@@ -17,14 +17,14 @@ public:
     int preferred_height() const;
 
     const GraphicsBitmap* bitmap() const;
-    const ImageDecoder* image_loader() const { return m_image_loader; }
+    const ImageDecoder* image_decoder() const { return m_image_decoder; }
 
 private:
     void load_image(const String& src);
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
-    RefPtr<ImageDecoder> m_image_loader;
+    RefPtr<ImageDecoder> m_image_decoder;
     mutable RefPtr<GraphicsBitmap> m_bitmap;
     ByteBuffer m_image_data;
 };
