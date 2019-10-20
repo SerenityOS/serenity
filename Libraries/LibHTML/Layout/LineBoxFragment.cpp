@@ -14,3 +14,12 @@ void LineBoxFragment::render(RenderingContext& context)
         to<LayoutText>(layout_node()).render_fragment(context, *this);
     }
 }
+
+bool LineBoxFragment::is_justifiable_whitespace() const
+{
+    if (!is<LayoutText>(layout_node()))
+        return false;
+    auto& layout_text = to<LayoutText>(layout_node());
+    auto text = layout_text.node().data().substring_view(m_start, m_length);
+    return text == " ";
+}

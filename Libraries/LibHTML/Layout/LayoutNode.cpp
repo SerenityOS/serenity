@@ -82,7 +82,7 @@ void LayoutNode::set_needs_display()
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                const_cast<Frame*>(frame)->set_needs_display(fragment.rect());
+                const_cast<Frame*>(frame)->set_needs_display(enclosing_int_rect(fragment.rect()));
             }
             return IterationDecision::Continue;
         });
@@ -98,7 +98,7 @@ Point LayoutNode::box_type_agnostic_position() const
     if (auto* block = containing_block()) {
         block->for_each_fragment([&](auto& fragment) {
             if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-                position = fragment.rect().location();
+                position = enclosing_int_rect(fragment.rect()).location();
                 return IterationDecision::Break;
             }
             return IterationDecision::Continue;

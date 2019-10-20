@@ -4,6 +4,8 @@
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutInline.h>
 #include <LibHTML/Layout/LayoutReplaced.h>
+#include <LibHTML/Layout/LayoutText.h>
+#include <math.h>
 
 LayoutBlock::LayoutBlock(const Node* node, NonnullRefPtr<StyleProperties> style)
     : LayoutBox(node, move(style))
@@ -72,34 +74,66 @@ void LayoutBlock::layout_inline_children()
         text_align = CSS::ValueID::Left;
     else if (text_align_string == "right")
         text_align = CSS::ValueID::Right;
+    else if (text_align_string == "justify")
+        text_align = CSS::ValueID::Justify;
 
     for (auto& line_box : m_line_boxes) {
         int max_height = min_line_height;
         for (auto& fragment : line_box.fragments()) {
-            max_height = max(max_height, fragment.rect().height());
+            max_height = max(max_height, enclosing_int_rect(fragment.rect()).height());
         }
 
         int x_offset = x();
+        int excess_horizontal_space = width() - line_box.width();
+
         switch (text_align) {
         case CSS::ValueID::Center:
-            x_offset += (width() - line_box.width()) / 2;
+            x_offset += excess_horizontal_space / 2;
             break;
         case CSS::ValueID::Right:
-            x_offset += (width() - line_box.width());
+            x_offset += excess_horizontal_space;
             break;
         case CSS::ValueID::Left:
+        case CSS::ValueID::Justify:
         default:
             break;
         }
 
-        for (auto& fragment : line_box.fragments()) {
+        int excess_horizontal_space_including_whitespace = excess_horizontal_space;
+        int whitespace_count = 0;
+        if (text_align == CSS::ValueID::Justify) {
+            for (auto& fragment : line_box.fragments()) {
+                if (fragment.is_justifiable_whitespace()) {
+                    ++whitespace_count;
+                    excess_horizontal_space_including_whitespace += fragment.rect().width();
+                }
+            }
+        }
+
+        float justified_space_width = whitespace_count ? ((float)excess_horizontal_space_including_whitespace / (float)whitespace_count) : 0;
+
+        for (int i = 0; i < line_box.fragments().size(); ++i) {
+            auto& fragment = line_box.fragments()[i];
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
             fragment.rect().set_x(x_offset + fragment.rect().x());
             fragment.rect().set_y(y() + content_height + (max_height - fragment.rect().height()));
 
+            if (text_align == CSS::ValueID::Justify) {
+                if (fragment.is_justifiable_whitespace()) {
+                    if (fragment.rect().width() != justified_space_width) {
+                        float diff = justified_space_width - fragment.rect().width();
+                        fragment.rect().set_width(justified_space_width);
+                        // Shift subsequent sibling fragments to the right to adjust for change in width.
+                        for (int j = i + 1; j < line_box.fragments().size(); ++j) {
+                            line_box.fragments()[j].rect().move_by(diff, 0);
+                        }
+                    }
+                }
+            }
+
             if (is<LayoutReplaced>(fragment.layout_node()))
-                const_cast<LayoutReplaced&>(to<LayoutReplaced>(fragment.layout_node())).set_rect(fragment.rect());
+                const_cast<LayoutReplaced&>(to<LayoutReplaced>(fragment.layout_node())).set_rect(enclosing_int_rect(fragment.rect()));
         }
 
         content_height += max_height;
@@ -234,7 +268,7 @@ void LayoutBlock::render(RenderingContext& context)
         for (auto& line_box : m_line_boxes) {
             for (auto& fragment : line_box.fragments()) {
                 if (context.should_show_line_box_borders())
-                    context.painter().draw_rect(fragment.rect(), Color::Green);
+                    context.painter().draw_rect(enclosing_int_rect(fragment.rect()), Color::Green);
                 fragment.render(context);
             }
         }
@@ -249,7 +283,7 @@ HitTestResult LayoutBlock::hit_test(const Point& position) const
     HitTestResult result;
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
-            if (fragment.rect().contains(position)) {
+            if (enclosing_int_rect(fragment.rect()).contains(position)) {
                 return { fragment.layout_node() };
             }
         }
