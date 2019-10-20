@@ -17,9 +17,12 @@ void LineBoxFragment::render(RenderingContext& context)
 
 bool LineBoxFragment::is_justifiable_whitespace() const
 {
+    return text() == " ";
+}
+
+StringView LineBoxFragment::text() const
+{
     if (!is<LayoutText>(layout_node()))
-        return false;
-    auto& layout_text = to<LayoutText>(layout_node());
-    auto text = layout_text.node().data().substring_view(m_start, m_length);
-    return text == " ";
+        return {};
+    return to<LayoutText>(layout_node()).node().data().substring_view(m_start, m_length);
 }
