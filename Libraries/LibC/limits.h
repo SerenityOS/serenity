@@ -6,7 +6,7 @@
 
 #define PATH_MAX 4096
 #if !defined MAXPATHLEN && defined PATH_MAX
-# define MAXPATHLEN  PATH_MAX
+#    define MAXPATHLEN PATH_MAX
 #endif
 
 #define INT_MAX INT32_MAX
@@ -30,3 +30,5 @@
 #define CHAR_MAX SCHAR_MAX
 
 #define MB_LEN_MAX 16
+
+#define ARG_MAX 65536
