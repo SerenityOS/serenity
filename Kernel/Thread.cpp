@@ -40,9 +40,6 @@ HashTable<Thread*>& thread_table()
     return *table;
 }
 
-static const u32 default_kernel_stack_size = 65536;
-static const u32 default_userspace_stack_size = 65536;
-
 Thread::Thread(Process& process)
     : m_process(process)
     , m_tid(process.m_next_tid++)
@@ -514,17 +511,6 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
     char** argv = (char**)stack_base;
     char** env = argv + arguments.size() + 1;
     char* bufptr = stack_base + (sizeof(char*) * (arguments.size() + 1)) + (sizeof(char*) * (environment.size() + 1));
-
-    size_t total_blob_size = 0;
-    for (auto& a : arguments)
-        total_blob_size += a.length() + 1;
-    for (auto& e : environment)
-        total_blob_size += e.length() + 1;
-
-    size_t total_meta_size = sizeof(char*) * (arguments.size() + 1) + sizeof(char*) * (environment.size() + 1);
-
-    // FIXME: It would be better if this didn't make us panic.
-    ASSERT((total_blob_size + total_meta_size) < default_userspace_stack_size);
 
     for (int i = 0; i < arguments.size(); ++i) {
         argv[i] = bufptr;

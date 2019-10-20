@@ -33,6 +33,7 @@
 #include <Kernel/StdLib.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/TTY/MasterPTY.h>
+#include <Kernel/Thread.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
@@ -378,6 +379,18 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         ASSERT(thread_count() == 1);
         ASSERT_NOT_REACHED();
     }
+
+    size_t total_blob_size = 0;
+    for (auto& a : arguments)
+        total_blob_size += a.length() + 1;
+    for (auto& e : environment)
+        total_blob_size += e.length() + 1;
+
+    size_t total_meta_size = sizeof(char*) * (arguments.size() + 1) + sizeof(char*) * (environment.size() + 1);
+
+    // FIXME: How much stack space does process startup need?
+    if ((total_blob_size + total_meta_size) >= Thread::default_userspace_stack_size)
+        return -E2BIG;
 
     auto parts = path.split('/');
     if (parts.is_empty())
