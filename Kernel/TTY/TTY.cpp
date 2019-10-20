@@ -19,8 +19,8 @@ TTY::~TTY()
 void TTY::set_default_termios()
 {
     memset(&m_termios, 0, sizeof(m_termios));
-    m_termios.c_lflag |= ISIG | ECHO;
-    static const char default_cc[32] = "\003\034\177\025\004\0\1\0\021\023\032\0\022\017\027\026\0";
+    m_termios.c_lflag |= ISIG | ECHO | ICANON;
+    static const char default_cc[32] = "\003\034\010\025\004\0\1\0\021\023\032\0\022\017\027\026\0";
     memcpy(m_termios.c_cc, default_cc, sizeof(default_cc));
 }
 
@@ -28,6 +28,26 @@ ssize_t TTY::read(FileDescription&, u8* buffer, ssize_t size)
 {
     if (m_input_buffer.size() < size)
         size = m_input_buffer.size();
+
+    if (in_canonical_mode()) {
+        int i = 0;
+        for (; i < size; i++) {
+            u8 ch = m_input_buffer.dequeue();
+            if (ch == '\0') {
+                //Here we handle a ^D line, so we don't add the
+                //character to the output.
+                m_available_lines--;
+                break;
+            } else if (ch == '\n' || is_eol(ch)) {
+                buffer[i] = ch;
+                i++;
+                m_available_lines--;
+                break;
+            }
+            buffer[i] = ch;
+        }
+        return i;
+    }
 
     for (int i = 0; i < size; i++)
         buffer[i] = m_input_buffer.dequeue();
@@ -50,12 +70,40 @@ ssize_t TTY::write(FileDescription&, const u8* buffer, ssize_t size)
 
 bool TTY::can_read(FileDescription&) const
 {
+    if (in_canonical_mode()) {
+        return m_available_lines > 0;
+    }
     return !m_input_buffer.is_empty();
 }
 
 bool TTY::can_write(FileDescription&) const
 {
     return true;
+}
+
+bool TTY::is_eol(u8 ch) const
+{
+    return ch == m_termios.c_cc[VEOL];
+}
+
+bool TTY::is_eof(u8 ch) const
+{
+    return ch == m_termios.c_cc[VEOF];
+}
+
+bool TTY::is_kill(u8 ch) const
+{
+    return ch == m_termios.c_cc[VKILL];
+}
+
+bool TTY::is_erase(u8 ch) const
+{
+    return ch == m_termios.c_cc[VERASE];
+}
+
+bool TTY::is_werase(u8 ch) const
+{
+    return ch == m_termios.c_cc[VWERASE];
 }
 
 void TTY::emit(u8 ch)
@@ -77,7 +125,80 @@ void TTY::emit(u8 ch)
             return;
         }
     }
+
+    if (in_canonical_mode()) {
+        if (is_eof(ch)) {
+            m_available_lines++;
+            //We use '\0' to delimit the end
+            //of a line.
+            m_input_buffer.enqueue('\0');
+            return;
+        }
+        if (is_kill(ch)) {
+            kill_line();
+            return;
+        }
+        if (is_erase(ch)) {
+            do_backspace();
+            return;
+        }
+        if (is_werase(ch)) {
+            erase_word();
+            return;
+        }
+        if (ch == '\n' || is_eol(ch)) {
+            m_available_lines++;
+        }
+    }
     m_input_buffer.enqueue(ch);
+    echo(ch);
+}
+
+bool TTY::can_do_backspace() const
+{
+    //can't do back space if we're empty. Plus, we don't want to
+    //removing any lines "commited" by newlines or ^D.
+    if (!m_input_buffer.is_empty() && !is_eol(m_input_buffer.last()) && m_input_buffer.last() != '\0') {
+        return true;
+    }
+    return false;
+}
+
+void TTY::do_backspace()
+{
+    if (can_do_backspace()) {
+        m_input_buffer.dequeue_end();
+        echo(m_termios.c_cc[VERASE]);
+    }
+}
+
+// TODO: Currently, both erase_word() and kill_line work by sending
+// a lot of VERASE characters; this is done because Terminal.cpp
+// doesn't currently support VWERASE and VKILL. When these are
+// implemented we could just send a VKILL or VWERASE.
+
+void TTY::erase_word()
+{
+    //Note: if we have leading whitespace before the word
+    //we want to delete we have to also delete that.
+    bool first_char = false;
+    while (can_do_backspace()) {
+        u8 ch = m_input_buffer.last();
+        if (ch == ' ' && first_char)
+            break;
+        if (ch != ' ')
+            first_char = true;
+        m_input_buffer.dequeue_end();
+        echo(m_termios.c_cc[VERASE]);
+    }
+}
+
+void TTY::kill_line()
+{
+    while (can_do_backspace()) {
+        m_input_buffer.dequeue_end();
+        echo(m_termios.c_cc[VERASE]);
+    }
 }
 
 void TTY::generate_signal(int signal)

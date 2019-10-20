@@ -33,6 +33,7 @@ private:
     // ^TTY
     virtual ssize_t on_tty_write(const u8*, ssize_t) override;
     virtual StringView tty_name() const override;
+    virtual void echo(u8) override { return; }
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "VirtualConsole"; }
