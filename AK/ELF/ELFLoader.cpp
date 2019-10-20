@@ -38,6 +38,10 @@ bool ELFLoader::layout()
         if (program_header.type() == PT_TLS) {
 #ifdef KERNEL
             auto* tls_image = tls_section_hook(program_header.size_in_memory(), program_header.alignment());
+            if (!tls_image) {
+                failed = true;
+                return;
+            }
             memcpy(tls_image, program_header.raw_data(), program_header.size_in_image());
 #endif
             return;
@@ -49,16 +53,20 @@ bool ELFLoader::layout()
 #endif
 #ifdef KERNEL
         if (program_header.is_writable()) {
-            alloc_section_hook(
+            auto* allocated_section = alloc_section_hook(
                 program_header.vaddr(),
                 program_header.size_in_memory(),
                 program_header.alignment(),
                 program_header.is_readable(),
                 program_header.is_writable(),
                 String::format("elf-alloc-%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : ""));
+            if (!allocated_section) {
+                failed = true;
+                return;
+            }
             memcpy(program_header.vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image());
         } else {
-            map_section_hook(
+            auto* mapped_section = map_section_hook(
                 program_header.vaddr(),
                 program_header.size_in_memory(),
                 program_header.alignment(),
@@ -67,6 +75,9 @@ bool ELFLoader::layout()
                 program_header.is_writable(),
                 program_header.is_executable(),
                 String::format("elf-map-%s%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : "", program_header.is_executable() ? "x" : ""));
+            if (!mapped_section) {
+                failed = true;
+            }
         }
 #endif
     });
