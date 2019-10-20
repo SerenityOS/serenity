@@ -101,7 +101,7 @@ class FloppyDiskDevice final : public IRQHandler
     AK_MAKE_ETERNAL
 
     static constexpr u8 SECTORS_PER_CYLINDER = 18;
-    static constexpr u8 CCYLINDERS_PER_HEAD = 80;
+    static constexpr u8 CYLINDERS_PER_HEAD = 80;
     static constexpr u16 BYTES_PER_SECTOR = 512;
 
 public:
@@ -158,9 +158,9 @@ private:
     virtual const char* class_name() const override;
 
     // Helper functions
-    inline u16 lba2cylinder(u16 lba) const { return lba / (2 * SECTORS_PER_CYLINDER); } // Convert an LBA into a cylinder value
-    inline u16 lba2head(u16 lba) const { return ((lba / SECTORS_PER_CYLINDER) % 2); }   // Convert an LBA into a head value
-    inline u16 lba2sector(u16 lba) const { return ((lba % SECTORS_PER_CYLINDER) + 1); } // Convert an LBA into a sector value
+    inline u16 lba2head(u16 lba) const { return (lba % (SECTORS_PER_CYLINDER * 2)) / SECTORS_PER_CYLINDER; } // Convert an LBA into a head value
+    inline u16 lba2cylinder(u16 lba) const { return lba / (2 * SECTORS_PER_CYLINDER); }                      // Convert an LBA into a cylinder value
+    inline u16 lba2sector(u16 lba) const { return ((lba % SECTORS_PER_CYLINDER) + 1); }                      // Convert an LBA into a sector value
 
     void initialize();
     bool read_sectors_with_dma(u16, u16, u8*);
