@@ -122,9 +122,14 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
     kprintf("fdc: read_sectors_with_dma lba = %d count = %d\n", lba, count);
 #endif
 
-    motor_enable(is_slave() ? 1 : 0); // Should I bother casting this?!
+    motor_enable(is_slave()); // Should I bother casting this?!
     write_ccr(0);
-    recalibrate(); // Recalibrate the drive
+    recalibrate();
+
+    if (!seek(lba)) {
+        kprintf("fdc: failed to seek to lba = %d!\n", lba);
+        return false;
+    }
 
     // We have to wait for about 300ms for the drive to spin up, because of
     // the inertia of the motor and diskette. This is only
@@ -155,13 +160,13 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
     for (int i = 0; i < 3; i++) {
         // Now actually send the command to the drive. This is a big one!
         send_byte(FLOPPY_MFM | FLOPPY_MT | FLOPPY_SK | static_cast<u8>(FloppyCommand::ReadData));
-        send_byte(head << 2 | is_slave() ? 1 : 0);
+        send_byte((head << 2) | is_slave());
         send_byte(cylinder);
         send_byte(head);
         send_byte(sector);
         send_byte(SECTORS_PER_CYLINDER >> 8); // Yikes!
-        send_byte((sector + 1) >= SECTORS_PER_CYLINDER ? SECTORS_PER_CYLINDER : sector + 1);
-        send_byte(0x27); // GPL3 value. The Datasheet doesn't really specify the values for this properly...
+        send_byte(((sector + 1) >= SECTORS_PER_CYLINDER) ? SECTORS_PER_CYLINDER : sector + 1);
+        send_byte(0x1b); // GPL3 value. The Datasheet doesn't really specify the values for this properly...
         send_byte(0xff);
 
         enable_irq();
@@ -170,8 +175,20 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
         m_interrupted = false;
 
         // Flush FIFO
-        read_byte();
-        read_byte();
+        // Let's check the value of Status Register 1 to ensure that
+        // the command executed correctly
+        u8 cmd_st0 = read_byte();
+        if ((cmd_st0 & 0xc0) != 0) {
+            kprintf("fdc: read failed with error code (st0) 0x%x\n", cmd_st0 >> 6);
+            return false;
+        }
+
+        u8 cmd_st1 = read_byte();
+        if (cmd_st1 != 0) {
+            kprintf("fdc: read failed with error code (st1) 0x%x\n", cmd_st1);
+            return false;
+        }
+
         read_byte();
         u8 cyl = read_byte();
         read_byte();
@@ -214,6 +231,11 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
     write_ccr(0);
     recalibrate(); // Recalibrate the drive
 
+    if (!seek(lba)) {
+        kprintf("fdc: failed to seek to lba = %d!\n", lba);
+        return false;
+    }
+
     // We have to wait for about 300ms for the drive to spin up, because of
     // the inertia of the motor and diskette.
     // TODO: Fix this abomination please!
@@ -238,13 +260,13 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
     for (int i = 0; i < 3; i++) {
         // Now actually send the command to the drive. This is a big one!
         send_byte(FLOPPY_MFM | FLOPPY_MT | static_cast<u8>(FloppyCommand::WriteData));
-        send_byte(head << 2 | is_slave() ? 1 : 0);
+        send_byte(head << 2 | is_slave());
         send_byte(cylinder);
         send_byte(head);
         send_byte(sector);
         send_byte(SECTORS_PER_CYLINDER >> 8); // Yikes!
         send_byte((sector + 1) >= SECTORS_PER_CYLINDER ? SECTORS_PER_CYLINDER : sector + 1);
-        send_byte(0x27); // GPL3 value. The Datasheet doesn't really specify the values for this properly...
+        send_byte(0x1b); // GPL3 value. The Datasheet doesn't really specify the values for this properly...
         send_byte(0xff);
 
         enable_irq();
@@ -253,8 +275,18 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
         m_interrupted = false;
 
         // Flush FIFO
-        read_byte();
-        read_byte();
+        u8 cmd_st0 = read_byte();
+        if ((cmd_st0 & 0xc0) != 0) {
+            kprintf("fdc: write failed! Error code 0x%x\n", cmd_st0 >> 6);
+            return false;
+        }
+
+        u8 cmd_st1 = read_byte();
+        if (cmd_st1 != 0) {
+            kprintf("fdc: write failed with error code (st1) 0x%x\n", cmd_st1);
+            return false;
+        }
+
         read_byte();
         u8 cyl = read_byte();
         read_byte();
@@ -385,7 +417,7 @@ bool FloppyDiskDevice::recalibrate()
     kprintf("fdc: recalibrating drive...\n");
 #endif
 
-    u8 slave = is_slave() ? 1 : 0;
+    u8 slave = is_slave();
     motor_enable(slave);
 
     for (int i = 0; i < 16; i++) {
@@ -413,7 +445,7 @@ bool FloppyDiskDevice::seek(u16 lba)
 {
     u8 head = lba2head(lba) & 0x01;
     u8 cylinder = lba2cylinder(lba) & 0xff;
-    u8 slave = is_slave() ? 1 : 0;
+    u8 slave = is_slave();
 
     // First, we need to enable the correct drive motor
     motor_enable(slave);
