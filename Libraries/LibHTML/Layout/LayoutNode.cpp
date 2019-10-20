@@ -79,10 +79,30 @@ void LayoutNode::set_needs_display()
     auto* frame = document().frame();
     ASSERT(frame);
 
-    for_each_fragment_of_this([&](auto& fragment) {
-        if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
-            const_cast<Frame*>(frame)->set_needs_display(fragment.rect());
-        }
-        return IterationDecision::Continue;
-    });
+    if (auto* block = containing_block()) {
+        block->for_each_fragment([&](auto& fragment) {
+            if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
+                const_cast<Frame*>(frame)->set_needs_display(fragment.rect());
+            }
+            return IterationDecision::Continue;
+        });
+    }
+}
+
+Point LayoutNode::box_type_agnostic_position() const
+{
+    if (is_box())
+        return to<LayoutBox>(*this).position();
+    ASSERT(is_inline());
+    Point position;
+    if (auto* block = containing_block()) {
+        block->for_each_fragment([&](auto& fragment) {
+            if (&fragment.layout_node() == this || is_ancestor_of(fragment.layout_node())) {
+                position = fragment.rect().location();
+                return IterationDecision::Break;
+            }
+            return IterationDecision::Continue;
+        });
+    }
+    return position;
 }

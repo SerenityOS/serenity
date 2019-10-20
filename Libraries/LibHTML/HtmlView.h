@@ -23,6 +23,7 @@ public:
 
     void reload();
     void load(const URL&);
+    void scroll_to_anchor(const StringView&);
 
     URL url() const;
 

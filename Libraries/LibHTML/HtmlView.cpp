@@ -312,3 +312,27 @@ LayoutDocument* HtmlView::layout_root()
         return nullptr;
     return const_cast<LayoutDocument*>(document()->layout_node());
 }
+
+void HtmlView::scroll_to_anchor(const StringView& name)
+{
+    HTMLAnchorElement* element = nullptr;
+    m_document->for_each_in_subtree([&](auto& node) {
+        if (!is<HTMLAnchorElement>(node))
+            return;
+        auto& anchor_element = to<HTMLAnchorElement>(node);
+        if (anchor_element.name() == name)
+            element = &anchor_element;
+    });
+
+    if (!element) {
+        dbg() << "HtmlView::scroll_to_anchor(): Anchor not found: '" << name << "'";
+        return;
+    }
+    if (!element->layout_node()) {
+        dbg() << "HtmlView::scroll_to_anchor(): Anchor found but without layout node: '" << name << "'";
+        return;
+    }
+    auto& layout_node = *element->layout_node();
+    scroll_into_view({ layout_node.box_type_agnostic_position(), visible_content_rect().size() }, true, true);
+    window()->set_override_cursor(GStandardCursor::None);
+}

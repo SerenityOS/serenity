@@ -91,7 +91,11 @@ int main(int argc, char** argv)
     };
 
     html_widget->on_link_click = [&](auto& url) {
-        html_widget->load(html_widget->document()->complete_url(url));
+        if (url.starts_with("#")) {
+            html_widget->scroll_to_anchor(url.substring_view(1, url.length() - 1));
+        } else {
+            html_widget->load(html_widget->document()->complete_url(url));
+        }
     };
 
     html_widget->on_title_change = [&](auto& title) {
