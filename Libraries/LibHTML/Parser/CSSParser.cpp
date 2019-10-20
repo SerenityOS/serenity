@@ -345,6 +345,10 @@ public:
 
     void parse_rule()
     {
+        consume_whitespace_or_comments();
+        if (index >= css.length())
+            return;
+
         // FIXME: We ignore @media rules for now.
         if (next_is("@media")) {
             while (peek() != '{')
