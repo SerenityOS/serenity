@@ -11,8 +11,8 @@ class HtmlView : public GScrollableWidget {
 public:
     virtual ~HtmlView() override;
 
-    Document* document() { return m_document; }
-    const Document* document() const { return m_document; }
+    Document* document();
+    const Document* document() const;
     void set_document(Document*);
 
     const LayoutDocument* layout_root() const;
@@ -49,7 +49,6 @@ private:
     void layout_and_sync_size();
 
     RefPtr<Frame> m_main_frame;
-    RefPtr<Document> m_document;
 
     bool m_should_show_line_box_borders { false };
 };
