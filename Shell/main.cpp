@@ -634,6 +634,7 @@ static int run_command(const String& cmd)
 
     struct termios trm;
     tcgetattr(0, &trm);
+    tcsetattr(0, TCSANOW, &g.default_termios);
 
     struct SpawnedProcess {
         String name;
@@ -840,7 +841,12 @@ int main(int argc, char** argv)
     g.uid = getuid();
     g.sid = setsid();
     tcsetpgrp(0, getpgrp());
-    tcgetattr(0, &g.termios);
+    tcgetattr(0, &g.default_termios);
+    g.termios = g.default_termios;
+    // Because we use our own line discipline which includes echoing,
+    // we disable ICANON and ECHO.
+    g.termios.c_lflag &= ~(ECHO | ICANON);
+    tcsetattr(0, TCSANOW, &g.termios);
 
     signal(SIGINT, [](int) {
         g.was_interrupted = true;
