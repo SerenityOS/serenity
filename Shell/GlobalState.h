@@ -13,6 +13,7 @@ struct GlobalState {
     pid_t sid;
     uid_t uid;
     struct termios termios;
+    struct termios default_termios;
     bool was_interrupted { false };
     bool was_resized { false };
     int last_return_code { 0 };
