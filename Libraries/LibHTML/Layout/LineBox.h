@@ -7,7 +7,7 @@ class LineBox {
 public:
     LineBox() {}
 
-    int width() const { return m_width; }
+    float width() const { return m_width; }
 
     void add_fragment(const LayoutNode& layout_node, int start, int length, int width, int height);
 
@@ -16,5 +16,5 @@ public:
 
 private:
     Vector<LineBoxFragment> m_fragments;
-    int m_width { 0 };
+    float m_width { 0 };
 };

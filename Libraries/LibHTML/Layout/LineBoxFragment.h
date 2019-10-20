@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibDraw/Rect.h>
+#include <LibDraw/FloatRect.h>
 
 class LayoutNode;
 class RenderingContext;
@@ -8,7 +8,7 @@ class RenderingContext;
 class LineBoxFragment {
     friend class LineBox;
 public:
-    LineBoxFragment(const LayoutNode& layout_node, int start, int length, const Rect& rect)
+    LineBoxFragment(const LayoutNode& layout_node, int start, int length, const FloatRect& rect)
         : m_layout_node(layout_node)
         , m_start(start)
         , m_length(length)
@@ -19,14 +19,16 @@ public:
     const LayoutNode& layout_node() const { return m_layout_node; }
     int start() const { return m_start; }
     int length() const { return m_length; }
-    const Rect& rect() const { return m_rect; }
-    Rect& rect() { return m_rect; }
+    const FloatRect& rect() const { return m_rect; }
+    FloatRect& rect() { return m_rect; }
 
     void render(RenderingContext&);
+
+    bool is_justifiable_whitespace() const;
 
 private:
     const LayoutNode& m_layout_node;
     int m_start { 0 };
     int m_length { 0 };
-    Rect m_rect;
+    FloatRect m_rect;
 };

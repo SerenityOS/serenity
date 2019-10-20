@@ -20,6 +20,7 @@ enum class ValueID {
     Center,
     Left,
     Right,
+    Justify,
 };
 }
 

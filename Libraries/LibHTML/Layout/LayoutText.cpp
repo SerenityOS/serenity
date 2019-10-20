@@ -46,9 +46,9 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
 
     bool is_underline = text_decoration == "underline";
     if (is_underline)
-        painter.draw_line(fragment.rect().bottom_left().translated(0, -1), fragment.rect().bottom_right().translated(0, -1), color);
+        painter.draw_line(enclosing_int_rect(fragment.rect()).bottom_left().translated(0, -1), enclosing_int_rect(fragment.rect()).bottom_right().translated(0, -1), color);
 
-    painter.draw_text(fragment.rect(), m_text_for_rendering.substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
+    painter.draw_text(enclosing_int_rect(fragment.rect()), m_text_for_rendering.substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
 }
 
 template<typename Callback>
