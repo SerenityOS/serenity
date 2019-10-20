@@ -89,7 +89,7 @@ li {
     margin-bottom: 2;
 }
 
-a {
+a:link {
     color: -libhtml-link;
     text-decoration: underline;
 }
