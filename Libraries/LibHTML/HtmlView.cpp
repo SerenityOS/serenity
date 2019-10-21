@@ -319,17 +319,20 @@ void HtmlView::scroll_to_anchor(const StringView& name)
     if (!document())
         return;
 
-    HTMLAnchorElement* element = nullptr;
-    document()->for_each_in_subtree([&](auto& node) {
-        if (is<HTMLAnchorElement>(node)) {
-            auto& anchor_element = to<HTMLAnchorElement>(node);
-            if (anchor_element.name() == name) {
-                element = &anchor_element;
-                return IterationDecision::Break;
+    const HTMLAnchorElement* element = nullptr;
+    if (auto* candidate = document()->get_element_by_id(name)) {
+        if (is<HTMLAnchorElement>(*candidate))
+            element = to<HTMLAnchorElement>(candidate);
+    }
+    if (!element) {
+        auto candidates = document()->get_elements_by_name(name);
+        for (auto* candidate : candidates) {
+            if (is<HTMLAnchorElement>(*candidate)) {
+                element = to<HTMLAnchorElement>(candidate);
+                break;
             }
         }
-        return IterationDecision::Continue;
-    });
+    }
 
     if (!element) {
         dbg() << "HtmlView::scroll_to_anchor(): Anchor not found: '" << name << "'";
