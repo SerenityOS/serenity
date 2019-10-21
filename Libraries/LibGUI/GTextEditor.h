@@ -164,6 +164,9 @@ public:
 
     void add_custom_context_menu_action(GAction&);
 
+    void set_cursor(int line, int column);
+    void set_cursor(const GTextPosition&);
+
 protected:
     GTextEditor(Type, GWidget* parent);
 
@@ -229,8 +232,6 @@ private:
     Rect cursor_content_rect() const;
     Rect content_rect_for_position(const GTextPosition&) const;
     void update_cursor();
-    void set_cursor(int line, int column);
-    void set_cursor(const GTextPosition&);
     Line& current_line() { return m_lines[m_cursor.line()]; }
     const Line& current_line() const { return m_lines[m_cursor.line()]; }
     GTextPosition text_position_at(const Point&) const;
