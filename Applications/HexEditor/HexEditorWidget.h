@@ -31,7 +31,8 @@ private:
     RefPtr<GAction> m_open_action;
     RefPtr<GAction> m_save_action;
     RefPtr<GAction> m_save_as_action;
-    RefPtr<GAction> m_goto_action;
+    RefPtr<GAction> m_goto_decimal_offset_action;
+    RefPtr<GAction> m_goto_hex_offset_action;
 
     RefPtr<GStatusBar> m_statusbar;
 
