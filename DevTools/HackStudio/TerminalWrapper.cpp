@@ -86,7 +86,7 @@ TerminalWrapper::TerminalWrapper(GWidget* parent)
     run_command(ptm_fd, "/bin/Shell");
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
-    m_terminal_widget = TerminalWidget::construct(ptm_fd, config);
+    m_terminal_widget = TerminalWidget::construct(ptm_fd, false, config);
     add_child(*m_terminal_widget);
 }
 

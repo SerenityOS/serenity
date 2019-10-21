@@ -19,10 +19,11 @@
 
 //#define TERMINAL_DEBUG
 
-TerminalWidget::TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config)
+TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<CConfigFile> config)
     : m_terminal(*this)
     , m_ptm_fd(ptm_fd)
     , m_notifier(CNotifier::construct(ptm_fd, CNotifier::Read))
+    , m_automatic_size_policy(automatic_size_policy)
     , m_config(move(config))
 {
     m_cursor_blink_timer = CTimer::construct();
@@ -572,8 +573,10 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
     m_pixel_width = (frame_thickness() * 2) + (m_inset * 2) + (columns * font().glyph_width('x'));
     m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (rows * (font().glyph_height() + m_line_spacing)) - m_line_spacing;
 
-    set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-    set_preferred_size(m_pixel_width, m_pixel_height);
+    if (m_automatic_size_policy) {
+        set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        set_preferred_size(m_pixel_width, m_pixel_height);
+    }
 
     m_needs_background_fill = true;
     force_repaint();
