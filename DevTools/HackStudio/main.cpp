@@ -57,6 +57,10 @@ int main(int argc, char** argv)
 
     auto statusbar = GStatusBar::construct(widget);
 
+    text_editor->on_cursor_change = [&] {
+        statusbar->set_text(String::format("Line: %d, Column: %d", text_editor->cursor().line(), text_editor->cursor().column()));
+    };
+
     window->show();
     return app.exec();
 }
