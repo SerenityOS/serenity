@@ -60,6 +60,10 @@ bool URL::parse(const StringView& string)
             if (buffer.is_empty())
                 return false;
             m_protocol = String::copy(buffer);
+            if (m_protocol == "http")
+                m_port = 80;
+            else if (m_protocol == "https")
+                m_port = 443;
             buffer.clear();
             if (m_protocol == "file")
                 state = State::InPath;
@@ -133,7 +137,7 @@ String URL::to_string() const
     builder.append("://");
     if (protocol() != "file") {
         builder.append(m_host);
-        if (protocol() != "http" || port() != 80) {
+        if (!(protocol() == "http" && port() == 80) && !(protocol() == "https" && port() == 443)) {
             builder.append(':');
             builder.append(String::number(m_port));
         }
