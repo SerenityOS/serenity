@@ -43,7 +43,8 @@ TEST_CASE(some_bad_urls)
 
 TEST_CASE(serialization)
 {
-    EXPECT_EQ(URL("http://www.serenityos.org/").to_string(), "http://www.serenityos.org:80/");
+    EXPECT_EQ(URL("http://www.serenityos.org/").to_string(), "http://www.serenityos.org/");
+    EXPECT_EQ(URL("http://www.serenityos.org:81/").to_string(), "http://www.serenityos.org:81/");
 }
 
 TEST_MAIN(URL)
