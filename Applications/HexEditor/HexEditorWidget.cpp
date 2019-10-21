@@ -102,7 +102,7 @@ HexEditorWidget::HexEditorWidget()
         }));
     }
 
-    m_goto_action = GAction::create("Go To...", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
+    m_goto_decimal_offset_action = GAction::create("Go To Offset (Decimal)...", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
         auto input_box = GInputBox::construct("Enter offset:", "Go To", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto valid = false;
@@ -113,8 +113,17 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
+    m_goto_hex_offset_action = GAction::create("Go To Offset (Hex)...", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
+        auto input_box = GInputBox::construct("Enter offset:", "Go To", this);
+        if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
+            auto new_offset = strtol(input_box->text_value().characters(), nullptr, 16);
+            m_editor->set_position(new_offset);
+        }
+    });
+
     auto edit_menu = make<GMenu>("Edit");
-    edit_menu->add_action(*m_goto_action);
+    edit_menu->add_action(*m_goto_decimal_offset_action);
+    edit_menu->add_action(*m_goto_hex_offset_action);
     edit_menu->add_separator();
     edit_menu->add_action(GAction::create("Copy Hex", [&](const GAction&) {
         m_editor->copy_selected_hex_to_clipboard();
