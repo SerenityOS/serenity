@@ -321,11 +321,14 @@ void HtmlView::scroll_to_anchor(const StringView& name)
 
     HTMLAnchorElement* element = nullptr;
     document()->for_each_in_subtree([&](auto& node) {
-        if (!is<HTMLAnchorElement>(node))
-            return;
-        auto& anchor_element = to<HTMLAnchorElement>(node);
-        if (anchor_element.name() == name)
-            element = &anchor_element;
+        if (is<HTMLAnchorElement>(node)) {
+            auto& anchor_element = to<HTMLAnchorElement>(node);
+            if (anchor_element.name() == name) {
+                element = &anchor_element;
+                return IterationDecision::Break;
+            }
+        }
+        return IterationDecision::Continue;
     });
 
     if (!element) {

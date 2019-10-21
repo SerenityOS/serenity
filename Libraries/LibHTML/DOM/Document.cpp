@@ -193,9 +193,9 @@ void Document::layout()
 void Document::update_style()
 {
     for_each_in_subtree([&](Node& node) {
-        if (!node.needs_style_update())
-            return;
-        to<Element>(node).recompute_style();
+        if (node.needs_style_update())
+            to<Element>(node).recompute_style();
+        return IterationDecision::Continue;
     });
     update_layout();
 }
@@ -241,4 +241,28 @@ void Document::set_hovered_node(Node* node)
     m_hovered_node = node;
 
     invalidate_style();
+}
+
+const Element* Document::get_element_by_id(const String& id) const
+{
+    const Element* element = nullptr;
+    for_each_in_subtree([&](auto& node) {
+        if (is<Element>(node) && to<Element>(node).attribute("id") == id) {
+            element = &to<Element>(node);
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    return element;
+}
+
+Vector<const Element*> Document::get_elements_by_name(const String& name) const
+{
+    Vector<const Element*> elements;
+    for_each_in_subtree([&](auto& node) {
+        if (is<Element>(node) && to<Element>(node).attribute("name") == name)
+            elements.append(&to<Element>(node));
+        return IterationDecision::Continue;
+    });
+    return elements;
 }

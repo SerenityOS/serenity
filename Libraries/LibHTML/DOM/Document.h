@@ -80,6 +80,9 @@ public:
 
     void schedule_style_update();
 
+    const Element* get_element_by_id(const String&) const;
+    Vector<const Element*> get_elements_by_name(const String&) const;
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
