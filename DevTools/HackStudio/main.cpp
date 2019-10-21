@@ -78,7 +78,7 @@ int main(int argc, char** argv)
                 text_editor->set_cursor(line_number, 0);
             }
         }
-    }));
+    }, text_editor));
 
     window->show();
     return app.exec();
