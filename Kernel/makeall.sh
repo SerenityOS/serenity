@@ -69,6 +69,7 @@ build_targets="$build_targets ../Demos/HelloWorld2"
 build_targets="$build_targets ../Demos/RetroFetch"
 build_targets="$build_targets ../Demos/WidgetGallery"
 
+build_targets="$build_targets ../DevTools/HackStudio"
 build_targets="$build_targets ../DevTools/VisualBuilder"
 build_targets="$build_targets ../DevTools/Inspector"
 

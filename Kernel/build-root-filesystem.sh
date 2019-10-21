@@ -96,6 +96,7 @@ cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/RetroFetch/RetroFetch mnt/bin/RetroFetch
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
 cp ../Demos/Fire/Fire mnt/bin/Fire
+cp ../DevTools/HackStudio/HackStudio mnt/bin/HackStudio
 cp ../DevTools/VisualBuilder/VisualBuilder mnt/bin/VisualBuilder
 cp ../DevTools/Inspector/Inspector mnt/bin/Inspector
 cp ../Games/Minesweeper/Minesweeper mnt/bin/Minesweeper
@@ -133,6 +134,7 @@ ln -s Inspector mnt/bin/ins
 ln -s SoundPlayer mnt/bin/sp
 ln -s Help mnt/bin/help
 ln -s Browser mnt/bin/br
+ln -s HackStudio mnt/bin/hs
 echo "done"
 
 mkdir -p mnt/boot/
