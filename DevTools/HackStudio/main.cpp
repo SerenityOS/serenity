@@ -1,4 +1,5 @@
 #include "Project.h"
+#include "TerminalWrapper.h"
 #include <LibCore/CFile.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -39,13 +40,14 @@ int main(int argc, char** argv)
 
     auto toolbar = GToolBar::construct(widget);
 
-    auto splitter = GSplitter::construct(Orientation::Horizontal, widget);
-    auto project_list_view = GListView::construct(splitter);
+    auto outer_splitter = GSplitter::construct(Orientation::Horizontal, widget);
+    auto project_list_view = GListView::construct(outer_splitter);
     project_list_view->set_model(project->model());
     project_list_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     project_list_view->set_preferred_size(200, 0);
 
-    auto text_editor = GTextEditor::construct(GTextEditor::MultiLine, splitter);
+    auto inner_splitter = GSplitter::construct(Orientation::Vertical, outer_splitter);
+    auto text_editor = GTextEditor::construct(GTextEditor::MultiLine, inner_splitter);
     text_editor->set_ruler_visible(true);
 
     project_list_view->on_activation = [&](auto& index) {
@@ -57,6 +59,8 @@ int main(int argc, char** argv)
         }
         text_editor->set_text(file->read_all());
     };
+
+    auto terminal_wrapper = TerminalWrapper::construct(inner_splitter);
 
     auto statusbar = GStatusBar::construct(widget);
 

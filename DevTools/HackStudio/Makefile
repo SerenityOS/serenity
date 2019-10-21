@@ -2,6 +2,7 @@ include ../../Makefile.common
 
 OBJS = \
     Project.o \
+    TerminalWrapper.o \
     main.o
 
 APP = HackStudio
@@ -11,7 +12,7 @@ DEFINES += -DUSERLAND
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lgui -ldraw -lcore -lc
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lvt -lgui -ldraw -lcore -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
