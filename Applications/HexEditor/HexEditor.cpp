@@ -50,6 +50,7 @@ void HexEditor::set_position(int position)
         return;
 
     m_position = position;
+    m_byte_position = 0;
     scroll_position_into_view(position);
     update_status();
 }
@@ -288,6 +289,7 @@ void HexEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Up) {
         if (m_position - bytes_per_row() >= 0) {
             m_position -= bytes_per_row();
+            m_byte_position = 0;
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -298,6 +300,7 @@ void HexEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Down) {
         if (m_position + bytes_per_row() < m_buffer.size()) {
             m_position += bytes_per_row();
+            m_byte_position = 0;
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -308,6 +311,7 @@ void HexEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Left) {
         if (m_position - 1 >= 0) {
             m_position--;
+            m_byte_position = 0;
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -318,6 +322,7 @@ void HexEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Right) {
         if (m_position + 1 < m_buffer.size()) {
             m_position++;
+            m_byte_position = 0;
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -328,6 +333,7 @@ void HexEditor::keydown_event(GKeyEvent& event)
     if (event.key() == KeyCode::Key_Backspace) {
         if (m_position > 0) {
             m_position--;
+            m_byte_position = 0;
             scroll_position_into_view(m_position);
             update();
             update_status();
@@ -374,6 +380,7 @@ void HexEditor::text_mode_keydown_event(GKeyEvent& event)
     m_tracked_changes.set(m_position, m_buffer.data()[m_position]);
     m_buffer.data()[m_position] = (u8)event.text().characters()[0]; // save the first 4 bits, OR the new value in the last 4
     m_position++;
+    m_byte_position = 0;
     update();
     update_status();
     did_change();
