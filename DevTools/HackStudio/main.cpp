@@ -1,11 +1,14 @@
 #include "Project.h"
 #include "TerminalWrapper.h"
 #include <LibCore/CFile.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GListView.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GStatusBar.h>
@@ -68,17 +71,38 @@ int main(int argc, char** argv)
         statusbar->set_text(String::format("Line: %d, Column: %d", text_editor->cursor().line(), text_editor->cursor().column()));
     };
 
-    text_editor->add_custom_context_menu_action(GAction::create("Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](auto&) {
-        auto input_box = GInputBox::construct("Line:", "Go to line", window);
-        auto result = input_box->exec();
-        if (result == GInputBox::ExecOK) {
-            bool ok;
-            auto line_number = input_box->text_value().to_uint(ok);
-            if (ok) {
-                text_editor->set_cursor(line_number - 1, 0);
+    text_editor->add_custom_context_menu_action(GAction::create(
+        "Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](auto&) {
+            auto input_box = GInputBox::construct("Line:", "Go to line", window);
+            auto result = input_box->exec();
+            if (result == GInputBox::ExecOK) {
+                bool ok;
+                auto line_number = input_box->text_value().to_uint(ok);
+                if (ok) {
+                    text_editor->set_cursor(line_number - 1, 0);
+                }
             }
-        }
-    }, text_editor));
+        },
+        text_editor));
+
+    auto menubar = make<GMenuBar>();
+    auto app_menu = make<GMenu>("HackStudio");
+    app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
+        app.quit();
+    }));
+    menubar->add_menu(move(app_menu));
+
+    auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
+
+    auto help_menu = make<GMenu>("Help");
+    help_menu->add_action(GAction::create("About", [&](auto&) {
+        GAboutDialog::show("HackStudio", small_icon, window);
+    }));
+    menubar->add_menu(move(help_menu));
+
+    app.set_menubar(move(menubar));
+
+    window->set_icon(small_icon);
 
     window->show();
     return app.exec();
