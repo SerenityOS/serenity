@@ -48,6 +48,11 @@ public:
         return (*it).value;
     }
 
+    bool has(const String& key) const
+    {
+        return m_members.contains(key);
+    }
+
     void set(const String& key, JsonValue&& value)
     {
         m_members.set(key, move(value));
