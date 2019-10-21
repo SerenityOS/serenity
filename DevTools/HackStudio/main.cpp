@@ -75,7 +75,7 @@ int main(int argc, char** argv)
             bool ok;
             auto line_number = input_box->text_value().to_uint(ok);
             if (ok) {
-                text_editor->set_cursor(line_number, 0);
+                text_editor->set_cursor(line_number - 1, 0);
             }
         }
     }, text_editor));
