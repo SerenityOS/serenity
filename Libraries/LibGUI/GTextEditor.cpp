@@ -848,11 +848,18 @@ void GTextEditor::set_cursor(int line, int column)
     set_cursor({ line, column });
 }
 
-void GTextEditor::set_cursor(const GTextPosition& position)
+void GTextEditor::set_cursor(const GTextPosition& a_position)
 {
     ASSERT(!m_lines.is_empty());
-    ASSERT(position.line() < m_lines.size());
-    ASSERT(position.column() <= m_lines[position.line()].length());
+
+    GTextPosition position = a_position;
+
+    if (position.line() >= m_lines.size())
+        position.set_line(m_lines.size() - 1);
+
+    if (position.column() > m_lines[position.line()].length())
+        position.set_column(m_lines[position.line()].length());
+
     if (m_cursor != position) {
         // NOTE: If the old cursor is no longer valid, repaint everything just in case.
         auto old_cursor_line_rect = m_cursor.line() < m_lines.size()
