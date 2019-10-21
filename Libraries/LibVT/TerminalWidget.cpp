@@ -1,7 +1,7 @@
 #include "TerminalWidget.h"
 #include "XtermColors.h"
-#include <AK/String.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
 #include <LibDraw/Font.h>
@@ -101,20 +101,38 @@ Rect TerminalWidget::row_rect(u16 row)
     return rect;
 }
 
+void TerminalWidget::set_logical_focus(bool focus)
+{
+    m_has_logical_focus = focus;
+    if (!m_has_logical_focus) {
+        m_cursor_blink_timer->stop();
+    } else {
+        m_cursor_blink_state = true;
+        m_cursor_blink_timer->start();
+    }
+    invalidate_cursor();
+    update();
+}
+
+void TerminalWidget::focusin_event(CEvent& event)
+{
+    set_logical_focus(true);
+    return GFrame::focusin_event(event);
+}
+
+void TerminalWidget::focusout_event(CEvent& event)
+{
+    set_logical_focus(false);
+    return GFrame::focusout_event(event);
+}
+
 void TerminalWidget::event(CEvent& event)
 {
-    if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
-        m_in_active_window = event.type() == GEvent::WindowBecameActive;
-        if (!m_in_active_window) {
-            m_cursor_blink_timer->stop();
-        } else {
-            m_cursor_blink_state = true;
-            m_cursor_blink_timer->start();
-        }
-        invalidate_cursor();
-        update();
-    }
-    return GWidget::event(event);
+    if (event.type() == GEvent::WindowBecameActive)
+        set_logical_focus(true);
+    else if (event.type() == GEvent::WindowBecameInactive)
+        set_logical_focus(false);
+    return GFrame::event(event);
 }
 
 void TerminalWidget::keydown_event(GKeyEvent& event)
@@ -239,7 +257,6 @@ void TerminalWidget::paint_event(GPaintEvent& event)
         else if (has_only_one_background_color)
             painter.fill_rect(row_rect, lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
 
-
         // The terminal insists on thinking characters and
         // bytes are the same thing. We want to still draw
         // emojis in *some* way, but it won't be completely
@@ -265,9 +282,8 @@ void TerminalWidget::paint_event(GPaintEvent& event)
             VT::Attribute attribute;
 
             for (u16 column = this_char_column; column < next_char_column; ++column) {
-                should_reverse_fill_for_cursor_or_selection |=
-                    m_cursor_blink_state
-                    && m_in_active_window
+                should_reverse_fill_for_cursor_or_selection |= m_cursor_blink_state
+                    && m_has_logical_focus
                     && row == row_with_cursor
                     && column == m_terminal.cursor_column();
                 should_reverse_fill_for_cursor_or_selection |= selection_contains({ row, column });
@@ -295,7 +311,7 @@ void TerminalWidget::paint_event(GPaintEvent& event)
         }
     }
 
-    if (!m_in_active_window && row_with_cursor < m_terminal.rows()) {
+    if (!m_has_logical_focus && row_with_cursor < m_terminal.rows()) {
         auto& cursor_line = line_for_visual_row(row_with_cursor);
         if (m_terminal.cursor_row() < (m_terminal.rows() - rows_from_history)) {
             auto cell_rect = glyph_rect(row_with_cursor, m_terminal.cursor_column()).inflated(0, m_line_spacing);

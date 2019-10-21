@@ -41,6 +41,8 @@ public:
 
     bool is_scrollable() const;
 
+    virtual bool accepts_focus() const override { return true; }
+
 private:
     // ^GWidget
     virtual void event(CEvent&) override;
@@ -52,12 +54,16 @@ private:
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousewheel_event(GMouseEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
+    virtual void focusin_event(CEvent&) override;
+    virtual void focusout_event(CEvent&) override;
 
     // ^TerminalClient
     virtual void beep() override;
     virtual void set_window_title(const StringView&) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed() override;
+
+    void set_logical_focus(bool);
 
     Rect glyph_rect(u16 row, u16 column);
     Rect row_rect(u16 row);
@@ -86,7 +92,7 @@ private:
 
     int m_ptm_fd { -1 };
 
-    bool m_in_active_window { false };
+    bool m_has_logical_focus { false };
 
     RefPtr<CNotifier> m_notifier;
 
