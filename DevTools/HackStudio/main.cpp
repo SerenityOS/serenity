@@ -1,7 +1,9 @@
 #include "Project.h"
 #include <LibCore/CFile.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GInputBox.h>
 #include <LibGUI/GListView.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GSplitter.h>
@@ -44,6 +46,7 @@ int main(int argc, char** argv)
     project_list_view->set_preferred_size(200, 0);
 
     auto text_editor = GTextEditor::construct(GTextEditor::MultiLine, splitter);
+    text_editor->set_ruler_visible(true);
 
     project_list_view->on_activation = [&](auto& index) {
         auto filename = project_list_view->model()->data(index).to_string();
@@ -60,6 +63,18 @@ int main(int argc, char** argv)
     text_editor->on_cursor_change = [&] {
         statusbar->set_text(String::format("Line: %d, Column: %d", text_editor->cursor().line(), text_editor->cursor().column()));
     };
+
+    text_editor->add_custom_context_menu_action(GAction::create("Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](auto&) {
+        auto input_box = GInputBox::construct("Line:", "Go to line", window);
+        auto result = input_box->exec();
+        if (result == GInputBox::ExecOK) {
+            bool ok;
+            auto line_number = input_box->text_value().to_uint(ok);
+            if (ok) {
+                text_editor->set_cursor(line_number, 0);
+            }
+        }
+    }));
 
     window->show();
     return app.exec();
