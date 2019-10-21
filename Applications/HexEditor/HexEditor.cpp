@@ -93,7 +93,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
         return false;
 
     StringBuilder output_string_builder;
-    for (int i = m_selection_start; i < m_selection_end; i++) {
+    for (int i = m_selection_start; i <= m_selection_end; i++) {
         output_string_builder.appendf("%02X ", m_buffer.data()[i]);
     }
 
@@ -107,7 +107,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
         return false;
 
     StringBuilder output_string_builder;
-    for (int i = m_selection_start; i < m_selection_end; i++) {
+    for (int i = m_selection_start; i <= m_selection_end; i++) {
         output_string_builder.appendf("%c", isprint(m_buffer.data()[i]) ? m_buffer[i] : '.');
     }
 
