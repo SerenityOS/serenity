@@ -15,7 +15,7 @@ class TerminalWidget final : public GFrame
     , public VT::TerminalClient {
     C_OBJECT(TerminalWidget)
 public:
-    explicit TerminalWidget(int ptm_fd, RefPtr<CConfigFile> config);
+    TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<CConfigFile> config);
     virtual ~TerminalWidget() override;
 
     void create_window();
@@ -99,6 +99,7 @@ private:
     u8 m_opacity { 255 };
     bool m_needs_background_fill { true };
     bool m_cursor_blink_state { true };
+    bool m_automatic_size_policy { false };
 
     int m_glyph_width { 0 };
 

@@ -162,7 +162,7 @@ int main(int argc, char** argv)
     window->set_double_buffering_enabled(false);
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
-    auto terminal = TerminalWidget::construct(ptm_fd, config);
+    auto terminal = TerminalWidget::construct(ptm_fd, true, config);
     window->set_main_widget(terminal);
     window->move_to(300, 300);
     terminal->apply_size_increments_to_window(*window);
