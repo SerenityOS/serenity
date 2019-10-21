@@ -163,6 +163,9 @@ int main(int argc, char** argv)
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
     auto terminal = TerminalWidget::construct(ptm_fd, true, config);
+    terminal->on_title_change = [&](auto& title) {
+        window->set_title(title);
+    };
     window->set_main_widget(terminal);
     window->move_to(300, 300);
     terminal->apply_size_increments_to_window(*window);

@@ -323,10 +323,8 @@ void TerminalWidget::paint_event(GPaintEvent& event)
 
 void TerminalWidget::set_window_title(const StringView& title)
 {
-    auto* w = window();
-    if (!w)
-        return;
-    w->set_title(title);
+    if (on_title_change)
+        on_title_change(title);
 }
 
 void TerminalWidget::invalidate_cursor()

@@ -43,6 +43,8 @@ public:
 
     virtual bool accepts_focus() const override { return true; }
 
+    Function<void(const StringView&)> on_title_change;
+
 private:
     // ^GWidget
     virtual void event(CEvent&) override;
