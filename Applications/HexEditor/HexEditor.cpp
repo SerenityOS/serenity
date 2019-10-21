@@ -89,12 +89,11 @@ bool HexEditor::write_to_file(const StringView& path)
 
 bool HexEditor::copy_selected_hex_to_clipboard()
 {
-    if(m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty())
+    if (m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty())
         return false;
 
     StringBuilder output_string_builder;
-    for(int i = m_selection_start; i < m_selection_end; i++)
-    {
+    for (int i = m_selection_start; i < m_selection_end; i++) {
         output_string_builder.appendf("%02X ", m_buffer.data()[i]);
     }
 
@@ -104,12 +103,11 @@ bool HexEditor::copy_selected_hex_to_clipboard()
 
 bool HexEditor::copy_selected_text_to_clipboard()
 {
-    if(m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0)
+    if (m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0)
         return false;
 
     StringBuilder output_string_builder;
-    for(int i = m_selection_start; i < m_selection_end; i++)
-    {
+    for (int i = m_selection_start; i < m_selection_end; i++) {
         output_string_builder.appendf("%c", isprint(m_buffer.data()[i]) ? m_buffer[i] : '.');
     }
 
@@ -252,9 +250,14 @@ void HexEditor::mouseup_event(GMouseEvent& event)
 {
     if (event.button() == GMouseButton::Left) {
         if (m_in_drag_select) {
-            if (m_selection_end == -1 || m_selection_start == m_selection_end || m_selection_start > m_selection_end) {
+            if (m_selection_end == -1 || m_selection_start == -1) {
                 m_selection_start = -1;
                 m_selection_end = -1;
+            } else if (m_selection_end < m_selection_start) {
+                // lets flip these around
+                auto start = m_selection_end;
+                m_selection_end = m_selection_start;
+                m_selection_start = start;
             }
             m_in_drag_select = false;
         }
@@ -446,6 +449,15 @@ void HexEditor::paint_event(GPaintEvent& event)
             }
 
             Color highlight_color = Color::from_rgb(0x84351a);
+            auto highlight_flag = false;
+            if (m_selection_start > -1 && m_selection_end > -1) {
+                if (byte_position >= m_selection_start && byte_position <= m_selection_end) {
+                    highlight_flag = true;
+                }
+                if (byte_position >= m_selection_end && byte_position <= m_selection_start) {
+                    highlight_flag = true;
+                }
+            }
 
             Rect hex_display_rect {
                 frame_thickness() + offset_margin_width() + (j * (character_width() * 3)) + 10,
@@ -453,7 +465,7 @@ void HexEditor::paint_event(GPaintEvent& event)
                 (character_width() * 3),
                 line_height() - m_line_spacing
             };
-            if (byte_position >= m_selection_start && byte_position <= m_selection_end) {
+            if (highlight_flag) {
                 painter.fill_rect(hex_display_rect, highlight_color);
                 text_color = text_color == Color::Red ? Color::from_rgb(0xFFC0CB) : Color::White;
             } else if (byte_position == m_position) {
@@ -470,7 +482,7 @@ void HexEditor::paint_event(GPaintEvent& event)
                 line_height() - m_line_spacing
             };
             // selection highlighting.
-            if (byte_position >= m_selection_start && byte_position <= m_selection_end) {
+            if (highlight_flag) {
                 painter.fill_rect(text_display_rect, highlight_color);
             } else if (byte_position == m_position) {
                 painter.fill_rect(text_display_rect, Color::from_rgb(0xCCCCCC));
