@@ -26,6 +26,7 @@ bool CFile::open(int fd, CIODevice::OpenMode mode, ShouldCloseFileDescription sh
 
 bool CFile::open(CIODevice::OpenMode mode)
 {
+    ASSERT(!m_filename.is_null());
     int flags = 0;
     if ((mode & CIODevice::ReadWrite) == CIODevice::ReadWrite) {
         flags |= O_RDWR | O_CREAT;
