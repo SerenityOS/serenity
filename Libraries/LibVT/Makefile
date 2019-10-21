@@ -1,7 +1,8 @@
 include ../../Makefile.common
 
 OBJS = \
-    Terminal.o
+    Terminal.o \
+    TerminalWidget.o
 
 LIBRARY = libvt.a
 DEFINES += -DUSERLAND

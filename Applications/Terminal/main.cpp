@@ -1,4 +1,3 @@
-#include "TerminalWidget.h"
 #include <Kernel/KeyCode.h>
 #include <LibCore/CArgsParser.h>
 #include <LibCore/CUserInfo.h>
@@ -14,6 +13,7 @@
 #include <LibGUI/GSlider.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
+#include <LibVT/TerminalWidget.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
