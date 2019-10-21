@@ -54,12 +54,27 @@ public:
     bool is_child_allowed(const T&) const { return true; }
 
     template<typename Callback>
-    void for_each_in_subtree(Callback callback)
+    IterationDecision for_each_in_subtree(Callback callback) const
     {
-        callback(static_cast<T&>(*this));
+        if (callback(static_cast<const T&>(*this)) == IterationDecision::Break)
+            return IterationDecision::Break;
         for (auto* child = first_child(); child; child = child->next_sibling()) {
-            child->for_each_in_subtree(callback);
+            if (child->for_each_in_subtree(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
         }
+        return IterationDecision::Continue;
+    }
+
+    template<typename Callback>
+    IterationDecision for_each_in_subtree(Callback callback)
+    {
+        if (callback(static_cast<T&>(*this)) == IterationDecision::Break)
+            return IterationDecision::Break;
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->for_each_in_subtree(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
     }
 
 protected:

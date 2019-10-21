@@ -77,6 +77,7 @@ void Node::invalidate_style()
     for_each_in_subtree([&](auto& node) {
         if (is<Element>(node))
             node.set_needs_style_update(true);
+        return IterationDecision::Continue;
     });
     document().schedule_style_update();
 }
