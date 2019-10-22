@@ -997,10 +997,14 @@ ssize_t ProcFSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     }
 
     auto& data = generated_data;
-    ssize_t nread = min(static_cast<off_t>(data.value().size() - offset), static_cast<off_t>(count));
-    memcpy(buffer, data.value().data() + offset, nread);
-    if (nread == 0 && description && description->generator_cache())
-        description->generator_cache().clear();
+    ssize_t nread = 0;
+    if (data.has_value()) {
+        nread = min(static_cast<off_t>(data.value().size() - offset), static_cast<off_t>(count));
+        memcpy(buffer, data.value().data() + offset, nread);
+        if (nread == 0 && description && description->generator_cache())
+            description->generator_cache().clear();
+    }
+
     return nread;
 }
 
