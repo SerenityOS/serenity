@@ -21,6 +21,8 @@
 
 String g_currently_open_file;
 
+static void build(TerminalWrapper&);
+
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
@@ -97,6 +99,12 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(app_menu));
 
+    auto build_menu = make<GMenu>("Build");
+    build_menu->add_action(GAction::create("Build", { Mod_Ctrl, Key_B }, [&](auto&) {
+        build(terminal_wrapper);
+    }));
+    menubar->add_menu(move(build_menu));
+
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
 
     auto help_menu = make<GMenu>("Help");
@@ -111,4 +119,9 @@ int main(int argc, char** argv)
 
     window->show();
     return app.exec();
+}
+
+void build(TerminalWrapper& wrapper)
+{
+    wrapper.run_command("make");
 }

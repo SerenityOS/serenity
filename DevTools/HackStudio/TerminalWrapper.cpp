@@ -2,17 +2,53 @@
 #include <AK/String.h>
 #include <LibCore/CConfigFile.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GMessageBox.h>
 #include <LibVT/TerminalWidget.h>
 #include <fcntl.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
-static void run_command(int ptm_fd, const String& command)
+void TerminalWrapper::run_command(const String& command)
 {
-    pid_t pid = fork();
-    if (pid == 0) {
+    if (m_pid != -1) {
+        GMessageBox::show(
+            "A command is already running in this TerminalWrapper",
+            "Can't run command",
+            GMessageBox::Type::Error,
+            GMessageBox::InputType::OK,
+            window());
+        return;
+    }
+
+    int ptm_fd = open("/dev/ptmx", O_RDWR);
+    if (ptm_fd < 0) {
+        perror("open(ptmx)");
+        ASSERT_NOT_REACHED();
+    }
+
+    m_terminal_widget->set_pty_master_fd(ptm_fd);
+    m_terminal_widget->on_command_exit = [this] {
+        int wstatus;
+        int rc = waitpid(m_pid, &wstatus, 0);
+        if (rc < 0) {
+            perror("waitpid");
+            ASSERT_NOT_REACHED();
+        }
+        if (WIFEXITED(wstatus)) {
+            m_terminal_widget->inject_string(String::format("\033[%d;1m(Command exited with code %d)\033[0m\n", wstatus == 0 ? 32 : 31, WEXITSTATUS(wstatus)));
+        } else if (WIFSTOPPED(wstatus)) {
+            m_terminal_widget->inject_string(String::format("\033[34;1m(Command stopped!)\033[0m\n"));
+        } else if (WIFSIGNALED(wstatus)) {
+            m_terminal_widget->inject_string(String::format("\033[34;1m(Command signaled with %s!)\033[0m\n", strsignal(WTERMSIG(wstatus))));
+        }
+        m_pid = -1;
+    };
+
+    m_pid = fork();
+    if (m_pid == 0) {
         const char* tty_name = ptsname(ptm_fd);
         if (!tty_name) {
             perror("ptsname");
@@ -77,16 +113,8 @@ TerminalWrapper::TerminalWrapper(GWidget* parent)
 {
     set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    int ptm_fd = open("/dev/ptmx", O_RDWR);
-    if (ptm_fd < 0) {
-        perror("open(ptmx)");
-        ASSERT_NOT_REACHED();
-    }
-
-    run_command(ptm_fd, "/bin/Shell");
-
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
-    m_terminal_widget = TerminalWidget::construct(ptm_fd, false, config);
+    m_terminal_widget = TerminalWidget::construct(-1, false, config);
     add_child(*m_terminal_widget);
 }
 
