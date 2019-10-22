@@ -113,11 +113,12 @@ void GListView::paint_event(GPaintEvent& event)
         }
 
         auto column_metadata = model()->column_metadata(m_model_column);
-        const Font& font = column_metadata.font ? *column_metadata.font : this->font();
+
         Rect row_rect(0, y, content_width(), item_height());
         painter.fill_rect(row_rect, background_color);
         auto index = model()->index(row_index, m_model_column);
         auto data = model()->data(index);
+        auto font = font_for_index(index);
         if (data.is_bitmap()) {
             painter.blit(row_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
         } else if (data.is_icon()) {

@@ -45,6 +45,8 @@ public:
 
     void notify_selection_changed(Badge<GModelSelection>);
 
+    NonnullRefPtr<Font> font_for_index(const GModelIndex&) const;
+
 protected:
     virtual void did_scroll() override;
     void activate(const GModelIndex&);

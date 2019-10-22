@@ -108,3 +108,18 @@ void GAbstractView::notify_selection_changed(Badge<GModelSelection>)
         on_selection_change();
     update();
 }
+
+NonnullRefPtr<Font> GAbstractView::font_for_index(const GModelIndex& index) const
+{
+    if (!model())
+        return font();
+
+    auto font_data = model()->data(index, GModel::Role::Font);
+    if (font_data.is_font())
+        return font_data.as_font();
+
+    auto column_metadata = model()->column_metadata(index.column());
+    if (column_metadata.font)
+        return *column_metadata.font;
+    return font();
+}
