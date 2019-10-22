@@ -1,8 +1,9 @@
 #pragma once
 
 #include <AK/String.h>
-#include <LibGUI/GIcon.h>
+#include <LibDraw/Font.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GIcon.h>
 
 namespace AK {
 class JsonValue;
@@ -22,6 +23,7 @@ public:
     GVariant(const Point&);
     GVariant(const Size&);
     GVariant(const Rect&);
+    GVariant(const Font&);
     GVariant(const AK::JsonValue&);
     GVariant(Color);
 
@@ -47,6 +49,7 @@ public:
         Point,
         Size,
         Rect,
+        Font,
     };
 
     bool is_valid() const { return m_type != Type::Invalid; }
@@ -61,6 +64,7 @@ public:
     bool is_point() const { return m_type == Type::Point; }
     bool is_size() const { return m_type == Type::Size; }
     bool is_rect() const { return m_type == Type::Rect; }
+    bool is_font() const { return m_type == Type::Font; }
     Type type() const { return m_type; }
 
     bool as_bool() const
@@ -167,6 +171,12 @@ public:
         return Color::from_rgba(m_value.as_color);
     }
 
+    const Font& as_font() const
+    {
+        ASSERT(type() == Type::Font);
+        return *m_value.as_font;
+    }
+
     Color to_color(Color default_value = {}) const
     {
         if (type() == Type::Color)
@@ -206,6 +216,7 @@ private:
         StringImpl* as_string;
         GraphicsBitmap* as_bitmap;
         GIconImpl* as_icon;
+        Font* as_font;
         bool as_bool;
         int as_int;
         unsigned as_uint;
