@@ -34,7 +34,8 @@ public:
         Custom,
         ForegroundColor,
         BackgroundColor,
-        Icon
+        Icon,
+        Font,
     };
 
     virtual ~GModel();
