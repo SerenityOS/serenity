@@ -18,6 +18,8 @@ public:
     TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<CConfigFile> config);
     virtual ~TerminalWidget() override;
 
+    void set_pty_master_fd(int fd);
+
     void create_window();
 
     void flush_dirty_lines();
@@ -44,6 +46,7 @@ public:
     virtual bool accepts_focus() const override { return true; }
 
     Function<void(const StringView&)> on_title_change;
+    Function<void()> on_command_exit;
 
 private:
     // ^GWidget

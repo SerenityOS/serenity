@@ -19,13 +19,46 @@
 
 //#define TERMINAL_DEBUG
 
+void TerminalWidget::set_pty_master_fd(int fd)
+{
+    m_ptm_fd = fd;
+    if (m_ptm_fd == -1) {
+        m_notifier = nullptr;
+        return;
+    }
+    m_notifier = CNotifier::construct(m_ptm_fd, CNotifier::Read);
+    m_notifier->on_ready_to_read = [this] {
+        u8 buffer[BUFSIZ];
+        ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
+        if (nread < 0) {
+            dbgprintf("Terminal read error: %s\n", strerror(errno));
+            perror("read(ptm)");
+            GApplication::the().quit(1);
+            return;
+        }
+        if (nread == 0) {
+            dbgprintf("Terminal: EOF on master pty, firing on_command_exit hook.\n");
+            if (on_command_exit)
+                on_command_exit();
+            int rc = close(m_ptm_fd);
+            if (rc < 0) {
+                perror("close");
+            }
+            set_pty_master_fd(-1);
+            return;
+        }
+        for (ssize_t i = 0; i < nread; ++i)
+            m_terminal.on_char(buffer[i]);
+        flush_dirty_lines();
+    };
+}
+
 TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<CConfigFile> config)
     : m_terminal(*this)
-    , m_ptm_fd(ptm_fd)
-    , m_notifier(CNotifier::construct(ptm_fd, CNotifier::Read))
     , m_automatic_size_policy(automatic_size_policy)
     , m_config(move(config))
 {
+    set_pty_master_fd(ptm_fd);
     m_cursor_blink_timer = CTimer::construct();
     m_visual_beep_timer = CTimer::construct();
 
@@ -53,25 +86,6 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<CC
         set_font(Font::default_fixed_width_font());
     else
         set_font(Font::load_from_file(font_entry));
-
-    m_notifier->on_ready_to_read = [this] {
-        u8 buffer[BUFSIZ];
-        ssize_t nread = read(m_ptm_fd, buffer, sizeof(buffer));
-        if (nread < 0) {
-            dbgprintf("Terminal read error: %s\n", strerror(errno));
-            perror("read(ptm)");
-            GApplication::the().quit(1);
-            return;
-        }
-        if (nread == 0) {
-            dbgprintf("Terminal: EOF on master pty, closing.\n");
-            GApplication::the().quit(0);
-            return;
-        }
-        for (ssize_t i = 0; i < nread; ++i)
-            m_terminal.on_char(buffer[i]);
-        flush_dirty_lines();
-    };
 
     m_line_height = font().glyph_height() + m_line_spacing;
 
@@ -138,6 +152,11 @@ void TerminalWidget::event(CEvent& event)
 
 void TerminalWidget::keydown_event(GKeyEvent& event)
 {
+    if (m_ptm_fd == -1) {
+        event.ignore();
+        return GFrame::keydown_event(event);
+    }
+
     // Reset timer so cursor doesn't blink while typing.
     m_cursor_blink_timer->stop();
     m_cursor_blink_state = true;
@@ -478,6 +497,8 @@ void TerminalWidget::mousedown_event(GMouseEvent& event)
         m_selection_end = {};
         update();
     } else if (event.button() == GMouseButton::Right) {
+        if (m_ptm_fd == -1)
+            return;
         auto text = GClipboard::the().data();
         if (text.is_empty())
             return;
@@ -582,8 +603,10 @@ void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
     winsize ws;
     ws.ws_row = rows;
     ws.ws_col = columns;
-    int rc = ioctl(m_ptm_fd, TIOCSWINSZ, &ws);
-    ASSERT(rc == 0);
+    if (m_ptm_fd != -1) {
+        int rc = ioctl(m_ptm_fd, TIOCSWINSZ, &ws);
+        ASSERT(rc == 0);
+    }
 }
 
 void TerminalWidget::beep()
