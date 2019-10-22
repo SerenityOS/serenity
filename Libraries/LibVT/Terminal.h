@@ -104,6 +104,8 @@ public:
     int max_history_size() const { return 500; }
     const NonnullOwnPtrVector<Line>& history() const { return m_history; }
 
+    void inject_string(const StringView&);
+
 private:
     typedef Vector<unsigned, 4> ParamVector;
 
@@ -114,7 +116,6 @@ private:
     void put_character_at(unsigned row, unsigned column, u8 ch);
     void set_window_title(const String&);
 
-    void inject_string(const String&);
     void unimplemented_escape();
     void unimplemented_xterm_escape();
 

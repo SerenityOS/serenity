@@ -833,7 +833,7 @@ void Terminal::on_char(u8 ch)
     }
 }
 
-void Terminal::inject_string(const String& str)
+void Terminal::inject_string(const StringView& str)
 {
     for (int i = 0; i < str.length(); ++i)
         on_char(str[i]);

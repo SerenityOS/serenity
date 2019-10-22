@@ -19,6 +19,11 @@ public:
     virtual ~TerminalWidget() override;
 
     void set_pty_master_fd(int fd);
+    void inject_string(const StringView& string)
+    {
+        m_terminal.inject_string(string);
+        flush_dirty_lines();
+    }
 
     void create_window();
 
