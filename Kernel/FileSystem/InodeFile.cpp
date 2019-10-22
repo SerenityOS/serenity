@@ -20,7 +20,10 @@ ssize_t InodeFile::read(FileDescription& description, u8* buffer, ssize_t count)
 
 ssize_t InodeFile::write(FileDescription& description, const u8* data, ssize_t count)
 {
-    return m_inode->write_bytes(description.offset(), count, data, &description);
+    ssize_t ret = m_inode->write_bytes(description.offset(), count, data, &description);
+    if (ret > 0)
+        m_inode->set_mtime(kgettimeofday().tv_sec);
+    return ret;
 }
 
 KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot)
