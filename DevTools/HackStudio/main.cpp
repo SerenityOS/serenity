@@ -22,6 +22,7 @@
 String g_currently_open_file;
 
 static void build(TerminalWrapper&);
+static void run(TerminalWrapper&);
 
 int main(int argc, char** argv)
 {
@@ -103,6 +104,9 @@ int main(int argc, char** argv)
     build_menu->add_action(GAction::create("Build", { Mod_Ctrl, Key_B }, [&](auto&) {
         build(terminal_wrapper);
     }));
+    build_menu->add_action(GAction::create("Run", { Mod_Ctrl, Key_R }, [&](auto&) {
+        run(terminal_wrapper);
+    }));
     menubar->add_menu(move(build_menu));
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
@@ -124,4 +128,9 @@ int main(int argc, char** argv)
 void build(TerminalWrapper& wrapper)
 {
     wrapper.run_command("make");
+}
+
+void run(TerminalWrapper& wrapper)
+{
+    wrapper.run_command("make run");
 }
