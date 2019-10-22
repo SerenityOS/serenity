@@ -16,6 +16,7 @@ const char* to_string(GVariant::Type type)
     case GVariant::Type::Point: return "Point";
     case GVariant::Type::Size: return "Size";
     case GVariant::Type::Rect: return "Rect";
+    case GVariant::Type::Font: return "Font";
     }
     ASSERT_NOT_REACHED();
 }
@@ -134,6 +135,13 @@ GVariant::GVariant(const GIcon& value)
     AK::ref_if_not_null(m_value.as_icon);
 }
 
+GVariant::GVariant(const Font& value)
+    : m_type(Type::Font)
+{
+    m_value.as_font = &const_cast<Font&>(value);
+    AK::ref_if_not_null(m_value.as_font);
+}
+
 GVariant::GVariant(Color color)
     : m_type(Type::Color)
 {
@@ -212,6 +220,10 @@ void GVariant::copy_from(const GVariant& other)
         m_value.as_icon = other.m_value.as_icon;
         AK::ref_if_not_null(m_value.as_icon);
         break;
+    case Type::Font:
+        m_value.as_font = other.m_value.as_font;
+        AK::ref_if_not_null(m_value.as_font);
+        break;
     case Type::Color:
         m_value.as_color = other.m_value.as_color;
         break;
@@ -256,6 +268,8 @@ bool GVariant::operator==(const GVariant& other) const
         return as_size() == other.as_size();
     case Type::Rect:
         return as_rect() == other.as_rect();
+    case Type::Font:
+        return &as_font() == &other.as_font();
     case Type::Invalid:
         return true;
     }
@@ -288,6 +302,7 @@ bool GVariant::operator<(const GVariant& other) const
     case Type::Point:
     case Type::Size:
     case Type::Rect:
+    case Type::Font:
         // FIXME: Figure out how to compare these.
         ASSERT_NOT_REACHED();
     case Type::Invalid:
@@ -321,6 +336,8 @@ String GVariant::to_string() const
         return as_size().to_string();
     case Type::Rect:
         return as_rect().to_string();
+    case Type::Font:
+        return String::format("[Font: %s]", as_font().name().characters());
     case Type::Invalid:
         return "[null]";
         break;
