@@ -1,144 +1,77 @@
-#include <AK/String.h>
-#include <AK/Vector.h>
-#include <LibCore/CArgsParser.h>
-
-#include <ctype.h>
 #include <stdio.h>
-
-static bool output_chars = false;
-static bool output_words = false;
-static bool output_lines = false;
-
-struct Count {
-    String file;
-    unsigned long chars = 0;
-    unsigned long words = 0;
-    unsigned long lines = 0;
-};
-
-int wc(const String& filename, Vector<Count>& counts);
-
-void report(const Count& count)
+#include <iostream>
+#include <iomanip>
+using namespace std;
+void wcout(char *wd, int lines, int words, int bytes, string name)
 {
-    if (output_lines) {
-        printf("%lu ", count.lines);
-    }
-    if (output_words) {
-        printf("%lu ", count.words);
-    }
-    if (output_chars) {
-        printf("%lu ", count.chars);
-    }
-    printf("%s\n", count.file.characters());
-}
-
-void report(const Vector<Count>& counts)
-{
-    Count total { "total" };
-    for (const auto& c : counts) {
-        report(c);
-        total.lines += c.lines;
-        total.words += c.words;
-        total.chars += c.chars;
-    }
-    if (counts.size() > 1) {
-        report(total);
-    }
-    fflush(stdout);
-}
-
-int count_words(const char* s)
-{
-    int n = 0;
-    bool in_word = false;
-    for (; *s; ++s) {
-        if (!isspace(*s)) {
-            if (!in_word) {
-                in_word = true;
-                ++n;
-            }
-        } else if (in_word) {
-            in_word = false;
+        while (*wd) switch(*wd++) {
+                case 'l':
+                        printf("%7i", lines);
+                        break;
+                case 'w':
+                        printf("%7i", words);
+                        break;
+                case 'c':
+                        printf("%8i", bytes);
+                        break;
         }
-    }
-    return n;
+        cout << setw(18) << name << endl;
 }
 
-int main(int argc, char** argv)
+int main(int argc, char **argv)
 {
-    if (argc < 2) {
-        printf("usage: wc [-c|-m] [-lw] [file...]\n");
-        return 0;
-    }
+        int character;
+        int linec=0, wordc=0, bytec=0, i = 1;
+        int tlinec=0, twordc=0, tbytec=0;
+        unsigned int spaceflag=0, lineflag=0, tabflag=0;
+        char wd[] = "lwc";
+        FILE *filep = stdin;
 
-    CArgsParser args_parser("wc");
-    args_parser.add_arg("l", "Include lines in count");
-    args_parser.add_arg("c", "Include bytes in count");
-    args_parser.add_arg("m", "Include chars in count");
-    args_parser.add_arg("w", "Include words in count");
-    CArgsParserResult args = args_parser.parse(argc, (char**)argv);
-
-    if (args.is_present("l")) {
-        output_lines = true;
-    }
-    if (args.is_present("c")) {
-        output_chars = true;
-    }
-    if (args.is_present("m")) {
-        output_chars = true;
-    }
-    if (args.is_present("w")) {
-        output_words = true;
-    }
-    if (!output_lines && !output_words && !output_chars) {
-        output_lines = output_chars = output_words = true;
-    }
-
-    Vector<String> files = args.get_single_values();
-    Vector<Count> counts;
-    int status;
-    if (files.is_empty()) {
-        status = wc("", counts);
-        if (status != 0)
-            return status;
-    } else {
-        for (const auto& f : files) {
-            status = wc(f, counts);
-            if (status != 0)
-                return status;
+        if (argc > 1 && *argv[1]=='-') {
+                strcpy(wd,++argv[1]);
+                argc--;
+                argv++;
         }
-    }
-    report(counts);
-    return 0;
-}
 
-int wc(const String& filename, Vector<Count>& counts)
-{
-    FILE* fp = nullptr;
-    if (filename == "" || filename == "-") {
-        fp = stdin;
-    } else {
-        fp = fopen(filename.characters(), "r");
-        if (fp == nullptr) {
-            fprintf(stderr, "wc: Could not open file '%s'\n", filename.characters());
-            return 1;
-        }
-    }
+        do {
+                lineflag=1;
+                if (argc > 1 && (filep = fopen(argv[i], "r"))==NULL) {
+                        fprintf(stderr, "wc: unable to open %s\n", argv[i]);
+                        continue;
+                }
+                while ((character = fgetc(filep)) != EOF) {
+                        bytec++;
+                        if (character>='A' && character<='z' && (spaceflag==1||lineflag==1||tabflag==1)) {
+                                wordc++;
+                                spaceflag=0;
+                                lineflag=0;
+                                tabflag=0;
+                        }
+                        switch(character) {
+                        case '\n': linec++;
+                                lineflag=1;
+                                break;
+                        case ' ': spaceflag=1;
+                                break;
+                        case '\t': tabflag=1;
+                                break;                                                                                                                                   
+                        }
+                } fclose(filep);
 
-    Count count { filename };
-    char* line = nullptr;
-    size_t len = 0;
-    ssize_t n_read = 0;
-    while ((n_read = getline(&line, &len, fp)) != -1) {
-        count.lines++;
-        count.words += count_words(line);
-        count.chars += n_read;
-    }
+                if (argc > 2) {
+                        tlinec += linec;
+                        twordc += wordc;
+                        tbytec += bytec;
+                }
+                if (argc > 1)
+                        wcout(wd, linec, wordc, bytec, argv[i]);
+                else
+                        wcout(wd, linec, wordc, bytec, "");
 
-    counts.append(count);
-    fclose(fp);
-    if (line) {
-        free(line);
-    }
-    return 0;
+                linec = 0;
+                wordc = 0;
+                bytec = 0;
+        } while (++i<argc);
+        if (argc > 2)
+                wcout(wd, tlinec, twordc, tbytec, "total");                                                                                                              
 }
