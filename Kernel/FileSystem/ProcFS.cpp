@@ -198,15 +198,20 @@ ProcFS::~ProcFS()
 
 Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
 {
-    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
-    if (!handle)
-        return {};
-    auto& process = handle->process();
-    if (process.number_of_open_file_descriptors() == 0)
-        return {};
-
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
+
+    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
+    if (!handle) {
+        array.finish();
+        return builder.build();
+    }
+    auto& process = handle->process();
+    if (process.number_of_open_file_descriptors() == 0) {
+        array.finish();
+        return builder.build();
+    }
+
     for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
         auto* description = process.file_description(i);
         if (!description)
