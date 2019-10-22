@@ -417,8 +417,12 @@ void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& ev
 #endif
     move_to_front_and_make_active(window);
     m_drag_window = window.make_weak_ptr();
-    ;
     m_drag_origin = event.position();
+    if (window.is_maximized()) {
+        auto width_before_resize = window.width();
+        window.set_maximized(false);
+        window.move_to(m_drag_origin.x() - (window.width() * ((float) m_drag_origin.x() / width_before_resize)), m_drag_origin.y());
+    }
     m_drag_window_origin = window.position();
     invalidate(window);
 }
