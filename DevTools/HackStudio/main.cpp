@@ -95,6 +95,11 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("HackStudio");
+    app_menu->add_action(GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
+        if (g_currently_open_file.is_empty())
+            return;
+        text_editor->write_to_file(g_currently_open_file);
+    }));
     app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
