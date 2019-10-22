@@ -16,6 +16,12 @@ public:
         if (role == Role::Display) {
             return m_project.m_files.at(row);
         }
+        if (role == Role::Font) {
+            extern String g_currently_open_file;
+            if (m_project.m_files.at(row) == g_currently_open_file)
+                return Font::default_bold_font();
+            return {};
+        }
         return {};
     }
     virtual void update() override {}

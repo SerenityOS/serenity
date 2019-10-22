@@ -19,6 +19,8 @@
 #include <stdio.h>
 #include <unistd.h>
 
+String g_currently_open_file;
+
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
@@ -34,11 +36,11 @@ int main(int argc, char** argv)
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
 
-    if (chdir("/home/anon/serenity") < 0) {
+    if (chdir("/home/anon/little") < 0) {
         perror("chdir");
         return 1;
     }
-    auto project = Project::load_from_file("serenity.files");
+    auto project = Project::load_from_file("little.files");
     ASSERT(project);
 
     auto toolbar = GToolBar::construct(widget);
@@ -61,6 +63,9 @@ int main(int argc, char** argv)
             return;
         }
         text_editor->set_text(file->read_all());
+        g_currently_open_file = filename;
+        window->set_title(String::format("%s - HackStudio", g_currently_open_file.characters()));
+        project_list_view->update();
     };
 
     auto terminal_wrapper = TerminalWrapper::construct(inner_splitter);
