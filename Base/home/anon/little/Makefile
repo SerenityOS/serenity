@@ -11,3 +11,6 @@ $(PROGRAM): $(OBJS)
 
 clean:
 	rm $(OBJS) $(PROGRAM)
+
+run:
+	./$(PROGRAM)
