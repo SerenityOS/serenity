@@ -8,12 +8,13 @@ namespace AK {
 
 template<typename T, int Capacity>
 class CircularDeque : public CircularQueue<T, Capacity> {
-
 public:
     T dequeue_end()
     {
         ASSERT(!this->is_empty());
-        T value = this->m_elements[(this->m_head + this->m_size - 1) % Capacity];
+        auto& slot = this->elements()[(this->m_head + this->m_size - 1) % Capacity];
+        T value = move(slot);
+        slot.~T();
         this->m_size--;
         return value;
     }

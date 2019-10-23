@@ -1,4 +1,4 @@
-PROGRAMS = TestAtomic TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL TestStringView TestUtf8
+PROGRAMS = TestAtomic TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL TestStringView TestUtf8 TestCircularQueue
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 
@@ -69,6 +69,10 @@ TestStringView: TestStringView.o $(SHARED_TEST_OBJS)
 
 TestUtf8: TestUtf8.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestUtf8.o $(SHARED_TEST_OBJS)
+
+TestCircularQueue: TestCircularQueue.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestCircularQueue.o $(SHARED_TEST_OBJS)
+
 
 clean:
 	rm -f $(SHARED_TEST_OBJS)
