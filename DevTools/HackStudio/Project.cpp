@@ -14,11 +14,11 @@ public:
     {
         int row = index.row();
         if (role == Role::Display) {
-            return m_project.m_files.at(row);
+            return m_project.m_files.at(row).name();
         }
         if (role == Role::Font) {
             extern String g_currently_open_file;
-            if (m_project.m_files.at(row) == g_currently_open_file)
+            if (m_project.m_files.at(row).name() == g_currently_open_file)
                 return Font::default_bold_font();
             return {};
         }
@@ -30,9 +30,11 @@ private:
     Project& m_project;
 };
 
-Project::Project(Vector<String>&& files)
-    : m_files(move(files))
+Project::Project(Vector<String>&& filenames)
 {
+    for (auto& filename : filenames) {
+        m_files.append(TextDocument::construct_with_name(filename));
+    }
     m_model = adopt(*new ProjectModel(*this));
 }
 

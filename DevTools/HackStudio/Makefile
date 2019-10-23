@@ -2,6 +2,7 @@ include ../../Makefile.common
 
 OBJS = \
     Project.o \
+    TextDocument.o \
     TerminalWrapper.o \
     main.o
 
