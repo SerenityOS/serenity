@@ -45,13 +45,18 @@ void GTabWidget::resize_event(GResizeEvent& event)
 
 Rect GTabWidget::child_rect_for_size(const Size& size) const
 {
+    Rect rect;
     switch (m_tab_position) {
     case TabPosition::Top:
-        return { { container_padding(), bar_height() + container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+        rect = { { container_padding(), bar_height() + container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+        break;
     case TabPosition::Bottom:
-        return { { container_padding(), container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+        rect = { { container_padding(), container_padding() }, { size.width() - container_padding() * 2, size.height() - bar_height() - container_padding() * 2 } };
+        break;
     }
-    ASSERT_NOT_REACHED();
+    if (rect.is_empty())
+        return {};
+    return rect;
 }
 
 void GTabWidget::child_event(CChildEvent& event)

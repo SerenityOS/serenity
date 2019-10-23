@@ -44,6 +44,8 @@ void GWidget::child_event(CChildEvent& event)
 
 void GWidget::set_relative_rect(const Rect& rect)
 {
+    ASSERT(rect.width() >= 0 && rect.height() >= 0);
+
     if (rect == m_relative_rect)
         return;
 
