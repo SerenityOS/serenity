@@ -12,6 +12,7 @@
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GStatusBar.h>
+#include <LibGUI/GTabWidget.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GWidget.h>
@@ -71,7 +72,10 @@ int main(int argc, char** argv)
         project_list_view->update();
     };
 
-    auto terminal_wrapper = TerminalWrapper::construct(inner_splitter);
+    auto tab_widget = GTabWidget::construct(inner_splitter);
+
+    auto terminal_wrapper = TerminalWrapper::construct(nullptr);
+    tab_widget->add_widget("Console", terminal_wrapper);
 
     auto statusbar = GStatusBar::construct(widget);
 
