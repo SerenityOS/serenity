@@ -1,11 +1,12 @@
+#include "FindInFilesWidget.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
 #include <LibCore/CFile.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GButton.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GButton.h>
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GListView.h>
 #include <LibGUI/GMenu.h>
@@ -27,12 +28,10 @@ OwnPtr<Project> g_project;
 RefPtr<GWindow> g_window;
 RefPtr<GListView> g_project_list_view;
 RefPtr<GTextEditor> g_text_editor;
-RefPtr<GTextBox> g_find_in_files_textbox;
 
 static void build(TerminalWrapper&);
 static void run(TerminalWrapper&);
-static NonnullRefPtr<GWidget> build_find_in_files_widget();
-static void open_file(const String&);
+void open_file(const String&);
 
 int main(int argc, char** argv)
 {
@@ -75,7 +74,7 @@ int main(int argc, char** argv)
 
     auto tab_widget = GTabWidget::construct(inner_splitter);
 
-    auto find_in_files_widget = build_find_in_files_widget();
+    auto find_in_files_widget = FindInFilesWidget::construct(nullptr);
     tab_widget->add_widget("Find in files", find_in_files_widget);
 
     auto terminal_wrapper = TerminalWrapper::construct(nullptr);
@@ -116,8 +115,7 @@ int main(int argc, char** argv)
     auto edit_menu = make<GMenu>("Edit");
     edit_menu->add_action(GAction::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, [&](auto&) {
         tab_widget->set_active_widget(find_in_files_widget);
-        g_find_in_files_textbox->select_all();
-        g_find_in_files_textbox->set_focus(true);
+        find_in_files_widget->focus_textbox_and_select_all();
     }));
     menubar->add_menu(move(edit_menu));
 
@@ -154,82 +152,6 @@ void build(TerminalWrapper& wrapper)
 void run(TerminalWrapper& wrapper)
 {
     wrapper.run_command("make run");
-}
-
-struct FilenameAndLineNumber {
-    String filename;
-    int line_number { -1 };
-};
-
-class SearchResultsModel final : public GModel {
-public:
-    explicit SearchResultsModel(const Vector<FilenameAndLineNumber>&& matches)
-        : m_matches(move(matches))
-    {
-    }
-
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override { return m_matches.size(); }
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return 1; }
-    virtual GVariant data(const GModelIndex& index, Role role = Role::Display) const override
-    {
-        if (role == Role::Display) {
-            auto& match = m_matches.at(index.row());
-            return String::format("%s:%d", match.filename.characters(), match.line_number);
-        }
-        return {};
-    }
-    virtual void update() override {}
-
-private:
-    Vector<FilenameAndLineNumber> m_matches;
-};
-
-static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
-{
-    Vector<FilenameAndLineNumber> matches;
-    g_project->for_each_text_file([&](auto& file) {
-        auto matches_in_file = file.find(text);
-        for (int match : matches_in_file) {
-            matches.append({ file.name(), match });
-        }
-    });
-
-    return adopt(*new SearchResultsModel(move(matches)));
-}
-
-NonnullRefPtr<GWidget> build_find_in_files_widget()
-{
-    auto widget = GWidget::construct();
-    widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    g_find_in_files_textbox = GTextBox::construct(widget);
-    g_find_in_files_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    g_find_in_files_textbox->set_preferred_size(0, 20);
-    auto button = GButton::construct("Find in files", widget);
-    button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    button->set_preferred_size(0, 20);
-
-    auto result_view = GListView::construct(widget);
-
-    result_view->on_activation = [result_view](auto& index) {
-        auto match_string = result_view->model()->data(index).to_string();
-        auto parts = match_string.split(':');
-        ASSERT(parts.size() == 2);
-        bool ok;
-        int line_number = parts[1].to_int(ok);
-        ASSERT(ok);
-        open_file(parts[0]);
-        g_text_editor->set_cursor(line_number - 1, 0);
-        g_text_editor->set_focus(true);
-    };
-
-    button->on_click = [result_view = result_view.ptr()](auto&) {
-        auto results_model = find_in_files(g_find_in_files_textbox->text());
-        result_view->set_model(results_model);
-    };
-    g_find_in_files_textbox->on_return_pressed = [button = button.ptr()] {
-        button->click();
-    };
-    return widget;
 }
 
 void open_file(const String& filename)
