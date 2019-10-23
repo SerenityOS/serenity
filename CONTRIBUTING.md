@@ -32,8 +32,3 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 * Use weasel-words like "refactor" or "fix" to avoid explaining what's being changed.
 * Include commented-out code.
 * Write in C.
-
-## Code of Conduct (lol)
-
-* You will be judged by your contributions first, and your sense of humor second.
-* Nobody owes you anything.
