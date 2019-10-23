@@ -1,11 +1,16 @@
+#include <LibDraw/StylePainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GResizeCorner.h>
 #include <LibGUI/GStatusBar.h>
-#include <LibDraw/StylePainter.h>
 
 GStatusBar::GStatusBar(GWidget* parent)
+    : GStatusBar(1, parent)
+{
+}
+
+GStatusBar::GStatusBar(int label_count, GWidget* parent)
     : GWidget(parent)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -13,11 +18,12 @@ GStatusBar::GStatusBar(GWidget* parent)
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
     layout()->set_margins({ 2, 2, 2, 2 });
     layout()->set_spacing(2);
-    m_label = GLabel::construct(this);
-    m_label->set_frame_shadow(FrameShadow::Sunken);
-    m_label->set_frame_shape(FrameShape::Panel);
-    m_label->set_frame_thickness(1);
-    m_label->set_text_alignment(TextAlignment::CenterLeft);
+
+    if (label_count < 1)
+        label_count = 1;
+
+    for (auto i = 0; i < label_count; i++)
+        m_labels.append(create_label());
 
     m_corner = GResizeCorner::construct(this);
 }
@@ -26,14 +32,34 @@ GStatusBar::~GStatusBar()
 {
 }
 
+NonnullRefPtr<GLabel> GStatusBar::create_label()
+{
+    auto label = GLabel::construct(this);
+    label->set_frame_shadow(FrameShadow::Sunken);
+    label->set_frame_shape(FrameShape::Panel);
+    label->set_frame_thickness(1);
+    label->set_text_alignment(TextAlignment::CenterLeft);
+    return label;
+}
+
 void GStatusBar::set_text(const StringView& text)
 {
-    m_label->set_text(text);
+    m_labels.first().set_text(text);
 }
 
 String GStatusBar::text() const
 {
-    return m_label->text();
+    return m_labels.first().text();
+}
+
+void GStatusBar::set_text(int index, const StringView& text)
+{
+    m_labels.at(index).set_text(text);
+}
+
+String GStatusBar::text(int index) const
+{
+    return m_labels.at(index).text();
 }
 
 void GStatusBar::paint_event(GPaintEvent& event)
