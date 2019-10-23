@@ -26,6 +26,7 @@ public:
 
     bool copy_selected_text_to_clipboard();
     bool copy_selected_hex_to_clipboard();
+    bool copy_selected_hex_to_clipboard_as_c_code();
 
     int bytes_per_row() const { return m_bytes_per_row; }
     void set_bytes_per_row(int);
