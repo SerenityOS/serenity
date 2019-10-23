@@ -18,11 +18,11 @@ int main(int argc, char** argv)
         return GWindow::CloseRequestDecision::StayOpen;
     };
 
-    if (argc >= 2)
-        hex_editor_widget->open_file(argv[1]);
-
     window->show();
     window->set_icon(load_png("/res/icons/16x16/app-hexeditor.png"));
+
+    if (argc >= 2)
+        hex_editor_widget->open_file(argv[1]);
 
     return app.exec();
 }
