@@ -27,6 +27,7 @@ OwnPtr<Project> g_project;
 RefPtr<GWindow> g_window;
 RefPtr<GListView> g_project_list_view;
 RefPtr<GTextEditor> g_text_editor;
+RefPtr<GTextBox> g_find_in_files_textbox;
 
 static void build(TerminalWrapper&);
 static void run(TerminalWrapper&);
@@ -74,7 +75,8 @@ int main(int argc, char** argv)
 
     auto tab_widget = GTabWidget::construct(inner_splitter);
 
-    tab_widget->add_widget("Find in files", build_find_in_files_widget());
+    auto find_in_files_widget = build_find_in_files_widget();
+    tab_widget->add_widget("Find in files", find_in_files_widget);
 
     auto terminal_wrapper = TerminalWrapper::construct(nullptr);
     tab_widget->add_widget("Console", terminal_wrapper);
@@ -110,6 +112,14 @@ int main(int argc, char** argv)
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
+
+    auto edit_menu = make<GMenu>("Edit");
+    edit_menu->add_action(GAction::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, [&](auto&) {
+        tab_widget->set_active_widget(find_in_files_widget);
+        g_find_in_files_textbox->select_all();
+        g_find_in_files_textbox->set_focus(true);
+    }));
+    menubar->add_menu(move(edit_menu));
 
     auto build_menu = make<GMenu>("Build");
     build_menu->add_action(GAction::create("Build", { Mod_Ctrl, Key_B }, [&](auto&) {
@@ -191,9 +201,9 @@ NonnullRefPtr<GWidget> build_find_in_files_widget()
 {
     auto widget = GWidget::construct();
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
-    auto textbox = GTextBox::construct(widget);
-    textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    textbox->set_preferred_size(0, 20);
+    g_find_in_files_textbox = GTextBox::construct(widget);
+    g_find_in_files_textbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    g_find_in_files_textbox->set_preferred_size(0, 20);
     auto button = GButton::construct("Find in files", widget);
     button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     button->set_preferred_size(0, 20);
@@ -212,9 +222,12 @@ NonnullRefPtr<GWidget> build_find_in_files_widget()
         g_text_editor->set_focus(true);
     };
 
-    button->on_click = [textbox, result_view = result_view.ptr()](auto&) {
-        auto results_model = find_in_files(textbox->text());
+    button->on_click = [result_view = result_view.ptr()](auto&) {
+        auto results_model = find_in_files(g_find_in_files_textbox->text());
         result_view->set_model(results_model);
+    };
+    g_find_in_files_textbox->on_return_pressed = [button = button.ptr()] {
+        button->click();
     };
     return widget;
 }
