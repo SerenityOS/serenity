@@ -10,12 +10,18 @@ class CircularQueue {
 public:
     CircularQueue()
     {
-        for (int i = 0; i < Capacity; ++i)
-            m_elements[i] = T();
+    }
+
+    ~CircularQueue()
+    {
+        clear();
     }
 
     void clear()
     {
+        for (int i = 0; i < m_size; ++i)
+            elements()[(m_head + i) % Capacity].~T();
+
         m_head = 0;
         m_size = 0;
     }
@@ -25,25 +31,36 @@ public:
 
     int capacity() const { return Capacity; }
 
-    void enqueue(const T& t)
+    void enqueue(T&& value)
     {
-        m_elements[(m_head + m_size) % Capacity] = t;
+        auto& slot = elements()[(m_head + m_size) % Capacity];
+        if (m_size == Capacity)
+            slot.~T();
+
+        new (&slot) T(value);
         if (m_size == Capacity)
             m_head = (m_head + 1) % Capacity;
         else
             ++m_size;
     }
 
+    void enqueue(const T& value)
+    {
+        enqueue(T(value));
+    }
+
     T dequeue()
     {
         ASSERT(!is_empty());
-        T value = m_elements[m_head];
+        auto& slot = elements()[m_head];
+        T value = move(slot);
+        slot.~T();
         m_head = (m_head + 1) % Capacity;
         --m_size;
         return value;
     }
 
-    const T& at(int index) const { return m_elements[(m_head + index) % Capacity]; }
+    const T& at(int index) const { return elements()[(m_head + index) % Capacity]; }
 
     const T& first() const { return at(0); }
     const T& last() const { return at(size() - 1); }
@@ -59,7 +76,7 @@ public:
             return *this;
         }
 
-        const T& operator*() const { return m_queue.m_elements[m_index]; }
+        const T& operator*() const { return m_queue.elements()[m_index]; }
 
     private:
         friend class CircularQueue;
@@ -78,8 +95,11 @@ public:
     int head_index() const { return m_head; }
 
 protected:
+    T* elements() { return reinterpret_cast<T*>(m_storage); }
+    const T* elements() const { return reinterpret_cast<const T*>(m_storage); }
+
     friend class ConstIterator;
-    T m_elements[Capacity];
+    alignas(T) u8 m_storage[sizeof(T) * Capacity];
     int m_size { 0 };
     int m_head { 0 };
 };
