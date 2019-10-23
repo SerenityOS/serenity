@@ -42,9 +42,9 @@ void GWidget::child_event(CChildEvent& event)
     return CObject::child_event(event);
 }
 
-void GWidget::set_relative_rect(const Rect& rect)
+void GWidget::set_relative_rect(const Rect& a_rect)
 {
-    ASSERT(rect.width() >= 0 && rect.height() >= 0);
+    Rect rect = a_rect.is_empty() ? Rect() : a_rect;
 
     if (rect == m_relative_rect)
         return;
