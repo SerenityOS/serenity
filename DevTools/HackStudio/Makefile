@@ -4,6 +4,7 @@ OBJS = \
     Project.o \
     TextDocument.o \
     TerminalWrapper.o \
+    FindInFilesWidget.o \
     main.o
 
 APP = HackStudio
