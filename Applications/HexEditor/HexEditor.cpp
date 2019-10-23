@@ -116,6 +116,29 @@ bool HexEditor::copy_selected_text_to_clipboard()
     return true;
 }
 
+bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
+{
+    if (m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty())
+        return false;
+
+    StringBuilder output_string_builder;
+    output_string_builder.appendf("unsigned char raw_data[%d] = {\n", (m_selection_end - m_selection_start) + 1);
+    output_string_builder.append("    ");
+    for (int i = m_selection_start, j = 1; i <= m_selection_end; i++, j++) {
+        output_string_builder.appendf("0x%02X", m_buffer.data()[i]);
+        if (i != m_selection_end)
+            output_string_builder.append(", ");
+        if ((j % 12) == 0) {
+            output_string_builder.append("\n");
+            output_string_builder.append("    ");
+        }
+    }
+    output_string_builder.append("\n};\n");
+
+    GClipboard::the().set_data(output_string_builder.to_string());
+    return true;
+}
+
 void HexEditor::set_bytes_per_row(int bytes_per_row)
 {
     m_bytes_per_row = bytes_per_row;
