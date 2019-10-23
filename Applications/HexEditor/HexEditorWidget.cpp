@@ -26,12 +26,11 @@ HexEditorWidget::HexEditorWidget()
     m_editor = HexEditor::construct(this);
 
     m_editor->on_status_change = [this](int position, HexEditor::EditMode edit_mode, int selection_start, int selection_end) {
-        m_statusbar->set_text(String::format("Offset: %8X, Edit Mode: %s, Selection Start: %d, Selection End: %d, Selected Bytes: %d",
-            position,
-            edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text",
-            selection_start,
-            selection_end,
-            (selection_end - selection_start) + 1));
+        m_statusbar->set_text(0, String::format("Offset: %8X", position));
+        m_statusbar->set_text(1, String::format("Edit Mode: %s", edit_mode == HexEditor::EditMode::Hex ? "Hex" : "Text"));
+        m_statusbar->set_text(2, String::format("Selection Start: %d", selection_start));
+        m_statusbar->set_text(3, String::format("Selection End: %d", selection_end));
+        m_statusbar->set_text(4, String::format("Selected Bytes: %d", (selection_end - selection_start) + 1));
     };
 
     m_editor->on_change = [this] {
@@ -41,7 +40,7 @@ HexEditorWidget::HexEditorWidget()
             update_title();
     };
 
-    m_statusbar = GStatusBar::construct(this);
+    m_statusbar = GStatusBar::construct(5, this);
 
     m_open_action = GCommonActions::make_open_action([this](auto&) {
         Optional<String> open_path = GFilePicker::get_open_filepath();
@@ -130,6 +129,10 @@ HexEditorWidget::HexEditorWidget()
     }));
     edit_menu->add_action(GAction::create("Copy Text", [&](const GAction&) {
         m_editor->copy_selected_text_to_clipboard();
+    }));
+    edit_menu->add_separator();
+    edit_menu->add_action(GAction::create("Copy As C Code", [&](const GAction&) {
+        m_editor->copy_selected_hex_to_clipboard_as_c_code();
     }));
     menubar->add_menu(move(edit_menu));
 
