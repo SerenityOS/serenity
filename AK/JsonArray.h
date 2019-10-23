@@ -62,6 +62,8 @@ public:
 
     const Vector<JsonValue>& values() const { return m_values; }
 
+    void ensure_capacity(int capacity) { m_values.ensure_capacity(capacity); }
+
 private:
     Vector<JsonValue> m_values;
 };
