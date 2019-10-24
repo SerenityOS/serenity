@@ -118,11 +118,11 @@ TerminalWrapper::TerminalWrapper(GWidget* parent)
 {
     set_layout(make<GBoxLayout>(Orientation::Vertical));
 
-    m_process_state_widget = ProcessStateWidget::construct(this);
-
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
     m_terminal_widget = TerminalWidget::construct(-1, false, config);
     add_child(*m_terminal_widget);
+
+    m_process_state_widget = ProcessStateWidget::construct(this);
 }
 
 TerminalWrapper::~TerminalWrapper()
