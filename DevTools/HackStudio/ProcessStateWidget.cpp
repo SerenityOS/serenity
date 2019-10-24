@@ -3,6 +3,7 @@
 #include <LibCore/CTimer.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
+#include <unistd.h>
 
 ProcessStateWidget::ProcessStateWidget(GWidget* parent)
     : GWidget(parent)
@@ -40,7 +41,7 @@ ProcessStateWidget::~ProcessStateWidget()
 
 void ProcessStateWidget::refresh()
 {
-    if (m_pid == -1) {
+    if (m_tty_fd == -1) {
         m_pid_label->set_text("(none)");
         m_state_label->set_text("n/a");
         m_cpu_label->set_text("n/a");
@@ -48,8 +49,10 @@ void ProcessStateWidget::refresh()
         return;
     }
 
+    pid_t pid = tcgetpgrp(m_tty_fd);
+
     auto processes = CProcessStatisticsReader::get_all();
-    auto child_process_data = processes.get(m_pid);
+    auto child_process_data = processes.get(pid);
 
     if (!child_process_data.has_value())
         return;
@@ -58,14 +61,14 @@ void ProcessStateWidget::refresh()
 
     auto& data = active_process_data.value();
 
-    m_pid_label->set_text(String::format("%s(%d)", data.name.characters(), m_pid));
+    m_pid_label->set_text(String::format("%s(%d)", data.name.characters(), pid));
     m_state_label->set_text(data.state);
     m_cpu_label->set_text(String::format("%d", data.times_scheduled));
     m_memory_label->set_text(String::format("%d", data.amount_resident));
 }
 
-void ProcessStateWidget::set_pid(pid_t pid)
+void ProcessStateWidget::set_tty_fd(int tty_fd)
 {
-    m_pid = pid;
+    m_tty_fd = tty_fd;
     refresh();
 }

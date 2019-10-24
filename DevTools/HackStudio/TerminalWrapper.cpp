@@ -45,7 +45,7 @@ void TerminalWrapper::run_command(const String& command)
         } else if (WIFSIGNALED(wstatus)) {
             m_terminal_widget->inject_string(String::format("\033[34;1m(Command signaled with %s!)\033[0m\n", strsignal(WTERMSIG(wstatus))));
         }
-        m_process_state_widget->set_pid(-1);
+        m_process_state_widget->set_tty_fd(-1);
         m_pid = -1;
     };
 
@@ -110,7 +110,7 @@ void TerminalWrapper::run_command(const String& command)
     }
 
     // Parent process, cont'd.
-    m_process_state_widget->set_pid(m_pid);
+    m_process_state_widget->set_tty_fd(ptm_fd);
 }
 
 TerminalWrapper::TerminalWrapper(GWidget* parent)
