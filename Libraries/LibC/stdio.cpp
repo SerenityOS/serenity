@@ -395,7 +395,6 @@ int sprintf(char* buffer, const char* fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     int ret = vsprintf(buffer, fmt, ap);
-    buffer[ret] = '\0';
     va_end(ap);
     return ret;
 }
@@ -413,7 +412,9 @@ int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
 {
     __vsnprintf_space_remaining = size;
     int ret = printf_internal(sized_buffer_putch, buffer, fmt, ap);
-    buffer[ret] = '\0';
+    if (__vsnprintf_space_remaining) {
+	    buffer[ret] = '\0';
+    }
     return ret;
 }
 
@@ -422,7 +423,6 @@ int snprintf(char* buffer, size_t size, const char* fmt, ...)
     va_list ap;
     va_start(ap, fmt);
     int ret = vsnprintf(buffer, size, fmt, ap);
-    buffer[ret] = '\0';
     va_end(ap);
     return ret;
 }
