@@ -1128,6 +1128,8 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
+    if (description->is_directory())
+        return -EISDIR;
     if (description->is_blocking()) {
         if (!description->can_read()) {
             if (current->block<Thread::ReadBlocker>(*description) == Thread::BlockResult::InterruptedBySignal)
