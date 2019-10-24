@@ -5,6 +5,7 @@ OBJS = \
     TextDocument.o \
     TerminalWrapper.o \
     FindInFilesWidget.o \
+    ProcessStateWidget.o \
     main.o
 
 APP = HackStudio
