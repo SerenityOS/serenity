@@ -142,11 +142,13 @@ int main(int argc, char** argv)
     menubar->add_menu(move(edit_menu));
 
     auto build_action = GAction::create("Build", { Mod_Ctrl, Key_B }, GraphicsBitmap::load_from_file("/res/icons/16x16/build.png"), [&](auto&) {
+        tab_widget->set_active_widget(terminal_wrapper);
         build(terminal_wrapper);
     });
     toolbar->add_action(build_action);
 
     auto run_action = GAction::create("Run", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/run.png"), [&](auto&) {
+        tab_widget->set_active_widget(terminal_wrapper);
         run(terminal_wrapper);
     });
     toolbar->add_action(run_action);
