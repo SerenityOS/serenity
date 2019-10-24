@@ -2,6 +2,7 @@
 
 #include <LibGUI/GWidget.h>
 
+class ProcessStateWidget;
 class TerminalWidget;
 
 class TerminalWrapper final : public GWidget {
@@ -14,6 +15,7 @@ public:
 private:
     explicit TerminalWrapper(GWidget* parent);
 
+    RefPtr<ProcessStateWidget> m_process_state_widget;
     RefPtr<TerminalWidget> m_terminal_widget;
     pid_t m_pid { -1 };
 };

@@ -1,4 +1,5 @@
 #include "TerminalWrapper.h"
+#include "ProcessStateWidget.h"
 #include <AK/String.h>
 #include <LibCore/CConfigFile.h>
 #include <LibGUI/GBoxLayout.h>
@@ -44,6 +45,7 @@ void TerminalWrapper::run_command(const String& command)
         } else if (WIFSIGNALED(wstatus)) {
             m_terminal_widget->inject_string(String::format("\033[34;1m(Command signaled with %s!)\033[0m\n", strsignal(WTERMSIG(wstatus))));
         }
+        m_process_state_widget->set_pid(-1);
         m_pid = -1;
     };
 
@@ -106,12 +108,17 @@ void TerminalWrapper::run_command(const String& command)
         }
         ASSERT_NOT_REACHED();
     }
+
+    // Parent process, cont'd.
+    m_process_state_widget->set_pid(m_pid);
 }
 
 TerminalWrapper::TerminalWrapper(GWidget* parent)
     : GWidget(parent)
 {
     set_layout(make<GBoxLayout>(Orientation::Vertical));
+
+    m_process_state_widget = ProcessStateWidget::construct(this);
 
     RefPtr<CConfigFile> config = CConfigFile::get_for_app("Terminal");
     m_terminal_widget = TerminalWidget::construct(-1, false, config);
