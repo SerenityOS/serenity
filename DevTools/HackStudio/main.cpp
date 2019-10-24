@@ -67,6 +67,32 @@ int main(int argc, char** argv)
     g_text_editor = GTextEditor::construct(GTextEditor::MultiLine, inner_splitter);
     g_text_editor->set_ruler_visible(true);
 
+    auto new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
+        // FIXME: Implement.
+    });
+
+    auto open_action = GCommonActions::make_open_action([&](auto&) {
+        // FIXME: Implement.
+    });
+
+    auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
+        if (g_currently_open_file.is_empty())
+            return;
+        g_text_editor->write_to_file(g_currently_open_file);
+    });
+
+    toolbar->add_action(new_action);
+    toolbar->add_action(open_action);
+    toolbar->add_action(save_action);
+    toolbar->add_separator();
+    toolbar->add_action(g_text_editor->cut_action());
+    toolbar->add_action(g_text_editor->copy_action());
+    toolbar->add_action(g_text_editor->paste_action());
+    toolbar->add_separator();
+    toolbar->add_action(g_text_editor->undo_action());
+    toolbar->add_action(g_text_editor->redo_action());
+    toolbar->add_separator();
+
     g_project_list_view->on_activation = [&](auto& index) {
         auto filename = g_project_list_view->model()->data(index).to_string();
         open_file(filename);
@@ -102,11 +128,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("HackStudio");
-    app_menu->add_action(GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
-        if (g_currently_open_file.is_empty())
-            return;
-        g_text_editor->write_to_file(g_currently_open_file);
-    }));
+    app_menu->add_action(save_action);
     app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
@@ -119,13 +141,19 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(edit_menu));
 
-    auto build_menu = make<GMenu>("Build");
-    build_menu->add_action(GAction::create("Build", { Mod_Ctrl, Key_B }, [&](auto&) {
+    auto build_action = GAction::create("Build", { Mod_Ctrl, Key_B }, GraphicsBitmap::load_from_file("/res/icons/16x16/build.png"), [&](auto&) {
         build(terminal_wrapper);
-    }));
-    build_menu->add_action(GAction::create("Run", { Mod_Ctrl, Key_R }, [&](auto&) {
+    });
+    toolbar->add_action(build_action);
+
+    auto run_action = GAction::create("Run", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/run.png"), [&](auto&) {
         run(terminal_wrapper);
-    }));
+    });
+    toolbar->add_action(run_action);
+
+    auto build_menu = make<GMenu>("Build");
+    build_menu->add_action(build_action);
+    build_menu->add_action(run_action);
     menubar->add_menu(move(build_menu));
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
