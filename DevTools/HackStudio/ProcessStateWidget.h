@@ -10,7 +10,7 @@ class ProcessStateWidget final : public GWidget {
 public:
     virtual ~ProcessStateWidget() override;
 
-    void set_pid(pid_t);
+    void set_tty_fd(int);
 
 private:
     explicit ProcessStateWidget(GWidget* parent);
@@ -24,5 +24,5 @@ private:
 
     RefPtr<CTimer> m_timer;
 
-    pid_t m_pid { -1 };
+    int m_tty_fd { -1 };
 };
