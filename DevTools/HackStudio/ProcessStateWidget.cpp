@@ -10,6 +10,7 @@ ProcessStateWidget::ProcessStateWidget(GWidget* parent)
 {
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 20);
+    set_visible(false);
 
     set_layout(make<GBoxLayout>(Orientation::Horizontal));
 
@@ -41,14 +42,6 @@ ProcessStateWidget::~ProcessStateWidget()
 
 void ProcessStateWidget::refresh()
 {
-    if (m_tty_fd == -1) {
-        m_pid_label->set_text("(none)");
-        m_state_label->set_text("n/a");
-        m_cpu_label->set_text("n/a");
-        m_memory_label->set_text("n/a");
-        return;
-    }
-
     pid_t pid = tcgetpgrp(m_tty_fd);
 
     auto processes = CProcessStatisticsReader::get_all();
@@ -70,5 +63,10 @@ void ProcessStateWidget::refresh()
 void ProcessStateWidget::set_tty_fd(int tty_fd)
 {
     m_tty_fd = tty_fd;
+    if (m_tty_fd == -1) {
+        set_visible(false);
+        return;
+    }
+    set_visible(true);
     refresh();
 }
