@@ -33,6 +33,7 @@ public:
     bool quit_when_last_window_deleted() const { return m_quit_when_last_window_deleted; }
     void set_quit_when_last_window_deleted(bool b) { m_quit_when_last_window_deleted = b; }
 
+    void did_create_window(Badge<GWindow>);
     void did_delete_last_window(Badge<GWindow>);
 
     const String& invoked_as() const { return m_invoked_as; }
