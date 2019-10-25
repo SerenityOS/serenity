@@ -6,6 +6,7 @@ OBJS = \
     TerminalWrapper.o \
     FindInFilesWidget.o \
     ProcessStateWidget.o \
+    CppLexer.o \
     main.o
 
 APP = HackStudio
