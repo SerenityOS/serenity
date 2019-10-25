@@ -45,6 +45,7 @@ public:
     static void unregister_notifier(Badge<CNotifier>, CNotifier&);
 
     void quit(int);
+    void unquit();
 
     void take_pending_events_from(CEventLoop& other)
     {
