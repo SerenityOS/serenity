@@ -17,7 +17,15 @@ char CppLexer::peek(int offset) const
 char CppLexer::consume()
 {
     ASSERT(m_index < m_input.length());
-    return m_input[m_index++];
+    char ch = m_input[m_index++];
+    m_previous_position = m_position;
+    if (ch == '\n') {
+        m_position.line++;
+        m_position.column = 0;
+    } else {
+        m_position.column++;
+    }
+    return ch;
 }
 
 static bool is_valid_first_character_of_identifier(char ch)
@@ -41,22 +49,27 @@ Vector<CppToken> CppLexer::lex()
 {
     Vector<CppToken> tokens;
 
+    int token_start_index = 0;
+    CppPosition token_start_position;
+
     auto emit_token = [&](auto type) {
         CppToken token;
         token.m_type = type;
-        token.m_view = StringView(m_input.characters_without_null_termination() + m_index, 1);
+        token.m_start = m_position;
+        token.m_end = m_position;
         tokens.append(token);
-        m_index++;
+        consume();
     };
 
-    int token_start_index = 0;
     auto begin_token = [&] {
         token_start_index = m_index;
+        token_start_position = m_position;
     };
     auto commit_token = [&](auto type) {
         CppToken token;
         token.m_type = type;
-        token.m_view = StringView(m_input.characters_without_null_termination() + token_start_index, m_index - token_start_index);
+        token.m_start = token_start_position;
+        token.m_end = m_previous_position;
         tokens.append(token);
     };
 
