@@ -1,3 +1,4 @@
+#include "CppLexer.h"
 #include "FindInFilesWidget.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
@@ -190,6 +191,27 @@ void run(TerminalWrapper& wrapper)
     wrapper.run_command("make run");
 }
 
+static Color color_for_token_type(CppToken::Type type)
+{
+    switch (type) {
+    case CppToken::Type::Keyword:
+        return Color::Green;
+    case CppToken::Type::Identifier:
+        return Color::Blue;
+    case CppToken::Type::DoubleQuotedString:
+    case CppToken::Type::SingleQuotedString:
+        return Color::Red;
+    case CppToken::Type::Number:
+        return Color::Blue;
+    case CppToken::Type::PreprocessorStatement:
+        return Color::Magenta;
+    case CppToken::Type::Comment:
+        return Color::MidGray;
+    default:
+        return Color::Black;
+    }
+}
+
 void open_file(const String& filename)
 {
     auto file = CFile::construct(filename);
@@ -197,8 +219,25 @@ void open_file(const String& filename)
         GMessageBox::show("Could not open!", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
         return;
     }
-    g_text_editor->set_text(file->read_all());
+    auto contents = file->read_all();
+    g_text_editor->set_text(contents);
     g_currently_open_file = filename;
     g_window->set_title(String::format("%s - HackStudio", g_currently_open_file.characters()));
     g_project_list_view->update();
+
+    if (filename.ends_with(".cpp")) {
+        CppLexer lexer(contents);
+        auto tokens = lexer.lex();
+
+        Vector<GTextEditor::Span> spans;
+        for (auto& token : tokens) {
+            dbg() << token.to_string() << " @ " << token.m_start.line << ":" << token.m_start.column << " - " << token.m_end.line << ":" << token.m_end.column;
+            GTextEditor::Span span;
+            span.start = { token.m_start.line, token.m_start.column };
+            span.end = { token.m_end.line, token.m_end.column };
+            span.color = color_for_token_type(token.m_type);
+            spans.append(span);
+        }
+        g_text_editor->set_spans(spans);
+    }
 }
