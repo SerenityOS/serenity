@@ -186,6 +186,13 @@ void CEventLoop::quit(int code)
     m_exit_code = code;
 }
 
+void CEventLoop::unquit()
+{
+    dbg() << "CEventLoop::unquit()";
+    m_exit_requested = false;
+    m_exit_code = 0;
+}
+
 struct CEventLoopPusher {
 public:
     CEventLoopPusher(CEventLoop& event_loop)
