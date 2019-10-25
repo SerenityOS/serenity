@@ -180,6 +180,7 @@ public:
         GTextPosition start;
         GTextPosition end;
         Color color;
+        const Font* font { nullptr };
     };
 
     void set_spans(const Vector<Span>& spans)
