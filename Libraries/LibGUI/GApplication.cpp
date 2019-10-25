@@ -119,6 +119,12 @@ void GApplication::hide_tooltip()
     }
 }
 
+void GApplication::did_create_window(Badge<GWindow>)
+{
+    if (m_event_loop->was_exit_requested())
+        m_event_loop->unquit();
+}
+
 void GApplication::did_delete_last_window(Badge<GWindow>)
 {
     if (m_quit_when_last_window_deleted)
