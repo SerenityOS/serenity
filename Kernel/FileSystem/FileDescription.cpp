@@ -34,6 +34,7 @@ FileDescription::FileDescription(File& file)
         m_inode = static_cast<InodeFile&>(file).inode();
     if (is_socket())
         socket()->attach(*this);
+    m_is_directory = metadata().is_directory();
 }
 
 FileDescription::~FileDescription()
@@ -138,19 +139,15 @@ ByteBuffer FileDescription::read_entire_file()
     return m_inode->read_entire(this);
 }
 
-bool FileDescription::is_directory() const
-{
-    ASSERT(!is_fifo());
-    return metadata().is_directory();
-}
 
 ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
 {
+    if (!is_directory())
+        return -ENOTDIR;
+
     auto metadata = this->metadata();
     if (!metadata.is_valid())
         return -EIO;
-    if (!metadata.is_directory())
-        return -ENOTDIR;
 
     int size_to_allocate = max(PAGE_SIZE, metadata.size);
 
