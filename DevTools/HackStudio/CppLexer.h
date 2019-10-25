@@ -4,7 +4,7 @@
 #include <AK/Vector.h>
 
 #define FOR_EACH_TOKEN_TYPE        \
-    __TOKEN(Invalid)               \
+    __TOKEN(Unknown)               \
     __TOKEN(Whitespace)            \
     __TOKEN(PreprocessorStatement) \
     __TOKEN(LeftParen)             \
@@ -47,7 +47,7 @@ struct CppToken {
         ASSERT_NOT_REACHED();
     }
 
-    Type m_type { Type::Invalid };
+    Type m_type { Type::Unknown };
     CppPosition m_start;
     CppPosition m_end;
 };

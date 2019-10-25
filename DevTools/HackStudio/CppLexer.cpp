@@ -1,5 +1,6 @@
 #include "CppLexer.h"
-#include <AK/LogStream.h>
+#include <AK/HashTable.h>
+#include <AK/String.h>
 #include <ctype.h>
 
 CppLexer::CppLexer(const StringView& input)
@@ -40,9 +41,95 @@ static bool is_valid_nonfirst_character_of_identifier(char ch)
 
 static bool is_keyword(const StringView& string)
 {
-    if (string == "int" || string == "char" || string == "return")
-        return true;
-    return false;
+    static HashTable<String> keywords;
+    if (keywords.is_empty()) {
+        keywords.set("alignas");
+        keywords.set("alignof");
+        keywords.set("and");
+        keywords.set("and_eq");
+        keywords.set("asm");
+        keywords.set("auto");
+        keywords.set("bitand");
+        keywords.set("bitor");
+        keywords.set("bool");
+        keywords.set("break");
+        keywords.set("case");
+        keywords.set("catch");
+        keywords.set("char");
+        keywords.set("char8_t");
+        keywords.set("char16_t");
+        keywords.set("char32_t");
+        keywords.set("class");
+        keywords.set("compl");
+        keywords.set("const");
+        keywords.set("constexpr");
+        keywords.set("const_cast");
+        keywords.set("continue");
+        keywords.set("decltype");
+        keywords.set("default");
+        keywords.set("delete");
+        keywords.set("do");
+        keywords.set("double");
+        keywords.set("dynamic_cast");
+        keywords.set("else");
+        keywords.set("enum");
+        keywords.set("explicit");
+        keywords.set("export");
+        keywords.set("extern");
+        keywords.set("false");
+        keywords.set("float");
+        keywords.set("for");
+        keywords.set("friend");
+        keywords.set("goto");
+        keywords.set("if");
+        keywords.set("inline");
+        keywords.set("int");
+        keywords.set("long");
+        keywords.set("mutable");
+        keywords.set("namespace");
+        keywords.set("new");
+        keywords.set("noexcept");
+        keywords.set("not");
+        keywords.set("not_eq");
+        keywords.set("nullptr");
+        keywords.set("operator");
+        keywords.set("or");
+        keywords.set("or_eq");
+        keywords.set("private");
+        keywords.set("protected");
+        keywords.set("public");
+        keywords.set("register");
+        keywords.set("reinterpret_cast");
+        keywords.set("return");
+        keywords.set("short");
+        keywords.set("signed");
+        keywords.set("sizeof");
+        keywords.set("static");
+        keywords.set("static_assert");
+        keywords.set("static_cast");
+        keywords.set("struct");
+        keywords.set("switch");
+        keywords.set("template");
+        keywords.set("this");
+        keywords.set("thread_local");
+        keywords.set("throw");
+        keywords.set("true");
+        keywords.set("try");
+        keywords.set("typedef");
+        keywords.set("typeid");
+        keywords.set("typename");
+        keywords.set("union");
+        keywords.set("unsigned");
+        keywords.set("using");
+        keywords.set("virtual");
+        keywords.set("void");
+        keywords.set("volatile");
+        keywords.set("wchar_t");
+        keywords.set("while");
+        keywords.set("xor");
+        keywords.set("xor_eq");
+    }
+    return keywords.contains(string);
 }
 
 Vector<CppToken> CppLexer::lex()
@@ -143,7 +230,7 @@ Vector<CppToken> CppLexer::lex()
             }
             consume();
             consume();
-            emit_token(CppToken::Type::Comment);
+            commit_token(CppToken::Type::Comment);
             continue;
         }
         if (ch == '"') {
@@ -186,7 +273,7 @@ Vector<CppToken> CppLexer::lex()
             continue;
         }
         dbg() << "Unimplemented token character: " << ch;
-        ASSERT_NOT_REACHED();
+        emit_token(CppToken::Type::Unknown);
     }
     return tokens;
 }
