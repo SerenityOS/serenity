@@ -84,6 +84,7 @@ void GWindow::show()
     apply_icon();
 
     reified_windows.set(m_window_id, this);
+    GApplication::the().did_create_window({});
     update();
 }
 
