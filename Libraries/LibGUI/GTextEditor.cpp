@@ -371,6 +371,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                 int advance = font().glyph_width(' ') + font().glyph_spacing();
                 Rect character_rect = { visual_line_rect.location(), { font().glyph_width(' '), line_height() } };
                 for (int i = 0; i < visual_line_text.length(); ++i) {
+                    const Font* font = &this->font();
                     Color color;
                     int physical_line = line_index;
                     int physical_column = start_of_visual_line + i;
@@ -379,9 +380,11 @@ void GTextEditor::paint_event(GPaintEvent& event)
                         if (!span.contains(GTextPosition(physical_line, physical_column)))
                             continue;
                         color = span.color;
+                        if (span.font)
+                            font = span.font;
                         break;
                     }
-                    painter.draw_text(character_rect, visual_line_text.substring_view(i, 1), m_text_alignment, color);
+                    painter.draw_text(character_rect, visual_line_text.substring_view(i, 1), *font, m_text_alignment, color);
                     character_rect.move_by(advance, 0);
                 }
             }
