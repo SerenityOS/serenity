@@ -29,6 +29,12 @@ RefPtr<GWindow> g_window;
 RefPtr<GListView> g_project_list_view;
 RefPtr<GTextEditor> g_text_editor;
 
+GTextEditor& main_editor()
+{
+    ASSERT(g_text_editor);
+    return *g_text_editor;
+}
+
 static void build(TerminalWrapper&);
 static void run(TerminalWrapper&);
 void open_file(const String&);
@@ -109,7 +115,7 @@ int main(int argc, char** argv)
     auto statusbar = GStatusBar::construct(widget);
 
     g_text_editor->on_cursor_change = [&] {
-        statusbar->set_text(String::format("Line: %d, Column: %d", g_text_editor->cursor().line(), g_text_editor->cursor().column()));
+        statusbar->set_text(String::format("Line: %d, Column: %d", g_text_editor->cursor().line() + 1, g_text_editor->cursor().column()));
     };
 
     g_text_editor->add_custom_context_menu_action(GAction::create(
