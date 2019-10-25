@@ -191,24 +191,28 @@ void run(TerminalWrapper& wrapper)
     wrapper.run_command("make run");
 }
 
-static Color color_for_token_type(CppToken::Type type)
+struct TextStyle {
+    Color color;
+    const Font* font { nullptr };
+};
+
+static TextStyle style_for_token_type(CppToken::Type type)
 {
     switch (type) {
     case CppToken::Type::Keyword:
-        return Color::Green;
+        return { Color::Black, &Font::default_bold_fixed_width_font() };
     case CppToken::Type::Identifier:
-        return Color::Blue;
+        return { Color::Blue };
     case CppToken::Type::DoubleQuotedString:
     case CppToken::Type::SingleQuotedString:
-        return Color::Red;
     case CppToken::Type::Number:
-        return Color::Blue;
+        return { Color::Red };
     case CppToken::Type::PreprocessorStatement:
-        return Color::Magenta;
+        return { Color::Magenta };
     case CppToken::Type::Comment:
-        return Color::MidGray;
+        return { Color::from_rgb(0x008200) };
     default:
-        return Color::Black;
+        return { Color::Black };
     }
 }
 
@@ -235,7 +239,9 @@ void open_file(const String& filename)
             GTextEditor::Span span;
             span.start = { token.m_start.line, token.m_start.column };
             span.end = { token.m_end.line, token.m_end.column };
-            span.color = color_for_token_type(token.m_type);
+            auto style = style_for_token_type(token.m_type);
+            span.color = style.color;
+            span.font = style.font;
             spans.append(span);
         }
         g_text_editor->set_spans(spans);
