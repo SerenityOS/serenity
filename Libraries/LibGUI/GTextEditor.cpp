@@ -364,7 +364,27 @@ void GTextEditor::paint_event(GPaintEvent& event)
 #ifdef DEBUG_GTEXTEDITOR
             painter.draw_rect(visual_line_rect, Color::Cyan);
 #endif
-            painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, Color::Black);
+            if (m_spans.is_empty()) {
+                // Fast-path for plain text
+                painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, Color::Black);
+            } else {
+                int advance = font().glyph_width(' ') + font().glyph_spacing();
+                Rect character_rect = { visual_line_rect.location(), { font().glyph_width(' '), line_height() } };
+                for (int i = 0; i < visual_line_text.length(); ++i) {
+                    Color color;
+                    int physical_line = line_index;
+                    int physical_column = start_of_visual_line + i;
+                    // FIXME: This is *horribly* inefficient.
+                    for (auto& span : m_spans) {
+                        if (!span.contains(GTextPosition(physical_line, physical_column)))
+                            continue;
+                        color = span.color;
+                        break;
+                    }
+                    painter.draw_text(character_rect, visual_line_text.substring_view(i, 1), m_text_alignment, color);
+                    character_rect.move_by(advance, 0);
+                }
+            }
             bool physical_line_has_selection = has_selection && line_index >= selection.start().line() && line_index <= selection.end().line();
             if (physical_line_has_selection) {
 

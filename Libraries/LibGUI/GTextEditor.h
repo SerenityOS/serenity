@@ -167,6 +167,26 @@ public:
     void set_cursor(int line, int column);
     void set_cursor(const GTextPosition&);
 
+    struct Span {
+        bool contains(const GTextPosition& position) const
+        {
+            if (!(position.line() > start.line() || (position.line() == start.line() && position.column() >= start.column())))
+                return false;
+            if (!(position.line() < end.line() || (position.line() == end.line() && position.column() <= end.column())))
+                return false;
+            return true;
+        }
+
+        GTextPosition start;
+        GTextPosition end;
+        Color color;
+    };
+
+    void set_spans(const Vector<Span>& spans)
+    {
+        m_spans = spans;
+    }
+
 protected:
     GTextEditor(Type, GWidget* parent);
 
@@ -187,7 +207,6 @@ protected:
     virtual void resize_event(GResizeEvent&) override;
 
 private:
-
     void create_actions();
     void paint_ruler(Painter&);
     void update_content_size();
@@ -274,6 +293,8 @@ private:
     RefPtr<GAction> m_delete_action;
     CElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
+
+    Vector<Span> m_spans;
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const GTextPosition& value)
