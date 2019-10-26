@@ -48,28 +48,22 @@ static bool is_keyword(const StringView& string)
         keywords.set("and");
         keywords.set("and_eq");
         keywords.set("asm");
-        keywords.set("auto");
         keywords.set("bitand");
         keywords.set("bitor");
         keywords.set("bool");
         keywords.set("break");
         keywords.set("case");
         keywords.set("catch");
-        keywords.set("char");
-        keywords.set("char8_t");
-        keywords.set("char16_t");
-        keywords.set("char32_t");
         keywords.set("class");
         keywords.set("compl");
         keywords.set("const");
-        keywords.set("constexpr");
         keywords.set("const_cast");
+        keywords.set("constexpr");
         keywords.set("continue");
         keywords.set("decltype");
         keywords.set("default");
         keywords.set("delete");
         keywords.set("do");
-        keywords.set("double");
         keywords.set("dynamic_cast");
         keywords.set("else");
         keywords.set("enum");
@@ -77,14 +71,12 @@ static bool is_keyword(const StringView& string)
         keywords.set("export");
         keywords.set("extern");
         keywords.set("false");
-        keywords.set("float");
+        keywords.set("final");
         keywords.set("for");
         keywords.set("friend");
         keywords.set("goto");
         keywords.set("if");
         keywords.set("inline");
-        keywords.set("int");
-        keywords.set("long");
         keywords.set("mutable");
         keywords.set("namespace");
         keywords.set("new");
@@ -95,13 +87,13 @@ static bool is_keyword(const StringView& string)
         keywords.set("operator");
         keywords.set("or");
         keywords.set("or_eq");
+        keywords.set("override");
         keywords.set("private");
         keywords.set("protected");
         keywords.set("public");
         keywords.set("register");
         keywords.set("reinterpret_cast");
         keywords.set("return");
-        keywords.set("short");
         keywords.set("signed");
         keywords.set("sizeof");
         keywords.set("static");
@@ -119,17 +111,80 @@ static bool is_keyword(const StringView& string)
         keywords.set("typeid");
         keywords.set("typename");
         keywords.set("union");
-        keywords.set("unsigned");
         keywords.set("using");
         keywords.set("virtual");
-        keywords.set("void");
         keywords.set("volatile");
-        keywords.set("wchar_t");
         keywords.set("while");
         keywords.set("xor");
         keywords.set("xor_eq");
     }
     return keywords.contains(string);
+}
+
+static bool is_known_type(const StringView& string)
+{
+    static HashTable<String> types;
+    if (types.is_empty()) {
+        types.set("ByteBuffer");
+        types.set("CircularDeque");
+        types.set("CircularQueue");
+        types.set("Deque");
+        types.set("DoublyLinkedList");
+        types.set("FileSystemPath");
+        types.set("FixedArray");
+        types.set("Function");
+        types.set("HashMap");
+        types.set("HashTable");
+        types.set("IPv4Address");
+        types.set("InlineLinkedList");
+        types.set("IntrusiveList");
+        types.set("JsonArray");
+        types.set("JsonObject");
+        types.set("JsonValue");
+        types.set("MappedFile");
+        types.set("NetworkOrdered");
+        types.set("NonnullOwnPtr");
+        types.set("NonnullOwnPtrVector");
+        types.set("NonnullRefPtr");
+        types.set("NonnullRefPtrVector");
+        types.set("Optional");
+        types.set("OwnPtr");
+        types.set("RefPtr");
+        types.set("Result");
+        types.set("ScopeGuard");
+        types.set("SinglyLinkedList");
+        types.set("String");
+        types.set("StringBuilder");
+        types.set("StringImpl");
+        types.set("StringView");
+        types.set("Utf8View");
+        types.set("Vector");
+        types.set("WeakPtr");
+        types.set("auto");
+        types.set("char");
+        types.set("char16_t");
+        types.set("char32_t");
+        types.set("char8_t");
+        types.set("double");
+        types.set("float");
+        types.set("i16");
+        types.set("i32");
+        types.set("i64");
+        types.set("i8");
+        types.set("int");
+        types.set("int");
+        types.set("long");
+        types.set("short");
+        types.set("signed");
+        types.set("u16");
+        types.set("u32");
+        types.set("u64");
+        types.set("u8");
+        types.set("unsigned");
+        types.set("void");
+        types.set("wchar_t");
+    }
+    return types.contains(string);
 }
 
 Vector<CppToken> CppLexer::lex()
@@ -268,6 +323,8 @@ Vector<CppToken> CppLexer::lex()
             auto token_view = StringView(m_input.characters_without_null_termination() + token_start_index, m_index - token_start_index);
             if (is_keyword(token_view))
                 commit_token(CppToken::Type::Keyword);
+            else if (is_known_type(token_view))
+                commit_token(CppToken::Type::KnownType);
             else
                 commit_token(CppToken::Type::Identifier);
             continue;

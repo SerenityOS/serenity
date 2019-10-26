@@ -21,6 +21,7 @@
     __TOKEN(Comment)               \
     __TOKEN(Number)                \
     __TOKEN(Keyword)               \
+    __TOKEN(KnownType)             \
     __TOKEN(Identifier)
 
 struct CppPosition {

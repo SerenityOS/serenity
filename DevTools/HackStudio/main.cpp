@@ -178,6 +178,8 @@ int main(int argc, char** argv)
     g_window->set_icon(small_icon);
 
     g_window->show();
+
+    open_file("main.cpp");
     return app.exec();
 }
 
@@ -201,19 +203,44 @@ static TextStyle style_for_token_type(CppToken::Type type)
     switch (type) {
     case CppToken::Type::Keyword:
         return { Color::Black, &Font::default_bold_fixed_width_font() };
+    case CppToken::Type::KnownType:
+        return { Color::from_rgb(0x929200), &Font::default_bold_fixed_width_font() };
     case CppToken::Type::Identifier:
-        return { Color::Blue };
+        return { Color::from_rgb(0x000092), &Font::default_bold_fixed_width_font() };
     case CppToken::Type::DoubleQuotedString:
     case CppToken::Type::SingleQuotedString:
     case CppToken::Type::Number:
-        return { Color::Red };
+        return { Color::from_rgb(0x920000) };
     case CppToken::Type::PreprocessorStatement:
-        return { Color::Magenta };
+        return { Color::from_rgb(0x009292) };
     case CppToken::Type::Comment:
-        return { Color::from_rgb(0x008200) };
+        return { Color::from_rgb(0x009200) };
     default:
         return { Color::Black };
     }
+}
+
+static void rehighlight()
+{
+    auto text = g_text_editor->text();
+    CppLexer lexer(text);
+    auto tokens = lexer.lex();
+
+    Vector<GTextEditor::Span> spans;
+    for (auto& token : tokens) {
+#ifdef DEBUG_SYNTAX_HIGHLIGHTING
+        dbg() << token.to_string() << " @ " << token.m_start.line << ":" << token.m_start.column << " - " << token.m_end.line << ":" << token.m_end.column;
+#endif
+        GTextEditor::Span span;
+        span.start = { token.m_start.line, token.m_start.column };
+        span.end = { token.m_end.line, token.m_end.column };
+        auto style = style_for_token_type(token.m_type);
+        span.color = style.color;
+        span.font = style.font;
+        spans.append(span);
+    }
+    g_text_editor->set_spans(spans);
+    g_text_editor->update();
 }
 
 void open_file(const String& filename)
@@ -225,25 +252,15 @@ void open_file(const String& filename)
     }
     auto contents = file->read_all();
     g_text_editor->set_text(contents);
+
+    if (filename.ends_with(".cpp")) {
+        g_text_editor->on_change = [] { rehighlight(); };
+        rehighlight();
+    } else {
+        g_text_editor->on_change = nullptr;
+    }
+
     g_currently_open_file = filename;
     g_window->set_title(String::format("%s - HackStudio", g_currently_open_file.characters()));
     g_project_list_view->update();
-
-    if (filename.ends_with(".cpp")) {
-        CppLexer lexer(contents);
-        auto tokens = lexer.lex();
-
-        Vector<GTextEditor::Span> spans;
-        for (auto& token : tokens) {
-            dbg() << token.to_string() << " @ " << token.m_start.line << ":" << token.m_start.column << " - " << token.m_end.line << ":" << token.m_end.column;
-            GTextEditor::Span span;
-            span.start = { token.m_start.line, token.m_start.column };
-            span.end = { token.m_end.line, token.m_end.column };
-            auto style = style_for_token_type(token.m_type);
-            span.color = style.color;
-            span.font = style.font;
-            spans.append(span);
-        }
-        g_text_editor->set_spans(spans);
-    }
 }
