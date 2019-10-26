@@ -42,6 +42,31 @@ HexEditorWidget::HexEditorWidget()
 
     m_statusbar = GStatusBar::construct(5, this);
 
+    m_new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [this](const GAction&) {
+        if (m_document_dirty) {
+            auto save_document_first_box = GMessageBox::construct("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
+            auto save_document_first_result = save_document_first_box->exec();
+
+            if (save_document_first_result != GDialog::ExecResult::ExecOK)
+                return;
+            m_save_action->activate();
+        }
+
+        auto input_box = GInputBox::construct("Enter new file size:", "New file size", this);
+        if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
+            auto valid = false;
+            auto file_size = input_box->text_value().to_int(valid);
+            if (valid) {
+                m_document_dirty = false;
+                m_editor->set_buffer(ByteBuffer::create_zeroed(file_size));
+                set_path(FileSystemPath());
+                update_title();
+            } else {
+                GMessageBox::show(String::format("Invalid file size entered.", strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            }
+        }
+    });
+
     m_open_action = GCommonActions::make_open_action([this](auto&) {
         Optional<String> open_path = GFilePicker::get_open_filepath();
 
@@ -82,6 +107,7 @@ HexEditorWidget::HexEditorWidget()
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("Hex Editor");
+    app_menu->add_action(*m_new_action);
     app_menu->add_action(*m_open_action);
     app_menu->add_action(*m_save_action);
     app_menu->add_action(*m_save_as_action);
