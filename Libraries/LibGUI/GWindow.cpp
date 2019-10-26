@@ -736,3 +736,16 @@ void GWindow::set_fullscreen(bool fullscreen)
     request.value = fullscreen;
     GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidSetFullscreen);
 }
+
+void GWindow::schedule_relayout()
+{
+    if (m_layout_pending)
+        return;
+    m_layout_pending = true;
+    deferred_invoke([this](auto&) {
+        if (main_widget())
+            main_widget()->do_layout();
+        update();
+        m_layout_pending = false;
+    });
+}

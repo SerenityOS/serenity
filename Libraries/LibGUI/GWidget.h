@@ -201,6 +201,8 @@ public:
 
     virtual void save_to(AK::JsonObject&) override;
 
+    void do_layout();
+
 protected:
     explicit GWidget(GWidget* parent = nullptr);
 
@@ -234,7 +236,6 @@ private:
     void handle_mouseup_event(GMouseEvent&);
     void handle_enter_event(CEvent&);
     void handle_leave_event(CEvent&);
-    void do_layout();
     void focus_previous_widget();
     void focus_next_widget();
 

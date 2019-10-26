@@ -146,6 +146,10 @@ void GWidget::set_layout(OwnPtr<GLayout>&& layout)
 
 void GWidget::do_layout()
 {
+    for_each_child_widget([&](auto& child) {
+        child.do_layout();
+        return IterationDecision::Continue;
+    });
     custom_layout();
     if (!m_layout)
         return;
@@ -434,19 +438,8 @@ void GWidget::set_size_policy(SizePolicy horizontal_policy, SizePolicy vertical_
 
 void GWidget::invalidate_layout()
 {
-    if (m_layout_dirty)
-        return;
-    m_layout_dirty = true;
-    deferred_invoke([this](auto&) {
-        m_layout_dirty = false;
-        auto* w = window();
-        if (!w)
-            return;
-        if (!w->main_widget())
-            return;
-        do_layout();
-        w->main_widget()->do_layout();
-    });
+    if (window())
+        window()->schedule_relayout();
 }
 
 void GWidget::set_visible(bool visible)
