@@ -373,11 +373,10 @@ void GTextEditor::paint_event(GPaintEvent& event)
                 for (int i = 0; i < visual_line_text.length(); ++i) {
                     const Font* font = &this->font();
                     Color color;
-                    int physical_line = line_index;
-                    int physical_column = start_of_visual_line + i;
+                    GTextPosition physical_position(line_index, start_of_visual_line + i);
                     // FIXME: This is *horribly* inefficient.
                     for (auto& span : m_spans) {
-                        if (!span.contains(GTextPosition(physical_line, physical_column)))
+                        if (!span.range.contains(physical_position))
                             continue;
                         color = span.color;
                         if (span.font)

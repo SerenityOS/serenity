@@ -78,6 +78,15 @@ public:
         return m_start == other.m_start && m_end == other.m_end;
     }
 
+    bool contains(const GTextPosition& position) const
+    {
+        if (!(position.line() > m_start.line() || (position.line() == m_start.line() && position.column() >= m_start.column())))
+            return false;
+        if (!(position.line() < m_end.line() || (position.line() == m_end.line() && position.column() <= m_end.column())))
+            return false;
+        return true;
+    }
+
 private:
     GTextPosition normalized_start() const { return m_start < m_end ? m_start : m_end; }
     GTextPosition normalized_end() const { return m_start < m_end ? m_end : m_start; }
@@ -168,17 +177,7 @@ public:
     void set_cursor(const GTextPosition&);
 
     struct Span {
-        bool contains(const GTextPosition& position) const
-        {
-            if (!(position.line() > start.line() || (position.line() == start.line() && position.column() >= start.column())))
-                return false;
-            if (!(position.line() < end.line() || (position.line() == end.line() && position.column() <= end.column())))
-                return false;
-            return true;
-        }
-
-        GTextPosition start;
-        GTextPosition end;
+        GTextRange range;
         Color color;
         const Font* font { nullptr };
     };
