@@ -315,4 +315,6 @@ void open_file(const String& filename)
     g_currently_open_file = filename;
     g_window->set_title(String::format("%s - HackStudio", g_currently_open_file.characters()));
     g_project_list_view->update();
+
+    g_text_editor->set_focus(true);
 }
