@@ -568,8 +568,12 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
+        int first_nonspace_column = current_line().first_non_whitespace_column();
         toggle_selection_if_needed_for_event(event);
-        set_cursor(m_cursor.line(), 0);
+        if (m_cursor.column() == first_nonspace_column)
+            set_cursor(m_cursor.line(), 0);
+        else
+            set_cursor(m_cursor.line(), first_nonspace_column);
         if (event.shift() && m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
@@ -1445,6 +1449,15 @@ int GTextEditor::Line::visual_line_containing(int column) const
         return IterationDecision::Continue;
     });
     return visual_line_index;
+}
+
+int GTextEditor::Line::first_non_whitespace_column() const
+{
+    for (int i = 0; i < length(); ++i) {
+        if (!isspace(m_text[i]))
+            return i;
+    }
+    return length();
 }
 
 void GTextEditor::add_custom_context_menu_action(GAction& action)

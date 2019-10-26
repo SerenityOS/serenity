@@ -233,6 +233,7 @@ private:
         void clear();
         void recompute_visual_lines();
         int visual_line_containing(int column) const;
+        int first_non_whitespace_column() const;
 
         template<typename Callback>
         void for_each_visual_line(Callback) const;
