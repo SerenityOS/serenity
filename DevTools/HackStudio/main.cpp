@@ -8,6 +8,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GFilePicker.h>
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GListView.h>
 #include <LibGUI/GMenu.h>
@@ -76,7 +77,7 @@ int main(int argc, char** argv)
     g_text_editor->set_line_wrapping_enabled(true);
     g_text_editor->set_automatic_indentation_enabled(true);
 
-    auto new_action = GAction::create("Add new file to project", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
+    auto new_action = GAction::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
         auto input_box = GInputBox::construct("Enter name of new file:", "Add new file to project", g_window);
         if (input_box->exec() == GInputBox::ExecCancel)
             return;
@@ -94,8 +95,16 @@ int main(int argc, char** argv)
         open_file(filename);
     });
 
-    auto open_action = GCommonActions::make_open_action([&](auto&) {
-        // FIXME: Implement.
+    auto add_existing_file_action = GAction::create("Add existing file to project...", GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+        auto result = GFilePicker::get_open_filepath("Add existing file to project");
+        if (!result.has_value())
+            return;
+        auto& filename = result.value();
+        if (!g_project->add_file(filename)) {
+            GMessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            return;
+        }
+        open_file(filename);
     });
 
     auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
@@ -105,7 +114,7 @@ int main(int argc, char** argv)
     });
 
     toolbar->add_action(new_action);
-    toolbar->add_action(open_action);
+    toolbar->add_action(add_existing_file_action);
     toolbar->add_action(save_action);
     toolbar->add_separator();
     toolbar->add_action(g_text_editor->cut_action());
@@ -174,6 +183,11 @@ int main(int argc, char** argv)
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
+
+    auto project_menu = make<GMenu>("Project");
+    project_menu->add_action(new_action);
+    project_menu->add_action(add_existing_file_action);
+    menubar->add_menu(move(project_menu));
 
     auto edit_menu = make<GMenu>("Edit");
     edit_menu->add_action(GAction::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, [&](auto&) {
