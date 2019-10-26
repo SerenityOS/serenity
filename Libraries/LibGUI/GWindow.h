@@ -131,6 +131,8 @@ public:
 
     virtual void save_to(AK::JsonObject&) override;
 
+    void schedule_relayout();
+
 protected:
     GWindow(CObject* parent = nullptr);
     virtual void wm_event(GWMEvent&);
@@ -175,4 +177,5 @@ private:
     String m_entered_keybind;
     int m_max_keybind_length { 0 };
     HashMap<String, WeakPtr<GWidget>> m_keyboard_activation_targets;
+    bool m_layout_pending { false };
 };
