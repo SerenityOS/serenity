@@ -482,7 +482,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line].length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid()) {
+            if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
             }
@@ -495,7 +495,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line].length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid()) {
+            if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
             }
@@ -508,7 +508,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line].length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid()) {
+            if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
             }
@@ -521,7 +521,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = min(m_cursor.column(), m_lines[new_line].length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid()) {
+            if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
             }
@@ -533,7 +533,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = m_cursor.column() - 1;
             toggle_selection_if_needed_for_event(event);
             set_cursor(m_cursor.line(), new_column);
-            if (m_selection.start().is_valid()) {
+            if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
             }
@@ -542,7 +542,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int new_column = m_lines[new_line].length();
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
-            if (m_selection.start().is_valid()) {
+            if (event.shift() && m_selection.start().is_valid()) {
                 m_selection.set_end(m_cursor);
                 did_update_selection();
             }
@@ -561,7 +561,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         }
         toggle_selection_if_needed_for_event(event);
         set_cursor(new_line, new_column);
-        if (m_selection.start().is_valid()) {
+        if (event.shift() && m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
         }
@@ -570,7 +570,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (!event.ctrl() && event.key() == KeyCode::Key_Home) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), 0);
-        if (m_selection.start().is_valid()) {
+        if (event.shift() && m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
         }
@@ -579,7 +579,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (!event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(m_cursor.line(), current_line().length());
-        if (m_selection.start().is_valid()) {
+        if (event.shift() && m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
         }
@@ -588,7 +588,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (event.ctrl() && event.key() == KeyCode::Key_Home) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(0, 0);
-        if (m_selection.start().is_valid()) {
+        if (event.shift() && m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
         }
@@ -597,7 +597,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     if (event.ctrl() && event.key() == KeyCode::Key_End) {
         toggle_selection_if_needed_for_event(event);
         set_cursor(line_count() - 1, m_lines[line_count() - 1].length());
-        if (m_selection.start().is_valid()) {
+        if (event.shift() && m_selection.start().is_valid()) {
             m_selection.set_end(m_cursor);
             did_update_selection();
         }
