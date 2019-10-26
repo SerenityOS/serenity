@@ -20,7 +20,6 @@ WSScreen::WSScreen(unsigned desired_width, unsigned desired_height)
 {
     ASSERT(!s_the);
     s_the = this;
-    m_cursor_location = rect().center();
     m_framebuffer_fd = open("/dev/fb0", O_RDWR);
     ASSERT(m_framebuffer_fd >= 0);
 
@@ -29,6 +28,7 @@ WSScreen::WSScreen(unsigned desired_width, unsigned desired_height)
     }
 
     set_resolution(desired_width, desired_height);
+    m_cursor_location = rect().center();
 }
 
 WSScreen::~WSScreen()
