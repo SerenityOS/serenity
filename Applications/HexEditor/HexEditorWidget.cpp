@@ -56,13 +56,13 @@ HexEditorWidget::HexEditorWidget()
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto valid = false;
             auto file_size = input_box->text_value().to_int(valid);
-            if (valid) {
+            if (valid && file_size > 0) {
                 m_document_dirty = false;
                 m_editor->set_buffer(ByteBuffer::create_zeroed(file_size));
                 set_path(FileSystemPath());
                 update_title();
             } else {
-                GMessageBox::show(String::format("Invalid file size entered.", strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+                GMessageBox::show("Invalid file size entered.", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
             }
         }
     });
