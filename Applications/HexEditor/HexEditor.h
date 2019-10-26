@@ -25,6 +25,7 @@ public:
     void fill_selection(u8 fill_byte);
     bool write_to_file(const StringView& path);
 
+    bool has_selection() const { return !(m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty()); }
     bool copy_selected_text_to_clipboard();
     bool copy_selected_hex_to_clipboard();
     bool copy_selected_hex_to_clipboard_as_c_code();
