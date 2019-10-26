@@ -258,7 +258,7 @@ static TextStyle style_for_token_type(CppToken::Type type)
     case CppToken::Type::KnownType:
         return { Color::from_rgb(0x929200), &Font::default_bold_fixed_width_font() };
     case CppToken::Type::Identifier:
-        return { Color::from_rgb(0x000092), &Font::default_bold_fixed_width_font() };
+        return { Color::from_rgb(0x000092) };
     case CppToken::Type::DoubleQuotedString:
     case CppToken::Type::SingleQuotedString:
     case CppToken::Type::Number:
