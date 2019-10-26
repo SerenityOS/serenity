@@ -147,6 +147,14 @@ HexEditorWidget::HexEditorWidget()
     });
 
     auto edit_menu = make<GMenu>("Edit");
+    edit_menu->add_action(GAction::create("Fill selection...", [&](const GAction&) {
+        auto input_box = GInputBox::construct("Fill byte (hex):", "Fill Selection", this);
+        if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
+            auto fill_byte = strtol(input_box->text_value().characters(), nullptr, 16);
+            m_editor->fill_selection(fill_byte);
+        }
+    }));
+    edit_menu->add_separator();
     edit_menu->add_action(*m_goto_decimal_offset_action);
     edit_menu->add_action(*m_goto_hex_offset_action);
     edit_menu->add_separator();

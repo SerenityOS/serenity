@@ -22,6 +22,7 @@ public:
     void set_readonly(bool);
 
     void set_buffer(const ByteBuffer&);
+    void fill_selection(u8 fill_byte);
     bool write_to_file(const StringView& path);
 
     bool copy_selected_text_to_clipboard();
