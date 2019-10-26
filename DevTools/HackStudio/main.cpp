@@ -256,8 +256,8 @@ static void rehighlight()
         dbg() << token.to_string() << " @ " << token.m_start.line << ":" << token.m_start.column << " - " << token.m_end.line << ":" << token.m_end.column;
 #endif
         GTextEditor::Span span;
-        span.start = { token.m_start.line, token.m_start.column };
-        span.end = { token.m_end.line, token.m_end.column };
+        span.range.set_start({ token.m_start.line, token.m_start.column });
+        span.range.set_end({ token.m_end.line, token.m_end.column });
         auto style = style_for_token_type(token.m_type);
         span.color = style.color;
         span.font = style.font;
