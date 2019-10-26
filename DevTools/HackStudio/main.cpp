@@ -109,6 +109,24 @@ int main(int argc, char** argv)
 
     auto tab_widget = GTabWidget::construct(inner_splitter);
 
+    tab_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    tab_widget->set_preferred_size(0, 24);
+
+    auto reveal_action_tab = [&](auto& widget) {
+        dbg() << "tab_widget preferred height: " << tab_widget->preferred_size().height();
+        if (tab_widget->preferred_size().height() < 200)
+            tab_widget->set_preferred_size(0, 200);
+        tab_widget->set_active_widget(widget);
+    };
+
+    auto hide_action_tabs = [&] {
+        tab_widget->set_preferred_size(0, 24);
+    };
+
+    auto hide_action_tabs_action = GAction::create("Hide action tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [&](auto&) {
+        hide_action_tabs();
+    });
+
     auto find_in_files_widget = FindInFilesWidget::construct(nullptr);
     tab_widget->add_widget("Find in files", find_in_files_widget);
 
@@ -145,19 +163,19 @@ int main(int argc, char** argv)
 
     auto edit_menu = make<GMenu>("Edit");
     edit_menu->add_action(GAction::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, [&](auto&) {
-        tab_widget->set_active_widget(find_in_files_widget);
+        reveal_action_tab(find_in_files_widget);
         find_in_files_widget->focus_textbox_and_select_all();
     }));
     menubar->add_menu(move(edit_menu));
 
     auto build_action = GAction::create("Build", { Mod_Ctrl, Key_B }, GraphicsBitmap::load_from_file("/res/icons/16x16/build.png"), [&](auto&) {
-        tab_widget->set_active_widget(terminal_wrapper);
+        reveal_action_tab(terminal_wrapper);
         build(terminal_wrapper);
     });
     toolbar->add_action(build_action);
 
     auto run_action = GAction::create("Run", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/run.png"), [&](auto&) {
-        tab_widget->set_active_widget(terminal_wrapper);
+        reveal_action_tab(terminal_wrapper);
         run(terminal_wrapper);
     });
     toolbar->add_action(run_action);
@@ -166,6 +184,10 @@ int main(int argc, char** argv)
     build_menu->add_action(build_action);
     build_menu->add_action(run_action);
     menubar->add_menu(move(build_menu));
+
+    auto view_menu = make<GMenu>("View");
+    view_menu->add_action(hide_action_tabs_action);
+    menubar->add_menu(move(view_menu));
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
 
