@@ -12,6 +12,8 @@ class Project {
 public:
     static OwnPtr<Project> load_from_file(const String& path);
 
+    [[nodiscard]] bool add_file(const String& filename);
+
     GModel& model() { return *m_model; }
 
     template<typename Callback>
@@ -22,10 +24,12 @@ public:
         }
     }
 
+
 private:
     friend class ProjectModel;
-    explicit Project(Vector<String>&& files);
+    explicit Project(const String& path, Vector<String>&& files);
 
+    String m_path;
     RefPtr<GModel> m_model;
     NonnullRefPtrVector<TextDocument> m_files;
 };
