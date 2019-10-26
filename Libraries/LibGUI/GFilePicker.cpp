@@ -13,9 +13,12 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GToolBar.h>
 
-Optional<String> GFilePicker::get_open_filepath()
+Optional<String> GFilePicker::get_open_filepath(const String& window_title)
 {
     auto picker = GFilePicker::construct(Mode::Open);
+
+    if (!window_title.is_null())
+        picker->set_title(window_title);
 
     if (picker->exec() == GDialog::ExecOK) {
         String file_path = picker->selected_file().string();
