@@ -54,6 +54,8 @@ void GTextEditor::set_text(const StringView& text)
     if (is_single_line() && text.length() == m_lines[0].length() && !memcmp(text.characters_without_null_termination(), m_lines[0].characters(), text.length()))
         return;
 
+    m_spans.clear();
+
     m_selection.clear();
     m_lines.clear();
     int start_of_current_line = 0;
