@@ -46,7 +46,7 @@ void HexEditor::set_buffer(const ByteBuffer& buffer)
 
 void HexEditor::fill_selection(u8 fill_byte)
 {
-    if (m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty())
+    if (!has_selection())
         return;
 
     for (int i = m_selection_start; i <= m_selection_end; i++) {
@@ -104,7 +104,7 @@ bool HexEditor::write_to_file(const StringView& path)
 
 bool HexEditor::copy_selected_hex_to_clipboard()
 {
-    if (m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty())
+    if (!has_selection())
         return false;
 
     StringBuilder output_string_builder;
@@ -118,7 +118,7 @@ bool HexEditor::copy_selected_hex_to_clipboard()
 
 bool HexEditor::copy_selected_text_to_clipboard()
 {
-    if (m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0)
+    if (!has_selection())
         return false;
 
     StringBuilder output_string_builder;
@@ -132,7 +132,7 @@ bool HexEditor::copy_selected_text_to_clipboard()
 
 bool HexEditor::copy_selected_hex_to_clipboard_as_c_code()
 {
-    if (m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty())
+    if (!has_selection())
         return false;
 
     StringBuilder output_string_builder;
