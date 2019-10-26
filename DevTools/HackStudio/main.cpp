@@ -73,6 +73,8 @@ int main(int argc, char** argv)
     auto inner_splitter = GSplitter::construct(Orientation::Vertical, outer_splitter);
     g_text_editor = GTextEditor::construct(GTextEditor::MultiLine, inner_splitter);
     g_text_editor->set_ruler_visible(true);
+    g_text_editor->set_line_wrapping_enabled(true);
+    g_text_editor->set_automatic_indentation_enabled(true);
 
     auto new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
         // FIXME: Implement.
