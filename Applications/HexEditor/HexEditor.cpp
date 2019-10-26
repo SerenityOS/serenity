@@ -44,6 +44,20 @@ void HexEditor::set_buffer(const ByteBuffer& buffer)
     update_status();
 }
 
+void HexEditor::fill_selection(u8 fill_byte)
+{
+    if (m_selection_start == -1 || m_selection_end == -1 || (m_selection_end - m_selection_start) < 0 || m_buffer.is_empty())
+        return;
+
+    for (int i = m_selection_start; i <= m_selection_end; i++) {
+        m_tracked_changes.set(i, m_buffer.data()[i]);
+        m_buffer.data()[i] = fill_byte;
+    }
+
+    update();
+    did_change();
+}
+
 void HexEditor::set_position(int position)
 {
     if (position > m_buffer.size())
