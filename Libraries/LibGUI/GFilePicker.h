@@ -16,7 +16,7 @@ public:
         Save
     };
 
-    static Optional<String> get_open_filepath();
+    static Optional<String> get_open_filepath(const String& window_title = {});
     static Optional<String> get_save_filepath(const String& title, const String& extension);
     static bool file_exists(const StringView& path);
 
