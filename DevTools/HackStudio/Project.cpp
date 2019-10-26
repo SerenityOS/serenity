@@ -24,13 +24,17 @@ public:
         }
         return {};
     }
-    virtual void update() override {}
+    virtual void update() override
+    {
+        did_update();
+    }
 
 private:
     Project& m_project;
 };
 
-Project::Project(Vector<String>&& filenames)
+Project::Project(const String& path, Vector<String>&& filenames)
+    : m_path(path)
 {
     for (auto& filename : filenames) {
         m_files.append(TextDocument::construct_with_name(filename));
@@ -52,5 +56,26 @@ OwnPtr<Project> Project::load_from_file(const String& path)
         files.append(String::copy(line, Chomp));
     }
 
-    return OwnPtr(new Project(move(files)));
+    return OwnPtr(new Project(path, move(files)));
+}
+
+bool Project::add_file(const String& filename)
+{
+    auto project_file = CFile::construct(m_path);
+    if (!project_file->open(CFile::WriteOnly))
+        return false;
+
+    for (auto& file : m_files) {
+        // FIXME: Check for error here. CIODevice::printf() needs some work on error reporting.
+        project_file->printf("%s\n", file.name().characters());
+    }
+
+    project_file->printf("%s\n", filename.characters());
+
+    if (!project_file->close())
+        return false;
+
+    m_files.append(TextDocument::construct_with_name(filename));
+    m_model->update();
+    return true;
 }

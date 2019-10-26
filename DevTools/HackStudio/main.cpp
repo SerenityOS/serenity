@@ -76,8 +76,22 @@ int main(int argc, char** argv)
     g_text_editor->set_line_wrapping_enabled(true);
     g_text_editor->set_automatic_indentation_enabled(true);
 
-    auto new_action = GAction::create("New", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
-        // FIXME: Implement.
+    auto new_action = GAction::create("Add new file to project", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
+        auto input_box = GInputBox::construct("Enter name of new file:", "Add new file to project", g_window);
+        if (input_box->exec() == GInputBox::ExecCancel)
+            return;
+        auto filename = input_box->text_value();
+        auto file = CFile::construct(filename);
+        if (!file->open((CIODevice::OpenMode)(CIODevice::WriteOnly | CIODevice::MustBeNew))) {
+            GMessageBox::show(String::format("Failed to create '%s'", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            return;
+        }
+        if (!g_project->add_file(filename)) {
+            GMessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            // FIXME: Should we unlink the file here maybe?
+            return;
+        }
+        open_file(filename);
     });
 
     auto open_action = GCommonActions::make_open_action([&](auto&) {
