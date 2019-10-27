@@ -6,6 +6,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
+#include <LibGUI/GTextDocument.h>
 #include <LibGUI/GTextRange.h>
 
 class GAction;
@@ -30,6 +31,9 @@ public:
         SingleLine
     };
     virtual ~GTextEditor() override;
+
+    const GTextDocument& document() const { return *m_document; }
+    GTextDocument& document() { return *m_document; }
 
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool);
@@ -56,7 +60,7 @@ public:
     void set_text(const StringView&);
     void scroll_cursor_into_view();
     void scroll_position_into_view(const GTextPosition&);
-    int line_count() const { return m_lines.size(); }
+    int line_count() const { return document().line_count(); }
     int line_spacing() const { return m_line_spacing; }
     int line_height() const { return font().glyph_height() + m_line_spacing; }
     GTextPosition cursor() const { return m_cursor; }
@@ -103,17 +107,6 @@ public:
     void set_cursor(int line, int column);
     void set_cursor(const GTextPosition&);
 
-    struct Span {
-        GTextRange range;
-        Color color;
-        const Font* font { nullptr };
-    };
-
-    void set_spans(const Vector<Span>& spans)
-    {
-        m_spans = spans;
-    }
-
 protected:
     GTextEditor(Type, GWidget* parent);
 
@@ -134,53 +127,24 @@ protected:
     virtual void resize_event(GResizeEvent&) override;
 
 private:
+    friend class GTextDocumentLine;
+
     void create_actions();
     void paint_ruler(Painter&);
     void update_content_size();
     void did_change();
-
-    class Line {
-        friend class GTextEditor;
-
-    public:
-        explicit Line(GTextEditor&);
-        Line(GTextEditor&, const StringView&);
-
-        StringView view() const { return { characters(), length() }; }
-        const char* characters() const { return m_text.data(); }
-        int length() const { return m_text.size() - 1; }
-        void set_text(const StringView&);
-        void append(char);
-        void prepend(char);
-        void insert(int index, char);
-        void remove(int index);
-        void append(const char*, int);
-        void truncate(int length);
-        void clear();
-        void recompute_visual_lines();
-        int visual_line_containing(int column) const;
-        int first_non_whitespace_column() const;
-
-        template<typename Callback>
-        void for_each_visual_line(Callback) const;
-
-    private:
-        GTextEditor& m_editor;
-
-        // NOTE: This vector is null terminated.
-        Vector<char> m_text;
-
-        Vector<int, 1> m_visual_line_breaks;
-        Rect m_visual_rect;
-    };
 
     Rect line_content_rect(int item_index) const;
     Rect line_widget_rect(int line_index) const;
     Rect cursor_content_rect() const;
     Rect content_rect_for_position(const GTextPosition&) const;
     void update_cursor();
-    Line& current_line() { return m_lines[m_cursor.line()]; }
-    const Line& current_line() const { return m_lines[m_cursor.line()]; }
+    const NonnullOwnPtrVector<GTextDocumentLine>& lines() const { return document().lines(); }
+    NonnullOwnPtrVector<GTextDocumentLine>& lines() { return document().lines(); }
+    GTextDocumentLine& line(int index) { return document().line(index); }
+    const GTextDocumentLine& line(int index) const { return document().line(index); }
+    GTextDocumentLine& current_line() { return line(m_cursor.line()); }
+    const GTextDocumentLine& current_line() const { return line(m_cursor.line()); }
     GTextPosition text_position_at(const Point&) const;
     void insert_at_cursor(char);
     void insert_at_cursor(const StringView&);
@@ -198,7 +162,6 @@ private:
 
     Type m_type { MultiLine };
 
-    NonnullOwnPtrVector<Line> m_lines;
     GTextPosition m_cursor;
     TextAlignment m_text_alignment { TextAlignment::CenterLeft };
     bool m_cursor_state { true };
@@ -222,7 +185,7 @@ private:
     CElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
 
-    Vector<Span> m_spans;
+    RefPtr<GTextDocument> m_document;
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const GTextPosition& value)
