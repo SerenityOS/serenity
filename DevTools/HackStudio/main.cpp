@@ -286,12 +286,12 @@ static void rehighlight()
     CppLexer lexer(text);
     auto tokens = lexer.lex();
 
-    Vector<GTextEditor::Span> spans;
+    Vector<GTextDocumentSpan> spans;
     for (auto& token : tokens) {
 #ifdef DEBUG_SYNTAX_HIGHLIGHTING
         dbg() << token.to_string() << " @ " << token.m_start.line << ":" << token.m_start.column << " - " << token.m_end.line << ":" << token.m_end.column;
 #endif
-        GTextEditor::Span span;
+        GTextDocumentSpan span;
         span.range.set_start({ token.m_start.line, token.m_start.column });
         span.range.set_end({ token.m_end.line, token.m_end.column });
         auto style = style_for_token_type(token.m_type);
@@ -299,7 +299,7 @@ static void rehighlight()
         span.font = style.font;
         spans.append(span);
     }
-    current_editor().set_spans(spans);
+    current_editor().document().set_spans(spans);
     current_editor().update();
 }
 

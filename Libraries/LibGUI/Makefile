@@ -25,6 +25,7 @@ OBJS = \
     GVariant.o \
     GShortcut.o \
     GTextEditor.o \
+    GTextDocument.o \
     GClipboard.o \
     GSortingProxyModel.o \
     GStackWidget.o \
