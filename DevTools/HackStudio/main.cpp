@@ -1,4 +1,6 @@
 #include "CppLexer.h"
+#include "Editor.h"
+#include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
@@ -10,12 +12,12 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GFilePicker.h>
 #include <LibGUI/GInputBox.h>
+#include <LibGUI/GLabel.h>
 #include <LibGUI/GListView.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GSplitter.h>
-#include <LibGUI/GStatusBar.h>
 #include <LibGUI/GTabWidget.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GTextEditor.h>
@@ -25,16 +27,28 @@
 #include <stdio.h>
 #include <unistd.h>
 
+RefPtr<EditorWrapper> g_current_editor_wrapper;
+
 String g_currently_open_file;
 OwnPtr<Project> g_project;
 RefPtr<GWindow> g_window;
 RefPtr<GListView> g_project_list_view;
-RefPtr<GTextEditor> g_text_editor;
 
-GTextEditor& main_editor()
+void add_new_editor(GWidget& parent)
 {
-    ASSERT(g_text_editor);
-    return *g_text_editor;
+    auto wrapper = EditorWrapper::construct(&parent);
+    g_current_editor_wrapper = wrapper;
+}
+
+EditorWrapper& current_editor_wrapper()
+{
+    ASSERT(g_current_editor_wrapper);
+    return *g_current_editor_wrapper;
+}
+
+Editor& current_editor()
+{
+    return current_editor_wrapper().editor();
 }
 
 static void build(TerminalWrapper&);
@@ -72,10 +86,8 @@ int main(int argc, char** argv)
     g_project_list_view->set_preferred_size(200, 0);
 
     auto inner_splitter = GSplitter::construct(Orientation::Vertical, outer_splitter);
-    g_text_editor = GTextEditor::construct(GTextEditor::MultiLine, inner_splitter);
-    g_text_editor->set_ruler_visible(true);
-    g_text_editor->set_line_wrapping_enabled(true);
-    g_text_editor->set_automatic_indentation_enabled(true);
+    add_new_editor(inner_splitter);
+    add_new_editor(inner_splitter);
 
     auto new_action = GAction::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
         auto input_box = GInputBox::construct("Enter name of new file:", "Add new file to project", g_window);
@@ -110,19 +122,20 @@ int main(int argc, char** argv)
     auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
         if (g_currently_open_file.is_empty())
             return;
-        g_text_editor->write_to_file(g_currently_open_file);
+        current_editor().write_to_file(g_currently_open_file);
     });
 
     toolbar->add_action(new_action);
     toolbar->add_action(add_existing_file_action);
     toolbar->add_action(save_action);
     toolbar->add_separator();
-    toolbar->add_action(g_text_editor->cut_action());
-    toolbar->add_action(g_text_editor->copy_action());
-    toolbar->add_action(g_text_editor->paste_action());
+
+    toolbar->add_action(GCommonActions::make_cut_action([&](auto&) { current_editor().cut_action().activate(); }));
+    toolbar->add_action(GCommonActions::make_copy_action([&](auto&) { current_editor().copy_action().activate(); }));
+    toolbar->add_action(GCommonActions::make_paste_action([&](auto&) { current_editor().paste_action().activate(); }));
     toolbar->add_separator();
-    toolbar->add_action(g_text_editor->undo_action());
-    toolbar->add_action(g_text_editor->redo_action());
+    toolbar->add_action(GCommonActions::make_undo_action([&](auto&) { current_editor().undo_action().activate(); }));
+    toolbar->add_action(GCommonActions::make_redo_action([&](auto&) { current_editor().redo_action().activate(); }));
     toolbar->add_separator();
 
     g_project_list_view->on_activation = [&](auto& index) {
@@ -155,26 +168,6 @@ int main(int argc, char** argv)
 
     auto terminal_wrapper = TerminalWrapper::construct(nullptr);
     tab_widget->add_widget("Console", terminal_wrapper);
-
-    auto statusbar = GStatusBar::construct(widget);
-
-    g_text_editor->on_cursor_change = [&] {
-        statusbar->set_text(String::format("Line: %d, Column: %d", g_text_editor->cursor().line() + 1, g_text_editor->cursor().column()));
-    };
-
-    g_text_editor->add_custom_context_menu_action(GAction::create(
-        "Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [&](auto&) {
-            auto input_box = GInputBox::construct("Line:", "Go to line", g_window);
-            auto result = input_box->exec();
-            if (result == GInputBox::ExecOK) {
-                bool ok;
-                auto line_number = input_box->text_value().to_uint(ok);
-                if (ok) {
-                    g_text_editor->set_cursor(line_number - 1, 0);
-                }
-            }
-        },
-        g_text_editor));
 
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("HackStudio");
@@ -274,7 +267,7 @@ static TextStyle style_for_token_type(CppToken::Type type)
 
 static void rehighlight()
 {
-    auto text = g_text_editor->text();
+    auto text = current_editor().text();
     CppLexer lexer(text);
     auto tokens = lexer.lex();
 
@@ -291,8 +284,8 @@ static void rehighlight()
         span.font = style.font;
         spans.append(span);
     }
-    g_text_editor->set_spans(spans);
-    g_text_editor->update();
+    current_editor().set_spans(spans);
+    current_editor().update();
 }
 
 void open_file(const String& filename)
@@ -303,18 +296,20 @@ void open_file(const String& filename)
         return;
     }
     auto contents = file->read_all();
-    g_text_editor->set_text(contents);
+    current_editor().set_text(contents);
 
     if (filename.ends_with(".cpp")) {
-        g_text_editor->on_change = [] { rehighlight(); };
+        current_editor().on_change = [] { rehighlight(); };
         rehighlight();
     } else {
-        g_text_editor->on_change = nullptr;
+        current_editor().on_change = nullptr;
     }
 
     g_currently_open_file = filename;
     g_window->set_title(String::format("%s - HackStudio", g_currently_open_file.characters()));
     g_project_list_view->update();
 
-    g_text_editor->set_focus(true);
+    current_editor_wrapper().filename_label().set_text(filename);
+
+    current_editor().set_focus(true);
 }

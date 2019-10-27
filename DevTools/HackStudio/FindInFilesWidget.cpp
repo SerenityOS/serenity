@@ -5,7 +5,7 @@
 #include <LibGUI/GListView.h>
 #include <LibGUI/GTextBox.h>
 
-extern GTextEditor& main_editor();
+extern GTextEditor& current_editor();
 extern void open_file(const String&);
 extern OwnPtr<Project> g_project;
 
@@ -71,8 +71,8 @@ FindInFilesWidget::FindInFilesWidget(GWidget* parent)
         int line_number = parts[1].to_int(ok);
         ASSERT(ok);
         open_file(parts[0]);
-        main_editor().set_cursor(line_number - 1, 0);
-        main_editor().set_focus(true);
+        current_editor().set_cursor(line_number - 1, 0);
+        current_editor().set_focus(true);
     };
 
     m_button->on_click = [this](auto&) {
