@@ -20,7 +20,6 @@ EditorWrapper::EditorWrapper(GWidget* parent)
     label_wrapper->layout()->set_margins({ 2, 0, 2, 0 });
 
     m_filename_label = GLabel::construct("(Untitled)", label_wrapper);
-    m_filename_label->set_font(Font::default_bold_font());
     m_filename_label->set_text_alignment(TextAlignment::CenterLeft);
     m_filename_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_filename_label->set_preferred_size(0, 14);
@@ -60,4 +59,9 @@ EditorWrapper::EditorWrapper(GWidget* parent)
 
 EditorWrapper::~EditorWrapper()
 {
+}
+
+void EditorWrapper::set_editor_has_focus(Badge<Editor>, bool focus)
+{
+    m_filename_label->set_font(focus ? Font::default_bold_font() : Font::default_font());
 }
