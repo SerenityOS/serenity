@@ -14,20 +14,21 @@ EditorWrapper::EditorWrapper(GWidget* parent)
 
     auto label_wrapper = GWidget::construct(this);
     label_wrapper->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    label_wrapper->set_preferred_size(0, 16);
+    label_wrapper->set_preferred_size(0, 14);
     label_wrapper->set_fill_with_background_color(true);
     label_wrapper->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    label_wrapper->layout()->set_margins({ 2, 0, 2, 0 });
 
     m_filename_label = GLabel::construct("(Untitled)", label_wrapper);
     m_filename_label->set_font(Font::default_bold_font());
     m_filename_label->set_text_alignment(TextAlignment::CenterLeft);
     m_filename_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_filename_label->set_preferred_size(0, 16);
+    m_filename_label->set_preferred_size(0, 14);
 
     m_cursor_label = GLabel::construct("(Cursor)", label_wrapper);
     m_cursor_label->set_text_alignment(TextAlignment::CenterRight);
     m_cursor_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    m_cursor_label->set_preferred_size(0, 16);
+    m_cursor_label->set_preferred_size(0, 14);
 
     m_editor = Editor::construct(this);
     m_editor->set_ruler_visible(true);

@@ -86,6 +86,7 @@ int main(int argc, char** argv)
     g_project_list_view->set_preferred_size(200, 0);
 
     auto inner_splitter = GSplitter::construct(Orientation::Vertical, outer_splitter);
+    inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
     add_new_editor(inner_splitter);
     add_new_editor(inner_splitter);
 
