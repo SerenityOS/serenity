@@ -27,6 +27,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
+NonnullRefPtrVector<EditorWrapper> g_all_editor_wrappers;
 RefPtr<EditorWrapper> g_current_editor_wrapper;
 
 String g_currently_open_file;
@@ -38,6 +39,7 @@ void add_new_editor(GWidget& parent)
 {
     auto wrapper = EditorWrapper::construct(&parent);
     g_current_editor_wrapper = wrapper;
+    g_all_editor_wrappers.append(wrapper);
 }
 
 EditorWrapper& current_editor_wrapper()
@@ -118,6 +120,18 @@ int main(int argc, char** argv)
             return;
         }
         open_file(filename);
+    });
+
+    auto switch_to_next_editor = GAction::create("Switch to next editor", { Mod_Ctrl, Key_E }, [&](auto&) {
+        if (g_all_editor_wrappers.size() <= 1)
+            return;
+        // FIXME: This will only work correctly when there are 2 editors. Make it work for any editor count.
+        for (auto& wrapper : g_all_editor_wrappers) {
+            if (&wrapper == &current_editor_wrapper())
+                continue;
+            wrapper.editor().set_focus(true);
+            return;
+        }
     });
 
     auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
