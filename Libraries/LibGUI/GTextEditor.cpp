@@ -622,10 +622,22 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             return;
         }
         if (m_cursor.column() > 0) {
+            int erase_count = 1;
+            if (current_line().first_non_whitespace_column() >= m_cursor.column()) {
+                int new_column;
+                if (m_cursor.column() % m_soft_tab_width == 0)
+                    new_column = m_cursor.column() - m_soft_tab_width;
+                else
+                    new_column = (m_cursor.column() / m_soft_tab_width) * m_soft_tab_width;
+                erase_count = m_cursor.column() - new_column;
+            }
+
             // Backspace within line
-            current_line().remove(m_cursor.column() - 1);
+            for (int i = 0; i < erase_count; ++i) {
+                current_line().remove(m_cursor.column() - 1 - i);
+            }
             update_content_size();
-            set_cursor(m_cursor.line(), m_cursor.column() - 1);
+            set_cursor(m_cursor.line(), m_cursor.column() - erase_count);
             did_change();
             return;
         }
