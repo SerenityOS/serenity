@@ -2,6 +2,15 @@
 #include <LibCore/CFile.h>
 #include <string.h>
 
+const GTextDocument& TextDocument::document() const
+{
+    if (!m_document) {
+        m_document = GTextDocument::create(nullptr);
+        m_document->set_text(contents());
+    }
+    return *m_document;
+}
+
 const ByteBuffer& TextDocument::contents() const
 {
     if (m_contents.is_null()) {

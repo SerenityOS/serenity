@@ -4,6 +4,7 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
 #include <AK/String.h>
+#include <LibGUI/GTextDocument.h>
 
 class TextDocument : public RefCounted<TextDocument> {
 public:
@@ -18,6 +19,8 @@ public:
 
     Vector<int> find(const StringView&) const;
 
+    const GTextDocument& document() const;
+
 private:
     explicit TextDocument(const String& name)
         : m_name(name)
@@ -26,4 +29,5 @@ private:
 
     String m_name;
     mutable ByteBuffer m_contents;
+    mutable RefPtr<GTextDocument> m_document;
 };
