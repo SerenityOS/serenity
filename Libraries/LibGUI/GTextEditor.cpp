@@ -19,7 +19,8 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
     , m_type(type)
 {
-    m_document = GTextDocument::create(*this);
+    m_document = GTextDocument::create(this);
+    m_document->register_client(*this);
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
@@ -33,6 +34,8 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
 
 GTextEditor::~GTextEditor()
 {
+    if (m_document)
+        m_document->unregister_client(*this);
 }
 
 void GTextEditor::create_actions()
@@ -72,9 +75,9 @@ void GTextEditor::update_content_size()
 {
     int content_width = 0;
     int content_height = 0;
-    for (auto& line : document().lines()) {
-        content_width = max(line.m_visual_rect.width(), content_width);
-        content_height += line.m_visual_rect.height();
+    for (auto& line : m_line_visual_data) {
+        content_width = max(line.visual_rect.width(), content_width);
+        content_height += line.visual_rect.height();
     }
     content_width += m_horizontal_content_padding * 2;
     if (is_right_text_alignment(m_text_alignment))
@@ -95,11 +98,12 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 
     if (is_line_wrapping_enabled()) {
         for (int i = 0; i < lines().size(); ++i) {
-            auto& rect = lines()[i].m_visual_rect;
+            auto& rect = m_line_visual_data[i].visual_rect;
             if (position.y() >= rect.top() && position.y() <= rect.bottom()) {
                 line_index = i;
                 break;
-            } else if (position.y() > rect.bottom())
+            }
+            if (position.y() > rect.bottom())
                 line_index = lines().size() - 1;
         }
     } else {
@@ -108,14 +112,12 @@ GTextPosition GTextEditor::text_position_at(const Point& a_position) const
 
     line_index = max(0, min(line_index, line_count() - 1));
 
-    auto& line = lines()[line_index];
-
     int column_index;
     switch (m_text_alignment) {
     case TextAlignment::CenterLeft:
         column_index = (position.x() + glyph_width() / 2) / glyph_width();
         if (is_line_wrapping_enabled()) {
-            line.for_each_visual_line([&](const Rect& rect, const StringView&, int start_of_line) {
+            for_each_visual_line(line_index, [&](const Rect& rect, const StringView&, int start_of_line) {
                 if (rect.contains_vertically(position.y())) {
                     column_index += start_of_line;
                     return IterationDecision::Break;
@@ -344,19 +346,19 @@ void GTextEditor::paint_event(GPaintEvent& event)
             if (selection.start().line() < line_index)
                 first_visual_line_with_selection = 0;
             else
-                first_visual_line_with_selection = line.visual_line_containing(selection.start().column());
+                first_visual_line_with_selection = visual_line_containing(line_index, selection.start().column());
 
             if (selection.end().line() > line_index)
-                last_visual_line_with_selection = line.m_visual_line_breaks.size();
+                last_visual_line_with_selection = m_line_visual_data[line_index].visual_line_breaks.size();
             else
-                last_visual_line_with_selection = line.visual_line_containing(selection.end().column());
+                last_visual_line_with_selection = visual_line_containing(line_index, selection.end().column());
         }
 
         int selection_start_column_within_line = selection.start().line() == line_index ? selection.start().column() : 0;
         int selection_end_column_within_line = selection.end().line() == line_index ? selection.end().column() : line.length();
 
         int visual_line_index = 0;
-        line.for_each_visual_line([&](const Rect& visual_line_rect, const StringView& visual_line_text, int start_of_visual_line) {
+        for_each_visual_line(line_index, [&](const Rect& visual_line_rect, const StringView& visual_line_text, int start_of_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
                 painter.fill_rect(visual_line_rect, Color(230, 230, 230));
 #ifdef DEBUG_GTEXTEDITOR
@@ -643,6 +645,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             int previous_length = previous_line.length();
             previous_line.append(current_line().characters(), current_line().length());
             lines().remove(m_cursor.line());
+            m_line_visual_data.remove(m_cursor.line());
             update_content_size();
             update();
             set_cursor(m_cursor.line() - 1, previous_length);
@@ -676,8 +679,9 @@ void GTextEditor::delete_current_line()
         return delete_selection();
 
     lines().remove(m_cursor.line());
+    m_line_visual_data.remove(m_cursor.line());
     if (lines().is_empty())
-        lines().append(make<GTextDocumentLine>(*this));
+        document().append_line(make<GTextDocumentLine>());
 
     update_content_size();
     update();
@@ -704,6 +708,7 @@ void GTextEditor::do_delete()
         int previous_length = current_line().length();
         current_line().append(next_line.characters(), next_line.length());
         lines().remove(m_cursor.line() + 1);
+        m_line_visual_data.remove(m_cursor.line() + 1);
         update();
         did_change();
         set_cursor(m_cursor.line(), previous_length);
@@ -738,16 +743,16 @@ void GTextEditor::insert_at_cursor(char ch)
                 if (leading_spaces)
                     new_line_contents = String::repeated(' ', leading_spaces);
             }
-            lines().insert(m_cursor.line() + (at_tail ? 1 : 0), make<GTextDocumentLine>(*this, new_line_contents));
+            document().insert_line(m_cursor.line() + (at_tail ? 1 : 0), make<GTextDocumentLine>(new_line_contents));
             update();
             did_change();
             set_cursor(m_cursor.line() + 1, lines()[m_cursor.line() + 1].length());
             return;
         }
-        auto new_line = make<GTextDocumentLine>(*this);
+        auto new_line = make<GTextDocumentLine>();
         new_line->append(current_line().characters() + m_cursor.column(), current_line().length() - m_cursor.column());
         current_line().truncate(m_cursor.column());
-        lines().insert(m_cursor.line() + 1, move(new_line));
+        document().insert_line(m_cursor.line() + 1, move(new_line));
         update();
         did_change();
         set_cursor(m_cursor.line() + 1, 0);
@@ -774,7 +779,7 @@ int GTextEditor::content_x_for_position(const GTextPosition& position) const
     int x_offset = -1;
     switch (m_text_alignment) {
     case TextAlignment::CenterLeft:
-        line.for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
+        for_each_visual_line(position.line(), [&](const Rect&, const StringView& view, int start_of_visual_line) {
             if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
                 x_offset = (position.column() - start_of_visual_line) * glyph_width();
                 return IterationDecision::Break;
@@ -806,9 +811,8 @@ Rect GTextEditor::content_rect_for_position(const GTextPosition& position) const
         return rect;
     }
 
-    auto& line = lines()[position.line()];
     Rect rect;
-    line.for_each_visual_line([&](const Rect& visual_line_rect, const StringView& view, int start_of_visual_line) {
+    for_each_visual_line(position.line(), [&](const Rect& visual_line_rect, const StringView& view, int start_of_visual_line) {
         if (position.column() >= start_of_visual_line && ((position.column() - start_of_visual_line) <= view.length())) {
             // NOTE: We have to subtract the horizontal padding here since it's part of the visual line rect
             //       *and* included in what we get from content_x_for_position().
@@ -865,7 +869,7 @@ Rect GTextEditor::line_content_rect(int line_index) const
         return line_rect;
     }
     if (is_line_wrapping_enabled())
-        return line.m_visual_rect;
+        return m_line_visual_data[line_index].visual_rect;
     return {
         content_x_for_position({ line_index, 0 }),
         line_index * line_height(),
@@ -929,7 +933,6 @@ void GTextEditor::timer_event(CTimerEvent&)
         update_cursor();
 }
 
-
 bool GTextEditor::write_to_file(const StringView& path)
 {
     int fd = open_with_path_length(path.characters_without_null_termination(), path.length(), O_WRONLY | O_CREAT | O_TRUNC, 0666);
@@ -991,7 +994,8 @@ String GTextEditor::text() const
 void GTextEditor::clear()
 {
     lines().clear();
-    lines().append(make<GTextDocumentLine>(*this));
+    m_line_visual_data.clear();
+    document().append_line(make<GTextDocumentLine>());
     m_selection.clear();
     did_update_selection();
     set_cursor(0, 0);
@@ -1027,6 +1031,7 @@ void GTextEditor::delete_selection()
     // First delete all the lines in between the first and last one.
     for (int i = selection.start().line() + 1; i < selection.end().line();) {
         lines().remove(i);
+        m_line_visual_data.remove(i);
         selection.end().set_line(selection.end().line() - 1);
     }
 
@@ -1056,10 +1061,12 @@ void GTextEditor::delete_selection()
         builder.append(after_selection);
         first_line.set_text(builder.to_string());
         lines().remove(selection.end().line());
+        m_line_visual_data.remove(selection.end().line());
     }
 
-    if (lines().is_empty())
-        lines().append(make<GTextDocumentLine>(*this));
+    if (lines().is_empty()) {
+        document().append_line(make<GTextDocumentLine>());
+    }
 
     m_selection.clear();
     did_update_selection();
@@ -1300,19 +1307,19 @@ char GTextEditor::character_at(const GTextPosition& position) const
 void GTextEditor::recompute_all_visual_lines()
 {
     int y_offset = 0;
-    for (auto& line : lines()) {
-        line.recompute_visual_lines();
-        line.m_visual_rect.set_y(y_offset);
-        y_offset += line.m_visual_rect.height();
+    for (int line_index = 0; line_index < line_count(); ++line_index) {
+        recompute_visual_lines(line_index);
+        m_line_visual_data[line_index].visual_rect.set_y(y_offset);
+        y_offset += m_line_visual_data[line_index].visual_rect.height();
     }
 
     update_content_size();
 }
 
-int GTextDocumentLine::visual_line_containing(int column) const
+int GTextEditor::visual_line_containing(int line_index, int column) const
 {
     int visual_line_index = 0;
-    for_each_visual_line([&](const Rect&, const StringView& view, int start_of_visual_line) {
+    for_each_visual_line(line_index, [&](const Rect&, const StringView& view, int start_of_visual_line) {
         if (column >= start_of_visual_line && ((column - start_of_visual_line) < view.length()))
             return IterationDecision::Break;
         ++visual_line_index;
@@ -1321,20 +1328,23 @@ int GTextDocumentLine::visual_line_containing(int column) const
     return visual_line_index;
 }
 
-void GTextDocumentLine::recompute_visual_lines()
+void GTextEditor::recompute_visual_lines(int line_index)
 {
-    m_visual_line_breaks.clear_with_capacity();
+    auto& line = document().line(line_index);
+    auto& visual_data = m_line_visual_data[line_index];
 
-    int available_width = m_editor.visible_text_rect_in_inner_coordinates().width();
+    visual_data.visual_line_breaks.clear_with_capacity();
 
-    if (m_editor.is_line_wrapping_enabled()) {
+    int available_width = visible_text_rect_in_inner_coordinates().width();
+
+    if (is_line_wrapping_enabled()) {
         int line_width_so_far = 0;
 
-        for (int i = 0; i < length(); ++i) {
-            auto ch = characters()[i];
-            auto glyph_width = m_editor.font().glyph_width(ch);
+        for (int i = 0; i < line.length(); ++i) {
+            auto ch = line.characters()[i];
+            auto glyph_width = font().glyph_width(ch);
             if ((line_width_so_far + glyph_width) > available_width) {
-                m_visual_line_breaks.append(i);
+                visual_data.visual_line_breaks.append(i);
                 line_width_so_far = glyph_width;
                 continue;
             }
@@ -1342,36 +1352,40 @@ void GTextDocumentLine::recompute_visual_lines()
         }
     }
 
-    m_visual_line_breaks.append(length());
+    visual_data.visual_line_breaks.append(line.length());
 
-    if (m_editor.is_line_wrapping_enabled())
-        m_visual_rect = { m_editor.m_horizontal_content_padding, 0, available_width, m_visual_line_breaks.size() * m_editor.line_height() };
+    if (is_line_wrapping_enabled())
+        visual_data.visual_rect = { m_horizontal_content_padding, 0, available_width, visual_data.visual_line_breaks.size() * line_height() };
     else
-        m_visual_rect = { m_editor.m_horizontal_content_padding, 0, m_editor.font().width(view()), m_editor.line_height() };
+        visual_data.visual_rect = { m_horizontal_content_padding, 0, font().width(line.view()), line_height() };
 }
 
 template<typename Callback>
-void GTextDocumentLine::for_each_visual_line(Callback callback) const
+void GTextEditor::for_each_visual_line(int line_index, Callback callback) const
 {
-    auto editor_visible_text_rect = m_editor.visible_text_rect_in_inner_coordinates();
+    auto editor_visible_text_rect = visible_text_rect_in_inner_coordinates();
     int start_of_line = 0;
-    int line_index = 0;
-    for (auto visual_line_break : m_visual_line_breaks) {
-        auto visual_line_view = StringView(characters() + start_of_line, visual_line_break - start_of_line);
+    int visual_line_index = 0;
+
+    auto& line = document().line(line_index);
+    auto& visual_data = m_line_visual_data[line_index];
+
+    for (auto visual_line_break : visual_data.visual_line_breaks) {
+        auto visual_line_view = StringView(line.characters() + start_of_line, visual_line_break - start_of_line);
         Rect visual_line_rect {
-            m_visual_rect.x(),
-            m_visual_rect.y() + (line_index * m_editor.line_height()),
-            m_editor.font().width(visual_line_view),
-            m_editor.line_height()
+            visual_data.visual_rect.x(),
+            visual_data.visual_rect.y() + (visual_line_index * line_height()),
+            font().width(visual_line_view),
+            line_height()
         };
-        if (is_right_text_alignment(m_editor.text_alignment()))
+        if (is_right_text_alignment(text_alignment()))
             visual_line_rect.set_right_without_resize(editor_visible_text_rect.right());
-        if (!m_editor.is_multi_line())
+        if (!is_multi_line())
             visual_line_rect.center_vertically_within(editor_visible_text_rect);
         if (callback(visual_line_rect, visual_line_view, start_of_line) == IterationDecision::Break)
             break;
         start_of_line = visual_line_break;
-        ++line_index;
+        ++visual_line_index;
     }
 }
 
@@ -1397,3 +1411,24 @@ void GTextEditor::did_change_font()
     vertical_scrollbar().set_step(line_height());
     GWidget::did_change_font();
 }
+
+void GTextEditor::document_did_append_line()
+{
+    m_line_visual_data.append(make<LineVisualData>());
+}
+
+void GTextEditor::document_did_remove_line(int line_index)
+{
+    m_line_visual_data.remove(line_index);
+}
+
+void GTextEditor::document_did_remove_all_lines()
+{
+    m_line_visual_data.clear();
+}
+
+void GTextEditor::document_did_insert_line(int line_index)
+{
+    m_line_visual_data.insert(line_index, make<LineVisualData>());
+}
+
