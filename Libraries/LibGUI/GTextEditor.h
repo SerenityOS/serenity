@@ -37,6 +37,8 @@ public:
     const GTextDocument& document() const { return *m_document; }
     GTextDocument& document() { return *m_document; }
 
+    void set_document(GTextDocument&);
+
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool);
 
@@ -131,10 +133,12 @@ protected:
 private:
     friend class GTextDocumentLine;
 
+    // ^GTextDocument::Client
     virtual void document_did_append_line() override;
     virtual void document_did_insert_line(int) override;
     virtual void document_did_remove_line(int) override;
     virtual void document_did_remove_all_lines() override;
+    virtual void document_did_change() override;
 
     void create_actions();
     void paint_ruler(Painter&);

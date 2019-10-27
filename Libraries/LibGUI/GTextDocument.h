@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
@@ -26,6 +27,7 @@ public:
         virtual void document_did_insert_line(int) = 0;
         virtual void document_did_remove_line(int) = 0;
         virtual void document_did_remove_all_lines() = 0;
+        virtual void document_did_change() = 0;
     };
 
     static NonnullRefPtr<GTextDocument> create(Client* client = nullptr)
@@ -55,6 +57,8 @@ public:
     void register_client(Client&);
     void unregister_client(Client&);
 
+    void update_views(Badge<GTextDocumentLine>);
+
 private:
     explicit GTextDocument(Client* client);
 
@@ -69,20 +73,20 @@ class GTextDocumentLine {
     friend class GTextDocument;
 
 public:
-    explicit GTextDocumentLine();
-    explicit GTextDocumentLine(const StringView&);
+    explicit GTextDocumentLine(GTextDocument&);
+    explicit GTextDocumentLine(GTextDocument&, const StringView&);
 
     StringView view() const { return { characters(), length() }; }
     const char* characters() const { return m_text.data(); }
     int length() const { return m_text.size() - 1; }
-    void set_text(const StringView&);
-    void append(char);
-    void prepend(char);
-    void insert(int index, char);
-    void remove(int index);
-    void append(const char*, int);
-    void truncate(int length);
-    void clear();
+    void set_text(GTextDocument&, const StringView&);
+    void append(GTextDocument&, char);
+    void prepend(GTextDocument&, char);
+    void insert(GTextDocument&, int index, char);
+    void remove(GTextDocument&, int index);
+    void append(GTextDocument&, const char*, int);
+    void truncate(GTextDocument&, int length);
+    void clear(GTextDocument&);
     int first_non_whitespace_column() const;
 
 private:

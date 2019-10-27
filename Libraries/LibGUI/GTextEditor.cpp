@@ -19,8 +19,7 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
     , m_type(type)
 {
-    m_document = GTextDocument::create(this);
-    m_document->register_client(*this);
+    set_document(GTextDocument::create());
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
@@ -632,7 +631,7 @@ void GTextEditor::keydown_event(GKeyEvent& event)
 
             // Backspace within line
             for (int i = 0; i < erase_count; ++i) {
-                current_line().remove(m_cursor.column() - 1 - i);
+                current_line().remove(document(), m_cursor.column() - 1 - i);
             }
             update_content_size();
             set_cursor(m_cursor.line(), m_cursor.column() - erase_count);
@@ -643,9 +642,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             // Backspace at column 0; merge with previous line
             auto& previous_line = lines()[m_cursor.line() - 1];
             int previous_length = previous_line.length();
-            previous_line.append(current_line().characters(), current_line().length());
-            lines().remove(m_cursor.line());
-            m_line_visual_data.remove(m_cursor.line());
+            previous_line.append(document(), current_line().characters(), current_line().length());
+            document().remove_line(m_cursor.line());
             update_content_size();
             update();
             set_cursor(m_cursor.line() - 1, previous_length);
@@ -678,10 +676,9 @@ void GTextEditor::delete_current_line()
     if (has_selection())
         return delete_selection();
 
-    lines().remove(m_cursor.line());
-    m_line_visual_data.remove(m_cursor.line());
+    document().remove_line(m_cursor.line());
     if (lines().is_empty())
-        document().append_line(make<GTextDocumentLine>());
+        document().append_line(make<GTextDocumentLine>(document()));
 
     update_content_size();
     update();
@@ -697,7 +694,7 @@ void GTextEditor::do_delete()
 
     if (m_cursor.column() < current_line().length()) {
         // Delete within line
-        current_line().remove(m_cursor.column());
+        current_line().remove(document(), m_cursor.column());
         did_change();
         update_cursor();
         return;
@@ -706,9 +703,8 @@ void GTextEditor::do_delete()
         // Delete at end of line; merge with next line
         auto& next_line = lines()[m_cursor.line() + 1];
         int previous_length = current_line().length();
-        current_line().append(next_line.characters(), next_line.length());
-        lines().remove(m_cursor.line() + 1);
-        m_line_visual_data.remove(m_cursor.line() + 1);
+        current_line().append(document(), next_line.characters(), next_line.length());
+        document().remove_line(m_cursor.line() + 1);
         update();
         did_change();
         set_cursor(m_cursor.line(), previous_length);
@@ -743,15 +739,15 @@ void GTextEditor::insert_at_cursor(char ch)
                 if (leading_spaces)
                     new_line_contents = String::repeated(' ', leading_spaces);
             }
-            document().insert_line(m_cursor.line() + (at_tail ? 1 : 0), make<GTextDocumentLine>(new_line_contents));
+            document().insert_line(m_cursor.line() + (at_tail ? 1 : 0), make<GTextDocumentLine>(document(), new_line_contents));
             update();
             did_change();
             set_cursor(m_cursor.line() + 1, lines()[m_cursor.line() + 1].length());
             return;
         }
-        auto new_line = make<GTextDocumentLine>();
-        new_line->append(current_line().characters() + m_cursor.column(), current_line().length() - m_cursor.column());
-        current_line().truncate(m_cursor.column());
+        auto new_line = make<GTextDocumentLine>(document());
+        new_line->append(document(), current_line().characters() + m_cursor.column(), current_line().length() - m_cursor.column());
+        current_line().truncate(document(), m_cursor.column());
         document().insert_line(m_cursor.line() + 1, move(new_line));
         update();
         did_change();
@@ -762,13 +758,13 @@ void GTextEditor::insert_at_cursor(char ch)
         int next_soft_tab_stop = ((m_cursor.column() + m_soft_tab_width) / m_soft_tab_width) * m_soft_tab_width;
         int spaces_to_insert = next_soft_tab_stop - m_cursor.column();
         for (int i = 0; i < spaces_to_insert; ++i) {
-            current_line().insert(m_cursor.column(), ' ');
+            current_line().insert(document(), m_cursor.column(), ' ');
         }
         did_change();
         set_cursor(m_cursor.line(), next_soft_tab_stop);
         return;
     }
-    current_line().insert(m_cursor.column(), ch);
+    current_line().insert(document(), m_cursor.column(), ch);
     did_change();
     set_cursor(m_cursor.line(), m_cursor.column() + 1);
 }
@@ -993,9 +989,8 @@ String GTextEditor::text() const
 
 void GTextEditor::clear()
 {
-    lines().clear();
-    m_line_visual_data.clear();
-    document().append_line(make<GTextDocumentLine>());
+    document().remove_all_lines();
+    document().append_line(make<GTextDocumentLine>(document()));
     m_selection.clear();
     did_update_selection();
     set_cursor(0, 0);
@@ -1030,8 +1025,7 @@ void GTextEditor::delete_selection()
 
     // First delete all the lines in between the first and last one.
     for (int i = selection.start().line() + 1; i < selection.end().line();) {
-        lines().remove(i);
-        m_line_visual_data.remove(i);
+        document().remove_line(i);
         selection.end().set_line(selection.end().line() - 1);
     }
 
@@ -1040,14 +1034,14 @@ void GTextEditor::delete_selection()
         auto& line = lines()[selection.start().line()];
         bool whole_line_is_selected = selection.start().column() == 0 && selection.end().column() == line.length();
         if (whole_line_is_selected) {
-            line.clear();
+            line.clear(document());
         } else {
             auto before_selection = String(line.characters(), line.length()).substring(0, selection.start().column());
             auto after_selection = String(line.characters(), line.length()).substring(selection.end().column(), line.length() - selection.end().column());
             StringBuilder builder(before_selection.length() + after_selection.length());
             builder.append(before_selection);
             builder.append(after_selection);
-            line.set_text(builder.to_string());
+            line.set_text(document(), builder.to_string());
         }
     } else {
         // Delete across a newline, merging lines.
@@ -1059,13 +1053,12 @@ void GTextEditor::delete_selection()
         StringBuilder builder(before_selection.length() + after_selection.length());
         builder.append(before_selection);
         builder.append(after_selection);
-        first_line.set_text(builder.to_string());
-        lines().remove(selection.end().line());
-        m_line_visual_data.remove(selection.end().line());
+        first_line.set_text(document(), builder.to_string());
+        document().remove_line(selection.end().line());
     }
 
     if (lines().is_empty()) {
-        document().append_line(make<GTextDocumentLine>());
+        document().append_line(make<GTextDocumentLine>(document()));
     }
 
     m_selection.clear();
@@ -1415,20 +1408,50 @@ void GTextEditor::did_change_font()
 void GTextEditor::document_did_append_line()
 {
     m_line_visual_data.append(make<LineVisualData>());
+    recompute_all_visual_lines();
+    update();
 }
 
 void GTextEditor::document_did_remove_line(int line_index)
 {
     m_line_visual_data.remove(line_index);
+    recompute_all_visual_lines();
+    update();
 }
 
 void GTextEditor::document_did_remove_all_lines()
 {
     m_line_visual_data.clear();
+    recompute_all_visual_lines();
+    update();
 }
 
 void GTextEditor::document_did_insert_line(int line_index)
 {
     m_line_visual_data.insert(line_index, make<LineVisualData>());
+    recompute_all_visual_lines();
+    update();
 }
 
+void GTextEditor::document_did_change()
+{
+    recompute_all_visual_lines();
+    update();
+}
+
+void GTextEditor::set_document(GTextDocument& document)
+{
+    if (m_document.ptr() == &document)
+        return;
+    if (m_document)
+        m_document->unregister_client(*this);
+    m_document = document;
+    m_line_visual_data.clear();
+    for (int i = 0; i < m_document->line_count(); ++i) {
+        m_line_visual_data.append(make<LineVisualData>());
+    }
+    m_cursor = { 0, 0 };
+    recompute_all_visual_lines();
+    update();
+    m_document->register_client(*this);
+}
