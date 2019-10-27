@@ -6,93 +6,20 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
+#include <LibGUI/GTextRange.h>
 
 class GAction;
 class GMenu;
 class GScrollBar;
 class Painter;
 
-enum class ShouldWrapAtEndOfDocument { No = 0, Yes };
-enum class ShouldWrapAtStartOfDocument { No = 0, Yes };
-
-class GTextPosition {
-public:
-    GTextPosition() {}
-    GTextPosition(int line, int column)
-        : m_line(line)
-        , m_column(column)
-    {
-    }
-
-    bool is_valid() const { return m_line >= 0 && m_column >= 0; }
-
-    int line() const { return m_line; }
-    int column() const { return m_column; }
-
-    void set_line(int line) { m_line = line; }
-    void set_column(int column) { m_column = column; }
-
-    bool operator==(const GTextPosition& other) const { return m_line == other.m_line && m_column == other.m_column; }
-    bool operator!=(const GTextPosition& other) const { return m_line != other.m_line || m_column != other.m_column; }
-    bool operator<(const GTextPosition& other) const { return m_line < other.m_line || (m_line == other.m_line && m_column < other.m_column); }
-
-private:
-    int m_line { -1 };
-    int m_column { -1 };
+enum class ShouldWrapAtEndOfDocument {
+    No = 0,
+    Yes
 };
-
-class GTextRange {
-public:
-    GTextRange() {}
-    GTextRange(const GTextPosition& start, const GTextPosition& end)
-        : m_start(start)
-        , m_end(end)
-    {
-    }
-
-    bool is_valid() const { return m_start.is_valid() && m_end.is_valid(); }
-    void clear()
-    {
-        m_start = {};
-        m_end = {};
-    }
-
-    GTextPosition& start() { return m_start; }
-    GTextPosition& end() { return m_end; }
-    const GTextPosition& start() const { return m_start; }
-    const GTextPosition& end() const { return m_end; }
-
-    GTextRange normalized() const { return GTextRange(normalized_start(), normalized_end()); }
-
-    void set_start(const GTextPosition& position) { m_start = position; }
-    void set_end(const GTextPosition& position) { m_end = position; }
-
-    void set(const GTextPosition& start, const GTextPosition& end)
-    {
-        m_start = start;
-        m_end = end;
-    }
-
-    bool operator==(const GTextRange& other) const
-    {
-        return m_start == other.m_start && m_end == other.m_end;
-    }
-
-    bool contains(const GTextPosition& position) const
-    {
-        if (!(position.line() > m_start.line() || (position.line() == m_start.line() && position.column() >= m_start.column())))
-            return false;
-        if (!(position.line() < m_end.line() || (position.line() == m_end.line() && position.column() <= m_end.column())))
-            return false;
-        return true;
-    }
-
-private:
-    GTextPosition normalized_start() const { return m_start < m_end ? m_start : m_end; }
-    GTextPosition normalized_end() const { return m_start < m_end ? m_end : m_start; }
-
-    GTextPosition m_start;
-    GTextPosition m_end;
+enum class ShouldWrapAtStartOfDocument {
+    No = 0,
+    Yes
 };
 
 class GTextEditor : public GScrollableWidget {
