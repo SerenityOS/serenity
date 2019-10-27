@@ -164,16 +164,28 @@ void GTextEditor::doubleclick_event(GMouseEvent& event)
     auto start = text_position_at(event.position());
     auto end = start;
     auto& line = m_lines[start.line()];
-    while (start.column() > 0) {
-        if (isspace(line.characters()[start.column() - 1]))
-            break;
-        start.set_column(start.column() - 1);
-    }
 
-    while (end.column() < line.length()) {
-        if (isspace(line.characters()[end.column()]))
+    if (m_spans.is_empty()) {
+        while (start.column() > 0) {
+            if (isspace(line.characters()[start.column() - 1]))
+                break;
+            start.set_column(start.column() - 1);
+        }
+
+        while (end.column() < line.length()) {
+            if (isspace(line.characters()[end.column()]))
+                break;
+            end.set_column(end.column() + 1);
+        }
+    } else {
+        for (auto& span : m_spans) {
+            if (!span.range.contains(start))
+                continue;
+            start = span.range.start();
+            end = span.range.end();
+            end.set_column(end.column() + 1);
             break;
-        end.set_column(end.column() + 1);
+        }
     }
 
     m_selection.set(start, end);
