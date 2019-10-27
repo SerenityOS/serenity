@@ -7,6 +7,8 @@ OBJS = \
     FindInFilesWidget.o \
     ProcessStateWidget.o \
     CppLexer.o \
+    Editor.o \
+    EditorWrapper.o \
     main.o
 
 APP = HackStudio
