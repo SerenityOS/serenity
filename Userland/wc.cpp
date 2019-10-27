@@ -85,7 +85,7 @@ int main(int argc, char **argv)
     do {
         if (files.size() > 0 && (file_pointer = fopen(files[iteration].characters(), "r"))==NULL) {
             fprintf(stderr, "wc: unable to open %s\n", files[iteration].characters());
-	    file_count--;
+	    existing_file_count--;
             continue;
         }
         word_flags.line=true;
