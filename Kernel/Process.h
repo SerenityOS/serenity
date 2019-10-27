@@ -318,7 +318,7 @@ private:
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
 
-    KResultOr<String> find_shebang_interpreter_for_executable(const String& executable_path);
+    KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const String& executable_path);
 
     Thread* m_main_thread { nullptr };
 

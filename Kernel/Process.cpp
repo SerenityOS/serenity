@@ -550,7 +550,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     return 0;
 }
 
-KResultOr<String> Process::find_shebang_interpreter_for_executable(const String& executable_path)
+KResultOr<Vector<String>> Process::find_shebang_interpreter_for_executable(const String& executable_path)
 {
     // FIXME: It's a bit sad that we'll open the executable twice (in case there's no shebang)
     //        Maybe we can find a way to plumb this opened FileDescription to the rest of the
@@ -569,16 +569,34 @@ KResultOr<String> Process::find_shebang_interpreter_for_executable(const String&
 
     char first_page[PAGE_SIZE];
     int nread = description->read((u8*)&first_page, sizeof(first_page));
-    int interpreter_length = 0;
+    int word_start = 2;
+    int word_length = 0;
     if (nread > 2 && first_page[0] == '#' && first_page[1] == '!') {
+        Vector<String> interpreter_words;
+
         for (int i = 2; i < nread; ++i) {
             if (first_page[i] == '\n') {
-                interpreter_length = i - 2;
                 break;
             }
+
+            if (first_page[i] != ' ') {
+                ++word_length;
+            }
+
+            if (first_page[i] == ' ') {
+                if (word_length > 0) {
+                    interpreter_words.append(String(&first_page[word_start], word_length));
+                }
+                word_length = 0;
+                word_start = i + 1;
+            }
         }
-        if (interpreter_length > 0)
-            return String(&first_page[2], interpreter_length);
+
+        if (word_length > 0)
+            interpreter_words.append(String(&first_page[word_start], word_length));
+
+        if (!interpreter_words.is_empty())
+            return interpreter_words;
     }
 
     return KResult(-ENOEXEC);
@@ -587,8 +605,16 @@ KResultOr<String> Process::find_shebang_interpreter_for_executable(const String&
 int Process::exec(String path, Vector<String> arguments, Vector<String> environment)
 {
     auto result = find_shebang_interpreter_for_executable(path);
-    if (!result.is_error())
-        return exec(result.value(), { result.value(), path }, move(environment));
+    if (!result.is_error()) {
+        Vector<String> new_arguments(result.value());
+
+        new_arguments.append(path);
+
+        arguments.remove(0);
+        new_arguments.append(move(arguments));
+
+        return exec(result.value().first(), move(new_arguments), move(environment));
+    }
 
     // The bulk of exec() is done by do_exec(), which ensures that all locals
     // are cleaned up by the time we yield-teleport below.
