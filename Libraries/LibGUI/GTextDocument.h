@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/HashTable.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
@@ -18,9 +19,18 @@ struct GTextDocumentSpan {
 
 class GTextDocument : public RefCounted<GTextDocument> {
 public:
-    static NonnullRefPtr<GTextDocument> create(GTextEditor& editor)
+    class Client {
+    public:
+        virtual ~Client();
+        virtual void document_did_append_line() = 0;
+        virtual void document_did_insert_line(int) = 0;
+        virtual void document_did_remove_line(int) = 0;
+        virtual void document_did_remove_all_lines() = 0;
+    };
+
+    static NonnullRefPtr<GTextDocument> create(Client* client = nullptr)
     {
-        return adopt(*new GTextDocument(editor));
+        return adopt(*new GTextDocument(client));
     }
 
     int line_count() const { return m_lines.size(); }
@@ -37,13 +47,21 @@ public:
     bool has_spans() const { return !m_spans.is_empty(); }
     const Vector<GTextDocumentSpan>& spans() const { return m_spans; }
 
+    void append_line(NonnullOwnPtr<GTextDocumentLine>);
+    void remove_line(int line_index);
+    void remove_all_lines();
+    void insert_line(int line_index, NonnullOwnPtr<GTextDocumentLine>);
+
+    void register_client(Client&);
+    void unregister_client(Client&);
+
 private:
-    explicit GTextDocument(GTextEditor&);
+    explicit GTextDocument(Client* client);
 
     NonnullOwnPtrVector<GTextDocumentLine> m_lines;
     Vector<GTextDocumentSpan> m_spans;
 
-    GTextEditor& m_editor;
+    HashTable<Client*> m_clients;
 };
 
 class GTextDocumentLine {
@@ -51,8 +69,8 @@ class GTextDocumentLine {
     friend class GTextDocument;
 
 public:
-    explicit GTextDocumentLine(GTextEditor&);
-    GTextDocumentLine(GTextEditor&, const StringView&);
+    explicit GTextDocumentLine();
+    explicit GTextDocumentLine(const StringView&);
 
     StringView view() const { return { characters(), length() }; }
     const char* characters() const { return m_text.data(); }
@@ -65,19 +83,9 @@ public:
     void append(const char*, int);
     void truncate(int length);
     void clear();
-    void recompute_visual_lines();
-    int visual_line_containing(int column) const;
     int first_non_whitespace_column() const;
 
-    template<typename Callback>
-    void for_each_visual_line(Callback) const;
-
 private:
-    GTextEditor& m_editor;
-
     // NOTE: This vector is null terminated.
     Vector<char> m_text;
-
-    Vector<int, 1> m_visual_line_breaks;
-    Rect m_visual_rect;
 };

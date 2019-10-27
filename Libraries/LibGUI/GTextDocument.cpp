@@ -1,24 +1,26 @@
 #include <LibGUI/GTextDocument.h>
 #include <ctype.h>
 
-GTextDocument::GTextDocument(GTextEditor& editor)
-    : m_editor(editor)
+GTextDocument::GTextDocument(Client* client)
 {
-    m_lines.append(make<GTextDocumentLine>(m_editor));
+    if (client)
+        m_clients.set(client);
+    append_line(make<GTextDocumentLine>());
 }
 
 void GTextDocument::set_text(const StringView& text)
 {
     m_spans.clear();
-    m_lines.clear();
+    remove_all_lines();
+
     int start_of_current_line = 0;
 
     auto add_line = [&](int current_position) {
         int line_length = current_position - start_of_current_line;
-        auto line = make<GTextDocumentLine>(m_editor);
+        auto line = make<GTextDocumentLine>();
         if (line_length)
             line->set_text(text.substring_view(start_of_current_line, current_position - start_of_current_line));
-        m_lines.append(move(line));
+        append_line(move(line));
         start_of_current_line = current_position + 1;
     };
     int i = 0;
@@ -38,14 +40,12 @@ int GTextDocumentLine::first_non_whitespace_column() const
     return length();
 }
 
-GTextDocumentLine::GTextDocumentLine(GTextEditor& editor)
-    : m_editor(editor)
+GTextDocumentLine::GTextDocumentLine()
 {
     clear();
 }
 
-GTextDocumentLine::GTextDocumentLine(GTextEditor& editor, const StringView& text)
-    : m_editor(editor)
+GTextDocumentLine::GTextDocumentLine(const StringView& text)
 {
     set_text(text);
 }
@@ -110,4 +110,46 @@ void GTextDocumentLine::truncate(int length)
 {
     m_text.resize(length + 1);
     m_text.last() = 0;
+}
+
+void GTextDocument::append_line(NonnullOwnPtr<GTextDocumentLine> line)
+{
+    lines().append(move(line));
+    for (auto* client : m_clients)
+        client->document_did_append_line();
+}
+
+void GTextDocument::insert_line(int line_index, NonnullOwnPtr<GTextDocumentLine> line)
+{
+    lines().insert(line_index, move(line));
+    for (auto* client : m_clients)
+        client->document_did_insert_line(line_index);
+}
+
+void GTextDocument::remove_line(int line_index)
+{
+    lines().remove(line_index);
+    for (auto* client : m_clients)
+        client->document_did_remove_line(line_index);
+}
+
+void GTextDocument::remove_all_lines()
+{
+    lines().clear();
+    for (auto* client : m_clients)
+        client->document_did_remove_all_lines();
+}
+
+GTextDocument::Client::~Client()
+{
+}
+
+void GTextDocument::register_client(Client& client)
+{
+    m_clients.set(&client);
+}
+
+void GTextDocument::unregister_client(Client& client)
+{
+    m_clients.remove(&client);
 }

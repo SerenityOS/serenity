@@ -23,7 +23,9 @@ enum class ShouldWrapAtStartOfDocument {
     Yes
 };
 
-class GTextEditor : public GScrollableWidget {
+class GTextEditor
+    : public GScrollableWidget
+    , public GTextDocument::Client {
     C_OBJECT(GTextEditor)
 public:
     enum Type {
@@ -129,6 +131,11 @@ protected:
 private:
     friend class GTextDocumentLine;
 
+    virtual void document_did_append_line() override;
+    virtual void document_did_insert_line(int) override;
+    virtual void document_did_remove_line(int) override;
+    virtual void document_did_remove_all_lines() override;
+
     void create_actions();
     void paint_ruler(Painter&);
     void update_content_size();
@@ -160,6 +167,9 @@ private:
     Rect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
 
+    int visual_line_containing(int line_index, int column) const;
+    void recompute_visual_lines(int line_index);
+
     Type m_type { MultiLine };
 
     GTextPosition m_cursor;
@@ -186,6 +196,16 @@ private:
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
 
     RefPtr<GTextDocument> m_document;
+
+    template<typename Callback>
+    void for_each_visual_line(int line_index, Callback) const;
+
+    struct LineVisualData {
+        Vector<int, 1> visual_line_breaks;
+        Rect visual_rect;
+    };
+
+    NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const GTextPosition& value)
