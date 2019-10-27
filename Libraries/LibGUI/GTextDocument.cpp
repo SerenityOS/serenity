@@ -5,7 +5,7 @@ GTextDocument::GTextDocument(Client* client)
 {
     if (client)
         m_clients.set(client);
-    append_line(make<GTextDocumentLine>());
+    append_line(make<GTextDocumentLine>(*this));
 }
 
 void GTextDocument::set_text(const StringView& text)
@@ -17,9 +17,9 @@ void GTextDocument::set_text(const StringView& text)
 
     auto add_line = [&](int current_position) {
         int line_length = current_position - start_of_current_line;
-        auto line = make<GTextDocumentLine>();
+        auto line = make<GTextDocumentLine>(*this);
         if (line_length)
-            line->set_text(text.substring_view(start_of_current_line, current_position - start_of_current_line));
+            line->set_text(*this, text.substring_view(start_of_current_line, current_position - start_of_current_line));
         append_line(move(line));
         start_of_current_line = current_position + 1;
     };
@@ -40,53 +40,56 @@ int GTextDocumentLine::first_non_whitespace_column() const
     return length();
 }
 
-GTextDocumentLine::GTextDocumentLine()
+GTextDocumentLine::GTextDocumentLine(GTextDocument& document)
 {
-    clear();
+    clear(document);
 }
 
-GTextDocumentLine::GTextDocumentLine(const StringView& text)
+GTextDocumentLine::GTextDocumentLine(GTextDocument& document, const StringView& text)
 {
-    set_text(text);
+    set_text(document, text);
 }
 
-void GTextDocumentLine::clear()
+void GTextDocumentLine::clear(GTextDocument& document)
 {
     m_text.clear();
     m_text.append(0);
+    document.update_views({});
 }
 
-void GTextDocumentLine::set_text(const StringView& text)
+void GTextDocumentLine::set_text(GTextDocument& document, const StringView& text)
 {
     if (text.length() == length() && !memcmp(text.characters_without_null_termination(), characters(), length()))
         return;
     if (text.is_empty()) {
-        clear();
+        clear(document);
         return;
     }
     m_text.resize(text.length() + 1);
     memcpy(m_text.data(), text.characters_without_null_termination(), text.length() + 1);
+    document.update_views({});
 }
 
-void GTextDocumentLine::append(const char* characters, int length)
+void GTextDocumentLine::append(GTextDocument& document, const char* characters, int length)
 {
     int old_length = m_text.size() - 1;
     m_text.resize(m_text.size() + length);
     memcpy(m_text.data() + old_length, characters, length);
     m_text.last() = 0;
+    document.update_views({});
 }
 
-void GTextDocumentLine::append(char ch)
+void GTextDocumentLine::append(GTextDocument& document, char ch)
 {
-    insert(length(), ch);
+    insert(document, length(), ch);
 }
 
-void GTextDocumentLine::prepend(char ch)
+void GTextDocumentLine::prepend(GTextDocument& document, char ch)
 {
-    insert(0, ch);
+    insert(document, 0, ch);
 }
 
-void GTextDocumentLine::insert(int index, char ch)
+void GTextDocumentLine::insert(GTextDocument& document, int index, char ch)
 {
     if (index == length()) {
         m_text.last() = ch;
@@ -94,9 +97,10 @@ void GTextDocumentLine::insert(int index, char ch)
     } else {
         m_text.insert(index, move(ch));
     }
+    document.update_views({});
 }
 
-void GTextDocumentLine::remove(int index)
+void GTextDocumentLine::remove(GTextDocument& document, int index)
 {
     if (index == length()) {
         m_text.take_last();
@@ -104,12 +108,14 @@ void GTextDocumentLine::remove(int index)
     } else {
         m_text.remove(index);
     }
+    document.update_views({});
 }
 
-void GTextDocumentLine::truncate(int length)
+void GTextDocumentLine::truncate(GTextDocument& document, int length)
 {
     m_text.resize(length + 1);
     m_text.last() = 0;
+    document.update_views({});
 }
 
 void GTextDocument::append_line(NonnullOwnPtr<GTextDocumentLine> line)
@@ -152,4 +158,10 @@ void GTextDocument::register_client(Client& client)
 void GTextDocument::unregister_client(Client& client)
 {
     m_clients.remove(&client);
+}
+
+void GTextDocument::update_views(Badge<GTextDocumentLine>)
+{
+    for (auto* client : m_clients)
+        client->document_did_change();
 }
