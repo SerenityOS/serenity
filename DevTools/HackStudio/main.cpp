@@ -305,13 +305,8 @@ static void rehighlight()
 
 void open_file(const String& filename)
 {
-    auto file = CFile::construct(filename);
-    if (!file->open(CFile::ReadOnly)) {
-        GMessageBox::show("Could not open!", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
-        return;
-    }
-    auto contents = file->read_all();
-    current_editor().set_text(contents);
+    auto file = g_project->get_file(filename);
+    current_editor().set_document(const_cast<GTextDocument&>(file->document()));
 
     if (filename.ends_with(".cpp")) {
         current_editor().on_change = [] { rehighlight(); };

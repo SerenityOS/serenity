@@ -14,6 +14,8 @@ public:
 
     [[nodiscard]] bool add_file(const String& filename);
 
+    TextDocument* get_file(const String& filename);
+
     GModel& model() { return *m_model; }
 
     template<typename Callback>

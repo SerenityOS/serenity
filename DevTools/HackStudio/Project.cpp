@@ -79,3 +79,12 @@ bool Project::add_file(const String& filename)
     m_model->update();
     return true;
 }
+
+TextDocument* Project::get_file(const String& filename)
+{
+    for (auto& file : m_files) {
+        if (file.name() == filename)
+            return &file;
+    }
+    return nullptr;
+}
