@@ -181,6 +181,12 @@ URL Document::complete_url(const String& string) const
     return url;
 }
 
+void Document::force_layout()
+{
+    m_layout_root = nullptr;
+    layout();
+}
+
 void Document::layout()
 {
     if (!m_layout_root) {
@@ -188,6 +194,7 @@ void Document::layout()
         m_layout_root = tree_builder.build(*this);
     }
     m_layout_root->layout();
+    m_layout_root->set_needs_display();
 }
 
 void Document::update_style()
