@@ -8,6 +8,8 @@
 extern RefPtr<Project> g_project;
 extern void open_file(const String&);
 static RefPtr<GraphicsBitmap> s_file_icon;
+static RefPtr<GraphicsBitmap> s_cplusplus_icon;
+static RefPtr<GraphicsBitmap> s_header_icon;
 
 class LocatorSuggestionModel final : public GModel {
 public:
@@ -30,9 +32,10 @@ public:
             if (index.column() == Column::Name)
                 return suggestion;
             if (index.column() == Column::Icon) {
-                if (!s_file_icon) {
-                    s_file_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-unknown.png");
-                }
+                if (suggestion.ends_with(".cpp"))
+                    return *s_cplusplus_icon;
+                if (suggestion.ends_with(".h"))
+                    return *s_header_icon;
                 return *s_file_icon;
             }
         }
@@ -72,6 +75,12 @@ private:
 Locator::Locator(GWidget* parent)
     : GWidget(parent)
 {
+    if (!s_cplusplus_icon) {
+        s_file_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-unknown.png");
+        s_cplusplus_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png");
+        s_header_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-header.png");
+    }
+
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 20);
@@ -123,7 +132,6 @@ Locator::Locator(GWidget* parent)
     m_suggestion_view->set_size_columns_to_fit_content(true);
     m_suggestion_view->set_headers_visible(false);
     m_popup_window->set_main_widget(m_suggestion_view);
-
 
     m_suggestion_view->on_activation = [this](auto& index) {
         open_suggestion(index);
