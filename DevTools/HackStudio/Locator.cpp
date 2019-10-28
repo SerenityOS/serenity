@@ -106,14 +106,12 @@ Locator::Locator(GWidget* parent)
             m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
         }
     };
+
     m_textbox->on_return_pressed = [this] {
         auto selected_index = m_suggestion_view->selection().first();
         if (!selected_index.is_valid())
             return;
-        auto filename_index = m_suggestion_view->model()->index(selected_index.row(), LocatorSuggestionModel::Column::Name);
-        auto filename = m_suggestion_view->model()->data(filename_index, GModel::Role::Display).to_string();
-        open_file(filename);
-        close();
+        open_suggestion(selected_index);
     };
 
     m_popup_window = GWindow::construct();
@@ -125,10 +123,23 @@ Locator::Locator(GWidget* parent)
     m_suggestion_view->set_size_columns_to_fit_content(true);
     m_suggestion_view->set_headers_visible(false);
     m_popup_window->set_main_widget(m_suggestion_view);
+
+
+    m_suggestion_view->on_activation = [this](auto& index) {
+        open_suggestion(index);
+    };
 }
 
 Locator::~Locator()
 {
+}
+
+void Locator::open_suggestion(const GModelIndex& index)
+{
+    auto filename_index = m_suggestion_view->model()->index(index.row(), LocatorSuggestionModel::Column::Name);
+    auto filename = m_suggestion_view->model()->data(filename_index, GModel::Role::Display).to_string();
+    open_file(filename);
+    close();
 }
 
 void Locator::open()
