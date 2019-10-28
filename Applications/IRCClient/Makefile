@@ -5,7 +5,6 @@ OBJS = \
     IRCChannel.o \
     IRCQuery.o \
     IRCLogBuffer.o \
-    IRCLogBufferModel.o \
     IRCAppWindow.o \
     IRCWindow.o \
     IRCWindowListModel.o \
