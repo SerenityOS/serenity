@@ -89,8 +89,10 @@ Locator::Locator(GWidget* parent)
         else
             new_index = m_suggestion_view->model()->index(0);
 
-        if (new_index.is_valid())
+        if (new_index.is_valid()) {
             m_suggestion_view->selection().set(new_index);
+            m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
+        }
     };
     m_textbox->on_down = [this] {
         GModelIndex new_index = m_suggestion_view->selection().first();
@@ -99,8 +101,10 @@ Locator::Locator(GWidget* parent)
         else
             new_index = m_suggestion_view->model()->index(0);
 
-        if (new_index.is_valid())
+        if (new_index.is_valid()) {
             m_suggestion_view->selection().set(new_index);
+            m_suggestion_view->scroll_into_view(new_index, Orientation::Vertical);
+        }
     };
     m_textbox->on_return_pressed = [this] {
         auto selected_index = m_suggestion_view->selection().first();
