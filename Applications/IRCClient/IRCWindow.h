@@ -6,8 +6,8 @@ class IRCChannel;
 class IRCClient;
 class IRCQuery;
 class IRCLogBuffer;
-class GTableView;
 class GTextEditor;
+class HtmlView;
 
 class IRCWindow : public GWidget {
     C_OBJECT(IRCWindow)
@@ -46,7 +46,7 @@ private:
     void* m_owner { nullptr };
     Type m_type;
     String m_name;
-    RefPtr<GTableView> m_table_view;
+    RefPtr<HtmlView> m_html_view;
     RefPtr<GTextEditor> m_text_editor;
     RefPtr<IRCLogBuffer> m_log_buffer;
     int m_unread_count { 0 };

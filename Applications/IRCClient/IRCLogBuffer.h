@@ -1,12 +1,10 @@
 #pragma once
 
-#include <AK/String.h>
-#include <AK/CircularQueue.h>
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <LibDraw/Color.h>
-
-class IRCLogBufferModel;
+#include <LibHTML/DOM/Document.h>
 
 class IRCLogBuffer : public RefCounted<IRCLogBuffer> {
 public:
@@ -21,17 +19,15 @@ public:
         Color color { Color::Black };
     };
 
-    int count() const { return m_messages.size(); }
-    const Message& at(int index) const { return m_messages.at(index); }
     void add_message(char prefix, const String& name, const String& text, Color = Color::Black);
     void add_message(const String& text, Color = Color::Black);
     void dump() const;
 
-    const IRCLogBufferModel* model() const { return m_model.ptr(); }
-    IRCLogBufferModel* model() { return m_model.ptr(); }
+    const Document& document() const { return *m_document; }
+    Document& document() { return *m_document; }
 
 private:
     IRCLogBuffer();
-    NonnullRefPtr<IRCLogBufferModel> m_model;
-    CircularQueue<Message, 1000> m_messages;
+    RefPtr<Document> m_document;
+    RefPtr<Element> m_container_element;
 };

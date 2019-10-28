@@ -2,12 +2,12 @@
 #include "IRCChannel.h"
 #include "IRCChannelMemberListModel.h"
 #include "IRCClient.h"
-#include "IRCLogBufferModel.h"
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GTextEditor.h>
+#include <LibHTML/HtmlView.h>
 
 IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& name, GWidget* parent)
     : GWidget(parent)
@@ -21,15 +21,7 @@ IRCWindow::IRCWindow(IRCClient& client, void* owner, Type type, const String& na
     // Make a container for the log buffer view + (optional) member list.
     auto container = GSplitter::construct(Orientation::Horizontal, this);
 
-    m_table_view = GTableView::construct(container);
-    m_table_view->set_size_columns_to_fit_content(true);
-    m_table_view->set_headers_visible(false);
-    m_table_view->set_font(Font::default_fixed_width_font());
-    m_table_view->set_alternating_row_colors(false);
-
-    if (m_type == Server) {
-        m_table_view->set_column_hidden(IRCLogBufferModel::Column::Name, true);
-    }
+    m_html_view = HtmlView::construct(container);
 
     if (m_type == Channel) {
         auto member_view = GTableView::construct(container);
@@ -65,7 +57,7 @@ IRCWindow::~IRCWindow()
 void IRCWindow::set_log_buffer(const IRCLogBuffer& log_buffer)
 {
     m_log_buffer = &log_buffer;
-    m_table_view->set_model(log_buffer.model());
+    m_html_view->set_document(const_cast<Document*>(&log_buffer.document()));
 }
 
 bool IRCWindow::is_active() const
@@ -80,7 +72,7 @@ void IRCWindow::did_add_message()
         m_client.aid_update_window_list();
         return;
     }
-    m_table_view->scroll_to_bottom();
+    m_html_view->scroll_to_bottom();
 }
 
 void IRCWindow::clear_unread_count()

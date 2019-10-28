@@ -7,6 +7,7 @@
 
 class GAction;
 class GStackWidget;
+class GTableView;
 
 class IRCAppWindow : public GWindow {
 public:
