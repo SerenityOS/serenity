@@ -3,6 +3,7 @@
 #include <LibGUI/GWidget.h>
 
 class LocatorTextBox;
+class GModelIndex;
 class GTableView;
 
 class Locator final : public GWidget {
@@ -17,6 +18,7 @@ private:
     virtual void keydown_event(GKeyEvent&) override;
 
     void update_suggestions();
+    void open_suggestion(const GModelIndex&);
 
     explicit Locator(GWidget* parent);
 
