@@ -9,6 +9,7 @@ OBJS = \
     CppLexer.o \
     Editor.o \
     EditorWrapper.o \
+    Locator.o \
     main.o
 
 APP = HackStudio

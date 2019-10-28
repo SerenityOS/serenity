@@ -2,6 +2,7 @@
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
+#include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
 #include <LibCore/CFile.h>
@@ -184,6 +185,12 @@ int main(int argc, char** argv)
     auto terminal_wrapper = TerminalWrapper::construct(nullptr);
     tab_widget->add_widget("Console", terminal_wrapper);
 
+    auto locator = Locator::construct(widget);
+
+    auto open_locator_action = GAction::create("Open Locator...", { Mod_Ctrl, Key_K }, [&](auto&) {
+        locator->open();
+    });
+
     auto menubar = make<GMenuBar>();
     auto app_menu = make<GMenu>("HackStudio");
     app_menu->add_action(save_action);
@@ -223,6 +230,7 @@ int main(int argc, char** argv)
 
     auto view_menu = make<GMenu>("View");
     view_menu->add_action(hide_action_tabs_action);
+    view_menu->add_action(open_locator_action);
     menubar->add_menu(move(view_menu));
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
