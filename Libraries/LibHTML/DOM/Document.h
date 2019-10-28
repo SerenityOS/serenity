@@ -69,6 +69,7 @@ public:
     void set_visited_link_color(Color);
 
     void layout();
+    void force_layout();
 
     void update_style();
     void update_layout();
