@@ -308,7 +308,7 @@ void open_file(const String& filename)
     auto file = g_project->get_file(filename);
     current_editor().set_document(const_cast<GTextDocument&>(file->document()));
 
-    if (filename.ends_with(".cpp")) {
+    if (filename.ends_with(".cpp") || filename.ends_with(".h")) {
         current_editor().on_change = [] { rehighlight(); };
         rehighlight();
     } else {
