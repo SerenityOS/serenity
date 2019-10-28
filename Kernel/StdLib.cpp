@@ -138,6 +138,37 @@ int memcmp(const void* v1, const void* v2, size_t n)
     return 0;
 }
 
+int strncmp(const char* s1, const char* s2, size_t n)
+{
+    if (!n)
+        return 0;
+    do {
+        if (*s1 != *s2++)
+            return *(const unsigned char*)s1 - *(const unsigned char*)--s2;
+        if (*s1++ == 0)
+            break;
+    } while (--n);
+    return 0;
+}
+
+char* strstr(const char* haystack, const char* needle)
+{
+    char nch;
+    char hch;
+
+    if ((nch = *needle++) != 0) {
+        size_t len = strlen(needle);
+        do {
+            do {
+                if ((hch = *haystack++) == 0)
+                    return nullptr;
+            } while (hch != nch);
+        } while (strncmp(haystack, needle, len) != 0);
+        --haystack;
+    }
+    return const_cast<char*>(haystack);
+}
+
 [[noreturn]] void __cxa_pure_virtual()
 {
     ASSERT_NOT_REACHED();

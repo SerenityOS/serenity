@@ -3,6 +3,10 @@
 #include <AK/StringBuilder.h>
 #include <stdarg.h>
 
+#ifdef KERNEL
+extern "C" char* strstr(const char* haystack, const char* needle);
+#endif
+
 namespace AK {
 
 bool String::operator==(const String& other) const
@@ -313,4 +317,10 @@ bool String::match_helper(const StringView& mask) const
     return (mask_ptr == mask_end) && !*string_ptr;
 }
 
+bool String::contains(const String& needle) const
+{
+    return strstr(characters(), needle.characters());
 }
+
+}
+

@@ -110,6 +110,8 @@ public:
         return m_impl->to_uppercase();
     }
 
+    bool contains(const String&) const;
+
     Vector<String> split_limit(char separator, int limit) const;
     Vector<String> split(char separator) const;
     String substring(int start, int length) const;
