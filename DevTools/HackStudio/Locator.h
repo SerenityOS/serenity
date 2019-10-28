@@ -15,8 +15,6 @@ public:
     void close();
 
 private:
-    virtual void keydown_event(GKeyEvent&) override;
-
     void update_suggestions();
     void open_suggestion(const GModelIndex&);
 

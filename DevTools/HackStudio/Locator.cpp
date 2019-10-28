@@ -156,11 +156,6 @@ void Locator::close()
     m_popup_window->hide();
 }
 
-void Locator::keydown_event(GKeyEvent& event)
-{
-    GWidget::keydown_event(event);
-}
-
 void Locator::update_suggestions()
 {
     auto typed_text = m_textbox->text();
