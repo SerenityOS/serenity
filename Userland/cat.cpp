@@ -22,7 +22,6 @@ int main(int argc, char** argv)
     } else {
         fds.append(0);
     }
-
     for (auto& fd : fds) {
         for (;;) {
             char buf[4096];
