@@ -130,6 +130,8 @@ protected:
     virtual void context_menu_event(GContextMenuEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
 
+    GTextPosition text_position_at(const Point&) const;
+
 private:
     friend class GTextDocumentLine;
 
@@ -156,7 +158,6 @@ private:
     const GTextDocumentLine& line(int index) const { return document().line(index); }
     GTextDocumentLine& current_line() { return line(m_cursor.line()); }
     const GTextDocumentLine& current_line() const { return line(m_cursor.line()); }
-    GTextPosition text_position_at(const Point&) const;
     void insert_at_cursor(char);
     void insert_at_cursor(const StringView&);
     int ruler_width() const;
