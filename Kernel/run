@@ -51,6 +51,18 @@ elif [ "$1" = "qgrub" ]; then
         -device e1000,netdev=breh \
         -hda _disk_image \
         -soundhw pcspk
+elif [ "$1" = "qtext" ]; then
+    $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
+        $SERENITY_EXTRA_QEMU_ARGS \
+        -d cpu_reset,guest_errors \
+        -device VGA,vgamem_mb=64 \
+        -debugcon stdio \
+        -device e1000 \
+        -kernel kernel \
+        -append "${SERENITY_KERNEL_CMDLINE} text_debug" \
+        -hda _disk_image \
+        -soundhw pcspk \
+        -soundhw sb16
 else
     # ./run: qemu with user networking
     $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
