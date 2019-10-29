@@ -10,7 +10,6 @@ public:
     virtual ~SampleWidget() override;
 
     void set_buffer(ABuffer*);
-
 private:
     explicit SampleWidget(GWidget* parent);
     virtual void paint_event(GPaintEvent&) override;
