@@ -93,15 +93,29 @@ GVariant::GVariant(const JsonValue& value)
         return;
     }
 
-    if (value.is_int()) {
+    if (value.is_i32()) {
         m_type = Type::Int;
-        m_value.as_int = value.as_int();
+        m_value.as_int = value.as_i32();
         return;
     }
 
-    if (value.is_uint()) {
+    if (value.is_u32()) {
         m_type = Type::UnsignedInt;
-        m_value.as_uint = value.as_uint();
+        m_value.as_uint = value.as_u32();
+        return;
+    }
+
+    if (value.is_i64()) {
+        // FIXME: GVariant should have a 64-bit internal type.
+        m_type = Type::Int;
+        m_value.as_int = value.to_i32();
+        return;
+    }
+
+    if (value.is_u64()) {
+        // FIXME: GVariant should have a 64-bit internal type.
+        m_type = Type::UnsignedInt;
+        m_value.as_uint = value.to_u32();
         return;
     }
 

@@ -120,11 +120,17 @@ void JsonValue::serialize(Builder& builder) const
         builder.appendf("%g", m_value.as_double);
         break;
 #endif
-    case Type::Int:
-        builder.appendf("%d", m_value.as_int);
+    case Type::Int32:
+        builder.appendf("%d", as_i32());
         break;
-    case Type::UnsignedInt:
-        builder.appendf("%u", m_value.as_uint);
+    case Type::Int64:
+        builder.appendf("%lld", as_i64());
+        break;
+    case Type::UnsignedInt32:
+        builder.appendf("%u", as_u32());
+        break;
+    case Type::UnsignedInt64:
+        builder.appendf("%llu", as_u64());
         break;
     case Type::Undefined:
         builder.append("undefined");

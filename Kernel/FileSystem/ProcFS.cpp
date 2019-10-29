@@ -257,8 +257,8 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.add("readable", region.is_readable());
         region_object.add("writable", region.is_writable());
         region_object.add("address", region.vaddr().get());
-        region_object.add("size", region.size());
-        region_object.add("amount_resident", region.amount_resident());
+        region_object.add("size", (u32)region.size());
+        region_object.add("amount_resident", (u32)region.amount_resident());
         region_object.add("name", region.name());
     }
     array.finish();
@@ -644,9 +644,9 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     InterruptDisabler disabler;
     KBufferBuilder builder;
     JsonObjectSerializer json { builder };
-    json.add("kmalloc_allocated", sum_alloc);
-    json.add("kmalloc_available", sum_free);
-    json.add("kmalloc_eternal_allocated", kmalloc_sum_eternal);
+    json.add("kmalloc_allocated", (u32)sum_alloc);
+    json.add("kmalloc_available", (u32)sum_free);
+    json.add("kmalloc_eternal_allocated", (u32)kmalloc_sum_eternal);
     json.add("user_physical_allocated", MM.user_physical_pages_used());
     json.add("user_physical_available", MM.user_physical_pages());
     json.add("super_physical_allocated", MM.super_physical_pages_used());
@@ -655,8 +655,8 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     json.add("kfree_call_count", g_kfree_call_count);
     slab_alloc_stats([&json](size_t slab_size, size_t num_allocated, size_t num_free) {
         auto prefix = String::format("slab_%zu", slab_size);
-        json.add(String::format("%s_num_allocated", prefix.characters()), num_allocated);
-        json.add(String::format("%s_num_free", prefix.characters()), num_free);
+        json.add(String::format("%s_num_allocated", prefix.characters()), (u32)num_allocated);
+        json.add(String::format("%s_num_free", prefix.characters()), (u32)num_free);
     });
     json.finish();
     return builder.build();
@@ -684,9 +684,9 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("nfds", process.number_of_open_file_descriptors());
         process_object.add("name", process.name());
         process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
-        process_object.add("amount_virtual", process.amount_virtual());
-        process_object.add("amount_resident", process.amount_resident());
-        process_object.add("amount_shared", process.amount_shared());
+        process_object.add("amount_virtual", (u32)process.amount_virtual());
+        process_object.add("amount_resident", (u32)process.amount_resident());
+        process_object.add("amount_shared", (u32)process.amount_shared());
         process_object.add("ticks", process.main_thread().ticks());
         process_object.add("priority", to_string(process.priority()));
         process_object.add("syscall_count", process.syscall_count());

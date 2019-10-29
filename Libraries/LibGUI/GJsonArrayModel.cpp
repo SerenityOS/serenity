@@ -34,10 +34,8 @@ GVariant GJsonArrayModel::data(const GModelIndex& index, Role role) const
         auto data = object.get(json_field_name);
         if (field_spec.massage_for_display)
             return field_spec.massage_for_display(object);
-        if (data.is_int())
-            return data.as_int();
-        if (data.is_uint())
-            return data.as_uint();
+        if (data.is_number())
+            return data.to_i32();
         return object.get(json_field_name).to_string();
     }
 
