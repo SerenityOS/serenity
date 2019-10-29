@@ -59,6 +59,8 @@ public:
 
     void update_views(Badge<GTextDocumentLine>);
 
+    String text_in_range(const GTextRange&) const;
+
 private:
     explicit GTextDocument(Client* client);
 

@@ -1,3 +1,4 @@
+#include <AK/StringBuilder.h>
 #include <LibGUI/GTextDocument.h>
 #include <ctype.h>
 
@@ -164,4 +165,21 @@ void GTextDocument::update_views(Badge<GTextDocumentLine>)
 {
     for (auto* client : m_clients)
         client->document_did_change();
+}
+
+String GTextDocument::text_in_range(const GTextRange& a_range) const
+{
+    auto range = a_range.normalized();
+
+    StringBuilder builder;
+    for (int i = range.start().line(); i <= range.end().line(); ++i) {
+        auto& line = lines()[i];
+        int selection_start_column_on_line = range.start().line() == i ? range.start().column() : 0;
+        int selection_end_column_on_line = range.end().line() == i ? range.end().column() : line.length();
+        builder.append(line.characters() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line);
+        if (i != range.end().line())
+            builder.append('\n');
+    }
+
+    return builder.to_string();
 }

@@ -1002,18 +1002,7 @@ String GTextEditor::selected_text() const
     if (!has_selection())
         return {};
 
-    auto selection = normalized_selection();
-    StringBuilder builder;
-    for (int i = selection.start().line(); i <= selection.end().line(); ++i) {
-        auto& line = lines()[i];
-        int selection_start_column_on_line = selection.start().line() == i ? selection.start().column() : 0;
-        int selection_end_column_on_line = selection.end().line() == i ? selection.end().column() : line.length();
-        builder.append(line.characters() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line);
-        if (i != selection.end().line())
-            builder.append('\n');
-    }
-
-    return builder.to_string();
+    return document().text_in_range(m_selection);
 }
 
 void GTextEditor::delete_selection()
