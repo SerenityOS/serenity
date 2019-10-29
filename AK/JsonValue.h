@@ -1,8 +1,8 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/IPv4Address.h>
 #include <AK/Optional.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 namespace AK {
@@ -16,8 +16,10 @@ public:
     enum class Type {
         Undefined,
         Null,
-        Int,
-        UnsignedInt,
+        Int32,
+        UnsignedInt32,
+        Int64,
+        UnsignedInt64,
 #ifndef KERNEL
         Double,
 #endif
@@ -38,9 +40,11 @@ public:
     JsonValue& operator=(const JsonValue&);
     JsonValue& operator=(JsonValue&&);
 
-    JsonValue(int);
-    JsonValue(unsigned);
-    JsonValue(long unsigned);
+    JsonValue(i32);
+    JsonValue(u32);
+    JsonValue(i64);
+    JsonValue(u64);
+
 #ifndef KERNEL
     JsonValue(double);
 #endif
@@ -84,31 +88,11 @@ public:
         return IPv4Address::from_string(as_string());
     }
 
-    int to_int(int default_value = 0) const
-    {
-        if (!is_number())
-            return default_value;
-#ifndef KERNEL
-        if (is_double())
-            return (int)as_double();
-#endif
-        if (is_uint())
-            return (int)as_uint();
-        return as_int();
-    }
+    int to_int(int default_value = 0) const { return to_i32(default_value); }
+    i32 to_i32(i32 default_value = 0) const { return to_number<i32>(default_value); }
 
-    unsigned to_uint(unsigned default_value = 0) const
-    {
-        if (!is_number())
-            return default_value;
-#ifndef KERNEL
-        if (is_double())
-            return (unsigned)as_double();
-#endif
-        if (is_int())
-            return (unsigned)as_int();
-        return as_uint();
-    }
+    unsigned to_uint(unsigned default_value = 0) const { return to_u32(default_value); }
+    u32 to_u32(u32 default_value = 0) const { return to_number<u32>(default_value); }
 
     bool to_bool(bool default_value = false) const
     {
@@ -117,16 +101,28 @@ public:
         return as_bool();
     }
 
-    int as_int() const
+    int as_i32() const
     {
-        ASSERT(is_int());
-        return m_value.as_int;
+        ASSERT(is_i32());
+        return m_value.as_i32;
     }
 
-    int as_uint() const
+    int as_u32() const
     {
-        ASSERT(is_uint());
-        return m_value.as_uint;
+        ASSERT(is_u32());
+        return m_value.as_u32;
+    }
+
+    int as_i64() const
+    {
+        ASSERT(is_i64());
+        return m_value.as_i64;
+    }
+
+    int as_u64() const
+    {
+        ASSERT(is_u64());
+        return m_value.as_u64;
     }
 
     int as_bool() const
@@ -170,8 +166,10 @@ public:
     bool is_undefined() const { return m_type == Type::Undefined; }
     bool is_bool() const { return m_type == Type::Bool; }
     bool is_string() const { return m_type == Type::String; }
-    bool is_int() const { return m_type == Type::Int; }
-    bool is_uint() const { return m_type == Type::UnsignedInt; }
+    bool is_i32() const { return m_type == Type::Int32; }
+    bool is_u32() const { return m_type == Type::UnsignedInt32; }
+    bool is_i64() const { return m_type == Type::Int64; }
+    bool is_u64() const { return m_type == Type::UnsignedInt64; }
 #ifndef KERNEL
     bool is_double() const
     {
@@ -185,28 +183,36 @@ public:
     bool is_object() const { return m_type == Type::Object; }
     bool is_number() const
     {
-        if (m_type == Type::Int || m_type == Type::UnsignedInt)
-            return true;
-#ifdef KERNEL
-        return false;
-#else
-        return m_type == Type::Double;
+        switch (m_type) {
+        case Type::Int32:
+        case Type::UnsignedInt32:
+        case Type::Int64:
+        case Type::UnsignedInt64:
+#ifndef KERNEL
+        case Type::Double:
 #endif
+            return true;
+        default:
+            return false;
+        }
     }
 
-    u32 to_u32(u32 default_value = 0) const
+    template<typename T>
+    T to_number(T default_value = 0) const
     {
-        if (!is_number())
-            return default_value;
-#ifdef KERNEL
-        return (u32)m_value.as_int;
-#else
-        if (type() == Type::Int)
-            return (u32)m_value.as_int;
-        if (type() == Type::UnsignedInt)
-            return m_value.as_uint;
-        return (u32)m_value.as_double;
+#ifndef KERNEL
+        if (is_double())
+            return (T)as_double();
 #endif
+        if (type() == Type::Int32)
+            return (T)as_i32();
+        if (type() == Type::UnsignedInt32)
+            return (T)as_u32();
+        if (type() == Type::Int64)
+            return (T)as_i64();
+        if (type() == Type::UnsignedInt64)
+            return (T)as_u64();
+        return default_value;
     }
 
 private:
@@ -222,8 +228,10 @@ private:
 #ifndef KERNEL
         double as_double;
 #endif
-        int as_int;
-        unsigned int as_uint;
+        i32 as_i32;
+        u32 as_u32;
+        i64 as_i64;
+        u64 as_u64;
         bool as_bool;
     } m_value;
 };

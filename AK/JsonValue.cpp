@@ -63,21 +63,28 @@ JsonValue& JsonValue::operator=(JsonValue&& other)
     return *this;
 }
 
-JsonValue::JsonValue(int value)
-    : m_type(Type::Int)
+JsonValue::JsonValue(i32 value)
+    : m_type(Type::Int32)
 {
-    m_value.as_int = value;
+    m_value.as_i32 = value;
 }
 
-JsonValue::JsonValue(long unsigned value)
-    : JsonValue((unsigned)value)
+JsonValue::JsonValue(u32 value)
+    : m_type(Type::UnsignedInt32)
 {
+    m_value.as_u32 = value;
 }
 
-JsonValue::JsonValue(unsigned value)
-    : m_type(Type::UnsignedInt)
+JsonValue::JsonValue(i64 value)
+    : m_type(Type::Int64)
 {
-    m_value.as_uint = value;
+    m_value.as_i64 = value;
+}
+
+JsonValue::JsonValue(u64 value)
+    : m_type(Type::UnsignedInt64)
+{
+    m_value.as_u64 = value;
 }
 
 JsonValue::JsonValue(const char* cstring)
