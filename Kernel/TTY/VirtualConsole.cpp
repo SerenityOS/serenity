@@ -545,6 +545,13 @@ StringView VirtualConsole::tty_name() const
     return m_tty_name;
 }
 
+void VirtualConsole::echo(u8 ch)
+{
+    if (should_echo_input()) {
+        on_tty_write(&ch, 1);
+    }
+}
+
 void VirtualConsole::set_vga_start_row(u16 row)
 {
     m_vga_start_row = row;
