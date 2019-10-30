@@ -9,6 +9,7 @@
 WSMenuManager::WSMenuManager()
 {
     m_username = getlogin();
+    m_needs_window_resize = false;
 
     m_timer = CTimer::construct(300, [this] {
         static time_t last_update_time;
@@ -44,6 +45,11 @@ void WSMenuManager::draw()
 {
     auto& wm = WSWindowManager::the();
     auto menubar_rect = wm.menubar_rect();
+
+    if (m_needs_window_resize) {
+        m_window->set_rect(menubar_rect);
+        m_needs_window_resize = false;
+    }
 
     Painter painter(*window().backing_store());
 
@@ -134,8 +140,8 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
 {
     auto& wm = WSWindowManager::the();
     bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove
-                                       && !m_open_menu_stack.is_empty()
-                                       && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == wm.system_menu());
+        && !m_open_menu_stack.is_empty()
+        && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == wm.system_menu());
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != wm.current_menu() && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
@@ -156,4 +162,9 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
         wm.close_current_menu();
         return;
     }
+}
+
+void WSMenuManager::set_needs_window_resize()
+{
+    m_needs_window_resize = true;
 }

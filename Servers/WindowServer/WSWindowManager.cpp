@@ -196,6 +196,7 @@ const Font& WSWindowManager::app_menu_font() const
 void WSWindowManager::set_resolution(int width, int height)
 {
     WSCompositor::the().set_resolution(width, height);
+    m_menu_manager.set_needs_window_resize();
     WSClientConnection::for_each_client([&](WSClientConnection& client) {
         client.notify_about_new_screen_rect(WSScreen::the().rect());
     });
@@ -421,7 +422,7 @@ void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& ev
     if (window.is_maximized()) {
         auto width_before_resize = window.width();
         window.set_maximized(false);
-        window.move_to(m_drag_origin.x() - (window.width() * ((float) m_drag_origin.x() / width_before_resize)), m_drag_origin.y());
+        window.move_to(m_drag_origin.x() - (window.width() * ((float)m_drag_origin.x() / width_before_resize)), m_drag_origin.y());
     }
     m_drag_window_origin = window.position();
     invalidate(window);
