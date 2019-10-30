@@ -634,7 +634,6 @@ static int run_command(const String& cmd)
 
     struct termios trm;
     tcgetattr(0, &trm);
-    tcsetattr(0, TCSANOW, &g.default_termios);
 
     struct SpawnedProcess {
         String name;
@@ -730,6 +729,7 @@ static int run_command(const String& cmd)
             if (!child) {
                 setpgid(0, 0);
                 tcsetpgrp(0, getpid());
+                tcsetattr(0, TCSANOW, &g.default_termios);
                 for (auto& rewiring : subcommand.rewirings) {
 #ifdef SH_DEBUG
                     dbgprintf("in %s<%d>, dup2(%d, %d)\n", argv[0], getpid(), rewiring.rewire_fd, rewiring.fd);
