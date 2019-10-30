@@ -21,6 +21,8 @@ public:
 
     Vector<WeakPtr<WSMenu>>& open_menu_stack() { return m_open_menu_stack; }
 
+    void set_needs_window_resize();
+
 private:
     WSWindow& window() { return *m_window; }
     const WSWindow& window() const { return *m_window; }
@@ -36,4 +38,6 @@ private:
     RefPtr<CTimer> m_timer;
 
     Vector<WeakPtr<WSMenu>> m_open_menu_stack;
+
+    bool m_needs_window_resize;
 };
