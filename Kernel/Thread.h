@@ -313,7 +313,7 @@ public:
     }
 
     static constexpr u32 default_kernel_stack_size = 65536;
-    static constexpr u32 default_userspace_stack_size = 65536;
+    static constexpr u32 default_userspace_stack_size = 4 * MB;
 
 private:
     IntrusiveListNode m_runnable_list_node;
