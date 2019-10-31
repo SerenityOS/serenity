@@ -502,7 +502,7 @@ void Thread::push_value_on_stack(u32 value)
 
 void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
 {
-    auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)");
+    auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
     ASSERT(region);
     m_tss.esp = region->vaddr().offset(default_userspace_stack_size).get();
 
@@ -537,7 +537,7 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
 
 void Thread::make_userspace_stack_for_secondary_thread(void* argument)
 {
-    m_userspace_stack_region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()));
+    m_userspace_stack_region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()), PROT_READ | PROT_WRITE, false);
     ASSERT(m_userspace_stack_region);
     m_tss.esp = m_userspace_stack_region->vaddr().offset(default_userspace_stack_size).get();
 
