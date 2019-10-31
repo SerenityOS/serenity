@@ -9,10 +9,15 @@ SECTIONS
         Arch/i386/Boot/boot.ao
 		*(.multiboot)
 		*(.text)
+		*(.text.startup)
 	}
 
 	.rodata BLOCK(4K) : ALIGN(4K)
 	{
+		start_ctors = .;
+		*(.ctors)
+		end_ctors = .;
+
 		*(.rodata)
 	}
 

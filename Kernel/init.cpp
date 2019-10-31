@@ -192,6 +192,22 @@ extern "C" {
 multiboot_info_t* multiboot_info_ptr;
 }
 
+typedef void (*ctor_func_t)(); 
+
+// Defined in the linker script
+extern ctor_func_t start_ctors;
+extern ctor_func_t end_ctors;
+
+// Define some Itanium C++ ABI methods to stop the linker from complaining
+// If we actually call these something has gone horribly wrong
+void* __dso_handle __attribute__((visibility ("hidden")));
+
+extern "C" int __cxa_atexit ( void (*)(void *), void *, void *)
+{
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
 extern "C" [[noreturn]] void init()
 {
     // this is only used one time, directly below here. we can't use this part
@@ -233,6 +249,10 @@ extern "C" [[noreturn]] void init()
     PIC::initialize();
     gdt_init();
     idt_init();
+
+    // call global constructors after gtd and itd init
+    for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
+        (*ctor)();
 
     keyboard = new KeyboardDevice;
     ps2mouse = new PS2MouseDevice;
