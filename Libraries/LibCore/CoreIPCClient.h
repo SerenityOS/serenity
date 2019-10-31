@@ -61,14 +61,14 @@ namespace Client {
                 CEventLoop::current().post_event(*this, make<PostProcessEvent>(m_connection->fd()));
             };
 
-            int retries = 1000;
+            int retries = 100000;
             while (retries) {
                 if (m_connection->connect(CSocketAddress::local(address))) {
                     break;
                 }
 
                 dbgprintf("Client::Connection: connect failed: %d, %s\n", errno, strerror(errno));
-                sleep(1);
+                usleep(10000);
                 --retries;
             }
             ASSERT(m_connection->is_connected());
@@ -260,14 +260,14 @@ namespace Client {
                 CEventLoop::current().post_event(*this, make<PostProcessEvent>(m_connection->fd()));
             };
 
-            int retries = 1000;
+            int retries = 100000;
             while (retries) {
                 if (m_connection->connect(CSocketAddress::local(address))) {
                     break;
                 }
 
                 dbgprintf("Client::Connection: connect failed: %d, %s\n", errno, strerror(errno));
-                sleep(1);
+                usleep(10000);
                 --retries;
             }
             ASSERT(m_connection->is_connected());
