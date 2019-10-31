@@ -3,12 +3,22 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <sched.h>
+#include <signal.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 //#define SPAWN_MULTIPLE_VIRTUAL_CONSOLES
+
+void sigchld_handler(int)
+{
+    int status = 0;
+    pid_t pid = waitpid(-1, &status, WNOHANG);
+    if (pid)
+        dbg() << "reaped pid " << pid;
+}
 
 void start_process(const String& program, const Vector<String>& arguments, int prio, const char* tty = nullptr)
 {
@@ -45,7 +55,7 @@ void start_process(const String& program, const Vector<String>& arguments, int p
         char* progv[256];
         progv[0] = const_cast<char*>(program.characters());
         for (int i = 0; i < arguments.size() && i < 254; i++)
-            progv[i+1] = const_cast<char*>(arguments[i].characters());
+            progv[i + 1] = const_cast<char*>(arguments[i].characters());
         progv[arguments.size() + 1] = nullptr;
         ret = execv(progv[0], progv);
         if (ret < 0) {
@@ -99,6 +109,8 @@ int main(int, char**)
     // Drop privileges.
     setgid(100);
     setuid(100);
+
+    signal(SIGCHLD, sigchld_handler);
 
     start_process("/bin/LookupServer", {}, lowest_prio);
     start_process("/bin/WindowServer", {}, highest_prio);
