@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 {
     Vector<int> fds;
     if (argc > 1) {
-        for (int i = 0; i < argc; i++) {
+        for (int i = 1; i < argc; i++) {
             int fd;
             if ((fd = open(argv[i], O_RDONLY)) == -1) {
                 fprintf(stderr, "Failed to open %s: %s\n", argv[i], strerror(errno));
