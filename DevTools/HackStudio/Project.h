@@ -1,6 +1,6 @@
 #pragma once
 
-#include "TextDocument.h"
+#include "ProjectFile.h"
 #include <AK/Noncopyable.h>
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/OwnPtr.h>
@@ -14,7 +14,7 @@ public:
 
     [[nodiscard]] bool add_file(const String& filename);
 
-    TextDocument* get_file(const String& filename);
+    ProjectFile* get_file(const String& filename);
 
     GModel& model() { return *m_model; }
 
@@ -33,5 +33,5 @@ private:
 
     String m_path;
     RefPtr<GModel> m_model;
-    NonnullRefPtrVector<TextDocument> m_files;
+    NonnullRefPtrVector<ProjectFile> m_files;
 };
