@@ -293,9 +293,10 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
     ASSERT_INTERRUPTS_DISABLED();
     auto& vmo = region.vmobject();
     auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
-    sti();
-    LOCKER(vmo.m_paging_lock);
-    cli();
+    ASSERT(vmo.is_anonymous());
+
+    // NOTE: We don't need to acquire the VMObject's lock.
+    //       This function is already exclusive due to interrupts being blocked.
 
     if (!vmo_page.is_null()) {
 #ifdef PAGE_FAULT_DEBUG
