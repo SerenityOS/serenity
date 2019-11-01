@@ -4,6 +4,8 @@
 
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
 
+[ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=128M
+
 export SDL_VIDEO_X11_DGAMOUSE=0
 
 if [ "$1" = "b" ]; then
@@ -11,7 +13,7 @@ if [ "$1" = "b" ]; then
     bochs -q -f .bochsrc
 elif [ "$1" = "qn" ]; then
     # ./run qn: qemu without network
-    $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
+    $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
         $SERENITY_EXTRA_QEMU_ARGS \
         -d cpu_reset,guest_errors \
         -device VGA,vgamem_mb=64 \
@@ -24,7 +26,7 @@ elif [ "$1" = "qn" ]; then
         -soundhw sb16
 elif [ "$1" = "qtap" ]; then
     # ./run qtap: qemu with tap
-    sudo $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
+    sudo $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
         $SERENITY_EXTRA_QEMU_ARGS \
         -enable-kvm \
         -d cpu_reset,guest_errors \
@@ -40,7 +42,7 @@ elif [ "$1" = "qtap" ]; then
         -soundhw sb16
 elif [ "$1" = "qgrub" ]; then
     # ./run qgrub: qemu with grub
-    $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
+    $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
         $SERENITY_EXTRA_QEMU_ARGS \
         -enable-kvm \
         -d cpu_reset,guest_errors \
@@ -52,7 +54,7 @@ elif [ "$1" = "qgrub" ]; then
         -hda _disk_image \
         -soundhw pcspk
 elif [ "$1" = "qtext" ]; then
-    $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
+    $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
         $SERENITY_EXTRA_QEMU_ARGS \
         -d cpu_reset,guest_errors \
         -device VGA,vgamem_mb=64 \
@@ -65,7 +67,7 @@ elif [ "$1" = "qtext" ]; then
         -soundhw sb16
 else
     # ./run: qemu with user networking
-    $SERENITY_QEMU_BIN -s -m ${SERENITY_RAM_SIZE:-128} \
+    $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
         $SERENITY_EXTRA_QEMU_ARGS \
         -enable-kvm \
         -d cpu_reset,guest_errors \
