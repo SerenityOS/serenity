@@ -15,10 +15,6 @@ public:
 
     const String& name() const { return m_name; }
 
-    const ByteBuffer& contents() const;
-
-    Vector<int> find(const StringView&) const;
-
     const GTextDocument& document() const;
 
 private:
@@ -28,6 +24,5 @@ private:
     }
 
     String m_name;
-    mutable ByteBuffer m_contents;
     mutable RefPtr<GTextDocument> m_document;
 };

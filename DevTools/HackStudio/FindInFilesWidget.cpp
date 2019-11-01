@@ -9,14 +9,14 @@ extern GTextEditor& current_editor();
 extern void open_file(const String&);
 extern OwnPtr<Project> g_project;
 
-struct FilenameAndLineNumber {
+struct FilenameAndRange {
     String filename;
-    int line_number { -1 };
+    GTextRange range;
 };
 
 class SearchResultsModel final : public GModel {
 public:
-    explicit SearchResultsModel(const Vector<FilenameAndLineNumber>&& matches)
+    explicit SearchResultsModel(const Vector<FilenameAndRange>&& matches)
         : m_matches(move(matches))
     {
     }
@@ -27,23 +27,29 @@ public:
     {
         if (role == Role::Display) {
             auto& match = m_matches.at(index.row());
-            return String::format("%s:%d", match.filename.characters(), match.line_number);
+            return String::format("%s: (%d,%d - %d,%d)",
+                match.filename.characters(),
+                match.range.start().line() + 1,
+                match.range.start().column(),
+                match.range.end().line() + 1,
+                match.range.end().column());
         }
         return {};
     }
     virtual void update() override {}
+    virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const override { return create_index(row, column, &m_matches.at(row)); }
 
 private:
-    Vector<FilenameAndLineNumber> m_matches;
+    Vector<FilenameAndRange> m_matches;
 };
 
 static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
 {
-    Vector<FilenameAndLineNumber> matches;
+    Vector<FilenameAndRange> matches;
     g_project->for_each_text_file([&](auto& file) {
-        auto matches_in_file = file.find(text);
-        for (int match : matches_in_file) {
-            matches.append({ file.name(), match });
+        auto matches_in_file = file.document().find_all(text);
+        for (auto& range : matches_in_file) {
+            matches.append({ file.name(), range });
         }
     });
 
@@ -63,15 +69,10 @@ FindInFilesWidget::FindInFilesWidget(GWidget* parent)
 
     m_result_view = GListView::construct(this);
 
-    m_result_view->on_activation = [this](auto& index) {
-        auto match_string = m_result_view->model()->data(index).to_string();
-        auto parts = match_string.split(':');
-        ASSERT(parts.size() == 2);
-        bool ok;
-        int line_number = parts[1].to_int(ok);
-        ASSERT(ok);
-        open_file(parts[0]);
-        current_editor().set_cursor(line_number - 1, 0);
+    m_result_view->on_activation = [](auto& index) {
+        auto& match = *(const FilenameAndRange*)index.internal_data();
+        open_file(match.filename);
+        current_editor().set_selection(match.range);
         current_editor().set_focus(true);
     };
 
