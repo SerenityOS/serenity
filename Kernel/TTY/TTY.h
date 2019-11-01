@@ -28,6 +28,7 @@ public:
 
     void set_termios(const termios&);
     bool should_generate_signals() const { return m_termios.c_lflag & ISIG; }
+    bool should_flush_on_signal() const { return !(m_termios.c_lflag & NOFLSH); }
     bool should_echo_input() const { return m_termios.c_lflag & ECHO; }
     bool in_canonical_mode() const { return m_termios.c_lflag & ICANON; }
 
@@ -46,6 +47,7 @@ protected:
     void do_backspace();
     void erase_word();
     void kill_line();
+    void flush_input();
 
     bool is_eol(u8) const;
     bool is_eof(u8) const;
