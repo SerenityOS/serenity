@@ -302,6 +302,13 @@ String LineEditor::get_line(const String& prompt)
                 }
                 continue;
             }
+            if (ch == g.termios.c_cc[VEOF]) { // Normally ^D
+                if (m_buffer.is_empty()) {
+                    printf("<EOF>\n");
+                    exit(0);
+                }
+                continue;
+            }
             if (ch == 0x05) { // ^E
                 if (m_cursor < m_buffer.size()) {
                     printf("\033[%dC", m_buffer.size() - m_cursor);
