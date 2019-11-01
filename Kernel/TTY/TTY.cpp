@@ -109,6 +109,9 @@ bool TTY::is_werase(u8 ch) const
 void TTY::emit(u8 ch)
 {
     if (should_generate_signals()) {
+        if (should_flush_on_signal())
+            flush_input();
+
         if (ch == m_termios.c_cc[VINTR]) {
             dbg() << tty_name() << ": VINTR pressed!";
             generate_signal(SIGINT);
@@ -212,6 +215,12 @@ void TTY::generate_signal(int signal)
         process.send_signal(signal, nullptr);
         return IterationDecision::Continue;
     });
+}
+
+void TTY::flush_input()
+{
+    m_available_lines = 0;
+    m_input_buffer.clear();
 }
 
 void TTY::set_termios(const termios& t)
