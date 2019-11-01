@@ -50,7 +50,7 @@ TextEditorWidget::TextEditorWidget()
             dbg() << "find_next(\"\")";
             return;
         }
-        auto found_range = m_editor->find_next(needle, m_editor->normalized_selection().end());
+        auto found_range = m_editor->document().find_next(needle, m_editor->normalized_selection().end());
         dbg() << "find_next(\"" << needle << "\") returned " << found_range;
         if (found_range.is_valid()) {
             m_editor->set_selection(found_range);
@@ -73,7 +73,7 @@ TextEditorWidget::TextEditorWidget()
         if (!selection_start.is_valid())
             selection_start = m_editor->normalized_selection().end();
 
-        auto found_range = m_editor->find_prev(needle, selection_start);
+        auto found_range = m_editor->document().find_previous(needle, selection_start);
 
         dbg() << "find_prev(\"" << needle << "\") returned " << found_range;
         if (found_range.is_valid()) {
