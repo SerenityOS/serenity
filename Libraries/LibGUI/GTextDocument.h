@@ -20,6 +20,11 @@ struct GTextDocumentSpan {
 
 class GTextDocument : public RefCounted<GTextDocument> {
 public:
+    enum class SearchShouldWrap {
+        No = 0,
+        Yes
+    };
+
     class Client {
     public:
         virtual ~Client();
@@ -60,6 +65,16 @@ public:
     void update_views(Badge<GTextDocumentLine>);
 
     String text_in_range(const GTextRange&) const;
+
+    Vector<GTextRange> find_all(const StringView& needle) const;
+
+    GTextRange find_next(const StringView&, const GTextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes) const;
+    GTextRange find_previous(const StringView&, const GTextPosition& start = {}, SearchShouldWrap = SearchShouldWrap::Yes) const;
+
+    GTextPosition next_position_after(const GTextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
+    GTextPosition previous_position_before(const GTextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
+
+    char character_at(const GTextPosition&) const;
 
 private:
     explicit GTextDocument(Client* client);

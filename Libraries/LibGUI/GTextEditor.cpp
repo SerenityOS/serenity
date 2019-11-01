@@ -1176,97 +1176,6 @@ void GTextEditor::resize_event(GResizeEvent& event)
     recompute_all_visual_lines();
 }
 
-GTextPosition GTextEditor::next_position_after(const GTextPosition& position, ShouldWrapAtEndOfDocument should_wrap)
-{
-    auto& line = lines()[position.line()];
-    if (position.column() == line.length()) {
-        if (position.line() == line_count() - 1) {
-            if (should_wrap == ShouldWrapAtEndOfDocument::Yes)
-                return { 0, 0 };
-            return {};
-        }
-        return { position.line() + 1, 0 };
-    }
-    return { position.line(), position.column() + 1 };
-}
-
-GTextPosition GTextEditor::prev_position_before(const GTextPosition& position, ShouldWrapAtStartOfDocument should_wrap)
-{
-    if (position.column() == 0) {
-        if (position.line() == 0) {
-            if (should_wrap == ShouldWrapAtStartOfDocument::Yes) {
-                auto& last_line = lines()[line_count() - 1];
-                return { line_count() - 1, last_line.length() };
-            }
-            return {};
-        }
-        auto& prev_line = lines()[position.line() - 1];
-        return { position.line() - 1, prev_line.length() };
-    }
-    return { position.line(), position.column() - 1 };
-}
-
-GTextRange GTextEditor::find_next(const StringView& needle, const GTextPosition& start)
-{
-    if (needle.is_empty())
-        return {};
-
-    GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
-    GTextPosition original_position = position;
-
-    GTextPosition start_of_potential_match;
-    int needle_index = 0;
-
-    do {
-        auto ch = character_at(position);
-        if (ch == needle[needle_index]) {
-            if (needle_index == 0)
-                start_of_potential_match = position;
-            ++needle_index;
-            if (needle_index >= needle.length())
-                return { start_of_potential_match, next_position_after(position) };
-        } else {
-            if (needle_index > 0)
-                position = start_of_potential_match;
-            needle_index = 0;
-        }
-        position = next_position_after(position);
-    } while (position.is_valid() && position != original_position);
-
-    return {};
-}
-
-GTextRange GTextEditor::find_prev(const StringView& needle, const GTextPosition& start)
-{
-    if (needle.is_empty())
-        return {};
-
-    GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
-    position = prev_position_before(position);
-    GTextPosition original_position = position;
-
-    GTextPosition end_of_potential_match;
-    int needle_index = needle.length() - 1;
-
-    do {
-        auto ch = character_at(position);
-        if (ch == needle[needle_index]) {
-            if (needle_index == needle.length() - 1)
-                end_of_potential_match = position;
-            --needle_index;
-            if (needle_index < 0)
-                return { position, next_position_after(end_of_potential_match) };
-        } else {
-            if (needle_index < needle.length() - 1)
-                position = end_of_potential_match;
-            needle_index = needle.length() - 1;
-        }
-        position = prev_position_before(position);
-    } while (position.is_valid() && position != original_position);
-
-    return {};
-}
-
 void GTextEditor::set_selection(const GTextRange& selection)
 {
     if (m_selection == selection)
@@ -1275,15 +1184,6 @@ void GTextEditor::set_selection(const GTextRange& selection)
     set_cursor(m_selection.end());
     scroll_position_into_view(normalized_selection().start());
     update();
-}
-
-char GTextEditor::character_at(const GTextPosition& position) const
-{
-    ASSERT(position.line() < line_count());
-    auto& line = lines()[position.line()];
-    if (position.column() == line.length())
-        return '\n';
-    return line.characters()[position.column()];
 }
 
 void GTextEditor::recompute_all_visual_lines()

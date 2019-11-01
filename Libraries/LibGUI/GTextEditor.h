@@ -14,15 +14,6 @@ class GMenu;
 class GScrollBar;
 class Painter;
 
-enum class ShouldWrapAtEndOfDocument {
-    No = 0,
-    Yes
-};
-enum class ShouldWrapAtStartOfDocument {
-    No = 0,
-    Yes
-};
-
 class GTextEditor
     : public GScrollableWidget
     , public GTextDocument::Client {
@@ -73,12 +64,6 @@ public:
     int glyph_width() const { return font().glyph_width('x'); }
 
     bool write_to_file(const StringView& path);
-
-    GTextRange find_next(const StringView&, const GTextPosition& start = {});
-    GTextRange find_prev(const StringView&, const GTextPosition& start = {});
-
-    GTextPosition next_position_after(const GTextPosition&, ShouldWrapAtEndOfDocument = ShouldWrapAtEndOfDocument::Yes);
-    GTextPosition prev_position_before(const GTextPosition&, ShouldWrapAtStartOfDocument = ShouldWrapAtStartOfDocument::Yes);
 
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
@@ -167,7 +152,6 @@ private:
     void delete_selection();
     void did_update_selection();
     int content_x_for_position(const GTextPosition&) const;
-    char character_at(const GTextPosition&) const;
     Rect ruler_rect_in_inner_coordinates() const;
     Rect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();

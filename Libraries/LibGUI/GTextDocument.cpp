@@ -183,3 +183,118 @@ String GTextDocument::text_in_range(const GTextRange& a_range) const
 
     return builder.to_string();
 }
+
+char GTextDocument::character_at(const GTextPosition& position) const
+{
+    ASSERT(position.line() < line_count());
+    auto& line = lines()[position.line()];
+    if (position.column() == line.length())
+        return '\n';
+    return line.characters()[position.column()];
+}
+
+GTextPosition GTextDocument::next_position_after(const GTextPosition& position, SearchShouldWrap should_wrap) const
+{
+    auto& line = lines()[position.line()];
+    if (position.column() == line.length()) {
+        if (position.line() == line_count() - 1) {
+            if (should_wrap == SearchShouldWrap::Yes)
+                return { 0, 0 };
+            return {};
+        }
+        return { position.line() + 1, 0 };
+    }
+    return { position.line(), position.column() + 1 };
+}
+
+GTextPosition GTextDocument::previous_position_before(const GTextPosition& position, SearchShouldWrap should_wrap) const
+{
+    if (position.column() == 0) {
+        if (position.line() == 0) {
+            if (should_wrap == SearchShouldWrap::Yes) {
+                auto& last_line = lines()[line_count() - 1];
+                return { line_count() - 1, last_line.length() };
+            }
+            return {};
+        }
+        auto& prev_line = lines()[position.line() - 1];
+        return { position.line() - 1, prev_line.length() };
+    }
+    return { position.line(), position.column() - 1 };
+}
+
+GTextRange GTextDocument::find_next(const StringView& needle, const GTextPosition& start, SearchShouldWrap should_wrap) const
+{
+    if (needle.is_empty())
+        return {};
+
+    GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
+    GTextPosition original_position = position;
+
+    GTextPosition start_of_potential_match;
+    int needle_index = 0;
+
+    do {
+        auto ch = character_at(position);
+        if (ch == needle[needle_index]) {
+            if (needle_index == 0)
+                start_of_potential_match = position;
+            ++needle_index;
+            if (needle_index >= needle.length())
+                return { start_of_potential_match, next_position_after(position, should_wrap) };
+        } else {
+            if (needle_index > 0)
+                position = start_of_potential_match;
+            needle_index = 0;
+        }
+        position = next_position_after(position, should_wrap);
+    } while (position.is_valid() && position != original_position);
+
+    return {};
+}
+
+GTextRange GTextDocument::find_previous(const StringView& needle, const GTextPosition& start, SearchShouldWrap should_wrap) const
+{
+    if (needle.is_empty())
+        return {};
+
+    GTextPosition position = start.is_valid() ? start : GTextPosition(0, 0);
+    position = previous_position_before(position, should_wrap);
+    GTextPosition original_position = position;
+
+    GTextPosition end_of_potential_match;
+    int needle_index = needle.length() - 1;
+
+    do {
+        auto ch = character_at(position);
+        if (ch == needle[needle_index]) {
+            if (needle_index == needle.length() - 1)
+                end_of_potential_match = position;
+            --needle_index;
+            if (needle_index < 0)
+                return { position, next_position_after(end_of_potential_match, should_wrap) };
+        } else {
+            if (needle_index < needle.length() - 1)
+                position = end_of_potential_match;
+            needle_index = needle.length() - 1;
+        }
+        position = previous_position_before(position, should_wrap);
+    } while (position.is_valid() && position != original_position);
+
+    return {};
+}
+
+Vector<GTextRange> GTextDocument::find_all(const StringView& needle) const
+{
+    Vector<GTextRange> ranges;
+
+    GTextPosition position;
+    for (;;) {
+        auto range = find_next(needle, position, SearchShouldWrap::No);
+        if (!range.is_valid())
+            break;
+        ranges.append(range);
+        position = range.end();
+    }
+    return ranges;
+}
