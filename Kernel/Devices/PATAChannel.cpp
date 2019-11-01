@@ -124,6 +124,8 @@ void PATAChannel::initialize()
         m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
         m_dma_buffer_page = MM.allocate_supervisor_physical_page();
         kprintf("PATAChannel: PIIX Bus master IDE: I/O @ %x\n", m_bus_master_base);
+    } else {
+        kprintf("PATAChannel: Unable to find valid PATAChannel controller! Falling back to PIO mode!\n");
     }
 }
 
