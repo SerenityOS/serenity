@@ -37,7 +37,7 @@ Project::Project(const String& path, Vector<String>&& filenames)
     : m_path(path)
 {
     for (auto& filename : filenames) {
-        m_files.append(TextDocument::construct_with_name(filename));
+        m_files.append(ProjectFile::construct_with_name(filename));
     }
     m_model = adopt(*new ProjectModel(*this));
 }
@@ -75,12 +75,12 @@ bool Project::add_file(const String& filename)
     if (!project_file->close())
         return false;
 
-    m_files.append(TextDocument::construct_with_name(filename));
+    m_files.append(ProjectFile::construct_with_name(filename));
     m_model->update();
     return true;
 }
 
-TextDocument* Project::get_file(const String& filename)
+ProjectFile* Project::get_file(const String& filename)
 {
     for (auto& file : m_files) {
         if (file.name() == filename)

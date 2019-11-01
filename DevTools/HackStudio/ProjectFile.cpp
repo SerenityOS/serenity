@@ -1,8 +1,8 @@
-#include "TextDocument.h"
+#include "ProjectFile.h"
 #include <LibCore/CFile.h>
 #include <string.h>
 
-const GTextDocument& TextDocument::document() const
+const GTextDocument& ProjectFile::document() const
 {
     if (!m_document) {
         m_document = GTextDocument::create(nullptr);
@@ -11,7 +11,7 @@ const GTextDocument& TextDocument::document() const
     return *m_document;
 }
 
-const ByteBuffer& TextDocument::contents() const
+const ByteBuffer& ProjectFile::contents() const
 {
     if (m_contents.is_null()) {
         auto file = CFile::construct(m_name);
@@ -21,7 +21,7 @@ const ByteBuffer& TextDocument::contents() const
     return m_contents;
 }
 
-Vector<int> TextDocument::find(const StringView& needle) const
+Vector<int> ProjectFile::find(const StringView& needle) const
 {
     // NOTE: This forces us to load the contents if we hadn't already.
     contents();

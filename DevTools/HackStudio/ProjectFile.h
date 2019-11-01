@@ -6,11 +6,11 @@
 #include <AK/String.h>
 #include <LibGUI/GTextDocument.h>
 
-class TextDocument : public RefCounted<TextDocument> {
+class ProjectFile : public RefCounted<ProjectFile> {
 public:
-    static NonnullRefPtr<TextDocument> construct_with_name(const String& name)
+    static NonnullRefPtr<ProjectFile> construct_with_name(const String& name)
     {
-        return adopt(*new TextDocument(name));
+        return adopt(*new ProjectFile(name));
     }
 
     const String& name() const { return m_name; }
@@ -22,7 +22,7 @@ public:
     const GTextDocument& document() const;
 
 private:
-    explicit TextDocument(const String& name)
+    explicit ProjectFile(const String& name)
         : m_name(name)
     {
     }

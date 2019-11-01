@@ -2,7 +2,7 @@ include ../../Makefile.common
 
 OBJS = \
     Project.o \
-    TextDocument.o \
+    ProjectFile.o \
     TerminalWrapper.o \
     FindInFilesWidget.o \
     ProcessStateWidget.o \
