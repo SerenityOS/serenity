@@ -6,6 +6,17 @@
 
 [ -z "$SERENITY_RAM_SIZE" ] && SERENITY_RAM_SIZE=128M
 
+[ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
+$SERENITY_EXTRA_QEMU_ARGS
+-s -m $SERENITY_RAM_SIZE
+-d cpu_reset,guest_errors 
+-device VGA,vgamem_mb=64
+-hda _disk_image
+-debugcon stdio
+-soundhw pcspk
+-soundhw sb16
+"
+
 export SDL_VIDEO_X11_DGAMOUSE=0
 
 if [ "$1" = "b" ]; then
@@ -13,73 +24,44 @@ if [ "$1" = "b" ]; then
     bochs -q -f .bochsrc
 elif [ "$1" = "qn" ]; then
     # ./run qn: qemu without network
-    $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
-        $SERENITY_EXTRA_QEMU_ARGS \
-        -d cpu_reset,guest_errors \
-        -device VGA,vgamem_mb=64 \
-        -debugcon stdio \
+    $SERENITY_QEMU_BIN \
+        $SERENITY_COMMON_QEMU_ARGS \
         -device e1000 \
         -kernel kernel \
-        -append "${SERENITY_KERNEL_CMDLINE}" \
-        -hda _disk_image \
-        -soundhw pcspk \
-        -soundhw sb16
+        -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$1" = "qtap" ]; then
     # ./run qtap: qemu with tap
-    sudo $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
-        $SERENITY_EXTRA_QEMU_ARGS \
+    sudo $SERENITY_QEMU_BIN \
+        $SERENITY_COMMON_QEMU_ARGS \
         -enable-kvm \
-        -d cpu_reset,guest_errors \
-        -device VGA,vgamem_mb=64 \
-        -debugcon stdio \
         -object filter-dump,id=hue,netdev=br0,file=e1000.pcap \
         -netdev tap,ifname=tap0,id=br0 \
         -device e1000,netdev=br0 \
         -kernel kernel \
-        -append "${SERENITY_KERNEL_CMDLINE}" \
-        -hda _disk_image \
-        -soundhw pcspk \
-        -soundhw sb16
+        -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$1" = "qgrub" ]; then
     # ./run qgrub: qemu with grub
-    $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
-        $SERENITY_EXTRA_QEMU_ARGS \
+    $SERENITY_QEMU_BIN \
+        $SERENITY_COMMON_QEMU_ARGS \
         -enable-kvm \
-        -d cpu_reset,guest_errors \
-        -device VGA,vgamem_mb=64 \
-        -debugcon stdio \
         -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
-        -device e1000,netdev=breh \
-        -hda _disk_image \
-        -soundhw pcspk
+        -device e1000,netdev=breh
 elif [ "$1" = "qtext" ]; then
-    $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
-        $SERENITY_EXTRA_QEMU_ARGS \
-        -d cpu_reset,guest_errors \
-        -device VGA,vgamem_mb=64 \
-        -debugcon stdio \
+    # ./run: qemu with serenity in text mode
+    $SERENITY_QEMU_BIN \
+        $SERENITY_COMMON_QEMU_ARGS \
         -device e1000 \
         -kernel kernel \
-        -append "${SERENITY_KERNEL_CMDLINE} text_debug" \
-        -hda _disk_image \
-        -soundhw pcspk \
-        -soundhw sb16
+        -append "${SERENITY_KERNEL_CMDLINE} text_debug"
 else
     # ./run: qemu with user networking
-    $SERENITY_QEMU_BIN -s -m $SERENITY_RAM_SIZE \
-        $SERENITY_EXTRA_QEMU_ARGS \
+    $SERENITY_QEMU_BIN \
+        $SERENITY_COMMON_QEMU_ARGS \
         -enable-kvm \
-        -d cpu_reset,guest_errors \
-        -device VGA,vgamem_mb=64 \
-        -debugcon stdio \
         -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh \
         -kernel kernel \
-        -append "${SERENITY_KERNEL_CMDLINE}" \
-        -hda _disk_image \
-        -soundhw pcspk \
-        -soundhw sb16
+        -append "${SERENITY_KERNEL_CMDLINE}"
 fi
-
