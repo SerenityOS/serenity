@@ -1098,9 +1098,8 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 
     unsigned first_inode_in_group = (group_index - 1) * inodes_per_group() + 1;
 
-    auto bitmap_block = ByteBuffer::create_uninitialized(block_size());
-    read_block(bgd.bg_inode_bitmap, bitmap_block.data());
-    auto inode_bitmap = Bitmap::wrap(bitmap_block.data(), inodes_in_group);
+    auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
+    auto inode_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), inodes_in_group);
     for (int i = 0; i < inode_bitmap.size(); ++i) {
         if (inode_bitmap.get(i))
             continue;
@@ -1148,11 +1147,9 @@ bool Ext2FS::get_inode_allocation_state(InodeIndex index) const
     auto& bgd = group_descriptor(group_index);
     unsigned index_in_group = index - ((group_index - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
-    auto block = ByteBuffer::create_uninitialized(block_size());
-    bool success = read_block(bgd.bg_inode_bitmap, block.data());
-    ASSERT(success);
-    auto bitmap = Bitmap::wrap(block.data(), inodes_per_group());
-    return bitmap.get(bit_index);
+
+    auto& cached_bitmap = const_cast<Ext2FS&>(*this).get_bitmap_block(bgd.bg_inode_bitmap);
+    return cached_bitmap.bitmap(inodes_per_group()).get(bit_index);
 }
 
 bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
@@ -1162,11 +1159,10 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     auto& bgd = group_descriptor(group_index);
     unsigned index_in_group = inode_index - ((group_index - 1) * inodes_per_group());
     unsigned bit_index = (index_in_group - 1) % inodes_per_group();
-    auto block = ByteBuffer::create_uninitialized(block_size());
-    bool success = read_block(bgd.bg_inode_bitmap, block.data());
-    ASSERT(success);
-    auto bitmap = Bitmap::wrap(block.data(), inodes_per_group());
-    bool current_state = bitmap.get(bit_index);
+
+    auto& cached_bitmap = get_bitmap_block(bgd.bg_inode_bitmap);
+
+    bool current_state = cached_bitmap.bitmap(inodes_per_group()).get(bit_index);
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: set_inode_allocation_state(%u) %u -> %u\n", inode_index, current_state, new_state);
 #endif
@@ -1176,9 +1172,8 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
         return true;
     }
 
-    bitmap.set(bit_index, new_state);
-    success = write_block(bgd.bg_inode_bitmap, block.data());
-    ASSERT(success);
+    cached_bitmap.bitmap(inodes_per_group()).set(bit_index, new_state);
+    cached_bitmap.dirty = true;
 
     // Update superblock
 #ifdef EXT2_DEBUG
