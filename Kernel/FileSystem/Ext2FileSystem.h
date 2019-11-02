@@ -47,7 +47,7 @@ private:
 
     bool write_directory(const Vector<FS::DirectoryEntry>&);
     void populate_lookup_cache() const;
-    bool resize(u64);
+    KResult resize(u64);
 
     Ext2FS& fs();
     const Ext2FS& fs() const;
