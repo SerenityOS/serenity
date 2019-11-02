@@ -148,8 +148,7 @@ private:
         Bitmap bitmap(u32 blocks_per_group) { return Bitmap::wrap(buffer.data(), blocks_per_group); }
     };
 
-    CachedBitmap& get_block_bitmap(BlockIndex bitmap_block_index);
-    CachedBitmap& get_inode_bitmap(InodeIndex bitmap_block_index);
+    CachedBitmap& get_bitmap_block(BlockIndex);
 
     Vector<OwnPtr<CachedBitmap>> m_cached_bitmaps;
 };
