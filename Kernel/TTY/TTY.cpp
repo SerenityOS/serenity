@@ -109,9 +109,6 @@ bool TTY::is_werase(u8 ch) const
 void TTY::emit(u8 ch)
 {
     if (should_generate_signals()) {
-        if (should_flush_on_signal())
-            flush_input();
-
         if (ch == m_termios.c_cc[VINTR]) {
             dbg() << tty_name() << ": VINTR pressed!";
             generate_signal(SIGINT);
@@ -208,6 +205,8 @@ void TTY::generate_signal(int signal)
 {
     if (!pgid())
         return;
+    if (should_flush_on_signal())
+        flush_input();
     dbg() << tty_name() << ": Send signal " << signal << " to everyone in pgrp " << pgid();
     InterruptDisabler disabler; // FIXME: Iterate over a set of process handles instead?
     Process::for_each_in_pgrp(pgid(), [&](auto& process) {
