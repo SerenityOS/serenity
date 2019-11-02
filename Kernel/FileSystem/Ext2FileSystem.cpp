@@ -502,6 +502,15 @@ void Ext2FS::flush_writes()
         flush_block_group_descriptor_table();
         m_block_group_descriptors_dirty = false;
     }
+    for (auto& cached_bitmap : m_cached_bitmaps) {
+        if (cached_bitmap->dirty) {
+            write_block(cached_bitmap->bitmap_block_index, cached_bitmap->buffer.data());
+            cached_bitmap->dirty = false;
+#ifdef EXT2_DEBUG
+            dbg() << "Flushed bitmap block " << cached_bitmap->bitmap_block_index;
+#endif
+        }
+    }
     DiskBackedFS::flush_writes();
 }
 
@@ -1006,11 +1015,11 @@ Ext2FS::BlockIndex Ext2FS::allocate_block(GroupIndex preferred_group_index)
     }
     ASSERT(found_a_group);
     auto& bgd = group_descriptor(group_index);
+    auto& cached_bitmap = get_block_bitmap(bgd.bg_block_bitmap);
 
-    auto bitmap_block = ByteBuffer::create_uninitialized(block_size());
-    read_block(bgd.bg_block_bitmap, bitmap_block.data());
     int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
-    auto block_bitmap = Bitmap::wrap(bitmap_block.data(), blocks_in_group);
+    auto block_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), blocks_in_group);
+
     BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index();
     int first_unset_bit_index = block_bitmap.find_first_unset();
     ASSERT(first_unset_bit_index != -1);
@@ -1200,29 +1209,37 @@ Ext2FS::BlockIndex Ext2FS::first_block_index() const
     return block_size() == 1024 ? 1 : 0;
 }
 
+Ext2FS::CachedBitmap& Ext2FS::get_block_bitmap(BlockIndex bitmap_block_index)
+{
+    for (auto& cached_bitmap : m_cached_bitmaps) {
+        if (cached_bitmap->bitmap_block_index == bitmap_block_index)
+            return *cached_bitmap;
+    }
+
+    auto block = ByteBuffer::create_uninitialized(block_size());
+    bool success = read_block(bitmap_block_index, block.data());
+    ASSERT(success);
+    m_cached_bitmaps.append(make<CachedBitmap>(bitmap_block_index, move(block)));
+    return *m_cached_bitmaps.last();
+}
+
 bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: set_block_allocation_state(block=%u, state=%u)\n", block_index, new_state);
 #endif
-    unsigned group_index = group_index_from_block_index(block_index);
+
+    GroupIndex group_index = group_index_from_block_index(block_index);
     auto& bgd = group_descriptor(group_index);
     BlockIndex index_in_group = (block_index - first_block_index()) - ((group_index - 1) * blocks_per_group());
     unsigned bit_index = index_in_group % blocks_per_group();
+
+    auto& cached_bitmap = get_block_bitmap(bgd.bg_block_bitmap);
+
+    bool current_state = cached_bitmap.bitmap(blocks_per_group()).get(bit_index);
 #ifdef EXT2_DEBUG
-    dbgprintf("  index_in_group: %u\n", index_in_group);
-    dbgprintf("  blocks_per_group: %u\n", blocks_per_group());
-    dbgprintf("  bit_index: %u\n", bit_index);
-    dbgprintf("  read_block(%u)\n", bgd.bg_block_bitmap);
-#endif
-    auto block = ByteBuffer::create_uninitialized(block_size());
-    bool success = read_block(bgd.bg_block_bitmap, block.data());
-    ASSERT(success);
-    auto bitmap = Bitmap::wrap(block.data(), blocks_per_group());
-    bool current_state = bitmap.get(bit_index);
-#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: block %u state: %u -> %u\n", block_index, current_state, new_state);
+    dbgprintf("Ext2FS: block %u state: %u -> %u (in bitmap block %u)\n", block_index, current_state, new_state, bgd.bg_block_bitmap);
 #endif
 
     if (current_state == new_state) {
@@ -1230,9 +1247,8 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
         return true;
     }
 
-    bitmap.set(bit_index, new_state);
-    success = write_block(bgd.bg_block_bitmap, block.data());
-    ASSERT(success);
+    cached_bitmap.bitmap(blocks_per_group()).set(bit_index, new_state);
+    cached_bitmap.dirty = true;
 
     // Update superblock
 #ifdef EXT2_DEBUG
