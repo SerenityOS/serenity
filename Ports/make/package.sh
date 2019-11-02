@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/bin/sh ../.port_include.sh
 port=make
 version=4.2.1
 useconfigure=true

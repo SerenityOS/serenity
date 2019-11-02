@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/bin/sh ../.port_include.sh
 port=mbedtls
 version=2.16.2
 files="https://tls.mbed.org/download/mbedtls-2.16.2-apache.tgz mbedtls-2.16.2-apache.tgz"

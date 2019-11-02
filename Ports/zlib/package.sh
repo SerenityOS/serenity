@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/bin/sh ../.port_include.sh
 port=zlib
 version=1.2.11
 useconfigure=true

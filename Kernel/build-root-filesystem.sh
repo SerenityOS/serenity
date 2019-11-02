@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 set -e
 
@@ -6,20 +6,22 @@ set -e
 rm -f ../Userland/qs
 
 die() {
-    echo "die: $@"
+    echo "die: $*"
     exit 1
 }
 
-if [ $(id -u) != 0 ]; then
+if [ "$(id -u)" != 0 ]; then
     die "this script needs to run as root"
 fi
 
-echo -n "creating initial filesystem structure... "
-mkdir -p mnt/{bin,etc,proc,mnt,tmp}
+printf "creating initial filesystem structure... "
+for dir in bin etc proc mnt tmp; do
+    mkdir -p mnt/$dir
+done
 chmod 1777 mnt/tmp
 echo "done"
 
-echo -n "setting up device nodes... "
+printf "setting up device nodes... "
 mkdir -p mnt/dev
 mkdir -p mnt/dev/pts
 mknod -m 666 mnt/dev/fb0 b 29 0
@@ -49,13 +51,13 @@ ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
 echo "done"
 
-echo -n "installing base system... "
+printf "installing base system... "
 cp -R ../Base/* mnt/
 cp -R ../Root/* mnt/
 cp kernel.map mnt/
 echo "done"
 
-echo -n "installing users... "
+printf "installing users... "
 mkdir -p mnt/home/anon
 mkdir -p mnt/home/nona
 cp ../ReadMe.md mnt/home/anon/
@@ -63,12 +65,12 @@ chown -R 100:100 mnt/home/anon
 chown -R 200:200 mnt/home/nona
 echo "done"
 
-echo -n "installing userland... "
+printf "installing userland... "
 find ../Userland/ -type f -executable -exec cp {} mnt/bin/ \;
 chmod 4755 mnt/bin/su
 echo "done"
 
-echo -n "installing applications... "
+printf "installing applications... "
 cp ../Applications/About/About mnt/bin/About
 cp ../Applications/Downloader/Downloader mnt/bin/Downloader
 cp ../Applications/FileManager/FileManager mnt/bin/FileManager
@@ -110,7 +112,7 @@ cp ../Servers/TelnetServer/TelnetServer mnt/bin/TelnetServer
 cp ../Shell/Shell mnt/bin/Shell
 echo "done"
 
-echo -n "installing shortcuts... "
+printf "installing shortcuts... "
 ln -s Downloader mnt/bin/dl
 ln -s FileManager mnt/bin/fm
 ln -s HelloWorld mnt/bin/hw
