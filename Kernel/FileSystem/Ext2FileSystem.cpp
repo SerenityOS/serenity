@@ -668,8 +668,11 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
 KResult Ext2FSInode::resize(u64 new_size)
 {
-    u64 block_size = fs().block_size();
     u64 old_size = size();
+    if (old_size == new_size)
+        return KSuccess;
+
+    u64 block_size = fs().block_size();
     int blocks_needed_before = ceil_div(old_size, block_size);
     int blocks_needed_after = ceil_div(new_size, block_size);
 
