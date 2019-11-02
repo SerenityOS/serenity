@@ -1,3 +1,3 @@
-#!/bin/bash
+#!/bin/sh
 
 ./build-image-qemu.sh
