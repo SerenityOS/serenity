@@ -46,41 +46,17 @@ Ext2FS::~Ext2FS()
 {
 }
 
-ByteBuffer Ext2FS::read_super_block() const
+bool Ext2FS::flush_super_block()
 {
     LOCKER(m_lock);
-    auto buffer = ByteBuffer::create_uninitialized(1024);
-    bool success = device().read_block(2, buffer.data());
+    bool success = device().write_blocks(2, 1, (const u8*)&m_super_block);
     ASSERT(success);
-    success = device().read_block(3, buffer.offset_pointer(512));
-    ASSERT(success);
-    return buffer;
-}
-
-bool Ext2FS::write_super_block(const ext2_super_block& sb)
-{
-    LOCKER(m_lock);
-    const u8* raw = (const u8*)&sb;
-    bool success;
-    success = device().write_block(2, raw);
-    ASSERT(success);
-    success = device().write_block(3, raw + 512);
-    ASSERT(success);
-    // FIXME: This is an ugly way to refresh the superblock cache. :-|
-    super_block();
     return true;
 }
 
 unsigned Ext2FS::first_block_of_group(GroupIndex group_index) const
 {
     return super_block().s_first_data_block + (group_index * super_block().s_blocks_per_group);
-}
-
-const ext2_super_block& Ext2FS::super_block() const
-{
-    if (!m_cached_super_block)
-        m_cached_super_block = read_super_block();
-    return *reinterpret_cast<ext2_super_block*>(m_cached_super_block.data());
 }
 
 const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
@@ -104,6 +80,9 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 
 bool Ext2FS::initialize()
 {
+    bool success = const_cast<DiskDevice&>(device()).read_blocks(2, 1, (u8*)&m_super_block);
+    ASSERT(success);
+
     auto& super_block = this->super_block();
 #ifdef EXT2_DEBUG
     kprintf("ext2fs: super block magic: %x (super block size: %u)\n", super_block.s_magic, sizeof(ext2_super_block));
@@ -516,7 +495,7 @@ void Ext2FS::flush_block_group_descriptor_table()
 void Ext2FS::flush_writes()
 {
     if (m_super_block_dirty) {
-        write_super_block(super_block());
+        flush_super_block();
         m_super_block_dirty = false;
     }
     if (m_block_group_descriptors_dirty) {
@@ -1193,14 +1172,13 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     ASSERT(success);
 
     // Update superblock
-    auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.data());
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: superblock free inode count %u -> %u\n", sb.s_free_inodes_count, sb.s_free_inodes_count - 1);
+    dbgprintf("Ext2FS: superblock free inode count %u -> %u\n", m_super_block.s_free_inodes_count, m_super_block.s_free_inodes_count - 1);
 #endif
     if (new_state)
-        --sb.s_free_inodes_count;
+        --m_super_block.s_free_inodes_count;
     else
-        ++sb.s_free_inodes_count;
+        ++m_super_block.s_free_inodes_count;
     m_super_block_dirty = true;
 
     // Update BGD
@@ -1257,14 +1235,13 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     ASSERT(success);
 
     // Update superblock
-    auto& sb = *reinterpret_cast<ext2_super_block*>(m_cached_super_block.data());
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: superblock free block count %u -> %u\n", sb.s_free_blocks_count, sb.s_free_blocks_count - 1);
+    dbgprintf("Ext2FS: superblock free block count %u -> %u\n", m_super_block.s_free_blocks_count, m_super_block.s_free_blocks_count - 1);
 #endif
     if (new_state)
-        --sb.s_free_blocks_count;
+        --m_super_block.s_free_blocks_count;
     else
-        ++sb.s_free_blocks_count;
+        ++m_super_block.s_free_blocks_count;
     m_super_block_dirty = true;
 
     // Update BGD

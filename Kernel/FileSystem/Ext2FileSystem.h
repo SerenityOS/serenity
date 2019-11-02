@@ -78,7 +78,7 @@ private:
     typedef unsigned InodeIndex;
     explicit Ext2FS(NonnullRefPtr<DiskDevice>&&);
 
-    const ext2_super_block& super_block() const;
+    const ext2_super_block& super_block() const { return m_super_block; }
     const ext2_group_desc& group_descriptor(unsigned groupIndex) const;
     void flush_block_group_descriptor_table();
     unsigned first_block_of_group(unsigned groupIndex) const;
@@ -90,8 +90,7 @@ private:
     bool write_ext2_inode(InodeIndex, const ext2_inode&);
     bool read_block_containing_inode(InodeIndex inode, BlockIndex& block_index, unsigned& offset, u8* buffer) const;
 
-    ByteBuffer read_super_block() const;
-    bool write_super_block(const ext2_super_block&);
+    bool flush_super_block();
 
     virtual const char* class_name() const override;
     virtual InodeIdentifier root_inode() const override;
@@ -129,7 +128,7 @@ private:
 
     unsigned m_block_group_count { 0 };
 
-    mutable ByteBuffer m_cached_super_block;
+    mutable ext2_super_block m_super_block;
     mutable ByteBuffer m_cached_group_descriptor_table;
 
     mutable HashMap<BlockIndex, RefPtr<Ext2FSInode>> m_inode_cache;
