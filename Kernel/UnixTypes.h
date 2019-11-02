@@ -382,6 +382,16 @@ struct timeval {
     suseconds_t tv_usec;
 };
 
+struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};
+
+typedef int clockid_t;
+
+#define CLOCK_MONOTONIC 1
+#define TIMER_ABSTIME 99
+
 #define UTSNAME_ENTRY_LEN 65
 
 struct utsname {

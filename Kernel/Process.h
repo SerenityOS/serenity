@@ -157,6 +157,8 @@ public:
     int sys$sleep(unsigned seconds);
     int sys$usleep(useconds_t usec);
     int sys$gettimeofday(timeval*);
+    int sys$clock_gettime(clockid_t, timespec*);
+    int sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params*);
     int sys$gethostname(char*, ssize_t);
     int sys$uname(utsname*);
     int sys$readlink(const char*, char*, ssize_t);

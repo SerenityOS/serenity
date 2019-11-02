@@ -3154,3 +3154,65 @@ int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags 
 
     return 0;
 }
+
+int Process::sys$clock_gettime(clockid_t clock_id, timespec* ts)
+{
+    if (!validate_write_typed(ts))
+        return -EFAULT;
+
+    switch (clock_id) {
+    case CLOCK_MONOTONIC:
+        ts->tv_sec = g_uptime / TICKS_PER_SECOND;
+        ts->tv_nsec = (g_uptime % TICKS_PER_SECOND) * 1000000;
+        break;
+    default:
+        return -EINVAL;
+    }
+
+    return 0;
+}
+
+int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* params)
+{
+    if (!validate_read_typed(params))
+        return -EFAULT;
+
+    if (params->requested_sleep && !validate_read_typed(params->requested_sleep))
+        return -EFAULT;
+
+    if (params->remaining_sleep && !validate_write_typed(params->remaining_sleep))
+        return -EFAULT;
+
+    clockid_t clock_id = params->clock_id;
+    int flags = params->flags;
+    bool is_absolute = flags & TIMER_ABSTIME;
+    auto* requested_sleep = params->requested_sleep;
+    auto* remaining_sleep = params->remaining_sleep;
+
+    switch (clock_id) {
+    case CLOCK_MONOTONIC: {
+        u64 wakeup_time;
+        if (is_absolute) {
+            u64 time_to_wake = (requested_sleep->tv_sec * 1000 + requested_sleep->tv_nsec / 1000000);
+            wakeup_time = current->sleep_until(time_to_wake);
+        } else {
+            u32 ticks_to_sleep = (requested_sleep->tv_sec * 1000 + requested_sleep->tv_nsec / 1000000);
+            if (!ticks_to_sleep)
+                return 0;
+            wakeup_time = current->sleep(ticks_to_sleep);
+        }
+        if (wakeup_time > g_uptime) {
+            u32 ticks_left = wakeup_time - g_uptime;
+            if (!is_absolute && remaining_sleep) {
+                remaining_sleep->tv_sec = ticks_left / TICKS_PER_SECOND;
+                ticks_left -= remaining_sleep->tv_sec * TICKS_PER_SECOND;
+                remaining_sleep->tv_nsec = ticks_left * 1000000;
+            }
+            return -EINTR;
+        }
+        return 0;
+    }
+    default:
+        return -EINVAL;
+    }
+}

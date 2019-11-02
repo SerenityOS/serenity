@@ -315,6 +315,10 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
         return current->process().sys$realpath((const char*)arg1, (char*)arg2, (size_t)arg3);
     case Syscall::SC_getrandom:
         return current->process().sys$getrandom((void*)arg1, (size_t)arg2, (unsigned int)arg3);
+    case Syscall::SC_clock_gettime:
+        return current->process().sys$clock_gettime((clockid_t)arg1, (timespec*)arg2);
+    case Syscall::SC_clock_nanosleep:
+        return current->process().sys$clock_nanosleep((const Syscall::SC_clock_nanosleep_params*)arg1);
     default:
         kprintf("<%u> int0x82: Unknown function %u requested {%x, %x, %x}\n", current->process().pid(), function, arg1, arg2, arg3);
         return -ENOSYS;

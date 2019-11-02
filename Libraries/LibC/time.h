@@ -36,15 +36,23 @@ char* asctime(const struct tm*);
 #define CLOCKS_PER_SEC 1000
 clock_t clock();
 
+struct timespec {
+    time_t tv_sec;
+    long tv_nsec;
+};
+
+typedef int clockid_t;
+
+#define CLOCK_MONOTONIC 1
+#define TIMER_ABSTIME 99
+
+int clock_gettime(clockid_t, struct timespec*);
+int clock_nanosleep(clockid_t, int flags, const struct timespec* requested_sleep, struct timespec* remaining_sleep);
+
 double difftime(time_t, time_t);
 size_t strftime(char* s, size_t max, const char* format, const struct tm*);
 
 #define difftime(t1, t0) (double)(t1 - t0)
 
-// This is c++11+, but we have no macro for that now.
-struct timespec {
-    time_t tv_sec;
-    long tv_nsec;
-};
 
 __END_DECLS
