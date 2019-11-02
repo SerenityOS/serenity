@@ -50,7 +50,9 @@ public:
         }
         if (!oldest_clean_entry) {
             // Not a single clean entry! Flush writes and try again.
-            m_fs.flush_writes();
+            // NOTE: We want to make sure we only call DiskBackedFS flush here,
+            //       not some DiskBackedFS subclass flush!
+            m_fs.flush_writes_impl();
             return get(block_index);
         }
 
@@ -148,7 +150,7 @@ bool DiskBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer) const
     return true;
 }
 
-void DiskBackedFS::flush_writes()
+void DiskBackedFS::flush_writes_impl()
 {
     LOCKER(m_lock);
     if (!cache().is_dirty())
@@ -163,8 +165,12 @@ void DiskBackedFS::flush_writes()
         entry.is_dirty = false;
     });
     cache().set_dirty(false);
-    dbg() << class_name() << ": "
-          << "Flushed " << count << " blocks to disk";
+    dbg() << class_name() << ": Flushed " << count << " blocks to disk";
+}
+
+void DiskBackedFS::flush_writes()
+{
+    flush_writes_impl();
 }
 
 DiskCache& DiskBackedFS::cache() const

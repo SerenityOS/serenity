@@ -16,6 +16,8 @@ public:
 
     virtual void flush_writes() override;
 
+    void flush_writes_impl();
+
 protected:
     explicit DiskBackedFS(NonnullRefPtr<DiskDevice>&&);
 
