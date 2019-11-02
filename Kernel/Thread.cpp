@@ -417,10 +417,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     }
 
     ProcessPagingScope paging_scope(m_process);
-    // The userspace registers should be stored at the top of the stack
-    // We have to subtract 2 because the processor decrements the kernel
-    // stack before pushing the args.
-    auto& regs = *(RegisterDump*)(kernel_stack_top() - sizeof(RegisterDump) - 2);
+    auto& regs = get_RegisterDump_from_stack();
 
     u32 old_signal_mask = m_signal_mask;
     u32 new_signal_mask = action.mask;
@@ -507,6 +504,14 @@ void Thread::push_value_on_stack(u32 value)
     m_tss.esp -= 4;
     u32* stack_ptr = (u32*)m_tss.esp;
     *stack_ptr = value;
+}
+
+RegisterDump& Thread::get_RegisterDump_from_stack()
+{
+    // The userspace registers should be stored at the top of the stack
+    // We have to subtract 2 because the processor decrements the kernel
+    // stack before pushing the args.
+    return *(RegisterDump*)(kernel_stack_top() - sizeof(RegisterDump) - 2);
 }
 
 void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
