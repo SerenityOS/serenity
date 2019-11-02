@@ -154,6 +154,15 @@ u64 Thread::sleep(u32 ticks)
     return wakeup_time;
 }
 
+u64 Thread::sleep_until(u64 wakeup_time)
+{
+    ASSERT(state() == Thread::Running);
+    auto ret = current->block<Thread::SleepBlocker>(wakeup_time);
+    if (wakeup_time > g_uptime)
+        ASSERT(ret == Thread::BlockResult::InterruptedBySignal);
+    return wakeup_time;
+}
+
 const char* Thread::state_string() const
 {
     switch (state()) {

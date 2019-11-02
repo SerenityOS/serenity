@@ -8,6 +8,7 @@
 
 extern "C" {
 struct timeval;
+struct timespec;
 }
 
 #define ENUMERATE_SYSCALLS                      \
@@ -131,7 +132,9 @@ struct timeval;
     __ENUMERATE_SYSCALL(realpath)               \
     __ENUMERATE_SYSCALL(get_process_name)       \
     __ENUMERATE_SYSCALL(fchdir)                 \
-    __ENUMERATE_SYSCALL(getrandom)
+    __ENUMERATE_SYSCALL(getrandom)              \
+    __ENUMERATE_SYSCALL(clock_gettime)          \
+    __ENUMERATE_SYSCALL(clock_nanosleep)
 
 namespace Syscall {
 
@@ -179,6 +182,13 @@ struct SC_select_params {
     fd_set* writefds;
     fd_set* exceptfds;
     struct timeval* timeout;
+};
+
+struct SC_clock_nanosleep_params {
+    int clock_id;
+    int flags;
+    const struct timespec* requested_sleep;
+    struct timespec* remaining_sleep;
 };
 
 struct SC_sendto_params {
