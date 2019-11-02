@@ -666,7 +666,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     return nread;
 }
 
-bool Ext2FSInode::resize(u64 new_size)
+KResult Ext2FSInode::resize(u64 new_size)
 {
     u64 block_size = fs().block_size();
     u64 old_size = size();
@@ -677,6 +677,13 @@ bool Ext2FSInode::resize(u64 new_size)
     dbgprintf("Ext2FSInode::resize(): blocks needed before (size was %Q): %d\n", old_size, blocks_needed_before);
     dbgprintf("Ext2FSInode::resize(): blocks needed after  (size is  %Q): %d\n", new_size, blocks_needed_after);
 #endif
+
+    if (blocks_needed_after > blocks_needed_before) {
+        u32 additional_blocks_needed = blocks_needed_after - blocks_needed_before;
+        if (additional_blocks_needed > fs().super_block().s_free_blocks_count)
+            return KResult(-ENOSPC);
+    }
+
 
     auto block_list = fs().block_list_for_inode(m_raw_inode);
     if (blocks_needed_after > blocks_needed_before) {
@@ -697,13 +704,13 @@ bool Ext2FSInode::resize(u64 new_size)
 
     bool success = fs().write_block_list_for_inode(index(), m_raw_inode, block_list);
     if (!success)
-        return false;
+        return KResult(-EIO);
 
     m_raw_inode.i_size = new_size;
     set_metadata_dirty(true);
 
     m_block_list = move(block_list);
-    return true;
+    return KSuccess;
 }
 
 ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, FileDescription*)
@@ -731,8 +738,9 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     u64 old_size = size();
     u64 new_size = max(static_cast<u64>(offset) + count, (u64)size());
 
-    if (!resize(new_size))
-        return -EIO;
+    auto resize_result = resize(new_size);
+    if (resize_result.is_error())
+        return resize_result;
 
     int first_block_logical_index = offset / block_size;
     int last_block_logical_index = (offset + count) / block_size;
@@ -1519,7 +1527,9 @@ KResult Ext2FSInode::truncate(off_t size)
     LOCKER(m_lock);
     if ((off_t)m_raw_inode.i_size == size)
         return KSuccess;
-    resize(size);
+    auto result = resize(size);
+    if (result.is_error())
+        return result;
     set_metadata_dirty(true);
     return KSuccess;
 }
