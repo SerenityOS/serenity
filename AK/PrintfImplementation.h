@@ -298,7 +298,10 @@ template<typename PutChFunc>
                 break;
 
             case 'u':
-                ret += print_number(putch, bufptr, va_arg(ap, u32), left_pad, zeroPad, fieldWidth);
+                if (long_qualifiers >= 2)
+                    ret += print_u64(putch, bufptr, va_arg(ap, u64), left_pad, zeroPad, fieldWidth);
+                else
+                    ret += print_number(putch, bufptr, va_arg(ap, u32), left_pad, zeroPad, fieldWidth);
                 break;
 
             case 'Q':
