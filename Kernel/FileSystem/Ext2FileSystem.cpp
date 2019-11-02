@@ -63,19 +63,7 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 {
     // FIXME: Should this fail gracefully somehow?
     ASSERT(group_index <= m_block_group_count);
-
-    if (!m_cached_group_descriptor_table) {
-        LOCKER(m_lock);
-        unsigned blocks_to_read = ceil_div(m_block_group_count * (unsigned)sizeof(ext2_group_desc), block_size());
-        unsigned first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-#ifdef EXT2_DEBUG
-        kprintf("ext2fs: block group count: %u, blocks-to-read: %u\n", m_block_group_count, blocks_to_read);
-        kprintf("ext2fs: first block of BGDT: %u\n", first_block_of_bgdt);
-#endif
-        m_cached_group_descriptor_table = ByteBuffer::create_uninitialized(block_size() * blocks_to_read);
-        read_blocks(first_block_of_bgdt, blocks_to_read, m_cached_group_descriptor_table.data());
-    }
-    return reinterpret_cast<ext2_group_desc*>(m_cached_group_descriptor_table.data())[group_index - 1];
+    return block_group_descriptors()[group_index - 1];
 }
 
 bool Ext2FS::initialize()
@@ -113,8 +101,10 @@ bool Ext2FS::initialize()
         return false;
     }
 
-    // Preheat the BGD cache.
-    group_descriptor(0);
+    unsigned blocks_to_read = ceil_div(m_block_group_count * (unsigned)sizeof(ext2_group_desc), block_size());
+    BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
+    m_cached_group_descriptor_table = KBuffer::create_with_size(block_size() * blocks_to_read);
+    read_blocks(first_block_of_bgdt, blocks_to_read, m_cached_group_descriptor_table.value().data());
 
 #ifdef EXT2_DEBUG
     for (unsigned i = 1; i <= m_block_group_count; ++i) {
@@ -489,7 +479,7 @@ void Ext2FS::flush_block_group_descriptor_table()
     LOCKER(m_lock);
     unsigned blocks_to_write = ceil_div(m_block_group_count * (unsigned)sizeof(ext2_group_desc), block_size());
     unsigned first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-    write_blocks(first_block_of_bgdt, blocks_to_write, m_cached_group_descriptor_table.data());
+    write_blocks(first_block_of_bgdt, blocks_to_write, (const u8*)block_group_descriptors());
 }
 
 void Ext2FS::flush_writes()
@@ -1222,7 +1212,7 @@ Ext2FS::CachedBitmap& Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
             return *cached_bitmap;
     }
 
-    auto block = ByteBuffer::create_uninitialized(block_size());
+    auto block = KBuffer::create_with_size(block_size());
     bool success = read_block(bitmap_block_index, block.data());
     ASSERT(success);
     m_cached_bitmaps.append(make<CachedBitmap>(bitmap_block_index, move(block)));

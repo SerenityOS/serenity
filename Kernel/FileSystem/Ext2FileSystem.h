@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Bitmap.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>
@@ -80,7 +81,9 @@ private:
     explicit Ext2FS(NonnullRefPtr<DiskDevice>&&);
 
     const ext2_super_block& super_block() const { return m_super_block; }
-    const ext2_group_desc& group_descriptor(unsigned groupIndex) const;
+    const ext2_group_desc& group_descriptor(GroupIndex) const;
+    ext2_group_desc* block_group_descriptors() { return (ext2_group_desc*)m_cached_group_descriptor_table.value().data(); }
+    const ext2_group_desc* block_group_descriptors() const { return (const ext2_group_desc*)m_cached_group_descriptor_table.value().data(); }
     void flush_block_group_descriptor_table();
     unsigned first_block_of_group(unsigned groupIndex) const;
     unsigned inodes_per_block() const;
@@ -130,7 +133,7 @@ private:
     unsigned m_block_group_count { 0 };
 
     mutable ext2_super_block m_super_block;
-    mutable ByteBuffer m_cached_group_descriptor_table;
+    mutable Optional<KBuffer> m_cached_group_descriptor_table;
 
     mutable HashMap<BlockIndex, RefPtr<Ext2FSInode>> m_inode_cache;
 
@@ -138,13 +141,13 @@ private:
     bool m_block_group_descriptors_dirty { false };
 
     struct CachedBitmap {
-        CachedBitmap(BlockIndex bi, ByteBuffer&& buf)
+        CachedBitmap(BlockIndex bi, KBuffer&& buf)
             : bitmap_block_index(bi)
-            , buffer(buf)
+            , buffer(move(buf))
         {}
         BlockIndex bitmap_block_index { 0 };
         bool dirty { false };
-        ByteBuffer buffer;
+        KBuffer buffer;
         Bitmap bitmap(u32 blocks_per_group) { return Bitmap::wrap(buffer.data(), blocks_per_group); }
     };
 
