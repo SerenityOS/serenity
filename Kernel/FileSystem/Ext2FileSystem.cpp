@@ -501,7 +501,7 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
         auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode.index())));
         --bgd.bg_used_dirs_count;
         dbgprintf("Ext2FS: decremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
-        flush_block_group_descriptor_table();
+        m_block_group_descriptors_dirty = true;
     }
 }
 
@@ -511,6 +511,19 @@ void Ext2FS::flush_block_group_descriptor_table()
     unsigned blocks_to_write = ceil_div(m_block_group_count * (unsigned)sizeof(ext2_group_desc), block_size());
     unsigned first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
     write_blocks(first_block_of_bgdt, blocks_to_write, m_cached_group_descriptor_table.data());
+}
+
+void Ext2FS::flush_writes()
+{
+    if (m_super_block_dirty) {
+        write_super_block(super_block());
+        m_super_block_dirty = false;
+    }
+    if (m_block_group_descriptors_dirty) {
+        flush_block_group_descriptor_table();
+        m_block_group_descriptors_dirty = false;
+    }
+    DiskBackedFS::flush_writes();
 }
 
 Ext2FSInode::Ext2FSInode(Ext2FS& fs, unsigned index)
@@ -1188,7 +1201,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
         --sb.s_free_inodes_count;
     else
         ++sb.s_free_inodes_count;
-    write_super_block(sb);
+    m_super_block_dirty = true;
 
     // Update BGD
     auto& mutable_bgd = const_cast<ext2_group_desc&>(bgd);
@@ -1200,7 +1213,7 @@ bool Ext2FS::set_inode_allocation_state(InodeIndex inode_index, bool new_state)
     dbgprintf("Ext2FS: group free inode count %u -> %u\n", bgd.bg_free_inodes_count, bgd.bg_free_inodes_count - 1);
 #endif
 
-    flush_block_group_descriptor_table();
+    m_block_group_descriptors_dirty = true;
     return true;
 }
 
@@ -1252,7 +1265,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
         --sb.s_free_blocks_count;
     else
         ++sb.s_free_blocks_count;
-    write_super_block(sb);
+    m_super_block_dirty = true;
 
     // Update BGD
     auto& mutable_bgd = const_cast<ext2_group_desc&>(bgd);
@@ -1264,7 +1277,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     dbgprintf("Ext2FS: group %u free block count %u -> %u\n", group_index, bgd.bg_free_blocks_count, bgd.bg_free_blocks_count - 1);
 #endif
 
-    flush_block_group_descriptor_table();
+    m_block_group_descriptors_dirty = true;
     return true;
 }
 
@@ -1306,7 +1319,7 @@ RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& 
     dbgprintf("Ext2FS: incremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
 #endif
 
-    flush_block_group_descriptor_table();
+    m_block_group_descriptors_dirty = true;
 
     error = 0;
     return inode;
