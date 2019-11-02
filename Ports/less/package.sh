@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/bin/sh ../.port_include.sh
 port=less
 version=530
 useconfigure="true"

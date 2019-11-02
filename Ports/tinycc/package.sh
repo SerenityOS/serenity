@@ -1,4 +1,4 @@
-#!/bin/bash ../.port_include.sh
+#!/bin/sh ../.port_include.sh
 port=tinycc
 workdir=tinycc-dev
 version=dev
