@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Bitmap.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/Inode.h>
 #include <Kernel/FileSystem/ext2_fs.h>
@@ -135,6 +136,22 @@ private:
 
     bool m_super_block_dirty { false };
     bool m_block_group_descriptors_dirty { false };
+
+    struct CachedBitmap {
+        CachedBitmap(BlockIndex bi, ByteBuffer&& buf)
+            : bitmap_block_index(bi)
+            , buffer(buf)
+        {}
+        BlockIndex bitmap_block_index { 0 };
+        bool dirty { false };
+        ByteBuffer buffer;
+        Bitmap bitmap(u32 blocks_per_group) { return Bitmap::wrap(buffer.data(), blocks_per_group); }
+    };
+
+    CachedBitmap& get_block_bitmap(BlockIndex bitmap_block_index);
+    CachedBitmap& get_inode_bitmap(InodeIndex bitmap_block_index);
+
+    Vector<OwnPtr<CachedBitmap>> m_cached_bitmaps;
 };
 
 inline Ext2FS& Ext2FSInode::fs()
