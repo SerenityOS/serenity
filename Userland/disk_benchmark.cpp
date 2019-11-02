@@ -6,11 +6,13 @@
 #include <getopt.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <fcntl.h>
+#include <unistd.h>
 #include <sys/stat.h>
 
 struct Result {
-    int write_bps;
-    int read_bps;
+    u64 write_bps;
+    u64 read_bps;
 };
 
 Result average_result(const Vector<Result>& results)
@@ -75,7 +77,7 @@ int main(int argc, char** argv)
 
     umask(0644);
 
-    auto filename = String::format("%s/disk_benchmark", directory);
+    auto filename = String::format("%s/disk_benchmark.tmp", directory);
 
     for (auto file_size : file_sizes) {
         for (auto block_size : block_sizes) {
@@ -96,7 +98,7 @@ int main(int argc, char** argv)
                 usleep(100);
             }
             auto average = average_result(results);
-            printf("\nFinished: runs=%d time=%dms write_bps=%d read_bps=%d\n", results.size(), timer.elapsed(), average.write_bps, average.read_bps);
+            printf("\nFinished: runs=%d time=%dms write_bps=%llu read_bps=%llu\n", results.size(), timer.elapsed(), average.write_bps, average.read_bps);
 
             sleep(1);
         }
@@ -136,7 +138,8 @@ Result benchmark(const String& filename, int file_size, int block_size, ByteBuff
         }
         nwrote += n;
     }
-    res.write_bps = (file_size / timer.elapsed()) * 1000;
+
+    res.write_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
 
     if (lseek(fd, 0, SEEK_SET) < 0) {
         perror("lseek");
@@ -153,7 +156,8 @@ Result benchmark(const String& filename, int file_size, int block_size, ByteBuff
         }
         nread += n;
     }
-    res.read_bps = (file_size / timer.elapsed()) * 1000;
+
+    res.read_bps = (u64)(timer.elapsed() ? (file_size / timer.elapsed()) : file_size) * 1000;
 
     if (close(fd) != 0) {
         perror("close");
