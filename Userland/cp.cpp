@@ -95,7 +95,7 @@ bool copy_file(String src_path, String dst_path, struct stat src_stat, int src_f
     }
 
     for (;;) {
-        char buffer[BUFSIZ];
+        char buffer[32768];
         ssize_t nread = read(src_fd, buffer, sizeof(buffer));
         if (nread < 0) {
             perror("read src");
