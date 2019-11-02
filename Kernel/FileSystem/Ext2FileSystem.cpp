@@ -1015,7 +1015,7 @@ Ext2FS::BlockIndex Ext2FS::allocate_block(GroupIndex preferred_group_index)
     }
     ASSERT(found_a_group);
     auto& bgd = group_descriptor(group_index);
-    auto& cached_bitmap = get_block_bitmap(bgd.bg_block_bitmap);
+    auto& cached_bitmap = get_bitmap_block(bgd.bg_block_bitmap);
 
     int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
     auto block_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), blocks_in_group);
@@ -1209,7 +1209,7 @@ Ext2FS::BlockIndex Ext2FS::first_block_index() const
     return block_size() == 1024 ? 1 : 0;
 }
 
-Ext2FS::CachedBitmap& Ext2FS::get_block_bitmap(BlockIndex bitmap_block_index)
+Ext2FS::CachedBitmap& Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
 {
     for (auto& cached_bitmap : m_cached_bitmaps) {
         if (cached_bitmap->bitmap_block_index == bitmap_block_index)
@@ -1235,7 +1235,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     BlockIndex index_in_group = (block_index - first_block_index()) - ((group_index - 1) * blocks_per_group());
     unsigned bit_index = index_in_group % blocks_per_group();
 
-    auto& cached_bitmap = get_block_bitmap(bgd.bg_block_bitmap);
+    auto& cached_bitmap = get_bitmap_block(bgd.bg_block_bitmap);
 
     bool current_state = cached_bitmap.bitmap(blocks_per_group()).get(bit_index);
 #ifdef EXT2_DEBUG
