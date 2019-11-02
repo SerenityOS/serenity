@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     }
     for (auto& fd : fds) {
         for (;;) {
-            char buf[4096];
+            char buf[32768];
             ssize_t nread = read(fd, buf, sizeof(buf));
             if (nread == 0)
                 break;
