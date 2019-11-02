@@ -39,12 +39,8 @@ GTextEditor::~GTextEditor()
 
 void GTextEditor::create_actions()
 {
-    m_undo_action = GCommonActions::make_undo_action([&](auto&) {
-        // FIXME: Undo
-    });
-    m_redo_action = GCommonActions::make_redo_action([&](auto&) {
-        // FIXME: Undo
-    });
+    m_undo_action = GCommonActions::make_undo_action([&](auto&) { undo(); }, this);
+    m_redo_action = GCommonActions::make_redo_action([&](auto&) { redo(); }, this);
     m_cut_action = GCommonActions::make_cut_action([&](auto&) { cut(); }, this);
     m_copy_action = GCommonActions::make_copy_action([&](auto&) { copy(); }, this);
     m_paste_action = GCommonActions::make_paste_action([&](auto&) { paste(); }, this);
@@ -458,6 +454,35 @@ void GTextEditor::select_all()
     update();
 }
 
+void GTextEditor::undo()
+{
+    if (m_undo_stack.size() <= 0)
+        return;
+
+    auto& undo_vector = m_undo_stack[m_undo_index];
+
+    //If we try to undo a empty vector, delete it and skip over.
+    if (undo_vector.size() <= 0 && m_undo_index > 0) {
+        m_undo_index--;
+        undo();
+        return;
+    }
+
+    for (int i = 0; i < undo_vector.size(); i++) {
+        auto& undo_command = undo_vector[i];
+        undo_command.undo();
+    }
+
+    undo_vector.clear();
+    m_undo_stack.remove(m_undo_index);
+    if (m_undo_index > 0)
+        m_undo_index--;
+}
+
+void GTextEditor::redo()
+{
+}
+
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
     if (is_single_line() && event.key() == KeyCode::Key_Tab)
@@ -631,6 +656,9 @@ void GTextEditor::keydown_event(GKeyEvent& event)
 
             // Backspace within line
             for (int i = 0; i < erase_count; ++i) {
+                int row = m_cursor.line();
+                int column = m_cursor.column() - 1 - i;
+                add_to_undo_stack(make<RemoveCharacterCommand>(*this, document().line(row).characters()[column], GTextPosition(row, column)));
                 current_line().remove(document(), m_cursor.column() - 1 - i);
             }
             update_content_size();
@@ -642,6 +670,11 @@ void GTextEditor::keydown_event(GKeyEvent& event)
             // Backspace at column 0; merge with previous line
             auto& previous_line = lines()[m_cursor.line() - 1];
             int previous_length = previous_line.length();
+
+            int row = m_cursor.line();
+            int column = previous_length;
+            add_to_undo_stack(make<RemoveLineCommand>(*this, String(lines()[m_cursor.line()].view()), GTextPosition(row, column), true));
+
             previous_line.append(document(), current_line().characters(), current_line().length());
             document().remove_line(m_cursor.line());
             update_content_size();
@@ -739,6 +772,14 @@ void GTextEditor::insert_at_cursor(char ch)
                 if (leading_spaces)
                     new_line_contents = String::repeated(' ', leading_spaces);
             }
+
+            int row = m_cursor.line();
+            int column = m_cursor.column() + 1;
+            Vector<char> line_content;
+            for (int i = m_cursor.column(); i < document().lines()[row].length(); i++)
+                line_content.append(document().lines()[row].characters()[i]);
+            add_to_undo_stack(make<CreateLineCommand>(*this, line_content, GTextPosition(row, column)));
+
             document().insert_line(m_cursor.line() + (at_tail ? 1 : 0), make<GTextDocumentLine>(document(), new_line_contents));
             update();
             did_change();
@@ -747,6 +788,14 @@ void GTextEditor::insert_at_cursor(char ch)
         }
         auto new_line = make<GTextDocumentLine>(document());
         new_line->append(document(), current_line().characters() + m_cursor.column(), current_line().length() - m_cursor.column());
+
+        int row = m_cursor.line();
+        int column = m_cursor.column() + 1;
+        Vector<char> line_content;
+        for (int i = 0; i < new_line->length(); i++)
+            line_content.append(new_line->characters()[i]);
+        add_to_undo_stack(make<CreateLineCommand>(*this, line_content, GTextPosition(row, column)));
+
         current_line().truncate(document(), m_cursor.column());
         document().insert_line(m_cursor.line() + 1, move(new_line));
         update();
@@ -767,6 +816,8 @@ void GTextEditor::insert_at_cursor(char ch)
     current_line().insert(document(), m_cursor.column(), ch);
     did_change();
     set_cursor(m_cursor.line(), m_cursor.column() + 1);
+
+    add_to_undo_stack(make<InsertCharacterCommand>(*this, ch, m_cursor));
 }
 
 int GTextEditor::content_x_for_position(const GTextPosition& position) const
@@ -879,6 +930,27 @@ void GTextEditor::update_cursor()
     update(line_widget_rect(m_cursor.line()));
 }
 
+void GTextEditor::update_undo_timer()
+{
+    if (m_undo_stack.size() <= 0)
+        return;
+
+    if (m_undo_timer == 0)
+        m_prev_undo_stack_size = m_undo_stack[m_undo_index].size();
+
+    if (m_undo_timer >= 2 && m_undo_stack[m_undo_index].size() > 0) {
+
+        if (m_undo_stack[m_undo_index].size() == m_prev_undo_stack_size) {
+            dbg() << "Increased Undo Index";
+            m_undo_stack.append(make<NonnullOwnPtrVector<UndoCommand>>());
+            m_undo_index++;
+        }
+        m_undo_timer = -1;
+    }
+
+    m_undo_timer++;
+}
+
 void GTextEditor::set_cursor(int line, int column)
 {
     set_cursor({ line, column });
@@ -925,8 +997,10 @@ void GTextEditor::focusout_event(CEvent&)
 void GTextEditor::timer_event(CTimerEvent&)
 {
     m_cursor_state = !m_cursor_state;
-    if (is_focused())
+    if (is_focused()) {
         update_cursor();
+        update_undo_timer();
+    }
 }
 
 bool GTextEditor::write_to_file(const StringView& path)
@@ -1014,6 +1088,10 @@ void GTextEditor::delete_selection()
 
     // First delete all the lines in between the first and last one.
     for (int i = selection.start().line() + 1; i < selection.end().line();) {
+        int row = i;
+        int column = lines()[i].length();
+        add_to_undo_stack(make<RemoveLineCommand>(*this, String(lines()[i].view()), GTextPosition(row, column), false));
+
         document().remove_line(i);
         selection.end().set_line(selection.end().line() - 1);
     }
@@ -1022,6 +1100,13 @@ void GTextEditor::delete_selection()
         // Delete within same line.
         auto& line = lines()[selection.start().line()];
         bool whole_line_is_selected = selection.start().column() == 0 && selection.end().column() == line.length();
+
+        for (int i = selection.end().column() - 1; i >= selection.start().column(); i--) {
+            int row = selection.start().line();
+            int column = i;
+            add_to_undo_stack(make<RemoveCharacterCommand>(*this, document().line(row).characters()[column], GTextPosition(row, column)));
+        }
+
         if (whole_line_is_selected) {
             line.clear(document());
         } else {
@@ -1042,8 +1127,20 @@ void GTextEditor::delete_selection()
         StringBuilder builder(before_selection.length() + after_selection.length());
         builder.append(before_selection);
         builder.append(after_selection);
+
+        for (int i = first_line.length() - 1; i > selection.start().column() - 1; i--) {
+            int row = selection.start().line();
+            int column = i;
+            add_to_undo_stack(make<RemoveCharacterCommand>(*this, document().line(row).characters()[column], GTextPosition(row, column)));
+        }
+
+        add_to_undo_stack(make<RemoveLineCommand>(*this, String(second_line.view()), selection.end(), false));
+
         first_line.set_text(document(), builder.to_string());
         document().remove_line(selection.end().line());
+
+        for (int i = (first_line.length()) - after_selection.length(); i < first_line.length(); i++)
+            add_to_undo_stack(make<InsertCharacterCommand>(*this, first_line.characters()[i], GTextPosition(selection.start().line(), i + 1)));
     }
 
     if (lines().is_empty()) {
@@ -1198,6 +1295,14 @@ void GTextEditor::recompute_all_visual_lines()
     update_content_size();
 }
 
+void GTextEditor::add_to_undo_stack(NonnullOwnPtr<UndoCommand> undo_command)
+{
+    if (m_undo_stack.size() <= m_undo_index)
+        m_undo_stack.append(make<NonnullOwnPtrVector<UndoCommand>>());
+
+    m_undo_stack[(m_undo_index)].insert(0, move(undo_command));
+}
+
 int GTextEditor::visual_line_containing(int line_index, int column) const
 {
     int visual_line_index = 0;
@@ -1343,4 +1448,104 @@ void GTextEditor::set_document(GTextDocument& document)
     recompute_all_visual_lines();
     update();
     m_document->register_client(*this);
+}
+
+GTextEditor::UndoCommand::UndoCommand(GTextEditor& text_editor)
+    : m_text_editor(text_editor)
+{
+}
+
+GTextEditor::UndoCommand::~UndoCommand()
+{
+}
+
+void GTextEditor::UndoCommand::undo() {}
+void GTextEditor::UndoCommand::redo() {}
+
+GTextEditor::InsertCharacterCommand::InsertCharacterCommand(GTextEditor& text_editor, char ch, GTextPosition text_position)
+    : UndoCommand(text_editor)
+    , m_character(ch)
+    , m_text_position(text_position)
+{
+}
+
+GTextEditor::RemoveCharacterCommand::RemoveCharacterCommand(GTextEditor& text_editor, char ch, GTextPosition text_position)
+    : UndoCommand(text_editor)
+    , m_character(ch)
+    , m_text_position(text_position)
+{
+}
+
+GTextEditor::RemoveLineCommand::RemoveLineCommand(GTextEditor& text_editor, String line_content, GTextPosition text_position, bool has_merged_content)
+    : UndoCommand(text_editor)
+    , m_line_content(line_content)
+    , m_text_position(text_position)
+    , m_has_merged_content(has_merged_content)
+{
+}
+
+GTextEditor::CreateLineCommand::CreateLineCommand(GTextEditor& text_editor, Vector<char> line_content, GTextPosition text_position)
+    : UndoCommand(text_editor)
+    , m_line_content(line_content)
+    , m_text_position(text_position)
+{
+}
+
+void GTextEditor::InsertCharacterCommand::undo()
+{
+    //Move back the cursor if it's inside in deleted content
+    if (m_text_editor.cursor().column() >= m_text_position.column())
+        m_text_editor.set_cursor(m_text_position.line(), m_text_position.column() - 1);
+
+    m_text_editor.lines()[m_text_position.line()].remove(m_text_editor.document(), (m_text_position.column() - 1));
+}
+
+void GTextEditor::InsertCharacterCommand::redo()
+{
+    //TOOD: Redo implementation
+}
+
+void GTextEditor::RemoveCharacterCommand::undo()
+{
+    m_text_editor.lines()[m_text_position.line()].insert(m_text_editor.document(), m_text_position.column(), m_character);
+}
+
+void GTextEditor::RemoveCharacterCommand::redo()
+{
+    //TOOD: Redo implementation
+}
+
+void GTextEditor::RemoveLineCommand::undo()
+{
+
+    //Insert back the line
+    m_text_editor.document().insert_line(m_text_position.line(), make<GTextDocumentLine>(m_text_editor.document(), m_line_content));
+
+    //Remove the merged line contents
+    if (m_has_merged_content)
+        for (int i = m_line_content.length() - 1; i >= 0; i--)
+            m_text_editor.document().lines()[m_text_position.line() - 1].remove(m_text_editor.document(), (m_text_position.column()) + i);
+}
+
+void GTextEditor::RemoveLineCommand::redo()
+{
+    //TOOD: Redo implementation
+}
+
+void GTextEditor::CreateLineCommand::undo()
+{
+    //Insert back the created line portion
+    for (int i = 0; i < m_line_content.size(); i++)
+        m_text_editor.document().lines()[m_text_position.line()].insert(m_text_editor.document(), (m_text_position.column() - 1) + i, m_line_content[i]);
+
+    //Set the cursor back before the selection
+    m_text_editor.set_cursor(m_text_position.line(), m_text_editor.document().lines()[m_text_position.line()].length());
+
+    //Remove the created line
+    m_text_editor.document().remove_line(m_text_position.line() + 1);
+}
+
+void GTextEditor::CreateLineCommand::redo()
+{
+    //TOOD: Redo implementation
 }

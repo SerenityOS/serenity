@@ -79,6 +79,8 @@ public:
     void do_delete();
     void delete_current_line();
     void select_all();
+    void undo();
+    void redo();
 
     Function<void()> on_change;
     Function<void()> on_return_pressed;
@@ -137,6 +139,7 @@ private:
     Rect cursor_content_rect() const;
     Rect content_rect_for_position(const GTextPosition&) const;
     void update_cursor();
+    void update_undo_timer();
     const NonnullOwnPtrVector<GTextDocumentLine>& lines() const { return document().lines(); }
     NonnullOwnPtrVector<GTextDocumentLine>& lines() { return document().lines(); }
     GTextDocumentLine& line(int index) { return document().line(index); }
@@ -156,6 +159,64 @@ private:
     Rect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
 
+    class UndoCommand {
+
+    public:
+        UndoCommand(GTextEditor& text_editor);
+        virtual ~UndoCommand();
+        virtual void undo();
+        virtual void redo();
+
+    protected:
+        GTextEditor& m_text_editor;
+    };
+
+    class InsertCharacterCommand : public UndoCommand {
+    public:
+        InsertCharacterCommand(GTextEditor& text_editor, char ch, GTextPosition text_position);
+        virtual void undo() override;
+        virtual void redo() override;
+
+    private:
+        char m_character;
+        GTextPosition m_text_position;
+    };
+
+    class RemoveCharacterCommand : public UndoCommand {
+    public:
+        RemoveCharacterCommand(GTextEditor& text_editor, char ch, GTextPosition text_position);
+        virtual void undo() override;
+        virtual void redo() override;
+
+    private:
+        char m_character;
+        GTextPosition m_text_position;
+    };
+
+    class RemoveLineCommand : public UndoCommand {
+    public:
+        RemoveLineCommand(GTextEditor& text_editor, String, GTextPosition text_position, bool has_merged_content);
+        virtual void undo() override;
+        virtual void redo() override;
+
+    private:
+        String m_line_content;
+        GTextPosition m_text_position;
+        bool m_has_merged_content;
+    };
+
+    class CreateLineCommand : public UndoCommand {
+    public:
+        CreateLineCommand(GTextEditor& text_editor, Vector<char> line_content, GTextPosition text_position);
+        virtual void undo() override;
+        virtual void redo() override;
+
+    private:
+        Vector<char> m_line_content;
+        GTextPosition m_text_position;
+    };
+
+    void add_to_undo_stack(NonnullOwnPtr<UndoCommand> undo_command);
     int visual_line_containing(int line_index, int column) const;
     void recompute_visual_lines(int line_index);
 
@@ -183,6 +244,10 @@ private:
     RefPtr<GAction> m_delete_action;
     CElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
+    NonnullOwnPtrVector<NonnullOwnPtrVector<UndoCommand>> m_undo_stack;
+    int m_undo_index = 0;
+    int m_undo_timer = 0;
+    int m_prev_undo_stack_size = 0;
 
     RefPtr<GTextDocument> m_document;
 
