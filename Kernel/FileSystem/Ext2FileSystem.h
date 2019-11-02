@@ -98,6 +98,7 @@ private:
     virtual RefPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, int& error) override;
     virtual RefPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, int& error) override;
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
+    virtual void flush_writes() override;
 
     BlockIndex first_block_index() const;
     InodeIndex allocate_inode(GroupIndex preferred_group, off_t expected_size);
@@ -132,6 +133,9 @@ private:
     mutable ByteBuffer m_cached_group_descriptor_table;
 
     mutable HashMap<BlockIndex, RefPtr<Ext2FSInode>> m_inode_cache;
+
+    bool m_super_block_dirty { false };
+    bool m_block_group_descriptors_dirty { false };
 };
 
 inline Ext2FS& Ext2FSInode::fs()
