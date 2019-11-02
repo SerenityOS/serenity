@@ -90,8 +90,10 @@ bool copy_file(String src_path, String dst_path, struct stat src_stat, int src_f
     }
 
     if (src_stat.st_size > 0) {
-        // NOTE: This is primarily an optimization, so it's not the end if it fails.
-        ftruncate(dst_fd, src_stat.st_size);
+        if (ftruncate(dst_fd, src_stat.st_size) < 0) {
+            perror("cp: ftruncate");
+            return false;
+        }
     }
 
     for (;;) {
