@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Queue.h>
 #include <LibCore/CEvent.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CIODevice.h>
@@ -70,7 +71,10 @@ namespace Server {
             , m_client_id(client_id)
         {
             add_child(socket);
-            m_socket->on_ready_to_read = [this] { drain_client(); };
+            m_socket->on_ready_to_read = [this] {
+                drain_client();
+                flush_outgoing_messages();
+            };
 #if defined(CIPC_DEBUG)
             dbg() << "S: Created new Connection " << fd << client_id << " and said hello";
 #endif
@@ -89,9 +93,16 @@ namespace Server {
 #if defined(CIPC_DEBUG)
             dbg() << "S: -> C " << int(message.type) << " extra " << extra_data.size();
 #endif
+            if (try_send_message(message, extra_data))
+                return;
+            QueuedMessage queued_message { message, extra_data };
             if (!extra_data.is_empty())
-                const_cast<ServerMessage&>(message).extra_size = extra_data.size();
+                queued_message.message.extra_size = extra_data.size();
+            m_queue.enqueue(move(queued_message));
+        }
 
+        bool try_send_message(const ServerMessage& message, const ByteBuffer& extra_data)
+        {
             struct iovec iov[2];
             int iov_count = 1;
 
@@ -104,29 +115,36 @@ namespace Server {
                 ++iov_count;
             }
 
-            int nwritten = 0;
-            for (;;) {
-                nwritten = writev(m_socket->fd(), iov, iov_count);
-                if (nwritten < 0) {
-                    switch (errno) {
-                    case EPIPE:
-                        dbgprintf("Connection::post_message: Disconnected from peer.\n");
-                        shutdown();
-                        return;
-                    case EAGAIN:
-                        // FIXME: It would be better to push these onto a queue so we can go back
-                        //        to servicing other clients.
-                        sched_yield();
-                        continue;
-                    default:
-                        perror("Connection::post_message writev");
-                        ASSERT_NOT_REACHED();
-                    }
+            int nwritten = writev(m_socket->fd(), iov, iov_count);
+            if (nwritten < 0) {
+                switch (errno) {
+                case EPIPE:
+                    dbgprintf("Connection::post_message: Disconnected from peer.\n");
+                    shutdown();
+                    return false;
+                case EAGAIN:
+#ifdef CIPC_DEBUG
+                    dbg() << "EAGAIN when trying to send WindowServer message, queue size: " << m_queue.size();
+#endif
+                    return false;
+                default:
+                    perror("Connection::post_message writev");
+                    ASSERT_NOT_REACHED();
                 }
-                break;
             }
 
             ASSERT(nwritten == (int)(sizeof(message) + extra_data.size()));
+            return true;
+        }
+
+        void flush_outgoing_messages()
+        {
+            while (!m_queue.is_empty()) {
+                auto& queued_message = m_queue.head();
+                if (!try_send_message(queued_message.message, queued_message.extra_data))
+                    break;
+                m_queue.dequeue();
+            }
         }
 
         void drain_client()
@@ -209,6 +227,13 @@ namespace Server {
 
     private:
         RefPtr<CLocalSocket> m_socket;
+
+        struct QueuedMessage {
+            ServerMessage message;
+            ByteBuffer extra_data;
+        };
+        Queue<QueuedMessage, 16> m_queue;
+
         int m_client_id { -1 };
         int m_client_pid { -1 };
     };
