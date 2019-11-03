@@ -32,6 +32,7 @@ template<size_t value>
 constexpr size_t product_odd() { return value * product_odd<value - 2>(); }
 
 extern "C" {
+
 double trunc(double x)
 {
     return (int64_t)x;
@@ -42,27 +43,19 @@ double cos(double angle)
     return sin(angle + M_PI_2);
 }
 
-double ampsin(double angle)
-{
-    double looped_angle = fmod(M_PI + angle, M_TAU) - M_PI;
-    double looped_angle_squared = looped_angle * looped_angle;
-
-    double quadratic_term;
-    if (looped_angle > 0) {
-        quadratic_term = -looped_angle_squared;
-    } else {
-        quadratic_term = looped_angle_squared;
-    }
-
-    double linear_term = M_PI * looped_angle;
-
-    return quadratic_term + linear_term;
-}
-
+// This can also be done with a taylor expansion, but for
+// now this works pretty well (and doesn't mess anything up
+// in quake in particular, which is very Floating-Point precision
+// heavy)
 double sin(double angle)
 {
-    double vertical_scaling = M_PI_2 * M_PI_2;
-    return ampsin(angle) / vertical_scaling;
+    double ret = 0.0;
+    __asm__(
+        "fsin"
+        : "=t"(ret)
+        : "0"(angle));
+
+    return ret;
 }
 
 double pow(double x, double y)
@@ -291,5 +284,4 @@ float ceilf(float value)
     }
     return as_int + 1;
 }
-
 }
