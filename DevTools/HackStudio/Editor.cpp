@@ -94,6 +94,10 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
+    if (m_documentation_tooltip_window->is_visible() && hovered_token == m_last_parsed_token) {
+        return;
+    }
+
     dbg() << "opening " << it->value;
     auto file = CFile::construct(it->value);
     if (!file->open(CFile::ReadOnly)) {
@@ -129,6 +133,8 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
     m_documentation_html_view->set_document(html_document);
     m_documentation_tooltip_window->move_to(screen_location.translated(4, 4));
     m_documentation_tooltip_window->show();
+
+    m_last_parsed_token = hovered_token;
 }
 
 void Editor::mousemove_event(GMouseEvent& event)
