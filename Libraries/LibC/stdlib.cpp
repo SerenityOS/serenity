@@ -1,7 +1,7 @@
-#include <AK/String.h>
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <AK/StdLibExtras.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Syscall.h>
 #include <alloca.h>
@@ -166,7 +166,6 @@ int putenv(char* new_var)
     environ = new_environ;
     return 0;
 }
-
 }
 
 double strtod(const char* str, char** endptr)
@@ -185,7 +184,6 @@ long double strtold(const char* str, char** endptr)
     ASSERT_NOT_REACHED();
 }
 
-
 float strtof(const char* str, char** endptr)
 {
     (void)str;
@@ -196,8 +194,72 @@ float strtof(const char* str, char** endptr)
 
 double atof(const char* str)
 {
-    dbgprintf("LibC: atof: '%s'\n", str);
-    ASSERT_NOT_REACHED();
+    size_t len = strlen(str);
+    size_t weight = 1;
+    int exp_val = 0;
+    double value = 0.0f;
+    double fraction = 0.0f;
+    bool has_sign = false;
+    bool is_negative = false;
+    bool is_fractional = false;
+    bool is_scientific = false;
+
+    if (str[0] == '-') {
+        is_negative = true;
+        has_sign = true;
+    }
+    if (str[0] == '+') {
+        has_sign = true;
+    }
+
+    for (size_t i = has_sign; i < len; i++) {
+
+        // Looks like we're about to start working on the fractional part
+        if (str[i] == '.') {
+            is_fractional = true;
+            continue;
+        }
+
+        if (str[i] == 'e' || str[i] == 'E') {
+            if (str[i + 1] == '-' || str[i + 1] == '+')
+                exp_val = atoi(str + i + 2);
+            else
+                exp_val = atoi(str + i + 1);
+
+            is_scientific = true;
+            continue;
+        }
+
+        if (str[i] < '0' || str[i] > '9' || exp_val != 0)
+            continue;
+
+        if (is_fractional) {
+            fraction *= 10;
+            fraction += str[i] - '0';
+            weight *= 10;
+        } else {
+            value = value * 10;
+            value += str[i] - '0';
+        }
+    }
+
+    fraction /= weight;
+    value += fraction;
+
+    if (is_scientific) {
+        bool divide = exp_val < 0;
+        if (divide)
+            exp_val *= -1;
+
+        for (int i = 0; i < exp_val; i++) {
+            if (divide)
+                value /= 10;
+            else
+                value *= 10;
+        }
+    }
+
+    return is_negative ? -value : value;
 }
 
 int atoi(const char* str)
@@ -338,10 +400,10 @@ char* mkdtemp(char* pattern)
         struct stat st;
         int rc = lstat(pattern, &st);
         if (rc < 0 && errno == ENOENT) {
-	    if (mkdir(pattern, 0700) < 0)
+            if (mkdir(pattern, 0700) < 0)
                 return nullptr;
-	    return pattern;
-	}
+            return pattern;
+        }
     }
 
     errno = EEXIST;
