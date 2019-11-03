@@ -6,7 +6,7 @@
 
 namespace AK {
 
-template<typename T>
+template<typename T, int segment_size = 1000>
 class Queue {
 public:
     Queue() { }
@@ -54,8 +54,6 @@ public:
     }
 
 private:
-    static const int segment_size = 1000;
-
     SinglyLinkedList<OwnPtr<Vector<T, segment_size>>> m_segments;
     int m_index_into_first { 0 };
     int m_size { 0 };
