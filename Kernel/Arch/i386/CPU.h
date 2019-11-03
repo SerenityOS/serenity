@@ -104,6 +104,7 @@ public:
         UserSupervisor = 1 << 2,
         WriteThrough = 1 << 3,
         CacheDisabled = 1 << 4,
+        Global = 1 << 8,
     };
 
     bool is_present() const { return raw() & Present; }
@@ -121,7 +122,10 @@ public:
     bool is_cache_disabled() const { return raw() & CacheDisabled; }
     void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
 
-    void set_bit(u8 bit, bool value)
+    bool is_global() const { return raw() & Global; }
+    void set_global(bool b) { set_bit(Global, b); }
+
+    void set_bit(u32 bit, bool value)
     {
         if (value)
             m_raw |= bit;
@@ -152,6 +156,7 @@ public:
         UserSupervisor = 1 << 2,
         WriteThrough = 1 << 3,
         CacheDisabled = 1 << 4,
+        Global = 1 << 8,
     };
 
     bool is_present() const { return raw() & Present; }
@@ -169,7 +174,10 @@ public:
     bool is_cache_disabled() const { return raw() & CacheDisabled; }
     void set_cache_disabled(bool b) { set_bit(CacheDisabled, b); }
 
-    void set_bit(u8 bit, bool value)
+    bool is_global() const { return raw() & Global; }
+    void set_global(bool b) { set_bit(Global, b); }
+
+    void set_bit(u32 bit, bool value)
     {
         if (value)
             m_raw |= bit;
