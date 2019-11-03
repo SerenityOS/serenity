@@ -384,7 +384,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     auto& inode = inode_vmobject.inode();
     auto nread = inode.read_bytes((first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, page_buffer, nullptr);
     if (nread < 0) {
-        kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
+        kprintf("MM: handle_inode_fault had error (%d) while reading!\n", nread);
         return PageFaultResponse::ShouldCrash;
     }
     if (nread < PAGE_SIZE) {
@@ -394,7 +394,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     cli();
     vmobject_physical_page_entry = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
     if (vmobject_physical_page_entry.is_null()) {
-        kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
+        kprintf("MM: handle_inode_fault was unable to allocate a physical page\n");
         return PageFaultResponse::ShouldCrash;
     }
     remap_page(page_index_in_region);
