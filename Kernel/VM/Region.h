@@ -114,6 +114,8 @@ public:
             m_access &= ~Access::Write;
     }
 
+    void remap_page(size_t index);
+
     // For InlineLinkedListNode
     Region* m_next { nullptr };
     Region* m_prev { nullptr };

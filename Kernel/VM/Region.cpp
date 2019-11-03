@@ -96,7 +96,7 @@ int Region::commit()
             return -ENOMEM;
         }
         vmobject().physical_pages()[i] = move(physical_page);
-        MM.remap_region_page(*this, i);
+        remap_page(i - first_page_index());
     }
     return 0;
 }
@@ -168,4 +168,26 @@ Bitmap& Region::ensure_cow_map() const
     if (!m_cow_map)
         m_cow_map = make<Bitmap>(page_count(), true);
     return *m_cow_map;
+}
+
+void Region::remap_page(size_t index)
+{
+    ASSERT(page_directory());
+    InterruptDisabler disabler;
+    auto page_vaddr = vaddr().offset(index * PAGE_SIZE);
+    auto& pte = MM.ensure_pte(*page_directory(), page_vaddr);
+    auto& physical_page = vmobject().physical_pages()[first_page_index() + index];
+    ASSERT(physical_page);
+    pte.set_physical_page_base(physical_page->paddr().get());
+    pte.set_present(true);
+    if (should_cow(index))
+        pte.set_writable(false);
+    else
+        pte.set_writable(is_writable());
+    pte.set_user_allowed(is_user_accessible());
+    page_directory()->flush(page_vaddr);
+#ifdef MM_DEBUG
+    dbg() << "MM: >> region.remap_page (PD=" << page_directory()->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
+#endif
+
 }
