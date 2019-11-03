@@ -1,4 +1,4 @@
-#!/bin/sh ../.port_include.sh
+#!/bin/bash ../.port_include.sh
 port=quake
 version=0.65
 workdir=SerenityQuake-master

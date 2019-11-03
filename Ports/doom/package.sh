@@ -1,4 +1,4 @@
-#!/bin/sh ../.port_include.sh
+#!/bin/bash ../.port_include.sh
 port=doom
 workdir=SerenityDOOM-master
 version=serenity-git
