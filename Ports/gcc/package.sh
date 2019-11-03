@@ -1,4 +1,4 @@
-#!/bin/sh ../.port_include.sh
+#!/bin/bash ../.port_include.sh
 port=gcc
 version=8.3.0
 useconfigure=true
@@ -18,10 +18,10 @@ fetch() {
     done
 }
 build() {
-    run make "$makeopts"
+    run make $makeopts
     run find ./host-i686-pc-serenity/gcc/ -maxdepth 1 -type f -executable -exec strip --strip-debug {} \; || echo
 }
 
 install() {
-    run make "$installopts"
+    run make $installopts
 }

@@ -1,4 +1,4 @@
-#!/bin/sh ../.port_include.sh
+#!/bin/bash ../.port_include.sh
 port=figlet
 version=2.2.5
 files="http://ftp.figlet.org/pub/figlet/program/unix/figlet-2.2.5.tar.gz figlet-2.2.5.tar.gz"

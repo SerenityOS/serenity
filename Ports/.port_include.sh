@@ -1,7 +1,4 @@
 #!/bin/bash
-
-# This file will need to be run in bash, for now.
-
 if [ -z "$SERENITY_ROOT" ]; then
     echo "You must source UseIt.sh to build ports."
     exit 1
@@ -33,19 +30,19 @@ run() {
     (cd "$workdir" && "$@")
 }
 run_replace_in_file(){
-    run perl -p -i -e "$1" "$2"
+    run perl -p -i -e "$1" $2
 }
 # Checks if a function is defined. In this case, if the function is not defined in the port's script, then we will use our defaults. This way, ports don't need to include these functions every time, but they can override our defaults if needed.
 func_defined() {
-    PATH=$(command -V "$1"  > /dev/null 2>&1)
+    PATH= command -V "$1"  > /dev/null 2>&1
 }
 func_defined fetch || fetch() {
     OLDIFS=$IFS
     IFS=$'\n'
     for f in $files; do
         IFS=$OLDIFS
-        read url filename <<< "$(echo $f)"
-        run_nocd curl "${curlopts:-}" "$url" -o "$filename"
+        read url filename <<< $(echo "$f")
+        run_nocd curl ${curlopts:-} "$url" -o "$filename"
         case "$filename" in
             *.tar*|.tbz*|*.txz|*.tgz)
                 run_nocd tar xf "$filename"
@@ -68,13 +65,13 @@ func_defined configure || configure() {
     run ./"$configscript" --host=i686-pc-serenity $configopts
 }
 func_defined build || build() {
-    run make "$makeopts"
+    run make $makeopts
 }
 func_defined install || install() {
     run make DESTDIR="$SERENITY_ROOT"/Root $installopts install
 }
 func_defined clean || clean() {
-    rm -rf "$workdir" -- *.out
+    rm -rf "$workdir" *.out
 }
 func_defined clean_dist || clean_dist() {
     OLDIFS=$IFS
@@ -86,7 +83,7 @@ func_defined clean_dist || clean_dist() {
     done
 }
 func_defined clean_all || clean_all() {
-    rm -rf "$workdir" -- *.out
+    rm -rf "$workdir" *.out
     OLDIFS=$IFS
     IFS=$'\n'
     for f in $files; do
@@ -106,7 +103,7 @@ addtodb() {
             echo "auto $port $version" >> "$prefix"/packages.db
         else
             echo "manual $port $version" >> "$prefix"/packages.db
-            if [ -n "${dependlist:-}" ]; then
+            if [ ! -z "${dependlist:-}" ]; then
                 echo "dependency $port$dependlist" >> "$prefix/packages.db"
             fi
         fi
@@ -197,10 +194,10 @@ if [ -z "${1:-}" ]; then
 else
     case "$1" in
         fetch|configure|build|install|clean|clean_dist|clean_all|uninstall)
-            do_"$1"
+            do_$1
             ;;
         --auto)
-            do_all "$1"
+            do_all $1
             ;;
         *)
             >&2 echo "I don't understand $1! Supported arguments: fetch, configure, build, install, clean, clean_dist, clean_all, uninstall."

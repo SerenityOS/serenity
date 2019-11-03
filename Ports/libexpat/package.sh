@@ -1,4 +1,4 @@
-#!/bin/sh ../.port_include.sh
+#!/bin/bash ../.port_include.sh
 port=libexpat
 version=2.2.9
 useconfigure=true
