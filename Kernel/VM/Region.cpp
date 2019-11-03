@@ -7,6 +7,7 @@
 #include <Kernel/VM/Region.h>
 
 //#define MM_DEBUG
+//#define PAGE_FAULT_DEBUG
 
 Region::Region(const Range& range, const String& name, u8 access)
     : m_range(range)
@@ -252,4 +253,152 @@ void Region::remap()
 {
     ASSERT(m_page_directory);
     map(*m_page_directory);
+}
+
+PageFaultResponse Region::handle_fault(const PageFault& fault)
+{
+    auto page_index_in_region = page_index_from_address(fault.vaddr());
+    if (fault.type() == PageFault::Type::PageNotPresent) {
+        if (vmobject().is_inode()) {
+#ifdef PAGE_FAULT_DEBUG
+            dbgprintf("NP(inode) fault in Region{%p}[%u]\n", this, page_index_in_region);
+#endif
+            return handle_inode_fault(page_index_in_region);
+        }
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("NP(zero) fault in Region{%p}[%u]\n", this, page_index_in_region);
+#endif
+        return handle_zero_fault(page_index_in_region);
+    }
+    ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
+    if (fault.access() == PageFault::Access::Write && should_cow(page_index_in_region)) {
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("PV(cow) fault in Region{%p}[%u]\n", this, page_index_in_region);
+#endif
+        return handle_cow_fault(page_index_in_region);
+    }
+    kprintf("PV(error) fault in Region{%p}[%u] at V%p\n", this, page_index_in_region, fault.vaddr().get());
+    return PageFaultResponse::ShouldCrash;
+}
+
+PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(vmobject().is_anonymous());
+
+    auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
+
+    // NOTE: We don't need to acquire the VMObject's lock.
+    //       This function is already exclusive due to interrupts being blocked.
+
+    if (!vmobject_physical_page_entry.is_null()) {
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
+#endif
+        remap_page(page_index_in_region);
+        return PageFaultResponse::Continue;
+    }
+
+    if (current)
+        current->process().did_zero_fault();
+
+    auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+    if (physical_page.is_null()) {
+        kprintf("MM: handle_zero_fault was unable to allocate a physical page\n");
+        return PageFaultResponse::ShouldCrash;
+    }
+
+#ifdef PAGE_FAULT_DEBUG
+    dbgprintf("      >> ZERO P%p\n", physical_page->paddr().get());
+#endif
+    vmobject_physical_page_entry = move(physical_page);
+    remap_page(page_index_in_region);
+    return PageFaultResponse::Continue;
+}
+
+PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
+    if (vmobject_physical_page_entry->ref_count() == 1) {
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
+#endif
+        set_should_cow(page_index_in_region, false);
+        remap_page(page_index_in_region);
+        return PageFaultResponse::Continue;
+    }
+
+    if (current)
+        current->process().did_cow_fault();
+
+#ifdef PAGE_FAULT_DEBUG
+    dbgprintf("    >> It's a COW page and it's time to COW!\n");
+#endif
+    auto physical_page_to_copy = move(vmobject_physical_page_entry);
+    auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
+    if (physical_page.is_null()) {
+        kprintf("MM: handle_cow_fault was unable to allocate a physical page\n");
+        return PageFaultResponse::ShouldCrash;
+    }
+    u8* dest_ptr = MM.quickmap_page(*physical_page);
+    const u8* src_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
+#ifdef PAGE_FAULT_DEBUG
+    dbgprintf("      >> COW P%p <- P%p\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
+#endif
+    memcpy(dest_ptr, src_ptr, PAGE_SIZE);
+    vmobject_physical_page_entry = move(physical_page);
+    MM.unquickmap_page();
+    set_should_cow(page_index_in_region, false);
+    remap_page(page_index_in_region);
+    return PageFaultResponse::Continue;
+}
+
+PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    ASSERT(vmobject().is_inode());
+    auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject());
+    auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[first_page_index() + page_index_in_region];
+
+    sti();
+    LOCKER(vmobject().m_paging_lock);
+    cli();
+
+    if (!vmobject_physical_page_entry.is_null()) {
+#ifdef PAGE_FAULT_DEBUG
+        dbgprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
+#endif
+        remap_page(page_index_in_region);
+        return PageFaultResponse::Continue;
+    }
+
+    if (current)
+        current->process().did_inode_fault();
+
+#ifdef MM_DEBUG
+    dbgprintf("MM: page_in_from_inode ready to read from inode\n");
+#endif
+    sti();
+    u8 page_buffer[PAGE_SIZE];
+    auto& inode = inode_vmobject.inode();
+    auto nread = inode.read_bytes((first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, page_buffer, nullptr);
+    if (nread < 0) {
+        kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
+        return PageFaultResponse::ShouldCrash;
+    }
+    if (nread < PAGE_SIZE) {
+        // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
+        memset(page_buffer + nread, 0, PAGE_SIZE - nread);
+    }
+    cli();
+    vmobject_physical_page_entry = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::No);
+    if (vmobject_physical_page_entry.is_null()) {
+        kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
+        return PageFaultResponse::ShouldCrash;
+    }
+    remap_page(page_index_in_region);
+    u8* dest_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
+    memcpy(dest_ptr, page_buffer, PAGE_SIZE);
+    return PageFaultResponse::Continue;
 }

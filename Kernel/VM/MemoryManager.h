@@ -23,11 +23,6 @@
 class KBuffer;
 class SynthFSInode;
 
-enum class PageFaultResponse {
-    ShouldCrash,
-    Continue,
-};
-
 #define MM MemoryManager::the()
 
 class MemoryManager {
@@ -107,10 +102,6 @@ private:
     static Region* kernel_region_from_vaddr(VirtualAddress);
 
     static Region* region_from_vaddr(VirtualAddress);
-
-    bool copy_on_write(Region&, unsigned page_index_in_region);
-    bool page_in_from_inode(Region&, unsigned page_index_in_region);
-    bool zero_page(Region& region, unsigned page_index_in_region);
 
     u8* quickmap_page(PhysicalPage&);
     void unquickmap_page();
