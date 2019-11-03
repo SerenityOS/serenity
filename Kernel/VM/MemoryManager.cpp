@@ -697,8 +697,7 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
         if (physical_page) {
             pte.set_physical_page_base(physical_page->paddr().get());
             pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
-            // FIXME: It seems wrong that the *region* cow map is essentially using *VMO* relative indices.
-            if (region.should_cow(region.first_page_index() + i))
+            if (region.should_cow(i))
                 pte.set_writable(false);
             else
                 pte.set_writable(region.is_writable());
