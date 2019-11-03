@@ -114,7 +114,7 @@ public:
             m_access &= ~Access::Write;
     }
 
-    void map(Process&);
+    void map(PageDirectory&);
     enum class ShouldDeallocateVirtualMemoryRange {
         No,
         Yes,
