@@ -89,8 +89,6 @@ public:
     size_t amount_resident() const;
     size_t amount_shared() const;
 
-    PageDirectory* page_directory() { return m_page_directory.ptr(); }
-
     bool should_cow(size_t page_index) const;
     void set_should_cow(size_t page_index, bool);
 

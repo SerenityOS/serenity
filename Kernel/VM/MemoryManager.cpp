@@ -365,7 +365,6 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 
 bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_region)
 {
-    ASSERT(region.page_directory());
     ASSERT(region.vmobject().is_inode());
 
     auto& vmobject = region.vmobject();
