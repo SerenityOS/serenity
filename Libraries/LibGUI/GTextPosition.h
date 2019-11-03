@@ -1,5 +1,8 @@
 #pragma once
 
+#include <AK/LogStream.h>
+#include <AK/String.h>
+
 class GTextPosition {
 public:
     GTextPosition() {}
@@ -25,3 +28,10 @@ private:
     int m_line { -1 };
     int m_column { -1 };
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const GTextPosition& value)
+{
+    if (!value.is_valid())
+        return stream << "GTextPosition(Invalid)";
+    return stream << String::format("(%d,%d)", value.line(), value.column());
+}

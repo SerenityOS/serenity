@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/LogStream.h>
 #include <LibGUI/GTextPosition.h>
 
 class GTextRange {
@@ -55,3 +56,10 @@ private:
     GTextPosition m_start;
     GTextPosition m_end;
 };
+
+inline const LogStream& operator<<(const LogStream& stream, const GTextRange& value)
+{
+    if (!value.is_valid())
+        return stream << "GTextRange(Invalid)";
+    return stream << value.start() << '-' << value.end();
+}

@@ -196,17 +196,3 @@ private:
 
     NonnullOwnPtrVector<LineVisualData> m_line_visual_data;
 };
-
-inline const LogStream& operator<<(const LogStream& stream, const GTextPosition& value)
-{
-    if (!value.is_valid())
-        return stream << "GTextPosition(Invalid)";
-    return stream << String::format("(%d,%d)", value.line(), value.column());
-}
-
-inline const LogStream& operator<<(const LogStream& stream, const GTextRange& value)
-{
-    if (!value.is_valid())
-        return stream << "GTextRange(Invalid)";
-    return stream << value.start() << '-' << value.end();
-}
