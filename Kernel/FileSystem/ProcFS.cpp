@@ -570,7 +570,7 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         if (fs.is_disk_backed())
             fs_object.add("device", static_cast<const DiskBackedFS&>(fs).device().absolute_path());
         else
-            fs_object.add("device", nullptr);
+            fs_object.add("device", fs.class_name());
     });
     array.finish();
     return builder.build();
