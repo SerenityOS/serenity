@@ -73,7 +73,7 @@ mkdir -p mnt/boot
 echo "done"
 
 echo "installing grub using $grub..."
-$grub --boot-directory=mnt/boot --target=i386-pc --modules="ext2 part_msdos ${dev}"
+$grub --boot-directory=mnt/boot --target=i386-pc --modules="ext2 part_msdos" "${dev}"
 
 if [ -d mnt/boot/grub2 ]; then
     cp grub.cfg mnt/boot/grub2/grub.cfg
