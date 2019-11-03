@@ -14,6 +14,7 @@ class Console final : public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
     static Console& the();
+    static bool is_initialized();
 
     Console();
     virtual ~Console() override;
