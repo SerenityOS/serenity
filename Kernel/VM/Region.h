@@ -10,6 +10,11 @@
 class Inode;
 class VMObject;
 
+enum class PageFaultResponse {
+    ShouldCrash,
+    Continue,
+};
+
 class Region final : public InlineLinkedListNode<Region> {
     friend class MemoryManager;
 
@@ -46,6 +51,8 @@ public:
     void set_shared(bool shared) { m_shared = shared; }
 
     bool is_user_accessible() const { return m_user_accessible; }
+
+    PageFaultResponse handle_fault(const PageFault&);
 
     NonnullOwnPtr<Region> clone();
 
@@ -121,6 +128,10 @@ public:
 
 private:
     Bitmap& ensure_cow_map() const;
+
+    PageFaultResponse handle_cow_fault(size_t page_index);
+    PageFaultResponse handle_inode_fault(size_t page_index);
+    PageFaultResponse handle_zero_fault(size_t page_index);
 
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;

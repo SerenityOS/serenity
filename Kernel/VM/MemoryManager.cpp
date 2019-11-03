@@ -297,124 +297,6 @@ const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAd
     return user_region_from_vaddr(const_cast<Process&>(process), vaddr);
 }
 
-bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    ASSERT(region.vmobject().is_anonymous());
-
-    auto& vmobject = region.vmobject();
-    auto& vmobject_physical_page_entry = vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
-
-    // NOTE: We don't need to acquire the VMObject's lock.
-    //       This function is already exclusive due to interrupts being blocked.
-
-    if (!vmobject_physical_page_entry.is_null()) {
-#ifdef PAGE_FAULT_DEBUG
-        dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
-#endif
-        region.remap_page(page_index_in_region);
-        return true;
-    }
-
-    if (current)
-        current->process().did_zero_fault();
-
-    auto physical_page = allocate_user_physical_page(ShouldZeroFill::Yes);
-#ifdef PAGE_FAULT_DEBUG
-    dbgprintf("      >> ZERO P%p\n", physical_page->paddr().get());
-#endif
-    vmobject_physical_page_entry = move(physical_page);
-    region.remap_page(page_index_in_region);
-    return true;
-}
-
-bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    auto& vmobject = region.vmobject();
-    auto& vmobject_physical_page_entry = vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
-    if (vmobject_physical_page_entry->ref_count() == 1) {
-#ifdef PAGE_FAULT_DEBUG
-        dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
-#endif
-        region.set_should_cow(page_index_in_region, false);
-        region.remap_page(page_index_in_region);
-        return true;
-    }
-
-    if (current)
-        current->process().did_cow_fault();
-
-#ifdef PAGE_FAULT_DEBUG
-    dbgprintf("    >> It's a COW page and it's time to COW!\n");
-#endif
-    auto physical_page_to_copy = move(vmobject_physical_page_entry);
-    auto physical_page = allocate_user_physical_page(ShouldZeroFill::No);
-    u8* dest_ptr = quickmap_page(*physical_page);
-    const u8* src_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
-#ifdef PAGE_FAULT_DEBUG
-    dbgprintf("      >> COW P%p <- P%p\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
-#endif
-    memcpy(dest_ptr, src_ptr, PAGE_SIZE);
-    vmobject_physical_page_entry = move(physical_page);
-    unquickmap_page();
-    region.set_should_cow(page_index_in_region, false);
-    region.remap_page(page_index_in_region);
-    return true;
-}
-
-bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_region)
-{
-    ASSERT(region.vmobject().is_inode());
-
-    auto& vmobject = region.vmobject();
-    auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject);
-    auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
-
-    InterruptFlagSaver saver;
-
-    sti();
-    LOCKER(vmobject.m_paging_lock);
-    cli();
-
-    if (!vmobject_physical_page_entry.is_null()) {
-#ifdef PAGE_FAULT_DEBUG
-        dbgprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
-#endif
-        region.remap_page(page_index_in_region);
-        return true;
-    }
-
-    if (current)
-        current->process().did_inode_fault();
-
-#ifdef MM_DEBUG
-    dbgprintf("MM: page_in_from_inode ready to read from inode\n");
-#endif
-    sti();
-    u8 page_buffer[PAGE_SIZE];
-    auto& inode = inode_vmobject.inode();
-    auto nread = inode.read_bytes((region.first_page_index() + page_index_in_region) * PAGE_SIZE, PAGE_SIZE, page_buffer, nullptr);
-    if (nread < 0) {
-        kprintf("MM: page_in_from_inode had error (%d) while reading!\n", nread);
-        return false;
-    }
-    if (nread < PAGE_SIZE) {
-        // If we read less than a page, zero out the rest to avoid leaking uninitialized data.
-        memset(page_buffer + nread, 0, PAGE_SIZE - nread);
-    }
-    cli();
-    vmobject_physical_page_entry = allocate_user_physical_page(ShouldZeroFill::No);
-    if (vmobject_physical_page_entry.is_null()) {
-        kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
-        return false;
-    }
-    region.remap_page(page_index_in_region);
-    u8* dest_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
-    memcpy(dest_ptr, page_buffer, PAGE_SIZE);
-    return true;
-}
-
 Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
 {
     if (auto* region = kernel_region_from_vaddr(vaddr))
@@ -452,32 +334,8 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         kprintf("NP(error) fault at invalid address V%p\n", fault.vaddr().get());
         return PageFaultResponse::ShouldCrash;
     }
-    auto page_index_in_region = region->page_index_from_address(fault.vaddr());
-    if (fault.type() == PageFault::Type::PageNotPresent) {
-        if (region->vmobject().is_inode()) {
-#ifdef PAGE_FAULT_DEBUG
-            dbgprintf("NP(inode) fault in Region{%p}[%u]\n", region, page_index_in_region);
-#endif
-            page_in_from_inode(*region, page_index_in_region);
-            return PageFaultResponse::Continue;
-        }
-#ifdef PAGE_FAULT_DEBUG
-        dbgprintf("NP(zero) fault in Region{%p}[%u]\n", region, page_index_in_region);
-#endif
-        zero_page(*region, page_index_in_region);
-        return PageFaultResponse::Continue;
-    }
-    ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
-    if (fault.access() == PageFault::Access::Write && region->should_cow(page_index_in_region)) {
-#ifdef PAGE_FAULT_DEBUG
-        dbgprintf("PV(cow) fault in Region{%p}[%u]\n", region, page_index_in_region);
-#endif
-        bool success = copy_on_write(*region, page_index_in_region);
-        ASSERT(success);
-        return PageFaultResponse::Continue;
-    }
-    kprintf("PV(error) fault in Region{%p}[%u] at V%p\n", region, page_index_in_region, fault.vaddr().get());
-    return PageFaultResponse::ShouldCrash;
+
+    return region->handle_fault(fault);
 }
 
 OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, bool user_accessible, bool should_commit)

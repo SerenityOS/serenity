@@ -14,6 +14,7 @@ class VMObject : public RefCounted<VMObject>
     , public Weakable<VMObject>
     , public InlineLinkedListNode<VMObject> {
     friend class MemoryManager;
+    friend class Region;
 
 public:
     virtual ~VMObject();
