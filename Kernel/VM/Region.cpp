@@ -216,7 +216,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
     release_page_directory();
 }
 
-void Region::map(Process& process)
+void Region::map(PageDirectory& page_directory)
 {
-    MM.map_region_at_address(process.page_directory(), *this, vaddr());
+    MM.map_region_at_address(page_directory, *this, vaddr());
 }

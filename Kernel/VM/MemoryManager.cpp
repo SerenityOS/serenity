@@ -483,7 +483,7 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
         region = Region::create_user_accessible(range, name, PROT_READ | PROT_WRITE | PROT_EXEC);
     else
         region = Region::create_kernel_only(range, name, PROT_READ | PROT_WRITE | PROT_EXEC);
-    MM.map_region_at_address(*m_kernel_page_directory, *region, range.base());
+    region->map(kernel_page_directory());
     // FIXME: It would be cool if these could zero-fill on demand instead.
     if (should_commit)
         region->commit();

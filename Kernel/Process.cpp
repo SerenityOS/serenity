@@ -122,7 +122,7 @@ Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String
     if (!range.is_valid())
         return nullptr;
     m_regions.append(Region::create_user_accessible(range, name, prot_to_region_access_flags(prot)));
-    m_regions.last().map(*this);
+    m_regions.last().map(page_directory());
     if (commit)
         m_regions.last().commit();
     return &m_regions.last();
@@ -134,7 +134,7 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
     if (!range.is_valid())
         return nullptr;
     m_regions.append(Region::create_user_accessible(range, inode, name, prot_to_region_access_flags(prot)));
-    m_regions.last().map(*this);
+    m_regions.last().map(page_directory());
     return &m_regions.last();
 }
 
@@ -145,7 +145,7 @@ Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, Non
         return nullptr;
     offset_in_vmo &= PAGE_MASK;
     m_regions.append(Region::create_user_accessible(range, move(vmo), offset_in_vmo, name, prot_to_region_access_flags(prot)));
-    m_regions.last().map(*this);
+    m_regions.last().map(page_directory());
     return &m_regions.last();
 }
 
@@ -267,7 +267,7 @@ int Process::sys$munmap(void* addr, size_t size)
 
         // And finally we map the new region(s).
         for (auto* new_region : new_regions) {
-            new_region->map(*this);
+            new_region->map(page_directory());
         }
         return 0;
     }
@@ -313,7 +313,7 @@ Process* Process::fork(RegisterDump& regs)
         dbg() << "fork: cloning Region{" << &region << "} '" << region.name() << "' @ " << region.vaddr();
 #endif
         child->m_regions.append(region.clone());
-        child->m_regions.last().map(*child);
+        child->m_regions.last().map(child->page_directory());
 
         if (&region == m_master_tls_region)
             child->m_master_tls_region = &child->m_regions.last();
