@@ -131,7 +131,7 @@ public:
     // NOTE: These are public so we can make<> them.
     Region(const Range&, const String&, u8 access);
     Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String&, u8 access);
-    Region(const Range&, RefPtr<Inode>&&, const String&, u8 access);
+    Region(const Range&, NonnullRefPtr<Inode>, const String&, u8 access);
 
 private:
     Bitmap& ensure_cow_map() const;

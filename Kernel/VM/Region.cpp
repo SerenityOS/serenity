@@ -17,7 +17,7 @@ Region::Region(const Range& range, const String& name, u8 access)
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, RefPtr<Inode>&& inode, const String& name, u8 access)
+Region::Region(const Range& range, NonnullRefPtr<Inode> inode, const String& name, u8 access)
     : m_range(range)
     , m_vmobject(InodeVMObject::create_with_inode(*inode))
     , m_name(name)
