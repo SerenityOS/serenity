@@ -70,7 +70,14 @@ static void console_putch(char*&, char ch)
 {
     if (serial_debug)
         serial_putch(ch);
-    Console::the().put_char(ch);
+
+    // It would be bad to reach the assert in Console()::the() and do a stack overflow
+
+    if (Console::is_initialized()) {
+        Console::the().put_char(ch);
+    } else {
+        IO::out8(0xe9, ch);
+    }
 }
 
 int kprintf(const char* fmt, ...)
