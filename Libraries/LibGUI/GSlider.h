@@ -31,6 +31,7 @@ public:
     int knob_fixed_primary_size() const { return 8; }
     int knob_secondary_size() const { return 20; }
 
+    bool knob_dragging() const { return m_dragging; }
     Rect knob_rect() const;
 
     Rect inner_rect() const
