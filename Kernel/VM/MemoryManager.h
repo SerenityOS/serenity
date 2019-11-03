@@ -47,9 +47,6 @@ public:
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
-    bool map_region(Process&, Region&);
-    bool unmap_region(Region&, bool deallocate_range = true);
-
     void populate_page_directory(PageDirectory&);
 
     void enter_process_paging_scope(Process&);

@@ -713,35 +713,6 @@ void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region&
     }
 }
 
-bool MemoryManager::unmap_region(Region& region, bool deallocate_range)
-{
-    ASSERT(region.page_directory());
-    InterruptDisabler disabler;
-    for (size_t i = 0; i < region.page_count(); ++i) {
-        auto vaddr = region.vaddr().offset(i * PAGE_SIZE);
-        auto& pte = ensure_pte(*region.page_directory(), vaddr);
-        pte.set_physical_page_base(0);
-        pte.set_present(false);
-        pte.set_writable(false);
-        pte.set_user_allowed(false);
-        region.page_directory()->flush(vaddr);
-#ifdef MM_DEBUG
-        auto& physical_page = region.vmobject().physical_pages()[region.first_page_index() + i];
-        dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
-#endif
-    }
-    if (deallocate_range)
-        region.page_directory()->range_allocator().deallocate(region.range());
-    region.release_page_directory();
-    return true;
-}
-
-bool MemoryManager::map_region(Process& process, Region& region)
-{
-    map_region_at_address(process.page_directory(), region, region.vaddr());
-    return true;
-}
-
 bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr) const
 {
     auto* region = region_from_vaddr(process, vaddr);
