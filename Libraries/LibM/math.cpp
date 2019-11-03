@@ -84,6 +84,23 @@ double tanh(double x)
     return (plusX - minusX) / (plusX + minusX);
 }
 
+double ampsin(double angle)
+{
+    double looped_angle = fmod(M_PI + angle, M_TAU) - M_PI;
+    double looped_angle_squared = looped_angle * looped_angle;
+
+    double quadratic_term;
+    if (looped_angle > 0) {
+        quadratic_term = -looped_angle_squared;
+    } else {
+        quadratic_term = looped_angle_squared;
+    }
+
+    double linear_term = M_PI * looped_angle;
+
+    return quadratic_term + linear_term;
+}
+
 double tan(double angle)
 {
     return ampsin(angle) / ampsin(M_PI_2 + angle);
