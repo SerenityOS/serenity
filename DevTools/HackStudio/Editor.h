@@ -27,4 +27,5 @@ private:
 
     RefPtr<GWindow> m_documentation_tooltip_window;
     RefPtr<HtmlView> m_documentation_html_view;
+    String m_last_parsed_token;
 };
