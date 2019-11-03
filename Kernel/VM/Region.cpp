@@ -41,7 +41,7 @@ Region::~Region()
     // find the address<->region mappings in an invalid state there.
     InterruptDisabler disabler;
     if (m_page_directory) {
-        MM.unmap_region(*this);
+        unmap(ShouldDeallocateVirtualMemoryRange::Yes);
         ASSERT(!m_page_directory);
     }
     MM.unregister_region(*this);
@@ -191,4 +191,32 @@ void Region::remap_page(size_t index)
     dbg() << "MM: >> region.remap_page (PD=" << page_directory()->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
 #endif
 
+}
+
+
+void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
+{
+    InterruptDisabler disabler;
+    ASSERT(page_directory());
+    for (size_t i = 0; i < page_count(); ++i) {
+        auto vaddr = this->vaddr().offset(i * PAGE_SIZE);
+        auto& pte = MM.ensure_pte(*page_directory(), vaddr);
+        pte.set_physical_page_base(0);
+        pte.set_present(false);
+        pte.set_writable(false);
+        pte.set_user_allowed(false);
+        page_directory()->flush(vaddr);
+#ifdef MM_DEBUG
+        auto& physical_page = region.vmobject().physical_pages()[region.first_page_index() + i];
+        dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
+#endif
+    }
+    if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes)
+        page_directory()->range_allocator().deallocate(range());
+    release_page_directory();
+}
+
+void Region::map(Process& process)
+{
+    MM.map_region_at_address(process.page_directory(), *this, vaddr());
 }

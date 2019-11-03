@@ -114,6 +114,13 @@ public:
             m_access &= ~Access::Write;
     }
 
+    void map(Process&);
+    enum class ShouldDeallocateVirtualMemoryRange {
+        No,
+        Yes,
+    };
+    void unmap(ShouldDeallocateVirtualMemoryRange = ShouldDeallocateVirtualMemoryRange::Yes);
+
     void remap_page(size_t index);
 
     // For InlineLinkedListNode
