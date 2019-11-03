@@ -6,6 +6,8 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/Region.h>
 
+//#define MM_DEBUG
+
 Region::Region(const Range& range, const String& name, u8 access)
     : m_range(range)
     , m_vmobject(AnonymousVMObject::create_with_size(size()))
@@ -190,9 +192,7 @@ void Region::remap_page(size_t index)
 #ifdef MM_DEBUG
     dbg() << "MM: >> region.remap_page (PD=" << page_directory()->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
 #endif
-
 }
-
 
 void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 {
@@ -207,8 +207,8 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
         pte.set_user_allowed(false);
         page_directory()->flush(vaddr);
 #ifdef MM_DEBUG
-        auto& physical_page = region.vmobject().physical_pages()[region.first_page_index() + i];
-        dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr, physical_page ? physical_page->paddr().get() : 0);
+        auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
+        dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr.get(), physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes)
@@ -218,11 +218,37 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 
 void Region::map(PageDirectory& page_directory)
 {
-    MM.map_region_at_address(page_directory, *this, vaddr());
+    InterruptDisabler disabler;
+    set_page_directory(page_directory);
+#ifdef MM_DEBUG
+    dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", first_page_index(), last_page_index(), vmobject().page_count());
+#endif
+    for (size_t i = 0; i < page_count(); ++i) {
+        auto page_vaddr = vaddr().offset(i * PAGE_SIZE);
+        auto& pte = MM.ensure_pte(page_directory, page_vaddr);
+        auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
+        if (physical_page) {
+            pte.set_physical_page_base(physical_page->paddr().get());
+            pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
+            if (should_cow(i))
+                pte.set_writable(false);
+            else
+                pte.set_writable(is_writable());
+        } else {
+            pte.set_physical_page_base(0);
+            pte.set_present(false);
+            pte.set_writable(is_writable());
+        }
+        pte.set_user_allowed(is_user_accessible());
+        page_directory.flush(page_vaddr);
+#ifdef MM_DEBUG
+        dbgprintf("MM: >> map_region_at_address (PD=%p) '%s' V%p => P%p (@%p)\n", &page_directory, name().characters(), page_vaddr.get(), physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
+#endif
+    }
 }
 
 void Region::remap()
 {
     ASSERT(m_page_directory);
-    MM.map_region_at_address(*m_page_directory, *this, vaddr());
+    map(*m_page_directory);
 }

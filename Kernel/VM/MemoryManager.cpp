@@ -682,38 +682,6 @@ void MemoryManager::unquickmap_page()
     m_quickmap_in_use = false;
 }
 
-void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region& region, VirtualAddress vaddr)
-{
-    InterruptDisabler disabler;
-    region.set_page_directory(page_directory);
-    auto& vmo = region.vmobject();
-#ifdef MM_DEBUG
-    dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", region.first_page_index(), region.last_page_index(), vmo.page_count());
-#endif
-    for (size_t i = 0; i < region.page_count(); ++i) {
-        auto page_vaddr = vaddr.offset(i * PAGE_SIZE);
-        auto& pte = ensure_pte(page_directory, page_vaddr);
-        auto& physical_page = vmo.physical_pages()[region.first_page_index() + i];
-        if (physical_page) {
-            pte.set_physical_page_base(physical_page->paddr().get());
-            pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
-            if (region.should_cow(i))
-                pte.set_writable(false);
-            else
-                pte.set_writable(region.is_writable());
-        } else {
-            pte.set_physical_page_base(0);
-            pte.set_present(false);
-            pte.set_writable(region.is_writable());
-        }
-        pte.set_user_allowed(region.is_user_accessible());
-        page_directory.flush(page_vaddr);
-#ifdef MM_DEBUG
-        dbgprintf("MM: >> map_region_at_address (PD=%p) '%s' V%p => P%p (@%p)\n", &page_directory, region.name().characters(), page_vaddr, physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
-#endif
-    }
-}
-
 bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr) const
 {
     auto* region = region_from_vaddr(process, vaddr);
