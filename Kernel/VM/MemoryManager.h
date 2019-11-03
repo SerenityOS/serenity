@@ -98,8 +98,6 @@ private:
     void register_region(Region&);
     void unregister_region(Region&);
 
-    void remap_region_page(Region&, unsigned page_index_in_region);
-
     void initialize_paging();
     void flush_entire_tlb();
     void flush_tlb(VirtualAddress);
