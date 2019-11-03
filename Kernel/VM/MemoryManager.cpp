@@ -158,6 +158,12 @@ void MemoryManager::initialize_paging()
     dbgprintf("MM: Installing page directory\n");
 #endif
 
+    // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
+    asm volatile(
+        "mov %cr4, %eax\n"
+        "orl $0x10, %eax\n"
+        "mov %eax, %cr4\n");
+
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
     asm volatile(
         "movl %%cr0, %%eax\n"
@@ -187,12 +193,14 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);
+            pde.set_global(true);
         } else if (page_directory_index == 1) {
             ASSERT(&page_directory == m_kernel_page_directory);
             pde.set_page_table_base((u32)m_page_table_one);
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);
+            pde.set_global(true);
         } else {
             //ASSERT(&page_directory != m_kernel_page_directory.ptr());
             auto page_table = allocate_supervisor_physical_page();
@@ -210,6 +218,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             pde.set_user_allowed(true);
             pde.set_present(true);
             pde.set_writable(true);
+            pde.set_global(&page_directory == m_kernel_page_directory.ptr());
             page_directory.m_physical_pages.set(page_directory_index, move(page_table));
         }
     }
