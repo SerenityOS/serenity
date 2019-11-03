@@ -95,6 +95,12 @@ namespace Server {
 #endif
             if (try_send_message(message, extra_data))
                 return;
+            if (m_queue.size() >= max_queued_messages) {
+                dbg() << "Connection::post_message: Client has too many queued messages already, disconnecting it.";
+                shutdown();
+                return;
+            }
+
             QueuedMessage queued_message { message, extra_data };
             if (!extra_data.is_empty())
                 queued_message.message.extra_size = extra_data.size();
@@ -232,6 +238,8 @@ namespace Server {
             ServerMessage message;
             ByteBuffer extra_data;
         };
+
+        static const int max_queued_messages = 200;
         Queue<QueuedMessage, 16> m_queue;
 
         int m_client_id { -1 };
