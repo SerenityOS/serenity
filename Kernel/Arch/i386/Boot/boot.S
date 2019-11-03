@@ -50,15 +50,11 @@ start:
 
     and $-16, %esp
 
-    pushl %esp
-    pushl %eax /* Multiboot header magic */
-    pushl %ebx /* Multiboot header pointer */
-
     mov %ebx, multiboot_info_ptr
 
     call init
 
-    pushl $exit_message
+    mov $exit_message, %eax
     call kprintf
 
     cli
