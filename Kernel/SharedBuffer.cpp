@@ -155,7 +155,7 @@ void SharedBuffer::seal()
     for (auto& ref : m_refs) {
         if (ref.region) {
             ref.region->set_writable(false);
-            MM.remap_region(*ref.region->page_directory(), *ref.region);
+            ref.region->remap();
         }
     }
 }

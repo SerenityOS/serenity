@@ -283,7 +283,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
     if (!region)
         return -EINVAL;
     region->set_writable(prot & PROT_WRITE);
-    MM.remap_region(page_directory(), *region);
+    region->remap();
     return 0;
 }
 
@@ -885,7 +885,7 @@ void create_signal_trampolines()
     memcpy(code_ptr, trampoline, trampoline_size);
 
     trampoline_region->set_writable(false);
-    MM.remap_region(*trampoline_region->page_directory(), *trampoline_region);
+    trampoline_region->remap();
 }
 
 int Process::sys$restore_signal_mask(u32 mask)

@@ -47,9 +47,8 @@ void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new
     m_physical_pages.resize(new_page_count);
 
     // FIXME: Consolidate with inode_contents_changed() so we only do a single walk.
-    for_each_region([](Region& region) {
-        ASSERT(region.page_directory());
-        MM.remap_region(*region.page_directory(), region);
+    for_each_region([](auto& region) {
+        region.remap();
     });
 }
 
@@ -99,9 +98,8 @@ void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t s
 #endif
 
     // FIXME: Consolidate with inode_size_changed() so we only do a single walk.
-    for_each_region([](Region& region) {
-        ASSERT(region.page_directory());
-        MM.remap_region(*region.page_directory(), region);
+    for_each_region([](auto& region) {
+        region.remap();
     });
 }
 
