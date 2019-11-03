@@ -213,13 +213,14 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
     }
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes)
         page_directory()->range_allocator().deallocate(range());
-    release_page_directory();
+    m_page_directory = nullptr;
 }
 
 void Region::map(PageDirectory& page_directory)
 {
+    ASSERT(!m_page_directory || m_page_directory == &page_directory);
     InterruptDisabler disabler;
-    set_page_directory(page_directory);
+    m_page_directory = page_directory;
 #ifdef MM_DEBUG
     dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", first_page_index(), last_page_index(), vmobject().page_count());
 #endif

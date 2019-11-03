@@ -91,18 +91,6 @@ public:
 
     PageDirectory* page_directory() { return m_page_directory.ptr(); }
 
-    void set_page_directory(PageDirectory& page_directory)
-    {
-        ASSERT(!m_page_directory || m_page_directory == &page_directory);
-        m_page_directory = page_directory;
-    }
-
-    void release_page_directory()
-    {
-        ASSERT(m_page_directory);
-        m_page_directory.clear();
-    }
-
     bool should_cow(size_t page_index) const;
     void set_should_cow(size_t page_index, bool);
 
