@@ -40,6 +40,12 @@ public:
         return value;
     }
 
+    const T& head() const
+    {
+        ASSERT(!is_empty());
+        return (*m_segments.first())[m_index_into_first];
+    }
+
     void clear()
     {
         m_segments.clear();
