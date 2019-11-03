@@ -175,10 +175,10 @@ Bitmap& Region::ensure_cow_map() const
 
 void Region::remap_page(size_t index)
 {
-    ASSERT(page_directory());
+    ASSERT(m_page_directory);
     InterruptDisabler disabler;
     auto page_vaddr = vaddr().offset(index * PAGE_SIZE);
-    auto& pte = MM.ensure_pte(*page_directory(), page_vaddr);
+    auto& pte = MM.ensure_pte(*m_page_directory, page_vaddr);
     auto& physical_page = vmobject().physical_pages()[first_page_index() + index];
     ASSERT(physical_page);
     pte.set_physical_page_base(physical_page->paddr().get());
@@ -188,31 +188,31 @@ void Region::remap_page(size_t index)
     else
         pte.set_writable(is_writable());
     pte.set_user_allowed(is_user_accessible());
-    page_directory()->flush(page_vaddr);
+    m_page_directory->flush(page_vaddr);
 #ifdef MM_DEBUG
-    dbg() << "MM: >> region.remap_page (PD=" << page_directory()->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
+    dbg() << "MM: >> region.remap_page (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
 #endif
 }
 
 void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 {
     InterruptDisabler disabler;
-    ASSERT(page_directory());
+    ASSERT(m_page_directory);
     for (size_t i = 0; i < page_count(); ++i) {
         auto vaddr = this->vaddr().offset(i * PAGE_SIZE);
-        auto& pte = MM.ensure_pte(*page_directory(), vaddr);
+        auto& pte = MM.ensure_pte(*m_page_directory, vaddr);
         pte.set_physical_page_base(0);
         pte.set_present(false);
         pte.set_writable(false);
         pte.set_user_allowed(false);
-        page_directory()->flush(vaddr);
+        m_page_directory->flush(vaddr);
 #ifdef MM_DEBUG
         auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
         dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr.get(), physical_page ? physical_page->paddr().get() : 0);
 #endif
     }
     if (deallocate_range == ShouldDeallocateVirtualMemoryRange::Yes)
-        page_directory()->range_allocator().deallocate(range());
+        m_page_directory->range_allocator().deallocate(range());
     m_page_directory = nullptr;
 }
 
