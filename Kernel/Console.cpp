@@ -13,6 +13,11 @@ Console& Console::the()
     return *s_the;
 }
 
+bool Console::is_initialized()
+{
+    return s_the != nullptr;
+}
+
 Console::Console()
     : CharacterDevice(5, 1)
 {
