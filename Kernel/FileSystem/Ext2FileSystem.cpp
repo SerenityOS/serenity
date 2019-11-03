@@ -68,6 +68,7 @@ const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const
 
 bool Ext2FS::initialize()
 {
+    LOCKER(m_lock);
     bool success = const_cast<DiskDevice&>(device()).read_blocks(2, 1, (u8*)&m_super_block);
     ASSERT(success);
 
@@ -484,6 +485,7 @@ void Ext2FS::flush_block_group_descriptor_table()
 
 void Ext2FS::flush_writes()
 {
+    LOCKER(m_lock);
     if (m_super_block_dirty) {
         flush_super_block();
         m_super_block_dirty = false;
