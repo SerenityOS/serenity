@@ -291,14 +291,15 @@ const Region* MemoryManager::region_from_vaddr(const Process& process, VirtualAd
 bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto& vmo = region.vmobject();
-    auto& vmo_page = vmo.physical_pages()[region.first_page_index() + page_index_in_region];
-    ASSERT(vmo.is_anonymous());
+    ASSERT(region.vmobject().is_anonymous());
+
+    auto& vmobject = region.vmobject();
+    auto& vmobject_physical_page_entry = vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
 
     // NOTE: We don't need to acquire the VMObject's lock.
     //       This function is already exclusive due to interrupts being blocked.
 
-    if (!vmo_page.is_null()) {
+    if (!vmobject_physical_page_entry.is_null()) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("MM: zero_page() but page already present. Fine with me!\n");
 #endif
@@ -313,7 +314,7 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("      >> ZERO P%p\n", physical_page->paddr().get());
 #endif
-    vmo.physical_pages()[page_index_in_region] = move(physical_page);
+    vmobject_physical_page_entry = move(physical_page);
     region.remap_page(page_index_in_region);
     return true;
 }
@@ -321,8 +322,9 @@ bool MemoryManager::zero_page(Region& region, unsigned page_index_in_region)
 bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto& vmo = region.vmobject();
-    if (vmo.physical_pages()[page_index_in_region]->ref_count() == 1) {
+    auto& vmobject = region.vmobject();
+    auto& vmobject_physical_page_entry = vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
+    if (vmobject_physical_page_entry->ref_count() == 1) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("    >> It's a COW page but nobody is sharing it anymore. Remap r/w\n");
 #endif
@@ -337,7 +339,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("    >> It's a COW page and it's time to COW!\n");
 #endif
-    auto physical_page_to_copy = move(vmo.physical_pages()[page_index_in_region]);
+    auto physical_page_to_copy = move(vmobject_physical_page_entry);
     auto physical_page = allocate_user_physical_page(ShouldZeroFill::No);
     u8* dest_ptr = quickmap_page(*physical_page);
     const u8* src_ptr = region.vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
@@ -345,7 +347,7 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
     dbgprintf("      >> COW P%p <- P%p\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
 #endif
     memcpy(dest_ptr, src_ptr, PAGE_SIZE);
-    vmo.physical_pages()[page_index_in_region] = move(physical_page);
+    vmobject_physical_page_entry = move(physical_page);
     unquickmap_page();
     region.set_should_cow(page_index_in_region, false);
     region.remap_page(page_index_in_region);
@@ -355,24 +357,23 @@ bool MemoryManager::copy_on_write(Region& region, unsigned page_index_in_region)
 bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_region)
 {
     ASSERT(region.page_directory());
-    auto& vmo = region.vmobject();
-    ASSERT(vmo.is_inode());
+    ASSERT(region.vmobject().is_inode());
 
-    auto& inode_vmobject = static_cast<InodeVMObject&>(vmo);
-
-    auto& vmo_page = inode_vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
+    auto& vmobject = region.vmobject();
+    auto& inode_vmobject = static_cast<InodeVMObject&>(vmobject);
+    auto& vmobject_physical_page_entry = inode_vmobject.physical_pages()[region.first_page_index() + page_index_in_region];
 
     InterruptFlagSaver saver;
 
     sti();
-    LOCKER(vmo.m_paging_lock);
+    LOCKER(vmobject.m_paging_lock);
     cli();
 
-    if (!vmo_page.is_null()) {
+    if (!vmobject_physical_page_entry.is_null()) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");
 #endif
-        region.remap_page( page_index_in_region);
+        region.remap_page(page_index_in_region);
         return true;
     }
 
@@ -395,8 +396,8 @@ bool MemoryManager::page_in_from_inode(Region& region, unsigned page_index_in_re
         memset(page_buffer + nread, 0, PAGE_SIZE - nread);
     }
     cli();
-    vmo_page = allocate_user_physical_page(ShouldZeroFill::No);
-    if (vmo_page.is_null()) {
+    vmobject_physical_page_entry = allocate_user_physical_page(ShouldZeroFill::No);
+    if (vmobject_physical_page_entry.is_null()) {
         kprintf("MM: page_in_from_inode was unable to allocate a physical page\n");
         return false;
     }

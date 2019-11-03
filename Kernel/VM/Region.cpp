@@ -87,16 +87,17 @@ int Region::commit()
 #ifdef MM_DEBUG
     dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at V%p\n", vmobject().page_count(), this, &vmobject(), vaddr().get());
 #endif
-    for (size_t i = first_page_index(); i <= last_page_index(); ++i) {
-        if (!vmobject().physical_pages()[i].is_null())
+    for (size_t i = 0; i < page_count(); ++i) {
+        auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + i];
+        if (!vmobject_physical_page_entry.is_null())
             continue;
         auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
         if (!physical_page) {
             kprintf("MM: commit was unable to allocate a physical page\n");
             return -ENOMEM;
         }
-        vmobject().physical_pages()[i] = move(physical_page);
-        remap_page(i - first_page_index());
+        vmobject_physical_page_entry = move(physical_page);
+        remap_page(i);
     }
     return 0;
 }
