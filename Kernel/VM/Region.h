@@ -121,6 +121,7 @@ public:
     };
     void unmap(ShouldDeallocateVirtualMemoryRange = ShouldDeallocateVirtualMemoryRange::Yes);
 
+    void remap();
     void remap_page(size_t index);
 
     // For InlineLinkedListNode

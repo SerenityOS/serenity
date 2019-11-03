@@ -673,13 +673,6 @@ void MemoryManager::unquickmap_page()
     m_quickmap_in_use = false;
 }
 
-void MemoryManager::remap_region(PageDirectory& page_directory, Region& region)
-{
-    InterruptDisabler disabler;
-    ASSERT(region.page_directory() == &page_directory);
-    map_region_at_address(page_directory, region, region.vaddr());
-}
-
 void MemoryManager::map_region_at_address(PageDirectory& page_directory, Region& region, VirtualAddress vaddr)
 {
     InterruptDisabler disabler;

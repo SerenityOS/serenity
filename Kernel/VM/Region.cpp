@@ -75,7 +75,7 @@ NonnullOwnPtr<Region> Region::clone()
 #endif
     // Set up a COW region. The parent (this) region becomes COW as well!
     ensure_cow_map().fill(true);
-    MM.remap_region(current->process().page_directory(), *this);
+    remap();
     auto clone_region = Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmo, m_name, m_access);
     clone_region->ensure_cow_map();
     return clone_region;
@@ -219,4 +219,10 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
 void Region::map(PageDirectory& page_directory)
 {
     MM.map_region_at_address(page_directory, *this, vaddr());
+}
+
+void Region::remap()
+{
+    ASSERT(m_page_directory);
+    MM.map_region_at_address(*m_page_directory, *this, vaddr());
 }
