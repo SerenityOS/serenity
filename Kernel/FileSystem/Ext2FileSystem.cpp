@@ -607,11 +607,8 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
 
     Locker fs_locker(fs().m_lock);
 
-    if (m_block_list.is_empty()) {
-        auto block_list = fs().block_list_for_inode(m_raw_inode);
-        if (m_block_list.size() != block_list.size())
-            m_block_list = move(block_list);
-    }
+    if (m_block_list.is_empty())
+        m_block_list = fs().block_list_for_inode(m_raw_inode);
 
     if (m_block_list.is_empty()) {
         kprintf("ext2fs: read_bytes: empty block list for inode %u\n", index());
@@ -734,6 +731,14 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     auto resize_result = resize(new_size);
     if (resize_result.is_error())
         return resize_result;
+
+    if (m_block_list.is_empty())
+        m_block_list = fs().block_list_for_inode(m_raw_inode);
+
+    if (m_block_list.is_empty()) {
+        dbg() << "Ext2FSInode::write_bytes(): empty block list for inode " << index();
+        return -EIO;
+    }
 
     int first_block_logical_index = offset / block_size;
     int last_block_logical_index = (offset + count) / block_size;
@@ -1391,7 +1396,10 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     // We might have cached the fact that this inode didn't exist. Wipe the slate.
     m_inode_cache.remove(inode_id);
 
-    return get_inode({ fsid(), inode_id });
+    auto inode = get_inode({ fsid(), inode_id });
+    // If we've already computed a block list, no sense in throwing it away.
+    static_cast<Ext2FSInode&>(*inode).m_block_list = move(blocks);
+    return inode;
 }
 
 void Ext2FSInode::populate_lookup_cache() const
