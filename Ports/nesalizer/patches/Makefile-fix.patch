@@ -1,5 +1,5 @@
 --- ./Makefile	2016-09-18 10:02:04.000000000 +0100
-+++ ./Makefile-serenity	2019-11-02 19:52:42.009051322 +0000
++++ ./Makefile-serenity	2019-11-04 13:43:24.842907912 +0000
 @@ -58,7 +58,7 @@
  objects     = $(c_objects) $(cpp_objects)
  deps        = $(addprefix $(BUILD_DIR)/,$(c_sources:=.d) $(cpp_sources:=.d))
@@ -24,3 +24,10 @@
      link_flags    += $(optimizations) -fuse-linker-plugin
  endif
  
+@@ -175,3 +175,6 @@
+ 
+ .PHONY: clean
+ clean: ; $(q)-rm -rf $(BUILD_DIR)
++
++install:
++	install $(BUILD_DIR)/${EXECUTABLE} ${DESTDIR}/bin/${EXECUTABLE}
