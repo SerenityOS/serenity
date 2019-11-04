@@ -18,4 +18,9 @@ public:
     void set_main_mix_volume(int);
 
     int get_remaining_samples();
+    int get_played_samples();
+    int get_playing_buffer();
+
+    void set_paused(bool paused);
+    void clear_buffer(bool paused = false);
 };
