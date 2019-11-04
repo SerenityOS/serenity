@@ -712,6 +712,7 @@ void GTextEditor::delete_current_line()
     document().remove_line(m_cursor.line());
     if (lines().is_empty())
         document().append_line(make<GTextDocumentLine>(document()));
+    m_cursor.set_column(0);
 
     update_content_size();
     update();
