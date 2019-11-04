@@ -294,7 +294,6 @@ public:
     void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
 
     void set_default_signal_dispositions();
-    void push_value_on_user_stack(RegisterDump&, u32);
     void push_value_on_stack(u32);
     void make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
     void make_userspace_stack_for_secondary_thread(void* argument);
