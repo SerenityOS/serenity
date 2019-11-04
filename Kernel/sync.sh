@@ -1,3 +1,3 @@
 #!/bin/sh
 
-./build-image-qemu.sh
+sudo -E ./build-image-qemu.sh
