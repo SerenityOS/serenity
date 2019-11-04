@@ -1,8 +1,8 @@
 #include <AK/IPv4Address.h>
 #include <AK/Types.h>
+#include <LibCore/CNotifier.h>
 #include <LibCore/CTCPServer.h>
 #include <LibCore/CTCPSocket.h>
-#include <LibCore/CNotifier.h>
 #include <stdio.h>
 #include <sys/socket.h>
 
@@ -54,7 +54,7 @@ RefPtr<CTCPSocket> CTCPServer::accept()
     return CTCPSocket::construct(accepted_fd);
 }
 
-IPv4Address CTCPServer::local_address() const
+Optional<IPv4Address> CTCPServer::local_address() const
 {
     if (m_fd == -1)
         return {};
@@ -62,20 +62,20 @@ IPv4Address CTCPServer::local_address() const
     sockaddr_in address;
     socklen_t len = sizeof(address);
     if (getsockname(m_fd, (sockaddr*)&address, &len) != 0)
-        return 0;
+        return {};
 
     return IPv4Address(address.sin_addr.s_addr);
 }
 
-u16 CTCPServer::local_port() const
+Optional<u16> CTCPServer::local_port() const
 {
     if (m_fd == -1)
-        return 0;
+        return {};
 
     sockaddr_in address;
     socklen_t len = sizeof(address);
     if (getsockname(m_fd, (sockaddr*)&address, &len) != 0)
-        return 0;
+        return {};
 
     return ntohs(address.sin_port);
 }
