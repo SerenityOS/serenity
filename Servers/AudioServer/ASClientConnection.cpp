@@ -75,8 +75,38 @@ OwnPtr<AudioServer::EnqueueBufferResponse> ASClientConnection::handle(const Audi
 OwnPtr<AudioServer::GetRemainingSamplesResponse> ASClientConnection::handle(const AudioServer::GetRemainingSamples&)
 {
     int remaining = 0;
-    if(m_queue)
+    if (m_queue)
         remaining = m_queue->get_remaining_samples();
 
     return make<AudioServer::GetRemainingSamplesResponse>(remaining);
+}
+
+OwnPtr<AudioServer::GetPlayedSamplesResponse> ASClientConnection::handle(const AudioServer::GetPlayedSamples&)
+{
+    int played = 0;
+    if (m_queue)
+        played = m_queue->get_played_samples();
+
+    return make<AudioServer::GetPlayedSamplesResponse>(played);
+}
+
+OwnPtr<AudioServer::SetPausedResponse> ASClientConnection::handle(const AudioServer::SetPaused& message)
+{
+    if (m_queue)
+        m_queue->set_paused(message.paused());
+    return make<AudioServer::SetPausedResponse>();
+}
+
+OwnPtr<AudioServer::ClearBufferResponse> ASClientConnection::handle(const AudioServer::ClearBuffer& message)
+{
+    if (m_queue)
+        m_queue->clear(message.paused());
+    return make<AudioServer::ClearBufferResponse>();
+}
+
+OwnPtr<AudioServer::GetPlayingBufferResponse> ASClientConnection::handle(const AudioServer::GetPlayingBuffer&){
+    int id = -1;
+    if(m_queue)
+        id = m_queue->get_playing_buffer();
+    return make<AudioServer::GetPlayingBufferResponse>(id);
 }

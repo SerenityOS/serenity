@@ -46,3 +46,23 @@ int AClientConnection::get_remaining_samples()
 {
     return send_sync<AudioServer::GetRemainingSamples>()->remaining_samples();
 }
+
+int AClientConnection::get_played_samples()
+{
+    return send_sync<AudioServer::GetPlayedSamples>()->played_samples();
+}
+
+void AClientConnection::set_paused(bool paused)
+{
+    send_sync<AudioServer::SetPaused>(paused);
+}
+
+void AClientConnection::clear_buffer(bool paused)
+{
+    send_sync<AudioServer::ClearBuffer>(paused);
+}
+
+int AClientConnection::get_playing_buffer()
+{
+    return send_sync<AudioServer::GetPlayingBuffer>()->buffer_id();
+}

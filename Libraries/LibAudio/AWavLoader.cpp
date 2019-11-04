@@ -31,6 +31,20 @@ RefPtr<ABuffer> AWavLoader::get_more_samples(size_t max_bytes_to_read_from_input
     return buffer;
 }
 
+void AWavLoader::seek(const int position)
+{
+    if (position < 0 || position > m_total_samples)
+        return;
+
+    m_loaded_samples = position;
+    m_file->seek(position * m_num_channels * (m_bits_per_sample / 8));
+}
+
+void AWavLoader::reset()
+{
+    seek(0);
+}
+
 bool AWavLoader::parse_header()
 {
     CIODeviceStreamReader stream(*m_file);
@@ -80,7 +94,7 @@ bool AWavLoader::parse_header()
 
     u16 audio_format;
     stream >> audio_format;
-    CHECK_OK("Audio format"); // incomplete read check
+    CHECK_OK("Audio format");     // incomplete read check
     ok = ok && audio_format == 1; // WAVE_FORMAT_PCM
     ASSERT(audio_format == 1);
     CHECK_OK("Audio format"); // value check
@@ -161,7 +175,7 @@ bool AResampleHelper::read_sample(float& next_l, float& next_r)
     return false;
 }
 
-template <typename SampleReader>
+template<typename SampleReader>
 static void read_samples_from_stream(BufferStream& stream, SampleReader read_sample, Vector<ASample>& samples, AResampleHelper& resampler, int num_channels)
 {
     float norm_l = 0;
@@ -169,7 +183,7 @@ static void read_samples_from_stream(BufferStream& stream, SampleReader read_sam
 
     switch (num_channels) {
     case 1:
-        for(;;) {
+        for (;;) {
             while (resampler.read_sample(norm_l, norm_r)) {
                 samples.append(ASample(norm_l));
             }
@@ -182,7 +196,7 @@ static void read_samples_from_stream(BufferStream& stream, SampleReader read_sam
         }
         break;
     case 2:
-        for(;;) {
+        for (;;) {
             while (resampler.read_sample(norm_l, norm_r)) {
                 samples.append(ASample(norm_l, norm_r));
             }
@@ -238,8 +252,7 @@ RefPtr<ABuffer> ABuffer::from_pcm_data(ByteBuffer& data, AResampleHelper& resamp
 {
     BufferStream stream(data);
     Vector<ASample> fdata;
-    fdata.ensure_capacity(data.size() * 2);
-
+    fdata.ensure_capacity(data.size() / (bits_per_sample / 8));
 #ifdef AWAVLOADER_DEBUG
     dbg() << "Reading " << bits_per_sample << " bits and " << num_channels << " channels, total bytes: " << data.size();
 #endif
