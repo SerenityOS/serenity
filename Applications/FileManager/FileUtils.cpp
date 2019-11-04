@@ -74,8 +74,15 @@ bool copy_file(const String& src_path, const String& dst_path, const struct stat
         }
     }
 
+    if (src_stat.st_size > 0) {
+        if (ftruncate(dst_fd, src_stat.st_size) < 0) {
+            perror("cp: ftruncate");
+            return false;
+        }
+    }
+
     for (;;) {
-        char buffer[BUFSIZ];
+        char buffer[32768];
         ssize_t nread = read(src_fd, buffer, sizeof(buffer));
         if (nread < 0) {
             return false;
