@@ -361,6 +361,12 @@ bool Thread::has_signal_handler(u8 signal) const
     return !action.handler_or_sigaction.is_null();
 }
 
+static void push_value_on_user_stack(u32* stack, u32 data)
+{
+    *stack -= 4;
+    *(u32*)*stack = data;
+}
+
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
@@ -417,7 +423,6 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     }
 
     ProcessPagingScope paging_scope(m_process);
-    auto& regs = get_RegisterDump_from_stack();
 
     u32 old_signal_mask = m_signal_mask;
     u32 new_signal_mask = action.mask;
@@ -428,54 +433,63 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
 
     m_signal_mask |= new_signal_mask;
 
-    u32 old_esp = regs.esp_if_crossRing;
-    u32 ret_eip = regs.eip;
-    u32 ret_eflags = regs.eflags;
+    auto setup_stack = [&]<typename ThreadState>(ThreadState state, u32 * stack)
+    {
+        u32 old_esp = *stack;
+        u32 ret_eip = state.eip;
+        u32 ret_eflags = state.eflags;
 
-    // Align the stack to 16 bytes.
-    // Note that we push 56 bytes (4 * 14) on to the stack,
-    // so we need to account for this here.
-    u32 stack_alignment = (regs.esp_if_crossRing - 56) % 16;
-    regs.esp_if_crossRing -= stack_alignment;
+        // Align the stack to 16 bytes.
+        // Note that we push 56 bytes (4 * 14) on to the stack,
+        // so we need to account for this here.
+        u32 stack_alignment = (*stack - 56) % 16;
+        *stack -= stack_alignment;
 
-    push_value_on_user_stack(regs, ret_eflags);
+        push_value_on_user_stack(stack, ret_eflags);
 
-    push_value_on_user_stack(regs, ret_eip);
-    push_value_on_user_stack(regs, regs.eax);
-    push_value_on_user_stack(regs, regs.ecx);
-    push_value_on_user_stack(regs, regs.edx);
-    push_value_on_user_stack(regs, regs.ebx);
-    push_value_on_user_stack(regs, old_esp);
-    push_value_on_user_stack(regs, regs.ebp);
-    push_value_on_user_stack(regs, regs.esi);
-    push_value_on_user_stack(regs, regs.edi);
+        push_value_on_user_stack(stack, ret_eip);
+        push_value_on_user_stack(stack, state.eax);
+        push_value_on_user_stack(stack, state.ecx);
+        push_value_on_user_stack(stack, state.edx);
+        push_value_on_user_stack(stack, state.ebx);
+        push_value_on_user_stack(stack, old_esp);
+        push_value_on_user_stack(stack, state.ebp);
+        push_value_on_user_stack(stack, state.esi);
+        push_value_on_user_stack(stack, state.edi);
 
-    // PUSH old_signal_mask
-    push_value_on_user_stack(regs, old_signal_mask);
+        // PUSH old_signal_mask
+        push_value_on_user_stack(stack, old_signal_mask);
 
-    push_value_on_user_stack(regs, signal);
-    push_value_on_user_stack(regs, handler_vaddr.get());
-    push_value_on_user_stack(regs, 0); //push fake return address
+        push_value_on_user_stack(stack, signal);
+        push_value_on_user_stack(stack, handler_vaddr.get());
+        push_value_on_user_stack(stack, 0); //push fake return address
 
-    regs.eip = g_return_to_ring3_from_signal_trampoline.get();
+        ASSERT((*stack % 16) == 0);
+    };
 
-    ASSERT((regs.esp_if_crossRing % 16) == 0);
-
-    // If we're not blocking we need to update the tss so
-    // that the far jump in Scheduler goes to the proper location.
-    // When we are blocking we don't update the TSS as we want to
-    // resume at the blocker and descend the stack, cleaning up nicely.
+    // We now place the thread state on the userspace stack.
+    // Note that when we are in the kernel (ie. blocking) we cannot use the
+    // tss, as that will contain kernel state; instead, we use a RegisterDump.
+    // Conversely, when the thread isn't blocking the RegisterDump may not be
+    // valid (fork, exec etc) but the tss will, so we use that instead.
     if (!in_kernel()) {
+        u32* stack = &m_tss.esp;
+        setup_stack(m_tss, stack);
+
         Scheduler::prepare_to_modify_tss(*this);
         m_tss.cs = 0x1b;
         m_tss.ds = 0x23;
         m_tss.es = 0x23;
         m_tss.fs = 0x23;
         m_tss.gs = thread_specific_selector() | 3;
-        m_tss.eip = regs.eip;
-        m_tss.esp = regs.esp_if_crossRing;
+        m_tss.eip = g_return_to_ring3_from_signal_trampoline.get();
         // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
         set_state(Skip1SchedulerPass);
+    } else {
+        auto& regs = get_RegisterDump_from_stack();
+        u32* stack = &regs.esp_if_crossRing;
+        setup_stack(regs, stack);
+        regs.eip = g_return_to_ring3_from_signal_trampoline.get();
     }
 
 #ifdef SIGNAL_DEBUG
@@ -490,13 +504,6 @@ void Thread::set_default_signal_dispositions()
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
     m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((u32)SIG_IGN);
     m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((u32)SIG_IGN);
-}
-
-void Thread::push_value_on_user_stack(RegisterDump& registers, u32 value)
-{
-    registers.esp_if_crossRing -= 4;
-    u32* stack_ptr = (u32*)registers.esp_if_crossRing;
-    *stack_ptr = value;
 }
 
 void Thread::push_value_on_stack(u32 value)
