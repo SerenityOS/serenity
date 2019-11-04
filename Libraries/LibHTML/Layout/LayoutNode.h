@@ -11,6 +11,7 @@
 class Document;
 class Element;
 class LayoutBlock;
+class LayoutDocument;
 class LayoutNode;
 class LayoutNodeWithStyle;
 class LineBoxFragment;
@@ -29,7 +30,11 @@ public:
     bool is_anonymous() const { return !m_node; }
     const Node* node() const { return m_node; }
 
+    Document& document();
     const Document& document() const;
+
+    const LayoutDocument& root() const;
+    LayoutDocument& root();
 
     template<typename Callback>
     inline void for_each_child(Callback callback) const
