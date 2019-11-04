@@ -20,14 +20,12 @@ struct [[gnu::packed]] allocation_t
     size_t nchunk;
 };
 
+#define BASE_PHYSICAL (4 * MB)
 #define CHUNK_SIZE 8
-#define POOL_SIZE (1024 * 1024)
+#define POOL_SIZE (3 * MB)
 
-#define ETERNAL_BASE_PHYSICAL (1 * MB)
+#define ETERNAL_BASE_PHYSICAL (2 * MB)
 #define ETERNAL_RANGE_SIZE (2 * MB)
-
-#define BASE_PHYSICAL (3 * MB)
-#define RANGE_SIZE (1 * MB)
 
 static u8 alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
 

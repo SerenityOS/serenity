@@ -22,6 +22,7 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager()
 {
+    // FIXME: Hard-coding these is stupid. Find a better way.
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(0x4000));
     m_page_table_zero = (PageTableEntry*)0x6000;
     m_page_table_one = (PageTableEntry*)0x7000;
@@ -61,25 +62,31 @@ void MemoryManager::initialize_paging()
     map_protected(VirtualAddress(0), PAGE_SIZE);
 
 #ifdef MM_DEBUG
-    dbgprintf("MM: Identity map bottom 5MB\n");
+    dbgprintf("MM: Identity map bottom 8MB\n");
 #endif
-    // The bottom 5 MB (except for the null page) are identity mapped & supervisor only.
+    // The bottom 8 MB (except for the null page) are identity mapped & supervisor only.
     // Every process shares these mappings.
-    create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (5 * MB) - PAGE_SIZE);
+    create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (8 * MB) - PAGE_SIZE);
 
-    // Basic memory map:
-    // 0      -> 512 kB         Kernel code. Root page directory & PDE 0.
-    // (last page before 1MB)   Used by quickmap_page().
-    // 1 MB   -> 3 MB           kmalloc_eternal() space.
-    // 3 MB   -> 4 MB           kmalloc() space.
-    // 4 MB   -> 5 MB           Supervisor physical pages (available for allocation!)
-    // 5 MB   -> 0xc0000000     Userspace physical pages (available for allocation!)
-    // 0xc0000000-0xffffffff    Kernel-only virtual address space
+    // FIXME: We should move everything kernel-related above the 0xc0000000 virtual mark.
+
+    // Basic physical memory map:
+    // 0      -> 1 MB           We're just leaving this alone for now.
+    // 1      -> 3 MB           Kernel image.
+    // (last page before 2MB)   Used by quickmap_page().
+    // 2 MB   -> 4 MB           kmalloc_eternal() space.
+    // 4 MB   -> 7 MB           kmalloc() space.
+    // 7 MB   -> 8 MB           Supervisor physical pages (available for allocation!)
+    // 8 MB   -> MAX            Userspace physical pages (available for allocation!)
+
+    // Basic virtual memory map:
+    // 0 MB   -> 8MB            Identity mapped.
+    // 0xc0000000-0xffffffff    Kernel-only virtual address space.
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
 #endif
-    m_quickmap_addr = VirtualAddress((1 * MB) - PAGE_SIZE);
+    m_quickmap_addr = VirtualAddress((2 * MB) - PAGE_SIZE);
 
     RefPtr<PhysicalRegion> region;
     bool region_is_super = false;
@@ -126,9 +133,9 @@ void MemoryManager::initialize_paging()
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
-            if (page_base < 4 * MB) {
+            if (page_base < 7 * MB) {
                 // nothing
-            } else if (page_base >= 4 * MB && page_base < 5 * MB) {
+            } else if (page_base >= 7 * MB && page_base < 8 * MB) {
                 if (region.is_null() || !region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
                     m_super_physical_regions.append(PhysicalRegion::create(addr, addr));
                     region = m_super_physical_regions.last();
