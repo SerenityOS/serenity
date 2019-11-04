@@ -218,7 +218,7 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
             continue;
         bool cloexec = process.fd_flags(i) & FD_CLOEXEC;
 
-        JsonObjectSerializer description_object = array.add_object();
+        auto description_object = array.add_object();
         description_object.add("fd", i);
         description_object.add("absolute_path", description->absolute_path());
         description_object.add("seekable", description->file().is_seekable());
@@ -253,7 +253,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     for (auto& region : process.regions()) {
-        JsonObjectSerializer region_object = array.add_object();
+        auto region_object = array.add_object();
         region_object.add("readable", region.is_readable());
         region_object.add("writable", region.is_writable());
         region_object.add("address", region.vaddr().get());
@@ -270,7 +270,7 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     PCI::enumerate_all([&array](PCI::Address address, PCI::ID id) {
-        JsonObjectSerializer obj = array.add_object();
+        auto obj = array.add_object();
         obj.add("bus", address.bus());
         obj.add("slot", address.slot());
         obj.add("function", address.function());
@@ -291,7 +291,7 @@ Optional<KBuffer> procfs$devices(InodeIdentifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     Device::for_each([&array](auto& device) {
-        JsonObjectSerializer obj = array.add_object();
+        auto obj = array.add_object();
         obj.add("major", device.major());
         obj.add("minor", device.minor());
         obj.add("class_name", device.class_name());
@@ -326,7 +326,7 @@ Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     NetworkAdapter::for_each([&array](auto& adapter) {
-        JsonObjectSerializer obj = array.add_object();
+        auto obj = array.add_object();
         obj.add("name", adapter.name());
         obj.add("class_name", adapter.class_name());
         obj.add("mac_address", adapter.mac_address().to_string());
@@ -352,7 +352,7 @@ Optional<KBuffer> procfs$net_arp(InodeIdentifier)
     JsonArraySerializer array { builder };
     LOCKER(arp_table().lock());
     for (auto& it : arp_table().resource()) {
-        JsonObjectSerializer obj = array.add_object();
+        auto obj = array.add_object();
         obj.add("mac_address", it.value.to_string());
         obj.add("ip_address", it.key.to_string());
     }
@@ -365,7 +365,7 @@ Optional<KBuffer> procfs$net_tcp(InodeIdentifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     TCPSocket::for_each([&array](auto& socket) {
-        JsonObjectSerializer obj = array.add_object();
+        auto obj = array.add_object();
         obj.add("local_address", socket.local_address().to_string());
         obj.add("local_port", socket.local_port());
         obj.add("peer_address", socket.peer_address().to_string());
@@ -387,7 +387,7 @@ Optional<KBuffer> procfs$net_udp(InodeIdentifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     UDPSocket::for_each([&array](auto& socket) {
-        JsonObjectSerializer obj = array.add_object();
+        auto obj = array.add_object();
         obj.add("local_address", socket.local_address().to_string());
         obj.add("local_port", socket.local_port());
         obj.add("peer_address", socket.peer_address().to_string());
@@ -402,7 +402,7 @@ Optional<KBuffer> procfs$net_local(InodeIdentifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     LocalSocket::for_each([&array](auto& socket) {
-        JsonObjectSerializer obj = array.add_object();
+        auto obj = array.add_object();
         obj.add("path", String(socket.socket_path()));
         obj.add("origin_pid", socket.origin_pid());
         obj.add("acceptor_pid", socket.acceptor_pid());
@@ -557,7 +557,7 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
     JsonArraySerializer array { builder };
     VFS::the().for_each_mount([&array](auto& mount) {
         auto& fs = mount.guest_fs();
-        JsonObjectSerializer fs_object = array.add_object();
+        auto fs_object = array.add_object();
         fs_object.add("class_name", fs.class_name());
         fs_object.add("total_block_count", fs.total_block_count());
         fs_object.add("free_block_count", fs.free_block_count());
@@ -643,7 +643,7 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
 {
     InterruptDisabler disabler;
     KBufferBuilder builder;
-    JsonObjectSerializer json { builder };
+    JsonObjectSerializer<KBufferBuilder> json { builder };
     json.add("kmalloc_allocated", (u32)sum_alloc);
     json.add("kmalloc_available", (u32)sum_free);
     json.add("kmalloc_eternal_allocated", (u32)kmalloc_sum_eternal);
@@ -671,7 +671,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
 
     // Keep this in sync with CProcessStatistics.
     auto build_process = [&](const Process& process) {
-        JsonObjectSerializer process_object = array.add_object();
+        auto process_object = array.add_object();
         process_object.add("pid", process.pid());
         process_object.add("times_scheduled", process.main_thread().times_scheduled());
         process_object.add("pgid", process.tty() ? process.tty()->pgid() : 0);
