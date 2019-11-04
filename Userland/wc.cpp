@@ -2,143 +2,148 @@
 #include <AK/Vector.h>
 #include <LibCore/CArgsParser.h>
 
-#include <ctype.h>
 #include <stdio.h>
-
-static bool output_chars = false;
-static bool output_words = false;
-static bool output_lines = false;
+#include <sys/stat.h>
 
 struct Count {
-    String file;
-    unsigned long chars = 0;
-    unsigned long words = 0;
-    unsigned long lines = 0;
+    String name;
+    bool exists = true;
+    unsigned int lines = 0;
+    unsigned int characters = 0;
+    unsigned int words = 0;
+    size_t bytes = 0;
 };
 
-int wc(const String& filename, Vector<Count>& counts);
+bool output_line = false;
+bool output_byte = false;
+bool output_character = false;
+bool output_word = false;
 
-void report(const Count& count)
+void wc_out(Count& count)
 {
-    if (output_lines) {
-        printf("%lu ", count.lines);
-    }
-    if (output_words) {
-        printf("%lu ", count.words);
-    }
-    if (output_chars) {
-        printf("%lu ", count.chars);
-    }
-    printf("%s\n", count.file.characters());
+    if (output_line)
+        printf("%7i ", count.lines);
+    if (output_word)
+        printf("%7i ", count.words);
+    if (output_byte)
+        printf("%7lu ", count.bytes);
+    if (output_character)
+        printf("%7i ", count.characters);
+
+    printf("%14s\n", count.name.characters());
 }
 
-void report(const Vector<Count>& counts)
+Count get_count(const String& file_name)
 {
-    Count total { "total" };
-    for (const auto& c : counts) {
-        report(c);
-        total.lines += c.lines;
-        total.words += c.words;
-        total.chars += c.chars;
-    }
-    if (counts.size() > 1) {
-        report(total);
-    }
-    fflush(stdout);
-}
-
-int count_words(const char* s)
-{
-    int n = 0;
-    bool in_word = false;
-    for (; *s; ++s) {
-        if (!isspace(*s)) {
-            if (!in_word) {
-                in_word = true;
-                ++n;
-            }
-        } else if (in_word) {
-            in_word = false;
+    Count count;
+    FILE* file_pointer = nullptr;
+    if (file_name == "-") {
+        count.name = "";
+        file_pointer = stdin;
+    } else {
+        count.name = file_name;
+        if ((file_pointer = fopen(file_name.characters(), "r")) == NULL) {
+            fprintf(stderr, "wc: unable to open %s\n", file_name.characters());
+            count.exists = false;
+            return count;
         }
     }
-    return n;
+    bool tab_flag = false;
+    bool space_flag = false;
+    bool line_flag = true;
+    int current_character;
+    while ((current_character = fgetc(file_pointer)) != EOF) {
+        count.characters++;
+        if (current_character >= 'A' && current_character <= 'z' && (space_flag || line_flag || tab_flag)) {
+            count.words++;
+            space_flag = false;
+            line_flag = false;
+            tab_flag = false;
+        }
+        switch (current_character) {
+        case '\n':
+            count.lines++;
+            line_flag = true;
+            break;
+        case ' ':
+            space_flag = true;
+            break;
+        case '\t':
+            tab_flag = true;
+            break;
+        }
+    }
+    fclose(file_pointer);
+    if (file_pointer != stdin) {
+        struct stat st;
+        stat(file_name.characters(), &st);
+        count.bytes = st.st_size;
+    }
+    return count;
+}
+
+Count get_total_count(Vector<Count>& counts)
+{
+    Count total_count{ "total" };
+    for (auto& count : counts) {
+        total_count.lines += count.lines;
+        total_count.words += count.words;
+        total_count.characters += count.characters;
+        total_count.bytes += count.bytes;
+    }
+    return total_count;
 }
 
 int main(int argc, char** argv)
 {
-    if (argc < 2) {
-        printf("usage: wc [-c|-m] [-lw] [file...]\n");
-        return 0;
-    }
-
     CArgsParser args_parser("wc");
-    args_parser.add_arg("l", "Include lines in count");
-    args_parser.add_arg("c", "Include bytes in count");
-    args_parser.add_arg("m", "Include chars in count");
-    args_parser.add_arg("w", "Include words in count");
-    CArgsParserResult args = args_parser.parse(argc, (char**)argv);
-
+    args_parser.add_arg("l", "Output line count");
+    args_parser.add_arg("c", "Output byte count");
+    args_parser.add_arg("m", "Output character count");
+    args_parser.add_arg("w", "Output word count");
+    args_parser.add_arg("h", "Print help message");
+    CArgsParserResult args = args_parser.parse(argc, argv);
+    if (args.is_present("h")) {
+        args_parser.print_usage();
+        return 1;
+    }
     if (args.is_present("l")) {
-        output_lines = true;
-    }
-    if (args.is_present("c")) {
-        output_chars = true;
-    }
-    if (args.is_present("m")) {
-        output_chars = true;
+        output_line = true;
     }
     if (args.is_present("w")) {
-        output_words = true;
+        output_word = true;
     }
-    if (!output_lines && !output_words && !output_chars) {
-        output_lines = output_chars = output_words = true;
+    if (args.is_present("m")) {
+        output_character = true;
     }
+    if (args.is_present("c")) {
+        if (!output_word && !output_line && !output_character)
+            output_word = output_line = true;
+        output_byte = true;
+    }
+    if (!output_line && !output_character && !output_word && !output_byte)
+        output_line = output_character = output_word = true;
 
-    Vector<String> files = args.get_single_values();
+    Vector<String> file_names = args.get_single_values();
     Vector<Count> counts;
-    int status;
-    if (files.is_empty()) {
-        status = wc("", counts);
-        if (status != 0)
-            return status;
-    } else {
-        for (const auto& f : files) {
-            status = wc(f, counts);
-            if (status != 0)
-                return status;
-        }
-    }
-    report(counts);
-    return 0;
-}
-
-int wc(const String& filename, Vector<Count>& counts)
-{
-    FILE* fp = nullptr;
-    if (filename == "" || filename == "-") {
-        fp = stdin;
-    } else {
-        fp = fopen(filename.characters(), "r");
-        if (fp == nullptr) {
-            fprintf(stderr, "wc: Could not open file '%s'\n", filename.characters());
-            return 1;
-        }
+    for (auto& file_name : file_names) {
+        Count count = get_count(file_name);
+        counts.append(count);
     }
 
-    Count count { filename };
-    char* line = nullptr;
-    size_t len = 0;
-    ssize_t n_read = 0;
-    while ((n_read = getline(&line, &len, fp)) != -1) {
-        count.lines++;
-        count.words += count_words(line);
-        count.chars += n_read;
+    if (file_names.size() > 1) {
+        Count total_count = get_total_count(counts);
+        counts.append(total_count);
     }
 
-    counts.append(count);
-    fclose(fp);
-    if (line) {
-        free(line);
+    if (file_names.is_empty()) {
+        Count count = get_count("-");
+        counts.append(count);
     }
+
+    for (auto& count : counts)
+        if (count.exists)
+            wc_out(count);
+
     return 0;
 }
