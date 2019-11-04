@@ -54,7 +54,7 @@ RefPtr<CTCPSocket> CTCPServer::accept()
     return CTCPSocket::construct(accepted_fd);
 }
 
-IPv4Address CTCPServer::local_address()
+IPv4Address CTCPServer::local_address() const
 {
     if (m_fd == -1)
         return {};
@@ -67,7 +67,7 @@ IPv4Address CTCPServer::local_address()
     return IPv4Address(address.sin_addr.s_addr);
 }
 
-u16 CTCPServer::local_port()
+u16 CTCPServer::local_port() const
 {
     if (m_fd == -1)
         return 0;
