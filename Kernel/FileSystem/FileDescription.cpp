@@ -106,7 +106,7 @@ off_t FileDescription::seek(off_t offset, int whence)
 ssize_t FileDescription::read(u8* buffer, ssize_t count)
 {
     int nread = m_file->read(*this, buffer, count);
-    if (m_file->is_seekable())
+    if (nread > 0 && m_file->is_seekable())
         m_current_offset += nread;
     return nread;
 }
@@ -114,7 +114,7 @@ ssize_t FileDescription::read(u8* buffer, ssize_t count)
 ssize_t FileDescription::write(const u8* data, ssize_t size)
 {
     int nwritten = m_file->write(*this, data, size);
-    if (m_file->is_seekable())
+    if (nwritten > 0 && m_file->is_seekable())
         m_current_offset += nwritten;
     return nwritten;
 }
