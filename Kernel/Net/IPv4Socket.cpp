@@ -222,6 +222,9 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
     ReceivedPacket packet;
     {
         LOCKER(lock());
+        if (m_receive_queue.is_empty() && !description.is_blocking())
+            return -EAGAIN;
+
         if (!m_receive_queue.is_empty()) {
             packet = m_receive_queue.take_first();
             m_can_read = !m_receive_queue.is_empty();
