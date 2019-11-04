@@ -63,6 +63,26 @@ const Document& LayoutNode::document() const
     return node()->document();
 }
 
+Document& LayoutNode::document()
+{
+    if (is_anonymous())
+        return parent()->document();
+    // FIXME: Remove this const_cast once we give up on the idea of a const link from layout tree to DOM tree.
+    return const_cast<Node*>(node())->document();
+}
+
+const LayoutDocument& LayoutNode::root() const
+{
+    ASSERT(document().layout_node());
+    return *document().layout_node();
+}
+
+LayoutDocument& LayoutNode::root()
+{
+    ASSERT(document().layout_node());
+    return *document().layout_node();
+}
+
 void LayoutNode::split_into_lines(LayoutBlock& container)
 {
     for_each_child([&](auto& child) {

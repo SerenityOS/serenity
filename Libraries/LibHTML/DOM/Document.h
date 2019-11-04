@@ -78,6 +78,7 @@ public:
     virtual bool is_child_allowed(const Node&) const override;
 
     const LayoutDocument* layout_node() const;
+    LayoutDocument* layout_node();
 
     void schedule_style_update();
 
