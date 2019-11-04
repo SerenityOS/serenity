@@ -22,6 +22,9 @@ public:
 
     RefPtr<ABuffer> get_more_samples(size_t max_bytes_to_read_from_input = 128 * KB);
 
+    void reset();
+    void seek(const int position);
+
     int loaded_samples() const { return m_loaded_samples; }
     int total_samples() const { return m_total_samples; }
     u32 sample_rate() const { return m_sample_rate; }

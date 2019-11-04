@@ -23,6 +23,10 @@ private:
     virtual OwnPtr<AudioServer::SetMainMixVolumeResponse> handle(const AudioServer::SetMainMixVolume&) override;
     virtual OwnPtr<AudioServer::EnqueueBufferResponse> handle(const AudioServer::EnqueueBuffer&) override;
     virtual OwnPtr<AudioServer::GetRemainingSamplesResponse> handle(const AudioServer::GetRemainingSamples&) override;
+    virtual OwnPtr<AudioServer::GetPlayedSamplesResponse> handle(const AudioServer::GetPlayedSamples&) override;
+    virtual OwnPtr<AudioServer::SetPausedResponse> handle(const AudioServer::SetPaused&) override;
+    virtual OwnPtr<AudioServer::ClearBufferResponse> handle(const AudioServer::ClearBuffer&) override;
+    virtual OwnPtr<AudioServer::GetPlayingBufferResponse> handle(const AudioServer::GetPlayingBuffer&) override;
 
     ASMixer& m_mixer;
     RefPtr<ASBufferQueue> m_queue;
