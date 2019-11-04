@@ -186,7 +186,7 @@ void LocalSocket::detach(FileDescription& description)
     }
 }
 
-bool LocalSocket::can_read(FileDescription& description) const
+bool LocalSocket::can_read(const FileDescription& description) const
 {
     auto role = this->role(description);
     if (role == Role::Listener)
@@ -208,7 +208,7 @@ bool LocalSocket::has_attached_peer(const FileDescription& description) const
     ASSERT_NOT_REACHED();
 }
 
-bool LocalSocket::can_write(FileDescription& description) const
+bool LocalSocket::can_write(const FileDescription& description) const
 {
     auto role = this->role(description);
     if (role == Role::Accepted)

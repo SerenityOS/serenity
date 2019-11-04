@@ -368,7 +368,7 @@ KeyboardDevice::~KeyboardDevice()
 {
 }
 
-bool KeyboardDevice::can_read(FileDescription&) const
+bool KeyboardDevice::can_read(const FileDescription&) const
 {
     return !m_queue.is_empty();
 }

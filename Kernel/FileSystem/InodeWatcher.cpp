@@ -18,12 +18,12 @@ InodeWatcher::~InodeWatcher()
         safe_inode->unregister_watcher({}, *this);
 }
 
-bool InodeWatcher::can_read(FileDescription&) const
+bool InodeWatcher::can_read(const FileDescription&) const
 {
     return !m_queue.is_empty() || !m_inode;
 }
 
-bool InodeWatcher::can_write(FileDescription&) const
+bool InodeWatcher::can_write(const FileDescription&) const
 {
     return true;
 }

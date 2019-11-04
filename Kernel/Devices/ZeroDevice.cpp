@@ -11,7 +11,7 @@ ZeroDevice::~ZeroDevice()
 {
 }
 
-bool ZeroDevice::can_read(FileDescription&) const
+bool ZeroDevice::can_read(const FileDescription&) const
 {
     return true;
 }

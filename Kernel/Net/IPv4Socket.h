@@ -27,8 +27,8 @@ public:
     virtual bool get_peer_address(sockaddr*, socklen_t*) override;
     virtual void attach(FileDescription&) override;
     virtual void detach(FileDescription&) override;
-    virtual bool can_read(FileDescription&) const override;
-    virtual bool can_write(FileDescription&) const override;
+    virtual bool can_read(const FileDescription&) const override;
+    virtual bool can_write(const FileDescription&) const override;
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
     virtual KResult setsockopt(int level, int option, const void*, socklen_t) override;
@@ -36,7 +36,7 @@ public:
 
     virtual int ioctl(FileDescription&, unsigned request, unsigned arg) override;
 
-    void did_receive(const IPv4Address& peer_address, u16 peer_port, KBuffer&&);
+    bool did_receive(const IPv4Address& peer_address, u16 peer_port, KBuffer&&);
 
     const IPv4Address& local_address() const { return m_local_address; }
     u16 local_port() const { return m_local_port; }

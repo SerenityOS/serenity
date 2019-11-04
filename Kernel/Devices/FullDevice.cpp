@@ -12,7 +12,7 @@ FullDevice::~FullDevice()
 {
 }
 
-bool FullDevice::can_read(FileDescription&) const
+bool FullDevice::can_read(const FileDescription&) const
 {
     return true;
 }

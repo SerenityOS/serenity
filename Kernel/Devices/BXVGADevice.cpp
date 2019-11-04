@@ -150,12 +150,12 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
     };
 }
 
-bool BXVGADevice::can_read(FileDescription&) const
+bool BXVGADevice::can_read(const FileDescription&) const
 {
     ASSERT_NOT_REACHED();
 }
 
-bool BXVGADevice::can_write(FileDescription&) const
+bool BXVGADevice::can_write(const FileDescription&) const
 {
     ASSERT_NOT_REACHED();
 }

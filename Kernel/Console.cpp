@@ -28,7 +28,7 @@ Console::~Console()
 {
 }
 
-bool Console::can_read(FileDescription&) const
+bool Console::can_read(const FileDescription&) const
 {
     return false;
 }
