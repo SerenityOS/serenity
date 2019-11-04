@@ -250,6 +250,9 @@ template<typename PutChFunc>
         if (*p == '%' && *(p + 1)) {
         one_more:
             ++p;
+            // FIXME: This is just a hack workaround to prevent choking on '.' specifiers
+            if (*p == '.')
+                goto one_more;
             if (*p == '-') {
                 left_pad = true;
                 if (*(p + 1))
@@ -356,8 +359,7 @@ template<typename PutChFunc>
                 ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, false, true, 8);
                 break;
             default:
-                dbg() << "printf_internal: Unimplemented format specifier " << *p;
-                ASSERT_NOT_REACHED();
+                dbg() << "printf_internal: Unimplemented format specifier " << *p << " (fmt: " << fmt << ")";
             }
         } else {
             putch(bufptr, *p);
