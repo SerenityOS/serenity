@@ -2,6 +2,7 @@
 #include "FileUtils.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
+#include <LibCore/CConfigFile.h>
 #include <LibCore/CUserInfo.h>
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
@@ -37,6 +38,8 @@ int main(int argc, char** argv)
         perror("sigaction");
         return 1;
     }
+
+    RefPtr<CConfigFile> config = CConfigFile::get_for_app("FileManager");
 
     GApplication app(argc, argv);
 
@@ -127,12 +130,18 @@ int main(int argc, char** argv)
     view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::List);
         view_as_table_action->set_checked(true);
+
+        config->write_entry("DirectoryView", "ViewMode", "List");
+        config->sync();
     });
     view_as_table_action->set_checkable(true);
 
     view_as_icons_action = GAction::create("Icon view", { Mod_Ctrl, KeyCode::Key_I }, GraphicsBitmap::load_from_file("/res/icons/16x16/icon-view.png"), [&](const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
         view_as_icons_action->set_checked(true);
+
+        config->write_entry("DirectoryView", "ViewMode", "Icon");
+        config->sync();
     });
     view_as_icons_action->set_checkable(true);
 
@@ -140,9 +149,7 @@ int main(int argc, char** argv)
     view_type_action_group->set_exclusive(true);
     view_type_action_group->add_action(*view_as_table_action);
     view_type_action_group->add_action(*view_as_icons_action);
-
-    view_as_icons_action->set_checked(true);
-
+    
     auto selected_file_paths = [&] {
         Vector<String> paths;
         auto& view = directory_view->current_view();
@@ -389,6 +396,17 @@ int main(int argc, char** argv)
     window->show();
 
     window->set_icon(load_png("/res/icons/16x16/filetype-folder.png"));
+
+    // Read direcory read mode from config.
+    auto dir_view_mode = config->read_entry("DirectoryView", "ViewMode", "Icon");
+
+    if (dir_view_mode.contains("List")) {
+        directory_view->set_view_mode(DirectoryView::ViewMode::List);
+        view_as_table_action->set_checked(true);
+    } else {
+        directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
+        view_as_icons_action->set_checked(true);
+    }
 
     return app.exec();
 }
