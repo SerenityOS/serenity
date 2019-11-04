@@ -77,6 +77,8 @@ public:
 
     static void sync();
 
+    bool has_watchers() const { return !m_watchers.is_empty(); }
+
     void register_watcher(Badge<InodeWatcher>, InodeWatcher&);
     void unregister_watcher(Badge<InodeWatcher>, InodeWatcher&);
 

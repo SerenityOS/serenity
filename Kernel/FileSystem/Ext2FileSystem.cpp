@@ -507,12 +507,16 @@ void Ext2FS::flush_writes()
     DiskBackedFS::flush_writes();
 
     // Uncache Inodes that are only kept alive by the index-to-inode lookup cache.
+    // We don't uncache Inodes that are being watched by at least one InodeWatcher.
+
     // FIXME: It would be better to keep a capped number of Inodes around.
     //        The problem is that they are quite heavy objects, and use a lot of heap memory
     //        for their (child name lookup) and (block list) caches.
     Vector<InodeIndex> unused_inodes;
     for (auto& it : m_inode_cache) {
         if (it.value->ref_count() != 1)
+            continue;
+        if (it.value->has_watchers())
             continue;
         unused_inodes.append(it.key);
     }
