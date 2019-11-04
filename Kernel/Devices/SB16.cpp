@@ -84,7 +84,7 @@ void SB16::initialize()
     enable_irq();
 }
 
-bool SB16::can_read(FileDescription&) const
+bool SB16::can_read(const FileDescription&) const
 {
     return false;
 }

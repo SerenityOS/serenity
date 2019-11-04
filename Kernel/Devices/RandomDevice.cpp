@@ -26,7 +26,7 @@ static void mysrand(unsigned seed)
 }
 #endif
 
-bool RandomDevice::can_read(FileDescription&) const
+bool RandomDevice::can_read(const FileDescription&) const
 {
     return true;
 }

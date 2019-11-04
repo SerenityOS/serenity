@@ -68,7 +68,7 @@ ssize_t TTY::write(FileDescription&, const u8* buffer, ssize_t size)
     return size;
 }
 
-bool TTY::can_read(FileDescription&) const
+bool TTY::can_read(const FileDescription&) const
 {
     if (in_canonical_mode()) {
         return m_available_lines > 0;
@@ -76,7 +76,7 @@ bool TTY::can_read(FileDescription&) const
     return !m_input_buffer.is_empty();
 }
 
-bool TTY::can_write(FileDescription&) const
+bool TTY::can_write(const FileDescription&) const
 {
     return true;
 }

@@ -46,14 +46,14 @@ ssize_t MasterPTY::write(FileDescription&, const u8* buffer, ssize_t size)
     return size;
 }
 
-bool MasterPTY::can_read(FileDescription&) const
+bool MasterPTY::can_read(const FileDescription&) const
 {
     if (!m_slave)
         return true;
     return !m_buffer.is_empty();
 }
 
-bool MasterPTY::can_write(FileDescription&) const
+bool MasterPTY::can_write(const FileDescription&) const
 {
     return true;
 }

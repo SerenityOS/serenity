@@ -255,7 +255,7 @@ u8 PS2MouseDevice::mouse_read()
     return IO::in8(I8042_BUFFER);
 }
 
-bool PS2MouseDevice::can_read(FileDescription&) const
+bool PS2MouseDevice::can_read(const FileDescription&) const
 {
     return !m_queue.is_empty();
 }

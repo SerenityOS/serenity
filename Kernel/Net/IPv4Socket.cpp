@@ -144,7 +144,7 @@ void IPv4Socket::detach(FileDescription&)
 {
 }
 
-bool IPv4Socket::can_read(FileDescription&) const
+bool IPv4Socket::can_read(const FileDescription&) const
 {
     if (m_role == Role::Listener)
         return can_accept();
@@ -153,7 +153,7 @@ bool IPv4Socket::can_read(FileDescription&) const
     return m_can_read;
 }
 
-bool IPv4Socket::can_write(FileDescription&) const
+bool IPv4Socket::can_write(const FileDescription&) const
 {
     return is_connected();
 }
@@ -282,9 +282,13 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
     return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
 }
 
-void IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet)
+bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet)
 {
     LOCKER(lock());
+    if (m_receive_queue.size_slow() > 2000) {
+        kprintf("IPv4Socket(%p): did_receive refusing packet since queue is full.\n", this);
+        return false;
+    }
     auto packet_size = packet.size();
     m_receive_queue.append({ source_address, source_port, move(packet) });
     m_can_read = true;
@@ -292,6 +296,7 @@ void IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
 #ifdef IPV4_SOCKET_DEBUG
     kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %d\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
 #endif
+    return true;
 }
 
 String IPv4Socket::absolute_path(const FileDescription&) const

@@ -82,12 +82,12 @@ int MBVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
     };
 }
 
-bool MBVGADevice::can_read(FileDescription&) const
+bool MBVGADevice::can_read(const FileDescription&) const
 {
     ASSERT_NOT_REACHED();
 }
 
-bool MBVGADevice::can_write(FileDescription&) const
+bool MBVGADevice::can_write(const FileDescription&) const
 {
     ASSERT_NOT_REACHED();
 }

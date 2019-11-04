@@ -121,14 +121,12 @@ ssize_t FileDescription::write(const u8* data, ssize_t size)
 
 bool FileDescription::can_write() const
 {
-    // FIXME: Remove this const_cast.
-    return m_file->can_write(const_cast<FileDescription&>(*this));
+    return m_file->can_write(*this);
 }
 
 bool FileDescription::can_read() const
 {
-    // FIXME: Remove this const_cast.
-    return m_file->can_read(const_cast<FileDescription&>(*this));
+    return m_file->can_read(*this);
 }
 
 ByteBuffer FileDescription::read_entire_file()

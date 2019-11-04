@@ -83,12 +83,12 @@ void FIFO::detach(Direction direction)
     }
 }
 
-bool FIFO::can_read(FileDescription&) const
+bool FIFO::can_read(const FileDescription&) const
 {
     return !m_buffer.is_empty() || !m_writers;
 }
 
-bool FIFO::can_write(FileDescription&) const
+bool FIFO::can_write(const FileDescription&) const
 {
     return m_buffer.bytes_in_write_buffer() < 4096 || !m_readers;
 }

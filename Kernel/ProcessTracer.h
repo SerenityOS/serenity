@@ -12,10 +12,10 @@ public:
     bool is_dead() const { return m_dead; }
     void set_dead() { m_dead = true; }
 
-    virtual bool can_read(FileDescription&) const override { return !m_calls.is_empty() || m_dead; }
+    virtual bool can_read(const FileDescription&) const override { return !m_calls.is_empty() || m_dead; }
     virtual int read(FileDescription&, u8*, int) override;
 
-    virtual bool can_write(FileDescription&) const override { return true; }
+    virtual bool can_write(const FileDescription&) const override { return true; }
     virtual int write(FileDescription&, const u8*, int) override { return -EIO; }
 
     virtual String absolute_path(const FileDescription&) const override;

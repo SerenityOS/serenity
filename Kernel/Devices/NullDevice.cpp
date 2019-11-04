@@ -20,7 +20,7 @@ NullDevice::~NullDevice()
 {
 }
 
-bool NullDevice::can_read(FileDescription&) const
+bool NullDevice::can_read(const FileDescription&) const
 {
     return true;
 }

@@ -48,12 +48,12 @@ ssize_t SlavePTY::on_tty_write(const u8* data, ssize_t size)
     return m_master->on_slave_write(data, size);
 }
 
-bool SlavePTY::can_write(FileDescription&) const
+bool SlavePTY::can_write(const FileDescription&) const
 {
     return m_master->can_write_from_slave();
 }
 
-bool SlavePTY::can_read(FileDescription& description) const
+bool SlavePTY::can_read(const FileDescription& description) const
 {
     if (m_master->is_closed())
         return true;
