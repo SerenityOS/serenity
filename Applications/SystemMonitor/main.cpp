@@ -219,6 +219,7 @@ RefPtr<GWidget> build_file_systems_tab()
         Vector<GJsonArrayModel::FieldSpec> df_fields;
         df_fields.empend("mount_point", "Mount point", TextAlignment::CenterLeft);
         df_fields.empend("class_name", "Class", TextAlignment::CenterLeft);
+        df_fields.empend("device", "Device", TextAlignment::CenterLeft);
         df_fields.empend(
             "Size", TextAlignment::CenterRight,
             [](const JsonObject& object) {
