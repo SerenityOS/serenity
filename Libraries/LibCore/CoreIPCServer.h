@@ -93,6 +93,7 @@ namespace Server {
 #if defined(CIPC_DEBUG)
             dbg() << "S: -> C " << int(message.type) << " extra " << extra_data.size();
 #endif
+            flush_outgoing_messages();
             if (try_send_message(message, extra_data))
                 return;
             if (m_queue.size() >= max_queued_messages) {
