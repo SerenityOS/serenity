@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     window->set_rect(300, 300, 350, 140);
     window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
 
-    auto player = SoundPlayerWidget::construct(audio_client, loader);
+    auto player = SoundPlayerWidget::construct(window, audio_client, loader);
     window->set_main_widget(player);
     window->show();
 

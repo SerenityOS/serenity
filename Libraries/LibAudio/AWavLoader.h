@@ -30,6 +30,7 @@ public:
     u32 sample_rate() const { return m_sample_rate; }
     u16 num_channels() const { return m_num_channels; }
     u16 bits_per_sample() const { return m_bits_per_sample; }
+    RefPtr<CFile> file() const { return m_file; }
 
 private:
     bool parse_header();

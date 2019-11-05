@@ -5,9 +5,11 @@
 #include <LibGUI/GLabel.h>
 #include <LibM/math.h>
 
-SoundPlayerWidget::SoundPlayerWidget(NonnullRefPtr<AClientConnection> connection, AWavLoader& loader)
+SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConnection> connection, AWavLoader& loader)
     : m_manager(PlaybackManager(connection, loader))
 {
+    window.set_title(String::format("SoundPlayer - \"%s\"", loader.file()->filename().characters()));
+
     set_fill_with_background_color(true);
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_margins({ 2, 2, 2, 2 });
@@ -66,9 +68,10 @@ SoundPlayerWidget::SoundPlayerWidget(NonnullRefPtr<AClientConnection> connection
     m_status->set_preferred_size(0, 18);
 
     m_status->set_text(String::format(
-        "Sample rate %uHz, %u channels, %u bits per sample",
+        "Sample rate %uHz, %u %s, %u bits per sample",
         loader.sample_rate(),
         loader.num_channels(),
+        (loader.num_channels() == 1) ? "channel" : "channels",
         loader.bits_per_sample()));
 
     update_position(0);
@@ -109,7 +112,7 @@ void SoundPlayerWidget::update_position(const int position)
     float remaining_seconds = m_manager.total_length() - seconds;
 
     m_elapsed->set_text(String::format(
-        "Position:\n%u:%02u.%02u",
+        "Elapsed:\n%u:%02u.%02u",
         static_cast<int>(seconds / 60),
         static_cast<int>(seconds) % 60,
         static_cast<int>(seconds * 100) % 100));
