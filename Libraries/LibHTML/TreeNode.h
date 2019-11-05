@@ -53,6 +53,26 @@ public:
 
     bool is_child_allowed(const T&) const { return true; }
 
+    T* next_in_pre_order()
+    {
+        if (first_child())
+            return first_child();
+        T* node;
+        if (!(node = next_sibling())) {
+            node = parent();
+            while (node && !node->next_sibling())
+                node = node->parent();
+            if (node)
+                node = node->next_sibling();
+        }
+        return node;
+    }
+
+    const T* next_in_pre_order() const
+    {
+        return const_cast<TreeNode*>(this)->next_in_pre_order();
+    }
+
     template<typename Callback>
     IterationDecision for_each_in_subtree(Callback callback) const
     {
