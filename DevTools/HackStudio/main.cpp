@@ -166,6 +166,15 @@ int main(int argc, char** argv)
         }
     });
 
+    auto remove_current_editor = GAction::create("Remove current editor", { Mod_Alt | Mod_Shift, Key_E }, [&](auto&) {
+        if (g_all_editor_wrappers.size() <= 1)
+            return;
+        auto wrapper = g_current_editor_wrapper;
+        switch_to_next_editor->activate();
+        inner_splitter->remove_child(*wrapper);
+        g_all_editor_wrappers.remove_first_matching([&](auto& entry) { return entry == wrapper.ptr(); });
+    });
+
     auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
         if (g_currently_open_file.is_empty())
             return;
@@ -265,7 +274,9 @@ int main(int argc, char** argv)
     auto view_menu = make<GMenu>("View");
     view_menu->add_action(hide_action_tabs_action);
     view_menu->add_action(open_locator_action);
+    view_menu->add_separator();
     view_menu->add_action(add_editor_action);
+    view_menu->add_action(remove_current_editor);
     menubar->add_menu(move(view_menu));
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
