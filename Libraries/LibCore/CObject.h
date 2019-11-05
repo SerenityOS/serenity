@@ -70,6 +70,7 @@ public:
     bool has_timer() const { return m_timer_id; }
 
     void add_child(CObject&);
+    void insert_child_before(CObject& new_child, CObject& before_child);
     void remove_child(CObject&);
 
     void dump_tree(int indent = 0);

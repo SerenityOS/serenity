@@ -64,6 +64,15 @@ void CObject::add_child(CObject& object)
     event(*make<CChildEvent>(CEvent::ChildAdded, object));
 }
 
+void CObject::insert_child_before(CObject& new_child, CObject& before_child)
+{
+    // FIXME: Should we support reparenting objects?
+    ASSERT(!new_child.parent() || new_child.parent() == this);
+    new_child.m_parent = this;
+    m_children.insert_before_matching(new_child, [&](auto& existing_child) { return existing_child.ptr() == &before_child; });
+    event(*make<CChildEvent>(CEvent::ChildAdded, new_child, &before_child));
+}
+
 void CObject::remove_child(CObject& object)
 {
     for (int i = 0; i < m_children.size(); ++i) {

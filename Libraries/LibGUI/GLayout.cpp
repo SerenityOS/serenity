@@ -52,6 +52,18 @@ void GLayout::add_widget(GWidget& widget)
     add_entry(move(entry));
 }
 
+void GLayout::insert_widget_before(GWidget& widget, GWidget& before_widget)
+{
+    Entry entry;
+    entry.type = Entry::Type::Widget;
+    entry.widget = widget.make_weak_ptr();
+    m_entries.insert_before_matching(move(entry), [&](auto& existing_entry) {
+        return existing_entry.type == Entry::Type::Widget && existing_entry.widget.ptr() == &before_widget;
+    });
+    if (m_owner)
+        m_owner->notify_layout_changed({});
+}
+
 void GLayout::remove_widget(GWidget& widget)
 {
     m_entries.remove_first_matching([&](auto& entry) {
