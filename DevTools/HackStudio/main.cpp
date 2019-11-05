@@ -36,11 +36,19 @@ OwnPtr<Project> g_project;
 RefPtr<GWindow> g_window;
 RefPtr<GListView> g_project_list_view;
 
+static RefPtr<GTabWidget> s_action_tab_widget;
+
 void add_new_editor(GWidget& parent)
 {
-    auto wrapper = EditorWrapper::construct(&parent);
+    auto wrapper = EditorWrapper::construct(nullptr);
+    if (s_action_tab_widget) {
+        parent.insert_child_before(wrapper, *s_action_tab_widget);
+    } else {
+        parent.add_child(wrapper);
+    }
     g_current_editor_wrapper = wrapper;
     g_all_editor_wrappers.append(wrapper);
+    wrapper->editor().set_focus(true);
 }
 
 EditorWrapper& current_editor_wrapper()
@@ -90,7 +98,6 @@ int main(int argc, char** argv)
 
     auto inner_splitter = GSplitter::construct(Orientation::Vertical, outer_splitter);
     inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
-    add_new_editor(inner_splitter);
     add_new_editor(inner_splitter);
 
     auto new_action = GAction::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
@@ -159,31 +166,34 @@ int main(int argc, char** argv)
         open_file(filename);
     };
 
-    auto tab_widget = GTabWidget::construct(inner_splitter);
+    s_action_tab_widget = GTabWidget::construct(inner_splitter);
 
-    tab_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    tab_widget->set_preferred_size(0, 24);
+    s_action_tab_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    s_action_tab_widget->set_preferred_size(0, 24);
 
     auto reveal_action_tab = [&](auto& widget) {
-        dbg() << "tab_widget preferred height: " << tab_widget->preferred_size().height();
-        if (tab_widget->preferred_size().height() < 200)
-            tab_widget->set_preferred_size(0, 200);
-        tab_widget->set_active_widget(widget);
+        if (s_action_tab_widget->preferred_size().height() < 200)
+            s_action_tab_widget->set_preferred_size(0, 200);
+        s_action_tab_widget->set_active_widget(widget);
     };
 
     auto hide_action_tabs = [&] {
-        tab_widget->set_preferred_size(0, 24);
+        s_action_tab_widget->set_preferred_size(0, 24);
     };
 
     auto hide_action_tabs_action = GAction::create("Hide action tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [&](auto&) {
         hide_action_tabs();
     });
 
+    auto add_editor_action = GAction::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E }, [&](auto&) {
+        add_new_editor(inner_splitter);
+    });
+
     auto find_in_files_widget = FindInFilesWidget::construct(nullptr);
-    tab_widget->add_widget("Find in files", find_in_files_widget);
+    s_action_tab_widget->add_widget("Find in files", find_in_files_widget);
 
     auto terminal_wrapper = TerminalWrapper::construct(nullptr);
-    tab_widget->add_widget("Console", terminal_wrapper);
+    s_action_tab_widget->add_widget("Console", terminal_wrapper);
 
     auto locator = Locator::construct(widget);
 
@@ -231,6 +241,7 @@ int main(int argc, char** argv)
     auto view_menu = make<GMenu>("View");
     view_menu->add_action(hide_action_tabs_action);
     view_menu->add_action(open_locator_action);
+    view_menu->add_action(add_editor_action);
     menubar->add_menu(move(view_menu));
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
