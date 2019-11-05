@@ -36,7 +36,7 @@ elif [ "$1" = "qtap" ]; then
     sudo $SERENITY_QEMU_BIN \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_KVM_ARG \
-        -object filter-dump,id=hue,netdev=br0,file=e1000.pcap \
+#        -object filter-dump,id=hue,netdev=br0,file=e1000.pcap \
         -netdev tap,ifname=tap0,id=br0 \
         -device e1000,netdev=br0 \
         -kernel kernel \
@@ -46,7 +46,7 @@ elif [ "$1" = "qgrub" ]; then
     $SERENITY_QEMU_BIN \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_KVM_ARG \
-        -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
+#        -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh
 elif [ "$1" = "qtext" ]; then
@@ -61,7 +61,7 @@ else
     $SERENITY_QEMU_BIN \
         $SERENITY_COMMON_QEMU_ARGS \
         $SERENITY_KVM_ARG \
-        -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
+#        -object filter-dump,id=hue,netdev=breh,file=e1000.pcap \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh \
         -kernel kernel \
