@@ -293,6 +293,7 @@ void FileDescription::set_file_flags(u32 flags)
 {
     m_is_blocking = !(flags & O_NONBLOCK);
     m_should_append = flags & O_APPEND;
+    m_direct = flags & O_DIRECT;
     m_file_flags = flags;
 }
 

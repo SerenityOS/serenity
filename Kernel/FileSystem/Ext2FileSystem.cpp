@@ -2,6 +2,7 @@
 #include <AK/BufferStream.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/FileSystem/Ext2FileSystem.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
@@ -89,7 +90,6 @@ bool Ext2FS::initialize()
     kprintf("ext2fs: desc per block = %u\n", EXT2_DESC_PER_BLOCK(&super_block));
     kprintf("ext2fs: desc size = %u\n", EXT2_DESC_SIZE(&super_block));
 #endif
-
 
     set_block_size(EXT2_BLOCK_SIZE(&super_block));
 
@@ -610,7 +610,7 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     return new_inode;
 }
 
-ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDescription*) const
+ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDescription* description) const
 {
     Locker inode_locker(m_lock);
     ASSERT(offset >= 0);
@@ -656,7 +656,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     u8 block[max_block_size];
 
     for (int bi = first_block_logical_index; remaining_count && bi <= last_block_logical_index; ++bi) {
-        bool success = fs().read_block(m_block_list[bi], block);
+        bool success = fs().read_block(m_block_list[bi], block, description);
         if (!success) {
             kprintf("ext2fs: read_bytes: read_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
             return -EIO;
@@ -694,7 +694,6 @@ KResult Ext2FSInode::resize(u64 new_size)
             return KResult(-ENOSPC);
     }
 
-
     auto block_list = fs().block_list_for_inode(m_raw_inode);
     if (blocks_needed_after > blocks_needed_before) {
         auto new_blocks = fs().allocate_blocks(fs().group_index_from_inode(index()), blocks_needed_after - blocks_needed_before);
@@ -723,7 +722,7 @@ KResult Ext2FSInode::resize(u64 new_size)
     return KSuccess;
 }
 
-ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, FileDescription*)
+ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, FileDescription* description)
 {
     ASSERT(offset >= 0);
     ASSERT(count >= 0);
@@ -785,7 +784,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
         ByteBuffer block;
         if (offset_into_block != 0 || num_bytes_to_copy != block_size) {
             block = ByteBuffer::create_uninitialized(block_size);
-            bool success = fs().read_block(m_block_list[bi], block.data());
+            bool success = fs().read_block(m_block_list[bi], block.data(), description);
             if (!success) {
                 kprintf("Ext2FSInode::write_bytes: read_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
                 return -EIO;
@@ -805,7 +804,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
 #ifdef EXT2_DEBUG
         dbgprintf("Ext2FSInode::write_bytes: writing block %u (offset_into_block: %u)\n", m_block_list[bi], offset_into_block);
 #endif
-        bool success = fs().write_block(m_block_list[bi], block.data());
+        bool success = fs().write_block(m_block_list[bi], block.data(), description);
         if (!success) {
             kprintf("Ext2FSInode::write_bytes: write_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
             ASSERT_NOT_REACHED();
