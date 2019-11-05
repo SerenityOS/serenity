@@ -4,6 +4,7 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <LibCore/CTimer.h>
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
 #include <LibGUI/GTextDocument.h>
@@ -158,6 +159,7 @@ private:
     Rect ruler_rect_in_inner_coordinates() const;
     Rect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
+    void ensure_cursor_is_valid();
 
     class UndoCommand {
 
@@ -216,6 +218,10 @@ private:
         GTextPosition m_text_position;
     };
 
+    struct UndoCommandsContainer {
+        NonnullOwnPtrVector<UndoCommand> m_undo_vector;
+    };
+
     void add_to_undo_stack(NonnullOwnPtr<UndoCommand> undo_command);
     int visual_line_containing(int line_index, int column) const;
     void recompute_visual_lines(int line_index);
@@ -244,10 +250,10 @@ private:
     RefPtr<GAction> m_delete_action;
     CElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
-    NonnullOwnPtrVector<NonnullOwnPtrVector<UndoCommand>> m_undo_stack;
-    int m_undo_index = 0;
-    int m_undo_timer = 0;
-    int m_prev_undo_stack_size = 0;
+    NonnullOwnPtrVector<UndoCommandsContainer> m_undo_stack;
+    int m_undo_stack_index = 0;
+    RefPtr<CTimer> m_undo_timer;
+    int m_last_updated_undo_vector_size = 0;
 
     RefPtr<GTextDocument> m_document;
 
