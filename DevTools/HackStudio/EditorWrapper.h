@@ -24,3 +24,9 @@ private:
     RefPtr<GLabel> m_cursor_label;
     RefPtr<Editor> m_editor;
 };
+
+template<>
+inline bool is<EditorWrapper>(const CObject& object)
+{
+    return !strcmp(object.class_name(), "EditorWrapper");
+}
