@@ -70,6 +70,8 @@ int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
 
+    Function<void()> update_actions;
+
     g_window = GWindow::construct();
     g_window->set_rect(100, 100, 800, 600);
     g_window->set_title("HackStudio");
@@ -166,13 +168,14 @@ int main(int argc, char** argv)
         }
     });
 
-    auto remove_current_editor = GAction::create("Remove current editor", { Mod_Alt | Mod_Shift, Key_E }, [&](auto&) {
+    auto remove_current_editor_action = GAction::create("Remove current editor", { Mod_Alt | Mod_Shift, Key_E }, [&](auto&) {
         if (g_all_editor_wrappers.size() <= 1)
             return;
         auto wrapper = g_current_editor_wrapper;
         switch_to_next_editor->activate();
         inner_splitter->remove_child(*wrapper);
         g_all_editor_wrappers.remove_first_matching([&](auto& entry) { return entry == wrapper.ptr(); });
+        update_actions();
     });
 
     auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
@@ -220,6 +223,7 @@ int main(int argc, char** argv)
 
     auto add_editor_action = GAction::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E }, [&](auto&) {
         add_new_editor(inner_splitter);
+        update_actions();
     });
 
     auto find_in_files_widget = FindInFilesWidget::construct(nullptr);
@@ -276,7 +280,7 @@ int main(int argc, char** argv)
     view_menu->add_action(open_locator_action);
     view_menu->add_separator();
     view_menu->add_action(add_editor_action);
-    view_menu->add_action(remove_current_editor);
+    view_menu->add_action(remove_current_editor_action);
     menubar->add_menu(move(view_menu));
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
@@ -293,7 +297,13 @@ int main(int argc, char** argv)
 
     g_window->show();
 
+    update_actions = [&]() {
+        remove_current_editor_action->set_enabled(g_all_editor_wrappers.size() > 1);
+    };
+
     open_file("main.cpp");
+
+    update_actions();
     return app.exec();
 }
 
