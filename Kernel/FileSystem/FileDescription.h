@@ -44,6 +44,8 @@ public:
 
     String absolute_path() const;
 
+    bool is_direct() const { return m_direct; }
+
     bool is_directory() const { return m_is_directory; }
 
     File& file() { return *m_file; }
@@ -117,5 +119,6 @@ private:
     bool m_is_blocking { true };
     bool m_is_directory { false };
     bool m_should_append { false };
+    bool m_direct { false };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
 };

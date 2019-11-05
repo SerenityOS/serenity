@@ -1,5 +1,6 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
+#include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KBuffer.h>
 #include <Kernel/Process.h>
 
@@ -92,11 +93,21 @@ DiskBackedFS::~DiskBackedFS()
 {
 }
 
-bool DiskBackedFS::write_block(unsigned index, const u8* data)
+bool DiskBackedFS::write_block(unsigned index, const u8* data, FileDescription* description)
 {
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::write_block %u, size=%u\n", index, data.size());
 #endif
+
+    bool allow_cache = !description || !description->is_direct();
+
+    if (!allow_cache) {
+        flush_specific_block_if_needed(index);
+        DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
+        device().write(base_offset, block_size(), data);
+        return true;
+    }
+
     auto& entry = cache().get(index);
     memcpy(entry.data, data, block_size());
     entry.is_dirty = true;
@@ -106,21 +117,31 @@ bool DiskBackedFS::write_block(unsigned index, const u8* data)
     return true;
 }
 
-bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const u8* data)
+bool DiskBackedFS::write_blocks(unsigned index, unsigned count, const u8* data, FileDescription* description)
 {
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::write_blocks %u x%u\n", index, count);
 #endif
     for (unsigned i = 0; i < count; ++i)
-        write_block(index + i, data + i * block_size());
+        write_block(index + i, data + i * block_size(), description);
     return true;
 }
 
-bool DiskBackedFS::read_block(unsigned index, u8* buffer) const
+bool DiskBackedFS::read_block(unsigned index, u8* buffer, FileDescription* description) const
 {
 #ifdef DBFS_DEBUG
     kprintf("DiskBackedFileSystem::read_block %u\n", index);
 #endif
+
+    bool allow_cache = !description || !description->is_direct();
+
+    if (!allow_cache) {
+        const_cast<DiskBackedFS*>(this)->flush_specific_block_if_needed(index);
+        DiskOffset base_offset = static_cast<DiskOffset>(index) * static_cast<DiskOffset>(block_size());
+        bool success = device().read(base_offset, block_size(), buffer);
+        ASSERT(success);
+        return true;
+    }
 
     auto& entry = cache().get(index);
     if (!entry.has_data) {
@@ -133,21 +154,35 @@ bool DiskBackedFS::read_block(unsigned index, u8* buffer) const
     return true;
 }
 
-bool DiskBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer) const
+bool DiskBackedFS::read_blocks(unsigned index, unsigned count, u8* buffer, FileDescription* description) const
 {
     if (!count)
         return false;
     if (count == 1)
-        return read_block(index, buffer);
+        return read_block(index, buffer, description);
     u8* out = buffer;
 
     for (unsigned i = 0; i < count; ++i) {
-        if (!read_block(index + i, out))
+        if (!read_block(index + i, out, description))
             return false;
         out += block_size();
     }
 
     return true;
+}
+
+void DiskBackedFS::flush_specific_block_if_needed(unsigned index)
+{
+    LOCKER(m_lock);
+    if (!cache().is_dirty())
+        return;
+    cache().for_each_entry([&](CacheEntry& entry) {
+        if (entry.is_dirty && entry.block_index == index) {
+            DiskOffset base_offset = static_cast<DiskOffset>(entry.block_index) * static_cast<DiskOffset>(block_size());
+            device().write(base_offset, block_size(), entry.data);
+            entry.is_dirty = false;
+        }
+    });
 }
 
 void DiskBackedFS::flush_writes_impl()
