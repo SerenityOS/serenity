@@ -14,6 +14,7 @@ public:
     virtual ~GLayout();
 
     void add_widget(GWidget&);
+    void insert_widget_before(GWidget& widget, GWidget& before_widget);
     void add_layout(OwnPtr<GLayout>&&);
     void add_spacer();
 

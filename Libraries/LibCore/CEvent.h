@@ -100,14 +100,18 @@ private:
 
 class CChildEvent final : public CEvent {
 public:
-    CChildEvent(Type, CObject& child);
+    CChildEvent(Type, CObject& child, CObject* insertion_before_child = nullptr);
     ~CChildEvent();
 
     CObject* child() { return m_child.ptr(); }
     const CObject* child() const { return m_child.ptr(); }
 
+    CObject* insertion_before_child() { return m_insertion_before_child.ptr(); }
+    const CObject* insertion_before_child() const { return m_insertion_before_child.ptr(); }
+
 private:
     WeakPtr<CObject> m_child;
+    WeakPtr<CObject> m_insertion_before_child;
 };
 
 class CCustomEvent : public CEvent {
