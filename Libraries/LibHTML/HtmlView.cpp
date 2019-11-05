@@ -64,7 +64,6 @@ void HtmlView::set_document(Document* new_document)
         };
     }
 
-
 #ifdef HTML_DEBUG
     if (document != nullptr) {
         dbgprintf("\033[33;1mLayout tree before layout:\033[0m\n");
@@ -159,6 +158,11 @@ void HtmlView::mousemove_event(GMouseEvent& event)
                 is_hovering_link = true;
             }
         }
+        if (m_in_mouse_selection) {
+            layout_root()->selection().set_end({ result.layout_node, result.index_in_node });
+            dump_selection("MouseMove");
+            update();
+        }
     }
     if (window())
         window()->set_override_cursor(is_hovering_link ? GStandardCursor::Hand : GStandardCursor::None);
@@ -196,12 +200,29 @@ void HtmlView::mousedown_event(GMouseEvent& event)
                 dbg() << "HtmlView: clicking on a link to " << link->href();
                 if (on_link_click)
                     on_link_click(link->href());
+            } else {
+                if (event.button() == GMouseButton::Left) {
+                    layout_root()->selection().set({ result.layout_node, result.index_in_node }, {});
+                    dump_selection("MouseDown");
+                    m_in_mouse_selection = true;
+                }
             }
         }
     }
     if (hovered_node_changed)
         update();
     event.accept();
+}
+
+void HtmlView::mouseup_event(GMouseEvent& event)
+{
+    if (!layout_root())
+        return GScrollableWidget::mouseup_event(event);
+
+    if (event.button() == GMouseButton::Left) {
+        dump_selection("MouseUp");
+        m_in_mouse_selection = false;
+    }
 }
 
 void HtmlView::keydown_event(GKeyEvent& event)
@@ -351,4 +372,11 @@ Document* HtmlView::document()
 const Document* HtmlView::document() const
 {
     return main_frame().document();
+}
+
+void HtmlView::dump_selection(const char* event_name)
+{
+    dbg() << event_name << " selection start: "
+          << layout_root()->selection().start().layout_node << ":" << layout_root()->selection().start().index_in_node << ", end: "
+          << layout_root()->selection().end().layout_node << ":" << layout_root()->selection().end().index_in_node;
 }

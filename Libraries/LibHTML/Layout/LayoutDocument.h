@@ -12,5 +12,9 @@ public:
     virtual const char* class_name() const override { return "LayoutDocument"; }
     virtual void layout() override;
 
+    const LayoutRange& selection() const { return m_selection; }
+    LayoutRange& selection() { return m_selection; }
+
 private:
+    LayoutRange m_selection;
 };

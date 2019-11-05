@@ -5,6 +5,7 @@
 #include <LibDraw/Rect.h>
 #include <LibHTML/CSS/StyleProperties.h>
 #include <LibHTML/Layout/BoxModelMetrics.h>
+#include <LibHTML/Layout/LayoutPosition.h>
 #include <LibHTML/RenderingContext.h>
 #include <LibHTML/TreeNode.h>
 
@@ -19,6 +20,7 @@ class Node;
 
 struct HitTestResult {
     RefPtr<LayoutNode> layout_node;
+    int index_in_node { 0 };
 };
 
 class LayoutNode : public TreeNode<LayoutNode> {

@@ -293,7 +293,7 @@ HitTestResult LayoutBlock::hit_test(const Point& position) const
     for (auto& line_box : m_line_boxes) {
         for (auto& fragment : line_box.fragments()) {
             if (enclosing_int_rect(fragment.rect()).contains(position)) {
-                return { fragment.layout_node() };
+                return { fragment.layout_node(), fragment.text_index_at(position.x()) };
             }
         }
     }
