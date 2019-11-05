@@ -14,6 +14,8 @@
 #include <LibHTML/Parser/HTMLParser.h>
 #include <LibMarkdown/MDDocument.h>
 
+//#define EDITOR_DEBUG
+
 Editor::Editor(GWidget* parent)
     : GTextEditor(GTextEditor::MultiLine, parent)
 {
@@ -89,7 +91,9 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 {
     auto it = man_paths().find(hovered_token);
     if (it == man_paths().end()) {
+#ifdef EDITOR_DEBUG
         dbg() << "no man path for " << hovered_token;
+#endif
         m_documentation_tooltip_window->hide();
         return;
     }
@@ -98,7 +102,9 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
         return;
     }
 
+#ifdef EDITOR_DEBUG
     dbg() << "opening " << it->value;
+#endif
     auto file = CFile::construct(it->value);
     if (!file->open(CFile::ReadOnly)) {
         dbg() << "failed to open " << it->value << " " << file->error_string();
