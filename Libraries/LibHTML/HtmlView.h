@@ -43,12 +43,15 @@ protected:
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
 
 private:
     void layout_and_sync_size();
+    void dump_selection(const char* event_name);
 
     RefPtr<Frame> m_main_frame;
 
     bool m_should_show_line_box_borders { false };
+    bool m_in_mouse_selection { false };
 };
