@@ -133,12 +133,36 @@ int main(int argc, char** argv)
     auto switch_to_next_editor = GAction::create("Switch to next editor", { Mod_Ctrl, Key_E }, [&](auto&) {
         if (g_all_editor_wrappers.size() <= 1)
             return;
-        // FIXME: This will only work correctly when there are 2 editors. Make it work for any editor count.
-        for (auto& wrapper : g_all_editor_wrappers) {
-            if (&wrapper == &current_editor_wrapper())
-                continue;
-            wrapper.editor().set_focus(true);
+        Vector<EditorWrapper*> wrappers;
+        inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
+            wrappers.append(&child);
+            return IterationDecision::Continue;
+        });
+        for (int i = 0; i < wrappers.size(); ++i) {
+            if (g_current_editor_wrapper.ptr() == wrappers[i]) {
+                if (i == wrappers.size() - 1)
+                    wrappers[0]->editor().set_focus(true);
+                else
+                    wrappers[i + 1]->editor().set_focus(true);
+            }
+        }
+    });
+
+    auto switch_to_previous_editor = GAction::create("Switch to previous editor", { Mod_Ctrl | Mod_Shift, Key_E }, [&](auto&) {
+        if (g_all_editor_wrappers.size() <= 1)
             return;
+        Vector<EditorWrapper*> wrappers;
+        inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
+            wrappers.append(&child);
+            return IterationDecision::Continue;
+        });
+        for (int i = wrappers.size() - 1; i >= 0; --i) {
+            if (g_current_editor_wrapper.ptr() == wrappers[i]) {
+                if (i == 0)
+                    wrappers.last()->editor().set_focus(true);
+                else
+                    wrappers[i - 1]->editor().set_focus(true);
+            }
         }
     });
 
