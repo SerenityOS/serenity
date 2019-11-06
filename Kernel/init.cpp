@@ -170,7 +170,7 @@ VFS* vfs;
             kprintf("init_stage2: error spawning Shell: %d\n", error);
             hang();
         }
-        shell_process->set_priority(Process::HighPriority);
+        shell_process->main_thread().set_priority(ThreadPriority::High);
     } else {
         tty0->set_graphical(true);
         auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
@@ -178,7 +178,7 @@ VFS* vfs;
             kprintf("init_stage2: error spawning SystemServer: %d\n", error);
             hang();
         }
-        system_server_process->set_priority(Process::HighPriority);
+        system_server_process->main_thread().set_priority(ThreadPriority::High);
     }
     Process::create_kernel_process("NetworkTask", NetworkTask_main);
 
@@ -313,7 +313,7 @@ extern "C" [[noreturn]] void init()
     });
     Process::create_kernel_process("Finalizer", [] {
         g_finalizer = current;
-        current->process().set_priority(Process::LowPriority);
+        current->set_priority(ThreadPriority::Low);
         for (;;) {
             Thread::finalize_dying_threads();
             (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Lurking);

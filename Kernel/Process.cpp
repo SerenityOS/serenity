@@ -2555,10 +2555,10 @@ int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
     if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
         return -EPERM;
 
-    if (param->sched_priority < Process::FirstPriority || param->sched_priority > Process::LastPriority)
+    if (param->sched_priority < (int)ThreadPriority::First || param->sched_priority > (int)ThreadPriority::Last)
         return -EINVAL;
 
-    peer->set_priority(Priority(param->sched_priority));
+    peer->main_thread().set_priority((ThreadPriority)param->sched_priority);
     return 0;
 }
 
@@ -2578,7 +2578,7 @@ int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
     if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
         return -EPERM;
 
-    param->sched_priority = peer->priority();
+    param->sched_priority = (int)peer->main_thread().priority();
     return 0;
 }
 
@@ -2753,23 +2753,6 @@ int Process::sys$get_shared_buffer_size(int shared_buffer_id)
     kprintf("%s(%u): Get shared buffer %d size: %u\n", name().characters(), pid(), shared_buffer_id, shared_buffers().resource().size());
 #endif
     return shared_buffer.size();
-}
-
-const char* to_string(Process::Priority priority)
-{
-    switch (priority) {
-    case Process::IdlePriority:
-        return "Idle";
-    case Process::LowPriority:
-        return "Low";
-    case Process::NormalPriority:
-        return "Normal";
-    case Process::HighPriority:
-        return "High";
-    }
-    kprintf("to_string(Process::Priority): Invalid priority: %u\n", priority);
-    ASSERT_NOT_REACHED();
-    return nullptr;
 }
 
 void Process::terminate_due_to_signal(u8 signal)

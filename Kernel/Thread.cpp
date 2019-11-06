@@ -670,3 +670,20 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
 {
     return stream << value.process().name() << "(" << value.pid() << ":" << value.tid() << ")";
 }
+
+const char* to_string(ThreadPriority priority)
+{
+    switch (priority) {
+    case ThreadPriority::Idle:
+        return "Idle";
+    case ThreadPriority::Low:
+        return "Low";
+    case ThreadPriority::Normal:
+        return "Normal";
+    case ThreadPriority::High:
+        return "High";
+    }
+    dbg() << "to_string(ThreadPriority): Invalid priority: " << (u32)priority;
+    ASSERT_NOT_REACHED();
+    return nullptr;
+}
