@@ -120,7 +120,7 @@ kernel.map: kernel
 	@echo "MKMAP $@"; sh mkmap.sh
 
 $(KERNEL): $(OBJS)
-	@echo "LD $@"; $(LD) $(LDFLAGS) -o $@ $(OBJS)
+	@echo "LD $@"; $(LD) $(LDFLAGS) -o $@ $(OBJS) -lgcc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
