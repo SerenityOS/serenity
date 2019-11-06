@@ -22,9 +22,9 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 
 ## Screenshot
 
-![Screenshot as of 9145a72](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-9145a72.png)
+![Screenshot as of 1133aca](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-1133aca.png)
 
-## Current features
+## Current features (all under development)
 
 * Pre-emptive multitasking
 * Multithreading
@@ -43,6 +43,9 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * Low-level utility library (LibCore)
 * Mid-level 2D graphics library (LibDraw)
 * High-level GUI library (LibGUI)
+* HTML/CSS engine
+* Web browser
+* C++ IDE
 * Emojis (UTF-8)
 * HTTP downloads
 * SoundBlaster 16 driver
