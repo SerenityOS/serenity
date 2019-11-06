@@ -1514,12 +1514,9 @@ int Process::sys$usleep(useconds_t usec)
 {
     if (!usec)
         return 0;
-
     u64 wakeup_time = current->sleep(usec / 1000);
-    if (wakeup_time > g_uptime) {
-        u32 ticks_left_until_original_wakeup_time = wakeup_time - g_uptime;
-        return ticks_left_until_original_wakeup_time / TICKS_PER_SECOND;
-    }
+    if (wakeup_time > g_uptime)
+        return -EINTR;
     return 0;
 }
 
