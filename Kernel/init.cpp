@@ -66,7 +66,7 @@ VFS* vfs;
     auto dev_random = make<RandomDevice>();
     auto dev_ptmx = make<PTYMultiplexer>();
 
-    bool textmode = !KParams::the().get("text_debug").is_null();
+    bool text_debug = KParams::the().has("text_debug");
 
     auto root = KParams::the().get("root");
     if (root.is_empty()) {
@@ -163,7 +163,7 @@ VFS* vfs;
     // SystemServer will start WindowServer, which will be doing graphics.
     // From this point on we don't want to touch the VGA text terminal or
     // accept keyboard input.
-    if (textmode) {
+    if (text_debug) {
         tty0->set_graphical(false);
         auto* shell_process = Process::create_user_process("/bin/Shell", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
         if (error != 0) {
@@ -236,7 +236,7 @@ extern "C" [[noreturn]] void init()
     // must come after kmalloc_init because we use AK_MAKE_ETERNAL in KParams
     new KParams(String(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline)));
 
-    bool textmode = !KParams::the().get("text_debug").is_null();
+    bool text_debug = KParams::the().has("text_debug");
 
     vfs = new VFS;
     dev_debuglog = new DebugLogDevice;
@@ -285,7 +285,7 @@ extern "C" [[noreturn]] void init()
             id.device_id);
     });
 
-    if (textmode) {
+    if (text_debug) {
         dbgprintf("Text mode enabled\n");
     } else {
         if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
