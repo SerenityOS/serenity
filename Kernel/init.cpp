@@ -231,7 +231,6 @@ extern "C" [[noreturn]] void init()
 
     kmalloc_init();
     slab_alloc_init();
-    init_ksyms();
 
     // must come after kmalloc_init because we use AK_MAKE_ETERNAL in KParams
     new KParams(String(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline)));
