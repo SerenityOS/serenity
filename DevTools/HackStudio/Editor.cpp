@@ -121,7 +121,7 @@ void Editor::show_documentation_tooltip_if_available(const String& hovered_token
 
     auto html_text = man_document.render_to_html();
 
-    auto html_document = parse_html(html_text);
+    auto html_document = parse_html_document(html_text);
     if (!html_document) {
         dbg() << "failed to parse HTML";
         return;
