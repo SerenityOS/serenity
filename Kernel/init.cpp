@@ -303,12 +303,6 @@ extern "C" [[noreturn]] void init()
     auto e1000 = E1000NetworkAdapter::autodetect();
     auto rtl8139 = RTL8139NetworkAdapter::autodetect();
 
-    NonnullRefPtr<ProcFS> new_procfs = ProcFS::create();
-    new_procfs->initialize();
-
-    auto devptsfs = DevPtsFS::create();
-    devptsfs->initialize();
-
     Process::initialize();
     Thread::initialize();
     Process::create_kernel_process("init_stage2", init_stage2);
