@@ -89,7 +89,6 @@ VFS_OBJS = \
     FileSystem/Ext2FileSystem.o \
     FileSystem/VirtualFileSystem.o \
     FileSystem/FileDescription.o \
-    FileSystem/SyntheticFileSystem.o \
     Devices/SB16.o
 
 AK_OBJS = \
