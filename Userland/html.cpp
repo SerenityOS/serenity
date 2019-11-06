@@ -34,7 +34,7 @@ int main(int argc, char** argv)
     }
 
     String html = String::copy(f->read_all());
-    auto document = parse_html(html);
+    auto document = parse_html_document(html);
 
     auto window = GWindow::construct();
     auto widget = HtmlView::construct();
