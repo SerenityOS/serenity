@@ -1,109 +1,104 @@
 include ../Makefile.common
 
-KERNEL_OBJS = \
-       init.o \
-       Heap/kmalloc.o \
-       Heap/SlabAllocator.o \
-       StdLib.o \
-       Lock.o \
-       Arch/i386/CPU.o \
-       Process.o \
-       SharedBuffer.o \
-       Thread.o \
-       Arch/i386/PIT.o \
-       Devices/KeyboardDevice.o \
-       CMOS.o \
-       Arch/i386/APIC.o \
-       Arch/i386/PIC.o \
-       Syscall.o \
-       Devices/PATAChannel.o \
-       Devices/PATADiskDevice.o \
-       Devices/FloppyDiskDevice.o \
-       VM/MemoryManager.o \
-       VM/Region.o \
-       VM/VMObject.o \
-       VM/AnonymousVMObject.o \
-       VM/InodeVMObject.o \
-       VM/PageDirectory.o \
-       VM/PhysicalPage.o \
-       VM/PhysicalRegion.o \
-       VM/RangeAllocator.o \
-       Console.o \
-       IRQHandler.o \
-       kprintf.o \
-       RTC.o \
-       TTY/TTY.o \
-       TTY/PTYMultiplexer.o \
-       TTY/MasterPTY.o \
-       TTY/SlavePTY.o \
-       TTY/VirtualConsole.o \
-       FileSystem/FIFO.o \
-       Scheduler.o \
-       DoubleBuffer.o \
-       KBufferBuilder.o \
-       KSyms.o \
-       KParams.o \
-       FileSystem/SharedMemory.o \
-       FileSystem/DevPtsFS.o \
-       Devices/BXVGADevice.o \
-       Devices/MBVGADevice.o \
-       PCI.o \
-       Devices/PS2MouseDevice.o \
-       Devices/SerialDevice.o \
-       Net/Socket.o \
-       Net/LocalSocket.o \
-       Net/IPv4Socket.o \
-       Net/TCPSocket.o \
-       Net/UDPSocket.o \
-       Net/NetworkAdapter.o \
-       Net/E1000NetworkAdapter.o \
-       Net/RTL8139NetworkAdapter.o \
-       Net/LoopbackAdapter.o \
-       Net/Routing.o \
-       Net/NetworkTask.o \
-       ProcessTracer.o \
-       Devices/PCSpeaker.o \
-       FileSystem/InodeFile.o \
-       FileSystem/Custody.o \
-       FileSystem/File.o
-
-VFS_OBJS = \
-    FileSystem/ProcFS.o \
-    FileSystem/TmpFS.o \
-    FileSystem/Inode.o \
-    Devices/DiskDevice.o \
-    Devices/Device.o \
-    Devices/CharacterDevice.o \
+CXX_OBJS = \
+    ../AK/FileSystemPath.o \
+    ../AK/JsonParser.o \
+    ../AK/JsonValue.o \
+    ../AK/LogStream.o \
+    ../AK/String.o \
+    ../AK/StringBuilder.o \
+    ../AK/StringImpl.o \
+    ../AK/StringView.o \
+    ../Libraries/LibELF/ELFImage.o \
+    ../Libraries/LibELF/ELFLoader.o \
+    Arch/i386/APIC.o \
+    Arch/i386/CPU.o \
+    Arch/i386/PIC.o \
+    Arch/i386/PIT.o \
+    CMOS.o \
+    Console.o \
+    Devices/BXVGADevice.o \
     Devices/BlockDevice.o \
-    Devices/NullDevice.o \
-    Devices/FullDevice.o \
-    Devices/ZeroDevice.o \
-    Devices/RandomDevice.o \
+    Devices/CharacterDevice.o \
     Devices/DebugLogDevice.o \
+    Devices/Device.o \
+    Devices/DiskDevice.o \
     Devices/DiskPartition.o \
-    Devices/MBRPartitionTable.o \
+    Devices/FloppyDiskDevice.o \
+    Devices/FullDevice.o \
     Devices/GPTPartitionTable.o \
-    FileSystem/InodeWatcher.o \
-    FileSystem/FileSystem.o \
+    Devices/KeyboardDevice.o \
+    Devices/MBRPartitionTable.o \
+    Devices/MBVGADevice.o \
+    Devices/NullDevice.o \
+    Devices/PATAChannel.o \
+    Devices/PATADiskDevice.o \
+    Devices/PCSpeaker.o \
+    Devices/PS2MouseDevice.o \
+    Devices/RandomDevice.o \
+    Devices/SB16.o \
+    Devices/SerialDevice.o \
+    Devices/ZeroDevice.o \
+    DoubleBuffer.o \
+    FileSystem/Custody.o \
+    FileSystem/DevPtsFS.o \
     FileSystem/DiskBackedFileSystem.o \
     FileSystem/Ext2FileSystem.o \
-    FileSystem/VirtualFileSystem.o \
+    FileSystem/FIFO.o \
+    FileSystem/File.o \
     FileSystem/FileDescription.o \
-    Devices/SB16.o
+    FileSystem/FileSystem.o \
+    FileSystem/Inode.o \
+    FileSystem/InodeFile.o \
+    FileSystem/InodeWatcher.o \
+    FileSystem/ProcFS.o \
+    FileSystem/SharedMemory.o \
+    FileSystem/TmpFS.o \
+    FileSystem/VirtualFileSystem.o \
+    Heap/SlabAllocator.o \
+    Heap/kmalloc.o \
+    IRQHandler.o \
+    KBufferBuilder.o \
+    KParams.o \
+    KSyms.o \
+    Lock.o \
+    Net/E1000NetworkAdapter.o \
+    Net/IPv4Socket.o \
+    Net/LocalSocket.o \
+    Net/LoopbackAdapter.o \
+    Net/NetworkAdapter.o \
+    Net/NetworkTask.o \
+    Net/RTL8139NetworkAdapter.o \
+    Net/Routing.o \
+    Net/Socket.o \
+    Net/TCPSocket.o \
+    Net/UDPSocket.o \
+    PCI.o \
+    Process.o \
+    ProcessTracer.o \
+    RTC.o \
+    Scheduler.o \
+    SharedBuffer.o \
+    StdLib.o \
+    Syscall.o \
+    TTY/MasterPTY.o \
+    TTY/PTYMultiplexer.o \
+    TTY/SlavePTY.o \
+    TTY/TTY.o \
+    TTY/VirtualConsole.o \
+    Thread.o \
+    VM/AnonymousVMObject.o \
+    VM/InodeVMObject.o \
+    VM/MemoryManager.o \
+    VM/PageDirectory.o \
+    VM/PhysicalPage.o \
+    VM/PhysicalRegion.o \
+    VM/RangeAllocator.o \
+    VM/Region.o \
+    VM/VMObject.o \
+    init.o \
+    kprintf.o
 
-AK_OBJS = \
-    ../AK/String.o \
-    ../AK/StringImpl.o \
-    ../AK/StringBuilder.o \
-    ../AK/StringView.o \
-    ../AK/FileSystemPath.o \
-    ../AK/JsonValue.o \
-    ../AK/JsonParser.o \
-    ../AK/LogStream.o \
-    ../Libraries/LibELF/ELFImage.o \
-    ../Libraries/LibELF/ELFLoader.o
-
-CXX_OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
 OBJS = $(CXX_OBJS) Arch/i386/Boot/boot.ao
 
 KERNEL = kernel
