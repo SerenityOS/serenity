@@ -1,6 +1,4 @@
 #include "IRCLogBuffer.h"
-#include <AK/StringBuilder.h>
-#include <LibHTML/DOM/DocumentFragment.h>
 #include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/ElementFactory.h>
 #include <LibHTML/DOM/HTMLBodyElement.h>
@@ -35,43 +33,42 @@ IRCLogBuffer::~IRCLogBuffer()
 {
 }
 
-static String timestamp_string()
-{
-    auto now = time(nullptr);
-    auto* tm = localtime(&now);
-    return String::format("%02u:%02u:%02u ", tm->tm_hour, tm->tm_min, tm->tm_sec);
-}
-
 void IRCLogBuffer::add_message(char prefix, const String& name, const String& text, Color color)
 {
-    auto nick_string = String::format("&lt;%c%s&gt; ", prefix ? prefix : ' ', name.characters());
-    auto html = String::format(
-        "<div style=\"color: %s\">"
-        "<span>%s</span>"
-        "<b>%s</b>"
-        "<span>%s</span>"
-        "</div>",
-        color.to_string().characters(),
-        timestamp_string().characters(),
-        nick_string.characters(),
-        text.characters());
-    auto fragment = parse_html_fragment(*m_document, html);
-    m_container_element->append_child(fragment->remove_child(*fragment->first_child()));
+    auto message_element = create_element(document(), "div");
+    message_element->set_attribute("style", String::format("color: %s;", color.to_string().characters()));
+    auto timestamp_element = create_element(document(), "span");
+    auto now = time(nullptr);
+    auto* tm = localtime(&now);
+    auto timestamp_string = String::format("%02u:%02u:%02u ", tm->tm_hour, tm->tm_min, tm->tm_sec);
+    timestamp_element->append_child(adopt(*new Text(document(), timestamp_string)));
+    auto nick_element = create_element(document(), "b");
+    nick_element->append_child(*new Text(document(), String::format("<%c%s> ", prefix ? prefix : ' ', name.characters())));
+    auto text_element = create_element(document(), "span");
+    text_element->append_child(*new Text(document(), text));
+    message_element->append_child(timestamp_element);
+    message_element->append_child(nick_element);
+    message_element->append_child(text_element);
+    m_container_element->append_child(message_element);
+
     m_document->force_layout();
 }
 
 void IRCLogBuffer::add_message(const String& text, Color color)
 {
-    auto html = String::format(
-        "<div style=\"color: %s\">"
-        "<span>%s</span>"
-        "<span>%s</span>"
-        "</div>",
-        color.to_string().characters(),
-        timestamp_string().characters(),
-        text.characters());
-    auto fragment = parse_html_fragment(*m_document, html);
-    m_container_element->append_child(fragment->remove_child(*fragment->first_child()));
+    auto message_element = create_element(document(), "div");
+    message_element->set_attribute("style", String::format("color: %s;", color.to_string().characters()));
+    auto timestamp_element = create_element(document(), "span");
+    auto now = time(nullptr);
+    auto* tm = localtime(&now);
+    auto timestamp_string = String::format("%02u:%02u:%02u ", tm->tm_hour, tm->tm_min, tm->tm_sec);
+    timestamp_element->append_child(adopt(*new Text(document(), timestamp_string)));
+    auto text_element = create_element(document(), "span");
+    text_element->append_child(*new Text(document(), text));
+    message_element->append_child(timestamp_element);
+    message_element->append_child(text_element);
+    m_container_element->append_child(message_element);
+
     m_document->force_layout();
 }
 

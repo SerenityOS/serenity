@@ -34,7 +34,7 @@ static bool is_self_closing_tag(const StringView& tag_name)
         || tag_name == "wbr";
 }
 
-static bool parse_html_document(const StringView& html, Document& document, ParentNode& root)
+static bool parse_html(const StringView& html, Document& document, ParentNode& root)
 {
     NonnullRefPtrVector<ParentNode> node_stack;
     node_stack.append(root);
@@ -313,17 +313,17 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
 RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringView& html)
 {
     auto fragment = adopt(*new DocumentFragment(document));
-    if (!parse_html_document(html, document, *fragment))
+    if (!parse_html(html, document, *fragment))
         return nullptr;
     return fragment;
 }
 
-NonnullRefPtr<Document> parse_html_document(const StringView& html, const URL& url)
+NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
 {
     auto document = adopt(*new Document);
     document->set_url(url);
 
-    bool success = parse_html_document(html, *document, *document);
+    bool success = parse_html(html, *document, *document);
     ASSERT(success);
 
     document->fixup();

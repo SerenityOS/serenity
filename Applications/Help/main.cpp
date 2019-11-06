@@ -80,7 +80,7 @@ int main(int argc, char* argv[])
         ASSERT(success);
 
         String html = md_document.render_to_html();
-        auto html_document = parse_html_document(html);
+        auto html_document = parse_html(html);
         html_view->set_document(html_document);
 
         String page_and_section = model->page_and_section(tree_view->selection().first());
