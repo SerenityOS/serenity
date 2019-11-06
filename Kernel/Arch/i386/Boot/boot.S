@@ -54,8 +54,9 @@ start:
 
     call init
 
-    mov $exit_message, %eax
+    pushl $exit_message
     call kprintf
+    add $4, %esp
 
     cli
 
