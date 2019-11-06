@@ -15,10 +15,3 @@
 
 #endif
 
-namespace AK {
-
-inline void not_implemented() { ASSERT(false); }
-
-}
-
-using AK::not_implemented;

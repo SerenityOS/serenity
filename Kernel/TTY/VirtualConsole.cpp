@@ -310,11 +310,11 @@ void VirtualConsole::escape$J(const Vector<unsigned>& params)
     switch (mode) {
     case 0:
         // FIXME: Clear from cursor to end of screen.
-        not_implemented();
+        ASSERT_NOT_REACHED();
         break;
     case 1:
         // FIXME: Clear from cursor to beginning of screen.
-        not_implemented();
+        ASSERT_NOT_REACHED();
         break;
     case 2:
         clear();
