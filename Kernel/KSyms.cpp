@@ -1,9 +1,9 @@
-#include "KSyms.h"
-#include "Process.h"
-#include "Scheduler.h"
-#include <AK/ELF/ELFLoader.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/KSyms.h>
+#include <Kernel/Process.h>
+#include <Kernel/Scheduler.h>
+#include <LibELF/ELFLoader.h>
 
 static KSym* s_ksyms;
 u32 ksym_lowest_address = 0xffffffff;

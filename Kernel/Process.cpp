@@ -1,5 +1,3 @@
-#include <AK/ELF/ELFLoader.h>
-#include <AK/ELF/exec_elf.h>
 #include <AK/FileSystemPath.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
@@ -37,6 +35,8 @@
 #include <Kernel/VM/InodeVMObject.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
+#include <LibELF/ELFLoader.h>
+#include <LibELF/exec_elf.h>
 
 //#define DEBUG_POLL_SELECT
 //#define DEBUG_IO

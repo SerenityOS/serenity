@@ -1,10 +1,10 @@
 #pragma once
 
 #include <AK/String.h>
-#include <AK/ELF/exec_elf.h>
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <Kernel/VM/VirtualAddress.h>
+#include <LibELF/exec_elf.h>
 
 class ELFImage {
 public:
