@@ -49,6 +49,7 @@ public:
 
     void prepend_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
     void append_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
+    NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node, bool call_removed_from = true);
     void donate_all_children_to(T& node);
 
     bool is_child_allowed(const T&) const { return true; }
@@ -108,6 +109,29 @@ private:
     T* m_next_sibling { nullptr };
     T* m_previous_sibling { nullptr };
 };
+
+template<typename T>
+inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node, bool call_removed_from)
+{
+    ASSERT(node->m_parent == this);
+
+    if (m_first_child == node)
+        m_first_child = node->m_next_sibling;
+
+    if (m_last_child == node)
+        m_last_child = node->m_previous_sibling;
+
+    node->m_next_sibling = nullptr;
+    node->m_previous_sibling = nullptr;
+    node->m_parent = nullptr;
+
+    if (call_removed_from)
+        node->removed_from(static_cast<T&>(*this));
+
+    node->deref();
+
+    return node;
+}
 
 template<typename T>
 inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool call_inserted_into)
