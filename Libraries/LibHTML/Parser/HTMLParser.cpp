@@ -2,6 +2,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Comment.h>
+#include <LibHTML/DOM/DocumentFragment.h>
 #include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/ElementFactory.h>
@@ -33,13 +34,10 @@ static bool is_self_closing_tag(const StringView& tag_name)
         || tag_name == "wbr";
 }
 
-NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
+static bool parse_html(const StringView& html, Document& document, ParentNode& root)
 {
     NonnullRefPtrVector<ParentNode> node_stack;
-
-    auto document = adopt(*new Document);
-    document->set_url(url);
-    node_stack.append(document);
+    node_stack.append(root);
 
     enum class State {
         Free = 0,
@@ -309,6 +307,27 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
         }
     }
 
+    return true;
+}
+
+RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringView& html)
+{
+    auto fragment = adopt(*new DocumentFragment(document));
+    if (!parse_html(html, document, *fragment))
+        return nullptr;
+    return fragment;
+}
+
+NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
+{
+    auto document = adopt(*new Document);
+    document->set_url(url);
+
+    bool success = parse_html(html, *document, *document);
+    ASSERT(success);
+
+    document->fixup();
+
     Function<void(Node&)> fire_insertion_callbacks = [&](Node& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             fire_insertion_callbacks(*child);
@@ -316,8 +335,7 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
         if (node.parent())
             node.inserted_into(*node.parent());
     };
+    fire_insertion_callbacks(document);
 
-    document->fixup();
-    fire_insertion_callbacks(*document);
     return document;
 }
