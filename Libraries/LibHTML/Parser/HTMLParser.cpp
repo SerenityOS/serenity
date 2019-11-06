@@ -339,3 +339,19 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
 
     return document;
 }
+
+String escape_html_entities(const StringView& html)
+{
+    StringBuilder builder;
+    for (int i = 0; i < html.length(); ++i) {
+        if (html[i] == '<')
+            builder.append("&lt;");
+        else if (html[i] == '>')
+            builder.append("&gt;");
+        else if (html[i] == '&')
+            builder.append("&amp;");
+        else
+            builder.append(html[i]);
+    }
+    return builder.to_string();
+}
