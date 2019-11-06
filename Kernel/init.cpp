@@ -46,8 +46,6 @@
 
 VirtualConsole* tty0;
 VirtualConsole* tty1;
-VirtualConsole* tty2;
-VirtualConsole* tty3;
 KeyboardDevice* keyboard;
 PS2MouseDevice* ps2mouse;
 SB16* sb16;
@@ -267,8 +265,6 @@ extern "C" [[noreturn]] void init()
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
     tty1 = new VirtualConsole(1);
-    tty2 = new VirtualConsole(2);
-    tty3 = new VirtualConsole(3);
     VirtualConsole::switch_to(0);
 
     kprintf("Starting Serenity Operating System...\n");
