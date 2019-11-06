@@ -252,7 +252,7 @@ using AK::TestSuite;
         auto ___aev1 = one;                                                                                                                                                \
         auto ___aev2 = two;                                                                                                                                                \
         if (___aev1 != ___aev2) {                                                                                                                                          \
-            dbg() << TStyle(TStyle::Red, TStyle::Bold) << "FAIL" << TStyle() << ": " __FILE__ ":" << __LINE__ << ": assertEqual(" ___str(one) ", " ___str(two) ") failed"; \
+            dbg() << "\033[31;1mFAIL\033[0m: " __FILE__ ":" << __LINE__ << ": assertEqual(" ___str(one) ", " ___str(two) ") failed"; \
         }                                                                                                                                                                  \
     } while (0)
 
