@@ -5,5 +5,5 @@
 
 class DocumentFragment;
 
-NonnullRefPtr<Document> parse_html(const StringView&, const URL& = URL());
+NonnullRefPtr<Document> parse_html_document(const StringView&, const URL& = URL());
 RefPtr<DocumentFragment> parse_html_fragment(Document&, const StringView&);

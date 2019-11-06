@@ -314,7 +314,7 @@ void HtmlView::load(const URL& url)
         if (url.path().ends_with(".png")) {
             document = create_image_document(data, url);
         } else {
-            document = parse_html(data, url);
+            document = parse_html_document(data, url);
         }
         ASSERT(document);
         set_document(document);
