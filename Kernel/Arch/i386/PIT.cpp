@@ -7,7 +7,7 @@
 #define IRQ_TIMER 0
 
 extern "C" void timer_interrupt_entry();
-extern "C" void timer_interrupt_handler(RegisterDump&);
+extern "C" void timer_interrupt_handler(RegisterDump);
 
 asm(
     ".globl timer_interrupt_entry \n"
@@ -27,9 +27,7 @@ asm(
     "    popw %es\n"
     "    popw %fs\n"
     "    popw %gs\n"
-    "    pushl %esp\n"
     "    call timer_interrupt_handler\n"
-    "    add $4, %esp\n"
     "    popw %gs\n"
     "    popw %gs\n"
     "    popw %fs\n"
@@ -42,7 +40,7 @@ asm(
 static u32 s_ticks_this_second;
 static u32 s_seconds_since_boot;
 
-void timer_interrupt_handler(RegisterDump& regs)
+void timer_interrupt_handler(RegisterDump regs)
 {
     IRQHandlerScope scope(IRQ_TIMER);
     if (++s_ticks_this_second >= TICKS_PER_SECOND) {
