@@ -34,6 +34,15 @@ struct ThreadSpecificData {
     ThreadSpecificData* self;
 };
 
+enum class ThreadPriority : u8 {
+    Idle,
+    Low,
+    Normal,
+    High,
+    First = Idle,
+    Last = High,
+};
+
 class Thread {
     friend class Process;
     friend class Scheduler;
@@ -50,6 +59,9 @@ public:
 
     int tid() const { return m_tid; }
     int pid() const;
+
+    void set_priority(ThreadPriority p) { m_priority = p; }
+    ThreadPriority priority() const { return m_priority; }
 
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
@@ -341,6 +353,7 @@ private:
     Blocker* m_blocker { nullptr };
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };
+    ThreadPriority m_priority { ThreadPriority::Normal };
     bool m_has_used_fpu { false };
     bool m_dump_backtrace_on_finalization { false };
 

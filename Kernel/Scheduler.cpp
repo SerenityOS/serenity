@@ -27,17 +27,17 @@ void Scheduler::update_state_for_thread(Thread& thread)
 //#define SCHEDULER_DEBUG
 //#define SCHEDULER_RUNNABLE_DEBUG
 
-static u32 time_slice_for(Process::Priority priority)
+static u32 time_slice_for(ThreadPriority priority)
 {
     // One time slice unit == 1ms
     switch (priority) {
-    case Process::HighPriority:
+    case ThreadPriority::High:
         return 50;
-    case Process::NormalPriority:
+    case ThreadPriority::Normal:
         return 15;
-    case Process::LowPriority:
+    case ThreadPriority::Low:
         return 5;
-    case Process::IdlePriority:
+    case ThreadPriority::Idle:
         return 1;
     }
     ASSERT_NOT_REACHED();
@@ -387,7 +387,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
         return yield();
 
-    unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(beneficiary->process().priority()));
+    unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(beneficiary->priority()));
 #ifdef SCHEDULER_DEBUG
     dbgprintf("%s(%u:%u) donating %u ticks to %s(%u:%u), reason=%s\n", current->process().name().characters(), current->pid(), current->tid(), ticks_to_donate, beneficiary->process().name().characters(), beneficiary->pid(), beneficiary->tid(), reason);
 #endif
@@ -429,7 +429,7 @@ void Scheduler::switch_now()
 
 bool Scheduler::context_switch(Thread& thread)
 {
-    thread.set_ticks_left(time_slice_for(thread.process().priority()));
+    thread.set_ticks_left(time_slice_for(thread.priority()));
     thread.did_schedule();
 
     if (current == &thread)
@@ -521,7 +521,7 @@ void Scheduler::initialize()
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);
     // Make sure the colonel uses a smallish time slice.
-    s_colonel_process->set_priority(Process::IdlePriority);
+    s_colonel_process->main_thread().set_priority(ThreadPriority::Idle);
     load_task_register(s_redirection.selector);
 }
 
