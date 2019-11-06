@@ -318,13 +318,13 @@ RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringVie
     return fragment;
 }
 
-NonnullRefPtr<Document> parse_html_document(const StringView& html, const URL& url)
+RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
 {
     auto document = adopt(*new Document);
     document->set_url(url);
 
-    bool success = parse_html_document(html, *document, *document);
-    ASSERT(success);
+    if (!parse_html_document(html, *document, *document))
+        return nullptr;
 
     document->fixup();
 
