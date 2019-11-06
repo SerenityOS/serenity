@@ -251,16 +251,15 @@ inline u32 read_fs_u32(u32 offset)
     u32 val;
     asm volatile(
         "movl %%fs:%a[off], %k[val]"
-        : [val] "=r" (val)
-        : [off] "ir" (offset));
+        : [ val ] "=r"(val)
+        : [ off ] "ir"(offset));
     return val;
 }
 
 inline void write_fs_u32(u32 offset, u32 val)
 {
     asm volatile(
-        "movl %k[val], %%fs:%a[off]"
-        :: [off] "ir" (offset), [val] "ir" (val)
+        "movl %k[val], %%fs:%a[off]" ::[off] "ir"(offset), [ val ] "ir"(val)
         : "memory");
 }
 
@@ -383,7 +382,6 @@ struct [[gnu::packed]] RegisterDump
     u16 ss_if_crossRing;
 };
 
-
 struct [[gnu::aligned(16)]] FPUState
 {
     u8 buffer[512];
@@ -397,8 +395,8 @@ inline constexpr u32 page_base_of(u32 address)
 class CPUID {
 public:
     CPUID(u32 function) { asm volatile("cpuid"
-                                         : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx)
-                                         : "a"(function), "c"(0)); }
+                                       : "=a"(m_eax), "=b"(m_ebx), "=c"(m_ecx), "=d"(m_edx)
+                                       : "a"(function), "c"(0)); }
     u32 eax() const { return m_eax; }
     u32 ebx() const { return m_ebx; }
     u32 ecx() const { return m_ecx; }
@@ -459,21 +457,20 @@ public:
     MSR(const MSR&) = delete;
     MSR& operator=(const MSR&) = delete;
 
-    MSR(uint32_t msr):
-        m_msr(msr)
+    MSR(uint32_t msr)
+        : m_msr(msr)
     {
     }
 
     void get(u32& low, u32& high)
     {
         asm volatile("rdmsr"
-            : "=a"(low), "=d"(high)
-            : "c"(m_msr));
+                     : "=a"(low), "=d"(high)
+                     : "c"(m_msr));
     }
 
     void set(u32 low, u32 high)
     {
-        asm volatile("wrmsr"
-            :: "a"(low), "d"(high), "c"(m_msr));
+        asm volatile("wrmsr" ::"a"(low), "d"(high), "c"(m_msr));
     }
 };

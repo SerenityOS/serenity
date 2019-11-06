@@ -1,7 +1,7 @@
+#include "APIC.h"
 #include "Assertions.h"
 #include "IRQHandler.h"
 #include "PIC.h"
-#include "APIC.h"
 #include "Process.h"
 #include "Scheduler.h"
 #include <AK/Types.h>
@@ -62,35 +62,36 @@ asm(
     "    add $0x4, %esp\n"
     "    iret\n");
 
-#define EH_ENTRY(ec)                                                          \
+#define EH_ENTRY(ec)                                         \
     extern "C" void exception_##ec##_handler(RegisterDump&); \
-    extern "C" void exception_##ec##_entry();                                 \
-    asm(                                                                      \
-        ".globl exception_" #ec "_entry\n"                                    \
-        "exception_" #ec "_entry: \n"                                         \
-        "    pusha\n"                                                         \
-        "    pushw %ds\n"                                                     \
-        "    pushw %es\n"                                                     \
-        "    pushw %fs\n"                                                     \
-        "    pushw %gs\n"                                                     \
-        "    pushw %ss\n"                                                     \
-        "    pushw %ss\n"                                                     \
-        "    pushw %ss\n"                                                     \
-        "    pushw %ss\n"                                                     \
-        "    pushw %ss\n"                                                     \
-        "    popw %ds\n"                                                      \
-        "    popw %es\n"                                                      \
-        "    popw %fs\n"                                                      \
-        "    popw %gs\n"                                                      \
-        "    mov %esp, %eax\n"                                                \
-        "    call exception_" #ec "_handler\n"                                \
-        "    popw %gs\n"                                                      \
-        "    popw %gs\n"                                                      \
-        "    popw %fs\n"                                                      \
-        "    popw %es\n"                                                      \
-        "    popw %ds\n"                                                      \
-        "    popa\n"                                                          \
-        "    add $0x4, %esp\n"                                                \
+    extern "C" void exception_##ec##_entry();                \
+    asm(                                                     \
+        ".globl exception_" #ec "_entry\n"                   \
+        "exception_" #ec "_entry: \n"                        \
+        "    pusha\n"                                        \
+        "    pushw %ds\n"                                    \
+        "    pushw %es\n"                                    \
+        "    pushw %fs\n"                                    \
+        "    pushw %gs\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    pushw %ss\n"                                    \
+        "    popw %ds\n"                                     \
+        "    popw %es\n"                                     \
+        "    popw %fs\n"                                     \
+        "    popw %gs\n"                                     \
+        "    pushl %esp\n"                                   \
+        "    call exception_" #ec "_handler\n"               \
+        "    add $4, %esp\n"                                 \
+        "    popw %gs\n"                                     \
+        "    popw %gs\n"                                     \
+        "    popw %fs\n"                                     \
+        "    popw %es\n"                                     \
+        "    popw %ds\n"                                     \
+        "    popa\n"                                         \
+        "    add $0x4, %esp\n"                               \
         "    iret\n");
 
 #define EH_ENTRY_NO_CODE(ec)                                 \
@@ -114,8 +115,9 @@ asm(
         "    popw %es\n"                                     \
         "    popw %fs\n"                                     \
         "    popw %gs\n"                                     \
-        "    mov %esp, %eax\n"                               \
+        "    pushl %esp\n"                                   \
         "    call exception_" #ec "_handler\n"               \
+        "    add $4, %esp\n"                                 \
         "    popw %gs\n"                                     \
         "    popw %gs\n"                                     \
         "    popw %fs\n"                                     \
@@ -265,10 +267,10 @@ void exception_14_handler(RegisterDump& regs)
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
 
     if (response == PageFaultResponse::ShouldCrash) {
-	    if(current->has_signal_handler(SIGSEGV)){
-	        current->send_urgent_signal_to_self(SIGSEGV);
-	       	return;
-	    }
+        if (current->has_signal_handler(SIGSEGV)) {
+            current->send_urgent_signal_to_self(SIGSEGV);
+            return;
+        }
 
         kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s address %p\033[0m\n",
             current->process().name().characters(),
@@ -301,7 +303,7 @@ void exception_14_handler(RegisterDump& regs)
     static void _exception##i()                                       \
     {                                                                 \
         kprintf(msg "\n");                                            \
-        u32 cr0, cr2, cr3, cr4;                                     \
+        u32 cr0, cr2, cr3, cr4;                                       \
         asm("movl %%cr0, %%eax"                                       \
             : "=a"(cr0));                                             \
         asm("movl %%cr2, %%eax"                                       \
