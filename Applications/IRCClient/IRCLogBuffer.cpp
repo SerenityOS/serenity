@@ -54,7 +54,7 @@ void IRCLogBuffer::add_message(char prefix, const String& name, const String& te
         color.to_string().characters(),
         timestamp_string().characters(),
         nick_string.characters(),
-        text.characters());
+        escape_html_entities(text).characters());
     auto fragment = parse_html_fragment(*m_document, html);
     m_container_element->append_child(fragment->remove_child(*fragment->first_child()));
     m_document->force_layout();
@@ -69,7 +69,7 @@ void IRCLogBuffer::add_message(const String& text, Color color)
         "</div>",
         color.to_string().characters(),
         timestamp_string().characters(),
-        text.characters());
+        escape_html_entities(text).characters());
     auto fragment = parse_html_fragment(*m_document, html);
     m_container_element->append_child(fragment->remove_child(*fragment->first_child()));
     m_document->force_layout();
