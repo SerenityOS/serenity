@@ -100,8 +100,8 @@ AK_OBJS = \
     ../AK/JsonValue.o \
     ../AK/JsonParser.o \
     ../AK/LogStream.o \
-    ../AK/ELF/ELFImage.o \
-    ../AK/ELF/ELFLoader.o
+    ../Libraries/LibELF/ELFImage.o \
+    ../Libraries/LibELF/ELFLoader.o
 
 CXX_OBJS = $(KERNEL_OBJS) $(VFS_OBJS) $(AK_OBJS)
 OBJS = $(CXX_OBJS) Arch/i386/Boot/boot.ao

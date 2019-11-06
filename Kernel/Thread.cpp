@@ -1,4 +1,3 @@
-#include <AK/ELF/ELFLoader.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
@@ -6,6 +5,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
+#include <LibELF/ELFLoader.h>
 
 //#define SIGNAL_DEBUG
 
