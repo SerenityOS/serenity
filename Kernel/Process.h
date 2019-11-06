@@ -348,7 +348,7 @@ private:
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
 
-    TTY* m_tty { nullptr };
+    RefPtr<TTY> m_tty;
 
     Region* region_from_range(const Range&);
     Region* region_containing(const Range&);
