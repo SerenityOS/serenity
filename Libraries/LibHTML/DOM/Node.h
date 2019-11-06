@@ -13,6 +13,7 @@ enum class NodeType : unsigned {
     COMMENT_NODE = 8,
     DOCUMENT_NODE = 9,
     DOCUMENT_TYPE_NODE = 10,
+    DOCUMENT_FRAGMENT_NODE = 11,
 };
 
 class Document;
@@ -35,6 +36,7 @@ public:
     bool is_document_type() const { return type() == NodeType::DOCUMENT_TYPE_NODE; }
     bool is_comment() const { return type() == NodeType::COMMENT_NODE; }
     bool is_character_data() const { return type() == NodeType::TEXT_NODE || type() == NodeType::COMMENT_NODE; }
+    bool is_document_fragment() const { return type() == NodeType::DOCUMENT_FRAGMENT_NODE; }
     bool is_parent_node() const { return is_element() || is_document(); }
 
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const;
