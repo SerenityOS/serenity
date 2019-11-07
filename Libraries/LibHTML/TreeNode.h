@@ -121,6 +121,12 @@ inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node, bool ca
     if (m_last_child == node)
         m_last_child = node->m_previous_sibling;
 
+    if (node->m_next_sibling)
+        node->m_next_sibling->m_previous_sibling = node->m_previous_sibling;
+
+    if (node->m_previous_sibling)
+        node->m_previous_sibling->m_next_sibling = node->m_next_sibling;
+
     node->m_next_sibling = nullptr;
     node->m_previous_sibling = nullptr;
     node->m_parent = nullptr;
