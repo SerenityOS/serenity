@@ -44,7 +44,7 @@ static String timestamp_string()
 
 void IRCLogBuffer::add_message(char prefix, const String& name, const String& text, Color color)
 {
-    auto nick_string = String::format("&lt;%c%s&gt; ", prefix ? prefix : ' ', name.characters());
+    auto nick_string = String::format("<%c%s> ", prefix ? prefix : ' ', name.characters());
     auto html = String::format(
         "<div style=\"color: %s\">"
         "<span>%s</span>"
@@ -53,7 +53,7 @@ void IRCLogBuffer::add_message(char prefix, const String& name, const String& te
         "</div>",
         color.to_string().characters(),
         timestamp_string().characters(),
-        nick_string.characters(),
+        escape_html_entities(nick_string).characters(),
         escape_html_entities(text).characters());
     auto fragment = parse_html_fragment(*m_document, html);
     m_container_element->append_child(fragment->remove_child(*fragment->first_child()));
