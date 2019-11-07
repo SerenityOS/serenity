@@ -385,15 +385,14 @@ public:
         append(T(value));
     }
 
+    void prepend(T&& value)
+    {
+        insert(0, move(value));
+    }
+
     void prepend(const T& value)
     {
-        grow_capacity(size() + 1);
-        for (int i = size(); i > 0; --i) {
-            new (slot(i)) T(move(at(i - 1)));
-            at(i - 1).~T();
-        }
-        new (slot(0)) T(value);
-        ++m_size;
+        insert(0, value);
     }
 
     void prepend(Vector&& other)
