@@ -145,7 +145,8 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                 static Escape escapes[] = {
                     { "&lt;", "<" },
                     { "&gt;", ">" },
-                    { "&amp;", "&" }
+                    { "&amp;", "&" },
+                    { "&mdash;", "-" },
                 };
                 auto rest_of_html = html.substring_view(i, html.length() - i);
                 bool found = false;
