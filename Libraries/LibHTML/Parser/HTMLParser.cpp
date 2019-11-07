@@ -168,13 +168,13 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                 break;
             }
             if (ch == '!') {
-                if (peek(1) == 'D'
-                    && peek(2) == 'O'
-                    && peek(3) == 'C'
-                    && peek(4) == 'T'
-                    && peek(5) == 'Y'
-                    && peek(6) == 'P'
-                    && peek(7) == 'E') {
+                if (toupper(peek(1)) == 'D'
+                    && toupper(peek(2)) == 'O'
+                    && toupper(peek(3)) == 'C'
+                    && toupper(peek(4)) == 'T'
+                    && toupper(peek(5)) == 'Y'
+                    && toupper(peek(6)) == 'P'
+                    && toupper(peek(7)) == 'E') {
                     i += 7;
                     move_to_state(State::InDoctype);
                     break;
