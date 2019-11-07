@@ -376,7 +376,7 @@ public:
         consume_whitespace_or_comments();
     }
 
-    NonnullRefPtr<StyleSheet> parse_sheet()
+    RefPtr<StyleSheet> parse_sheet()
     {
         while (index < css.length()) {
             parse_rule();
@@ -385,7 +385,7 @@ public:
         return StyleSheet::create(move(rules));
     }
 
-    NonnullRefPtr<StyleDeclaration> parse_standalone_declaration()
+    RefPtr<StyleDeclaration> parse_standalone_declaration()
     {
         consume_whitespace_or_comments();
         for (;;) {
@@ -415,13 +415,13 @@ private:
     StringView css;
 };
 
-NonnullRefPtr<StyleSheet> parse_css(const StringView& css)
+RefPtr<StyleSheet> parse_css(const StringView& css)
 {
     CSSParser parser(css);
     return parser.parse_sheet();
 }
 
-NonnullRefPtr<StyleDeclaration> parse_css_declaration(const StringView& css)
+RefPtr<StyleDeclaration> parse_css_declaration(const StringView& css)
 {
     CSSParser parser(css);
     return parser.parse_standalone_declaration();

@@ -22,7 +22,7 @@ static StyleSheet& default_stylesheet()
     if (!sheet) {
         extern const char default_stylesheet_source[];
         String css = default_stylesheet_source;
-        sheet = &parse_css(css).leak_ref();
+        sheet = parse_css(css).leak_ref();
     }
     return *sheet;
 }
