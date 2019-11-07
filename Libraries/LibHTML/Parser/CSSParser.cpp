@@ -123,6 +123,9 @@ public:
 
     char consume_specific(char ch)
     {
+        if (peek() != ch) {
+            dbg() << "peek() != '" << ch << "'";
+        }
         PARSE_ASSERT(peek() == ch);
         PARSE_ASSERT(index < css.length());
         ++index;
@@ -282,7 +285,7 @@ public:
 
     bool is_valid_property_value_char(char ch) const
     {
-        return ch && ch != '!' && ch != ';';
+        return ch && ch != '!' && ch != ';' && ch != '}';
     }
 
     Optional<StyleProperty> parse_property()
