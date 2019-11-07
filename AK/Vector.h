@@ -263,6 +263,13 @@ public:
         return value;
     }
 
+    T take(int index)
+    {
+        T value = move(at(index));
+        remove(index);
+        return value;
+    }
+
     void remove(int index)
     {
         ASSERT(index < m_size);
