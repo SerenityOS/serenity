@@ -121,6 +121,9 @@ public:
     CALLABLE_WHEN(unconsumed)
     operator T*() { return m_ptr; }
 
+    operator bool() const = delete;
+    bool operator!() const = delete;
+
 private:
     void clear()
     {
