@@ -96,7 +96,7 @@ int main(int argc, char** argv)
     g_project_list_view = GListView::construct(outer_splitter);
     g_project_list_view->set_model(g_project->model());
     g_project_list_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    g_project_list_view->set_preferred_size(200, 0);
+    g_project_list_view->set_preferred_size(140, 0);
 
     auto inner_splitter = GSplitter::construct(Orientation::Vertical, outer_splitter);
     inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
