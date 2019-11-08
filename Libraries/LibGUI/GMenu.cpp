@@ -1,7 +1,7 @@
 #include <AK/HashMap.h>
 #include <LibGUI/GAction.h>
-#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GMenu.h>
+#include <LibGUI/GWindowServerConnection.h>
 
 //#define GMENU_DEBUG
 
@@ -113,7 +113,7 @@ int GMenu::realize_menu()
             request.menu.enabled = true;
             request.menu.checkable = false;
             request.menu.checked = false;
-            
+
             // no shortcut on submenu, make sure this is cleared out
             request.menu.shortcut_text_length = 0;
             strcpy(request.menu.shortcut_text, "\0");

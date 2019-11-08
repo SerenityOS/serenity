@@ -1,5 +1,5 @@
 #include "WindowList.h"
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GWindowServerConnection.h>
 #include <WindowServer/WSAPITypes.h>
 
 WindowList& WindowList::the()
