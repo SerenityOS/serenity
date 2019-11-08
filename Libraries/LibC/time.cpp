@@ -4,6 +4,7 @@
 #include <sys/time.h>
 #include <sys/times.h>
 #include <time.h>
+#include <string.h>
 
 extern "C" {
 
@@ -96,9 +97,11 @@ char* asctime(const struct tm*)
     ASSERT_NOT_REACHED();
 }
 
-size_t strftime(char*, size_t, const char*, const struct tm*)
+size_t strftime(char* destination, size_t, const char*, const struct tm*)
 {
-    ASSERT_NOT_REACHED();
+    // FIXME: Stubbed function to make nasm work. Should be properly implemented
+    strcpy(destination, "strftime_unimplemented");
+    return strlen("strftime_unimplemented");
 }
 
 long timezone;

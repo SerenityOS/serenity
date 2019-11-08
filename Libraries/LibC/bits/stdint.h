@@ -101,6 +101,15 @@ typedef __INTMAX_TYPE__ intmax_t;
 #define UINT_LEAST32_MAX UINT32_MAX
 #define UINT_LEAST64_MAX UINT64_MAX
 
+#define INT8_C(x) x
+#define UINT8_C(x) x
+
+#define INT16_C(x) x
+#define UINT16_C(x) x
+
+#define INT32_C(x) x
+#define UINT32_C(x) x
+
 #define INT64_C(x) x##LL
 #define UINT64_C(x) x##ULL
 

@@ -17,7 +17,9 @@
 #define PRIx8 "b"
 #define PRIx16 "w"
 #define PRIx32 "x"
+#define PRIX32 "X"
 #define PRIx64 "llx"
+#define PRIX64 "llX"
 
 #define __PRI64_PREFIX "ll"
 #define __PRIPTR_PREFIX
