@@ -5,19 +5,20 @@
 #include <LibGUI/GToolBar.h>
 
 GToolBar::GToolBar(GWidget* parent)
-    : GToolBar(Orientation::Horizontal, parent)
+    : GToolBar(Orientation::Horizontal, 16, parent)
 {
 }
 
-GToolBar::GToolBar(Orientation orientation, GWidget* parent)
+GToolBar::GToolBar(Orientation orientation, int button_size, GWidget* parent)
     : GWidget(parent)
+    , m_button_size(button_size)
 {
     if (orientation == Orientation::Horizontal) {
         set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-        set_preferred_size(0, 28);
+        set_preferred_size(0, button_size + 12);
     } else {
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-        set_preferred_size(28, 0);
+        set_preferred_size(button_size + 12, 0);
     }
     set_layout(make<GBoxLayout>(orientation));
     layout()->set_spacing(0);
@@ -46,7 +47,7 @@ void GToolBar::add_action(GAction& action)
     button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
     ASSERT(button->size_policy(Orientation::Horizontal) == SizePolicy::Fixed);
     ASSERT(button->size_policy(Orientation::Vertical) == SizePolicy::Fixed);
-    button->set_preferred_size(24, 24);
+    button->set_preferred_size(m_button_size + 8, m_button_size + 8);
 
     m_items.append(move(item));
 }
