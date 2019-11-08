@@ -22,9 +22,11 @@
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GStackWidget.h>
 #include <LibGUI/GTabWidget.h>
+#include <LibGUI/GTableView.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GToolBar.h>
+#include <LibGUI/GTreeView.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
@@ -129,7 +131,29 @@ int main(int argc, char** argv)
     form_widgets_toolbar->add_action(GAction::create("GButton", GraphicsBitmap::load_from_file("/res/icons/vbwidgets/button.png"), [&](auto&) {}));
     form_widgets_toolbar->add_action(GAction::create("GSpinBox", GraphicsBitmap::load_from_file("/res/icons/vbwidgets/spinbox.png"), [&](auto&) {}));
 
-    g_form_editor_widget = FormEditorWidget::construct(g_form_inner_container);
+    auto form_editor_inner_splitter = GSplitter::construct(Orientation::Horizontal, g_form_inner_container);
+
+    g_form_editor_widget = FormEditorWidget::construct(form_editor_inner_splitter);
+
+    auto form_editing_pane_container = GSplitter::construct(Orientation::Vertical, form_editor_inner_splitter);
+    form_editing_pane_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    form_editing_pane_container->set_preferred_size(170, 0);
+    form_editing_pane_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+
+    auto add_properties_pane = [&](auto& text, auto pane_widget) {
+        auto wrapper = GWidget::construct(form_editing_pane_container.ptr());
+        wrapper->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        auto label = GLabel::construct(text, wrapper);
+        label->set_fill_with_background_color(true);
+        label->set_text_alignment(TextAlignment::CenterLeft);
+        label->set_font(Font::default_bold_font());
+        label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        label->set_preferred_size(0, 16);
+        wrapper->add_child(pane_widget);
+    };
+
+    add_properties_pane("Form widget tree:", GTreeView::construct(nullptr));
+    add_properties_pane("Widget properties:", GTableView::construct(nullptr));
 
     g_text_inner_splitter = GSplitter::construct(Orientation::Vertical, g_right_hand_stack);
     g_text_inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
