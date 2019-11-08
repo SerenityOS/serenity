@@ -506,6 +506,64 @@ void GTextEditor::redo()
     m_undo_stack_index--;
 }
 
+void GTextEditor::get_selection_line_boundaries(int& first_line, int& last_line)
+{
+    auto selection = normalized_selection();
+    if (!selection.is_valid()) {
+        first_line = m_cursor.line();
+        last_line = m_cursor.line();
+        return;
+    }
+    first_line = selection.start().line();
+    last_line = selection.end().line();
+    if (first_line != last_line && selection.end().column() == 0)
+        last_line -= 1;
+}
+
+void GTextEditor::move_selected_lines_up()
+{
+    int first_line;
+    int last_line;
+    get_selection_line_boundaries(first_line, last_line);
+
+    if (first_line == 0)
+        return;
+
+    auto& lines = document().lines();
+    lines.insert(last_line, lines.take(first_line - 1));
+    m_cursor = { first_line - 1, 0 };
+
+    if (has_selection()) {
+        m_selection.set_start({ first_line - 1, 0 });
+        m_selection.set_end({ last_line - 1, line(last_line - 1).length() });
+    }
+
+    did_change();
+    update();
+}
+
+void GTextEditor::move_selected_lines_down()
+{
+    int first_line;
+    int last_line;
+    get_selection_line_boundaries(first_line, last_line);
+
+    auto& lines = document().lines();
+    if (last_line >= (lines.size() - 1))
+        return;
+
+    lines.insert(first_line, lines.take(last_line + 1));
+    m_cursor = { first_line + 1, 0 };
+
+    if (has_selection()) {
+        m_selection.set_start({ first_line + 1, 0 });
+        m_selection.set_end({ last_line + 1, line(last_line + 1).length() });
+    }
+
+    did_change();
+    update();
+}
+
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
     if (is_single_line() && event.key() == KeyCode::Key_Tab)
@@ -524,6 +582,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
+            if (event.ctrl() && event.shift()) {
+                move_selected_lines_up();
+                return;
+            }
             int new_line = m_cursor.line() - 1;
             int new_column = min(m_cursor.column(), lines()[new_line].length());
             toggle_selection_if_needed_for_event(event);
@@ -537,6 +599,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (lines().size() - 1)) {
+            if (event.ctrl() && event.shift()) {
+                move_selected_lines_down();
+                return;
+            }
             int new_line = m_cursor.line() + 1;
             int new_column = min(m_cursor.column(), lines()[new_line].length());
             toggle_selection_if_needed_for_event(event);

@@ -161,6 +161,9 @@ private:
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
     void flush_pending_change_notification_if_needed();
+    void get_selection_line_boundaries(int& first_line, int& last_line);
+    void move_selected_lines_up();
+    void move_selected_lines_down();
 
     class UndoCommand {
 
