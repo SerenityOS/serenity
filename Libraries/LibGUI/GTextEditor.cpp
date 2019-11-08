@@ -148,6 +148,9 @@ void GTextEditor::doubleclick_event(GMouseEvent& event)
     if (event.button() != GMouseButton::Left)
         return;
 
+    // NOTE: This ensures that spans are updated before we look at them.
+    flush_pending_change_notification_if_needed();
+
     m_triple_click_timer.start();
     m_in_drag_select = false;
 
@@ -293,6 +296,9 @@ Rect GTextEditor::visible_text_rect_in_inner_coordinates() const
 
 void GTextEditor::paint_event(GPaintEvent& event)
 {
+    // NOTE: This ensures that spans are updated before we look at them.
+    flush_pending_change_notification_if_needed();
+
     GFrame::paint_event(event);
 
     GPainter painter(*this);
@@ -504,6 +510,64 @@ void GTextEditor::redo()
     did_change();
 }
 
+void GTextEditor::get_selection_line_boundaries(int& first_line, int& last_line)
+{
+    auto selection = normalized_selection();
+    if (!selection.is_valid()) {
+        first_line = m_cursor.line();
+        last_line = m_cursor.line();
+        return;
+    }
+    first_line = selection.start().line();
+    last_line = selection.end().line();
+    if (first_line != last_line && selection.end().column() == 0)
+        last_line -= 1;
+}
+
+void GTextEditor::move_selected_lines_up()
+{
+    int first_line;
+    int last_line;
+    get_selection_line_boundaries(first_line, last_line);
+
+    if (first_line == 0)
+        return;
+
+    auto& lines = document().lines();
+    lines.insert(last_line, lines.take(first_line - 1));
+    m_cursor = { first_line - 1, 0 };
+
+    if (has_selection()) {
+        m_selection.set_start({ first_line - 1, 0 });
+        m_selection.set_end({ last_line - 1, line(last_line - 1).length() });
+    }
+
+    did_change();
+    update();
+}
+
+void GTextEditor::move_selected_lines_down()
+{
+    int first_line;
+    int last_line;
+    get_selection_line_boundaries(first_line, last_line);
+
+    auto& lines = document().lines();
+    if (last_line >= (lines.size() - 1))
+        return;
+
+    lines.insert(first_line, lines.take(last_line + 1));
+    m_cursor = { first_line + 1, 0 };
+
+    if (has_selection()) {
+        m_selection.set_start({ first_line + 1, 0 });
+        m_selection.set_end({ last_line + 1, line(last_line + 1).length() });
+    }
+
+    did_change();
+    update();
+}
+
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
     if (is_single_line() && event.key() == KeyCode::Key_Tab)
@@ -522,6 +586,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_Up) {
         if (m_cursor.line() > 0) {
+            if (event.ctrl() && event.shift()) {
+                move_selected_lines_up();
+                return;
+            }
             int new_line = m_cursor.line() - 1;
             int new_column = min(m_cursor.column(), lines()[new_line].length());
             toggle_selection_if_needed_for_event(event);
@@ -535,6 +603,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_Down) {
         if (m_cursor.line() < (lines().size() - 1)) {
+            if (event.ctrl() && event.shift()) {
+                move_selected_lines_down();
+                return;
+            }
             int new_line = m_cursor.line() + 1;
             int new_column = min(m_cursor.column(), lines()[new_line].length());
             toggle_selection_if_needed_for_event(event);
@@ -1227,12 +1299,14 @@ void GTextEditor::did_change()
     recompute_all_visual_lines();
     m_undo_action->set_enabled(can_undo());
     m_redo_action->set_enabled(can_redo());
-    if (!m_have_pending_change_notification) {
-        m_have_pending_change_notification = true;
+    if (!m_has_pending_change_notification) {
+        m_has_pending_change_notification = true;
         deferred_invoke([this](auto&) {
+            if (!m_has_pending_change_notification)
+                return;
             if (on_change)
                 on_change();
-            m_have_pending_change_notification = false;
+            m_has_pending_change_notification = false;
         });
     }
 }
@@ -1602,4 +1676,13 @@ void GTextEditor::CreateLineCommand::redo()
 
     for (int i = 0; i < m_line_content.size(); i++)
         m_text_editor.document().lines()[m_text_position.line() + 1].insert(m_text_editor.document(), i, m_line_content[i]);
+}
+
+void GTextEditor::flush_pending_change_notification_if_needed()
+{
+    if (!m_has_pending_change_notification)
+        return;
+    if (on_change)
+        on_change();
+    m_has_pending_change_notification = false;
 }

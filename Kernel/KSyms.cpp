@@ -134,10 +134,8 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
 void dump_backtrace()
 {
     static bool in_dump_backtrace = false;
-    if (in_dump_backtrace) {
-        dbgprintf("dump_backtrace() called from within itself, what the hell is going on!\n");
+    if (in_dump_backtrace)
         return;
-    }
     TemporaryChange change(in_dump_backtrace, true);
     TemporaryChange disable_kmalloc_stacks(g_dump_kmalloc_stacks, false);
     u32 ebp;

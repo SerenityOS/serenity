@@ -31,6 +31,11 @@ stack_bottom:
 .skip 32768
 stack_top:
 
+.section .page_tables
+.align 4096
+page_tables_start:
+.skip 4096*3
+
 .section .text
 
 .global start
@@ -52,7 +57,9 @@ start:
 
     mov %ebx, multiboot_info_ptr
 
+    pushl $page_tables_start
     call init
+    add $4, %esp
 
     pushl $exit_message
     call kprintf

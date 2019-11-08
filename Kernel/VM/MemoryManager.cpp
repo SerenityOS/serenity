@@ -20,13 +20,11 @@ MemoryManager& MM
     return *s_the;
 }
 
-MemoryManager::MemoryManager()
+MemoryManager::MemoryManager(u32 physical_address_for_kernel_page_tables)
 {
-    // FIXME: Hard-coding these is stupid. Find a better way.
-    m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(0x4000));
-    m_page_table_zero = (PageTableEntry*)0x6000;
-    m_page_table_one = (PageTableEntry*)0x7000;
-
+    m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(physical_address_for_kernel_page_tables));
+    m_page_table_zero = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE);
+    m_page_table_one = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * 2);
     initialize_paging();
 
     kprintf("MM initialized.\n");
@@ -146,7 +144,7 @@ void MemoryManager::initialize_paging()
             } else {
                 if (region.is_null() || region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
                     m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
-                    region = &m_user_physical_regions.last();
+                    region = m_user_physical_regions.last();
                     region_is_super = false;
                 } else {
                     region->expand(region->lower(), addr);
@@ -262,9 +260,9 @@ void MemoryManager::create_identity_mapping(PageDirectory& page_directory, Virtu
     }
 }
 
-void MemoryManager::initialize()
+void MemoryManager::initialize(u32 physical_address_for_kernel_page_tables)
 {
-    s_the = new MemoryManager;
+    s_the = new MemoryManager(physical_address_for_kernel_page_tables);
 }
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
@@ -388,16 +386,21 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
     ASSERT_NOT_REACHED();
 }
 
+RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page()
+{
+    RefPtr<PhysicalPage> page;
+    for (auto& region : m_user_physical_regions) {
+        page = region.take_free_page(false);
+        if (!page.is_null())
+            break;
+    }
+    return page;
+}
+
 RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
 {
     InterruptDisabler disabler;
-    RefPtr<PhysicalPage> page;
-
-    for (auto& region : m_user_physical_regions) {
-        page = region.take_free_page(false);
-        if (page.is_null())
-            continue;
-    }
+    RefPtr<PhysicalPage> page = find_free_user_physical_page();
 
     if (!page) {
         if (m_user_physical_regions.is_empty()) {
