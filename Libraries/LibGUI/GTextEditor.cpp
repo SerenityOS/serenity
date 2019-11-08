@@ -146,6 +146,9 @@ void GTextEditor::doubleclick_event(GMouseEvent& event)
     if (event.button() != GMouseButton::Left)
         return;
 
+    // NOTE: This ensures that spans are updated before we look at them.
+    flush_pending_change_notification_if_needed();
+
     m_triple_click_timer.start();
     m_in_drag_select = false;
 
@@ -291,6 +294,9 @@ Rect GTextEditor::visible_text_rect_in_inner_coordinates() const
 
 void GTextEditor::paint_event(GPaintEvent& event)
 {
+    // NOTE: This ensures that spans are updated before we look at them.
+    flush_pending_change_notification_if_needed();
+
     GFrame::paint_event(event);
 
     GPainter painter(*this);
@@ -1221,12 +1227,14 @@ void GTextEditor::did_change()
     ASSERT(!is_readonly());
     update_content_size();
     recompute_all_visual_lines();
-    if (!m_have_pending_change_notification) {
-        m_have_pending_change_notification = true;
+    if (!m_has_pending_change_notification) {
+        m_has_pending_change_notification = true;
         deferred_invoke([this](auto&) {
+            if (!m_has_pending_change_notification)
+                return;
             if (on_change)
                 on_change();
-            m_have_pending_change_notification = false;
+            m_has_pending_change_notification = false;
         });
     }
 }
@@ -1596,4 +1604,13 @@ void GTextEditor::CreateLineCommand::redo()
 
     for (int i = 0; i < m_line_content.size(); i++)
         m_text_editor.document().lines()[m_text_position.line() + 1].insert(m_text_editor.document(), i, m_line_content[i]);
+}
+
+void GTextEditor::flush_pending_change_notification_if_needed()
+{
+    if (!m_has_pending_change_notification)
+        return;
+    if (on_change)
+        on_change();
+    m_has_pending_change_notification = false;
 }
