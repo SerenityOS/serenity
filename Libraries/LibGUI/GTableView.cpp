@@ -250,14 +250,15 @@ void GTableView::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
 
-    if (!model())
-        return;
-
     GPainter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
+    painter.fill_rect(event.rect(), Color::White);
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+
+    if (!model())
+        return;
 
     int exposed_width = max(content_size().width(), width());
     int y_offset = header_height();
