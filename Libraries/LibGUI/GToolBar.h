@@ -18,6 +18,7 @@ public:
 
 protected:
     explicit GToolBar(GWidget* parent);
+    explicit GToolBar(Orientation, GWidget* parent);
 
     virtual void paint_event(GPaintEvent&) override;
 
