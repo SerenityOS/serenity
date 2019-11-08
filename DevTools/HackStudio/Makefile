@@ -6,6 +6,8 @@ OBJS = \
     TerminalWrapper.o \
     FindInFilesWidget.o \
     ProcessStateWidget.o \
+    FormEditorWidget.o \
+    FormWidget.o \
     CppLexer.o \
     Editor.o \
     EditorWrapper.o \
