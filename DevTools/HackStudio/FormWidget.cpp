@@ -7,7 +7,7 @@ FormWidget::FormWidget(FormEditorWidget& parent)
 {
     set_fill_with_background_color(true);
     set_background_color(Color::WarmGray);
-    set_relative_rect(20, 20, 400, 300);
+    set_relative_rect(5, 5, 400, 300);
 }
 
 FormWidget::~FormWidget()
