@@ -8,6 +8,7 @@ SECTIONS
 	{
         Arch/i386/Boot/boot.ao
 		*(.multiboot)
+		*(.page_tables)
 		*(.text)
 		*(.text.startup)
 	}

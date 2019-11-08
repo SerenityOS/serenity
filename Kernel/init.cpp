@@ -206,7 +206,7 @@ extern "C" int __cxa_atexit ( void (*)(void *), void *, void *)
     return 0;
 }
 
-extern "C" [[noreturn]] void init()
+extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
 {
     // this is only used one time, directly below here. we can't use this part
     // of libc at this point in the boot process, or we'd just pull strstr in
@@ -268,7 +268,7 @@ extern "C" [[noreturn]] void init()
 
     kprintf("Starting Serenity Operating System...\n");
 
-    MemoryManager::initialize();
+    MemoryManager::initialize(physical_address_for_kernel_page_tables);
 
     if (APIC::init())
         APIC::enable(0);
