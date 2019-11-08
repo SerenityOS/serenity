@@ -103,6 +103,7 @@ private:
 
     static Region* region_from_vaddr(VirtualAddress);
 
+    RefPtr<PhysicalPage> find_free_user_physical_page();
     u8* quickmap_page(PhysicalPage&);
     void unquickmap_page();
 
