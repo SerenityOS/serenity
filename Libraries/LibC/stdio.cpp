@@ -437,7 +437,9 @@ void perror(const char* s)
 FILE* fopen(const char* pathname, const char* mode)
 {
     int flags = 0;
-    if (!strcmp(mode, "r") || !strcmp(mode, "rb"))
+    // NOTE: rt is a non-standard mode which opens a file for read, explicitly
+    // specifying that it's a text file
+    if (!strcmp(mode, "r") || !strcmp(mode, "rb") || !strcmp(mode, "rt"))
         flags = O_RDONLY;
     else if (!strcmp(mode, "r+") || !strcmp(mode, "rb+"))
         flags = O_RDWR;
