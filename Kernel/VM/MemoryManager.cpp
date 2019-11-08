@@ -20,13 +20,11 @@ MemoryManager& MM
     return *s_the;
 }
 
-MemoryManager::MemoryManager()
+MemoryManager::MemoryManager(u32 physical_address_for_kernel_page_tables)
 {
-    // FIXME: Hard-coding these is stupid. Find a better way.
-    m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(0x4000));
-    m_page_table_zero = (PageTableEntry*)0x6000;
-    m_page_table_one = (PageTableEntry*)0x7000;
-
+    m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(physical_address_for_kernel_page_tables));
+    m_page_table_zero = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE);
+    m_page_table_one = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * 2);
     initialize_paging();
 
     kprintf("MM initialized.\n");
@@ -262,9 +260,9 @@ void MemoryManager::create_identity_mapping(PageDirectory& page_directory, Virtu
     }
 }
 
-void MemoryManager::initialize()
+void MemoryManager::initialize(u32 physical_address_for_kernel_page_tables)
 {
-    s_the = new MemoryManager;
+    s_the = new MemoryManager(physical_address_for_kernel_page_tables);
 }
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
