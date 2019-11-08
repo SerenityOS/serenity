@@ -6,7 +6,7 @@ FormEditorWidget::FormEditorWidget(GWidget* parent)
     : GScrollableWidget(parent)
 {
     set_fill_with_background_color(true);
-    set_background_color(Color::White);
+    set_background_color(Color::MidGray);
 
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
