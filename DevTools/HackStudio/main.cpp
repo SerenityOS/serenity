@@ -2,6 +2,7 @@
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
+#include "FormEditorWidget.h"
 #include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
@@ -19,6 +20,7 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GSplitter.h>
+#include <LibGUI/GStackWidget.h>
 #include <LibGUI/GTabWidget.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GTextEditor.h>
@@ -35,6 +37,9 @@ String g_currently_open_file;
 OwnPtr<Project> g_project;
 RefPtr<GWindow> g_window;
 RefPtr<GListView> g_project_list_view;
+RefPtr<GStackWidget> g_right_hand_stack;
+RefPtr<GSplitter> g_inner_splitter;
+RefPtr<FormEditorWidget> g_form_editor_widget;
 
 static RefPtr<GTabWidget> s_action_tab_widget;
 
@@ -49,6 +54,20 @@ void add_new_editor(GWidget& parent)
     g_current_editor_wrapper = wrapper;
     g_all_editor_wrappers.append(wrapper);
     wrapper->editor().set_focus(true);
+}
+
+enum class EditMode {
+    Text,
+    Form,
+};
+
+void set_edit_mode(EditMode mode)
+{
+    if (mode == EditMode::Text) {
+        g_right_hand_stack->set_active_widget(g_inner_splitter);
+    } else if (mode == EditMode::Form) {
+        g_right_hand_stack->set_active_widget(g_form_editor_widget);
+    }
 }
 
 EditorWrapper& current_editor_wrapper()
@@ -98,9 +117,13 @@ int main(int argc, char** argv)
     g_project_list_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     g_project_list_view->set_preferred_size(140, 0);
 
-    auto inner_splitter = GSplitter::construct(Orientation::Vertical, outer_splitter);
-    inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
-    add_new_editor(inner_splitter);
+    g_right_hand_stack = GStackWidget::construct(outer_splitter);
+
+    g_form_editor_widget = FormEditorWidget::construct(g_right_hand_stack);
+
+    g_inner_splitter = GSplitter::construct(Orientation::Vertical, g_right_hand_stack);
+    g_inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
+    add_new_editor(*g_inner_splitter);
 
     auto new_action = GAction::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
         auto input_box = GInputBox::construct("Enter name of new file:", "Add new file to project", g_window);
@@ -136,7 +159,7 @@ int main(int argc, char** argv)
         if (g_all_editor_wrappers.size() <= 1)
             return;
         Vector<EditorWrapper*> wrappers;
-        inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
+        g_inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
             wrappers.append(&child);
             return IterationDecision::Continue;
         });
@@ -154,7 +177,7 @@ int main(int argc, char** argv)
         if (g_all_editor_wrappers.size() <= 1)
             return;
         Vector<EditorWrapper*> wrappers;
-        inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
+        g_inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
             wrappers.append(&child);
             return IterationDecision::Continue;
         });
@@ -173,7 +196,7 @@ int main(int argc, char** argv)
             return;
         auto wrapper = g_current_editor_wrapper;
         switch_to_next_editor->activate();
-        inner_splitter->remove_child(*wrapper);
+        g_inner_splitter->remove_child(*wrapper);
         g_all_editor_wrappers.remove_first_matching([&](auto& entry) { return entry == wrapper.ptr(); });
         update_actions();
     });
@@ -202,7 +225,7 @@ int main(int argc, char** argv)
         open_file(filename);
     };
 
-    s_action_tab_widget = GTabWidget::construct(inner_splitter);
+    s_action_tab_widget = GTabWidget::construct(g_inner_splitter);
 
     s_action_tab_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     s_action_tab_widget->set_preferred_size(0, 24);
@@ -222,7 +245,7 @@ int main(int argc, char** argv)
     });
 
     auto add_editor_action = GAction::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E }, [&](auto&) {
-        add_new_editor(inner_splitter);
+        add_new_editor(*g_inner_splitter);
         update_actions();
     });
 
@@ -377,6 +400,12 @@ void open_file(const String& filename)
         rehighlight();
     } else {
         current_editor().on_change = nullptr;
+    }
+
+    if (filename.ends_with(".frm")) {
+        set_edit_mode(EditMode::Form);
+    } else {
+        set_edit_mode(EditMode::Text);
     }
 
     g_currently_open_file = filename;
