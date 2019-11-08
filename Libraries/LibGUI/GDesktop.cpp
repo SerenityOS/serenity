@@ -1,5 +1,5 @@
 #include <LibGUI/GDesktop.h>
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GWindowServerConnection.h>
 #include <string.h>
 #include <unistd.h>
 

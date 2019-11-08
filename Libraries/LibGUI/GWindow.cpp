@@ -8,10 +8,10 @@
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GEvent.h>
-#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
+#include <LibGUI/GWindowServerConnection.h>
 
 //#define UPDATE_COALESCING_DEBUG
 

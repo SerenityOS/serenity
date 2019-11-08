@@ -1,15 +1,15 @@
-#include "GWidget.h"
-#include "GEvent.h"
-#include "GEventLoop.h"
-#include "GWindow.h"
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GEvent.h>
 #include <LibGUI/GLayout.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GPainter.h>
-#include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
+#include <LibGUI/GWindowServerConnection.h>
 #include <unistd.h>
 
 GWidget::GWidget(GWidget* parent)

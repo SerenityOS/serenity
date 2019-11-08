@@ -4,7 +4,7 @@ OBJS = \
     GPainter.o \
     GButton.o \
     GCheckBox.o \
-    GEventLoop.o \
+    GWindowServerConnection.o \
     GLabel.o \
     GTextBox.o \
     GScrollBar.o \

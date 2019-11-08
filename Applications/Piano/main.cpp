@@ -5,7 +5,6 @@
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>

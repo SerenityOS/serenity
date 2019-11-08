@@ -1,6 +1,6 @@
 #include <LibC/SharedBuffer.h>
 #include <LibGUI/GClipboard.h>
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GWindowServerConnection.h>
 #include <WindowServer/WSAPITypes.h>
 
 GClipboard& GClipboard::the()

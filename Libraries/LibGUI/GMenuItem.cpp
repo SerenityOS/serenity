@@ -1,7 +1,7 @@
 #include <LibGUI/GAction.h>
-#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuItem.h>
+#include <LibGUI/GWindowServerConnection.h>
 #include <WindowServer/WSAPITypes.h>
 
 GMenuItem::GMenuItem(unsigned menu_id, Type type)

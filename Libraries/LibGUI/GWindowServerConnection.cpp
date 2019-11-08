@@ -1,6 +1,3 @@
-#include "GEventLoop.h"
-#include "GEvent.h"
-#include "GWindow.h"
 #include <LibC/errno.h>
 #include <LibC/fcntl.h>
 #include <LibC/stdio.h>
@@ -17,8 +14,11 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GDesktop.h>
+#include <LibGUI/GEvent.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
+#include <LibGUI/GWindowServerConnection.h>
 #include <sys/uio.h>
 
 //#define GEVENTLOOP_DEBUG

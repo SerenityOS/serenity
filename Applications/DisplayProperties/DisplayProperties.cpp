@@ -1,3 +1,5 @@
+#include "DisplayProperties.h"
+#include "ItemListModel.h"
 #include <AK/StringBuilder.h>
 #include <LibCore/CDirIterator.h>
 #include <LibDraw/PNGLoader.h>
@@ -6,7 +8,6 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GDesktop.h>
-#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GGroupBox.h>
 #include <LibGUI/GLabel.h>
@@ -17,11 +18,8 @@
 #include <LibGUI/GToolBar.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
-
+#include <LibGUI/GWindowServerConnection.h>
 #include <Servers/WindowServer/WSWindowManager.h>
-
-#include "DisplayProperties.h"
-#include "ItemListModel.h"
 
 DisplayPropertiesWidget::DisplayPropertiesWidget()
     : m_wm_config(CConfigFile::get_for_app("WindowManager"))

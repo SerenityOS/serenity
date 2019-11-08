@@ -4,7 +4,6 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GDesktop.h>
-#include <LibGUI/GEventLoop.h>
 #include <LibGUI/GFrame.h>
 #include <LibGUI/GWindow.h>
 #include <WindowServer/WSAPITypes.h>
