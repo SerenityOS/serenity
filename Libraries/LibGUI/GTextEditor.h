@@ -160,6 +160,7 @@ private:
     Rect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
+    void flush_pending_change_notification_if_needed();
 
     class UndoCommand {
 
@@ -233,7 +234,7 @@ private:
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { false };
-    bool m_have_pending_change_notification { false };
+    bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
     bool m_line_wrapping_enabled { false };
     bool m_readonly { false };
