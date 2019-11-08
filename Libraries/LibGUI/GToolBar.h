@@ -18,7 +18,7 @@ public:
 
 protected:
     explicit GToolBar(GWidget* parent);
-    explicit GToolBar(Orientation, GWidget* parent);
+    explicit GToolBar(Orientation, int button_size, GWidget* parent);
 
     virtual void paint_event(GPaintEvent&) override;
 
@@ -33,5 +33,6 @@ private:
         RefPtr<GAction> action;
     };
     NonnullOwnPtrVector<Item> m_items;
+    int m_button_size { 16 };
     bool m_has_frame { true };
 };
