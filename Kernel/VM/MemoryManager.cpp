@@ -144,7 +144,7 @@ void MemoryManager::initialize_paging()
             } else {
                 if (region.is_null() || region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
                     m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
-                    region = &m_user_physical_regions.last();
+                    region = m_user_physical_regions.last();
                     region_is_super = false;
                 } else {
                     region->expand(region->lower(), addr);
@@ -386,16 +386,21 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
     ASSERT_NOT_REACHED();
 }
 
+RefPtr<PhysicalPage> MemoryManager::find_free_user_physical_page()
+{
+    RefPtr<PhysicalPage> page;
+    for (auto& region : m_user_physical_regions) {
+        page = region.take_free_page(false);
+        if (!page.is_null())
+            break;
+    }
+    return page;
+}
+
 RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill should_zero_fill)
 {
     InterruptDisabler disabler;
-    RefPtr<PhysicalPage> page;
-
-    for (auto& region : m_user_physical_regions) {
-        page = region.take_free_page(false);
-        if (page.is_null())
-            continue;
-    }
+    RefPtr<PhysicalPage> page = find_free_user_physical_page();
 
     if (!page) {
         if (m_user_physical_regions.is_empty()) {
