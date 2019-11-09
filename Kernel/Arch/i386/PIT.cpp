@@ -27,6 +27,7 @@ asm(
     "    popw %es\n"
     "    popw %fs\n"
     "    popw %gs\n"
+    "    cld\n"
     "    call timer_interrupt_handler\n"
     "    popw %gs\n"
     "    popw %gs\n"
