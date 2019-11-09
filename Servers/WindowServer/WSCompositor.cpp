@@ -107,9 +107,11 @@ void WSCompositor::compose()
         return false;
     };
 
+    // Paint the wallpaper.
     for (auto& dirty_rect : dirty_rects.rects()) {
         if (wm.any_opaque_window_contains_rect(dirty_rect))
             continue;
+        // FIXME: If the wallpaper is opaque, no need to fill with color!
         m_back_painter->fill_rect(dirty_rect, wm.m_background_color);
         if (m_wallpaper) {
             if (m_wallpaper_mode == WallpaperMode::Simple) {
@@ -121,11 +123,13 @@ void WSCompositor::compose()
                     dirty_rect, offset);
             } else if (m_wallpaper_mode == WallpaperMode::Tile) {
                 m_back_painter->draw_tiled_bitmap(dirty_rect, *m_wallpaper);
-            } else {
+            } else if (m_wallpaper_mode == WallpaperMode::Scaled) {
                 float hscale = (float)m_wallpaper->size().width() / (float)ws.size().width();
                 float vscale = (float)m_wallpaper->size().height() / (float)ws.size().height();
 
                 m_back_painter->blit_scaled(dirty_rect, *m_wallpaper, dirty_rect, hscale, vscale);
+            } else {
+                ASSERT_NOT_REACHED();
             }
         }
     }
@@ -169,6 +173,7 @@ void WSCompositor::compose()
         return IterationDecision::Continue;
     };
 
+    // Paint the window stack.
     if (auto* fullscreen_window = wm.active_fullscreen_window()) {
         compose_window(*fullscreen_window);
     } else {
@@ -342,10 +347,6 @@ void WSCompositor::draw_cursor()
 {
     auto& wm = WSWindowManager::the();
     Rect cursor_rect = current_cursor_rect();
-    Color inner_color = Color::White;
-    Color outer_color = Color::Black;
-    if (WSScreen::the().mouse_button_state() & (unsigned)MouseButton::Left)
-        swap(inner_color, outer_color);
     m_back_painter->blit(cursor_rect.location(), wm.active_cursor().bitmap(), wm.active_cursor().rect());
     m_last_cursor_rect = cursor_rect;
 }
