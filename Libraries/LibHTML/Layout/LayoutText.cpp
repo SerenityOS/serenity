@@ -3,6 +3,7 @@
 #include <LibCore/CDirIterator.h>
 #include <LibDraw/Font.h>
 #include <LibGUI/GPainter.h>
+#include <LibHTML/DOM/Document.h>
 #include <LibHTML/Layout/LayoutBlock.h>
 #include <LibHTML/Layout/LayoutText.h>
 #include <ctype.h>
@@ -43,6 +44,9 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
 
     auto color = style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black);
     auto text_decoration = style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
+
+    if (document().inspected_node() == &node())
+        context.painter().draw_rect(enclosing_int_rect(fragment.rect()), Color::Magenta);
 
     bool is_underline = text_decoration == "underline";
     if (is_underline)

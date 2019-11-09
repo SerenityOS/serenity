@@ -244,6 +244,20 @@ LayoutDocument* Document::layout_node()
     return static_cast<LayoutDocument*>(Node::layout_node());
 }
 
+void Document::set_inspected_node(Node* node)
+{
+    if (m_inspected_node == node)
+        return;
+
+    if (m_inspected_node && m_inspected_node->layout_node())
+        m_inspected_node->layout_node()->set_needs_display();
+
+    m_inspected_node = node;
+
+    if (m_inspected_node && m_inspected_node->layout_node())
+        m_inspected_node->layout_node()->set_needs_display();
+}
+
 void Document::set_hovered_node(Node* node)
 {
     if (m_hovered_node == node)

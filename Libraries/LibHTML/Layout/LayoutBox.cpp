@@ -21,6 +21,9 @@ void LayoutBox::render(RenderingContext& context)
         context.painter().draw_rect(m_rect, Color::Red);
 #endif
 
+    if (node() && document().inspected_node() == node())
+        context.painter().draw_rect(m_rect, Color::Magenta);
+
     Rect padded_rect;
     padded_rect.set_x(x() - box_model().padding().left.to_px());
     padded_rect.set_width(width() + box_model().padding().left.to_px() + box_model().padding().right.to_px());
