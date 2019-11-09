@@ -3,18 +3,17 @@
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GLabel.h>
+#include <LibGUI/GMessageBox.h>
 #include <LibM/math.h>
 
-SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConnection> connection, AWavLoader& loader)
-    : m_manager(PlaybackManager(connection, loader))
+SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConnection> connection)
+    : m_window(window)
+    , m_connection(connection)
+    , m_manager(connection)
 {
-    window.set_title(String::format("SoundPlayer - \"%s\"", loader.file()->filename().characters()));
-
     set_fill_with_background_color(true);
     set_layout(make<GBoxLayout>(Orientation::Vertical));
     layout()->set_margins({ 2, 2, 2, 2 });
-
-    m_sample_ratio = PLAYBACK_MANAGER_RATE / static_cast<float>(loader.sample_rate());
 
     auto status_widget = GWidget::construct(this);
     status_widget->set_fill_with_background_color(true);
@@ -38,7 +37,7 @@ SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConne
 
     m_slider = Slider::construct(Orientation::Horizontal, this);
     m_slider->set_min(0);
-    m_slider->set_max(normalize_rate(static_cast<int>(loader.total_samples())));
+    m_slider->set_enabled(false);
     m_slider->on_knob_released = [&](int value) { m_manager.seek(denormalize_rate(value)); };
 
     auto control_widget = GWidget::construct(this);
@@ -51,13 +50,15 @@ SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConne
 
     m_play = GButton::construct(control_widget);
     m_play->set_icon(*m_pause_icon);
+    m_play->set_enabled(false);
     m_play->on_click = [this](GButton& button) {
         button.set_icon(m_manager.toggle_pause() ? *m_play_icon : *m_pause_icon);
     };
 
-    auto stop = GButton::construct(control_widget);
-    stop->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/stop.png"));
-    stop->on_click = [&](GButton&) { m_manager.stop(); };
+    m_stop = GButton::construct(control_widget);
+    m_stop->set_enabled(false);
+    m_stop->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/stop.png"));
+    m_stop->on_click = [&](GButton&) { m_manager.stop(); };
 
     m_status = GLabel::construct(this);
     m_status->set_frame_shape(FrameShape::Box);
@@ -66,18 +67,11 @@ SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConne
     m_status->set_text_alignment(TextAlignment::CenterLeft);
     m_status->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_status->set_preferred_size(0, 18);
-
-    m_status->set_text(String::format(
-        "Sample rate %uHz, %u %s, %u bits per sample",
-        loader.sample_rate(),
-        loader.num_channels(),
-        (loader.num_channels() == 1) ? "channel" : "channels",
-        loader.bits_per_sample()));
+    m_status->set_text("No file open!");
 
     update_position(0);
 
     m_manager.on_update = [&]() { update_ui(); };
-    m_manager.play();
 }
 
 SoundPlayerWidget::~SoundPlayerWidget()
@@ -86,6 +80,43 @@ SoundPlayerWidget::~SoundPlayerWidget()
 
 SoundPlayerWidget::Slider::~Slider()
 {
+}
+
+void SoundPlayerWidget::open_file(String path)
+{
+    if (!path.ends_with(".wav")) {
+        GMessageBox::show("Selected file is not a \".wav\" file!", "Filetype error", GMessageBox::Type::Error);
+        return;
+    }
+
+    OwnPtr<AWavLoader> loader = make<AWavLoader>(path);
+    if (loader->has_error()) {
+        GMessageBox::show(
+            String::format(
+                "Failed to load WAV file: %s (%s)",
+                path.characters(),
+                loader->error_string()),
+            "Filetype error", GMessageBox::Type::Error);
+        return;
+    }
+
+    m_sample_ratio = PLAYBACK_MANAGER_RATE / static_cast<float>(loader->sample_rate());
+
+    m_slider->set_max(normalize_rate(static_cast<int>(loader->total_samples())));
+    m_slider->set_enabled(true);
+    m_play->set_enabled(true);
+    m_stop->set_enabled(true);
+
+    m_window.set_title(String::format("SoundPlayer - \"%s\"", loader->file()->filename().characters()));
+    m_status->set_text(String::format(
+        "Sample rate %uHz, %u %s, %u bits per sample",
+        loader->sample_rate(),
+        loader->num_channels(),
+        (loader->num_channels() == 1) ? "channel" : "channels",
+        loader->bits_per_sample()));
+
+    m_manager.set_loader(move(loader));
+    update_position(0);
 }
 
 int SoundPlayerWidget::normalize_rate(int rate) const
