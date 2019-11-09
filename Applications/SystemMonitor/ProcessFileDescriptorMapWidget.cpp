@@ -25,6 +25,12 @@ ProcessFileDescriptorMapWidget::ProcessFileDescriptorMapWidget(GWidget* parent)
     pid_fds_fields.empend("On exec", TextAlignment::CenterLeft, [](auto& object) {
         return object.get("cloexec").to_bool() ? "Close" : "Keep";
     });
+    pid_fds_fields.empend("Can read", TextAlignment::CenterLeft, [](auto& object) {
+        return object.get("can_read").to_bool() ? "Yes" : "No";
+    });
+    pid_fds_fields.empend("Can write", TextAlignment::CenterLeft, [](auto& object) {
+        return object.get("can_write").to_bool() ? "Yes" : "No";
+    });
 
     m_table_view->set_model(GJsonArrayModel::create({}, move(pid_fds_fields)));
 }

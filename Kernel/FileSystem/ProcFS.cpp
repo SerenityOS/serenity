@@ -226,6 +226,8 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
         description_object.add("offset", description->offset());
         description_object.add("cloexec", cloexec);
         description_object.add("blocking", description->is_blocking());
+        description_object.add("can_read", description->can_read());
+        description_object.add("can_write", description->can_write());
     }
     array.finish();
     return builder.build();

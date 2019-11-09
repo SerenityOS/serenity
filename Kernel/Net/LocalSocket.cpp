@@ -195,7 +195,7 @@ bool LocalSocket::can_read(const FileDescription& description) const
         return !has_attached_peer(description) || !m_for_server.is_empty();
     if (role == Role::Connected)
         return !has_attached_peer(description) || !m_for_client.is_empty();
-    ASSERT_NOT_REACHED();
+    return false;
 }
 
 bool LocalSocket::has_attached_peer(const FileDescription& description) const
@@ -215,7 +215,7 @@ bool LocalSocket::can_write(const FileDescription& description) const
         return !has_attached_peer(description) || m_for_client.bytes_in_write_buffer() < 16384;
     if (role == Role::Connected)
         return !has_attached_peer(description) || m_for_server.bytes_in_write_buffer() < 16384;
-    ASSERT_NOT_REACHED();
+    return false;
 }
 
 ssize_t LocalSocket::sendto(FileDescription& description, const void* data, size_t data_size, int, const sockaddr*, socklen_t)
