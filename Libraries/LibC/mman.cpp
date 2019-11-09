@@ -53,7 +53,7 @@ int shm_open(const char* name, int flags, mode_t mode)
 
 int shm_unlink(const char* name)
 {
-    int rc = syscall(SC_shm_close, name);
+    int rc = syscall(SC_shm_unlink, name);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 }
