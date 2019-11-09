@@ -13,6 +13,7 @@ class SoundPlayerWidget final : public GWidget {
 public:
     virtual ~SoundPlayerWidget() override;
     void open_file(String path);
+    void hide_scope(bool);
     PlaybackManager& manager() { return m_manager; }
 
 private:
