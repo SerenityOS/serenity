@@ -248,6 +248,7 @@ void GTreeView::did_update_model()
 
 void GTreeView::did_update_selection()
 {
+    GAbstractView::did_update_selection();
     ASSERT(model());
     auto index = selection().first();
     if (!index.is_valid())
