@@ -13,13 +13,13 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
     dbg() << "CHttpJob::handle_content_encoding: buf has content_encoding = " << content_encoding;
 
     if (content_encoding == "gzip") {
-        if (!Gzip::is_compressed(buf)) {
+        if (!CGzip::is_compressed(buf)) {
             dbg() << "CHttpJob::handle_content_encoding: buf is not gzip compressed!";
         }
 
         dbg() << "CHttpJob::handle_content_encoding: buf is gzip compressed!";
 
-        auto uncompressed = Gzip::decompress(buf);
+        auto uncompressed = CGzip::decompress(buf);
         if (!uncompressed.has_value()) {
             dbg() << "CHttpJob::handle_content_encoding: Gzip::decompress() failed. Returning original buffer.";
             return buf;

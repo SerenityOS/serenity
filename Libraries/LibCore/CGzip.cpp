@@ -7,7 +7,7 @@
 
 #include <LibDraw/puff.h>
 
-bool Gzip::is_compressed(const ByteBuffer& data)
+bool CGzip::is_compressed(const ByteBuffer& data)
 {
     return data.size() > 2 && data[0] == 0x1F && data[1] == 0x8b;
 }
@@ -78,7 +78,7 @@ static Optional<ByteBuffer> get_gzip_payload(const ByteBuffer& data)
     return data.slice(current, new_size);
 }
 
-Optional<ByteBuffer> Gzip::decompress(const ByteBuffer& data)
+Optional<ByteBuffer> CGzip::decompress(const ByteBuffer& data)
 {
     ASSERT(is_compressed(data));
 
