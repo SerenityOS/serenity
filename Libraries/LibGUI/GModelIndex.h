@@ -46,6 +46,8 @@ private:
 
 inline const LogStream& operator<<(const LogStream& stream, const GModelIndex& value)
 {
+    if (value.internal_data())
+        return stream << String::format("GModelIndex(%d,%d,%p)", value.row(), value.column(), value.internal_data());
     return stream << String::format("GModelIndex(%d,%d)", value.row(), value.column());
 }
 
