@@ -24,6 +24,7 @@ asm(
     "    popw %es\n"
     "    popw %fs\n"
     "    popw %gs\n"
+    "    cld\n"
     "    call syscall_trap_entry\n"
     "    popw %gs\n"
     "    popw %gs\n"

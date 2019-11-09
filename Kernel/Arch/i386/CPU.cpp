@@ -55,6 +55,7 @@ asm(
     "    pushw %ss\n"
     "    popw %ds\n"
     "    popw %es\n"
+    "    cld\n"
     "    call handle_irq\n"
     "    popw %es\n"
     "    popw %ds\n"
@@ -82,6 +83,7 @@ asm(
         "    popw %es\n"                                    \
         "    popw %fs\n"                                    \
         "    popw %gs\n"                                    \
+        "    cld\n"                                         \
         "    call exception_" #ec "_handler\n"              \
         "    popw %gs\n"                                    \
         "    popw %gs\n"                                    \
@@ -92,35 +94,36 @@ asm(
         "    add $0x4, %esp\n"                              \
         "    iret\n");
 
-#define EH_ENTRY_NO_CODE(ec)                                 \
+#define EH_ENTRY_NO_CODE(ec)                                \
     extern "C" void exception_##ec##_handler(RegisterDump); \
-    extern "C" void exception_##ec##_entry();                \
-    asm(                                                     \
-        ".globl exception_" #ec "_entry\n"                   \
-        "exception_" #ec "_entry: \n"                        \
-        "    pushl $0x0\n"                                   \
-        "    pusha\n"                                        \
-        "    pushw %ds\n"                                    \
-        "    pushw %es\n"                                    \
-        "    pushw %fs\n"                                    \
-        "    pushw %gs\n"                                    \
-        "    pushw %ss\n"                                    \
-        "    pushw %ss\n"                                    \
-        "    pushw %ss\n"                                    \
-        "    pushw %ss\n"                                    \
-        "    pushw %ss\n"                                    \
-        "    popw %ds\n"                                     \
-        "    popw %es\n"                                     \
-        "    popw %fs\n"                                     \
-        "    popw %gs\n"                                     \
-        "    call exception_" #ec "_handler\n"               \
-        "    popw %gs\n"                                     \
-        "    popw %gs\n"                                     \
-        "    popw %fs\n"                                     \
-        "    popw %es\n"                                     \
-        "    popw %ds\n"                                     \
-        "    popa\n"                                         \
-        "    add $0x4, %esp\n"                               \
+    extern "C" void exception_##ec##_entry();               \
+    asm(                                                    \
+        ".globl exception_" #ec "_entry\n"                  \
+        "exception_" #ec "_entry: \n"                       \
+        "    pushl $0x0\n"                                  \
+        "    pusha\n"                                       \
+        "    pushw %ds\n"                                   \
+        "    pushw %es\n"                                   \
+        "    pushw %fs\n"                                   \
+        "    pushw %gs\n"                                   \
+        "    pushw %ss\n"                                   \
+        "    pushw %ss\n"                                   \
+        "    pushw %ss\n"                                   \
+        "    pushw %ss\n"                                   \
+        "    pushw %ss\n"                                   \
+        "    popw %ds\n"                                    \
+        "    popw %es\n"                                    \
+        "    popw %fs\n"                                    \
+        "    popw %gs\n"                                    \
+        "    cld\n"                                         \
+        "    call exception_" #ec "_handler\n"              \
+        "    popw %gs\n"                                    \
+        "    popw %gs\n"                                    \
+        "    popw %fs\n"                                    \
+        "    popw %es\n"                                    \
+        "    popw %ds\n"                                    \
+        "    popa\n"                                        \
+        "    add $0x4, %esp\n"                              \
         "    iret\n");
 
 static void dump(const RegisterDump& regs)
