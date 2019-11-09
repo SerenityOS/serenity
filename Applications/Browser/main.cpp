@@ -141,6 +141,10 @@ int main(int argc, char** argv)
             dom_inspector_window->set_rect(100, 100, 300, 500);
             dom_inspector_window->set_title("DOM inspector");
             dom_tree_view = GTreeView::construct(nullptr);
+            dom_tree_view->on_selection = [](auto& index) {
+                auto* node = static_cast<Node*>(index.internal_data());
+                node->document().set_inspected_node(node);
+            };
             dom_inspector_window->set_main_widget(dom_tree_view);
         }
         if (html_widget->document())
