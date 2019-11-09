@@ -14,7 +14,7 @@ SHARED_TEST_OBJS = \
     ../URL.o \
     ../Utf8View.o \
 
-.cpp.o:
+%.o: %.cpp ../*.h
 	@echo "HOST_CXX $<"; $(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ -c $<
 
 define execute-command

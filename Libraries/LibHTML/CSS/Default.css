@@ -102,9 +102,18 @@ a:hover {
 hr {
     margin-top: 4;
     margin-bottom: 4;
-    border-width: 1;
-    border-color: #888888;
-    border-style: inset;
+    border-top-width: 1;
+    border-left-width: 1;
+    border-right-width: 1;
+    border-bottom-width: 1;
+    border-top-color: #888888;
+    border-left-color: #888888;
+    border-right-color: #888888;
+    border-bottom-color: #888888;
+    border-top-style: inset;
+    border-left-style: inset;
+    border-right-style: inset;
+    border-bottom-style: inset;
 }
 
 blink {

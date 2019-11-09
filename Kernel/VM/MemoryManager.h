@@ -38,7 +38,7 @@ class MemoryManager {
 public:
     static MemoryManager& the();
 
-    static void initialize();
+    static void initialize(u32 physical_address_for_kernel_page_tables);
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
@@ -79,7 +79,7 @@ public:
     }
 
 private:
-    MemoryManager();
+    MemoryManager(u32 physical_address_for_kernel_page_tables);
     ~MemoryManager();
 
     void register_vmo(VMObject&);
@@ -103,6 +103,7 @@ private:
 
     static Region* region_from_vaddr(VirtualAddress);
 
+    RefPtr<PhysicalPage> find_free_user_physical_page();
     u8* quickmap_page(PhysicalPage&);
     void unquickmap_page();
 

@@ -6,7 +6,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/Syscall.h>
 
-extern "C" void syscall_trap_entry(RegisterDump&);
+extern "C" void syscall_trap_entry(RegisterDump);
 extern "C" void syscall_trap_handler();
 extern volatile RegisterDump* syscallRegDump;
 
@@ -28,7 +28,6 @@ asm(
     "    popw %es\n"
     "    popw %fs\n"
     "    popw %gs\n"
-    "    mov %esp, %eax\n"
     "    call syscall_trap_entry\n"
     "    popw %gs\n"
     "    popw %gs\n"
@@ -328,7 +327,7 @@ static u32 handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3
 
 }
 
-void syscall_trap_entry(RegisterDump& regs)
+void syscall_trap_entry(RegisterDump regs)
 {
     current->process().big_lock().lock();
     u32 function = regs.eax;

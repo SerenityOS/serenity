@@ -2,6 +2,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Comment.h>
+#include <LibHTML/DOM/DocumentFragment.h>
 #include <LibHTML/DOM/DocumentType.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/ElementFactory.h>
@@ -33,13 +34,10 @@ static bool is_self_closing_tag(const StringView& tag_name)
         || tag_name == "wbr";
 }
 
-NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
+static bool parse_html_document(const StringView& html, Document& document, ParentNode& root)
 {
     NonnullRefPtrVector<ParentNode> node_stack;
-
-    auto document = adopt(*new Document);
-    document->set_url(url);
-    node_stack.append(document);
+    node_stack.append(root);
 
     enum class State {
         Free = 0,
@@ -147,7 +145,8 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
                 static Escape escapes[] = {
                     { "&lt;", "<" },
                     { "&gt;", ">" },
-                    { "&amp;", "&" }
+                    { "&amp;", "&" },
+                    { "&mdash;", "-" },
                 };
                 auto rest_of_html = html.substring_view(i, html.length() - i);
                 bool found = false;
@@ -169,13 +168,13 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
                 break;
             }
             if (ch == '!') {
-                if (peek(1) == 'D'
-                    && peek(2) == 'O'
-                    && peek(3) == 'C'
-                    && peek(4) == 'T'
-                    && peek(5) == 'Y'
-                    && peek(6) == 'P'
-                    && peek(7) == 'E') {
+                if (toupper(peek(1)) == 'D'
+                    && toupper(peek(2)) == 'O'
+                    && toupper(peek(3)) == 'C'
+                    && toupper(peek(4)) == 'T'
+                    && toupper(peek(5)) == 'Y'
+                    && toupper(peek(6)) == 'P'
+                    && toupper(peek(7)) == 'E') {
                     i += 7;
                     move_to_state(State::InDoctype);
                     break;
@@ -309,6 +308,27 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
         }
     }
 
+    return true;
+}
+
+RefPtr<DocumentFragment> parse_html_fragment(Document& document, const StringView& html)
+{
+    auto fragment = adopt(*new DocumentFragment(document));
+    if (!parse_html_document(html, document, *fragment))
+        return nullptr;
+    return fragment;
+}
+
+RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
+{
+    auto document = adopt(*new Document);
+    document->set_url(url);
+
+    if (!parse_html_document(html, *document, *document))
+        return nullptr;
+
+    document->fixup();
+
     Function<void(Node&)> fire_insertion_callbacks = [&](Node& node) {
         for (auto* child = node.first_child(); child; child = child->next_sibling()) {
             fire_insertion_callbacks(*child);
@@ -316,8 +336,23 @@ NonnullRefPtr<Document> parse_html(const StringView& html, const URL& url)
         if (node.parent())
             node.inserted_into(*node.parent());
     };
+    fire_insertion_callbacks(document);
 
-    document->fixup();
-    fire_insertion_callbacks(*document);
     return document;
+}
+
+String escape_html_entities(const StringView& html)
+{
+    StringBuilder builder;
+    for (int i = 0; i < html.length(); ++i) {
+        if (html[i] == '<')
+            builder.append("&lt;");
+        else if (html[i] == '>')
+            builder.append("&gt;");
+        else if (html[i] == '&')
+            builder.append("&amp;");
+        else
+            builder.append(html[i]);
+    }
+    return builder.to_string();
 }

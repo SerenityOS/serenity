@@ -36,7 +36,7 @@ void exit_with_usage(int rc)
     exit(rc);
 }
 
-Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer);
+Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache);
 
 int main(int argc, char** argv)
 {
@@ -44,12 +44,16 @@ int main(int argc, char** argv)
     int time_per_benchmark = 10;
     Vector<int> file_sizes;
     Vector<int> block_sizes;
+    bool allow_cache = false;
 
     int opt;
-    while ((opt = getopt(argc, argv, "hd:t:f:b:")) != -1) {
+    while ((opt = getopt(argc, argv, "chd:t:f:b:")) != -1) {
         switch (opt) {
         case 'h':
             exit_with_usage(0);
+            break;
+        case 'c':
+            allow_cache = true;
             break;
         case 'd':
             directory = strdup(optarg);
@@ -94,7 +98,7 @@ int main(int argc, char** argv)
             while (timer.elapsed() < time_per_benchmark * 1000) {
                 printf(".");
                 fflush(stdout);
-                results.append(benchmark(filename, file_size, block_size, buffer));
+                results.append(benchmark(filename, file_size, block_size, buffer, allow_cache));
                 usleep(100);
             }
             auto average = average_result(results);
@@ -110,9 +114,13 @@ int main(int argc, char** argv)
     }
 }
 
-Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer)
+Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache)
 {
-    int fd = open(filename.characters(), O_CREAT | O_TRUNC | O_WRONLY);
+    int flags = O_CREAT | O_TRUNC | O_WRONLY;
+    if (!allow_cache)
+        flags |= O_DIRECT;
+
+    int fd = open(filename.characters(), flags);
     if (fd == -1) {
         perror("open");
         exit(1);

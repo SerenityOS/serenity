@@ -4,7 +4,7 @@
 #include <AK/HashMap.h>
 #include <AK/OwnPtr.h>
 #include <AK/Vector.h>
-#include <AK/ELF/ELFImage.h>
+#include <LibELF/ELFImage.h>
 
 #ifdef KERNEL
 #include <Kernel/VM/VirtualAddress.h>

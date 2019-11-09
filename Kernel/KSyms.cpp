@@ -1,15 +1,15 @@
-#include "KSyms.h"
-#include "Process.h"
-#include "Scheduler.h"
-#include <AK/ELF/ELFLoader.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/FileSystem/FileDescription.h>
+#include <Kernel/KSyms.h>
+#include <Kernel/Process.h>
+#include <Kernel/Scheduler.h>
+#include <LibELF/ELFLoader.h>
 
 static KSym* s_ksyms;
-u32 ksym_lowest_address;
-u32 ksym_highest_address;
-u32 ksym_count;
-bool ksyms_ready;
+u32 ksym_lowest_address = 0xffffffff;
+u32 ksym_highest_address = 0;
+u32 ksym_count = 0;
+bool ksyms_ready = false;
 
 static u8 parse_hex_digit(char nibble)
 {
@@ -134,24 +134,14 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
 void dump_backtrace()
 {
     static bool in_dump_backtrace = false;
-    if (in_dump_backtrace) {
-        dbgprintf("dump_backtrace() called from within itself, what the hell is going on!\n");
+    if (in_dump_backtrace)
         return;
-    }
     TemporaryChange change(in_dump_backtrace, true);
     TemporaryChange disable_kmalloc_stacks(g_dump_kmalloc_stacks, false);
     u32 ebp;
     asm volatile("movl %%ebp, %%eax"
                  : "=a"(ebp));
     dump_backtrace_impl(ebp, ksyms_ready);
-}
-
-void init_ksyms()
-{
-    ksyms_ready = false;
-    ksym_lowest_address = 0xffffffff;
-    ksym_highest_address = 0;
-    ksym_count = 0;
 }
 
 void load_ksyms()

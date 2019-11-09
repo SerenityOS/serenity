@@ -29,6 +29,8 @@ public:
     bool is_justifiable_whitespace() const;
     StringView text() const;
 
+    int text_index_at(float x) const;
+
 private:
     const LayoutNode& m_layout_node;
     int m_start { 0 };

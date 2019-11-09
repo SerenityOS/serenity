@@ -1,6 +1,6 @@
 #include "TaskbarButton.h"
 #include <LibGUI/GAction.h>
-#include <LibGUI/GEventLoop.h>
+#include <LibGUI/GWindowServerConnection.h>
 #include <WindowServer/WSAPITypes.h>
 
 TaskbarButton::TaskbarButton(const WindowIdentifier& identifier, GWidget* parent)

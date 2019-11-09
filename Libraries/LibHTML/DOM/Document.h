@@ -44,6 +44,10 @@ public:
     Node* hovered_node() { return m_hovered_node; }
     const Node* hovered_node() const { return m_hovered_node; }
 
+    void set_inspected_node(Node*);
+    Node* inspected_node() { return m_inspected_node; }
+    const Node* inspected_node() const { return m_inspected_node; }
+
     const HTMLHtmlElement* document_element() const;
     const HTMLHeadElement* head() const;
     const HTMLBodyElement* body() const;
@@ -91,6 +95,7 @@ private:
     OwnPtr<StyleResolver> m_style_resolver;
     NonnullRefPtrVector<StyleSheet> m_sheets;
     RefPtr<Node> m_hovered_node;
+    RefPtr<Node> m_inspected_node;
     WeakPtr<Frame> m_frame;
     URL m_url;
 

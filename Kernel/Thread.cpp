@@ -1,4 +1,3 @@
-#include <AK/ELF/ELFLoader.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
@@ -6,6 +5,7 @@
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/signal_numbers.h>
+#include <LibELF/ELFLoader.h>
 
 //#define SIGNAL_DEBUG
 
@@ -669,4 +669,21 @@ void Thread::make_thread_specific_region(Badge<Process>)
 const LogStream& operator<<(const LogStream& stream, const Thread& value)
 {
     return stream << value.process().name() << "(" << value.pid() << ":" << value.tid() << ")";
+}
+
+const char* to_string(ThreadPriority priority)
+{
+    switch (priority) {
+    case ThreadPriority::Idle:
+        return "Idle";
+    case ThreadPriority::Low:
+        return "Low";
+    case ThreadPriority::Normal:
+        return "Normal";
+    case ThreadPriority::High:
+        return "High";
+    }
+    dbg() << "to_string(ThreadPriority): Invalid priority: " << (u32)priority;
+    ASSERT_NOT_REACHED();
+    return nullptr;
 }

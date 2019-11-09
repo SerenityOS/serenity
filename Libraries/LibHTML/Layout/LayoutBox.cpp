@@ -21,6 +21,9 @@ void LayoutBox::render(RenderingContext& context)
         context.painter().draw_rect(m_rect, Color::Red);
 #endif
 
+    if (node() && document().inspected_node() == node())
+        context.painter().draw_rect(m_rect, Color::Magenta);
+
     Rect padded_rect;
     padded_rect.set_x(x() - box_model().padding().left.to_px());
     padded_rect.set_width(width() + box_model().padding().left.to_px() + box_model().padding().right.to_px());
@@ -46,9 +49,22 @@ void LayoutBox::render(RenderingContext& context)
     auto border_width_value = style().property(CSS::PropertyID::BorderTopWidth);
     auto border_color_value = style().property(CSS::PropertyID::BorderTopColor);
     auto border_style_value = style().property(CSS::PropertyID::BorderTopStyle);
-    if (border_width_value.has_value() && border_color_value.has_value()) {
+
+    if (border_width_value.has_value()) {
         int border_width = border_width_value.value()->to_length().to_px();
-        Color border_color = border_color_value.value()->to_color(document());
+
+        Color border_color;
+        if (border_color_value.has_value())
+            border_color = border_color_value.value()->to_color(document());
+        else {
+            // FIXME: This is basically CSS "currentColor" which should be handled elsewhere
+            //        in a much more reusable way.
+            auto color_value = style().property(CSS::PropertyID::Color);
+            if (color_value.has_value())
+                border_color = color_value.value()->to_color(document());
+            else
+                border_color = Color::Black;
+        }
 
         if (border_style_value.has_value() && border_style_value.value()->to_string() == "inset") {
             // border-style: inset

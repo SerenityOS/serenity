@@ -46,8 +46,6 @@
 
 VirtualConsole* tty0;
 VirtualConsole* tty1;
-VirtualConsole* tty2;
-VirtualConsole* tty3;
 KeyboardDevice* keyboard;
 PS2MouseDevice* ps2mouse;
 SB16* sb16;
@@ -68,7 +66,7 @@ VFS* vfs;
     auto dev_random = make<RandomDevice>();
     auto dev_ptmx = make<PTYMultiplexer>();
 
-    bool textmode = !KParams::the().get("text_debug").is_null();
+    bool text_debug = KParams::the().has("text_debug");
 
     auto root = KParams::the().get("root");
     if (root.is_empty()) {
@@ -165,14 +163,14 @@ VFS* vfs;
     // SystemServer will start WindowServer, which will be doing graphics.
     // From this point on we don't want to touch the VGA text terminal or
     // accept keyboard input.
-    if (textmode) {
+    if (text_debug) {
         tty0->set_graphical(false);
         auto* shell_process = Process::create_user_process("/bin/Shell", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
         if (error != 0) {
             kprintf("init_stage2: error spawning Shell: %d\n", error);
             hang();
         }
-        shell_process->set_priority(Process::HighPriority);
+        shell_process->main_thread().set_priority(ThreadPriority::High);
     } else {
         tty0->set_graphical(true);
         auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
@@ -180,7 +178,7 @@ VFS* vfs;
             kprintf("init_stage2: error spawning SystemServer: %d\n", error);
             hang();
         }
-        system_server_process->set_priority(Process::HighPriority);
+        system_server_process->main_thread().set_priority(ThreadPriority::High);
     }
     Process::create_kernel_process("NetworkTask", NetworkTask_main);
 
@@ -208,7 +206,7 @@ extern "C" int __cxa_atexit ( void (*)(void *), void *, void *)
     return 0;
 }
 
-extern "C" [[noreturn]] void init()
+extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
 {
     // this is only used one time, directly below here. we can't use this part
     // of libc at this point in the boot process, or we'd just pull strstr in
@@ -233,12 +231,11 @@ extern "C" [[noreturn]] void init()
 
     kmalloc_init();
     slab_alloc_init();
-    init_ksyms();
 
     // must come after kmalloc_init because we use AK_MAKE_ETERNAL in KParams
     new KParams(String(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline)));
 
-    bool textmode = !KParams::the().get("text_debug").is_null();
+    bool text_debug = KParams::the().has("text_debug");
 
     vfs = new VFS;
     dev_debuglog = new DebugLogDevice;
@@ -267,13 +264,11 @@ extern "C" [[noreturn]] void init()
     VirtualConsole::initialize();
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
     tty1 = new VirtualConsole(1);
-    tty2 = new VirtualConsole(2);
-    tty3 = new VirtualConsole(3);
     VirtualConsole::switch_to(0);
 
     kprintf("Starting Serenity Operating System...\n");
 
-    MemoryManager::initialize();
+    MemoryManager::initialize(physical_address_for_kernel_page_tables);
 
     if (APIC::init())
         APIC::enable(0);
@@ -289,7 +284,7 @@ extern "C" [[noreturn]] void init()
             id.device_id);
     });
 
-    if (textmode) {
+    if (text_debug) {
         dbgprintf("Text mode enabled\n");
     } else {
         if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
@@ -307,12 +302,6 @@ extern "C" [[noreturn]] void init()
     auto e1000 = E1000NetworkAdapter::autodetect();
     auto rtl8139 = RTL8139NetworkAdapter::autodetect();
 
-    NonnullRefPtr<ProcFS> new_procfs = ProcFS::create();
-    new_procfs->initialize();
-
-    auto devptsfs = DevPtsFS::create();
-    devptsfs->initialize();
-
     Process::initialize();
     Thread::initialize();
     Process::create_kernel_process("init_stage2", init_stage2);
@@ -324,7 +313,7 @@ extern "C" [[noreturn]] void init()
     });
     Process::create_kernel_process("Finalizer", [] {
         g_finalizer = current;
-        current->process().set_priority(Process::LowPriority);
+        current->set_priority(ThreadPriority::Low);
         for (;;) {
             Thread::finalize_dying_threads();
             (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Lurking);

@@ -1,15 +1,15 @@
-#include "GWidget.h"
-#include "GEvent.h"
-#include "GEventLoop.h"
-#include "GWindow.h"
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
+#include <LibDraw/GraphicsBitmap.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GEvent.h>
 #include <LibGUI/GLayout.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GPainter.h>
-#include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
+#include <LibGUI/GWindowServerConnection.h>
 #include <unistd.h>
 
 GWidget::GWidget(GWidget* parent)
@@ -27,8 +27,12 @@ GWidget::~GWidget()
 void GWidget::child_event(CChildEvent& event)
 {
     if (event.type() == GEvent::ChildAdded) {
-        if (event.child() && is<GWidget>(*event.child()) && layout())
-            layout()->add_widget(to<GWidget>(*event.child()));
+        if (event.child() && is<GWidget>(*event.child()) && layout()) {
+            if (event.insertion_before_child() && event.insertion_before_child()->is_widget())
+                layout()->insert_widget_before(to<GWidget>(*event.child()), to<GWidget>(*event.insertion_before_child()));
+            else
+                layout()->add_widget(to<GWidget>(*event.child()));
+        }
     }
     if (event.type() == GEvent::ChildRemoved) {
         if (layout()) {

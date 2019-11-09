@@ -45,13 +45,58 @@ public:
     const T* first_child() const { return m_first_child; }
     const T* last_child() const { return m_last_child; }
 
+    int child_count() const
+    {
+        int count = 0;
+        for (auto* child = first_child(); child; child = child->next_sibling())
+            ++count;
+        return count;
+    }
+
+    T* child_at_index(int index)
+    {
+        int count = 0;
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (count == index)
+                return child;
+            ++count;
+        }
+        return nullptr;
+    }
+
+    const T* child_at_index(int index) const
+    {
+        return const_cast<TreeNode*>(this)->child_at_index(index);
+    }
+
     bool is_ancestor_of(const TreeNode&) const;
 
     void prepend_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
     void append_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
+    NonnullRefPtr<T> remove_child(NonnullRefPtr<T> node, bool call_removed_from = true);
     void donate_all_children_to(T& node);
 
     bool is_child_allowed(const T&) const { return true; }
+
+    T* next_in_pre_order()
+    {
+        if (first_child())
+            return first_child();
+        T* node;
+        if (!(node = next_sibling())) {
+            node = parent();
+            while (node && !node->next_sibling())
+                node = node->parent();
+            if (node)
+                node = node->next_sibling();
+        }
+        return node;
+    }
+
+    const T* next_in_pre_order() const
+    {
+        return const_cast<TreeNode*>(this)->next_in_pre_order();
+    }
 
     template<typename Callback>
     IterationDecision for_each_in_subtree(Callback callback) const
@@ -88,6 +133,35 @@ private:
     T* m_next_sibling { nullptr };
     T* m_previous_sibling { nullptr };
 };
+
+template<typename T>
+inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node, bool call_removed_from)
+{
+    ASSERT(node->m_parent == this);
+
+    if (m_first_child == node)
+        m_first_child = node->m_next_sibling;
+
+    if (m_last_child == node)
+        m_last_child = node->m_previous_sibling;
+
+    if (node->m_next_sibling)
+        node->m_next_sibling->m_previous_sibling = node->m_previous_sibling;
+
+    if (node->m_previous_sibling)
+        node->m_previous_sibling->m_next_sibling = node->m_next_sibling;
+
+    node->m_next_sibling = nullptr;
+    node->m_previous_sibling = nullptr;
+    node->m_parent = nullptr;
+
+    if (call_removed_from)
+        node->removed_from(static_cast<T&>(*this));
+
+    node->deref();
+
+    return node;
+}
 
 template<typename T>
 inline void TreeNode<T>::append_child(NonnullRefPtr<T> node, bool call_inserted_into)

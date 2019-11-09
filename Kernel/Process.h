@@ -44,15 +44,6 @@ public:
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
 
-    enum Priority : u8 {
-        IdlePriority,
-        FirstPriority = IdlePriority,
-        LowPriority,
-        NormalPriority,
-        HighPriority,
-        LastPriority = HighPriority,
-    };
-
     enum RingLevel : u8 {
         Ring0 = 0,
         Ring3 = 3,
@@ -74,9 +65,6 @@ public:
     const PageDirectory& page_directory() const { return *m_page_directory; }
 
     static Process* from_pid(pid_t);
-
-    void set_priority(Priority p) { m_priority = p; }
-    Priority priority() const { return m_priority; }
 
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
@@ -351,7 +339,6 @@ private:
     Vector<FileDescriptionAndFlags> m_fds;
 
     RingLevel m_ring { Ring0 };
-    Priority m_priority { NormalPriority };
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
 
@@ -361,7 +348,7 @@ private:
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
 
-    TTY* m_tty { nullptr };
+    RefPtr<TTY> m_tty;
 
     Region* region_from_range(const Range&);
     Region* region_containing(const Range&);
@@ -429,7 +416,7 @@ private:
     Process& m_process;
 };
 
-extern const char* to_string(Process::Priority);
+const char* to_string(ThreadPriority);
 
 extern InlineLinkedList<Process>* g_processes;
 

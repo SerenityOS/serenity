@@ -688,7 +688,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("amount_resident", (u32)process.amount_resident());
         process_object.add("amount_shared", (u32)process.amount_shared());
         process_object.add("ticks", process.main_thread().ticks());
-        process_object.add("priority", to_string(process.priority()));
+        process_object.add("priority", to_string(process.main_thread().priority()));
         process_object.add("syscall_count", process.syscall_count());
         process_object.add("inode_faults", process.inode_faults());
         process_object.add("zero_faults", process.zero_faults());

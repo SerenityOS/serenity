@@ -31,24 +31,6 @@ const LogStream& operator<<(const LogStream& stream, const void* value)
     return stream << String::format("%p", value);
 }
 
-const LogStream& operator<<(const LogStream& stream, const TStyle& style)
-{
-    stream << "\033[";
-
-    if (style.color() != TStyle::Color::NoColor)
-        stream << ((int)style.color() + 30) << (style.attributes() ? ";" : "");
-    else
-        stream << '0';
-
-    if (style.attributes() & TStyle::Attribute::Bold)
-        stream << '1';
-
-    stream << 'm';
-
-    stream.m_needs_style_reset = true;
-    return stream;
-}
-
 #ifdef USERLAND
 static TriState got_process_name = TriState::Unknown;
 static char process_name_buffer[256];
@@ -65,7 +47,7 @@ DebugLogStream dbg()
             got_process_name = TriState::False;
     }
     if (got_process_name == TriState::True)
-        stream << TStyle(TStyle::Color::Brown, TStyle::Attribute::Bold) << process_name_buffer << '(' << getpid() << ")" << TStyle(TStyle::None) << ": ";
+        stream << "\033[33;1m" << process_name_buffer << '(' << getpid() << ")\033[0m: ";
 #endif
     return stream;
 }

@@ -27,7 +27,9 @@ RefPtr<ABuffer> AWavLoader::get_more_samples(size_t max_bytes_to_read_from_input
         return nullptr;
 
     auto buffer = ABuffer::from_pcm_data(raw_samples, *m_resampler, m_num_channels, m_bits_per_sample);
-    m_loaded_samples += buffer->sample_count();
+    //Buffer contains normalized samples, but m_loaded_samples should containt the ammount of actually loaded samples
+    m_loaded_samples += static_cast<int>(max_bytes_to_read_from_input) / (m_num_channels * (m_bits_per_sample / 8));
+    m_loaded_samples = min(m_total_samples, m_loaded_samples);
     return buffer;
 }
 

@@ -6,6 +6,7 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GSlider.h>
 #include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
 
 class SoundPlayerWidget final : public GWidget {
     C_OBJECT(SoundPlayerWidget)
@@ -13,7 +14,7 @@ public:
     virtual ~SoundPlayerWidget() override;
 
 private:
-    explicit SoundPlayerWidget(NonnullRefPtr<AClientConnection>, AWavLoader&);
+    explicit SoundPlayerWidget(GWindow&, NonnullRefPtr<AClientConnection>, AWavLoader&);
 
     void update_position(const int position);
     void update_ui();

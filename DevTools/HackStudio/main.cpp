@@ -2,6 +2,7 @@
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
+#include "FormEditorWidget.h"
 #include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
@@ -19,10 +20,13 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GSplitter.h>
+#include <LibGUI/GStackWidget.h>
 #include <LibGUI/GTabWidget.h>
+#include <LibGUI/GTableView.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GTextEditor.h>
 #include <LibGUI/GToolBar.h>
+#include <LibGUI/GTreeView.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
@@ -35,12 +39,38 @@ String g_currently_open_file;
 OwnPtr<Project> g_project;
 RefPtr<GWindow> g_window;
 RefPtr<GListView> g_project_list_view;
+RefPtr<GStackWidget> g_right_hand_stack;
+RefPtr<GSplitter> g_text_inner_splitter;
+RefPtr<GWidget> g_form_inner_container;
+RefPtr<FormEditorWidget> g_form_editor_widget;
+
+static RefPtr<GTabWidget> s_action_tab_widget;
 
 void add_new_editor(GWidget& parent)
 {
-    auto wrapper = EditorWrapper::construct(&parent);
+    auto wrapper = EditorWrapper::construct(nullptr);
+    if (s_action_tab_widget) {
+        parent.insert_child_before(wrapper, *s_action_tab_widget);
+    } else {
+        parent.add_child(wrapper);
+    }
     g_current_editor_wrapper = wrapper;
     g_all_editor_wrappers.append(wrapper);
+    wrapper->editor().set_focus(true);
+}
+
+enum class EditMode {
+    Text,
+    Form,
+};
+
+void set_edit_mode(EditMode mode)
+{
+    if (mode == EditMode::Text) {
+        g_right_hand_stack->set_active_widget(g_text_inner_splitter);
+    } else if (mode == EditMode::Form) {
+        g_right_hand_stack->set_active_widget(g_form_inner_container);
+    }
 }
 
 EditorWrapper& current_editor_wrapper()
@@ -61,6 +91,8 @@ void open_file(const String&);
 int main(int argc, char** argv)
 {
     GApplication app(argc, argv);
+
+    Function<void()> update_actions;
 
     g_window = GWindow::construct();
     g_window->set_rect(100, 100, 800, 600);
@@ -86,12 +118,46 @@ int main(int argc, char** argv)
     g_project_list_view = GListView::construct(outer_splitter);
     g_project_list_view->set_model(g_project->model());
     g_project_list_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    g_project_list_view->set_preferred_size(200, 0);
+    g_project_list_view->set_preferred_size(140, 0);
 
-    auto inner_splitter = GSplitter::construct(Orientation::Vertical, outer_splitter);
-    inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
-    add_new_editor(inner_splitter);
-    add_new_editor(inner_splitter);
+    g_right_hand_stack = GStackWidget::construct(outer_splitter);
+
+    g_form_inner_container = GWidget::construct(g_right_hand_stack);
+    g_form_inner_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    auto form_widgets_toolbar = GToolBar::construct(Orientation::Vertical, 26, g_form_inner_container);
+    form_widgets_toolbar->set_preferred_size(38, 0);
+
+    form_widgets_toolbar->add_action(GAction::create("GLabel", GraphicsBitmap::load_from_file("/res/icons/vbwidgets/label.png"), [&](auto&) {}));
+    form_widgets_toolbar->add_action(GAction::create("GButton", GraphicsBitmap::load_from_file("/res/icons/vbwidgets/button.png"), [&](auto&) {}));
+    form_widgets_toolbar->add_action(GAction::create("GSpinBox", GraphicsBitmap::load_from_file("/res/icons/vbwidgets/spinbox.png"), [&](auto&) {}));
+
+    auto form_editor_inner_splitter = GSplitter::construct(Orientation::Horizontal, g_form_inner_container);
+
+    g_form_editor_widget = FormEditorWidget::construct(form_editor_inner_splitter);
+
+    auto form_editing_pane_container = GSplitter::construct(Orientation::Vertical, form_editor_inner_splitter);
+    form_editing_pane_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    form_editing_pane_container->set_preferred_size(170, 0);
+    form_editing_pane_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
+
+    auto add_properties_pane = [&](auto& text, auto pane_widget) {
+        auto wrapper = GWidget::construct(form_editing_pane_container.ptr());
+        wrapper->set_layout(make<GBoxLayout>(Orientation::Vertical));
+        auto label = GLabel::construct(text, wrapper);
+        label->set_fill_with_background_color(true);
+        label->set_text_alignment(TextAlignment::CenterLeft);
+        label->set_font(Font::default_bold_font());
+        label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        label->set_preferred_size(0, 16);
+        wrapper->add_child(pane_widget);
+    };
+
+    add_properties_pane("Form widget tree:", GTreeView::construct(nullptr));
+    add_properties_pane("Widget properties:", GTableView::construct(nullptr));
+
+    g_text_inner_splitter = GSplitter::construct(Orientation::Vertical, g_right_hand_stack);
+    g_text_inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
+    add_new_editor(*g_text_inner_splitter);
 
     auto new_action = GAction::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
         auto input_box = GInputBox::construct("Enter name of new file:", "Add new file to project", g_window);
@@ -126,13 +192,47 @@ int main(int argc, char** argv)
     auto switch_to_next_editor = GAction::create("Switch to next editor", { Mod_Ctrl, Key_E }, [&](auto&) {
         if (g_all_editor_wrappers.size() <= 1)
             return;
-        // FIXME: This will only work correctly when there are 2 editors. Make it work for any editor count.
-        for (auto& wrapper : g_all_editor_wrappers) {
-            if (&wrapper == &current_editor_wrapper())
-                continue;
-            wrapper.editor().set_focus(true);
-            return;
+        Vector<EditorWrapper*> wrappers;
+        g_text_inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
+            wrappers.append(&child);
+            return IterationDecision::Continue;
+        });
+        for (int i = 0; i < wrappers.size(); ++i) {
+            if (g_current_editor_wrapper.ptr() == wrappers[i]) {
+                if (i == wrappers.size() - 1)
+                    wrappers[0]->editor().set_focus(true);
+                else
+                    wrappers[i + 1]->editor().set_focus(true);
+            }
         }
+    });
+
+    auto switch_to_previous_editor = GAction::create("Switch to previous editor", { Mod_Ctrl | Mod_Shift, Key_E }, [&](auto&) {
+        if (g_all_editor_wrappers.size() <= 1)
+            return;
+        Vector<EditorWrapper*> wrappers;
+        g_text_inner_splitter->for_each_child_of_type<EditorWrapper>([&](auto& child) {
+            wrappers.append(&child);
+            return IterationDecision::Continue;
+        });
+        for (int i = wrappers.size() - 1; i >= 0; --i) {
+            if (g_current_editor_wrapper.ptr() == wrappers[i]) {
+                if (i == 0)
+                    wrappers.last()->editor().set_focus(true);
+                else
+                    wrappers[i - 1]->editor().set_focus(true);
+            }
+        }
+    });
+
+    auto remove_current_editor_action = GAction::create("Remove current editor", { Mod_Alt | Mod_Shift, Key_E }, [&](auto&) {
+        if (g_all_editor_wrappers.size() <= 1)
+            return;
+        auto wrapper = g_current_editor_wrapper;
+        switch_to_next_editor->activate();
+        g_text_inner_splitter->remove_child(*wrapper);
+        g_all_editor_wrappers.remove_first_matching([&](auto& entry) { return entry == wrapper.ptr(); });
+        update_actions();
     });
 
     auto save_action = GAction::create("Save", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [&](auto&) {
@@ -159,31 +259,35 @@ int main(int argc, char** argv)
         open_file(filename);
     };
 
-    auto tab_widget = GTabWidget::construct(inner_splitter);
+    s_action_tab_widget = GTabWidget::construct(g_text_inner_splitter);
 
-    tab_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    tab_widget->set_preferred_size(0, 24);
+    s_action_tab_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    s_action_tab_widget->set_preferred_size(0, 24);
 
     auto reveal_action_tab = [&](auto& widget) {
-        dbg() << "tab_widget preferred height: " << tab_widget->preferred_size().height();
-        if (tab_widget->preferred_size().height() < 200)
-            tab_widget->set_preferred_size(0, 200);
-        tab_widget->set_active_widget(widget);
+        if (s_action_tab_widget->preferred_size().height() < 200)
+            s_action_tab_widget->set_preferred_size(0, 200);
+        s_action_tab_widget->set_active_widget(widget);
     };
 
     auto hide_action_tabs = [&] {
-        tab_widget->set_preferred_size(0, 24);
+        s_action_tab_widget->set_preferred_size(0, 24);
     };
 
     auto hide_action_tabs_action = GAction::create("Hide action tabs", { Mod_Ctrl | Mod_Shift, Key_X }, [&](auto&) {
         hide_action_tabs();
     });
 
+    auto add_editor_action = GAction::create("Add new editor", { Mod_Ctrl | Mod_Alt, Key_E }, [&](auto&) {
+        add_new_editor(*g_text_inner_splitter);
+        update_actions();
+    });
+
     auto find_in_files_widget = FindInFilesWidget::construct(nullptr);
-    tab_widget->add_widget("Find in files", find_in_files_widget);
+    s_action_tab_widget->add_widget("Find in files", find_in_files_widget);
 
     auto terminal_wrapper = TerminalWrapper::construct(nullptr);
-    tab_widget->add_widget("Console", terminal_wrapper);
+    s_action_tab_widget->add_widget("Console", terminal_wrapper);
 
     auto locator = Locator::construct(widget);
 
@@ -231,6 +335,9 @@ int main(int argc, char** argv)
     auto view_menu = make<GMenu>("View");
     view_menu->add_action(hide_action_tabs_action);
     view_menu->add_action(open_locator_action);
+    view_menu->add_separator();
+    view_menu->add_action(add_editor_action);
+    view_menu->add_action(remove_current_editor_action);
     menubar->add_menu(move(view_menu));
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
@@ -247,7 +354,13 @@ int main(int argc, char** argv)
 
     g_window->show();
 
-    open_file("main.cpp");
+    update_actions = [&]() {
+        remove_current_editor_action->set_enabled(g_all_editor_wrappers.size() > 1);
+    };
+
+    open_file("test.frm");
+
+    update_actions();
     return app.exec();
 }
 
@@ -321,6 +434,12 @@ void open_file(const String& filename)
         rehighlight();
     } else {
         current_editor().on_change = nullptr;
+    }
+
+    if (filename.ends_with(".frm")) {
+        set_edit_mode(EditMode::Form);
+    } else {
+        set_edit_mode(EditMode::Text);
     }
 
     g_currently_open_file = filename;

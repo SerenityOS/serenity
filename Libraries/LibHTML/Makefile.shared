@@ -51,6 +51,7 @@ LIBHTML_OBJS = \
     Layout/LineBox.o \
     Layout/LineBoxFragment.o \
     Layout/LayoutTreeBuilder.o \
+    DOMTreeModel.o \
     FontCache.o \
     ResourceLoader.o \
     HtmlView.o \

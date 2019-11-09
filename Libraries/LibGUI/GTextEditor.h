@@ -4,6 +4,7 @@
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtrVector.h>
+#include <LibCore/CTimer.h>
 #include <LibDraw/TextAlignment.h>
 #include <LibGUI/GScrollableWidget.h>
 #include <LibGUI/GTextDocument.h>
@@ -68,6 +69,8 @@ public:
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     void set_selection(const GTextRange&);
+    bool can_undo() const { return m_undo_stack_index < m_undo_stack.size() && !m_undo_stack.is_empty(); }
+    bool can_redo() const { return m_undo_stack_index > 0 && m_undo_stack[m_undo_stack_index - 1].m_undo_vector.size() > 0 && !m_undo_stack.is_empty(); }
 
     String text() const;
 
@@ -158,6 +161,11 @@ private:
     Rect ruler_rect_in_inner_coordinates() const;
     Rect visible_text_rect_in_inner_coordinates() const;
     void recompute_all_visual_lines();
+    void ensure_cursor_is_valid();
+    void flush_pending_change_notification_if_needed();
+    void get_selection_line_boundaries(int& first_line, int& last_line);
+    void move_selected_lines_up();
+    void move_selected_lines_down();
 
     class UndoCommand {
 
@@ -216,6 +224,10 @@ private:
         GTextPosition m_text_position;
     };
 
+    struct UndoCommandsContainer {
+        NonnullOwnPtrVector<UndoCommand> m_undo_vector;
+    };
+
     void add_to_undo_stack(NonnullOwnPtr<UndoCommand> undo_command);
     int visual_line_containing(int line_index, int column) const;
     void recompute_visual_lines(int line_index);
@@ -227,7 +239,7 @@ private:
     bool m_cursor_state { true };
     bool m_in_drag_select { false };
     bool m_ruler_visible { false };
-    bool m_have_pending_change_notification { false };
+    bool m_has_pending_change_notification { false };
     bool m_automatic_indentation_enabled { false };
     bool m_line_wrapping_enabled { false };
     bool m_readonly { false };
@@ -244,10 +256,10 @@ private:
     RefPtr<GAction> m_delete_action;
     CElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
-    NonnullOwnPtrVector<NonnullOwnPtrVector<UndoCommand>> m_undo_stack;
-    int m_undo_index = 0;
-    int m_undo_timer = 0;
-    int m_prev_undo_stack_size = 0;
+    NonnullOwnPtrVector<UndoCommandsContainer> m_undo_stack;
+    int m_undo_stack_index = 0;
+    RefPtr<CTimer> m_undo_timer;
+    int m_last_updated_undo_vector_size = 0;
 
     RefPtr<GTextDocument> m_document;
 
