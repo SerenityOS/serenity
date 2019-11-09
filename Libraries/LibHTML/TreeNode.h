@@ -45,6 +45,30 @@ public:
     const T* first_child() const { return m_first_child; }
     const T* last_child() const { return m_last_child; }
 
+    int child_count() const
+    {
+        int count = 0;
+        for (auto* child = first_child(); child; child = child->next_sibling())
+            ++count;
+        return count;
+    }
+
+    T* child_at_index(int index)
+    {
+        int count = 0;
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (count == index)
+                return child;
+            ++count;
+        }
+        return nullptr;
+    }
+
+    const T* child_at_index(int index) const
+    {
+        return const_cast<TreeNode*>(this)->child_at_index(index);
+    }
+
     bool is_ancestor_of(const TreeNode&) const;
 
     void prepend_child(NonnullRefPtr<T> node, bool call_inserted_into = true);
