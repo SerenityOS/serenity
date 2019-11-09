@@ -1,13 +1,13 @@
 #include "SoundPlayerWidget.h"
 #include <LibAudio/AClientConnection.h>
 #include <LibDraw/CharacterBitmap.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GFilePicker.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
-#include <LibGUI/GAboutDialog.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -33,24 +33,30 @@ int main(int argc, char** argv)
         player->manager().play();
     }
 
+    auto hide_scope = GAction::create("Hide scope", [&](GAction& action) {
+        action.set_checked(!action.is_checked());
+        player->hide_scope(action.is_checked());
+    });
+    hide_scope->set_checkable(true);
+
     app_menu->add_action(GCommonActions::make_open_action([&](auto&) {
         Optional<String> path = GFilePicker::get_open_filepath("Open wav file...");
         if (path.has_value()) {
             player->open_file(path.value());
         }
     }));
-
+    app_menu->add_action(move(hide_scope));
     app_menu->add_separator();
     app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
 
-    menubar->add_menu(move(app_menu));
-
     auto help_menu = make<GMenu>("Help");
     help_menu->add_action(GAction::create("About", [](auto&) {
         GAboutDialog::show("SoundPlayer", GraphicsBitmap::load_from_file("/res/icons/32x32/app-sound-player.png"));
     }));
+
+    menubar->add_menu(move(app_menu));
     menubar->add_menu(move(help_menu));
     app.set_menubar(move(menubar));
 

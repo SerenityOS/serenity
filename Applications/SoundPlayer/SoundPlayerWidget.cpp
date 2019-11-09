@@ -26,7 +26,11 @@ SoundPlayerWidget::SoundPlayerWidget(GWindow& window, NonnullRefPtr<AClientConne
     m_elapsed->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_elapsed->set_preferred_size(80, 0);
 
-    m_sample_widget = SampleWidget::construct(status_widget);
+    auto sample_widget_container = GWidget::construct(status_widget.ptr());
+    sample_widget_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    sample_widget_container->set_size_policy(SizePolicy::Fill, SizePolicy::Fill);
+
+    m_sample_widget = SampleWidget::construct(sample_widget_container);
 
     m_remaining = GLabel::construct(status_widget);
     m_remaining->set_frame_shape(FrameShape::Container);
@@ -80,6 +84,11 @@ SoundPlayerWidget::~SoundPlayerWidget()
 
 SoundPlayerWidget::Slider::~Slider()
 {
+}
+
+void SoundPlayerWidget::hide_scope(bool hide)
+{
+    m_sample_widget->set_visible(!hide);
 }
 
 void SoundPlayerWidget::open_file(String path)
