@@ -69,6 +69,8 @@ public:
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     void set_selection(const GTextRange&);
+    bool can_undo() const { return m_undo_stack_index < m_undo_stack.size() && !m_undo_stack.is_empty(); }
+    bool can_redo() const { return m_undo_stack_index > 0 && m_undo_stack[m_undo_stack_index - 1].m_undo_vector.size() > 0 && !m_undo_stack.is_empty(); }
 
     String text() const;
 
