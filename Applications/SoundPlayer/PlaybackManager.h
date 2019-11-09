@@ -10,7 +10,7 @@
 
 class PlaybackManager final {
 public:
-    PlaybackManager(NonnullRefPtr<AClientConnection>, AWavLoader&);
+    PlaybackManager(NonnullRefPtr<AClientConnection>);
     ~PlaybackManager();
 
     void play();
@@ -18,6 +18,7 @@ public:
     void pause();
     void seek(const int position);
     bool toggle_pause();
+    void set_loader(OwnPtr<AWavLoader>&&);
 
     int last_seek() const { return m_last_seek; }
     bool is_paused() const { return m_paused; }
@@ -25,7 +26,6 @@ public:
     RefPtr<ABuffer> current_buffer() const { return m_current_buffer; }
 
     NonnullRefPtr<AClientConnection> connection() const { return m_connection; }
-    AWavLoader& loader() const { return m_loader; }
 
     Function<void()> on_update;
 
@@ -38,8 +38,8 @@ private:
     bool m_paused { true };
     int m_next_ptr { 0 };
     int m_last_seek { 0 };
-    float m_total_length;
-    AWavLoader& m_loader;
+    float m_total_length { 0 };
+    OwnPtr<AWavLoader> m_loader { nullptr };
     NonnullRefPtr<AClientConnection> m_connection;
     RefPtr<ABuffer> m_next_buffer;
     RefPtr<ABuffer> m_current_buffer;

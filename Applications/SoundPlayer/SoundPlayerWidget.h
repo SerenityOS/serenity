@@ -12,9 +12,11 @@ class SoundPlayerWidget final : public GWidget {
     C_OBJECT(SoundPlayerWidget)
 public:
     virtual ~SoundPlayerWidget() override;
+    void open_file(String path);
+    PlaybackManager& manager() { return m_manager; }
 
 private:
-    explicit SoundPlayerWidget(GWindow&, NonnullRefPtr<AClientConnection>, AWavLoader&);
+    explicit SoundPlayerWidget(GWindow&, NonnullRefPtr<AClientConnection>);
 
     void update_position(const int position);
     void update_ui();
@@ -47,6 +49,8 @@ private:
         }
     };
 
+    GWindow& m_window;
+    NonnullRefPtr<AClientConnection> m_connection;
     PlaybackManager m_manager;
     float m_sample_ratio;
     RefPtr<GLabel> m_status;
@@ -57,4 +61,5 @@ private:
     RefPtr<GraphicsBitmap> m_play_icon { GraphicsBitmap::load_from_file("/res/icons/16x16/play.png") };
     RefPtr<GraphicsBitmap> m_pause_icon { GraphicsBitmap::load_from_file("/res/icons/16x16/pause.png") };
     RefPtr<GButton> m_play;
+    RefPtr<GButton> m_stop;
 };
