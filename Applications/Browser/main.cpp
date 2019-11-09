@@ -9,9 +9,11 @@
 #include <LibGUI/GStatusBar.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GToolBar.h>
+#include <LibGUI/GTreeView.h>
 #include <LibGUI/GWindow.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOMTreeModel.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutBlock.h>
@@ -128,6 +130,27 @@ int main(int argc, char** argv)
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
+
+    RefPtr<GWindow> dom_inspector_window;
+    RefPtr<GTreeView> dom_tree_view;
+
+    auto inspect_menu = make<GMenu>("Inspect");
+    inspect_menu->add_action(GAction::create("Inspect DOM tree", [&](auto&) {
+        if (!dom_inspector_window) {
+            dom_inspector_window = GWindow::construct();
+            dom_inspector_window->set_rect(100, 100, 300, 500);
+            dom_inspector_window->set_title("DOM inspector");
+            dom_tree_view = GTreeView::construct(nullptr);
+            dom_inspector_window->set_main_widget(dom_tree_view);
+        }
+        if (html_widget->document())
+            dom_tree_view->set_model(DOMTreeModel::create(*html_widget->document()));
+        else
+            dom_tree_view->set_model(nullptr);
+        dom_inspector_window->show();
+        dom_inspector_window->move_to_front();
+    }));
+    menubar->add_menu(move(inspect_menu));
 
     auto debug_menu = make<GMenu>("Debug");
     debug_menu->add_action(GAction::create("Dump DOM tree", [&](auto&) {
