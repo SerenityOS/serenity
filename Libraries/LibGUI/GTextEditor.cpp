@@ -48,6 +48,8 @@ void GTextEditor::create_actions()
 {
     m_undo_action = GCommonActions::make_undo_action([&](auto&) { undo(); }, this);
     m_redo_action = GCommonActions::make_redo_action([&](auto&) { redo(); }, this);
+    m_undo_action->set_enabled(false);
+    m_redo_action->set_enabled(false);
     m_cut_action = GCommonActions::make_cut_action([&](auto&) { cut(); }, this);
     m_copy_action = GCommonActions::make_copy_action([&](auto&) { copy(); }, this);
     m_paste_action = GCommonActions::make_paste_action([&](auto&) { paste(); }, this);
@@ -469,7 +471,7 @@ void GTextEditor::select_all()
 
 void GTextEditor::undo()
 {
-    if (m_undo_stack_index >= m_undo_stack.size() || m_undo_stack.is_empty())
+    if (!can_undo())
         return;
 
     auto& undo_container = m_undo_stack[m_undo_stack_index];
@@ -488,11 +490,12 @@ void GTextEditor::undo()
     }
 
     m_undo_stack_index++;
+    did_change();
 }
 
 void GTextEditor::redo()
 {
-    if (m_undo_stack_index <= 0 || m_undo_stack.is_empty())
+    if (!can_redo())
         return;
 
     auto& undo_container = m_undo_stack[m_undo_stack_index - 1];
@@ -504,6 +507,7 @@ void GTextEditor::redo()
     }
 
     m_undo_stack_index--;
+    did_change();
 }
 
 void GTextEditor::get_selection_line_boundaries(int& first_line, int& last_line)
@@ -1293,6 +1297,8 @@ void GTextEditor::did_change()
     ASSERT(!is_readonly());
     update_content_size();
     recompute_all_visual_lines();
+    m_undo_action->set_enabled(can_undo());
+    m_redo_action->set_enabled(can_redo());
     if (!m_has_pending_change_notification) {
         m_has_pending_change_notification = true;
         deferred_invoke([this](auto&) {
