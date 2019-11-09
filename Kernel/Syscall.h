@@ -106,7 +106,7 @@ struct timespec;
     __ENUMERATE_SYSCALL(donate)                 \
     __ENUMERATE_SYSCALL(rename)                 \
     __ENUMERATE_SYSCALL(shm_open)               \
-    __ENUMERATE_SYSCALL(shm_close)              \
+    __ENUMERATE_SYSCALL(shm_unlink)             \
     __ENUMERATE_SYSCALL(ftruncate)              \
     __ENUMERATE_SYSCALL(systrace)               \
     __ENUMERATE_SYSCALL(exit_thread)            \
@@ -143,6 +143,7 @@ enum Function {
 #define __ENUMERATE_SYSCALL(x) SC_##x,
     ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
+        __Count
 };
 
 inline constexpr const char* to_string(Function function)
@@ -154,6 +155,8 @@ inline constexpr const char* to_string(Function function)
         return #x;
         ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
+    default:
+        break;
     }
     return "Unknown";
 }
