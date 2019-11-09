@@ -97,6 +97,10 @@ public:
     void die();
     void finalize();
 
+    int sys$yield();
+    int sys$putch(char);
+    int sys$sync();
+    int sys$beep();
     int sys$get_process_name(char* buffer, int buffer_size);
     int sys$watch_file(const char* path, int path_length);
     int sys$dbgputch(u8);

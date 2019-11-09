@@ -307,7 +307,7 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     Process::create_kernel_process("init_stage2", init_stage2);
     Process::create_kernel_process("syncd", [] {
         for (;;) {
-            Syscall::sync();
+            VFS::the().sync();
             current->sleep(1 * TICKS_PER_SECOND);
         }
     });

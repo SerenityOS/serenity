@@ -5,6 +5,7 @@
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIT.h>
+#include <Kernel/Console.h>
 #include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/Custody.h>
@@ -3195,4 +3196,27 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* param
     default:
         return -EINVAL;
     }
+}
+
+int Process::sys$sync()
+{
+    VFS::the().sync();
+    return 0;
+}
+
+int Process::sys$putch(char ch)
+{
+    Console::the().put_char(ch);
+    return 0;
+}
+
+int Process::sys$yield()
+{
+    return Scheduler::yield();
+}
+
+int Process::sys$beep()
+{
+    Scheduler::beep();
+    return 0;
 }
