@@ -8,6 +8,7 @@
 DOMTreeModel::DOMTreeModel(Document& document)
     : m_document(document)
 {
+    m_document_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-html.png"));
     m_element_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
     m_text_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
 }
@@ -19,7 +20,7 @@ DOMTreeModel::~DOMTreeModel()
 GModelIndex DOMTreeModel::index(int row, int column, const GModelIndex& parent) const
 {
     if (!parent.is_valid()) {
-        return create_index(row, column, &m_document);
+        return create_index(row, column, m_document.ptr());
     }
     auto& parent_node = *static_cast<Node*>(parent.internal_data());
     return create_index(row, column, parent_node.child_at_index(row));
@@ -35,7 +36,7 @@ GModelIndex DOMTreeModel::parent_index(const GModelIndex& index) const
 
     // No grandparent? Parent is the document!
     if (!node.parent()->parent()) {
-        return create_index(0, 0, &m_document);
+        return create_index(0, 0, m_document.ptr());
     }
 
     // Walk the grandparent's children to find the index of node's parent in its parent.
@@ -89,6 +90,8 @@ GVariant DOMTreeModel::data(const GModelIndex& index, Role role) const
 {
     auto* node = static_cast<Node*>(index.internal_data());
     if (role == Role::Icon) {
+        if (node->is_document())
+            return m_document_icon;
         if (node->is_element())
             return m_element_icon;
         // FIXME: More node type icons?
@@ -96,7 +99,6 @@ GVariant DOMTreeModel::data(const GModelIndex& index, Role role) const
     }
     if (role == Role::Display) {
         if (node->is_text()) {
-
             return String::format("%s", with_whitespace_collapsed(to<Text>(*node).data()).characters());
         }
         return String::format("<%s>", node->tag_name().characters());

@@ -23,8 +23,9 @@ public:
 private:
     explicit DOMTreeModel(Document&);
 
-    Document& m_document;
+    NonnullRefPtr<Document> m_document;
 
+    GIcon m_document_icon;
     GIcon m_element_icon;
     GIcon m_text_icon;
 };
