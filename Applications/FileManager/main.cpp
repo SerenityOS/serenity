@@ -45,8 +45,13 @@ int main(int argc, char** argv)
 
     auto window = GWindow::construct();
     window->set_title("File Manager");
-    window->set_rect(20, 200, 640, 480);
-
+    
+    auto left = config->read_num_entry("Window", "Left", 150);
+    auto top = config->read_num_entry("Window", "Top", 75);
+    auto width = config->read_num_entry("Window", "Width", 640);
+    auto heigth = config->read_num_entry("Window", "Heigth", 480);
+    window->set_rect( {left, top, width, heigth} );
+    
     auto widget = GWidget::construct();
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
@@ -408,5 +413,16 @@ int main(int argc, char** argv)
         view_as_icons_action->set_checked(true);
     }
 
+    // Write window position to config file on close request.
+    window->on_close_request = [&] {
+        config->write_num_entry("Window", "Left", window->x());
+        config->write_num_entry("Window", "Top", window->y());
+        config->write_num_entry("Window", "Width", window->width());
+        config->write_num_entry("Window", "Heigth", window->height());
+        config->sync();
+
+        return GWindow::CloseRequestDecision::Close;
+    };
+    
     return app.exec();
 }
