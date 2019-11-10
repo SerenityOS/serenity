@@ -60,6 +60,15 @@ public:
             m_widgets.clear();
         }
 
+        template<typename Callback>
+        void for_each(Callback callback)
+        {
+            for (auto& it : m_widgets) {
+                if (callback(*it) == IterationDecision::Break)
+                    break;
+            }
+        }
+
         WidgetSelection() {}
     private:
         HashTable<GWidget*> m_widgets;
