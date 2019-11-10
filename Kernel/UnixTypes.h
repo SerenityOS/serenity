@@ -448,3 +448,6 @@ struct ifreq {
 #define ifr_llprio ifr_ifru.ifru_metric       // link layer priority
 #define ifr_hwaddr ifr_ifru.ifru_hwaddr       // MAC address
 };
+
+#define AT_FDCWD -100
+

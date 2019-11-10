@@ -134,7 +134,8 @@ struct timespec;
     __ENUMERATE_SYSCALL(fchdir)                 \
     __ENUMERATE_SYSCALL(getrandom)              \
     __ENUMERATE_SYSCALL(clock_gettime)          \
-    __ENUMERATE_SYSCALL(clock_nanosleep)
+    __ENUMERATE_SYSCALL(clock_nanosleep)        \
+    __ENUMERATE_SYSCALL(openat)
 
 namespace Syscall {
 
@@ -173,6 +174,14 @@ struct SC_mmap_params {
 };
 
 struct SC_open_params {
+    const char* path;
+    int path_length;
+    int options;
+    u16 mode;
+};
+
+struct SC_openat_params {
+    int dirfd;
     const char* path;
     int path_length;
     int options;
