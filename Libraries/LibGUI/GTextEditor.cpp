@@ -15,6 +15,11 @@
 
 //#define DEBUG_GTEXTEDITOR
 
+GTextEditor::GTextEditor(GWidget* parent)
+    : GTextEditor(Type::MultiLine, parent)
+{
+}
+
 GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
     , m_type(type)

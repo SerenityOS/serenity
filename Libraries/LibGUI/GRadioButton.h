@@ -10,7 +10,8 @@ public:
     virtual void click() override;
 
 protected:
-    GRadioButton(const StringView& text, GWidget* parent);
+    explicit GRadioButton(GWidget* parent);
+    explicit GRadioButton(const StringView& text, GWidget* parent);
     virtual void paint_event(GPaintEvent&) override;
 
 private:

@@ -44,7 +44,8 @@ public:
     Function<void(int)> on_value_changed;
 
 protected:
-    GSlider(Orientation, GWidget*);
+    explicit GSlider(GWidget*);
+    explicit GSlider(Orientation, GWidget*);
 
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;

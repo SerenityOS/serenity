@@ -2,6 +2,11 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GSlider.h>
 
+GSlider::GSlider(GWidget* parent)
+    : GSlider(Orientation::Horizontal, parent)
+{
+}
+
 GSlider::GSlider(Orientation orientation, GWidget* parent)
     : GWidget(parent)
     , m_orientation(orientation)
