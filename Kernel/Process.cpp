@@ -2272,6 +2272,12 @@ void Process::finalize()
 
 void Process::die()
 {
+    // Let go of the TTY, otherwise a slave PTY may keep the master PTY from
+    // getting an EOF when the last process using the slave PTY dies.
+    // If the master PTY owner relies on an EOF to know when to wait() on a
+    // slave owner, we have to allow the PTY pair to be torn down.
+    m_tty = nullptr;
+
     if (m_tracer)
         m_tracer->set_dead();
 
