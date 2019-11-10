@@ -196,15 +196,11 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 {
     if (!validate_read(params, sizeof(Syscall::SC_mmap_params)))
         return (void*)-EFAULT;
-    if (params->name && !validate_read_str(params->name))
+
+    auto& [addr, size, prot, flags, fd, offset, name] = *params;
+
+    if (name && !validate_read_str(name))
         return (void*)-EFAULT;
-    void* addr = (void*)params->addr;
-    size_t size = params->size;
-    int prot = params->prot;
-    int flags = params->flags;
-    int fd = params->fd;
-    off_t offset = params->offset;
-    const char* name = params->name;
     if (size == 0)
         return (void*)-EINVAL;
     if ((u32)addr & ~PAGE_MASK)
@@ -1351,7 +1347,7 @@ int Process::sys$open(const Syscall::SC_open_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
-    auto [path, path_length, options, mode] = *params;
+    auto& [path, path_length, options, mode] = *params;
     if (!validate_read(path, path_length))
         return -EFAULT;
 #ifdef DEBUG_IO
@@ -1376,7 +1372,7 @@ int Process::sys$openat(const Syscall::SC_openat_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
-    auto [dirfd, path, path_length, options, mode] = *params;
+    auto& [dirfd, path, path_length, options, mode] = *params;
     if (!validate_read(path, path_length))
         return -EFAULT;
 #ifdef DEBUG_IO
@@ -2070,21 +2066,24 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     // FIXME: Return -EINVAL if timeout is invalid.
     if (!validate_read_typed(params))
         return -EFAULT;
-    if (params->writefds && !validate_write_typed(params->writefds))
+
+    auto& [nfds, readfds, writefds, exceptfds, timeout] = *params;
+
+    if (writefds && !validate_write_typed(writefds))
         return -EFAULT;
-    if (params->readfds && !validate_write_typed(params->readfds))
+    if (readfds && !validate_write_typed(readfds))
         return -EFAULT;
-    if (params->exceptfds && !validate_write_typed(params->exceptfds))
+    if (exceptfds && !validate_write_typed(exceptfds))
         return -EFAULT;
-    if (params->timeout && !validate_read_typed(params->timeout))
+    if (timeout && !validate_read_typed(timeout))
         return -EFAULT;
-    if (params->nfds < 0)
+    if (nfds < 0)
         return -EINVAL;
 
-    timeval timeout;
+    timeval computed_timeout;
     bool select_has_timeout = false;
-    if (params->timeout && (params->timeout->tv_sec || params->timeout->tv_usec)) {
-        timeval_add(kgettimeofday(), *params->timeout, timeout);
+    if (timeout && (timeout->tv_sec || timeout->tv_usec)) {
+        timeval_add(kgettimeofday(), *timeout, computed_timeout);
         select_has_timeout = true;
     }
 
@@ -2105,19 +2104,19 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         }
         return 0;
     };
-    if (int error = transfer_fds(params->writefds, wfds))
+    if (int error = transfer_fds(writefds, wfds))
         return error;
-    if (int error = transfer_fds(params->readfds, rfds))
+    if (int error = transfer_fds(readfds, rfds))
         return error;
-    if (int error = transfer_fds(params->exceptfds, efds))
+    if (int error = transfer_fds(exceptfds, efds))
         return error;
 
 #if defined(DEBUG_IO) || defined(DEBUG_POLL_SELECT)
-    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), rfds.size(), wfds.size(), params->timeout);
+    dbgprintf("%s<%u> selecting on (read:%u, write:%u), timeout=%p\n", name().characters(), pid(), rfds.size(), wfds.size(), timeout);
 #endif
 
-    if (!params->timeout || select_has_timeout) {
-        if (current->block<Thread::SelectBlocker>(timeout, select_has_timeout, rfds, wfds, efds) == Thread::BlockResult::InterruptedBySignal)
+    if (!timeout || select_has_timeout) {
+        if (current->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds) == Thread::BlockResult::InterruptedBySignal)
             return -EINTR;
     }
 
@@ -2133,9 +2132,9 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             }
         }
     };
-    mark_fds(params->readfds, rfds, [](auto& description) { return description.can_read(); });
-    mark_fds(params->writefds, wfds, [](auto& description) { return description.can_write(); });
-    // FIXME: We should also mark params->exceptfds as appropriate.
+    mark_fds(readfds, rfds, [](auto& description) { return description.can_read(); });
+    mark_fds(writefds, wfds, [](auto& description) { return description.can_write(); });
+    // FIXME: We should also mark exceptfds as appropriate.
 
     return marked_fd_count;
 }
@@ -2465,12 +2464,7 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    int sockfd = params->sockfd;
-    const void* data = params->data;
-    size_t data_length = params->data_length;
-    int flags = params->flags;
-    auto* addr = (const sockaddr*)params->addr;
-    auto addr_length = (socklen_t)params->addr_length;
+    auto& [sockfd, data, data_length, flags, addr, addr_length] = *params;
 
     if (!validate_read(data, data_length))
         return -EFAULT;
@@ -2491,12 +2485,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    int sockfd = params->sockfd;
-    void* buffer = params->buffer;
-    size_t buffer_length = params->buffer_length;
-    int flags = params->flags;
-    auto* addr = (sockaddr*)params->addr;
-    auto* addr_length = (socklen_t*)params->addr_length;
+    auto& [sockfd, buffer, buffer_length, flags, addr, addr_length] = *params;
 
     if (!validate_write(buffer, buffer_length))
         return -EFAULT;
@@ -2627,11 +2616,8 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
-    int sockfd = params->sockfd;
-    int level = params->level;
-    int option = params->option;
-    auto* value = params->value;
-    auto* value_size = (socklen_t*)params->value_size;
+
+    auto& [sockfd, level, option, value, value_size] = *params;
 
     if (!validate_write_typed(value_size))
         return -EFAULT;
@@ -2650,11 +2636,8 @@ int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
-    int sockfd = params->sockfd;
-    int level = params->level;
-    int option = params->option;
-    auto* value = params->value;
-    auto value_size = (socklen_t)params->value_size;
+
+    auto& [sockfd, level, option, value, value_size] = *params;
 
     if (!validate_read(value, value_size))
         return -EFAULT;
@@ -3201,17 +3184,15 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* param
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    if (params->requested_sleep && !validate_read_typed(params->requested_sleep))
+    auto& [clock_id, flags, requested_sleep, remaining_sleep] = *params;
+
+    if (requested_sleep && !validate_read_typed(requested_sleep))
         return -EFAULT;
 
-    if (params->remaining_sleep && !validate_write_typed(params->remaining_sleep))
+    if (remaining_sleep && !validate_write_typed(remaining_sleep))
         return -EFAULT;
 
-    clockid_t clock_id = params->clock_id;
-    int flags = params->flags;
     bool is_absolute = flags & TIMER_ABSTIME;
-    auto* requested_sleep = params->requested_sleep;
-    auto* remaining_sleep = params->remaining_sleep;
 
     switch (clock_id) {
     case CLOCK_MONOTONIC: {
