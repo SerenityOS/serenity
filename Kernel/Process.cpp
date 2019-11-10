@@ -1351,19 +1351,56 @@ int Process::sys$open(const Syscall::SC_open_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
-    auto* path = params->path;
-    auto path_length = params->path_length;
-    auto options = params->options;
-    auto mode = params->mode;
+    auto [path, path_length, options, mode] = *params;
+    if (!validate_read(path, path_length))
+        return -EFAULT;
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$open(\"%s\")\n", name().characters(), pid(), path);
 #endif
-    if (!validate_read(path, path_length))
-        return -EFAULT;
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
     auto result = VFS::the().open(path, options, mode & ~umask(), current_directory());
+    if (result.is_error())
+        return result.error();
+    auto description = result.value();
+    if (options & O_DIRECTORY && !description->is_directory())
+        return -ENOTDIR; // FIXME: This should be handled by VFS::open.
+    description->set_file_flags(options);
+    u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
+    m_fds[fd].set(move(description), fd_flags);
+    return fd;
+}
+
+int Process::sys$openat(const Syscall::SC_openat_params* params)
+{
+    if (!validate_read_typed(params))
+        return -EFAULT;
+    auto [dirfd, path, path_length, options, mode] = *params;
+    if (!validate_read(path, path_length))
+        return -EFAULT;
+#ifdef DEBUG_IO
+    dbgprintf("%s(%u) sys$openat(%d, \"%s\")\n", dirfd, name().characters(), pid(), path);
+#endif
+    int fd = alloc_fd();
+    if (fd < 0)
+        return fd;
+
+    RefPtr<Custody> base;
+    if (dirfd == AT_FDCWD) {
+        base = current_directory();
+    } else {
+        auto* base_description = file_description(dirfd);
+        if (!base_description)
+            return -EBADF;
+        if (!base_description->is_directory())
+            return -ENOTDIR;
+        if (!base_description->custody())
+            return -EINVAL;
+        base = base_description->custody();
+    }
+
+    auto result = VFS::the().open(path, options, mode & ~umask(), *base);
     if (result.is_error())
         return result.error();
     auto description = result.value();
