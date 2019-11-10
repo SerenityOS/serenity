@@ -12,6 +12,9 @@ public:
     FormEditorWidget& editor();
     const FormEditorWidget& editor() const;
 
+    // FIXME: This should be an app-wide preference instead.
+    int grid_size() const { return m_grid_size; }
+
 private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void second_paint_event(GPaintEvent&) override;
@@ -21,6 +24,5 @@ private:
 
     explicit FormWidget(FormEditorWidget& parent);
 
-    // FIXME: This should be an app-wide preference instead.
     int m_grid_size { 5 };
 };
