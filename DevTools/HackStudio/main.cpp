@@ -128,7 +128,7 @@ int main(int argc, char** argv)
     auto form_widgets_toolbar = GToolBar::construct(Orientation::Vertical, 26, g_form_inner_container);
     form_widgets_toolbar->set_preferred_size(38, 0);
 
-    form_widgets_toolbar->add_action(GAction::create("Cursor", GraphicsBitmap::load_from_file("/res/cursors/arrow.png"), [&](auto&) {
+    form_widgets_toolbar->add_action(GAction::create("Cursor", GraphicsBitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
     }));
 
     GWidgetClassRegistration::for_each([&](const GWidgetClassRegistration& reg) {
