@@ -245,6 +245,9 @@ void TerminalWidget::paint_event(GPaintEvent& event)
 
     painter.add_clip_rect(event.rect());
 
+    Rect terminal_buffer_rect(frame_inner_rect().top_left(), { frame_inner_rect().width() - m_scrollbar->width(), frame_inner_rect().height() });
+    painter.add_clip_rect(terminal_buffer_rect);
+
     if (m_visual_beep_timer->is_active())
         painter.fill_rect(frame_inner_rect(), Color::Red);
     else
