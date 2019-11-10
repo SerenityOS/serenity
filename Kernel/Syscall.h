@@ -9,6 +9,8 @@
 extern "C" {
 struct timeval;
 struct timespec;
+struct sockaddr;
+typedef u32 socklen_t;
 }
 
 #define ENUMERATE_SYSCALLS                      \
@@ -208,8 +210,8 @@ struct SC_sendto_params {
     const void* data;
     size_t data_length;
     int flags;
-    const void* addr;   // const sockaddr*
-    size_t addr_length; // socklen_t
+    const sockaddr* addr;
+    socklen_t addr_length;
 };
 
 struct SC_recvfrom_params {
@@ -217,8 +219,8 @@ struct SC_recvfrom_params {
     void* buffer;
     size_t buffer_length;
     int flags;
-    void* addr;        // sockaddr*
-    void* addr_length; // socklen_t*
+    sockaddr* addr;
+    socklen_t* addr_length;
 };
 
 struct SC_getsockopt_params {
@@ -226,7 +228,7 @@ struct SC_getsockopt_params {
     int level;
     int option;
     void* value;
-    void* value_size; // socklen_t*
+    socklen_t* value_size;
 };
 
 struct SC_setsockopt_params {
@@ -234,7 +236,7 @@ struct SC_setsockopt_params {
     int level;
     int option;
     const void* value;
-    size_t value_size; // socklen_t
+    socklen_t value_size;
 };
 
 void initialize();
