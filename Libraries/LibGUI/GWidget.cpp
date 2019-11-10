@@ -101,7 +101,13 @@ void GWidget::child_event(CChildEvent& event)
 
 void GWidget::set_relative_rect(const Rect& a_rect)
 {
-    Rect rect = a_rect.is_empty() ? Rect() : a_rect;
+    // Get rid of negative width/height values.
+    Rect rect = {
+        a_rect.x(),
+        a_rect.y(),
+        max(a_rect.width(), 0),
+        max(a_rect.height(), 0)
+    };
 
     if (rect == m_relative_rect)
         return;
