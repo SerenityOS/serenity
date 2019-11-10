@@ -1,8 +1,8 @@
-#include <LibGUI/GPainter.h>
-#include <LibGUI/GScrollBar.h>
 #include <LibDraw/CharacterBitmap.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/StylePainter.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GScrollBar.h>
 
 static const char* s_up_arrow_bitmap_data = {
     "         "
@@ -56,6 +56,11 @@ static CharacterBitmap* s_up_arrow_bitmap;
 static CharacterBitmap* s_down_arrow_bitmap;
 static CharacterBitmap* s_left_arrow_bitmap;
 static CharacterBitmap* s_right_arrow_bitmap;
+
+GScrollBar::GScrollBar(GWidget* parent)
+    : GScrollBar(Orientation::Vertical, parent)
+{
+}
 
 GScrollBar::GScrollBar(Orientation orientation, GWidget* parent)
     : GWidget(parent)
@@ -239,7 +244,7 @@ void GScrollBar::mousedown_event(GMouseEvent& event)
         return;
     }
     if (has_scrubber() && scrubber_rect().contains(event.position())) {
-	m_scrubber_in_use = true;
+        m_scrubber_in_use = true;
         m_scrubbing = true;
         m_scrub_start_value = value();
         m_scrub_origin = event.position();

@@ -1,8 +1,8 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Badge.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <LibCore/CElapsedTimer.h>
 #include <LibCore/CObject.h>
 #include <LibDraw/Color.h>
@@ -11,6 +11,10 @@
 #include <LibDraw/Rect.h>
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GShortcut.h>
+
+#define REGISTER_GWIDGET(class_name)                           \
+    extern GWidgetClassRegistration registration_##class_name; \
+    GWidgetClassRegistration registration_##class_name(#class_name, [](GWidget* parent) { return class_name::construct(parent); });
 
 class GraphicsBitmap;
 class GAction;
@@ -40,6 +44,26 @@ enum class HorizontalDirection {
 enum class VerticalDirection {
     Up,
     Down
+};
+
+class GWidget;
+
+class GWidgetClassRegistration {
+    AK_MAKE_NONCOPYABLE(GWidgetClassRegistration)
+    AK_MAKE_NONMOVABLE(GWidgetClassRegistration)
+public:
+    GWidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<GWidget>(GWidget*)> factory);
+    ~GWidgetClassRegistration();
+
+    String class_name() const { return m_class_name; }
+    NonnullRefPtr<GWidget> construct(GWidget* parent) const { return m_factory(parent); }
+
+    static void for_each(Function<void(const GWidgetClassRegistration&)>);
+    static const GWidgetClassRegistration* find(const String& class_name);
+
+private:
+    String m_class_name;
+    Function<NonnullRefPtr<GWidget>(GWidget*)> m_factory;
 };
 
 class GWidget : public CObject {

@@ -12,6 +12,59 @@
 #include <LibGUI/GWindowServerConnection.h>
 #include <unistd.h>
 
+#include <LibGUI/GButton.h>
+#include <LibGUI/GCheckBox.h>
+#include <LibGUI/GGroupBox.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GRadioButton.h>
+#include <LibGUI/GScrollBar.h>
+#include <LibGUI/GSlider.h>
+#include <LibGUI/GSpinBox.h>
+#include <LibGUI/GTextBox.h>
+
+REGISTER_GWIDGET(GButton)
+REGISTER_GWIDGET(GCheckBox)
+REGISTER_GWIDGET(GGroupBox)
+REGISTER_GWIDGET(GLabel)
+REGISTER_GWIDGET(GRadioButton)
+REGISTER_GWIDGET(GScrollBar)
+REGISTER_GWIDGET(GSlider)
+REGISTER_GWIDGET(GSpinBox)
+REGISTER_GWIDGET(GTextBox)
+REGISTER_GWIDGET(GWidget)
+
+static HashMap<String, GWidgetClassRegistration*>& widget_classes()
+{
+    static HashMap<String, GWidgetClassRegistration*>* map;
+    if (!map)
+        map = new HashMap<String, GWidgetClassRegistration*>;
+    return *map;
+}
+
+GWidgetClassRegistration::GWidgetClassRegistration(const String& class_name, Function<NonnullRefPtr<GWidget>(GWidget*)> factory)
+    : m_class_name(class_name)
+    , m_factory(move(factory))
+{
+    widget_classes().set(class_name, this);
+}
+
+GWidgetClassRegistration::~GWidgetClassRegistration()
+{
+    ASSERT_NOT_REACHED();
+}
+
+void GWidgetClassRegistration::for_each(Function<void(const GWidgetClassRegistration&)> callback)
+{
+    for (auto& it : widget_classes()) {
+        callback(*it.value);
+    }
+}
+
+const GWidgetClassRegistration* GWidgetClassRegistration::find(const String& class_name)
+{
+    return widget_classes().get(class_name).value_or(nullptr);
+}
+
 GWidget::GWidget(GWidget* parent)
     : CObject(parent, true)
     , m_font(Font::default_font())

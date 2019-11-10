@@ -102,7 +102,8 @@ public:
     void set_cursor(const GTextPosition&);
 
 protected:
-    GTextEditor(Type, GWidget* parent);
+    explicit GTextEditor(GWidget* parent);
+    explicit GTextEditor(Type, GWidget* parent);
 
     virtual void did_change_font() override;
     virtual void paint_event(GPaintEvent&) override;

@@ -38,6 +38,7 @@ public:
     };
 
 private:
+    explicit GScrollBar(GWidget* parent);
     explicit GScrollBar(Orientation, GWidget* parent);
 
     virtual void paint_event(GPaintEvent&) override;
