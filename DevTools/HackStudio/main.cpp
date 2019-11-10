@@ -1,6 +1,5 @@
 #include "CppLexer.h"
 #include "CursorTool.h"
-#include "WidgetTool.h"
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
@@ -9,9 +8,11 @@
 #include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
+#include "WidgetTool.h"
 #include <LibCore/CFile.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GActionGroup.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
@@ -130,9 +131,17 @@ int main(int argc, char** argv)
     auto form_widgets_toolbar = GToolBar::construct(Orientation::Vertical, 26, g_form_inner_container);
     form_widgets_toolbar->set_preferred_size(38, 0);
 
-    form_widgets_toolbar->add_action(GAction::create("Cursor", GraphicsBitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
+    GActionGroup tool_actions;
+    tool_actions.set_exclusive(true);
+
+    auto cursor_tool_action = GAction::create("Cursor", GraphicsBitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
         g_form_editor_widget->set_tool(make<CursorTool>(*g_form_editor_widget));
-    }));
+    });
+    cursor_tool_action->set_checkable(true);
+    cursor_tool_action->set_checked(true);
+    tool_actions.add_action(cursor_tool_action);
+
+    form_widgets_toolbar->add_action(cursor_tool_action);
 
     GWidgetClassRegistration::for_each([&](const GWidgetClassRegistration& reg) {
         auto icon_path = String::format("/res/icons/widgets/%s.png", reg.class_name().characters());
@@ -141,6 +150,9 @@ int main(int argc, char** argv)
             auto widget = reg.construct(&g_form_editor_widget->form_widget());
             widget->set_relative_rect(30, 30, 30, 30);
         });
+        action->set_checkable(true);
+        action->set_checked(false);
+        tool_actions.add_action(action);
         form_widgets_toolbar->add_action(move(action));
     });
 
