@@ -14,6 +14,7 @@ public:
 
 private:
     virtual void paint_event(GPaintEvent&) override;
+    virtual void second_paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
