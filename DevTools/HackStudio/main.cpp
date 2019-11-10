@@ -1,4 +1,6 @@
 #include "CppLexer.h"
+#include "CursorTool.h"
+#include "WidgetTool.h"
 #include "Editor.h"
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
@@ -129,11 +131,13 @@ int main(int argc, char** argv)
     form_widgets_toolbar->set_preferred_size(38, 0);
 
     form_widgets_toolbar->add_action(GAction::create("Cursor", GraphicsBitmap::load_from_file("/res/icons/widgets/Cursor.png"), [&](auto&) {
+        g_form_editor_widget->set_tool(make<CursorTool>(*g_form_editor_widget));
     }));
 
     GWidgetClassRegistration::for_each([&](const GWidgetClassRegistration& reg) {
         auto icon_path = String::format("/res/icons/widgets/%s.png", reg.class_name().characters());
         auto action = GAction::create(reg.class_name(), GraphicsBitmap::load_from_file(icon_path), [&reg](auto&) {
+            g_form_editor_widget->set_tool(make<WidgetTool>(*g_form_editor_widget, reg));
             auto widget = reg.construct(&g_form_editor_widget->form_widget());
             widget->set_relative_rect(30, 30, 30, 30);
         });

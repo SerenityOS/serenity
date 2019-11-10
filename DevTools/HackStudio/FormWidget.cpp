@@ -1,5 +1,6 @@
 #include "FormWidget.h"
 #include "FormEditorWidget.h"
+#include "Tool.h"
 #include <LibGUI/GPainter.h>
 
 FormWidget::FormWidget(FormEditorWidget& parent)
@@ -8,10 +9,22 @@ FormWidget::FormWidget(FormEditorWidget& parent)
     set_fill_with_background_color(true);
     set_background_color(Color::WarmGray);
     set_relative_rect(5, 5, 400, 300);
+
+    set_greedy_for_hits(true);
 }
 
 FormWidget::~FormWidget()
 {
+}
+
+FormEditorWidget& FormWidget::editor()
+{
+    return static_cast<FormEditorWidget&>(*parent());
+}
+
+const FormEditorWidget& FormWidget::editor() const
+{
+    return static_cast<const FormEditorWidget&>(*parent());
 }
 
 void FormWidget::paint_event(GPaintEvent& event)
@@ -24,4 +37,19 @@ void FormWidget::paint_event(GPaintEvent& event)
             painter.set_pixel({ x, y }, Color::from_rgb(0x404040));
         }
     }
+}
+
+void FormWidget::mousedown_event(GMouseEvent& event)
+{
+    editor().tool().on_mousedown(event);
+}
+
+void FormWidget::mouseup_event(GMouseEvent& event)
+{
+    editor().tool().on_mouseup(event);
+}
+
+void FormWidget::mousemove_event(GMouseEvent& event)
+{
+    editor().tool().on_mousemove(event);
 }

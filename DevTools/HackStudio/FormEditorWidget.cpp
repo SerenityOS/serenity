@@ -1,9 +1,11 @@
 #include "FormEditorWidget.h"
+#include "CursorTool.h"
 #include "FormWidget.h"
 #include <LibGUI/GPainter.h>
 
 FormEditorWidget::FormEditorWidget(GWidget* parent)
     : GScrollableWidget(parent)
+    , m_tool(make<CursorTool>(*this))
 {
     set_fill_with_background_color(true);
     set_background_color(Color::MidGray);
@@ -25,4 +27,11 @@ void FormEditorWidget::paint_event(GPaintEvent& event)
 
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
+}
+
+void FormEditorWidget::set_tool(NonnullOwnPtr<Tool> tool)
+{
+    m_tool->detach();
+    m_tool = move(tool);
+    m_tool->attach();
 }
