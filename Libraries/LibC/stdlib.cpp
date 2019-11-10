@@ -447,9 +447,21 @@ size_t mbstowcs(wchar_t*, const char*, size_t)
     ASSERT_NOT_REACHED();
 }
 
-size_t mbtowc(wchar_t*, const char*, size_t)
+size_t mbtowc(wchar_t* wch, const char* data, size_t data_size)
 {
-    ASSERT_NOT_REACHED();
+    // FIXME: This needs a real implementation.
+    UNUSED_PARAM(data_size);
+
+    if (wch && data) {
+        *wch = *data;
+        return 1;
+    }
+
+    if (!wch && data) {
+        return 1;
+    }
+
+    return 0;
 }
 
 int wctomb(char*, wchar_t)
