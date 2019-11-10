@@ -1,4 +1,5 @@
 #include <LibGUI/GAction.h>
+#include <LibGUI/GActionGroup.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GPainter.h>
@@ -36,6 +37,8 @@ void GToolBar::add_action(GAction& action)
     item->action = action;
 
     auto button = GButton::construct(this);
+    if (action.group() && action.group()->is_exclusive())
+        button->set_exclusive(true);
     button->set_action(*item->action);
     button->set_tooltip(item->action->text());
     if (item->action->icon())
