@@ -81,3 +81,32 @@ void CursorTool::on_mousemove(GMouseEvent& event)
         return;
     }
 }
+
+void CursorTool::on_keydown(GKeyEvent& event)
+{
+    dbg() << "CursorTool::on_keydown";
+
+    auto move_selected_widgets_by = [this](int x, int y) {
+        m_editor.selection().for_each([&](auto& widget) {
+            widget.move_by(x, y);
+            return IterationDecision::Continue;
+        });
+    };
+
+    if (event.modifiers() == 0) {
+        switch (event.key()) {
+        case Key_Down:
+            move_selected_widgets_by(0, m_editor.form_widget().grid_size());
+            break;
+        case Key_Up:
+            move_selected_widgets_by(0, -m_editor.form_widget().grid_size());
+            break;
+        case Key_Left:
+            move_selected_widgets_by(-m_editor.form_widget().grid_size(), 0);
+            break;
+        case Key_Right:
+            move_selected_widgets_by(m_editor.form_widget().grid_size(), 0);
+            break;
+        }
+    }
+}

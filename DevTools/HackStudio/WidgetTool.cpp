@@ -18,3 +18,9 @@ void WidgetTool::on_mousemove(GMouseEvent& event)
     (void)event;
     dbg() << "WidgetTool::on_mousemove";
 }
+
+void WidgetTool::on_keydown(GKeyEvent& event)
+{
+    (void)event;
+    dbg() << "WidgetTool::on_keydown";
+}

@@ -3,6 +3,7 @@
 #include <AK/Noncopyable.h>
 
 class FormEditorWidget;
+class GKeyEvent;
 class GMouseEvent;
 
 class Tool {
@@ -14,6 +15,7 @@ public:
     virtual void on_mousedown(GMouseEvent&) = 0;
     virtual void on_mouseup(GMouseEvent&) = 0;
     virtual void on_mousemove(GMouseEvent&) = 0;
+    virtual void on_keydown(GKeyEvent&) = 0;
 
     virtual const char* class_name() const = 0;
 

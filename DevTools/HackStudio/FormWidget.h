@@ -16,11 +16,14 @@ public:
     int grid_size() const { return m_grid_size; }
 
 private:
+    virtual bool accepts_focus() const override { return true; }
+
     virtual void paint_event(GPaintEvent&) override;
     virtual void second_paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
+    virtual void keydown_event(GKeyEvent&) override;
 
     explicit FormWidget(FormEditorWidget& parent);
 

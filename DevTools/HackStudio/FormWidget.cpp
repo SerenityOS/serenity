@@ -68,3 +68,8 @@ void FormWidget::mousemove_event(GMouseEvent& event)
 {
     editor().tool().on_mousemove(event);
 }
+
+void FormWidget::keydown_event(GKeyEvent& event)
+{
+    editor().tool().on_keydown(event);
+}

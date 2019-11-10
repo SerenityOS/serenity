@@ -18,6 +18,7 @@ private:
     virtual void on_mousedown(GMouseEvent&) override;
     virtual void on_mouseup(GMouseEvent&) override;
     virtual void on_mousemove(GMouseEvent&) override;
+    virtual void on_keydown(GKeyEvent&) override;
 
     const GWidgetClassRegistration& m_meta_class;
 };

@@ -19,6 +19,7 @@ private:
     virtual void on_mousedown(GMouseEvent&) override;
     virtual void on_mouseup(GMouseEvent&) override;
     virtual void on_mousemove(GMouseEvent&) override;
+    virtual void on_keydown(GKeyEvent&) override;
 
     Point m_drag_origin;
     HashMap<GWidget*, Point> m_positions_before_drag;
