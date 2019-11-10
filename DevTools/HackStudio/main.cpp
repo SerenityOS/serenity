@@ -3,6 +3,7 @@
 #include "EditorWrapper.h"
 #include "FindInFilesWidget.h"
 #include "FormEditorWidget.h"
+#include "FormWidget.h"
 #include "Locator.h"
 #include "Project.h"
 #include "TerminalWrapper.h"
@@ -132,8 +133,9 @@ int main(int argc, char** argv)
 
     GWidgetClassRegistration::for_each([&](const GWidgetClassRegistration& reg) {
         auto icon_path = String::format("/res/icons/widgets/%s.png", reg.class_name().characters());
-        auto action = GAction::create(reg.class_name(), GraphicsBitmap::load_from_file(icon_path), [&](auto&) {
-
+        auto action = GAction::create(reg.class_name(), GraphicsBitmap::load_from_file(icon_path), [&reg](auto&) {
+            auto widget = reg.construct(&g_form_editor_widget->form_widget());
+            widget->set_relative_rect(30, 30, 30, 30);
         });
         form_widgets_toolbar->add_action(move(action));
     });
