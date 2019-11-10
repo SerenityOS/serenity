@@ -419,11 +419,6 @@ void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& ev
     move_to_front_and_make_active(window);
     m_drag_window = window.make_weak_ptr();
     m_drag_origin = event.position();
-    if (window.is_maximized()) {
-        auto width_before_resize = window.width();
-        window.set_maximized(false);
-        window.move_to(m_drag_origin.x() - (window.width() * ((float)m_drag_origin.x() / width_before_resize)), m_drag_origin.y());
-    }
     m_drag_window_origin = window.position();
     invalidate(window);
 }
@@ -489,14 +484,31 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
         return true;
     }
     if (event.type() == WSEvent::MouseMove) {
+        
 #ifdef DRAG_DEBUG
         dbg() << "[WM] Dragging, origin: " << m_drag_origin << ", now: " << event.position();
+        if (m_drag_window->is_maximized()) {
+            dbg() << "  [!] The window is still maximized. Not dragging yet.";
+        }
 #endif
-        Point pos = m_drag_window_origin.translated(event.position() - m_drag_origin);
-        m_drag_window->set_position_without_repaint(pos);
-        if (m_drag_window->rect().contains(event.position()))
-            hovered_window = m_drag_window;
-        return true;
+        if (m_drag_window->is_maximized()) {
+            auto pixels_moved_from_start = event.position().pixels_moved(m_drag_origin);
+            // dbg() << "[WM] " << pixels_moved_from_start << " moved since start of drag";
+            if (pixels_moved_from_start > 5) {
+                // dbg() << "[WM] de-maximizing window";
+                m_drag_origin = event.position();
+                auto width_before_resize = m_drag_window->width();
+                m_drag_window->set_maximized(false);
+                m_drag_window->move_to(m_drag_origin.x() - (m_drag_window->width() * ((float)m_drag_origin.x() / width_before_resize)), m_drag_origin.y());
+                m_drag_window_origin = m_drag_window->position();
+            }
+        } else {
+            Point pos = m_drag_window_origin.translated(event.position() - m_drag_origin);
+            m_drag_window->set_position_without_repaint(pos);
+            if (m_drag_window->rect().contains(event.position()))
+                hovered_window = m_drag_window;
+            return true;
+        }
     }
     return false;
 }

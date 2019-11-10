@@ -110,6 +110,16 @@ public:
             set_y(value);
     }
 
+    // Returns pixels moved from other in either direction
+    int pixels_moved(const Point &other) const
+    {
+        auto pixels_moved = max(
+            abs(other.x() - x()),
+            abs(other.y() - y())
+        );
+        return pixels_moved;
+    }
+
 private:
     int m_x { 0 };
     int m_y { 0 };
