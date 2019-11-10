@@ -39,6 +39,21 @@ void FormWidget::paint_event(GPaintEvent& event)
     }
 }
 
+void FormWidget::second_paint_event(GPaintEvent& event)
+{
+    if (editor().selection().is_empty())
+        return;
+
+    GPainter painter(*this);
+    painter.add_clip_rect(event.rect());
+    for_each_child_widget([&](auto& child) {
+        if (editor().selection().contains(child)) {
+            painter.draw_rect(child.relative_rect(), Color::Blue);
+        }
+        return IterationDecision::Continue;
+    });
+}
+
 void FormWidget::mousedown_event(GMouseEvent& event)
 {
     editor().tool().on_mousedown(event);
