@@ -12,6 +12,9 @@ OBJS = \
     Editor.o \
     EditorWrapper.o \
     Locator.o \
+    Tool.o \
+    CursorTool.o \
+    WidgetTool.o \
     main.o
 
 APP = HackStudio
