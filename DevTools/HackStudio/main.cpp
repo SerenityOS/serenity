@@ -127,9 +127,16 @@ int main(int argc, char** argv)
     auto form_widgets_toolbar = GToolBar::construct(Orientation::Vertical, 26, g_form_inner_container);
     form_widgets_toolbar->set_preferred_size(38, 0);
 
-    form_widgets_toolbar->add_action(GAction::create("GLabel", GraphicsBitmap::load_from_file("/res/icons/vbwidgets/label.png"), [&](auto&) {}));
-    form_widgets_toolbar->add_action(GAction::create("GButton", GraphicsBitmap::load_from_file("/res/icons/vbwidgets/button.png"), [&](auto&) {}));
-    form_widgets_toolbar->add_action(GAction::create("GSpinBox", GraphicsBitmap::load_from_file("/res/icons/vbwidgets/spinbox.png"), [&](auto&) {}));
+    form_widgets_toolbar->add_action(GAction::create("Cursor", GraphicsBitmap::load_from_file("/res/cursors/arrow.png"), [&](auto&) {
+    }));
+
+    GWidgetClassRegistration::for_each([&](const GWidgetClassRegistration& reg) {
+        auto icon_path = String::format("/res/icons/widgets/%s.png", reg.class_name().characters());
+        auto action = GAction::create(reg.class_name(), GraphicsBitmap::load_from_file(icon_path), [&](auto&) {
+
+        });
+        form_widgets_toolbar->add_action(move(action));
+    });
 
     auto form_editor_inner_splitter = GSplitter::construct(Orientation::Horizontal, g_form_inner_container);
 
