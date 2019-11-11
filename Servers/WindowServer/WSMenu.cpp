@@ -239,6 +239,9 @@ void WSMenu::clear_hovered_item()
 
 void WSMenu::did_activate(WSMenuItem& item)
 {
+    if (item.type() == WSMenuItem::Type::Separator)
+        return;
+
     if (on_item_activation)
         on_item_activation(item);
 
