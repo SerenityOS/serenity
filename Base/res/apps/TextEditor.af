@@ -1,0 +1,8 @@
+[App]
+Name=TextEditor
+Executable=/bin/TextEditor
+Category=Utilities
+
+[Icons]
+16x16=/res/icons/TextEditor16.png
+32x32=/res/icons/32x32/app-texteditor.png
