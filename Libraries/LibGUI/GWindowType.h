@@ -9,5 +9,4 @@ enum class GWindowType {
     Taskbar,
     Tooltip,
     Menubar,
-    Launcher,
 };

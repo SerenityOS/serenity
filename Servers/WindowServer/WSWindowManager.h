@@ -299,8 +299,6 @@ IterationDecision WSWindowManager::for_each_visible_window_of_type_from_back_to_
 template<typename Callback>
 IterationDecision WSWindowManager::for_each_visible_window_from_back_to_front(Callback callback)
 {
-    if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Launcher, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Normal, callback) == IterationDecision::Break)
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_back_to_front(WSWindowType::Taskbar, callback) == IterationDecision::Break)
@@ -350,9 +348,7 @@ IterationDecision WSWindowManager::for_each_visible_window_from_front_to_back(Ca
         return IterationDecision::Break;
     if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Tooltip, callback) == IterationDecision::Break)
         return IterationDecision::Break;
-    if (for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, callback) == IterationDecision::Break)
-        return IterationDecision::Break;
-    return for_each_visible_window_of_type_from_front_to_back(WSWindowType::Launcher, callback);
+    return for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, callback);
 }
 
 template<typename Callback>
