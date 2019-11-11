@@ -111,7 +111,6 @@ int main(int, char**)
     start_process("/bin/AudioServer", {}, highest_prio);
     start_process("/bin/Taskbar", {}, highest_prio);
     start_process("/bin/Terminal", {}, highest_prio - 1);
-    start_process("/bin/Launcher", {}, highest_prio);
 
     // This won't return if we're in test mode.
     check_for_test_mode();
