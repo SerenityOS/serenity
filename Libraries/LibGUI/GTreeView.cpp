@@ -244,6 +244,7 @@ void GTreeView::did_update_model()
 {
     GAbstractView::did_update_model();
     update_content_size();
+    update();
 }
 
 void GTreeView::did_update_selection()
