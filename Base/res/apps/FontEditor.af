@@ -1,0 +1,8 @@
+[App]
+Name=FontEditor
+Executable=/bin/FontEditor
+Category=FontEditor
+
+[Icons]
+16x16=/res/icons/16x16/app-font-editor.png
+32x32=/res/icons/FontEditor.png
