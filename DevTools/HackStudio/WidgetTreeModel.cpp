@@ -75,3 +75,14 @@ void WidgetTreeModel::update()
 {
     did_update();
 }
+
+GModelIndex WidgetTreeModel::index_for_widget(GWidget& widget) const
+{
+    int parent_child_index = 0;
+    for (auto& parent_child : widget.parent_widget()->child_widgets()) {
+        if (parent_child == &widget)
+            return create_index(parent_child_index, 0, &widget);
+        ++parent_child_index;
+    }
+    return {};
+}
