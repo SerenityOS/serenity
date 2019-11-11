@@ -74,20 +74,20 @@ pushd "$DIR/Build/"
 
     pushd binutils
         "$DIR"/Tarballs/binutils-2.32/configure --prefix="$PREFIX" \
-                                              --target="$TARGET" \
-                                              --with-sysroot="$SYSROOT" \
-                                              --disable-nls || exit 1
+                                                --target="$TARGET" \
+                                                --with-sysroot="$SYSROOT" \
+                                                --disable-nls || exit 1
         make -j "$MAKEJOBS" || exit 1
         make install || exit 1
     popd
 
     pushd gcc
         "$DIR"/Tarballs/gcc-8.3.0/configure --prefix="$PREFIX" \
-                                          --target="$TARGET" \
-                                          --with-sysroot="$SYSROOT" \
-                                          --disable-nls \
-                                          --with-newlib \
-                                          --enable-languages=c,c++ || exit 1
+                                            --target="$TARGET" \
+                                            --with-sysroot="$SYSROOT" \
+                                            --disable-nls \
+                                            --with-newlib \
+                                            --enable-languages=c,c++ || exit 1
 
         echo "XXX build gcc and libgcc"
         make -j "$MAKEJOBS" all-gcc all-target-libgcc || exit 1
