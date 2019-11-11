@@ -3,6 +3,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/String.h>
 #include <AK/Types.h>
+#include <AK/Utf8View.h>
 #include <Kernel/Syscall.h>
 #include <alloca.h>
 #include <assert.h>
@@ -467,6 +468,28 @@ size_t mbtowc(wchar_t* wch, const char* data, size_t data_size)
 int wctomb(char*, wchar_t)
 {
     ASSERT_NOT_REACHED();
+}
+
+size_t wcstombs(char* dest, const wchar_t* src, size_t max)
+{
+    char* originalDest = dest;
+    while ((size_t)(dest - originalDest) < max) {
+        StringView v { (const char*)src, sizeof(wchar_t) };
+
+        // FIXME: dependent on locale, for now utf-8 is supported.
+        Utf8View utf8 { v };
+        if (*utf8.begin() == '\0') {
+            *dest = '\0';
+            return (size_t)(dest - originalDest); // Exclude null character in returned size
+        }
+
+        for (auto byte : utf8) {
+            if (byte != '\0')
+                *dest++ = byte;
+        }
+        ++src;
+    }
+    return max;
 }
 
 template<typename T, T min_value, T max_value>

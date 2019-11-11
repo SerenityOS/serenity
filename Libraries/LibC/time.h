@@ -48,11 +48,13 @@ typedef int clockid_t;
 
 int clock_gettime(clockid_t, struct timespec*);
 int clock_nanosleep(clockid_t, int flags, const struct timespec* requested_sleep, struct timespec* remaining_sleep);
+int clock_getres(clockid_t, struct timespec* result);
+struct tm* gmtime_r(const time_t* timep, struct tm* result);
+struct tm* localtime_r(const time_t* timep, struct tm* result);
 
 double difftime(time_t, time_t);
 size_t strftime(char* s, size_t max, const char* format, const struct tm*);
 
 #define difftime(t1, t0) (double)(t1 - t0)
-
 
 __END_DECLS
