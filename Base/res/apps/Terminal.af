@@ -1,0 +1,8 @@
+[App]
+Name=Terminal
+Executable=/bin/Terminal
+Category=Utilities
+
+[Icons]
+16x16=/res/icons/16x16/app-terminal.png
+32x32=/res/icons/32x32/app-terminal.png

@@ -1,0 +1,8 @@
+[App]
+Name=Calculator
+Executable=/bin/Calculator
+Category=Utilities
+
+[Icons]
+16x16=
+32x32=

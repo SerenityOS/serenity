@@ -10,6 +10,7 @@
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/CTimer.h>
+#include <LibCore/CDirIterator.h>
 #include <LibDraw/CharacterBitmap.h>
 #include <LibDraw/Font.h>
 #include <LibDraw/PNGLoader.h>
@@ -45,16 +46,25 @@ WSWindowManager::WSWindowManager()
     reload_config(false);
 
     struct AppMenuItem {
-        const char* binary_name;
-        const char* description;
-        const char* icon_path;
+        String binary_name;
+        String description;
+        String icon_path;
     };
 
-    Vector<AppMenuItem> apps = {
-        { "/bin/Terminal", "Open Terminal...", "/res/icons/16x16/app-terminal.png" },
-        { "/bin/FileManager", "Open FileManager...", "/res/icons/16x16/filetype-folder.png" },
-        { "/bin/SystemMonitor", "Open SystemMonitor...", "/res/icons/16x16/app-system-monitor.png" }
-    };
+    Vector<AppMenuItem> apps;
+
+    CDirIterator dt("/res/apps", CDirIterator::SkipDots);
+    while (dt.has_next()) {
+        auto af_name = dt.next_path();
+        auto af_path = String::format("/res/apps/%s", af_name.characters());
+        auto af = CConfigFile::open(af_path);
+        if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
+            continue;
+        auto app_name = af->read_entry("App", "Name");
+        auto app_executable = af->read_entry("App", "Executable");
+        auto app_icon_path = af->read_entry("Icons", "16x16");
+        apps.append({ app_executable, app_name, app_icon_path });
+    }
 
     u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
     m_system_menu = WSMenu::construct(nullptr, -1, String((const char*)system_menu_name));
@@ -74,7 +84,7 @@ WSWindowManager::WSWindowManager()
         if (item.identifier() >= 1 && item.identifier() <= 1u + apps.size() - 1) {
             if (fork() == 0) {
                 const auto& bin = apps[item.identifier() - 1].binary_name;
-                execl(bin, bin, nullptr);
+                execl(bin.characters(), bin.characters(), nullptr);
                 ASSERT_NOT_REACHED();
             }
         }
