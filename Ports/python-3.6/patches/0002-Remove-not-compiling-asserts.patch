@@ -1,0 +1,238 @@
+diff --git a/Include/bytearrayobject.h b/Include/bytearrayobject.h
+index a757b88..e4bf703 100644
+--- a/Include/bytearrayobject.h
++++ b/Include/bytearrayobject.h
+@@ -49,9 +49,8 @@ PyAPI_FUNC(int) PyByteArray_Resize(PyObject *, Py_ssize_t);
+ /* Macros, trading safety for speed */
+ #ifndef Py_LIMITED_API
+ #define PyByteArray_AS_STRING(self) \
+-    (assert(PyByteArray_Check(self)), \
+-     Py_SIZE(self) ? ((PyByteArrayObject *)(self))->ob_start : _PyByteArray_empty_string)
+-#define PyByteArray_GET_SIZE(self) (assert(PyByteArray_Check(self)), Py_SIZE(self))
++        (Py_SIZE(self) ? ((PyByteArrayObject*)(self))->ob_start : _PyByteArray_empty_string)
++#define PyByteArray_GET_SIZE(self) (Py_SIZE(self))
+ 
+ PyAPI_DATA(char) _PyByteArray_empty_string[];
+ #endif
+diff --git a/Include/bytesobject.h b/Include/bytesobject.h
+index 98e29b6..7432bcd 100644
+--- a/Include/bytesobject.h
++++ b/Include/bytesobject.h
+@@ -82,9 +82,8 @@ PyAPI_FUNC(PyObject *) _PyBytes_DecodeEscape(const char *, Py_ssize_t,
+ 
+ /* Macro, trading safety for speed */
+ #ifndef Py_LIMITED_API
+-#define PyBytes_AS_STRING(op) (assert(PyBytes_Check(op)), \
+-                                (((PyBytesObject *)(op))->ob_sval))
+-#define PyBytes_GET_SIZE(op)  (assert(PyBytes_Check(op)),Py_SIZE(op))
++#define PyBytes_AS_STRING(op) ((((PyBytesObject*)(op))->ob_sval))
++#define PyBytes_GET_SIZE(op) (Py_SIZE(op))
+ #endif
+ 
+ /* _PyBytes_Join(sep, x) is like sep.join(x).  sep must be PyBytesObject*,
+diff --git a/Include/unicodeobject.h b/Include/unicodeobject.h
+index 8103a63..f0f3e1a 100644
+--- a/Include/unicodeobject.h
++++ b/Include/unicodeobject.h
+@@ -381,11 +381,9 @@ PyAPI_DATA(PyTypeObject) PyUnicodeIter_Type;
+    on request.  Use PyUnicode_GET_LENGTH() for the length in code points. */
+ 
+ #define PyUnicode_GET_SIZE(op)                       \
+-    (assert(PyUnicode_Check(op)),                    \
+-     (((PyASCIIObject *)(op))->wstr) ?               \
++    ((((PyASCIIObject *)(op))->wstr) ?               \
+       PyUnicode_WSTR_LENGTH(op) :                    \
+       ((void)PyUnicode_AsUnicode((PyObject *)(op)),  \
+-       assert(((PyASCIIObject *)(op))->wstr),        \
+        PyUnicode_WSTR_LENGTH(op)))
+ 
+ #define PyUnicode_GET_DATA_SIZE(op) \
+@@ -397,8 +395,7 @@ PyAPI_DATA(PyTypeObject) PyUnicodeIter_Type;
+    use PyUnicode_WRITE() and PyUnicode_READ(). */
+ 
+ #define PyUnicode_AS_UNICODE(op) \
+-    (assert(PyUnicode_Check(op)), \
+-     (((PyASCIIObject *)(op))->wstr) ? (((PyASCIIObject *)(op))->wstr) : \
++    ((((PyASCIIObject *)(op))->wstr) ? (((PyASCIIObject *)(op))->wstr) : \
+       PyUnicode_AsUnicode((PyObject *)(op)))
+ 
+ #define PyUnicode_AS_DATA(op) \
+@@ -418,9 +415,7 @@ PyAPI_DATA(PyTypeObject) PyUnicodeIter_Type;
+    string may be compact (PyUnicode_IS_COMPACT_ASCII) or not, but must be
+    ready. */
+ #define PyUnicode_IS_ASCII(op)                   \
+-    (assert(PyUnicode_Check(op)),                \
+-     assert(PyUnicode_IS_READY(op)),             \
+-     ((PyASCIIObject*)op)->state.ascii)
++    (((PyASCIIObject*)op)->state.ascii)
+ 
+ /* Return true if the string is compact or 0 if not.
+    No type checks or Ready calls are performed. */
+@@ -454,9 +449,7 @@ enum PyUnicode_Kind {
+ 
+ /* Return one of the PyUnicode_*_KIND values defined above. */
+ #define PyUnicode_KIND(op) \
+-    (assert(PyUnicode_Check(op)), \
+-     assert(PyUnicode_IS_READY(op)),            \
+-     ((PyASCIIObject *)(op))->state.kind)
++    (((PyASCIIObject *)(op))->state.kind)
+ 
+ /* Return a void pointer to the raw unicode buffer. */
+ #define _PyUnicode_COMPACT_DATA(op)                     \
+@@ -465,12 +458,10 @@ enum PyUnicode_Kind {
+      ((void*)((PyCompactUnicodeObject*)(op) + 1)))
+ 
+ #define _PyUnicode_NONCOMPACT_DATA(op)                  \
+-    (assert(((PyUnicodeObject*)(op))->data.any),        \
+-     ((((PyUnicodeObject *)(op))->data.any)))
++    (((((PyUnicodeObject *)(op))->data.any)))
+ 
+ #define PyUnicode_DATA(op) \
+-    (assert(PyUnicode_Check(op)), \
+-     PyUnicode_IS_COMPACT(op) ? _PyUnicode_COMPACT_DATA(op) :   \
++    (PyUnicode_IS_COMPACT(op) ? _PyUnicode_COMPACT_DATA(op) :   \
+      _PyUnicode_NONCOMPACT_DATA(op))
+ 
+ /* In the access macros below, "kind" may be evaluated more than once.
+@@ -517,9 +508,7 @@ enum PyUnicode_Kind {
+    PyUnicode_READ_CHAR, for multiple consecutive reads callers should
+    cache kind and use PyUnicode_READ instead. */
+ #define PyUnicode_READ_CHAR(unicode, index) \
+-    (assert(PyUnicode_Check(unicode)),          \
+-     assert(PyUnicode_IS_READY(unicode)),       \
+-     (Py_UCS4)                                  \
++    ((Py_UCS4)                                  \
+         (PyUnicode_KIND((unicode)) == PyUnicode_1BYTE_KIND ? \
+             ((const Py_UCS1 *)(PyUnicode_DATA((unicode))))[(index)] : \
+             (PyUnicode_KIND((unicode)) == PyUnicode_2BYTE_KIND ? \
+@@ -531,10 +520,8 @@ enum PyUnicode_Kind {
+ /* Returns the length of the unicode string. The caller has to make sure that
+    the string has it's canonical representation set before calling
+    this macro.  Call PyUnicode_(FAST_)Ready to ensure that. */
+-#define PyUnicode_GET_LENGTH(op)                \
+-    (assert(PyUnicode_Check(op)),               \
+-     assert(PyUnicode_IS_READY(op)),            \
+-     ((PyASCIIObject *)(op))->length)
++#define PyUnicode_GET_LENGTH(op) \
++        (((PyASCIIObject*)(op))->length)
+ 
+ 
+ /* Fast check to determine whether an object is ready. Equivalent to
+@@ -547,16 +534,14 @@ enum PyUnicode_Kind {
+    _PyUnicode_Ready().
+    Returns 0 on success and -1 on errors. */
+ #define PyUnicode_READY(op)                        \
+-    (assert(PyUnicode_Check(op)),                       \
+-     (PyUnicode_IS_READY(op) ?                          \
++    ((PyUnicode_IS_READY(op) ?                          \
+       0 : _PyUnicode_Ready((PyObject *)(op))))
+ 
+ /* Return a maximum character value which is suitable for creating another
+    string based on op.  This is always an approximation but more efficient
+    than iterating over the string. */
+ #define PyUnicode_MAX_CHAR_VALUE(op) \
+-    (assert(PyUnicode_IS_READY(op)),                                    \
+-     (PyUnicode_IS_ASCII(op) ?                                          \
++    ((PyUnicode_IS_ASCII(op) ?                                          \
+       (0x7f) :                                                          \
+       (PyUnicode_KIND(op) == PyUnicode_1BYTE_KIND ?                     \
+        (0xffU) :                                                        \
+@@ -924,8 +909,7 @@ _PyUnicodeWriter_PrepareInternal(_PyUnicodeWriter *writer,
+ 
+    Return 0 on success, raise an exception and return -1 on error. */
+ #define _PyUnicodeWriter_PrepareKind(WRITER, KIND)                    \
+-    (assert((KIND) != PyUnicode_WCHAR_KIND),                          \
+-     (KIND) <= (WRITER)->kind                                         \
++    ((KIND) <= (WRITER)->kind                                         \
+      ? 0                                                              \
+      : _PyUnicodeWriter_PrepareKindInternal((WRITER), (KIND)))
+ 
+diff --git a/Objects/longobject.c b/Objects/longobject.c
+index ad239ce..678cc7c 100644
+--- a/Objects/longobject.c
++++ b/Objects/longobject.c
+@@ -17,8 +17,7 @@
+ #endif
+ 
+ /* convert a PyLong of size 1, 0 or -1 to an sdigit */
+-#define MEDIUM_VALUE(x) (assert(-1 <= Py_SIZE(x) && Py_SIZE(x) <= 1),   \
+-         Py_SIZE(x) < 0 ? -(sdigit)(x)->ob_digit[0] :   \
++#define MEDIUM_VALUE(x) (Py_SIZE(x) < 0 ? -(sdigit)(x)->ob_digit[0] :   \
+              (Py_SIZE(x) == 0 ? (sdigit)0 :                             \
+               (sdigit)(x)->ob_digit[0]))
+ 
+diff --git a/Objects/unicodeobject.c b/Objects/unicodeobject.c
+index 9c998f7..25e36bc 100644
+--- a/Objects/unicodeobject.c
++++ b/Objects/unicodeobject.c
+@@ -78,17 +78,13 @@ extern "C" {
+ #define _PyUnicode_UTF8(op)                             \
+     (((PyCompactUnicodeObject*)(op))->utf8)
+ #define PyUnicode_UTF8(op)                              \
+-    (assert(_PyUnicode_CHECK(op)),                      \
+-     assert(PyUnicode_IS_READY(op)),                    \
+-     PyUnicode_IS_COMPACT_ASCII(op) ?                   \
++    (PyUnicode_IS_COMPACT_ASCII(op) ?                   \
+          ((char*)((PyASCIIObject*)(op) + 1)) :          \
+          _PyUnicode_UTF8(op))
+ #define _PyUnicode_UTF8_LENGTH(op)                      \
+     (((PyCompactUnicodeObject*)(op))->utf8_length)
+ #define PyUnicode_UTF8_LENGTH(op)                       \
+-    (assert(_PyUnicode_CHECK(op)),                      \
+-     assert(PyUnicode_IS_READY(op)),                    \
+-     PyUnicode_IS_COMPACT_ASCII(op) ?                   \
++    (PyUnicode_IS_COMPACT_ASCII(op) ?                   \
+          ((PyASCIIObject*)(op))->length :               \
+          _PyUnicode_UTF8_LENGTH(op))
+ #define _PyUnicode_WSTR(op)                             \
+@@ -102,28 +98,22 @@ extern "C" {
+ #define _PyUnicode_HASH(op)                             \
+     (((PyASCIIObject *)(op))->hash)
+ #define _PyUnicode_KIND(op)                             \
+-    (assert(_PyUnicode_CHECK(op)),                      \
+-     ((PyASCIIObject *)(op))->state.kind)
++    (((PyASCIIObject *)(op))->state.kind)
+ #define _PyUnicode_GET_LENGTH(op)                       \
+-    (assert(_PyUnicode_CHECK(op)),                      \
+-     ((PyASCIIObject *)(op))->length)
++    (((PyASCIIObject *)(op))->length)
+ #define _PyUnicode_DATA_ANY(op)                         \
+     (((PyUnicodeObject*)(op))->data.any)
+ 
+ #undef PyUnicode_READY
+ #define PyUnicode_READY(op)                             \
+-    (assert(_PyUnicode_CHECK(op)),                      \
+-     (PyUnicode_IS_READY(op) ?                          \
++    ((PyUnicode_IS_READY(op) ?                          \
+       0 :                                               \
+       _PyUnicode_Ready(op)))
+ 
+ #define _PyUnicode_SHARE_UTF8(op)                       \
+-    (assert(_PyUnicode_CHECK(op)),                      \
+-     assert(!PyUnicode_IS_COMPACT_ASCII(op)),           \
+-     (_PyUnicode_UTF8(op) == PyUnicode_DATA(op)))
++    ((_PyUnicode_UTF8(op) == PyUnicode_DATA(op)))
+ #define _PyUnicode_SHARE_WSTR(op)                       \
+-    (assert(_PyUnicode_CHECK(op)),                      \
+-     (_PyUnicode_WSTR(unicode) == PyUnicode_DATA(op)))
++    ((_PyUnicode_WSTR(unicode) == PyUnicode_DATA(op)))
+ 
+ /* true if the Unicode object has an allocated UTF-8 memory block
+    (not shared with other data) */
+diff --git a/Python/pytime.c b/Python/pytime.c
+index 3015a6b..07335d4 100644
+--- a/Python/pytime.c
++++ b/Python/pytime.c
+@@ -8,8 +8,7 @@
+ #endif
+ 
+ #define _PyTime_check_mul_overflow(a, b) \
+-    (assert(b > 0), \
+-     (_PyTime_t)(a) < _PyTime_MIN / (_PyTime_t)(b) \
++    ((_PyTime_t)(a) < _PyTime_MIN / (_PyTime_t)(b) \
+      || _PyTime_MAX / (_PyTime_t)(b) < (_PyTime_t)(a))
+ 
+ /* To millisecond (10^-3) */
+-- 
+2.17.1
+
