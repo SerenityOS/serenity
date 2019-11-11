@@ -1,0 +1,26 @@
+diff --git a/Python/pytime.c b/Python/pytime.c
+index 07335d4..50d676a 100644
+--- a/Python/pytime.c
++++ b/Python/pytime.c
+@@ -225,7 +225,7 @@ _PyTime_FromNanoseconds(long long ns)
+     return t;
+ }
+ 
+-#ifdef HAVE_CLOCK_GETTIME
++
+ static int
+ _PyTime_FromTimespec(_PyTime_t *tp, struct timespec *ts, int raise)
+ {
+@@ -247,7 +247,8 @@ _PyTime_FromTimespec(_PyTime_t *tp, struct timespec *ts, int raise)
+     *tp = t;
+     return res;
+ }
+-#elif !defined(MS_WINDOWS)
++
++#if !defined(MS_WINDOWS)
+ static int
+ _PyTime_FromTimeval(_PyTime_t *tp, struct timeval *tv, int raise)
+ {
+-- 
+2.17.1
+
