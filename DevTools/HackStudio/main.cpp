@@ -9,6 +9,7 @@
 #include "Project.h"
 #include "TerminalWrapper.h"
 #include "WidgetTool.h"
+#include "WidgetTreeModel.h"
 #include <LibCore/CFile.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
@@ -149,6 +150,7 @@ int main(int argc, char** argv)
             g_form_editor_widget->set_tool(make<WidgetTool>(*g_form_editor_widget, reg));
             auto widget = reg.construct(&g_form_editor_widget->form_widget());
             widget->set_relative_rect(30, 30, 30, 30);
+            g_form_editor_widget->model().update();
         });
         action->set_checkable(true);
         action->set_checked(false);
@@ -177,7 +179,10 @@ int main(int argc, char** argv)
         wrapper->add_child(pane_widget);
     };
 
-    add_properties_pane("Form widget tree:", GTreeView::construct(nullptr));
+    auto form_widget_tree_view = GTreeView::construct(nullptr);
+    form_widget_tree_view->set_model(g_form_editor_widget->model());
+
+    add_properties_pane("Form widget tree:", form_widget_tree_view);
     add_properties_pane("Widget properties:", GTableView::construct(nullptr));
 
     g_text_inner_splitter = GSplitter::construct(Orientation::Vertical, g_right_hand_stack);
