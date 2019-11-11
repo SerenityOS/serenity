@@ -1348,6 +1348,8 @@ int Process::sys$open(const Syscall::SC_open_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
     auto& [path, path_length, options, mode] = *params;
+    if (!path_length)
+        return -EINVAL;
     if (!validate_read(path, path_length))
         return -EFAULT;
 #ifdef DEBUG_IO
