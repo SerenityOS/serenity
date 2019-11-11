@@ -15,6 +15,8 @@ public:
     virtual GModelIndex parent_index(const GModelIndex&) const override;
     virtual void update() override;
 
+    GModelIndex index_for_widget(GWidget&) const;
+
 private:
     explicit WidgetTreeModel(GWidget&);
 

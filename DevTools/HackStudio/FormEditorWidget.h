@@ -23,6 +23,13 @@ public:
 
     class WidgetSelection {
     public:
+        Function<void(GWidget&)> on_remove;
+        Function<void(GWidget&)> on_add;
+        Function<void()> on_clear;
+
+        void enable_hooks() { m_hooks_enabled = true; }
+        void disable_hooks() { m_hooks_enabled = false; }
+
         bool is_empty() const
         {
             return m_widgets.is_empty();
@@ -51,16 +58,22 @@ public:
         {
             ASSERT(m_widgets.contains(&widget));
             m_widgets.remove(&widget);
+            if (m_hooks_enabled && on_remove)
+                on_remove(widget);
         }
 
         void add(GWidget& widget)
         {
             m_widgets.set(&widget);
+            if (m_hooks_enabled && on_add)
+                on_add(widget);
         }
 
         void clear()
         {
             m_widgets.clear();
+            if (m_hooks_enabled && on_clear)
+                on_clear();
         }
 
         template<typename Callback>
@@ -76,6 +89,7 @@ public:
 
     private:
         HashTable<GWidget*> m_widgets;
+        bool m_hooks_enabled { true };
     };
 
     WidgetSelection& selection() { return m_selection; }

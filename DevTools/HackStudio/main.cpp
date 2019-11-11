@@ -100,7 +100,7 @@ int main(int argc, char** argv)
     Function<void()> update_actions;
 
     g_window = GWindow::construct();
-    g_window->set_rect(100, 100, 800, 600);
+    g_window->set_rect(90, 90, 840, 600);
     g_window->set_title("HackStudio");
 
     auto widget = GWidget::construct();
@@ -164,7 +164,7 @@ int main(int argc, char** argv)
 
     auto form_editing_pane_container = GSplitter::construct(Orientation::Vertical, form_editor_inner_splitter);
     form_editing_pane_container->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    form_editing_pane_container->set_preferred_size(170, 0);
+    form_editing_pane_container->set_preferred_size(190, 0);
     form_editing_pane_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     auto add_properties_pane = [&](auto& text, auto pane_widget) {
@@ -181,6 +181,28 @@ int main(int argc, char** argv)
 
     auto form_widget_tree_view = GTreeView::construct(nullptr);
     form_widget_tree_view->set_model(g_form_editor_widget->model());
+    form_widget_tree_view->on_selection_change = [&] {
+        g_form_editor_widget->selection().disable_hooks();
+        g_form_editor_widget->selection().clear();
+        form_widget_tree_view->selection().for_each_index([&](auto& index) {
+            // NOTE: Make sure we don't add the FormWidget itself to the selection,
+            //       since that would allow you to drag-move the FormWidget.
+            if (index.internal_data() != &g_form_editor_widget->form_widget())
+                g_form_editor_widget->selection().add(*(GWidget*)index.internal_data());
+        });
+        g_form_editor_widget->update();
+        g_form_editor_widget->selection().enable_hooks();
+    };
+
+    g_form_editor_widget->selection().on_add = [&](auto& widget) {
+        form_widget_tree_view->selection().add(g_form_editor_widget->model().index_for_widget(widget));
+    };
+    g_form_editor_widget->selection().on_remove = [&](auto& widget) {
+        form_widget_tree_view->selection().remove(g_form_editor_widget->model().index_for_widget(widget));
+    };
+    g_form_editor_widget->selection().on_clear = [&] {
+        form_widget_tree_view->selection().clear();
+    };
 
     add_properties_pane("Form widget tree:", form_widget_tree_view);
     add_properties_pane("Widget properties:", GTableView::construct(nullptr));
