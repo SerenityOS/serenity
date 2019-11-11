@@ -66,15 +66,21 @@ void GTreeView::mousedown_event(GMouseEvent& event)
     auto adjusted_position = event.position().translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
     bool is_toggle;
     auto index = index_at_content_position(adjusted_position, is_toggle);
-    if (!index.is_valid())
+    if (!index.is_valid()) {
+        if (event.button() == GMouseButton::Left && !(event.modifiers() & Mod_Ctrl))
+            selection().clear();
         return;
-
-    if (selection().first() != index) {
-        selection().set(index);
     }
 
-    if (is_toggle && model.row_count(index))
-        toggle_index(index);
+    if (event.button() == GMouseButton::Left) {
+        if (event.modifiers() & Mod_Ctrl) {
+            selection().toggle(index);
+        } else {
+            selection().set(index);
+        }
+        if (is_toggle && model.row_count(index))
+            toggle_index(index);
+    }
 }
 
 void GTreeView::doubleclick_event(GMouseEvent& event)
