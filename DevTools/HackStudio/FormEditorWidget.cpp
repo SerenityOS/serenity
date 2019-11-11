@@ -1,6 +1,7 @@
 #include "FormEditorWidget.h"
 #include "CursorTool.h"
 #include "FormWidget.h"
+#include "WidgetTreeModel.h"
 #include <LibGUI/GPainter.h>
 
 FormEditorWidget::FormEditorWidget(GWidget* parent)
@@ -15,6 +16,7 @@ FormEditorWidget::FormEditorWidget(GWidget* parent)
     set_frame_thickness(2);
 
     m_form_widget = FormWidget::construct(*this);
+    m_widget_tree_model = WidgetTreeModel::create(*m_form_widget);
 }
 
 FormEditorWidget::~FormEditorWidget()
@@ -34,4 +36,9 @@ void FormEditorWidget::set_tool(NonnullOwnPtr<Tool> tool)
     m_tool->detach();
     m_tool = move(tool);
     m_tool->attach();
+}
+
+WidgetTreeModel& FormEditorWidget::model()
+{
+    return *m_widget_tree_model;
 }

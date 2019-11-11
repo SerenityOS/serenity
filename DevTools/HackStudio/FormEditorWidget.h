@@ -4,6 +4,7 @@
 
 class FormWidget;
 class Tool;
+class WidgetTreeModel;
 
 class FormEditorWidget final : public GScrollableWidget {
     C_OBJECT(FormEditorWidget)
@@ -17,6 +18,8 @@ public:
     const Tool& tool() const { return *m_tool; }
 
     void set_tool(NonnullOwnPtr<Tool>);
+
+    WidgetTreeModel& model();
 
     class WidgetSelection {
     public:
@@ -70,6 +73,7 @@ public:
         }
 
         WidgetSelection() {}
+
     private:
         HashTable<GWidget*> m_widgets;
     };
@@ -82,6 +86,7 @@ private:
     explicit FormEditorWidget(GWidget* parent);
 
     RefPtr<FormWidget> m_form_widget;
+    RefPtr<WidgetTreeModel> m_widget_tree_model;
     NonnullOwnPtr<Tool> m_tool;
     WidgetSelection m_selection;
 };

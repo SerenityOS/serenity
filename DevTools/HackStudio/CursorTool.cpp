@@ -1,6 +1,7 @@
 #include "CursorTool.h"
 #include "FormEditorWidget.h"
 #include "FormWidget.h"
+#include "WidgetTreeModel.h"
 #include <AK/LogStream.h>
 
 void CursorTool::on_mousedown(GMouseEvent& event)
@@ -78,6 +79,7 @@ void CursorTool::on_mousemove(GMouseEvent& event)
             widget.set_relative_rect(new_rect);
             return IterationDecision::Continue;
         });
+        m_editor.model().update();
         return;
     }
 }

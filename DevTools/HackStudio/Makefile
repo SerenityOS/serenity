@@ -15,6 +15,7 @@ OBJS = \
     Tool.o \
     CursorTool.o \
     WidgetTool.o \
+    WidgetTreeModel.o \
     main.o
 
 APP = HackStudio
