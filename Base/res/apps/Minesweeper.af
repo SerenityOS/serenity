@@ -1,0 +1,8 @@
+[App]
+Name=Minesweeper
+Executable=/bin/Minesweeper
+Category=Games
+
+[Icons]
+16x16=/res/icons/minesweeper/mine.png
+32x32=/res/icons/32x32/app-minesweeper.png
