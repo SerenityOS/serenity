@@ -84,8 +84,6 @@ public:
     Rect menubar_rect() const;
     WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
     void set_current_menubar(WSMenuBar*);
-    WSMenu* current_menu() { return m_current_menu.ptr(); }
-    void set_current_menu(WSMenu*, bool is_submenu = false);
     WSMenu* system_menu() { return m_system_menu.ptr(); }
 
     const WSCursor& active_cursor() const;
@@ -114,7 +112,6 @@ public:
     void close_menubar(WSMenuBar&);
     Color menu_selection_color() const { return m_menu_selection_color; }
     int menubar_menu_margin() const;
-    void close_current_menu();
 
     void set_resolution(int width, int height);
 
@@ -255,7 +252,6 @@ private:
     RefPtr<WSMenu> m_system_menu;
     Color m_menu_selection_color;
     WeakPtr<WSMenuBar> m_current_menubar;
-    WeakPtr<WSMenu> m_current_menu;
 
     WSWindowSwitcher m_switcher;
     WSMenuManager m_menu_manager;
@@ -265,6 +261,13 @@ private:
 
     RefPtr<CConfigFile> m_wm_config;
 
+    struct AppMetadata {
+        String executable;
+        String name;
+        String icon_path;
+        String category;
+    };
+    Vector<AppMetadata> m_apps;
     HashMap<String, NonnullRefPtr<WSMenu>> m_app_category_menus;
 };
 

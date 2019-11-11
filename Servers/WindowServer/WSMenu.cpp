@@ -198,30 +198,19 @@ void WSMenu::draw()
     }
 }
 
-void close_everyone_not_in_lineage(WSMenu& menu)
-{
-    for (auto& open_menu : WSWindowManager::the().menu_manager().open_menu_stack()) {
-        if (!open_menu)
-            continue;
-        if (&menu == open_menu.ptr() || open_menu->is_menu_ancestor_of(menu))
-            continue;
-        open_menu->menu_window()->set_visible(false);
-    }
-}
-
 void WSMenu::event(CEvent& event)
 {
     if (event.type() == WSEvent::MouseMove) {
         ASSERT(menu_window());
         auto* item = item_at(static_cast<const WSMouseEvent&>(event).position());
-        if (!item || m_hovered_item == item)
+        if (m_hovered_item == item)
             return;
         m_hovered_item = item;
-        if (m_hovered_item->is_submenu()) {
-            close_everyone_not_in_lineage(*m_hovered_item->submenu());
+        if (m_hovered_item && m_hovered_item->is_submenu()) {
+            WSWindowManager::the().menu_manager().close_everyone_not_in_lineage(*m_hovered_item->submenu());
             m_hovered_item->submenu()->popup(m_hovered_item->rect().top_right().translated(menu_window()->rect().location()), true);
         } else {
-            close_everyone_not_in_lineage(*this);
+            WSWindowManager::the().menu_manager().close_everyone_not_in_lineage(*this);
         }
         redraw();
         return;
@@ -253,7 +242,7 @@ void WSMenu::did_activate(WSMenuItem& item)
     if (on_item_activation)
         on_item_activation(item);
 
-    close();
+    WSWindowManager::the().menu_manager().close_everyone();
 
     WSAPI_ServerMessage message;
     message.type = WSAPI_ServerMessage::Type::MenuItemActivated;
@@ -284,9 +273,7 @@ WSMenuItem* WSMenu::item_at(const Point& position)
 
 void WSMenu::close()
 {
-    WSWindowManager::the().close_menu(*this);
-    if (menu_window())
-        menu_window()->set_visible(false);
+    WSWindowManager::the().menu_manager().close_menu_and_descendants(*this);
 }
 
 void WSMenu::popup(const Point& position, bool is_submenu)
@@ -305,7 +292,7 @@ void WSMenu::popup(const Point& position, bool is_submenu)
 
     window.move_to(adjusted_pos);
     window.set_visible(true);
-    WSWindowManager::the().set_current_menu(this, is_submenu);
+    WSWindowManager::the().menu_manager().set_current_menu(this, is_submenu);
 }
 
 bool WSMenu::is_menu_ancestor_of(const WSMenu& other) const

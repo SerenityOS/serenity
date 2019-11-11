@@ -143,23 +143,24 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
         && !m_open_menu_stack.is_empty()
         && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == wm.system_menu());
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
-    bool should_open_menu = &menu != wm.current_menu() && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
+    bool should_open_menu = &menu != m_current_menu && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
     if (should_open_menu) {
-        if (wm.current_menu() == &menu)
+        if (m_current_menu == &menu)
             return;
-        wm.close_current_menu();
+        close_everyone();
         if (!menu.is_empty()) {
             auto& menu_window = menu.ensure_menu_window();
             menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
             menu_window.set_visible(true);
         }
-        wm.set_current_menu(&menu);
+        set_current_menu(&menu);
         refresh();
         return;
     }
     if (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left) {
-        wm.close_current_menu();
+        close_everyone();
+        set_current_menu(nullptr);
         return;
     }
 }
@@ -167,4 +168,75 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
 void WSMenuManager::set_needs_window_resize()
 {
     m_needs_window_resize = true;
+}
+
+void WSMenuManager::close_everyone()
+{
+    for (auto& menu : m_open_menu_stack) {
+        if (menu && menu->menu_window())
+            menu->menu_window()->set_visible(false);
+    }
+    m_open_menu_stack.clear();
+    refresh();
+}
+
+void WSMenuManager::close_everyone_not_in_lineage(WSMenu& menu)
+{
+    Vector<WSMenu*> menus_to_close;
+    for (auto& open_menu : m_open_menu_stack) {
+        if (!open_menu)
+            continue;
+        if (&menu == open_menu.ptr() || open_menu->is_menu_ancestor_of(menu))
+            continue;
+        menus_to_close.append(open_menu);
+    }
+    close_menus(menus_to_close);
+}
+
+void WSMenuManager::close_menus(const Vector<WSMenu*>& menus)
+{
+    for (auto& menu : menus) {
+        if (menu == m_current_menu)
+            m_current_menu = nullptr;
+        if (menu->menu_window())
+            menu->menu_window()->set_visible(false);
+        m_open_menu_stack.remove_first_matching([&](auto& entry) {
+            return entry == menu;
+        });
+    }
+    refresh();
+}
+
+static void collect_menu_subtree(WSMenu& menu, Vector<WSMenu*>& menus)
+{
+    menus.append(&menu);
+    for (int i = 0; i < menu.item_count(); ++i) {
+        auto& item = menu.item(i);
+        if (!item.is_submenu())
+            continue;
+        collect_menu_subtree(*const_cast<WSMenuItem&>(item).submenu(), menus);
+    }
+}
+
+void WSMenuManager::close_menu_and_descendants(WSMenu& menu)
+{
+    Vector<WSMenu*> menus_to_close;
+    collect_menu_subtree(menu, menus_to_close);
+    close_menus(menus_to_close);
+}
+
+void WSMenuManager::set_current_menu(WSMenu* menu, bool is_submenu)
+{
+    if (!is_submenu && m_current_menu)
+        m_current_menu->close();
+    if (menu)
+        m_current_menu = menu->make_weak_ptr();
+
+    if (!is_submenu) {
+        close_everyone();
+        if (menu)
+            m_open_menu_stack.append(menu->make_weak_ptr());
+    } else {
+        m_open_menu_stack.append(menu->make_weak_ptr());
+    }
 }
