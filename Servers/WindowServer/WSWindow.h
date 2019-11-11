@@ -45,7 +45,7 @@ public:
 
     bool is_movable() const
     {
-        return m_type == WSWindowType::Normal || m_type == WSWindowType::Launcher;
+        return m_type == WSWindowType::Normal;
     }
 
     WSWindowFrame& frame() { return m_frame; }

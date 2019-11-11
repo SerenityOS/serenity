@@ -140,8 +140,6 @@ static WSAPI_WindowType to_api(WSWindowType ws_type)
         return WSAPI_WindowType::Tooltip;
     case WSWindowType::Menubar:
         return WSAPI_WindowType::Menubar;
-    case WSWindowType::Launcher:
-        return WSAPI_WindowType::Launcher;
     default:
         ASSERT_NOT_REACHED();
     }

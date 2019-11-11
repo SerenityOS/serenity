@@ -76,7 +76,6 @@ cp ../Applications/Downloader/Downloader mnt/bin/Downloader
 cp ../Applications/FileManager/FileManager mnt/bin/FileManager
 cp ../Applications/FontEditor/FontEditor mnt/bin/FontEditor
 cp ../Applications/IRCClient/IRCClient mnt/bin/IRCClient
-cp ../Applications/Launcher/Launcher mnt/bin/Launcher
 cp ../Applications/SystemMonitor/SystemMonitor mnt/bin/SystemMonitor
 cp ../Applications/Taskbar/Taskbar mnt/bin/Taskbar
 cp ../Applications/Terminal/Terminal mnt/bin/Terminal
