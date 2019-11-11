@@ -1,0 +1,16 @@
+diff --git a/Python/random.c b/Python/random.c
+index 46e3bb5..a4a7136 100644
+--- a/Python/random.c
++++ b/Python/random.c
+@@ -316,7 +316,7 @@ dev_urandom(char *buffer, Py_ssize_t size, int blocking, int raise)
+         } while (0 < size);
+     }
+     else {
+-        fd = _Py_open_noraise("/dev/urandom", O_RDONLY);
++        fd = _Py_open_noraise("/dev/random", O_RDONLY);
+         if (fd < 0) {
+             return -1;
+         }
+-- 
+2.17.1
+
