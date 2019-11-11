@@ -731,7 +731,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
             if (topmost_menu->hovered_item())
                 topmost_menu->clear_hovered_item();
             if (event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseUp)
-                m_menu_manager.close_everyone();
+                m_menu_manager.close_bar();
             if (event.type() == WSEvent::MouseMove) {
                 for (auto& menu : m_menu_manager.open_menu_stack()) {
                     if (!menu)

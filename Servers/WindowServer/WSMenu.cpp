@@ -242,7 +242,7 @@ void WSMenu::did_activate(WSMenuItem& item)
     if (on_item_activation)
         on_item_activation(item);
 
-    WSWindowManager::the().menu_manager().close_everyone();
+    WSWindowManager::the().menu_manager().close_bar();
 
     WSAPI_ServerMessage message;
     message.type = WSAPI_ServerMessage::Type::MenuItemActivated;

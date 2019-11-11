@@ -145,7 +145,10 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != m_current_menu && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
-    if (should_open_menu) {
+    if (is_mousedown_with_left_button)
+        m_bar_open = !m_bar_open;
+
+    if (should_open_menu && m_bar_open) {
         if (m_current_menu == &menu)
             return;
         close_everyone();
@@ -158,11 +161,9 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
         refresh();
         return;
     }
-    if (event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left) {
+
+    if (!m_bar_open)
         close_everyone();
-        set_current_menu(nullptr);
-        return;
-    }
 }
 
 void WSMenuManager::set_needs_window_resize()
@@ -177,6 +178,7 @@ void WSMenuManager::close_everyone()
             menu->menu_window()->set_visible(false);
     }
     m_open_menu_stack.clear();
+    m_current_menu = nullptr;
     refresh();
 }
 
@@ -239,4 +241,10 @@ void WSMenuManager::set_current_menu(WSMenu* menu, bool is_submenu)
     } else {
         m_open_menu_stack.append(menu->make_weak_ptr());
     }
+}
+
+void WSMenuManager::close_bar()
+{
+    close_everyone();
+    m_bar_open = false;
 }
