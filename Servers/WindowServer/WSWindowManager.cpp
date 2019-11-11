@@ -45,15 +45,6 @@ WSWindowManager::WSWindowManager()
 
     reload_config(false);
 
-    struct AppMenuItem {
-        String binary_name;
-        String description;
-        String icon_path;
-        String category;
-    };
-
-    Vector<AppMenuItem> apps;
-
     CDirIterator dt("/res/apps", CDirIterator::SkipDots);
     while (dt.has_next()) {
         auto af_name = dt.next_path();
@@ -65,23 +56,23 @@ WSWindowManager::WSWindowManager()
         auto app_executable = af->read_entry("App", "Executable");
         auto app_category = af->read_entry("App", "Category");
         auto app_icon_path = af->read_entry("Icons", "16x16");
-        apps.append({ app_executable, app_name, app_icon_path, app_category });
+        m_apps.append({ app_executable, app_name, app_icon_path, app_category });
     }
 
     u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
     m_system_menu = WSMenu::construct(nullptr, -1, String((const char*)system_menu_name));
 
     // First we construct all the necessary app category submenus.
-    for (const auto& app : apps) {
+    for (const auto& app : m_apps) {
         if (app.category.is_null())
             continue;
         if (m_app_category_menus.contains(app.category))
             continue;
         auto category_menu = WSMenu::construct(nullptr, 5000 + m_app_category_menus.size(), app.category);
-        category_menu->on_item_activation = [apps](auto& item) {
-            if (item.identifier() >= 1 && item.identifier() <= 1u + apps.size() - 1) {
+        category_menu->on_item_activation = [this](auto& item) {
+            if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
                 if (fork() == 0) {
-                    const auto& bin = apps[item.identifier() - 1].binary_name;
+                    const auto& bin = m_apps[item.identifier() - 1].executable;
                     execl(bin.characters(), bin.characters(), nullptr);
                     ASSERT_NOT_REACHED();
                 }
@@ -95,9 +86,9 @@ WSWindowManager::WSWindowManager()
 
     // Then we create and insert all the app menu items into the right place.
     int app_identifier = 1;
-    for (const auto& app : apps) {
+    for (const auto& app : m_apps) {
         auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
-        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.description, String(), true, false, false, load_png(app.icon_path)));
+        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, load_png(app.icon_path)));
     }
 
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
@@ -106,10 +97,10 @@ WSWindowManager::WSWindowManager()
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, load_png("/res/icons/16x16/ladybug.png")));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
-    m_system_menu->on_item_activation = [this, apps](WSMenuItem& item) {
-        if (item.identifier() >= 1 && item.identifier() <= 1u + apps.size() - 1) {
+    m_system_menu->on_item_activation = [this](WSMenuItem& item) {
+        if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
             if (fork() == 0) {
-                const auto& bin = apps[item.identifier() - 1].binary_name;
+                const auto& bin = m_apps[item.identifier() - 1].executable;
                 execl(bin.characters(), bin.characters(), nullptr);
                 ASSERT_NOT_REACHED();
             }
@@ -247,24 +238,6 @@ void WSWindowManager::set_resolution(int width, int height)
 int WSWindowManager::menubar_menu_margin() const
 {
     return 16;
-}
-
-void WSWindowManager::set_current_menu(WSMenu* menu, bool is_submenu)
-{
-    if (m_current_menu == menu)
-        return;
-    if (!is_submenu && m_current_menu)
-        m_current_menu->close();
-    if (menu)
-        m_current_menu = menu->make_weak_ptr();
-
-    if (!is_submenu) {
-        m_menu_manager.open_menu_stack().clear();
-        if (menu)
-            m_menu_manager.open_menu_stack().append(menu->make_weak_ptr());
-    } else {
-        m_menu_manager.open_menu_stack().append(menu->make_weak_ptr());
-    }
 }
 
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
@@ -432,19 +405,6 @@ void WSWindowManager::pick_new_active_window()
         set_active_window(&candidate);
         return IterationDecision::Break;
     });
-}
-
-void WSWindowManager::close_current_menu()
-{
-    if (m_current_menu && m_current_menu->menu_window())
-        m_current_menu->menu_window()->set_visible(false);
-    m_current_menu = nullptr;
-    for (auto& menu : m_menu_manager.open_menu_stack()) {
-        if (menu && menu->menu_window())
-            menu->menu_window()->set_visible(false);
-    }
-    m_menu_manager.open_menu_stack().clear();
-    m_menu_manager.refresh();
 }
 
 void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& event)
@@ -761,14 +721,17 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         return;
     }
 
-    if (m_current_menu && m_current_menu->menu_window()) {
-        auto& window = *m_current_menu->menu_window();
-        bool event_is_inside_current_menu = window.rect().contains(event.position());
+    if (!menu_manager().open_menu_stack().is_empty()) {
+        auto* topmost_menu = menu_manager().open_menu_stack().last().ptr();
+        ASSERT(topmost_menu);
+        auto* window = topmost_menu->menu_window();
+        ASSERT(window);
+        bool event_is_inside_current_menu = window->rect().contains(event.position());
         if (!event_is_inside_current_menu) {
-            if (m_current_menu->hovered_item())
-                m_current_menu->clear_hovered_item();
+            if (topmost_menu->hovered_item())
+                topmost_menu->clear_hovered_item();
             if (event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseUp)
-                close_current_menu();
+                m_menu_manager.close_everyone();
             if (event.type() == WSEvent::MouseMove) {
                 for (auto& menu : m_menu_manager.open_menu_stack()) {
                     if (!menu)
@@ -782,9 +745,9 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
                 }
             }
         } else {
-            hovered_window = &window;
-            auto translated_event = event.translated(-window.position());
-            deliver_mouse_event(window, translated_event);
+            hovered_window = window;
+            auto translated_event = event.translated(-window->position());
+            deliver_mouse_event(*window, translated_event);
         }
         return;
     }
@@ -1058,12 +1021,6 @@ void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
     // FIXME: This seems slightly wrong; the inner rect shouldn't intersect the border part of the outer rect.
     inner_rect.intersect(outer_rect);
     invalidate(inner_rect);
-}
-
-void WSWindowManager::close_menu(WSMenu& menu)
-{
-    if (current_menu() == &menu)
-        close_current_menu();
 }
 
 void WSWindowManager::close_menubar(WSMenuBar& menubar)

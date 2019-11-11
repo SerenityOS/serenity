@@ -388,7 +388,7 @@ void WSClientConnection::handle_request(const WSAPIDestroyMenuRequest& request)
         return;
     }
     auto& menu = *(*it).value;
-    WSWindowManager::the().close_menu(menu);
+    menu.close();
     m_menus.remove(it);
     remove_child(menu);
     WSAPI_ServerMessage response;

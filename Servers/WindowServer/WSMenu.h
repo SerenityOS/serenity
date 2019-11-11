@@ -29,6 +29,7 @@ public:
 
     bool is_empty() const { return m_items.is_empty(); }
     int item_count() const { return m_items.size(); }
+    const WSMenuItem& item(int index) const { return m_items.at(index); }
 
     void add_item(NonnullOwnPtr<WSMenuItem>&& item) { m_items.append(move(item)); }
 
