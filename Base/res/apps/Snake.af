@@ -1,0 +1,8 @@
+[App]
+Name=Snake
+Executable=/bin/Snake
+Category=Games
+
+[Icons]
+16x16=/res/icons/16x16/app-snake.png
+32x32=/res/icons/32x32/app-snake.png
