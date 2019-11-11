@@ -21,6 +21,11 @@ NonnullRefPtr<CConfigFile> CConfigFile::get_for_system(const String& app_name)
     return adopt(*new CConfigFile(path));
 }
 
+NonnullRefPtr<CConfigFile> CConfigFile::open(const String& path)
+{
+    return adopt(*new CConfigFile(path));
+}
+
 CConfigFile::CConfigFile(const String& file_name)
     : m_file_name(file_name)
 {

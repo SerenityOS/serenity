@@ -11,6 +11,7 @@ class CConfigFile : public RefCounted<CConfigFile> {
 public:
     static NonnullRefPtr<CConfigFile> get_for_app(const String& app_name);
     static NonnullRefPtr<CConfigFile> get_for_system(const String& app_name);
+    static NonnullRefPtr<CConfigFile> open(const String& path);
     ~CConfigFile();
 
     bool has_group(const String&) const;
