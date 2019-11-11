@@ -675,3 +675,15 @@ void GWidget::save_to(AK::JsonObject& json)
     json.set("size_policy", String::format("[%s,%s]", to_string(horizontal_size_policy()), to_string(vertical_size_policy())));
     CObject::save_to(json);
 }
+
+Vector<GWidget*> GWidget::child_widgets() const
+{
+    Vector<GWidget*> widgets;
+    widgets.ensure_capacity(children().size());
+    for (auto& child : const_cast<GWidget*>(this)->children()) {
+        if (child.is_widget())
+            widgets.append(static_cast<GWidget*>(&child));
+    }
+    return widgets;
+}
+
