@@ -75,6 +75,8 @@ public:
 
     void popup(const Point&, bool is_submenu = false);
 
+    bool is_menu_ancestor_of(const WSMenu&) const;
+
 private:
     virtual void event(CEvent&) override;
 
