@@ -124,7 +124,8 @@ public:
     bool is_focused() const;
     void set_focus(bool);
 
-    enum class ShouldRespectGreediness { No = 0, Yes };
+    enum class ShouldRespectGreediness { No = 0,
+        Yes };
     struct HitTestResult {
         GWidget* widget { nullptr };
         Point local_position;
@@ -219,6 +220,8 @@ public:
             return IterationDecision::Continue;
         });
     }
+
+    Vector<GWidget*> child_widgets() const;
 
     virtual bool is_radio_button() const { return false; }
     virtual bool is_abstract_button() const { return false; }
