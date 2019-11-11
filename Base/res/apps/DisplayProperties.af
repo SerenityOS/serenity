@@ -1,7 +1,7 @@
 [App]
 Name=DisplayProperties
 Executable=/bin/DisplayProperties
-Category=Utilities
+Category=Graphics
 
 [Icons]
 16x16=/res/icons/16x16/app-display-properties.png

@@ -1,6 +1,7 @@
 [App]
 Name=PaintBrush
 Executable=/bin/PaintBrush
+Category=Graphics
 
 [Icons]
 16x16=/res/icons/16x16/app-paintbrush.png
