@@ -148,6 +148,8 @@ public:
             m_current_menubar->for_each_menu(callback);
     }
 
+    WSMenu* find_internal_menu_by_id(int);
+
 private:
     NonnullRefPtr<WSCursor> get_cursor(const String& name);
     NonnullRefPtr<WSCursor> get_cursor(const String& name, const Point& hotspot);
@@ -262,6 +264,8 @@ private:
     WeakPtr<WSButton> m_hovered_button;
 
     RefPtr<CConfigFile> m_wm_config;
+
+    HashMap<String, NonnullRefPtr<WSMenu>> m_app_category_menus;
 };
 
 template<typename Callback>

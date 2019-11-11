@@ -198,6 +198,17 @@ void WSMenu::draw()
     }
 }
 
+void close_everyone_not_in_lineage(WSMenu& menu)
+{
+    for (auto& open_menu : WSWindowManager::the().menu_manager().open_menu_stack()) {
+        if (!open_menu)
+            continue;
+        if (&menu == open_menu.ptr() || open_menu->is_menu_ancestor_of(menu))
+            continue;
+        open_menu->menu_window()->set_visible(false);
+    }
+}
+
 void WSMenu::event(CEvent& event)
 {
     if (event.type() == WSEvent::MouseMove) {
@@ -207,21 +218,10 @@ void WSMenu::event(CEvent& event)
             return;
         m_hovered_item = item;
         if (m_hovered_item->is_submenu()) {
+            close_everyone_not_in_lineage(*m_hovered_item->submenu());
             m_hovered_item->submenu()->popup(m_hovered_item->rect().top_right().translated(menu_window()->rect().location()), true);
         } else {
-            bool close_remaining_menus = false;
-            for (auto& open_menu : WSWindowManager::the().menu_manager().open_menu_stack()) {
-                if (!open_menu)
-                    continue;
-                if (close_remaining_menus) {
-                    open_menu->menu_window()->set_visible(false);
-                    continue;
-                }
-                if (open_menu == this) {
-                    close_remaining_menus = true;
-                    continue;
-                }
-            }
+            close_everyone_not_in_lineage(*this);
         }
         redraw();
         return;
@@ -306,4 +306,18 @@ void WSMenu::popup(const Point& position, bool is_submenu)
     window.move_to(adjusted_pos);
     window.set_visible(true);
     WSWindowManager::the().set_current_menu(this, is_submenu);
+}
+
+bool WSMenu::is_menu_ancestor_of(const WSMenu& other) const
+{
+    for (auto& item : m_items) {
+        if (!item.is_submenu())
+            continue;
+        auto& submenu = *const_cast<WSMenuItem&>(item).submenu();
+        if (&submenu == &other)
+            return true;
+        if (submenu.is_menu_ancestor_of(other))
+            return true;
+    }
+    return false;
 }

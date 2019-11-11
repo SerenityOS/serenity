@@ -1,6 +1,7 @@
 #include "WSMenuItem.h"
 #include "WSClientConnection.h"
 #include "WSMenu.h"
+#include "WSWindowManager.h"
 #include <LibDraw/GraphicsBitmap.h>
 
 WSMenuItem::WSMenuItem(WSMenu& menu, unsigned identifier, const String& text, const String& shortcut_text, bool enabled, bool checkable, bool checked, const GraphicsBitmap* icon)
@@ -45,6 +46,7 @@ void WSMenuItem::set_checked(bool checked)
 WSMenu* WSMenuItem::submenu()
 {
     ASSERT(is_submenu());
-    ASSERT(m_menu.client());
-    return m_menu.client()->find_menu_by_id(m_submenu_id);
+    if (m_menu.client())
+        return m_menu.client()->find_menu_by_id(m_submenu_id);
+    return WSWindowManager::the().find_internal_menu_by_id(m_submenu_id);
 }

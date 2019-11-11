@@ -9,8 +9,8 @@
 #include <AK/LogStream.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <LibCore/CTimer.h>
 #include <LibCore/CDirIterator.h>
+#include <LibCore/CTimer.h>
 #include <LibDraw/CharacterBitmap.h>
 #include <LibDraw/Font.h>
 #include <LibDraw/PNGLoader.h>
@@ -49,6 +49,7 @@ WSWindowManager::WSWindowManager()
         String binary_name;
         String description;
         String icon_path;
+        String category;
     };
 
     Vector<AppMenuItem> apps;
@@ -62,16 +63,41 @@ WSWindowManager::WSWindowManager()
             continue;
         auto app_name = af->read_entry("App", "Name");
         auto app_executable = af->read_entry("App", "Executable");
+        auto app_category = af->read_entry("App", "Category");
         auto app_icon_path = af->read_entry("Icons", "16x16");
-        apps.append({ app_executable, app_name, app_icon_path });
+        apps.append({ app_executable, app_name, app_icon_path, app_category });
     }
 
     u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
     m_system_menu = WSMenu::construct(nullptr, -1, String((const char*)system_menu_name));
 
-    int appIndex = 1;
+    // First we construct all the necessary app category submenus.
     for (const auto& app : apps) {
-        m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, appIndex++, app.description, String(), true, false, false, load_png(app.icon_path)));
+        if (app.category.is_null())
+            continue;
+        if (m_app_category_menus.contains(app.category))
+            continue;
+        auto category_menu = WSMenu::construct(nullptr, 5000 + m_app_category_menus.size(), app.category);
+        category_menu->on_item_activation = [apps](auto& item) {
+            if (item.identifier() >= 1 && item.identifier() <= 1u + apps.size() - 1) {
+                if (fork() == 0) {
+                    const auto& bin = apps[item.identifier() - 1].binary_name;
+                    execl(bin.characters(), bin.characters(), nullptr);
+                    ASSERT_NOT_REACHED();
+                }
+            }
+        };
+        auto item = make<WSMenuItem>(*m_system_menu, -1, app.category);
+        item->set_submenu_id(category_menu->menu_id());
+        m_system_menu->add_item(move(item));
+        m_app_category_menus.set(app.category, move(category_menu));
+    }
+
+    // Then we create and insert all the app menu items into the right place.
+    int app_identifier = 1;
+    for (const auto& app : apps) {
+        auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
+        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.description, String(), true, false, false, load_png(app.icon_path)));
     }
 
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
@@ -494,7 +520,7 @@ bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*
         return true;
     }
     if (event.type() == WSEvent::MouseMove) {
-        
+
 #ifdef DRAG_DEBUG
         dbg() << "[WM] Dragging, origin: " << m_drag_origin << ", now: " << event.position();
         if (m_drag_window->is_maximized()) {
@@ -1120,4 +1146,13 @@ Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
     });
 
     return rect;
+}
+
+WSMenu* WSWindowManager::find_internal_menu_by_id(int menu_id)
+{
+    for (auto& it : m_app_category_menus) {
+        if (menu_id == it.value->menu_id())
+            return it.value;
+    }
+    return nullptr;
 }
