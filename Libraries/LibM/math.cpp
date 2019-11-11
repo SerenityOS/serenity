@@ -301,4 +301,10 @@ float ceilf(float value)
     }
     return as_int + 1;
 }
+
+double modf(double x, double* intpart)
+{
+    *intpart = (double)((int)(x));
+    return x - (int)x;
+}
 }

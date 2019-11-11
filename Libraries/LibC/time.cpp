@@ -134,4 +134,18 @@ int clock_nanosleep(clockid_t clock_id, int flags, const struct timespec* reques
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int clock_getres(clockid_t, struct timespec*)
+{
+    ASSERT_NOT_REACHED();
+}
+
+struct tm* gmtime_r(const time_t*, struct tm*)
+{
+    ASSERT_NOT_REACHED();
+}
+
+struct tm* localtime_r(const time_t*, struct tm*)
+{
+    ASSERT_NOT_REACHED();
+}
 }
