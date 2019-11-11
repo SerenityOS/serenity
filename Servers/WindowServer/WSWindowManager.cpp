@@ -7,6 +7,7 @@
 #include "WSScreen.h"
 #include "WSWindow.h"
 #include <AK/LogStream.h>
+#include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
 #include <LibCore/CDirIterator.h>
@@ -45,6 +46,7 @@ WSWindowManager::WSWindowManager()
 
     reload_config(false);
 
+    HashTable<String> seen_app_categories;
     CDirIterator dt("/res/apps", CDirIterator::SkipDots);
     while (dt.has_next()) {
         auto af_name = dt.next_path();
@@ -57,18 +59,23 @@ WSWindowManager::WSWindowManager()
         auto app_category = af->read_entry("App", "Category");
         auto app_icon_path = af->read_entry("Icons", "16x16");
         m_apps.append({ app_executable, app_name, app_icon_path, app_category });
+        seen_app_categories.set(app_category);
     }
+
+    Vector<String> sorted_app_categories;
+    for (auto& category : seen_app_categories)
+        sorted_app_categories.append(category);
+    quick_sort(sorted_app_categories.begin(), sorted_app_categories.end(), [](auto& a, auto& b) { return a < b; });
 
     u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
     m_system_menu = WSMenu::construct(nullptr, -1, String((const char*)system_menu_name));
 
     // First we construct all the necessary app category submenus.
-    for (const auto& app : m_apps) {
-        if (app.category.is_null())
+    for (const auto& category : sorted_app_categories) {
+
+        if (m_app_category_menus.contains(category))
             continue;
-        if (m_app_category_menus.contains(app.category))
-            continue;
-        auto category_menu = WSMenu::construct(nullptr, 5000 + m_app_category_menus.size(), app.category);
+        auto category_menu = WSMenu::construct(nullptr, 5000 + m_app_category_menus.size(), category);
         category_menu->on_item_activation = [this](auto& item) {
             if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
                 if (fork() == 0) {
@@ -78,10 +85,10 @@ WSWindowManager::WSWindowManager()
                 }
             }
         };
-        auto item = make<WSMenuItem>(*m_system_menu, -1, app.category);
+        auto item = make<WSMenuItem>(*m_system_menu, -1, category);
         item->set_submenu_id(category_menu->menu_id());
         m_system_menu->add_item(move(item));
-        m_app_category_menus.set(app.category, move(category_menu));
+        m_app_category_menus.set(category, move(category_menu));
     }
 
     // Then we create and insert all the app menu items into the right place.
