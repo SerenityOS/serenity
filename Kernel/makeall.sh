@@ -105,4 +105,4 @@ for targ in $build_targets; do
     fi
 done
 
-sudo -E PATH=$PATH ./build-image-qemu.sh
+sudo -E PATH="$PATH" ./build-image-qemu.sh
