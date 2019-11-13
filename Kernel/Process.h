@@ -204,8 +204,8 @@ public:
     int sys$sched_setparam(pid_t pid, const struct sched_param* param);
     int sys$sched_getparam(pid_t pid, struct sched_param* param);
     int sys$restore_signal_mask(u32 mask);
-    int sys$create_thread(int (*)(void*), void*);
-    void sys$exit_thread(int code);
+    int sys$create_thread(void* (*)(void*), void*);
+    void sys$exit_thread(void*);
     int sys$rename(const char* oldpath, const char* newpath);
     int sys$systrace(pid_t);
     int sys$mknod(const char* pathname, mode_t, dev_t);

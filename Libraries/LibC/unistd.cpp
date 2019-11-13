@@ -1,5 +1,5 @@
-#include <AK/String.h>
 #include <AK/ScopedValueRollback.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/Syscall.h>
 #include <assert.h>
@@ -540,13 +540,13 @@ char* getlogin()
     return nullptr;
 }
 
-int create_thread(int (*entry)(void*), void* argument)
+int create_thread(void *(*entry)(void*), void* argument)
 {
     int rc = syscall(SC_create_thread, entry, argument);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-void exit_thread(int code)
+void exit_thread(void* code)
 {
     syscall(SC_exit_thread, code);
     ASSERT_NOT_REACHED();
@@ -633,5 +633,4 @@ int get_process_name(char* buffer, int buffer_size)
     int rc = syscall(SC_get_process_name, buffer, buffer_size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
 }

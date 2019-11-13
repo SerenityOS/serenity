@@ -24,6 +24,7 @@ build_targets="$build_targets ../Libraries/LibC"
 build_targets="$build_targets ../Libraries/LibCore"
 build_targets="$build_targets ../Libraries/LibIPC"
 build_targets="$build_targets ../Libraries/LibThread"
+build_targets="$build_targets ../Libraries/LibPthread"
 
 # Build IPC servers before their client code to ensure the IPC definitions are available.
 build_targets="$build_targets ../Servers/AudioServer"

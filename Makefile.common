@@ -13,7 +13,8 @@ INCLUDE_FLAGS = \
     -I$(SERENITY_BASE_DIR)/Libraries \
     -I$(SERENITY_BASE_DIR)/Libraries/LibC \
     -I$(SERENITY_BASE_DIR)/Servers \
-    -I$(SERENITY_BASE_DIR)/Libraries/LibM
+    -I$(SERENITY_BASE_DIR)/Libraries/LibM \
+    -I$(SERENITY_BASE_DIR)/Libraries/LibPthread
 
 LDFLAGS = \
     -L$(SERENITY_BASE_DIR)/Libraries/LibC \

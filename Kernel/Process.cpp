@@ -2807,7 +2807,7 @@ int Process::thread_count() const
     return count;
 }
 
-int Process::sys$create_thread(int (*entry)(void*), void* argument)
+int Process::sys$create_thread(void* (*entry)(void*), void* argument)
 {
     if (!validate_read((const void*)entry, sizeof(void*)))
         return -EFAULT;
@@ -2822,11 +2822,13 @@ int Process::sys$create_thread(int (*entry)(void*), void* argument)
     return thread->tid();
 }
 
-void Process::sys$exit_thread(int code)
+void Process::sys$exit_thread(void* code)
 {
+    UNUSED_PARAM(code);
     cli();
     if (&current->process().main_thread() == current) {
-        sys$exit(code);
+        // FIXME: For POSIXy reasons, we should only sys$exit once *all* threads have exited.
+        sys$exit(0);
         return;
     }
     current->set_state(Thread::State::Dying);
