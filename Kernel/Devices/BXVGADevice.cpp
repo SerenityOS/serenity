@@ -149,23 +149,3 @@ int BXVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
         return -EINVAL;
     };
 }
-
-bool BXVGADevice::can_read(const FileDescription&) const
-{
-    ASSERT_NOT_REACHED();
-}
-
-bool BXVGADevice::can_write(const FileDescription&) const
-{
-    ASSERT_NOT_REACHED();
-}
-
-ssize_t BXVGADevice::read(FileDescription&, u8*, ssize_t)
-{
-    ASSERT_NOT_REACHED();
-}
-
-ssize_t BXVGADevice::write(FileDescription&, const u8*, ssize_t)
-{
-    ASSERT_NOT_REACHED();
-}
