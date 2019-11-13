@@ -20,7 +20,7 @@ WSScreen::WSScreen(unsigned desired_width, unsigned desired_height)
 {
     ASSERT(!s_the);
     s_the = this;
-    m_framebuffer_fd = open("/dev/fb0", O_RDWR);
+    m_framebuffer_fd = open("/dev/fb0", O_RDWR | O_CLOEXEC);
     ASSERT(m_framebuffer_fd >= 0);
 
     if (fb_set_buffer(m_framebuffer_fd, 0) == 0) {
