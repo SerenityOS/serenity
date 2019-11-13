@@ -148,7 +148,7 @@ int main(int argc, char** argv)
     if (chdir(get_current_user_home_path().characters()) < 0)
         perror("chdir");
 
-    int ptm_fd = open("/dev/ptmx", O_RDWR);
+    int ptm_fd = open("/dev/ptmx", O_RDWR | O_CLOEXEC);
     if (ptm_fd < 0) {
         perror("open(ptmx)");
         return 1;
