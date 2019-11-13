@@ -5,7 +5,7 @@
 
 __BEGIN_DECLS
 
-typedef void* pthread_t;
+typedef int pthread_t;
 typedef void* pthread_key_t;
 typedef void* pthread_once_t;
 typedef void* pthread_mutex_t;
@@ -15,7 +15,7 @@ typedef void* pthread_cond_t;
 typedef void* pthread_spinlock_t;
 typedef void* pthread_condattr_t;
 
-int pthread_create(pthread_t, pthread_attr_t*, void* (*)(void*), void*);
+int pthread_create(pthread_t*, pthread_attr_t*, void* (*)(void*), void*);
 void pthread_exit(void*);
 int pthread_kill(pthread_t, int);
 void pthread_cleanup_push(void (*)(void*), void*);
@@ -31,7 +31,6 @@ int pthread_attr_destroy(pthread_attr_t*);
 
 int pthread_once(pthread_once_t*, void (*)(void));
 #define PTHREAD_ONCE_INIT 0
-pthread_once_t once_control = PTHREAD_ONCE_INIT;
 void* pthread_getspecific(pthread_key_t key);
 int pthread_setspecific(pthread_key_t key, const void* value);
 

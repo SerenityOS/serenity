@@ -3,7 +3,7 @@ DEFINES += -DUSERLAND
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lmarkdown -lhtml -laudio -lipc -lvt -lpcidb -lgui -ldraw -lthread -lcore -lc
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lmarkdown -lhtml -laudio -lipc -lvt -lpcidb -lgui -ldraw -lthread -lpthread -lcore -lc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
