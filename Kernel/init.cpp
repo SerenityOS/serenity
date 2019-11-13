@@ -67,6 +67,7 @@ VFS* vfs;
     auto dev_ptmx = make<PTYMultiplexer>();
 
     bool text_debug = KParams::the().has("text_debug");
+    bool force_pio = KParams::the().has("force_pio");
 
     auto root = KParams::the().get("root");
     if (root.is_empty()) {
@@ -78,7 +79,7 @@ VFS* vfs;
         hang();
     }
 
-    auto pata0 = PATAChannel::create(PATAChannel::ChannelType::Primary);
+    auto pata0 = PATAChannel::create(PATAChannel::ChannelType::Primary, force_pio);
     NonnullRefPtr<DiskDevice> root_dev = *pata0->master_device();
 
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));

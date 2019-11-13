@@ -75,6 +75,8 @@
 #define ATA_CTL_ALTSTATUS 0x00
 #define ATA_CTL_DEVADDRESS 0x01
 
+#define PCI_Mass_Storage_Class 0x1
+#define PCI_IDE_Controller_Subclass 0x1
 static Lock& s_lock()
 {
     static Lock* lock;
@@ -84,12 +86,12 @@ static Lock& s_lock()
     return *lock;
 };
 
-OwnPtr<PATAChannel> PATAChannel::create(ChannelType type)
+OwnPtr<PATAChannel> PATAChannel::create(ChannelType type, bool force_pio)
 {
-    return make<PATAChannel>(type);
+    return make<PATAChannel>(type, force_pio);
 }
 
-PATAChannel::PATAChannel(ChannelType type)
+PATAChannel::PATAChannel(ChannelType type, bool force_pio)
     : IRQHandler((type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ))
     , m_channel_number((type == ChannelType::Primary ? 0 : 1))
     , m_io_base((type == ChannelType::Primary ? 0x1F0 : 0x170))
@@ -98,7 +100,7 @@ PATAChannel::PATAChannel(ChannelType type)
     m_dma_enabled.resource() = true;
     ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
 
-    initialize();
+    initialize(force_pio);
     detect_disks();
 }
 
@@ -106,26 +108,26 @@ PATAChannel::~PATAChannel()
 {
 }
 
-void PATAChannel::initialize()
+void PATAChannel::initialize(bool force_pio)
 {
-    static const PCI::ID piix3_ide_id = { 0x8086, 0x7010 };
-    static const PCI::ID piix4_ide_id = { 0x8086, 0x7111 };
     PCI::enumerate_all([this](const PCI::Address& address, PCI::ID id) {
-        if (id == piix3_ide_id || id == piix4_ide_id) {
+        if (PCI::get_class(address) == PCI_Mass_Storage_Class && PCI::get_subclass(address) == PCI_IDE_Controller_Subclass) {
             m_pci_address = address;
-            kprintf("PATAChannel: PIIX%u PATA Controller found!\n", id == piix3_ide_id ? 3 : 4);
+            kprintf("PATAChannel: PATA Controller found! id=%w:%w\n", id.vendor_id, id.device_id);
         }
     });
-
-    // Let's try to set up DMA transfers.
+    m_force_pio.resource() = false;
     if (!m_pci_address.is_null()) {
-        m_prdt.end_of_table = 0x8000;
+        // Let's try to set up DMA transfers.
         PCI::enable_bus_mastering(m_pci_address);
+        m_prdt.end_of_table = 0x8000;
         m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
         m_dma_buffer_page = MM.allocate_supervisor_physical_page();
-        kprintf("PATAChannel: PIIX Bus master IDE: I/O @ %x\n", m_bus_master_base);
-    } else {
-        kprintf("PATAChannel: Unable to find valid PATAChannel controller! Falling back to PIO mode!\n");
+        kprintf("PATAChannel: Bus master IDE: I/O @ %x\n", m_bus_master_base);
+        if (force_pio) {
+            m_force_pio.resource() = true;
+            kprintf("PATAChannel: Requested to force PIO mode!\n");
+        }
     }
 }
 

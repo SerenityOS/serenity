@@ -24,7 +24,7 @@ const char* PATADiskDevice::class_name() const
 
 bool PATADiskDevice::read_blocks(unsigned index, u16 count, u8* out)
 {
-    if (m_channel.m_bus_master_base && m_channel.m_dma_enabled.resource())
+    if (m_channel.m_bus_master_base && m_channel.m_dma_enabled.resource() && !m_channel.m_force_pio.resource())
         return read_sectors_with_dma(index, count, out);
     return read_sectors(index, count, out);
 }
