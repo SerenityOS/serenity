@@ -896,6 +896,7 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
     stream.fill_to_end(0);
 
     ssize_t nwritten = write_bytes(0, directory_data.size(), directory_data.data(), nullptr);
+    set_metadata_dirty(true);
     return nwritten == directory_data.size();
 }
 
