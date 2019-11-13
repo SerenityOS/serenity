@@ -202,6 +202,10 @@ int openat_with_path_length(int dirfd, const char* path, size_t path_length, int
 
 int open(const char* path, int options, ...)
 {
+    if (!path) {
+        errno = EFAULT;
+        return -1;
+    }
     va_list ap;
     va_start(ap, options);
     auto mode = (mode_t)va_arg(ap, unsigned);
@@ -211,6 +215,10 @@ int open(const char* path, int options, ...)
 
 int openat(int dirfd, const char* path, int options, ...)
 {
+    if (!path) {
+        errno = EFAULT;
+        return -1;
+    }
     va_list ap;
     va_start(ap, options);
     auto mode = (mode_t)va_arg(ap, unsigned);
