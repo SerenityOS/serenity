@@ -50,6 +50,9 @@ func_defined fetch || fetch() {
             *.gz)
                 run_nocd gunzip "$filename"
                 ;;
+            *.zip)
+                run_nocd bsdtar xf "$filename"
+                ;;
             *)
                 echo "Note: no case for file $filename."
                 ;;
@@ -152,6 +155,7 @@ do_fetch() {
 do_configure() {
     if [ "$useconfigure" = "true" ]; then
         echo "Configuring $port!"
+        chmod +x "${workdir}"/"$configscript"
         configure
     else
         echo "This port does not use a configure script. Skipping configure step."
