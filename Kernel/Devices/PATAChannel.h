@@ -35,8 +35,8 @@ public:
     };
 
 public:
-    static OwnPtr<PATAChannel> create(ChannelType type);
-    explicit PATAChannel(ChannelType);
+    static OwnPtr<PATAChannel> create(ChannelType type, bool force_pio);
+    PATAChannel(ChannelType type, bool force_pio);
     virtual ~PATAChannel() override;
 
     RefPtr<PATADiskDevice> master_device() { return m_master; };
@@ -46,7 +46,7 @@ private:
     //^ IRQHandler
     virtual void handle_irq() override;
 
-    void initialize();
+    void initialize(bool force_pio);
     void detect_disks();
 
     bool wait_for_irq();
@@ -67,6 +67,7 @@ private:
     RefPtr<PhysicalPage> m_dma_buffer_page;
     u16 m_bus_master_base { 0 };
     Lockable<bool> m_dma_enabled;
+    Lockable<bool> m_force_pio;
 
     RefPtr<PATADiskDevice> m_master;
     RefPtr<PATADiskDevice> m_slave;
