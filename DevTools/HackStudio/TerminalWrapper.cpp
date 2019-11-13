@@ -24,7 +24,7 @@ void TerminalWrapper::run_command(const String& command)
         return;
     }
 
-    int ptm_fd = open("/dev/ptmx", O_RDWR);
+    int ptm_fd = open("/dev/ptmx", O_RDWR | O_CLOEXEC);
     if (ptm_fd < 0) {
         perror("open(ptmx)");
         ASSERT_NOT_REACHED();
