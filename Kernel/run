@@ -53,8 +53,10 @@ elif [ "$1" = "qgrub" ]; then
         -device e1000,netdev=breh
 elif [ "$1" = "qcmd" ]; then
     SERENITY_KERNEL_CMDLINE=""
-    for (( i=2; i<=$#; i++)); do
-        SERENITY_KERNEL_CMDLINE+="${!i} "
+    # FIXME: Someone who knows sh syntax better, please help:
+    for i in `seq 2 $#`; do
+        shift
+        SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE $1"
     done
     echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
     # ./run: qemu with serenity with custom commandline
