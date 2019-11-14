@@ -137,7 +137,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(getrandom)              \
     __ENUMERATE_SYSCALL(clock_gettime)          \
     __ENUMERATE_SYSCALL(clock_nanosleep)        \
-    __ENUMERATE_SYSCALL(openat)
+    __ENUMERATE_SYSCALL(openat)                 \
+    __ENUMERATE_SYSCALL(join_thread)
 
 namespace Syscall {
 

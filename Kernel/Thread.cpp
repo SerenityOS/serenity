@@ -238,6 +238,14 @@ void Thread::finalize()
     dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
     set_state(Thread::State::Dead);
 
+    if (m_joiner) {
+        ASSERT(m_joiner->m_joinee == this);
+        m_joiner->m_joinee_exit_value = m_exit_value;
+        m_joiner->m_joinee = nullptr;
+        // NOTE: We clear the joiner pointer here as well, to be tidy.
+        m_joiner = nullptr;
+    }
+
     if (m_dump_backtrace_on_finalization)
         dbg() << backtrace_impl();
 
