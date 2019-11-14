@@ -6,9 +6,11 @@
 #include <LibGUI/GMessageBox.h>
 #include <LibVT/TerminalWidget.h>
 #include <fcntl.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/ioctl.h>
+#include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
 
@@ -54,6 +56,9 @@ void TerminalWrapper::run_command(const String& command)
 
     m_pid = fork();
     if (m_pid == 0) {
+        // Create a new process group.
+        setsid();
+
         const char* tty_name = ptsname(ptm_fd);
         if (!tty_name) {
             perror("ptsname");
@@ -114,6 +119,14 @@ void TerminalWrapper::run_command(const String& command)
 
     // Parent process, cont'd.
     m_process_state_widget->set_tty_fd(ptm_fd);
+}
+
+void TerminalWrapper::kill_running_command()
+{
+    ASSERT(m_pid != -1);
+
+    // Kill our child process and its whole process group.
+    (void)killpg(m_pid, SIGTERM);
 }
 
 TerminalWrapper::TerminalWrapper(GWidget* parent)
