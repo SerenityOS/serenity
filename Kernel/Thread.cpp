@@ -131,6 +131,46 @@ void Thread::unblock()
     set_state(Thread::Runnable);
 }
 
+void Thread::set_should_die()
+{
+    if (m_should_die)
+        return;
+    InterruptDisabler disabler;
+
+    // Remember that we should die instead of returning to
+    // the userspace.
+    m_should_die = true;
+
+    if (is_blocked()) {
+        ASSERT(in_kernel());
+        ASSERT(m_blocker != nullptr);
+        // We're blocked in the kernel. Pretend to have
+        // been interrupted by a signal (perhaps that is
+        // what has actually killed us).
+        m_blocker->set_interrupted_by_signal();
+        unblock();
+    } else if (!in_kernel()) {
+        // We're executing in userspace (and we're clearly
+        // not the current thread). No need to unwind, so
+        // set the state to dying right away. This also
+        // makes sure we won't be scheduled anymore.
+        set_state(Thread::State::Dying);
+    }
+}
+
+void Thread::die_if_needed()
+{
+    ASSERT(current == this);
+
+    if (!m_should_die)
+        return;
+
+    InterruptDisabler disabler;
+    set_state(Thread::State::Dying);
+    if (!Scheduler::is_active())
+        Scheduler::pick_next_and_switch_now();
+}
+
 void Thread::block_helper()
 {
     // This function mostly exists to avoid circular header dependencies. If

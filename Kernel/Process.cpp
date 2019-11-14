@@ -836,6 +836,7 @@ void Process::sys$exit(int status)
     m_termination_status = status;
     m_termination_signal = 0;
     die();
+    current->die_if_needed();
     ASSERT_NOT_REACHED();
 }
 
@@ -921,6 +922,7 @@ void Process::crash(int signal, u32 eip)
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!is_dead());
+    ASSERT(&current->process() == this);
 
     if (m_elf_loader && ksyms_ready)
         dbgprintf("\033[31;1m%p  %s\033[0m\n", eip, m_elf_loader->symbolicate(eip).characters());
@@ -930,6 +932,9 @@ void Process::crash(int signal, u32 eip)
     dump_regions();
     ASSERT(is_ring3());
     die();
+    // We can not return from here, as there is nowhere
+    // to unwind to, so die right away.
+    current->die_if_needed();
     ASSERT_NOT_REACHED();
 }
 
@@ -2320,16 +2325,13 @@ void Process::die()
         m_tracer->set_dead();
 
     {
+        // Tell the threads to unwind and die.
         InterruptDisabler disabler;
         for_each_thread([](Thread& thread) {
-            if (thread.state() != Thread::State::Dead)
-                thread.set_state(Thread::State::Dying);
+            thread.set_should_die();
             return IterationDecision::Continue;
         });
     }
-
-    if (!Scheduler::is_active())
-        Scheduler::pick_next_and_switch_now();
 }
 
 size_t Process::amount_virtual() const
@@ -2831,9 +2833,9 @@ void Process::sys$exit_thread(void* code)
         sys$exit(0);
         return;
     }
-    current->set_state(Thread::State::Dying);
+    current->set_should_die();
     big_lock().unlock_if_locked();
-    Scheduler::pick_next_and_switch_now();
+    current->die_if_needed();
     ASSERT_NOT_REACHED();
 }
 

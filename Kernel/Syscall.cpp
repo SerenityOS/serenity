@@ -100,4 +100,7 @@ void syscall_trap_entry(RegisterDump regs)
     if (auto* tracer = process.tracer())
         tracer->did_syscall(function, arg1, arg2, arg3, regs.eax);
     process.big_lock().unlock();
+
+    // Check if we're supposed to return to userspace or just die.
+    current->die_if_needed();
 }
