@@ -47,6 +47,9 @@ void TerminalWrapper::run_command(const String& command)
         }
         m_process_state_widget->set_tty_fd(-1);
         m_pid = -1;
+
+        if (on_command_exit)
+            on_command_exit();
     };
 
     m_pid = fork();
