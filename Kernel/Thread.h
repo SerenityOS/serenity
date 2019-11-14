@@ -97,12 +97,14 @@ public:
 
     class JoinBlocker final : public Blocker {
     public:
-        explicit JoinBlocker(Thread& joinee);
+        explicit JoinBlocker(Thread& joinee, void*& joinee_exit_value);
         virtual bool should_unblock(Thread&, time_t now_s, long us) override;
         virtual const char* state_string() const override { return "Joining"; }
+        void set_joinee_exit_value(void* value) { m_joinee_exit_value = value; }
 
     private:
         Thread& m_joinee;
+        void*& m_joinee_exit_value;
     };
 
     class FileDescriptionBlocker : public Blocker {
@@ -367,10 +369,8 @@ private:
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
 
-    // FIXME: Some of these could probably live in the JoinBlocker object instead.
     Thread* m_joiner { nullptr };
     Thread* m_joinee { nullptr };
-    void* m_joinee_exit_value { nullptr };
     void* m_exit_value { nullptr };
 
     FPUState* m_fpu_state { nullptr };

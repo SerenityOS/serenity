@@ -2906,15 +2906,17 @@ int Process::sys$join_thread(int tid, void** exit_value)
 
     // FIXME: EINVAL: 'thread' is not a joinable thread
 
+    void* joinee_exit_value = nullptr;
+
     // FIXME: pthread_join() should not be interruptable. Enforce this somehow?
-    auto result = current->block<Thread::JoinBlocker>(*thread);
+    auto result = current->block<Thread::JoinBlocker>(*thread, joinee_exit_value);
     (void)result;
 
     // NOTE: 'thread' is very possibly deleted at this point. Clear it just to be safe.
     thread = nullptr;
 
     if (exit_value)
-        *exit_value = current->m_joinee_exit_value;
+        *exit_value = joinee_exit_value;
     return 0;
 }
 
