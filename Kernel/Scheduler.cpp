@@ -68,8 +68,9 @@ void Scheduler::beep()
     s_beep_timeout = g_uptime + 100;
 }
 
-Thread::JoinBlocker::JoinBlocker(Thread& joinee)
+Thread::JoinBlocker::JoinBlocker(Thread& joinee, void*& joinee_exit_value)
     : m_joinee(joinee)
+    , m_joinee_exit_value(joinee_exit_value)
 {
     ASSERT(m_joinee.m_joiner == nullptr);
     m_joinee.m_joiner = current;
