@@ -11,6 +11,7 @@ public:
     virtual ~TerminalWrapper() override;
 
     void run_command(const String&);
+    void kill_running_command();
 
     Function<void()> on_command_exit;
 
