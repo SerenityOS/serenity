@@ -103,13 +103,17 @@ void TerminalWrapper::run_command(const String& command)
             perror("ioctl(TIOCSCTTY)");
             exit(1);
         }
-        const char* args[4] = { "/bin/Shell", nullptr, nullptr, nullptr };
-        if (!command.is_empty()) {
-            args[1] = "-c";
-            args[2] = command.characters();
+
+        setenv("TERM", "xterm", true);
+        setenv("PATH", "/bin:/usr/bin:/usr/local/bin", true);
+
+        auto parts = command.split(' ');
+        ASSERT(!parts.is_empty());
+        const char** args = (const char**) calloc(parts.size() + 1, sizeof(const char*));
+        for (int i = 0; i < parts.size(); i++) {
+            args[i] = parts[i].characters();
         }
-        const char* envs[] = { "TERM=xterm", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
-        rc = execve("/bin/Shell", const_cast<char**>(args), const_cast<char**>(envs));
+        rc = execvp(args[0], const_cast<char**>(args));
         if (rc < 0) {
             perror("execve");
             exit(1);
