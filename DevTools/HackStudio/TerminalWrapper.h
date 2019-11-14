@@ -12,6 +12,8 @@ public:
 
     void run_command(const String&);
 
+    Function<void()> on_command_exit;
+
 private:
     explicit TerminalWrapper(GWidget* parent);
 
