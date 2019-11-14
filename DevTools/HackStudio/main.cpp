@@ -367,21 +367,34 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(edit_menu));
 
+    auto stop_action = GAction::create("Stop", GraphicsBitmap::load_from_file("/res/icons/16x16/stop.png"), [&](auto&) {
+        terminal_wrapper->kill_running_command();
+    });
+
+    stop_action->set_enabled(false);
+    terminal_wrapper->on_command_exit = [&] {
+        stop_action->set_enabled(false);
+    };
+
     auto build_action = GAction::create("Build", { Mod_Ctrl, Key_B }, GraphicsBitmap::load_from_file("/res/icons/16x16/build.png"), [&](auto&) {
         reveal_action_tab(terminal_wrapper);
         build(terminal_wrapper);
+        stop_action->set_enabled(true);
     });
     toolbar->add_action(build_action);
 
-    auto run_action = GAction::create("Run", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/run.png"), [&](auto&) {
+    auto run_action = GAction::create("Run", { Mod_Ctrl, Key_R }, GraphicsBitmap::load_from_file("/res/icons/16x16/play.png"), [&](auto&) {
         reveal_action_tab(terminal_wrapper);
         run(terminal_wrapper);
+        stop_action->set_enabled(true);
     });
     toolbar->add_action(run_action);
+    toolbar->add_action(stop_action);
 
     auto build_menu = make<GMenu>("Build");
     build_menu->add_action(build_action);
     build_menu->add_action(run_action);
+    build_menu->add_action(stop_action);
     menubar->add_menu(move(build_menu));
 
     auto view_menu = make<GMenu>("View");
