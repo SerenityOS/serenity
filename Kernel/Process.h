@@ -315,6 +315,9 @@ private:
 
     KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const String& executable_path);
 
+    KResult do_kill(Process&, int signal);
+    KResult do_killpg(pid_t pgrp, int signal);
+
     Thread* m_main_thread { nullptr };
 
     RefPtr<PageDirectory> m_page_directory;

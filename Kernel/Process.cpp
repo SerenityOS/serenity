@@ -1455,8 +1455,12 @@ int Process::sys$killpg(int pgrp, int signum)
 {
     if (signum < 1 || signum >= 32)
         return -EINVAL;
-    (void)pgrp;
-    ASSERT_NOT_REACHED();
+    if (pgrp < 0)
+        return -EINVAL;
+
+    InterruptDisabler disabler;
+
+    return do_killpg(pgrp, signum);
 }
 
 int Process::sys$setuid(uid_t uid)
@@ -1514,16 +1518,59 @@ int Process::sys$isatty(int fd)
     return 1;
 }
 
+KResult Process::do_kill(Process& process, int signal)
+{
+    // FIXME: Allow sending SIGCONT to everyone in the process group.
+    // FIXME: Should setuid processes have some special treatment here?
+    if (!is_superuser() && m_euid != process.m_uid && m_uid != process.m_uid)
+        return KResult(-EPERM);
+    if (process.is_ring0() && signal == SIGKILL) {
+        kprintf("%s(%u) attempted to send SIGKILL to ring 0 process %s(%u)\n", name().characters(), m_pid, process.name().characters(), process.pid());
+        return KResult(-EPERM);
+    }
+    process.send_signal(signal, this);
+    return KSuccess;
+}
+
+KResult Process::do_killpg(pid_t pgrp, int signal)
+{
+    ASSERT(pgrp >= 0);
+
+    // Send the signal to all processes in the given group.
+    if (pgrp == 0) {
+        // Send the signal to our own pgrp.
+        pgrp = pgid();
+    }
+
+    bool group_was_empty = true;
+    bool any_succeeded = false;
+    KResult error = KSuccess;
+
+    Process::for_each_in_pgrp(pgrp, [&](auto& process) {
+        group_was_empty = false;
+
+        KResult res = do_kill(process, signal);
+        if (res.is_success())
+            any_succeeded = true;
+        else
+            error = res;
+
+        return IterationDecision::Continue;
+    });
+
+    if (group_was_empty)
+        return KResult(-ESRCH);
+    if (any_succeeded)
+        return KSuccess;
+    return error;
+}
+
 int Process::sys$kill(pid_t pid, int signal)
 {
     if (signal < 0 || signal >= 32)
         return -EINVAL;
-    if (pid == 0) {
-        Process::for_each_in_pgrp(pgid(), [&](auto& process) {
-            process.send_signal(signal, this);
-            return IterationDecision::Continue;
-        });
-        return 0;
+    if (pid <= 0) {
+        return do_killpg(-pid, signal);
     }
     if (pid == -1) {
         // FIXME: Send to all processes.
@@ -1539,16 +1586,7 @@ int Process::sys$kill(pid_t pid, int signal)
     auto* peer = Process::from_pid(pid);
     if (!peer)
         return -ESRCH;
-    // FIXME: Allow sending SIGCONT to everyone in the process group.
-    // FIXME: Should setuid processes have some special treatment here?
-    if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
-        return -EPERM;
-    if (peer->is_ring0() && signal == SIGKILL) {
-        kprintf("%s(%u) attempted to send SIGKILL to ring 0 process %s(%u)\n", name().characters(), m_pid, peer->name().characters(), peer->pid());
-        return -EPERM;
-    }
-    peer->send_signal(signal, this);
-    return 0;
+    return do_kill(*peer, signal);
 }
 
 int Process::sys$usleep(useconds_t usec)
