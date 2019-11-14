@@ -68,6 +68,19 @@ void Scheduler::beep()
     s_beep_timeout = g_uptime + 100;
 }
 
+Thread::JoinBlocker::JoinBlocker(Thread& joinee)
+    : m_joinee(joinee)
+{
+    ASSERT(m_joinee.m_joiner == nullptr);
+    m_joinee.m_joiner = current;
+    current->m_joinee = &joinee;
+}
+
+bool Thread::JoinBlocker::should_unblock(Thread& joiner, time_t, long)
+{
+    return !joiner.m_joinee;
+}
+
 Thread::FileDescriptionBlocker::FileDescriptionBlocker(const FileDescription& description)
     : m_blocked_description(description)
 {}

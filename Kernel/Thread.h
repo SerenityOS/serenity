@@ -95,6 +95,16 @@ public:
         friend class Thread;
     };
 
+    class JoinBlocker final : public Blocker {
+    public:
+        explicit JoinBlocker(Thread& joinee);
+        virtual bool should_unblock(Thread&, time_t now_s, long us) override;
+        virtual const char* state_string() const override { return "Joining"; }
+
+    private:
+        Thread& m_joinee;
+    };
+
     class FileDescriptionBlocker : public Blocker {
     public:
         const FileDescription& blocked_description() const;
@@ -356,6 +366,13 @@ private:
     VirtualAddress m_thread_specific_data;
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
+
+    // FIXME: Some of these could probably live in the JoinBlocker object instead.
+    Thread* m_joiner { nullptr };
+    Thread* m_joinee { nullptr };
+    void* m_joinee_exit_value { nullptr };
+    void* m_exit_value { nullptr };
+
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };
     ThreadPriority m_priority { ThreadPriority::Normal };

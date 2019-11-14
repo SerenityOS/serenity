@@ -2862,9 +2862,9 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument)
     return thread->tid();
 }
 
-void Process::sys$exit_thread(void* code)
+void Process::sys$exit_thread(void* exit_value)
 {
-    UNUSED_PARAM(code);
+    current->m_exit_value = exit_value;
     cli();
     if (&current->process().main_thread() == current) {
         // FIXME: For POSIXy reasons, we should only sys$exit once *all* threads have exited.
@@ -2875,6 +2875,47 @@ void Process::sys$exit_thread(void* code)
     big_lock().unlock_if_locked();
     current->die_if_needed();
     ASSERT_NOT_REACHED();
+}
+
+int Process::sys$join_thread(int tid, void** exit_value)
+{
+    if (exit_value && !validate_write_typed(exit_value))
+        return -EFAULT;
+
+    Thread* thread = nullptr;
+    for_each_thread([&](auto& child_thread) {
+        if (child_thread.tid() == tid) {
+            thread = &child_thread;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (!thread)
+        return -ESRCH;
+
+    if (thread == current)
+        return -EDEADLK;
+
+    if (thread->m_joinee == current)
+        return -EDEADLK;
+
+    ASSERT(thread->m_joiner != current);
+    if (thread->m_joiner)
+        return -EINVAL;
+
+    // FIXME: EINVAL: 'thread' is not a joinable thread
+
+    // FIXME: pthread_join() should not be interruptable. Enforce this somehow?
+    auto result = current->block<Thread::JoinBlocker>(*thread);
+    (void)result;
+
+    // NOTE: 'thread' is very possibly deleted at this point. Clear it just to be safe.
+    thread = nullptr;
+
+    if (exit_value)
+        *exit_value = current->m_joinee_exit_value;
+    return 0;
 }
 
 int Process::sys$gettid()
