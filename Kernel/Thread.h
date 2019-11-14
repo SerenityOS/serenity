@@ -276,6 +276,11 @@ public:
 
     void unblock();
 
+    // Tell this thread to unblock if needed,
+    // gracefully unwind the stack and die.
+    void set_should_die();
+    void die_if_needed();
+
     const FarPtr& far_ptr() const { return m_far_ptr; }
 
     bool tick();
@@ -356,6 +361,7 @@ private:
     ThreadPriority m_priority { ThreadPriority::Normal };
     bool m_has_used_fpu { false };
     bool m_dump_backtrace_on_finalization { false };
+    bool m_should_die { false };
 
     void block_helper();
 };
