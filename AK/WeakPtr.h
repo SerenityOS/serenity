@@ -18,14 +18,14 @@ public:
 
     template<typename U>
     WeakPtr(WeakPtr<U>&& other)
-        : m_link(reinterpret_cast<WeakLink<T>*>(other.leak_link()))
+        : m_link(reinterpret_cast<WeakLink<T>*>(other.take_link().ptr()))
     {
     }
 
     template<typename U>
     WeakPtr& operator=(WeakPtr<U>&& other)
     {
-        m_link = reinterpret_cast<WeakLink<T>*>(other.leak_link());
+        m_link = reinterpret_cast<WeakLink<T>*>(other.take_link().ptr());
         return *this;
     }
 
@@ -46,7 +46,7 @@ public:
     bool is_null() const { return !m_link || !m_link->ptr(); }
     void clear() { m_link = nullptr; }
 
-    WeakLink<T>* leak_link() { return m_link.leak_ref(); }
+    RefPtr<WeakLink<T>> take_link() { return move(m_link); }
 
     bool operator==(const OwnPtr<T>& other) const { return ptr() == other.ptr(); }
 
