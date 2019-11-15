@@ -1,3 +1,4 @@
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GAction.h>
@@ -573,6 +574,31 @@ void GTextEditor::move_selected_lines_down()
     update();
 }
 
+void GTextEditor::sort_selected_lines()
+{
+    if (is_readonly())
+        return;
+
+    if (!has_selection())
+        return;
+        
+    int first_line;
+    int last_line;
+    get_selection_line_boundaries(first_line, last_line);
+
+    auto& lines = document().lines();
+
+    auto start = lines.begin() + first_line;
+    auto end = lines.begin() + last_line + 1;
+
+    quick_sort(start, end, [](auto& a, auto& b) {
+        return strcmp(a.characters(), b.characters()) < 0;
+    });
+
+    did_change();
+    update();
+}
+
 void GTextEditor::keydown_event(GKeyEvent& event)
 {
     if (is_single_line() && event.key() == KeyCode::Key_Tab)
@@ -732,7 +758,10 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         select_all();
         return;
     }
-
+    if (event.alt() && event.shift() && event.key() == KeyCode::Key_S) {
+        sort_selected_lines();
+        return;
+    }
     if (event.key() == KeyCode::Key_Backspace) {
         if (is_readonly())
             return;
