@@ -15,6 +15,7 @@ class GTextDocumentLine;
 struct GTextDocumentSpan {
     GTextRange range;
     Color color;
+    bool is_skippable { false };
     const Font* font { nullptr };
 };
 
@@ -75,6 +76,9 @@ public:
     GTextPosition previous_position_before(const GTextPosition&, SearchShouldWrap = SearchShouldWrap::Yes) const;
 
     char character_at(const GTextPosition&) const;
+
+    Optional<GTextDocumentSpan> first_non_skippable_span_before(const GTextPosition&) const;
+    Optional<GTextDocumentSpan> first_non_skippable_span_after(const GTextPosition&) const;
 
 private:
     explicit GTextDocument(Client* client);

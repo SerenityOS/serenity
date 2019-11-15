@@ -298,3 +298,37 @@ Vector<GTextRange> GTextDocument::find_all(const StringView& needle) const
     }
     return ranges;
 }
+
+Optional<GTextDocumentSpan> GTextDocument::first_non_skippable_span_before(const GTextPosition& position) const
+{
+    for (int i = m_spans.size() - 1; i >= 0; --i) {
+        if (!m_spans[i].range.contains(position))
+            continue;
+        while ((i - 1) >= 0 && m_spans[i - 1].is_skippable)
+            --i;
+        if (i <= 0)
+            return {};
+        return m_spans[i - 1];
+    }
+    return {};
+}
+
+Optional<GTextDocumentSpan> GTextDocument::first_non_skippable_span_after(const GTextPosition& position) const
+{
+    for (int i = 0; i < m_spans.size(); ++i) {
+        if (!m_spans[i].range.contains(position))
+            continue;
+        while ((i + 1) < m_spans.size() && m_spans[i + 1].is_skippable)
+            ++i;
+        if (i >= (m_spans.size() - 1))
+            return {};
+        return m_spans[i + 1];
+    }
+    return {};
+}
+
+
+
+
+
+
