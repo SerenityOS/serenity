@@ -1,0 +1,38 @@
+diff --git a/crypto/dso/dso_dlfcn.c b/crypto/dso/dso_dlfcn.c
+index 78df723..c3de9cf 100644
+--- a/crypto/dso/dso_dlfcn.c
++++ b/crypto/dso/dso_dlfcn.c
+@@ -421,33 +421,6 @@ static int dladdr(void *address, Dl_info *dl)
+ 
+ static int dlfcn_pathbyaddr(void *addr, char *path, int sz)
+ {
+-# ifdef HAVE_DLINFO
+-    Dl_info dli;
+-    int len;
+-
+-    if (addr == NULL) {
+-        union {
+-            int (*f) (void *, char *, int);
+-            void *p;
+-        } t = {
+-            dlfcn_pathbyaddr
+-        };
+-        addr = t.p;
+-    }
+-
+-    if (dladdr(addr, &dli)) {
+-        len = (int)strlen(dli.dli_fname);
+-        if (sz <= 0)
+-            return len + 1;
+-        if (len >= sz)
+-            len = sz - 1;
+-        memcpy(path, dli.dli_fname, len);
+-        path[len++] = 0;
+-        return len;
+-    }
+-
+-    ERR_add_error_data(2, "dlfcn_pathbyaddr(): ", dlerror());
+-# endif
+     return -1;
+ }
+ 
