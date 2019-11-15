@@ -469,6 +469,8 @@ VT::Position TerminalWidget::buffer_position_at(const Point& position) const
 void TerminalWidget::doubleclick_event(GMouseEvent& event)
 {
     if (event.button() == GMouseButton::Left) {
+        m_triple_click_timer.start();
+
         auto position = buffer_position_at(event.position());
         auto& line = m_terminal.line(position.row());
         bool want_whitespace = line.characters[position.column()] == ' ';
@@ -496,8 +498,20 @@ void TerminalWidget::doubleclick_event(GMouseEvent& event)
 void TerminalWidget::mousedown_event(GMouseEvent& event)
 {
     if (event.button() == GMouseButton::Left) {
-        m_selection_start = buffer_position_at(event.position());
-        m_selection_end = {};
+        if (m_triple_click_timer.is_valid() && m_triple_click_timer.elapsed() < 250) {
+            int start_column = 0;
+            int end_column = m_terminal.columns() - 1;
+
+            auto position = buffer_position_at(event.position());
+            m_selection_start = { position.row(), start_column };
+            m_selection_end = { position.row(), end_column };
+
+            if (has_selection())
+                GClipboard::the().set_data(selected_text());
+        } else {
+            m_selection_start = buffer_position_at(event.position());
+            m_selection_end = {};
+        }
         update();
     } else if (event.button() == GMouseButton::Right) {
         if (m_ptm_fd == -1)
