@@ -483,6 +483,7 @@ static void rehighlight()
         auto style = style_for_token_type(token.m_type);
         span.color = style.color;
         span.font = style.font;
+        span.is_skippable = token.m_type == CppToken::Type::Whitespace;
         spans.append(span);
     }
     current_editor().document().set_spans(spans);
