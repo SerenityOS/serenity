@@ -118,4 +118,6 @@ private:
     RefPtr<CConfigFile> m_config;
 
     RefPtr<GScrollBar> m_scrollbar;
+
+    CElapsedTimer m_triple_click_timer;
 };
