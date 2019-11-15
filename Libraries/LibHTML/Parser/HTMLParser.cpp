@@ -128,6 +128,11 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
             return html[i + offset];
         };
         char ch = html[i];
+
+        //Skip non-ascii characters
+        if (!isascii(ch))
+            continue;
+
         switch (state) {
         case State::Free:
             if (ch == '<') {
