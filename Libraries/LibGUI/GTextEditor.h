@@ -167,6 +167,7 @@ private:
     void get_selection_line_boundaries(int& first_line, int& last_line);
     void move_selected_lines_up();
     void move_selected_lines_down();
+    void sort_selected_lines();
 
     class UndoCommand {
 
