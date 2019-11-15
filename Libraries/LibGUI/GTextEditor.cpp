@@ -676,6 +676,24 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
+        if (event.ctrl() && document().has_spans()) {
+            // FIXME: Do something nice when the document has no spans.
+            for (int i = 0; i < document().spans().size(); ++i) {
+                if (!document().spans()[i].range.contains(m_cursor))
+                    continue;
+                GTextPosition new_cursor = i == 0
+                    ? GTextPosition(0, 0)
+                    : document().spans()[i - 1].range.start();
+                toggle_selection_if_needed_for_event(event);
+                set_cursor(new_cursor);
+                if (event.shift() && m_selection.start().is_valid()) {
+                    m_selection.set_end(m_cursor);
+                    did_update_selection();
+                }
+                break;
+            }
+            return;
+        }
         if (m_cursor.column() > 0) {
             int new_column = m_cursor.column() - 1;
             toggle_selection_if_needed_for_event(event);
@@ -697,6 +715,24 @@ void GTextEditor::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Right) {
+        if (event.ctrl() && document().has_spans()) {
+            // FIXME: Do something nice when the document has no spans.
+            for (int i = 0; i < document().spans().size(); ++i) {
+                if (!document().spans()[i].range.contains(m_cursor))
+                    continue;
+                GTextPosition new_cursor = i == (document().spans().size() - 1)
+                    ? document().spans().last().range.end()
+                    : document().spans()[i + 1].range.start();
+                toggle_selection_if_needed_for_event(event);
+                set_cursor(new_cursor);
+                if (event.shift() && m_selection.start().is_valid()) {
+                    m_selection.set_end(m_cursor);
+                    did_update_selection();
+                }
+                break;
+            }
+            return;
+        }
         int new_line = m_cursor.line();
         int new_column = m_cursor.column();
         if (m_cursor.column() < current_line().length()) {
