@@ -61,11 +61,12 @@ private:
         char padding[templated_slab_size - sizeof(FreeSlab*)];
     };
 
-    FreeSlab* m_freelist { nullptr };
-    size_t m_num_allocated { 0 };
-    size_t m_num_free { 0 };
-    void* m_base { nullptr };
-    void* m_end { nullptr };
+    // NOTE: These are not default-initialized to prevent an init-time constructor from overwriting them
+    FreeSlab* m_freelist;
+    size_t m_num_allocated;
+    size_t m_num_free;
+    void* m_base;
+    void* m_end;
 
     static_assert(sizeof(FreeSlab) == templated_slab_size);
 };
