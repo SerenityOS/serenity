@@ -140,12 +140,17 @@ int getc(FILE* stream)
     return fgetc(stream);
 }
 
+int getc_unlocked(FILE* stream)
+{
+    return fgetc(stream);
+}
+
 int getchar()
 {
     return getc(stdin);
 }
 
-ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
+ssize_t getdelim(char** lineptr, size_t* n, int delim, FILE* stream)
 {
     char *ptr, *eptr;
     if (*lineptr == nullptr || *n == 0) {
@@ -170,7 +175,7 @@ ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
             return ptr - *lineptr;
         }
         if (ptr + 2 >= eptr) {
-            char *nbuf;
+            char* nbuf;
             size_t nbuf_sz = *n * 2;
             ssize_t d = ptr - *lineptr;
             if ((nbuf = static_cast<char*>(realloc(*lineptr, nbuf_sz))) == nullptr) {
@@ -184,7 +189,7 @@ ssize_t getdelim(char **lineptr, size_t *n, int delim, FILE *stream)
     }
 }
 
-ssize_t getline(char **lineptr, size_t *n, FILE *stream)
+ssize_t getline(char** lineptr, size_t* n, FILE* stream)
 {
     return getdelim(lineptr, n, '\n', stream);
 }
@@ -413,7 +418,7 @@ int vsnprintf(char* buffer, size_t size, const char* fmt, va_list ap)
     __vsnprintf_space_remaining = size;
     int ret = printf_internal(sized_buffer_putch, buffer, fmt, ap);
     if (__vsnprintf_space_remaining) {
-	    buffer[ret] = '\0';
+        buffer[ret] = '\0';
     }
     return ret;
 }
@@ -614,6 +619,18 @@ int vfscanf(FILE* stream, const char* fmt, va_list ap)
     if (!fgets(buffer, sizeof(buffer) - 1, stream))
         return -1;
     return vsscanf(buffer, fmt, ap);
+}
+
+void flockfile(FILE* filehandle)
+{
+    (void)filehandle;
+    dbgprintf("FIXME: Implement flockfile()\n");
+}
+
+void funlockfile(FILE* filehandle)
+{
+    (void)filehandle;
+    dbgprintf("FIXME: Implement funlockfile()\n");
 }
 
 FILE* tmpfile()
