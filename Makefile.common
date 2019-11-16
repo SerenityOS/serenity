@@ -18,6 +18,7 @@ INCLUDE_FLAGS = \
 
 LDFLAGS = \
     -L$(SERENITY_BASE_DIR)/Libraries/LibC \
+    -L$(SERENITY_BASE_DIR)/Libraries/LibPthread \
     -L$(SERENITY_BASE_DIR)/Libraries/LibCore \
     -L$(SERENITY_BASE_DIR)/Libraries/LibIPC \
     -L$(SERENITY_BASE_DIR)/Libraries/LibM \
