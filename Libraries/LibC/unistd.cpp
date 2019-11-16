@@ -104,6 +104,24 @@ int execl(const char* filename, const char* arg0, ...)
     return execve(filename, const_cast<char* const*>(args.data()), environ);
 }
 
+int execlp(const char* filename, const char* arg0, ...)
+{
+    Vector<const char*, 16> args;
+    args.append(arg0);
+
+    va_list ap;
+    va_start(ap, arg0);
+    for (;;) {
+        const char* arg = va_arg(ap, const char*);
+        if (!arg)
+            break;
+        args.append(arg);
+    }
+    va_end(ap);
+    args.append(nullptr);
+    return execvpe(filename, const_cast<char* const*>(args.data()), environ);
+}
+
 uid_t getuid()
 {
     return syscall(SC_getuid);
@@ -459,11 +477,12 @@ long fpathconf(int fd, int name)
 long pathconf(const char* path, int name)
 {
     (void)path;
-    (void)name;
 
     switch (name) {
     case _PC_PATH_MAX:
         return PATH_MAX;
+    case _PC_PIPE_BUF:
+        return PIPE_BUF;
     }
 
     ASSERT_NOT_REACHED();
@@ -548,7 +567,7 @@ char* getlogin()
     return nullptr;
 }
 
-int create_thread(void *(*entry)(void*), void* argument)
+int create_thread(void* (*entry)(void*), void* argument)
 {
     int rc = syscall(SC_create_thread, entry, argument);
     __RETURN_WITH_ERRNO(rc, rc, -1);
