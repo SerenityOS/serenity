@@ -1,0 +1,12 @@
+diff -ru nano-4.5-original/nano-4.5/src/files.c nano-4.5/src/files.c
+--- nano-4.5-original/nano-4.5/src/files.c	2019-10-04 04:38:05.000000000 -0500
++++ nano-4.5/src/files.c	2019-11-13 02:17:33.268207958 -0600
+@@ -31,6 +31,7 @@
+ #include <unistd.h>
+ 
+ #define LOCKBUFSIZE 8192
++#define P_tmpdir        "/tmp"
+ 
+ /* Verify that the containing directory of the given filename exists. */
+ bool has_valid_path(const char *filename)
+
