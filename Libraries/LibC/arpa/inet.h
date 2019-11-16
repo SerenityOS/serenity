@@ -13,7 +13,7 @@ int inet_pton(int af, const char* src, void* dst);
 
 inline uint16_t htons(uint16_t value)
 {
-#if BYTE_ORDER == LITTLE_ENDIAN
+#if __BYTE_ORDER == __LITTLE_ENDIAN
     return __builtin_bswap16(value);
 #else
     return value;
@@ -27,7 +27,7 @@ inline uint16_t ntohs(uint16_t value)
 
 inline uint32_t htonl(uint32_t value)
 {
-#if BYTE_ORDER == LITTLE_ENDIAN
+#if __BYTE_ORDER == __LITTLE_ENDIAN
     return __builtin_bswap32(value);
 #else
     return value;
