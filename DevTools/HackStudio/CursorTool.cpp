@@ -29,8 +29,10 @@ void CursorTool::on_mousedown(GMouseEvent& event)
             }
         } else {
             m_editor.selection().clear();
-            form_widget.set_rubber_banding({}, true);
-            form_widget.set_rubber_band_origin({}, event.position());
+            m_rubber_banding = true;
+            m_rubber_band_origin = event.position();
+            m_rubber_band_position = event.position();
+            form_widget.update();
         }
         // FIXME: Do we need to update any part of the FormEditorWidget outside the FormWidget?
         form_widget.update();
@@ -51,7 +53,8 @@ void CursorTool::on_mouseup(GMouseEvent& event)
             }
         }
         m_dragging = false;
-        form_widget.set_rubber_banding({}, false);
+        m_rubber_banding = false;
+        form_widget.update();
     }
 }
 
@@ -60,8 +63,8 @@ void CursorTool::on_mousemove(GMouseEvent& event)
     dbg() << "CursorTool::on_mousemove";
     auto& form_widget = m_editor.form_widget();
 
-    if (form_widget.is_rubber_banding({})) {
-        form_widget.set_rubber_band_position({}, event.position());
+    if (m_rubber_banding) {
+        set_rubber_band_position(event.position());
         return;
     }
 
@@ -90,7 +93,6 @@ void CursorTool::on_mousemove(GMouseEvent& event)
         m_editor.model().update();
         return;
     }
-
 }
 
 void CursorTool::on_keydown(GKeyEvent& event)
@@ -120,4 +122,52 @@ void CursorTool::on_keydown(GKeyEvent& event)
             break;
         }
     }
+}
+
+void CursorTool::set_rubber_band_position(const Point& position)
+{
+    if (m_rubber_band_position == position)
+        return;
+    m_rubber_band_position = position;
+
+    auto rubber_band_rect = this->rubber_band_rect();
+
+    m_editor.selection().clear();
+    m_editor.form_widget().for_each_child_widget([&](auto& child) {
+        if (child.relative_rect().intersects(rubber_band_rect))
+            m_editor.selection().add(child);
+        return IterationDecision::Continue;
+    });
+
+    m_editor.form_widget().update();
+}
+
+static Rect rect_from_two_points(const Point& a, const Point& b)
+{
+    if (a.x() <= b.x()) {
+        if (a.y() <= b.y())
+            return { a, { b.x() - a.x(), b.y() - a.y() } };
+        int height = a.y() - b.y();
+        return { a.x(), a.y() - height, b.x() - a.x(), height };
+    }
+    if (a.y() >= b.y())
+        return { b, { a.x() - b.x(), a.y() - b.y() } };
+    int height = b.y() - a.y();
+    return { b.x(), b.y() - height, a.x() - b.x(), height };
+}
+
+Rect CursorTool::rubber_band_rect() const
+{
+    if (!m_rubber_banding)
+        return {};
+    return rect_from_two_points(m_rubber_band_origin, m_rubber_band_position);
+}
+
+void CursorTool::on_second_paint(GPainter& painter, GPaintEvent&)
+{
+    if (!m_rubber_banding)
+        return;
+    auto rect = rubber_band_rect();
+    painter.fill_rect(rect, Color(244, 202, 158, 60));
+    painter.draw_rect(rect, Color(110, 34, 9));
 }

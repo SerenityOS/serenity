@@ -53,10 +53,7 @@ void FormWidget::second_paint_event(GPaintEvent& event)
         });
     }
 
-    if (m_rubber_banding) {
-        painter.fill_rect(rubber_band_rect(), Color(244, 202, 158, 60));
-        painter.draw_rect(rubber_band_rect(), Color(110, 34, 9));
-    }
+    editor().tool().on_second_paint(painter, event);
 }
 
 void FormWidget::mousedown_event(GMouseEvent& event)
@@ -77,60 +74,4 @@ void FormWidget::mousemove_event(GMouseEvent& event)
 void FormWidget::keydown_event(GKeyEvent& event)
 {
     editor().tool().on_keydown(event);
-}
-
-void FormWidget::set_rubber_banding(Badge<CursorTool>, bool value)
-{
-    if (m_rubber_banding == value)
-        return;
-    m_rubber_banding = value;
-    update();
-}
-
-void FormWidget::set_rubber_band_origin(Badge<CursorTool>, const Point& origin)
-{
-    if (m_rubber_band_origin == origin)
-        return;
-    m_rubber_band_origin = origin;
-    m_rubber_band_position = origin;
-    update();
-}
-
-void FormWidget::set_rubber_band_position(Badge<CursorTool>, const Point& position)
-{
-    if (m_rubber_band_position == position)
-        return;
-    m_rubber_band_position = position;
-
-    auto rubber_band_rect = this->rubber_band_rect();
-
-    editor().selection().clear();
-    for_each_child_widget([&](auto& child) {
-        if (child.relative_rect().intersects(rubber_band_rect))
-            editor().selection().add(child);
-        return IterationDecision::Continue;
-    });
-
-    update();
-}
-
-static Rect rect_from_two_points(const Point& a, const Point& b)
-{
-    if (a.x() <= b.x()) {
-        if (a.y() <= b.y())
-            return { a, { b.x() - a.x(), b.y() - a.y() } };
-        int height = a.y() - b.y();
-        return { a.x(), a.y() - height, b.x() - a.x(), height };
-    }
-    if (a.y() >= b.y())
-        return { b, { a.x() - b.x(), a.y() - b.y() } };
-    int height = b.y() - a.y();
-    return { b.x(), b.y() - height, a.x() - b.x(), height };
-}
-
-Rect FormWidget::rubber_band_rect() const
-{
-    if (!m_rubber_banding)
-        return {};
-    return rect_from_two_points(m_rubber_band_origin, m_rubber_band_position);
 }
