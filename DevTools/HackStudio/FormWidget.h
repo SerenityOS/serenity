@@ -1,7 +1,9 @@
 #pragma once
 
+#include <AK/Badge.h>
 #include <LibGUI/GWidget.h>
 
+class CursorTool;
 class FormEditorWidget;
 
 class FormWidget final : public GWidget {
@@ -15,6 +17,11 @@ public:
     // FIXME: This should be an app-wide preference instead.
     int grid_size() const { return m_grid_size; }
 
+    bool is_rubber_banding(Badge<CursorTool>) const { return m_rubber_banding; }
+    void set_rubber_banding(Badge<CursorTool>, bool);
+    void set_rubber_band_position(Badge<CursorTool>, const Point&);
+    void set_rubber_band_origin(Badge<CursorTool>, const Point&);
+
 private:
     virtual bool accepts_focus() const override { return true; }
 
@@ -27,5 +34,11 @@ private:
 
     explicit FormWidget(FormEditorWidget& parent);
 
+    Rect rubber_band_rect() const;
+
     int m_grid_size { 5 };
+
+    bool m_rubber_banding { false };
+    Point m_rubber_band_origin;
+    Point m_rubber_band_position;
 };

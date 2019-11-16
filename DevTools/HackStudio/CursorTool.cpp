@@ -29,6 +29,8 @@ void CursorTool::on_mousedown(GMouseEvent& event)
             }
         } else {
             m_editor.selection().clear();
+            form_widget.set_rubber_banding({}, true);
+            form_widget.set_rubber_band_origin({}, event.position());
         }
         // FIXME: Do we need to update any part of the FormEditorWidget outside the FormWidget?
         form_widget.update();
@@ -49,15 +51,21 @@ void CursorTool::on_mouseup(GMouseEvent& event)
             }
         }
         m_dragging = false;
+        form_widget.set_rubber_banding({}, false);
     }
 }
 
 void CursorTool::on_mousemove(GMouseEvent& event)
 {
     dbg() << "CursorTool::on_mousemove";
+    auto& form_widget = m_editor.form_widget();
+
+    if (form_widget.is_rubber_banding({})) {
+        form_widget.set_rubber_band_position({}, event.position());
+        return;
+    }
 
     if (!m_dragging && event.buttons() & GMouseButton::Left && event.position() != m_drag_origin) {
-        auto& form_widget = m_editor.form_widget();
         auto result = form_widget.hit_test(event.position(), GWidget::ShouldRespectGreediness::No);
         if (result.widget && result.widget != &form_widget) {
             if (!m_editor.selection().contains(*result.widget)) {
@@ -82,6 +90,7 @@ void CursorTool::on_mousemove(GMouseEvent& event)
         m_editor.model().update();
         return;
     }
+
 }
 
 void CursorTool::on_keydown(GKeyEvent& event)
