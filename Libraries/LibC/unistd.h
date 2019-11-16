@@ -115,7 +115,6 @@ int halt();
 int reboot();
 int mount(const char* device, const char* mountpoint, const char* fstype);
 int umount(const char* mountpoint);
-char* realpath(const char* pathname, char* buffer);
 
 enum {
     _PC_NAME_MAX,
