@@ -5,6 +5,8 @@
 class FormEditorWidget;
 class GKeyEvent;
 class GMouseEvent;
+class GPaintEvent;
+class GPainter;
 
 class Tool {
     AK_MAKE_NONCOPYABLE(Tool)
@@ -16,6 +18,7 @@ public:
     virtual void on_mouseup(GMouseEvent&) = 0;
     virtual void on_mousemove(GMouseEvent&) = 0;
     virtual void on_keydown(GKeyEvent&) = 0;
+    virtual void on_second_paint(GPainter&, GPaintEvent&) {}
 
     virtual const char* class_name() const = 0;
 
