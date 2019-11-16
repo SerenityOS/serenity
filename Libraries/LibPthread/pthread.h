@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sched.h>
+#include <stdint.h>
 #include <sys/cdefs.h>
 
 __BEGIN_DECLS
@@ -8,7 +9,7 @@ __BEGIN_DECLS
 typedef int pthread_t;
 typedef void* pthread_key_t;
 typedef void* pthread_once_t;
-typedef void* pthread_mutex_t;
+typedef uint32_t pthread_mutex_t;
 typedef void* pthread_attr_t;
 typedef void* pthread_mutexattr_t;
 typedef void* pthread_cond_t;
