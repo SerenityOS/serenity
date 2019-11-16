@@ -41,6 +41,7 @@ long labs(long);
 double atof(const char*);
 int system(const char* command);
 char* mktemp(char*);
+int mkstemp(char*);
 char* mkdtemp(char*);
 void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*));
 size_t mbstowcs(wchar_t*, const char*, size_t);

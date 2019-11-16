@@ -382,6 +382,17 @@ char* mktemp(char* pattern)
     return pattern;
 }
 
+int mkstemp(char* pattern)
+{
+    char* path = mktemp(pattern);
+
+    int fd = open(path, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR); // I'm using the flags I saw glibc using.
+    if (fd >= 0)
+        return fd;
+
+    return -1;
+}
+
 char* mkdtemp(char* pattern)
 {
     int length = strlen(pattern);
