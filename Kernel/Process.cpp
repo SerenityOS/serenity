@@ -3323,7 +3323,8 @@ int Process::sys$putch(char ch)
 
 int Process::sys$yield()
 {
-    return Scheduler::yield();
+    current->yield_without_holding_big_lock();
+    return 0;
 }
 
 int Process::sys$beep()
