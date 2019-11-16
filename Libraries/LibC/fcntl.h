@@ -54,6 +54,14 @@ __BEGIN_DECLS
 #define S_IRWXG (S_IRWXU >> 3)
 #define S_IRWXO (S_IRWXG >> 3)
 
+int creat(const char* path, mode_t);
+int open(const char* path, int options, ...);
+int creat_with_path_length(const char* path, size_t path_length, mode_t);
+int open_with_path_length(const char* path, size_t path_length, int options, mode_t);
+#define AT_FDCWD -100
+int openat(int dirfd, const char* path, int options, ...);
+int openat_with_path_length(int dirfd, const char* path, size_t path_length, int options, mode_t);
+
 int fcntl(int fd, int cmd, ...);
 int watch_file(const char* path, int path_length);
 
