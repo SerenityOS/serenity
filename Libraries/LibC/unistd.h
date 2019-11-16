@@ -20,12 +20,11 @@ __BEGIN_DECLS
 #define STDERR_FILENO 2
 
 /* lseek whence values */
-#ifndef _STDIO_H /* also defined in stdio.h */
-#define SEEK_SET 0 /* from beginning of file.  */
-#define SEEK_CUR 1 /* from current position in file.  */
-#define SEEK_END 2 /* from the end of the file.  */
+#ifndef _STDIO_H       /* also defined in stdio.h */
+#    define SEEK_SET 0 /* from beginning of file.  */
+#    define SEEK_CUR 1 /* from current position in file.  */
+#    define SEEK_END 2 /* from the end of the file.  */
 #endif
-
 
 extern char** environ;
 
@@ -54,6 +53,7 @@ int execve(const char* filename, char* const argv[], char* const envp[]);
 int execvpe(const char* filename, char* const argv[], char* const envp[]);
 int execvp(const char* filename, char* const argv[]);
 int execl(const char* filename, const char* arg, ...);
+int execlp(const char* filename, const char* arg, ...);
 void sync();
 void _exit(int status);
 pid_t getsid(pid_t);
@@ -127,6 +127,7 @@ char* realpath(const char* pathname, char* buffer);
 enum {
     _PC_NAME_MAX,
     _PC_PATH_MAX,
+    _PC_PIPE_BUF
 };
 
 #define HOST_NAME_MAX 64

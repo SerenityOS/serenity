@@ -8,6 +8,7 @@
 #if !defined MAXPATHLEN && defined PATH_MAX
 #    define MAXPATHLEN PATH_MAX
 #endif
+#define PIPE_BUF 4096
 
 #define INT_MAX INT32_MAX
 #define INT_MIN INT32_MIN
