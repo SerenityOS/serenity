@@ -1,0 +1,12 @@
+diff -ru nano-4.5-original/nano-4.5/config.sub nano-4.5/config.sub
+--- nano-4.5-original/nano-4.5/config.sub	2018-11-10 00:30:37.000000000 -0600
++++ nano-4.5/config.sub	2019-11-13 01:52:22.442486361 -0600
+@@ -1369,6 +1369,7 @@
+ 	      | -sym* | -kopensolaris* | -plan9* \
+ 	      | -amigaos* | -amigados* | -msdos* | -newsos* | -unicos* | -aof* \
+ 	      | -aos* | -aros* | -cloudabi* | -sortix* \
++		  | -serenity* \
+ 	      | -nindy* | -vxsim* | -vxworks* | -ebmon* | -hms* | -mvs* \
+ 	      | -clix* | -riscos* | -uniplus* | -iris* | -rtu* | -xenix* \
+ 	      | -hiux* | -knetbsd* | -mirbsd* | -netbsd* \
+
