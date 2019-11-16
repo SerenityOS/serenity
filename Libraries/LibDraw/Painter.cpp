@@ -56,6 +56,9 @@ void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)
 
 void Painter::fill_rect(const Rect& a_rect, Color color)
 {
+    if (color.alpha() == 0)
+        return;
+
     if (draw_op() != DrawOp::Copy) {
         fill_rect_with_draw_op(a_rect, color);
         return;
@@ -70,8 +73,17 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
 
+    if (color.alpha() == 0xff) {
+        for (int i = rect.height() - 1; i >= 0; --i) {
+            fast_u32_fill(dst, color.value(), rect.width());
+            dst += dst_skip;
+        }
+        return;
+    }
+
     for (int i = rect.height() - 1; i >= 0; --i) {
-        fast_u32_fill(dst, color.value(), rect.width());
+        for (int j = 0; j < rect.width(); ++j)
+            dst[j] = Color::from_rgba(dst[j]).blend(color).value();
         dst += dst_skip;
     }
 }
