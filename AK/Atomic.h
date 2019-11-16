@@ -1,5 +1,9 @@
 #pragma once
 
+#ifndef KERNEL
+#include <stddef.h>
+#endif
+
 namespace AK {
 
 enum MemoryOrder
