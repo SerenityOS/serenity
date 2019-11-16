@@ -53,8 +53,10 @@ void FormWidget::second_paint_event(GPaintEvent& event)
         });
     }
 
-    if (m_rubber_banding)
-        painter.draw_rect(rubber_band_rect(), Color::MidMagenta);
+    if (m_rubber_banding) {
+        painter.fill_rect(rubber_band_rect(), Color(244, 202, 158, 60));
+        painter.draw_rect(rubber_band_rect(), Color(110, 34, 9));
+    }
 }
 
 void FormWidget::mousedown_event(GMouseEvent& event)
