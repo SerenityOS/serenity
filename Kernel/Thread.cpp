@@ -171,12 +171,8 @@ void Thread::die_if_needed()
         Scheduler::pick_next_and_switch_now();
 }
 
-void Thread::block_helper()
+void Thread::yield_without_holding_big_lock()
 {
-    // This function mostly exists to avoid circular header dependencies. If
-    // anything needs adding, think carefully about whether it belongs in
-    // block() instead. Remember that we're unlocking here, so be very careful
-    // about altering any state once we're unlocked!
     bool did_unlock = process().big_lock().unlock_if_locked();
     Scheduler::yield();
     if (did_unlock)

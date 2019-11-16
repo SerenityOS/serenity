@@ -267,7 +267,7 @@ public:
         set_state(Thread::Blocked);
 
         // Yield to the scheduler, and wait for us to resume unblocked.
-        block_helper();
+        yield_without_holding_big_lock();
 
         // We should no longer be blocked once we woke up
         ASSERT(state() != Thread::Blocked);
@@ -380,7 +380,7 @@ private:
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
 
-    void block_helper();
+    void yield_without_holding_big_lock();
 };
 
 HashTable<Thread*>& thread_table();
