@@ -18,6 +18,92 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
+template<typename T, T min_value, T max_value>
+static inline T strtol_impl(const char* nptr, char** endptr, int base)
+{
+    errno = 0;
+
+    if (base < 0 || base == 1 || base > 36) {
+        errno = EINVAL;
+        if (endptr)
+            *endptr = const_cast<char*>(nptr);
+        return 0;
+    }
+
+    const char* p = nptr;
+    while (isspace(*p))
+        ++p;
+
+    bool is_negative = false;
+    if (*p == '-') {
+        is_negative = true;
+        ++p;
+    } else {
+        if (*p == '+')
+            ++p;
+    }
+
+    if (base == 0 || base == 16) {
+        if (base == 0)
+            base = 10;
+        if (*p == '0') {
+            if (*(p + 1) == 'X' || *(p + 1) == 'x') {
+                p += 2;
+                base = 16;
+            } else if (base != 16) {
+                base = 8;
+            }
+        }
+    }
+
+    long cutoff_point = is_negative ? (min_value / base) : (max_value / base);
+    int max_valid_digit_at_cutoff_point = is_negative ? (min_value % base) : (max_value % base);
+
+    long num = 0;
+
+    bool has_overflowed = false;
+    unsigned digits_consumed = 0;
+
+    for (;;) {
+        char ch = *(p++);
+        int digit;
+        if (isdigit(ch))
+            digit = ch - '0';
+        else if (islower(ch))
+            digit = ch - ('a' - 10);
+        else if (isupper(ch))
+            digit = ch - ('A' - 10);
+        else
+            break;
+
+        if (digit >= base)
+            break;
+
+        if (has_overflowed)
+            continue;
+
+        bool is_past_cutoff = is_negative ? num < cutoff_point : num > cutoff_point;
+
+        if (is_past_cutoff || (num == cutoff_point && digit > max_valid_digit_at_cutoff_point)) {
+            has_overflowed = true;
+            num = is_negative ? min_value : max_value;
+            errno = ERANGE;
+        } else {
+            num *= base;
+            num += is_negative ? -digit : digit;
+            ++digits_consumed;
+        }
+    }
+
+    if (endptr) {
+        if (has_overflowed || digits_consumed > 0)
+            *endptr = const_cast<char*>(p - 1);
+        else
+            *endptr = const_cast<char*>(nptr);
+    }
+    return num;
+}
+
 extern "C" {
 
 typedef void (*__atexit_handler)();
@@ -166,7 +252,6 @@ int putenv(char* new_var)
     __environ_is_malloced = true;
     environ = new_environ;
     return 0;
-}
 }
 
 double strtod(const char* str, char** endptr)
@@ -503,92 +588,6 @@ size_t wcstombs(char* dest, const wchar_t* src, size_t max)
     return max;
 }
 
-template<typename T, T min_value, T max_value>
-static T strtol_impl(const char* nptr, char** endptr, int base)
-{
-    errno = 0;
-
-    if (base < 0 || base == 1 || base > 36) {
-        errno = EINVAL;
-        if (endptr)
-            *endptr = const_cast<char*>(nptr);
-        return 0;
-    }
-
-    const char* p = nptr;
-    while (isspace(*p))
-        ++p;
-
-    bool is_negative = false;
-    if (*p == '-') {
-        is_negative = true;
-        ++p;
-    } else {
-        if (*p == '+')
-            ++p;
-    }
-
-    if (base == 0 || base == 16) {
-        if (base == 0)
-            base = 10;
-        if (*p == '0') {
-            if (*(p + 1) == 'X' || *(p + 1) == 'x') {
-                p += 2;
-                base = 16;
-            } else if (base != 16) {
-                base = 8;
-            }
-        }
-    }
-
-    long cutoff_point = is_negative ? (min_value / base) : (max_value / base);
-    int max_valid_digit_at_cutoff_point = is_negative ? (min_value % base) : (max_value % base);
-
-    long num = 0;
-
-    bool has_overflowed = false;
-    unsigned digits_consumed = 0;
-
-    for (;;) {
-        char ch = *(p++);
-        int digit;
-        if (isdigit(ch))
-            digit = ch - '0';
-        else if (islower(ch))
-            digit = ch - ('a' - 10);
-        else if (isupper(ch))
-            digit = ch - ('A' - 10);
-        else
-            break;
-
-        if (digit >= base)
-            break;
-
-        if (has_overflowed)
-            continue;
-
-        bool is_past_cutoff = is_negative ? num < cutoff_point : num > cutoff_point;
-
-        if (is_past_cutoff || (num == cutoff_point && digit > max_valid_digit_at_cutoff_point)) {
-            has_overflowed = true;
-            num = is_negative ? min_value : max_value;
-            errno = ERANGE;
-        } else {
-            num *= base;
-            num += is_negative ? -digit : digit;
-            ++digits_consumed;
-        }
-    }
-
-    if (endptr) {
-        if (has_overflowed || digits_consumed > 0)
-            *endptr = const_cast<char*>(p - 1);
-        else
-            *endptr = const_cast<char*>(nptr);
-    }
-    return num;
-}
-
 long strtol(const char* str, char** endptr, int base)
 {
     return strtol_impl<long, LONG_MIN, LONG_MAX>(str, endptr, base);
@@ -635,4 +634,19 @@ uint32_t arc4random_uniform(uint32_t max_bounds)
     // XXX: Should actually apply special rules for uniformity; avoid what is
     // called "modulo bias".
     return arc4random() % max_bounds;
+}
+
+char* realpath(const char* pathname, char* buffer)
+{
+    size_t size = PATH_MAX;
+    if (buffer == nullptr)
+        buffer = (char*)malloc(size);
+    int rc = syscall(SC_realpath, pathname, buffer, size);
+    if (rc < 0) {
+        errno = -rc;
+        return nullptr;
+    }
+    errno = 0;
+    return buffer;
+}
 }

@@ -48,6 +48,7 @@ size_t mbstowcs(wchar_t*, const char*, size_t);
 size_t mbtowc(wchar_t*, const char*, size_t);
 int wctomb(char*, wchar_t);
 size_t wcstombs(char*, const wchar_t*, size_t);
+char* realpath(const char* pathname, char* buffer);
 
 #define RAND_MAX 32767
 int rand();

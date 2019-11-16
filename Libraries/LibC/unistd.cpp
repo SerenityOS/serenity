@@ -578,20 +578,6 @@ int umount(const char* mountpoint)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-char* realpath(const char* pathname, char* buffer)
-{
-    size_t size = PATH_MAX;
-    if (buffer == nullptr)
-        buffer = (char*)malloc(size);
-    int rc = syscall(SC_realpath, pathname, buffer, size);
-    if (rc < 0) {
-        errno = -rc;
-        return nullptr;
-    }
-    errno = 0;
-    return buffer;
-}
-
 void dump_backtrace()
 {
     syscall(SC_dump_backtrace);
