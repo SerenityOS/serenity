@@ -5,7 +5,6 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/ext2_fs.h>
 #include <Kernel/Process.h>
-#include <Kernel/RTC.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
@@ -53,11 +52,6 @@ bool Ext2FS::flush_super_block()
     bool success = device().write_blocks(2, 1, (const u8*)&m_super_block);
     ASSERT(success);
     return true;
-}
-
-unsigned Ext2FS::first_block_of_group(GroupIndex group_index) const
-{
-    return super_block().s_first_data_block + (group_index * super_block().s_blocks_per_group);
 }
 
 const ext2_group_desc& Ext2FS::group_descriptor(GroupIndex group_index) const

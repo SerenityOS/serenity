@@ -85,7 +85,6 @@ private:
     ext2_group_desc* block_group_descriptors() { return (ext2_group_desc*)m_cached_group_descriptor_table.value().data(); }
     const ext2_group_desc* block_group_descriptors() const { return (const ext2_group_desc*)m_cached_group_descriptor_table.value().data(); }
     void flush_block_group_descriptor_table();
-    unsigned first_block_of_group(unsigned groupIndex) const;
     unsigned inodes_per_block() const;
     unsigned inodes_per_group() const;
     unsigned blocks_per_group() const;
@@ -135,7 +134,7 @@ private:
     mutable ext2_super_block m_super_block;
     mutable Optional<KBuffer> m_cached_group_descriptor_table;
 
-    mutable HashMap<BlockIndex, RefPtr<Ext2FSInode>> m_inode_cache;
+    mutable HashMap<InodeIndex, RefPtr<Ext2FSInode>> m_inode_cache;
 
     bool m_super_block_dirty { false };
     bool m_block_group_descriptors_dirty { false };
