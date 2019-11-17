@@ -18,6 +18,21 @@ __BEGIN_DECLS
 
 #include <stdint.h>
 
+static __inline uint16_t __bswap16(uint16_t x)
+{
+       return __builtin_bswap16(x);
+}
+
+static __inline uint32_t __bswap32(uint32_t x)
+{
+       return __builtin_bswap32(x)
+}
+
+static __inline uint64_t __bswap64(uint64_t x)
+{
+       return __builtin_bswap64(x)
+}
+
 #define LITTLE_ENDIAN	__LITTLE_ENDIAN
 #define BIG_ENDIAN	__BIG_ENDIAN
 #define PDP_ENDIAN	__PDP_ENDIAN
