@@ -722,13 +722,12 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     Locker fs_locker(fs().m_lock);
 
     if (is_symlink()) {
-        // FIXME: This doesn't seem right if the inode is already bigger than 'max_inline_symlink_length'
-        if ((offset + count) < max_inline_symlink_length) {
+        if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
 #ifdef EXT2_DEBUG
             dbgprintf("Ext2FSInode: write_bytes poking into i_block array for inline symlink '%s' (%u bytes)\n", String((const char*)data, count).characters(), count);
 #endif
             memcpy(((u8*)m_raw_inode.i_block) + offset, data, (size_t)count);
-            if ((offset + count) > (off_t)m_raw_inode.i_size)
+            if ((size_t)(offset + count) > (size_t)m_raw_inode.i_size)
                 m_raw_inode.i_size = offset + count;
             set_metadata_dirty(true);
             return count;
