@@ -142,25 +142,11 @@ void CursorTool::set_rubber_band_position(const Point& position)
     m_editor.form_widget().update();
 }
 
-static Rect rect_from_two_points(const Point& a, const Point& b)
-{
-    if (a.x() <= b.x()) {
-        if (a.y() <= b.y())
-            return { a, { b.x() - a.x(), b.y() - a.y() } };
-        int height = a.y() - b.y();
-        return { a.x(), a.y() - height, b.x() - a.x(), height };
-    }
-    if (a.y() >= b.y())
-        return { b, { a.x() - b.x(), a.y() - b.y() } };
-    int height = b.y() - a.y();
-    return { b.x(), b.y() - height, a.x() - b.x(), height };
-}
-
 Rect CursorTool::rubber_band_rect() const
 {
     if (!m_rubber_banding)
         return {};
-    return rect_from_two_points(m_rubber_band_origin, m_rubber_band_position);
+    return Rect::from_two_points(m_rubber_band_origin, m_rubber_band_position);
 }
 
 void CursorTool::on_second_paint(GPainter& painter, GPaintEvent&)

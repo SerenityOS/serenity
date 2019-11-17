@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
 #include <LibDraw/Orientation.h>
 #include <LibDraw/Point.h>
 #include <LibDraw/Size.h>
@@ -236,6 +236,11 @@ public:
     }
 
     void intersect(const Rect&);
+
+    static Rect from_two_points(const Point& a, const Point& b)
+    {
+        return { min(a.x(), b.x()), min(a.y(), b.y()), abs(a.x() - b.x()), abs(a.y() - b.y()) };
+    }
 
     static Rect intersection(const Rect& a, const Rect& b)
     {
