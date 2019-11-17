@@ -13,6 +13,7 @@
 #include <string.h>
 #include <sys/ioctl.h>
 #include <sys/types.h>
+#include <termios.h>
 #include <unistd.h>
 
 extern "C" {
@@ -329,8 +330,8 @@ int rmdir(const char* pathname)
 
 int isatty(int fd)
 {
-    int rc = syscall(SC_isatty, fd);
-    __RETURN_WITH_ERRNO(rc, 1, 0);
+    struct termios dummy;
+    return tcgetattr(fd, &dummy);
 }
 
 int getdtablesize()

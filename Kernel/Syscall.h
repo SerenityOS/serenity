@@ -50,7 +50,7 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(execve)                 \
     __ENUMERATE_SYSCALL(geteuid)                \
     __ENUMERATE_SYSCALL(getegid)                \
-    __ENUMERATE_SYSCALL(isatty)                 \
+    __ENUMERATE_REMOVED_SYSCALL(isatty)         \
     __ENUMERATE_SYSCALL(getdtablesize)          \
     __ENUMERATE_SYSCALL(dup)                    \
     __ENUMERATE_SYSCALL(dup2)                   \
@@ -144,9 +144,12 @@ namespace Syscall {
 
 enum Function {
 #undef __ENUMERATE_SYSCALL
+#undef __ENUMERATE_REMOVED_SYSCALL
+#define __ENUMERATE_REMOVED_SYSCALL(x) SC_##x,
 #define __ENUMERATE_SYSCALL(x) SC_##x,
     ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
+#undef __ENUMERATE_REMOVED_SYSCALL
         __Count
 };
 
@@ -154,11 +157,16 @@ inline constexpr const char* to_string(Function function)
 {
     switch (function) {
 #undef __ENUMERATE_SYSCALL
+#undef __ENUMERATE_REMOVED_SYSCALL
+#define __ENUMERATE_REMOVED_SYSCALL(x) \
+    case SC_##x:                       \
+        return #x " (removed)";
 #define __ENUMERATE_SYSCALL(x) \
     case SC_##x:               \
         return #x;
         ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
+#undef __ENUMERATE_REMOVED_SYSCALL
     default:
         break;
     }
@@ -291,6 +299,8 @@ inline u32 invoke(Function function, T1 arg1, T2 arg2, T3 arg3)
 
 #undef __ENUMERATE_SYSCALL
 #define __ENUMERATE_SYSCALL(x) using Syscall::SC_##x;
+#define __ENUMERATE_REMOVED_SYSCALL(x)
 ENUMERATE_SYSCALLS
 #undef __ENUMERATE_SYSCALL
+#undef __ENUMERATE_REMOVED_SYSCALL
 #define syscall Syscall::invoke
