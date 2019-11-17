@@ -48,11 +48,13 @@ void initialize()
 
 #pragma GCC diagnostic ignored "-Wcast-function-type"
 typedef int (Process::*Handler)(u32, u32, u32);
+#define __ENUMERATE_REMOVED_SYSCALL(x) nullptr,
 #define __ENUMERATE_SYSCALL(x) reinterpret_cast<Handler>(&Process::sys$##x),
 static Handler s_syscall_table[] = {
     ENUMERATE_SYSCALLS
 };
 #undef __ENUMERATE_SYSCALL
+#undef __ENUMERATE_REMOVED_SYSCALL
 
 int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 {

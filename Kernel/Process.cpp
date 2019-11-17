@@ -1522,16 +1522,6 @@ int Process::sys$uname(utsname* buf)
     return 0;
 }
 
-int Process::sys$isatty(int fd)
-{
-    auto* description = file_description(fd);
-    if (!description)
-        return -EBADF;
-    if (!description->is_tty())
-        return -ENOTTY;
-    return 1;
-}
-
 KResult Process::do_kill(Process& process, int signal)
 {
     // FIXME: Allow sending SIGCONT to everyone in the process group.

@@ -159,7 +159,6 @@ public:
     int sys$ptsname_r(int fd, char*, ssize_t);
     pid_t sys$fork(RegisterDump&);
     int sys$execve(const char* filename, const char** argv, const char** envp);
-    int sys$isatty(int fd);
     int sys$getdtablesize();
     int sys$dup(int oldfd);
     int sys$dup2(int oldfd, int newfd);
