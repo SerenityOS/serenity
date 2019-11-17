@@ -595,11 +595,6 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     if (!read_block_containing_inode(inode.index(), block_index, offset, block))
         return {};
 
-    // FIXME: Do we really need to check the cache once again?
-    //        We've been holding m_lock this whole time.
-    auto it = m_inode_cache.find(inode.index());
-    if (it != m_inode_cache.end())
-        return (*it).value;
     auto new_inode = adopt(*new Ext2FSInode(const_cast<Ext2FS&>(*this), inode.index()));
     memcpy(&new_inode->m_raw_inode, reinterpret_cast<ext2_inode*>(block + offset), sizeof(ext2_inode));
     m_inode_cache.set(inode.index(), new_inode);
