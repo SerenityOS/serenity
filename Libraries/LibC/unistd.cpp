@@ -331,7 +331,7 @@ int rmdir(const char* pathname)
 int isatty(int fd)
 {
     struct termios dummy;
-    return tcgetattr(fd, &dummy);
+    return tcgetattr(fd, &dummy) == 0;
 }
 
 int getdtablesize()
