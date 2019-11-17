@@ -601,18 +601,6 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
     push_value_on_stack(0);
 }
 
-void Thread::make_userspace_stack_for_secondary_thread(void* argument)
-{
-    m_userspace_stack_region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, String::format("Stack (Thread %d)", tid()), PROT_READ | PROT_WRITE, false);
-    ASSERT(m_userspace_stack_region);
-    m_userspace_stack_region->set_stack(true);
-    m_tss.esp = m_userspace_stack_region->vaddr().offset(default_userspace_stack_size).get();
-
-    // NOTE: The stack needs to be 16-byte aligned.
-    push_value_on_stack((u32)argument);
-    push_value_on_stack(0);
-}
-
 Thread* Thread::clone(Process& process)
 {
     auto* clone = new Thread(process);
