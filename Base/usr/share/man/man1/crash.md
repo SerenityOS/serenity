@@ -25,6 +25,8 @@ kinds of crashes.
 * `-M`: Read a pointer from uninitialized memory, then write to it.
 * `-F`: Read a pointer from memory freed using `free()`, then write to it.
 * `-r`: Write to read-only memory.
+* `-T`: Make a syscall while using an invalid stack pointer.
+* `-t`: Trigger a page fault while using an invalid stack pointer.
 
 ## Examples
 
