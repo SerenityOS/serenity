@@ -1069,11 +1069,11 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
     return blocks;
 }
 
-unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
+unsigned Ext2FS::find_a_free_inode(GroupIndex preferred_group, off_t expected_size)
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: allocate_inode(preferredGroup: %u, expected_size: %u)\n", preferred_group, expected_size);
+    dbgprintf("Ext2FS: find_a_free_inode(preferred_group: %u, expected_size: %ld)\n", preferred_group, expected_size);
 #endif
 
     unsigned needed_blocks = ceil_div(expected_size, block_size());
@@ -1101,12 +1101,12 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
     }
 
     if (!group_index) {
-        kprintf("Ext2FS: allocate_inode: no suitable group found for new inode with %u blocks needed :(\n", needed_blocks);
+        kprintf("Ext2FS: find_a_free_inode: no suitable group found for new inode with %u blocks needed :(\n", needed_blocks);
         return 0;
     }
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: allocate_inode: found suitable group [%u] for new inode with %u blocks needed :^)\n", group_index, needed_blocks);
+    dbgprintf("Ext2FS: find_a_free_inode: found suitable group [%u] for new inode with %u blocks needed :^)\n", group_index, needed_blocks);
 #endif
 
     auto& bgd = group_descriptor(group_index);
@@ -1135,9 +1135,6 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 #endif
 
     ASSERT(get_inode_allocation_state(inode) == false);
-
-    // FIXME: allocate blocks if needed!
-
     return inode;
 }
 
@@ -1348,8 +1345,7 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     }
 
     // NOTE: This doesn't commit the inode allocation just yet!
-    // FIXME: Change the name of allocate_inode since it behaves differently than allocate_block
-    auto inode_id = allocate_inode(0, size);
+    auto inode_id = find_a_free_inode(0, size);
     if (!inode_id) {
         kprintf("Ext2FS: create_inode: allocate_inode failed\n");
         error = -ENOSPC;
