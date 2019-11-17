@@ -2,6 +2,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/ProcessTracer.h>
 #include <Kernel/Syscall.h>
+#include <Kernel/VM/MemoryManager.h>
 
 extern "C" void syscall_trap_entry(RegisterDump);
 extern "C" void syscall_trap_handler();
@@ -91,6 +92,13 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 void syscall_trap_entry(RegisterDump regs)
 {
     auto& process = current->process();
+
+    if (!MM.validate_user_stack(process, VirtualAddress(regs.esp_if_crossRing))) {
+        dbgprintf("Invalid stack pointer: %p\n", regs.esp_if_crossRing);
+        handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
+        ASSERT_NOT_REACHED();
+    }
+
     process.big_lock().lock();
     u32 function = regs.eax;
     u32 arg1 = regs.edx;

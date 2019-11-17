@@ -131,7 +131,7 @@ static void dump(const RegisterDump& regs)
     u16 ss;
     u32 esp;
     if (!current || current->process().is_ring0()) {
-        ss = regs.ds;
+        ss = regs.ss;
         esp = regs.esp;
     } else {
         ss = regs.ss_if_crossRing;
@@ -160,14 +160,14 @@ static void dump(const RegisterDump& regs)
     }
 }
 
-static void handle_crash(RegisterDump& regs, const char* description, int signal)
+void handle_crash(RegisterDump& regs, const char* description, int signal)
 {
     if (!current) {
         kprintf("%s with !current\n", description);
         hang();
     }
 
-    kprintf("\033[31;1mCRASH: %s %s: %s(%u)\033[0m\n",
+    kprintf("\033[31;1mCRASH: %s. %s: %s(%u)\033[0m\n",
         description,
         current->process().is_ring0() ? "Kernel" : "Process",
         current->process().name().characters(),
@@ -181,6 +181,7 @@ static void handle_crash(RegisterDump& regs, const char* description, int signal
         hang();
     }
 
+    cli();
     current->process().crash(signal, regs.eip);
 }
 
@@ -262,6 +263,13 @@ void exception_14_handler(RegisterDump regs)
 #ifdef PAGE_FAULT_DEBUG
     dump(regs);
 #endif
+
+    bool faulted_in_userspace = (regs.cs & 3) == 3;
+    if (faulted_in_userspace && !MM.validate_user_stack(current->process(), VirtualAddress(regs.esp_if_crossRing))) {
+        dbgprintf("Invalid stack pointer: %p\n", regs.esp_if_crossRing);
+        handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
+        ASSERT_NOT_REACHED();
+    }
 
     auto response = MM.handle_page_fault(PageFault(regs.exception_code, VirtualAddress(fault_address)));
 

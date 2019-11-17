@@ -58,6 +58,7 @@ NonnullOwnPtr<Region> Region::clone()
     ASSERT(is_user_accessible());
 
     if (m_shared || (is_readable() && !is_writable())) {
+        ASSERT(!m_stack);
 #ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (V%p)\n",
             current->process().name().characters(),
@@ -81,6 +82,13 @@ NonnullOwnPtr<Region> Region::clone()
     remap();
     auto clone_region = Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmo, m_name, m_access);
     clone_region->ensure_cow_map();
+    if (m_stack) {
+        ASSERT(is_readable());
+        ASSERT(is_writable());
+        ASSERT(!is_shared());
+        ASSERT(vmobject().is_anonymous());
+        clone_region->set_stack(true);
+    }
     return clone_region;
 }
 
