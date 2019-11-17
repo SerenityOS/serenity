@@ -135,7 +135,10 @@ VFS* vfs;
         hang();
     }
 
-    vfs->mount_root(e2fs);
+    if (!vfs->mount_root(e2fs)) {
+        kprintf("VFS::mount_root failed\n");
+        hang();
+    }
 
     dbgprintf("Load ksyms\n");
     load_ksyms();
