@@ -325,7 +325,6 @@ public:
     void set_default_signal_dispositions();
     void push_value_on_stack(u32);
     void make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
-    void make_userspace_stack_for_secondary_thread(void* argument);
 
     void make_thread_specific_region(Badge<Process>);
 

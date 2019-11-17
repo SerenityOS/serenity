@@ -35,8 +35,6 @@ void sysbeep();
 int systrace(pid_t);
 int gettid();
 int donate(int tid);
-int create_thread(void *(*)(void*), void* argument);
-void exit_thread(void*);
 int create_shared_buffer(int, void** buffer);
 int share_buffer_with(int, pid_t peer_pid);
 int share_buffer_globally(int);

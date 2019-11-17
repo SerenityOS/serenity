@@ -2861,16 +2861,23 @@ int Process::thread_count() const
     return count;
 }
 
-int Process::sys$create_thread(void* (*entry)(void*), void* argument)
+int Process::sys$create_thread(void* (*entry)(void*), void* argument, void* stack)
 {
     if (!validate_read((const void*)entry, sizeof(void*)))
+        return -EFAULT;
+    if (!MM.validate_user_stack(*this, VirtualAddress(((u32)stack) - 4)))
         return -EFAULT;
     auto* thread = new Thread(*this);
     auto& tss = thread->tss();
     tss.eip = (u32)entry;
     tss.eflags = 0x0202;
     tss.cr3 = page_directory().cr3();
-    thread->make_userspace_stack_for_secondary_thread(argument);
+    tss.esp = (u32)stack;
+
+    // NOTE: The stack needs to be 16-byte aligned.
+    thread->push_value_on_stack((u32)argument);
+    thread->push_value_on_stack(0);
+
     thread->make_thread_specific_region({});
     thread->set_state(Thread::State::Runnable);
     return thread->tid();
