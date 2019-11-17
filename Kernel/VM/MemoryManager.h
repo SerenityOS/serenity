@@ -46,6 +46,7 @@ public:
 
     void enter_process_paging_scope(Process&);
 
+    bool validate_user_stack(const Process&, VirtualAddress) const;
     bool validate_user_read(const Process&, VirtualAddress) const;
     bool validate_user_write(const Process&, VirtualAddress) const;
 

@@ -50,6 +50,9 @@ public:
     bool is_shared() const { return m_shared; }
     void set_shared(bool shared) { m_shared = shared; }
 
+    bool is_stack() const { return m_stack; }
+    void set_stack(bool stack) { m_stack = stack; }
+
     bool is_user_accessible() const { return m_user_accessible; }
 
     PageFaultResponse handle_fault(const PageFault&);
@@ -141,5 +144,6 @@ private:
     u8 m_access { 0 };
     bool m_shared { false };
     bool m_user_accessible { false };
+    bool m_stack { false };
     mutable OwnPtr<Bitmap> m_cow_map;
 };

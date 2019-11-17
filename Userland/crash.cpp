@@ -5,7 +5,7 @@
 
 static void print_usage_and_exit()
 {
-    printf("usage: crash -[sdiamfMF]\n");
+    printf("usage: crash -[sdiamfMFTt]\n");
     exit(0);
 }
 
@@ -22,6 +22,8 @@ int main(int argc, char** argv)
         ReadFromUninitializedMallocMemory,
         ReadFromFreedMemory,
         WriteToReadonlyMemory,
+        InvalidStackPointerOnSyscall,
+        InvalidStackPointerOnPageFault,
     };
     Mode mode = SegmentationViolation;
 
@@ -46,6 +48,10 @@ int main(int argc, char** argv)
         mode = WriteToFreedMemory;
     else if (String(argv[1]) == "-r")
         mode = WriteToReadonlyMemory;
+    else if (String(argv[1]) == "-T")
+        mode = InvalidStackPointerOnSyscall;
+    else if (String(argv[1]) == "-t")
+        mode = InvalidStackPointerOnPageFault;
     else
         print_usage_and_exit();
 
@@ -109,6 +115,41 @@ int main(int argc, char** argv)
         ASSERT(rc == 0);
         ASSERT(*ptr == 'x');
         *ptr = 'y'; // This should crash!
+    }
+
+    if (mode == InvalidStackPointerOnSyscall) {
+        u8* makeshift_stack = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_STACK, 0, 0);
+        if (!makeshift_stack) {
+            perror("mmap");
+            return 1;
+        }
+        u8* makeshift_esp = makeshift_stack + 2048;
+        asm volatile("mov %%eax, %%esp" :: "a"(makeshift_esp));
+        getuid();
+        dbgprintf("Survived syscall with MAP_STACK stack\n");
+
+        u8* bad_stack = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        if (!bad_stack) {
+            perror("mmap");
+            return 1;
+        }
+        u8* bad_esp = bad_stack + 2048;
+        asm volatile("mov %%eax, %%esp" :: "a"(bad_esp));
+        getuid();
+
+        ASSERT_NOT_REACHED();
+    }
+
+    if (mode == InvalidStackPointerOnPageFault) {
+        u8* bad_stack = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        if (!bad_stack) {
+            perror("mmap");
+            return 1;
+        }
+        u8* bad_esp = bad_stack + 2048;
+        asm volatile("mov %%eax, %%esp" :: "a"(bad_esp));
+        asm volatile("pushl $0");
+        ASSERT_NOT_REACHED();
     }
 
     ASSERT_NOT_REACHED();

@@ -207,12 +207,24 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         return (void*)-EINVAL;
     if ((flags & MAP_SHARED) && (flags & MAP_PRIVATE))
         return (void*)-EINVAL;
+
+    // EINVAL: MAP_STACK cannot be used with shared or file-backed mappings
+    if ((flags & MAP_STACK) && ((flags & MAP_SHARED) || !(flags & MAP_PRIVATE) || !(flags & MAP_ANONYMOUS)))
+        return (void*)-EINVAL;
+
+    // EINVAL: MAP_STACK cannot be used with non-readable or non-writable memory
+    if ((flags & MAP_STACK) && (!(prot & PROT_READ) || !(prot & PROT_WRITE)))
+        return (void*)-EINVAL;
+
+    // FIXME: The rest of this function seems like it could share more code..
     if (flags & MAP_ANONYMOUS) {
         auto* region = allocate_region(VirtualAddress((u32)addr), size, name ? name : "mmap", prot, false);
         if (!region)
             return (void*)-ENOMEM;
         if (flags & MAP_SHARED)
             region->set_shared(true);
+        if (flags & MAP_STACK)
+            region->set_stack(true);
         return region->vaddr().as_ptr();
     }
     if (offset & ~PAGE_MASK)
@@ -813,13 +825,15 @@ void Process::dump_regions()
     kprintf("Process %s(%u) regions:\n", name().characters(), pid());
     kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
     for (auto& region : m_regions) {
-        kprintf("%08x -- %08x    %08x    %c%c%c     %s\n",
+        kprintf("%08x -- %08x    %08x    %c%c%c%c%c     %s\n",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),
             region.size(),
             region.is_readable() ? 'R' : ' ',
             region.is_writable() ? 'W' : ' ',
             region.is_executable() ? 'X' : ' ',
+            region.is_shared() ? 'S' : ' ',
+            region.is_stack() ? 'T' : ' ',
             region.name().characters());
     }
 }

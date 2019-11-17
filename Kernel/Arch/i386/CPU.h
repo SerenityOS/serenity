@@ -193,6 +193,7 @@ static_assert(sizeof(PageDirectoryEntry) == 4);
 static_assert(sizeof(PageTableEntry) == 4);
 
 class IRQHandler;
+struct RegisterDump;
 
 void gdt_init();
 void idt_init();
@@ -208,6 +209,7 @@ u16 gdt_alloc_entry();
 void gdt_free_entry(u16);
 Descriptor& get_gdt_entry(u16 selector);
 void write_gdt_entry(u16 selector, Descriptor&);
+void handle_crash(RegisterDump&, const char* description, int signal);
 
 [[noreturn]] static inline void hang()
 {
