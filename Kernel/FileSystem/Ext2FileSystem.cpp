@@ -595,6 +595,8 @@ RefPtr<Inode> Ext2FS::get_inode(InodeIdentifier inode) const
     if (!read_block_containing_inode(inode.index(), block_index, offset, block))
         return {};
 
+    // FIXME: Do we really need to check the cache once again?
+    //        We've been holding m_lock this whole time.
     auto it = m_inode_cache.find(inode.index());
     if (it != m_inode_cache.end())
         return (*it).value;
@@ -725,6 +727,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     Locker fs_locker(fs().m_lock);
 
     if (is_symlink()) {
+        // FIXME: This doesn't seem right if the inode is already bigger than 'max_inline_symlink_length'
         if ((offset + count) < max_inline_symlink_length) {
 #ifdef EXT2_DEBUG
             dbgprintf("Ext2FSInode: write_bytes poking into i_block array for inline symlink '%s' (%u bytes)\n", String((const char*)data, count).characters(), count);
@@ -948,11 +951,10 @@ KResult Ext2FSInode::remove_child(const StringView& name)
 #endif
     ASSERT(is_directory());
 
-    unsigned child_inode_index;
     auto it = m_lookup_cache.find(name);
     if (it == m_lookup_cache.end())
         return KResult(-ENOENT);
-    child_inode_index = (*it).value;
+    auto child_inode_index = (*it).value;
 
     InodeIdentifier child_id { fsid(), child_inode_index };
 
@@ -1088,6 +1090,8 @@ unsigned Ext2FS::allocate_inode(GroupIndex preferred_group, off_t expected_size)
 
     unsigned group_index = 0;
 
+    // FIXME: We shouldn't refuse to allocate an inode if there is no group that can house the whole thing.
+    //        In those cases we should just spread it across multiple groups.
     auto is_suitable_group = [this, needed_blocks](GroupIndex group_index) {
         auto& bgd = group_descriptor(group_index);
         return bgd.bg_free_inodes_count && bgd.bg_free_blocks_count >= needed_blocks;
@@ -1350,6 +1354,7 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     }
 
     // NOTE: This doesn't commit the inode allocation just yet!
+    // FIXME: Change the name of allocate_inode since it behaves differently than allocate_block
     auto inode_id = allocate_inode(0, size);
     if (!inode_id) {
         kprintf("Ext2FS: create_inode: allocate_inode failed\n");
