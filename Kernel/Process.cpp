@@ -1516,7 +1516,7 @@ int Process::sys$uname(utsname* buf)
     strcpy(buf->sysname, "Serenity");
     strcpy(buf->release, "1.0-dev");
     strcpy(buf->version, "FIXME");
-    strcpy(buf->machine, "i386");
+    strcpy(buf->machine, "i686");
     LOCKER(*s_hostname_lock);
     strncpy(buf->nodename, s_hostname->characters(), sizeof(utsname::nodename));
     return 0;
