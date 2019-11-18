@@ -63,6 +63,9 @@ public:
     void set_priority(ThreadPriority p) { m_priority = p; }
     ThreadPriority priority() const { return m_priority; }
 
+    void set_joinable(bool j) { m_is_joinable = j; }
+    bool is_joinable() const { return m_is_joinable; }
+
     Process& process() { return m_process; }
     const Process& process() const { return m_process; }
 
@@ -368,6 +371,7 @@ private:
     SignalActionData m_signal_action_data[32];
     Blocker* m_blocker { nullptr };
 
+    bool m_is_joinable { true };
     Thread* m_joiner { nullptr };
     Thread* m_joinee { nullptr };
     void* m_exit_value { nullptr };
