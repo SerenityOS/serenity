@@ -7,6 +7,7 @@
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Console.h>
 #include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
@@ -3282,6 +3283,12 @@ int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags 
             bytes[i] = ((uint8_t*)&word)[i];
     }
 
+    return 0;
+}
+
+int Process::sys$setkeymap(char* n_map, char* n_shift_map, char* n_alt_map)
+{
+    KeyboardDevice::the().set_maps(n_map, n_shift_map, n_alt_map);
     return 0;
 }
 
