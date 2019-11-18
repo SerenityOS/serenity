@@ -86,6 +86,10 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
         return -ENOSYS;
     }
 
+    if (s_syscall_table[function] == nullptr) {
+        dbg() << process << ": Null syscall " << function << " requested: \"" << to_string((Function)function) << "\", you probably need to rebuild this program.";
+        return -ENOSYS;
+    }
     return (process.*(s_syscall_table[function]))(arg1, arg2, arg3);
 }
 
