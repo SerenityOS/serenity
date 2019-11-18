@@ -22,6 +22,7 @@ LIBHTML_OBJS = \
     DOM/Text.o \
     DOM/DocumentType.o \
     DOM/ElementFactory.o \
+    CSS/PropertyID.o \
     CSS/Selector.o \
     CSS/StyleSheet.o \
     CSS/StyleRule.o \
@@ -59,15 +60,28 @@ LIBHTML_OBJS = \
     Dump.o
 
 GENERATED_SOURCES = \
-    CSS/DefaultStyleSheetSource.cpp
+    CSS/DefaultStyleSheetSource.cpp \
+    CSS/PropertyID.h \
+    CSS/PropertyID.cpp
 
 OBJS = $(EXTRA_OBJS) $(LIBHTML_OBJS)
 
 LIBRARY = libhtml.a
 DEFINES += -DUSERLAND
 
+Dump.cpp: CSS/PropertyID.h
+Parser/CSSParser.cpp: CSS/PropertyID.h
+
 CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSource.sh
 	@echo "GENERATE $@"; Scripts/GenerateStyleSheetSource.sh default_stylesheet_source $< > $@
+
+CSS/PropertyID.h: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h.cpp
+	make -C CodeGenerators/Generate_CSS_PropertyID_h
+	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h $< > $@
+
+CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp.cpp CSS/PropertyID.h
+	make -C CodeGenerators/Generate_CSS_PropertyID_cpp
+	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp $< > $@
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
@@ -75,5 +89,7 @@ CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSourc
 -include $(OBJS:%.o=%.d)
 
 clean:
+	make -C CodeGenerators/Generate_CSS_PropertyID_h clean
+	make -C CodeGenerators/Generate_CSS_PropertyID_cpp clean
 	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d $(GENERATED_SOURCES)
 
