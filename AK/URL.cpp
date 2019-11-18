@@ -1,3 +1,4 @@
+#include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <AK/URL.h>
 
@@ -144,6 +145,33 @@ String URL::to_string() const
     }
     builder.append(m_path);
     return builder.to_string();
+}
+
+URL URL::complete_url(const String& string) const
+{
+    URL url(string);
+    if (url.is_valid())
+        return url;
+
+    FileSystemPath fspath(path());
+    StringBuilder builder;
+    builder.append('/');
+
+    bool document_url_ends_in_slash = path()[path().length() - 1] == '/';
+
+    for (int i = 0; i < fspath.parts().size(); ++i) {
+        if (i == fspath.parts().size() - 1 && !document_url_ends_in_slash)
+            break;
+        builder.append(fspath.parts()[i]);
+        builder.append('/');
+    }
+    builder.append(string);
+    auto built = builder.to_string();
+    fspath = FileSystemPath(built);
+
+    url = *this;
+    url.set_path(fspath.string());
+    return url;
 }
 
 }
