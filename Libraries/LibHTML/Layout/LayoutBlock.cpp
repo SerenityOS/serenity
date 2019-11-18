@@ -157,66 +157,99 @@ void LayoutBlock::compute_width()
 
     auto auto_value = Length();
     auto zero_value = Length(0, Length::Type::Absolute);
-    auto width = style.length_or_fallback(CSS::PropertyID::Width, auto_value);
-    auto margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value);
-    auto margin_right = style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value);
-    auto border_left = style.length_or_fallback(CSS::PropertyID::BorderLeftWidth, zero_value);
-    auto border_right = style.length_or_fallback(CSS::PropertyID::BorderRightWidth, zero_value);
-    auto padding_left = style.length_or_fallback(CSS::PropertyID::PaddingLeft, zero_value);
-    auto padding_right = style.length_or_fallback(CSS::PropertyID::PaddingRight, zero_value);
+
+    Length margin_left;
+    Length margin_right;
+    Length border_left;
+    Length border_right;
+    Length padding_left;
+    Length padding_right;
+
+    auto try_compute_width = [&](const auto& a_width) {
+        Length width = a_width;
+#ifdef HTML_DEBUG
+        dbg() << " Left: " << margin_left << "+" << border_left << "+" << padding_left;
+        dbg() << "Right: " << margin_right << "+" << border_right << "+" << padding_right;
+#endif
+        margin_left = style.length_or_fallback(CSS::PropertyID::MarginLeft, zero_value);
+        margin_right = style.length_or_fallback(CSS::PropertyID::MarginRight, zero_value);
+        border_left = style.length_or_fallback(CSS::PropertyID::BorderLeftWidth, zero_value);
+        border_right = style.length_or_fallback(CSS::PropertyID::BorderRightWidth, zero_value);
+        padding_left = style.length_or_fallback(CSS::PropertyID::PaddingLeft, zero_value);
+        padding_right = style.length_or_fallback(CSS::PropertyID::PaddingRight, zero_value);
+
+        int total_px = 0;
+        for (auto& value : { margin_left, border_left, padding_left, width, padding_right, border_right, margin_right }) {
+            total_px += value.to_px();
+        }
 
 #ifdef HTML_DEBUG
-    dbg() << " Left: " << margin_left << "+" << border_left << "+" << padding_left;
-    dbg() << "Right: " << margin_right << "+" << border_right << "+" << padding_right;
+        dbg() << "Total: " << total_px;
 #endif
 
-    int total_px = 0;
-    for (auto& value : { margin_left, border_left, padding_left, width, padding_right, border_right, margin_right }) {
-        total_px += value.to_px();
-    }
+        // 10.3.3 Block-level, non-replaced elements in normal flow
+        // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
+        if (width.is_auto() && total_px > containing_block()->width()) {
+            if (margin_left.is_auto())
+                margin_left = zero_value;
+            if (margin_right.is_auto())
+                margin_right = zero_value;
+        }
 
-#ifdef HTML_DEBUG
-    dbg() << "Total: " << total_px;
-#endif
+        // 10.3.3 cont'd.
+        auto underflow_px = containing_block()->width() - total_px;
 
-    // 10.3.3 Block-level, non-replaced elements in normal flow
-    // If 'width' is not 'auto' and 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' (plus any of 'margin-left' or 'margin-right' that are not 'auto') is larger than the width of the containing block, then any 'auto' values for 'margin-left' or 'margin-right' are, for the following rules, treated as zero.
-    if (width.is_auto() && total_px > containing_block()->width()) {
-        if (margin_left.is_auto())
-            margin_left = zero_value;
-        if (margin_right.is_auto())
-            margin_right = zero_value;
-    }
-
-    // 10.3.3 cont'd.
-    auto underflow_px = containing_block()->width() - total_px;
-
-    if (width.is_auto()) {
-        if (margin_left.is_auto())
-            margin_left = zero_value;
-        if (margin_right.is_auto())
-            margin_right = zero_value;
-        if (underflow_px >= 0) {
-            width = Length(underflow_px, Length::Type::Absolute);
+        if (width.is_auto()) {
+            if (margin_left.is_auto())
+                margin_left = zero_value;
+            if (margin_right.is_auto())
+                margin_right = zero_value;
+            if (underflow_px >= 0) {
+                width = Length(underflow_px, Length::Type::Absolute);
+            } else {
+                width = zero_value;
+                margin_right = Length(margin_right.to_px() + underflow_px, Length::Type::Absolute);
+            }
         } else {
-            width = zero_value;
-            margin_right = Length(margin_right.to_px() + underflow_px, Length::Type::Absolute);
+            if (!margin_left.is_auto() && !margin_right.is_auto()) {
+                margin_right = Length(margin_right.to_px() + underflow_px, Length::Type::Absolute);
+            } else if (!margin_left.is_auto() && margin_right.is_auto()) {
+                margin_right = Length(underflow_px, Length::Type::Absolute);
+            } else if (margin_left.is_auto() && !margin_right.is_auto()) {
+                margin_left = Length(underflow_px, Length::Type::Absolute);
+            } else { // margin_left.is_auto() && margin_right.is_auto()
+                auto half_of_the_underflow = Length(underflow_px / 2, Length::Type::Absolute);
+                margin_left = half_of_the_underflow;
+                margin_right = half_of_the_underflow;
+            }
         }
-    } else {
-        if (!margin_left.is_auto() && !margin_right.is_auto()) {
-            margin_right = Length(margin_right.to_px() + underflow_px, Length::Type::Absolute);
-        } else if (!margin_left.is_auto() && margin_right.is_auto()) {
-            margin_right = Length(underflow_px, Length::Type::Absolute);
-        } else if (margin_left.is_auto() && !margin_right.is_auto()) {
-            margin_left = Length(underflow_px, Length::Type::Absolute);
-        } else { // margin_left.is_auto() && margin_right.is_auto()
-            auto half_of_the_underflow = Length(underflow_px / 2, Length::Type::Absolute);
-            margin_left = half_of_the_underflow;
-            margin_right = half_of_the_underflow;
+        return width;
+    };
+
+    auto specified_width = style.length_or_fallback(CSS::PropertyID::Width, auto_value);
+
+    // 1. The tentative used width is calculated (without 'min-width' and 'max-width')
+    auto used_width = try_compute_width(specified_width);
+
+    // 2. The tentative used width is greater than 'max-width', the rules above are applied again,
+    //    but this time using the computed value of 'max-width' as the computed value for 'width'.
+    auto specified_max_width = style.length_or_fallback(CSS::PropertyID::MaxWidth, auto_value);
+    if (!specified_max_width.is_auto()) {
+        if (used_width.to_px() > specified_max_width.to_px()) {
+            used_width = try_compute_width(specified_max_width);
         }
     }
 
-    rect().set_width(width.to_px());
+    // 3. If the resulting width is smaller than 'min-width', the rules above are applied again,
+    //    but this time using the value of 'min-width' as the computed value for 'width'.
+    auto specified_min_width = style.length_or_fallback(CSS::PropertyID::MinWidth, auto_value);
+    if (!specified_min_width.is_auto()) {
+        if (used_width.to_px() < specified_min_width.to_px()) {
+            used_width = try_compute_width(specified_min_width);
+        }
+    }
+
+    rect().set_width(used_width.to_px());
     box_model().margin().left = margin_left;
     box_model().margin().right = margin_right;
     box_model().border().left = border_left;
