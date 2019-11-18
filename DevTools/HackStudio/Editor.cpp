@@ -229,10 +229,25 @@ void Editor::cursor_did_change()
             return;
         }
 
+        if (token_type == CppToken::Type::LeftParen && span.range.start() == cursor()) {
+            auto buddy = find_span_of_type(i, CppToken::Type::RightParen, CppToken::Type::LeftParen, Direction::Forward);
+            if (buddy != -1)
+                make_buddies(i, buddy);
+            return;
+        }
+
         auto right_of_end = span.range.end();
         right_of_end.set_column(right_of_end.column() + 1);
+
         if (token_type == CppToken::Type::RightCurly && right_of_end == cursor()) {
             auto buddy = find_span_of_type(i, CppToken::Type::LeftCurly, CppToken::Type::RightCurly, Direction::Backward);
+            if (buddy != -1)
+                make_buddies(i, buddy);
+            return;
+        }
+
+        if (token_type == CppToken::Type::RightParen && right_of_end == cursor()) {
+            auto buddy = find_span_of_type(i, CppToken::Type::LeftParen, CppToken::Type::RightParen, Direction::Backward);
             if (buddy != -1)
                 make_buddies(i, buddy);
             return;
