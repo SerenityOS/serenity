@@ -17,10 +17,10 @@ public:
     const LengthBox& border() const { return m_border; }
 
     struct PixelBox {
-        int top;
-        int right;
-        int bottom;
-        int left;
+        float top;
+        float right;
+        float bottom;
+        float left;
     };
 
     PixelBox full_margin() const;

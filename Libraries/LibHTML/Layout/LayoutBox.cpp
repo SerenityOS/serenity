@@ -22,7 +22,7 @@ void LayoutBox::render(RenderingContext& context)
 #endif
 
     if (node() && document().inspected_node() == node())
-        context.painter().draw_rect(m_rect, Color::Magenta);
+        context.painter().draw_rect(enclosing_int_rect(m_rect), Color::Magenta);
 
     Rect padded_rect;
     padded_rect.set_x(x() - box_model().padding().left.to_px());
@@ -51,7 +51,7 @@ void LayoutBox::render(RenderingContext& context)
     auto border_style_value = style().property(CSS::PropertyID::BorderTopStyle);
 
     if (border_width_value.has_value()) {
-        int border_width = border_width_value.value()->to_length().to_px();
+        float border_width = border_width_value.value()->to_length().to_px();
 
         Color border_color;
         if (border_color_value.has_value())
@@ -99,7 +99,7 @@ HitTestResult LayoutBox::hit_test(const Point& position) const
     // FIXME: It would be nice if we could confidently skip over hit testing
     //        parts of the layout tree, but currently we can't just check
     //        m_rect.contains() since inline text rects can't be trusted..
-    HitTestResult result { m_rect.contains(position) ? this : nullptr };
+    HitTestResult result { m_rect.contains(FloatPoint(position.x(), position.y())) ? this : nullptr };
     for_each_child([&](auto& child) {
         auto child_result = child.hit_test(position);
         if (child_result.layout_node)
@@ -114,7 +114,7 @@ void LayoutBox::set_needs_display()
     ASSERT(frame);
 
     if (!is_inline()) {
-        const_cast<Frame*>(frame)->set_needs_display(rect());
+        const_cast<Frame*>(frame)->set_needs_display(enclosing_int_rect(rect()));
         return;
     }
 

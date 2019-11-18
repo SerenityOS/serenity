@@ -126,13 +126,13 @@ void LayoutText::for_each_source_line(Callback callback) const
 void LayoutText::split_into_lines(LayoutBlock& container)
 {
     auto& font = style().font();
-    int space_width = font.glyph_width(' ') + font.glyph_spacing();
-    int line_height = style().line_height();
+    float space_width = font.glyph_width(' ') + font.glyph_spacing();
+    float line_height = style().line_height();
 
     auto& line_boxes = container.line_boxes();
     if (line_boxes.is_empty())
         line_boxes.append(LineBox());
-    int available_width = container.width() - line_boxes.last().width();
+    float available_width = container.width() - line_boxes.last().width();
 
     bool is_preformatted = style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre";
     if (is_preformatted) {
@@ -176,7 +176,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
     for (int i = 0; i < words.size(); ++i) {
         auto& word = words[i];
 
-        int word_width;
+        float word_width;
         bool is_whitespace = isspace(*word.view.begin());
 
         if (is_whitespace)
