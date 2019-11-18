@@ -2851,18 +2851,42 @@ int Process::thread_count() const
     return count;
 }
 
-int Process::sys$create_thread(void* (*entry)(void*), void* argument, void* stack)
+int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Syscall::SC_create_thread_params* params)
 {
     if (!validate_read((const void*)entry, sizeof(void*)))
         return -EFAULT;
-    if (!MM.validate_user_stack(*this, VirtualAddress(((u32)stack) - 4)))
+
+    if (!validate_read_typed(params))
         return -EFAULT;
+
+    u32 user_stack_address = reinterpret_cast<u32>(params->m_stack_location) + params->m_stack_size;
+
+    if (!MM.validate_user_stack(*this, VirtualAddress(user_stack_address - 4)))
+        return -EFAULT;
+
+    // FIXME: return EAGAIN if Thread::all_threads().size() is greater than PTHREAD_THREADS_MAX
+
+    ThreadPriority requested_thread_priority = static_cast<ThreadPriority>(params->m_schedule_priority);
+    if (requested_thread_priority < ThreadPriority::First || requested_thread_priority > ThreadPriority::Last)
+        return -EINVAL;
+
+    if (requested_thread_priority != ThreadPriority::Normal && !is_superuser())
+        return -EPERM;
+
+    bool is_thread_joinable = (0 == params->m_detach_state);
+
+    // FIXME: Do something with guard pages?
+
     auto* thread = new Thread(*this);
+
+    thread->set_priority(requested_thread_priority);
+    thread->set_joinable(is_thread_joinable);
+
     auto& tss = thread->tss();
     tss.eip = (u32)entry;
     tss.eflags = 0x0202;
     tss.cr3 = page_directory().cr3();
-    tss.esp = (u32)stack;
+    tss.esp = user_stack_address;
 
     // NOTE: The stack needs to be 16-byte aligned.
     thread->push_value_on_stack((u32)argument);
@@ -2915,7 +2939,8 @@ int Process::sys$join_thread(int tid, void** exit_value)
     if (thread->m_joiner)
         return -EINVAL;
 
-    // FIXME: EINVAL: 'thread' is not a joinable thread
+    if (!thread->is_joinable())
+        return -EINVAL;
 
     void* joinee_exit_value = nullptr;
 
