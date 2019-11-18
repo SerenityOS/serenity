@@ -31,6 +31,8 @@ public:
 
     String to_string() const;
 
+    URL complete_url(const String&) const;
+
 private:
     bool parse(const StringView&);
 

@@ -156,29 +156,7 @@ RefPtr<GraphicsBitmap> Document::background_image() const
 
 URL Document::complete_url(const String& string) const
 {
-    URL url(string);
-    if (url.is_valid())
-        return url;
-
-    FileSystemPath fspath(m_url.path());
-    StringBuilder builder;
-    builder.append('/');
-
-    bool document_url_ends_in_slash = m_url.path()[m_url.path().length() - 1] == '/';
-
-    for (int i = 0; i < fspath.parts().size(); ++i) {
-        if (i == fspath.parts().size() - 1 && !document_url_ends_in_slash)
-            break;
-        builder.append(fspath.parts()[i]);
-        builder.append('/');
-    }
-    builder.append(string);
-    auto built = builder.to_string();
-    fspath = FileSystemPath(built);
-
-    url = m_url;
-    url.set_path(fspath.string());
-    return url;
+    return m_url.complete_url(string);
 }
 
 void Document::force_layout()
