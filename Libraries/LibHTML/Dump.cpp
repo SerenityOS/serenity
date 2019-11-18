@@ -1,4 +1,5 @@
 #include <AK/Utf8View.h>
+#include <LibHTML/CSS/PropertyID.h>
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/Comment.h>
 #include <LibHTML/DOM/Document.h>
@@ -128,7 +129,7 @@ void dump_tree(const LayoutNode& layout_node)
     layout_node.style().for_each_property([&](auto property_id, auto& value) {
         for (int i = 0; i < indent; ++i)
             dbgprintf("    ");
-        dbgprintf("  (CSS::PropertyID(%u): %s)\n", (unsigned)property_id, value.to_string().characters());
+        dbgprintf("  (%s: %s)\n", CSS::string_from_property_id(property_id), value.to_string().characters());
     });
 
     ++indent;
