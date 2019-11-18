@@ -389,6 +389,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                 for (int i = 0; i < visual_line_text.length(); ++i) {
                     const Font* font = &this->font();
                     Color color;
+                    Optional<Color> background_color;
                     GTextPosition physical_position(line_index, start_of_visual_line + i);
                     // FIXME: This is *horribly* inefficient.
                     for (auto& span : document().spans()) {
@@ -397,8 +398,11 @@ void GTextEditor::paint_event(GPaintEvent& event)
                         color = span.color;
                         if (span.font)
                             font = span.font;
+                        background_color = span.background_color;
                         break;
                     }
+                    if (background_color.has_value())
+                        painter.fill_rect(character_rect, background_color.value());
                     painter.draw_text(character_rect, visual_line_text.substring_view(i, 1), *font, m_text_alignment, color);
                     character_rect.move_by(advance, 0);
                 }
@@ -1135,6 +1139,7 @@ void GTextEditor::set_cursor(const GTextPosition& a_position)
         update(old_cursor_line_rect);
         update_cursor();
     }
+    cursor_did_change();
     if (on_cursor_change)
         on_cursor_change();
 }

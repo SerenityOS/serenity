@@ -120,6 +120,7 @@ protected:
     virtual void leave_event(CEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
+    virtual void cursor_did_change() {}
 
     GTextPosition text_position_at(const Point&) const;
 
