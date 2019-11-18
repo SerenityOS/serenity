@@ -103,6 +103,9 @@ void StyleProperties::load_font() const
 
 float StyleProperties::line_height() const
 {
+    auto line_height_length = length_or_fallback(CSS::PropertyID::LineHeight, {});
+    if (line_height_length.is_absolute())
+        return (float)font().glyph_height() * line_height_length.to_px();
     return (float)font().glyph_height() * 1.4f;
 }
 
