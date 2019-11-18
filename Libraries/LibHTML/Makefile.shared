@@ -69,9 +69,6 @@ OBJS = $(EXTRA_OBJS) $(LIBHTML_OBJS)
 LIBRARY = libhtml.a
 DEFINES += -DUSERLAND
 
-Dump.cpp: CSS/PropertyID.h
-Parser/CSSParser.cpp: CSS/PropertyID.h
-
 CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSource.sh
 	@echo "GENERATE $@"; Scripts/GenerateStyleSheetSource.sh default_stylesheet_source $< > $@
 
@@ -79,7 +76,7 @@ CSS/PropertyID.h: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_h/G
 	make -C CodeGenerators/Generate_CSS_PropertyID_h
 	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h $< > $@
 
-CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp.cpp CSS/PropertyID.h
+CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp.cpp
 	make -C CodeGenerators/Generate_CSS_PropertyID_cpp
 	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp $< > $@
 
