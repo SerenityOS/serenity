@@ -22,13 +22,92 @@ static Optional<Color> parse_css_color(const StringView& view)
     return {};
 }
 
-NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
+static Optional<float> try_parse_float(const StringView& string)
 {
-    String string(view);
-    char* endptr = nullptr;
-    long value = strtol(String(view).characters(), &endptr, 10);
-    if (endptr && ((!*endptr) || (endptr[0] == 'p' && endptr[1] == 'x' && endptr[2] == '\0')))
-        return LengthStyleValue::create(Length((float)value, Length::Type::Absolute));
+    const char* str = string.characters_without_null_termination();
+    size_t len = string.length();
+    size_t weight = 1;
+    int exp_val = 0;
+    float value = 0.0f;
+    float fraction = 0.0f;
+    bool has_sign = false;
+    bool is_negative = false;
+    bool is_fractional = false;
+    bool is_scientific = false;
+
+    if (str[0] == '-') {
+        is_negative = true;
+        has_sign = true;
+    }
+    if (str[0] == '+') {
+        has_sign = true;
+    }
+
+    for (size_t i = has_sign; i < len; i++) {
+
+        // Looks like we're about to start working on the fractional part
+        if (str[i] == '.') {
+            is_fractional = true;
+            continue;
+        }
+
+        if (str[i] == 'e' || str[i] == 'E') {
+            if (str[i + 1] == '-' || str[i + 1] == '+')
+                exp_val = atoi(str + i + 2);
+            else
+                exp_val = atoi(str + i + 1);
+
+            is_scientific = true;
+            continue;
+        }
+
+        if (str[i] < '0' || str[i] > '9' || exp_val != 0) {
+            return {};
+            continue;
+        }
+
+        if (is_fractional) {
+            fraction *= 10;
+            fraction += str[i] - '0';
+            weight *= 10;
+        } else {
+            value = value * 10;
+            value += str[i] - '0';
+        }
+    }
+
+    fraction /= weight;
+    value += fraction;
+
+    if (is_scientific) {
+        bool divide = exp_val < 0;
+        if (divide)
+            exp_val *= -1;
+
+        for (int i = 0; i < exp_val; i++) {
+            if (divide)
+                value /= 10;
+            else
+                value *= 10;
+        }
+    }
+
+    return is_negative ? -value : value;
+}
+
+static Optional<float> parse_number(const StringView& view)
+{
+    if (view.length() >= 2 && view[view.length() - 2] == 'p' && view[view.length() - 1] == 'x')
+        return parse_number(view.substring_view(0, view.length() - 2));
+
+    return try_parse_float(view);
+}
+
+NonnullRefPtr<StyleValue> parse_css_value(const StringView& string)
+{
+    auto number = parse_number(string);
+    if (number.has_value())
+        return LengthStyleValue::create(Length(number.value(), Length::Type::Absolute));
     if (string == "inherit")
         return InheritStyleValue::create();
     if (string == "initial")
@@ -36,7 +115,7 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
     if (string == "auto")
         return LengthStyleValue::create(Length());
 
-    auto color = parse_css_color(view);
+    auto color = parse_css_color(string);
     if (color.has_value())
         return ColorStyleValue::create(color.value());
 
