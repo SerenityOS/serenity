@@ -63,7 +63,7 @@ void dump_tree(const LayoutNode& layout_node)
         dbgprintf("%s {%s}\n", layout_node.class_name(), tag_name.characters());
     } else {
         auto& layout_box = to<LayoutBox>(layout_node);
-        dbgprintf("%s {%s} at (%d,%d) size %dx%d",
+        dbgprintf("%s {%s} at (%g,%g) size %gx%g",
             layout_box.class_name(),
             tag_name.characters(),
             layout_box.x(),
@@ -72,7 +72,7 @@ void dump_tree(const LayoutNode& layout_node)
             layout_box.height());
 
         // Dump the horizontal box properties
-        dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
+        dbgprintf(" [%g+%g+%g %g %g+%g+%g]",
             layout_box.box_model().margin().left.to_px(),
             layout_box.box_model().border().left.to_px(),
             layout_box.box_model().padding().left.to_px(),
@@ -82,7 +82,7 @@ void dump_tree(const LayoutNode& layout_node)
             layout_box.box_model().margin().right.to_px());
 
         // And the vertical box properties
-        dbgprintf(" [%d+%d+%d %d %d+%d+%d]",
+        dbgprintf(" [%g+%g+%g %g %g+%g+%g]",
             layout_box.box_model().margin().top.to_px(),
             layout_box.box_model().border().top.to_px(),
             layout_box.box_model().padding().top.to_px(),
@@ -103,7 +103,7 @@ void dump_tree(const LayoutNode& layout_node)
             auto& line_box = block.line_boxes()[line_box_index];
             for (int i = 0; i < indent; ++i)
                 dbgprintf("    ");
-            dbgprintf("    [%d] width: %d\n", line_box_index, line_box.width());
+            dbgprintf("    [%d] width: %g\n", line_box_index, line_box.width());
             for (int fragment_index = 0; fragment_index < line_box.fragments().size(); ++fragment_index) {
                 auto& fragment = line_box.fragments()[fragment_index];
                 for (int i = 0; i < indent; ++i)
