@@ -15,6 +15,8 @@ public:
     EditorWrapper& wrapper();
     const EditorWrapper& wrapper() const;
 
+    void notify_did_rehighlight();
+
 private:
     virtual void focusin_event(CEvent&) override;
     virtual void focusout_event(CEvent&) override;
@@ -23,6 +25,7 @@ private:
     virtual void cursor_did_change() override;
 
     void show_documentation_tooltip_if_available(const String&, const Point& screen_location);
+    void highlight_matching_curlies_or_parens();
 
     explicit Editor(GWidget* parent);
 

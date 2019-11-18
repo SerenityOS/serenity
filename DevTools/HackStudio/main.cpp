@@ -488,6 +488,7 @@ static void rehighlight()
         spans.append(span);
     }
     current_editor().document().set_spans(spans);
+    static_cast<Editor&>(current_editor()).notify_did_rehighlight();
     current_editor().update();
 }
 

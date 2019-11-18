@@ -172,17 +172,8 @@ void Editor::mousemove_event(GMouseEvent& event)
     GApplication::the().hide_tooltip();
 }
 
-void Editor::cursor_did_change()
+void Editor::highlight_matching_curlies_or_parens()
 {
-    if (m_has_brace_buddies) {
-        if (m_brace_buddies[0].index >= 0 && m_brace_buddies[0].index < document().spans().size())
-            document().set_span_at_index(m_brace_buddies[0].index, m_brace_buddies[0].span_backup);
-        if (m_brace_buddies[1].index >= 0 && m_brace_buddies[1].index < document().spans().size())
-            document().set_span_at_index(m_brace_buddies[1].index, m_brace_buddies[1].span_backup);
-        m_has_brace_buddies = false;
-        update();
-    }
-
     enum class Direction {
         Forward,
         Backward,
@@ -253,4 +244,23 @@ void Editor::cursor_did_change()
             return;
         }
     }
+}
+
+void Editor::cursor_did_change()
+{
+    if (m_has_brace_buddies) {
+        if (m_brace_buddies[0].index >= 0 && m_brace_buddies[0].index < document().spans().size())
+            document().set_span_at_index(m_brace_buddies[0].index, m_brace_buddies[0].span_backup);
+        if (m_brace_buddies[1].index >= 0 && m_brace_buddies[1].index < document().spans().size())
+            document().set_span_at_index(m_brace_buddies[1].index, m_brace_buddies[1].span_backup);
+        m_has_brace_buddies = false;
+        update();
+    }
+    highlight_matching_curlies_or_parens();
+}
+
+void Editor::notify_did_rehighlight()
+{
+    m_has_brace_buddies = false;
+    highlight_matching_curlies_or_parens();
 }
