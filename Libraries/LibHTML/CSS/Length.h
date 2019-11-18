@@ -25,8 +25,8 @@ public:
     String to_string() const
     {
         if (is_auto())
-            return "auto";
-        return String::format("%d [Length/Absolute]", m_value);
+            return "[Length/auto]";
+        return String::format("%d [Length/px]", m_value);
     }
 
     int to_px() const
