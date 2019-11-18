@@ -18,6 +18,8 @@ build_targets=""
 # Build the host-side tools first, since they are needed to build some programs.
 build_targets="$build_targets ../DevTools/IPCCompiler"
 build_targets="$build_targets ../DevTools/FormCompiler"
+build_targets="$build_targets ../LibHTML/CodeGenerators/CodeGenerators/Generate_CSS_PropertyID_cpp"
+build_targets="$build_targets ../LibHTML/CodeGenerators/CodeGenerators/Generate_CSS_PropertyID_h"
 
 # Build LibC, LibCore, LibIPC and LibThread before IPC servers, since they depend on them.
 build_targets="$build_targets ../Libraries/LibC"

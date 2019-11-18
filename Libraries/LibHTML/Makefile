@@ -79,13 +79,9 @@ CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSourc
 	@echo "GENERATE $@"; Scripts/GenerateStyleSheetSource.sh default_stylesheet_source $< > $@
 
 CSS/PropertyID.h: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h.cpp
-	make -C CodeGenerators/Generate_CSS_PropertyID_h clean
-	make -C CodeGenerators/Generate_CSS_PropertyID_h
 	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h $< > $@
 
 CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp.cpp
-	make -C CodeGenerators/Generate_CSS_PropertyID_cpp clean
-	make -C CodeGenerators/Generate_CSS_PropertyID_cpp
 	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp $< > $@
 
 %.o: %.cpp $(GENERATED_SOURCES)
@@ -94,8 +90,6 @@ CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_c
 -include $(OBJS:%.o=%.d)
 
 clean:
-	make -C CodeGenerators/Generate_CSS_PropertyID_h clean
-	make -C CodeGenerators/Generate_CSS_PropertyID_cpp clean
 	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d $(GENERATED_SOURCES)
 
 $(LIBRARY): $(GENERATED_SOURCES) $(LIBHTML_OBJS)
