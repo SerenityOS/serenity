@@ -27,6 +27,12 @@ Color::Color(NamedColor named)
     case Cyan:
         rgb = { 0, 255, 255 };
         break;
+    case DarkCyan:
+        rgb = { 0, 127, 127 };
+        break;
+    case MidCyan:
+        rgb = { 0, 192, 192 };
+        break;
     case Blue:
         rgb = { 0, 0, 255 };
         break;
