@@ -88,7 +88,7 @@ CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_c
 	make -C CodeGenerators/Generate_CSS_PropertyID_cpp
 	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp $< > $@
 
-.cpp.o:
+%.o: %.cpp $(GENERATED_SOURCES)
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
 
 -include $(OBJS:%.o=%.d)
