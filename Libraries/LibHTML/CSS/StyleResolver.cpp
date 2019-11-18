@@ -164,6 +164,52 @@ static void set_property_expanding_shorthands(StyleProperties& style, CSS::Prope
         return;
     }
 
+    if (property_id == CSS::PropertyID::Padding) {
+        if (value.is_length()) {
+            style.set_property(CSS::PropertyID::PaddingTop, value);
+            style.set_property(CSS::PropertyID::PaddingRight, value);
+            style.set_property(CSS::PropertyID::PaddingBottom, value);
+            style.set_property(CSS::PropertyID::PaddingLeft, value);
+            return;
+        }
+        if (value.is_string()) {
+            auto parts = split_on_whitespace(value.to_string());
+            if (parts.size() == 2) {
+                auto vertical = parse_css_value(parts[0]);
+                auto horizontal = parse_css_value(parts[1]);
+                style.set_property(CSS::PropertyID::PaddingTop, vertical);
+                style.set_property(CSS::PropertyID::PaddingBottom, vertical);
+                style.set_property(CSS::PropertyID::PaddingLeft, horizontal);
+                style.set_property(CSS::PropertyID::PaddingRight, horizontal);
+                return;
+            }
+            if (parts.size() == 3) {
+                auto top = parse_css_value(parts[0]);
+                auto horizontal = parse_css_value(parts[1]);
+                auto bottom = parse_css_value(parts[2]);
+                style.set_property(CSS::PropertyID::PaddingTop, top);
+                style.set_property(CSS::PropertyID::PaddingBottom, bottom);
+                style.set_property(CSS::PropertyID::PaddingLeft, horizontal);
+                style.set_property(CSS::PropertyID::PaddingRight, horizontal);
+                return;
+            }
+            if (parts.size() == 4) {
+                auto top = parse_css_value(parts[0]);
+                auto right = parse_css_value(parts[1]);
+                auto bottom = parse_css_value(parts[2]);
+                auto left = parse_css_value(parts[3]);
+                style.set_property(CSS::PropertyID::PaddingTop, top);
+                style.set_property(CSS::PropertyID::PaddingBottom, bottom);
+                style.set_property(CSS::PropertyID::PaddingLeft, left);
+                style.set_property(CSS::PropertyID::PaddingRight, right);
+                return;
+            }
+            dbg() << "Unsure what to do with CSS padding value '" << value.to_string() << "'";
+            return;
+        }
+        return;
+    }
+
     style.set_property(property_id, value);
 }
 
