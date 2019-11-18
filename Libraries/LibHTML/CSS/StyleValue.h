@@ -46,6 +46,8 @@ public:
     bool is_color() const { return type() == Type::Color; }
     bool is_identifier() const { return type() == Type::Identifier; }
     bool is_image() const { return type() == Type::Image; }
+    bool is_string() const { return type() == Type::String; }
+    bool is_length() const { return type() == Type::Length; }
 
     virtual String to_string() const = 0;
     virtual Length to_length() const { return {}; }

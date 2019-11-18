@@ -5,6 +5,7 @@
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Dump.h>
 #include <LibHTML/Parser/CSSParser.h>
+#include <ctype.h>
 #include <stdio.h>
 
 StyleResolver::StyleResolver(Document& document)
@@ -93,6 +94,79 @@ bool StyleResolver::is_inherited_property(CSS::PropertyID property_id)
     return inherited_properties.contains(property_id);
 }
 
+static Vector<String> split_on_whitespace(const StringView& string)
+{
+    if (string.is_empty())
+        return {};
+
+    Vector<String> v;
+    int substart = 0;
+    for (int i = 0; i < string.length(); ++i) {
+        char ch = string.characters_without_null_termination()[i];
+        if (isspace(ch)) {
+            int sublen = i - substart;
+            if (sublen != 0)
+                v.append(string.substring_view(substart, sublen));
+            substart = i + 1;
+        }
+    }
+    int taillen = string.length() - substart;
+    if (taillen != 0)
+        v.append(string.substring_view(substart, taillen));
+    return v;
+}
+
+static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value)
+{
+    if (property_id == CSS::PropertyID::Margin) {
+        if (value.is_length()) {
+            style.set_property(CSS::PropertyID::MarginTop, value);
+            style.set_property(CSS::PropertyID::MarginRight, value);
+            style.set_property(CSS::PropertyID::MarginBottom, value);
+            style.set_property(CSS::PropertyID::MarginLeft, value);
+            return;
+        }
+        if (value.is_string()) {
+            auto parts = split_on_whitespace(value.to_string());
+            if (parts.size() == 2) {
+                auto vertical = parse_css_value(parts[0]);
+                auto horizontal = parse_css_value(parts[1]);
+                style.set_property(CSS::PropertyID::MarginTop, vertical);
+                style.set_property(CSS::PropertyID::MarginBottom, vertical);
+                style.set_property(CSS::PropertyID::MarginLeft, horizontal);
+                style.set_property(CSS::PropertyID::MarginRight, horizontal);
+                return;
+            }
+            if (parts.size() == 3) {
+                auto top = parse_css_value(parts[0]);
+                auto horizontal = parse_css_value(parts[1]);
+                auto bottom = parse_css_value(parts[2]);
+                style.set_property(CSS::PropertyID::MarginTop, top);
+                style.set_property(CSS::PropertyID::MarginBottom, bottom);
+                style.set_property(CSS::PropertyID::MarginLeft, horizontal);
+                style.set_property(CSS::PropertyID::MarginRight, horizontal);
+                return;
+            }
+            if (parts.size() == 4) {
+                auto top = parse_css_value(parts[0]);
+                auto right = parse_css_value(parts[1]);
+                auto bottom = parse_css_value(parts[2]);
+                auto left = parse_css_value(parts[3]);
+                style.set_property(CSS::PropertyID::MarginTop, top);
+                style.set_property(CSS::PropertyID::MarginBottom, bottom);
+                style.set_property(CSS::PropertyID::MarginLeft, left);
+                style.set_property(CSS::PropertyID::MarginRight, right);
+                return;
+            }
+            dbg() << "Unsure what to do with CSS margin value '" << value.to_string() << "'";
+            return;
+        }
+        return;
+    }
+
+    style.set_property(property_id, value);
+}
+
 NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& element, const StyleProperties* parent_style) const
 {
     auto style = StyleProperties::create();
@@ -100,7 +174,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     if (parent_style) {
         parent_style->for_each_property([&](auto property_id, auto& value) {
             if (is_inherited_property(property_id))
-                style->set_property(property_id, value);
+                set_property_expanding_shorthands(style, property_id, value);
         });
     }
 
@@ -109,7 +183,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     auto matching_rules = collect_matching_rules(element);
     for (auto& rule : matching_rules) {
         for (auto& property : rule.declaration().properties()) {
-            style->set_property(property.property_id, property.value);
+            set_property_expanding_shorthands(style, property.property_id, property.value);
         }
     }
 
@@ -117,7 +191,7 @@ NonnullRefPtr<StyleProperties> StyleResolver::resolve_style(const Element& eleme
     if (!style_attribute.is_null()) {
         if (auto declaration = parse_css_declaration(style_attribute)) {
             for (auto& property : declaration->properties()) {
-                style->set_property(property.property_id, property.value);
+                set_property_expanding_shorthands(style, property.property_id, property.value);
             }
         }
     }
