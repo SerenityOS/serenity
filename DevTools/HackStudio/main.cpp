@@ -423,7 +423,7 @@ int main(int argc, char** argv)
         remove_current_editor_action->set_enabled(g_all_editor_wrappers.size() > 1);
     };
 
-    open_file("test.frm");
+    open_file("main.cpp");
 
     update_actions();
     return app.exec();
@@ -484,6 +484,7 @@ static void rehighlight()
         span.color = style.color;
         span.font = style.font;
         span.is_skippable = token.m_type == CppToken::Type::Whitespace;
+        span.data = (void*)token.m_type;
         spans.append(span);
     }
     current_editor().document().set_spans(spans);

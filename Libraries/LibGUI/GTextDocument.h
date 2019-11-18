@@ -15,8 +15,10 @@ class GTextDocumentLine;
 struct GTextDocumentSpan {
     GTextRange range;
     Color color;
+    Optional<Color> background_color;
     bool is_skippable { false };
     const Font* font { nullptr };
+    void* data { nullptr };
 };
 
 class GTextDocument : public RefCounted<GTextDocument> {
@@ -54,6 +56,7 @@ public:
 
     bool has_spans() const { return !m_spans.is_empty(); }
     const Vector<GTextDocumentSpan>& spans() const { return m_spans; }
+    void set_span_at_index(int index, GTextDocumentSpan span) { m_spans[index] = move(span); }
 
     void append_line(NonnullOwnPtr<GTextDocumentLine>);
     void remove_line(int line_index);
