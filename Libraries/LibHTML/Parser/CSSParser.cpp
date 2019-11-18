@@ -25,13 +25,10 @@ static Optional<Color> parse_css_color(const StringView& view)
 NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
 {
     String string(view);
-    bool ok;
-    int as_int = string.to_int(ok);
-    if (ok)
-        return LengthStyleValue::create(Length(as_int, Length::Type::Absolute));
-    unsigned as_uint = string.to_uint(ok);
-    if (ok)
-        return LengthStyleValue::create(Length(as_uint, Length::Type::Absolute));
+    char* endptr = nullptr;
+    long value = strtol(String(view).characters(), &endptr, 10);
+    if (endptr && ((!*endptr) || (endptr[0] == 'p' && endptr[1] == 'x' && endptr[2] == '\0')))
+        return LengthStyleValue::create(Length(value, Length::Type::Absolute));
     if (string == "inherit")
         return InheritStyleValue::create();
     if (string == "initial")
