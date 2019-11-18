@@ -48,9 +48,8 @@ void LayoutImage::render(RenderingContext& context)
         if (alt.is_empty())
             alt = node().src();
         context.painter().draw_text(enclosing_int_rect(rect()), alt, TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), TextElision::Right);
-    } else {
+    } else if (node().bitmap())
         context.painter().draw_scaled_bitmap(enclosing_int_rect(rect()), *node().bitmap(), node().bitmap()->rect());
-    }
     LayoutReplaced::render(context);
 }
 
