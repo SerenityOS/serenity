@@ -33,3 +33,5 @@
 #define MB_LEN_MAX 16
 
 #define ARG_MAX 65536
+
+#define PTHREAD_STACK_MIN 65536
