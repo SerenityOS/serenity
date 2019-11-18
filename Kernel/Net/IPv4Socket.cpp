@@ -222,8 +222,14 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
     ReceivedPacket packet;
     {
         LOCKER(lock());
-        if (m_receive_queue.is_empty() && !description.is_blocking())
-            return -EAGAIN;
+        if (m_receive_queue.is_empty()) {
+            // FIXME: Shouldn't this return -ENOTCONN instead of EOF?
+            //        But if so, we still need to deliver at least one EOF read to userspace.. right?
+            if (protocol_is_disconnected())
+                return 0;
+            if (!description.is_blocking())
+                return -EAGAIN;
+        }
 
         if (!m_receive_queue.is_empty()) {
             packet = m_receive_queue.take_first();
