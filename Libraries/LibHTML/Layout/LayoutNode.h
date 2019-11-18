@@ -2,6 +2,7 @@
 
 #include <AK/NonnullRefPtr.h>
 #include <AK/Vector.h>
+#include <LibDraw/FloatRect.h>
 #include <LibDraw/Rect.h>
 #include <LibHTML/CSS/StyleProperties.h>
 #include <LibHTML/Layout/BoxModelMetrics.h>
@@ -108,7 +109,7 @@ public:
     template<typename T>
     T* first_ancestor_of_type();
 
-    Point box_type_agnostic_position() const;
+    FloatPoint box_type_agnostic_position() const;
 
 protected:
     explicit LayoutNode(const Node*);

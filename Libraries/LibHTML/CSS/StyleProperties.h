@@ -32,7 +32,7 @@ public:
         return *m_font;
     }
 
-    int line_height() const;
+    float line_height() const;
 
     bool operator==(const StyleProperties&) const;
     bool operator!=(const StyleProperties& other) const { return !(*this == other); }

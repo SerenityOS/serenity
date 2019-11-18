@@ -85,14 +85,14 @@ void HtmlView::layout_and_sync_size()
 
     main_frame().set_size(available_size());
     document()->layout();
-    set_content_size(layout_root()->size());
+    set_content_size(enclosing_int_rect(layout_root()->rect()).size());
 
     // NOTE: If layout caused us to gain or lose scrollbars, we have to lay out again
     //       since the scrollbars now take up some of the available space.
     if (had_vertical_scrollbar != vertical_scrollbar().is_visible() || had_horizontal_scrollbar != horizontal_scrollbar().is_visible()) {
         main_frame().set_size(available_size());
         document()->layout();
-        set_content_size(layout_root()->size());
+        set_content_size(enclosing_int_rect(layout_root()->rect()).size());
     }
 
 #ifdef HTML_DEBUG
@@ -360,7 +360,8 @@ void HtmlView::scroll_to_anchor(const StringView& name)
         return;
     }
     auto& layout_node = *element->layout_node();
-    scroll_into_view({ layout_node.box_type_agnostic_position(), visible_content_rect().size() }, true, true);
+    FloatRect float_rect { layout_node.box_type_agnostic_position(), { (float)visible_content_rect().width(), (float)visible_content_rect().height() } };
+    scroll_into_view(enclosing_int_rect(float_rect), true, true);
     window()->set_override_cursor(GStandardCursor::None);
 }
 

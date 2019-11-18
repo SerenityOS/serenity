@@ -101,10 +101,9 @@ void StyleProperties::load_font() const
     FontCache::the().set({ font_family, font_weight }, *m_font);
 }
 
-int StyleProperties::line_height() const
+float StyleProperties::line_height() const
 {
-    // FIXME: Allow overriding the line-height. We currently default to 140% which seems to look nice.
-    return (int)(font().glyph_height() * 1.4f);
+    return (float)font().glyph_height() * 1.4f;
 }
 
 bool StyleProperties::operator==(const StyleProperties& other) const

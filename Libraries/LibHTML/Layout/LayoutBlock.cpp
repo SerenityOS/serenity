@@ -41,7 +41,7 @@ void LayoutBlock::layout()
 void LayoutBlock::layout_block_children()
 {
     ASSERT(!children_are_inline());
-    int content_height = 0;
+    float content_height = 0;
     for_each_child([&](auto& child) {
         // FIXME: What should we do here? Something like a <table> might have a bunch of useless text children..
         if (child.is_inline())
@@ -66,8 +66,8 @@ void LayoutBlock::layout_inline_children()
         line_box.trim_trailing_whitespace();
     }
 
-    int min_line_height = style().line_height();
-    int content_height = 0;
+    float min_line_height = style().line_height();
+    float content_height = 0;
 
     // FIXME: This should be done by the CSS parser!
     CSS::ValueID text_align = CSS::ValueID::Left;
@@ -82,9 +82,9 @@ void LayoutBlock::layout_inline_children()
         text_align = CSS::ValueID::Justify;
 
     for (auto& line_box : m_line_boxes) {
-        int max_height = min_line_height;
+        float max_height = min_line_height;
         for (auto& fragment : line_box.fragments()) {
-            max_height = max(max_height, enclosing_int_rect(fragment.rect()).height());
+            max_height = max(max_height, fragment.rect().height());
         }
 
         float x_offset = x();
@@ -137,7 +137,7 @@ void LayoutBlock::layout_inline_children()
             }
 
             if (is<LayoutReplaced>(fragment.layout_node()))
-                const_cast<LayoutReplaced&>(to<LayoutReplaced>(fragment.layout_node())).set_rect(enclosing_int_rect(fragment.rect()));
+                const_cast<LayoutReplaced&>(to<LayoutReplaced>(fragment.layout_node())).set_rect(fragment.rect());
 
             float final_line_box_width = 0;
             for (auto& fragment : line_box.fragments())
@@ -178,7 +178,7 @@ void LayoutBlock::compute_width()
         padding_left = style.length_or_fallback(CSS::PropertyID::PaddingLeft, zero_value);
         padding_right = style.length_or_fallback(CSS::PropertyID::PaddingRight, zero_value);
 
-        int total_px = 0;
+        float total_px = 0;
         for (auto& value : { margin_left, border_left, padding_left, width, padding_right, border_right, margin_right }) {
             total_px += value.to_px();
         }
@@ -275,7 +275,7 @@ void LayoutBlock::compute_position()
     box_model().padding().bottom = style.length_or_fallback(CSS::PropertyID::PaddingBottom, zero_value);
     rect().set_x(containing_block()->x() + box_model().margin().left.to_px() + box_model().border().left.to_px() + box_model().padding().left.to_px());
 
-    int top_border = -1;
+    float top_border = -1;
     if (previous_sibling() != nullptr) {
         auto& previous_sibling_rect = previous_sibling()->rect();
         auto& previous_sibling_style = previous_sibling()->box_model();

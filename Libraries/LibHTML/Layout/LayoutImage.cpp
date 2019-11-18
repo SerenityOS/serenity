@@ -38,18 +38,18 @@ void LayoutImage::render(RenderingContext& context)
         return;
 
     // FIXME: This should be done at a different level. Also rect() does not include padding etc!
-    if (!context.viewport_rect().intersects(rect()))
+    if (!context.viewport_rect().intersects(enclosing_int_rect(rect())))
         return;
 
     if (renders_as_alt_text()) {
         context.painter().set_font(Font::default_font());
-        StylePainter::paint_frame(context.painter(), rect(), FrameShape::Container, FrameShadow::Sunken, 2);
+        StylePainter::paint_frame(context.painter(), enclosing_int_rect(rect()), FrameShape::Container, FrameShadow::Sunken, 2);
         auto alt = node().alt();
         if (alt.is_empty())
             alt = node().src();
-        context.painter().draw_text(rect(), alt, TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), TextElision::Right);
+        context.painter().draw_text(enclosing_int_rect(rect()), alt, TextAlignment::Center, style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black), TextElision::Right);
     } else {
-        context.painter().draw_scaled_bitmap(rect(), *node().bitmap(), node().bitmap()->rect());
+        context.painter().draw_scaled_bitmap(enclosing_int_rect(rect()), *node().bitmap(), node().bitmap()->rect());
     }
     LayoutReplaced::render(context);
 }

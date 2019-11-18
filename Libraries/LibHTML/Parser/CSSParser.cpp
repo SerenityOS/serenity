@@ -28,7 +28,7 @@ NonnullRefPtr<StyleValue> parse_css_value(const StringView& view)
     char* endptr = nullptr;
     long value = strtol(String(view).characters(), &endptr, 10);
     if (endptr && ((!*endptr) || (endptr[0] == 'p' && endptr[1] == 'x' && endptr[2] == '\0')))
-        return LengthStyleValue::create(Length(value, Length::Type::Absolute));
+        return LengthStyleValue::create(Length((float)value, Length::Type::Absolute));
     if (string == "inherit")
         return InheritStyleValue::create();
     if (string == "initial")
