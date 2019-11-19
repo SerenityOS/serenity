@@ -119,8 +119,8 @@ void dump_tree(const LayoutNode& layout_node)
                     for (int i = 0; i < indent; ++i)
                         dbgprintf("    ");
                     auto& layout_text = static_cast<const LayoutText&>(fragment.layout_node());
-                    dbgprintf("        text: \"%s\"\n",
-                        String(Utf8View(layout_text.node().data()).substring_view(fragment.start(), fragment.length()).as_string()).characters());
+                    auto fragment_text = layout_text.text_for_rendering().substring(fragment.start(), fragment.length());
+                    dbgprintf("        text: \"%s\"\n", fragment_text.characters());
                 }
             }
         }
