@@ -52,6 +52,10 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     if (is_underline)
         painter.draw_line(enclosing_int_rect(fragment.rect()).bottom_left().translated(0, -1), enclosing_int_rect(fragment.rect()).bottom_right().translated(0, -1), color);
 
+    auto background_color = style().property(CSS::PropertyID::BackgroundColor);
+    if (background_color.has_value() && background_color.value()->is_color())
+        painter.fill_rect(enclosing_int_rect(fragment.rect()), background_color.value()->to_color(document()));
+
     painter.draw_text(enclosing_int_rect(fragment.rect()), m_text_for_rendering.substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
 }
 
