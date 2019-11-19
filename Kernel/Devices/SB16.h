@@ -30,13 +30,11 @@ private:
     virtual const char* class_name() const override { return "SB16"; }
 
     void initialize();
-    void wait_for_irq();
     void dma_start(uint32_t length);
     void set_sample_rate(uint16_t hz);
     void dsp_write(u8 value);
     u8 dsp_read();
 
     RefPtr<PhysicalPage> m_dma_buffer_page;
-    bool m_interrupted { false };
     int m_major_version { 0 };
 };

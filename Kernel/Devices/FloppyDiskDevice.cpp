@@ -171,8 +171,9 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
 
         enable_irq();
 
-        wait_for_irq(); // TODO: See if there was a lockup here via some "timeout counter"
-        m_interrupted = false;
+        if (!wait_for_irq()) // TODO: See if there was a lockup here via some "timeout counter"
+            return false;
+        set_interrupted(false);
 
         // Flush FIFO
         // Let's check the value of Status Register 1 to ensure that
@@ -271,8 +272,9 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
 
         enable_irq();
 
-        wait_for_irq(); // TODO: See if there was a lockup here via some "timeout counter"
-        m_interrupted = false;
+        if (!wait_for_irq()) // TODO: See if there was a lockup here via some "timeout counter"
+            return false;
+        set_interrupted(false);
 
         // Flush FIFO
         u8 cmd_st0 = read_byte();
@@ -316,30 +318,6 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
     kprintf("fdc: out of read attempts (check your hardware maybe!?)\n");
 #endif
     return false;
-}
-
-bool FloppyDiskDevice::wait_for_irq()
-{
-#ifdef FLOPPY_DEBUG
-    kprintf("fdc: Waiting for interrupt...\n");
-#endif
-
-    while (!m_interrupted) {
-        Scheduler::yield();
-    }
-
-    memory_barrier();
-    return true;
-}
-
-void FloppyDiskDevice::handle_irq()
-{
-    // The only thing we need to do is acknowledge the IRQ happened
-    m_interrupted = true;
-
-#ifdef FLOPPY_DEBUG
-    kprintf("fdc: Received IRQ!\n");
-#endif
 }
 
 void FloppyDiskDevice::send_byte(u8 value) const
@@ -423,8 +401,9 @@ bool FloppyDiskDevice::recalibrate()
     for (int i = 0; i < 16; i++) {
         send_byte(FloppyCommand::Recalibrate);
         send_byte(slave);
-        wait_for_irq();
-        m_interrupted = false;
+        if (!wait_for_irq())
+            return false;
+        set_interrupted(false);
 
         send_byte(FloppyCommand::SenseInterrupt);
         u8 st0 = read_byte();
@@ -458,8 +437,9 @@ bool FloppyDiskDevice::seek(u16 lba)
         send_byte(FloppyCommand::Seek);
         send_byte((head << 2) | slave);
         send_byte(cylinder);
-        wait_for_irq();
-        m_interrupted = false;
+        if (!wait_for_irq())
+            return false;
+        set_interrupted(false);
 
         send_byte(FloppyCommand::SenseInterrupt);
         u8 st0 = read_byte();
@@ -498,8 +478,9 @@ void FloppyDiskDevice::initialize()
     write_dor(FLOPPY_DOR_RESET | FLOPPY_DOR_DMAGATE);
 
     write_ccr(0);
-    wait_for_irq();
-    m_interrupted = false;
+    if (!wait_for_irq())
+        return;
+    set_interrupted(false);
 
     // "If (and only if) drive polling mode is turned on, send 4 Sense Interrupt commands (required). "
     // Sorry OSDev, but the Intel Manual states otherwise. This ALWAYS needs to be performed.

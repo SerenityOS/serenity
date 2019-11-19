@@ -127,23 +127,14 @@ void SB16::dma_start(uint32_t length)
 
 void SB16::handle_irq()
 {
+    IRQHandler::handle_irq();
+
     // Stop sound output ready for the next block.
     dsp_write(0xd5);
 
     IO::in8(DSP_STATUS); // 8 bit interrupt
     if (m_major_version >= 4)
         IO::in8(DSP_R_ACK); // 16 bit interrupt
-
-    m_interrupted = true;
-}
-
-void SB16::wait_for_irq()
-{
-    // Well, we have no way of knowing how much got written. So just hope all of
-    // it did, even if we're interrupted.
-    (void)current->block_until("Interrupting", [this] {
-        return m_interrupted;
-    });
 }
 
 ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
@@ -183,8 +174,9 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     dsp_write((u8)sample_count);
     dsp_write((u8)(sample_count >> 8));
 
-    m_interrupted = false;
+    set_interrupted(false);
     enable_irq();
-    wait_for_irq();
+    if (!wait_for_irq())
+        return -EINTR;
     return length;
 }

@@ -203,6 +203,16 @@ public:
         pid_t& m_waitee_pid;
     };
 
+    class WaitForIRQBlocker final : public Blocker {
+    public:
+        explicit WaitForIRQBlocker(IRQHandler& handler);
+        virtual bool should_unblock(Thread&, time_t, long) override;
+        virtual const char* state_string() const override { return "Waiting for IRQ"; }
+
+    private:
+        IRQHandler& m_irq_handler;
+    };
+
     class SemiPermanentBlocker final : public Blocker {
     public:
         enum class Reason {
@@ -294,6 +304,7 @@ public:
     // Tell this thread to unblock if needed,
     // gracefully unwind the stack and die.
     void set_should_die();
+    bool should_die() { return m_should_die; }
     void die_if_needed();
 
     const FarPtr& far_ptr() const { return m_far_ptr; }

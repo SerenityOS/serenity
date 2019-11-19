@@ -5,6 +5,7 @@
 #include <Kernel/Process.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/IRQHandler.h>
 
 SchedulerData* g_scheduler_data;
 
@@ -232,6 +233,15 @@ bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
         return IterationDecision::Break;
     });
     return should_unblock;
+}
+
+Thread::WaitForIRQBlocker::WaitForIRQBlocker(IRQHandler& handler)
+    : m_irq_handler(handler)
+{}
+
+bool Thread::WaitForIRQBlocker::should_unblock(Thread&, time_t, long)
+{
+    return m_irq_handler.was_interrupted();
 }
 
 Thread::SemiPermanentBlocker::SemiPermanentBlocker(Reason reason)

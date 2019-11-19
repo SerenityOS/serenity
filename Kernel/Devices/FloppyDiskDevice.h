@@ -151,9 +151,6 @@ protected:
     explicit FloppyDiskDevice(DriveType);
 
 private:
-    // ^IRQHandler
-    void handle_irq();
-
     // ^DiskDevice
     virtual const char* class_name() const override;
 
@@ -165,7 +162,6 @@ private:
     void initialize();
     bool read_sectors_with_dma(u16, u16, u8*);
     bool write_sectors_with_dma(u16, u16, const u8*);
-    bool wait_for_irq();
 
     bool is_busy() const;
     bool seek(u16);
@@ -186,7 +182,6 @@ private:
 
     Lock m_lock { "FloppyDiskDevice" };
     u16 m_io_base_addr { 0 };
-    volatile bool m_interrupted { false };
 
     DriveType m_drive_type { DriveType::Master };
     RefPtr<PhysicalPage> m_dma_buffer_page;

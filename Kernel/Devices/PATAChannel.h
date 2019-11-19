@@ -49,7 +49,6 @@ private:
     void initialize(bool force_pio);
     void detect_disks();
 
-    bool wait_for_irq();
     bool ata_read_sectors_with_dma(u32, u16, u8*, bool);
     bool ata_write_sectors_with_dma(u32, u16, const u8*, bool);
     bool ata_read_sectors(u32, u16, u8*, bool);
@@ -60,7 +59,6 @@ private:
     u16 m_io_base { 0x1F0 };
     u16 m_control_base { 0 };
     volatile u8 m_device_error { 0 };
-    volatile bool m_interrupted { false };
 
     PCI::Address m_pci_address;
     PhysicalRegionDescriptor m_prdt;
