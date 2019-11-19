@@ -261,6 +261,10 @@
     "inherited": false,
     "initial": "0"
   },
+  "position": {
+    "inherited": false,
+    "initial": "static"
+  },
   "right": {
     "inherited": false,
     "initial": "auto"
