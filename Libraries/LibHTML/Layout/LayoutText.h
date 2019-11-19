@@ -13,6 +13,7 @@ public:
     const Text& node() const { return static_cast<const Text&>(*LayoutNode::node()); }
 
     const String& text_for_style(const StyleProperties&) const;
+    const String& text_for_rendering() const { return m_text_for_rendering; }
 
     virtual const char* class_name() const override { return "LayoutText"; }
     virtual bool is_text() const final { return true; }
