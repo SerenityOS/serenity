@@ -13,7 +13,7 @@ DEFINES += -DUSERLAND
 
 all: $(APP)
 
-main.cpp: AudioServerEndpoint.h
+*.cpp: AudioServerEndpoint.h
 
 AudioServerEndpoint.h: AudioServer.ipc
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
