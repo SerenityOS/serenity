@@ -9,6 +9,7 @@ public:
     struct Component {
         enum class Type {
             Invalid,
+            Universal,
             TagName,
             Id,
             Class,
