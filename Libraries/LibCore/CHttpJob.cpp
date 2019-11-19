@@ -1,10 +1,10 @@
+#include <LibCore/CGzip.h>
 #include <LibCore/CHttpJob.h>
 #include <LibCore/CHttpResponse.h>
 #include <LibCore/CTCPSocket.h>
 #include <stdio.h>
 #include <unistd.h>
 
-#include <CGzip.h>
 
 #define CHTTPJOB_DEBUG
 
