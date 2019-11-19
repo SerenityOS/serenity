@@ -329,6 +329,8 @@ public:
             consume_one();
             return {};
         }
+        if (peek() == '}')
+            return {};
         buffer.clear();
         while (is_valid_property_name_char(peek()))
             buffer.append(consume_one());
