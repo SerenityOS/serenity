@@ -25,7 +25,7 @@ StringView LineBoxFragment::text() const
 {
     if (!is<LayoutText>(layout_node()))
         return {};
-    return to<LayoutText>(layout_node()).node().data().substring_view(m_start, m_length);
+    return to<LayoutText>(layout_node()).text_for_rendering().substring_view(m_start, m_length);
 }
 
 int LineBoxFragment::text_index_at(float x) const
