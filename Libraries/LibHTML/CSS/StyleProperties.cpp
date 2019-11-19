@@ -89,7 +89,11 @@ void StyleProperties::load_font() const
 
     if (file_name.is_null()) {
         dbg() << "Failed to find a font for family " << font_family << " weight " << font_weight;
-        m_font = Font::default_font();
+
+        if (font_weight == "bold")
+            m_font = Font::default_bold_font();
+        else
+            m_font = Font::default_font();
         return;
     }
 
