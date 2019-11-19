@@ -134,7 +134,7 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
         return KSuccess;
     }
 
-    if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal) {
+    if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::Interrupted) {
         m_connect_side_role = Role::None;
         return KResult(-EINTR);
     }
@@ -251,7 +251,7 @@ ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t
         }
     } else if (!can_read(description)) {
         auto result = current->block<Thread::ReceiveBlocker>(description);
-        if (result == Thread::BlockResult::InterruptedBySignal)
+        if (result == Thread::BlockResult::Interrupted)
             return -EINTR;
     }
     if (!has_attached_peer(description) && buffer_for_me.is_empty())

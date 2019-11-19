@@ -1098,7 +1098,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 #ifdef IO_DEBUG
             dbgprintf("block write on %d\n", fd);
 #endif
-            if (current->block<Thread::WriteBlocker>(description) == Thread::BlockResult::InterruptedBySignal) {
+            if (current->block<Thread::WriteBlocker>(description) == Thread::BlockResult::Interrupted) {
                 if (nwritten == 0)
                     return -EINTR;
             }
@@ -1155,7 +1155,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
         return -EISDIR;
     if (description->is_blocking()) {
         if (!description->can_read()) {
-            if (current->block<Thread::ReadBlocker>(*description) == Thread::BlockResult::InterruptedBySignal)
+            if (current->block<Thread::ReadBlocker>(*description) == Thread::BlockResult::Interrupted)
                 return -EINTR;
         }
     }
@@ -1727,7 +1727,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     }
 
     pid_t waitee_pid = waitee;
-    if (current->block<Thread::WaitBlocker>(options, waitee_pid) == Thread::BlockResult::InterruptedBySignal)
+    if (current->block<Thread::WaitBlocker>(options, waitee_pid) == Thread::BlockResult::Interrupted)
         return -EINTR;
 
     InterruptDisabler disabler;
@@ -2146,7 +2146,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
 #endif
 
     if (!timeout || select_has_timeout) {
-        if (current->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds) == Thread::BlockResult::InterruptedBySignal)
+        if (current->block<Thread::SelectBlocker>(computed_timeout, select_has_timeout, rfds, wfds, efds) == Thread::BlockResult::Interrupted)
             return -EINTR;
     }
 
@@ -2204,7 +2204,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
 #endif
 
     if (has_timeout || timeout < 0) {
-        if (current->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()) == Thread::BlockResult::InterruptedBySignal)
+        if (current->block<Thread::SelectBlocker>(actual_timeout, has_timeout, rfds, wfds, Thread::SelectBlocker::FDVector()) == Thread::BlockResult::Interrupted)
             return -EINTR;
     }
 
@@ -2448,7 +2448,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     auto& socket = *accepting_socket_description->socket();
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
-            if (current->block<Thread::AcceptBlocker>(*accepting_socket_description) == Thread::BlockResult::InterruptedBySignal)
+            if (current->block<Thread::AcceptBlocker>(*accepting_socket_description) == Thread::BlockResult::Interrupted)
                 return -EINTR;
         } else {
             return -EAGAIN;

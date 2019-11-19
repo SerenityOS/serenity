@@ -90,8 +90,8 @@ public:
         virtual ~Blocker() {}
         virtual bool should_unblock(Thread&, time_t now_s, long us) = 0;
         virtual const char* state_string() const = 0;
-        void set_interrupted_by_signal() { m_was_interrupted_while_blocked = true; }
-        bool was_interrupted_by_signal() const { return m_was_interrupted_while_blocked; }
+        void set_interrupted() { m_was_interrupted_while_blocked = true; }
+        bool was_interrupted() const { return m_was_interrupted_while_blocked; }
 
     private:
         bool m_was_interrupted_while_blocked { false };
@@ -253,7 +253,7 @@ public:
 
     enum class BlockResult {
         WokeNormally,
-        InterruptedBySignal,
+        Interrupted,
     };
 
     template<typename T, class... Args>
@@ -278,8 +278,8 @@ public:
         // Remove ourselves...
         m_blocker = nullptr;
 
-        if (t.was_interrupted_by_signal())
-            return BlockResult::InterruptedBySignal;
+        if (t.was_interrupted())
+            return BlockResult::Interrupted;
 
         return BlockResult::WokeNormally;
     };

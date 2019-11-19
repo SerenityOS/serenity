@@ -144,10 +144,9 @@ void Thread::set_should_die()
     if (is_blocked()) {
         ASSERT(in_kernel());
         ASSERT(m_blocker != nullptr);
-        // We're blocked in the kernel. Pretend to have
-        // been interrupted by a signal (perhaps that is
-        // what has actually killed us).
-        m_blocker->set_interrupted_by_signal();
+        // We're blocked in the kernel. Interrupt the block
+        // and begin unwinding.
+        m_blocker->set_interrupted();
         unblock();
     } else if (!in_kernel()) {
         // We're executing in userspace (and we're clearly
@@ -185,7 +184,7 @@ u64 Thread::sleep(u32 ticks)
     u64 wakeup_time = g_uptime + ticks;
     auto ret = current->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime) {
-        ASSERT(ret == Thread::BlockResult::InterruptedBySignal);
+        ASSERT(ret == Thread::BlockResult::Interrupted);
     }
     return wakeup_time;
 }
@@ -195,7 +194,7 @@ u64 Thread::sleep_until(u64 wakeup_time)
     ASSERT(state() == Thread::Running);
     auto ret = current->block<Thread::SleepBlocker>(wakeup_time);
     if (wakeup_time > g_uptime)
-        ASSERT(ret == Thread::BlockResult::InterruptedBySignal);
+        ASSERT(ret == Thread::BlockResult::Interrupted);
     return wakeup_time;
 }
 

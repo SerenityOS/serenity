@@ -250,7 +250,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
 
         LOCKER(lock());
         if (!m_can_read) {
-            if (res == Thread::BlockResult::InterruptedBySignal)
+            if (res == Thread::BlockResult::Interrupted)
                 return -EINTR;
 
             // Unblocked due to timeout.
