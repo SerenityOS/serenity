@@ -56,8 +56,7 @@ int main(int argc, char** argv)
         dbg() << "        return \"" << name << "\";";
     });
     dbg() << "    default:";
-    dbg() << "        ASSERT_NOT_REACHED();";
-    dbg() << "        return nullptr;";
+    dbg() << "        return \"(invalid CSS::PropertyID)\";";
     dbg() << "    }";
     dbg() << "}";
     dbg() << "}";
