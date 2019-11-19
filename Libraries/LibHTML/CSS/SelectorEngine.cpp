@@ -30,6 +30,8 @@ bool matches(const Selector::Component& component, const Element& element)
     }
 
     switch (component.type) {
+    case Selector::Component::Type::Universal:
+        return true;
     case Selector::Component::Type::Id:
         return component.value == element.attribute("id");
     case Selector::Component::Type::Class:

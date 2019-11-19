@@ -224,6 +224,12 @@ public:
             consume_whitespace_or_comments();
         }
 
+        if (peek() == '*') {
+            type = Selector::Component::Type::Universal;
+            consume_one();
+            return Selector::Component { type, Selector::Component::PseudoClass::None, relation, String() };
+        }
+
         if (peek() == '.') {
             type = Selector::Component::Type::Class;
             consume_one();

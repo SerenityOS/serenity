@@ -150,6 +150,9 @@ void dump_rule(const StyleRule& rule)
             case Selector::Component::Type::Invalid:
                 type_description = "Invalid";
                 break;
+            case Selector::Component::Type::Universal:
+                type_description = "Universal";
+                break;
             case Selector::Component::Type::Id:
                 type_description = "Id";
                 break;
