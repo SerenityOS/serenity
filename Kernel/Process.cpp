@@ -1072,13 +1072,6 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
         nwritten += rc;
     }
 
-    if (current->has_unmasked_pending_signals()) {
-        if (current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal) == Thread::BlockResult::InterruptedBySignal) {
-            if (nwritten == 0)
-                return -EINTR;
-        }
-    }
-
     return nwritten;
 }
 
@@ -1121,12 +1114,6 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
         }
         if (rc == 0)
             break;
-        if (current->has_unmasked_pending_signals()) {
-            if (current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal) == Thread::BlockResult::InterruptedBySignal) {
-                if (nwritten == 0)
-                    return -EINTR;
-            }
-        }
         nwritten += rc;
     }
     return nwritten;
@@ -1146,14 +1133,8 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
-    auto nwritten = do_write(*description, data, size);
-    if (current->has_unmasked_pending_signals()) {
-        if (current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal) == Thread::BlockResult::InterruptedBySignal) {
-            if (nwritten == 0)
-                return -EINTR;
-        }
-    }
-    return nwritten;
+
+    return do_write(*description, data, size);
 }
 
 ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
