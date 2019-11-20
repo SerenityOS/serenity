@@ -67,8 +67,11 @@ int main(int argc, char** argv)
 
     String filename = argv[1];
     int ret_val = read_map_from_file(filename);
+<<<<<<< HEAD
     if(ret_val == -EPERM)
         fprintf(stderr, "Permission denied.\n");
+=======
+>>>>>>> 4b38f563e11a59d8a259570b442fae61f3a75881
     if(ret_val == 0)
         fprintf(stderr, "New keymap loaded from \"%s\".\n", filename.characters());
 
