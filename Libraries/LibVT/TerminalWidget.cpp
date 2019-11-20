@@ -498,9 +498,6 @@ void TerminalWidget::doubleclick_event(GMouseEvent& event)
 
         m_selection_start = { position.row(), start_column };
         m_selection_end = { position.row(), end_column };
-
-        if (has_selection())
-            GClipboard::the().set_data(selected_text());
     }
     GFrame::doubleclick_event(event);
 }
@@ -552,15 +549,6 @@ void TerminalWidget::mousemove_event(GMouseEvent& event)
     m_selection_end = buffer_position_at(event.position());
     if (old_selection_end != m_selection_end)
         update();
-}
-
-void TerminalWidget::mouseup_event(GMouseEvent& event)
-{
-    if (event.button() != GMouseButton::Left)
-        return;
-    if (!has_selection())
-        return;
-    GClipboard::the().set_data(selected_text());
 }
 
 void TerminalWidget::mousewheel_event(GMouseEvent& event)

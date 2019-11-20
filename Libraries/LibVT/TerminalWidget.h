@@ -67,7 +67,6 @@ private:
     virtual void keydown_event(GKeyEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
-    virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousewheel_event(GMouseEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void focusin_event(CEvent&) override;
