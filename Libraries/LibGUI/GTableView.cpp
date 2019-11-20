@@ -151,7 +151,8 @@ void GTableView::mousedown_event(GMouseEvent& event)
         return;
 
     if (event.y() < header_height()) {
-        for (int i = 0; i < model()->column_count(); ++i) {
+        int column_count = model()->column_count();
+        for (int i = 0; i < column_count; ++i) {
             if (column_resize_grabbable_rect(i).contains(event.position())) {
                 m_resizing_column = i;
                 m_in_column_resize = true;
@@ -162,12 +163,9 @@ void GTableView::mousedown_event(GMouseEvent& event)
             auto header_rect = this->header_rect(i);
             auto column_metadata = model()->column_metadata(i);
             if (header_rect.contains(event.position()) && column_metadata.sortable == GModel::ColumnMetadata::Sortable::True) {
-                auto new_sort_order = GSortOrder::Ascending;
-                if (model()->key_column() == i)
-                    new_sort_order = model()->sort_order() == GSortOrder::Ascending
-                        ? GSortOrder::Descending
-                        : GSortOrder::Ascending;
-                model()->set_key_column_and_sort_order(i, new_sort_order);
+                m_pressed_column_header_index = i;
+                m_pressed_column_header_is_pressed = true;
+                update_headers();
                 return;
             }
         }
@@ -223,6 +221,20 @@ void GTableView::mousemove_event(GMouseEvent& event)
         return;
     }
 
+    if (m_pressed_column_header_index != -1) {
+        auto header_rect = this->header_rect(m_pressed_column_header_index);
+        if (header_rect.contains(event.position())) {
+            if (!m_pressed_column_header_is_pressed)
+                update_headers();
+            m_pressed_column_header_is_pressed = true;
+        } else {
+            if (m_pressed_column_header_is_pressed)
+                update_headers();
+            m_pressed_column_header_is_pressed = false;
+        }
+        return;
+    }
+
     if (event.buttons() == 0) {
         for (int i = 0; i < model()->column_count(); ++i) {
             if (column_resize_grabbable_rect(i).contains(event.position())) {
@@ -242,6 +254,20 @@ void GTableView::mouseup_event(GMouseEvent& event)
             if (!column_resize_grabbable_rect(m_resizing_column).contains(adjusted_position))
                 window()->set_override_cursor(GStandardCursor::None);
             m_in_column_resize = false;
+        }
+        if (m_pressed_column_header_index != -1) {
+            auto header_rect = this->header_rect(m_pressed_column_header_index);
+            if (header_rect.contains(event.position())) {
+                auto new_sort_order = GSortOrder::Ascending;
+                if (model()->key_column() == m_pressed_column_header_index)
+                    new_sort_order = model()->sort_order() == GSortOrder::Ascending
+                        ? GSortOrder::Descending
+                        : GSortOrder::Ascending;
+                model()->set_key_column_and_sort_order(m_pressed_column_header_index, new_sort_order);
+            }
+            m_pressed_column_header_index = -1;
+            m_pressed_column_header_is_pressed = false;
+            update_headers();
         }
     }
 }
@@ -347,13 +373,15 @@ void GTableView::paint_headers(Painter& painter)
     painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
     painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::MidGray);
     int x_offset = 0;
-    for (int column_index = 0; column_index < model()->column_count(); ++column_index) {
+    int column_count = model()->column_count();
+    for (int column_index = 0; column_index < column_count; ++column_index) {
         if (is_column_hidden(column_index))
             continue;
         int column_width = this->column_width(column_index);
         bool is_key_column = model()->key_column() == column_index;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
-        StylePainter::paint_button(painter, cell_rect, ButtonStyle::Normal, false);
+        bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
+        StylePainter::paint_button(painter, cell_rect, ButtonStyle::Normal, pressed);
         String text;
         if (is_key_column) {
             StringBuilder builder;
@@ -368,6 +396,8 @@ void GTableView::paint_headers(Painter& painter)
             text = model()->column_name(column_index);
         }
         auto text_rect = cell_rect.translated(horizontal_padding(), 0);
+        if (pressed)
+            text_rect.move_by(1, 1);
         painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, Color::Black);
         x_offset += column_width + horizontal_padding() * 2;
     }
@@ -550,4 +580,11 @@ const Font& GTableView::header_font()
 void GTableView::set_cell_painting_delegate(int column, OwnPtr<GTableCellPaintingDelegate>&& delegate)
 {
     column_data(column).cell_painting_delegate = move(delegate);
+}
+
+void GTableView::update_headers()
+{
+    Rect rect { 0, 0, frame_inner_rect().width(), header_height() };
+    rect.move_by(frame_thickness(), frame_thickness());
+    update(rect);
 }

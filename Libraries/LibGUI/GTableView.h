@@ -72,6 +72,7 @@ protected:
     void update_content_size();
     void update_column_sizes();
     static const Font& header_font();
+    void update_headers();
 
     struct ColumnData {
         int width { 0 };
@@ -91,6 +92,8 @@ protected:
     Point m_column_resize_origin;
     int m_column_resize_original_width { 0 };
     int m_resizing_column { -1 };
+    int m_pressed_column_header_index { -1 };
+    bool m_pressed_column_header_is_pressed { false };
 
     GMenu& ensure_header_context_menu();
     OwnPtr<GMenu> m_header_context_menu;
