@@ -397,7 +397,7 @@ void GTableView::paint_headers(Painter& painter)
         bool is_key_column = model()->key_column() == column_index;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
-        bool hovered = column_index == m_hovered_column_header_index;
+        bool hovered = column_index == m_hovered_column_header_index && model()->column_metadata(column_index).sortable == GModel::ColumnMetadata::Sortable::True;
         StylePainter::paint_button(painter, cell_rect, ButtonStyle::Normal, pressed, hovered);
         String text;
         if (is_key_column) {
