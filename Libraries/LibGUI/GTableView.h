@@ -73,6 +73,7 @@ protected:
     void update_column_sizes();
     static const Font& header_font();
     void update_headers();
+    void set_hovered_header_index(int);
 
     struct ColumnData {
         int width { 0 };
@@ -94,6 +95,7 @@ protected:
     int m_resizing_column { -1 };
     int m_pressed_column_header_index { -1 };
     bool m_pressed_column_header_is_pressed { false };
+    int m_hovered_column_header_index { -1 };
 
     GMenu& ensure_header_context_menu();
     OwnPtr<GMenu> m_header_context_menu;
