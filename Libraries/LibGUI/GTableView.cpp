@@ -9,6 +9,8 @@
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GWindow.h>
 
+static const int minimum_column_width = 2;
+
 GTableView::GTableView(GWidget* parent)
     : GAbstractView(parent)
 {
@@ -217,6 +219,8 @@ void GTableView::mousemove_event(GMouseEvent& event)
     if (m_in_column_resize) {
         auto delta = event.position() - m_column_resize_origin;
         int new_width = m_column_resize_original_width + delta.x();
+        if (new_width <= minimum_column_width)
+            new_width = minimum_column_width;
         ASSERT(m_resizing_column >= 0 && m_resizing_column < model()->column_count());
         auto& column_data = this->column_data(m_resizing_column);
         if (column_data.width != new_width) {
