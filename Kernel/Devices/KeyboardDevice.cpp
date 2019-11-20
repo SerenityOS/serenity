@@ -370,9 +370,7 @@ KeyboardDevice::KeyboardDevice()
 {
     s_the = this;
 
-    map = en_map;
-    shift_map = en_shift_map;
-    alt_map = en_map;
+    KeyboardDevice::set_maps(en_map, en_shift_map, en_map);
 
     // Empty the buffer of any pending data.
     // I don't care what you've been pressing until now!
@@ -418,6 +416,10 @@ KeyboardClient::~KeyboardClient()
 
 void KeyboardDevice::set_maps(char* n_map, char* n_shift_map, char* n_alt_map)
 {
+    kfree(map);
+    kfree(shift_map);
+    kfree(alt_map);
+
     map = (char*) kmalloc(0x80);
     shift_map = (char*) kmalloc(0x80);
     alt_map = (char*) kmalloc(0x80);

@@ -3267,9 +3267,19 @@ int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags 
     return 0;
 }
 
-int Process::sys$setkeymap(char* n_map, char* n_shift_map, char* n_alt_map)
+int Process::sys$setkeymap(char* map, char* shift_map, char* alt_map)
 {
-    KeyboardDevice::the().set_maps(n_map, n_shift_map, n_alt_map);
+    if (!is_superuser())
+        return -EPERM;
+
+    if (!validate_read(map, 0x80))
+        return -EFAULT;
+    if (!validate_read(shift_map, 0x80))
+        return -EFAULT;
+    if (!validate_read(alt_map, 0x80))
+        return -EFAULT;
+
+    KeyboardDevice::the().set_maps(map, shift_map, alt_map);
     return 0;
 }
 
