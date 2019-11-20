@@ -4,6 +4,7 @@
 #include <LibCore/CNotifier.h>
 #include <LibGUI/GModel.h>
 #include <sys/stat.h>
+#include <time.h>
 
 class GDirectoryModel final : public GModel
     , public Weakable<GDirectoryModel> {
@@ -56,6 +57,20 @@ public:
         if (index < m_directories.size())
             return m_directories[index];
         return m_files[index - m_directories.size()];
+    }
+
+    GIcon icon_for_file(const mode_t mode, const String name) const;
+
+    static String timestamp_string(time_t timestamp)
+    {
+        auto* tm = localtime(&timestamp);
+        return String::format("%4u-%02u-%02u %02u:%02u:%02u",
+            tm->tm_year + 1900,
+            tm->tm_mon + 1,
+            tm->tm_mday,
+            tm->tm_hour,
+            tm->tm_min,
+            tm->tm_sec);
     }
 
 private:

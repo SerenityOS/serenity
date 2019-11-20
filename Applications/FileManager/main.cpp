@@ -1,5 +1,6 @@
 #include "DirectoryView.h"
 #include "FileUtils.h"
+#include "PropertiesDialog.h"
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CConfigFile.h>
@@ -45,13 +46,13 @@ int main(int argc, char** argv)
 
     auto window = GWindow::construct();
     window->set_title("File Manager");
-    
+
     auto left = config->read_num_entry("Window", "Left", 150);
     auto top = config->read_num_entry("Window", "Top", 75);
     auto width = config->read_num_entry("Window", "Width", 640);
     auto heigth = config->read_num_entry("Window", "Heigth", 480);
-    window->set_rect( {left, top, width, heigth} );
-    
+    window->set_rect({ left, top, width, heigth });
+
     auto widget = GWidget::construct();
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
@@ -154,7 +155,7 @@ int main(int argc, char** argv)
     view_type_action_group->set_exclusive(true);
     view_type_action_group->add_action(*view_as_table_action);
     view_type_action_group->add_action(*view_as_icons_action);
-    
+
     auto selected_file_paths = [&] {
         Vector<String> paths;
         auto& view = directory_view->current_view();
@@ -211,9 +212,22 @@ int main(int argc, char** argv)
     };
 
     auto properties_action
-        = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [](auto&) {});
+        = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [&](auto&) {
+              auto& model = directory_view->model();
+              auto selected = selected_file_paths();
 
-    enum class ConfirmBeforeDelete { No, Yes };
+              RefPtr<PropertiesDialog> properties;
+              if (selected.is_empty()) {
+                  properties = PropertiesDialog::construct(model, directory_view->path(), true, window);
+              } else {
+                  properties = PropertiesDialog::construct(model, selected.first(), false, window);
+              }
+
+              properties->exec();
+          });
+
+    enum class ConfirmBeforeDelete { No,
+        Yes };
 
     auto do_delete = [&](ConfirmBeforeDelete confirm) {
         auto paths = selected_file_paths();
@@ -423,6 +437,6 @@ int main(int argc, char** argv)
 
         return GWindow::CloseRequestDecision::Close;
     };
-    
+
     return app.exec();
 }

@@ -9,7 +9,6 @@
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
-#include <time.h>
 #include <unistd.h>
 
 static HashMap<String, RefPtr<GraphicsBitmap>> s_thumbnail_cache;
@@ -154,20 +153,28 @@ bool GDirectoryModel::fetch_thumbnail_for(const Entry& entry)
     return false;
 }
 
+GIcon GDirectoryModel::icon_for_file(const mode_t mode, const String name) const
+{
+    if (S_ISDIR(mode))
+        return m_directory_icon;
+    if (S_ISLNK(mode))
+        return m_symlink_icon;
+    if (S_ISSOCK(mode))
+        return m_socket_icon;
+    if (mode & S_IXUSR)
+        return m_executable_icon;
+    if (name.to_lowercase().ends_with(".wav"))
+        return m_filetype_sound_icon;
+    if (name.to_lowercase().ends_with(".html"))
+        return m_filetype_html_icon;
+    if (name.to_lowercase().ends_with(".png")) {
+        return m_filetype_image_icon;
+    }
+    return m_file_icon;
+}
+
 GIcon GDirectoryModel::icon_for(const Entry& entry) const
 {
-    if (S_ISDIR(entry.mode))
-        return m_directory_icon;
-    if (S_ISLNK(entry.mode))
-        return m_symlink_icon;
-    if (S_ISSOCK(entry.mode))
-        return m_socket_icon;
-    if (entry.mode & S_IXUSR)
-        return m_executable_icon;
-    if (entry.name.to_lowercase().ends_with(".wav"))
-        return m_filetype_sound_icon;
-    if (entry.name.to_lowercase().ends_with(".html"))
-        return m_filetype_html_icon;
     if (entry.name.to_lowercase().ends_with(".png")) {
         if (!entry.thumbnail) {
             if (!const_cast<GDirectoryModel*>(this)->fetch_thumbnail_for(entry))
@@ -175,19 +182,8 @@ GIcon GDirectoryModel::icon_for(const Entry& entry) const
         }
         return GIcon(m_filetype_image_icon.bitmap_for_size(16), *entry.thumbnail);
     }
-    return m_file_icon;
-}
 
-static String timestamp_string(time_t timestamp)
-{
-    auto* tm = localtime(&timestamp);
-    return String::format("%4u-%02u-%02u %02u:%02u:%02u",
-        tm->tm_year + 1900,
-        tm->tm_mon + 1,
-        tm->tm_mday,
-        tm->tm_hour,
-        tm->tm_min,
-        tm->tm_sec);
+    return icon_for_file(entry.mode, entry.name);
 }
 
 static String permission_string(mode_t mode)
