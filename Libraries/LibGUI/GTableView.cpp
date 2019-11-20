@@ -201,6 +201,13 @@ GModelIndex GTableView::index_at_event_position(const Point& position) const
     }
     return {};
 }
+void GTableView::set_hovered_header_index(int index)
+{
+    if (m_hovered_column_header_index == index)
+        return;
+    m_hovered_column_header_index = index;
+    update_headers();
+}
 
 void GTableView::mousemove_event(GMouseEvent& event)
 {
@@ -236,12 +243,21 @@ void GTableView::mousemove_event(GMouseEvent& event)
     }
 
     if (event.buttons() == 0) {
-        for (int i = 0; i < model()->column_count(); ++i) {
+        int column_count = model()->column_count();
+        bool found_hovered_header = false;
+        for (int i = 0; i < column_count; ++i) {
             if (column_resize_grabbable_rect(i).contains(event.position())) {
                 window()->set_override_cursor(GStandardCursor::ResizeHorizontal);
+                set_hovered_header_index(-1);
                 return;
             }
+            if (header_rect(i).contains(event.position())) {
+                set_hovered_header_index(i);
+                found_hovered_header = true;
+            }
         }
+        if (!found_hovered_header)
+            set_hovered_header_index(-1);
     }
     window()->set_override_cursor(GStandardCursor::None);
 }
@@ -381,7 +397,8 @@ void GTableView::paint_headers(Painter& painter)
         bool is_key_column = model()->key_column() == column_index;
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
-        StylePainter::paint_button(painter, cell_rect, ButtonStyle::Normal, pressed);
+        bool hovered = column_index == m_hovered_column_header_index;
+        StylePainter::paint_button(painter, cell_rect, ButtonStyle::Normal, pressed, hovered);
         String text;
         if (is_key_column) {
             StringBuilder builder;
@@ -570,6 +587,7 @@ void GTableView::context_menu_event(GContextMenuEvent& event)
 void GTableView::leave_event(CEvent&)
 {
     window()->set_override_cursor(GStandardCursor::None);
+    set_hovered_header_index(-1);
 }
 
 const Font& GTableView::header_font()
