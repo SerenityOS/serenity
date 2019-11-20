@@ -48,6 +48,12 @@ public:
 
     bool is_scrollable() const;
 
+    GAction& copy_action() { return *m_copy_action; }
+    GAction& paste_action() { return *m_paste_action; }
+
+    void copy();
+    void paste();
+
     virtual bool accepts_focus() const override { return true; }
 
     Function<void(const StringView&)> on_title_change;
@@ -118,6 +124,9 @@ private:
     RefPtr<CConfigFile> m_config;
 
     RefPtr<GScrollBar> m_scrollbar;
+
+    RefPtr<GAction> m_copy_action;
+    RefPtr<GAction> m_paste_action;
 
     CElapsedTimer m_triple_click_timer;
 };
