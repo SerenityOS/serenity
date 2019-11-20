@@ -513,7 +513,7 @@ void TerminalWidget::mousedown_event(GMouseEvent& event)
             m_selection_end = {};
         }
         update();
-    } else if (event.button() == GMouseButton::Right) {
+    } else if (event.button() == GMouseButton::Middle) {
         if (m_ptm_fd == -1)
             return;
         auto text = GClipboard::the().data();
