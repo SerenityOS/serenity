@@ -185,6 +185,12 @@ int main(int argc, char** argv)
     auto menubar = make<GMenuBar>();
 
     auto app_menu = make<GMenu>("Terminal");
+    app_menu->add_action(GAction::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
+        if (!fork()) {
+            execl("/bin/Terminal", "Terminal", nullptr);
+            exit(1);
+        }
+    }));
     app_menu->add_action(GAction::create("Settings...", load_png("/res/icons/gear16.png"),
         [&](const GAction&) {
             if (!settings_window) {
