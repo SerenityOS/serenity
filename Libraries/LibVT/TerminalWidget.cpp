@@ -8,6 +8,7 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>
+#include <LibGUI/GMenu.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GWindow.h>
@@ -653,4 +654,14 @@ void TerminalWidget::beep()
         force_repaint();
     };
     force_repaint();
+}
+
+void TerminalWidget::context_menu_event(GContextMenuEvent& event)
+{
+    if (!m_context_menu) {
+        m_context_menu = make<GMenu>();
+        m_context_menu->add_action(copy_action());
+        m_context_menu->add_action(paste_action());
+    }
+    m_context_menu->popup(event.screen_position());
 }

@@ -72,6 +72,7 @@ private:
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void focusin_event(CEvent&) override;
     virtual void focusout_event(CEvent&) override;
+    virtual void context_menu_event(GContextMenuEvent&) override;
 
     // ^TerminalClient
     virtual void beep() override;
@@ -127,6 +128,8 @@ private:
 
     RefPtr<GAction> m_copy_action;
     RefPtr<GAction> m_paste_action;
+
+    OwnPtr<GMenu> m_context_menu;
 
     CElapsedTimer m_triple_click_timer;
 };
