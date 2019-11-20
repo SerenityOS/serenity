@@ -210,6 +210,11 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(app_menu));
 
+    auto edit_menu = make<GMenu>("Edit");
+    edit_menu->add_action(terminal->copy_action());
+    edit_menu->add_action(terminal->paste_action());
+    menubar->add_menu(move(edit_menu));
+
     auto font_menu = make<GMenu>("Font");
     GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
         font_menu->add_action(GAction::create(font_name, [&](const GAction& action) {

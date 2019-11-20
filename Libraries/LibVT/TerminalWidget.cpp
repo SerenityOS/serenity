@@ -5,6 +5,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
 #include <LibDraw/Font.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GPainter.h>
@@ -90,6 +91,14 @@ TerminalWidget::TerminalWidget(int ptm_fd, bool automatic_size_policy, RefPtr<CC
     m_line_height = font().glyph_height() + m_line_spacing;
 
     m_terminal.set_size(m_config->read_num_entry("Window", "Width", 80), m_config->read_num_entry("Window", "Height", 25));
+
+    m_copy_action = GAction::create("Copy", { Mod_Ctrl | Mod_Shift, Key_C }, GraphicsBitmap::load_from_file("/res/icons/16x16/edit-copy.png"), [this](auto&) {
+        copy();
+    });
+
+    m_paste_action = GAction::create("Paste", { Mod_Ctrl | Mod_Shift, Key_V }, GraphicsBitmap::load_from_file("/res/icons/paste16.png"), [this](auto&) {
+        paste();
+    });
 }
 
 TerminalWidget::~TerminalWidget()
@@ -495,6 +504,26 @@ void TerminalWidget::doubleclick_event(GMouseEvent& event)
     GFrame::doubleclick_event(event);
 }
 
+void TerminalWidget::paste()
+{
+    if (m_ptm_fd == -1)
+        return;
+    auto text = GClipboard::the().data();
+    if (text.is_empty())
+        return;
+    int nwritten = write(m_ptm_fd, text.characters(), text.length());
+    if (nwritten < 0) {
+        perror("write");
+        ASSERT_NOT_REACHED();
+    }
+}
+
+void TerminalWidget::copy()
+{
+    if (has_selection())
+        GClipboard::the().set_data(selected_text());
+}
+
 void TerminalWidget::mousedown_event(GMouseEvent& event)
 {
     if (event.button() == GMouseButton::Left) {
@@ -505,25 +534,11 @@ void TerminalWidget::mousedown_event(GMouseEvent& event)
             auto position = buffer_position_at(event.position());
             m_selection_start = { position.row(), start_column };
             m_selection_end = { position.row(), end_column };
-
-            if (has_selection())
-                GClipboard::the().set_data(selected_text());
         } else {
             m_selection_start = buffer_position_at(event.position());
             m_selection_end = {};
         }
         update();
-    } else if (event.button() == GMouseButton::Middle) {
-        if (m_ptm_fd == -1)
-            return;
-        auto text = GClipboard::the().data();
-        if (text.is_empty())
-            return;
-        int nwritten = write(m_ptm_fd, text.characters(), text.length());
-        if (nwritten < 0) {
-            perror("write");
-            ASSERT_NOT_REACHED();
-        }
     }
 }
 
