@@ -55,9 +55,10 @@ public:
         callback(*m_item_view);
     }
 
+    GDirectoryModel& model() { return *m_model; }
+
 private:
     explicit DirectoryView(GWidget* parent);
-    GDirectoryModel& model() { return *m_model; }
     const GDirectoryModel& model() const { return *m_model; }
 
     void handle_activation(const GModelIndex&);
