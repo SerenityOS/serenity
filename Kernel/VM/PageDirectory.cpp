@@ -22,7 +22,7 @@ RefPtr<PageDirectory> PageDirectory::find_by_pdb(u32 pdb)
 }
 
 PageDirectory::PageDirectory(PhysicalAddress paddr)
-    : m_range_allocator(VirtualAddress(0xc0000000), 0x3f000000)
+    : m_range_allocator(VirtualAddress(kernelspace_range_base + 0x800000), 0x3f000000)
 {
     m_directory_page = PhysicalPage::create(paddr, true, false);
     InterruptDisabler disabler;

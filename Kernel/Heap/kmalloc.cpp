@@ -6,11 +6,11 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/Heap/kmalloc.h>
 
 #define SANITIZE_KMALLOC
 
@@ -20,11 +20,11 @@ struct [[gnu::packed]] allocation_t
     size_t nchunk;
 };
 
-#define BASE_PHYSICAL (4 * MB)
+#define KMALLOC_RANGE_BASE (0xc0000000 + (4 * MB))
 #define CHUNK_SIZE 8
 #define POOL_SIZE (3 * MB)
 
-#define ETERNAL_BASE_PHYSICAL (2 * MB)
+#define ETERNAL_RANGE_BASE (0xc0000000 + (2 * MB))
 #define ETERNAL_RANGE_SIZE (2 * MB)
 
 static u8 alloc_map[POOL_SIZE / CHUNK_SIZE / 8];
@@ -42,21 +42,21 @@ static u8* s_end_of_eternal_range;
 
 bool is_kmalloc_address(const void* ptr)
 {
-    if (ptr >= (u8*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
+    if (ptr >= (u8*)ETERNAL_RANGE_BASE && ptr < s_next_eternal_ptr)
         return true;
-    return (size_t)ptr >= BASE_PHYSICAL && (size_t)ptr <= (BASE_PHYSICAL + POOL_SIZE);
+    return (size_t)ptr >= KMALLOC_RANGE_BASE && (size_t)ptr <= (KMALLOC_RANGE_BASE + POOL_SIZE);
 }
 
 void kmalloc_init()
 {
     memset(&alloc_map, 0, sizeof(alloc_map));
-    memset((void*)BASE_PHYSICAL, 0, POOL_SIZE);
+    memset((void*)KMALLOC_RANGE_BASE, 0, POOL_SIZE);
 
     kmalloc_sum_eternal = 0;
     sum_alloc = 0;
     sum_free = POOL_SIZE;
 
-    s_next_eternal_ptr = (u8*)ETERNAL_BASE_PHYSICAL;
+    s_next_eternal_ptr = (u8*)ETERNAL_RANGE_BASE;
     s_end_of_eternal_range = s_next_eternal_ptr + ETERNAL_RANGE_SIZE;
 }
 
@@ -134,7 +134,7 @@ void* kmalloc_impl(size_t size)
                 ++chunks_here;
 
                 if (chunks_here == chunks_needed) {
-                    auto* a = (allocation_t*)(BASE_PHYSICAL + (first_chunk * CHUNK_SIZE));
+                    auto* a = (allocation_t*)(KMALLOC_RANGE_BASE + (first_chunk * CHUNK_SIZE));
                     u8* ptr = (u8*)a;
                     ptr += sizeof(allocation_t);
                     a->nchunk = chunks_needed;

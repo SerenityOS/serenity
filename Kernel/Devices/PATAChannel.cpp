@@ -116,11 +116,13 @@ void PATAChannel::initialize(bool force_pio)
             kprintf("PATAChannel: PATA Controller found! id=%w:%w\n", id.vendor_id, id.device_id);
         }
     });
+
+    m_prdt_page = MM.allocate_supervisor_physical_page();
     m_force_pio.resource() = false;
     if (!m_pci_address.is_null()) {
         // Let's try to set up DMA transfers.
         PCI::enable_bus_mastering(m_pci_address);
-        m_prdt.end_of_table = 0x8000;
+        prdt().end_of_table = 0x8000;
         m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
         m_dma_buffer_page = MM.allocate_supervisor_physical_page();
         kprintf("PATAChannel: Bus master IDE: I/O @ %x\n", m_bus_master_base);
@@ -259,16 +261,16 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
 
     disable_irq();
 
-    m_prdt.offset = m_dma_buffer_page->paddr();
-    m_prdt.size = 512 * count;
+    prdt().offset = m_dma_buffer_page->paddr();
+    prdt().size = 512 * count;
 
-    ASSERT(m_prdt.size <= PAGE_SIZE);
+    ASSERT(prdt().size <= PAGE_SIZE);
 
     // Stop bus master
     IO::out8(m_bus_master_base, 0);
 
     // Write the PRDT location
-    IO::out32(m_bus_master_base + 4, (u32)&m_prdt);
+    IO::out32(m_bus_master_base + 4, (u32)&prdt());
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
@@ -338,18 +340,18 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
 
     disable_irq();
 
-    m_prdt.offset = m_dma_buffer_page->paddr();
-    m_prdt.size = 512 * count;
+    prdt().offset = m_dma_buffer_page->paddr();
+    prdt().size = 512 * count;
 
     memcpy(m_dma_buffer_page->paddr().as_ptr(), inbuf, 512 * count);
 
-    ASSERT(m_prdt.size <= PAGE_SIZE);
+    ASSERT(prdt().size <= PAGE_SIZE);
 
     // Stop bus master
     IO::out8(m_bus_master_base, 0);
 
     // Write the PRDT location
-    IO::out32(m_bus_master_base + 4, (u32)&m_prdt);
+    IO::out32(m_bus_master_base + 4, (u32)&prdt());
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
