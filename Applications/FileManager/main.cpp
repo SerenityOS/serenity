@@ -252,8 +252,33 @@ int main(int argc, char** argv)
                     return;
             }
         }
+
         for (auto& path : paths) {
-            if (unlink(path.characters()) < 0) {
+            struct stat st;
+            if (lstat(path.characters(), &st)) {
+                GMessageBox::show(
+                    String::format("lstat(%s) failed: %s", path.characters(), strerror(errno)),
+                    "Delete failed",
+                    GMessageBox::Type::Error,
+                    GMessageBox::InputType::OK,
+                    window);
+                break;
+            }
+
+            if (S_ISDIR(st.st_mode)) {
+                String error_path;
+                int error = FileUtils::delete_directory(path, error_path);
+
+                if (error) {
+                    GMessageBox::show(
+                        String::format("Failed to delete directory \"%s\": %s", error_path.characters(), strerror(error)),
+                        "Delete failed",
+                        GMessageBox::Type::Error,
+                        GMessageBox::InputType::OK,
+                        window);
+                    break;
+                }
+            } else if (unlink(path.characters()) < 0) {
                 int saved_errno = errno;
                 GMessageBox::show(
                     String::format("unlink(%s) failed: %s", path.characters(), strerror(saved_errno)),
