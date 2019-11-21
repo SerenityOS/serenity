@@ -2,6 +2,10 @@
     <head>
         <title>CSS attribute selector test</title>
         <style type="text/css">
+            [hello=friends] {
+                background-color: #f0f;
+                color: white;
+            }
             div[id="foo"] {
                 background-color: blue;
                 color: #fff;
@@ -13,6 +17,7 @@
         </style>
     </head>
     <body>
+        <div hello=friends>This div is hello, friends!</div>
         <div id="foo">This div has id="foo" and is bloo!</div>
         <div cool="">This div has a "cool" attribute and a cool green color.</div>
     </body>

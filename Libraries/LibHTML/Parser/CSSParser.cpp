@@ -244,14 +244,18 @@ public:
         } else if (peek() == '#') {
             type = Selector::Component::Type::Id;
             consume_one();
-        } else {
+        } else if (isalpha(peek())) {
             type = Selector::Component::Type::TagName;
+        } else {
+            type = Selector::Component::Type::Universal;
         }
 
-        while (is_valid_selector_char(peek()))
-            buffer.append(consume_one());
+        if (type != Selector::Component::Type::Universal) {
+            while (is_valid_selector_char(peek()))
+                buffer.append(consume_one());
+            PARSE_ASSERT(!buffer.is_null());
+        }
 
-        PARSE_ASSERT(!buffer.is_null());
         Selector::Component component {
             type,
             Selector::Component::PseudoClass::None,
