@@ -42,6 +42,10 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     auto& painter = context.painter();
     painter.set_font(style().font());
 
+    auto background_color = style().property(CSS::PropertyID::BackgroundColor);
+    if (background_color.has_value() && background_color.value()->is_color())
+        painter.fill_rect(enclosing_int_rect(fragment.rect()), background_color.value()->to_color(document()));
+
     auto color = style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black);
     auto text_decoration = style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
 
@@ -51,10 +55,6 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     bool is_underline = text_decoration == "underline";
     if (is_underline)
         painter.draw_line(enclosing_int_rect(fragment.rect()).bottom_left().translated(0, -1), enclosing_int_rect(fragment.rect()).bottom_right().translated(0, -1), color);
-
-    auto background_color = style().property(CSS::PropertyID::BackgroundColor);
-    if (background_color.has_value() && background_color.value()->is_color())
-        painter.fill_rect(enclosing_int_rect(fragment.rect()), background_color.value()->to_color(document()));
 
     painter.draw_text(enclosing_int_rect(fragment.rect()), m_text_for_rendering.substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
 }
