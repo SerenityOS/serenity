@@ -2,9 +2,9 @@ ENTRY(start)
 
 SECTIONS
 {
-	. = 0x100000;
+	. = 0xc0100000;
 
-	.text BLOCK(4K) : ALIGN(4K)
+	.text ALIGN(4K) : AT(ADDR(.text) - 0xc0000000)
 	{
         Arch/i386/Boot/boot.ao
 		*(.multiboot)
@@ -13,7 +13,7 @@ SECTIONS
 		*(.text.startup)
 	}
 
-	.rodata BLOCK(4K) : ALIGN(4K)
+	.rodata ALIGN(4K) : AT(ADDR(.rodata) - 0xc0000000)
 	{
 		start_ctors = .;
 		*(.ctors)
@@ -22,12 +22,12 @@ SECTIONS
 		*(.rodata)
 	}
 
-	.data BLOCK(4K) : ALIGN(4K)
+	.data ALIGN(4K) : AT(ADDR(.data) - 0xc0000000)
 	{
 		*(.data)
 	}
 
-	.bss BLOCK(4K) : ALIGN(4K)
+	.bss ALIGN(4K) : AT(ADDR(.bss) - 0xc0000000)
 	{
 		*(COMMON)
 		*(.bss)

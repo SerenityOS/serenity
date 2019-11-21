@@ -1,10 +1,10 @@
 #include "VirtualConsole.h"
 #include "IO.h"
 #include "StdLib.h"
-#include <Kernel/Heap/kmalloc.h>
 #include <AK/String.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Heap/kmalloc.h>
 
 static u8* s_vga_buffer;
 static VirtualConsole* s_consoles[6];
@@ -32,7 +32,7 @@ void VirtualConsole::flush_vga_cursor()
 
 void VirtualConsole::initialize()
 {
-    s_vga_buffer = (u8*)0xb8000;
+    s_vga_buffer = (u8*)(kernel_virtual_base + 0xb8000);
     memset(s_consoles, 0, sizeof(s_consoles));
     s_active_console = -1;
 }
