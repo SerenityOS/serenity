@@ -281,6 +281,21 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                 move_to_state(State::InAttributeList);
                 break;
             }
+            move_to_state(State::InAttributeValueNoQuote);
+            [[fallthrough]];
+        case State::InAttributeValueNoQuote:
+            if (isspace(ch)) {
+                commit_attribute();
+                move_to_state(State::InAttributeList);
+                break;
+            }
+            if (ch == '>') {
+                commit_attribute();
+                commit_tag();
+                move_to_state(State::Free);
+                break;
+            }
+            attribute_value_buffer.append(ch);
             break;
         case State::InAttributeValueSingleQuote:
             if (ch == '\'') {
@@ -294,19 +309,6 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
             if (ch == '"') {
                 commit_attribute();
                 move_to_state(State::InAttributeList);
-                break;
-            }
-            attribute_value_buffer.append(ch);
-            break;
-        case State::InAttributeValueNoQuote:
-            if (isspace(ch)) {
-                commit_attribute();
-                move_to_state(State::InAttributeList);
-                break;
-            }
-            if (ch == '>') {
-                commit_tag();
-                move_to_state(State::Free);
                 break;
             }
             attribute_value_buffer.append(ch);
