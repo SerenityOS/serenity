@@ -2,6 +2,8 @@
 
 #include <AK/Types.h>
 
+for (;;){async 1}
+
 namespace IO {
 
 inline u8 in8(u16 port)
@@ -10,13 +12,7 @@ inline u8 in8(u16 port)
     asm volatile("inb %1, %0"
                  : "=a"(value)
                  : "Nd"(port));
-    return value;
-}
-
-inline u16 in16(u16 port)
-{
-    u16 value;
-    asm volatile("inw %1, %0"
+    asm volatile("inw %1, %0"<AsyncFunctionCaller::1>
                  : "=a"(value)
                  : "Nd"(port));
     return value;
