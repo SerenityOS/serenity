@@ -227,7 +227,15 @@ public:
         if (peek() == '*') {
             type = Selector::Component::Type::Universal;
             consume_one();
-            return Selector::Component { type, Selector::Component::PseudoClass::None, relation, String() };
+            return Selector::Component {
+                type,
+                Selector::Component::PseudoClass::None,
+                relation,
+                String(),
+                Selector::Component::AttributeMatchType::None,
+                String(),
+                String()
+            };
         }
 
         if (peek() == '.') {
@@ -244,15 +252,55 @@ public:
             buffer.append(consume_one());
 
         PARSE_ASSERT(!buffer.is_null());
-        Selector::Component component { type, Selector::Component::PseudoClass::None, relation, String::copy(buffer) };
+        Selector::Component component {
+            type,
+            Selector::Component::PseudoClass::None,
+            relation,
+            String::copy(buffer),
+            Selector::Component::AttributeMatchType::None,
+            String(),
+            String()
+        };
         buffer.clear();
 
         if (peek() == '[') {
-            // FIXME: Implement attribute selectors.
-            while (peek() != ']') {
-                consume_one();
+            Selector::Component::AttributeMatchType attribute_match_type = Selector::Component::AttributeMatchType::HasAttribute;
+            String attribute_name;
+            String attribute_value;
+            bool in_value = false;
+            consume_specific('[');
+            char expected_end_of_attribute_selector = ']';
+            while (peek() != expected_end_of_attribute_selector) {
+                char ch = consume_one();
+                if (ch == '=') {
+                    attribute_match_type = Selector::Component::AttributeMatchType::ExactValueMatch;
+                    attribute_name = String::copy(buffer);
+                    buffer.clear();
+                    in_value = true;
+                    consume_whitespace_or_comments();
+                    if (peek() == '\'') {
+                        expected_end_of_attribute_selector = '\'';
+                        consume_one();
+                    } else if (peek() == '"') {
+                        expected_end_of_attribute_selector = '"';
+                        consume_one();
+                    }
+                    continue;
+                }
+                buffer.append(ch);
             }
-            consume_one();
+            if (in_value)
+                attribute_value = String::copy(buffer);
+            else
+                attribute_name = String::copy(buffer);
+            buffer.clear();
+            component.attribute_match_type = attribute_match_type;
+            component.attribute_name = attribute_name;
+            component.attribute_value = attribute_value;
+            if (expected_end_of_attribute_selector != ']')
+                consume_specific(expected_end_of_attribute_selector);
+            consume_whitespace_or_comments();
+            consume_specific(']');
         }
 
         if (peek() == ':') {
