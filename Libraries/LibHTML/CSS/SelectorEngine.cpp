@@ -29,6 +29,19 @@ bool matches(const Selector::Component& component, const Element& element)
         break;
     }
 
+    switch (component.attribute_match_type) {
+    case Selector::Component::AttributeMatchType::HasAttribute:
+        if (!element.has_attribute(component.attribute_name))
+            return false;
+        break;
+    case Selector::Component::AttributeMatchType::ExactValueMatch:
+        if (element.attribute(component.attribute_name) != component.attribute_value)
+            return false;
+        break;
+    default:
+        break;
+    }
+
     switch (component.type) {
     case Selector::Component::Type::Universal:
         return true;

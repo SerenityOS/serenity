@@ -33,6 +33,16 @@ public:
         Relation relation { Relation::None };
 
         String value;
+
+        enum class AttributeMatchType {
+            None,
+            HasAttribute,
+            ExactValueMatch,
+        };
+
+        AttributeMatchType attribute_match_type { AttributeMatchType::None };
+        String attribute_name;
+        String attribute_value;
     };
 
     explicit Selector(Vector<Component>&&);
