@@ -163,6 +163,11 @@ int main(int argc, char** argv)
     debug_menu->add_action(GAction::create("Dump Layout tree", [&](auto&) {
         dump_tree(*html_widget->document()->layout_node());
     }));
+    debug_menu->add_action(GAction::create("Dump Style sheets", [&](auto&) {
+        for (auto& sheet : html_widget->document()->stylesheets()) {
+            dump_sheet(sheet);
+        }
+    }));
     debug_menu->add_separator();
     auto line_box_borders_action = GAction::create("Line box borders", [&](auto& action) {
         action.set_checked(!action.is_checked());
