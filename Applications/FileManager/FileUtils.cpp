@@ -9,6 +9,42 @@
 
 namespace FileUtils {
 
+int delete_directory(String directory, String& file_that_caused_error)
+{
+    CDirIterator iterator(directory, CDirIterator::SkipDots);
+    if (iterator.has_error()) {
+        file_that_caused_error = directory;
+        return -1;
+    }
+
+    while (iterator.has_next()) {
+        auto file_to_delete = String::format("%s/%s", directory.characters(), iterator.next_path().characters());
+        struct stat st;
+
+        if (lstat(file_to_delete.characters(), &st)) {
+            file_that_caused_error = file_to_delete;
+            return errno;
+        }
+
+        if (S_ISDIR(st.st_mode)) {
+            if (delete_directory(file_to_delete, file_to_delete)) {
+                file_that_caused_error = file_to_delete;
+                return errno;
+            }
+        } else if (unlink(file_to_delete.characters())) {
+            file_that_caused_error = file_to_delete;
+            return errno;
+        }
+    }
+
+    if (rmdir(directory.characters())) {
+        file_that_caused_error = directory;
+        return errno;
+    }
+
+    return 0;
+}
+
 bool copy_file_or_directory(const String& src_path, const String& dst_path)
 {
     int duplicate_count = 0;
