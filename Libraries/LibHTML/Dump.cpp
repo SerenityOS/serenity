@@ -180,12 +180,28 @@ void dump_rule(const StyleRule& rule)
                 relation_description = "{GeneralSibling}";
                 break;
             }
-            dbgprintf("    %s:%s %s\n", type_description, component.value.characters(), relation_description);
+            const char* attribute_match_type_description = "";
+            switch (component.attribute_match_type) {
+            case Selector::Component::AttributeMatchType::None:
+                break;
+            case Selector::Component::AttributeMatchType::HasAttribute:
+                attribute_match_type_description = "HasAttribute";
+                break;
+            case Selector::Component::AttributeMatchType::ExactValueMatch:
+                attribute_match_type_description = "ExactValueMatch";
+                break;
+            }
+
+            dbgprintf("    %s:%s %s", type_description, component.value.characters(), relation_description);
+            if (component.attribute_match_type != Selector::Component::AttributeMatchType::None) {
+                dbgprintf(" [%s, name='%s', value='%s']", attribute_match_type_description, component.attribute_name.characters(), component.attribute_value.characters());
+            }
+            dbgprintf("\n");
         }
     }
     dbgprintf("  Declarations:\n");
     for (auto& property : rule.declaration().properties()) {
-        dbgprintf("    CSS::PropertyID(%u): '%s'\n", (unsigned)property.property_id, property.value->to_string().characters());
+        dbgprintf("    %s: '%s'\n", CSS::string_from_property_id(property.property_id), property.value->to_string().characters());
     }
 }
 
