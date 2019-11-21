@@ -1,6 +1,5 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Badge.h>
 #include <AK/Bitmap.h>
 #include <AK/ByteBuffer.h>
@@ -8,6 +7,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
@@ -114,7 +114,8 @@ private:
 
     RefPtr<PageDirectory> m_kernel_page_directory;
     PageTableEntry* m_page_table_zero { nullptr };
-    PageTableEntry* m_page_table_one { nullptr };
+    PageTableEntry* m_page_table_768 { nullptr };
+    PageTableEntry* m_page_table_769 { nullptr };
 
     VirtualAddress m_quickmap_addr;
 

@@ -55,6 +55,8 @@ private:
     bool ata_read_sectors(u32, u16, u8*, bool);
     bool ata_write_sectors(u32, u16, const u8*, bool);
 
+    PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_page->paddr().as_ptr()); }
+
     // Data members
     u8 m_channel_number { 0 }; // Channel number. 0 = master, 1 = slave
     u16 m_io_base { 0x1F0 };
@@ -63,7 +65,7 @@ private:
     volatile bool m_interrupted { false };
 
     PCI::Address m_pci_address;
-    PhysicalRegionDescriptor m_prdt;
+    RefPtr<PhysicalPage> m_prdt_page;
     RefPtr<PhysicalPage> m_dma_buffer_page;
     u16 m_bus_master_base { 0 };
     Lockable<bool> m_dma_enabled;
