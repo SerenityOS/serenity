@@ -104,9 +104,21 @@ OwnPtr<AudioServer::ClearBufferResponse> ASClientConnection::handle(const AudioS
     return make<AudioServer::ClearBufferResponse>();
 }
 
-OwnPtr<AudioServer::GetPlayingBufferResponse> ASClientConnection::handle(const AudioServer::GetPlayingBuffer&){
+OwnPtr<AudioServer::GetPlayingBufferResponse> ASClientConnection::handle(const AudioServer::GetPlayingBuffer&)
+{
     int id = -1;
-    if(m_queue)
+    if (m_queue)
         id = m_queue->get_playing_buffer();
     return make<AudioServer::GetPlayingBufferResponse>(id);
+}
+
+OwnPtr<AudioServer::GetMutedResponse> ASClientConnection::handle(const AudioServer::GetMuted&)
+{
+    return make<AudioServer::GetMutedResponse>(m_mixer.is_muted());
+}
+
+OwnPtr<AudioServer::SetMutedResponse> ASClientConnection::handle(const AudioServer::SetMuted& message)
+{
+    m_mixer.set_muted(message.muted());
+    return make<AudioServer::SetMutedResponse>();
 }
