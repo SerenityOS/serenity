@@ -87,6 +87,9 @@ public:
     int main_volume() const { return m_main_volume; }
     void set_main_volume(int volume) { m_main_volume = volume; }
 
+    bool is_muted() const { return m_muted; }
+    void set_muted(bool);
+
 private:
     Vector<NonnullRefPtr<ASBufferQueue>> m_pending_mixing;
 
@@ -95,7 +98,10 @@ private:
 
     LibThread::Thread m_sound_thread;
 
+    bool m_muted { false };
     int m_main_volume { 100 };
+
+    u8* m_zero_filled_buffer { nullptr };
 
     void mix();
 };

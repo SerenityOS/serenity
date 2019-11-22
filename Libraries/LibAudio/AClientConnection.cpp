@@ -32,6 +32,16 @@ bool AClientConnection::try_enqueue(const ABuffer& buffer)
     return response->success();
 }
 
+bool AClientConnection::get_muted()
+{
+    return send_sync<AudioServer::GetMuted>()->muted();
+}
+
+void AClientConnection::set_muted(bool muted)
+{
+    send_sync<AudioServer::SetMuted>(muted);
+}
+
 int AClientConnection::get_main_mix_volume()
 {
     return send_sync<AudioServer::GetMainMixVolume>()->volume();

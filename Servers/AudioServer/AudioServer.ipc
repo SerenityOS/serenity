@@ -4,6 +4,8 @@ endpoint AudioServer
     Greet(i32 client_pid) => (i32 server_pid, i32 client_id)
 
     // Mixer functions
+    SetMuted(bool muted) => ()
+    GetMuted() => (bool muted)
     GetMainMixVolume() => (i32 volume)
     SetMainMixVolume(i32 volume) => ()
 
