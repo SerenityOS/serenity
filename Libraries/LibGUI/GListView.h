@@ -22,7 +22,6 @@ public:
     int horizontal_padding() const { return m_horizontal_padding; }
 
     void scroll_into_view(const GModelIndex&, Orientation);
-    void set_selection_index(int);
 
     Point adjusted_position(const Point&);
 

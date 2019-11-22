@@ -96,7 +96,6 @@ void DisplayPropertiesWidget::create_wallpaper_list()
         builder.append(path);
 
         if (builder.build() == wallpaper_path) {
-            dbg() << "wallpapers are the same: " << index;
             m_selected_wallpaper_index = index;
         }
         m_wallpapers.append(path);
@@ -122,9 +121,10 @@ void DisplayPropertiesWidget::create_frame()
     wallpaper_list->set_background_color(Color::White);
     wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
     wallpaper_list->horizontal_scrollbar().set_visible(false);
-    if (m_selected_wallpaper_index >= 0) {
-        wallpaper_list->set_selection_index(m_selected_wallpaper_index);
-    }
+    auto wallpaper_model = wallpaper_list->model();
+    auto wallpaper_index_in_model = wallpaper_model->index(m_selected_wallpaper_index, wallpaper_list->model_column());
+    if (wallpaper_model->is_valid(wallpaper_index_in_model))
+        wallpaper_list->selection().set(wallpaper_index_in_model);
     wallpaper_list->on_selection = [this](auto& index) {
         StringBuilder builder;
         m_selected_wallpaper = m_wallpapers.at(index.row());
@@ -146,11 +146,13 @@ void DisplayPropertiesWidget::create_frame()
     resolution_list->set_background_color(Color::White);
     resolution_list->set_model(*ItemListModel<Size>::create(m_resolutions));
     resolution_list->horizontal_scrollbar().set_visible(false);
-    resolution_list->set_selection_index(m_selected_resolution_index);
+    auto resolution_model = resolution_list->model();
+    auto resolution_index_in_model = resolution_model->index(m_selected_resolution_index, resolution_list->model_column());
+    if (resolution_model->is_valid(resolution_index_in_model))
+        resolution_list->selection().set(resolution_index_in_model);
     resolution_list->on_selection = [this](auto& index) {
         m_selected_resolution = m_resolutions.at(index.row());
     };
-    
     settings_content->layout()->add_spacer();
 
     // Add the apply and cancel buttons

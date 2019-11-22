@@ -82,16 +82,6 @@ void GListView::mousedown_event(GMouseEvent& event)
     selection().clear();
 }
 
-void GListView::set_selection_index(int index)
-{
-    if (!model())
-        return;
-
-    auto index_as_model = model()->index(index, m_model_column);
-    ASSERT(model()->is_valid(index_as_model));
-    selection().set(index_as_model);
-}
-
 void GListView::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
