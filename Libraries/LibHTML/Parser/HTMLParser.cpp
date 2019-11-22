@@ -118,7 +118,15 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
     };
 
     auto commit_attribute = [&] {
-        attributes.append({ String::copy(attribute_name_buffer), String::copy(attribute_value_buffer) });
+        if (!attribute_name_buffer.is_empty()) {
+            auto name = String::copy(attribute_name_buffer);
+            String value;
+            if (attribute_value_buffer.is_empty())
+                value = String::empty();
+            else
+                value = String::copy(attribute_value_buffer);
+            attributes.empend(name, value);
+        }
     };
 
     for (int i = 0; i < html.length(); ++i) {
@@ -243,6 +251,7 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
             }
 
             if (ch == '>') {
+                commit_attribute();
                 commit_tag();
                 move_to_state(State::Free);
                 break;
@@ -272,6 +281,21 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
                 move_to_state(State::InAttributeList);
                 break;
             }
+            move_to_state(State::InAttributeValueNoQuote);
+            [[fallthrough]];
+        case State::InAttributeValueNoQuote:
+            if (isspace(ch)) {
+                commit_attribute();
+                move_to_state(State::InAttributeList);
+                break;
+            }
+            if (ch == '>') {
+                commit_attribute();
+                commit_tag();
+                move_to_state(State::Free);
+                break;
+            }
+            attribute_value_buffer.append(ch);
             break;
         case State::InAttributeValueSingleQuote:
             if (ch == '\'') {
@@ -285,19 +309,6 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
             if (ch == '"') {
                 commit_attribute();
                 move_to_state(State::InAttributeList);
-                break;
-            }
-            attribute_value_buffer.append(ch);
-            break;
-        case State::InAttributeValueNoQuote:
-            if (isspace(ch)) {
-                commit_attribute();
-                move_to_state(State::InAttributeList);
-                break;
-            }
-            if (ch == '>') {
-                commit_tag();
-                move_to_state(State::Free);
                 break;
             }
             attribute_value_buffer.append(ch);
