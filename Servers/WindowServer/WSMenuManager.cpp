@@ -1,3 +1,4 @@
+#include <LibAudio/AClientConnection.h>
 #include <LibCore/CTimer.h>
 #include <LibDraw/Font.h>
 #include <LibDraw/Painter.h>
@@ -8,6 +9,11 @@
 
 WSMenuManager::WSMenuManager()
 {
+    m_audio_client = make<AClientConnection>();
+
+    m_unmuted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-unmuted.png");
+    m_muted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-muted.png");
+
     m_username = getlogin();
     m_needs_window_resize = false;
 
@@ -74,6 +80,8 @@ void WSMenuManager::draw()
     });
 
     int username_width = Font::default_bold_font().width(m_username);
+
+    // FIXME: This rect should only be computed once.
     Rect username_rect {
         menubar_rect.right() - wm.menubar_menu_margin() / 2 - Font::default_bold_font().width(m_username),
         menubar_rect.y(),
@@ -92,6 +100,8 @@ void WSMenuManager::draw()
         tm->tm_min,
         tm->tm_sec);
     int time_width = wm.font().width(time_text);
+
+    // FIXME: This rect should only be computed once.
     Rect time_rect {
         username_rect.left() - wm.menubar_menu_margin() / 2 - time_width,
         menubar_rect.y(),
@@ -101,8 +111,15 @@ void WSMenuManager::draw()
 
     painter.draw_text(time_rect, time_text, wm.font(), TextAlignment::CenterRight, Color::Black);
 
+    // FIXME: This rect should only be computed once.
     Rect cpu_rect { time_rect.right() - wm.font().width(time_text) - m_cpu_monitor.capacity() - 10, time_rect.y() + 1, m_cpu_monitor.capacity(), time_rect.height() - 2 };
     m_cpu_monitor.paint(painter, cpu_rect);
+
+    // FIXME: This rect should only be computed once.
+    m_audio_rect = { cpu_rect.left() - 20, cpu_rect.y(), 12, 16 };
+
+    auto& audio_bitmap = m_audio_muted ? *m_muted_bitmap : *m_unmuted_bitmap;
+    painter.blit(m_audio_rect.location(), audio_bitmap, audio_bitmap.rect());
 }
 
 void WSMenuManager::tick_clock()
@@ -132,6 +149,18 @@ void WSMenuManager::event(CEvent& event)
             }
             return true;
         });
+
+        if (mouse_event.type() == WSEvent::MouseDown
+            && mouse_event.button() == MouseButton::Left
+            && m_audio_rect.contains(mouse_event.position())) {
+
+            // FIXME: This should listen for notifications from the AudioServer, once those actually exist.
+            //        Right now, we won't notice if another program changes the AudioServer muted state.
+            m_audio_muted = !m_audio_muted;
+            m_audio_client->set_muted(m_audio_muted);
+            draw();
+            m_window->invalidate();
+        }
     }
     return CObject::event(event);
 }

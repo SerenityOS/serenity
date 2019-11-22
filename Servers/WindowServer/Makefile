@@ -26,7 +26,7 @@ DEFINES += -DUSERLAND
 all: $(APP)
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore -ldraw -lthread -lpthread
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore -ldraw -lthread -lpthread -laudio -lipc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<

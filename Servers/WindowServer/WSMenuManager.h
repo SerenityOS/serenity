@@ -6,6 +6,8 @@
 #include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSWindow.h>
 
+class AClientConnection;
+
 class WSMenuManager final : public CObject {
     C_OBJECT(WSMenuManager)
 public:
@@ -50,6 +52,14 @@ private:
     WeakPtr<WSMenu> m_current_menu;
     Vector<WeakPtr<WSMenu>> m_open_menu_stack;
 
+    RefPtr<GraphicsBitmap> m_muted_bitmap;
+    RefPtr<GraphicsBitmap> m_unmuted_bitmap;
+
+    OwnPtr<AClientConnection> m_audio_client;
+
+    Rect m_audio_rect;
+
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
+    bool m_audio_muted { false };
 };
