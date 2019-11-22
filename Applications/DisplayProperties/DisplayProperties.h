@@ -46,5 +46,7 @@ private:
     RefPtr<GLabel> m_wallpaper_preview;
 
     Size m_selected_resolution;
+    int m_selected_resolution_index { -1 };
     String m_selected_wallpaper;
+    int m_selected_wallpaper_index { -1 };
 };

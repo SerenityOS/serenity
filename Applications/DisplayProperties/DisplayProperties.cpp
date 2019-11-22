@@ -24,10 +24,10 @@
 DisplayPropertiesWidget::DisplayPropertiesWidget()
     : m_wm_config(CConfigFile::get_for_app("WindowManager"))
 {
-    create_root_widget();
-    create_frame();
     create_resolution_list();
     create_wallpaper_list();
+    create_root_widget();
+    create_frame();
 }
 
 void DisplayPropertiesWidget::create_resolution_list()
@@ -62,6 +62,7 @@ void DisplayPropertiesWidget::create_resolution_list()
     for (auto& resolution : m_resolutions) {
         if (resolution == find_size) {
             m_selected_resolution = m_resolutions.at(index);
+            m_selected_resolution_index = index;
             return; // We don't need to do anything else
         }
 
@@ -69,6 +70,7 @@ void DisplayPropertiesWidget::create_resolution_list()
     }
 
     m_selected_resolution = m_resolutions.at(0);
+    m_selected_resolution_index = 0;
 }
 
 void DisplayPropertiesWidget::create_root_widget()
@@ -81,10 +83,25 @@ void DisplayPropertiesWidget::create_root_widget()
 
 void DisplayPropertiesWidget::create_wallpaper_list()
 {
-    CDirIterator iterator("/res/wallpapers/", CDirIterator::Flags::SkipDots);
+    String wallpaper_dir = "/res/wallpapers/";
+    CDirIterator iterator(wallpaper_dir, CDirIterator::Flags::SkipDots);
 
-    while (iterator.has_next())
-        m_wallpapers.append(iterator.next_path());
+    String wallpaper_path = m_wm_config->read_entry("Background", "Path");
+    int index = 0;
+    while (iterator.has_next()) {
+        auto path = iterator.next_path();
+
+        StringBuilder builder;
+        builder.append(wallpaper_dir);
+        builder.append(path);
+
+        if (builder.build() == wallpaper_path) {
+            dbg() << "wallpapers are the same: " << index;
+            m_selected_wallpaper_index = index;
+        }
+        m_wallpapers.append(path);
+        index++;
+    }
 }
 
 void DisplayPropertiesWidget::create_frame()
@@ -105,6 +122,9 @@ void DisplayPropertiesWidget::create_frame()
     wallpaper_list->set_background_color(Color::White);
     wallpaper_list->set_model(*ItemListModel<AK::String>::create(m_wallpapers));
     wallpaper_list->horizontal_scrollbar().set_visible(false);
+    if (m_selected_wallpaper_index >= 0) {
+        wallpaper_list->set_selection_index(m_selected_wallpaper_index);
+    }
     wallpaper_list->on_selection = [this](auto& index) {
         StringBuilder builder;
         m_selected_wallpaper = m_wallpapers.at(index.row());
@@ -126,10 +146,11 @@ void DisplayPropertiesWidget::create_frame()
     resolution_list->set_background_color(Color::White);
     resolution_list->set_model(*ItemListModel<Size>::create(m_resolutions));
     resolution_list->horizontal_scrollbar().set_visible(false);
+    resolution_list->set_selection_index(m_selected_resolution_index);
     resolution_list->on_selection = [this](auto& index) {
         m_selected_resolution = m_resolutions.at(index.row());
     };
-
+    
     settings_content->layout()->add_spacer();
 
     // Add the apply and cancel buttons
