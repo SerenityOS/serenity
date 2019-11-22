@@ -282,6 +282,9 @@ bool WSCompositor::set_wallpaper(const String& path, Function<void(bool)>&& call
             m_wallpaper_path = path;
             m_wallpaper = move(bitmap);
             invalidate();
+            auto& wm = WSWindowManager::the();
+            wm.wm_config()->write_entry("Background", "Path", path);
+            wm.wm_config()->sync();
             callback(true);
         });
     return true;
