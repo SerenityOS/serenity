@@ -542,8 +542,6 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     int diff_x = event.x() - m_resize_origin.x();
     int diff_y = event.y() - m_resize_origin.y();
 
-    int change_x = 0;
-    int change_y = 0;
     int change_w = 0;
     int change_h = 0;
 
@@ -557,25 +555,19 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
         break;
     case ResizeDirection::UpRight:
         change_w = diff_x;
-        change_y = diff_y;
         change_h = -diff_y;
         break;
     case ResizeDirection::Up:
-        change_y = diff_y;
         change_h = -diff_y;
         break;
     case ResizeDirection::UpLeft:
-        change_x = diff_x;
         change_w = -diff_x;
-        change_y = diff_y;
         change_h = -diff_y;
         break;
     case ResizeDirection::Left:
-        change_x = diff_x;
         change_w = -diff_x;
         break;
     case ResizeDirection::DownLeft:
-        change_x = diff_x;
         change_w = -diff_x;
         change_h = diff_y;
         break;
@@ -587,10 +579,10 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     }
 
     auto new_rect = m_resize_window_original_rect;
+
+    // First, size the new rect.
     Size minimum_size { 50, 50 };
 
-    new_rect.set_x(new_rect.x() + change_x);
-    new_rect.set_y(new_rect.y() + change_y);
     new_rect.set_width(max(minimum_size.width(), new_rect.width() + change_w));
     new_rect.set_height(max(minimum_size.height(), new_rect.height() + change_h));
 
@@ -599,6 +591,31 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
         new_rect.set_width(m_resize_window->base_size().width() + horizontal_incs * m_resize_window->size_increment().width());
         int vertical_incs = (new_rect.height() - m_resize_window->base_size().height()) / m_resize_window->size_increment().height();
         new_rect.set_height(m_resize_window->base_size().height() + vertical_incs * m_resize_window->size_increment().height());
+    }
+
+    // Second, set its position so that the sides of the window
+    // that end up moving are the same ones as the user is dragging,
+    // no matter which part of the logic above caused us to decide
+    // to resize by this much.
+    switch (m_resize_direction) {
+    case ResizeDirection::DownRight:
+    case ResizeDirection::Right:
+    case ResizeDirection::Down:
+        break;
+    case ResizeDirection::Left:
+    case ResizeDirection::Up:
+    case ResizeDirection::UpLeft:
+        new_rect.set_right_without_resize(m_resize_window_original_rect.right());
+        new_rect.set_bottom_without_resize(m_resize_window_original_rect.bottom());
+        break;
+    case ResizeDirection::UpRight:
+        new_rect.set_bottom_without_resize(m_resize_window_original_rect.bottom());
+        break;
+    case ResizeDirection::DownLeft:
+        new_rect.set_right_without_resize(m_resize_window_original_rect.right());
+        break;
+    default:
+        ASSERT_NOT_REACHED();
     }
 
     if (new_rect.contains(event.position()))
