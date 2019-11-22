@@ -151,24 +151,52 @@ void WSCompositor::compose()
                 window.frame().paint(*m_back_painter);
             if (!backing_store)
                 continue;
-            Rect dirty_rect_in_window_coordinates = Rect::intersection(dirty_rect, window.rect());
-            if (dirty_rect_in_window_coordinates.is_empty())
+
+            // Decide where we would paint this window's backing store.
+            // This is subtly different from widow.rect(), because window
+            // size may be different from its backing store size. This
+            // happens when the window has been resized and the client
+            // has not yet attached a new backing store. In this case,
+            // we want to try to blit the backing store at the same place
+            // it was previously, and fill the rest of the window with its
+            // background color.
+            Rect backing_rect;
+            backing_rect.set_size(backing_store->size());
+            switch (WSWindowManager::the().resize_direction_of_window(window)) {
+            case ResizeDirection::None:
+            case ResizeDirection::Right:
+            case ResizeDirection::Down:
+            case ResizeDirection::DownRight:
+                backing_rect.set_location(window.rect().location());
+                break;
+            case ResizeDirection::Left:
+            case ResizeDirection::Up:
+            case ResizeDirection::UpLeft:
+                backing_rect.set_right_without_resize(window.rect().right());
+                backing_rect.set_bottom_without_resize(window.rect().bottom());
+                break;
+            case ResizeDirection::UpRight:
+                backing_rect.set_left(window.rect().left());
+                backing_rect.set_bottom_without_resize(window.rect().bottom());
+                break;
+            case ResizeDirection::DownLeft:
+                backing_rect.set_right_without_resize(window.rect().right());
+                backing_rect.set_top(window.rect().top());
+                break;
+            }
+
+            Rect dirty_rect_in_backing_coordinates = dirty_rect
+                                                         .intersected(window.rect())
+                                                         .intersected(backing_rect)
+                                                         .translated(-backing_rect.location());
+
+            if (dirty_rect_in_backing_coordinates.is_empty())
                 continue;
-            dirty_rect_in_window_coordinates.move_by(-window.position());
-            auto dst = window.position();
-            dst.move_by(dirty_rect_in_window_coordinates.location());
+            auto dst = backing_rect.location().translated(dirty_rect_in_backing_coordinates.location());
 
-            m_back_painter->blit(dst, *backing_store, dirty_rect_in_window_coordinates, window.opacity());
-
-            if (backing_store->width() < window.width()) {
-                Rect right_fill_rect { window.x() + backing_store->width(), window.y(), window.width() - backing_store->width(), window.height() };
-                m_back_painter->fill_rect(right_fill_rect, window.background_color());
-            }
-
-            if (backing_store->height() < window.height()) {
-                Rect bottom_fill_rect { window.x(), window.y() + backing_store->height(), window.width(), window.height() - backing_store->height() };
-                m_back_painter->fill_rect(bottom_fill_rect, window.background_color());
-            }
+            m_back_painter->blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
+            for (auto background_rect : window.rect().shatter(backing_rect))
+                m_back_painter->fill_rect(background_rect, window.background_color());
         }
         return IterationDecision::Continue;
     };
