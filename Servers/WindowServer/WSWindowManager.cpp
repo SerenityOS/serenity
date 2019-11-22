@@ -1108,6 +1108,13 @@ void WSWindowManager::set_resize_candidate(WSWindow& window, ResizeDirection dir
     m_resize_direction = direction;
 }
 
+ResizeDirection WSWindowManager::resize_direction_of_window(const WSWindow& window)
+{
+    if (&window != m_resize_window)
+        return ResizeDirection::None;
+    return m_resize_direction;
+}
+
 Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
 {
     Rect rect = WSScreen::the().rect();

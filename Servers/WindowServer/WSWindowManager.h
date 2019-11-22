@@ -123,6 +123,7 @@ public:
 
     void set_resize_candidate(WSWindow&, ResizeDirection);
     void clear_resize_candidate();
+    ResizeDirection resize_direction_of_window(const WSWindow&);
 
     bool any_opaque_window_contains_rect(const Rect&);
     bool any_opaque_window_above_this_one_contains_rect(const WSWindow&, const Rect&);
