@@ -68,7 +68,7 @@ typedef struct {
 	int (*gl_stat)(const char *, struct stat *);
 } glob_t;
 
-#if __POSIX_VISIBLE >= 199209
+//#if __POSIX_VISIBLE >= 199209
 /* Believed to have been introduced in 1003.2-1992 */
 #define	GLOB_APPEND	0x0001	/* Append to output from previous call. */
 #define	GLOB_DOOFFS	0x0002	/* Use gl_offs. */
@@ -105,4 +105,4 @@ int	glob(const char * __restrict, int,
 void	globfree(glob_t *);
 __END_DECLS
 
-#endif /* !_GLOB_H_ */
+//#endif /* !_GLOB_H_ */
