@@ -256,6 +256,10 @@ public:
             PARSE_ASSERT(!buffer.is_null());
         }
 
+<<<<<<< HEAD
+=======
+        PARSE_ASSERT(!buffer.is_null());
+>>>>>>> 8946e509... LibHTML: Implement some attribute selector support
         Selector::Component component {
             type,
             Selector::Component::PseudoClass::None,
