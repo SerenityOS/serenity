@@ -25,7 +25,7 @@ private:
     virtual void cursor_did_change() override;
 
     void show_documentation_tooltip_if_available(const String&, const Point& screen_location);
-    void highlight_matching_curlies_or_parens();
+    void highlight_matching_token_pair();
 
     explicit Editor(GWidget* parent);
 
