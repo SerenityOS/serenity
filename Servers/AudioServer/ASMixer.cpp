@@ -101,7 +101,12 @@ void ASMixer::mix()
 
 void ASMixer::set_muted(bool muted)
 {
+    if (m_muted == muted)
+        return;
     m_muted = muted;
+    ASClientConnection::for_each([muted](ASClientConnection& client) {
+        client.did_change_muted_state({}, muted);
+    });
 }
 
 ASBufferQueue::ASBufferQueue(ASClientConnection& client)

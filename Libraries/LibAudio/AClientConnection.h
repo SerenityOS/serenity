@@ -29,6 +29,10 @@ public:
     void set_paused(bool paused);
     void clear_buffer(bool paused = false);
 
+    Function<void(i32 buffer_id)> on_finish_playing_buffer;
+    Function<void(bool muted)> on_muted_state_change;
+
 private:
     virtual void handle(const AudioClient::FinishedPlayingBuffer&) override;
+    virtual void handle(const AudioClient::MutedStateChanged&) override;
 };
