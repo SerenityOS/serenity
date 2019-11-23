@@ -31,6 +31,12 @@ void Download::stop()
     all_downloads().remove(m_id);
 }
 
+void Download::set_payload(const ByteBuffer& payload)
+{
+    m_payload = payload;
+    m_total_size = payload.size();
+}
+
 void Download::did_finish(bool success)
 {
     if (!m_client) {

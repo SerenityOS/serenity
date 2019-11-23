@@ -33,7 +33,8 @@ bool Client::stop_download(i32 download_id)
 void Client::handle(const ProtocolClient::DownloadFinished& message)
 {
     if (on_download_finish)
-        on_download_finish(message.download_id(), message.success());
+        on_download_finish(message.download_id(), message.success(), message.total_size(), message.shared_buffer_id());
+    send_sync<ProtocolServer::DisownSharedBuffer>(message.shared_buffer_id());
 }
 
 void Client::handle(const ProtocolClient::DownloadProgress& message)

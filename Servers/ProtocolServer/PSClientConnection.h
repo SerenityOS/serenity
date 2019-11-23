@@ -5,6 +5,7 @@
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 
 class Download;
+class SharedBuffer;
 
 class PSClientConnection final : public IPC::Server::ConnectionNG<ProtocolServerEndpoint>
     , public ProtocolServerEndpoint {
@@ -23,4 +24,7 @@ private:
     virtual OwnPtr<ProtocolServer::IsSupportedProtocolResponse> handle(const ProtocolServer::IsSupportedProtocol&) override;
     virtual OwnPtr<ProtocolServer::StartDownloadResponse> handle(const ProtocolServer::StartDownload&) override;
     virtual OwnPtr<ProtocolServer::StopDownloadResponse> handle(const ProtocolServer::StopDownload&) override;
+    virtual OwnPtr<ProtocolServer::DisownSharedBufferResponse> handle(const ProtocolServer::DisownSharedBuffer&) override;
+
+    HashMap<i32, RefPtr<SharedBuffer>> m_shared_buffers;
 };

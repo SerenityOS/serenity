@@ -2,6 +2,7 @@
 #include <ProtocolServer/PSClientConnection.h>
 #include <ProtocolServer/Protocol.h>
 #include <ProtocolServer/ProtocolClientEndpoint.h>
+#include <LibC/SharedBuffer.h>
 
 static HashMap<int, RefPtr<PSClientConnection>> s_connections;
 
@@ -48,7 +49,15 @@ OwnPtr<ProtocolServer::StopDownloadResponse> PSClientConnection::handle(const Pr
 
 void PSClientConnection::did_finish_download(Badge<Download>, Download& download, bool success)
 {
-    post_message(ProtocolClient::DownloadFinished(download.id(), success));
+    RefPtr<SharedBuffer> buffer;
+    if (success && !download.payload().is_null()) {
+        buffer = SharedBuffer::create_with_size(download.payload().size());
+        memcpy(buffer->data(), download.payload().data(), download.payload().size());
+        buffer->seal();
+        buffer->share_with(client_pid());
+        m_shared_buffers.set(buffer->shared_buffer_id(), buffer);
+    }
+    post_message(ProtocolClient::DownloadFinished(download.id(), success, download.total_size(), buffer ? buffer->shared_buffer_id() : -1));
 }
 
 void PSClientConnection::did_progress_download(Badge<Download>, Download& download)
@@ -60,4 +69,10 @@ OwnPtr<ProtocolServer::GreetResponse> PSClientConnection::handle(const ProtocolS
 {
     set_client_pid(message.client_pid());
     return make<ProtocolServer::GreetResponse>(getpid(), client_id());
+}
+
+OwnPtr<ProtocolServer::DisownSharedBufferResponse> PSClientConnection::handle(const ProtocolServer::DisownSharedBuffer& message)
+{
+    m_shared_buffers.remove(message.shared_buffer_id());
+    return make<ProtocolServer::DisownSharedBufferResponse>();
 }

@@ -1,4 +1,5 @@
 #include <LibCore/CHttpJob.h>
+#include <LibCore/CHttpResponse.h>
 #include <ProtocolServer/HttpDownload.h>
 
 HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<CHttpJob>&& job)
@@ -6,6 +7,7 @@ HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<CHttpJob>&&
     , m_job(job)
 {
     m_job->on_finish = [this](bool success) {
+        set_payload(m_job->response()->payload());
         did_finish(success);
     };
 }
