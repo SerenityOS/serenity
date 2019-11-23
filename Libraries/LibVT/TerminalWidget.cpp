@@ -244,7 +244,8 @@ void TerminalWidget::keydown_event(GKeyEvent& event)
         write(m_ptm_fd, &ch, 1);
     }
 
-    m_scrollbar->set_value(m_scrollbar->max());
+    if (event.key() != Key_Control && event.key() != Key_Alt && event.key() != Key_Shift)
+        m_scrollbar->set_value(m_scrollbar->max());
 }
 
 void TerminalWidget::paint_event(GPaintEvent& event)
