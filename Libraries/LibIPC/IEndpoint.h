@@ -13,6 +13,7 @@ class IEndpoint {
 public:
     virtual ~IEndpoint();
 
+    virtual int magic() const = 0;
     virtual String name() const = 0;
     virtual OwnPtr<IMessage> handle(const IMessage&) = 0;
 

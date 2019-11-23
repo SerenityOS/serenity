@@ -27,6 +27,7 @@ struct Message {
 
 struct Endpoint {
     String name;
+    int magic;
     Vector<Message> messages;
 };
 
@@ -177,6 +178,13 @@ int main(int argc, char** argv)
         consume_whitespace();
         endpoints.last().name = extract_while([](char ch) { return !isspace(ch); });
         consume_whitespace();
+        consume_specific('=');
+        consume_whitespace();
+        auto magic_string = extract_while([](char ch) { return !isspace(ch) && ch != '{'; });
+        bool ok;
+        endpoints.last().magic = magic_string.to_int(ok);
+        ASSERT(ok);
+        consume_whitespace();
         consume_specific('{');
         parse_messages();
         consume_specific('}');
@@ -244,17 +252,20 @@ int main(int argc, char** argv)
             return builder.to_string();
         };
 
-        auto do_message = [&](const String& name, const Vector<Parameter>& parameters, String response_type = {}) {
+        auto do_message = [&](const String& name, const Vector<Parameter>& parameters, const String& response_type = {}) {
             dbg() << "class " << name << " final : public IMessage {";
             dbg() << "public:";
             if (!response_type.is_null())
                 dbg() << "    typedef class " << response_type << " ResponseType;";
             dbg() << "    " << constructor_for_message(name, parameters);
             dbg() << "    virtual ~" << name << "() override {}";
+            dbg() << "    virtual i32 endpoint_magic() const override { return " << endpoint.magic << "; }";
+            dbg() << "    static i32 static_endpoint_magic() { return " << endpoint.magic << "; }";
             dbg() << "    virtual i32 id() const override { return (int)MessageID::" << name << "; }";
             dbg() << "    static i32 static_message_id() { return (int)MessageID::" << name << "; }";
             dbg() << "    virtual String name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
-            dbg() << "    static OwnPtr<" << name << "> decode(BufferStream& stream)";
+            dbg() << "    static String static_name() { return \"" << endpoint.name << "::" << name << "\"; }";
+            dbg() << "    static OwnPtr<" << name << "> decode(BufferStream& stream, size_t& size_in_bytes)";
             dbg() << "    {";
 
             if (parameters.is_empty())
@@ -278,6 +289,7 @@ int main(int argc, char** argv)
                 if (i != parameters.size() - 1)
                     builder.append(", ");
             }
+            dbg() << "        size_in_bytes = stream.offset();";
             dbg() << "        return make<" << name << ">(" << builder.to_string() << ");";
             dbg() << "    }";
             dbg() << "    virtual ByteBuffer encode() const override";
@@ -285,6 +297,7 @@ int main(int argc, char** argv)
             // FIXME: Support longer messages:
             dbg() << "        auto buffer = ByteBuffer::create_uninitialized(1024);";
             dbg() << "        BufferStream stream(buffer);";
+            dbg() << "        stream << endpoint_magic();";
             dbg() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
                 dbg() << "        stream << m_" << parameter.name << ";";
@@ -317,17 +330,24 @@ int main(int argc, char** argv)
         dbg() << "public:";
         dbg() << "    " << endpoint.name << "Endpoint() {}";
         dbg() << "    virtual ~" << endpoint.name << "Endpoint() override {}";
+        dbg() << "    static int static_magic() { return " << endpoint.magic << "; }";
+        dbg() << "    virtual int magic() const override { return " << endpoint.magic << "; }";
+        dbg() << "    static String static_name() { return \"" << endpoint.name << "\"; };";
         dbg() << "    virtual String name() const override { return \"" << endpoint.name << "\"; };";
-        dbg() << "    static OwnPtr<IMessage> decode_message(const ByteBuffer& buffer)";
+        dbg() << "    static OwnPtr<IMessage> decode_message(const ByteBuffer& buffer, size_t& size_in_bytes)";
         dbg() << "    {";
         dbg() << "        BufferStream stream(const_cast<ByteBuffer&>(buffer));";
+        dbg() << "        i32 message_endpoint_magic = 0;";
+        dbg() << "        stream >> message_endpoint_magic;";
+        dbg() << "        if (message_endpoint_magic != " << endpoint.magic << ")";
+        dbg() << "            return nullptr;";
         dbg() << "        i32 message_id = 0;";
         dbg() << "        stream >> message_id;";
         dbg() << "        switch (message_id) {";
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name) {
                 dbg() << "        case (int)" << endpoint.name << "::MessageID::" << name << ":";
-                dbg() << "            return " << endpoint.name << "::" << name << "::decode(stream);";
+                dbg() << "            return " << endpoint.name << "::" << name << "::decode(stream, size_in_bytes);";
             };
             do_decode_message(message.name);
             if (message.is_synchronous)
@@ -383,7 +403,7 @@ int main(int argc, char** argv)
 
 #ifdef DEBUG
     for (auto& endpoint : endpoints) {
-        dbg() << "Endpoint: '" << endpoint.name << "'";
+        dbg() << "Endpoint: '" << endpoint.name << "' (magic: " << endpoint.magic << ")";
         for (auto& message : endpoint.messages) {
             dbg() << "  Message: '" << message.name << "'";
             dbg() << "    Sync: " << message.is_synchronous;

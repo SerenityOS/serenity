@@ -256,7 +256,7 @@ namespace Server {
             , m_client_id(client_id)
         {
             add_child(socket);
-            m_socket->on_ready_to_read = [this] { drain_client(); };
+            m_socket->on_ready_to_read = [this] { drain_messages_from_client(); };
         }
 
         virtual ~ConnectionNG() override
@@ -287,15 +287,16 @@ namespace Server {
             ASSERT(nwritten == buffer.size());
         }
 
-        void drain_client()
+        void drain_messages_from_client()
         {
-            unsigned messages_received = 0;
+            Vector<u8> bytes;
             for (;;) {
                 u8 buffer[4096];
                 ssize_t nread = recv(m_socket->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
                 if (nread == 0 || (nread == -1 && errno == EAGAIN)) {
-                    if (!messages_received) {
+                    if (bytes.is_empty()) {
                         CEventLoop::current().post_event(*this, make<DisconnectedEvent>(client_id()));
+                        return;
                     }
                     break;
                 }
@@ -303,17 +304,21 @@ namespace Server {
                     perror("recv");
                     ASSERT_NOT_REACHED();
                 }
-                auto message = m_endpoint.decode_message(ByteBuffer::wrap(buffer, nread));
+                bytes.append(buffer, nread);
+            }
+
+            size_t decoded_bytes = 0;
+            for (size_t index = 0; index < (size_t)bytes.size(); index += decoded_bytes) {
+                auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
+                auto message = Endpoint::decode_message(remaining_bytes, decoded_bytes);
                 if (!message) {
-                    dbg() << "drain_client: Endpoint didn't recognize message";
+                    dbg() << "drain_messages_from_client: Endpoint didn't recognize message";
                     did_misbehave();
                     return;
                 }
-                ++messages_received;
-
-                auto response = m_endpoint.handle(*message);
-                if (response)
+                if (auto response = m_endpoint.handle(*message))
                     post_message(*response);
+                ASSERT(decoded_bytes);
             }
         }
 
