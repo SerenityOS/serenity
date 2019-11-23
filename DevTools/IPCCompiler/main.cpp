@@ -276,7 +276,19 @@ int main(int argc, char** argv)
                 if (parameter.type == "bool")
                     initial_value = "false";
                 dbg() << "        " << parameter.type << " " << parameter.name << " = " << initial_value << ";";
-                dbg() << "        stream >> " << parameter.name << ";";
+
+                if (parameter.type == "String") {
+                    dbg() << "        int " << parameter.name << "_length = 0;";
+                    dbg() << "        char* " << parameter.name << "_buffer = nullptr;";
+                    dbg() << "        stream >> " << parameter.name << "_length;";
+                    dbg() << "        auto " << parameter.name << "_impl = StringImpl::create_uninitialized(" << parameter.name << "_length, " << parameter.name << "_buffer);";
+                    dbg() << "        for (int i = 0; i < " << parameter.name << "_length; ++i) {";
+                    dbg() << "            stream >> " << parameter.name << "_buffer[i];";
+                    dbg() << "        }";
+                    dbg() << "        " << parameter.name << " = *" << parameter.name << "_impl;";
+                } else {
+                    dbg() << "        stream >> " << parameter.name << ";";
+                }
                 dbg() << "        if (stream.handle_read_failure()) {";
                 dbg() << "            return nullptr;";
                 dbg() << "        }";
@@ -300,7 +312,12 @@ int main(int argc, char** argv)
             dbg() << "        stream << endpoint_magic();";
             dbg() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
-                dbg() << "        stream << m_" << parameter.name << ";";
+                if (parameter.type == "String") {
+                    dbg() << "        stream << m_" << parameter.name << ".length();";
+                    dbg() << "        stream << m_" << parameter.name << ";";
+                } else {
+                    dbg() << "        stream << m_" << parameter.name << ";";
+                }
             }
             dbg() << "        stream.snip();";
             dbg() << "        return buffer;";
