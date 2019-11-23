@@ -135,6 +135,7 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(get_process_name)       \
     __ENUMERATE_SYSCALL(fchdir)                 \
     __ENUMERATE_SYSCALL(getrandom)              \
+    __ENUMERATE_SYSCALL(setkeymap)              \
     __ENUMERATE_SYSCALL(clock_gettime)          \
     __ENUMERATE_SYSCALL(clock_nanosleep)        \
     __ENUMERATE_SYSCALL(openat)                 \

@@ -221,6 +221,7 @@ public:
     int sys$set_process_icon(int icon_id);
     int sys$realpath(const char* pathname, char*, size_t);
     ssize_t sys$getrandom(void*, size_t, unsigned int);
+    int sys$setkeymap(char* map, char* shift_map, char* alt_map);
 
     static void initialize();
 
