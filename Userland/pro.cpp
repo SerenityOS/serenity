@@ -1,5 +1,6 @@
 #include <LibCore/CEventLoop.h>
 #include <LibProtocol/Client.h>
+#include <LibC/SharedBuffer.h>
 #include <stdio.h>
 
 int main(int argc, char** argv)
@@ -13,8 +14,14 @@ int main(int argc, char** argv)
     printf("supports HTTP? %u\n", protocol_client->is_supported_protocol("http"));
     printf(" supports FTP? %u\n", protocol_client->is_supported_protocol("ftp"));
 
-    protocol_client->on_download_finish = [&](i32 download_id, bool success) {
-        printf("download %d finished, success=%u\n", download_id, success);
+    protocol_client->on_download_finish = [&](i32 download_id, bool success, u32 total_size, i32 shared_buffer_id) {
+        printf("download %d finished, success=%u, shared_buffer_id=%d\n", download_id, success, shared_buffer_id);
+        if (success) {
+            ASSERT(shared_buffer_id != -1);
+            auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(shared_buffer_id);
+            auto payload_bytes = ByteBuffer::wrap(shared_buffer->data(), total_size);
+            write(STDOUT_FILENO, payload_bytes.data(), payload_bytes.size());
+        }
         loop.quit(0);
     };
 

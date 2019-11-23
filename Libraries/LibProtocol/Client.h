@@ -18,7 +18,7 @@ public:
     i32 start_download(const String& url);
     bool stop_download(i32 download_id);
 
-    Function<void(i32 download_id, bool success)> on_download_finish;
+    Function<void(i32 download_id, bool success, u32 total_size, i32 shared_buffer_id)> on_download_finish;
     Function<void(i32 download_id, u64 total_size, u64 downloaded_size)> on_download_progress;
 
 private:
