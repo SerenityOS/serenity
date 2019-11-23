@@ -11,6 +11,7 @@ GTextDocument::GTextDocument(Client* client)
 
 void GTextDocument::set_text(const StringView& text)
 {
+    m_client_notifications_enabled = false;
     m_spans.clear();
     remove_all_lines();
 
@@ -30,6 +31,10 @@ void GTextDocument::set_text(const StringView& text)
             add_line(i);
     }
     add_line(i);
+    m_client_notifications_enabled = true;
+
+    for (auto* client : m_clients)
+        client->document_did_set_text();
 }
 
 int GTextDocumentLine::first_non_whitespace_column() const
@@ -122,29 +127,37 @@ void GTextDocumentLine::truncate(GTextDocument& document, int length)
 void GTextDocument::append_line(NonnullOwnPtr<GTextDocumentLine> line)
 {
     lines().append(move(line));
-    for (auto* client : m_clients)
-        client->document_did_append_line();
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_append_line();
+    }
 }
 
 void GTextDocument::insert_line(int line_index, NonnullOwnPtr<GTextDocumentLine> line)
 {
     lines().insert(line_index, move(line));
-    for (auto* client : m_clients)
-        client->document_did_insert_line(line_index);
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_insert_line(line_index);
+    }
 }
 
 void GTextDocument::remove_line(int line_index)
 {
     lines().remove(line_index);
-    for (auto* client : m_clients)
-        client->document_did_remove_line(line_index);
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_remove_line(line_index);
+    }
 }
 
 void GTextDocument::remove_all_lines()
 {
     lines().clear();
-    for (auto* client : m_clients)
-        client->document_did_remove_all_lines();
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_remove_all_lines();
+    }
 }
 
 GTextDocument::Client::~Client()
@@ -163,8 +176,10 @@ void GTextDocument::unregister_client(Client& client)
 
 void GTextDocument::update_views(Badge<GTextDocumentLine>)
 {
-    for (auto* client : m_clients)
-        client->document_did_change();
+    if (m_client_notifications_enabled) {
+        for (auto* client : m_clients)
+            client->document_did_change();
+    }
 }
 
 String GTextDocument::text_in_range(const GTextRange& a_range) const
@@ -326,9 +341,3 @@ Optional<GTextDocumentSpan> GTextDocument::first_non_skippable_span_after(const 
     }
     return {};
 }
-
-
-
-
-
-
