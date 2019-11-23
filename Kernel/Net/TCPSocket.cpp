@@ -162,6 +162,7 @@ void TCPSocket::send_tcp_packet(u16 flags, const void* payload, int payload_size
     tcp_packet.set_checksum(compute_tcp_checksum(local_address(), peer_address(), tcp_packet, payload_size));
 
     if (tcp_packet.has_syn() || payload_size > 0) {
+        LOCKER(m_not_acked_lock);
         m_not_acked.append({ m_sequence_number, move(buffer), 0, {} });
         send_outgoing_packets();
         return;
@@ -185,6 +186,7 @@ void TCPSocket::send_outgoing_packets()
 
     auto now = kgettimeofday();
 
+    LOCKER(m_not_acked_lock);
     for (auto& packet : m_not_acked) {
         timeval diff;
         timeval_sub(packet.tx_time, now, diff);
@@ -228,6 +230,7 @@ void TCPSocket::receive_tcp_packet(const TCPPacket& packet, u16 size)
 #endif
 
         int removed = 0;
+        LOCKER(m_not_acked_lock);
         while (!m_not_acked.is_empty()) {
             auto& packet = m_not_acked.first();
 

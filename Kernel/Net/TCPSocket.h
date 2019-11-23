@@ -172,5 +172,6 @@ private:
         timeval tx_time;
     };
 
+    Lock m_not_acked_lock { "TCPSocket unacked packets" };
     SinglyLinkedList<OutgoingPacket> m_not_acked;
 };
