@@ -17,7 +17,11 @@
 #define I8042_MOUSE_BUFFER 0x20
 #define I8042_KEYBOARD_BUFFER 0x00
 
-static char map[0x80] = {
+char *map;
+char *shift_map;
+char *alt_map;
+
+static char en_map[0x80] = {
     0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, '\t',
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0,
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
@@ -31,7 +35,7 @@ static char map[0x80] = {
     0, 0, 0, 0, 0, 0, '\\', 0, 0, 0,
 };
 
-static char shift_map[0x80] = {
+static char en_shift_map[0x80] = {
     0, '\033', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0x08, '\t',
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0,
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|',
@@ -242,7 +246,7 @@ static KeyCode numpad_key_map[13] = { Key_7, Key_8, Key_9, Key_Invalid, Key_4, K
 void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
 {
     KeyCode key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
-    char character = (m_modifiers & Mod_Shift) ? shift_map[raw] : map[raw];
+    char character = (m_modifiers & Mod_Shift) ? shift_map[raw]: (m_modifiers & Mod_Alt) ? alt_map[raw] : map[raw];
 
     if (key == Key_NumLock && pressed)
         m_num_lock_on = !m_num_lock_on;
@@ -258,6 +262,14 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
             {
                 key = newKey;
                 character = numpad_map[index];
+            }
+        }
+    }
+    else
+    {
+        if(m_has_e0_prefix) {
+            if(key == Key_Slash) {
+                character = '/'; // On Turkish-QWERTY Keyboard Key_Slash mapped to '.' char, if e0 prefix is true remap to '/' char
             }
         }
     }
@@ -356,6 +368,8 @@ KeyboardDevice::KeyboardDevice()
 {
     s_the = this;
 
+    KeyboardDevice::set_maps(en_map, en_shift_map, en_map);
+
     // Empty the buffer of any pending data.
     // I don't care what you've been pressing until now!
     while (IO::in8(I8042_STATUS) & I8042_BUFFER_FULL)
@@ -396,4 +410,21 @@ ssize_t KeyboardDevice::write(FileDescription&, const u8*, ssize_t)
 
 KeyboardClient::~KeyboardClient()
 {
+}
+
+void KeyboardDevice::set_maps(char* n_map, char* n_shift_map, char* n_alt_map)
+{
+    kfree(map);
+    kfree(shift_map);
+    kfree(alt_map);
+
+    map = (char*) kmalloc(0x80);
+    shift_map = (char*) kmalloc(0x80);
+    alt_map = (char*) kmalloc(0x80);
+
+    for(int i=0; i < 0x80; i++) {
+        map[i] = n_map[i];
+        shift_map[i] = n_shift_map[i];
+        alt_map[i] = n_alt_map[i];
+    }
 }
