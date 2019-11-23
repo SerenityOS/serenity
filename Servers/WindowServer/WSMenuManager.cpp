@@ -10,6 +10,15 @@
 WSMenuManager::WSMenuManager()
 {
     m_audio_client = make<AClientConnection>();
+    m_audio_client->on_muted_state_change = [this](bool muted) {
+        if (m_audio_muted == muted)
+            return;
+        m_audio_muted = muted;
+        if (m_window) {
+            draw();
+            m_window->invalidate();
+        }
+    };
 
     m_unmuted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-unmuted.png");
     m_muted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-muted.png");
@@ -153,11 +162,7 @@ void WSMenuManager::event(CEvent& event)
         if (mouse_event.type() == WSEvent::MouseDown
             && mouse_event.button() == MouseButton::Left
             && m_audio_rect.contains(mouse_event.position())) {
-
-            // FIXME: This should listen for notifications from the AudioServer, once those actually exist.
-            //        Right now, we won't notice if another program changes the AudioServer muted state.
-            m_audio_muted = !m_audio_muted;
-            m_audio_client->set_muted(m_audio_muted);
+            m_audio_client->set_muted(!m_audio_muted);
             draw();
             m_window->invalidate();
         }
