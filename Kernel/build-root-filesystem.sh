@@ -72,7 +72,6 @@ echo "done"
 
 printf "installing applications... "
 cp ../Applications/About/About mnt/bin/About
-cp ../Applications/Downloader/Downloader mnt/bin/Downloader
 cp ../Applications/FileManager/FileManager mnt/bin/FileManager
 cp ../Applications/FontEditor/FontEditor mnt/bin/FontEditor
 cp ../Applications/IRCClient/IRCClient mnt/bin/IRCClient
@@ -112,7 +111,6 @@ cp ../Shell/Shell mnt/bin/Shell
 echo "done"
 
 printf "installing shortcuts... "
-ln -s Downloader mnt/bin/dl
 ln -s FileManager mnt/bin/fm
 ln -s HelloWorld mnt/bin/hw
 ln -s HelloWorld2 mnt/bin/hw2
