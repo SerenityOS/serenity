@@ -24,8 +24,7 @@ MemoryManager::MemoryManager(u32 physical_address_for_kernel_page_tables)
 {
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(physical_address_for_kernel_page_tables));
     m_page_table_zero = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE);
-    m_page_table_768 = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * 2);
-    m_page_table_769 = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * 3);
+    m_page_table_one = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * 2);
     initialize_paging();
 
     kprintf("MM initialized.\n");
@@ -39,6 +38,7 @@ void MemoryManager::populate_page_directory(PageDirectory& page_directory)
 {
     page_directory.m_directory_page = allocate_supervisor_physical_page();
     page_directory.entries()[0].copy_from({}, kernel_page_directory().entries()[0]);
+    page_directory.entries()[1].copy_from({}, kernel_page_directory().entries()[1]);
     // Defer to the kernel page tables for 0xC0000000-0xFFFFFFFF
     for (int i = 768; i < 1024; ++i)
         page_directory.entries()[i].copy_from({}, kernel_page_directory().entries()[i]);
@@ -47,6 +47,7 @@ void MemoryManager::populate_page_directory(PageDirectory& page_directory)
 void MemoryManager::initialize_paging()
 {
     memset(m_page_table_zero, 0, PAGE_SIZE);
+    memset(m_page_table_one, 0, PAGE_SIZE);
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
@@ -59,12 +60,16 @@ void MemoryManager::initialize_paging()
     map_protected(VirtualAddress(0), PAGE_SIZE);
 
 #ifdef MM_DEBUG
-    dbgprintf("MM: Identity map bottom 1MiB\n", kernel_virtual_base);
+    dbgprintf("MM: Identity map bottom 8MB\n");
 #endif
-    create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (1 * MB) - PAGE_SIZE);
+    // The bottom 8 MB (except for the null page) are identity mapped & supervisor only.
+    // Every process shares these mappings.
+    create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (8 * MB) - PAGE_SIZE);
+
+    // FIXME: We should move everything kernel-related above the 0xc0000000 virtual mark.
 
     // Basic physical memory map:
-    // 0      -> 1 MB           Page table/directory / I/O memory region
+    // 0      -> 1 MB           We're just leaving this alone for now.
     // 1      -> 3 MB           Kernel image.
     // (last page before 2MB)   Used by quickmap_page().
     // 2 MB   -> 4 MB           kmalloc_eternal() space.
@@ -73,10 +78,8 @@ void MemoryManager::initialize_paging()
     // 8 MB   -> MAX            Userspace physical pages (available for allocation!)
 
     // Basic virtual memory map:
-    // 0x00000000-0x00100000    Identity mapped for Kernel Physical pages handed out by allocate_supervisor_physical_page (for I/O, page tables etc).
-    // 0x00800000-0xbfffffff    Userspace program virtual address space.
-    // 0xc0001000-0xc0800000    Kernel-only virtual address space. This area is mapped to the first 8 MB of physical memory and includes areas for kmalloc, etc.
-    // 0xc0800000-0xffffffff    Kernel virtual address space for kernel Page Directory.
+    // 0 MB   -> 8MB            Identity mapped.
+    // 0xc0000000-0xffffffff    Kernel-only virtual address space.
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
@@ -95,6 +98,10 @@ void MemoryManager::initialize_paging()
             (u32)mmap->type);
 
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
+            continue;
+
+        // FIXME: Maybe make use of stuff below the 1MB mark?
+        if (mmap->addr < (1 * MB))
             continue;
 
         if ((mmap->addr + mmap->len) > 0xffffffff)
@@ -124,8 +131,9 @@ void MemoryManager::initialize_paging()
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
             auto addr = PhysicalAddress(page_base);
 
-            // Anything below 1 * MB is a Kernel Physical region
-            if (page_base > PAGE_SIZE && page_base < 1 * MB) {
+            if (page_base < 7 * MB) {
+                // nothing
+            } else if (page_base >= 7 * MB && page_base < 8 * MB) {
                 if (region.is_null() || !region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
                     m_super_physical_regions.append(PhysicalRegion::create(addr, addr));
                     region = m_super_physical_regions.last();
@@ -133,7 +141,7 @@ void MemoryManager::initialize_paging()
                 } else {
                     region->expand(region->lower(), addr);
                 }
-            } else if (page_base > 8 * MB) {
+            } else {
                 if (region.is_null() || region_is_super || region->upper().offset(PAGE_SIZE) != addr) {
                     m_user_physical_regions.append(PhysicalRegion::create(addr, addr));
                     region = m_user_physical_regions.last();
@@ -154,6 +162,7 @@ void MemoryManager::initialize_paging()
 #ifdef MM_DEBUG
     dbgprintf("MM: Installing page directory\n");
 #endif
+
     // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
     asm volatile(
         "mov %cr4, %eax\n"
@@ -166,6 +175,10 @@ void MemoryManager::initialize_paging()
         "orl $0x80000001, %%eax\n"
         "movl %%eax, %%cr0\n" ::
             : "%eax", "memory");
+
+#ifdef MM_DEBUG
+    dbgprintf("MM: Paging initialized.\n");
+#endif
 }
 
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
@@ -186,16 +199,9 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             pde.set_present(true);
             pde.set_writable(true);
             pde.set_global(true);
-        } else if (page_directory_index == 768) {
+        } else if (page_directory_index == 1) {
             ASSERT(&page_directory == m_kernel_page_directory);
-            pde.set_page_table_base((u32)m_page_table_768);
-            pde.set_user_allowed(false);
-            pde.set_present(true);
-            pde.set_writable(true);
-            pde.set_global(true);
-        } else if (page_directory_index == 769) {
-            ASSERT(&page_directory == m_kernel_page_directory);
-            pde.set_page_table_base((u32)m_page_table_769);
+            pde.set_page_table_base((u32)m_page_table_one);
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);
@@ -221,7 +227,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             page_directory.m_physical_pages.set(page_directory_index, move(page_table));
         }
     }
-    return pde.page_table_virtual_base()[page_table_index];
+    return pde.page_table_base()[page_table_index];
 }
 
 void MemoryManager::map_protected(VirtualAddress vaddr, size_t length)
