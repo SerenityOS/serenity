@@ -31,6 +31,7 @@ build_targets="$build_targets ../Libraries/LibPthread"
 # Build IPC servers before their client code to ensure the IPC definitions are available.
 build_targets="$build_targets ../Servers/AudioServer"
 build_targets="$build_targets ../Servers/LookupServer"
+build_targets="$build_targets ../Servers/ProtocolServer"
 
 build_targets="$build_targets ../AK"
 
@@ -42,6 +43,7 @@ build_targets="$build_targets ../Libraries/LibM"
 build_targets="$build_targets ../Libraries/LibPCIDB"
 build_targets="$build_targets ../Libraries/LibVT"
 build_targets="$build_targets ../Libraries/LibMarkdown"
+build_targets="$build_targets ../Libraries/LibProtocol"
 
 build_targets="$build_targets ../Applications/About"
 build_targets="$build_targets ../Applications/Calculator"
