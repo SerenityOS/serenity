@@ -1,8 +1,8 @@
 #include <AK/FileSystemPath.h>
 #include <AK/MappedFile.h>
 #include <AK/NetworkOrdered.h>
+#include <LibCore/puff.h>
 #include <LibDraw/PNGLoader.h>
-#include <LibDraw/puff.c>
 #include <fcntl.h>
 #include <serenity.h>
 #include <stdio.h>

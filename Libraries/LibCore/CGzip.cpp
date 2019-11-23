@@ -1,11 +1,10 @@
 #include "CGzip.h"
-
 #include <AK/ByteBuffer.h>
 #include <AK/Optional.h>
+#include <LibCore/puff.h>
+#include <LibCore/puff.c>
 #include <limits.h>
 #include <stddef.h>
-
-#include <LibDraw/puff.h>
 
 bool CGzip::is_compressed(const ByteBuffer& data)
 {
