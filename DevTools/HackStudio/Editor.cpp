@@ -172,7 +172,7 @@ void Editor::mousemove_event(GMouseEvent& event)
     GApplication::the().hide_tooltip();
 }
 
-void Editor::highlight_matching_curlies_or_parens()
+void Editor::highlight_matching_token_pair()
 {
     enum class Direction {
         Forward,
@@ -210,38 +210,40 @@ void Editor::highlight_matching_curlies_or_parens()
         update();
     };
 
+    struct MatchingTokenPair {
+        CppToken::Type open;
+        CppToken::Type close;
+    };
+
+    MatchingTokenPair pairs[] = {
+        { CppToken::Type::LeftCurly, CppToken::Type::RightCurly },
+        { CppToken::Type::LeftParen, CppToken::Type::RightParen },
+        { CppToken::Type::LeftBracket, CppToken::Type::RightBracket },
+    };
+
     for (int i = 0; i < document().spans().size(); ++i) {
         auto& span = const_cast<GTextDocumentSpan&>(document().spans().at(i));
         auto token_type = (CppToken::Type)((uintptr_t)span.data);
-        if (token_type == CppToken::Type::LeftCurly && span.range.start() == cursor()) {
-            auto buddy = find_span_of_type(i, CppToken::Type::RightCurly, CppToken::Type::LeftCurly, Direction::Forward);
-            if (buddy != -1)
-                make_buddies(i, buddy);
-            return;
-        }
 
-        if (token_type == CppToken::Type::LeftParen && span.range.start() == cursor()) {
-            auto buddy = find_span_of_type(i, CppToken::Type::RightParen, CppToken::Type::LeftParen, Direction::Forward);
-            if (buddy != -1)
-                make_buddies(i, buddy);
-            return;
+        for (auto& pair : pairs) {
+            if (token_type == pair.open && span.range.start() == cursor()) {
+                auto buddy = find_span_of_type(i, pair.close, pair.open, Direction::Forward);
+                if (buddy != -1)
+                    make_buddies(i, buddy);
+                return;
+            }
         }
 
         auto right_of_end = span.range.end();
         right_of_end.set_column(right_of_end.column() + 1);
 
-        if (token_type == CppToken::Type::RightCurly && right_of_end == cursor()) {
-            auto buddy = find_span_of_type(i, CppToken::Type::LeftCurly, CppToken::Type::RightCurly, Direction::Backward);
-            if (buddy != -1)
-                make_buddies(i, buddy);
-            return;
-        }
-
-        if (token_type == CppToken::Type::RightParen && right_of_end == cursor()) {
-            auto buddy = find_span_of_type(i, CppToken::Type::LeftParen, CppToken::Type::RightParen, Direction::Backward);
-            if (buddy != -1)
-                make_buddies(i, buddy);
-            return;
+        for (auto& pair : pairs) {
+            if (token_type == pair.close && right_of_end == cursor()) {
+                auto buddy = find_span_of_type(i, pair.open, pair.close, Direction::Backward);
+                if (buddy != -1)
+                    make_buddies(i, buddy);
+                return;
+            }
         }
     }
 }
@@ -256,11 +258,11 @@ void Editor::cursor_did_change()
         m_has_brace_buddies = false;
         update();
     }
-    highlight_matching_curlies_or_parens();
+    highlight_matching_token_pair();
 }
 
 void Editor::notify_did_rehighlight()
 {
     m_has_brace_buddies = false;
-    highlight_matching_curlies_or_parens();
+    highlight_matching_token_pair();
 }
