@@ -36,6 +36,7 @@ public:
         virtual void document_did_remove_line(int) = 0;
         virtual void document_did_remove_all_lines() = 0;
         virtual void document_did_change() = 0;
+        virtual void document_did_set_text() = 0;
     };
 
     static NonnullRefPtr<GTextDocument> create(Client* client = nullptr)
@@ -90,6 +91,7 @@ private:
     Vector<GTextDocumentSpan> m_spans;
 
     HashTable<Client*> m_clients;
+    bool m_client_notifications_enabled { true };
 };
 
 class GTextDocumentLine {

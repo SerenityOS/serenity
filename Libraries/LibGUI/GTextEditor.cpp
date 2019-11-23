@@ -1613,6 +1613,14 @@ void GTextEditor::document_did_change()
     update();
 }
 
+void GTextEditor::document_did_set_text()
+{
+    m_line_visual_data.clear();
+    for (int i = 0; i < m_document->line_count(); ++i)
+        m_line_visual_data.append(make<LineVisualData>());
+    document_did_change();
+}
+
 void GTextEditor::set_document(GTextDocument& document)
 {
     if (m_document.ptr() == &document)

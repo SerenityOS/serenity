@@ -133,6 +133,7 @@ private:
     virtual void document_did_remove_line(int) override;
     virtual void document_did_remove_all_lines() override;
     virtual void document_did_change() override;
+    virtual void document_did_set_text() override;
 
     void create_actions();
     void paint_ruler(Painter&);
