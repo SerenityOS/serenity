@@ -13,6 +13,15 @@
 
 static HashMap<int, RefPtr<ASClientConnection>> s_connections;
 
+void ASClientConnection::for_each(Function<void(ASClientConnection&)> callback)
+{
+    NonnullRefPtrVector<ASClientConnection> connections;
+    for (auto& it : s_connections)
+        connections.append(*it.value);
+    for (auto& connection : connections)
+        callback(connection);
+}
+
 ASClientConnection::ASClientConnection(CLocalSocket& client_socket, int client_id, ASMixer& mixer)
     : ConnectionNG(*this, client_socket, client_id)
     , m_mixer(mixer)
@@ -32,6 +41,11 @@ void ASClientConnection::die()
 void ASClientConnection::did_finish_playing_buffer(Badge<ASBufferQueue>, int buffer_id)
 {
     post_message(AudioClient::FinishedPlayingBuffer(buffer_id));
+}
+
+void ASClientConnection::did_change_muted_state(Badge<ASMixer>, bool muted)
+{
+    post_message(AudioClient::MutedStateChanged(muted));
 }
 
 OwnPtr<AudioServer::GreetResponse> ASClientConnection::handle(const AudioServer::Greet& message)

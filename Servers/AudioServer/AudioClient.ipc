@@ -1,4 +1,5 @@
 endpoint AudioClient = 82
 {
     FinishedPlayingBuffer(i32 buffer_id) =|
+    MutedStateChanged(bool muted) =|
 }

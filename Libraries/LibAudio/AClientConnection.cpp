@@ -77,6 +77,14 @@ int AClientConnection::get_playing_buffer()
     return send_sync<AudioServer::GetPlayingBuffer>()->buffer_id();
 }
 
-void AClientConnection::handle(const AudioClient::FinishedPlayingBuffer&)
+void AClientConnection::handle(const AudioClient::FinishedPlayingBuffer& message)
 {
+    if (on_finish_playing_buffer)
+        on_finish_playing_buffer(message.buffer_id());
+}
+
+void AClientConnection::handle(const AudioClient::MutedStateChanged& message)
+{
+    if (on_muted_state_change)
+        on_muted_state_change(message.muted());
 }
