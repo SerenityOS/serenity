@@ -252,7 +252,7 @@ void Region::map(PageDirectory& page_directory)
         pte.set_user_allowed(is_user_accessible());
         page_directory.flush(page_vaddr);
 #ifdef MM_DEBUG
-        kprintf("MM: >> map_region_at_address (PD=%p) '%s' V%p => P%p (@%p)\n", &page_directory, name().characters(), page_vaddr.get(), physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
+        dbgprintf("MM: >> map_region_at_address (PD=%p) '%s' V%p => P%p (@%p)\n", &page_directory, name().characters(), page_vaddr.get(), physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
 #endif
     }
 }

@@ -107,7 +107,7 @@ CXXFLAGS += -nostdlib -nostdinc -nostdinc++
 CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/8.3.0/
 CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/8.3.0/i686-pc-serenity/
 DEFINES += -DKERNEL
-LDFLAGS += -Wl,-T linker.ld -nostdlib
+LDFLAGS += -Ttext 0x100000 -Wl,-T linker.ld -nostdlib
 
 all: $(KERNEL) kernel.map
 
