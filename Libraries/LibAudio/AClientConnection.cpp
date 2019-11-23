@@ -3,7 +3,7 @@
 #include <SharedBuffer.h>
 
 AClientConnection::AClientConnection()
-    : ConnectionNG("/tmp/asportal")
+    : ConnectionNG(*this, "/tmp/asportal")
 {
 }
 
@@ -75,4 +75,8 @@ void AClientConnection::clear_buffer(bool paused)
 int AClientConnection::get_playing_buffer()
 {
     return send_sync<AudioServer::GetPlayingBuffer>()->buffer_id();
+}
+
+void AClientConnection::handle(const AudioClient::FinishedPlayingBuffer&)
+{
 }

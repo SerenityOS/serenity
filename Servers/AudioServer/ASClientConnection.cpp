@@ -1,10 +1,9 @@
 #include "ASClientConnection.h"
 #include "ASMixer.h"
-
+#include "AudioClientEndpoint.h"
 #include <LibAudio/ABuffer.h>
 #include <LibCore/CEventLoop.h>
 #include <SharedBuffer.h>
-
 #include <errno.h>
 #include <stdio.h>
 #include <sys/socket.h>
@@ -30,10 +29,9 @@ void ASClientConnection::die()
     s_connections.remove(client_id());
 }
 
-void ASClientConnection::did_finish_playing_buffer(Badge<ASMixer>, int buffer_id)
+void ASClientConnection::did_finish_playing_buffer(Badge<ASBufferQueue>, int buffer_id)
 {
-    (void)buffer_id;
-    //post_message(AudioClient::FinishedPlayingBuffer(buffer_id));
+    post_message(AudioClient::FinishedPlayingBuffer(buffer_id));
 }
 
 OwnPtr<AudioServer::GreetResponse> ASClientConnection::handle(const AudioServer::Greet& message)

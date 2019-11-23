@@ -1,11 +1,13 @@
 #pragma once
 
+#include <AudioServer/AudioClientEndpoint.h>
 #include <AudioServer/AudioServerEndpoint.h>
 #include <LibCore/CoreIPCClient.h>
 
 class ABuffer;
 
-class AClientConnection : public IPC::Client::ConnectionNG<AudioServerEndpoint> {
+class AClientConnection : public IPC::Client::ConnectionNG<AudioClientEndpoint, AudioServerEndpoint>
+    , public AudioClientEndpoint {
     C_OBJECT(AClientConnection)
 public:
     AClientConnection();
@@ -26,4 +28,7 @@ public:
 
     void set_paused(bool paused);
     void clear_buffer(bool paused = false);
+
+private:
+    virtual void handle(const AudioClient::FinishedPlayingBuffer&) override;
 };

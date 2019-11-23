@@ -13,7 +13,7 @@ class ASClientConnection final : public IPC::Server::ConnectionNG<AudioServerEnd
 public:
     explicit ASClientConnection(CLocalSocket&, int client_id, ASMixer& mixer);
     ~ASClientConnection() override;
-    void did_finish_playing_buffer(Badge<ASMixer>, int buffer_id);
+    void did_finish_playing_buffer(Badge<ASBufferQueue>, int buffer_id);
 
     virtual void die() override;
 

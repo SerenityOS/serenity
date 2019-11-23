@@ -1,4 +1,4 @@
-endpoint AudioClient
+endpoint AudioClient = 82
 {
     FinishedPlayingBuffer(i32 buffer_id) =|
 }

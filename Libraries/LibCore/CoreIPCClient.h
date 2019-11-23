@@ -246,11 +246,12 @@ namespace Client {
         int m_my_client_id { -1 };
     };
 
-    template<typename Endpoint>
+    template<typename LocalEndpoint, typename PeerEndpoint>
     class ConnectionNG : public CObject {
     public:
-        ConnectionNG(const StringView& address)
-            : m_connection(CLocalSocket::construct(this))
+        ConnectionNG(LocalEndpoint& local_endpoint, const StringView& address)
+            : m_local_endpoint(local_endpoint)
+            , m_connection(CLocalSocket::construct(this))
             , m_notifier(CNotifier::construct(m_connection->fd(), CNotifier::Read, this))
         {
             // We want to rate-limit our clients
@@ -312,8 +313,7 @@ namespace Client {
                 }
                 ASSERT(rc > 0);
                 ASSERT(FD_ISSET(m_connection->fd(), &rfds));
-                bool success = drain_messages_from_server();
-                if (!success)
+                if (!drain_messages_from_server())
                     return nullptr;
                 for (ssize_t i = 0; i < m_unprocessed_messages.size(); ++i) {
                     if (m_unprocessed_messages[i]->id() == MessageType::static_message_id()) {
@@ -358,30 +358,42 @@ namespace Client {
     private:
         bool drain_messages_from_server()
         {
+            Vector<u8> bytes;
             for (;;) {
                 u8 buffer[4096];
                 ssize_t nread = recv(m_connection->fd(), buffer, sizeof(buffer), MSG_DONTWAIT);
                 if (nread < 0) {
-                    if (errno == EAGAIN) {
-                        return true;
-                    }
+                    if (errno == EAGAIN)
+                        break;
                     perror("read");
                     exit(1);
                     return false;
                 }
                 if (nread == 0) {
                     dbg() << "EOF on IPC fd";
+                    // FIXME: Dying is definitely not always appropriate!
                     exit(1);
                     return false;
                 }
-
-                auto message = Endpoint::decode_message(ByteBuffer::wrap(buffer, sizeof(buffer)));
-                ASSERT(message);
-
-                m_unprocessed_messages.append(move(message));
+                bytes.append(buffer, nread);
             }
+
+            size_t decoded_bytes = 0;
+            for (size_t index = 0; index < (size_t)bytes.size(); index += decoded_bytes) {
+                auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
+                if (auto message = LocalEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
+                    m_local_endpoint.handle(*message);
+                } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
+                    m_unprocessed_messages.append(move(message));
+                } else {
+                    ASSERT_NOT_REACHED();
+                }
+                ASSERT(decoded_bytes);
+            }
+            return true;
         }
 
+        LocalEndpoint& m_local_endpoint;
         RefPtr<CLocalSocket> m_connection;
         RefPtr<CNotifier> m_notifier;
         Vector<OwnPtr<IMessage>> m_unprocessed_messages;
