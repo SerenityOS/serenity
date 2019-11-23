@@ -8,6 +8,7 @@ OBJS = \
     GraphicsBitmap.o \
     Painter.o \
     PNGLoader.o \
+    GIFLoader.o \
     ImageDecoder.o \
     Rect.o \
     StylePainter.o \
