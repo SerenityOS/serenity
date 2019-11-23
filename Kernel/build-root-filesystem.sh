@@ -107,6 +107,7 @@ cp ../Servers/WindowServer/WindowServer mnt/bin/WindowServer
 cp ../Servers/AudioServer/AudioServer mnt/bin/AudioServer
 cp ../Servers/TTYServer/TTYServer mnt/bin/TTYServer
 cp ../Servers/TelnetServer/TelnetServer mnt/bin/TelnetServer
+cp ../Servers/ProtocolServer/ProtocolServer mnt/bin/ProtocolServer
 cp ../Shell/Shell mnt/bin/Shell
 echo "done"
 

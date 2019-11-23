@@ -1,0 +1,6 @@
+endpoint ProtocolClient = 13
+{
+    // Download notifications
+    DownloadProgress(i32 download_id, u32 total_size, u32 downloaded_size) =|
+    DownloadFinished(i32 download_id, bool success) =|
+}

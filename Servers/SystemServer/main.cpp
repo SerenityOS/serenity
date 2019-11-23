@@ -106,6 +106,7 @@ int main(int, char**)
 
     signal(SIGCHLD, sigchld_handler);
 
+    start_process("/bin/ProtocolServer", {}, lowest_prio);
     start_process("/bin/LookupServer", {}, lowest_prio);
     start_process("/bin/WindowServer", {}, highest_prio);
     start_process("/bin/AudioServer", {}, highest_prio);

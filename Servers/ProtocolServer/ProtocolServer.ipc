@@ -1,0 +1,12 @@
+endpoint ProtocolServer = 9
+{
+    // Basic protocol
+    Greet(i32 client_pid) => (i32 server_pid, i32 client_id)
+
+    // Test if a specific protocol is supported, e.g "http"
+    IsSupportedProtocol(String protocol) => (bool supported)
+
+    // Download API
+    StartDownload(String url) => (i32 download_id)
+    StopDownload(i32 download_id) => (bool success)
+}
