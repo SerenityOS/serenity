@@ -1,6 +1,7 @@
 include ../../Makefile.common
 
 OBJS = \
+    Download.o \
     Client.o
 
 LIBRARY = libprotocol.a

@@ -1,4 +1,5 @@
 #include <LibProtocol/Client.h>
+#include <LibProtocol/Download.h>
 #include <SharedBuffer.h>
 
 namespace LibProtocol {
@@ -6,6 +7,7 @@ namespace LibProtocol {
 Client::Client()
     : ConnectionNG(*this, "/tmp/psportal")
 {
+    handshake();
 }
 
 void Client::handshake()
@@ -20,27 +22,36 @@ bool Client::is_supported_protocol(const String& protocol)
     return send_sync<ProtocolServer::IsSupportedProtocol>(protocol)->supported();
 }
 
-i32 Client::start_download(const String& url)
+RefPtr<Download> Client::start_download(const String& url)
 {
-    return send_sync<ProtocolServer::StartDownload>(url)->download_id();
+    i32 download_id = send_sync<ProtocolServer::StartDownload>(url)->download_id();
+    auto download = Download::create_from_id({}, *this, download_id);
+    m_downloads.set(download_id, download);
+    return download;
 }
 
-bool Client::stop_download(i32 download_id)
+bool Client::stop_download(Badge<Download>, Download& download)
 {
-    return send_sync<ProtocolServer::StopDownload>(download_id)->success();
+    if (!m_downloads.contains(download.id()))
+        return false;
+    return send_sync<ProtocolServer::StopDownload>(download.id())->success();
 }
 
 void Client::handle(const ProtocolClient::DownloadFinished& message)
 {
-    if (on_download_finish)
-        on_download_finish(message.download_id(), message.success(), message.total_size(), message.shared_buffer_id());
+    RefPtr<Download> download;
+    if ((download = m_downloads.get(message.download_id()).value_or(nullptr))) {
+        download->did_finish({}, message.success(), message.total_size(), message.shared_buffer_id());
+    }
     send_sync<ProtocolServer::DisownSharedBuffer>(message.shared_buffer_id());
+    m_downloads.remove(message.download_id());
 }
 
 void Client::handle(const ProtocolClient::DownloadProgress& message)
 {
-    if (on_download_progress)
-        on_download_progress(message.download_id(), message.total_size(), message.downloaded_size());
+    if (auto download = m_downloads.get(message.download_id()).value_or(nullptr)) {
+        download->did_progress({}, message.total_size(), message.downloaded_size());
+    }
 }
 
 }
