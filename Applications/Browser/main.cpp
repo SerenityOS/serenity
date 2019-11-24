@@ -24,6 +24,7 @@
 #include <LibHTML/Parser/HTMLParser.h>
 #include <LibHTML/ResourceLoader.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 static const char* home_url = "file:///home/anon/www/welcome.html";
 
@@ -135,6 +136,25 @@ int main(int argc, char** argv)
     RefPtr<GTreeView> dom_tree_view;
 
     auto inspect_menu = make<GMenu>("Inspect");
+    inspect_menu->add_action(GAction::create("View source", { Mod_Ctrl, Key_U }, [&](auto&) {
+        String filename_to_open;
+        char tmp_filename[] = "/tmp/view-source.XXXXXX";
+        ASSERT(html_widget->document());
+        if (html_widget->document()->url().protocol() == "file") {
+            filename_to_open = html_widget->document()->url().path();
+        } else {
+            int fd = mkstemp(tmp_filename);
+            ASSERT(fd >= 0);
+            auto source = html_widget->document()->source();
+            write(fd, source.characters(), source.length());
+            close(fd);
+            filename_to_open = tmp_filename;
+        }
+        if (fork() == 0) {
+            execl("/bin/TextEditor", "TextEditor", filename_to_open.characters(), nullptr);
+            ASSERT_NOT_REACHED();
+        }
+    }));
     inspect_menu->add_action(GAction::create("Inspect DOM tree", [&](auto&) {
         if (!dom_inspector_window) {
             dom_inspector_window = GWindow::construct();
