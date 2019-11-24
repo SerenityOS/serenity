@@ -89,6 +89,9 @@ public:
     const Element* get_element_by_id(const String&) const;
     Vector<const Element*> get_elements_by_name(const String&) const;
 
+    const String& source() const { return m_source; }
+    void set_source(const String& source) { m_source = source; }
+
 private:
     virtual RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
@@ -106,6 +109,8 @@ private:
     Color m_visited_link_color { Color::Magenta };
 
     RefPtr<CTimer> m_style_update_timer;
+
+    String m_source;
 };
 
 template<>
