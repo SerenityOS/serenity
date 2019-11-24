@@ -53,6 +53,9 @@ public:
     bool is_stack() const { return m_stack; }
     void set_stack(bool stack) { m_stack = stack; }
 
+    bool is_mmap() const { return m_mmap; }
+    void set_mmap(bool mmap) { m_mmap = mmap; }
+
     bool is_user_accessible() const { return m_user_accessible; }
 
     PageFaultResponse handle_fault(const PageFault&);
@@ -145,5 +148,6 @@ private:
     bool m_shared { false };
     bool m_user_accessible { false };
     bool m_stack { false };
+    bool m_mmap { false };
     mutable OwnPtr<Bitmap> m_cow_map;
 };
