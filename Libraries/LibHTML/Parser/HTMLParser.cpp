@@ -334,6 +334,7 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
 {
     auto document = adopt(*new Document);
     document->set_url(url);
+    document->set_source(html);
 
     if (!parse_html_document(html, *document, *document))
         return nullptr;
