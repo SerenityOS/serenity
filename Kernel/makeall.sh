@@ -69,7 +69,6 @@ build_targets="$build_targets ../Applications/Browser"
 build_targets="$build_targets ../Demos/Fire"
 build_targets="$build_targets ../Demos/HelloWorld"
 build_targets="$build_targets ../Demos/HelloWorld2"
-build_targets="$build_targets ../Demos/RetroFetch"
 build_targets="$build_targets ../Demos/WidgetGallery"
 
 build_targets="$build_targets ../DevTools/HackStudio"
