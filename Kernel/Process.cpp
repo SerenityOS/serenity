@@ -188,6 +188,8 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
     auto* region = region_from_range({ VirtualAddress((u32)addr), size });
     if (!region)
         return -EINVAL;
+    if (!region->is_mmap())
+        return -EPERM;
     region->set_name(String(name));
     return 0;
 }
@@ -225,6 +227,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
             region->set_shared(true);
         if (flags & MAP_STACK)
             region->set_stack(true);
+        region->set_mmap(true);
         return region->vaddr().as_ptr();
     }
     if (offset & ~PAGE_MASK)
@@ -240,6 +243,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         region->set_shared(true);
     if (name)
         region->set_name(name);
+    region->set_mmap(true);
     return region->vaddr().as_ptr();
 }
 
@@ -247,12 +251,16 @@ int Process::sys$munmap(void* addr, size_t size)
 {
     Range range_to_unmap { VirtualAddress((u32)addr), size };
     if (auto* whole_region = region_from_range(range_to_unmap)) {
+        if (!whole_region->is_mmap())
+            return -EPERM;
         bool success = deallocate_region(*whole_region);
         ASSERT(success);
         return 0;
     }
 
     if (auto* old_region = region_containing(range_to_unmap)) {
+        if (!old_region->is_mmap())
+            return -EPERM;
         Range old_region_range = old_region->range();
         auto remaining_ranges_after_unmap = old_region_range.carve(range_to_unmap);
         ASSERT(!remaining_ranges_after_unmap.is_empty());
@@ -291,6 +299,8 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
     auto* region = region_from_range({ VirtualAddress((u32)addr), size });
     if (!region)
         return -EINVAL;
+    if (!region->is_mmap())
+        return -EPERM;
     region->set_writable(prot & PROT_WRITE);
     region->remap();
     return 0;
