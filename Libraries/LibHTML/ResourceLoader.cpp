@@ -1,8 +1,8 @@
+#include <LibC/SharedBuffer.h>
 #include <LibCore/CFile.h>
-#include <LibCore/CHttpJob.h>
-#include <LibCore/CHttpRequest.h>
-#include <LibCore/CNetworkResponse.h>
 #include <LibHTML/ResourceLoader.h>
+#include <LibProtocol/Client.h>
+#include <LibProtocol/Download.h>
 
 ResourceLoader& ResourceLoader::the()
 {
@@ -10,6 +10,11 @@ ResourceLoader& ResourceLoader::the()
     if (!s_the)
         s_the = &ResourceLoader::construct().leak_ref();
     return *s_the;
+}
+
+ResourceLoader::ResourceLoader()
+    : m_protocol_client(LibProtocol::Client::construct())
+{
 }
 
 void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> callback)
@@ -31,25 +36,17 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> call
     }
 
     if (url.protocol() == "http") {
-        CHttpRequest request;
-        request.set_url(url);
-        request.set_method(CHttpRequest::Method::GET);
-        auto job = request.schedule();
+        auto download = protocol_client().start_download(url.to_string());
+        download->on_finish = [callback = move(callback)](bool success, const ByteBuffer& payload, auto) {
+            if (!success) {
+                dbg() << "HTTP load failed!";
+                ASSERT_NOT_REACHED();
+            }
+            callback(ByteBuffer::copy(payload.data(), payload.size()));
+        };
         ++m_pending_loads;
         if (on_load_counter_change)
             on_load_counter_change();
-        job->on_finish = [this, job, callback = move(callback)](bool success) {
-            --m_pending_loads;
-            if (on_load_counter_change)
-                on_load_counter_change();
-            if (!success) {
-                dbg() << "HTTP job failed!";
-                ASSERT_NOT_REACHED();
-            }
-            auto* response = job->response();
-            ASSERT(response);
-            callback(response->payload());
-        };
         return;
     }
 
