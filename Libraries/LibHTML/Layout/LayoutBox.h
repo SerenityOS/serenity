@@ -32,6 +32,14 @@ protected:
 private:
     virtual bool is_box() const override { return true; }
 
+    enum class Edge {
+        Top,
+        Right,
+        Bottom,
+        Left,
+    };
+    void paint_border(RenderingContext&, Edge, const Rect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
+
     FloatRect m_rect;
 };
 

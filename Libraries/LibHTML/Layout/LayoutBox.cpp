@@ -8,6 +8,75 @@
 //#define DRAW_BOXES_AROUND_LAYOUT_NODES
 //#define DRAW_BOXES_AROUND_HOVERED_NODES
 
+void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Rect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
+{
+    auto border_width = style().property(width_property_id);
+    if (!border_width.has_value())
+        return;
+
+    auto border_style = style().property(style_property_id);
+    float width = border_width.value()->to_length().to_px();
+
+    Color color;
+    auto border_color = style().property(color_property_id);
+    if (border_color.has_value()) {
+        color = border_color.value()->to_color(document());
+    } else {
+        // FIXME: This is basically CSS "currentColor" which should be handled elsewhere
+        //        in a much more reusable way.
+        auto current_color = style().property(CSS::PropertyID::Color);
+        if (current_color.has_value())
+            color = current_color.value()->to_color(document());
+        else
+            color = Color::Black;
+    }
+
+    auto first_point_for_edge = [](Edge edge, const Rect& rect) {
+        switch (edge) {
+        case Edge::Top:
+            return rect.top_left();
+        case Edge::Right:
+            return rect.top_right();
+        case Edge::Bottom:
+            return rect.bottom_left();
+        case Edge::Left:
+        default:
+            return rect.top_left();
+        }
+    };
+
+    auto second_point_for_edge = [](Edge edge, const Rect& rect) {
+        switch (edge) {
+        case Edge::Top:
+            return rect.top_right();
+        case Edge::Right:
+            return rect.bottom_right();
+        case Edge::Bottom:
+            return rect.bottom_right();
+        case Edge::Left:
+        default:
+            return rect.bottom_left();
+        }
+    };
+
+    auto p1 = first_point_for_edge(edge, rect);
+    auto p2 = second_point_for_edge(edge, rect);
+
+    if (border_style.has_value() && border_style.value()->to_string() == "inset") {
+        auto top_left_color = Color::from_rgb(0x5a5a5a);
+        auto bottom_right_color = Color::from_rgb(0x888888);
+        color = (edge == Edge::Left || edge == Edge::Top) ? top_left_color : bottom_right_color;
+    } else if (border_style.has_value() && border_style.value()->to_string() == "outset") {
+        auto top_left_color = Color::from_rgb(0x888888);
+        auto bottom_right_color = Color::from_rgb(0x5a5a5a);
+        color = (edge == Edge::Left || edge == Edge::Top) ? top_left_color : bottom_right_color;
+    } else {
+        // border-style: solid
+    }
+    dbg() << "draw_line(" << p1 << ", " << p2 << ", " << color.to_string() << ", " << (int)width << ")";
+    context.painter().draw_line(p1, p2, color, width);
+}
+
 void LayoutBox::render(RenderingContext& context)
 {
     if (!is_visible())
@@ -45,51 +114,16 @@ void LayoutBox::render(RenderingContext& context)
         }
     }
 
-    // FIXME: Respect all individual border sides
-    auto border_width_value = style().property(CSS::PropertyID::BorderTopWidth);
-    auto border_color_value = style().property(CSS::PropertyID::BorderTopColor);
-    auto border_style_value = style().property(CSS::PropertyID::BorderTopStyle);
+    Rect bordered_rect;
+    bordered_rect.set_x(padded_rect.x() - box_model().border().left.to_px());
+    bordered_rect.set_width(padded_rect.width() + box_model().border().left.to_px() + box_model().border().right.to_px());
+    bordered_rect.set_y(padded_rect.y() - box_model().border().top.to_px());
+    bordered_rect.set_height(padded_rect.height() + box_model().border().top.to_px() + box_model().border().bottom.to_px());
 
-    if (border_width_value.has_value()) {
-        float border_width = border_width_value.value()->to_length().to_px();
-
-        Color border_color;
-        if (border_color_value.has_value())
-            border_color = border_color_value.value()->to_color(document());
-        else {
-            // FIXME: This is basically CSS "currentColor" which should be handled elsewhere
-            //        in a much more reusable way.
-            auto color_value = style().property(CSS::PropertyID::Color);
-            if (color_value.has_value())
-                border_color = color_value.value()->to_color(document());
-            else
-                border_color = Color::Black;
-        }
-
-        if (border_style_value.has_value() && border_style_value.value()->to_string() == "inset") {
-            // border-style: inset
-            auto shadow_color = Color::from_rgb(0x888888);
-            auto highlight_color = Color::from_rgb(0x5a5a5a);
-            context.painter().draw_line(padded_rect.top_left(), padded_rect.top_right(), highlight_color, border_width);
-            context.painter().draw_line(padded_rect.top_right(), padded_rect.bottom_right(), shadow_color, border_width);
-            context.painter().draw_line(padded_rect.bottom_right(), padded_rect.bottom_left(), shadow_color, border_width);
-            context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), highlight_color, border_width);
-        } else if (border_style_value.has_value() && border_style_value.value()->to_string() == "outset") {
-            // border-style: outset
-            auto highlight_color = Color::from_rgb(0x888888);
-            auto shadow_color = Color::from_rgb(0x5a5a5a);
-            context.painter().draw_line(padded_rect.top_left(), padded_rect.top_right(), highlight_color, border_width);
-            context.painter().draw_line(padded_rect.top_right(), padded_rect.bottom_right(), shadow_color, border_width);
-            context.painter().draw_line(padded_rect.bottom_right(), padded_rect.bottom_left(), shadow_color, border_width);
-            context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), highlight_color, border_width);
-        } else {
-            // border-style: solid
-            context.painter().draw_line(padded_rect.top_left(), padded_rect.top_right(), border_color, border_width);
-            context.painter().draw_line(padded_rect.top_right(), padded_rect.bottom_right(), border_color, border_width);
-            context.painter().draw_line(padded_rect.bottom_right(), padded_rect.bottom_left(), border_color, border_width);
-            context.painter().draw_line(padded_rect.bottom_left(), padded_rect.top_left(), border_color, border_width);
-        }
-    }
+    paint_border(context, Edge::Top, bordered_rect, CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopWidth);
+    paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightWidth);
+    paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomWidth);
+    paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftWidth);
 
     LayoutNodeWithStyleAndBoxModelMetrics::render(context);
 }
