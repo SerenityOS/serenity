@@ -260,9 +260,9 @@ void TerminalWidget::paint_event(GPaintEvent& event)
     painter.add_clip_rect(terminal_buffer_rect);
 
     if (m_visual_beep_timer->is_active())
-        painter.fill_rect(frame_inner_rect(), Color::Red);
+        painter.clear_rect(frame_inner_rect(), Color::Red);
     else
-        painter.fill_rect(frame_inner_rect(), Color(Color::Black).with_alpha(m_opacity));
+        painter.clear_rect(frame_inner_rect(), Color(Color::Black).with_alpha(m_opacity));
     invalidate_cursor();
 
     int rows_from_history = 0;
