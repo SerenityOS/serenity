@@ -54,7 +54,7 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
 
     bool is_underline = text_decoration == "underline";
     if (is_underline)
-        painter.draw_line(enclosing_int_rect(fragment.rect()).bottom_left().translated(0, -1), enclosing_int_rect(fragment.rect()).bottom_right().translated(0, -1), color);
+        painter.draw_line(enclosing_int_rect(fragment.rect()).bottom_left().translated(0, 1), enclosing_int_rect(fragment.rect()).bottom_right().translated(0, 1), color);
 
     painter.draw_text(enclosing_int_rect(fragment.rect()), m_text_for_rendering.substring_view(fragment.start(), fragment.length()), TextAlignment::TopLeft, color);
 }
@@ -131,7 +131,6 @@ void LayoutText::split_into_lines(LayoutBlock& container)
 {
     auto& font = style().font();
     float space_width = font.glyph_width(' ') + font.glyph_spacing();
-    float line_height = style().line_height();
 
     auto& line_boxes = container.line_boxes();
     if (line_boxes.is_empty())
@@ -142,7 +141,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
     if (is_preformatted) {
         m_text_for_rendering = node().data();
         for_each_source_line([&](const Utf8View& view, int start, int length) {
-            line_boxes.last().add_fragment(*this, start, length, font.width(view), line_height);
+            line_boxes.last().add_fragment(*this, start, length, font.width(view), font.glyph_height());
             line_boxes.append(LineBox());
         });
         return;
@@ -196,7 +195,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         if (is_whitespace && line_boxes.last().fragments().is_empty())
             continue;
 
-        line_boxes.last().add_fragment(*this, word.start, is_whitespace ? 1 : word.length, word_width, line_height);
+        line_boxes.last().add_fragment(*this, word.start, is_whitespace ? 1 : word.length, word_width, font.glyph_height());
         available_width -= word_width;
 
         if (available_width < 0) {

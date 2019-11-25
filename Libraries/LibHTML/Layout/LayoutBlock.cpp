@@ -67,6 +67,7 @@ void LayoutBlock::layout_inline_children()
     }
 
     float min_line_height = style().line_height();
+    float line_spacing = min_line_height - style().font().glyph_height();
     float content_height = 0;
 
     // FIXME: This should be done by the CSS parser!
@@ -121,7 +122,7 @@ void LayoutBlock::layout_inline_children()
             // Vertically align everyone's bottom to the line.
             // FIXME: Support other kinds of vertical alignment.
             fragment.rect().set_x(roundf(x_offset + fragment.rect().x()));
-            fragment.rect().set_y(y() + content_height + (max_height - fragment.rect().height()));
+            fragment.rect().set_y(y() + content_height + (max_height - fragment.rect().height()) - (line_spacing / 2));
 
             if (text_align == CSS::ValueID::Justify) {
                 if (fragment.is_justifiable_whitespace()) {
