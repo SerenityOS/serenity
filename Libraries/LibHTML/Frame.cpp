@@ -1,7 +1,9 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/Frame.h>
+#include <LibHTML/HtmlView.h>
 
-Frame::Frame()
+Frame::Frame(HtmlView& html_view)
+    : m_html_view(html_view.make_weak_ptr())
 {
 }
 

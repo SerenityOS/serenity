@@ -22,7 +22,7 @@
 
 HtmlView::HtmlView(GWidget* parent)
     : GScrollableWidget(parent)
-    , m_main_frame(Frame::create())
+    , m_main_frame(Frame::create(*this))
 {
     main_frame().on_set_needs_display = [this](auto& content_rect) {
         if (content_rect.is_empty()) {
