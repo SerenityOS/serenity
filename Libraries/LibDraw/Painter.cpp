@@ -54,6 +54,24 @@ void Painter::fill_rect_with_draw_op(const Rect& a_rect, Color color)
     }
 }
 
+void Painter::clear_rect(const Rect& a_rect, Color color)
+{
+    auto rect = a_rect.translated(translation()).intersected(clip_rect());
+    if (rect.is_empty())
+        return;
+
+    ASSERT(m_target->rect().contains(rect));
+
+    RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
+    const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
+
+    for (int i = rect.height() - 1; i >= 0; --i) {
+        fast_u32_fill(dst, color.value(), rect.width());
+        dst += dst_skip;
+    }
+}
+
+
 void Painter::fill_rect(const Rect& a_rect, Color color)
 {
     if (color.alpha() == 0)
@@ -61,6 +79,11 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
 
     if (draw_op() != DrawOp::Copy) {
         fill_rect_with_draw_op(a_rect, color);
+        return;
+    }
+
+    if (color.alpha() == 0xff) {
+        clear_rect(a_rect, color);
         return;
     }
 
@@ -72,14 +95,6 @@ void Painter::fill_rect(const Rect& a_rect, Color color)
 
     RGBA32* dst = m_target->scanline(rect.top()) + rect.left();
     const size_t dst_skip = m_target->pitch() / sizeof(RGBA32);
-
-    if (color.alpha() == 0xff) {
-        for (int i = rect.height() - 1; i >= 0; --i) {
-            fast_u32_fill(dst, color.value(), rect.width());
-            dst += dst_skip;
-        }
-        return;
-    }
 
     for (int i = rect.height() - 1; i >= 0; --i) {
         for (int j = 0; j < rect.width(); ++j)
