@@ -19,6 +19,7 @@ class Painter {
 public:
     explicit Painter(GraphicsBitmap&);
     ~Painter();
+    void clear_rect(const Rect&, Color);
     void fill_rect(const Rect&, Color);
     void fill_rect_with_gradient(const Rect&, Color gradient_start, Color gradient_end);
     void draw_rect(const Rect&, Color, bool rough = false);
