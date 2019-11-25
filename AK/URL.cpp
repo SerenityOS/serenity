@@ -144,6 +144,10 @@ String URL::to_string() const
         }
     }
     builder.append(m_path);
+    if (!m_query.is_empty()) {
+        builder.append('?');
+        builder.append(m_query);
+    }
     return builder.to_string();
 }
 
