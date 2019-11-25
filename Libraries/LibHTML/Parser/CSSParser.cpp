@@ -374,6 +374,72 @@ public:
         return ch && ch != '!' && ch != ';' && ch != '}';
     }
 
+    struct ValueAndImportant {
+        String value;
+        bool important { false };
+    };
+
+    ValueAndImportant consume_css_value()
+    {
+        buffer.clear();
+
+        int paren_nesting_level = 0;
+        bool important = false;
+
+        for (;;) {
+            char ch = peek();
+            if (ch == '(') {
+                ++paren_nesting_level;
+                buffer.append(consume_one());
+                continue;
+            }
+            if (ch == ')') {
+                PARSE_ASSERT(paren_nesting_level > 0);
+                --paren_nesting_level;
+                buffer.append(consume_one());
+                continue;
+            }
+            if (paren_nesting_level > 0) {
+                buffer.append(consume_one());
+                continue;
+            }
+            if (next_is("!important")) {
+                consume_specific('!');
+                consume_specific('i');
+                consume_specific('m');
+                consume_specific('p');
+                consume_specific('o');
+                consume_specific('r');
+                consume_specific('t');
+                consume_specific('a');
+                consume_specific('n');
+                consume_specific('t');
+                important = true;
+                continue;
+            }
+            if (next_is("/*")) {
+                consume_whitespace_or_comments();
+                continue;
+            }
+            if (!ch)
+                break;
+            if (ch == '}')
+                break;
+            if (ch == ';')
+                break;
+            buffer.append(consume_one());
+        }
+
+        // Remove trailing whitespace.
+        while (!buffer.is_empty() && isspace(buffer.last()))
+            buffer.take_last();
+
+        auto string = String::copy(buffer);
+        buffer.clear();
+
+        return { string, important };
+    }
+
     Optional<StyleProperty> parse_property()
     {
         consume_whitespace_or_comments();
@@ -391,36 +457,16 @@ public:
         consume_whitespace_or_comments();
         consume_specific(':');
         consume_whitespace_or_comments();
-        while (is_valid_property_value_char(peek()))
-            buffer.append(consume_one());
 
-        // Remove trailing whitespace.
-        while (!buffer.is_empty() && isspace(buffer.last()))
-            buffer.take_last();
+        auto [property_value, important] = consume_css_value();
 
-        auto property_value = String::copy(buffer);
-        buffer.clear();
         consume_whitespace_or_comments();
-        bool is_important = false;
-        if (peek() == '!') {
-            consume_specific('!');
-            consume_specific('i');
-            consume_specific('m');
-            consume_specific('p');
-            consume_specific('o');
-            consume_specific('r');
-            consume_specific('t');
-            consume_specific('a');
-            consume_specific('n');
-            consume_specific('t');
-            consume_whitespace_or_comments();
-            is_important = true;
-        }
+
         if (peek() && peek() != '}')
             consume_specific(';');
 
         auto property_id = CSS::property_id_from_string(property_name);
-        return StyleProperty { property_id, parse_css_value(property_value), is_important };
+        return StyleProperty { property_id, parse_css_value(property_value), important };
     }
 
     void parse_declaration()
