@@ -37,7 +37,10 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> call
 
     if (url.protocol() == "http") {
         auto download = protocol_client().start_download(url.to_string());
-        download->on_finish = [callback = move(callback)](bool success, const ByteBuffer& payload, auto) {
+        download->on_finish = [this, callback = move(callback)](bool success, const ByteBuffer& payload, auto) {
+            --m_pending_loads;
+            if (on_load_counter_change)
+                on_load_counter_change();
             if (!success) {
                 dbg() << "HTTP load failed!";
                 ASSERT_NOT_REACHED();
