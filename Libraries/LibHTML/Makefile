@@ -27,11 +27,13 @@ LIBHTML_OBJS = \
     DOM/HTMLBodyElement.o \
     DOM/HTMLElement.o \
     DOM/HTMLFontElement.o \
+    DOM/HTMLFormElement.o \
     DOM/HTMLHRElement.o \
     DOM/HTMLHeadElement.o \
     DOM/HTMLHeadingElement.o \
     DOM/HTMLHtmlElement.o \
     DOM/HTMLImageElement.o \
+    DOM/HTMLInputElement.o \
     DOM/HTMLLinkElement.o \
     DOM/HTMLStyleElement.o \
     DOM/HTMLTitleElement.o \
@@ -59,6 +61,7 @@ LIBHTML_OBJS = \
     Layout/LayoutTableRow.o \
     Layout/LayoutText.o \
     Layout/LayoutTreeBuilder.o \
+    Layout/LayoutWidget.o \
     Layout/LineBox.o \
     Layout/LineBoxFragment.o \
     Parser/CSSParser.o \

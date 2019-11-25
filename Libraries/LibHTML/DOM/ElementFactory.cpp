@@ -4,11 +4,13 @@
 #include <LibHTML/DOM/HTMLBlinkElement.h>
 #include <LibHTML/DOM/HTMLBodyElement.h>
 #include <LibHTML/DOM/HTMLFontElement.h>
+#include <LibHTML/DOM/HTMLFormElement.h>
 #include <LibHTML/DOM/HTMLHRElement.h>
 #include <LibHTML/DOM/HTMLHeadElement.h>
 #include <LibHTML/DOM/HTMLHeadingElement.h>
 #include <LibHTML/DOM/HTMLHtmlElement.h>
 #include <LibHTML/DOM/HTMLImageElement.h>
+#include <LibHTML/DOM/HTMLInputElement.h>
 #include <LibHTML/DOM/HTMLLinkElement.h>
 #include <LibHTML/DOM/HTMLStyleElement.h>
 #include <LibHTML/DOM/HTMLTitleElement.h>
@@ -38,6 +40,10 @@ NonnullRefPtr<Element> create_element(Document& document, const String& tag_name
         return adopt(*new HTMLImageElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "blink")
         return adopt(*new HTMLBlinkElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "form")
+        return adopt(*new HTMLFormElement(document, lowercase_tag_name));
+    if (lowercase_tag_name == "input")
+        return adopt(*new HTMLInputElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "br")
         return adopt(*new HTMLBRElement(document, lowercase_tag_name));
     if (lowercase_tag_name == "h1"
