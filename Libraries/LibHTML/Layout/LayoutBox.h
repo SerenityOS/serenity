@@ -38,7 +38,7 @@ private:
         Bottom,
         Left,
     };
-    void paint_border(RenderingContext&, Edge, const Rect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
+    void paint_border(RenderingContext&, Edge, const FloatRect&, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id);
 
     FloatRect m_rect;
 };

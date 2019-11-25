@@ -8,7 +8,7 @@
 //#define DRAW_BOXES_AROUND_LAYOUT_NODES
 //#define DRAW_BOXES_AROUND_HOVERED_NODES
 
-void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Rect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
+void LayoutBox::paint_border(RenderingContext& context, Edge edge, const FloatRect& rect, CSS::PropertyID style_property_id, CSS::PropertyID color_property_id, CSS::PropertyID width_property_id)
 {
     auto border_width = style().property(width_property_id);
     if (!border_width.has_value())
@@ -16,6 +16,8 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Rect& r
 
     auto border_style = style().property(style_property_id);
     float width = border_width.value()->to_length().to_px();
+
+    int int_width = max((int)width, 1);
 
     Color color;
     auto border_color = style().property(color_property_id);
@@ -31,7 +33,7 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Rect& r
             color = Color::Black;
     }
 
-    auto first_point_for_edge = [](Edge edge, const Rect& rect) {
+    auto first_point_for_edge = [](Edge edge, const FloatRect& rect) {
         switch (edge) {
         case Edge::Top:
             return rect.top_left();
@@ -45,7 +47,7 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Rect& r
         }
     };
 
-    auto second_point_for_edge = [](Edge edge, const Rect& rect) {
+    auto second_point_for_edge = [](Edge edge, const FloatRect& rect) {
         switch (edge) {
         case Edge::Top:
             return rect.top_right();
@@ -73,8 +75,59 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const Rect& r
     } else {
         // border-style: solid
     }
-    dbg() << "draw_line(" << p1 << ", " << p2 << ", " << color.to_string() << ", " << (int)width << ")";
-    context.painter().draw_line(p1, p2, color, width);
+
+    auto draw_line = [&](auto& p1, auto& p2) {
+        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1);
+    };
+
+    auto width_for = [&](CSS::PropertyID property_id) -> float {
+        auto width = style().property(property_id);
+        if (!width.has_value())
+            return 0;
+        return width.value()->to_length().to_px();
+    };
+
+    float p1_step = 0;
+    float p2_step = 0;
+
+    switch (edge) {
+    case Edge::Top:
+        p1_step = width_for(CSS::PropertyID::BorderLeftWidth) / (float)int_width;
+        p2_step = width_for(CSS::PropertyID::BorderRightWidth) / (float)int_width;
+        for (int i = 0; i < int_width; ++i) {
+            draw_line(p1, p2);
+            p1.move_by(p1_step, 1);
+            p2.move_by(-p2_step, 1);
+        }
+        break;
+    case Edge::Right:
+        p1_step = width_for(CSS::PropertyID::BorderTopWidth) / (float)int_width;
+        p2_step = width_for(CSS::PropertyID::BorderBottomWidth) / (float)int_width;
+        for (int i = int_width - 1; i >= 0; --i) {
+            draw_line(p1, p2);
+            p1.move_by(-1, p1_step);
+            p2.move_by(-1, -p2_step);
+        }
+        break;
+    case Edge::Bottom:
+        p1_step = width_for(CSS::PropertyID::BorderLeftWidth) / (float)int_width;
+        p2_step = width_for(CSS::PropertyID::BorderRightWidth) / (float)int_width;
+        for (int i = int_width - 1; i >= 0; --i) {
+            draw_line(p1, p2);
+            p1.move_by(p1_step, -1);
+            p2.move_by(-p2_step, -1);
+        }
+        break;
+    case Edge::Left:
+        p1_step = width_for(CSS::PropertyID::BorderTopWidth) / (float)int_width;
+        p2_step = width_for(CSS::PropertyID::BorderBottomWidth) / (float)int_width;
+        for (int i = 0; i < int_width; ++i) {
+            draw_line(p1, p2);
+            p1.move_by(1, p1_step);
+            p2.move_by(1, -p2_step);
+        }
+        break;
+    }
 }
 
 void LayoutBox::render(RenderingContext& context)
@@ -93,7 +146,7 @@ void LayoutBox::render(RenderingContext& context)
     if (node() && document().inspected_node() == node())
         context.painter().draw_rect(enclosing_int_rect(m_rect), Color::Magenta);
 
-    Rect padded_rect;
+    FloatRect padded_rect;
     padded_rect.set_x(x() - box_model().padding().left.to_px());
     padded_rect.set_width(width() + box_model().padding().left.to_px() + box_model().padding().right.to_px());
     padded_rect.set_y(y() - box_model().padding().top.to_px());
@@ -102,28 +155,28 @@ void LayoutBox::render(RenderingContext& context)
     if (!is_body()) {
         auto bgcolor = style().property(CSS::PropertyID::BackgroundColor);
         if (bgcolor.has_value() && bgcolor.value()->is_color()) {
-            context.painter().fill_rect(padded_rect, bgcolor.value()->to_color(document()));
+            context.painter().fill_rect(enclosing_int_rect(padded_rect), bgcolor.value()->to_color(document()));
         }
 
         auto bgimage = style().property(CSS::PropertyID::BackgroundImage);
         if (bgimage.has_value() && bgimage.value()->is_image()) {
             auto& image_value = static_cast<const ImageStyleValue&>(*bgimage.value());
             if (image_value.bitmap()) {
-                context.painter().draw_tiled_bitmap(padded_rect, *image_value.bitmap());
+                context.painter().draw_tiled_bitmap(enclosing_int_rect(padded_rect), *image_value.bitmap());
             }
         }
     }
 
-    Rect bordered_rect;
+    FloatRect bordered_rect;
     bordered_rect.set_x(padded_rect.x() - box_model().border().left.to_px());
     bordered_rect.set_width(padded_rect.width() + box_model().border().left.to_px() + box_model().border().right.to_px());
     bordered_rect.set_y(padded_rect.y() - box_model().border().top.to_px());
     bordered_rect.set_height(padded_rect.height() + box_model().border().top.to_px() + box_model().border().bottom.to_px());
 
-    paint_border(context, Edge::Top, bordered_rect, CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopWidth);
-    paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightWidth);
-    paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomWidth);
     paint_border(context, Edge::Left, bordered_rect, CSS::PropertyID::BorderLeftStyle, CSS::PropertyID::BorderLeftColor, CSS::PropertyID::BorderLeftWidth);
+    paint_border(context, Edge::Right, bordered_rect, CSS::PropertyID::BorderRightStyle, CSS::PropertyID::BorderRightColor, CSS::PropertyID::BorderRightWidth);
+    paint_border(context, Edge::Top, bordered_rect, CSS::PropertyID::BorderTopStyle, CSS::PropertyID::BorderTopColor, CSS::PropertyID::BorderTopWidth);
+    paint_border(context, Edge::Bottom, bordered_rect, CSS::PropertyID::BorderBottomStyle, CSS::PropertyID::BorderBottomColor, CSS::PropertyID::BorderBottomWidth);
 
     LayoutNodeWithStyleAndBoxModelMetrics::render(context);
 }
