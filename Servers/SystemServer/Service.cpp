@@ -16,6 +16,7 @@ struct UidAndGid {
 };
 
 static HashMap<String, UidAndGid>* s_user_map;
+static HashMap<pid_t, Service*> s_service_map;
 
 void Service::resolve_user()
 {
@@ -33,6 +34,14 @@ void Service::resolve_user()
     }
     m_uid = user.value().uid;
     m_gid = user.value().gid;
+}
+
+Service* Service::find_by_pid(pid_t pid)
+{
+    auto it = s_service_map.find(pid);
+    if (it == s_service_map.end())
+        return nullptr;
+    return (*it).value;
 }
 
 void Service::spawn()
@@ -81,7 +90,24 @@ void Service::spawn()
         rc = execv(argv[0], argv);
         perror("exec");
         ASSERT_NOT_REACHED();
+    } else {
+        // We are the parent.
+        s_service_map.set(m_pid, this);
     }
+}
+
+void Service::did_exit(int exit_code)
+{
+    ASSERT(m_pid > 0);
+    (void)exit_code;
+
+    dbg() << "Service " << name() << " has exited";
+
+    s_service_map.remove(m_pid);
+    m_pid = -1;
+
+    if (m_keep_alive)
+        spawn();
 }
 
 Service::Service(const CConfigFile& config, const StringView& name)
@@ -106,6 +132,8 @@ Service::Service(const CConfigFile& config, const StringView& name)
     else
         ASSERT_NOT_REACHED();
 
+    m_keep_alive = config.read_bool_entry(name, "KeepAlive");
+
     m_user = config.read_entry(name, "User");
     if (!m_user.is_null())
         resolve_user();
@@ -127,6 +155,7 @@ void Service::save_to(JsonObject& json)
 
     json.set("stdio_file_path", m_stdio_file_path);
     json.set("priority", m_priority);
+    json.set("keep_alive", m_keep_alive);
     json.set("user", m_user);
     json.set("uid", m_uid);
     json.set("gid", m_gid);
