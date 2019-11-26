@@ -9,7 +9,7 @@ int main(int argc, char** argv)
     (void)argc;
     (void)argv;
 
-    printf("PID TPG PGP SID  OWNER  STATE        PPID NSCHED     FDS   TTY   NAME\n");
+    printf("PID TPG PGP SID UID  STATE        PPID NSCHED     FDS TTY   NAME\n");
 
     auto all_processes = CProcessStatisticsReader::get_all();
 
@@ -17,12 +17,12 @@ int main(int argc, char** argv)
         const auto& proc = it.value;
         auto tty = proc.tty;
 
-        if (tty != "notty")
-            tty = strrchr(tty.characters(), '/') + 1;
+        if (tty.starts_with("/dev/"))
+            tty = tty.characters() + 5;
         else
             tty = "n/a";
 
-        printf("%-3u %-3u %-3u %-3u  %-4u   %-10s   %-3u  %-9u  %-4u  %-4s  %s\n",
+        printf("%-3u %-3u %-3u %-3u %-3u  %-11s  %-3u  %-9u  %-3u %-5s %s\n",
             proc.pid,
             proc.pgid,
             proc.pgp,
