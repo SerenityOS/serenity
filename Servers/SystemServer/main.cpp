@@ -10,12 +10,28 @@
 #include <sys/wait.h>
 #include <unistd.h>
 
-void sigchld_handler(int)
+static void sigchld_handler(int)
 {
     int status = 0;
     pid_t pid = waitpid(-1, &status, WNOHANG);
-    if (pid)
-        dbg() << "reaped pid " << pid;
+    if (!pid)
+        return;
+
+    dbg() << "Reaped child with pid " << pid;
+    Service* service = Service::find_by_pid(pid);
+    if (service == nullptr) {
+        dbg() << "There was no service with this pid, what is going on?";
+        return;
+    }
+
+    // Call service->did_exit(status) some time soon.
+    // We wouldn't want to run the complex logic, such
+    // as possibly spawning the service again, from the
+    // signal handler, so defer it.
+    CEventLoop::main().post_event(*service, make<CDeferredInvocationEvent>([=](CObject&) {
+        service->did_exit(status);
+    }));
+    CEventLoop::wake();
 }
 
 static void check_for_test_mode()
@@ -63,7 +79,12 @@ int main(int, char**)
 {
     mount_all_filesystems();
 
-    signal(SIGCHLD, sigchld_handler);
+    struct sigaction sa = {
+        .sa_handler = sigchld_handler,
+        .sa_mask = 0,
+        .sa_flags = SA_RESTART
+    };
+    sigaction(SIGCHLD, &sa, nullptr);
 
     CEventLoop event_loop;
 
