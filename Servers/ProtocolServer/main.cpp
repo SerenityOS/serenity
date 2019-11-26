@@ -9,8 +9,8 @@ int main(int, char**)
     CEventLoop event_loop;
     (void)*new HttpProtocol;
     auto server = CLocalServer::construct();
-    unlink("/tmp/psportal");
-    server->listen("/tmp/psportal");
+    bool ok = server->take_over_from_system_server();
+    ASSERT(ok);
     server->on_ready_to_accept = [&] {
         auto client_socket = server->accept();
         if (!client_socket) {
