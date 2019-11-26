@@ -3,7 +3,9 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <LibCore/CConfigFile.h>
+#include <LibCore/CLocalSocket.h>
 #include <fcntl.h>
+#include <libgen.h>
 #include <pwd.h>
 #include <sched.h>
 #include <stdio.h>
@@ -44,6 +46,61 @@ Service* Service::find_by_pid(pid_t pid)
     return (*it).value;
 }
 
+static int ensure_parent_directories(const char* path)
+{
+    ASSERT(path[0] == '/');
+
+    char* parent_buffer = strdup(path);
+    const char* parent = dirname(parent_buffer);
+
+    int rc = 0;
+    while (true) {
+        int rc = mkdir(parent, 0755);
+
+        if (rc == 0)
+            break;
+
+        if (errno != ENOENT)
+            break;
+
+        ensure_parent_directories(parent);
+    };
+
+    free(parent_buffer);
+    return rc;
+}
+
+void Service::setup_socket()
+{
+    ASSERT(!m_socket_path.is_null());
+    ASSERT(m_socket_fd == -1);
+
+    ensure_parent_directories(m_socket_path.characters());
+
+    // Note: we use SOCK_CLOEXEC here to make sure we don't leak every socket to
+    // all the clients. We'll make the one we do need to pass down !CLOEXEC later
+    // after forking off the process.
+    m_socket_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+    if (m_socket_fd < 0) {
+        perror("socket");
+        ASSERT_NOT_REACHED();
+    }
+
+    auto socket_address = CSocketAddress::local(m_socket_path);
+    auto un = socket_address.to_sockaddr_un();
+    int rc = bind(m_socket_fd, (const sockaddr*)&un, sizeof(un));
+    if (rc < 0) {
+        perror("bind");
+        ASSERT_NOT_REACHED();
+    }
+
+    rc = listen(m_socket_fd, 5);
+    if (rc < 0) {
+        perror("listen");
+        ASSERT_NOT_REACHED();
+    }
+}
+
 void Service::spawn()
 {
     dbg() << "Spawning " << name();
@@ -74,6 +131,14 @@ void Service::spawn()
             }
             dup2(0, 1);
             dup2(0, 2);
+        }
+
+        if (!m_socket_path.is_null()) {
+            ASSERT(m_socket_fd > 2);
+            dup2(m_socket_fd, 3);
+            // The new descriptor is !CLOEXEC here.
+            // This is true even if m_socket_fd == 3.
+            setenv("SOCKET_TAKEOVER", "1", true);
         }
 
         if (!m_user.is_null()) {
@@ -134,6 +199,11 @@ Service::Service(const CConfigFile& config, const StringView& name)
 
     m_keep_alive = config.read_bool_entry(name, "KeepAlive");
 
+    m_socket_path = config.read_entry(name, "Socket");
+    if (!m_socket_path.is_null()) {
+        setup_socket();
+    }
+
     m_user = config.read_entry(name, "User");
     if (!m_user.is_null())
         resolve_user();
@@ -156,6 +226,7 @@ void Service::save_to(JsonObject& json)
     json.set("stdio_file_path", m_stdio_file_path);
     json.set("priority", m_priority);
     json.set("keep_alive", m_keep_alive);
+    json.set("socket_path", m_socket_path);
     json.set("user", m_user);
     json.set("uid", m_uid);
     json.set("gid", m_gid);

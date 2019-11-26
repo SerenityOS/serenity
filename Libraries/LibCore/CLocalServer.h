@@ -10,6 +10,7 @@ class CLocalServer : public CObject {
 public:
     virtual ~CLocalServer() override;
 
+    bool take_over_from_system_server();
     bool is_listening() const { return m_listening; }
     bool listen(const String& address);
 
@@ -19,6 +20,8 @@ public:
 
 private:
     explicit CLocalServer(CObject* parent = nullptr);
+
+    void setup_notifier();
 
     int m_fd { -1 };
     bool m_listening { false };
