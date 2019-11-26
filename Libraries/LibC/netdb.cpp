@@ -30,7 +30,7 @@ static int connect_to_lookup_server()
 
     sockaddr_un address;
     address.sun_family = AF_LOCAL;
-    strcpy(address.sun_path, "/tmp/.LookupServer-socket");
+    strcpy(address.sun_path, "/tmp/portal/lookup");
 
     int retries = 3;
     int rc = 0;
