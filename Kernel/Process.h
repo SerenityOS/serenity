@@ -461,6 +461,13 @@ inline void Process::for_each_thread(Callback callback) const
 {
     InterruptDisabler disabler;
     pid_t my_pid = pid();
+
+    if (my_pid == 0) {
+        // NOTE: Special case the colonel thread, since its main thread is not in the global thread table.
+        callback(const_cast<Thread&>(main_thread()));
+        return;
+    }
+
     Thread::for_each([callback, my_pid](Thread& thread) -> IterationDecision {
         if (thread.pid() == my_pid)
             return callback(thread);
