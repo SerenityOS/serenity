@@ -47,6 +47,8 @@ String ProcessModel::column_name(int column) const
         return "";
     case Column::PID:
         return "PID";
+    case Column::TID:
+        return "TID";
     case Column::State:
         return "State";
     case Column::User:
@@ -80,6 +82,8 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
     case Column::Icon:
         return { 16, TextAlignment::CenterLeft };
     case Column::PID:
+        return { 32, TextAlignment::CenterRight };
+    case Column::TID:
         return { 32, TextAlignment::CenterRight };
     case Column::State:
         return { 75, TextAlignment::CenterLeft };
@@ -117,47 +121,49 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
 {
     ASSERT(is_valid(index));
 
-    auto it = m_processes.find(m_pids[index.row()]);
-    auto& process = *(*it).value;
+    auto it = m_threads.find(m_pids[index.row()]);
+    auto& thread = *(*it).value;
 
     if (role == Role::Sort) {
         switch (index.column()) {
         case Column::Icon:
             return 0;
         case Column::PID:
-            return process.current_state.pid;
+            return thread.current_state.pid;
+        case Column::TID:
+            return thread.current_state.tid;
         case Column::State:
-            return process.current_state.state;
+            return thread.current_state.state;
         case Column::User:
-            return process.current_state.user;
+            return thread.current_state.user;
         case Column::Priority:
-            if (process.current_state.priority == "Idle")
+            if (thread.current_state.priority == "Idle")
                 return 0;
-            if (process.current_state.priority == "Low")
+            if (thread.current_state.priority == "Low")
                 return 1;
-            if (process.current_state.priority == "Normal")
+            if (thread.current_state.priority == "Normal")
                 return 2;
-            if (process.current_state.priority == "High")
+            if (thread.current_state.priority == "High")
                 return 3;
             ASSERT_NOT_REACHED();
             return 3;
         case Column::Virtual:
-            return (int)process.current_state.amount_virtual;
+            return (int)thread.current_state.amount_virtual;
         case Column::Physical:
-            return (int)process.current_state.amount_resident;
+            return (int)thread.current_state.amount_resident;
         case Column::CPU:
-            return process.current_state.cpu_percent;
+            return thread.current_state.cpu_percent;
         case Column::Name:
-            return process.current_state.name;
+            return thread.current_state.name;
         // FIXME: GVariant with unsigned?
         case Column::Syscalls:
-            return (int)process.current_state.syscall_count;
+            return (int)thread.current_state.syscall_count;
         case Column::InodeFaults:
-            return (int)process.current_state.inode_faults;
+            return (int)thread.current_state.inode_faults;
         case Column::ZeroFaults:
-            return (int)process.current_state.zero_faults;
+            return (int)thread.current_state.zero_faults;
         case Column::CowFaults:
-            return (int)process.current_state.cow_faults;
+            return (int)thread.current_state.cow_faults;
         }
         ASSERT_NOT_REACHED();
         return {};
@@ -166,8 +172,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
     if (role == Role::Display) {
         switch (index.column()) {
         case Column::Icon:
-            if (process.current_state.icon_id != -1) {
-                auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(process.current_state.icon_id);
+            if (thread.current_state.icon_id != -1) {
+                auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(thread.current_state.icon_id);
                 if (icon_buffer) {
                     auto icon_bitmap = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *icon_buffer, { 16, 16 });
                     if (icon_bitmap)
@@ -176,38 +182,40 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             }
             return *m_generic_process_icon;
         case Column::PID:
-            return process.current_state.pid;
+            return thread.current_state.pid;
+        case Column::TID:
+            return thread.current_state.tid;
         case Column::State:
-            return process.current_state.state;
+            return thread.current_state.state;
         case Column::User:
-            return process.current_state.user;
+            return thread.current_state.user;
         case Column::Priority:
-            if (process.current_state.priority == "Idle")
+            if (thread.current_state.priority == "Idle")
                 return String::empty();
-            if (process.current_state.priority == "High")
+            if (thread.current_state.priority == "High")
                 return *m_high_priority_icon;
-            if (process.current_state.priority == "Low")
+            if (thread.current_state.priority == "Low")
                 return *m_low_priority_icon;
-            if (process.current_state.priority == "Normal")
+            if (thread.current_state.priority == "Normal")
                 return *m_normal_priority_icon;
-            return process.current_state.priority;
+            return thread.current_state.priority;
         case Column::Virtual:
-            return pretty_byte_size(process.current_state.amount_virtual);
+            return pretty_byte_size(thread.current_state.amount_virtual);
         case Column::Physical:
-            return pretty_byte_size(process.current_state.amount_resident);
+            return pretty_byte_size(thread.current_state.amount_resident);
         case Column::CPU:
-            return process.current_state.cpu_percent;
+            return thread.current_state.cpu_percent;
         case Column::Name:
-            return process.current_state.name;
+            return thread.current_state.name;
         // FIXME: It's weird that GVariant doesn't support unsigned ints. Should it?
         case Column::Syscalls:
-            return (int)process.current_state.syscall_count;
+            return (int)thread.current_state.syscall_count;
         case Column::InodeFaults:
-            return (int)process.current_state.inode_faults;
+            return (int)thread.current_state.inode_faults;
         case Column::ZeroFaults:
-            return (int)process.current_state.zero_faults;
+            return (int)thread.current_state.zero_faults;
         case Column::CowFaults:
-            return (int)process.current_state.cow_faults;
+            return (int)thread.current_state.cow_faults;
         }
     }
 
@@ -219,44 +227,48 @@ void ProcessModel::update()
     auto all_processes = CProcessStatisticsReader::get_all();
 
     unsigned last_sum_times_scheduled = 0;
-    for (auto& it : m_processes)
+    for (auto& it : m_threads)
         last_sum_times_scheduled += it.value->current_state.times_scheduled;
 
-    HashTable<pid_t> live_pids;
+    HashTable<PidAndTid> live_pids;
     unsigned sum_times_scheduled = 0;
     for (auto& it : all_processes) {
-        ProcessState state;
-        state.pid = it.value.pid;
-        state.times_scheduled = it.value.times_scheduled;
-        state.user = it.value.username;
-        state.priority = it.value.priority;
-        state.syscall_count = it.value.syscall_count;
-        state.inode_faults = it.value.inode_faults;
-        state.zero_faults = it.value.zero_faults;
-        state.cow_faults = it.value.cow_faults;
-        state.state = it.value.state;
-        state.name = it.value.name;
-        state.amount_virtual = it.value.amount_virtual;
-        state.amount_resident = it.value.amount_resident;
-        state.icon_id = it.value.icon_id;
-        sum_times_scheduled += it.value.times_scheduled;
-        {
-            auto pit = m_processes.find(it.value.pid);
-            if (pit == m_processes.end())
-                m_processes.set(it.value.pid, make<Process>());
-        }
-        auto pit = m_processes.find(it.value.pid);
-        ASSERT(pit != m_processes.end());
-        (*pit).value->previous_state = (*pit).value->current_state;
-        (*pit).value->current_state = state;
+        for (auto& thread : it.value.threads) {
+            ThreadState state;
+            state.pid = it.value.pid;
+            state.user = it.value.username;
+            state.syscall_count = it.value.syscall_count;
+            state.inode_faults = it.value.inode_faults;
+            state.zero_faults = it.value.zero_faults;
+            state.cow_faults = it.value.cow_faults;
+            state.name = it.value.name;
+            state.amount_virtual = it.value.amount_virtual;
+            state.amount_resident = it.value.amount_resident;
+            state.icon_id = it.value.icon_id;
 
-        live_pids.set(it.value.pid);
+            state.tid = thread.tid;
+            state.times_scheduled = thread.times_scheduled;
+            state.priority = thread.priority;
+            state.state = thread.state;
+            sum_times_scheduled += thread.times_scheduled;
+            {
+                auto pit = m_threads.find({ it.value.pid, thread.tid });
+                if (pit == m_threads.end())
+                    m_threads.set({ it.value.pid, thread.tid }, make<Thread>());
+            }
+            auto pit = m_threads.find({ it.value.pid, thread.tid });
+            ASSERT(pit != m_threads.end());
+            (*pit).value->previous_state = (*pit).value->current_state;
+            (*pit).value->current_state = state;
+
+            live_pids.set({ it.value.pid, thread.tid });
+        }
     }
 
     m_pids.clear();
     float total_cpu_percent = 0;
-    Vector<pid_t, 16> pids_to_remove;
-    for (auto& it : m_processes) {
+    Vector<PidAndTid, 16> pids_to_remove;
+    for (auto& it : m_threads) {
         if (!live_pids.contains(it.key)) {
             pids_to_remove.append(it.key);
             continue;
@@ -264,13 +276,13 @@ void ProcessModel::update()
         auto& process = *it.value;
         u32 times_scheduled_diff = process.current_state.times_scheduled - process.previous_state.times_scheduled;
         process.current_state.cpu_percent = ((float)times_scheduled_diff * 100) / (float)(sum_times_scheduled - last_sum_times_scheduled);
-        if (it.key != 0) {
+        if (it.key.pid != 0) {
             total_cpu_percent += process.current_state.cpu_percent;
             m_pids.append(it.key);
         }
     }
     for (auto pid : pids_to_remove)
-        m_processes.remove(pid);
+        m_threads.remove(pid);
 
     if (on_new_cpu_data_point)
         on_new_cpu_data_point(total_cpu_percent);

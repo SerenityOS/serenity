@@ -28,9 +28,9 @@ int main(int argc, char** argv)
             proc.pgp,
             proc.sid,
             proc.uid,
-            proc.state.characters(),
+            proc.threads.first().state.characters(),
             proc.ppid,
-            proc.times_scheduled,
+            proc.threads.first().times_scheduled,
             proc.nfds,
             tty.characters(),
             proc.name.characters());

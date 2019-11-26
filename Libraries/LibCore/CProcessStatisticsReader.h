@@ -1,19 +1,26 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
+#include <unistd.h>
+
+struct CThreadStatistics {
+    int tid;
+    unsigned times_scheduled;
+    unsigned ticks;
+    String state;
+    String priority;
+};
 
 struct CProcessStatistics {
     // Keep this in sync with /proc/all.
     // From the kernel side:
     pid_t pid;
-    unsigned times_scheduled;
     unsigned pgid;
     unsigned pgp;
     unsigned sid;
     uid_t uid;
     gid_t gid;
-    String state;
     pid_t ppid;
     unsigned nfds;
     String name;
@@ -21,13 +28,13 @@ struct CProcessStatistics {
     size_t amount_virtual;
     size_t amount_resident;
     size_t amount_shared;
-    unsigned ticks;
-    String priority;
     unsigned syscall_count;
     unsigned inode_faults;
     unsigned zero_faults;
     unsigned cow_faults;
     int icon_id;
+
+    Vector<CThreadStatistics> threads;
 
     // synthetic
     String username;
