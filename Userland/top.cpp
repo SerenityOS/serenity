@@ -88,10 +88,10 @@ static Snapshot get_snapshot()
             thread_data.amount_virtual = stats.amount_virtual;
             thread_data.amount_resident = stats.amount_resident;
             thread_data.amount_shared = stats.amount_shared;
-            thread_data.syscall_count = stats.syscall_count;
-            thread_data.inode_faults = stats.inode_faults;
-            thread_data.zero_faults = stats.zero_faults;
-            thread_data.cow_faults = stats.cow_faults;
+            thread_data.syscall_count = thread.syscall_count;
+            thread_data.inode_faults = thread.inode_faults;
+            thread_data.zero_faults = thread.zero_faults;
+            thread_data.cow_faults = thread.cow_faults;
             thread_data.icon_id = stats.icon_id;
             thread_data.times_scheduled = thread.times_scheduled;
             thread_data.priority = thread.priority;

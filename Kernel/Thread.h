@@ -331,6 +331,15 @@ public:
 
     void make_thread_specific_region(Badge<Process>);
 
+    unsigned syscall_count() const { return m_syscall_count; }
+    void did_syscall() { ++m_syscall_count; }
+    unsigned inode_faults() const { return m_inode_faults; }
+    void did_inode_fault() { ++m_inode_faults; }
+    unsigned zero_faults() const { return m_zero_faults; }
+    void did_zero_fault() { ++m_zero_faults; }
+    unsigned cow_faults() const { return m_cow_faults; }
+    void did_cow_fault() { ++m_cow_faults; }
+
     Thread* clone(Process&);
 
     template<typename Callback>
@@ -375,6 +384,11 @@ private:
     Thread* m_joiner { nullptr };
     Thread* m_joinee { nullptr };
     void* m_exit_value { nullptr };
+
+    unsigned m_syscall_count { 0 };
+    unsigned m_inode_faults { 0 };
+    unsigned m_zero_faults { 0 };
+    unsigned m_cow_faults { 0 };
 
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };

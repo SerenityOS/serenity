@@ -286,15 +286,6 @@ public:
 
     Lock& big_lock() { return m_big_lock; }
 
-    unsigned syscall_count() const { return m_syscall_count; }
-    void did_syscall() { ++m_syscall_count; }
-    unsigned inode_faults() const { return m_inode_faults; }
-    void did_inode_fault() { ++m_inode_faults; }
-    unsigned zero_faults() const { return m_zero_faults; }
-    void did_zero_fault() { ++m_zero_faults; }
-    unsigned cow_faults() const { return m_cow_faults; }
-    void did_cow_fault() { ++m_cow_faults; }
-
     const ELFLoader* elf_loader() const { return m_elf_loader.ptr(); }
 
     int icon_id() const { return m_icon_id; }
@@ -372,11 +363,6 @@ private:
     HashTable<gid_t> m_gids;
 
     int m_next_tid { 0 };
-
-    unsigned m_syscall_count { 0 };
-    unsigned m_inode_faults { 0 };
-    unsigned m_zero_faults { 0 };
-    unsigned m_cow_faults { 0 };
 
     RefPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
