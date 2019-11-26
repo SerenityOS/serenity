@@ -1,6 +1,7 @@
 include ../../Makefile.common
 
 LOOKUPSERVER_OBJS = \
+    LookupServer.o \
     main.o
 
 APP = LookupServer
