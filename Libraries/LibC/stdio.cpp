@@ -15,7 +15,7 @@
 
 extern "C" {
 
-static FILE __default_streams[4];
+static FILE __default_streams[3];
 FILE* stdin;
 FILE* stdout;
 FILE* stderr;
@@ -483,7 +483,7 @@ int fclose(FILE* stream)
 {
     fflush(stream);
     int rc = close(stream->fd);
-    if (stream != &__default_streams[0] && stream != &__default_streams[1] && stream != &__default_streams[2] && stream != &__default_streams[3])
+    if (stream != &__default_streams[0] && stream != &__default_streams[1] && stream != &__default_streams[2])
         free(stream);
     return rc;
 }
