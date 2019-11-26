@@ -689,10 +689,6 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("amount_virtual", (u32)process.amount_virtual());
         process_object.add("amount_resident", (u32)process.amount_resident());
         process_object.add("amount_shared", (u32)process.amount_shared());
-        process_object.add("syscall_count", process.syscall_count());
-        process_object.add("inode_faults", process.inode_faults());
-        process_object.add("zero_faults", process.zero_faults());
-        process_object.add("cow_faults", process.cow_faults());
         process_object.add("icon_id", process.icon_id());
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {
@@ -702,6 +698,10 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
             thread_object.add("ticks", thread.ticks());
             thread_object.add("state", thread.state_string());
             thread_object.add("priority", to_string(thread.priority()));
+            thread_object.add("syscall_count", thread.syscall_count());
+            thread_object.add("inode_faults", thread.inode_faults());
+            thread_object.add("zero_faults", thread.zero_faults());
+            thread_object.add("cow_faults", thread.cow_faults());
             return IterationDecision::Continue;
         });
     };

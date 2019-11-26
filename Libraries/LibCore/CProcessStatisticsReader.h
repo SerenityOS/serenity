@@ -8,6 +8,10 @@ struct CThreadStatistics {
     int tid;
     unsigned times_scheduled;
     unsigned ticks;
+    unsigned syscall_count;
+    unsigned inode_faults;
+    unsigned zero_faults;
+    unsigned cow_faults;
     String state;
     String priority;
 };
@@ -28,10 +32,6 @@ struct CProcessStatistics {
     size_t amount_virtual;
     size_t amount_resident;
     size_t amount_shared;
-    unsigned syscall_count;
-    unsigned inode_faults;
-    unsigned zero_faults;
-    unsigned cow_faults;
     int icon_id;
 
     Vector<CThreadStatistics> threads;

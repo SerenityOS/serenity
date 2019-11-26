@@ -38,10 +38,6 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
         process.amount_virtual = process_object.get("amount_virtual").to_u32();
         process.amount_resident = process_object.get("amount_resident").to_u32();
         process.amount_shared = process_object.get("amount_shared").to_u32();
-        process.syscall_count = process_object.get("syscall_count").to_u32();
-        process.inode_faults = process_object.get("inode_faults").to_u32();
-        process.zero_faults = process_object.get("zero_faults").to_u32();
-        process.cow_faults = process_object.get("cow_faults").to_u32();
         process.icon_id = process_object.get("icon_id").to_int();
 
         auto thread_array = process_object.get("threads").as_array();
@@ -53,6 +49,10 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
             thread.state = thread_object.get("state").to_string();
             thread.ticks = thread_object.get("ticks").to_u32();
             thread.priority = thread_object.get("priority").to_string();
+            thread.syscall_count = thread_object.get("syscall_count").to_u32();
+            thread.inode_faults = thread_object.get("inode_faults").to_u32();
+            thread.zero_faults = thread_object.get("zero_faults").to_u32();
+            thread.cow_faults = thread_object.get("cow_faults").to_u32();
             process.threads.append(move(thread));
         });
 

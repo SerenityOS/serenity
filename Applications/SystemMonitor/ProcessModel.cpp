@@ -237,10 +237,10 @@ void ProcessModel::update()
             ThreadState state;
             state.pid = it.value.pid;
             state.user = it.value.username;
-            state.syscall_count = it.value.syscall_count;
-            state.inode_faults = it.value.inode_faults;
-            state.zero_faults = it.value.zero_faults;
-            state.cow_faults = it.value.cow_faults;
+            state.syscall_count = thread.syscall_count;
+            state.inode_faults = thread.inode_faults;
+            state.zero_faults = thread.zero_faults;
+            state.cow_faults = thread.cow_faults;
             state.name = it.value.name;
             state.amount_virtual = it.value.amount_virtual;
             state.amount_resident = it.value.amount_resident;

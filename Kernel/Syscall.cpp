@@ -60,7 +60,7 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 {
     ASSERT_INTERRUPTS_ENABLED();
     auto& process = current->process();
-    process.did_syscall();
+    current->did_syscall();
 
     if (function == SC_exit || function == SC_exit_thread) {
         // These syscalls need special handling since they never return to the caller.
