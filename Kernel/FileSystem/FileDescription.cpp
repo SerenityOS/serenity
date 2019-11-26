@@ -54,6 +54,11 @@ KResult FileDescription::fstat(stat& buffer)
         buffer.st_mode = 001000;
         return KSuccess;
     }
+    if (is_socket()) {
+        memset(&buffer, 0, sizeof(buffer));
+        buffer.st_mode = 0140000;
+        return KSuccess;
+    }
 
     if (!m_inode)
         return KResult(-EBADF);
