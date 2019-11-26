@@ -49,7 +49,7 @@ LookupServer::LookupServer()
             const_cast<CLocalSocket&>(*socket).on_ready_to_read = []{};
         };
     };
-    bool ok = m_local_server->listen("/tmp/.LookupServer-socket");
+    bool ok = m_local_server->take_over_from_system_server();
     ASSERT(ok);
 }
 
