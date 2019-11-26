@@ -677,13 +677,11 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
     auto build_process = [&](const Process& process) {
         auto process_object = array.add_object();
         process_object.add("pid", process.pid());
-        process_object.add("times_scheduled", process.main_thread().times_scheduled());
         process_object.add("pgid", process.tty() ? process.tty()->pgid() : 0);
         process_object.add("pgp", process.pgid());
         process_object.add("sid", process.sid());
         process_object.add("uid", process.uid());
         process_object.add("gid", process.gid());
-        process_object.add("state", process.main_thread().state_string());
         process_object.add("ppid", process.ppid());
         process_object.add("nfds", process.number_of_open_file_descriptors());
         process_object.add("name", process.name());
@@ -691,13 +689,21 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("amount_virtual", (u32)process.amount_virtual());
         process_object.add("amount_resident", (u32)process.amount_resident());
         process_object.add("amount_shared", (u32)process.amount_shared());
-        process_object.add("ticks", process.main_thread().ticks());
-        process_object.add("priority", to_string(process.main_thread().priority()));
         process_object.add("syscall_count", process.syscall_count());
         process_object.add("inode_faults", process.inode_faults());
         process_object.add("zero_faults", process.zero_faults());
         process_object.add("cow_faults", process.cow_faults());
         process_object.add("icon_id", process.icon_id());
+        auto thread_array = process_object.add_array("threads");
+        process.for_each_thread([&](const Thread& thread) {
+            auto thread_object = thread_array.add_object();
+            thread_object.add("tid", thread.tid());
+            thread_object.add("times_scheduled", thread.times_scheduled());
+            thread_object.add("ticks", thread.ticks());
+            thread_object.add("state", thread.state_string());
+            thread_object.add("priority", to_string(thread.priority()));
+            return IterationDecision::Continue;
+        });
     };
     build_process(*Scheduler::colonel());
     for (auto* process : processes)

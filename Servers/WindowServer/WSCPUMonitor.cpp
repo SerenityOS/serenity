@@ -44,10 +44,12 @@ void WSCPUMonitor::get_cpu_usage(unsigned& busy, unsigned& idle)
     auto all_processes = CProcessStatisticsReader::get_all();
 
     for (auto& it : all_processes) {
-        if (it.value.pid == 0)
-            idle += it.value.times_scheduled;
-        else
-            busy += it.value.times_scheduled;
+        for (auto& jt : it.value.threads) {
+            if (it.value.pid == 0)
+                idle += jt.times_scheduled;
+            else
+                busy += jt.times_scheduled;
+        }
     }
 }
 

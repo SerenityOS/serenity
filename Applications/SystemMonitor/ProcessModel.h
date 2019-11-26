@@ -1,12 +1,21 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <LibGUI/GModel.h>
 #include <unistd.h>
 
 class GraphWidget;
+
+struct PidAndTid {
+    bool operator==(const PidAndTid& other) const
+    {
+        return pid == other.pid && tid == other.tid;
+    }
+    pid_t pid;
+    int tid;
+};
 
 class ProcessModel final : public GModel {
 public:
@@ -18,6 +27,7 @@ public:
         Priority,
         User,
         PID,
+        TID,
         Virtual,
         Physical,
         Syscalls,
@@ -44,7 +54,8 @@ public:
 private:
     ProcessModel();
 
-    struct ProcessState {
+    struct ThreadState {
+        int tid;
         pid_t pid;
         unsigned times_scheduled;
         String name;
@@ -61,16 +72,23 @@ private:
         int icon_id;
     };
 
-    struct Process {
-        ProcessState current_state;
-        ProcessState previous_state;
+    struct Thread {
+        ThreadState current_state;
+        ThreadState previous_state;
     };
 
     HashMap<uid_t, String> m_usernames;
-    HashMap<pid_t, NonnullOwnPtr<Process>> m_processes;
-    Vector<pid_t> m_pids;
+    HashMap<PidAndTid, NonnullOwnPtr<Thread>> m_threads;
+    Vector<PidAndTid> m_pids;
     RefPtr<GraphicsBitmap> m_generic_process_icon;
     RefPtr<GraphicsBitmap> m_high_priority_icon;
     RefPtr<GraphicsBitmap> m_low_priority_icon;
     RefPtr<GraphicsBitmap> m_normal_priority_icon;
 };
+
+namespace AK {
+template<>
+struct Traits<PidAndTid> : public GenericTraits<PidAndTid> {
+    static unsigned hash(const PidAndTid& value) { return pair_int_hash(value.pid, value.tid); }
+};
+}
