@@ -14,7 +14,7 @@ class GWindowServerConnection : public IPC::Client::Connection<WSAPI_ServerMessa
     C_OBJECT(GWindowServerConnection)
 public:
     GWindowServerConnection()
-        : Connection("/tmp/wsportal")
+        : Connection("/tmp/portal/window")
     {}
 
     void handshake() override;
