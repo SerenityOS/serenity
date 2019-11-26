@@ -34,6 +34,9 @@ bool CFile::open(CIODevice::OpenMode mode)
         flags |= O_RDONLY;
     } else if (mode & CIODevice::WriteOnly) {
         flags |= O_WRONLY | O_CREAT;
+        bool should_truncate = !((mode & CIODevice::Append) || (mode & CIODevice::MustBeNew));
+        if (should_truncate)
+            flags |= O_TRUNC;
     }
     if (mode & CIODevice::Append)
         flags |= O_APPEND;
