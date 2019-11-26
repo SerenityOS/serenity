@@ -7,8 +7,8 @@
 ASEventLoop::ASEventLoop()
     : m_server(CLocalServer::construct())
 {
-    unlink("/tmp/asportal");
-    m_server->listen("/tmp/asportal");
+    bool ok = m_server->take_over_from_system_server();
+    ASSERT(ok);
     m_server->on_ready_to_accept = [this] {
         auto client_socket = m_server->accept();
         if (!client_socket) {
