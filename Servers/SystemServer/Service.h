@@ -15,6 +15,9 @@ class Service final : public CObject {
 
 public:
     void spawn();
+    void did_exit(int exit_code);
+
+    static Service* find_by_pid(pid_t);
 
     void save_to(AK::JsonObject&) override;
 
@@ -28,6 +31,8 @@ private:
     // File path to open as stdio fds.
     String m_stdio_file_path;
     int m_priority { 1 };
+    // Whether we should re-launch it if it exits.
+    bool m_keep_alive { false };
     // The name of the user we should run this service as.
     String m_user;
     uid_t m_uid { 0 };
