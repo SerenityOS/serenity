@@ -89,11 +89,13 @@ int main(int, char**)
     CEventLoop event_loop;
 
     // Read our config and instantiate services.
+    // This takes care of setting up sockets.
     Vector<RefPtr<Service>> services;
     auto config = CConfigFile::get_for_system("SystemServer");
     for (auto name : config->groups())
         services.append(Service::construct(*config, name));
 
+    // After we've set them all up, spawn them!
     for (auto& service : services)
         service->spawn();
 

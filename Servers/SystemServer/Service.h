@@ -2,6 +2,7 @@
 
 #include <AK/RefPtr.h>
 #include <AK/String.h>
+#include <LibCore/CNotifier.h>
 #include <LibCore/CObject.h>
 
 class CConfigFile;
@@ -33,6 +34,8 @@ private:
     int m_priority { 1 };
     // Whether we should re-launch it if it exits.
     bool m_keep_alive { false };
+    // Path to the socket to create and listen on on behalf of this service.
+    String m_socket_path;
     // The name of the user we should run this service as.
     String m_user;
     uid_t m_uid { 0 };
@@ -40,6 +43,9 @@ private:
 
     // PID of the running instance of this service.
     pid_t m_pid { -1 };
+    // An open fd to the socket.
+    int m_socket_fd { -1 };
 
     void resolve_user();
+    void setup_socket();
 };
