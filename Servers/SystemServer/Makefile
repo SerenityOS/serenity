@@ -1,6 +1,7 @@
 include ../../Makefile.common
 
 SYSTEMSERVER_OBJS = \
+    Service.o \
     main.o
 
 APP = SystemServer
