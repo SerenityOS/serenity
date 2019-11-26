@@ -176,7 +176,9 @@ CEventLoop& CEventLoop::main()
 
 CEventLoop& CEventLoop::current()
 {
-    return *s_event_loop_stack->last();
+    CEventLoop* event_loop = s_event_loop_stack->last();
+    ASSERT(event_loop != nullptr);
+    return *event_loop;
 }
 
 void CEventLoop::quit(int code)
