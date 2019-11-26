@@ -101,6 +101,31 @@ void Service::setup_socket()
     }
 }
 
+void Service::setup_notifier()
+{
+    ASSERT(m_lazy);
+    ASSERT(m_socket_fd >= 0);
+    ASSERT(!m_socket_notifier);
+
+    m_socket_notifier = CNotifier::construct(m_socket_fd, CNotifier::Event::Read, this);
+    m_socket_notifier->on_ready_to_read = [this] {
+        dbg() << "Ready to read on behalf of " << name();
+        remove_child(*m_socket_notifier);
+        m_socket_notifier = nullptr;
+        spawn();
+    };
+}
+
+void Service::activate()
+{
+    ASSERT(m_pid < 0);
+
+    if (m_lazy)
+        setup_notifier();
+    else
+        spawn();
+}
+
 void Service::spawn()
 {
     dbg() << "Spawning " << name();
@@ -172,7 +197,7 @@ void Service::did_exit(int exit_code)
     m_pid = -1;
 
     if (m_keep_alive)
-        spawn();
+        activate();
 }
 
 Service::Service(const CConfigFile& config, const StringView& name)
@@ -198,6 +223,7 @@ Service::Service(const CConfigFile& config, const StringView& name)
         ASSERT_NOT_REACHED();
 
     m_keep_alive = config.read_bool_entry(name, "KeepAlive");
+    m_lazy = config.read_bool_entry(name, "Lazy");
 
     m_socket_path = config.read_entry(name, "Socket");
     if (!m_socket_path.is_null()) {
@@ -227,6 +253,7 @@ void Service::save_to(JsonObject& json)
     json.set("priority", m_priority);
     json.set("keep_alive", m_keep_alive);
     json.set("socket_path", m_socket_path);
+    json.set("lazy", m_lazy);
     json.set("user", m_user);
     json.set("uid", m_uid);
     json.set("gid", m_gid);
