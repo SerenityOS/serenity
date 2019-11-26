@@ -95,9 +95,9 @@ int main(int, char**)
     for (auto name : config->groups())
         services.append(Service::construct(*config, name));
 
-    // After we've set them all up, spawn them!
+    // After we've set them all up, activate them!
     for (auto& service : services)
-        service->spawn();
+        service->activate();
 
     // This won't return if we're in test mode.
     check_for_test_mode();
