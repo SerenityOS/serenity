@@ -184,6 +184,25 @@ void kfree(void* ptr)
 #endif
 }
 
+void* krealloc(void* ptr, size_t new_size)
+{
+    if (!ptr)
+        return kmalloc(new_size);
+
+    InterruptDisabler disabler;
+
+    auto* a = (allocation_t*)((((u8*)ptr) - sizeof(allocation_t)));
+    size_t old_size = a->nchunk * CHUNK_SIZE;
+
+    if (old_size == new_size)
+        return ptr;
+
+    auto* new_ptr = kmalloc(new_size);
+    memcpy(new_ptr, ptr, min(old_size, new_size));
+    kfree(ptr);
+    return new_ptr;
+}
+
 void* operator new(size_t size)
 {
     return kmalloc(size);

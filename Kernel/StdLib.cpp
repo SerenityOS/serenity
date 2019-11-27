@@ -174,4 +174,13 @@ char* strstr(const char* haystack, const char* needle)
     ASSERT_NOT_REACHED();
 }
 
+void* realloc(void* p, size_t s)
+{
+    return krealloc(p, s);
+}
+
+void free(void* p)
+{
+    return kfree(p);
+}
 }

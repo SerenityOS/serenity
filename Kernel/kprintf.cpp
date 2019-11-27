@@ -96,7 +96,7 @@ static void buffer_putch(char*& bufptr, char ch)
     *bufptr++ = ch;
 }
 
-int ksprintf(char* buffer, const char* fmt, ...)
+int sprintf(char* buffer, const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
