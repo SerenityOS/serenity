@@ -41,7 +41,7 @@ VirtualConsole::VirtualConsole(unsigned index, InitialContents initial_contents)
     : TTY(4, index)
     , m_index(index)
 {
-    ksprintf(m_tty_name, "/dev/tty%u", m_index);
+    sprintf(m_tty_name, "/dev/tty%u", m_index);
     set_size(80, 25);
     m_horizontal_tabs = static_cast<u8*>(kmalloc_eternal(columns()));
     for (unsigned i = 0; i < columns(); ++i)

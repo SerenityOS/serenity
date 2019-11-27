@@ -10,7 +10,7 @@ SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
     , m_master(master)
     , m_index(index)
 {
-    ksprintf(m_tty_name, "/dev/pts/%u", m_index);
+    sprintf(m_tty_name, "/dev/pts/%u", m_index);
     set_uid(current->process().uid());
     set_gid(current->process().gid());
     DevPtsFS::register_slave_pty(*this);
