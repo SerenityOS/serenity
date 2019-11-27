@@ -6,7 +6,7 @@
 
 class Selector {
 public:
-    struct Component {
+    struct SimpleSelector {
         enum class Type {
             Invalid,
             Universal,
@@ -23,15 +23,6 @@ public:
         };
         PseudoClass pseudo_class { PseudoClass::None };
 
-        enum class Relation {
-            None,
-            ImmediateChild,
-            Descendant,
-            AdjacentSibling,
-            GeneralSibling,
-        };
-        Relation relation { Relation::None };
-
         String value;
 
         enum class AttributeMatchType {
@@ -45,13 +36,27 @@ public:
         String attribute_value;
     };
 
-    explicit Selector(Vector<Component>&&);
+    struct ComplexSelector {
+        enum class Relation {
+            None,
+            ImmediateChild,
+            Descendant,
+            AdjacentSibling,
+            GeneralSibling,
+        };
+        Relation relation { Relation::None };
+
+        using CompoundSelector = Vector<SimpleSelector>;
+        CompoundSelector compound_selector;
+    };
+
+    explicit Selector(Vector<ComplexSelector>&&);
     ~Selector();
 
-    const Vector<Component>& components() const { return m_components; }
+    const Vector<ComplexSelector>& complex_selectors() const { return m_complex_selectors; }
 
     Specificity specificity() const;
 
 private:
-    Vector<Component> m_components;
+    Vector<ComplexSelector> m_complex_selectors;
 };

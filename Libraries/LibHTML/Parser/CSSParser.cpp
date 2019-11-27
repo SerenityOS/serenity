@@ -4,6 +4,7 @@
 #include <LibHTML/Parser/CSSParser.h>
 #include <ctype.h>
 #include <stdio.h>
+#include <stdlib.h>
 
 #define PARSE_ASSERT(x)                                                   \
     if (!(x)) {                                                           \
@@ -166,8 +167,9 @@ public:
         return css[index++];
     };
 
-    void consume_whitespace_or_comments()
+    bool consume_whitespace_or_comments()
     {
+        int original_index = index;
         bool in_comment = false;
         for (; index < css.length(); ++index) {
             char ch = peek();
@@ -187,6 +189,7 @@ public:
                 continue;
             break;
         }
+        return original_index != index;
     }
 
     bool is_valid_selector_char(char ch) const
@@ -199,76 +202,59 @@ public:
         return ch == '~' || ch == '>' || ch == '+';
     }
 
-    Optional<Selector::Component> parse_selector_component()
+    Optional<Selector::SimpleSelector> parse_selector_component()
     {
-        consume_whitespace_or_comments();
-        Selector::Component::Type type;
-        Selector::Component::Relation relation = Selector::Component::Relation::Descendant;
-
-        if (peek() == '{')
+        if (consume_whitespace_or_comments())
             return {};
 
-        if (is_combinator(peek())) {
-            switch (peek()) {
-            case '>':
-                relation = Selector::Component::Relation::ImmediateChild;
-                break;
-            case '+':
-                relation = Selector::Component::Relation::AdjacentSibling;
-                break;
-            case '~':
-                relation = Selector::Component::Relation::GeneralSibling;
-                break;
-            }
-            consume_one();
-            consume_whitespace_or_comments();
-        }
+        if (peek() == '{' || peek() == ',')
+            return {};
+
+        Selector::SimpleSelector::Type type;
 
         if (peek() == '*') {
-            type = Selector::Component::Type::Universal;
+            type = Selector::SimpleSelector::Type::Universal;
             consume_one();
-            return Selector::Component {
+            return Selector::SimpleSelector {
                 type,
-                Selector::Component::PseudoClass::None,
-                relation,
+                Selector::SimpleSelector::PseudoClass::None,
                 String(),
-                Selector::Component::AttributeMatchType::None,
+                Selector::SimpleSelector::AttributeMatchType::None,
                 String(),
                 String()
             };
         }
 
         if (peek() == '.') {
-            type = Selector::Component::Type::Class;
+            type = Selector::SimpleSelector::Type::Class;
             consume_one();
         } else if (peek() == '#') {
-            type = Selector::Component::Type::Id;
+            type = Selector::SimpleSelector::Type::Id;
             consume_one();
         } else if (isalpha(peek())) {
-            type = Selector::Component::Type::TagName;
+            type = Selector::SimpleSelector::Type::TagName;
         } else {
-            type = Selector::Component::Type::Universal;
+            type = Selector::SimpleSelector::Type::Universal;
         }
 
-        if (type != Selector::Component::Type::Universal) {
+        if (type != Selector::SimpleSelector::Type::Universal) {
             while (is_valid_selector_char(peek()))
                 buffer.append(consume_one());
             PARSE_ASSERT(!buffer.is_null());
         }
 
-        Selector::Component component {
+        Selector::SimpleSelector component {
             type,
-            Selector::Component::PseudoClass::None,
-            relation,
+            Selector::SimpleSelector::PseudoClass::None,
             String::copy(buffer),
-            Selector::Component::AttributeMatchType::None,
+            Selector::SimpleSelector::AttributeMatchType::None,
             String(),
             String()
         };
         buffer.clear();
 
         if (peek() == '[') {
-            Selector::Component::AttributeMatchType attribute_match_type = Selector::Component::AttributeMatchType::HasAttribute;
+            Selector::SimpleSelector::AttributeMatchType attribute_match_type = Selector::SimpleSelector::AttributeMatchType::HasAttribute;
             String attribute_name;
             String attribute_value;
             bool in_value = false;
@@ -277,7 +263,7 @@ public:
             while (peek() != expected_end_of_attribute_selector) {
                 char ch = consume_one();
                 if (ch == '=') {
-                    attribute_match_type = Selector::Component::AttributeMatchType::ExactValueMatch;
+                    attribute_match_type = Selector::SimpleSelector::AttributeMatchType::ExactValueMatch;
                     attribute_name = String::copy(buffer);
                     buffer.clear();
                     in_value = true;
@@ -322,32 +308,70 @@ public:
             buffer.clear();
 
             if (pseudo_name == "link")
-                component.pseudo_class = Selector::Component::PseudoClass::Link;
+                component.pseudo_class = Selector::SimpleSelector::PseudoClass::Link;
             else if (pseudo_name == "hover")
-                component.pseudo_class = Selector::Component::PseudoClass::Hover;
+                component.pseudo_class = Selector::SimpleSelector::PseudoClass::Hover;
         }
 
         return component;
     }
 
+    Optional<Selector::ComplexSelector> parse_selector_component_list()
+    {
+        auto relation = Selector::ComplexSelector::Relation::Descendant;
+
+        if (peek() == '{' || peek() == ',')
+            return {};
+
+        if (is_combinator(peek())) {
+            switch (peek()) {
+            case '>':
+                relation = Selector::ComplexSelector::Relation::ImmediateChild;
+                break;
+            case '+':
+                relation = Selector::ComplexSelector::Relation::AdjacentSibling;
+                break;
+            case '~':
+                relation = Selector::ComplexSelector::Relation::GeneralSibling;
+                break;
+            }
+            consume_one();
+            consume_whitespace_or_comments();
+        }
+
+        consume_whitespace_or_comments();
+
+        Vector<Selector::SimpleSelector> components;
+        for (;;) {
+            dbg() << "calling parse_selector_component at index " << index << ", peek=" << peek();
+            auto component = parse_selector_component();
+            if (!component.has_value())
+                break;
+            components.append(component.value());
+            PARSE_ASSERT(components.size() < 10);
+        }
+
+        return Selector::ComplexSelector { relation, move(components) };
+    }
+
     void parse_selector()
     {
-        Vector<Selector::Component> components;
+        Vector<Selector::ComplexSelector> component_lists;
 
         for (;;) {
-            auto component = parse_selector_component();
-            if (component.has_value())
-                components.append(component.value());
+            auto component_list = parse_selector_component_list();
+            if (component_list.has_value())
+                component_lists.append(component_list.value());
             consume_whitespace_or_comments();
             if (peek() == ',' || peek() == '{')
                 break;
         }
 
-        if (components.is_empty())
+        if (component_lists.is_empty())
             return;
-        components.first().relation = Selector::Component::Relation::None;
+        component_lists.first().relation = Selector::ComplexSelector::Relation::None;
 
-        current_rule.selectors.append(Selector(move(components)));
+        current_rule.selectors.append(Selector(move(component_lists)));
     };
 
     void parse_selector_list()

@@ -14,27 +14,27 @@ static bool matches_hover_pseudo_class(const Element& element)
     return element.is_ancestor_of(*hovered_node);
 }
 
-bool matches(const Selector::Component& component, const Element& element)
+bool matches(const Selector::SimpleSelector& component, const Element& element)
 {
     switch (component.pseudo_class) {
-    case Selector::Component::PseudoClass::None:
+    case Selector::SimpleSelector::PseudoClass::None:
         break;
-    case Selector::Component::PseudoClass::Link:
+    case Selector::SimpleSelector::PseudoClass::Link:
         if (!element.is_link())
             return false;
         break;
-    case Selector::Component::PseudoClass::Hover:
+    case Selector::SimpleSelector::PseudoClass::Hover:
         if (!matches_hover_pseudo_class(element))
             return false;
         break;
     }
 
     switch (component.attribute_match_type) {
-    case Selector::Component::AttributeMatchType::HasAttribute:
+    case Selector::SimpleSelector::AttributeMatchType::HasAttribute:
         if (!element.has_attribute(component.attribute_name))
             return false;
         break;
-    case Selector::Component::AttributeMatchType::ExactValueMatch:
+    case Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
         if (element.attribute(component.attribute_name) != component.attribute_value)
             return false;
         break;
@@ -43,50 +43,52 @@ bool matches(const Selector::Component& component, const Element& element)
     }
 
     switch (component.type) {
-    case Selector::Component::Type::Universal:
+    case Selector::SimpleSelector::Type::Universal:
         return true;
-    case Selector::Component::Type::Id:
+    case Selector::SimpleSelector::Type::Id:
         return component.value == element.attribute("id");
-    case Selector::Component::Type::Class:
+    case Selector::SimpleSelector::Type::Class:
         return element.has_class(component.value);
-    case Selector::Component::Type::TagName:
+    case Selector::SimpleSelector::Type::TagName:
         return component.value == element.tag_name();
     default:
         ASSERT_NOT_REACHED();
     }
 }
 
-bool matches(const Selector& selector, int component_index, const Element& element)
+bool matches(const Selector& selector, int component_list_index, const Element& element)
 {
-    auto& component = selector.components()[component_index];
-    if (!matches(component, element))
-        return false;
-    switch (component.relation) {
-    case Selector::Component::Relation::None:
+    auto& component_list = selector.complex_selectors()[component_list_index];
+    for (auto& component : component_list.compound_selector) {
+        if (!matches(component, element))
+            return false;
+    }
+    switch (component_list.relation) {
+    case Selector::ComplexSelector::Relation::None:
         return true;
-    case Selector::Component::Relation::Descendant:
-        ASSERT(component_index != 0);
+    case Selector::ComplexSelector::Relation::Descendant:
+        ASSERT(component_list_index != 0);
         for (auto* ancestor = element.parent(); ancestor; ancestor = ancestor->parent()) {
             if (!is<Element>(*ancestor))
                 continue;
-            if (matches(selector, component_index - 1, to<Element>(*ancestor)))
+            if (matches(selector, component_list_index - 1, to<Element>(*ancestor)))
                 return true;
         }
         return false;
-    case Selector::Component::Relation::ImmediateChild:
-        ASSERT(component_index != 0);
+    case Selector::ComplexSelector::Relation::ImmediateChild:
+        ASSERT(component_list_index != 0);
         if (!element.parent() || !is<Element>(*element.parent()))
             return false;
-        return matches(selector, component_index - 1, to<Element>(*element.parent()));
-    case Selector::Component::Relation::AdjacentSibling:
-        ASSERT(component_index != 0);
+        return matches(selector, component_list_index - 1, to<Element>(*element.parent()));
+    case Selector::ComplexSelector::Relation::AdjacentSibling:
+        ASSERT(component_list_index != 0);
         if (auto* sibling = element.previous_element_sibling())
-            return matches(selector, component_index - 1, *sibling);
+            return matches(selector, component_list_index - 1, *sibling);
         return false;
-    case Selector::Component::Relation::GeneralSibling:
-        ASSERT(component_index != 0);
+    case Selector::ComplexSelector::Relation::GeneralSibling:
+        ASSERT(component_list_index != 0);
         for (auto* sibling = element.previous_element_sibling(); sibling; sibling = sibling->previous_element_sibling()) {
-            if (matches(selector, component_index - 1, *sibling))
+            if (matches(selector, component_list_index - 1, *sibling))
                 return true;
         }
         return false;
@@ -96,8 +98,8 @@ bool matches(const Selector& selector, int component_index, const Element& eleme
 
 bool matches(const Selector& selector, const Element& element)
 {
-    ASSERT(!selector.components().is_empty());
-    return matches(selector, selector.components().size() - 1, element);
+    ASSERT(!selector.complex_selectors().is_empty());
+    return matches(selector, selector.complex_selectors().size() - 1, element);
 }
 
 }
