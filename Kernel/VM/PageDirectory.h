@@ -31,6 +31,8 @@ public:
     Process* process() { return m_process; }
     const Process* process() const { return m_process; }
 
+    void update_kernel_mappings();
+
 private:
     PageDirectory(Process&, const RangeAllocator* parent_range_allocator);
     explicit PageDirectory(PhysicalAddress);

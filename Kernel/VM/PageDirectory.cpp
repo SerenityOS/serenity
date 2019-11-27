@@ -57,3 +57,11 @@ void PageDirectory::flush(VirtualAddress vaddr)
     if (this == &MM.kernel_page_directory() || &current->process().page_directory() == this)
         MM.flush_tlb(vaddr);
 }
+
+void PageDirectory::update_kernel_mappings()
+{
+    // This ensures that the kernel virtual address space is up-to-date in this page directory.
+    // This may be necessary to avoid triple faulting when entering a process's paging scope
+    // whose mappings are out-of-date.
+    memcpy(entries() + 768, MM.kernel_page_directory().entries() + 768, sizeof(PageDirectoryEntry) * 256);
+}

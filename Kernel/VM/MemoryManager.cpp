@@ -479,6 +479,12 @@ void MemoryManager::enter_process_paging_scope(Process& process)
 {
     ASSERT(current);
     InterruptDisabler disabler;
+
+    // NOTE: To prevent triple-faulting here, we have to ensure that the current stack
+    //       is accessible to the incoming page directory. We achieve this by forcing
+    //       an update of the kernel VM mappings in the entered scope's page directory.
+    process.page_directory().update_kernel_mappings();
+
     current->tss().cr3 = process.page_directory().cr3();
     asm volatile("movl %%eax, %%cr3" ::"a"(process.page_directory().cr3())
                  : "memory");
