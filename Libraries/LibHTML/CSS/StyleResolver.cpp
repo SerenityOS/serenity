@@ -118,6 +118,30 @@ static Vector<String> split_on_whitespace(const StringView& string)
 
 static void set_property_expanding_shorthands(StyleProperties& style, CSS::PropertyID property_id, const StyleValue& value)
 {
+    if (property_id == CSS::PropertyID::BorderStyle) {
+        style.set_property(CSS::PropertyID::BorderTopStyle, value);
+        style.set_property(CSS::PropertyID::BorderRightStyle, value);
+        style.set_property(CSS::PropertyID::BorderBottomStyle, value);
+        style.set_property(CSS::PropertyID::BorderLeftStyle, value);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BorderWidth) {
+        style.set_property(CSS::PropertyID::BorderTopWidth, value);
+        style.set_property(CSS::PropertyID::BorderRightWidth, value);
+        style.set_property(CSS::PropertyID::BorderBottomWidth, value);
+        style.set_property(CSS::PropertyID::BorderLeftWidth, value);
+        return;
+    }
+
+    if (property_id == CSS::PropertyID::BorderColor) {
+        style.set_property(CSS::PropertyID::BorderTopColor, value);
+        style.set_property(CSS::PropertyID::BorderRightColor, value);
+        style.set_property(CSS::PropertyID::BorderBottomColor, value);
+        style.set_property(CSS::PropertyID::BorderLeftColor, value);
+        return;
+    }
+
     if (property_id == CSS::PropertyID::Margin) {
         if (value.is_length()) {
             style.set_property(CSS::PropertyID::MarginTop, value);
