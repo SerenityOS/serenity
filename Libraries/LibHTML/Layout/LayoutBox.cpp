@@ -72,12 +72,12 @@ void LayoutBox::paint_border(RenderingContext& context, Edge edge, const FloatRe
         auto top_left_color = Color::from_rgb(0x888888);
         auto bottom_right_color = Color::from_rgb(0x5a5a5a);
         color = (edge == Edge::Left || edge == Edge::Top) ? top_left_color : bottom_right_color;
-    } else {
-        // border-style: solid
     }
 
+    bool dotted = border_style.has_value() && border_style.value()->to_string() == "dotted";
+
     auto draw_line = [&](auto& p1, auto& p2) {
-        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1);
+        context.painter().draw_line({ (int)p1.x(), (int)p1.y() }, { (int)p2.x(), (int)p2.y() }, color, 1, dotted);
     };
 
     auto width_for = [&](CSS::PropertyID property_id) -> float {
