@@ -53,8 +53,6 @@ public:
 
     bool is_dead() const { return m_dead; }
 
-    Thread::State state() const { return main_thread().state(); }
-
     Thread& main_thread() { return *m_main_thread; }
     const Thread& main_thread() const { return *m_main_thread; }
 
