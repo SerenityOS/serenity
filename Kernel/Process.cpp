@@ -2103,7 +2103,6 @@ clock_t Process::sys$times(tms* times)
 
 int Process::sys$select(const Syscall::SC_select_params* params)
 {
-    // FIXME: Return -EINTR if a signal is caught.
     // FIXME: Return -EINVAL if timeout is invalid.
     if (!validate_read_typed(params))
         return -EFAULT;
