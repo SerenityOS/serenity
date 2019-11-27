@@ -1,7 +1,7 @@
 #include <LibHTML/CSS/Selector.h>
 
-Selector::Selector(Vector<Component>&& components)
-    : m_components(move(components))
+Selector::Selector(Vector<ComplexSelector>&& component_lists)
+    : m_complex_selectors(move(component_lists))
 {
 }
 
@@ -15,19 +15,21 @@ Specificity Selector::specificity() const
     unsigned tag_names = 0;
     unsigned classes = 0;
 
-    for (auto& component : m_components) {
-        switch (component.type) {
-        case Component::Type::Id:
-            ++ids;
-            break;
-        case Component::Type::Class:
-            ++classes;
-            break;
-        case Component::Type::TagName:
-            ++tag_names;
-            break;
-        default:
-            break;
+    for (auto& list : m_complex_selectors) {
+        for (auto& simple_selector : list.compound_selector) {
+            switch (simple_selector.type) {
+            case SimpleSelector::Type::Id:
+                ++ids;
+                break;
+            case SimpleSelector::Type::Class:
+                ++classes;
+                break;
+            case SimpleSelector::Type::TagName:
+                ++tag_names;
+                break;
+            default:
+                break;
+            }
         }
     }
 

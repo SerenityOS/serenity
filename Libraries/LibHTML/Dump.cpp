@@ -144,57 +144,70 @@ void dump_rule(const StyleRule& rule)
     dbgprintf("Rule:\n");
     for (auto& selector : rule.selectors()) {
         dbgprintf("  Selector:\n");
-        for (auto& component : selector.components()) {
-            const char* type_description = "Unknown";
-            switch (component.type) {
-            case Selector::Component::Type::Invalid:
-                type_description = "Invalid";
-                break;
-            case Selector::Component::Type::Universal:
-                type_description = "Universal";
-                break;
-            case Selector::Component::Type::Id:
-                type_description = "Id";
-                break;
-            case Selector::Component::Type::Class:
-                type_description = "Class";
-                break;
-            case Selector::Component::Type::TagName:
-                type_description = "TagName";
-                break;
-            }
+
+        for (auto& complex_selector : selector.complex_selectors()) {
+            dbgprintf("    ");
+
             const char* relation_description = "";
-            switch (component.relation) {
-            case Selector::Component::Relation::None:
+            switch (complex_selector.relation) {
+            case Selector::ComplexSelector::Relation::None:
                 break;
-            case Selector::Component::Relation::ImmediateChild:
-                relation_description = "{ImmediateChild}";
+            case Selector::ComplexSelector::Relation::ImmediateChild:
+                relation_description = "ImmediateChild";
                 break;
-            case Selector::Component::Relation::Descendant:
-                relation_description = "{Descendant}";
+            case Selector::ComplexSelector::Relation::Descendant:
+                relation_description = "Descendant";
                 break;
-            case Selector::Component::Relation::AdjacentSibling:
-                relation_description = "{AdjacentSibling}";
+            case Selector::ComplexSelector::Relation::AdjacentSibling:
+                relation_description = "AdjacentSibling";
                 break;
-            case Selector::Component::Relation::GeneralSibling:
-                relation_description = "{GeneralSibling}";
-                break;
-            }
-            const char* attribute_match_type_description = "";
-            switch (component.attribute_match_type) {
-            case Selector::Component::AttributeMatchType::None:
-                break;
-            case Selector::Component::AttributeMatchType::HasAttribute:
-                attribute_match_type_description = "HasAttribute";
-                break;
-            case Selector::Component::AttributeMatchType::ExactValueMatch:
-                attribute_match_type_description = "ExactValueMatch";
+            case Selector::ComplexSelector::Relation::GeneralSibling:
+                relation_description = "GeneralSibling";
                 break;
             }
 
-            dbgprintf("    %s:%s %s", type_description, component.value.characters(), relation_description);
-            if (component.attribute_match_type != Selector::Component::AttributeMatchType::None) {
-                dbgprintf(" [%s, name='%s', value='%s']", attribute_match_type_description, component.attribute_name.characters(), component.attribute_value.characters());
+            if (*relation_description)
+                dbgprintf("{%s} ", relation_description);
+
+            for (int i = 0; i < complex_selector.compound_selector.size(); ++i) {
+                auto& simple_selector = complex_selector.compound_selector[i];
+                const char* type_description = "Unknown";
+                switch (simple_selector.type) {
+                case Selector::SimpleSelector::Type::Invalid:
+                    type_description = "Invalid";
+                    break;
+                case Selector::SimpleSelector::Type::Universal:
+                    type_description = "Universal";
+                    break;
+                case Selector::SimpleSelector::Type::Id:
+                    type_description = "Id";
+                    break;
+                case Selector::SimpleSelector::Type::Class:
+                    type_description = "Class";
+                    break;
+                case Selector::SimpleSelector::Type::TagName:
+                    type_description = "TagName";
+                    break;
+                }
+                const char* attribute_match_type_description = "";
+                switch (simple_selector.attribute_match_type) {
+                case Selector::SimpleSelector::AttributeMatchType::None:
+                    break;
+                case Selector::SimpleSelector::AttributeMatchType::HasAttribute:
+                    attribute_match_type_description = "HasAttribute";
+                    break;
+                case Selector::SimpleSelector::AttributeMatchType::ExactValueMatch:
+                    attribute_match_type_description = "ExactValueMatch";
+                    break;
+                }
+
+                dbgprintf("%s:%s", type_description, simple_selector.value.characters());
+                if (simple_selector.attribute_match_type != Selector::SimpleSelector::AttributeMatchType::None) {
+                    dbgprintf(" [%s, name='%s', value='%s']", attribute_match_type_description, simple_selector.attribute_name.characters(), simple_selector.attribute_value.characters());
+                }
+
+                if (i != complex_selector.compound_selector.size() - 1)
+                    dbgprintf(", ");
             }
             dbgprintf("\n");
         }
