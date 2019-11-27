@@ -71,7 +71,6 @@ void Painter::clear_rect(const Rect& a_rect, Color color)
     }
 }
 
-
 void Painter::fill_rect(const Rect& a_rect, Color color)
 {
     if (color.alpha() == 0)
@@ -774,7 +773,7 @@ void Painter::draw_pixel(const Point& position, Color color, int thickness)
     fill_rect(rect, color);
 }
 
-void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thickness)
+void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
 {
     auto clip_rect = this->clip_rect();
 
@@ -797,8 +796,13 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
             return;
         int min_y = max(point1.y(), clip_rect.top());
         int max_y = min(point2.y(), clip_rect.bottom());
-        for (int y = min_y; y <= max_y; ++y)
-            draw_pixel({ x, y }, color, thickness);
+        if (dotted) {
+            for (int y = min_y; y <= max_y; y += 2)
+                draw_pixel({ x, y }, color, thickness);
+        } else {
+            for (int y = min_y; y <= max_y; ++y)
+                draw_pixel({ x, y }, color, thickness);
+        }
         return;
     }
 
@@ -815,10 +819,18 @@ void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thick
             return;
         int min_x = max(point1.x(), clip_rect.left());
         int max_x = min(point2.x(), clip_rect.right());
-        for (int x = min_x; x <= max_x; ++x)
-            draw_pixel({ x, y }, color, thickness);
+        if (dotted) {
+            for (int x = min_x; x <= max_x; x += 2)
+                draw_pixel({ x, y }, color, thickness);
+        } else {
+            for (int x = min_x; x <= max_x; ++x)
+                draw_pixel({ x, y }, color, thickness);
+        }
         return;
     }
+
+    // FIXME: Implement dotted diagonal lines.
+    ASSERT(!dotted);
 
     const double adx = abs(point2.x() - point1.x());
     const double ady = abs(point2.y() - point1.y());
