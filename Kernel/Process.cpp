@@ -2438,6 +2438,8 @@ int Process::sys$listen(int sockfd, int backlog)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
+    if (socket.is_connected())
+        return -EINVAL;
     return socket.listen(backlog);
 }
 
