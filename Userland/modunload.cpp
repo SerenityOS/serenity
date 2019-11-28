@@ -5,10 +5,10 @@ int main(int argc, char** argv)
 {
     (void)argc;
     (void)argv;
-    const char* path = "/mod/TestModule.o";
-    int rc = module_load(path, strlen(path));
+    const char* name = "FIXME";
+    int rc = module_unload(name, strlen(name));
     if (rc < 0) {
-        perror("module_load");
+        perror("module_unload");
         return 1;
     }
     return 0;

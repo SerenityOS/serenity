@@ -134,13 +134,13 @@ ln -s SoundPlayer mnt/bin/sp
 ln -s Help mnt/bin/help
 ln -s Browser mnt/bin/br
 ln -s HackStudio mnt/bin/hs
-ln -s modload mnt/bin/m
 echo "done"
 
 mkdir -p mnt/boot/
 cp kernel mnt/boot/
 
-cp TestModule.o mnt/
+mkdir -p mnt/mod/
+cp TestModule.o mnt/mod
 
 # Run local sync script, if it exists
 if [ -f sync-local.sh ]; then
