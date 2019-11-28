@@ -106,14 +106,21 @@ bool ELFImage::parse()
     for (unsigned i = 0; i < section_count(); ++i) {
         auto& sh = section_header(i);
         if (sh.sh_type == SHT_SYMTAB) {
-            ASSERT(!m_symbol_table_section_index);
+            ASSERT(!m_symbol_table_section_index || m_symbol_table_section_index == i);
             m_symbol_table_section_index = i;
         }
         if (sh.sh_type == SHT_STRTAB && i != header().e_shstrndx) {
-            ASSERT(!m_string_table_section_index);
+            ASSERT(!m_string_table_section_index || m_string_table_section_index == i);
             m_string_table_section_index = i;
         }
     }
+
+    // Then create a name-to-index map.
+    for (unsigned i = 0; i < section_count(); ++i) {
+        auto& section = this->section(i);
+        m_sections.set(section.name(), move(i));
+    }
+
     return true;
 }
 
@@ -172,4 +179,37 @@ const ELFImage::ProgramHeader ELFImage::program_header(unsigned index) const
 {
     ASSERT(index < program_header_count());
     return ProgramHeader(*this, index);
+}
+
+const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned index) const
+{
+    ASSERT(index < relocation_count());
+    auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
+    return Relocation(m_image, rels[index]);
+}
+
+const ELFImage::RelocationSection ELFImage::Section::relocations() const
+{
+    // FIXME: This is ugly.
+    char relocation_sectionName[128];
+    sprintf(relocation_sectionName, ".rel%s", name());
+
+#ifdef ELFIMAGE_DEBUG
+    kprintf("looking for '%s'\n", relocation_sectionName);
+#endif
+    auto relocation_section = m_image.lookup_section(relocation_sectionName);
+    if (relocation_section.type() != SHT_REL)
+        return static_cast<const RelocationSection>(m_image.section(0));
+
+#ifdef ELFIMAGE_DEBUG
+    kprintf("Found relocations for %s in %s\n", name(), relocation_section.name());
+#endif
+    return static_cast<const RelocationSection>(relocation_section);
+}
+
+const ELFImage::Section ELFImage::lookup_section(const char* name) const
+{
+    if (auto it = m_sections.find(name); it != m_sections.end())
+        return section((*it).value);
+    return section(0);
 }
