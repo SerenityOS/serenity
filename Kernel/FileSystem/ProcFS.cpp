@@ -13,8 +13,10 @@
 #include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KParams.h>
+#include <Kernel/Module.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/Net/Routing.h>
@@ -22,7 +24,6 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI.h>
 #include <Kernel/VM/MemoryManager.h>
-#include <Kernel/Heap/kmalloc.h>
 #include <LibC/errno_numbers.h>
 
 enum ProcParentDirectory {
@@ -52,6 +53,7 @@ enum ProcFileType {
     FI_Root_devices,
     FI_Root_uptime,
     FI_Root_cmdline,
+    FI_Root_modules,
     FI_Root_self, // symlink
     FI_Root_sys,  // directory
     FI_Root_net,  // directory
@@ -322,6 +324,21 @@ Optional<KBuffer> procfs$cmdline(InodeIdentifier)
 {
     KBufferBuilder builder;
     builder.appendf("%s\n", KParams::the().cmdline().characters());
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$modules(InodeIdentifier)
+{
+    extern HashMap<String, OwnPtr<Module>>* g_modules;
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    for (auto& it : *g_modules) {
+        auto obj = array.add_object();
+        obj.add("name", it.value->name);
+        obj.add("module_init", (u32)it.value->module_init);
+        obj.add("module_fini", (u32)it.value->module_fini);
+    }
+    array.finish();
     return builder.build();
 }
 
@@ -1291,6 +1308,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_devices] = { "devices", FI_Root_devices, procfs$devices };
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, procfs$cmdline };
+    m_entries[FI_Root_modules] = { "modules", FI_Root_modules, procfs$modules };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
     m_entries[FI_Root_net] = { "net", FI_Root_net };
 
