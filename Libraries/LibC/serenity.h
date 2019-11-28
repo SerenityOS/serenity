@@ -35,3 +35,10 @@ private:
 };
 
 #endif // __cplusplus
+
+__BEGIN_DECLS
+
+int module_load(const char* path, size_t path_length);
+int module_unload(const char* name, size_t name_length);
+
+__END_DECLS

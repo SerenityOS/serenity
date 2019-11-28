@@ -99,6 +99,8 @@ CXX_OBJS = \
     init.o \
     kprintf.o
 
+MODULE_OBJS = TestModule.o
+
 OBJS = $(CXX_OBJS) Arch/i386/Boot/boot.ao
 
 KERNEL = kernel
@@ -109,7 +111,7 @@ CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/8.3.0/i686-pc-sere
 DEFINES += -DKERNEL
 LDFLAGS += -Ttext 0x100000 -Wl,-T linker.ld -nostdlib
 
-all: $(KERNEL) kernel.map
+all: $(KERNEL) $(MODULE_OBJS) kernel.map
 
 kernel.map: kernel
 	@echo "MKMAP $@"; sh mkmap.sh

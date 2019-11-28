@@ -6,8 +6,8 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Console.h>
-#include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/KeyboardDevice.h>
+#include <Kernel/Devices/NullDevice.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
@@ -23,6 +23,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/Module.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
@@ -55,9 +56,12 @@ static String* s_hostname;
 static Lock* s_hostname_lock;
 VirtualAddress g_return_to_ring3_from_signal_trampoline;
 VirtualAddress g_return_to_ring0_from_signal_trampoline;
+HashMap<String, OwnPtr<Module>>* g_modules;
 
 void Process::initialize()
 {
+    g_modules = new HashMap<String, OwnPtr<Module>>;
+
     next_pid = 0;
     g_processes = new InlineLinkedList<Process>;
     s_hostname = new String("courage");
@@ -3375,5 +3379,120 @@ int Process::sys$yield()
 int Process::sys$beep()
 {
     Scheduler::beep();
+    return 0;
+}
+
+extern "C" void outside_func()
+{
+    kprintf("I'm the outside func!\n");
+}
+
+static u32 find_kernel_symbol(const StringView& name)
+{
+    if (name == "kprintf")
+        return (u32)kprintf;
+    if (name == "outside_func")
+        return (u32)outside_func;
+    ASSERT_NOT_REACHED();
+}
+
+int Process::sys$module_load(const char* path, size_t path_length)
+{
+#if 0
+    if (!is_superuser())
+        return -EPERM;
+#endif
+    if (!validate_read(path, path_length))
+        return -EFAULT;
+    auto description_or_error = VFS::the().open(path, 0, 0, current_directory());
+    if (description_or_error.is_error())
+        return description_or_error.error();
+    auto& description = description_or_error.value();
+    auto payload = description->read_entire_file();
+    auto storage = KBuffer::create_with_size(payload.size());
+    memcpy(storage.data(), payload.data(), payload.size());
+    payload.clear();
+
+    // FIXME: ELFImage should really be taking a size argument as well...
+    auto elf_image = make<ELFImage>(storage.data());
+    if (!elf_image->parse())
+        return -ENOEXEC;
+
+    ModuleInitPtr module_init = nullptr;
+
+    HashMap<String, u8*> section_storage_by_name;
+
+    auto module = make<Module>();
+    module->name = "FIXME";
+
+    elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
+        auto section_storage = KBuffer::copy(section.raw_data(), section.size());
+        section_storage_by_name.set(section.name(), section_storage.data());
+        module->sections.append(move(section_storage));
+        return IterationDecision::Continue;
+    });
+
+    elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
+        auto* section_storage = section_storage_by_name.get(section.name()).value_or(nullptr);
+        ASSERT(section_storage);
+        section.relocations().for_each_relocation([&](const ELFImage::Relocation& relocation) {
+            auto& patch_ptr = *reinterpret_cast<ptrdiff_t*>(section_storage + relocation.offset());
+            switch (relocation.type()) {
+            case R_386_PC32: {
+                // PC-relative relocation
+                dbg() << "PC-relative relocation: " << relocation.symbol().name();
+                u32 symbol_address = find_kernel_symbol(relocation.symbol().name());
+                dbg() << "   Symbol address: " << (void*)symbol_address;
+                ptrdiff_t relative_offset = (char*)symbol_address - ((char*)&patch_ptr + 4);
+                patch_ptr = relative_offset;
+                break;
+            }
+            case R_386_32: // Absolute relocation
+                dbg() << "Absolute relocation: '" << relocation.symbol().name() << "' value:" << relocation.symbol().value() << ", index:" << relocation.symbol_index();
+                auto* section_storage_containing_symbol = section_storage_by_name.get(relocation.symbol().section().name()).value_or(nullptr);
+                ASSERT(section_storage_containing_symbol);
+                patch_ptr += (ptrdiff_t)(section_storage_containing_symbol + relocation.symbol().value());
+                break;
+            }
+            return IterationDecision::Continue;
+        });
+
+        return IterationDecision::Continue;
+    });
+
+    auto* text_base = section_storage_by_name.get(".text").value_or(nullptr);
+    if (!text_base) {
+        dbg() << "No .text section found in module!";
+        return -EINVAL;
+    }
+
+    elf_image->for_each_symbol([&](const ELFImage::Symbol& symbol) {
+        dbg() << " - " << symbol.type() << " '" << symbol.name() << "' @ " << (void*)symbol.value() << ", size=" << symbol.size();
+        if (!strcmp(symbol.name(), "module_init")) {
+            module_init = (ModuleInitPtr)(text_base + symbol.value());
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (!module_init)
+        return -EINVAL;
+
+    module_init();
+
+    auto name = module->name;
+    g_modules->set(name, move(module));
+
+    return 0;
+}
+
+int Process::sys$module_unload(const char* name, size_t name_length)
+{
+#if 0
+    if (!is_superuser())
+        return -EPERM;
+#endif
+    if (!validate_read(name, name_length))
+        return -EFAULT;
+    // FIXME: Implement this syscall!
     return 0;
 }
