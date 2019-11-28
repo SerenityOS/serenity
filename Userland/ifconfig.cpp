@@ -70,6 +70,7 @@ int main(int argc, char** argv)
         auto bytes_in = if_object.get("bytes_in").to_u32();
         auto packets_out = if_object.get("packets_out").to_u32();
         auto bytes_out = if_object.get("bytes_out").to_u32();
+        auto mtu = if_object.get("mtu").to_u32();
 
         printf("%s:\n", name.characters());
         printf("     mac: %s\n", mac_address.characters());
@@ -77,6 +78,7 @@ int main(int argc, char** argv)
         printf("   class: %s\n", class_name.characters());
         printf("      RX: %u packets %u bytes (%s)\n", packets_in, bytes_in, si_bytes(bytes_in).characters());
         printf("      TX: %u packets %u bytes (%s)\n", packets_out, bytes_out, si_bytes(bytes_out).characters());
+        printf("     MTU: %u\n", mtu);
         printf("\n");
     });
 

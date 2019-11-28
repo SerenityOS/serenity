@@ -70,8 +70,14 @@ void NetworkAdapter::send(const MACAddress& destination, const ARPPacket& packet
 
 void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Address& destination_ipv4, IPv4Protocol protocol, const u8* payload, size_t payload_size, u8 ttl)
 {
-    size_t size_in_bytes = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload_size;
-    auto buffer = ByteBuffer::create_zeroed(size_in_bytes);
+    size_t ipv4_packet_size = sizeof(IPv4Packet) + payload_size;
+    if (ipv4_packet_size > mtu()) {
+        // FIXME: Implement IP fragmentation.
+        ASSERT_NOT_REACHED();
+    }
+
+    size_t ethernet_frame_size = sizeof(EthernetFrameHeader) + sizeof(IPv4Packet) + payload_size;
+    auto buffer = ByteBuffer::create_zeroed(ethernet_frame_size);
     auto& eth = *(EthernetFrameHeader*)buffer.data();
     eth.set_source(mac_address());
     eth.set_destination(destination_mac);
@@ -87,9 +93,9 @@ void NetworkAdapter::send_ipv4(const MACAddress& destination_mac, const IPv4Addr
     ipv4.set_ttl(ttl);
     ipv4.set_checksum(ipv4.compute_checksum());
     m_packets_out++;
-    m_bytes_out += size_in_bytes;
+    m_bytes_out += ethernet_frame_size;
     memcpy(ipv4.payload(), payload, payload_size);
-    send_raw((const u8*)&eth, size_in_bytes);
+    send_raw((const u8*)&eth, ethernet_frame_size);
 }
 
 void NetworkAdapter::did_receive(const u8* data, int length)

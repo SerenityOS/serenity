@@ -11,6 +11,7 @@ LoopbackAdapter& LoopbackAdapter::the()
 LoopbackAdapter::LoopbackAdapter()
 {
     set_interface_name("loop");
+    set_mtu(65536);
 }
 
 LoopbackAdapter::~LoopbackAdapter()

@@ -345,6 +345,7 @@ Optional<KBuffer> procfs$net_adapters(InodeIdentifier)
         obj.add("packets_out", adapter.packets_out());
         obj.add("bytes_out", adapter.bytes_out());
         obj.add("link_up", adapter.link_up());
+        obj.add("mtu", adapter.mtu());
     });
     array.finish();
     return builder.build();

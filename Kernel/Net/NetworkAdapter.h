@@ -41,6 +41,9 @@ public:
 
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 
+    u32 mtu() const { return m_mtu; }
+    void set_mtu(u32 mtu) { m_mtu = mtu; }
+
     u32 packets_in() const { return m_packets_in; }
     u32 bytes_in() const { return m_bytes_in; }
     u32 packets_out() const { return m_packets_out; }
@@ -66,4 +69,5 @@ private:
     u32 m_bytes_in { 0 };
     u32 m_packets_out { 0 };
     u32 m_bytes_out { 0 };
+    u32 m_mtu { 1500 };
 };
