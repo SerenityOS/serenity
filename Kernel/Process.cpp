@@ -3418,8 +3418,6 @@ int Process::sys$module_load(const char* path, size_t path_length)
     if (!elf_image->parse())
         return -ENOEXEC;
 
-    ModuleInitPtr module_init = nullptr;
-
     HashMap<String, u8*> section_storage_by_name;
 
     auto module = make<Module>();
@@ -3469,15 +3467,17 @@ int Process::sys$module_load(const char* path, size_t path_length)
     elf_image->for_each_symbol([&](const ELFImage::Symbol& symbol) {
         dbg() << " - " << symbol.type() << " '" << symbol.name() << "' @ " << (void*)symbol.value() << ", size=" << symbol.size();
         if (!strcmp(symbol.name(), "module_init")) {
-            module_init = (ModuleInitPtr)(text_base + symbol.value());
+            module->module_init = (ModuleInitPtr)(text_base + symbol.value());
+        } else if (!strcmp(symbol.name(), "module_fini")) {
+            module->module_fini = (ModuleFiniPtr)(text_base + symbol.value());
         }
         return IterationDecision::Continue;
     });
 
-    if (!module_init)
+    if (!module->module_init)
         return -EINVAL;
 
-    module_init();
+    module->module_init();
 
     auto name = module->name;
     g_modules->set(name, move(module));
@@ -3493,6 +3493,14 @@ int Process::sys$module_unload(const char* name, size_t name_length)
 #endif
     if (!validate_read(name, name_length))
         return -EFAULT;
-    // FIXME: Implement this syscall!
+
+    auto it = g_modules->find(name);
+    if (it == g_modules->end())
+        return -ENOENT;
+
+    if (it->value->module_fini)
+        it->value->module_fini();
+
+    g_modules->remove(it);
     return 0;
 }

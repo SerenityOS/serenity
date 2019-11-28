@@ -4,10 +4,13 @@
 #include <AK/Vector.h>
 #include <Kernel/KBuffer.h>
 
+typedef void* (*ModuleInitPtr)();
+typedef void* (*ModuleFiniPtr)();
+
 struct Module {
     String name;
     Vector<KBuffer> sections;
-};
 
-typedef void* (*ModuleInitPtr)();
-typedef void* (*ModuleFiniPtr)();
+    ModuleInitPtr module_init { nullptr };
+    ModuleFiniPtr module_fini { nullptr };
+};
