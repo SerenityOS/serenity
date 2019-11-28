@@ -207,7 +207,7 @@ public:
         if (consume_whitespace_or_comments())
             return {};
 
-        if (peek() == '{' || peek() == ',')
+        if (peek() == '{' || peek() == ',' || is_combinator(peek()))
             return {};
 
         Selector::SimpleSelector::Type type;
