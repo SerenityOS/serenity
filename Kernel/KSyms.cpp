@@ -19,6 +19,15 @@ static u8 parse_hex_digit(char nibble)
     return 10 + (nibble - 'a');
 }
 
+u32 address_for_kernel_symbol(const char* name)
+{
+    for (unsigned i = 0; i < ksym_count; ++i) {
+        if (!strcmp(name, s_ksyms[i].name))
+            return s_ksyms[i].address;
+    }
+    return 0;
+}
+
 const KSym* ksymbolicate(u32 address)
 {
     if (address < ksym_lowest_address || address > ksym_highest_address)

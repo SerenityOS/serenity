@@ -3382,20 +3382,6 @@ int Process::sys$beep()
     return 0;
 }
 
-extern "C" void outside_func()
-{
-    kprintf("I'm the outside func!\n");
-}
-
-static u32 find_kernel_symbol(const StringView& name)
-{
-    if (name == "kprintf")
-        return (u32)kprintf;
-    if (name == "outside_func")
-        return (u32)outside_func;
-    ASSERT_NOT_REACHED();
-}
-
 int Process::sys$module_load(const char* path, size_t path_length)
 {
 #if 0
@@ -3439,7 +3425,7 @@ int Process::sys$module_load(const char* path, size_t path_length)
             case R_386_PC32: {
                 // PC-relative relocation
                 dbg() << "PC-relative relocation: " << relocation.symbol().name();
-                u32 symbol_address = find_kernel_symbol(relocation.symbol().name());
+                u32 symbol_address = address_for_kernel_symbol(relocation.symbol().name());
                 dbg() << "   Symbol address: " << (void*)symbol_address;
                 ptrdiff_t relative_offset = (char*)symbol_address - ((char*)&patch_ptr + 4);
                 patch_ptr = relative_offset;
@@ -3447,9 +3433,16 @@ int Process::sys$module_load(const char* path, size_t path_length)
             }
             case R_386_32: // Absolute relocation
                 dbg() << "Absolute relocation: '" << relocation.symbol().name() << "' value:" << relocation.symbol().value() << ", index:" << relocation.symbol_index();
-                auto* section_storage_containing_symbol = section_storage_by_name.get(relocation.symbol().section().name()).value_or(nullptr);
-                ASSERT(section_storage_containing_symbol);
-                patch_ptr += (ptrdiff_t)(section_storage_containing_symbol + relocation.symbol().value());
+
+                if (relocation.symbol().bind() == STB_LOCAL) {
+                    auto* section_storage_containing_symbol = section_storage_by_name.get(relocation.symbol().section().name()).value_or(nullptr);
+                    ASSERT(section_storage_containing_symbol);
+                    patch_ptr += (ptrdiff_t)(section_storage_containing_symbol + relocation.symbol().value());
+                } else if (relocation.symbol().bind() == STB_GLOBAL) {
+                    patch_ptr += address_for_kernel_symbol(relocation.symbol().name());
+                } else {
+                    ASSERT_NOT_REACHED();
+                }
                 break;
             }
             return IterationDecision::Continue;
