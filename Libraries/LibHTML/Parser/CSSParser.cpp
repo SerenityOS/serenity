@@ -301,8 +301,18 @@ public:
                 is_pseudo_element = true;
                 consume_one();
             }
-            while (is_valid_selector_char(peek()))
+            if (next_is("not")) {
                 buffer.append(consume_one());
+                buffer.append(consume_one());
+                buffer.append(consume_one());
+                buffer.append(consume_specific('('));
+                while (peek() != ')')
+                    buffer.append(consume_one());
+                buffer.append(consume_specific(')'));
+            } else {
+                while (is_valid_selector_char(peek()))
+                    buffer.append(consume_one());
+            }
 
             auto pseudo_name = String::copy(buffer);
             buffer.clear();
