@@ -36,6 +36,7 @@ public:
         unsigned size() const { return m_sym.st_size; }
         unsigned index() const { return m_index; }
         unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
+        unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
         const Section section() const { return m_image.section(section_index()); }
 
     private:
