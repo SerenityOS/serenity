@@ -54,6 +54,7 @@ LIBC_OBJS = \
        dlfcn.o \
        libgen.o \
        wchar.o \
+       serenity.o \
        syslog.o
 
 ASM_OBJS = setjmp.ao crti.ao crtn.ao
