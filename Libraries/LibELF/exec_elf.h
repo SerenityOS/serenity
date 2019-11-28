@@ -775,4 +775,7 @@ struct elf_args {
 
 #define ELF_TARG_VER 1 /* The ver for which this code is intended */
 
+#define R_386_32 1
+#define R_386_PC32 2
+
 #endif /* _SYS_EXEC_ELF_H_ */
