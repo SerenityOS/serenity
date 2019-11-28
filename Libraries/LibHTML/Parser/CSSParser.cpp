@@ -202,7 +202,7 @@ public:
         return ch == '~' || ch == '>' || ch == '+';
     }
 
-    Optional<Selector::SimpleSelector> parse_selector_component()
+    Optional<Selector::SimpleSelector> parse_simple_selector()
     {
         if (consume_whitespace_or_comments())
             return {};
@@ -243,7 +243,7 @@ public:
             PARSE_ASSERT(!buffer.is_null());
         }
 
-        Selector::SimpleSelector component {
+        Selector::SimpleSelector simple_selector {
             type,
             Selector::SimpleSelector::PseudoClass::None,
             String::copy(buffer),
@@ -284,9 +284,9 @@ public:
             else
                 attribute_name = String::copy(buffer);
             buffer.clear();
-            component.attribute_match_type = attribute_match_type;
-            component.attribute_name = attribute_name;
-            component.attribute_value = attribute_value;
+            simple_selector.attribute_match_type = attribute_match_type;
+            simple_selector.attribute_name = attribute_name;
+            simple_selector.attribute_value = attribute_value;
             if (expected_end_of_attribute_selector != ']')
                 consume_specific(expected_end_of_attribute_selector);
             consume_whitespace_or_comments();
@@ -308,15 +308,15 @@ public:
             buffer.clear();
 
             if (pseudo_name == "link")
-                component.pseudo_class = Selector::SimpleSelector::PseudoClass::Link;
+                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Link;
             else if (pseudo_name == "hover")
-                component.pseudo_class = Selector::SimpleSelector::PseudoClass::Hover;
+                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Hover;
         }
 
-        return component;
+        return simple_selector;
     }
 
-    Optional<Selector::ComplexSelector> parse_selector_component_list()
+    Optional<Selector::ComplexSelector> parse_complex_selector()
     {
         auto relation = Selector::ComplexSelector::Relation::Descendant;
 
@@ -341,37 +341,37 @@ public:
 
         consume_whitespace_or_comments();
 
-        Vector<Selector::SimpleSelector> components;
+        Vector<Selector::SimpleSelector> simple_selectors;
         for (;;) {
-            dbg() << "calling parse_selector_component at index " << index << ", peek=" << peek();
-            auto component = parse_selector_component();
+            auto component = parse_simple_selector();
             if (!component.has_value())
                 break;
-            components.append(component.value());
-            PARSE_ASSERT(components.size() < 10);
+            simple_selectors.append(component.value());
+            // If this assert triggers, we're most likely up to no good.
+            PARSE_ASSERT(simple_selectors.size() < 100);
         }
 
-        return Selector::ComplexSelector { relation, move(components) };
+        return Selector::ComplexSelector { relation, move(simple_selectors) };
     }
 
     void parse_selector()
     {
-        Vector<Selector::ComplexSelector> component_lists;
+        Vector<Selector::ComplexSelector> complex_selectors;
 
         for (;;) {
-            auto component_list = parse_selector_component_list();
-            if (component_list.has_value())
-                component_lists.append(component_list.value());
+            auto complex_selector = parse_complex_selector();
+            if (complex_selector.has_value())
+                complex_selectors.append(complex_selector.value());
             consume_whitespace_or_comments();
             if (peek() == ',' || peek() == '{')
                 break;
         }
 
-        if (component_lists.is_empty())
+        if (complex_selectors.is_empty())
             return;
-        component_lists.first().relation = Selector::ComplexSelector::Relation::None;
+        complex_selectors.first().relation = Selector::ComplexSelector::Relation::None;
 
-        current_rule.selectors.append(Selector(move(component_lists)));
+        current_rule.selectors.append(Selector(move(complex_selectors)));
     };
 
     void parse_selector_list()
