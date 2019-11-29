@@ -3407,7 +3407,6 @@ int Process::sys$module_load(const char* path, size_t path_length)
     HashMap<String, u8*> section_storage_by_name;
 
     auto module = make<Module>();
-    module->name = "FIXME";
 
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
         auto section_storage = KBuffer::copy(section.raw_data(), section.size());
@@ -3463,6 +3462,10 @@ int Process::sys$module_load(const char* path, size_t path_length)
             module->module_init = (ModuleInitPtr)(text_base + symbol.value());
         } else if (!strcmp(symbol.name(), "module_fini")) {
             module->module_fini = (ModuleFiniPtr)(text_base + symbol.value());
+        } else if (!strcmp(symbol.name(), "module_name")) {
+            const u8* storage = section_storage_by_name.get(symbol.section().name()).value_or(nullptr);
+            if (storage)
+                module->name = String((const char*)(storage + symbol.value()));
         }
         return IterationDecision::Continue;
     });

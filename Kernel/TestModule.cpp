@@ -1,6 +1,8 @@
 #include <Kernel/kstdio.h>
 #include <Kernel/Process.h>
 
+extern "C" const char module_name[] = "TestModule";
+
 extern "C" void module_init()
 {
     kprintf("TestModule has booted!\n");
