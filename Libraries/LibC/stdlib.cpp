@@ -509,8 +509,21 @@ char* mkdtemp(char* pattern)
 
 void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
 {
-    dbgprintf("FIXME(LibC): bsearch(%p, %p, %u, %u, %p)\n", key, base, nmemb, size, compar);
-    ASSERT_NOT_REACHED();
+    int low = 0;
+    int high = nmemb - 1;
+    while (low <= high) {
+        int middle = (low + high) / 2;
+        void* middle_memb = const_cast<char*>((const char*)base + middle * size);
+        int comparison = compar(key, middle_memb);
+        if (comparison < 0)
+            high = middle - 1;
+        else if (comparison > 0)
+            low = middle + 1;
+        else
+            return middle_memb;
+    }
+
+    return NULL;
 }
 
 div_t div(int numerator, int denominator)
