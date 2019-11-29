@@ -66,6 +66,10 @@ void print(const JsonValue& value, int indent)
         printf("\033[32;1m");
     else if (value.is_null() || value.is_undefined())
         printf("\033[34;1m");
+    if (value.is_string())
+        putchar('"');
     printf("%s", value.to_string().characters());
+    if (value.is_string())
+        putchar('"');
     printf("\033[0m");
 }
