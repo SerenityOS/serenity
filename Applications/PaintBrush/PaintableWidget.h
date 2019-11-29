@@ -20,7 +20,8 @@ public:
     void set_tool(Tool* tool);
     Tool* tool();
 
-    Color color_for(const GMouseEvent&);
+    Color color_for(const GMouseEvent&) const;
+    Color color_for(GMouseButton) const;
 
     void set_bitmap(const GraphicsBitmap&);
 
@@ -32,6 +33,7 @@ public:
 
 private:
     virtual void paint_event(GPaintEvent&) override;
+    virtual void second_paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;

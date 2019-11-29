@@ -9,10 +9,11 @@ public:
 
     virtual const char* class_name() const = 0;
 
-    virtual void on_mousedown(GMouseEvent&) { }
-    virtual void on_mousemove(GMouseEvent&) { }
-    virtual void on_mouseup(GMouseEvent&) { }
-    virtual void on_contextmenu(GContextMenuEvent&) { }
+    virtual void on_mousedown(GMouseEvent&) {}
+    virtual void on_mousemove(GMouseEvent&) {}
+    virtual void on_mouseup(GMouseEvent&) {}
+    virtual void on_contextmenu(GContextMenuEvent&) {}
+    virtual void on_second_paint(GPaintEvent&) {}
 
     void clear() { m_widget = nullptr; }
     void setup(PaintableWidget& widget) { m_widget = widget.make_weak_ptr(); }

@@ -46,7 +46,16 @@ Tool* PaintableWidget::tool()
     return m_tool;
 }
 
-Color PaintableWidget::color_for(const GMouseEvent& event)
+Color PaintableWidget::color_for(GMouseButton button) const
+{
+    if (button == GMouseButton::Left)
+        return m_primary_color;
+    if (button == GMouseButton::Right)
+        return m_secondary_color;
+    ASSERT_NOT_REACHED();
+}
+
+Color PaintableWidget::color_for(const GMouseEvent& event) const
 {
     if (event.buttons() & GMouseButton::Left)
         return m_primary_color;
@@ -78,6 +87,13 @@ void PaintableWidget::mousemove_event(GMouseEvent& event)
     if (m_tool)
         m_tool->on_mousemove(event);
     GWidget::mousemove_event(event);
+}
+
+void PaintableWidget::second_paint_event(GPaintEvent& event)
+{
+    if (m_tool)
+        m_tool->on_second_paint(event);
+    GWidget::second_paint_event(event);
 }
 
 void PaintableWidget::set_primary_color(Color color)
