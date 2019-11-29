@@ -1,7 +1,7 @@
 #include "ELFLoader.h"
+#include <AK/Demangle.h>
 #include <AK/QuickSort.h>
 #include <AK/kstdio.h>
-#include <cxxabi.h>
 
 #ifdef KERNEL
 #include <Kernel/VM/MemoryManager.h>
@@ -139,12 +139,7 @@ String ELFLoader::symbolicate(u32 address) const
             if (i == 0)
                 return "!!";
             auto& symbol = sorted_symbols[i - 1];
-            int status = 0;
-            auto* demangled_name = abi::__cxa_demangle(symbol.name, nullptr, nullptr, &status);
-            auto string = String::format("%s +%u", status == 0 ? demangled_name : symbol.name, address - symbol.address);
-            if (status == 0)
-                kfree(demangled_name);
-            return string;
+            return String::format("%s +%u", demangle(symbol.name).characters(), address - symbol.address);
         }
     }
     return "??";

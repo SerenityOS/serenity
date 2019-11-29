@@ -1,3 +1,4 @@
+#include <AK/Demangle.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
@@ -682,7 +683,7 @@ String Thread::backtrace_impl() const
         if (symbol.ksym->address == ksym_highest_address && offset > 4096)
             builder.appendf("%p\n", symbol.address);
         else
-            builder.appendf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+            builder.appendf("%p  %s +%u\n", symbol.address, demangle(symbol.ksym->name).characters(), offset);
     }
     return builder.to_string();
 }
