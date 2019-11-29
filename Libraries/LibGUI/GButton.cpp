@@ -54,7 +54,7 @@ void GButton::paint_event(GPaintEvent& event)
     if (text_rect.width() > content_rect.width())
         text_rect.set_width(content_rect.width());
     text_rect.align_within(content_rect, text_alignment());
-    paint_text(painter, text_rect, font, TextAlignment::Center);
+    paint_text(painter, text_rect, font, text_alignment());
 }
 
 void GButton::click()
