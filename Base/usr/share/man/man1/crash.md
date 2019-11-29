@@ -27,6 +27,7 @@ kinds of crashes.
 * `-r`: Write to read-only memory.
 * `-T`: Make a syscall while using an invalid stack pointer.
 * `-t`: Trigger a page fault while using an invalid stack pointer.
+* `-S`: Make a syscall from writeable memory.
 
 ## Examples
 
