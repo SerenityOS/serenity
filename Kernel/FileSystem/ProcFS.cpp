@@ -337,6 +337,11 @@ Optional<KBuffer> procfs$modules(InodeIdentifier)
         obj.add("name", it.value->name);
         obj.add("module_init", (u32)it.value->module_init);
         obj.add("module_fini", (u32)it.value->module_fini);
+        u32 size = 0;
+        for (auto& section : it.value->sections) {
+            size += section.capacity();
+        }
+        obj.add("size", size);
     }
     array.finish();
     return builder.build();
