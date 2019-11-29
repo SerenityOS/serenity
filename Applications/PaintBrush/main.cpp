@@ -33,6 +33,7 @@ int main(int argc, char** argv)
     vertical_container->layout()->set_spacing(0);
 
     auto paintable_widget = PaintableWidget::construct(vertical_container);
+    paintable_widget->set_focus(true);
     PaletteWidget::construct(*paintable_widget, vertical_container);
 
     window->show();
