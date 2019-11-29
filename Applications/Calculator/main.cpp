@@ -15,5 +15,6 @@ int main(int argc, char** argv)
     window->set_main_widget(calc_widget);
 
     window->show();
+    window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-calculator.png"));
     return app.exec();
 }
