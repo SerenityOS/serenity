@@ -32,11 +32,11 @@ void GButton::paint_event(GPaintEvent& event)
     if (text().is_empty() && !m_icon)
         return;
 
-    auto content_rect = rect().shrunken(10, 2);
+    auto content_rect = rect().shrunken(8, 2);
     auto icon_location = m_icon ? content_rect.center().translated(-(m_icon->width() / 2), -(m_icon->height() / 2)) : Point();
     if (m_icon && !text().is_empty())
         icon_location.set_x(content_rect.x());
-    if (is_being_pressed())
+    if (is_being_pressed() || is_checked())
         painter.translate(1, 1);
     if (m_icon) {
         if (is_enabled())
