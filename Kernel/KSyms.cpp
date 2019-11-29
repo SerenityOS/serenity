@@ -1,3 +1,4 @@
+#include <AK/Demangle.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/KSyms.h>
@@ -115,11 +116,6 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         return;
     }
     ASSERT(recognized_symbol_count <= max_recognized_symbol_count);
-    size_t bytes_needed = 0;
-    for (int i = 0; i < recognized_symbol_count; ++i) {
-        auto& symbol = recognized_symbols[i];
-        bytes_needed += (symbol.ksym ? strlen(symbol.ksym->name) : 0) + 8 + 16;
-    }
     for (int i = 0; i < recognized_symbol_count; ++i) {
         auto& symbol = recognized_symbols[i];
         if (!symbol.address)
@@ -136,7 +132,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         if (symbol.ksym->address == ksym_highest_address && offset > 4096)
             dbgprintf("%p\n", symbol.address);
         else
-            dbgprintf("%p  %s +%u\n", symbol.address, symbol.ksym->name, offset);
+            dbgprintf("%p  %s +%u\n", symbol.address, demangle(symbol.ksym->name).characters(), offset);
     }
 }
 
