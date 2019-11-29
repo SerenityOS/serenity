@@ -3,9 +3,11 @@
 
 int main(int argc, char** argv)
 {
-    (void)argc;
-    (void)argv;
-    const char* name = "FIXME";
+    if (argc != 2) {
+        printf("usage: %s <module name>\n", argv[0]);
+        return 0;
+    }
+    const char* name = argv[1];
     int rc = module_unload(name, strlen(name));
     if (rc < 0) {
         perror("module_unload");
