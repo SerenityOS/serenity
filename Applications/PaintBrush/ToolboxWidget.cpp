@@ -1,13 +1,14 @@
 #include "ToolboxWidget.h"
 #include "BucketTool.h"
-#include "SprayTool.h"
+#include "EraseTool.h"
+#include "LineTool.h"
 #include "PaintableWidget.h"
 #include "PenTool.h"
 #include "PickerTool.h"
-#include "EraseTool.h"
+#include "SprayTool.h"
+#include <LibDraw/PNGLoader.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
-#include <LibDraw/PNGLoader.h>
 
 class ToolButton final : public GButton {
     C_OBJECT(ToolButton)
@@ -69,6 +70,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
     add_tool("Spray", "spray", make<SprayTool>());
     add_tool("Color Picker", "picker", make<PickerTool>());
     add_tool("Erase", "eraser", make<EraseTool>());
+    add_tool("Line", "line", make<LineTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()
