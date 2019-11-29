@@ -770,7 +770,7 @@ void Painter::draw_pixel(const Point& position, Color color, int thickness)
     if (thickness == 1)
         return set_pixel_with_draw_op(m_target->scanline(position.y())[position.x()], color);
     Rect rect { position.translated(-(thickness / 2), -(thickness / 2)), { thickness, thickness } };
-    fill_rect(rect, color);
+    fill_rect(rect.translated(-state().translation), color);
 }
 
 void Painter::draw_line(const Point& p1, const Point& p2, Color color, int thickness, bool dotted)
