@@ -4,5 +4,5 @@ Executable=/bin/Calculator
 Category=Utilities
 
 [Icons]
-16x16=
+16x16=/res/icons/16x16/app-calculator.png
 32x32=
