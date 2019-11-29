@@ -58,6 +58,15 @@ void LineTool::on_second_paint(GPaintEvent& event)
     painter.draw_line(m_line_start_position, m_line_end_position, m_widget->color_for(m_drawing_button), m_thickness);
 }
 
+void LineTool::on_keydown(GKeyEvent& event)
+{
+    if (event.key() == Key_Escape && m_drawing_button != GMouseButton::None) {
+        m_drawing_button = GMouseButton::None;
+        m_widget->update();
+        event.accept();
+    }
+}
+
 void LineTool::on_contextmenu(GContextMenuEvent& event)
 {
     if (!m_context_menu) {

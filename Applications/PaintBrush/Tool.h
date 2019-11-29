@@ -1,7 +1,6 @@
 #pragma once
 
 #include "PaintableWidget.h"
-class GMouseEvent;
 
 class Tool {
 public:
@@ -14,6 +13,7 @@ public:
     virtual void on_mouseup(GMouseEvent&) {}
     virtual void on_contextmenu(GContextMenuEvent&) {}
     virtual void on_second_paint(GPaintEvent&) {}
+    virtual void on_keydown(GKeyEvent&) {}
 
     void clear() { m_widget = nullptr; }
     void setup(PaintableWidget& widget) { m_widget = widget.make_weak_ptr(); }

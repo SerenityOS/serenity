@@ -15,6 +15,7 @@ public:
     virtual void on_mouseup(GMouseEvent&) override;
     virtual void on_contextmenu(GContextMenuEvent&) override;
     virtual void on_second_paint(GPaintEvent&) override;
+    virtual void on_keydown(GKeyEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "LineTool"; }

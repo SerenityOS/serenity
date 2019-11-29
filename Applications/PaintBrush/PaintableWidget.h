@@ -32,11 +32,13 @@ public:
     Function<void(Color)> on_secondary_color_change;
 
 private:
+    virtual bool accepts_focus() const override { return true; }
     virtual void paint_event(GPaintEvent&) override;
     virtual void second_paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
+    virtual void keydown_event(GKeyEvent&) override;
 
     RefPtr<GraphicsBitmap> m_bitmap;
 
