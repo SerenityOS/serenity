@@ -36,6 +36,7 @@ void DisplayPropertiesWidget::create_resolution_list()
     m_resolutions.append({ 640, 480 });
     m_resolutions.append({ 800, 600 });
     m_resolutions.append({ 1024, 768 });
+    m_resolutions.append({ 1280, 720 });
     m_resolutions.append({ 1280, 1024 });
     m_resolutions.append({ 1440, 900 });
     m_resolutions.append({ 1600, 900 });
