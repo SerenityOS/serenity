@@ -1,4 +1,5 @@
 #include <AK/String.h>
+#include <Kernel/Syscall.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <sys/mman.h>
@@ -24,6 +25,7 @@ int main(int argc, char** argv)
         WriteToReadonlyMemory,
         InvalidStackPointerOnSyscall,
         InvalidStackPointerOnPageFault,
+        SyscallFromWritableMemory,
     };
     Mode mode = SegmentationViolation;
 
@@ -52,6 +54,8 @@ int main(int argc, char** argv)
         mode = InvalidStackPointerOnSyscall;
     else if (String(argv[1]) == "-t")
         mode = InvalidStackPointerOnPageFault;
+    else if (String(argv[1]) == "-S")
+        mode = SyscallFromWritableMemory;
     else
         print_usage_and_exit();
 
@@ -150,6 +154,11 @@ int main(int argc, char** argv)
         asm volatile("mov %%eax, %%esp" :: "a"(bad_esp));
         asm volatile("pushl $0");
         ASSERT_NOT_REACHED();
+    }
+
+    if (mode == SyscallFromWritableMemory) {
+        u8 buffer[] = { 0xb8, Syscall::SC_getuid, 0, 0, 0, 0xcd, 0x82 };
+        ((void(*)())buffer)();
     }
 
     ASSERT_NOT_REACHED();

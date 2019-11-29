@@ -1,6 +1,5 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Badge.h>
 #include <AK/Bitmap.h>
 #include <AK/ByteBuffer.h>
@@ -8,6 +7,7 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
 #include <AK/Weakable.h>
@@ -79,6 +79,9 @@ public:
         }
     }
 
+    static Region* region_from_vaddr(Process&, VirtualAddress);
+    static const Region* region_from_vaddr(const Process&, VirtualAddress);
+
 private:
     MemoryManager(u32 physical_address_for_kernel_page_tables);
     ~MemoryManager();
@@ -95,9 +98,6 @@ private:
     void map_protected(VirtualAddress, size_t length);
 
     void create_identity_mapping(PageDirectory&, VirtualAddress, size_t length);
-
-    static Region* region_from_vaddr(Process&, VirtualAddress);
-    static const Region* region_from_vaddr(const Process&, VirtualAddress);
 
     static Region* user_region_from_vaddr(Process&, VirtualAddress);
     static Region* kernel_region_from_vaddr(VirtualAddress);

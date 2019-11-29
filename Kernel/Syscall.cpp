@@ -105,6 +105,19 @@ void syscall_trap_entry(RegisterDump regs)
         ASSERT_NOT_REACHED();
     }
 
+    auto* calling_region = MM.region_from_vaddr(process, VirtualAddress(regs.eip));
+    if (!calling_region) {
+        dbgprintf("Syscall from %p which has no region\n", regs.eip);
+        handle_crash(regs, "Syscall from unknown region", SIGSEGV);
+        ASSERT_NOT_REACHED();
+    }
+
+    if (calling_region->is_writable()) {
+        dbgprintf("Syscall from writable memory at %p\n", regs.eip);
+        handle_crash(regs, "Syscall from writable memory", SIGSEGV);
+        ASSERT_NOT_REACHED();
+    }
+
     process.big_lock().lock();
     u32 function = regs.eax;
     u32 arg1 = regs.edx;

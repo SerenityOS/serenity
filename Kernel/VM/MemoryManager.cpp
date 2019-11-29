@@ -289,7 +289,6 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
 
 Region* MemoryManager::region_from_vaddr(Process& process, VirtualAddress vaddr)
 {
-    ASSERT_INTERRUPTS_DISABLED();
     if (auto* region = kernel_region_from_vaddr(vaddr))
         return region;
     return user_region_from_vaddr(process, vaddr);
