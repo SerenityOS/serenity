@@ -287,9 +287,9 @@ void TerminalWidget::paint_event(GPaintEvent& event)
         auto& line = line_for_visual_row(row);
         bool has_only_one_background_color = line.has_only_one_background_color();
         if (m_visual_beep_timer->is_active())
-            painter.fill_rect(row_rect, Color::Red);
+            painter.clear_rect(row_rect, Color::Red);
         else if (has_only_one_background_color)
-            painter.fill_rect(row_rect, lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
+            painter.clear_rect(row_rect, lookup_color(line.attributes[0].background_color).with_alpha(m_opacity));
 
         // The terminal insists on thinking characters and
         // bytes are the same thing. We want to still draw
@@ -325,7 +325,7 @@ void TerminalWidget::paint_event(GPaintEvent& event)
                 auto character_rect = glyph_rect(row, column);
                 auto cell_rect = character_rect.inflated(0, m_line_spacing);
                 if (!has_only_one_background_color || should_reverse_fill_for_cursor_or_selection) {
-                    painter.fill_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
+                    painter.clear_rect(cell_rect, lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.foreground_color : attribute.background_color).with_alpha(m_opacity));
                 }
                 if (attribute.flags & VT::Attribute::Underline)
                     painter.draw_line(cell_rect.bottom_left(), cell_rect.bottom_right(), lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
