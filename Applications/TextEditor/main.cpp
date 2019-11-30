@@ -12,6 +12,8 @@ int main(int argc, char** argv)
     auto text_widget = TextEditorWidget::construct();
     window->set_main_widget(text_widget);
 
+    text_widget->editor().set_focus(true);
+
     window->on_close_request = [&]() -> GWindow::CloseRequestDecision {
         if (text_widget->request_close())
             return GWindow::CloseRequestDecision::Close;

@@ -250,8 +250,6 @@ TextEditorWidget::TextEditorWidget()
 
     toolbar->add_action(m_editor->undo_action());
     toolbar->add_action(m_editor->redo_action());
-
-    m_editor->set_focus(true);
 }
 
 TextEditorWidget::~TextEditorWidget()
