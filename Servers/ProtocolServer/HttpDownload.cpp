@@ -7,7 +7,8 @@ HttpDownload::HttpDownload(PSClientConnection& client, NonnullRefPtr<CHttpJob>&&
     , m_job(job)
 {
     m_job->on_finish = [this](bool success) {
-        set_payload(m_job->response()->payload());
+        if (m_job->response())
+            set_payload(m_job->response()->payload());
         did_finish(success);
     };
 }
