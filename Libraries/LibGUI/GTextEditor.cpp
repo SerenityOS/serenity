@@ -823,20 +823,14 @@ void GTextEditor::do_delete()
 
     if (m_cursor.column() < current_line().length()) {
         // Delete within line
-        current_line().remove(document(), m_cursor.column());
-        did_change();
-        update_cursor();
+        GTextRange erased_range(m_cursor, { m_cursor.line(), m_cursor.column() + 1 });
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
         return;
     }
     if (m_cursor.column() == current_line().length() && m_cursor.line() != line_count() - 1) {
         // Delete at end of line; merge with next line
-        auto& next_line = lines()[m_cursor.line() + 1];
-        int previous_length = current_line().length();
-        current_line().append(document(), next_line.characters(), next_line.length());
-        document().remove_line(m_cursor.line() + 1);
-        update();
-        did_change();
-        set_cursor(m_cursor.line(), previous_length);
+        GTextRange erased_range(m_cursor, { m_cursor.line() + 1, 0 });
+        execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
         return;
     }
 }
