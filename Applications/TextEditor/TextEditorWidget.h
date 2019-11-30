@@ -19,6 +19,8 @@ public:
     void open_sesame(const String& path);
     bool request_close();
 
+    GTextEditor& editor() { return *m_editor; }
+
 private:
     TextEditorWidget();
     void set_path(const FileSystemPath& file);
