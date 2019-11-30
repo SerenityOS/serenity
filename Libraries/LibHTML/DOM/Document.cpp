@@ -187,6 +187,9 @@ void Document::update_style()
 
 void Document::update_layout()
 {
+    if (!frame())
+        return;
+
     layout();
     if (on_layout_updated)
         on_layout_updated();
