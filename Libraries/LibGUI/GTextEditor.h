@@ -152,8 +152,6 @@ private:
     const GTextDocumentLine& line(int index) const { return document().line(index); }
     GTextDocumentLine& current_line() { return line(m_cursor.line()); }
     const GTextDocumentLine& current_line() const { return line(m_cursor.line()); }
-    void insert_at_cursor(char);
-    void insert_at_cursor(const StringView&);
     int ruler_width() const;
     Rect ruler_content_rect(int line) const;
     void toggle_selection_if_needed_for_event(const GKeyEvent&);
@@ -173,6 +171,14 @@ private:
 
     int visual_line_containing(int line_index, int column) const;
     void recompute_visual_lines(int line_index);
+
+    template<class T, class... Args>
+    inline void execute(Args&&... args)
+    {
+        auto command = make<T>(*m_document, forward<Args>(args)...);
+        command->redo();
+        m_document->add_to_undo_stack(move(command));
+    }
 
     Type m_type { MultiLine };
 

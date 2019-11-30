@@ -33,49 +33,26 @@ protected:
     GTextDocument& m_document;
 };
 
-class InsertCharacterCommand : public GTextDocumentUndoCommand {
+class InsertTextCommand : public GTextDocumentUndoCommand {
 public:
-    InsertCharacterCommand(GTextDocument&, char, GTextPosition);
+    InsertTextCommand(GTextDocument&, const String&, const GTextPosition&);
     virtual void undo() override;
     virtual void redo() override;
 
 private:
-    char m_character;
-    GTextPosition m_text_position;
+    String m_text;
+    GTextRange m_range;
 };
 
-class RemoveCharacterCommand : public GTextDocumentUndoCommand {
+class RemoveTextCommand : public GTextDocumentUndoCommand {
 public:
-    RemoveCharacterCommand(GTextDocument&, char, GTextPosition);
+    RemoveTextCommand(GTextDocument&, const String&, const GTextRange&);
     virtual void undo() override;
     virtual void redo() override;
 
 private:
-    char m_character;
-    GTextPosition m_text_position;
-};
-
-class RemoveLineCommand : public GTextDocumentUndoCommand {
-public:
-    RemoveLineCommand(GTextDocument&, String, GTextPosition, bool has_merged_content);
-    virtual void undo() override;
-    virtual void redo() override;
-
-private:
-    String m_line_content;
-    GTextPosition m_text_position;
-    bool m_has_merged_content;
-};
-
-class CreateLineCommand : public GTextDocumentUndoCommand {
-public:
-    CreateLineCommand(GTextDocument&, Vector<char> line_content, GTextPosition);
-    virtual void undo() override;
-    virtual void redo() override;
-
-private:
-    Vector<char> m_line_content;
-    GTextPosition m_text_position;
+    String m_text;
+    GTextRange m_range;
 };
 
 class GTextDocument : public RefCounted<GTextDocument> {
@@ -151,6 +128,10 @@ public:
 
     void notify_did_change();
     void set_all_cursors(const GTextPosition&);
+
+    GTextPosition insert_at(const GTextPosition&, char);
+    GTextPosition insert_at(const GTextPosition&, const StringView&);
+    void remove(const GTextRange&);
 
 private:
     explicit GTextDocument(Client* client);
