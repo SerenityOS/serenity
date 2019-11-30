@@ -804,13 +804,21 @@ void GTextEditor::delete_current_line()
     if (has_selection())
         return delete_selection();
 
-    document().remove_line(m_cursor.line());
-    if (lines().is_empty())
-        document().append_line(make<GTextDocumentLine>(document()));
-    m_cursor.set_column(0);
+    GTextPosition start;
+    GTextPosition end;
+    if (m_cursor.line() == 0 && lines().size() == 1) {
+        start = { 0, 0 };
+        end = { 0, line(0).length() };
+    } else if (m_cursor.line() == lines().size() - 1) {
+        start = { m_cursor.line() - 1, line(m_cursor.line()).length() };
+        end = { m_cursor.line(), line(m_cursor.line()).length() };
+    } else {
+        start = { m_cursor.line(), 0 };
+        end = { m_cursor.line() + 1, 0 };
+    }
 
-    update_content_size();
-    update();
+    GTextRange erased_range(start, end);
+    execute<RemoveTextCommand>(document().text_in_range(erased_range), erased_range);
 }
 
 void GTextEditor::do_delete()
@@ -1365,8 +1373,8 @@ void GTextEditor::document_did_insert_line(int line_index)
 
 void GTextEditor::document_did_change()
 {
-    ensure_cursor_is_valid();
     recompute_all_visual_lines();
+    ensure_cursor_is_valid();
     update();
 
     undo_action().set_enabled(can_undo());
