@@ -366,23 +366,7 @@ void GTextDocument::undo()
 {
     if (!can_undo())
         return;
-
-    auto& undo_container = m_undo_stack[m_undo_stack_index];
-    auto& undo_vector = undo_container.m_undo_vector;
-
-    //If we try to undo a empty vector, delete it and skip over.
-    if (undo_vector.is_empty()) {
-        m_undo_stack.remove(m_undo_stack_index);
-        undo();
-        return;
-    }
-
-    for (int i = 0; i < undo_vector.size(); i++) {
-        auto& undo_command = undo_vector[i];
-        undo_command.undo();
-    }
-
-    m_undo_stack_index++;
+    m_undo_stack.undo();
     notify_did_change();
 }
 
@@ -390,36 +374,13 @@ void GTextDocument::redo()
 {
     if (!can_redo())
         return;
-
-    auto& undo_container = m_undo_stack[m_undo_stack_index - 1];
-    auto& redo_vector = undo_container.m_undo_vector;
-
-    for (int i = redo_vector.size() - 1; i >= 0; i--) {
-        auto& undo_command = redo_vector[i];
-        undo_command.redo();
-    }
-
-    m_undo_stack_index--;
+    m_undo_stack.redo();
     notify_did_change();
 }
 
 void GTextDocument::add_to_undo_stack(NonnullOwnPtr<GTextDocumentUndoCommand> undo_command)
 {
-    if (m_undo_stack.is_empty()) {
-        auto undo_commands_container = make<UndoCommandsContainer>();
-        m_undo_stack.prepend(move(undo_commands_container));
-    }
-
-    // Clear the elements of the stack before the m_undo_stack_index (Excluding our new element)
-    for (int i = 1; i < m_undo_stack_index; i++)
-        m_undo_stack.remove(1);
-
-    if (m_undo_stack_index > 0 && !m_undo_stack.is_empty())
-        m_undo_stack[0].m_undo_vector.clear();
-
-    m_undo_stack_index = 0;
-
-    m_undo_stack[0].m_undo_vector.prepend(move(undo_command));
+    m_undo_stack.push(move(undo_command));
 }
 
 GTextDocumentUndoCommand::GTextDocumentUndoCommand(GTextDocument& document)
@@ -536,21 +497,5 @@ void CreateLineCommand::redo()
 
 void GTextDocument::update_undo_timer()
 {
-    if (m_undo_stack.is_empty())
-        return;
-
-    auto& undo_vector = m_undo_stack[0].m_undo_vector;
-
-    if (undo_vector.size() == m_last_updated_undo_vector_size && !undo_vector.is_empty()) {
-        auto undo_commands_container = make<UndoCommandsContainer>();
-        m_undo_stack.prepend(move(undo_commands_container));
-        // Note: Remove dbg() if we're 100% sure there are no bugs left.
-        dbg() << "Undo stack increased to " << m_undo_stack.size();
-
-        // Shift the index to the left since we're adding an empty container.
-        if (m_undo_stack_index > 0)
-            m_undo_stack_index++;
-    }
-
-    m_last_updated_undo_vector_size = undo_vector.size();
+    m_undo_stack.finalize_current_combo();
 }
