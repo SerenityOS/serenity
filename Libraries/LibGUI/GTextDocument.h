@@ -9,6 +9,7 @@
 #include <LibDraw/Color.h>
 #include <LibDraw/Font.h>
 #include <LibGUI/GTextRange.h>
+#include <LibGUI/GUndoStack.h>
 
 class GTextEditor;
 class GTextDocument;
@@ -23,12 +24,10 @@ struct GTextDocumentSpan {
     void* data { nullptr };
 };
 
-class GTextDocumentUndoCommand {
+class GTextDocumentUndoCommand : public GCommand {
 public:
     GTextDocumentUndoCommand(GTextDocument&);
     virtual ~GTextDocumentUndoCommand();
-    virtual void undo() {}
-    virtual void redo() {}
 
 protected:
     GTextDocument& m_document;
@@ -143,15 +142,10 @@ public:
     Optional<GTextDocumentSpan> first_non_skippable_span_before(const GTextPosition&) const;
     Optional<GTextDocumentSpan> first_non_skippable_span_after(const GTextPosition&) const;
 
-    struct UndoCommandsContainer {
-        NonnullOwnPtrVector<GTextDocumentUndoCommand> m_undo_vector;
-    };
-
     void add_to_undo_stack(NonnullOwnPtr<GTextDocumentUndoCommand>);
 
-    bool can_undo() const { return m_undo_stack_index < m_undo_stack.size() && !m_undo_stack.is_empty(); }
-    bool can_redo() const { return m_undo_stack_index > 0 && m_undo_stack[m_undo_stack_index - 1].m_undo_vector.size() > 0 && !m_undo_stack.is_empty(); }
-
+    bool can_undo() const { return m_undo_stack.can_undo(); }
+    bool can_redo() const { return m_undo_stack.can_redo(); }
     void undo();
     void redo();
 
@@ -169,10 +163,7 @@ private:
     HashTable<Client*> m_clients;
     bool m_client_notifications_enabled { true };
 
-    NonnullOwnPtrVector<UndoCommandsContainer> m_undo_stack;
-    int m_undo_stack_index { 0 };
-    int m_last_updated_undo_vector_size = 0;
-
+    GUndoStack m_undo_stack;
     RefPtr<CTimer> m_undo_timer;
 };
 

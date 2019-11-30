@@ -57,6 +57,8 @@ OBJS = \
     GAboutDialog.o \
     GModelSelection.o \
     GLazyWidget.o \
+    GCommand.o \
+    GUndoStack.o \
     GWindow.o
 
 LIBRARY = libgui.a
