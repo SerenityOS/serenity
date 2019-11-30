@@ -1373,12 +1373,8 @@ void GTextEditor::document_did_insert_line(int line_index)
 
 void GTextEditor::document_did_change()
 {
-    recompute_all_visual_lines();
-    ensure_cursor_is_valid();
+    did_change();
     update();
-
-    undo_action().set_enabled(can_undo());
-    redo_action().set_enabled(can_redo());
 }
 
 void GTextEditor::document_did_set_text()
