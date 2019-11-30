@@ -69,8 +69,8 @@ public:
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     void set_selection(const GTextRange&);
-    bool can_undo() const { return m_undo_stack_index < m_undo_stack.size() && !m_undo_stack.is_empty(); }
-    bool can_redo() const { return m_undo_stack_index > 0 && m_undo_stack[m_undo_stack_index - 1].m_undo_vector.size() > 0 && !m_undo_stack.is_empty(); }
+    bool can_undo() const { return document().can_undo(); }
+    bool can_redo() const { return document().can_redo(); }
 
     String text() const;
 
@@ -82,8 +82,8 @@ public:
     void do_delete();
     void delete_current_line();
     void select_all();
-    void undo();
-    void redo();
+    void undo() { document().undo(); }
+    void redo() { document().redo(); }
 
     Function<void()> on_change;
     Function<void()> on_return_pressed;
@@ -134,6 +134,7 @@ private:
     virtual void document_did_remove_all_lines() override;
     virtual void document_did_change() override;
     virtual void document_did_set_text() override;
+    virtual void document_did_set_cursor(const GTextPosition&) override;
 
     void create_actions();
     void paint_ruler(Painter&);
@@ -145,7 +146,6 @@ private:
     Rect cursor_content_rect() const;
     Rect content_rect_for_position(const GTextPosition&) const;
     void update_cursor();
-    void update_undo_timer();
     const NonnullOwnPtrVector<GTextDocumentLine>& lines() const { return document().lines(); }
     NonnullOwnPtrVector<GTextDocumentLine>& lines() { return document().lines(); }
     GTextDocumentLine& line(int index) { return document().line(index); }
@@ -171,68 +171,6 @@ private:
     void move_selected_lines_down();
     void sort_selected_lines();
 
-    class UndoCommand {
-
-    public:
-        UndoCommand(GTextEditor& text_editor);
-        virtual ~UndoCommand();
-        virtual void undo();
-        virtual void redo();
-
-    protected:
-        GTextEditor& m_text_editor;
-    };
-
-    class InsertCharacterCommand : public UndoCommand {
-    public:
-        InsertCharacterCommand(GTextEditor& text_editor, char ch, GTextPosition text_position);
-        virtual void undo() override;
-        virtual void redo() override;
-
-    private:
-        char m_character;
-        GTextPosition m_text_position;
-    };
-
-    class RemoveCharacterCommand : public UndoCommand {
-    public:
-        RemoveCharacterCommand(GTextEditor& text_editor, char ch, GTextPosition text_position);
-        virtual void undo() override;
-        virtual void redo() override;
-
-    private:
-        char m_character;
-        GTextPosition m_text_position;
-    };
-
-    class RemoveLineCommand : public UndoCommand {
-    public:
-        RemoveLineCommand(GTextEditor& text_editor, String, GTextPosition text_position, bool has_merged_content);
-        virtual void undo() override;
-        virtual void redo() override;
-
-    private:
-        String m_line_content;
-        GTextPosition m_text_position;
-        bool m_has_merged_content;
-    };
-
-    class CreateLineCommand : public UndoCommand {
-    public:
-        CreateLineCommand(GTextEditor& text_editor, Vector<char> line_content, GTextPosition text_position);
-        virtual void undo() override;
-        virtual void redo() override;
-
-    private:
-        Vector<char> m_line_content;
-        GTextPosition m_text_position;
-    };
-
-    struct UndoCommandsContainer {
-        NonnullOwnPtrVector<UndoCommand> m_undo_vector;
-    };
-
-    void add_to_undo_stack(NonnullOwnPtr<UndoCommand> undo_command);
     int visual_line_containing(int line_index, int column) const;
     void recompute_visual_lines(int line_index);
 
@@ -260,10 +198,6 @@ private:
     RefPtr<GAction> m_delete_action;
     CElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
-    NonnullOwnPtrVector<UndoCommandsContainer> m_undo_stack;
-    int m_undo_stack_index = 0;
-    RefPtr<CTimer> m_undo_timer;
-    int m_last_updated_undo_vector_size = 0;
 
     RefPtr<GTextDocument> m_document;
 
