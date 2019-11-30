@@ -5,11 +5,13 @@
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
+#include <LibCore/CTimer.h>
 #include <LibDraw/Color.h>
 #include <LibDraw/Font.h>
 #include <LibGUI/GTextRange.h>
 
 class GTextEditor;
+class GTextDocument;
 class GTextDocumentLine;
 
 struct GTextDocumentSpan {
@@ -19,6 +21,62 @@ struct GTextDocumentSpan {
     bool is_skippable { false };
     const Font* font { nullptr };
     void* data { nullptr };
+};
+
+class GTextDocumentUndoCommand {
+public:
+    GTextDocumentUndoCommand(GTextDocument&);
+    virtual ~GTextDocumentUndoCommand();
+    virtual void undo() {}
+    virtual void redo() {}
+
+protected:
+    GTextDocument& m_document;
+};
+
+class InsertCharacterCommand : public GTextDocumentUndoCommand {
+public:
+    InsertCharacterCommand(GTextDocument&, char, GTextPosition);
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    char m_character;
+    GTextPosition m_text_position;
+};
+
+class RemoveCharacterCommand : public GTextDocumentUndoCommand {
+public:
+    RemoveCharacterCommand(GTextDocument&, char, GTextPosition);
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    char m_character;
+    GTextPosition m_text_position;
+};
+
+class RemoveLineCommand : public GTextDocumentUndoCommand {
+public:
+    RemoveLineCommand(GTextDocument&, String, GTextPosition, bool has_merged_content);
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    String m_line_content;
+    GTextPosition m_text_position;
+    bool m_has_merged_content;
+};
+
+class CreateLineCommand : public GTextDocumentUndoCommand {
+public:
+    CreateLineCommand(GTextDocument&, Vector<char> line_content, GTextPosition);
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    Vector<char> m_line_content;
+    GTextPosition m_text_position;
 };
 
 class GTextDocument : public RefCounted<GTextDocument> {
@@ -37,6 +95,7 @@ public:
         virtual void document_did_remove_all_lines() = 0;
         virtual void document_did_change() = 0;
         virtual void document_did_set_text() = 0;
+        virtual void document_did_set_cursor(const GTextPosition&) = 0;
     };
 
     static NonnullRefPtr<GTextDocument> create(Client* client = nullptr)
@@ -84,14 +143,37 @@ public:
     Optional<GTextDocumentSpan> first_non_skippable_span_before(const GTextPosition&) const;
     Optional<GTextDocumentSpan> first_non_skippable_span_after(const GTextPosition&) const;
 
+    struct UndoCommandsContainer {
+        NonnullOwnPtrVector<GTextDocumentUndoCommand> m_undo_vector;
+    };
+
+    void add_to_undo_stack(NonnullOwnPtr<GTextDocumentUndoCommand>);
+
+    bool can_undo() const { return m_undo_stack_index < m_undo_stack.size() && !m_undo_stack.is_empty(); }
+    bool can_redo() const { return m_undo_stack_index > 0 && m_undo_stack[m_undo_stack_index - 1].m_undo_vector.size() > 0 && !m_undo_stack.is_empty(); }
+
+    void undo();
+    void redo();
+
+    void notify_did_change();
+    void set_all_cursors(const GTextPosition&);
+
 private:
     explicit GTextDocument(Client* client);
+
+    void update_undo_timer();
 
     NonnullOwnPtrVector<GTextDocumentLine> m_lines;
     Vector<GTextDocumentSpan> m_spans;
 
     HashTable<Client*> m_clients;
     bool m_client_notifications_enabled { true };
+
+    NonnullOwnPtrVector<UndoCommandsContainer> m_undo_stack;
+    int m_undo_stack_index { 0 };
+    int m_last_updated_undo_vector_size = 0;
+
+    RefPtr<CTimer> m_undo_timer;
 };
 
 class GTextDocumentLine {
