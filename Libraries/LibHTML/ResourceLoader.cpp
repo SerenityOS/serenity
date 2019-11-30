@@ -43,7 +43,8 @@ void ResourceLoader::load(const URL& url, Function<void(const ByteBuffer&)> call
                 on_load_counter_change();
             if (!success) {
                 dbg() << "HTTP load failed!";
-                ASSERT_NOT_REACHED();
+                callback({});
+                return;
             }
             callback(ByteBuffer::copy(payload.data(), payload.size()));
         };
