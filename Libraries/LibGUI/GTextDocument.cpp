@@ -392,110 +392,164 @@ GTextDocumentUndoCommand::~GTextDocumentUndoCommand()
 {
 }
 
-InsertCharacterCommand::InsertCharacterCommand(GTextDocument& document, char ch, GTextPosition text_position)
+InsertTextCommand::InsertTextCommand(GTextDocument& document, const String& text, const GTextPosition& position)
     : GTextDocumentUndoCommand(document)
-    , m_character(ch)
-    , m_text_position(text_position)
+    , m_text(text)
+    , m_range({ position, position })
 {
 }
 
-RemoveCharacterCommand::RemoveCharacterCommand(GTextDocument& document, char ch, GTextPosition text_position)
+void InsertTextCommand::redo()
+{
+    auto new_cursor = m_document.insert_at(m_range.start(), m_text);
+    // NOTE: We don't know where the range ends until after doing redo().
+    //       This is okay since we always do redo() after adding this to the undo stack.
+    m_range.set_end(new_cursor);
+    m_document.set_all_cursors(new_cursor);
+}
+
+void InsertTextCommand::undo()
+{
+    m_document.remove(m_range);
+    m_document.set_all_cursors(m_range.start());
+}
+
+RemoveTextCommand::RemoveTextCommand(GTextDocument& document, const String& text, const GTextRange& range)
     : GTextDocumentUndoCommand(document)
-    , m_character(ch)
-    , m_text_position(text_position)
+    , m_text(text)
+    , m_range(range)
 {
 }
 
-RemoveLineCommand::RemoveLineCommand(GTextDocument& document, String line_content, GTextPosition text_position, bool has_merged_content)
-    : GTextDocumentUndoCommand(document)
-    , m_line_content(move(line_content))
-    , m_text_position(text_position)
-    , m_has_merged_content(has_merged_content)
+void RemoveTextCommand::redo()
 {
+    m_document.remove(m_range);
+    m_document.set_all_cursors(m_range.start());
 }
 
-CreateLineCommand::CreateLineCommand(GTextDocument& document, Vector<char> line_content, GTextPosition text_position)
-    : GTextDocumentUndoCommand(document)
-    , m_line_content(move(line_content))
-    , m_text_position(text_position)
+void RemoveTextCommand::undo()
 {
-}
-
-void InsertCharacterCommand::undo()
-{
-    m_document.lines()[m_text_position.line()].remove(m_document, (m_text_position.column() - 1));
-    m_document.notify_did_change();
-}
-
-void InsertCharacterCommand::redo()
-{
-    m_document.lines()[m_text_position.line()].insert(m_document, m_text_position.column() - 1, m_character);
-}
-
-void RemoveCharacterCommand::undo()
-{
-    m_document.lines()[m_text_position.line()].insert(m_document, m_text_position.column(), m_character);
-}
-
-void RemoveCharacterCommand::redo()
-{
-    m_document.lines()[m_text_position.line()].remove(m_document, (m_text_position.column()));
-    m_document.notify_did_change();
-}
-
-void RemoveLineCommand::undo()
-{
-    // Insert back the line
-    m_document.insert_line(m_text_position.line(), make<GTextDocumentLine>(m_document, m_line_content));
-
-    // Remove the merged line contents
-    if (m_has_merged_content) {
-        for (int i = m_line_content.length() - 1; i >= 0; i--)
-            m_document.lines()[m_text_position.line() - 1].remove(m_document, (m_text_position.column()) + i);
-    }
-}
-
-void RemoveLineCommand::redo()
-{
-    // Remove the created line
-    m_document.remove_line(m_text_position.line());
-
-    // Add back the line contents
-    if (m_has_merged_content) {
-        for (int i = 0; i < m_line_content.length(); i++)
-            m_document.lines()[m_text_position.line() - 1].insert(m_document, (m_text_position.column()) + i, m_line_content[i]);
-    }
-}
-
-void CreateLineCommand::undo()
-{
-    // Insert back the created line portion
-    for (int i = 0; i < m_line_content.size(); i++)
-        m_document.lines()[m_text_position.line()].insert(m_document, (m_text_position.column() - 1) + i, m_line_content[i]);
-
-    // Move the cursor up a row back before the split.
-    m_document.set_all_cursors({ m_text_position.line(), m_document.lines()[m_text_position.line()].length() });
-
-    // Remove the created line
-    m_document.remove_line(m_text_position.line() + 1);
-}
-
-void CreateLineCommand::redo()
-{
-    // Remove the characters that we're inserted back
-    for (int i = m_line_content.size() - 1; i >= 0; i--)
-        m_document.lines()[m_text_position.line()].remove(m_document, (m_text_position.column()) + i);
-
-    m_document.notify_did_change();
-
-    // Then we want to add BACK the created line
-    m_document.insert_line(m_text_position.line() + 1, make<GTextDocumentLine>(m_document, ""));
-
-    for (int i = 0; i < m_line_content.size(); i++)
-        m_document.lines()[m_text_position.line() + 1].insert(m_document, i, m_line_content[i]);
+    auto new_cursor = m_document.insert_at(m_range.start(), m_text);
+    m_document.set_all_cursors(new_cursor);
 }
 
 void GTextDocument::update_undo_timer()
 {
     m_undo_stack.finalize_current_combo();
+}
+
+GTextPosition GTextDocument::insert_at(const GTextPosition& position, const StringView& text)
+{
+    GTextPosition cursor = position;
+    for (int i = 0; i < text.length(); ++i) {
+        cursor = insert_at(cursor, text[i]);
+    }
+    return cursor;
+}
+
+GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch)
+{
+    // FIXME: We need these from GTextEditor!
+    bool m_automatic_indentation_enabled = true;
+    int m_soft_tab_width = 4;
+
+    bool at_head = position.column() == 0;
+    bool at_tail = position.column() == line(position.line()).length();
+    if (ch == '\n') {
+        if (at_tail || at_head) {
+            String new_line_contents;
+            if (m_automatic_indentation_enabled && at_tail) {
+                int leading_spaces = 0;
+                auto& old_line = lines()[position.line()];
+                for (int i = 0; i < old_line.length(); ++i) {
+                    if (old_line.characters()[i] == ' ')
+                        ++leading_spaces;
+                    else
+                        break;
+                }
+                if (leading_spaces)
+                    new_line_contents = String::repeated(' ', leading_spaces);
+            }
+
+            int row = position.line();
+            Vector<char> line_content;
+            for (int i = position.column(); i < line(row).length(); i++)
+                line_content.append(line(row).characters()[i]);
+            insert_line(position.line() + (at_tail ? 1 : 0), make<GTextDocumentLine>(*this, new_line_contents));
+            notify_did_change();
+            return { position.line() + 1, line(position.line() + 1).length() };
+        }
+        auto new_line = make<GTextDocumentLine>(*this);
+        new_line->append(*this, line(position.line()).characters() + position.column(), line(position.line()).length() - position.column());
+
+        Vector<char> line_content;
+        for (int i = 0; i < new_line->length(); i++)
+            line_content.append(new_line->characters()[i]);
+        line(position.line()).truncate(*this, position.column());
+        insert_line(position.line() + 1, move(new_line));
+        notify_did_change();
+        return { position.line() + 1, 0 };
+    }
+    if (ch == '\t') {
+        int next_soft_tab_stop = ((position.column() + m_soft_tab_width) / m_soft_tab_width) * m_soft_tab_width;
+        int spaces_to_insert = next_soft_tab_stop - position.column();
+        for (int i = 0; i < spaces_to_insert; ++i) {
+            line(position.line()).insert(*this, position.column(), ' ');
+        }
+        notify_did_change();
+        return { position.line(), next_soft_tab_stop };
+    }
+    line(position.line()).insert(*this, position.column(), ch);
+    notify_did_change();
+    return { position.line(), position.column() + 1 };
+}
+
+void GTextDocument::remove(const GTextRange& unnormalized_range)
+{
+    if (!unnormalized_range.is_valid())
+        return;
+
+    auto range = unnormalized_range.normalized();
+
+    // First delete all the lines in between the first and last one.
+    for (int i = range.start().line() + 1; i < range.end().line();) {
+        remove_line(i);
+        range.end().set_line(range.end().line() - 1);
+    }
+
+    if (range.start().line() == range.end().line()) {
+        // Delete within same line.
+        auto& line = lines()[range.start().line()];
+        bool whole_line_is_selected = range.start().column() == 0 && range.end().column() == line.length();
+
+        if (whole_line_is_selected) {
+            line.clear(*this);
+        } else {
+            auto before_selection = String(line.characters(), line.length()).substring(0, range.start().column());
+            auto after_selection = String(line.characters(), line.length()).substring(range.end().column(), line.length() - range.end().column());
+            StringBuilder builder(before_selection.length() + after_selection.length());
+            builder.append(before_selection);
+            builder.append(after_selection);
+            line.set_text(*this, builder.to_string());
+        }
+    } else {
+        // Delete across a newline, merging lines.
+        ASSERT(range.start().line() == range.end().line() - 1);
+        auto& first_line = lines()[range.start().line()];
+        auto& second_line = lines()[range.end().line()];
+        auto before_selection = String(first_line.characters(), first_line.length()).substring(0, range.start().column());
+        auto after_selection = String(second_line.characters(), second_line.length()).substring(range.end().column(), second_line.length() - range.end().column());
+        StringBuilder builder(before_selection.length() + after_selection.length());
+        builder.append(before_selection);
+        builder.append(after_selection);
+
+        first_line.set_text(*this, builder.to_string());
+        remove_line(range.end().line());
+    }
+
+    if (lines().is_empty()) {
+        append_line(make<GTextDocumentLine>(*this));
+    }
+
+    notify_did_change();
 }
