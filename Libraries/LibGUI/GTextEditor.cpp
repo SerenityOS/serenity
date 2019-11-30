@@ -1139,7 +1139,6 @@ void GTextEditor::leave_event(CEvent&)
 
 void GTextEditor::did_change()
 {
-    ASSERT(!is_readonly());
     update_content_size();
     recompute_all_visual_lines();
     m_undo_action->set_enabled(can_undo());
