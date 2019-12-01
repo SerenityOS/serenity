@@ -285,9 +285,6 @@ bool WSClientConnection::handle_message(const WSAPI_ClientMessage& message, cons
         CEventLoop::current().post_event(*this, make<WSAPIDidFinishPaintingNotification>(client_id(), message.window_id, rects));
         break;
     }
-    case WSAPI_ClientMessage::Type::GetWindowBackingStore:
-        CEventLoop::current().post_event(*this, make<WSAPIGetWindowBackingStoreRequest>(client_id(), message.window_id));
-        break;
     case WSAPI_ClientMessage::Type::SetWindowBackingStore:
         CEventLoop::current().post_event(*this, make<WSAPISetWindowBackingStoreRequest>(client_id(), message.window_id, message.backing.shared_buffer_id, message.backing.size, message.backing.bpp, message.backing.pitch, message.backing.has_alpha_channel, message.backing.flush_immediately));
         break;
@@ -822,28 +819,6 @@ void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification
     WSWindowSwitcher::the().refresh_if_needed();
 }
 
-void WSClientConnection::handle_request(const WSAPIGetWindowBackingStoreRequest& request)
-{
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
-    if (it == m_windows.end()) {
-        post_error("WSAPIGetWindowBackingStoreRequest: Bad window ID");
-        return;
-    }
-    auto& window = *(*it).value;
-    auto* backing_store = window.backing_store();
-
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidGetWindowBackingStore;
-    response.window_id = window_id;
-    response.backing.bpp = sizeof(RGBA32);
-    response.backing.pitch = backing_store->pitch();
-    response.backing.size = backing_store->size();
-    response.backing.has_alpha_channel = backing_store->has_alpha_channel();
-    response.backing.shared_buffer_id = backing_store->shared_buffer_id();
-    post_message(response);
-}
-
 void WSClientConnection::handle_request(const WSAPISetWindowBackingStoreRequest& request)
 {
     int window_id = request.window_id();
@@ -1028,8 +1003,6 @@ void WSClientConnection::on_request(const WSAPIClientRequest& request)
         return handle_request(static_cast<const WSAPIInvalidateRectRequest&>(request));
     case WSEvent::APIDidFinishPaintingNotification:
         return handle_request(static_cast<const WSAPIDidFinishPaintingNotification&>(request));
-    case WSEvent::APIGetWindowBackingStoreRequest:
-        return handle_request(static_cast<const WSAPIGetWindowBackingStoreRequest&>(request));
     case WSEvent::APISetGlobalCursorTrackingRequest:
         return handle_request(static_cast<const WSAPISetGlobalCursorTrackingRequest&>(request));
     case WSEvent::APISetWindowOpacityRequest:
