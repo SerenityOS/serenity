@@ -289,6 +289,21 @@ private:
     u32 m_flags;
 };
 
+inline bool cli_and_save_interrupt_flag()
+{
+    u32 flags = cpu_flags();
+    cli();
+    return flags & 0x200;
+}
+
+inline void restore_interrupt_flag(bool flag)
+{
+    if (flag)
+        sti();
+    else
+        cli();
+}
+
 class InterruptDisabler {
 public:
     InterruptDisabler()
