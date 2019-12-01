@@ -180,6 +180,14 @@ void Thread::yield_without_holding_big_lock()
         process().big_lock().lock();
 }
 
+void Thread::donate_and_yield_without_holding_big_lock(Thread* beneficiary, const char* reason)
+{
+    bool did_unlock = process().big_lock().unlock_if_locked();
+    Scheduler::donate_to(beneficiary, reason);
+    if (did_unlock)
+        process().big_lock().lock();
+}
+
 u64 Thread::sleep(u32 ticks)
 {
     ASSERT(state() == Thread::Running);

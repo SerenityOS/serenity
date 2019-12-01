@@ -1,4 +1,5 @@
 #include <Kernel/Lock.h>
+#include <Kernel/Thread.h>
 
 void Lock::lock()
 {
@@ -18,8 +19,8 @@ void Lock::lock()
                 return;
             }
             m_lock.store(false, AK::memory_order_release);
+            (void)current->donate_remaining_timeslice_and_block<Thread::WaitQueueBlocker>(m_holder, m_name, m_queue);
         }
-        Scheduler::donate_to(m_holder, m_name);
     }
 }
 
@@ -36,10 +37,12 @@ void Lock::unlock()
                 return;
             }
             m_holder = nullptr;
+            m_queue.wake_one();
             m_lock.store(false, AK::memory_order_release);
             return;
         }
-        Scheduler::donate_to(m_holder, m_name);
+        // I don't know *who* is using "m_lock", so just yield.
+        Scheduler::yield();
     }
 }
 
@@ -64,7 +67,10 @@ bool Lock::unlock_if_locked()
             }
             m_holder = nullptr;
             m_lock.store(false, AK::memory_order_release);
+            m_queue.wake_one();
             return true;
         }
+        // I don't know *who* is using "m_lock", so just yield.
+        Scheduler::yield();
     }
 }

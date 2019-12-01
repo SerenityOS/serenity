@@ -1,11 +1,12 @@
 #pragma once
 
 #include <AK/Assertions.h>
-#include <AK/Types.h>
 #include <AK/Atomic.h>
+#include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KSyms.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/WaitQueue.h>
 
 class Thread;
 extern Thread* current;
@@ -29,6 +30,7 @@ private:
     u32 m_level { 0 };
     Thread* m_holder { nullptr };
     const char* m_name { nullptr };
+    WaitQueue m_queue;
 };
 
 class Locker {
@@ -45,7 +47,6 @@ public:
 private:
     Lock& m_lock;
 };
-
 
 #define LOCKER(lock) Locker locker(lock)
 

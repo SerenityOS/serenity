@@ -96,6 +96,7 @@ CXX_OBJS = \
     VM/RangeAllocator.o \
     VM/Region.o \
     VM/VMObject.o \
+    WaitQueue.o \
     init.o \
     kprintf.o
 
