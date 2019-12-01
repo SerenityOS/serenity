@@ -21,7 +21,7 @@ void WaitQueue::wake_one()
     if (m_threads.is_empty())
         return;
     if (auto* thread = m_threads.take_first())
-        thread->unblock();
+        thread->wake_from_queue();
 }
 
 void WaitQueue::wake_all()
@@ -30,5 +30,5 @@ void WaitQueue::wake_all()
     if (m_threads.is_empty())
         return;
     while (!m_threads.is_empty())
-        m_threads.take_first()->unblock();
+        m_threads.take_first()->wake_from_queue();
 }

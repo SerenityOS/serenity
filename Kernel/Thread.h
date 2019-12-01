@@ -11,6 +11,7 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/Region.h>
+#include <Kernel/WaitQueue.h>
 #include <LibC/fd_set.h>
 
 class Alarm;
@@ -84,6 +85,7 @@ public:
         Dead,
         Stopped,
         Blocked,
+        Queued,
     };
 
     class Blocker {
@@ -109,16 +111,6 @@ public:
     private:
         Thread& m_joinee;
         void*& m_joinee_exit_value;
-    };
-
-    class WaitQueueBlocker final : public Blocker {
-    public:
-        explicit WaitQueueBlocker(WaitQueue&);
-        virtual bool should_unblock(Thread&, time_t now_s, long us) override;
-        virtual const char* state_string() const override { return "WaitQueued"; }
-
-    private:
-        WaitQueue& m_queue;
     };
 
     class FileDescriptionBlocker : public Blocker {
@@ -268,30 +260,18 @@ public:
     };
 
     template<typename T, class... Args>
-    [[nodiscard]] BlockResult block_impl(Thread* beneficiary, const char* reason, Args&&... args)
+    [[nodiscard]] BlockResult block(Args&&... args)
     {
         // We should never be blocking a blocked (or otherwise non-active) thread.
         ASSERT(state() == Thread::Running);
         ASSERT(m_blocker == nullptr);
 
-        // NOTE: We disable interrupts here to avoid the situation where a WaitQueueBlocker
-        //       adds the current thread to a WaitQueue, and then someone wakes up before
-        //       we set the state to Blocked decides to wake the queue. They would find
-        //       unblocked threads in a wait queue, which would not be good. We can't go
-        //       into Blocked state earlier, since that would prevent this thread from
-        //       getting scheduled.
-        auto saved_if = cli_and_save_interrupt_flag();
         T t(forward<Args>(args)...);
         m_blocker = &t;
         set_state(Thread::Blocked);
-        restore_interrupt_flag(saved_if);
 
         // Yield to the scheduler, and wait for us to resume unblocked.
-        if (beneficiary) {
-            donate_and_yield_without_holding_big_lock(beneficiary, reason);
-        } else {
-            yield_without_holding_big_lock();
-        }
+        yield_without_holding_big_lock();
 
         // We should no longer be blocked once we woke up
         ASSERT(state() != Thread::Blocked);
@@ -305,26 +285,31 @@ public:
         return BlockResult::WokeNormally;
     }
 
-    template<typename T, class... Args>
-    [[nodiscard]] BlockResult block(Args&&... args)
-    {
-        return block_impl<T>(nullptr, nullptr, forward<Args>(args)...);
-    }
-
-    template<typename T, class... Args>
-    [[nodiscard]] BlockResult donate_remaining_timeslice_and_block(Thread* beneficiary, const char* reason, Args&&... args)
-    {
-        return block_impl<T>(beneficiary, reason, forward<Args>(args)...);
-    }
-
     [[nodiscard]] BlockResult block_until(const char* state_string, Function<bool()>&& condition)
     {
         return block<ConditionBlocker>(state_string, move(condition));
     }
 
-    void wait_on(WaitQueue& queue)
+    void wait_on(WaitQueue& queue, Thread* beneficiary = nullptr, const char* reason = nullptr)
     {
-        (void)block<WaitQueueBlocker>(queue);
+        bool did_unlock = unlock_process_if_locked();
+        cli();
+        set_state(State::Queued);
+        queue.enqueue(*current);
+        // Yield and wait for the queue to wake us up again.
+        if (beneficiary)
+            Scheduler::donate_to(beneficiary, reason);
+        else
+            Scheduler::yield();
+        // We've unblocked, relock the process if needed and carry on.
+        if (did_unlock)
+            relock_process();
+    }
+
+    void wake_from_queue()
+    {
+        ASSERT(state() == State::Queued);
+        set_state(State::Runnable);
     }
 
     void unblock();
@@ -400,6 +385,9 @@ private:
 
 private:
     friend class SchedulerData;
+    bool unlock_process_if_locked();
+    void relock_process();
+
     String backtrace_impl() const;
     Process& m_process;
     int m_tid { -1 };
@@ -436,7 +424,6 @@ private:
     bool m_should_die { false };
 
     void yield_without_holding_big_lock();
-    void donate_and_yield_without_holding_big_lock(Thread* beneficiary, const char* reason);
 };
 
 HashTable<Thread*>& thread_table();

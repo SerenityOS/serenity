@@ -19,7 +19,7 @@ void Lock::lock()
                 return;
             }
             m_lock.store(false, AK::memory_order_release);
-            (void)current->donate_remaining_timeslice_and_block<Thread::WaitQueueBlocker>(m_holder, m_name, m_queue);
+            current->wait_on(m_queue, m_holder, m_name);
         }
     }
 }
