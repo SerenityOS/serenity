@@ -5,6 +5,7 @@
 #include <Kernel/IRQHandler.h>
 #include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/WaitQueue.h>
 
 class SB16;
 
@@ -37,6 +38,7 @@ private:
     u8 dsp_read();
 
     RefPtr<PhysicalPage> m_dma_buffer_page;
-    bool m_interrupted { false };
     int m_major_version { 0 };
+
+    WaitQueue m_irq_queue;
 };

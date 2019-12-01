@@ -65,6 +65,8 @@ SB16& SB16::the()
 
 void SB16::initialize()
 {
+    disable_irq();
+
     IO::out8(0x226, 1);
     IO::delay();
     IO::out8(0x226, 0);
@@ -81,7 +83,6 @@ void SB16::initialize()
     auto vmin = dsp_read();
 
     kprintf("SB16: found version %d.%d\n", m_major_version, vmin);
-    enable_irq();
 }
 
 bool SB16::can_read(const FileDescription&) const
@@ -134,16 +135,15 @@ void SB16::handle_irq()
     if (m_major_version >= 4)
         IO::in8(DSP_R_ACK); // 16 bit interrupt
 
-    m_interrupted = true;
+    m_irq_queue.wake_all();
 }
 
 void SB16::wait_for_irq()
 {
-    // Well, we have no way of knowing how much got written. So just hope all of
-    // it did, even if we're interrupted.
-    (void)current->block_until("Interrupting", [this] {
-        return m_interrupted;
-    });
+    cli();
+    enable_irq();
+    current->wait_on(m_irq_queue);
+    disable_irq();
 }
 
 ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
@@ -162,7 +162,6 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
 
     u8 mode = (u8)SampleFormat::Signed | (u8)SampleFormat::Stereo;
 
-    disable_irq();
     const int sample_rate = 44100;
     set_sample_rate(sample_rate);
     memcpy(m_dma_buffer_page->paddr().as_ptr(), data, length);
@@ -183,8 +182,6 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
     dsp_write((u8)sample_count);
     dsp_write((u8)(sample_count >> 8));
 
-    m_interrupted = false;
-    enable_irq();
     wait_for_irq();
     return length;
 }
