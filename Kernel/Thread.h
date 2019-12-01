@@ -322,6 +322,11 @@ public:
         return block<ConditionBlocker>(state_string, move(condition));
     }
 
+    void wait_on(WaitQueue& queue)
+    {
+        (void)block<WaitQueueBlocker>(queue);
+    }
+
     void unblock();
 
     // Tell this thread to unblock if needed,

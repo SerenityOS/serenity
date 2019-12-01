@@ -97,6 +97,8 @@ PATAChannel::PATAChannel(ChannelType type, bool force_pio)
     , m_io_base((type == ChannelType::Primary ? 0x1F0 : 0x170))
     , m_control_base((type == ChannelType::Primary ? 0x3f6 : 0x376))
 {
+    disable_irq();
+
     m_dma_enabled.resource() = true;
     ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
 
@@ -144,20 +146,12 @@ static void print_ide_status(u8 status)
         (status & ATA_SR_ERR) != 0);
 }
 
-bool PATAChannel::wait_for_irq()
+void PATAChannel::wait_for_irq()
 {
-#ifdef PATA_DEBUG
-    kprintf("PATAChannel: waiting for IRQ %d...\n", irq_number());
-#endif
-    while (!m_interrupted) {
-        // FIXME: Put this process into a Blocked state instead, it's stupid to wake up just to check a flag.
-        Scheduler::yield();
-    }
-#ifdef PATA_DEBUG
-    kprintf("PATAChannel: received IRQ %d!\n", irq_number());
-#endif
-
-    return true;
+    cli();
+    enable_irq();
+    current->wait_on(m_irq_queue);
+    disable_irq();
 }
 
 void PATAChannel::handle_irq()
@@ -173,7 +167,7 @@ void PATAChannel::handle_irq()
 #ifdef PATA_DEBUG
     kprintf("PATAChannel: interrupt: DRQ=%u BSY=%u DRDY=%u\n", (status & ATA_SR_DRQ) != 0, (status & ATA_SR_BSY) != 0, (status & ATA_SR_DRDY) != 0);
 #endif
-    m_interrupted = true;
+    m_irq_queue.wake_all();
 }
 
 static void io_delay()
@@ -186,8 +180,6 @@ void PATAChannel::detect_disks()
 {
     // There are only two possible disks connected to a channel
     for (auto i = 0; i < 2; i++) {
-        enable_irq();
-
         IO::out8(m_io_base + ATA_REG_HDDEVSEL, 0xA0 | (i << 4)); // First, we need to select the drive itself
 
         // Apparently these need to be 0 before sending IDENTIFY?!
@@ -257,8 +249,6 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
         current->pid(), lba, count, outbuf);
 #endif
 
-    disable_irq();
-
     m_prdt.offset = m_dma_buffer_page->paddr();
     m_prdt.size = 512 * count;
 
@@ -275,9 +265,6 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
 
     // Set transfer direction
     IO::out8(m_bus_master_base, 0x8);
-
-    m_interrupted = false;
-    enable_irq();
 
     while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
         ;
@@ -315,7 +302,6 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
     IO::out8(m_bus_master_base, 0x9);
 
     wait_for_irq();
-    disable_irq();
 
     if (m_device_error)
         return false;
@@ -336,8 +322,6 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
         current->pid(), lba, count, inbuf);
 #endif
 
-    disable_irq();
-
     m_prdt.offset = m_dma_buffer_page->paddr();
     m_prdt.size = 512 * count;
 
@@ -353,9 +337,6 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
-
-    m_interrupted = false;
-    enable_irq();
 
     while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
         ;
@@ -393,7 +374,6 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
     IO::out8(m_bus_master_base, 0x1);
 
     wait_for_irq();
-    disable_irq();
 
     if (m_device_error)
         return false;
@@ -415,7 +395,6 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
         start_sector,
         outbuf);
 #endif
-    disable_irq();
 
     while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
         ;
@@ -439,8 +418,6 @@ bool PATAChannel::ata_read_sectors(u32 start_sector, u16 count, u8* outbuf, bool
         ;
 
     IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_READ_PIO);
-    m_interrupted = false;
-    enable_irq();
     wait_for_irq();
 
     if (m_device_error)
@@ -475,7 +452,6 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
         count,
         start_sector);
 #endif
-    disable_irq();
 
     while (IO::in8(m_io_base + ATA_REG_STATUS) & ATA_SR_BSY)
         ;
@@ -512,19 +488,13 @@ bool PATAChannel::ata_write_sectors(u32 start_sector, u16 count, const u8* inbuf
         kprintf("PATAChannel: Writing 512 bytes (part %d) (status=%b), inbuf=%p...\n", i, status, inbuf + (512 * i));
 #endif
 
-        disable_irq();
         IO::repeated_out16(m_io_base + ATA_REG_DATA, inbuf + (512 * i), 256);
-        m_interrupted = false;
-        enable_irq();
         wait_for_irq();
         status = IO::in8(m_io_base + ATA_REG_STATUS);
         ASSERT(!(status & ATA_SR_BSY));
     }
 
-    disable_irq();
     IO::out8(m_io_base + ATA_REG_COMMAND, ATA_CMD_CACHE_FLUSH);
-    m_interrupted = false;
-    enable_irq();
     wait_for_irq();
     u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     ASSERT(!(status & ATA_SR_BSY));
