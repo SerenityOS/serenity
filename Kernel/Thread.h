@@ -209,7 +209,6 @@ public:
     class SemiPermanentBlocker final : public Blocker {
     public:
         enum class Reason {
-            Lurking,
             Signal,
         };
 
@@ -218,8 +217,6 @@ public:
         virtual const char* state_string() const override
         {
             switch (m_reason) {
-            case Reason::Lurking:
-                return "Lurking";
             case Reason::Signal:
                 return "Signal";
             }
