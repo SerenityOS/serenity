@@ -274,11 +274,17 @@ public:
         ASSERT(state() == Thread::Running);
         ASSERT(m_blocker == nullptr);
 
-        T t(AK::forward<Args>(args)...);
+        // NOTE: We disable interrupts here to avoid the situation where a WaitQueueBlocker
+        //       adds the current thread to a WaitQueue, and then someone wakes up before
+        //       we set the state to Blocked decides to wake the queue. They would find
+        //       unblocked threads in a wait queue, which would not be good. We can't go
+        //       into Blocked state earlier, since that would prevent this thread from
+        //       getting scheduled.
+        auto saved_if = cli_and_save_interrupt_flag();
+        T t(forward<Args>(args)...);
         m_blocker = &t;
-
-        // Enter blocked state.
         set_state(Thread::Blocked);
+        restore_interrupt_flag(saved_if);
 
         // Yield to the scheduler, and wait for us to resume unblocked.
         if (beneficiary) {
