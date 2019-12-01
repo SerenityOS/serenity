@@ -82,9 +82,22 @@ bool Thread::JoinBlocker::should_unblock(Thread& joiner, time_t, long)
     return !joiner.m_joinee;
 }
 
+Thread::WaitQueueBlocker::WaitQueueBlocker(WaitQueue& queue)
+    : m_queue(queue)
+{
+    m_queue.enqueue(*current);
+}
+
+bool Thread::WaitQueueBlocker::should_unblock(Thread&, time_t, long)
+{
+    // Someone else will have to unblock us by calling wake_one() or wake_all() on the queue.
+    return false;
+}
+
 Thread::FileDescriptionBlocker::FileDescriptionBlocker(const FileDescription& description)
     : m_blocked_description(description)
-{}
+{
+}
 
 const FileDescription& Thread::FileDescriptionBlocker::blocked_description() const
 {
@@ -236,7 +249,8 @@ bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
 
 Thread::SemiPermanentBlocker::SemiPermanentBlocker(Reason reason)
     : m_reason(reason)
-{}
+{
+}
 
 bool Thread::SemiPermanentBlocker::should_unblock(Thread&, time_t, long)
 {

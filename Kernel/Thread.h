@@ -18,6 +18,7 @@ class FileDescription;
 class Process;
 class ProcessInspectionHandle;
 class Region;
+class WaitQueue;
 
 enum class ShouldUnblockThread {
     No = 0,
@@ -108,6 +109,16 @@ public:
     private:
         Thread& m_joinee;
         void*& m_joinee_exit_value;
+    };
+
+    class WaitQueueBlocker final : public Blocker {
+    public:
+        explicit WaitQueueBlocker(WaitQueue&);
+        virtual bool should_unblock(Thread&, time_t now_s, long us) override;
+        virtual const char* state_string() const override { return "WaitQueued"; }
+
+    private:
+        WaitQueue& m_queue;
     };
 
     class FileDescriptionBlocker : public Blocker {
@@ -257,7 +268,7 @@ public:
     };
 
     template<typename T, class... Args>
-    [[nodiscard]] BlockResult block(Args&&... args)
+    [[nodiscard]] BlockResult block_impl(Thread* beneficiary, const char* reason, Args&&... args)
     {
         // We should never be blocking a blocked (or otherwise non-active) thread.
         ASSERT(state() == Thread::Running);
@@ -270,7 +281,11 @@ public:
         set_state(Thread::Blocked);
 
         // Yield to the scheduler, and wait for us to resume unblocked.
-        yield_without_holding_big_lock();
+        if (beneficiary) {
+            donate_and_yield_without_holding_big_lock(beneficiary, reason);
+        } else {
+            yield_without_holding_big_lock();
+        }
 
         // We should no longer be blocked once we woke up
         ASSERT(state() != Thread::Blocked);
@@ -282,7 +297,19 @@ public:
             return BlockResult::InterruptedBySignal;
 
         return BlockResult::WokeNormally;
-    };
+    }
+
+    template<typename T, class... Args>
+    [[nodiscard]] BlockResult block(Args&&... args)
+    {
+        return block_impl<T>(nullptr, nullptr, forward<Args>(args)...);
+    }
+
+    template<typename T, class... Args>
+    [[nodiscard]] BlockResult donate_remaining_timeslice_and_block(Thread* beneficiary, const char* reason, Args&&... args)
+    {
+        return block_impl<T>(beneficiary, reason, forward<Args>(args)...);
+    }
 
     [[nodiscard]] BlockResult block_until(const char* state_string, Function<bool()>&& condition)
     {
@@ -398,6 +425,7 @@ private:
     bool m_should_die { false };
 
     void yield_without_holding_big_lock();
+    void donate_and_yield_without_holding_big_lock(Thread* beneficiary, const char* reason);
 };
 
 HashTable<Thread*>& thread_table();
