@@ -206,7 +206,10 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
         return data_length;
     }
 
-    return protocol_send(data, data_length);
+    int nsent = protocol_send(data, data_length);
+    if (nsent > 0)
+        current->did_ipv4_socket_write(nsent);
+    return nsent;
 }
 
 ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
@@ -285,7 +288,10 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         return ipv4_packet.payload_size();
     }
 
-    return protocol_receive(packet.data.value(), buffer, buffer_length, flags);
+    int nreceived = protocol_receive(packet.data.value(), buffer, buffer_length, flags);
+    if (nreceived > 0)
+        current->did_ipv4_socket_read(nreceived);
+    return nreceived;
 }
 
 bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet)

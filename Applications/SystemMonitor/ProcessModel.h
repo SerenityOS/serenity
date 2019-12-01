@@ -34,6 +34,12 @@ public:
         InodeFaults,
         ZeroFaults,
         CowFaults,
+        FileReadBytes,
+        FileWriteBytes,
+        UnixSocketReadBytes,
+        UnixSocketWriteBytes,
+        IPv4SocketReadBytes,
+        IPv4SocketWriteBytes,
         __Count
     };
 
@@ -68,6 +74,12 @@ private:
         unsigned inode_faults;
         unsigned zero_faults;
         unsigned cow_faults;
+        unsigned unix_socket_read_bytes;
+        unsigned unix_socket_write_bytes;
+        unsigned ipv4_socket_read_bytes;
+        unsigned ipv4_socket_write_bytes;
+        unsigned file_read_bytes;
+        unsigned file_write_bytes;
         float cpu_percent;
         int icon_id;
     };

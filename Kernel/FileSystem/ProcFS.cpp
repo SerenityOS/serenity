@@ -725,6 +725,12 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
             thread_object.add("inode_faults", thread.inode_faults());
             thread_object.add("zero_faults", thread.zero_faults());
             thread_object.add("cow_faults", thread.cow_faults());
+            thread_object.add("file_read_bytes", thread.file_read_bytes());
+            thread_object.add("file_write_bytes", thread.file_write_bytes());
+            thread_object.add("unix_socket_read_bytes", thread.unix_socket_read_bytes());
+            thread_object.add("unix_socket_write_bytes", thread.unix_socket_write_bytes());
+            thread_object.add("ipv4_socket_read_bytes", thread.ipv4_socket_read_bytes());
+            thread_object.add("ipv4_socket_write_bytes", thread.ipv4_socket_write_bytes());
             return IterationDecision::Continue;
         });
     };

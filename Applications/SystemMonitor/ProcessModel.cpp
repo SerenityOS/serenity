@@ -71,6 +71,18 @@ String ProcessModel::column_name(int column) const
         return "F:Zero";
     case Column::CowFaults:
         return "F:CoW";
+    case Column::IPv4SocketReadBytes:
+        return "IPv4 In";
+    case Column::IPv4SocketWriteBytes:
+        return "IPv4 Out";
+    case Column::UnixSocketReadBytes:
+        return "Unix In";
+    case Column::UnixSocketWriteBytes:
+        return "Unix Out";
+    case Column::FileReadBytes:
+        return "File In";
+    case Column::FileWriteBytes:
+        return "File Out";
     default:
         ASSERT_NOT_REACHED();
     }
@@ -106,6 +118,18 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
     case Column::ZeroFaults:
         return { 60, TextAlignment::CenterRight };
     case Column::CowFaults:
+        return { 60, TextAlignment::CenterRight };
+    case Column::FileReadBytes:
+        return { 60, TextAlignment::CenterRight };
+    case Column::FileWriteBytes:
+        return { 60, TextAlignment::CenterRight };
+    case Column::UnixSocketReadBytes:
+        return { 60, TextAlignment::CenterRight };
+    case Column::UnixSocketWriteBytes:
+        return { 60, TextAlignment::CenterRight };
+    case Column::IPv4SocketReadBytes:
+        return { 60, TextAlignment::CenterRight };
+    case Column::IPv4SocketWriteBytes:
         return { 60, TextAlignment::CenterRight };
     default:
         ASSERT_NOT_REACHED();
@@ -164,6 +188,18 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return (int)thread.current_state.zero_faults;
         case Column::CowFaults:
             return (int)thread.current_state.cow_faults;
+        case Column::IPv4SocketReadBytes:
+            return (int)thread.current_state.ipv4_socket_read_bytes;
+        case Column::IPv4SocketWriteBytes:
+            return (int)thread.current_state.ipv4_socket_write_bytes;
+        case Column::UnixSocketReadBytes:
+            return (int)thread.current_state.unix_socket_read_bytes;
+        case Column::UnixSocketWriteBytes:
+            return (int)thread.current_state.unix_socket_write_bytes;
+        case Column::FileReadBytes:
+            return (int)thread.current_state.file_read_bytes;
+        case Column::FileWriteBytes:
+            return (int)thread.current_state.file_write_bytes;
         }
         ASSERT_NOT_REACHED();
         return {};
@@ -216,6 +252,18 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return (int)thread.current_state.zero_faults;
         case Column::CowFaults:
             return (int)thread.current_state.cow_faults;
+        case Column::IPv4SocketReadBytes:
+            return (int)thread.current_state.ipv4_socket_read_bytes;
+        case Column::IPv4SocketWriteBytes:
+            return (int)thread.current_state.ipv4_socket_write_bytes;
+        case Column::UnixSocketReadBytes:
+            return (int)thread.current_state.unix_socket_read_bytes;
+        case Column::UnixSocketWriteBytes:
+            return (int)thread.current_state.unix_socket_write_bytes;
+        case Column::FileReadBytes:
+            return (int)thread.current_state.file_read_bytes;
+        case Column::FileWriteBytes:
+            return (int)thread.current_state.file_write_bytes;
         }
     }
 
@@ -241,6 +289,12 @@ void ProcessModel::update()
             state.inode_faults = thread.inode_faults;
             state.zero_faults = thread.zero_faults;
             state.cow_faults = thread.cow_faults;
+            state.unix_socket_read_bytes = thread.unix_socket_read_bytes;
+            state.unix_socket_write_bytes = thread.unix_socket_write_bytes;
+            state.ipv4_socket_read_bytes = thread.ipv4_socket_read_bytes;
+            state.ipv4_socket_write_bytes = thread.ipv4_socket_write_bytes;
+            state.file_read_bytes = thread.file_read_bytes;
+            state.file_write_bytes = thread.file_write_bytes;
             state.name = it.value.name;
             state.amount_virtual = it.value.amount_virtual;
             state.amount_resident = it.value.amount_resident;
