@@ -661,6 +661,9 @@ void Thread::set_state(State new_state)
     if (m_process.pid() != 0) {
         Scheduler::update_state_for_thread(*this);
     }
+
+    if (new_state == Dying)
+        g_finalizer_wait_queue->wake_all();
 }
 
 String Thread::backtrace(ProcessInspectionHandle&) const

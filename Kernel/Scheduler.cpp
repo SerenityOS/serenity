@@ -46,6 +46,7 @@ static u32 time_slice_for(ThreadPriority priority)
 Thread* current;
 Thread* g_last_fpu_thread;
 Thread* g_finalizer;
+WaitQueue* g_finalizer_wait_queue;
 static Process* s_colonel_process;
 u64 g_uptime;
 static u64 s_beep_timeout;
@@ -257,6 +258,7 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
     case Thread::Dead:
     case Thread::Stopped:
     case Thread::Queued:
+    case Thread::Dying:
         /* don't know, don't care */
         return;
     case Thread::Blocked:
@@ -269,11 +271,6 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
         return;
     case Thread::Skip0SchedulerPasses:
         set_state(Thread::Runnable);
-        return;
-    case Thread::Dying:
-        ASSERT(g_finalizer);
-        if (g_finalizer->is_blocked())
-            g_finalizer->unblock();
         return;
     }
 }
@@ -534,6 +531,7 @@ Process* Scheduler::colonel()
 void Scheduler::initialize()
 {
     g_scheduler_data = new SchedulerData;
+    g_finalizer_wait_queue = new WaitQueue;
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process("colonel", nullptr);

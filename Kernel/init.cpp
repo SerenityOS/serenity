@@ -319,8 +319,8 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
         g_finalizer = current;
         current->set_priority(ThreadPriority::Low);
         for (;;) {
+            current->wait_on(*g_finalizer_wait_queue);
             Thread::finalize_dying_threads();
-            (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Lurking);
         }
     });
 

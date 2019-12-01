@@ -7,12 +7,14 @@
 
 class Process;
 class Thread;
+class WaitQueue;
 struct RegisterDump;
 struct SchedulerData;
 
 extern Thread* current;
 extern Thread* g_last_fpu_thread;
 extern Thread* g_finalizer;
+extern WaitQueue* g_finalizer_wait_queue;
 extern u64 g_uptime;
 extern SchedulerData* g_scheduler_data;
 
