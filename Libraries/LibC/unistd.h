@@ -117,7 +117,8 @@ int umount(const char* mountpoint);
 enum {
     _PC_NAME_MAX,
     _PC_PATH_MAX,
-    _PC_PIPE_BUF
+    _PC_PIPE_BUF,
+    _PC_VDISABLE
 };
 
 #define HOST_NAME_MAX 64
@@ -132,5 +133,6 @@ enum {
  * range of values), but we do have process priorities.
  */
 #define _POSIX_PRIORITY_SCHEDULING
+#define _POSIX_VDISABLE '\0'
 
 __END_DECLS
