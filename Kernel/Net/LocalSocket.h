@@ -36,7 +36,8 @@ private:
     virtual bool is_local() const override { return true; }
     bool has_attached_peer(const FileDescription&) const;
     static Lockable<InlineLinkedList<LocalSocket>>& all_sockets();
-    DoubleBuffer& buffer_for(FileDescription&);
+    DoubleBuffer& receive_buffer_for(FileDescription&);
+    DoubleBuffer& send_buffer_for(FileDescription&);
 
     // An open socket file on the filesystem.
     RefPtr<FileDescription> m_file;

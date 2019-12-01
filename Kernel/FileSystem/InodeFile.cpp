@@ -15,15 +15,20 @@ InodeFile::~InodeFile()
 
 ssize_t InodeFile::read(FileDescription& description, u8* buffer, ssize_t count)
 {
-    return m_inode->read_bytes(description.offset(), count, buffer, &description);
+    ssize_t nread = m_inode->read_bytes(description.offset(), count, buffer, &description);
+    if (nread > 0)
+        current->did_file_read(nread);
+    return nread;
 }
 
 ssize_t InodeFile::write(FileDescription& description, const u8* data, ssize_t count)
 {
-    ssize_t ret = m_inode->write_bytes(description.offset(), count, data, &description);
-    if (ret > 0)
+    ssize_t nwritten = m_inode->write_bytes(description.offset(), count, data, &description);
+    if (nwritten > 0) {
         m_inode->set_mtime(kgettimeofday().tv_sec);
-    return ret;
+        current->did_file_write(nwritten);
+    }
+    return nwritten;
 }
 
 KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& description, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot)

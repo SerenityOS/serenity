@@ -363,6 +363,45 @@ public:
     unsigned cow_faults() const { return m_cow_faults; }
     void did_cow_fault() { ++m_cow_faults; }
 
+    unsigned file_read_bytes() const { return m_file_read_bytes; }
+    unsigned file_write_bytes() const { return m_file_write_bytes; }
+
+    void did_file_read(unsigned bytes)
+    {
+        m_file_read_bytes += bytes;
+    }
+
+    void did_file_write(unsigned bytes)
+    {
+        m_file_write_bytes += bytes;
+    }
+
+    unsigned unix_socket_read_bytes() const { return m_unix_socket_read_bytes; }
+    unsigned unix_socket_write_bytes() const { return m_unix_socket_write_bytes; }
+
+    void did_unix_socket_read(unsigned bytes)
+    {
+        m_unix_socket_read_bytes += bytes;
+    }
+
+    void did_unix_socket_write(unsigned bytes)
+    {
+        m_unix_socket_write_bytes += bytes;
+    }
+
+    unsigned ipv4_socket_read_bytes() const { return m_ipv4_socket_read_bytes; }
+    unsigned ipv4_socket_write_bytes() const { return m_ipv4_socket_write_bytes; }
+
+    void did_ipv4_socket_read(unsigned bytes)
+    {
+        m_ipv4_socket_read_bytes += bytes;
+    }
+
+    void did_ipv4_socket_write(unsigned bytes)
+    {
+        m_ipv4_socket_write_bytes += bytes;
+    }
+
     Thread* clone(Process&);
 
     template<typename Callback>
@@ -415,6 +454,15 @@ private:
     unsigned m_inode_faults { 0 };
     unsigned m_zero_faults { 0 };
     unsigned m_cow_faults { 0 };
+
+    unsigned m_file_read_bytes { 0 };
+    unsigned m_file_write_bytes { 0 };
+
+    unsigned m_unix_socket_read_bytes { 0 };
+    unsigned m_unix_socket_write_bytes { 0 };
+
+    unsigned m_ipv4_socket_read_bytes { 0 };
+    unsigned m_ipv4_socket_write_bytes { 0 };
 
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };

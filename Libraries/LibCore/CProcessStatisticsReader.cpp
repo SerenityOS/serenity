@@ -53,6 +53,12 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
             thread.inode_faults = thread_object.get("inode_faults").to_u32();
             thread.zero_faults = thread_object.get("zero_faults").to_u32();
             thread.cow_faults = thread_object.get("cow_faults").to_u32();
+            thread.unix_socket_read_bytes = thread_object.get("unix_socket_read_bytes").to_u32();
+            thread.unix_socket_write_bytes = thread_object.get("unix_socket_write_bytes").to_u32();
+            thread.ipv4_socket_read_bytes = thread_object.get("ipv4_socket_read_bytes").to_u32();
+            thread.ipv4_socket_write_bytes = thread_object.get("ipv4_socket_write_bytes").to_u32();
+            thread.file_read_bytes = thread_object.get("file_read_bytes").to_u32();
+            thread.file_write_bytes = thread_object.get("file_write_bytes").to_u32();
             process.threads.append(move(thread));
         });
 
@@ -78,4 +84,3 @@ String CProcessStatisticsReader::username_from_uid(uid_t uid)
         return (*it).value;
     return String::number(uid);
 }
-
