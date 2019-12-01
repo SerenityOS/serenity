@@ -1,6 +1,8 @@
 #include <AK/StringBuilder.h>
 #include <LibVT/Terminal.h>
 
+//#define TERMINAL_DEBUG
+
 namespace VT {
 
 Terminal::Terminal(TerminalClient& client)
@@ -640,8 +642,8 @@ void Terminal::execute_escape_sequence(u8 final)
     dbgprintf("\n");
     for (auto& line : m_lines) {
         dbgprintf("Terminal: Line: ");
-        for (int i = 0; i < line->length; i++) {
-            dbgprintf("%c", line->characters[i]);
+        for (int i = 0; i < line.m_length; i++) {
+            dbgprintf("%c", line.characters[i]);
         }
         dbgprintf("\n");
     }
