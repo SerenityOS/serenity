@@ -30,9 +30,10 @@ static void handle_tcp(const IPv4Packet&);
 
 void NetworkTask_main()
 {
+    WaitQueue packet_wait_queue;
     u8 octet = 15;
     int pending_packets = 0;
-    NetworkAdapter::for_each([&octet, &pending_packets](auto& adapter) {
+    NetworkAdapter::for_each([&](auto& adapter) {
         if (String(adapter.class_name()) == "LoopbackAdapter") {
             adapter.set_ipv4_address({ 127, 0, 0, 1 });
             adapter.set_ipv4_netmask({ 255, 0, 0, 0 });
@@ -50,12 +51,15 @@ void NetworkTask_main()
             adapter.ipv4_netmask().to_string().characters(),
             adapter.ipv4_gateway().to_string().characters());
 
-        adapter.on_receive = [&pending_packets]() {
+        adapter.on_receive = [&]() {
             pending_packets++;
+            packet_wait_queue.wake_all();
         };
     });
 
     auto dequeue_packet = [&pending_packets]() -> Optional<KBuffer> {
+        if (pending_packets == 0)
+            return {};
         Optional<KBuffer> packet;
         NetworkAdapter::for_each([&packet, &pending_packets](auto& adapter) {
             if (packet.has_value() || !adapter.has_queued_packets())
@@ -73,9 +77,7 @@ void NetworkTask_main()
     for (;;) {
         auto packet_maybe_null = dequeue_packet();
         if (!packet_maybe_null.has_value()) {
-            (void)current->block_until("Networking", [&pending_packets] {
-                return pending_packets > 0;
-            });
+            current->wait_on(packet_wait_queue);
             continue;
         }
         auto& packet = packet_maybe_null.value();
