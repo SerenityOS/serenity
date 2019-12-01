@@ -82,18 +82,6 @@ bool Thread::JoinBlocker::should_unblock(Thread& joiner, time_t, long)
     return !joiner.m_joinee;
 }
 
-Thread::WaitQueueBlocker::WaitQueueBlocker(WaitQueue& queue)
-    : m_queue(queue)
-{
-    m_queue.enqueue(*current);
-}
-
-bool Thread::WaitQueueBlocker::should_unblock(Thread&, time_t, long)
-{
-    // Someone else will have to unblock us by calling wake_one() or wake_all() on the queue.
-    return false;
-}
-
 Thread::FileDescriptionBlocker::FileDescriptionBlocker(const FileDescription& description)
     : m_blocked_description(description)
 {
@@ -268,6 +256,7 @@ void Thread::consider_unblock(time_t now_sec, long now_usec)
     case Thread::Running:
     case Thread::Dead:
     case Thread::Stopped:
+    case Thread::Queued:
         /* don't know, don't care */
         return;
     case Thread::Blocked:

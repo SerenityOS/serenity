@@ -180,12 +180,14 @@ void Thread::yield_without_holding_big_lock()
         process().big_lock().lock();
 }
 
-void Thread::donate_and_yield_without_holding_big_lock(Thread* beneficiary, const char* reason)
+bool Thread::unlock_process_if_locked()
 {
-    bool did_unlock = process().big_lock().unlock_if_locked();
-    Scheduler::donate_to(beneficiary, reason);
-    if (did_unlock)
-        process().big_lock().lock();
+    return process().big_lock().unlock_if_locked();
+}
+
+void Thread::relock_process()
+{
+    process().big_lock().lock();
 }
 
 u64 Thread::sleep(u32 ticks)
@@ -227,6 +229,8 @@ const char* Thread::state_string() const
         return "Skip1";
     case Thread::Skip0SchedulerPasses:
         return "Skip0";
+    case Thread::Queued:
+        return "Queued";
     case Thread::Blocked:
         ASSERT(m_blocker != nullptr);
         return m_blocker->state_string();
@@ -645,6 +649,9 @@ bool Thread::is_thread(void* ptr)
 void Thread::set_state(State new_state)
 {
     InterruptDisabler disabler;
+    if (new_state == m_state)
+        return;
+
     if (new_state == Blocked) {
         // we should always have a Blocker while blocked
         ASSERT(m_blocker != nullptr);
