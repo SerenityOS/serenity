@@ -327,7 +327,9 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
         auto& current_pde = current_page_directory[page_directory_index];
 
         if (kernel_pde.is_present() && !current_pde.is_present()) {
+#ifdef PAGE_FAULT_DEBUG
             dbg() << "NP(kernel): Copying new kernel mapping for " << fault.vaddr() << " into current page directory";
+#endif
             current_pde.copy_from({}, kernel_pde);
             flush_tlb(fault.vaddr().page_base());
             return PageFaultResponse::Continue;
