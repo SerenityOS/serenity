@@ -53,7 +53,6 @@ public:
         APISetWindowIconBitmapRequest,
         APIInvalidateRectRequest,
         APIDidFinishPaintingNotification,
-        APIGetWindowBackingStoreRequest,
         APISetGlobalCursorTrackingRequest,
         APISetWindowOpacityRequest,
         APISetWindowBackingStoreRequest,
@@ -724,20 +723,6 @@ public:
 private:
     int m_window_id { 0 };
     Vector<Rect, 32> m_rects;
-};
-
-class WSAPIGetWindowBackingStoreRequest final : public WSAPIClientRequest {
-public:
-    explicit WSAPIGetWindowBackingStoreRequest(int client_id, int window_id)
-        : WSAPIClientRequest(WSEvent::APIGetWindowBackingStoreRequest, client_id)
-        , m_window_id(window_id)
-    {
-    }
-
-    int window_id() const { return m_window_id; }
-
-private:
-    int m_window_id { 0 };
 };
 
 class WSAPIDidFinishPaintingNotification final : public WSAPIClientRequest {

@@ -71,7 +71,6 @@ private:
     void handle_request(const WSAPIDestroyWindowRequest&);
     void handle_request(const WSAPIInvalidateRectRequest&);
     void handle_request(const WSAPIDidFinishPaintingNotification&);
-    void handle_request(const WSAPIGetWindowBackingStoreRequest&);
     void handle_request(const WSAPISetWindowBackingStoreRequest&);
     void handle_request(const WSAPISetGlobalCursorTrackingRequest&);
     void handle_request(const WSAPISetWindowOpacityRequest&);
