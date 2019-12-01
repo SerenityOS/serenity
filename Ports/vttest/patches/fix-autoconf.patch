@@ -1,0 +1,13 @@
+diff -ru vttest-original/vttest-20190710/config.sub vttest-20190710/config.sub
+--- vttest-original/vttest-20190710/config.sub	2019-06-30 01:32:41.000000000 -0500
++++ vttest-20190710/config.sub	2019-12-01 03:10:47.708867392 -0600
+@@ -1347,7 +1347,7 @@
+ 	     | nindy* | vxsim* | vxworks* | ebmon* | hms* | mvs* \
+ 	     | clix* | riscos* | uniplus* | iris* | isc* | rtu* | xenix* \
+ 	     | knetbsd* | mirbsd* | netbsd* \
+-	     | bitrig* | openbsd* | solidbsd* | libertybsd* | os108* \
++	     | bitrig* | openbsd* | solidbsd* | libertybsd* | os108* | serenity* \
+ 	     | ekkobsd* | kfreebsd* | freebsd* | riscix* | lynxos* \
+ 	     | bosx* | nextstep* | cxux* | aout* | elf* | oabi* \
+ 	     | ptx* | coff* | ecoff* | winnt* | domain* | vsta* \
+
