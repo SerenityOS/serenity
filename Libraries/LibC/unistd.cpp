@@ -412,6 +412,8 @@ long fpathconf(int fd, int name)
     switch (name) {
     case _PC_PATH_MAX:
         return PATH_MAX;
+    case _PC_VDISABLE:
+        return _POSIX_VDISABLE;
     }
 
     ASSERT_NOT_REACHED();
