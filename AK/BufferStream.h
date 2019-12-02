@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/ByteBuffer.h>
+#include <AK/String.h>
 
 namespace AK {
 
@@ -37,7 +37,7 @@ public:
         m_buffer[m_offset++] = value;
         return *this;
     }
-    BufferStream& operator>>(u8& value )
+    BufferStream& operator>>(u8& value)
     {
         if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
@@ -52,13 +52,36 @@ public:
         m_buffer[m_offset++] = value;
         return *this;
     }
-    BufferStream& operator>>(bool& value )
+    BufferStream& operator>>(bool& value)
     {
         if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
             m_read_failure = true;
             return *this;
         }
         value = m_buffer[m_offset++];
+        return *this;
+    }
+
+    BufferStream& operator<<(float value)
+    {
+        union bits {
+            float as_float;
+            u32 as_u32;
+        } u;
+        u.as_float = value;
+        return *this << u.as_u32;
+    }
+
+    BufferStream& operator>>(float& value)
+    {
+        union bits {
+            float as_float;
+            u32 as_u32;
+        } u;
+        *this >> u.as_u32;
+        if (m_read_failure)
+            return *this;
+        value = u.as_float;
         return *this;
     }
 
@@ -213,7 +236,8 @@ public:
         m_read_failure = false;
     }
 
-    bool handle_read_failure() {
+    bool handle_read_failure()
+    {
         bool old = m_read_failure;
         m_read_failure = false;
         return old;
