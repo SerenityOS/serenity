@@ -46,6 +46,12 @@ public:
     StringView substring_view(int start, int length) const;
     Vector<StringView> split_view(char, bool keep_empty = false) const;
 
+    // Create a Vector of StringViews split by line endings. As of CommonMark
+    // 0.29, the spec defines a line ending as "a newline (U+000A), a carriage
+    // return (U+000D) not followed by a newline, or a carriage return and a
+    // following newline.".
+    Vector<StringView> lines(bool consider_cr = true) const;
+
     // FIXME: These should be shared between String and StringView somehow!
     unsigned to_uint(bool& ok) const;
     int to_int(bool& ok) const;
