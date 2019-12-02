@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Badge.h>
-#include <LibCore/CoreIPCServer.h>
+#include <LibIPC/IClientConnection.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 
 class Download;

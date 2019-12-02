@@ -1,6 +1,6 @@
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CLocalServer.h>
-#include <LibCore/CoreIPCServer.h>
+#include <LibIPC/IClientConnection.h>
 #include <ProtocolServer/HttpProtocol.h>
 #include <ProtocolServer/PSClientConnection.h>
 

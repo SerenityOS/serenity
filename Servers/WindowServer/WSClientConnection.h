@@ -5,8 +5,8 @@
 #include <AK/OwnPtr.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
-#include <LibCore/CoreIPCServer.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibIPC/IClientConnection.h>
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WindowServerEndpoint.h>
 
