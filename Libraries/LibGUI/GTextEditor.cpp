@@ -1223,6 +1223,14 @@ void GTextEditor::set_selection(const GTextRange& selection)
     update();
 }
 
+void GTextEditor::clear_selection()
+{
+    if (!has_selection())
+        return;
+    m_selection.clear();
+    update();
+}
+
 void GTextEditor::recompute_all_visual_lines()
 {
     int y_offset = 0;
