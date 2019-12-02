@@ -161,6 +161,11 @@ void* malloc(size_t size)
         if (auto* allocator = big_allocator_for_size(real_size)) {
             if (!allocator->blocks.is_empty()) {
                 auto* block = allocator->blocks.take_last();
+                if (mprotect(block, real_size, PROT_READ | PROT_WRITE) < 0) {
+                    perror("mprotect");
+                    ASSERT_NOT_REACHED();
+                }
+                set_mmap_name(block, PAGE_SIZE, "malloc: BigAllocationBlock (reused)");
                 return &block->m_slot[0];
             }
         }
@@ -236,6 +241,11 @@ void free(void* ptr)
         if (auto* allocator = big_allocator_for_size(block->m_size)) {
             if (allocator->blocks.size() < number_of_big_blocks_to_keep_around_per_size_class) {
                 allocator->blocks.append(block);
+                set_mmap_name(block, PAGE_SIZE, "malloc: BigAllocationBlock (free)");
+                if (mprotect(block, PAGE_SIZE, PROT_NONE) < 0) {
+                    perror("mprotect");
+                    ASSERT_NOT_REACHED();
+                }
                 return;
             }
         }
