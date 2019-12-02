@@ -1,4 +1,5 @@
 #include "ProcessMemoryMapWidget.h"
+#include <LibCore/CTimer.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GJsonArrayModel.h>
 #include <LibGUI/GTableView.h>
@@ -30,6 +31,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
     });
     pid_vm_fields.empend("name", "Name", TextAlignment::CenterLeft);
     m_table_view->set_model(GJsonArrayModel::create({}, move(pid_vm_fields)));
+    m_timer = CTimer::construct(1000, [this] { refresh(); }, this);
 }
 
 ProcessMemoryMapWidget::~ProcessMemoryMapWidget()
@@ -42,4 +44,10 @@ void ProcessMemoryMapWidget::set_pid(pid_t pid)
         return;
     m_pid = pid;
     static_cast<GJsonArrayModel*>(m_table_view->model())->set_json_path(String::format("/proc/%d/vm", pid));
+}
+
+void ProcessMemoryMapWidget::refresh()
+{
+    if (m_pid != -1)
+        m_table_view->model()->update();
 }
