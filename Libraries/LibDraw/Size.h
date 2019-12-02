@@ -4,8 +4,6 @@
 #include <AK/LogStream.h>
 #include <LibDraw/Orientation.h>
 
-struct WSAPI_Size;
-
 class Size {
 public:
     Size() {}
@@ -14,7 +12,6 @@ public:
         , m_height(h)
     {
     }
-    Size(const WSAPI_Size&);
 
     bool is_null() const { return !m_width && !m_height; }
     bool is_empty() const { return m_width <= 0 || m_height <= 0; }
@@ -77,7 +74,6 @@ public:
             set_height(value);
     }
 
-    operator WSAPI_Size() const;
 
     String to_string() const { return String::format("[%dx%d]", m_width, m_height); }
 

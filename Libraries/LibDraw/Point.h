@@ -5,7 +5,6 @@
 #include <LibDraw/Orientation.h>
 
 class Rect;
-struct WSAPI_Point;
 
 class Point {
 public:
@@ -15,7 +14,6 @@ public:
         , m_y(y)
     {
     }
-    Point(const WSAPI_Point&);
 
     int x() const { return m_x; }
     int y() const { return m_y; }
@@ -79,7 +77,6 @@ public:
     }
     Point operator+(const Point& other) const { return { m_x + other.m_x, m_y + other.m_y }; }
 
-    operator WSAPI_Point() const;
     String to_string() const { return String::format("[%d,%d]", x(), y()); }
 
     bool is_null() const { return !m_x && !m_y; }
