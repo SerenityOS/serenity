@@ -32,8 +32,6 @@ int get_number_of_days(int month, int year)
 
     if (month == 2)
         return is_leap_year ? 29 : 28;
-
-    return is_long_month ? 31 : 30;
 }
 
 void append_to_print(char* buffer, int row, int column, char* text)
