@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/NonnullOwnPtrVector.h>
 #include <LibCore/CEvent.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CLocalSocket.h>
@@ -25,6 +26,7 @@ public:
         m_connection->set_blocking(true);
         m_notifier->on_ready_to_read = [this] {
             drain_messages_from_server();
+            handle_messages();
         };
 
         int retries = 100000;
@@ -131,7 +133,7 @@ private:
         for (size_t index = 0; index < (size_t)bytes.size(); index += decoded_bytes) {
             auto remaining_bytes = ByteBuffer::wrap(bytes.data() + index, bytes.size() - index);
             if (auto message = LocalEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
-                m_local_endpoint.handle(*message);
+                m_unprocessed_messages.append(move(message));
             } else if (auto message = PeerEndpoint::decode_message(remaining_bytes, decoded_bytes)) {
                 m_unprocessed_messages.append(move(message));
             } else {
@@ -140,6 +142,15 @@ private:
             ASSERT(decoded_bytes);
         }
         return true;
+    }
+
+    void handle_messages()
+    {
+        auto messages = move(m_unprocessed_messages);
+        for (auto& message : messages) {
+            if (message->endpoint_magic() == LocalEndpoint::static_magic())
+                m_local_endpoint.handle(*message);
+        }
     }
 
     LocalEndpoint& m_local_endpoint;
