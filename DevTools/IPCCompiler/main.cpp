@@ -265,10 +265,10 @@ int main(int argc, char** argv)
             dbg() << "    virtual ~" << name << "() override {}";
             dbg() << "    virtual i32 endpoint_magic() const override { return " << endpoint.magic << "; }";
             dbg() << "    static i32 static_endpoint_magic() { return " << endpoint.magic << "; }";
-            dbg() << "    virtual i32 id() const override { return (int)MessageID::" << name << "; }";
+            dbg() << "    virtual i32 message_id() const override { return (int)MessageID::" << name << "; }";
             dbg() << "    static i32 static_message_id() { return (int)MessageID::" << name << "; }";
-            dbg() << "    virtual String name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
-            dbg() << "    static String static_name() { return \"" << endpoint.name << "::" << name << "\"; }";
+            dbg() << "    virtual String message_name() const override { return \"" << endpoint.name << "::" << name << "\"; }";
+            dbg() << "    static String static_message_name() { return \"" << endpoint.name << "::" << name << "\"; }";
             dbg() << "    static OwnPtr<" << name << "> decode(BufferStream& stream, size_t& size_in_bytes)";
             dbg() << "    {";
 
@@ -463,7 +463,7 @@ int main(int argc, char** argv)
         dbg();
         dbg() << "    virtual OwnPtr<IMessage> handle(const IMessage& message) override";
         dbg() << "    {";
-        dbg() << "        switch (message.id()) {";
+        dbg() << "        switch (message.message_id()) {";
         for (auto& message : endpoint.messages) {
             auto do_decode_message = [&](const String& name, bool returns_something) {
                 dbg() << "        case (int)" << endpoint.name << "::MessageID::" << name << ":";
