@@ -18,6 +18,7 @@
 #include <errno.h>
 #include <fcntl.h>
 #include <pwd.h>
+#include <signal.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -137,6 +138,16 @@ RefPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigF
 
 int main(int argc, char** argv)
 {
+    struct sigaction act;
+    memset(&act, 0, sizeof(act));
+    act.sa_flags = SA_NOCLDWAIT;
+    act.sa_handler = SIG_IGN;
+    int rc = sigaction(SIGCHLD, &act, nullptr);
+    if (rc < 0) {
+        perror("sigaction");
+        return 1;
+    }
+
     GApplication app(argc, argv);
 
     CArgsParser args_parser("Terminal");
