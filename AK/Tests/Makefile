@@ -1,4 +1,4 @@
-PROGRAMS = TestAtomic TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL TestStringView TestUtf8 TestCircularQueue
+PROGRAMS = TestBinarySearch TestAtomic TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL TestStringView TestUtf8 TestCircularQueue
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 
@@ -24,6 +24,9 @@ endef
 
 all: $(PROGRAMS)
 	$(foreach x,$(PROGRAMS),$(call execute-command,./$(x)))
+
+TestBinarySearch: TestBinarySearch.o $(SHARED_TEST_OBJS)
+	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestBinarySearch.o $(SHARED_TEST_OBJS)
 
 TestAtomic: TestAtomic.o $(SHARED_TEST_OBJS)
 	$(PRE_CXX) $(CXX) $(CXXFLAGS) -o $@ TestAtomic.o $(SHARED_TEST_OBJS)
