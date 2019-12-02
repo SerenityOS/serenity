@@ -7,7 +7,7 @@
 static HashMap<int, RefPtr<PSClientConnection>> s_connections;
 
 PSClientConnection::PSClientConnection(CLocalSocket& socket, int client_id)
-    : ConnectionNG(*this, socket, client_id)
+    : IClientConnection(*this, socket, client_id)
 {
     s_connections.set(client_id, *this);
 }

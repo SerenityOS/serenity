@@ -5,7 +5,7 @@
 namespace LibProtocol {
 
 Client::Client()
-    : ConnectionNG(*this, "/tmp/portal/protocol")
+    : IServerConnection(*this, "/tmp/portal/protocol")
 {
     handshake();
 }

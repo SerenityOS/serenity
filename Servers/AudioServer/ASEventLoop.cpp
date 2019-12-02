@@ -17,6 +17,6 @@ ASEventLoop::ASEventLoop()
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::Server::new_connection_ng_for_client<ASClientConnection>(*client_socket, client_id, m_mixer);
+        new_client_connection<ASClientConnection>(*client_socket, client_id, m_mixer);
     };
 }

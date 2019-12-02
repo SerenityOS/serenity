@@ -6,7 +6,7 @@
 
 class ABuffer;
 
-class AClientConnection : public IPC::Client::ConnectionNG<AudioClientEndpoint, AudioServerEndpoint>
+class AClientConnection : public IServerConnection<AudioClientEndpoint, AudioServerEndpoint>
     , public AudioClientEndpoint {
     C_OBJECT(AClientConnection)
 public:

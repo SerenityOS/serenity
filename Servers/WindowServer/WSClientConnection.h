@@ -15,7 +15,7 @@ class WSMenu;
 class WSMenuBar;
 
 class WSClientConnection final
-    : public IPC::Server::ConnectionNG<WindowServerEndpoint>
+    : public IClientConnection<WindowServerEndpoint>
     , public WindowServerEndpoint {
     C_OBJECT(WSClientConnection)
 public:
