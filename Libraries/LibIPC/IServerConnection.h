@@ -55,7 +55,7 @@ public:
         // Double check we don't already have the event waiting for us.
         // Otherwise we might end up blocked for a while for no reason.
         for (ssize_t i = 0; i < m_unprocessed_messages.size(); ++i) {
-            if (m_unprocessed_messages[i]->id() == MessageType::static_message_id()) {
+            if (m_unprocessed_messages[i]->message_id() == MessageType::static_message_id()) {
                 auto message = move(m_unprocessed_messages[i]);
                 m_unprocessed_messages.remove(i);
                 return message;
@@ -74,7 +74,7 @@ public:
             if (!drain_messages_from_server())
                 return nullptr;
             for (ssize_t i = 0; i < m_unprocessed_messages.size(); ++i) {
-                if (m_unprocessed_messages[i]->id() == MessageType::static_message_id()) {
+                if (m_unprocessed_messages[i]->message_id() == MessageType::static_message_id()) {
                     auto message = move(m_unprocessed_messages[i]);
                     m_unprocessed_messages.remove(i);
                     return message;
