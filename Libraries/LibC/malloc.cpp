@@ -89,6 +89,7 @@ struct ChunkedBlock : public CommonHeader
 struct Allocator {
     size_t size { 0 };
     size_t block_count { 0 };
+    ChunkedBlock* empty_block_queue { nullptr };
     InlineLinkedList<ChunkedBlock> usable_blocks;
     InlineLinkedList<ChunkedBlock> full_blocks;
 };
@@ -174,6 +175,20 @@ void* malloc(size_t size)
     for (block = allocator->usable_blocks.head(); block; block = block->next()) {
         if (block->free_chunks())
             break;
+    }
+
+    if (!block && allocator->empty_block_queue) {
+        block = allocator->empty_block_queue;
+        int rc = mprotect(block, PAGE_SIZE, PROT_READ | PROT_WRITE);
+        if (rc < 0) {
+            perror("mprotect");
+            ASSERT_NOT_REACHED();
+        }
+        allocator->empty_block_queue = block->m_next;
+        char buffer[64];
+        snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu) (reused)", good_size);
+        set_mmap_name(block, PAGE_SIZE, buffer);
+        allocator->usable_blocks.append(block);
     }
 
     if (!block) {
@@ -262,13 +277,13 @@ void free(void* ptr)
 #ifdef MALLOC_DEBUG
             dbgprintf("Keeping block %p around for size class %u\n", block, good_size);
 #endif
-            if (allocator->usable_blocks.tail() != block) {
-#ifdef MALLOC_DEBUG
-                dbgprintf("Moving block %p to tail of list for size class %u\n", block, good_size);
-#endif
-                allocator->usable_blocks.remove(block);
-                allocator->usable_blocks.append(block);
-            }
+            allocator->usable_blocks.remove(block);
+            block->m_next = allocator->empty_block_queue;
+            allocator->empty_block_queue = block;
+            char buffer[64];
+            snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu) (free)", good_size);
+            set_mmap_name(block, PAGE_SIZE, buffer);
+            mprotect(block, PAGE_SIZE, PROT_NONE);
             return;
         }
 #ifdef MALLOC_DEBUG
