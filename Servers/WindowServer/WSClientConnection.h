@@ -87,8 +87,6 @@ private:
     virtual OwnPtr<WindowServer::DismissMenuResponse> handle(const WindowServer::DismissMenu&) override;
     virtual OwnPtr<WindowServer::SetWindowIconBitmapResponse> handle(const WindowServer::SetWindowIconBitmap&) override;
 
-    void post_error(const String&);
-
     HashMap<int, NonnullRefPtr<WSWindow>> m_windows;
     HashMap<int, NonnullOwnPtr<WSMenuBar>> m_menubars;
     HashMap<int, NonnullRefPtr<WSMenu>> m_menus;
