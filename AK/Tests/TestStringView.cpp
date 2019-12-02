@@ -61,6 +61,14 @@ TEST_CASE(lines)
     EXPECT(test_string_vector.at(1) == String("Hello there"));
     EXPECT(test_string_vector.at(2) == String("Hello there"));
     EXPECT(test_string_vector.at(3) == String("```"));
+
+    test_string = "\n\n\n";
+    test_string_view = test_string.view();
+    test_string_vector = test_string_view.lines();
+    EXPECT_EQ(test_string_vector.size(), 3);
+    EXPECT_EQ(test_string_vector.at(0).is_empty(), true);
+    EXPECT_EQ(test_string_vector.at(1).is_empty(), true);
+    EXPECT_EQ(test_string_vector.at(2).is_empty(), true);
 }
 
 TEST_MAIN(StringView)
