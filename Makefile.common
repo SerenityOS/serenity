@@ -40,6 +40,6 @@ LD = i686-pc-serenity-g++
 AS = i686-pc-serenity-as
 LINK = i686-pc-serenity-ld
 
-DEFINES = -DSANITIZE_PTRS -DDEBUG
+DEFINES = -DSANITIZE_PTRS -DDEBUG -DGIT_COMMIT=\"`git rev-parse --short HEAD`\" -DGIT_BRANCH=\"`git rev-parse --abbrev-ref HEAD`\" -DGIT_CHANGES=\"`git diff-index --quiet HEAD -- && echo "tracked"|| echo "untracked"`\"
 
 IPCCOMPILER = $(SERENITY_BASE_DIR)/DevTools/IPCCompiler/IPCCompiler
