@@ -108,7 +108,7 @@ public:
     void set_writable(bool b)
     {
         if (b)
-            m_access |= Access::Read;
+            m_access |= Access::Write;
         else
             m_access &= ~Access::Write;
     }
