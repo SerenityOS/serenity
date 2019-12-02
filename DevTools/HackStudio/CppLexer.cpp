@@ -278,13 +278,21 @@ Vector<CppToken> CppLexer::lex()
             begin_token();
             consume();
             consume();
+            bool comment_block_ends = false;
             while (peek()) {
-                if (peek() == '*' && peek(1) == '/')
+                if (peek() == '*' && peek(1) == '/') {
+                    comment_block_ends = true;
                     break;
+                }
+
                 consume();
             }
-            consume();
-            consume();
+
+            if (comment_block_ends) {
+                consume();
+                consume();
+            }
+
             commit_token(CppToken::Type::Comment);
             continue;
         }
