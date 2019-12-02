@@ -40,6 +40,46 @@ Vector<StringView> StringView::split_view(const char separator, bool keep_empty)
     return v;
 }
 
+Vector<StringView> StringView::lines(bool consider_cr) const
+{
+    if (is_empty())
+        return {};
+
+    if (!consider_cr)
+        return split_view('\n', true);
+
+    Vector<StringView> v;
+    ssize_t substart = 0;
+    bool last_ch_was_cr = false;
+    bool split_view = false;
+    for (ssize_t i = 0; i < length(); ++i) {
+        char ch = characters_without_null_termination()[i];
+        if (ch == '\n') {
+            split_view = true;
+            if (last_ch_was_cr) {
+                substart = i + 1;
+                split_view = false;
+                last_ch_was_cr = false;
+            }
+        }
+        if (ch == '\r') {
+            split_view = true;
+            last_ch_was_cr = true;
+        }
+        if (split_view) {
+            ssize_t sublen = i - substart;
+            if (sublen != 0)
+                v.append(substring_view(substart, sublen));
+            substart = i + 1;
+        }
+        split_view = false;
+    }
+    ssize_t taillen = length() - substart;
+    if (taillen != 0)
+        v.append(substring_view(substart, taillen));
+    return v;
+}
+
 bool StringView::starts_with(const StringView& str) const
 {
     if (str.is_empty())

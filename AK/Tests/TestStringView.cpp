@@ -42,4 +42,25 @@ TEST_CASE(starts_with)
     EXPECT(!test_string_view.starts_with("DEF"));
 }
 
+TEST_CASE(lines)
+{
+    String test_string = "a\nb\r\nc\rd";
+    StringView test_string_view = test_string.view();
+    Vector<StringView> test_string_vector = test_string_view.lines();
+    EXPECT_EQ(test_string_vector.size(), 4);
+    EXPECT(test_string_vector.at(0) == String("a"));
+    EXPECT(test_string_vector.at(1) == String("b"));
+    EXPECT(test_string_vector.at(2) == String("c"));
+    EXPECT(test_string_vector.at(3) == String("d"));
+
+    test_string = "```\nHello there\r\nHello there\n```";
+    test_string_view = test_string.view();
+    test_string_vector = test_string_view.lines();
+    EXPECT_EQ(test_string_vector.size(), 4);
+    EXPECT(test_string_vector.at(0) == String("```"));
+    EXPECT(test_string_vector.at(1) == String("Hello there"));
+    EXPECT(test_string_vector.at(2) == String("Hello there"));
+    EXPECT(test_string_vector.at(3) == String("```"));
+}
+
 TEST_MAIN(StringView)

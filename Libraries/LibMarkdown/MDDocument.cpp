@@ -49,7 +49,7 @@ static bool helper(Vector<StringView>::ConstIterator& lines, NonnullOwnPtrVector
 
 bool MDDocument::parse(const StringView& str)
 {
-    const Vector<StringView> lines_vec = str.split_view('\n', true);
+    const Vector<StringView> lines_vec = str.lines();
     auto lines = lines_vec.begin();
 
     while (true) {
