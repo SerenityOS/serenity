@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AudioServer/AudioServerEndpoint.h>
-#include <LibCore/CoreIPCServer.h>
+#include <LibIPC/IClientConnection.h>
 
 class ABuffer;
 class ASBufferQueue;

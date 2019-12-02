@@ -2,7 +2,7 @@
 
 #include <AudioServer/AudioClientEndpoint.h>
 #include <AudioServer/AudioServerEndpoint.h>
-#include <LibCore/CoreIPCClient.h>
+#include <LibIPC/IServerConnection.h>
 
 class ABuffer;
 

@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibCore/CoreIPCClient.h>
+#include <LibIPC/IServerConnection.h>
 #include <ProtocolServer/ProtocolClientEndpoint.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 

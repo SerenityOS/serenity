@@ -1,6 +1,6 @@
 #pragma once
 
-#include <LibCore/CoreIPCClient.h>
+#include <LibIPC/IServerConnection.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <WindowServer/WindowServerEndpoint.h>
 
