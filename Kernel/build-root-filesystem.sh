@@ -134,6 +134,7 @@ ln -s SoundPlayer mnt/bin/sp
 ln -s Help mnt/bin/help
 ln -s Browser mnt/bin/br
 ln -s HackStudio mnt/bin/hs
+ln -s SystemMonitor mnt/bin/sm
 echo "done"
 
 mkdir -p mnt/boot/
