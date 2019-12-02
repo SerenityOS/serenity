@@ -128,6 +128,12 @@ public:
         shutdown();
     }
 
+    void did_misbehave(const char* message)
+    {
+        dbg() << "Connection{" << this << "} (id=" << m_client_id << ", pid=" << m_client_pid << ") misbehaved (" << message << "), disconnecting.";
+        shutdown();
+    }
+
     void shutdown()
     {
         m_socket->close();
