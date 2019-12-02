@@ -18,19 +18,13 @@ int main(int, char**)
         return 1;
     }
 
-    dbg() << "1";
     WSEventLoop loop;
 
-    dbg() << "2";
     auto wm_config = CConfigFile::get_for_app("WindowManager");
-    dbg() << "3";
     WSScreen screen(wm_config->read_num_entry("Screen", "Width", 1024),
         wm_config->read_num_entry("Screen", "Height", 768));
-    dbg() << "4";
     WSCompositor::the();
-    dbg() << "5";
     auto wm = WSWindowManager::construct();
-    dbg() << "6";
 
     dbgprintf("Entering WindowServer main loop.\n");
     loop.exec();
