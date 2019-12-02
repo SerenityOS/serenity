@@ -1,35 +1,44 @@
 #pragma once
 
-#include <LibCore/CEventLoop.h>
 #include <LibCore/CoreIPCClient.h>
-#include <LibGUI/GEvent.h>
-#include <WindowServer/WSAPITypes.h>
+#include <WindowServer/WindowClientEndpoint.h>
+#include <WindowServer/WindowServerEndpoint.h>
 
-class GAction;
-class CObject;
-class CNotifier;
-class GWindow;
-
-class GWindowServerConnection : public IPC::Client::Connection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
+class GWindowServerConnection
+    : public IPC::Client::ConnectionNG<WindowClientEndpoint, WindowServerEndpoint>
+    , public WindowClientEndpoint {
     C_OBJECT(GWindowServerConnection)
 public:
     GWindowServerConnection()
-        : Connection("/tmp/portal/window")
-    {}
+        : ConnectionNG(*this, "/tmp/portal/window")
+    {
+        handshake();
+    }
 
-    void handshake() override;
+    virtual void handshake() override;
     static GWindowServerConnection& the();
 
 private:
-    void postprocess_bundles(Vector<IncomingMessageBundle>& m_unprocessed_bundles) override;
-    void handle_paint_event(const WSAPI_ServerMessage&, GWindow&, const ByteBuffer& extra_data);
-    void handle_resize_event(const WSAPI_ServerMessage&, GWindow&);
-    void handle_mouse_event(const WSAPI_ServerMessage&, GWindow&);
-    void handle_key_event(const WSAPI_ServerMessage&, GWindow&);
-    void handle_window_activation_event(const WSAPI_ServerMessage&, GWindow&);
-    void handle_window_close_request_event(const WSAPI_ServerMessage&, GWindow&);
-    void handle_menu_event(const WSAPI_ServerMessage&);
-    void handle_window_entered_or_left_event(const WSAPI_ServerMessage&, GWindow&);
-    void handle_wm_event(const WSAPI_ServerMessage&, GWindow&);
-    void handle_greeting(WSAPI_ServerMessage&);
+    virtual void handle(const WindowClient::Paint&) override;
+    virtual void handle(const WindowClient::MouseMove&) override;
+    virtual void handle(const WindowClient::MouseDown&) override;
+    virtual void handle(const WindowClient::MouseDoubleClick&) override;
+    virtual void handle(const WindowClient::MouseUp&) override;
+    virtual void handle(const WindowClient::MouseWheel&) override;
+    virtual void handle(const WindowClient::WindowEntered&) override;
+    virtual void handle(const WindowClient::WindowLeft&) override;
+    virtual void handle(const WindowClient::KeyDown&) override;
+    virtual void handle(const WindowClient::KeyUp&) override;
+    virtual void handle(const WindowClient::WindowActivated&) override;
+    virtual void handle(const WindowClient::WindowDeactivated&) override;
+    virtual void handle(const WindowClient::WindowCloseRequest&) override;
+    virtual void handle(const WindowClient::WindowResized&) override;
+    virtual void handle(const WindowClient::MenuItemActivated&) override;
+    virtual void handle(const WindowClient::ScreenRectChanged&) override;
+    virtual void handle(const WindowClient::ClipboardContentsChanged&) override;
+    virtual void handle(const WindowClient::WM_WindowRemoved&) override;
+    virtual void handle(const WindowClient::WM_WindowStateChanged&) override;
+    virtual void handle(const WindowClient::WM_WindowIconBitmapChanged&) override;
+    virtual void handle(const WindowClient::WM_WindowRectChanged&) override;
+    virtual void handle(const WindowClient::AsyncSetWallpaperFinished&) override;
 };

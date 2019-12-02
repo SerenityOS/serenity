@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/InlineLinkedList.h>
+#include <AK/String.h>
 #include <LibCore/CObject.h>
 #include <LibDraw/DisjointRectSet.h>
 #include <LibDraw/GraphicsBitmap.h>
@@ -13,6 +13,13 @@ class WSClientConnection;
 class WSCursor;
 class WSMenu;
 class WSMouseEvent;
+
+enum WSWMEventMask {
+    WindowRectChanges = 1 << 0,
+    WindowStateChanges = 1 << 1,
+    WindowIconChanges = 1 << 2,
+    WindowRemovals = 1 << 3,
+};
 
 class WSWindow final : public CObject
     , public InlineLinkedListNode<WSWindow> {

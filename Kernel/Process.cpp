@@ -1180,6 +1180,9 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
 int Process::sys$close(int fd)
 {
     auto* description = file_description(fd);
+#ifdef DEBUG_IO
+    dbgprintf("%s(%u) sys$close(%d) %p\n", name().characters(), pid(), fd, description);
+#endif
     if (!description)
         return -EBADF;
     int rc = description->close();
@@ -1367,10 +1370,10 @@ int Process::sys$open(const Syscall::SC_open_params* params)
         return -EINVAL;
     if (!validate_read(path, path_length))
         return -EFAULT;
-#ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$open(\"%s\")\n", name().characters(), pid(), path);
-#endif
     int fd = alloc_fd();
+#ifdef DEBUG_IO
+    dbgprintf("%s(%u) sys$open(\"%s\") -> %d\n", name().characters(), pid(), path, fd);
+#endif
     if (fd < 0)
         return fd;
     auto result = VFS::the().open(path, options, mode & ~umask(), current_directory());
@@ -2141,8 +2144,10 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             return 0;
         for (int fd = 0; fd < params->nfds; ++fd) {
             if (FD_ISSET(fd, fds)) {
-                if (!file_description(fd))
+                if (!file_description(fd)) {
+                    dbg() << *current << " sys$select: Bad fd number " << fd;
                     return -EBADF;
+                }
                 vector.append(fd);
             }
         }

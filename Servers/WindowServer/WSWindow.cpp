@@ -3,8 +3,8 @@
 #include "WSEventLoop.h"
 #include "WSScreen.h"
 #include "WSWindowManager.h"
-#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
+#include <WindowServer/WindowClientEndpoint.h>
 
 static String default_window_icon_path()
 {
@@ -41,7 +41,7 @@ WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int win
 {
     // FIXME: This should not be hard-coded here.
     if (m_type == WSWindowType::Taskbar) {
-        m_wm_event_mask = WSAPI_WMEventMask::WindowStateChanges | WSAPI_WMEventMask::WindowRemovals | WSAPI_WMEventMask::WindowIconChanges;
+        m_wm_event_mask = WSWMEventMask::WindowStateChanges | WSWMEventMask::WindowRemovals | WSWMEventMask::WindowIconChanges;
         m_listens_to_wm_events = true;
     }
     WSWindowManager::the().add_window(*this);
@@ -73,73 +73,26 @@ void WSWindow::set_rect(const Rect& rect)
     m_frame.notify_window_rect_changed(old_rect, rect);
 }
 
-// FIXME: Just use the same types.
-static WSAPI_MouseButton to_api(MouseButton button)
-{
-    switch (button) {
-    case MouseButton::None:
-        return WSAPI_MouseButton::NoButton;
-    case MouseButton::Left:
-        return WSAPI_MouseButton::Left;
-    case MouseButton::Right:
-        return WSAPI_MouseButton::Right;
-    case MouseButton::Middle:
-        return WSAPI_MouseButton::Middle;
-    }
-    ASSERT_NOT_REACHED();
-}
-
 void WSWindow::handle_mouse_event(const WSMouseEvent& event)
 {
     set_automatic_cursor_tracking_enabled(event.buttons() != 0);
 
-    WSAPI_ServerMessage server_message;
-    server_message.window_id = window_id();
-
     switch (event.type()) {
     case WSEvent::MouseMove:
-        server_message.type = WSAPI_ServerMessage::Type::MouseMove;
+        m_client->post_message(WindowClient::MouseMove(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     case WSEvent::MouseDown:
-        server_message.type = WSAPI_ServerMessage::Type::MouseDown;
+        m_client->post_message(WindowClient::MouseDown(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     case WSEvent::MouseDoubleClick:
-        server_message.type = WSAPI_ServerMessage::Type::MouseDoubleClick;
+        m_client->post_message(WindowClient::MouseDoubleClick(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     case WSEvent::MouseUp:
-        server_message.type = WSAPI_ServerMessage::Type::MouseUp;
+        m_client->post_message(WindowClient::MouseUp(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
     case WSEvent::MouseWheel:
-        server_message.type = WSAPI_ServerMessage::Type::MouseWheel;
+        m_client->post_message(WindowClient::MouseWheel(m_window_id, event.position(), (u32)event.button(), event.buttons(), event.modifiers(), event.wheel_delta()));
         break;
-    default:
-        ASSERT_NOT_REACHED();
-    }
-
-    server_message.mouse.position = event.position();
-    server_message.mouse.button = to_api(event.button());
-    server_message.mouse.buttons = event.buttons();
-    server_message.mouse.modifiers = event.modifiers();
-    server_message.mouse.wheel_delta = event.wheel_delta();
-
-    m_client->post_message(server_message);
-}
-
-static WSAPI_WindowType to_api(WSWindowType ws_type)
-{
-    switch (ws_type) {
-    case WSWindowType::Normal:
-        return WSAPI_WindowType::Normal;
-    case WSWindowType::Menu:
-        return WSAPI_WindowType::Menu;
-    case WSWindowType::WindowSwitcher:
-        return WSAPI_WindowType::WindowSwitcher;
-    case WSWindowType::Taskbar:
-        return WSAPI_WindowType::Taskbar;
-    case WSWindowType::Tooltip:
-        return WSAPI_WindowType::Tooltip;
-    case WSWindowType::Menubar:
-        return WSAPI_WindowType::Menubar;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -183,101 +136,96 @@ void WSWindow::event(CEvent& event)
     if (is_blocked_by_modal_window())
         return;
 
-    WSAPI_ServerMessage server_message;
-    server_message.window_id = window_id();
-
     if (static_cast<WSEvent&>(event).is_mouse_event())
         return handle_mouse_event(static_cast<const WSMouseEvent&>(event));
 
     switch (event.type()) {
     case WSEvent::WindowEntered:
-        server_message.type = WSAPI_ServerMessage::Type::WindowEntered;
+        m_client->post_message(WindowClient::WindowEntered(m_window_id));
         break;
     case WSEvent::WindowLeft:
-        server_message.type = WSAPI_ServerMessage::Type::WindowLeft;
+        m_client->post_message(WindowClient::WindowLeft(m_window_id));
         break;
     case WSEvent::KeyDown:
-        server_message.type = WSAPI_ServerMessage::Type::KeyDown;
-        server_message.key.character = static_cast<const WSKeyEvent&>(event).character();
-        server_message.key.key = static_cast<const WSKeyEvent&>(event).key();
-        server_message.key.modifiers = static_cast<const WSKeyEvent&>(event).modifiers();
+        m_client->post_message(
+            WindowClient::KeyDown(m_window_id,
+                (u8) static_cast<const WSKeyEvent&>(event).character(),
+                (u32) static_cast<const WSKeyEvent&>(event).key(),
+                static_cast<const WSKeyEvent&>(event).modifiers()));
         break;
     case WSEvent::KeyUp:
-        server_message.type = WSAPI_ServerMessage::Type::KeyUp;
-        server_message.key.character = static_cast<const WSKeyEvent&>(event).character();
-        server_message.key.key = static_cast<const WSKeyEvent&>(event).key();
-        server_message.key.modifiers = static_cast<const WSKeyEvent&>(event).modifiers();
+        m_client->post_message(
+            WindowClient::KeyUp(m_window_id,
+                (u8) static_cast<const WSKeyEvent&>(event).character(),
+                (u32) static_cast<const WSKeyEvent&>(event).key(),
+                static_cast<const WSKeyEvent&>(event).modifiers()));
         break;
     case WSEvent::WindowActivated:
-        server_message.type = WSAPI_ServerMessage::Type::WindowActivated;
+        m_client->post_message(WindowClient::WindowActivated(m_window_id));
         break;
     case WSEvent::WindowDeactivated:
-        server_message.type = WSAPI_ServerMessage::Type::WindowDeactivated;
+        m_client->post_message(WindowClient::WindowDeactivated(m_window_id));
         break;
     case WSEvent::WindowCloseRequest:
-        server_message.type = WSAPI_ServerMessage::Type::WindowCloseRequest;
+        m_client->post_message(WindowClient::WindowCloseRequest(m_window_id));
         break;
     case WSEvent::WindowResized:
-        server_message.type = WSAPI_ServerMessage::Type::WindowResized;
-        server_message.window.old_rect = static_cast<const WSResizeEvent&>(event).old_rect();
-        server_message.window.rect = static_cast<const WSResizeEvent&>(event).rect();
+        m_client->post_message(
+            WindowClient::WindowResized(
+                m_window_id,
+                static_cast<const WSResizeEvent&>(event).old_rect(),
+                static_cast<const WSResizeEvent&>(event).rect()));
         break;
     case WSEvent::WM_WindowRemoved: {
         auto& removed_event = static_cast<const WSWMWindowRemovedEvent&>(event);
-        server_message.type = WSAPI_ServerMessage::Type::WM_WindowRemoved;
-        server_message.wm.client_id = removed_event.client_id();
-        server_message.wm.window_id = removed_event.window_id();
+        m_client->post_message(WindowClient::WM_WindowRemoved(
+            removed_event.client_id(),
+            removed_event.window_id()));
         break;
     }
     case WSEvent::WM_WindowStateChanged: {
         auto& changed_event = static_cast<const WSWMWindowStateChangedEvent&>(event);
-        server_message.type = WSAPI_ServerMessage::Type::WM_WindowStateChanged;
-        server_message.wm.client_id = changed_event.client_id();
-        server_message.wm.window_id = changed_event.window_id();
-        server_message.wm.is_active = changed_event.is_active();
-        server_message.wm.is_minimized = changed_event.is_minimized();
-        server_message.wm.window_type = to_api(changed_event.window_type());
-        ASSERT(changed_event.title().length() < (int)sizeof(server_message.text));
-        memcpy(server_message.text, changed_event.title().characters(), changed_event.title().length());
-        server_message.text_length = changed_event.title().length();
-        server_message.wm.rect = changed_event.rect();
+        m_client->post_message(WindowClient::WM_WindowStateChanged(
+            changed_event.client_id(),
+            changed_event.window_id(),
+            changed_event.is_active(),
+            changed_event.is_minimized(),
+            (i32)(changed_event.window_type()),
+            changed_event.title(),
+            changed_event.rect()));
         break;
     }
 
     case WSEvent::WM_WindowIconBitmapChanged: {
         auto& changed_event = static_cast<const WSWMWindowIconBitmapChangedEvent&>(event);
-        server_message.type = WSAPI_ServerMessage::Type::WM_WindowIconBitmapChanged;
-        server_message.wm.client_id = changed_event.client_id();
-        server_message.wm.window_id = changed_event.window_id();
-        server_message.wm.icon_buffer_id = changed_event.icon_buffer_id();
-        server_message.wm.icon_size = changed_event.icon_size();
-
         // FIXME: Perhaps we should update the bitmap sharing list somewhere else instead?
-        ASSERT(client());
         dbg() << "WindowServer: Sharing icon buffer " << changed_event.icon_buffer_id() << " with PID " << client()->client_pid();
-        if (share_buffer_with(changed_event.icon_buffer_id(), client()->client_pid()) < 0) {
+        if (share_buffer_with(changed_event.icon_buffer_id(), m_client->client_pid()) < 0) {
             ASSERT_NOT_REACHED();
         }
+        m_client->post_message(
+            WindowClient::WM_WindowIconBitmapChanged(
+                changed_event.client_id(),
+                changed_event.window_id(),
+                changed_event.icon_buffer_id(),
+                changed_event.icon_size()));
+
         break;
     }
 
     case WSEvent::WM_WindowRectChanged: {
         auto& changed_event = static_cast<const WSWMWindowRectChangedEvent&>(event);
-        server_message.type = WSAPI_ServerMessage::Type::WM_WindowRectChanged;
-        server_message.wm.client_id = changed_event.client_id();
-        server_message.wm.window_id = changed_event.window_id();
-        server_message.wm.rect = changed_event.rect();
+        m_client->post_message(
+            WindowClient::WM_WindowRectChanged(
+                changed_event.client_id(),
+                changed_event.window_id(),
+                changed_event.rect()));
         break;
     }
 
     default:
         break;
     }
-
-    if (server_message.type == WSAPI_ServerMessage::Type::Invalid)
-        return;
-
-    m_client->post_message(server_message);
 }
 
 void WSWindow::set_global_cursor_tracking_enabled(bool enabled)

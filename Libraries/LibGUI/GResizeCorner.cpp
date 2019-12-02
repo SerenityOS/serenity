@@ -2,7 +2,6 @@
 #include <LibGUI/GResizeCorner.h>
 #include <LibGUI/GWindow.h>
 #include <LibDraw/GraphicsBitmap.h>
-#include <WindowServer/WSAPITypes.h>
 
 GResizeCorner::GResizeCorner(GWidget* parent)
     : GWidget(parent)

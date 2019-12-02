@@ -7,20 +7,20 @@
 #include <LibCore/CObject.h>
 #include <LibCore/CoreIPCServer.h>
 #include <LibDraw/GraphicsBitmap.h>
-#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSEvent.h>
+#include <WindowServer/WindowServerEndpoint.h>
 
 class WSWindow;
 class WSMenu;
 class WSMenuBar;
 
-class WSClientConnection final : public IPC::Server::Connection<WSAPI_ServerMessage, WSAPI_ClientMessage> {
+class WSClientConnection final
+    : public IPC::Server::ConnectionNG<WindowServerEndpoint>
+    , public WindowServerEndpoint {
     C_OBJECT(WSClientConnection)
 public:
     ~WSClientConnection() override;
-    virtual void send_greeting() override;
     virtual void die() override;
-    bool handle_message(const WSAPI_ClientMessage&, const ByteBuffer&& = {}) override;
 
     static WSClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(WSClientConnection&)>);
@@ -48,45 +48,44 @@ public:
 
 private:
     explicit WSClientConnection(CLocalSocket&, int client_id);
-    virtual void event(CEvent&) override;
 
-    void on_request(const WSAPIClientRequest&);
-    void handle_request(const WSAPICreateMenubarRequest&);
-    void handle_request(const WSAPIDestroyMenubarRequest&);
-    void handle_request(const WSAPICreateMenuRequest&);
-    void handle_request(const WSAPIDestroyMenuRequest&);
-    void handle_request(const WSAPISetApplicationMenubarRequest&);
-    void handle_request(const WSAPIAddMenuToMenubarRequest&);
-    void handle_request(const WSAPIAddMenuItemRequest&);
-    void handle_request(const WSAPIUpdateMenuItemRequest&);
-    void handle_request(const WSAPIAddMenuSeparatorRequest&);
-    void handle_request(const WSAPISetWindowTitleRequest&);
-    void handle_request(const WSAPIGetWindowTitleRequest&);
-    void handle_request(const WSAPISetWindowRectRequest&);
-    void handle_request(const WSAPIGetWindowRectRequest&);
-    void handle_request(const WSAPISetWindowIconBitmapRequest&);
-    void handle_request(const WSAPISetClipboardContentsRequest&);
-    void handle_request(const WSAPIGetClipboardContentsRequest&);
-    void handle_request(const WSAPICreateWindowRequest&);
-    void handle_request(const WSAPIDestroyWindowRequest&);
-    void handle_request(const WSAPIInvalidateRectRequest&);
-    void handle_request(const WSAPIDidFinishPaintingNotification&);
-    void handle_request(const WSAPISetWindowBackingStoreRequest&);
-    void handle_request(const WSAPISetGlobalCursorTrackingRequest&);
-    void handle_request(const WSAPISetWindowOpacityRequest&);
-    void handle_request(const WSAPISetWallpaperRequest&);
-    void handle_request(const WSAPIGetWallpaperRequest&);
-    void handle_request(const WSAPISetResolutionRequest&);
-    void handle_request(const WSAPISetWindowOverrideCursorRequest&);
-    void handle_request(const WSWMAPISetActiveWindowRequest&);
-    void handle_request(const WSWMAPISetWindowMinimizedRequest&);
-    void handle_request(const WSWMAPIStartWindowResizeRequest&);
-    void handle_request(const WSWMAPIPopupWindowMenuRequest&);
-    void handle_request(const WSAPIPopupMenuRequest&);
-    void handle_request(const WSAPIDismissMenuRequest&);
-    void handle_request(const WSAPISetWindowHasAlphaChannelRequest&);
-    void handle_request(const WSAPIMoveWindowToFrontRequest&);
-    void handle_request(const WSAPISetFullscreenRequest&);
+    virtual OwnPtr<WindowServer::GreetResponse> handle(const WindowServer::Greet&) override;
+    virtual OwnPtr<WindowServer::CreateMenubarResponse> handle(const WindowServer::CreateMenubar&) override;
+    virtual OwnPtr<WindowServer::DestroyMenubarResponse> handle(const WindowServer::DestroyMenubar&) override;
+    virtual OwnPtr<WindowServer::CreateMenuResponse> handle(const WindowServer::CreateMenu&) override;
+    virtual OwnPtr<WindowServer::DestroyMenuResponse> handle(const WindowServer::DestroyMenu&) override;
+    virtual OwnPtr<WindowServer::AddMenuToMenubarResponse> handle(const WindowServer::AddMenuToMenubar&) override;
+    virtual OwnPtr<WindowServer::SetApplicationMenubarResponse> handle(const WindowServer::SetApplicationMenubar&) override;
+    virtual OwnPtr<WindowServer::AddMenuItemResponse> handle(const WindowServer::AddMenuItem&) override;
+    virtual OwnPtr<WindowServer::AddMenuSeparatorResponse> handle(const WindowServer::AddMenuSeparator&) override;
+    virtual OwnPtr<WindowServer::UpdateMenuItemResponse> handle(const WindowServer::UpdateMenuItem&) override;
+    virtual OwnPtr<WindowServer::CreateWindowResponse> handle(const WindowServer::CreateWindow&) override;
+    virtual OwnPtr<WindowServer::DestroyWindowResponse> handle(const WindowServer::DestroyWindow&) override;
+    virtual OwnPtr<WindowServer::SetWindowTitleResponse> handle(const WindowServer::SetWindowTitle&) override;
+    virtual OwnPtr<WindowServer::GetWindowTitleResponse> handle(const WindowServer::GetWindowTitle&) override;
+    virtual OwnPtr<WindowServer::SetWindowRectResponse> handle(const WindowServer::SetWindowRect&) override;
+    virtual OwnPtr<WindowServer::GetWindowRectResponse> handle(const WindowServer::GetWindowRect&) override;
+    virtual void handle(const WindowServer::InvalidateRect&) override;
+    virtual void handle(const WindowServer::DidFinishPainting&) override;
+    virtual OwnPtr<WindowServer::SetGlobalCursorTrackingResponse> handle(const WindowServer::SetGlobalCursorTracking&) override;
+    virtual OwnPtr<WindowServer::SetWindowOpacityResponse> handle(const WindowServer::SetWindowOpacity&) override;
+    virtual OwnPtr<WindowServer::SetWindowBackingStoreResponse> handle(const WindowServer::SetWindowBackingStore&) override;
+    virtual OwnPtr<WindowServer::GetClipboardContentsResponse> handle(const WindowServer::GetClipboardContents&) override;
+    virtual OwnPtr<WindowServer::SetClipboardContentsResponse> handle(const WindowServer::SetClipboardContents&) override;
+    virtual void handle(const WindowServer::WM_SetActiveWindow&) override;
+    virtual void handle(const WindowServer::WM_SetWindowMinimized&) override;
+    virtual void handle(const WindowServer::WM_StartWindowResize&) override;
+    virtual void handle(const WindowServer::WM_PopupWindowMenu&) override;
+    virtual OwnPtr<WindowServer::SetWindowHasAlphaChannelResponse> handle(const WindowServer::SetWindowHasAlphaChannel&) override;
+    virtual OwnPtr<WindowServer::MoveWindowToFrontResponse> handle(const WindowServer::MoveWindowToFront&) override;
+    virtual OwnPtr<WindowServer::SetFullscreenResponse> handle(const WindowServer::SetFullscreen&) override;
+    virtual void handle(const WindowServer::AsyncSetWallpaper&) override;
+    virtual OwnPtr<WindowServer::GetWallpaperResponse> handle(const WindowServer::GetWallpaper&) override;
+    virtual OwnPtr<WindowServer::SetResolutionResponse> handle(const WindowServer::SetResolution&) override;
+    virtual OwnPtr<WindowServer::SetWindowOverrideCursorResponse> handle(const WindowServer::SetWindowOverrideCursor&) override;
+    virtual OwnPtr<WindowServer::PopupMenuResponse> handle(const WindowServer::PopupMenu&) override;
+    virtual OwnPtr<WindowServer::DismissMenuResponse> handle(const WindowServer::DismissMenu&) override;
+    virtual OwnPtr<WindowServer::SetWindowIconBitmapResponse> handle(const WindowServer::SetWindowIconBitmap&) override;
 
     void post_error(const String&);
 

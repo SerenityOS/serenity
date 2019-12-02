@@ -5,6 +5,8 @@
 #include <ctype.h>
 #include <stdio.h>
 
+//#define GENERATE_DEBUG_CODE
+
 struct Parameter {
     String type;
     String name;
@@ -71,7 +73,7 @@ int main(int argc, char** argv)
 
     auto consume_specific = [&](char ch) {
         if (peek() != ch) {
-            dbg() << "consume_specific: wanted '" << ch << "', but got '" << peek() << "'";
+            dbg() << "consume_specific: wanted '" << ch << "', but got '" << peek() << "' at index " << index;
         }
         ASSERT(peek() == ch);
         ++index;
@@ -197,6 +199,8 @@ int main(int argc, char** argv)
     dbg() << "#pragma once";
     dbg() << "#include <AK/BufferStream.h>";
     dbg() << "#include <AK/OwnPtr.h>";
+    dbg() << "#include <LibDraw/Color.h>";
+    dbg() << "#include <LibDraw/Rect.h>";
     dbg() << "#include <LibIPC/IEndpoint.h>";
     dbg() << "#include <LibIPC/IMessage.h>";
     dbg();
@@ -279,17 +283,66 @@ int main(int argc, char** argv)
 
                 if (parameter.type == "String") {
                     dbg() << "        int " << parameter.name << "_length = 0;";
-                    dbg() << "        char* " << parameter.name << "_buffer = nullptr;";
                     dbg() << "        stream >> " << parameter.name << "_length;";
-                    dbg() << "        auto " << parameter.name << "_impl = StringImpl::create_uninitialized(" << parameter.name << "_length, " << parameter.name << "_buffer);";
-                    dbg() << "        for (int i = 0; i < " << parameter.name << "_length; ++i) {";
-                    dbg() << "            stream >> " << parameter.name << "_buffer[i];";
+                    dbg() << "        if (" << parameter.name << "_length == 0) {";
+                    dbg() << "            " << parameter.name << " = String::empty();";
+                    dbg() << "        } else if (" << parameter.name << "_length == -1) {";
+                    dbg() << "            " << parameter.name << " = String();";
+                    dbg() << "        } else {";
+                    dbg() << "            char* " << parameter.name << "_buffer = nullptr;";
+                    dbg() << "            auto " << parameter.name << "_impl = StringImpl::create_uninitialized(" << parameter.name << "_length, " << parameter.name << "_buffer);";
+                    dbg() << "            for (int i = 0; i < " << parameter.name << "_length; ++i) {";
+                    dbg() << "                stream >> " << parameter.name << "_buffer[i];";
+                    dbg() << "            }";
+                    dbg() << "            " << parameter.name << " = *" << parameter.name << "_impl;";
                     dbg() << "        }";
-                    dbg() << "        " << parameter.name << " = *" << parameter.name << "_impl;";
+                } else if (parameter.type == "Color") {
+                    dbg() << "        u32 " << parameter.name << "_rgba = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_rgba;";
+                    dbg() << "        " << parameter.name << " = Color::from_rgba(" << parameter.name << "_rgba);";
+                } else if (parameter.type == "Size") {
+                    dbg() << "        int " << parameter.name << "_width = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_width;";
+                    dbg() << "        int " << parameter.name << "_height = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_height;";
+                    dbg() << "        " << parameter.name << " = { " << parameter.name << "_width, " << parameter.name << "_height };";
+                } else if (parameter.type == "Point") {
+                    dbg() << "        int " << parameter.name << "_x = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_x;";
+                    dbg() << "        int " << parameter.name << "_y = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_y;";
+                    dbg() << "        " << parameter.name << " = { " << parameter.name << "_x, " << parameter.name << "_y };";
+                } else if (parameter.type == "Rect") {
+                    dbg() << "        int " << parameter.name << "_x = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_x;";
+                    dbg() << "        int " << parameter.name << "_y = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_y;";
+                    dbg() << "        int " << parameter.name << "_width = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_width;";
+                    dbg() << "        int " << parameter.name << "_height = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_height;";
+                    dbg() << "        " << parameter.name << " = { " << parameter.name << "_x, " << parameter.name << "_y, " << parameter.name << "_width, " << parameter.name << "_height };";
+                } else if (parameter.type == "Vector<Rect>") {
+                    dbg() << "        int " << parameter.name << "_size = 0;";
+                    dbg() << "        stream >> " << parameter.name << "_size;";
+                    dbg() << "        for (int i = 0; i < " << parameter.name << "_size; ++i) {";
+                    dbg() << "            int " << parameter.name << "_x = 0;";
+                    dbg() << "            stream >> " << parameter.name << "_x;";
+                    dbg() << "            int " << parameter.name << "_y = 0;";
+                    dbg() << "            stream >> " << parameter.name << "_y;";
+                    dbg() << "            int " << parameter.name << "_width = 0;";
+                    dbg() << "            stream >> " << parameter.name << "_width;";
+                    dbg() << "            int " << parameter.name << "_height = 0;";
+                    dbg() << "            stream >> " << parameter.name << "_height;";
+                    dbg() << "            " << parameter.name << ".empend(" << parameter.name << "_x, " << parameter.name << "_y, " << parameter.name << "_width, " << parameter.name << "_height);";
+                    dbg() << "        }";
                 } else {
                     dbg() << "        stream >> " << parameter.name << ";";
                 }
                 dbg() << "        if (stream.handle_read_failure()) {";
+#ifdef GENERATE_DEBUG_CODE
+                dbg() << "            dbg() << \"Failed to decode " << name << "." << parameter.name << "\";";
+#endif
                 dbg() << "            return nullptr;";
                 dbg() << "        }";
             }
@@ -307,14 +360,39 @@ int main(int argc, char** argv)
             dbg() << "    virtual ByteBuffer encode() const override";
             dbg() << "    {";
             // FIXME: Support longer messages:
-            dbg() << "        auto buffer = ByteBuffer::create_uninitialized(1024);";
+            dbg() << "        auto buffer = ByteBuffer::create_uninitialized(4096);";
             dbg() << "        BufferStream stream(buffer);";
             dbg() << "        stream << endpoint_magic();";
             dbg() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
                 if (parameter.type == "String") {
-                    dbg() << "        stream << m_" << parameter.name << ".length();";
-                    dbg() << "        stream << m_" << parameter.name << ";";
+                    dbg() << "        if (m_" << parameter.name << ".is_null()) {";
+                    dbg() << "            stream << (i32)-1;";
+                    dbg() << "        } else {";
+                    dbg() << "            stream << m_" << parameter.name << ".length();";
+                    dbg() << "            stream << m_" << parameter.name << ";";
+                    dbg() << "        }";
+                } else if (parameter.type == "Color") {
+                    dbg() << "        stream << m_" << parameter.name << ".value();";
+                } else if (parameter.type == "Size") {
+                    dbg() << "        stream << m_" << parameter.name << ".width();";
+                    dbg() << "        stream << m_" << parameter.name << ".height();";
+                } else if (parameter.type == "Point") {
+                    dbg() << "        stream << m_" << parameter.name << ".x();";
+                    dbg() << "        stream << m_" << parameter.name << ".y();";
+                } else if (parameter.type == "Rect") {
+                    dbg() << "        stream << m_" << parameter.name << ".x();";
+                    dbg() << "        stream << m_" << parameter.name << ".y();";
+                    dbg() << "        stream << m_" << parameter.name << ".width();";
+                    dbg() << "        stream << m_" << parameter.name << ".height();";
+                } else if (parameter.type == "Vector<Rect>") {
+                    dbg() << "        stream << m_" << parameter.name << ".size();";
+                    dbg() << "        for (auto& rect : m_" << parameter.name << ") {";
+                    dbg() << "            stream << rect.x();";
+                    dbg() << "            stream << rect.y();";
+                    dbg() << "            stream << rect.width();";
+                    dbg() << "            stream << rect.height();";
+                    dbg() << "        }";
                 } else {
                     dbg() << "        stream << m_" << parameter.name << ";";
                 }
@@ -356,8 +434,12 @@ int main(int argc, char** argv)
         dbg() << "        BufferStream stream(const_cast<ByteBuffer&>(buffer));";
         dbg() << "        i32 message_endpoint_magic = 0;";
         dbg() << "        stream >> message_endpoint_magic;";
-        dbg() << "        if (message_endpoint_magic != " << endpoint.magic << ")";
+        dbg() << "        if (message_endpoint_magic != " << endpoint.magic << ") {";
+#ifdef GENERATE_DEBUG_CODE
+        dbg() << "            dbg() << \"endpoint magic \" << message_endpoint_magic << \" != " << endpoint.magic << "\";";
+#endif
         dbg() << "            return nullptr;";
+        dbg() << "        }";
         dbg() << "        i32 message_id = 0;";
         dbg() << "        stream >> message_id;";
         dbg() << "        switch (message_id) {";
@@ -371,6 +453,9 @@ int main(int argc, char** argv)
                 do_decode_message(message.response_name());
         }
         dbg() << "        default:";
+#ifdef GENERATE_DEBUG_CODE
+        dbg() << "            dbg() << \"Failed to decode " << endpoint.name << ".(\" << message_id << \")\";";
+#endif
         dbg() << "            return nullptr;";
 
         dbg() << "        }";

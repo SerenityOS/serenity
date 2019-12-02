@@ -177,12 +177,8 @@ void DisplayPropertiesWidget::send_settings_to_window_server(int tab_index)
         builder.append(m_selected_wallpaper);
         GDesktop::the().set_wallpaper(builder.to_string());
     } else if (tab_index == TabIndices::Settings) {
-        WSAPI_ClientMessage request;
-        request.type = WSAPI_ClientMessage::Type::SetResolution;
         dbg() << "Attempting to set resolution " << m_selected_resolution;
-        request.wm_conf.resolution = { m_selected_resolution.width(), m_selected_resolution.height() };
-        auto response = GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidSetResolution);
-        ASSERT(response.value == 1);
+        GWindowServerConnection::the().send_sync<WindowServer::SetResolution>(m_selected_resolution);
     } else {
         dbg() << "Invalid tab index " << tab_index;
     }

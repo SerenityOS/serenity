@@ -1,0 +1,68 @@
+endpoint WindowServer = 2
+{
+    Greet(i32 client_pid) => (i32 server_pid, i32 client_id, Rect screen_rect)
+
+    CreateMenubar() => (i32 menubar_id)
+    DestroyMenubar(i32 menubar_id) => ()
+
+    CreateMenu(String menu_title) => (i32 menu_id)
+    DestroyMenu(i32 menu_id) => ()
+
+    AddMenuToMenubar(i32 menubar_id, i32 menu_id) => ()
+    SetApplicationMenubar(i32 menubar_id) => ()
+
+    AddMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, String text, bool enabled, bool checkable, bool checked, String shortcut, i32 icon_buffer_id) => ()
+    AddMenuSeparator(i32 menu_id) => ()
+
+    UpdateMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, String text, bool enabled, bool checkable, bool checked, String shortcut) => ()
+
+    CreateWindow(
+        Rect rect,
+        bool has_alpha_channel,
+        bool modal,
+        bool resizable,
+        bool fullscreen,
+        bool show_titlebar,
+        float opacity,
+        Color background_color,
+        Size base_size,
+        Size size_increment,
+        i32 type,
+        String title) => (i32 window_id)
+
+    DestroyWindow(i32 window_id) => ()
+
+    SetWindowTitle(i32 window_id, String title) => ()
+    GetWindowTitle(i32 window_id) => (String title)
+
+    SetWindowRect(i32 window_id, Rect rect) => ()
+    GetWindowRect(i32 window_id) => (Rect rect)
+
+    InvalidateRect(i32 window_id, Vector<Rect> rects) =|
+    DidFinishPainting(i32 window_id, Vector<Rect> rects) =|
+
+    SetGlobalCursorTracking(i32 window_id, bool enabled) => ()
+    SetWindowOpacity(i32 window_id, float opacity) => ()
+
+    SetWindowBackingStore(i32 window_id, i32 bpp, i32 pitch, i32 shared_buffer_id, bool has_alpha_channel, Size size, bool flush_immediately) => ()
+    GetClipboardContents() => (i32 shared_buffer_id, i32 content_size, String content_type)
+    SetClipboardContents(i32 shared_buffer_id, i32 content_size, String content_type) => ()
+
+    WM_SetActiveWindow(i32 client_id, i32 window_id) =|
+    WM_SetWindowMinimized(i32 client_id, i32 window_id, bool minimized) =|
+    WM_StartWindowResize(i32 client_id, i32 window_id) =|
+    WM_PopupWindowMenu(i32 client_id, i32 window_id, Point screen_position) =|
+
+    SetWindowHasAlphaChannel(i32 window_id, bool has_alpha_channel) => ()
+    MoveWindowToFront(i32 window_id) => ()
+    SetFullscreen(i32 window_id, bool fullscreen) => ()
+    PopupMenu(i32 menu_id, Point screen_position) => ()
+    DismissMenu(i32 menu_id) => ()
+
+    AsyncSetWallpaper(String path) =|
+    SetResolution(Size resolution) => ()
+    SetWindowIconBitmap(i32 window_id, i32 icon_buffer_id, Size icon_size) => ()
+
+    GetWallpaper() => (String path)
+    SetWindowOverrideCursor(i32 window_id, i32 cursor_type) => ()
+}

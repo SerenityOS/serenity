@@ -6,7 +6,6 @@
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GFrame.h>
 #include <LibGUI/GWindow.h>
-#include <WindowServer/WSAPITypes.h>
 #include <stdio.h>
 
 //#define EVENT_DEBUG

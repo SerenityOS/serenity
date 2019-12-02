@@ -18,7 +18,6 @@
 #include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WSWindowType.h>
 
-class WSAPIClientRequest;
 class WSScreen;
 class WSMenuBar;
 class WSMouseEvent;
@@ -158,7 +157,6 @@ private:
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& hovered_window);
     bool process_ongoing_window_drag(WSMouseEvent&, WSWindow*& hovered_window);
     void start_window_drag(WSWindow&, const WSMouseEvent&);
-    void handle_client_request(const WSAPIClientRequest&);
     void set_hovered_window(WSWindow*);
     template<typename Callback>
     IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback, bool ignore_highlight = false);
