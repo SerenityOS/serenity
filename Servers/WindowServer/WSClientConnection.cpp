@@ -96,7 +96,6 @@ OwnPtr<WindowServer::CreateMenuResponse> WSClientConnection::handle(const Window
     int menu_id = m_next_menu_id++;
     auto menu = WSMenu::construct(this, menu_id, message.menu_title());
     m_menus.set(menu_id, move(menu));
-    dbg() << "Created menu ID " << menu_id << " (" << message.menu_title() << ")";
     return make<WindowServer::CreateMenuResponse>(menu_id);
 }
 
