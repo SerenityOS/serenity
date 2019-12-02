@@ -7,8 +7,6 @@
 #include <LibDraw/Size.h>
 #include <LibDraw/TextAlignment.h>
 
-struct WSAPI_Rect;
-
 class Rect {
 public:
     Rect() {}
@@ -27,8 +25,6 @@ public:
         , m_size(other.m_size)
     {
     }
-
-    Rect(const WSAPI_Rect&);
 
     bool is_null() const
     {
@@ -226,8 +222,6 @@ public:
     Size size() const { return m_size; }
 
     Vector<Rect, 4> shatter(const Rect& hammer) const;
-
-    operator WSAPI_Rect() const;
 
     bool operator==(const Rect& other) const
     {
