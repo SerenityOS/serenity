@@ -69,6 +69,7 @@ public:
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     void set_selection(const GTextRange&);
+    void clear_selection();
     bool can_undo() const { return document().can_undo(); }
     bool can_redo() const { return document().can_redo(); }
 
