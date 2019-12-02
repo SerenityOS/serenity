@@ -5,7 +5,6 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWindow.h>
 #include <LibGUI/GWindowServerConnection.h>
-#include <WindowServer/WSAPITypes.h>
 
 static GApplication* s_the;
 

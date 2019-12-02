@@ -3,7 +3,6 @@
 #include <Kernel/MousePacket.h>
 #include <LibCore/CLocalSocket.h>
 #include <LibCore/CObject.h>
-#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>
@@ -38,7 +37,7 @@ WSEventLoop::WSEventLoop()
         }
         static int s_next_client_id = 0;
         int client_id = ++s_next_client_id;
-        IPC::Server::new_connection_for_client<WSClientConnection>(*client_socket, client_id);
+        IPC::Server::new_connection_ng_for_client<WSClientConnection>(*client_socket, client_id);
     };
 
     ASSERT(m_keyboard_fd >= 0);

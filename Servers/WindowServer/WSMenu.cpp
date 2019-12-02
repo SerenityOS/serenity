@@ -11,8 +11,8 @@
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/Painter.h>
 #include <LibDraw/StylePainter.h>
-#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
+#include <WindowServer/WindowClientEndpoint.h>
 
 WSMenu::WSMenu(WSClientConnection* client, int menu_id, const String& name)
     : CObject(client)
@@ -247,13 +247,8 @@ void WSMenu::did_activate(WSMenuItem& item)
 
     WSWindowManager::the().menu_manager().close_bar();
 
-    WSAPI_ServerMessage message;
-    message.type = WSAPI_ServerMessage::Type::MenuItemActivated;
-    message.menu.menu_id = m_menu_id;
-    message.menu.identifier = item.identifier();
-
     if (m_client)
-        m_client->post_message(message);
+        m_client->post_message(WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
 }
 
 WSMenuItem* WSMenu::item_with_identifier(unsigned identifer)

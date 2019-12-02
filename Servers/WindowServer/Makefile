@@ -25,6 +25,14 @@ DEFINES += -DUSERLAND
 
 all: $(APP)
 
+*.cpp: WindowServerEndpoint.h WindowClientEndpoint.h
+
+WindowServerEndpoint.h: WindowServer.ipc
+	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
+
+WindowClientEndpoint.h: WindowClient.ipc
+	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
+
 $(APP): $(OBJS)
 	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -ldraw -lcore -lthread -lpthread -laudio -lipc
 
@@ -34,5 +42,5 @@ $(APP): $(OBJS)
 -include $(OBJS:%.o=%.d)
 
 clean:
-	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d
+	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d WindowServerEndpoint.h WindowClientEndpoint.h
 

@@ -1,7 +1,6 @@
 #include <LibC/SharedBuffer.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <SharedBuffer.h>
-#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSClipboard.h>
 #include <WindowServer/WSCompositor.h>
@@ -13,6 +12,7 @@
 #include <WindowServer/WSWindow.h>
 #include <WindowServer/WSWindowManager.h>
 #include <WindowServer/WSWindowSwitcher.h>
+#include <WindowServer/WindowClientEndpoint.h>
 #include <errno.h>
 #include <stdio.h>
 #include <sys/ioctl.h>
@@ -42,7 +42,7 @@ WSClientConnection* WSClientConnection::from_client_id(int client_id)
 }
 
 WSClientConnection::WSClientConnection(CLocalSocket& client_socket, int client_id)
-    : Connection(client_socket, client_id)
+    : ConnectionNG(*this, client_socket, client_id)
 {
     if (!s_connections)
         s_connections = new HashMap<int, NonnullRefPtr<WSClientConnection>>;
@@ -54,16 +54,6 @@ WSClientConnection::~WSClientConnection()
     auto windows = move(m_windows);
 }
 
-void WSClientConnection::send_greeting()
-{
-    WSAPI_ServerMessage message;
-    message.type = WSAPI_ServerMessage::Type::Greeting;
-    message.greeting.server_pid = getpid();
-    message.greeting.your_client_id = client_id();
-    message.greeting.screen_rect = WSScreen::the().rect();
-    post_message(message);
-}
-
 void WSClientConnection::die()
 {
     s_connections->remove(client_id());
@@ -72,642 +62,327 @@ void WSClientConnection::die()
 void WSClientConnection::post_error(const String& error_message)
 {
     dbgprintf("WSClientConnection::post_error: client_id=%d: %s\n", client_id(), error_message.characters());
-    WSAPI_ServerMessage message;
-    message.type = WSAPI_ServerMessage::Type::Error;
-    ASSERT(error_message.length() < (ssize_t)sizeof(message.text));
-    strcpy(message.text, error_message.characters());
-    message.text_length = error_message.length();
-    post_message(message);
+    did_misbehave();
 }
 
 void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
 {
-    WSAPI_ServerMessage message;
-    message.type = WSAPI_ServerMessage::Type::ScreenRectChanged;
-    message.screen.rect = rect;
-    post_message(message);
+    post_message(WindowClient::ScreenRectChanged(rect));
 }
 
 void WSClientConnection::notify_about_clipboard_contents_changed()
 {
-    auto& clipboard = WSClipboard::the();
-    WSAPI_ServerMessage message;
-    message.type = WSAPI_ServerMessage::Type::ClipboardContentsChanged;
-    message.clipboard.shared_buffer_id = -1;
-    message.clipboard.contents_size = -1;
-    ASSERT(clipboard.data_type().length() < (ssize_t)sizeof(message.text));
-    strcpy(message.text, clipboard.data_type().characters());
-    message.text_length = clipboard.data_type().length();
-    post_message(message);
+    post_message(WindowClient::ClipboardContentsChanged(WSClipboard::the().data_type()));
 }
 
-void WSClientConnection::event(CEvent& event)
-{
-    if (static_cast<WSEvent&>(event).is_client_request()) {
-        on_request(static_cast<const WSAPIClientRequest&>(event));
-        return;
-    }
-
-    Connection::event(event);
-}
-
-static Vector<Rect, 32> get_rects(const WSAPI_ClientMessage& message, const ByteBuffer& extra_data)
-{
-    Vector<Rect, 32> rects;
-    if (message.rect_count > (int)(WSAPI_ClientMessage::max_inline_rect_count + extra_data.size() / sizeof(WSAPI_Rect))) {
-        return {};
-    }
-    for (int i = 0; i < min(WSAPI_ClientMessage::max_inline_rect_count, message.rect_count); ++i)
-        rects.append(message.rects[i]);
-    if (!extra_data.is_empty()) {
-        auto* extra_rects = reinterpret_cast<const WSAPI_Rect*>(extra_data.data());
-        for (int i = 0; i < (int)(extra_data.size() / sizeof(WSAPI_Rect)); ++i)
-            rects.append(extra_rects[i]);
-    }
-    return rects;
-}
-
-bool WSClientConnection::handle_message(const WSAPI_ClientMessage& message, const ByteBuffer&& extra_data)
-{
-    switch (message.type) {
-    case WSAPI_ClientMessage::Type::Greeting:
-        set_client_pid(message.greeting.client_pid);
-        break;
-    case WSAPI_ClientMessage::Type::CreateMenubar:
-        CEventLoop::current().post_event(*this, make<WSAPICreateMenubarRequest>(client_id()));
-        break;
-    case WSAPI_ClientMessage::Type::DestroyMenubar:
-        CEventLoop::current().post_event(*this, make<WSAPIDestroyMenubarRequest>(client_id(), message.menu.menubar_id));
-        break;
-    case WSAPI_ClientMessage::Type::SetApplicationMenubar:
-        CEventLoop::current().post_event(*this, make<WSAPISetApplicationMenubarRequest>(client_id(), message.menu.menubar_id));
-        break;
-    case WSAPI_ClientMessage::Type::AddMenuToMenubar:
-        CEventLoop::current().post_event(*this, make<WSAPIAddMenuToMenubarRequest>(client_id(), message.menu.menubar_id, message.menu.menu_id));
-        break;
-    case WSAPI_ClientMessage::Type::CreateMenu:
-        if (message.text_length > (int)sizeof(message.text)) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPICreateMenuRequest>(client_id(), String(message.text, message.text_length)));
-        break;
-    case WSAPI_ClientMessage::Type::PopupMenu:
-        CEventLoop::current().post_event(*this, make<WSAPIPopupMenuRequest>(client_id(), message.menu.menu_id, message.menu.position));
-        break;
-    case WSAPI_ClientMessage::Type::DismissMenu:
-        CEventLoop::current().post_event(*this, make<WSAPIDismissMenuRequest>(client_id(), message.menu.menu_id));
-        break;
-    case WSAPI_ClientMessage::Type::SetWindowIconBitmap:
-        CEventLoop::current().post_event(*this, make<WSAPISetWindowIconBitmapRequest>(client_id(), message.window_id, message.window.icon_buffer_id, message.window.icon_size));
-        break;
-    case WSAPI_ClientMessage::Type::DestroyMenu:
-        CEventLoop::current().post_event(*this, make<WSAPIDestroyMenuRequest>(client_id(), message.menu.menu_id));
-        break;
-    case WSAPI_ClientMessage::Type::AddMenuItem:
-        if (message.text_length > (int)sizeof(message.text)) {
-            did_misbehave();
-            return false;
-        }
-        if (message.menu.shortcut_text_length > (int)sizeof(message.menu.shortcut_text)) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPIAddMenuItemRequest>(client_id(), message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled, message.menu.checkable, message.menu.checked, message.menu.icon_buffer_id, message.menu.submenu_id));
-        break;
-    case WSAPI_ClientMessage::Type::UpdateMenuItem:
-        if (message.text_length > (int)sizeof(message.text)) {
-            did_misbehave();
-            return false;
-        }
-        if (message.menu.shortcut_text_length > (int)sizeof(message.menu.shortcut_text)) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPIUpdateMenuItemRequest>(client_id(), message.menu.menu_id, message.menu.identifier, String(message.text, message.text_length), String(message.menu.shortcut_text, message.menu.shortcut_text_length), message.menu.enabled, message.menu.checkable, message.menu.checked));
-        break;
-    case WSAPI_ClientMessage::Type::AddMenuSeparator:
-        CEventLoop::current().post_event(*this, make<WSAPIAddMenuSeparatorRequest>(client_id(), message.menu.menu_id));
-        break;
-    case WSAPI_ClientMessage::Type::CreateWindow: {
-        if (message.text_length > (int)sizeof(message.text)) {
-            did_misbehave();
-            return false;
-        }
-
-        auto ws_window_type = WSWindowType::Invalid;
-        switch (message.window.type) {
-        case WSAPI_WindowType::Normal:
-            ws_window_type = WSWindowType::Normal;
-            break;
-        case WSAPI_WindowType::Menu:
-            ws_window_type = WSWindowType::Menu;
-            break;
-        case WSAPI_WindowType::WindowSwitcher:
-            ws_window_type = WSWindowType::WindowSwitcher;
-            break;
-        case WSAPI_WindowType::Taskbar:
-            ws_window_type = WSWindowType::Taskbar;
-            break;
-        case WSAPI_WindowType::Tooltip:
-            ws_window_type = WSWindowType::Tooltip;
-            break;
-        case WSAPI_WindowType::Menubar:
-            ws_window_type = WSWindowType::Menubar;
-            break;
-        case WSAPI_WindowType::Invalid:
-        default:
-            dbgprintf("Unknown WSAPI_WindowType: %d\n", message.window.type);
-            did_misbehave();
-            return false;
-        }
-
-        CEventLoop::current().post_event(*this,
-            make<WSAPICreateWindowRequest>(client_id(),
-                message.window.rect,
-                String(message.text, message.text_length),
-                message.window.has_alpha_channel,
-                message.window.modal,
-                message.window.resizable,
-                message.window.fullscreen,
-                message.window.show_titlebar,
-                message.window.opacity,
-                message.window.base_size,
-                message.window.size_increment,
-                ws_window_type,
-                Color::from_rgba(message.window.background_color)));
-        break;
-    }
-    case WSAPI_ClientMessage::Type::DestroyWindow:
-        CEventLoop::current().post_event(*this, make<WSAPIDestroyWindowRequest>(client_id(), message.window_id));
-        break;
-    case WSAPI_ClientMessage::Type::SetWindowTitle:
-        if (message.text_length > (int)sizeof(message.text)) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPISetWindowTitleRequest>(client_id(), message.window_id, String(message.text, message.text_length)));
-        break;
-    case WSAPI_ClientMessage::Type::GetWindowTitle:
-        CEventLoop::current().post_event(*this, make<WSAPIGetWindowTitleRequest>(client_id(), message.window_id));
-        break;
-    case WSAPI_ClientMessage::Type::SetWindowRect:
-        CEventLoop::current().post_event(*this, make<WSAPISetWindowRectRequest>(client_id(), message.window_id, message.window.rect));
-        break;
-    case WSAPI_ClientMessage::Type::GetWindowRect:
-        CEventLoop::current().post_event(*this, make<WSAPIGetWindowRectRequest>(client_id(), message.window_id));
-        break;
-    case WSAPI_ClientMessage::Type::SetClipboardContents:
-        if (message.text_length > (int)sizeof(message.text)) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPISetClipboardContentsRequest>(client_id(), message.clipboard.shared_buffer_id, message.clipboard.contents_size, String(message.text, message.text_length)));
-        break;
-    case WSAPI_ClientMessage::Type::GetClipboardContents:
-        CEventLoop::current().post_event(*this, make<WSAPIGetClipboardContentsRequest>(client_id()));
-        break;
-    case WSAPI_ClientMessage::Type::InvalidateRect: {
-        auto rects = get_rects(message, extra_data);
-        if (rects.is_empty()) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPIInvalidateRectRequest>(client_id(), message.window_id, rects));
-        break;
-    }
-    case WSAPI_ClientMessage::Type::DidFinishPainting: {
-        auto rects = get_rects(message, extra_data);
-        if (rects.is_empty()) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPIDidFinishPaintingNotification>(client_id(), message.window_id, rects));
-        break;
-    }
-    case WSAPI_ClientMessage::Type::SetWindowBackingStore:
-        CEventLoop::current().post_event(*this, make<WSAPISetWindowBackingStoreRequest>(client_id(), message.window_id, message.backing.shared_buffer_id, message.backing.size, message.backing.bpp, message.backing.pitch, message.backing.has_alpha_channel, message.backing.flush_immediately));
-        break;
-    case WSAPI_ClientMessage::Type::SetGlobalCursorTracking:
-        CEventLoop::current().post_event(*this, make<WSAPISetGlobalCursorTrackingRequest>(client_id(), message.window_id, message.value));
-        break;
-    case WSAPI_ClientMessage::Type::SetWallpaper:
-        if (message.text_length > (int)sizeof(message.text)) {
-            did_misbehave();
-            return false;
-        }
-        CEventLoop::current().post_event(*this, make<WSAPISetWallpaperRequest>(client_id(), String(message.text, message.text_length)));
-        break;
-    case WSAPI_ClientMessage::Type::GetWallpaper:
-        CEventLoop::current().post_event(*this, make<WSAPIGetWallpaperRequest>(client_id()));
-        break;
-    case WSAPI_ClientMessage::Type::SetResolution:
-        CEventLoop::current().post_event(*this, make<WSAPISetResolutionRequest>(client_id(), message.wm_conf.resolution.width, message.wm_conf.resolution.height));
-        break;
-    case WSAPI_ClientMessage::Type::SetWindowOverrideCursor:
-        CEventLoop::current().post_event(*this, make<WSAPISetWindowOverrideCursorRequest>(client_id(), message.window_id, (WSStandardCursor)message.cursor.cursor));
-        break;
-    case WSAPI_ClientMessage::SetWindowHasAlphaChannel:
-        CEventLoop::current().post_event(*this, make<WSAPISetWindowHasAlphaChannelRequest>(client_id(), message.window_id, message.value));
-        break;
-    case WSAPI_ClientMessage::Type::WM_SetActiveWindow:
-        CEventLoop::current().post_event(*this, make<WSWMAPISetActiveWindowRequest>(client_id(), message.wm.client_id, message.wm.window_id));
-        break;
-    case WSAPI_ClientMessage::Type::WM_SetWindowMinimized:
-        CEventLoop::current().post_event(*this, make<WSWMAPISetWindowMinimizedRequest>(client_id(), message.wm.client_id, message.wm.window_id, message.wm.minimized));
-        break;
-    case WSAPI_ClientMessage::Type::WM_StartWindowResize:
-        CEventLoop::current().post_event(*this, make<WSWMAPIStartWindowResizeRequest>(client_id(), message.wm.client_id, message.wm.window_id));
-        break;
-    case WSAPI_ClientMessage::Type::WM_PopupWindowMenu:
-        CEventLoop::current().post_event(*this, make<WSWMAPIPopupWindowMenuRequest>(client_id(), message.wm.client_id, message.wm.window_id, message.wm.position));
-        break;
-    case WSAPI_ClientMessage::Type::MoveWindowToFront:
-        CEventLoop::current().post_event(*this, make<WSAPIMoveWindowToFrontRequest>(client_id(), message.window_id));
-        break;
-    case WSAPI_ClientMessage::Type::SetFullscreen:
-        CEventLoop::current().post_event(*this, make<WSAPISetFullscreenRequest>(client_id(), message.window_id, message.value));
-        break;
-    default:
-        break;
-    }
-    return true;
-}
-
-void WSClientConnection::handle_request(const WSAPICreateMenubarRequest&)
+OwnPtr<WindowServer::CreateMenubarResponse> WSClientConnection::handle(const WindowServer::CreateMenubar&)
 {
     int menubar_id = m_next_menubar_id++;
     auto menubar = make<WSMenuBar>(*this, menubar_id);
     m_menubars.set(menubar_id, move(menubar));
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidCreateMenubar;
-    response.menu.menubar_id = menubar_id;
-    post_message(response);
+    return make<WindowServer::CreateMenubarResponse>(menubar_id);
 }
 
-void WSClientConnection::handle_request(const WSAPIDestroyMenubarRequest& request)
+OwnPtr<WindowServer::DestroyMenubarResponse> WSClientConnection::handle(const WindowServer::DestroyMenubar& message)
 {
-    int menubar_id = request.menubar_id();
+    int menubar_id = message.menubar_id();
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
         post_error("WSAPIDestroyMenubarRequest: Bad menubar ID");
-        return;
+        return make<WindowServer::DestroyMenubarResponse>();
     }
     auto& menubar = *(*it).value;
     WSWindowManager::the().close_menubar(menubar);
     m_menubars.remove(it);
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidDestroyMenubar;
-    response.menu.menubar_id = menubar_id;
-    post_message(response);
+    return make<WindowServer::DestroyMenubarResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPICreateMenuRequest& request)
+OwnPtr<WindowServer::CreateMenuResponse> WSClientConnection::handle(const WindowServer::CreateMenu& message)
 {
     int menu_id = m_next_menu_id++;
-    auto menu = WSMenu::construct(this, menu_id, request.text());
+    auto menu = WSMenu::construct(this, menu_id, message.menu_title());
     m_menus.set(menu_id, move(menu));
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidCreateMenu;
-    response.menu.menu_id = menu_id;
-    post_message(response);
+    dbg() << "Created menu ID " << menu_id << " (" << message.menu_title() << ")";
+    return make<WindowServer::CreateMenuResponse>(menu_id);
 }
 
-void WSClientConnection::handle_request(const WSAPIDestroyMenuRequest& request)
+OwnPtr<WindowServer::DestroyMenuResponse> WSClientConnection::handle(const WindowServer::DestroyMenu& message)
 {
-    int menu_id = static_cast<const WSAPIDestroyMenuRequest&>(request).menu_id();
+    int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         post_error("WSAPIDestroyMenuRequest: Bad menu ID");
-        return;
+        return make<WindowServer::DestroyMenuResponse>();
     }
     auto& menu = *(*it).value;
     menu.close();
     m_menus.remove(it);
     remove_child(menu);
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidDestroyMenu;
-    response.menu.menu_id = menu_id;
-    post_message(response);
+    return make<WindowServer::DestroyMenuResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetApplicationMenubarRequest& request)
+OwnPtr<WindowServer::SetApplicationMenubarResponse> WSClientConnection::handle(const WindowServer::SetApplicationMenubar& message)
 {
-    int menubar_id = request.menubar_id();
+    int menubar_id = message.menubar_id();
     auto it = m_menubars.find(menubar_id);
     if (it == m_menubars.end()) {
         post_error("WSAPISetApplicationMenubarRequest: Bad menubar ID");
-        return;
+        return make<WindowServer::SetApplicationMenubarResponse>();
     }
     auto& menubar = *(*it).value;
     m_app_menubar = menubar.make_weak_ptr();
     WSWindowManager::the().notify_client_changed_app_menubar(*this);
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidSetApplicationMenubar;
-    response.menu.menubar_id = menubar_id;
-    post_message(response);
+    return make<WindowServer::SetApplicationMenubarResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIAddMenuToMenubarRequest& request)
+OwnPtr<WindowServer::AddMenuToMenubarResponse> WSClientConnection::handle(const WindowServer::AddMenuToMenubar& message)
 {
-    int menubar_id = request.menubar_id();
-    int menu_id = request.menu_id();
+    int menubar_id = message.menubar_id();
+    int menu_id = message.menu_id();
     auto it = m_menubars.find(menubar_id);
     auto jt = m_menus.find(menu_id);
     if (it == m_menubars.end()) {
         post_error("WSAPIAddMenuToMenubarRequest: Bad menubar ID");
-        return;
+        return make<WindowServer::AddMenuToMenubarResponse>();
     }
     if (jt == m_menus.end()) {
         post_error("WSAPIAddMenuToMenubarRequest: Bad menu ID");
-        return;
+        return make<WindowServer::AddMenuToMenubarResponse>();
     }
     auto& menubar = *(*it).value;
     auto& menu = *(*jt).value;
     menubar.add_menu(menu);
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidAddMenuToMenubar;
-    response.menu.menubar_id = menubar_id;
-    response.menu.menu_id = menu_id;
-    post_message(response);
+    return make<WindowServer::AddMenuToMenubarResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIAddMenuItemRequest& request)
+OwnPtr<WindowServer::AddMenuItemResponse> WSClientConnection::handle(const WindowServer::AddMenuItem& message)
 {
-    int menu_id = request.menu_id();
-    unsigned identifier = request.identifier();
+    int menu_id = message.menu_id();
+    unsigned identifier = message.identifier();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
-        post_error("WSAPIAddMenuItemRequest: Bad menu ID");
-        return;
+        dbg() << "WSAPIAddMenuItemRequest: Bad menu ID: " << menu_id;
+        return make<WindowServer::AddMenuItemResponse>();
     }
     auto& menu = *(*it).value;
-    auto menu_item = make<WSMenuItem>(menu, identifier, request.text(), request.shortcut_text(), request.is_enabled(), request.is_checkable(), request.is_checked());
-    if (request.icon_buffer_id() != -1) {
-        auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(request.icon_buffer_id());
+    auto menu_item = make<WSMenuItem>(menu, identifier, message.text(), message.shortcut(), message.enabled(), message.checkable(), message.checked());
+    if (message.icon_buffer_id() != -1) {
+        auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(message.icon_buffer_id());
         if (!icon_buffer) {
             did_misbehave();
-            return;
+            return make<WindowServer::AddMenuItemResponse>();
         }
         // FIXME: Verify that the icon buffer can accomodate a 16x16 bitmap view.
         auto shared_icon = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, icon_buffer.release_nonnull(), { 16, 16 });
         menu_item->set_icon(shared_icon);
     }
-    menu_item->set_submenu_id(request.submenu_id());
+    menu_item->set_submenu_id(message.submenu_id());
     menu.add_item(move(menu_item));
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidAddMenuItem;
-    response.menu.menu_id = menu_id;
-    response.menu.identifier = identifier;
-    post_message(response);
+    return make<WindowServer::AddMenuItemResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIPopupMenuRequest& request)
+OwnPtr<WindowServer::PopupMenuResponse> WSClientConnection::handle(const WindowServer::PopupMenu& message)
 {
-    int menu_id = request.menu_id();
-    auto position = request.position();
+    int menu_id = message.menu_id();
+    auto position = message.screen_position();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         post_error("WSAPIPopupMenuRequest: Bad menu ID");
-        return;
+        return make<WindowServer::PopupMenuResponse>();
     }
     auto& menu = *(*it).value;
     menu.popup(position);
+    return make<WindowServer::PopupMenuResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIDismissMenuRequest& request)
+OwnPtr<WindowServer::DismissMenuResponse> WSClientConnection::handle(const WindowServer::DismissMenu& message)
 {
-    int menu_id = request.menu_id();
+    int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         post_error("WSAPIDismissMenuRequest: Bad menu ID");
-        return;
+        return make<WindowServer::DismissMenuResponse>();
     }
     auto& menu = *(*it).value;
     menu.close();
+    return make<WindowServer::DismissMenuResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIUpdateMenuItemRequest& request)
+OwnPtr<WindowServer::UpdateMenuItemResponse> WSClientConnection::handle(const WindowServer::UpdateMenuItem& message)
 {
-    int menu_id = request.menu_id();
-    unsigned identifier = request.identifier();
+    int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         post_error("WSAPIUpdateMenuItemRequest: Bad menu ID");
-        return;
+        return make<WindowServer::UpdateMenuItemResponse>();
     }
     auto& menu = *(*it).value;
-    auto* menu_item = menu.item_with_identifier(request.identifier());
+    auto* menu_item = menu.item_with_identifier(message.identifier());
     if (!menu_item) {
         post_error("WSAPIUpdateMenuItemRequest: Bad menu item identifier");
-        return;
+        return make<WindowServer::UpdateMenuItemResponse>();
     }
-    menu_item->set_text(request.text());
-    menu_item->set_shortcut_text(request.shortcut_text());
-    menu_item->set_enabled(request.is_enabled());
-    menu_item->set_checkable(request.is_checkable());
-    if (request.is_checkable())
-        menu_item->set_checked(request.is_checked());
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidUpdateMenuItem;
-    response.menu.menu_id = menu_id;
-    response.menu.identifier = identifier;
-    post_message(response);
+    menu_item->set_text(message.text());
+    menu_item->set_shortcut_text(message.shortcut());
+    menu_item->set_enabled(message.enabled());
+    menu_item->set_checkable(message.checkable());
+    if (message.checkable())
+        menu_item->set_checked(message.checked());
+    return make<WindowServer::UpdateMenuItemResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIAddMenuSeparatorRequest& request)
+OwnPtr<WindowServer::AddMenuSeparatorResponse> WSClientConnection::handle(const WindowServer::AddMenuSeparator& message)
 {
-    int menu_id = request.menu_id();
+    int menu_id = message.menu_id();
     auto it = m_menus.find(menu_id);
     if (it == m_menus.end()) {
         post_error("WSAPIAddMenuSeparatorRequest: Bad menu ID");
-        return;
+        return make<WindowServer::AddMenuSeparatorResponse>();
     }
     auto& menu = *(*it).value;
     menu.add_item(make<WSMenuItem>(menu, WSMenuItem::Separator));
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidAddMenuSeparator;
-    response.menu.menu_id = menu_id;
-    post_message(response);
+    return make<WindowServer::AddMenuSeparatorResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIMoveWindowToFrontRequest& request)
+OwnPtr<WindowServer::MoveWindowToFrontResponse> WSClientConnection::handle(const WindowServer::MoveWindowToFront& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPIMoveWindowToFrontRequest: Bad window ID");
-        return;
+        return make<WindowServer::MoveWindowToFrontResponse>();
     }
-    auto& window = *(*it).value;
-    WSWindowManager::the().move_to_front_and_make_active(window);
+    WSWindowManager::the().move_to_front_and_make_active(*(*it).value);
+    return make<WindowServer::MoveWindowToFrontResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetFullscreenRequest& request)
+OwnPtr<WindowServer::SetFullscreenResponse> WSClientConnection::handle(const WindowServer::SetFullscreen& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPISetFullscreenRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetFullscreenResponse>();
     }
-    auto& window = *(*it).value;
-    window.set_fullscreen(request.fullscreen());
-
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidSetFullscreen;
-    response.window_id = window_id;
-    post_message(response);
+    it->value->set_fullscreen(message.fullscreen());
+    return make<WindowServer::SetFullscreenResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetWindowOpacityRequest& request)
+OwnPtr<WindowServer::SetWindowOpacityResponse> WSClientConnection::handle(const WindowServer::SetWindowOpacity& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPISetWindowOpacityRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetWindowOpacityResponse>();
     }
-    auto& window = *(*it).value;
-    window.set_opacity(request.opacity());
+    it->value->set_opacity(message.opacity());
+    return make<WindowServer::SetWindowOpacityResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetWallpaperRequest& request)
+void WSClientConnection::handle(const WindowServer::AsyncSetWallpaper& message)
 {
-    WSCompositor::the().set_wallpaper(request.wallpaper(), [&](bool success) {
-        WSAPI_ServerMessage response;
-        response.type = WSAPI_ServerMessage::Type::DidSetWallpaper;
-        response.value = success;
-        post_message(response);
+    WSCompositor::the().set_wallpaper(message.path(), [&](bool success) {
+        post_message(WindowClient::AsyncSetWallpaperFinished(success));
     });
 }
 
-void WSClientConnection::handle_request(const WSAPIGetWallpaperRequest&)
+OwnPtr<WindowServer::GetWallpaperResponse> WSClientConnection::handle(const WindowServer::GetWallpaper&)
 {
-    auto path = WSCompositor::the().wallpaper_path();
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidGetWallpaper;
-    ASSERT(path.length() < (int)sizeof(response.text));
-    memcpy(response.text, path.characters(), path.length() + 1);
-    response.text_length = path.length();
-    post_message(response);
+    return make<WindowServer::GetWallpaperResponse>(WSCompositor::the().wallpaper_path());
 }
 
-void WSClientConnection::handle_request(const WSAPISetResolutionRequest& request)
+OwnPtr<WindowServer::SetResolutionResponse> WSClientConnection::handle(const WindowServer::SetResolution& message)
 {
-    WSWindowManager::the().set_resolution(request.resolution().width(), request.resolution().height());
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidSetResolution;
-    response.value = true;
-    post_message(response);
+    WSWindowManager::the().set_resolution(message.resolution().width(), message.resolution().height());
+    return make<WindowServer::SetResolutionResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetWindowTitleRequest& request)
+OwnPtr<WindowServer::SetWindowTitleResponse> WSClientConnection::handle(const WindowServer::SetWindowTitle& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPISetWindowTitleRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetWindowTitleResponse>();
     }
-    auto& window = *(*it).value;
-    window.set_title(request.title());
+    it->value->set_title(message.title());
+    return make<WindowServer::SetWindowTitleResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIGetWindowTitleRequest& request)
+OwnPtr<WindowServer::GetWindowTitleResponse> WSClientConnection::handle(const WindowServer::GetWindowTitle& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPIGetWindowTitleRequest: Bad window ID");
-        return;
+        return make<WindowServer::GetWindowTitleResponse>("");
     }
-    auto& window = *(*it).value;
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidGetWindowTitle;
-    response.window_id = window.window_id();
-    ASSERT(window.title().length() < (ssize_t)sizeof(response.text));
-    strcpy(response.text, window.title().characters());
-    response.text_length = window.title().length();
-    post_message(response);
+    return make<WindowServer::GetWindowTitleResponse>(it->value->title());
 }
 
-void WSClientConnection::handle_request(const WSAPISetWindowIconBitmapRequest& request)
+OwnPtr<WindowServer::SetWindowIconBitmapResponse> WSClientConnection::handle(const WindowServer::SetWindowIconBitmap& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPISetWindowIconBitmapRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetWindowIconBitmapResponse>();
     }
     auto& window = *(*it).value;
 
-    auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(request.icon_buffer_id());
+    auto icon_buffer = SharedBuffer::create_from_shared_buffer_id(message.icon_buffer_id());
 
     if (!icon_buffer) {
         window.set_default_icon();
     } else {
-        window.set_icon(GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *icon_buffer, request.icon_size()));
+        window.set_icon(GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *icon_buffer, message.icon_size()));
     }
 
     window.frame().invalidate_title_bar();
     WSWindowManager::the().tell_wm_listeners_window_icon_changed(window);
+    return make<WindowServer::SetWindowIconBitmapResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetWindowRectRequest& request)
+OwnPtr<WindowServer::SetWindowRectResponse> WSClientConnection::handle(const WindowServer::SetWindowRect& message)
 {
-    int window_id = request.window_id();
+    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         post_error("WSAPISetWindowRectRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetWindowRectResponse>();
     }
     auto& window = *(*it).value;
     if (window.is_fullscreen()) {
         dbgprintf("WSClientConnection: Ignoring SetWindowRect request for fullscreen window\n");
-        return;
+        return make<WindowServer::SetWindowRectResponse>();
     }
-    window.set_rect(request.rect());
-    window.request_update(request.rect());
+    window.set_rect(message.rect());
+    window.request_update(message.rect());
+    return make<WindowServer::SetWindowRectResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIGetWindowRectRequest& request)
+OwnPtr<WindowServer::GetWindowRectResponse> WSClientConnection::handle(const WindowServer::GetWindowRect& message)
 {
-    int window_id = request.window_id();
+    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         post_error("WSAPIGetWindowRectRequest: Bad window ID");
-        return;
+        return make<WindowServer::GetWindowRectResponse>(Rect());
     }
-    auto& window = *(*it).value;
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidGetWindowRect;
-    response.window_id = window.window_id();
-    response.window.rect = window.rect();
-    post_message(response);
+    return make<WindowServer::GetWindowRectResponse>(it->value->rect());
 }
 
-void WSClientConnection::handle_request(const WSAPISetClipboardContentsRequest& request)
+OwnPtr<WindowServer::SetClipboardContentsResponse> WSClientConnection::handle(const WindowServer::SetClipboardContents& message)
 {
-    auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(request.shared_buffer_id());
+    auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.shared_buffer_id());
     if (!shared_buffer) {
         post_error("WSAPISetClipboardContentsRequest: Bad shared buffer ID");
-        return;
+        return make<WindowServer::SetClipboardContentsResponse>();
     }
-    WSClipboard::the().set_data(*shared_buffer, request.size(), request.data_type());
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidSetClipboardContents;
-    response.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
-    post_message(response);
+    WSClipboard::the().set_data(*shared_buffer, message.content_size(), message.content_type());
+    return make<WindowServer::SetClipboardContentsResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
+OwnPtr<WindowServer::GetClipboardContentsResponse> WSClientConnection::handle(const WindowServer::GetClipboardContents&)
 {
     auto& clipboard = WSClipboard::the();
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidGetClipboardContents;
-    response.clipboard.shared_buffer_id = -1;
-    response.clipboard.contents_size = 0;
+
+    i32 shared_buffer_id = -1;
     if (clipboard.size()) {
         // FIXME: Optimize case where an app is copy/pasting within itself.
         //        We can just reuse the SharedBuffer then, since it will have the same peer PID.
@@ -717,59 +392,47 @@ void WSClientConnection::handle_request(const WSAPIGetClipboardContentsRequest&)
         memcpy(shared_buffer->data(), clipboard.data(), clipboard.size());
         shared_buffer->seal();
         shared_buffer->share_with(client_pid());
-        response.clipboard.shared_buffer_id = shared_buffer->shared_buffer_id();
-        response.clipboard.contents_size = clipboard.size();
+        shared_buffer_id = shared_buffer->shared_buffer_id();
 
         // FIXME: This is a workaround for the fact that SharedBuffers will go away if neither side is retaining them.
         //        After we respond to GetClipboardContents, we have to wait for the client to ref the buffer on his side.
         m_last_sent_clipboard_content = move(shared_buffer);
     }
-    ASSERT(clipboard.data_type().length() < (ssize_t)sizeof(response.text));
-    if (!clipboard.data_type().is_null())
-        strcpy(response.text, clipboard.data_type().characters());
-    response.text_length = clipboard.data_type().length();
-    post_message(response);
+    return make<WindowServer::GetClipboardContentsResponse>(shared_buffer_id, clipboard.size(), clipboard.data_type());
 }
 
-void WSClientConnection::handle_request(const WSAPICreateWindowRequest& request)
+OwnPtr<WindowServer::CreateWindowResponse> WSClientConnection::handle(const WindowServer::CreateWindow& message)
 {
     int window_id = m_next_window_id++;
-    auto window = WSWindow::construct(*this, request.window_type(), window_id, request.is_modal(), request.is_resizable(), request.is_fullscreen());
-    window->set_background_color(request.background_color());
-    window->set_has_alpha_channel(request.has_alpha_channel());
-    window->set_title(request.title());
-    if (!request.is_fullscreen())
-        window->set_rect(request.rect());
-    window->set_show_titlebar(request.show_titlebar());
-    window->set_opacity(request.opacity());
-    window->set_size_increment(request.size_increment());
-    window->set_base_size(request.base_size());
+    auto window = WSWindow::construct(*this, (WSWindowType)message.type(), window_id, message.modal(), message.resizable(), message.fullscreen());
+    window->set_background_color(message.background_color());
+    window->set_has_alpha_channel(message.has_alpha_channel());
+    window->set_title(message.title());
+    if (!message.fullscreen())
+        window->set_rect(message.rect());
+    window->set_show_titlebar(message.show_titlebar());
+    window->set_opacity(message.opacity());
+    window->set_size_increment(message.size_increment());
+    window->set_base_size(message.base_size());
     window->invalidate();
     m_windows.set(window_id, move(window));
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidCreateWindow;
-    response.window_id = window_id;
-    post_message(response);
+    return make<WindowServer::CreateWindowResponse>(window_id);
 }
 
-void WSClientConnection::handle_request(const WSAPIDestroyWindowRequest& request)
+OwnPtr<WindowServer::DestroyWindowResponse> WSClientConnection::handle(const WindowServer::DestroyWindow& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPIDestroyWindowRequest: Bad window ID");
-        return;
+        return make<WindowServer::DestroyWindowResponse>();
     }
     auto& window = *(*it).value;
     WSWindowManager::the().invalidate(window);
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidDestroyWindow;
-    response.window_id = window.window_id();
-    post_message(response);
-
     remove_child(window);
     ASSERT(it->value.ptr() == &window);
-    m_windows.remove(window_id);
+    m_windows.remove(message.window_id());
+
+    return make<WindowServer::DestroyWindowResponse>();
 }
 
 void WSClientConnection::post_paint_message(WSWindow& window)
@@ -777,130 +440,113 @@ void WSClientConnection::post_paint_message(WSWindow& window)
     auto rect_set = window.take_pending_paint_rects();
     if (window.is_minimized())
         return;
-    WSAPI_ServerMessage message;
-    message.type = WSAPI_ServerMessage::Type::Paint;
-    message.window_id = window.window_id();
-    auto& rects = rect_set.rects();
-    message.rect_count = rects.size();
-    for (int i = 0; i < min(WSAPI_ServerMessage::max_inline_rect_count, rects.size()); ++i)
-        message.rects[i] = rects[i];
-    message.paint.window_size = window.size();
-    ByteBuffer extra_data;
-    if (rects.size() > WSAPI_ServerMessage::max_inline_rect_count)
-        extra_data = ByteBuffer::wrap(&rects[WSAPI_ServerMessage::max_inline_rect_count], (rects.size() - WSAPI_ServerMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
-    post_message(message, extra_data);
+
+    Vector<Rect> rects;
+    rects.ensure_capacity(rect_set.size());
+    for (auto& r : rect_set.rects()) {
+        rects.append(r);
+    }
+    post_message(WindowClient::Paint(window.window_id(), window.size(), rects));
 }
 
-void WSClientConnection::handle_request(const WSAPIInvalidateRectRequest& request)
+void WSClientConnection::handle(const WindowServer::InvalidateRect& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPIInvalidateRectRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
-    for (int i = 0; i < request.rects().size(); ++i)
-        window.request_update(request.rects()[i].intersected({ {}, window.size() }));
+    for (int i = 0; i < message.rects().size(); ++i)
+        window.request_update(message.rects()[i].intersected({ {}, window.size() }));
 }
 
-void WSClientConnection::handle_request(const WSAPIDidFinishPaintingNotification& request)
+void WSClientConnection::handle(const WindowServer::DidFinishPainting& message)
 {
-    int window_id = request.window_id();
+    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         post_error("WSAPIDidFinishPaintingNotification: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
-    for (auto& rect : request.rects())
+    for (auto& rect : message.rects())
         WSWindowManager::the().invalidate(window, rect);
 
     WSWindowSwitcher::the().refresh_if_needed();
 }
 
-void WSClientConnection::handle_request(const WSAPISetWindowBackingStoreRequest& request)
+OwnPtr<WindowServer::SetWindowBackingStoreResponse> WSClientConnection::handle(const WindowServer::SetWindowBackingStore& message)
 {
-    int window_id = request.window_id();
+    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         post_error("WSAPISetWindowBackingStoreRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetWindowBackingStoreResponse>();
     }
     auto& window = *(*it).value;
-    if (window.last_backing_store() && window.last_backing_store()->shared_buffer_id() == request.shared_buffer_id()) {
+    if (window.last_backing_store() && window.last_backing_store()->shared_buffer_id() == message.shared_buffer_id()) {
         window.swap_backing_stores();
     } else {
-        auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(request.shared_buffer_id());
+        auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.shared_buffer_id());
         if (!shared_buffer)
-            return;
+            return make<WindowServer::SetWindowBackingStoreResponse>();
         auto backing_store = GraphicsBitmap::create_with_shared_buffer(
-            request.has_alpha_channel() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
+            message.has_alpha_channel() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32,
             *shared_buffer,
-            request.size());
+            message.size());
         window.set_backing_store(move(backing_store));
     }
 
-    if (request.flush_immediately())
+    if (message.flush_immediately())
         window.invalidate();
 
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidSetWindowBackingStore;
-    response.window_id = window_id;
-    response.backing.shared_buffer_id = request.shared_buffer_id();
-    post_message(response);
+    return make<WindowServer::SetWindowBackingStoreResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetGlobalCursorTrackingRequest& request)
+OwnPtr<WindowServer::SetGlobalCursorTrackingResponse> WSClientConnection::handle(const WindowServer::SetGlobalCursorTracking& message)
 {
-    int window_id = request.window_id();
+    int window_id = message.window_id();
     auto it = m_windows.find(window_id);
     if (it == m_windows.end()) {
         post_error("WSAPISetGlobalCursorTrackingRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetGlobalCursorTrackingResponse>();
     }
-    auto& window = *(*it).value;
-    window.set_global_cursor_tracking_enabled(request.value());
+    it->value->set_global_cursor_tracking_enabled(message.enabled());
+    return make<WindowServer::SetGlobalCursorTrackingResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetWindowOverrideCursorRequest& request)
+OwnPtr<WindowServer::SetWindowOverrideCursorResponse> WSClientConnection::handle(const WindowServer::SetWindowOverrideCursor& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPISetWindowOverrideCursorRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetWindowOverrideCursorResponse>();
     }
     auto& window = *(*it).value;
-    window.set_override_cursor(WSCursor::create(request.cursor()));
+    window.set_override_cursor(WSCursor::create((WSStandardCursor)message.cursor_type()));
+    return make<WindowServer::SetWindowOverrideCursorResponse>();
 }
 
-void WSClientConnection::handle_request(const WSAPISetWindowHasAlphaChannelRequest& request)
+OwnPtr<WindowServer::SetWindowHasAlphaChannelResponse> WSClientConnection::handle(const WindowServer::SetWindowHasAlphaChannel& message)
 {
-    int window_id = request.window_id();
-    auto it = m_windows.find(window_id);
+    auto it = m_windows.find(message.window_id());
     if (it == m_windows.end()) {
         post_error("WSAPISetWindowHasAlphaChannelRequest: Bad window ID");
-        return;
+        return make<WindowServer::SetWindowHasAlphaChannelResponse>();
     }
-    auto& window = *(*it).value;
-    window.set_has_alpha_channel(request.value());
-
-    WSAPI_ServerMessage response;
-    response.type = WSAPI_ServerMessage::Type::DidSetWindowHasAlphaChannel;
-    response.window_id = window_id;
-    response.value = request.value();
-    post_message(response);
+    it->value->set_has_alpha_channel(message.has_alpha_channel());
+    return make<WindowServer::SetWindowHasAlphaChannelResponse>();
 }
 
-void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& request)
+void WSClientConnection::handle(const WindowServer::WM_SetActiveWindow& message)
 {
-    auto* client = WSClientConnection::from_client_id(request.target_client_id());
+    auto* client = WSClientConnection::from_client_id(message.client_id());
     if (!client) {
         post_error("WSWMAPISetActiveWindowRequest: Bad client ID");
         return;
     }
-    auto it = client->m_windows.find(request.target_window_id());
+    auto it = client->m_windows.find(message.window_id());
     if (it == client->m_windows.end()) {
         post_error("WSWMAPISetActiveWindowRequest: Bad window ID");
         return;
@@ -910,30 +556,30 @@ void WSClientConnection::handle_request(const WSWMAPISetActiveWindowRequest& req
     WSWindowManager::the().move_to_front_and_make_active(window);
 }
 
-void WSClientConnection::handle_request(const WSWMAPIPopupWindowMenuRequest& request)
+void WSClientConnection::handle(const WindowServer::WM_PopupWindowMenu& message)
 {
-    auto* client = WSClientConnection::from_client_id(request.target_client_id());
+    auto* client = WSClientConnection::from_client_id(message.client_id());
     if (!client) {
         post_error("WSWMAPIPopupWindowMenuRequest: Bad client ID");
         return;
     }
-    auto it = client->m_windows.find(request.target_window_id());
+    auto it = client->m_windows.find(message.window_id());
     if (it == client->m_windows.end()) {
         post_error("WSWMAPIPopupWindowMenuRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
-    window.popup_window_menu(request.position());
+    window.popup_window_menu(message.screen_position());
 }
 
-void WSClientConnection::handle_request(const WSWMAPIStartWindowResizeRequest& request)
+void WSClientConnection::handle(const WindowServer::WM_StartWindowResize& request)
 {
-    auto* client = WSClientConnection::from_client_id(request.target_client_id());
+    auto* client = WSClientConnection::from_client_id(request.client_id());
     if (!client) {
         post_error("WSWMAPIStartWindowResizeRequest: Bad client ID");
         return;
     }
-    auto it = client->m_windows.find(request.target_window_id());
+    auto it = client->m_windows.find(request.window_id());
     if (it == client->m_windows.end()) {
         post_error("WSWMAPIStartWindowResizeRequest: Bad window ID");
         return;
@@ -944,100 +590,26 @@ void WSClientConnection::handle_request(const WSWMAPIStartWindowResizeRequest& r
     WSWindowManager::the().start_window_resize(window, WSScreen::the().cursor_location(), MouseButton::Left);
 }
 
-void WSClientConnection::handle_request(const WSWMAPISetWindowMinimizedRequest& request)
+void WSClientConnection::handle(const WindowServer::WM_SetWindowMinimized& message)
 {
-    auto* client = WSClientConnection::from_client_id(request.target_client_id());
+    auto* client = WSClientConnection::from_client_id(message.client_id());
     if (!client) {
         post_error("WSWMAPISetWindowMinimizedRequest: Bad client ID");
         return;
     }
-    auto it = client->m_windows.find(request.target_window_id());
+    auto it = client->m_windows.find(message.window_id());
     if (it == client->m_windows.end()) {
         post_error("WSWMAPISetWindowMinimizedRequest: Bad window ID");
         return;
     }
     auto& window = *(*it).value;
-    window.set_minimized(request.is_minimized());
+    window.set_minimized(message.minimized());
 }
 
-void WSClientConnection::on_request(const WSAPIClientRequest& request)
+OwnPtr<WindowServer::GreetResponse> WSClientConnection::handle(const WindowServer::Greet& message)
 {
-    switch (request.type()) {
-    case WSEvent::APICreateMenubarRequest:
-        return handle_request(static_cast<const WSAPICreateMenubarRequest&>(request));
-    case WSEvent::APIDestroyMenubarRequest:
-        return handle_request(static_cast<const WSAPIDestroyMenubarRequest&>(request));
-    case WSEvent::APICreateMenuRequest:
-        return handle_request(static_cast<const WSAPICreateMenuRequest&>(request));
-    case WSEvent::APIDestroyMenuRequest:
-        return handle_request(static_cast<const WSAPIDestroyMenuRequest&>(request));
-    case WSEvent::APISetApplicationMenubarRequest:
-        return handle_request(static_cast<const WSAPISetApplicationMenubarRequest&>(request));
-    case WSEvent::APIAddMenuToMenubarRequest:
-        return handle_request(static_cast<const WSAPIAddMenuToMenubarRequest&>(request));
-    case WSEvent::APIAddMenuItemRequest:
-        return handle_request(static_cast<const WSAPIAddMenuItemRequest&>(request));
-    case WSEvent::APIAddMenuSeparatorRequest:
-        return handle_request(static_cast<const WSAPIAddMenuSeparatorRequest&>(request));
-    case WSEvent::APIUpdateMenuItemRequest:
-        return handle_request(static_cast<const WSAPIUpdateMenuItemRequest&>(request));
-    case WSEvent::APISetWindowTitleRequest:
-        return handle_request(static_cast<const WSAPISetWindowTitleRequest&>(request));
-    case WSEvent::APIGetWindowTitleRequest:
-        return handle_request(static_cast<const WSAPIGetWindowTitleRequest&>(request));
-    case WSEvent::APISetWindowRectRequest:
-        return handle_request(static_cast<const WSAPISetWindowRectRequest&>(request));
-    case WSEvent::APIGetWindowRectRequest:
-        return handle_request(static_cast<const WSAPIGetWindowRectRequest&>(request));
-    case WSEvent::APISetWindowIconBitmapRequest:
-        return handle_request(static_cast<const WSAPISetWindowIconBitmapRequest&>(request));
-    case WSEvent::APISetClipboardContentsRequest:
-        return handle_request(static_cast<const WSAPISetClipboardContentsRequest&>(request));
-    case WSEvent::APIGetClipboardContentsRequest:
-        return handle_request(static_cast<const WSAPIGetClipboardContentsRequest&>(request));
-    case WSEvent::APICreateWindowRequest:
-        return handle_request(static_cast<const WSAPICreateWindowRequest&>(request));
-    case WSEvent::APIDestroyWindowRequest:
-        return handle_request(static_cast<const WSAPIDestroyWindowRequest&>(request));
-    case WSEvent::APIInvalidateRectRequest:
-        return handle_request(static_cast<const WSAPIInvalidateRectRequest&>(request));
-    case WSEvent::APIDidFinishPaintingNotification:
-        return handle_request(static_cast<const WSAPIDidFinishPaintingNotification&>(request));
-    case WSEvent::APISetGlobalCursorTrackingRequest:
-        return handle_request(static_cast<const WSAPISetGlobalCursorTrackingRequest&>(request));
-    case WSEvent::APISetWindowOpacityRequest:
-        return handle_request(static_cast<const WSAPISetWindowOpacityRequest&>(request));
-    case WSEvent::APISetWindowBackingStoreRequest:
-        return handle_request(static_cast<const WSAPISetWindowBackingStoreRequest&>(request));
-    case WSEvent::APISetWallpaperRequest:
-        return handle_request(static_cast<const WSAPISetWallpaperRequest&>(request));
-    case WSEvent::APIGetWallpaperRequest:
-        return handle_request(static_cast<const WSAPIGetWallpaperRequest&>(request));
-    case WSEvent::APISetResolutionRequest:
-        return handle_request(static_cast<const WSAPISetResolutionRequest&>(request));
-    case WSEvent::APISetWindowOverrideCursorRequest:
-        return handle_request(static_cast<const WSAPISetWindowOverrideCursorRequest&>(request));
-    case WSEvent::WMAPISetActiveWindowRequest:
-        return handle_request(static_cast<const WSWMAPISetActiveWindowRequest&>(request));
-    case WSEvent::WMAPISetWindowMinimizedRequest:
-        return handle_request(static_cast<const WSWMAPISetWindowMinimizedRequest&>(request));
-    case WSEvent::WMAPIStartWindowResizeRequest:
-        return handle_request(static_cast<const WSWMAPIStartWindowResizeRequest&>(request));
-    case WSEvent::WMAPIPopupWindowMenuRequest:
-        return handle_request(static_cast<const WSWMAPIPopupWindowMenuRequest&>(request));
-    case WSEvent::APIPopupMenuRequest:
-        return handle_request(static_cast<const WSAPIPopupMenuRequest&>(request));
-    case WSEvent::APIDismissMenuRequest:
-        return handle_request(static_cast<const WSAPIDismissMenuRequest&>(request));
-    case WSEvent::APISetWindowHasAlphaChannelRequest:
-        return handle_request(static_cast<const WSAPISetWindowHasAlphaChannelRequest&>(request));
-    case WSEvent::APIMoveWindowToFrontRequest:
-        return handle_request(static_cast<const WSAPIMoveWindowToFrontRequest&>(request));
-    case WSEvent::APISetFullscreenRequest:
-        return handle_request(static_cast<const WSAPISetFullscreenRequest&>(request));
-    default:
-        break;
-    }
+    set_client_pid(message.client_pid());
+    return make<WindowServer::GreetResponse>(getpid(), client_id(), WSScreen::the().rect());
 }
 
 bool WSClientConnection::is_showing_modal_window() const

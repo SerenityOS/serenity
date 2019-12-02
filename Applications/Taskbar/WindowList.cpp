@@ -1,6 +1,5 @@
 #include "WindowList.h"
 #include <LibGUI/GWindowServerConnection.h>
-#include <WindowServer/WSAPITypes.h>
 
 WindowList& WindowList::the()
 {
@@ -25,18 +24,12 @@ Window& WindowList::ensure_window(const WindowIdentifier& identifier)
         return *it->value;
     auto window = make<Window>(identifier);
     window->set_button(aid_create_button(identifier));
-    window->button()->on_click = [window = window.ptr(), identifier](GButton&) {
-        WSAPI_ClientMessage message;
+    window->button()->on_click = [window = window.ptr(), identifier](auto&) {
         if (window->is_minimized() || !window->is_active()) {
-            message.type = WSAPI_ClientMessage::Type::WM_SetActiveWindow;
+            GWindowServerConnection::the().post_message(WindowServer::WM_SetActiveWindow(identifier.client_id(), identifier.window_id()));
         } else {
-            message.type = WSAPI_ClientMessage::Type::WM_SetWindowMinimized;
-            message.wm.minimized = true;
+            GWindowServerConnection::the().post_message(WindowServer::WM_SetWindowMinimized(identifier.client_id(), identifier.window_id(), true));
         }
-        message.wm.client_id = identifier.client_id();
-        message.wm.window_id = identifier.window_id();
-        bool success = GWindowServerConnection::the().post_message_to_server(message);
-        ASSERT(success);
     };
     auto& window_ref = *window;
     m_windows.set(identifier, move(window));

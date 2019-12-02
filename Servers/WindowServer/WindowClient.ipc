@@ -1,0 +1,30 @@
+endpoint WindowClient = 4
+{
+    Paint(i32 window_id, Size window_size, Vector<Rect> rects) =|
+    MouseMove(i32 window_id, Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    MouseDown(i32 window_id, Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    MouseDoubleClick(i32 window_id, Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    MouseUp(i32 window_id, Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    MouseWheel(i32 window_id, Point mouse_position, u32 button, u32 buttons, u32 modifiers, i32 wheel_delta) =|
+    WindowEntered(i32 window_id) =|
+    WindowLeft(i32 window_id) =|
+    KeyDown(i32 window_id, u8 character, u32 key, u32 modifiers) =|
+    KeyUp(i32 window_id, u8 character, u32 key, u32 modifiers) =|
+    WindowActivated(i32 window_id) =|
+    WindowDeactivated(i32 window_id) =|
+    WindowCloseRequest(i32 window_id) =|
+    WindowResized(i32 window_id, Rect old_rect, Rect new_rect) =|
+
+    MenuItemActivated(i32 menu_id, i32 identifier) =|
+
+    ScreenRectChanged(Rect rect) =|
+
+    ClipboardContentsChanged(String content_type) =|
+
+    WM_WindowRemoved(i32 client_id, i32 window_id) =|
+    WM_WindowStateChanged(i32 client_id, i32 window_id, bool is_active, bool is_minimized, i32 window_type, String title, Rect rect) =|
+    WM_WindowIconBitmapChanged(i32 client_id, i32 window_id, i32 icon_buffer_id, Size icon_size) =|
+    WM_WindowRectChanged(i32 client_id, i32 window_id, Rect rect) =|
+
+    AsyncSetWallpaperFinished(bool success) =|
+}

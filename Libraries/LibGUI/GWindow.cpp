@@ -50,36 +50,27 @@ void GWindow::move_to_front()
     if (!m_window_id)
         return;
 
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::MoveWindowToFront;
-    request.window_id = m_window_id;
-    GWindowServerConnection::the().post_message_to_server(request);
+    GWindowServerConnection::the().send_sync<WindowServer::MoveWindowToFront>(m_window_id);
 }
 
 void GWindow::show()
 {
     if (m_window_id)
         return;
-
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::CreateWindow;
-    request.window_id = m_window_id;
-    request.window.rect = m_rect_when_windowless;
-    request.window.has_alpha_channel = m_has_alpha_channel;
-    request.window.modal = m_modal;
-    request.window.resizable = m_resizable;
-    request.window.fullscreen = m_fullscreen;
-    request.window.show_titlebar = m_show_titlebar;
-    request.window.opacity = m_opacity_when_windowless;
-    request.window.background_color = m_background_color.value();
-    request.window.size_increment = m_size_increment;
-    request.window.base_size = m_base_size;
-    request.window.type = (WSAPI_WindowType)m_window_type;
-    ASSERT(m_title_when_windowless.length() < (ssize_t)sizeof(request.text));
-    strcpy(request.text, m_title_when_windowless.characters());
-    request.text_length = m_title_when_windowless.length();
-    auto response = GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidCreateWindow);
-    m_window_id = response.window_id;
+    auto response = GWindowServerConnection::the().send_sync<WindowServer::CreateWindow>(
+        m_rect_when_windowless,
+        m_has_alpha_channel,
+        m_modal,
+        m_resizable,
+        m_fullscreen,
+        m_show_titlebar,
+        m_opacity_when_windowless,
+        m_background_color,
+        m_base_size,
+        m_size_increment,
+        (i32)m_window_type,
+        m_title_when_windowless);
+    m_window_id = response->window_id();
 
     apply_icon();
 
@@ -93,10 +84,7 @@ void GWindow::hide()
     if (!m_window_id)
         return;
     reified_windows.remove(m_window_id);
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::DestroyWindow;
-    request.window_id = m_window_id;
-    GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidDestroyWindow);
+    GWindowServerConnection::the().send_sync<WindowServer::DestroyWindow>(m_window_id);
     m_window_id = 0;
     m_pending_paint_event_rects.clear();
     m_back_bitmap = nullptr;
@@ -118,39 +106,21 @@ void GWindow::set_title(const StringView& title)
     m_title_when_windowless = title;
     if (!m_window_id)
         return;
-
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::SetWindowTitle;
-    request.window_id = m_window_id;
-    ASSERT(m_title_when_windowless.length() < (ssize_t)sizeof(request.text));
-    strcpy(request.text, m_title_when_windowless.characters());
-    request.text_length = m_title_when_windowless.length();
-    GWindowServerConnection::the().post_message_to_server(request);
+    GWindowServerConnection::the().send_sync<WindowServer::SetWindowTitle>(m_window_id, title);
 }
 
 String GWindow::title() const
 {
     if (!m_window_id)
         return m_title_when_windowless;
-
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::GetWindowTitle;
-    request.window_id = m_window_id;
-    auto response = GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowTitle);
-    return String(response.text, response.text_length);
+    return GWindowServerConnection::the().send_sync<WindowServer::GetWindowTitle>(m_window_id)->title();
 }
 
 Rect GWindow::rect() const
 {
     if (!m_window_id)
         return m_rect_when_windowless;
-
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::GetWindowRect;
-    request.window_id = m_window_id;
-    auto response = GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidGetWindowRect);
-    ASSERT(response.window_id == m_window_id);
-    return response.window.rect;
+    return GWindowServerConnection::the().send_sync<WindowServer::GetWindowRect>(m_window_id)->rect();
 }
 
 void GWindow::set_rect(const Rect& a_rect)
@@ -161,11 +131,7 @@ void GWindow::set_rect(const Rect& a_rect)
             m_main_widget->resize(m_rect_when_windowless.size());
         return;
     }
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::SetWindowRect;
-    request.window_id = m_window_id;
-    request.window.rect = a_rect;
-    GWindowServerConnection::the().post_message_to_server(request);
+    GWindowServerConnection::the().send_sync<WindowServer::SetWindowRect>(m_window_id, a_rect);
     if (m_back_bitmap && m_back_bitmap->size() != a_rect.size())
         m_back_bitmap = nullptr;
     if (m_front_bitmap && m_front_bitmap->size() != a_rect.size())
@@ -183,11 +149,7 @@ void GWindow::set_override_cursor(GStandardCursor cursor)
 {
     if (!m_window_id)
         return;
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::SetWindowOverrideCursor;
-    request.window_id = m_window_id;
-    request.cursor.cursor = (WSAPI_StandardCursor)cursor;
-    GWindowServerConnection::the().post_message_to_server(request);
+    GWindowServerConnection::the().send_sync<WindowServer::SetWindowOverrideCursor>(m_window_id, (u32)cursor);
 }
 
 void GWindow::event(CEvent& event)
@@ -258,16 +220,10 @@ void GWindow::event(CEvent& event)
             set_current_backing_bitmap(*m_back_bitmap, true);
 
         if (m_window_id) {
-            WSAPI_ClientMessage message;
-            message.type = WSAPI_ClientMessage::Type::DidFinishPainting;
-            message.window_id = m_window_id;
-            message.rect_count = rects.size();
-            for (int i = 0; i < min(WSAPI_ClientMessage::max_inline_rect_count, rects.size()); ++i)
-                message.rects[i] = rects[i];
-            ByteBuffer extra_data;
-            if (rects.size() > WSAPI_ClientMessage::max_inline_rect_count)
-                extra_data = ByteBuffer::wrap(&rects[WSAPI_ClientMessage::max_inline_rect_count], (rects.size() - WSAPI_ClientMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
-            GWindowServerConnection::the().post_message_to_server(message, move(extra_data));
+            Vector<Rect> rects_to_send;
+            for (auto& r : rects)
+                rects_to_send.append(r);
+            GWindowServerConnection::the().post_message(WindowServer::DidFinishPainting(m_window_id, rects_to_send));
         }
         return;
     }
@@ -455,16 +411,10 @@ void GWindow::update(const Rect& a_rect)
             auto rects = move(m_pending_paint_event_rects);
             if (rects.is_empty())
                 return;
-            WSAPI_ClientMessage request;
-            request.type = WSAPI_ClientMessage::Type::InvalidateRect;
-            request.window_id = m_window_id;
-            for (int i = 0; i < min(WSAPI_ClientMessage::max_inline_rect_count, rects.size()); ++i)
-                request.rects[i] = rects[i];
-            ByteBuffer extra_data;
-            if (rects.size() > WSAPI_ClientMessage::max_inline_rect_count)
-                extra_data = ByteBuffer::wrap(&rects[WSAPI_ClientMessage::max_inline_rect_count], (rects.size() - WSAPI_ClientMessage::max_inline_rect_count) * sizeof(WSAPI_Rect));
-            request.rect_count = rects.size();
-            GWindowServerConnection::the().post_message_to_server(request, move(extra_data));
+            Vector<Rect> rects_to_send;
+            for (auto& r : rects)
+                rects_to_send.append(r);
+            GWindowServerConnection::the().post_message(WindowServer::InvalidateRect(m_window_id, rects_to_send));
         });
     }
     m_pending_paint_event_rects.append(a_rect);
@@ -534,12 +484,7 @@ void GWindow::set_has_alpha_channel(bool value)
     m_back_bitmap = nullptr;
     m_front_bitmap = nullptr;
 
-    WSAPI_ClientMessage message;
-    message.type = WSAPI_ClientMessage::Type::SetWindowHasAlphaChannel;
-    message.window_id = m_window_id;
-    message.value = value;
-    GWindowServerConnection::the().sync_request(message, WSAPI_ServerMessage::DidSetWindowHasAlphaChannel);
-
+    GWindowServerConnection::the().send_sync<WindowServer::SetWindowHasAlphaChannel>(m_window_id, value);
     update();
 }
 
@@ -554,12 +499,7 @@ void GWindow::set_opacity(float opacity)
     m_opacity_when_windowless = opacity;
     if (!m_window_id)
         return;
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::SetWindowOpacity;
-    request.window_id = m_window_id;
-    request.window.opacity = opacity;
-    m_opacity_when_windowless = opacity;
-    GWindowServerConnection::the().post_message_to_server(request);
+    GWindowServerConnection::the().send_sync<WindowServer::SetWindowOpacity>(m_window_id, opacity);
 }
 
 void GWindow::set_hovered_widget(GWidget* widget)
@@ -578,16 +518,7 @@ void GWindow::set_hovered_widget(GWidget* widget)
 
 void GWindow::set_current_backing_bitmap(GraphicsBitmap& bitmap, bool flush_immediately)
 {
-    WSAPI_ClientMessage message;
-    message.type = WSAPI_ClientMessage::Type::SetWindowBackingStore;
-    message.window_id = m_window_id;
-    message.backing.bpp = 32;
-    message.backing.pitch = bitmap.pitch();
-    message.backing.shared_buffer_id = bitmap.shared_buffer_id();
-    message.backing.has_alpha_channel = bitmap.has_alpha_channel();
-    message.backing.size = bitmap.size();
-    message.backing.flush_immediately = flush_immediately;
-    GWindowServerConnection::the().sync_request(message, WSAPI_ServerMessage::Type::DidSetWindowBackingStore);
+    GWindowServerConnection::the().send_sync<WindowServer::SetWindowBackingStore>(m_window_id, 32, bitmap.pitch(), bitmap.shared_buffer_id(), bitmap.has_alpha_channel(), bitmap.size(), flush_immediately);
 }
 
 void GWindow::flip(const Vector<Rect, 32>& dirty_rects)
@@ -668,21 +599,12 @@ void GWindow::apply_icon()
     if (!has_set_process_icon)
         set_process_icon(m_icon->shared_buffer_id());
 
-    WSAPI_ClientMessage message;
-    message.type = WSAPI_ClientMessage::Type::SetWindowIconBitmap;
-    message.window_id = m_window_id;
-    message.window.icon_buffer_id = m_icon->shared_buffer_id();
-    message.window.icon_size = m_icon->size();
-    GWindowServerConnection::the().post_message_to_server(message);
+    GWindowServerConnection::the().send_sync<WindowServer::SetWindowIconBitmap>(m_window_id, m_icon->shared_buffer_id(), m_icon->size());
 }
 
 void GWindow::start_wm_resize()
 {
-    WSAPI_ClientMessage message;
-    message.type = WSAPI_ClientMessage::Type::WM_StartWindowResize;
-    message.wm.client_id = GWindowServerConnection::the().my_client_id();
-    message.wm.window_id = m_window_id;
-    GWindowServerConnection::the().post_message_to_server(message);
+    GWindowServerConnection::the().post_message(WindowServer::WM_StartWindowResize(GWindowServerConnection::the().my_client_id(), m_window_id));
 }
 
 Vector<GWidget*> GWindow::focusable_widgets() const
@@ -729,12 +651,7 @@ void GWindow::set_fullscreen(bool fullscreen)
     m_fullscreen = fullscreen;
     if (!m_window_id)
         return;
-
-    WSAPI_ClientMessage request;
-    request.type = WSAPI_ClientMessage::Type::SetFullscreen;
-    request.window_id = m_window_id;
-    request.value = fullscreen;
-    GWindowServerConnection::the().sync_request(request, WSAPI_ServerMessage::Type::DidSetFullscreen);
+    GWindowServerConnection::the().send_sync<WindowServer::SetFullscreen>(m_window_id, fullscreen);
 }
 
 void GWindow::schedule_relayout()

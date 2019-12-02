@@ -17,7 +17,6 @@
 #include <LibDraw/PNGLoader.h>
 #include <LibDraw/Painter.h>
 #include <LibDraw/StylePainter.h>
-#include <WindowServer/WSAPITypes.h>
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>
@@ -318,7 +317,7 @@ void WSWindowManager::remove_window(WSWindow& window)
         m_switcher.refresh();
 
     for_each_window_listening_to_wm_events([&window](WSWindow& listener) {
-        if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowRemovals))
+        if (!(listener.wm_event_mask() & WSWMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (window.client())
             CEventLoop::current().post_event(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
@@ -328,7 +327,7 @@ void WSWindowManager::remove_window(WSWindow& window)
 
 void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow& window)
 {
-    if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowStateChanges))
+    if (!(listener.wm_event_mask() & WSWMEventMask::WindowStateChanges))
         return;
     if (window.client())
         CEventLoop::current().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
@@ -336,7 +335,7 @@ void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow
 
 void WSWindowManager::tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow& window)
 {
-    if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowRectChanges))
+    if (!(listener.wm_event_mask() & WSWMEventMask::WindowRectChanges))
         return;
     if (window.client())
         CEventLoop::current().post_event(listener, make<WSWMWindowRectChangedEvent>(window.client()->client_id(), window.window_id(), window.rect()));
@@ -344,7 +343,7 @@ void WSWindowManager::tell_wm_listener_about_window_rect(WSWindow& listener, WSW
 
 void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow& window)
 {
-    if (!(listener.wm_event_mask() & WSAPI_WMEventMask::WindowIconChanges))
+    if (!(listener.wm_event_mask() & WSWMEventMask::WindowIconChanges))
         return;
     if (window.client() && window.icon().shared_buffer_id() != -1)
         CEventLoop::current().post_event(listener, make<WSWMWindowIconBitmapChangedEvent>(window.client()->client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));

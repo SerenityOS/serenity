@@ -6,7 +6,6 @@
 #include <LibCore/CNotifier.h>
 
 class WSClientConnection;
-struct WSAPI_ClientMessage;
 
 class WSEventLoop {
 public:

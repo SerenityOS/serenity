@@ -32,10 +32,11 @@ build_targets="$build_targets ../Libraries/LibPthread"
 build_targets="$build_targets ../Servers/AudioServer"
 build_targets="$build_targets ../Servers/LookupServer"
 build_targets="$build_targets ../Servers/ProtocolServer"
+build_targets="$build_targets ../Libraries/LibAudio"
+build_targets="$build_targets ../Servers/WindowServer"
 
 build_targets="$build_targets ../AK"
 
-build_targets="$build_targets ../Libraries/LibAudio"
 build_targets="$build_targets ../Libraries/LibDraw"
 build_targets="$build_targets ../Libraries/LibGUI"
 build_targets="$build_targets ../Libraries/LibHTML"
@@ -81,7 +82,6 @@ build_targets="$build_targets ../Games/Snake"
 build_targets="$build_targets ../Servers/SystemServer"
 build_targets="$build_targets ../Servers/TTYServer"
 build_targets="$build_targets ../Servers/TelnetServer"
-build_targets="$build_targets ../Servers/WindowServer"
 
 build_targets="$build_targets ../Shell"
 
