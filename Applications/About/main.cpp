@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
     auto window = GWindow::construct();
     window->set_title("About Serenity");
-    Rect window_rect { 0, 0, 240, 150 };
+    Rect window_rect { 0, 0, 240, 180 };
     window_rect.center_within(GDesktop::the().rect());
     window->set_resizable(false);
     window->set_rect(window_rect);
@@ -43,6 +43,16 @@ int main(int argc, char** argv)
     version_label->set_text(String::format("Version %s", uts.release));
     version_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     version_label->set_preferred_size(0, 11);
+
+    auto git_info_label = GLabel::construct(widget);
+    git_info_label->set_text(String::format("Built on %s@%s", GIT_BRANCH, GIT_COMMIT));
+    git_info_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    git_info_label->set_preferred_size(0, 11);
+
+    auto git_changes_label = GLabel::construct(widget);
+    git_changes_label->set_text(String::format("Changes: %s", GIT_CHANGES));
+    git_changes_label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    git_changes_label->set_preferred_size(0, 11);
 
     auto quit_button = GButton::construct(widget);
     quit_button->set_text("Okay");
