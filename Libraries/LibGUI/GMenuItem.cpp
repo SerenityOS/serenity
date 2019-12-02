@@ -56,5 +56,6 @@ void GMenuItem::update_window_server()
     if (m_menu_id < 0)
         return;
     auto& action = *m_action;
-    GWindowServerConnection::the().send_sync<WindowServer::UpdateMenuItem>(m_menu_id, m_identifier, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, action.shortcut().to_string());
+    auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
+    GWindowServerConnection::the().send_sync<WindowServer::UpdateMenuItem>(m_menu_id, m_identifier, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, shortcut_text);
 }

@@ -107,7 +107,8 @@ int GMenu::realize_menu()
                 }
                 icon_buffer_id = action.icon()->shared_buffer_id();
             }
-            GWindowServerConnection::the().send_sync<WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, action.shortcut().to_string(), icon_buffer_id);
+            auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
+            GWindowServerConnection::the().send_sync<WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, shortcut_text, icon_buffer_id);
         }
     }
     all_menus().set(m_menu_id, this);
