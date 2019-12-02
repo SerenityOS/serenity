@@ -24,6 +24,7 @@ build_targets="$build_targets ../Libraries/LibHTML/CodeGenerators/Generate_CSS_P
 # Build LibC, LibCore, LibIPC and LibThread before IPC servers, since they depend on them.
 build_targets="$build_targets ../Libraries/LibC"
 build_targets="$build_targets ../Libraries/LibCore"
+build_targets="$build_targets ../Libraries/LibDraw"
 build_targets="$build_targets ../Libraries/LibIPC"
 build_targets="$build_targets ../Libraries/LibThread"
 build_targets="$build_targets ../Libraries/LibPthread"
@@ -37,7 +38,6 @@ build_targets="$build_targets ../Servers/WindowServer"
 
 build_targets="$build_targets ../AK"
 
-build_targets="$build_targets ../Libraries/LibDraw"
 build_targets="$build_targets ../Libraries/LibGUI"
 build_targets="$build_targets ../Libraries/LibHTML"
 build_targets="$build_targets ../Libraries/LibM"
