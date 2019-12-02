@@ -306,6 +306,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         return -EINVAL;
     if (!region->is_mmap())
         return -EPERM;
+    region->set_readable(prot & PROT_READ);
     region->set_writable(prot & PROT_WRITE);
     region->remap();
     return 0;

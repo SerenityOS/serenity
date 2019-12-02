@@ -28,6 +28,8 @@ kinds of crashes.
 * `-T`: Make a syscall while using an invalid stack pointer.
 * `-t`: Trigger a page fault while using an invalid stack pointer.
 * `-S`: Make a syscall from writeable memory.
+* `-x`: Read from recently freed memory. (Tests an opportunistic malloc guard.)
+* `-y`: Write to recently freed memory. (Tests an opportunistic malloc guard.)
 
 ## Examples
 
