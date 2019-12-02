@@ -95,6 +95,16 @@ public:
         append_node(new Node(value));
     }
 
+    void prepend(T&& value)
+    {
+        prepend_node(new Node(move(value)));
+    }
+
+    void prepend(const T& value)
+    {
+        prepend_node(new Node(value));
+    }
+
     bool contains_slow(const T& value) const
     {
         for (auto* node = m_head; node; node = node->next) {
@@ -132,7 +142,7 @@ public:
         return end();
     }
 
-    void remove(Iterator& it)
+    void remove(Iterator it)
     {
         ASSERT(it.m_node);
         auto* node = it.m_node;
@@ -163,9 +173,25 @@ private:
             return;
         }
         ASSERT(m_tail);
+        ASSERT(!node->next);
         m_tail->next = node;
         node->prev = m_tail;
         m_tail = node;
+    }
+
+    void prepend_node(Node* node)
+    {
+        if (!m_head) {
+            ASSERT(!m_tail);
+            m_head = node;
+            m_tail = node;
+            return;
+        }
+        ASSERT(m_tail);
+        ASSERT(!node->prev);
+        m_head->prev = node;
+        node->next = m_head;
+        m_head = node;
     }
 
     Node* head() { return m_head; }
