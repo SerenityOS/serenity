@@ -1409,6 +1409,8 @@ void GTextEditor::set_document(GTextDocument& document)
         m_line_visual_data.append(make<LineVisualData>());
     }
     m_cursor = { 0, 0 };
+    if (has_selection())
+        m_selection.clear();
     recompute_all_visual_lines();
     update();
     m_document->register_client(*this);
