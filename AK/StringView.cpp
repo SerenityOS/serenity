@@ -68,8 +68,7 @@ Vector<StringView> StringView::lines(bool consider_cr) const
         }
         if (split_view) {
             ssize_t sublen = i - substart;
-            if (sublen != 0)
-                v.append(substring_view(substart, sublen));
+            v.append(substring_view(substart, sublen));
             substart = i + 1;
         }
         split_view = false;
