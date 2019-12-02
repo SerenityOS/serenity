@@ -284,7 +284,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
         return handle_zero_fault(page_index_in_region);
     }
     ASSERT(fault.type() == PageFault::Type::ProtectionViolation);
-    if (fault.access() == PageFault::Access::Write && should_cow(page_index_in_region)) {
+    if (fault.access() == PageFault::Access::Write && is_writable() && should_cow(page_index_in_region)) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("PV(cow) fault in Region{%p}[%u]\n", this, page_index_in_region);
 #endif
