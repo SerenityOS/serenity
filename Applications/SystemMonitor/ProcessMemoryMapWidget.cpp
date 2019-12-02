@@ -2,6 +2,7 @@
 #include <LibCore/CTimer.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GJsonArrayModel.h>
+#include <LibGUI/GSortingProxyModel.h>
 #include <LibGUI/GTableView.h>
 
 ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
@@ -30,7 +31,9 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
         return builder.to_string();
     });
     pid_vm_fields.empend("name", "Name", TextAlignment::CenterLeft);
-    m_table_view->set_model(GJsonArrayModel::create({}, move(pid_vm_fields)));
+    m_json_model = GJsonArrayModel::create({}, move(pid_vm_fields));
+    m_table_view->set_model(GSortingProxyModel::create(*m_json_model));
+    m_table_view->model()->set_key_column_and_sort_order(0, GSortOrder::Ascending);
     m_timer = CTimer::construct(1000, [this] { refresh(); }, this);
 }
 
@@ -43,11 +46,11 @@ void ProcessMemoryMapWidget::set_pid(pid_t pid)
     if (m_pid == pid)
         return;
     m_pid = pid;
-    static_cast<GJsonArrayModel*>(m_table_view->model())->set_json_path(String::format("/proc/%d/vm", pid));
+    m_json_model->set_json_path(String::format("/proc/%d/vm", pid));
 }
 
 void ProcessMemoryMapWidget::refresh()
 {
     if (m_pid != -1)
-        m_table_view->model()->update();
+        m_json_model->update();
 }
