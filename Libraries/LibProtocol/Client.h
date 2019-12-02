@@ -8,7 +8,7 @@ namespace LibProtocol {
 
 class Download;
 
-class Client : public IPC::Client::ConnectionNG<ProtocolClientEndpoint, ProtocolServerEndpoint>
+class Client : public IServerConnection<ProtocolClientEndpoint, ProtocolServerEndpoint>
     , public ProtocolClientEndpoint {
     C_OBJECT(Client)
 public:

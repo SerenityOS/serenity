@@ -3,7 +3,7 @@
 #include <SharedBuffer.h>
 
 AClientConnection::AClientConnection()
-    : ConnectionNG(*this, "/tmp/portal/audio")
+    : IServerConnection(*this, "/tmp/portal/audio")
 {
 }
 

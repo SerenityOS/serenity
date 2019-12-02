@@ -23,7 +23,7 @@ void ASClientConnection::for_each(Function<void(ASClientConnection&)> callback)
 }
 
 ASClientConnection::ASClientConnection(CLocalSocket& client_socket, int client_id, ASMixer& mixer)
-    : ConnectionNG(*this, client_socket, client_id)
+    : IClientConnection(*this, client_socket, client_id)
     , m_mixer(mixer)
 {
     s_connections.set(client_id, *this);

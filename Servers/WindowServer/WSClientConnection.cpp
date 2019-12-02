@@ -42,7 +42,7 @@ WSClientConnection* WSClientConnection::from_client_id(int client_id)
 }
 
 WSClientConnection::WSClientConnection(CLocalSocket& client_socket, int client_id)
-    : ConnectionNG(*this, client_socket, client_id)
+    : IClientConnection(*this, client_socket, client_id)
 {
     if (!s_connections)
         s_connections = new HashMap<int, NonnullRefPtr<WSClientConnection>>;

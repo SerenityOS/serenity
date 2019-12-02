@@ -5,12 +5,12 @@
 #include <WindowServer/WindowServerEndpoint.h>
 
 class GWindowServerConnection
-    : public IPC::Client::ConnectionNG<WindowClientEndpoint, WindowServerEndpoint>
+    : public IServerConnection<WindowClientEndpoint, WindowServerEndpoint>
     , public WindowClientEndpoint {
     C_OBJECT(GWindowServerConnection)
 public:
     GWindowServerConnection()
-        : ConnectionNG(*this, "/tmp/portal/window")
+        : IServerConnection(*this, "/tmp/portal/window")
     {
         handshake();
     }
