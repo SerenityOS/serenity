@@ -113,6 +113,14 @@ public:
             m_access &= ~Access::Write;
     }
 
+    void set_readable(bool b)
+    {
+        if (b)
+            m_access |= Access::Read;
+        else
+            m_access &= ~Access::Read;
+    }
+
     void map(PageDirectory&);
     enum class ShouldDeallocateVirtualMemoryRange {
         No,

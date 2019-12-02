@@ -191,7 +191,7 @@ void Region::remap_page(size_t index)
     auto& physical_page = vmobject().physical_pages()[first_page_index() + index];
     ASSERT(physical_page);
     pte.set_physical_page_base(physical_page->paddr().get());
-    pte.set_present(true);
+    pte.set_present(is_readable());
     if (should_cow(index))
         pte.set_writable(false);
     else
@@ -239,7 +239,7 @@ void Region::map(PageDirectory& page_directory)
         auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
         if (physical_page) {
             pte.set_physical_page_base(physical_page->paddr().get());
-            pte.set_present(true); // FIXME: Maybe we should use the is_readable flag here?
+            pte.set_present(is_readable());
             if (should_cow(i))
                 pte.set_writable(false);
             else
@@ -267,6 +267,11 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
 {
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
+        if (!is_readable()) {
+            dbgprintf("NP(non-readable) fault in Region{%p}[%u]\n", this, page_index_in_region);
+            return PageFaultResponse::ShouldCrash;
+        }
+
         if (vmobject().is_inode()) {
 #ifdef PAGE_FAULT_DEBUG
             dbgprintf("NP(inode) fault in Region{%p}[%u]\n", this, page_index_in_region);

@@ -26,6 +26,8 @@ int main(int argc, char** argv)
         InvalidStackPointerOnSyscall,
         InvalidStackPointerOnPageFault,
         SyscallFromWritableMemory,
+        WriteToFreedMemoryStillCachedByMalloc,
+        ReadFromFreedMemoryStillCachedByMalloc,
     };
     Mode mode = SegmentationViolation;
 
@@ -56,6 +58,10 @@ int main(int argc, char** argv)
         mode = InvalidStackPointerOnPageFault;
     else if (String(argv[1]) == "-S")
         mode = SyscallFromWritableMemory;
+    else if (String(argv[1]) == "-x")
+        mode = ReadFromFreedMemoryStillCachedByMalloc;
+    else if (String(argv[1]) == "-y")
+        mode = WriteToFreedMemoryStillCachedByMalloc;
     else
         print_usage_and_exit();
 
@@ -159,6 +165,23 @@ int main(int argc, char** argv)
     if (mode == SyscallFromWritableMemory) {
         u8 buffer[] = { 0xb8, Syscall::SC_getuid, 0, 0, 0, 0xcd, 0x82 };
         ((void(*)())buffer)();
+    }
+
+    if (mode == ReadFromFreedMemoryStillCachedByMalloc) {
+        auto* ptr = (u8*)malloc(1024);
+        free(ptr);
+        dbgprintf("ptr = %p\n", ptr);
+        volatile auto foo = *ptr;
+        (void)foo;
+        ASSERT_NOT_REACHED();
+    }
+
+    if (mode == WriteToFreedMemoryStillCachedByMalloc) {
+        auto* ptr = (u8*)malloc(1024);
+        free(ptr);
+        dbgprintf("ptr = %p\n", ptr);
+        *ptr = 'x';
+        ASSERT_NOT_REACHED();
     }
 
     ASSERT_NOT_REACHED();
