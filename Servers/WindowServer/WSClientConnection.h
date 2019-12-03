@@ -86,6 +86,7 @@ private:
     virtual OwnPtr<WindowServer::PopupMenuResponse> handle(const WindowServer::PopupMenu&) override;
     virtual OwnPtr<WindowServer::DismissMenuResponse> handle(const WindowServer::DismissMenu&) override;
     virtual OwnPtr<WindowServer::SetWindowIconBitmapResponse> handle(const WindowServer::SetWindowIconBitmap&) override;
+    virtual void handle(const WindowServer::WM_SetWindowTaskbarRect&) override;
 
     HashMap<int, NonnullRefPtr<WSWindow>> m_windows;
     HashMap<int, NonnullOwnPtr<WSMenuBar>> m_menubars;
