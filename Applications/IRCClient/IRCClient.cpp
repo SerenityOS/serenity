@@ -5,6 +5,7 @@
 #include "IRCQuery.h"
 #include "IRCWindow.h"
 #include "IRCWindowListModel.h"
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CNotifier.h>
 #include <arpa/inet.h>
@@ -513,6 +514,11 @@ void IRCClient::handle_rpl_namreply(const Message& msg)
     auto& channel_name = msg.arguments[2];
     auto& channel = ensure_channel(channel_name);
     auto members = msg.arguments[3].split(' ');
+
+    quick_sort(members.begin(), members.end(), [](auto& a, auto& b) {
+        return strcasecmp(a.characters(), b.characters()) < 0;
+    });
+
     for (auto& member : members) {
         if (member.is_empty())
             continue;
