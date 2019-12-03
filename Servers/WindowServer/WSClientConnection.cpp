@@ -612,3 +612,19 @@ bool WSClientConnection::is_showing_modal_window() const
     }
     return false;
 }
+
+void WSClientConnection::handle(const WindowServer::WM_SetWindowTaskbarRect& message)
+{
+    auto* client = WSClientConnection::from_client_id(message.client_id());
+    if (!client) {
+        did_misbehave("WM_SetWindowTaskbarRect: Bad client ID");
+        return;
+    }
+    auto it = client->m_windows.find(message.window_id());
+    if (it == client->m_windows.end()) {
+        did_misbehave("WM_SetWindowTaskbarRect: Bad window ID");
+        return;
+    }
+    auto& window = *(*it).value;
+    window.set_taskbar_rect(message.rect());
+}

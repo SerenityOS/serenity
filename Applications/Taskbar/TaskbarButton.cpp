@@ -16,3 +16,13 @@ void TaskbarButton::context_menu_event(GContextMenuEvent&)
 {
     GWindowServerConnection::the().post_message(WindowServer::WM_PopupWindowMenu(m_identifier.client_id(), m_identifier.window_id(), screen_relative_rect().location()));
 }
+
+void TaskbarButton::resize_event(GResizeEvent& event)
+{
+    GWindowServerConnection::the().post_message(
+        WindowServer::WM_SetWindowTaskbarRect(
+            m_identifier.client_id(),
+            m_identifier.window_id(),
+            screen_relative_rect()));
+    return GButton::resize_event(event);
+}

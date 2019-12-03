@@ -52,6 +52,7 @@ endpoint WindowServer = 2
     WM_SetWindowMinimized(i32 client_id, i32 window_id, bool minimized) =|
     WM_StartWindowResize(i32 client_id, i32 window_id) =|
     WM_PopupWindowMenu(i32 client_id, i32 window_id, Point screen_position) =|
+    WM_SetWindowTaskbarRect(i32 client_id, i32 window_id, Rect rect) =|
 
     SetWindowHasAlphaChannel(i32 window_id, bool has_alpha_channel) => ()
     MoveWindowToFront(i32 window_id) => ()

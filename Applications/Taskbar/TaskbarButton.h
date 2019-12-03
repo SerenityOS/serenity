@@ -11,6 +11,7 @@ public:
 
 private:
     virtual void context_menu_event(GContextMenuEvent&) override;
+    virtual void resize_event(GResizeEvent&) override;
 
     WindowIdentifier m_identifier;
 };

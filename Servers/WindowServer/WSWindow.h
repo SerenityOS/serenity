@@ -102,6 +102,9 @@ public:
 
     void set_rect_from_window_manager_resize(const Rect&);
 
+    void set_taskbar_rect(const Rect& rect) { m_taskbar_rect = rect; }
+    const Rect& taskbar_rect() const { return m_taskbar_rect; }
+
     void move_to(const Point& position) { set_rect({ position, size() }); }
     void move_to(int x, int y) { move_to({ x, y }); }
 
@@ -152,6 +155,13 @@ public:
     void request_update(const Rect&);
     DisjointRectSet take_pending_paint_rects() { return move(m_pending_paint_rects); }
 
+    bool in_minimize_animation() const { return m_minimize_animation_step != -1; }
+
+    int minimize_animation_index() const { return m_minimize_animation_step; }
+    void step_minimize_animation() { m_minimize_animation_step += 1; }
+    void start_minimize_animation() { m_minimize_animation_step = 0; }
+    void end_minimize_animation() { m_minimize_animation_step = -1; }
+
     // For InlineLinkedList.
     // FIXME: Maybe make a ListHashSet and then WSWindowManager can just use that.
     WSWindow* m_next { nullptr };
@@ -164,6 +174,7 @@ private:
     String m_title;
     Rect m_rect;
     Rect m_saved_nonfullscreen_rect;
+    Rect m_taskbar_rect;
     WSWindowType m_type { WSWindowType::Normal };
     bool m_global_cursor_tracking_enabled { false };
     bool m_automatic_cursor_tracking_enabled { false };
@@ -190,4 +201,5 @@ private:
     DisjointRectSet m_pending_paint_rects;
     Rect m_unmaximized_rect;
     RefPtr<WSMenu> m_window_menu;
+    int m_minimize_animation_step { -1 };
 };

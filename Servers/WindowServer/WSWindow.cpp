@@ -103,6 +103,7 @@ void WSWindow::set_minimized(bool minimized)
     if (m_minimized == minimized)
         return;
     m_minimized = minimized;
+    start_minimize_animation();
     if (!minimized)
         request_update({ {}, size() });
     invalidate();
