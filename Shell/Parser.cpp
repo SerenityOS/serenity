@@ -1,6 +1,7 @@
 #include "Parser.h"
 #include <stdio.h>
 #include <unistd.h>
+#include <ctype.h>
 
 void Parser::commit_token()
 {
@@ -101,6 +102,28 @@ Vector<Command> Parser::parse()
             if (ch == '\"') {
                 m_state = State::InDoubleQuotes;
                 break;
+            }
+            if (isdigit(ch)) {
+                if (i != m_input.length() - 1) {
+                    char next_ch = m_input.characters()[i + 1];
+                    if (next_ch == '>') {
+                        commit_token();
+                        begin_redirect_write(ch - '0');
+                        ++i;
+
+                        // Search for another > for append.
+                        m_state = State::InWriteAppendOrRedirectionPath;
+                        break;
+                    }
+                    if (next_ch == '<') {
+                        commit_token();
+                        begin_redirect_read(ch - '0');
+                        ++i;
+
+                        m_state = State::InRedirectionPath;
+                        break;
+                    }
+                }
             }
             m_token.append(ch);
             break;
