@@ -64,7 +64,12 @@ static int sh_export(int argc, char** argv)
         return 1;
     }
 
-    return setenv(parts[0].characters(), parts[1].characters(), 1);
+    int setenv_return = setenv(parts[0].characters(), parts[1].characters(), 1);
+
+    if (setenv_return == 0 && parts[0] == "PATH")
+        editor.cache_path();
+
+    return setenv_return;
 }
 
 static int sh_unset(int argc, char** argv)
@@ -909,6 +914,8 @@ int main(int argc, char** argv)
 
     load_history();
     atexit(save_history);
+
+    editor.cache_path();
 
     for (;;) {
         auto line = editor.get_line(prompt());

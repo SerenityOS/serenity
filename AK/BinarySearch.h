@@ -1,5 +1,7 @@
 #pragma once
 
+#include <AK/Types.h>
+
 namespace AK {
 
 template<typename T>

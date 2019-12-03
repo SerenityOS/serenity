@@ -37,58 +37,70 @@ void LineEditor::append(const String& string)
     m_cursor = m_buffer.size();
 }
 
-void LineEditor::tab_complete_first_token()
+void LineEditor::cache_path()
 {
-    auto input = String::copy(m_buffer);
+    if (!m_path.is_empty())
+        m_path.clear_with_capacity();
 
     String path = getenv("PATH");
     if (path.is_empty())
         return;
+
     auto directories = path.split(':');
-
-    String match;
-
-    // Go through the files in PATH.
     for (const auto& directory : directories) {
         CDirIterator programs(directory.characters(), CDirIterator::SkipDots);
         while (programs.has_next()) {
-            String program = programs.next_path();
-            if (!program.starts_with(input))
-                continue;
+            auto program = programs.next_path();
 
-            // Check that the file is an executable program.
-            struct stat program_status;
             StringBuilder program_path;
             program_path.append(directory.characters());
             program_path.append('/');
             program_path.append(program.characters());
+            struct stat program_status;
             int stat_error = stat(program_path.to_string().characters(), &program_status);
             if (stat_error || !(program_status.st_mode & S_IXUSR))
                 continue;
 
-            // Set `match` to the first one that starts with `input`.
-            if (match.is_empty()) {
-                match = program;
-            } else {
-                // Remove characters from the end of `match` if they're
-                // different from another `program` starting with `input`.
-                int i = input.length();
-                while (i < match.length() && i < program.length() && match[i] == program[i])
-                    ++i;
-                match = match.substring(0, i);
-            }
-
-            if (match.length() == input.length())
-                return;
+            m_path.append(program.characters());
         }
     }
 
-    if (match.is_empty())
+    quick_sort(m_path.begin(), m_path.end(), AK::is_less_than<String>);
+}
+
+void LineEditor::cut_mismatching_chars(String& completion, const String& program, int token_length)
+{
+    int i = token_length;
+    while (i < completion.length() && i < program.length() && completion[i] == program[i])
+        ++i;
+    completion = completion.substring(0, i);
+}
+
+void LineEditor::tab_complete_first_token()
+{
+    String token = String::copy(m_buffer);
+
+    auto match = binary_search(m_path.data(), m_path.size(), token, [](const String& token, const String& program) -> int {
+        return strncmp(token.characters(), program.characters(), token.length());
+    });
+    if (!match)
         return;
 
-    // Then append `match` to the buffer, excluding the `input` part which is
-    // already in the buffer.
-    append(match.substring(input.length(), match.length() - input.length()).characters());
+    String completion = *match;
+
+    // Now that we have a program name starting with our token, we look at
+    // other program names starting with our token and cut off any mismatching
+    // characters.
+
+    int index = match - m_path.data();
+    for (int i = index - 1; i >= 0 && m_path[i].starts_with(token); --i)
+        cut_mismatching_chars(completion, m_path[i], token.length());
+    for (int i = index + 1; i < m_path.size() && m_path[i].starts_with(token); ++i)
+        cut_mismatching_chars(completion, m_path[i], token.length());
+
+    if (token.length() == completion.length())
+        return;
+    append(completion.substring(token.length(), completion.length() - token.length()).characters());
 }
 
 String LineEditor::get_line(const String& prompt)
