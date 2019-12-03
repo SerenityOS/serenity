@@ -32,6 +32,8 @@ int get_number_of_days(int month, int year)
 
     if (month == 2)
         return is_leap_year ? 29 : 28;
+
+    return is_long_month ? 31 : 30;
 }
 
 void append_to_print(char* buffer, int row, int column, char* text)
@@ -62,78 +64,14 @@ void insert_month_to_print(int column, int month, int year)
     int last_written_chars = 0;
     for (int i = 1; day_to_print <= days_in_the_month; ++i) {
         if (i - 1 < first_day_of_week_for_month) {
-            last_written_chars += sprintf(temp_buffer + last_written_chars * sizeof(char), "   ");
+            last_written_chars += sprintf(temp_buffer + last_written_chars, "   ");
         } else {
             if (year == current_year && month == current_month && target_day == day_to_print) {
                 // FIXME: To replicate Unix cal it would be better to use "\x1b[30;47m%2d\x1b[0m " in here instead of *.
                 //        However, doing that messes up the layout.
-                last_written_chars += sprintf(temp_buffer + last_written_chars * sizeof(char), "%2d*", day_to_print);
+                last_written_chars += sprintf(temp_buffer + last_written_chars, "%2d*", day_to_print);
             } else {
-                last_written_chars += sprintf(temp_buffer + last_written_chars * sizeof(char), "%2d ", day_to_print);
-            }
-            day_to_print++;
-        }
-
-        append_to_print(print_buffer, printing_row, printing_column, temp_buffer);
-
-        if (i % 7 == 0) {
-            printing_row++;
-            memset(temp_buffer, ' ', line_width * 8);
-            temp_buffer[line_width * 8 - 1] = '\0';
-            last_written_chars = 0;
-        }
-    }
-}
-
-void clean_buffers()
-{
-    for (int i = 1; i < line_width * line_count; ++i) {
-        print_buffer[i - 1] = i % line_width == 0 ? '\n' : ' ';
-    }
-    print_buffer[line_width * line_count - 1] = '\0';
-
-    for (int i = 0; i < line_width; ++i) {
-        temp_buffer[i] = ' ';
-    }
-    temp_buffer[line_width - 1] = '\0';
-}
-
-void append_to_print(char* buffer, int row, int column, char* text)
-{
-    int starting_point = (line_width * row) + (column * column_width);
-    for (int i = 0; text[i] != '\0'; i++) {
-        buffer[starting_point + i] = text[i];
-    }
-}
-
-void insert_month_to_print(int column, int month, int year)
-{
-    int printing_column = column;
-    int printing_row = 0;
-
-    // FIXME: Both the month name and month header text should be provided by a locale
-    sprintf(temp_buffer, "     %02u - %04u    ", month, year);
-    append_to_print(print_buffer, printing_row, printing_column, temp_buffer);
-    printing_row++;
-
-    sprintf(temp_buffer, "Su Mo Tu We Th Fr Sa");
-    append_to_print(print_buffer, printing_row, printing_column, temp_buffer);
-    printing_row++;
-
-    int day_to_print = 1;
-    int first_day_of_week_for_month = day_of_week(1, month, year);
-    int days_in_the_month = get_number_of_days(month, year);
-    int last_written_chars = 0;
-    for (int i = 1; day_to_print <= days_in_the_month; ++i) {
-        if (i - 1 < first_day_of_week_for_month) {
-            last_written_chars += sprintf(temp_buffer + last_written_chars * sizeof(char), "   ");
-        } else {
-            if (year == current_year && month == current_month && target_day == day_to_print) {
-                // FIXME: To replicate Unix cal it would be better to use "\x1b[30;47m%2d\x1b[0m " in here instead of *.
-                //        However, doing that messes up the layout.
-                last_written_chars += sprintf(temp_buffer + last_written_chars * sizeof(char), "%2d*", day_to_print);
-            } else {
-                last_written_chars += sprintf(temp_buffer + last_written_chars * sizeof(char), "%2d ", day_to_print);
+                last_written_chars += sprintf(temp_buffer + last_written_chars, "%2d ", day_to_print);
             }
             day_to_print++;
         }
@@ -220,7 +158,7 @@ int main(int argc, char** argv)
         for (int i = 1; i < 12; ++i) {
             insert_month_to_print(0, i++, target_year);
             insert_month_to_print(1, i++, target_year);
-            insert_month_to_print(2, i++, target_year);
+            insert_month_to_print(2, i, target_year);
             printf(print_buffer);
             printf("\n");
             clean_buffers();
