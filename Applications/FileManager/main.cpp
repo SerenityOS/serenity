@@ -96,6 +96,24 @@ int main(int argc, char** argv)
         directory_view->open(path);
     };
 
+    auto refresh_tree_view = [&] {
+        file_system_model->update();
+
+        auto current_path = directory_view->path();
+
+        // not exactly sure why i have to reselect the root node first, but the index() fails if I dont
+        auto root_index = file_system_model->index(file_system_model->root_path());
+        tree_view->selection().set(root_index);
+
+        // reselect the existing folder in the tree
+        auto new_index = file_system_model->index(current_path);
+        tree_view->selection().set(new_index);
+        tree_view->scroll_into_view(new_index, Orientation::Vertical);
+        tree_view->update();
+
+        directory_view->refresh();
+    };
+
     auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GAction&) {
         directory_view->open_parent_directory();
     });
@@ -111,21 +129,7 @@ int main(int argc, char** argv)
             if (rc < 0) {
                 GMessageBox::show(String::format("mkdir(\"%s\") failed: %s", new_dir_path.characters(), strerror(errno)), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, window);
             } else {
-                file_system_model->update();
-
-                auto current_path = directory_view->path();
-
-                // not exactly sure why i have to reselect the root node first, but the index() fails if I dont
-                auto root_index = file_system_model->index(file_system_model->root_path());
-                tree_view->selection().set(root_index);
-
-                // reselect the existing folder in the tree
-                auto new_index = file_system_model->index(current_path);
-                tree_view->selection().set(new_index);
-                tree_view->scroll_into_view(new_index, Orientation::Vertical);
-                tree_view->update();
-
-                directory_view->refresh();
+                refresh_tree_view();
             }
         }
     });
@@ -263,6 +267,8 @@ int main(int argc, char** argv)
                     GMessageBox::InputType::OK,
                     window);
                 break;
+            } else {
+                refresh_tree_view();
             }
 
             if (S_ISDIR(st.st_mode)) {
@@ -277,6 +283,8 @@ int main(int argc, char** argv)
                         GMessageBox::InputType::OK,
                         window);
                     break;
+                } else {
+                    refresh_tree_view();
                 }
             } else if (unlink(path.characters()) < 0) {
                 int saved_errno = errno;
