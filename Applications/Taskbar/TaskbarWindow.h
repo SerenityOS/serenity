@@ -11,6 +11,7 @@ public:
     int taskbar_height() const { return 28; }
 
 private:
+    void create_quick_launch_bar();
     void on_screen_rect_change(const Rect&);
     NonnullRefPtr<GButton> create_button(const WindowIdentifier&);
 
