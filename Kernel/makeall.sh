@@ -1,4 +1,9 @@
 #!/bin/sh
+if [ -z "$SERENITY_ROOT" ]; then
+    echo "You must source Toolchain/UseIt.sh to build Serenity."
+    exit 1
+fi
+
 set -e
 
 # Get user and group details for setting qemu disk image ownership
