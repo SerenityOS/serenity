@@ -103,6 +103,51 @@ Vector<Command> Parser::parse()
                 m_state = State::InDoubleQuotes;
                 break;
             }
+            
+            // redirection from zsh-style multi-digit fd, such as {10}>file
+            if (ch == '{') {
+                bool is_multi_fd_redirection = false;
+                int redir_end = i + 1;
+
+                while (redir_end < m_input.length()) {
+                    char lookahead_ch = m_input.characters()[redir_end];
+                    if (isdigit(lookahead_ch)) {
+                        ++redir_end;
+                        continue;
+                    }
+                    if (lookahead_ch == '}' && redir_end + 1 != m_input.length()) {
+                        // Disallow {}> and {}<
+                        if (redir_end == i + 1)
+                            break;
+
+                        ++redir_end;
+                        if (m_input.characters()[redir_end] == '>' || m_input.characters()[redir_end] == '<')
+                            is_multi_fd_redirection = true;
+                        break;
+                    }
+                    break;
+                }
+
+                if (is_multi_fd_redirection) {
+                    commit_token();
+
+                    int fd = atoi(&m_input.characters()[i + 1]);
+
+                    if (m_input.characters()[redir_end] == '>') {
+                        begin_redirect_write(fd);
+                        // Search for another > for append.
+                        m_state = State::InWriteAppendOrRedirectionPath;
+                    }
+                    if (m_input.characters()[redir_end] == '<') {
+                        begin_redirect_read(fd);
+                        m_state = State::InRedirectionPath;
+                    }
+
+                    i = redir_end;
+
+                    break;
+                }
+            }
             if (isdigit(ch)) {
                 if (i != m_input.length() - 1) {
                     char next_ch = m_input.characters()[i + 1];
