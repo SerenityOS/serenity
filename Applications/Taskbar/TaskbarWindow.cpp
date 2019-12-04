@@ -1,6 +1,7 @@
 #include "TaskbarWindow.h"
 #include "TaskbarButton.h"
 #include <LibC/SharedBuffer.h>
+#include <LibCore/CConfigFile.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GDesktop.h>
@@ -32,10 +33,66 @@ TaskbarWindow::TaskbarWindow()
     WindowList::the().aid_create_button = [this](auto& identifier) {
         return create_button(identifier);
     };
+
+    create_quick_launch_bar();
 }
 
 TaskbarWindow::~TaskbarWindow()
 {
+}
+
+void TaskbarWindow::create_quick_launch_bar()
+{
+    auto quick_launch_bar = GFrame::construct(main_widget());
+    quick_launch_bar->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+    quick_launch_bar->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    quick_launch_bar->layout()->set_spacing(3);
+    quick_launch_bar->layout()->set_margins({ 3, 0, 3, 0 });
+    quick_launch_bar->set_frame_thickness(1);
+    quick_launch_bar->set_frame_shape(FrameShape::Container);
+    quick_launch_bar->set_frame_shadow(FrameShadow::Raised);
+
+    int total_width = 6;
+    bool first = true;
+
+    auto config = CConfigFile::get_for_app("Taskbar");
+    constexpr const char* quick_launch = "QuickLaunch";
+
+    // FIXME: CConfigFile does not keep the order of the entries.
+    for (auto& name : config->keys(quick_launch)) {
+        auto af_name = config->read_entry(quick_launch, name);
+        ASSERT(!af_name.is_null());
+        auto af_path = String::format("/res/apps/%s", af_name.characters());
+        auto af = CConfigFile::open(af_path);
+        auto app_executable = af->read_entry("App", "Executable");
+        auto app_icon_path = af->read_entry("Icons", "16x16");
+
+        auto button = GButton::construct(quick_launch_bar);
+        button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
+        button->set_preferred_size(22, 22);
+        button->set_button_style(ButtonStyle::CoolBar);
+
+        button->set_icon(GraphicsBitmap::load_from_file(app_icon_path));
+        // FIXME: the tooltip ends up outside the screen rect.
+        button->set_tooltip(name);
+        button->on_click = [app_executable](auto&) {
+            pid_t pid = fork();
+            if (pid < 0) {
+                perror("fork");
+            } else if (pid == 0) {
+                execl(app_executable.characters(), app_executable.characters(), nullptr);
+                perror("execl");
+                ASSERT_NOT_REACHED();
+            }
+        };
+
+        if (!first)
+            total_width += 3;
+        first = false;
+        total_width += 22;
+    }
+
+    quick_launch_bar->set_preferred_size(total_width, 22);
 }
 
 void TaskbarWindow::on_screen_rect_change(const Rect& rect)
