@@ -3,6 +3,7 @@
 #include <LibDraw/Font.h>
 #include <LibDraw/Painter.h>
 #include <WindowServer/WSMenuManager.h>
+#include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>
 #include <time.h>
 #include <unistd.h>
@@ -34,6 +35,26 @@ WSMenuManager::WSMenuManager()
             last_update_time = now;
         }
     });
+
+    auto menubar_rect = this->menubar_rect();
+
+    int username_width = Font::default_bold_font().width(m_username);
+    m_username_rect = {
+        menubar_rect.right() - menubar_menu_margin() / 2 - Font::default_bold_font().width(m_username),
+        menubar_rect.y(),
+        username_width,
+        menubar_rect.height()
+    };
+
+    int time_width = Font::default_font().width("2222-22-22 22:22:22");
+    m_time_rect = {
+        m_username_rect.left() - menubar_menu_margin() / 2 - time_width,
+        menubar_rect.y(),
+        time_width,
+        menubar_rect.height()
+    };
+
+    m_audio_rect = { m_time_rect.right() - time_width - 20, m_time_rect.y() + 1, 12, 16 };
 }
 
 WSMenuManager::~WSMenuManager()
@@ -43,7 +64,7 @@ WSMenuManager::~WSMenuManager()
 void WSMenuManager::setup()
 {
     m_window = WSWindow::construct(*this, WSWindowType::Menubar);
-    m_window->set_rect(WSWindowManager::the().menubar_rect());
+    m_window->set_rect(menubar_rect());
 }
 
 bool WSMenuManager::is_open(const WSMenu& menu) const
@@ -58,7 +79,7 @@ bool WSMenuManager::is_open(const WSMenu& menu) const
 void WSMenuManager::draw()
 {
     auto& wm = WSWindowManager::the();
-    auto menubar_rect = wm.menubar_rect();
+    auto menubar_rect = this->menubar_rect();
 
     if (m_needs_window_resize) {
         m_window->set_rect(menubar_rect);
@@ -87,16 +108,7 @@ void WSMenuManager::draw()
         return true;
     });
 
-    int username_width = Font::default_bold_font().width(m_username);
-
-    // FIXME: This rect should only be computed once.
-    Rect username_rect {
-        menubar_rect.right() - wm.menubar_menu_margin() / 2 - Font::default_bold_font().width(m_username),
-        menubar_rect.y(),
-        username_width,
-        menubar_rect.height()
-    };
-    painter.draw_text(username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, Color::Black);
+    painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, Color::Black);
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
@@ -107,20 +119,9 @@ void WSMenuManager::draw()
         tm->tm_hour,
         tm->tm_min,
         tm->tm_sec);
-    int time_width = wm.font().width(time_text);
 
-    // FIXME: This rect should only be computed once.
-    Rect time_rect {
-        username_rect.left() - wm.menubar_menu_margin() / 2 - time_width,
-        menubar_rect.y(),
-        time_width,
-        menubar_rect.height()
-    };
 
-    painter.draw_text(time_rect, time_text, wm.font(), TextAlignment::CenterRight, Color::Black);
-
-    // FIXME: This rect should only be computed once.
-    m_audio_rect = { time_rect.right() - wm.font().width(time_text) - 20, time_rect.y() + 1, 12, 16 };
+    painter.draw_text(m_time_rect, time_text, wm.font(), TextAlignment::CenterRight, Color::Black);
 
     auto& audio_bitmap = m_audio_muted ? *m_muted_bitmap : *m_unmuted_bitmap;
     painter.blit(m_audio_rect.location(), audio_bitmap, audio_bitmap.rect());
@@ -321,4 +322,9 @@ void WSMenuManager::invalidate_applet(WSMenuApplet& applet, const Rect& rect)
     (void)rect;
     draw_applet(applet);
     window().invalidate();
+}
+
+Rect WSMenuManager::menubar_rect() const
+{
+    return { 0, 0, WSScreen::the().rect().width(), 18 };
 }

@@ -241,11 +241,6 @@ void WSWindowManager::set_resolution(int width, int height)
     }
 }
 
-int WSWindowManager::menubar_menu_margin() const
-{
-    return 16;
-}
-
 void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 {
     if (menubar)
@@ -255,11 +250,11 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
 #ifdef DEBUG_MENUS
     dbg() << "[WM] Current menubar is now " << menubar;
 #endif
-    Point next_menu_location { menubar_menu_margin() / 2, 0 };
+    Point next_menu_location { WSMenuManager::menubar_menu_margin() / 2, 0 };
     int index = 0;
     for_each_active_menubar_menu([&](WSMenu& menu) {
         int text_width = index == 1 ? Font::default_bold_font().width(menu.name()) : font().width(menu.name());
-        menu.set_rect_in_menubar({ next_menu_location.x() - menubar_menu_margin() / 2, 0, text_width + menubar_menu_margin(), menubar_rect().height() - 1 });
+        menu.set_rect_in_menubar({ next_menu_location.x() - WSMenuManager::menubar_menu_margin() / 2, 0, text_width + WSMenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
         menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
         ++index;
@@ -926,7 +921,7 @@ Rect WSWindowManager::menubar_rect() const
 {
     if (active_fullscreen_window())
         return {};
-    return { 0, 0, WSScreen::the().rect().width(), 18 };
+    return m_menu_manager.menubar_rect();
 }
 
 void WSWindowManager::draw_window_switcher()

@@ -23,6 +23,9 @@ public:
 
     Vector<WeakPtr<WSMenu>>& open_menu_stack() { return m_open_menu_stack; }
 
+    Rect menubar_rect() const;
+    static int menubar_menu_margin() { return 16; }
+
     void set_needs_window_resize();
 
     WSMenu* current_menu() { return m_current_menu.ptr(); }
@@ -64,6 +67,8 @@ private:
     OwnPtr<AClientConnection> m_audio_client;
 
     Rect m_audio_rect;
+    Rect m_username_rect;
+    Rect m_time_rect;
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
