@@ -358,6 +358,11 @@ template<typename PutChFunc>
             case 'p':
                 ret += print_hex(putch, bufptr, va_arg(ap, u32), *p == 'P', true, false, true, 8);
                 break;
+
+            case 'n':
+                *va_arg(ap, int*) = ret;
+                break;
+
             default:
                 dbg() << "printf_internal: Unimplemented format specifier " << *p << " (fmt: " << fmt << ")";
             }
