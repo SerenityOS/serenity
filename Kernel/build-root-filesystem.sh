@@ -108,6 +108,7 @@ cp ../Servers/TTYServer/TTYServer mnt/bin/TTYServer
 cp ../Servers/TelnetServer/TelnetServer mnt/bin/TelnetServer
 cp ../Servers/ProtocolServer/ProtocolServer mnt/bin/ProtocolServer
 cp ../Shell/Shell mnt/bin/Shell
+cp ../MenuApplets/CPUGraph/CPUGraph.MenuApplet mnt/bin/
 echo "done"
 
 printf "installing shortcuts... "
