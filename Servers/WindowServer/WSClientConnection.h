@@ -10,6 +10,7 @@
 #include <WindowServer/WSEvent.h>
 #include <WindowServer/WindowServerEndpoint.h>
 
+class WSMenuApplet;
 class WSWindow;
 class WSMenu;
 class WSMenuBar;
@@ -87,7 +88,12 @@ private:
     virtual OwnPtr<WindowServer::DismissMenuResponse> handle(const WindowServer::DismissMenu&) override;
     virtual OwnPtr<WindowServer::SetWindowIconBitmapResponse> handle(const WindowServer::SetWindowIconBitmap&) override;
     virtual void handle(const WindowServer::WM_SetWindowTaskbarRect&) override;
+    virtual OwnPtr<WindowServer::CreateMenuAppletResponse> handle(const WindowServer::CreateMenuApplet&) override;
+    virtual OwnPtr<WindowServer::DestroyMenuAppletResponse> handle(const WindowServer::DestroyMenuApplet&) override;
+    virtual OwnPtr<WindowServer::SetMenuAppletBackingStoreResponse> handle(const WindowServer::SetMenuAppletBackingStore&) override;
+    virtual OwnPtr<WindowServer::InvalidateMenuAppletRectResponse> handle(const WindowServer::InvalidateMenuAppletRect&) override;
 
+    HashMap<i32, NonnullOwnPtr<WSMenuApplet>> m_menu_applets;
     HashMap<int, NonnullRefPtr<WSWindow>> m_windows;
     HashMap<int, NonnullOwnPtr<WSMenuBar>> m_menubars;
     HashMap<int, NonnullRefPtr<WSMenu>> m_menus;
