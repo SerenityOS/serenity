@@ -43,6 +43,7 @@ private:
     void draw_cursor();
     void draw_geometry_label();
     void draw_menubar();
+    void run_animations();
 
     unsigned m_compose_count { 0 };
     unsigned m_flush_count { 0 };
