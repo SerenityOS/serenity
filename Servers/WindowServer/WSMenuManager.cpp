@@ -29,10 +29,9 @@ WSMenuManager::WSMenuManager()
     m_timer = CTimer::construct(300, [this] {
         static time_t last_update_time;
         time_t now = time(nullptr);
-        if (now != last_update_time || m_cpu_monitor.is_dirty()) {
+        if (now != last_update_time) {
             tick_clock();
             last_update_time = now;
-            m_cpu_monitor.set_dirty(false);
         }
     });
 }
@@ -121,11 +120,7 @@ void WSMenuManager::draw()
     painter.draw_text(time_rect, time_text, wm.font(), TextAlignment::CenterRight, Color::Black);
 
     // FIXME: This rect should only be computed once.
-    Rect cpu_rect { time_rect.right() - wm.font().width(time_text) - m_cpu_monitor.capacity() - 10, time_rect.y() + 1, m_cpu_monitor.capacity(), time_rect.height() - 2 };
-    m_cpu_monitor.paint(painter, cpu_rect);
-
-    // FIXME: This rect should only be computed once.
-    m_audio_rect = { cpu_rect.left() - 20, cpu_rect.y(), 12, 16 };
+    m_audio_rect = { time_rect.right() - wm.font().width(time_text) - 20, time_rect.y() + 1, 12, 16 };
 
     auto& audio_bitmap = m_audio_muted ? *m_muted_bitmap : *m_unmuted_bitmap;
     painter.blit(m_audio_rect.location(), audio_bitmap, audio_bitmap.rect());

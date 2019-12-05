@@ -14,7 +14,6 @@ OBJS = \
     WSCursor.o \
     WSWindowFrame.o \
     WSButton.o \
-    WSCPUMonitor.o \
     WSCompositor.o \
     WSMenuManager.o \
     WSMenuApplet.o \
