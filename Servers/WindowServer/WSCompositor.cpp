@@ -212,41 +212,7 @@ void WSCompositor::compose()
         draw_geometry_label();
     }
 
-    static const int minimize_animation_steps = 10;
-
-    wm.for_each_window([&](WSWindow& window) {
-        if (window.in_minimize_animation()) {
-            int animation_index = window.minimize_animation_index();
-
-            auto from_rect = window.is_minimized() ? window.frame().rect() : window.taskbar_rect();
-            auto to_rect = window.is_minimized() ? window.taskbar_rect() : window.frame().rect();
-
-            float x_delta_per_step = (float)(from_rect.x() - to_rect.x()) / minimize_animation_steps;
-            float y_delta_per_step = (float)(from_rect.y() - to_rect.y()) / minimize_animation_steps;
-            float width_delta_per_step = (float)(from_rect.width() - to_rect.width()) / minimize_animation_steps;
-            float height_delta_per_step = (float)(from_rect.height() - to_rect.height()) / minimize_animation_steps;
-
-            Rect rect {
-                from_rect.x() - (int)(x_delta_per_step * animation_index),
-                from_rect.y() - (int)(y_delta_per_step * animation_index),
-                from_rect.width() - (int)(width_delta_per_step * animation_index),
-                from_rect.height() - (int)(height_delta_per_step * animation_index)
-            };
-
-#ifdef MINIMIZE_ANIMATION_DEBUG
-            dbg() << "Minimize animation from " << from_rect << " to " << to_rect << " frame# " << animation_index << " " << rect;
-#endif
-
-            m_back_painter->draw_rect(rect, Color::White);
-
-            window.step_minimize_animation();
-            if (window.minimize_animation_index() >= minimize_animation_steps)
-                window.end_minimize_animation();
-
-            invalidate(rect);
-        }
-        return IterationDecision::Continue;
-    });
+    run_animations();
 
     draw_cursor();
 
@@ -358,6 +324,45 @@ void WSCompositor::flip_buffers()
     swap(m_front_painter, m_back_painter);
     WSScreen::the().set_buffer(m_buffers_are_flipped ? 0 : 1);
     m_buffers_are_flipped = !m_buffers_are_flipped;
+}
+
+void WSCompositor::run_animations()
+{
+    static const int minimize_animation_steps = 10;
+
+    WSWindowManager::the().for_each_window([&](WSWindow& window) {
+        if (window.in_minimize_animation()) {
+            int animation_index = window.minimize_animation_index();
+
+            auto from_rect = window.is_minimized() ? window.frame().rect() : window.taskbar_rect();
+            auto to_rect = window.is_minimized() ? window.taskbar_rect() : window.frame().rect();
+
+            float x_delta_per_step = (float)(from_rect.x() - to_rect.x()) / minimize_animation_steps;
+            float y_delta_per_step = (float)(from_rect.y() - to_rect.y()) / minimize_animation_steps;
+            float width_delta_per_step = (float)(from_rect.width() - to_rect.width()) / minimize_animation_steps;
+            float height_delta_per_step = (float)(from_rect.height() - to_rect.height()) / minimize_animation_steps;
+
+            Rect rect {
+                from_rect.x() - (int)(x_delta_per_step * animation_index),
+                from_rect.y() - (int)(y_delta_per_step * animation_index),
+                from_rect.width() - (int)(width_delta_per_step * animation_index),
+                from_rect.height() - (int)(height_delta_per_step * animation_index)
+            };
+
+#ifdef MINIMIZE_ANIMATION_DEBUG
+            dbg() << "Minimize animation from " << from_rect << " to " << to_rect << " frame# " << animation_index << " " << rect;
+#endif
+
+            m_back_painter->draw_rect(rect, Color::White);
+
+            window.step_minimize_animation();
+            if (window.minimize_animation_index() >= minimize_animation_steps)
+                window.end_minimize_animation();
+
+            invalidate(rect);
+        }
+        return IterationDecision::Continue;
+    });
 }
 
 void WSCompositor::set_resolution(int desired_width, int desired_height)
