@@ -47,4 +47,5 @@ private:
     RefPtr<GWidget> m_find_widget;
 
     bool m_document_dirty { false };
+    bool m_document_opening { false };
 };

@@ -28,6 +28,12 @@ TextEditorWidget::TextEditorWidget()
     m_editor->set_line_wrapping_enabled(true);
 
     m_editor->on_change = [this] {
+        // Do not mark as diry on the first change (When document is first opened.)
+        if (m_document_opening) {
+            m_document_opening = false;
+            return;
+        }
+
         bool was_dirty = m_document_dirty;
         m_document_dirty = true;
         if (!was_dirty)
@@ -282,8 +288,10 @@ void TextEditorWidget::open_sesame(const String& path)
         return;
     }
 
-    m_document_dirty = false;
     m_editor->set_text(file->read_all());
+    m_document_dirty = false;
+    m_document_opening = true;
+
     set_path(FileSystemPath(path));
 }
 
