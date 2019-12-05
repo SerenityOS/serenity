@@ -4,7 +4,6 @@
 #include <LibCore/CObject.h>
 #include <LibCore/CTimer.h>
 #include <WindowServer/WSMenuApplet.h>
-#include <WindowServer/WSCPUMonitor.h>
 #include <WindowServer/WSWindow.h>
 
 class AClientConnection;
@@ -51,7 +50,6 @@ private:
     void tick_clock();
 
     RefPtr<WSWindow> m_window;
-    WSCPUMonitor m_cpu_monitor;
     String m_username;
     RefPtr<CTimer> m_timer;
 
