@@ -16,6 +16,11 @@ endpoint WindowServer = 2
 
     UpdateMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, String text, bool enabled, bool checkable, bool checked, String shortcut) => ()
 
+    CreateMenuApplet(Size size) => (i32 applet_id)
+    DestroyMenuApplet(i32 applet_id) => ()
+    SetMenuAppletBackingStore(i32 applet_id, i32 shared_buffer_id) => ()
+    InvalidateMenuAppletRect(i32 applet_id, Rect rect) => ()
+
     CreateWindow(
         Rect rect,
         bool has_alpha_channel,

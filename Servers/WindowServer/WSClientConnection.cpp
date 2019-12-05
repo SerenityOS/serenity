@@ -1,6 +1,7 @@
 #include <LibC/SharedBuffer.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <SharedBuffer.h>
+#include <WindowServer/WSMenuApplet.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSClipboard.h>
 #include <WindowServer/WSCompositor.h>
@@ -627,4 +628,54 @@ void WSClientConnection::handle(const WindowServer::WM_SetWindowTaskbarRect& mes
     }
     auto& window = *(*it).value;
     window.set_taskbar_rect(message.rect());
+}
+
+OwnPtr<WindowServer::CreateMenuAppletResponse> WSClientConnection::handle(const WindowServer::CreateMenuApplet& message)
+{
+    auto applet = make<WSMenuApplet>(message.size());
+    auto applet_id = applet->applet_id();
+    WSWindowManager::the().menu_manager().add_applet(*applet);
+    m_menu_applets.set(applet_id, move(applet));
+    return make<WindowServer::CreateMenuAppletResponse>(applet_id);
+}
+
+OwnPtr<WindowServer::DestroyMenuAppletResponse> WSClientConnection::handle(const WindowServer::DestroyMenuApplet& message)
+{
+    auto it = m_menu_applets.find(message.applet_id());
+    if (it == m_menu_applets.end()) {
+        did_misbehave("DestroyApplet: Invalid applet ID");
+        return nullptr;
+    }
+    WSWindowManager::the().menu_manager().remove_applet(*it->value);
+    m_menu_applets.remove(message.applet_id());
+    return make<WindowServer::DestroyMenuAppletResponse>();
+}
+
+OwnPtr<WindowServer::SetMenuAppletBackingStoreResponse> WSClientConnection::handle(const WindowServer::SetMenuAppletBackingStore& message)
+{
+    auto it = m_menu_applets.find(message.applet_id());
+    if (it == m_menu_applets.end()) {
+        did_misbehave("SetAppletBackingStore: Invalid applet ID");
+        return nullptr;
+    }
+    auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.shared_buffer_id());
+    ssize_t size_in_bytes = it->value->size().area() * sizeof(RGBA32);
+    if (size_in_bytes > shared_buffer->size()) {
+        did_misbehave("SetAppletBackingStore: Shared buffer is too small for applet size");
+        return nullptr;
+    }
+    auto bitmap = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *shared_buffer, it->value->size());
+    it->value->set_bitmap(bitmap);
+    return make<WindowServer::SetMenuAppletBackingStoreResponse>();
+}
+
+OwnPtr<WindowServer::InvalidateMenuAppletRectResponse> WSClientConnection::handle(const WindowServer::InvalidateMenuAppletRect& message)
+{
+    auto it = m_menu_applets.find(message.applet_id());
+    if (it == m_menu_applets.end()) {
+        did_misbehave("InvalidateAppletRect: Invalid applet ID");
+        return nullptr;
+    }
+    it->value->invalidate(message.rect());
+    return make<WindowServer::InvalidateMenuAppletRectResponse>();
 }

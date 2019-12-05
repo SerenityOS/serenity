@@ -17,6 +17,7 @@ OBJS = \
     WSCPUMonitor.o \
     WSCompositor.o \
     WSMenuManager.o \
+    WSMenuApplet.o \
     main.o
 
 APP = WindowServer

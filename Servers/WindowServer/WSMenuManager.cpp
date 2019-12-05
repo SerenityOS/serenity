@@ -129,6 +129,12 @@ void WSMenuManager::draw()
 
     auto& audio_bitmap = m_audio_muted ? *m_muted_bitmap : *m_unmuted_bitmap;
     painter.blit(m_audio_rect.location(), audio_bitmap, audio_bitmap.rect());
+
+    for (auto& applet : m_applets) {
+        if (!applet)
+            continue;
+        draw_applet(*applet);
+    }
 }
 
 void WSMenuManager::tick_clock()
@@ -281,4 +287,43 @@ void WSMenuManager::close_bar()
 {
     close_everyone();
     m_bar_open = false;
+}
+
+void WSMenuManager::add_applet(WSMenuApplet& applet)
+{
+    int right_edge_x = m_audio_rect.x() - 4;
+    for (auto& existing_applet : m_applets) {
+        if (existing_applet)
+            right_edge_x = existing_applet->rect_in_menubar().x() - 4;
+    }
+
+    Rect new_applet_rect(right_edge_x - applet.size().width(), 0, applet.size().width(), applet.size().height());
+    Rect dummy_menubar_rect(0, 0, 0, 18);
+    new_applet_rect.center_vertically_within(dummy_menubar_rect);
+
+    applet.set_rect_in_menubar(new_applet_rect);
+    m_applets.append(applet.make_weak_ptr());
+}
+
+void WSMenuManager::remove_applet(WSMenuApplet& applet)
+{
+    m_applets.remove_first_matching([&](auto& entry) {
+        return &applet == entry.ptr();
+    });
+}
+
+void WSMenuManager::draw_applet(const WSMenuApplet& applet)
+{
+    if (!applet.bitmap())
+        return;
+    Painter painter(*window().backing_store());
+    painter.blit(applet.rect_in_menubar().location(), *applet.bitmap(), applet.bitmap()->rect());
+}
+
+void WSMenuManager::invalidate_applet(WSMenuApplet& applet, const Rect& rect)
+{
+    // FIXME: This should only invalidate the applet's own rect, not the whole menubar.
+    (void)rect;
+    draw_applet(applet);
+    window().invalidate();
 }
