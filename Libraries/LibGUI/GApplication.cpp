@@ -1,5 +1,6 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GDesktop.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GPainter.h>
@@ -106,7 +107,19 @@ void GApplication::show_tooltip(const StringView& tooltip, const Point& screen_l
         m_tooltip_window->set_double_buffering_enabled(false);
     }
     m_tooltip_window->set_tooltip(tooltip);
-    m_tooltip_window->move_to(screen_location);
+
+    Rect desktop_rect = GDesktop::the().rect();
+
+    const int margin = 30;
+    Point adjusted_pos = screen_location;
+    if (adjusted_pos.x() + m_tooltip_window->width() >= desktop_rect.width() - margin) {
+        adjusted_pos = adjusted_pos.translated(-m_tooltip_window->width(), 0);
+    }
+    if (adjusted_pos.y() + m_tooltip_window->height() >= desktop_rect.height() - margin) {
+        adjusted_pos = adjusted_pos.translated(0, -(m_tooltip_window->height() * 2));
+    }
+
+    m_tooltip_window->move_to(adjusted_pos);
     m_tooltip_window->show();
 }
 
