@@ -432,7 +432,11 @@ Optional<KBuffer> procfs$net_local(InodeIdentifier)
         auto obj = array.add_object();
         obj.add("path", String(socket.socket_path()));
         obj.add("origin_pid", socket.origin_pid());
+        obj.add("origin_uid", socket.origin_uid());
+        obj.add("origin_gid", socket.origin_gid());
         obj.add("acceptor_pid", socket.acceptor_pid());
+        obj.add("acceptor_uid", socket.acceptor_pid());
+        obj.add("acceptor_gid", socket.acceptor_pid());
     });
     array.finish();
     return builder.build();

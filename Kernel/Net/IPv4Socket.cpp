@@ -361,10 +361,10 @@ KResult IPv4Socket::setsockopt(int level, int option, const void* value, socklen
     }
 }
 
-KResult IPv4Socket::getsockopt(int level, int option, void* value, socklen_t* value_size)
+KResult IPv4Socket::getsockopt(FileDescription& description, int level, int option, void* value, socklen_t* value_size)
 {
     if (level != IPPROTO_IP)
-        return Socket::getsockopt(level, option, value, value_size);
+        return Socket::getsockopt(description, level, option, value, value_size);
 
     switch (option) {
     case IP_TTL:

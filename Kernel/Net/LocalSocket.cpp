@@ -33,6 +33,7 @@ LocalSocket::LocalSocket(int type)
 {
     LOCKER(all_sockets().lock());
     all_sockets().resource().append(this);
+
 #ifdef DEBUG_LOCAL_SOCKET
     kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", current->process().name().characters(), current->pid(), this, type);
 #endif
@@ -301,4 +302,35 @@ String LocalSocket::absolute_path(const FileDescription& description) const
     }
 
     return builder.to_string();
+}
+
+KResult LocalSocket::getsockopt(FileDescription& description, int level, int option, void* value, socklen_t* value_size)
+{
+    if (level != SOL_SOCKET)
+        return Socket::getsockopt(description, level, option, value, value_size);
+
+    switch (option) {
+    case SO_PEERCRED: {
+        if (*value_size < sizeof(ucred))
+            return KResult(-EINVAL);
+        auto& creds = *(ucred*)value;
+        switch (role(description)) {
+        case Role::Accepted:
+            creds = m_origin;
+            *value_size = sizeof(ucred);
+            return KSuccess;
+        case Role::Connected:
+            creds = m_acceptor;
+            *value_size = sizeof(ucred);
+            return KSuccess;
+        case Role::Connecting:
+            return KResult(-ENOTCONN);
+        default:
+            return KResult(-EINVAL);
+        }
+        break;
+    }
+    default:
+        return Socket::getsockopt(description, level, option, value, value_size);
+    }
 }

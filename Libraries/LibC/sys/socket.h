@@ -46,6 +46,12 @@ struct sockaddr_in {
     char sin_zero[8];
 };
 
+struct ucred {
+    pid_t pid;
+    uid_t uid;
+    gid_t gid;
+};
+
 #define SOL_SOCKET 1
 #define SOMAXCONN 128
 
@@ -53,6 +59,7 @@ struct sockaddr_in {
 #define SO_SNDTIMEO 2
 #define SO_KEEPALIVE 3
 #define SO_ERROR 4
+#define SO_PEERCRED 5
 
 int socket(int domain, int type, int protocol);
 int bind(int sockfd, const struct sockaddr* addr, socklen_t);

@@ -337,6 +337,7 @@ struct pollfd {
 #define SO_SNDTIMEO 2
 #define SO_KEEPALIVE 3
 #define SO_ERROR 4
+#define SO_PEERCRED 5
 
 #define IPPROTO_IP 0
 #define IPPROTO_ICMP 1
@@ -344,6 +345,12 @@ struct pollfd {
 #define IPPROTO_UDP 17
 
 #define IP_TTL 2
+
+struct ucred {
+    pid_t pid;
+    uid_t uid;
+    gid_t gid;
+};
 
 struct sockaddr {
     u16 sa_family;
