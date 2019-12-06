@@ -29,6 +29,7 @@ public:
     virtual bool can_write(const FileDescription&) const override;
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
+    virtual KResult getsockopt(FileDescription&, int level, int option, void*, socklen_t*) override;
 
 private:
     explicit LocalSocket(int type);

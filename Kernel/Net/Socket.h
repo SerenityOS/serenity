@@ -77,10 +77,14 @@ public:
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) = 0;
 
     virtual KResult setsockopt(int level, int option, const void*, socklen_t);
-    virtual KResult getsockopt(int level, int option, void*, socklen_t*);
+    virtual KResult getsockopt(FileDescription&, int level, int option, void*, socklen_t*);
 
-    pid_t origin_pid() const { return m_origin_pid; }
-    pid_t acceptor_pid() const { return m_acceptor_pid; }
+    pid_t origin_pid() const { return m_origin.pid; }
+    uid_t origin_uid() const { return m_origin.uid; }
+    gid_t origin_gid() const { return m_origin.gid; }
+    pid_t acceptor_pid() const { return m_acceptor.pid; }
+    uid_t acceptor_uid() const { return m_acceptor.uid; }
+    gid_t acceptor_gid() const { return m_acceptor.gid; }
 
     timeval receive_deadline() const { return m_receive_deadline; }
     timeval send_deadline() const { return m_send_deadline; }
@@ -107,12 +111,15 @@ protected:
 
     Role m_role { Role::None };
 
+protected:
+    ucred m_origin { 0, 0, 0 };
+    ucred m_acceptor { 0, 0, 0 };
+
 private:
     virtual bool is_socket() const final { return true; }
 
     Lock m_lock { "Socket" };
-    pid_t m_origin_pid { 0 };
-    pid_t m_acceptor_pid { 0 };
+
     int m_domain { 0 };
     int m_type { 0 };
     int m_protocol { 0 };

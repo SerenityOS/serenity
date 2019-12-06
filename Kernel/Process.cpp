@@ -2678,7 +2678,7 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
-    return socket.getsockopt(level, option, value, value_size);
+    return socket.getsockopt(*description, level, option, value, value_size);
 }
 
 int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)

@@ -27,7 +27,8 @@ Socket::Socket(int domain, int type, int protocol)
     , m_type(type)
     , m_protocol(protocol)
 {
-    m_origin_pid = current->pid();
+    auto& process = current->process();
+    m_origin = { process.pid(), process.uid(), process.gid() };
 }
 
 Socket::~Socket()
@@ -53,7 +54,8 @@ RefPtr<Socket> Socket::accept()
 #endif
     auto client = m_pending.take_first();
     ASSERT(!client->is_connected());
-    client->m_acceptor_pid = m_origin_pid;
+    auto& process = current->process();
+    client->m_acceptor = { process.pid(), process.uid(), process.gid() };
     client->m_connected = true;
     client->m_role = Role::Accepted;
     return client;
@@ -91,7 +93,7 @@ KResult Socket::setsockopt(int level, int option, const void* value, socklen_t v
     }
 }
 
-KResult Socket::getsockopt(int level, int option, void* value, socklen_t* value_size)
+KResult Socket::getsockopt(FileDescription&, int level, int option, void* value, socklen_t* value_size)
 {
     ASSERT(level == SOL_SOCKET);
     switch (option) {
