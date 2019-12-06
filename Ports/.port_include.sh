@@ -51,7 +51,7 @@ func_defined fetch || fetch() {
                 run_nocd gunzip "$filename"
                 ;;
             *.zip)
-                run_nocd bsdtar xf "$filename"
+                run_nocd bsdtar xf "$filename" || run_nocd unzip -qo "$filename"
                 ;;
             *)
                 echo "Note: no case for file $filename."
