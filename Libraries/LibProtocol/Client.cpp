@@ -12,8 +12,7 @@ Client::Client()
 
 void Client::handshake()
 {
-    auto response = send_sync<ProtocolServer::Greet>(getpid());
-    set_server_pid(response->server_pid());
+    auto response = send_sync<ProtocolServer::Greet>();
     set_my_client_id(response->client_id());
 }
 

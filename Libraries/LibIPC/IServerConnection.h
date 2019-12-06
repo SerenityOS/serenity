@@ -39,12 +39,19 @@ public:
             usleep(10000);
             --retries;
         }
+
+        ucred creds;
+        socklen_t creds_size = sizeof(creds);
+        if (getsockopt(m_connection->fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
+            ASSERT_NOT_REACHED();
+        }
+        m_server_pid = creds.pid;
+
         ASSERT(m_connection->is_connected());
     }
 
     virtual void handshake() = 0;
 
-    void set_server_pid(pid_t pid) { m_server_pid = pid; }
     pid_t server_pid() const { return m_server_pid; }
     void set_my_client_id(int id) { m_my_client_id = id; }
     int my_client_id() const { return m_my_client_id; }

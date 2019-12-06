@@ -1,7 +1,7 @@
 endpoint AudioServer = 85
 {
     // Basic protocol
-    Greet(i32 client_pid) => (i32 server_pid, i32 client_id)
+    Greet() => (i32 client_id)
 
     // Mixer functions
     SetMuted(bool muted) => ()
