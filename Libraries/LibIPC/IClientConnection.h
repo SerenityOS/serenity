@@ -55,6 +55,13 @@ public:
         , m_socket(socket)
         , m_client_id(client_id)
     {
+        ASSERT(socket.is_connected());
+        ucred creds;
+        socklen_t creds_size = sizeof(creds);
+        if (getsockopt(m_socket->fd(), SOL_SOCKET, SO_PEERCRED, &creds, &creds_size) < 0) {
+            ASSERT_NOT_REACHED();
+        }
+        m_client_pid = creds.pid;
         add_child(socket);
         m_socket->on_ready_to_read = [this] { drain_messages_from_client(); };
     }
@@ -142,7 +149,6 @@ public:
 
     int client_id() const { return m_client_id; }
     pid_t client_pid() const { return m_client_pid; }
-    void set_client_pid(pid_t pid) { m_client_pid = pid; }
 
     virtual void die() = 0;
 

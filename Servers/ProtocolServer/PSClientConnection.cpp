@@ -65,10 +65,9 @@ void PSClientConnection::did_progress_download(Badge<Download>, Download& downlo
     post_message(ProtocolClient::DownloadProgress(download.id(), download.total_size(), download.downloaded_size()));
 }
 
-OwnPtr<ProtocolServer::GreetResponse> PSClientConnection::handle(const ProtocolServer::Greet& message)
+OwnPtr<ProtocolServer::GreetResponse> PSClientConnection::handle(const ProtocolServer::Greet&)
 {
-    set_client_pid(message.client_pid());
-    return make<ProtocolServer::GreetResponse>(getpid(), client_id());
+    return make<ProtocolServer::GreetResponse>(client_id());
 }
 
 OwnPtr<ProtocolServer::DisownSharedBufferResponse> PSClientConnection::handle(const ProtocolServer::DisownSharedBuffer& message)

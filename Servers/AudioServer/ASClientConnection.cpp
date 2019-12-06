@@ -48,10 +48,9 @@ void ASClientConnection::did_change_muted_state(Badge<ASMixer>, bool muted)
     post_message(AudioClient::MutedStateChanged(muted));
 }
 
-OwnPtr<AudioServer::GreetResponse> ASClientConnection::handle(const AudioServer::Greet& message)
+OwnPtr<AudioServer::GreetResponse> ASClientConnection::handle(const AudioServer::Greet&)
 {
-    set_client_pid(message.client_pid());
-    return make<AudioServer::GreetResponse>(getpid(), client_id());
+    return make<AudioServer::GreetResponse>(client_id());
 }
 
 OwnPtr<AudioServer::GetMainMixVolumeResponse> ASClientConnection::handle(const AudioServer::GetMainMixVolume&)

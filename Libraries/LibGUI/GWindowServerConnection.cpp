@@ -20,8 +20,7 @@ GWindowServerConnection& GWindowServerConnection::the()
 
 void GWindowServerConnection::handshake()
 {
-    auto response = send_sync<WindowServer::Greet>(getpid());
-    set_server_pid(response->server_pid());
+    auto response = send_sync<WindowServer::Greet>();
     set_my_client_id(response->client_id());
     GDesktop::the().did_receive_screen_rect({}, response->screen_rect());
 }

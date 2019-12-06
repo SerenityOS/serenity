@@ -598,10 +598,9 @@ void WSClientConnection::handle(const WindowServer::WM_SetWindowMinimized& messa
     window.set_minimized(message.minimized());
 }
 
-OwnPtr<WindowServer::GreetResponse> WSClientConnection::handle(const WindowServer::Greet& message)
+OwnPtr<WindowServer::GreetResponse> WSClientConnection::handle(const WindowServer::Greet&)
 {
-    set_client_pid(message.client_pid());
-    return make<WindowServer::GreetResponse>(getpid(), client_id(), WSScreen::the().rect());
+    return make<WindowServer::GreetResponse>(client_id(), WSScreen::the().rect());
 }
 
 bool WSClientConnection::is_showing_modal_window() const
