@@ -23,9 +23,9 @@ constexpr size_t highest_reasonable_stack_size = 8 * MB; // That's the default i
 
 extern "C" {
 
-static int create_thread(void* (*entry)(void*), void* argument, void* stack)
+static int create_thread(void* (*entry)(void*), void* argument, void* thread_params)
 {
-    return syscall(SC_create_thread, entry, argument, stack);
+    return syscall(SC_create_thread, entry, argument, thread_params);
 }
 
 static void exit_thread(void* code)
@@ -537,4 +537,14 @@ int pthread_setspecific(pthread_key_t key, const void* value)
     t_specifics.values[key] = const_cast<void*>(value);
     return 0;
 }
+int pthread_setname_np(pthread_t thread, const char* buffer, int buffer_size)
+{
+    return syscall(SC_set_thread_name, thread, buffer, buffer_size);
 }
+
+int pthread_getname_np(pthread_t thread, char* buffer, int buffer_size)
+{
+    return syscall(SC_get_thread_name, thread, buffer, buffer_size);
+}
+
+} // extern "C"
