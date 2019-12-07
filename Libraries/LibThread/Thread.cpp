@@ -2,9 +2,10 @@
 #include <pthread.h>
 #include <unistd.h>
 
-LibThread::Thread::Thread(Function<int()> action)
+LibThread::Thread::Thread(Function<int()> action, StringView thread_name)
     : CObject(nullptr)
     , m_action(move(action))
+    , m_thread_name(thread_name.is_null() ? "" : thread_name)
 {
 }
 
@@ -31,6 +32,10 @@ void LibThread::Thread::start()
         static_cast<void*>(this));
 
     ASSERT(rc == 0);
+    if (!m_thread_name.is_empty()) {
+        rc = pthread_setname_np(m_tid, m_thread_name.characters(), m_thread_name.length());
+        ASSERT(rc == 0);
+    }
     dbg() << "Started a thread, tid = " << m_tid;
 }
 
