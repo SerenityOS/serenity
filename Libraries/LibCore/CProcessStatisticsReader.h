@@ -20,6 +20,7 @@ struct CThreadStatistics {
     unsigned file_write_bytes;
     String state;
     String priority;
+    String name;
 };
 
 struct CProcessStatistics {

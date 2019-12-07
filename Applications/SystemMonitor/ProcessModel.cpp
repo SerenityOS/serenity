@@ -295,10 +295,11 @@ void ProcessModel::update()
             state.ipv4_socket_write_bytes = thread.ipv4_socket_write_bytes;
             state.file_read_bytes = thread.file_read_bytes;
             state.file_write_bytes = thread.file_write_bytes;
-            state.name = it.value.name;
             state.amount_virtual = it.value.amount_virtual;
             state.amount_resident = it.value.amount_resident;
             state.icon_id = it.value.icon_id;
+
+            state.name = thread.name;
 
             state.tid = thread.tid;
             state.times_scheduled = thread.times_scheduled;

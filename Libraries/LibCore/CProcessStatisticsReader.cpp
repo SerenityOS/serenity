@@ -46,6 +46,7 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
             CThreadStatistics thread;
             thread.tid = thread_object.get("tid").to_u32();
             thread.times_scheduled = thread_object.get("times_scheduled").to_u32();
+            thread.name = thread_object.get("name").to_string();
             thread.state = thread_object.get("state").to_string();
             thread.ticks = thread_object.get("ticks").to_u32();
             thread.priority = thread_object.get("priority").to_string();
