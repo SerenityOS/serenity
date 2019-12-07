@@ -85,6 +85,11 @@ int pthread_join(pthread_t thread, void** exit_value_ptr)
     return syscall(SC_join_thread, thread, exit_value_ptr);
 }
 
+int pthread_detach(pthread_t thread)
+{
+    return syscall(SC_detach_thread, thread);
+}
+
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
     // FIXME: Implement mutex attributes
