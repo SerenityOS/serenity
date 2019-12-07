@@ -125,6 +125,17 @@ int pthread_mutex_unlock(pthread_mutex_t* mutex)
     return 0;
 }
 
+int pthread_mutexattr_init(pthread_mutexattr_t* attr)
+{
+    attr->type = PTHREAD_MUTEX_NORMAL;
+    return 0;
+}
+
+int pthread_mutexattr_destroy(pthread_mutexattr_t*)
+{
+    return 0;
+}
+
 int pthread_attr_init(pthread_attr_t* attributes)
 {
     auto* impl = new PthreadAttrImpl {};

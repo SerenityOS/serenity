@@ -65,7 +65,9 @@ typedef void* pthread_key_t;
 typedef void* pthread_once_t;
 typedef uint32_t pthread_mutex_t;
 typedef void* pthread_attr_t;
-typedef void* pthread_mutexattr_t;
+typedef struct __pthread_mutexattr_t {
+    int type;
+} pthread_mutexattr_t;
 
 typedef struct __pthread_cond_t {
     void* storage;
