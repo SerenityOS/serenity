@@ -205,6 +205,8 @@ public:
     void sys$exit_thread(void*);
     int sys$join_thread(int tid, void** exit_value);
     int sys$detach_thread(int tid);
+    int sys$set_thread_name(int tid, const char* buffer, int buffer_size);
+    int sys$get_thread_name(int tid, char* buffer, int buffer_size);
     int sys$rename(const char* oldpath, const char* newpath);
     int sys$systrace(pid_t);
     int sys$mknod(const char* pathname, mode_t, dev_t);

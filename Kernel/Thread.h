@@ -73,6 +73,9 @@ public:
 
     String backtrace(ProcessInspectionHandle&) const;
 
+    const String& name() const { return m_name; }
+    void set_name(StringView s) { m_name = s; }
+
     void finalize();
 
     enum State : u8 {
@@ -463,6 +466,7 @@ private:
 
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };
+    String m_name;
     ThreadPriority m_priority { ThreadPriority::Normal };
     bool m_has_used_fpu { false };
     bool m_dump_backtrace_on_finalization { false };
