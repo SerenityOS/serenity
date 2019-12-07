@@ -721,6 +721,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process.for_each_thread([&](const Thread& thread) {
             auto thread_object = thread_array.add_object();
             thread_object.add("tid", thread.tid());
+            thread_object.add("name", thread.name());
             thread_object.add("times_scheduled", thread.times_scheduled());
             thread_object.add("ticks", thread.ticks());
             thread_object.add("state", thread.state_string());

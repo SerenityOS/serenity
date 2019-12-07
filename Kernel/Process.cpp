@@ -542,6 +542,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     Scheduler::prepare_to_modify_tss(main_thread());
 
     m_name = parts.take_last();
+    main_thread().set_name(m_name);
 
     // ss0 sp!!!!!!!!!
     u32 old_esp0 = main_thread().m_tss.esp0;
@@ -2882,6 +2883,14 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
 
     auto* thread = new Thread(*this);
 
+    // We know this thread is not the main_thread,
+    // So give it a unique name until the user calls $set_thread_name on it
+    // length + 4 to give space for our extra junk at the end
+    StringBuilder builder(m_name.length() + 4);
+    builder.append(m_name);
+    builder.appendf("[%d]", thread->tid());
+    thread->set_name(builder.to_string());
+
     thread->set_priority(requested_thread_priority);
     thread->set_joinable(is_thread_joinable);
 
@@ -2977,6 +2986,63 @@ int Process::sys$join_thread(int tid, void** exit_value)
 
     if (exit_value)
         *exit_value = joinee_exit_value;
+    return 0;
+}
+
+int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
+{
+    if (!validate_read(buffer, buffer_size))
+        return -EFAULT;
+
+    const size_t max_thread_name_size = 64;
+    if (strnlen(buffer, buffer_size) > max_thread_name_size)
+        return -EINVAL;
+
+    Thread* thread = nullptr;
+    for_each_thread([&](auto& child_thread) {
+        if (child_thread.tid() == tid) {
+            thread = &child_thread;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (!thread)
+        return -ESRCH;
+
+    // Forbid renaming the main thread of a process
+    // That guy should always be named after the process
+    if (thread == &current->process().main_thread())
+        return -EINVAL;
+
+    thread->set_name({buffer, buffer_size});
+
+    return 0;
+}
+int Process::sys$get_thread_name(int tid, char* buffer, int buffer_size)
+{
+    if (buffer_size <= 0)
+        return -EINVAL;
+
+    if (!validate_write(buffer, buffer_size))
+        return -EFAULT;
+
+    Thread* thread = nullptr;
+    for_each_thread([&](auto& child_thread) {
+        if (child_thread.tid() == tid) {
+            thread = &child_thread;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (!thread)
+        return -ESRCH;
+
+    if (thread->name().length() >= buffer_size)
+        return -ENAMETOOLONG;
+
+    strncpy(buffer, thread->name().characters(), buffer_size);
     return 0;
 }
 
@@ -3241,7 +3307,7 @@ KBuffer Process::backtrace(ProcessInspectionHandle& handle) const
 {
     KBufferBuilder builder;
     for_each_thread([&](Thread& thread) {
-        builder.appendf("Thread %d:\n", thread.tid());
+        builder.appendf("Thread %d (%s):\n", thread.tid(), thread.name().characters());
         builder.append(thread.backtrace(handle));
         return IterationDecision::Continue;
     });
