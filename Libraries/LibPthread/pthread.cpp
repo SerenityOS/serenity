@@ -5,6 +5,7 @@
 #include <Kernel/Syscall.h>
 #include <limits.h>
 #include <pthread.h>
+#include <signal.h>
 #include <stdio.h>
 #include <sys/mman.h>
 #include <time.h>
@@ -88,6 +89,13 @@ int pthread_join(pthread_t thread, void** exit_value_ptr)
 int pthread_detach(pthread_t thread)
 {
     return syscall(SC_detach_thread, thread);
+}
+
+int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set)
+{
+    if (sigprocmask(how, set, old_set))
+        return errno;
+    return 0;
 }
 
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
