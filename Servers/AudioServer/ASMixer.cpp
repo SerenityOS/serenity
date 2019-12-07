@@ -8,7 +8,7 @@ ASMixer::ASMixer()
     , m_sound_thread([this] {
         mix();
         return 0;
-    })
+    }, "AudioServer[mixer]")
 {
     if (!m_device->open(CIODevice::WriteOnly)) {
         dbgprintf("Can't open audio device: %s\n", m_device->error_string());
