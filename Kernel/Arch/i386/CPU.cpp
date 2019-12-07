@@ -3,7 +3,6 @@
 #include "IRQHandler.h"
 #include "PIC.h"
 #include "Process.h"
-#include "Scheduler.h"
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KSyms.h>
@@ -507,10 +506,8 @@ void handle_irq()
         }
     }
 
-    if (s_irq_handler[irq]) {
+    if (s_irq_handler[irq])
         s_irq_handler[irq]->handle_irq();
-        Scheduler::stop_idling();
-    }
     PIC::eoi(irq);
 }
 
