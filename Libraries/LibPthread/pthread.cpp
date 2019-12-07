@@ -1,11 +1,13 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
+#include <AK/InlineLinkedList.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Syscall.h>
 #include <limits.h>
 #include <pthread.h>
 #include <stdio.h>
 #include <sys/mman.h>
+#include <time.h>
 #include <unistd.h>
 
 #define PTHREAD_DEBUG
@@ -325,6 +327,102 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
         attributes_impl->m_stack_location);
 #endif
 
+    return 0;
+}
+
+struct WaitNode : public InlineLinkedListNode<WaitNode> {
+    bool waiting { true };
+    WaitNode* m_next { nullptr };
+    WaitNode* m_prev { nullptr };
+};
+
+struct ConditionVariable {
+    InlineLinkedList<WaitNode> waiters;
+    clockid_t clock;
+};
+
+int pthread_cond_init(pthread_cond_t* cond, const pthread_condattr_t* attr)
+{
+    auto& condvar = *new ConditionVariable;
+    cond->storage = &condvar;
+    if (attr)
+        condvar.clock = attr->clockid;
+    return 0;
+}
+
+int pthread_cond_destroy(pthread_cond_t* cond)
+{
+    delete static_cast<ConditionVariable*>(cond->storage);
+    return 0;
+}
+
+int pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex)
+{
+    WaitNode node;
+    auto& condvar = *(ConditionVariable*)cond->storage;
+    condvar.waiters.append(&node);
+    while (node.waiting) {
+        pthread_mutex_unlock(mutex);
+        sched_yield();
+        pthread_mutex_lock(mutex);
+    }
+    return 0;
+}
+
+int pthread_condattr_init(pthread_condattr_t* attr)
+{
+    attr->clockid = CLOCK_MONOTONIC;
+    return 0;
+}
+
+int pthread_condattr_destroy(pthread_condattr_t*)
+{
+    return 0;
+}
+
+int pthread_condattr_setclock(pthread_condattr_t* attr, clockid_t clock)
+{
+    attr->clockid = clock;
+    return 0;
+}
+
+int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime)
+{
+    WaitNode node;
+    auto& condvar = *(ConditionVariable*)cond->storage;
+    condvar.waiters.append(&node);
+    while (node.waiting) {
+        struct timespec now;
+        if (clock_gettime(condvar.clock, &now) < 0)
+            return -1;
+        if ((abstime->tv_sec < now.tv_sec) || (abstime->tv_sec == now.tv_sec && abstime->tv_nsec <= now.tv_nsec)) {
+            errno = ETIMEDOUT;
+            return -1;
+        }
+        pthread_mutex_unlock(mutex);
+        sched_yield();
+        pthread_mutex_lock(mutex);
+    }
+    return 0;
+}
+
+int pthread_cond_signal(pthread_cond_t* cond)
+{
+    auto& condvar = *(ConditionVariable*)cond->storage;
+    if (condvar.waiters.is_empty())
+        return 0;
+    auto* node = condvar.waiters.remove_head();
+    node->waiting = false;
+    return 0;
+}
+
+int pthread_cond_broadcast(pthread_cond_t* cond)
+{
+    auto& condvar = *(ConditionVariable*)cond->storage;
+    while (!condvar.waiters.is_empty()) {
+        auto* node = condvar.waiters.remove_head();
+        node->waiting = false;
+    }
     return 0;
 }
 }
