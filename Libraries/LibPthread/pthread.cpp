@@ -111,6 +111,15 @@ int pthread_mutex_lock(pthread_mutex_t* mutex)
     }
 }
 
+int pthread_mutex_trylock(pthread_mutex_t* mutex)
+{
+    auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex);
+    u32 expected = false;
+    if (atomic->compare_exchange_strong(expected, true, AK::memory_order_acq_rel))
+        return 0;
+    return EBUSY;
+}
+
 int pthread_mutex_unlock(pthread_mutex_t* mutex)
 {
     auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex);
