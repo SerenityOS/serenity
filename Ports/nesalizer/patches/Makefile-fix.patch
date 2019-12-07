@@ -5,7 +5,7 @@
  deps        = $(addprefix $(BUILD_DIR)/,$(c_sources:=.d) $(cpp_sources:=.d))
  
 -LDLIBS := $(shell sdl2-config --libs) -lrt
-+LDLIBS := -lSDL2 -lgui -lipc -ldraw -lcore -lpthread
++LDLIBS := -L$(SERENITY_ROOT)/Root/lib -lSDL2 -lgui -lipc -ldraw -lcore -lpthread
  
  ifeq ($(INCLUDE_DEBUGGER),1)
      LDLIBS += -lreadline
