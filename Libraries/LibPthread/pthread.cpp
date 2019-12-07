@@ -34,6 +34,11 @@ static void exit_thread(void* code)
     ASSERT_NOT_REACHED();
 }
 
+int pthread_self()
+{
+    return gettid();
+}
+
 int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_routine)(void*), void* argument_to_start_routine)
 {
     if (!thread)
