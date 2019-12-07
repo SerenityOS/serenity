@@ -754,7 +754,7 @@ static int run_command(const String& cmd)
                         fprintf(stderr, "%s: Command not found.\n", argv[0]);
                     else
                         fprintf(stderr, "execvp(%s): %s\n", argv[0], strerror(errno));
-                    exit(1);
+                    _exit(1);
                 }
                 ASSERT_NOT_REACHED();
             }
