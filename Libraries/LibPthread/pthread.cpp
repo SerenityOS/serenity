@@ -388,7 +388,7 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
 }
 
 struct WaitNode : public InlineLinkedListNode<WaitNode> {
-    bool waiting { true };
+    volatile bool waiting { true };
     WaitNode* m_next { nullptr };
     WaitNode* m_prev { nullptr };
 };
