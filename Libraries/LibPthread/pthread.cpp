@@ -395,7 +395,7 @@ struct WaitNode : public InlineLinkedListNode<WaitNode> {
 
 struct ConditionVariable {
     InlineLinkedList<WaitNode> waiters;
-    clockid_t clock;
+    clockid_t clock { CLOCK_MONOTONIC };
 };
 
 int pthread_cond_init(pthread_cond_t* cond, const pthread_condattr_t* attr)
@@ -450,8 +450,10 @@ int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const s
     condvar.waiters.append(&node);
     while (node.waiting) {
         struct timespec now;
-        if (clock_gettime(condvar.clock, &now) < 0)
+        if (clock_gettime(condvar.clock, &now) < 0) {
+            dbgprintf("pthread_cond_timedwait: clock_gettime() failed\n");
             return errno;
+        }
         if ((abstime->tv_sec < now.tv_sec) || (abstime->tv_sec == now.tv_sec && abstime->tv_nsec <= now.tv_nsec)) {
             return ETIMEDOUT;
         }
