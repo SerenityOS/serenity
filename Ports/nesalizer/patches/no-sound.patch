@@ -1,0 +1,35 @@
+diff -ru nesalizer-master/src/audio.cpp nesalizer-master-nosound/src/audio.cpp
+--- nesalizer-master/src/audio.cpp	2016-09-18 11:02:04.000000000 +0200
++++ nesalizer-master-nosound/src/audio.cpp	2019-12-07 16:32:11.814936331 +0100
+@@ -190,6 +190,8 @@
+ }
+ 
+ void end_audio_frame() {
++    return;
++
+     if (frame_offset == 0)
+         // No audio added; blip_end_frame() dislikes being called with an
+         // offset of 0
+diff -ru nesalizer-master/src/sdl_backend.cpp nesalizer-master-nosound/src/sdl_backend.cpp
+--- nesalizer-master/src/sdl_backend.cpp	2016-09-18 11:02:04.000000000 +0200
++++ nesalizer-master-nosound/src/sdl_backend.cpp	2019-12-07 16:31:58.158302177 +0100
+@@ -192,7 +192,7 @@
+     // Make this configurable later
+     SDL_DisableScreenSaver();
+ 
+-    fail_if(SDL_Init(SDL_INIT_AUDIO | SDL_INIT_VIDEO) != 0,
++    fail_if(SDL_Init(SDL_INIT_VIDEO) != 0,
+       "failed to initialize SDL: %s", SDL_GetError());
+ 
+     fail_if(!(screen =
+@@ -252,8 +252,10 @@
+     want.samples  = sdl_audio_buffer_size;
+     want.callback = audio_callback;
+ 
++#if 0
+     fail_if(!(audio_device_id = SDL_OpenAudioDevice(0, 0, &want, 0, 0)),
+       "failed to initialize audio: %s\n", SDL_GetError());
++#endif
+ 
+     // Input
+ 
