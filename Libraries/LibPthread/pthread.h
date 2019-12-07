@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
+#include <time.h>
 
 __BEGIN_DECLS
 
@@ -56,6 +57,8 @@ int pthread_cond_broadcast(pthread_cond_t*);
 int pthread_cond_init(pthread_cond_t*, const pthread_condattr_t*);
 int pthread_cond_signal(pthread_cond_t*);
 int pthread_cond_wait(pthread_cond_t*, pthread_mutex_t*);
+int pthread_condattr_init(pthread_condattr_t*);
+int pthread_condattr_setclock(pthread_condattr_t*, clockid_t);
 int pthread_condattr_destroy(pthread_condattr_t*);
 int pthread_cancel(pthread_t);
 int pthread_cond_destroy(pthread_cond_t*);

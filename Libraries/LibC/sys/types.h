@@ -66,10 +66,16 @@ typedef void* pthread_once_t;
 typedef uint32_t pthread_mutex_t;
 typedef void* pthread_attr_t;
 typedef void* pthread_mutexattr_t;
-typedef void* pthread_cond_t;
+
+typedef struct __pthread_cond_t {
+    void* storage;
+} pthread_cond_t;
+
 typedef void* pthread_rwlock_t;
 typedef void* pthread_rwlockatrr_t;
 typedef void* pthread_spinlock_t;
-typedef void* pthread_condattr_t;
+typedef struct __pthread_condattr_t {
+    int clockid; // clockid_t
+} pthread_condattr_t;
 
 __END_DECLS
