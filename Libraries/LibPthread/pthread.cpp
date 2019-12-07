@@ -371,6 +371,22 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
     return 0;
 }
 
+int pthread_getschedparam(pthread_t thread, int* policy, struct sched_param* param)
+{
+    (void)thread;
+    (void)policy;
+    (void)param;
+    return 0;
+}
+
+int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param* param)
+{
+    (void)thread;
+    (void)policy;
+    (void)param;
+    return 0;
+}
+
 struct WaitNode : public InlineLinkedListNode<WaitNode> {
     bool waiting { true };
     WaitNode* m_next { nullptr };
