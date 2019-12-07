@@ -24,8 +24,7 @@ extern "C" {
 
 static int create_thread(void* (*entry)(void*), void* argument, void* stack)
 {
-    int rc = syscall(SC_create_thread, entry, argument, stack);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return syscall(SC_create_thread, entry, argument, stack);
 }
 
 static void exit_thread(void* code)
@@ -83,8 +82,7 @@ void pthread_exit(void* value_ptr)
 
 int pthread_join(pthread_t thread, void** exit_value_ptr)
 {
-    int rc = syscall(SC_join_thread, thread, exit_value_ptr);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return syscall(SC_join_thread, thread, exit_value_ptr);
 }
 
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
@@ -413,10 +411,9 @@ int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const s
     while (node.waiting) {
         struct timespec now;
         if (clock_gettime(condvar.clock, &now) < 0)
-            return -1;
+            return errno;
         if ((abstime->tv_sec < now.tv_sec) || (abstime->tv_sec == now.tv_sec && abstime->tv_nsec <= now.tv_nsec)) {
-            errno = ETIMEDOUT;
-            return -1;
+            return ETIMEDOUT;
         }
         pthread_mutex_unlock(mutex);
         sched_yield();
