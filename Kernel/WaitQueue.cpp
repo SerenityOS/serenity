@@ -22,6 +22,7 @@ void WaitQueue::wake_one()
         return;
     if (auto* thread = m_threads.take_first())
         thread->wake_from_queue();
+    Scheduler::stop_idling();
 }
 
 void WaitQueue::wake_all()
@@ -31,4 +32,5 @@ void WaitQueue::wake_all()
         return;
     while (!m_threads.is_empty())
         m_threads.take_first()->wake_from_queue();
+    Scheduler::stop_idling();
 }
