@@ -141,7 +141,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(openat)                 \
     __ENUMERATE_SYSCALL(join_thread)            \
     __ENUMERATE_SYSCALL(module_load)            \
-    __ENUMERATE_SYSCALL(module_unload)
+    __ENUMERATE_SYSCALL(module_unload)          \
+    __ENUMERATE_SYSCALL(detach_thread)
 
 namespace Syscall {
 

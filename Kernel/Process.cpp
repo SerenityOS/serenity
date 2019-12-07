@@ -2915,6 +2915,27 @@ void Process::sys$exit_thread(void* exit_value)
     ASSERT_NOT_REACHED();
 }
 
+int Process::sys$detach_thread(int tid)
+{
+    Thread* thread = nullptr;
+    for_each_thread([&](auto& child_thread) {
+        if (child_thread.tid() == tid) {
+            thread = &child_thread;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (!thread)
+        return -ESRCH;
+
+    if (!thread->is_joinable())
+        return -EINVAL;
+
+    thread->set_joinable(false);
+    return 0;
+}
+
 int Process::sys$join_thread(int tid, void** exit_value)
 {
     if (exit_value && !validate_write_typed(exit_value))

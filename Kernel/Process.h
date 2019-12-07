@@ -204,6 +204,7 @@ public:
     int sys$create_thread(void* (*)(void*), void* argument, const Syscall::SC_create_thread_params*);
     void sys$exit_thread(void*);
     int sys$join_thread(int tid, void** exit_value);
+    int sys$detach_thread(int tid);
     int sys$rename(const char* oldpath, const char* newpath);
     int sys$systrace(pid_t);
     int sys$mknod(const char* pathname, mode_t, dev_t);
