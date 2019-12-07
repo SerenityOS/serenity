@@ -90,6 +90,11 @@ int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attrib
     return 0;
 }
 
+int pthread_mutex_destroy(pthread_mutex_t*)
+{
+    return 0;
+}
+
 int pthread_mutex_lock(pthread_mutex_t* mutex)
 {
     auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex);
