@@ -61,7 +61,7 @@ struct utimbuf {
 };
 
 typedef int pthread_t;
-typedef void* pthread_key_t;
+typedef int pthread_key_t;
 typedef void* pthread_once_t;
 typedef uint32_t pthread_mutex_t;
 typedef void* pthread_attr_t;

@@ -465,4 +465,58 @@ int pthread_cond_broadcast(pthread_cond_t* cond)
     }
     return 0;
 }
+
+static const int max_keys = 64;
+
+typedef void (*KeyDestructor)(void*);
+
+struct KeyTable {
+    // FIXME: Invoke key destructors on thread exit!
+    KeyDestructor destructors[64] { nullptr };
+    int next { 0 };
+    pthread_mutex_t mutex { PTHREAD_MUTEX_INITIALIZER };
+};
+
+struct SpecificTable {
+    void* values[64] { nullptr };
+};
+
+static KeyTable s_keys;
+
+__thread SpecificTable t_specifics;
+
+int pthread_key_create(pthread_key_t* key, KeyDestructor destructor)
+{
+    int ret = 0;
+    pthread_mutex_lock(&s_keys.mutex);
+    if (s_keys.next >= max_keys) {
+        ret = ENOMEM;
+    } else {
+        *key = s_keys.next++;
+        s_keys.destructors[*key] = destructor;
+        ret = 0;
+    }
+    pthread_mutex_unlock(&s_keys.mutex);
+    return ret;
+}
+
+void* pthread_getspecific(pthread_key_t key)
+{
+    if (key < 0)
+        return nullptr;
+    if (key >= max_keys)
+        return nullptr;
+    return t_specifics.values[key];
+}
+
+int pthread_setspecific(pthread_key_t key, const void* value)
+{
+    if (key < 0)
+        return EINVAL;
+    if (key >= max_keys)
+        return EINVAL;
+
+    t_specifics.values[key] = const_cast<void*>(value);
+    return 0;
+}
 }
