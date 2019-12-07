@@ -46,6 +46,9 @@ int pthread_once(pthread_once_t*, void (*)());
 void* pthread_getspecific(pthread_key_t key);
 int pthread_setspecific(pthread_key_t key, const void* value);
 
+int pthread_getschedparam(pthread_t thread, int* policy, struct sched_param* param);
+int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param* param);
+
 #define PTHREAD_MUTEX_NORMAL 0
 #define PTHREAD_MUTEX_RECURSIVE 1
 #define PTHREAD_MUTEX_INITIALIZER 0
