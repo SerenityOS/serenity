@@ -3,7 +3,5 @@ port=m4
 version=1.4.9
 useconfigure=true
 files="http://ftp.gnu.org/gnu/m4/m4-1.4.9.tar.gz m4-1.4.9.tar.gz"
+configopts=--host=386bsd
 
-configure() {
-    run ./configure --host=386bsd
-}
