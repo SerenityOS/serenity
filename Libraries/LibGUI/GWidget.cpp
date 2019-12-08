@@ -156,6 +156,8 @@ void GWidget::event(CEvent& event)
         return handle_mouseup_event(static_cast<GMouseEvent&>(event));
     case GEvent::MouseWheel:
         return mousewheel_event(static_cast<GMouseEvent&>(event));
+    case GEvent::Drop:
+        return drop_event(static_cast<GDropEvent&>(event));
     case GEvent::Enter:
         return handle_enter_event(event);
     case GEvent::Leave:
@@ -348,6 +350,11 @@ void GWidget::leave_event(CEvent&)
 
 void GWidget::change_event(GEvent&)
 {
+}
+
+void GWidget::drop_event(GDropEvent& event)
+{
+    dbg() << class_name() << "{" << this << "} DROP  position: " << event.position() << ", text: '" << event.text() << "'";
 }
 
 void GWidget::update()
@@ -686,4 +693,3 @@ Vector<GWidget*> GWidget::child_widgets() const
     }
     return widgets;
 }
-

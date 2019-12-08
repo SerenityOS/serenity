@@ -1,12 +1,12 @@
 #include <LibC/SharedBuffer.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <SharedBuffer.h>
-#include <WindowServer/WSMenuApplet.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSClipboard.h>
 #include <WindowServer/WSCompositor.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSMenu.h>
+#include <WindowServer/WSMenuApplet.h>
 #include <WindowServer/WSMenuBar.h>
 #include <WindowServer/WSMenuItem.h>
 #include <WindowServer/WSScreen.h>
@@ -677,4 +677,25 @@ OwnPtr<WindowServer::InvalidateMenuAppletRectResponse> WSClientConnection::handl
     }
     it->value->invalidate(message.rect());
     return make<WindowServer::InvalidateMenuAppletRectResponse>();
+}
+
+OwnPtr<WindowServer::StartDragResponse> WSClientConnection::handle(const WindowServer::StartDrag& message)
+{
+    auto& wm = WSWindowManager::the();
+    if (wm.dnd_client())
+        return make<WindowServer::StartDragResponse>(false);
+
+    RefPtr<GraphicsBitmap> bitmap;
+    if (message.bitmap_id() != -1) {
+        auto shared_buffer = SharedBuffer::create_from_shared_buffer_id(message.bitmap_id());
+        ssize_t size_in_bytes = message.bitmap_size().area() * sizeof(RGBA32);
+        if (size_in_bytes > shared_buffer->size()) {
+            did_misbehave("SetAppletBackingStore: Shared buffer is too small for applet size");
+            return nullptr;
+        }
+        bitmap = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *shared_buffer, message.bitmap_size());
+    }
+
+    wm.start_dnd_drag(*this, message.text(), bitmap);
+    return make<WindowServer::StartDragResponse>(true);
 }

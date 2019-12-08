@@ -154,6 +154,16 @@ void GWindow::set_override_cursor(GStandardCursor cursor)
 
 void GWindow::event(CEvent& event)
 {
+    if (event.type() == GEvent::Drop) {
+        auto& drop_event = static_cast<GDropEvent&>(event);
+        if (!m_main_widget)
+            return;
+        auto result = m_main_widget->hit_test(drop_event.position());
+        auto local_event = make<GDropEvent>(result.local_position, drop_event.text());
+        ASSERT(result.widget);
+        return result.widget->dispatch_event(*local_event, this);
+    }
+
     if (event.type() == GEvent::MouseUp || event.type() == GEvent::MouseDown || event.type() == GEvent::MouseDoubleClick || event.type() == GEvent::MouseMove || event.type() == GEvent::MouseWheel) {
         auto& mouse_event = static_cast<GMouseEvent&>(event);
         if (m_global_cursor_tracking_widget) {

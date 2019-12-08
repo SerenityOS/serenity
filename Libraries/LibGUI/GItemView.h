@@ -29,6 +29,7 @@ private:
     virtual void paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
@@ -42,6 +43,8 @@ private:
     int m_model_column { 0 };
     int m_visual_column_count { 0 };
     int m_visual_row_count { 0 };
+
+    Point m_left_mousedown_position;
 
     Size m_effective_item_size { 80, 80 };
 };

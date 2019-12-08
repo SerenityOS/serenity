@@ -59,6 +59,7 @@ OBJS = \
     GLazyWidget.o \
     GCommand.o \
     GUndoStack.o \
+    GDragOperation.o \
     GWindow.o
 
 LIBRARY = libgui.a

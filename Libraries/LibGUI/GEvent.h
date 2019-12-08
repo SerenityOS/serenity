@@ -2,9 +2,9 @@
 
 #include <Kernel/KeyCode.h>
 #include <LibCore/CEvent.h>
-#include <LibGUI/GWindowType.h>
 #include <LibDraw/Point.h>
 #include <LibDraw/Rect.h>
+#include <LibGUI/GWindowType.h>
 
 class CObject;
 
@@ -34,6 +34,7 @@ public:
         WindowCloseRequest,
         ContextMenu,
         EnabledChange,
+        Drop,
 
         __Begin_WM_Events,
         WM_WindowRemoved,
@@ -277,4 +278,21 @@ private:
     GMouseButton m_button { GMouseButton::None };
     unsigned m_modifiers { 0 };
     int m_wheel_delta { 0 };
+};
+
+class GDropEvent final : public GEvent {
+public:
+    GDropEvent(const Point& position, const String& text)
+        : GEvent(GEvent::Drop)
+        , m_position(position)
+        , m_text(text)
+    {
+    }
+
+    const Point& position() const { return m_position; }
+    const String& text() const { return m_text; }
+
+private:
+    Point m_position;
+    String m_text;
 };

@@ -1,4 +1,6 @@
+#include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
+#include <LibGUI/GDragOperation.h>
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GModel.h>
 #include <LibGUI/GPainter.h>
@@ -83,6 +85,7 @@ void GItemView::mousedown_event(GMouseEvent& event)
     int item_index = item_at_event_position(event.position());
 
     if (event.button() == GMouseButton::Left) {
+        m_left_mousedown_position = event.position();
         if (item_index == -1) {
             selection().clear();
         } else {
@@ -95,6 +98,45 @@ void GItemView::mousedown_event(GMouseEvent& event)
     }
 
     GAbstractView::mousedown_event(event);
+}
+
+void GItemView::mousemove_event(GMouseEvent& event)
+{
+    if (!model())
+        return GAbstractView::mousemove_event(event);
+
+    if (event.buttons() & GMouseButton::Left && !selection().is_empty()) {
+        auto diff = event.position() - m_left_mousedown_position;
+        auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
+        constexpr int drag_distance_threshold = 5;
+        if (distance_travelled_squared > (drag_distance_threshold)) {
+            dbg() << "Initiate drag!";
+            auto drag_operation = GDragOperation::construct();
+
+            StringBuilder builder;
+            selection().for_each_index([&](auto& index) {
+                auto data = model()->data(index);
+                builder.append(data.to_string());
+                builder.append(" ");
+            });
+
+            drag_operation->set_text(builder.to_string());
+            auto outcome = drag_operation->exec();
+            switch (outcome) {
+            case GDragOperation::Outcome::Accepted:
+                dbg() << "Drag was accepted!";
+                break;
+            case GDragOperation::Outcome::Cancelled:
+                dbg() << "Drag was cancelled!";
+                break;
+            default:
+                ASSERT_NOT_REACHED();
+                break;
+            }
+        }
+    }
+
+    GAbstractView::mousemove_event(event);
 }
 
 void GItemView::context_menu_event(GContextMenuEvent& event)

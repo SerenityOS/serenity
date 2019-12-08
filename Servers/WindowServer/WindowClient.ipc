@@ -27,4 +27,9 @@ endpoint WindowClient = 4
     WM_WindowRectChanged(i32 client_id, i32 window_id, Rect rect) =|
 
     AsyncSetWallpaperFinished(bool success) =|
+
+    DragAccepted() =|
+    DragCancelled() =|
+
+    DragDropped(i32 window_id, Point mouse_position, String text) =|
 }

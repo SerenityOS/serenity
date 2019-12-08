@@ -20,6 +20,7 @@
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>
+#include <WindowServer/WindowClientEndpoint.h>
 #include <errno.h>
 #include <stdio.h>
 #include <time.h>
@@ -625,6 +626,36 @@ bool WSWindowManager::process_ongoing_window_resize(const WSMouseEvent& event, W
     return true;
 }
 
+bool WSWindowManager::process_ongoing_drag(WSMouseEvent& event, WSWindow*& hovered_window)
+{
+    if (!m_dnd_client)
+        return false;
+    if (!(event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left))
+        return true;
+
+    hovered_window = nullptr;
+    for_each_visible_window_from_front_to_back([&](auto& window) {
+        if (window.frame().rect().contains(event.position())) {
+            hovered_window = &window;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+
+    if (hovered_window) {
+        m_dnd_client->post_message(WindowClient::DragAccepted());
+        if (hovered_window->client()) {
+            auto translated_event = event.translated(-hovered_window->position());
+            hovered_window->client()->post_message(WindowClient::DragDropped(hovered_window->window_id(), translated_event.position(), m_dnd_text));
+        }
+    } else {
+        m_dnd_client->post_message(WindowClient::DragCancelled());
+    }
+
+    end_dnd_drag();
+    return true;
+}
+
 void WSWindowManager::set_cursor_tracking_button(WSButton* button)
 {
     m_cursor_tracking_button = button ? button->make_weak_ptr() : nullptr;
@@ -707,6 +738,9 @@ void WSWindowManager::deliver_mouse_event(WSWindow& window, WSMouseEvent& event)
 void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovered_window)
 {
     hovered_window = nullptr;
+
+    if (process_ongoing_drag(event, hovered_window))
+        return;
 
     if (process_ongoing_window_drag(event, hovered_window))
         return;
@@ -943,6 +977,12 @@ void WSWindowManager::event(CEvent& event)
         auto& key_event = static_cast<const WSKeyEvent&>(event);
         m_keyboard_modifiers = key_event.modifiers();
 
+        if (key_event.type() == WSEvent::KeyDown && key_event.key() == Key_Escape && m_dnd_client) {
+            m_dnd_client->post_message(WindowClient::DragCancelled());
+            end_dnd_drag();
+            return;
+        }
+
         if (key_event.type() == WSEvent::KeyDown && key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab)
             m_switcher.show();
         if (m_switcher.is_visible()) {
@@ -1137,4 +1177,30 @@ WSMenu* WSWindowManager::find_internal_menu_by_id(int menu_id)
             return it.value;
     }
     return nullptr;
+}
+
+void WSWindowManager::start_dnd_drag(WSClientConnection& client, const String& text, GraphicsBitmap* bitmap)
+{
+    ASSERT(!m_dnd_client);
+    m_dnd_client = client.make_weak_ptr();
+    m_dnd_text = text;
+    m_dnd_bitmap = bitmap;
+    WSCompositor::the().invalidate_cursor();
+}
+
+void WSWindowManager::end_dnd_drag()
+{
+    ASSERT(m_dnd_client);
+    WSCompositor::the().invalidate_cursor();
+    m_dnd_client = nullptr;
+    m_dnd_text = {};
+    m_dnd_bitmap = nullptr;
+}
+
+Rect WSWindowManager::dnd_rect() const
+{
+    int width = font().width(m_dnd_text);
+    int height = font().glyph_height();
+    auto location = WSCompositor::the().current_cursor_rect().center().translated(8, 8);
+    return Rect(location, { width, height }).inflated(4, 4);
 }
