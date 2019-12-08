@@ -185,6 +185,7 @@ void WSWindowManager::reload_config(bool set_screen)
     m_i_beam_cursor = get_cursor("IBeam");
     m_disallowed_cursor = get_cursor("Disallowed");
     m_move_cursor = get_cursor("Move");
+    m_drag_cursor = get_cursor("Drag");
 
     m_background_color = m_wm_config->read_color_entry("Colors", "Background", Color::Red);
 
@@ -1103,6 +1104,9 @@ void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& clie
 
 const WSCursor& WSWindowManager::active_cursor() const
 {
+    if (m_dnd_client)
+        return *m_drag_cursor;
+
     if (m_drag_window)
         return *m_move_cursor;
 

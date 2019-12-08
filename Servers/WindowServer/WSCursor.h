@@ -11,6 +11,7 @@ enum class WSStandardCursor {
     ResizeDiagonalTLBR,
     ResizeDiagonalBLTR,
     Hand,
+    Drag,
 };
 
 class WSCursor : public RefCounted<WSCursor> {
