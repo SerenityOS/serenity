@@ -3,10 +3,10 @@
 #include "Color.h"
 #include "Rect.h"
 #include "Size.h"
-#include <AK/String.h>
 #include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <AK/StringView.h>
 #include <SharedBuffer.h>
 
@@ -24,6 +24,9 @@ public:
     static RefPtr<GraphicsBitmap> load_from_file(const StringView& path);
     static RefPtr<GraphicsBitmap> load_from_file(Format, const StringView& path, const Size&);
     static NonnullRefPtr<GraphicsBitmap> create_with_shared_buffer(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
+
+    NonnullRefPtr<GraphicsBitmap> to_shareable_bitmap() const;
+
     ~GraphicsBitmap();
 
     RGBA32* scanline(int y);
@@ -38,6 +41,9 @@ public:
     int height() const { return m_size.height(); }
     size_t pitch() const { return m_pitch; }
     int shared_buffer_id() const { return m_shared_buffer ? m_shared_buffer->shared_buffer_id() : -1; }
+
+    SharedBuffer* shared_buffer() { return m_shared_buffer.ptr(); }
+    const SharedBuffer* shared_buffer() const { return m_shared_buffer.ptr(); }
 
     unsigned bpp() const
     {
@@ -157,7 +163,7 @@ inline Color GraphicsBitmap::get_pixel(int x, int y) const
         return get_pixel<Format::Indexed8>(x, y);
     default:
         ASSERT_NOT_REACHED();
-        return { };
+        return {};
     }
 }
 
