@@ -40,6 +40,8 @@ RefPtr<WSCursor> WSCursor::create(WSStandardCursor standard_cursor)
         return WSWindowManager::the().resize_diagonally_bltr_cursor();
     case WSStandardCursor::Hand:
         return WSWindowManager::the().hand_cursor();
+    case WSStandardCursor::Drag:
+        return WSWindowManager::the().drag_cursor();
     }
     ASSERT_NOT_REACHED();
 }

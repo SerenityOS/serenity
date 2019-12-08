@@ -103,6 +103,7 @@ public:
     const WSCursor& i_beam_cursor() const { return *m_i_beam_cursor; }
     const WSCursor& disallowed_cursor() const { return *m_disallowed_cursor; }
     const WSCursor& move_cursor() const { return *m_move_cursor; }
+    const WSCursor& drag_cursor() const { return *m_drag_cursor; }
 
     void invalidate(const WSWindow&);
     void invalidate(const WSWindow&, const Rect&);
@@ -196,6 +197,7 @@ private:
     RefPtr<WSCursor> m_i_beam_cursor;
     RefPtr<WSCursor> m_disallowed_cursor;
     RefPtr<WSCursor> m_move_cursor;
+    RefPtr<WSCursor> m_drag_cursor;
 
     Color m_background_color;
     Color m_active_window_border_color;
