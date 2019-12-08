@@ -424,11 +424,16 @@ void WSCompositor::draw_cursor()
 
     if (wm.dnd_client()) {
         auto dnd_rect = wm.dnd_rect();
+        m_back_painter->fill_rect(dnd_rect, Color(110, 34, 9, 200));
         if (!wm.dnd_text().is_empty()) {
-            m_back_painter->fill_rect(dnd_rect, Color(110, 34, 9, 200));
-            m_back_painter->draw_text(dnd_rect, wm.dnd_text(), TextAlignment::Center, Color::White);
+            auto text_rect = dnd_rect;
+            if (wm.dnd_bitmap())
+                text_rect.move_by(wm.dnd_bitmap()->width(), 0);
+            m_back_painter->draw_text(text_rect, wm.dnd_text(), TextAlignment::CenterLeft, Color::White);
         }
-        // FIXME: Also do the drag_bitmap if present
+        if (wm.dnd_bitmap()) {
+            m_back_painter->blit(dnd_rect.top_left(), *wm.dnd_bitmap(), wm.dnd_bitmap()->rect());
+        }
         m_last_dnd_rect = dnd_rect;
     } else {
         m_last_dnd_rect = {};

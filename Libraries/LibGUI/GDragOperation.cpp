@@ -1,3 +1,4 @@
+#include <LibDraw/GraphicsBitmap.h>
 #include <LibGUI/GDragOperation.h>
 #include <LibGUI/GWindowServerConnection.h>
 
@@ -17,7 +18,17 @@ GDragOperation::Outcome GDragOperation::exec()
     ASSERT(!s_current_drag_operation);
     ASSERT(!m_event_loop);
 
-    auto response = GWindowServerConnection::the().send_sync<WindowServer::StartDrag>(m_text, -1, Size());
+    int bitmap_id = -1;
+    Size bitmap_size;
+    RefPtr<GraphicsBitmap> shared_bitmap;
+    if (m_bitmap) {
+        shared_bitmap = m_bitmap->to_shareable_bitmap();
+        shared_bitmap->shared_buffer()->share_with(GWindowServerConnection::the().server_pid());
+        bitmap_id = shared_bitmap->shared_buffer_id();
+        bitmap_size = shared_bitmap->size();
+    }
+
+    auto response = GWindowServerConnection::the().send_sync<WindowServer::StartDrag>(m_text, bitmap_id, bitmap_size);
     if (!response->started()) {
         m_outcome = Outcome::Cancelled;
         return m_outcome;
