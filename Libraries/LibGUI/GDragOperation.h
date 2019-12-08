@@ -3,6 +3,7 @@
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CObject.h>
 
+class GraphicsBitmap;
 class GWindowServerConnection;
 
 class GDragOperation : public CObject {
@@ -17,6 +18,7 @@ public:
     virtual ~GDragOperation() override;
 
     void set_text(const String& text) { m_text = text; }
+    void set_bitmap(const GraphicsBitmap* bitmap) { m_bitmap = bitmap; }
 
     Outcome exec();
     Outcome outcome() const { return m_outcome; }
@@ -33,4 +35,5 @@ private:
     OwnPtr<CEventLoop> m_event_loop;
     Outcome m_outcome { Outcome::None };
     String m_text;
+    RefPtr<GraphicsBitmap> m_bitmap;
 };

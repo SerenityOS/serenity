@@ -113,14 +113,23 @@ void GItemView::mousemove_event(GMouseEvent& event)
             dbg() << "Initiate drag!";
             auto drag_operation = GDragOperation::construct();
 
+            RefPtr<GraphicsBitmap> bitmap;
+
             StringBuilder builder;
             selection().for_each_index([&](auto& index) {
                 auto data = model()->data(index);
                 builder.append(data.to_string());
                 builder.append(" ");
+
+                if (!bitmap) {
+                    GVariant icon_data = model()->data(index, GModel::Role::Icon);
+                    if (icon_data.is_icon())
+                        bitmap = icon_data.as_icon().bitmap_for_size(32);
+                }
             });
 
             drag_operation->set_text(builder.to_string());
+            drag_operation->set_bitmap(bitmap);
             auto outcome = drag_operation->exec();
             switch (outcome) {
             case GDragOperation::Outcome::Accepted:
