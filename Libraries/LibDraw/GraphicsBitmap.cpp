@@ -77,6 +77,16 @@ GraphicsBitmap::GraphicsBitmap(Format format, NonnullRefPtr<SharedBuffer>&& shar
     ASSERT(format != Format::Indexed8);
 }
 
+NonnullRefPtr<GraphicsBitmap> GraphicsBitmap::to_shareable_bitmap() const
+{
+    if (m_shared_buffer)
+        return *this;
+    auto buffer = SharedBuffer::create_with_size(size_in_bytes());
+    auto bitmap = GraphicsBitmap::create_with_shared_buffer(m_format, *buffer, m_size);
+    memcpy(buffer->data(), scanline(0), size_in_bytes());
+    return bitmap;
+}
+
 GraphicsBitmap::~GraphicsBitmap()
 {
     if (m_needs_munmap) {
