@@ -1,7 +1,6 @@
 #!/bin/bash ../.port_include.sh
 port=nesalizer
-version=git
+version=master
 curlopts="-L"
-workdir=nesalizer-master
-files="https://github.com/ulfalizer/nesalizer/archive/master.tar.gz nesalizer-master.tar.gz"
+files="https://github.com/SerenityOS/nesalizer/archive/master.zip nesalizer-master.zip"
 depends=SDL2
