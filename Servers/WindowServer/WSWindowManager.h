@@ -66,6 +66,14 @@ public:
 
     Rect maximized_window_rect(const WSWindow&) const;
 
+    WSClientConnection* dnd_client() { return m_dnd_client.ptr(); }
+    const String& dnd_text() const { return m_dnd_text; }
+    const GraphicsBitmap* dnd_bitmap() const { return m_dnd_bitmap; }
+    Rect dnd_rect() const;
+
+    void start_dnd_drag(WSClientConnection&, const String& text, GraphicsBitmap*);
+    void end_dnd_drag();
+
     WSWindow* active_window() { return m_active_window.ptr(); }
     const WSClientConnection* active_client() const;
     bool active_window_is_modal() const { return m_active_window && m_active_window->is_modal(); }
@@ -156,6 +164,7 @@ private:
     void deliver_mouse_event(WSWindow& window, WSMouseEvent& event);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& hovered_window);
     bool process_ongoing_window_drag(WSMouseEvent&, WSWindow*& hovered_window);
+    bool process_ongoing_drag(WSMouseEvent&, WSWindow*& hovered_window);
     void start_window_drag(WSWindow&, const WSMouseEvent&);
     void set_hovered_window(WSWindow*);
     template<typename Callback>
@@ -268,6 +277,10 @@ private:
     };
     Vector<AppMetadata> m_apps;
     HashMap<String, NonnullRefPtr<WSMenu>> m_app_category_menus;
+
+    WeakPtr<WSClientConnection> m_dnd_client;
+    String m_dnd_text;
+    RefPtr<GraphicsBitmap> m_dnd_bitmap;
 };
 
 template<typename Callback>

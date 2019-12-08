@@ -92,6 +92,7 @@ private:
     virtual OwnPtr<WindowServer::DestroyMenuAppletResponse> handle(const WindowServer::DestroyMenuApplet&) override;
     virtual OwnPtr<WindowServer::SetMenuAppletBackingStoreResponse> handle(const WindowServer::SetMenuAppletBackingStore&) override;
     virtual OwnPtr<WindowServer::InvalidateMenuAppletRectResponse> handle(const WindowServer::InvalidateMenuAppletRect&) override;
+    virtual OwnPtr<WindowServer::StartDragResponse> handle(const WindowServer::StartDrag&) override;
 
     HashMap<i32, NonnullOwnPtr<WSMenuApplet>> m_menu_applets;
     HashMap<int, NonnullRefPtr<WSWindow>> m_windows;

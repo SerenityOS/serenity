@@ -2,6 +2,7 @@
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GDesktop.h>
+#include <LibGUI/GDragOperation.h>
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GWidget.h>
@@ -260,4 +261,20 @@ void GWindowServerConnection::handle(const WindowClient::ClipboardContentsChange
 void GWindowServerConnection::handle(const WindowClient::AsyncSetWallpaperFinished&)
 {
     // This is handled manually by GDesktop::set_wallpaper().
+}
+
+void GWindowServerConnection::handle(const WindowClient::DragDropped& message)
+{
+    if (auto* window = GWindow::from_window_id(message.window_id()))
+        CEventLoop::current().post_event(*window, make<GDropEvent>(message.mouse_position(), message.text()));
+}
+
+void GWindowServerConnection::handle(const WindowClient::DragAccepted&)
+{
+    GDragOperation::notify_accepted({});
+}
+
+void GWindowServerConnection::handle(const WindowClient::DragCancelled&)
+{
+    GDragOperation::notify_cancelled({});
 }

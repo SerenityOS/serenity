@@ -254,6 +254,7 @@ protected:
     virtual void leave_event(CEvent&);
     virtual void child_event(CChildEvent&) override;
     virtual void change_event(GEvent&);
+    virtual void drop_event(GDropEvent&);
 
 private:
     void handle_paint_event(GPaintEvent&);

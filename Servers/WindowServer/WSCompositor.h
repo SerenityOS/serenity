@@ -61,6 +61,7 @@ private:
     DisjointRectSet m_dirty_rects;
 
     Rect m_last_cursor_rect;
+    Rect m_last_dnd_rect;
     Rect m_last_geometry_label_rect;
 
     String m_wallpaper_path;

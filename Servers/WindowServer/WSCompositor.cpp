@@ -93,6 +93,7 @@ void WSCompositor::compose()
 
     dirty_rects.add(Rect::intersection(m_last_geometry_label_rect, WSScreen::the().rect()));
     dirty_rects.add(Rect::intersection(m_last_cursor_rect, WSScreen::the().rect()));
+    dirty_rects.add(Rect::intersection(m_last_dnd_rect, WSScreen::the().rect()));
     dirty_rects.add(Rect::intersection(current_cursor_rect(), WSScreen::the().rect()));
 #ifdef DEBUG_COUNTERS
     dbgprintf("[WM] compose #%u (%u rects)\n", ++m_compose_count, dirty_rects.rects().size());
@@ -387,6 +388,9 @@ Rect WSCompositor::current_cursor_rect() const
 
 void WSCompositor::invalidate_cursor()
 {
+    auto& wm = WSWindowManager::the();
+    if (wm.dnd_client())
+        invalidate(wm.dnd_rect());
     invalidate(current_cursor_rect());
 }
 
@@ -417,5 +421,17 @@ void WSCompositor::draw_cursor()
     auto& wm = WSWindowManager::the();
     Rect cursor_rect = current_cursor_rect();
     m_back_painter->blit(cursor_rect.location(), wm.active_cursor().bitmap(), wm.active_cursor().rect());
+
+    if (wm.dnd_client()) {
+        auto dnd_rect = wm.dnd_rect();
+        if (!wm.dnd_text().is_empty()) {
+            m_back_painter->fill_rect(dnd_rect, Color(110, 34, 9, 200));
+            m_back_painter->draw_text(dnd_rect, wm.dnd_text(), TextAlignment::Center, Color::White);
+        }
+        // FIXME: Also do the drag_bitmap if present
+        m_last_dnd_rect = dnd_rect;
+    } else {
+        m_last_dnd_rect = {};
+    }
     m_last_cursor_rect = cursor_rect;
 }

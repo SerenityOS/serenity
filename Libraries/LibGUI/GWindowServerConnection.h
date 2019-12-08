@@ -41,4 +41,7 @@ private:
     virtual void handle(const WindowClient::WM_WindowIconBitmapChanged&) override;
     virtual void handle(const WindowClient::WM_WindowRectChanged&) override;
     virtual void handle(const WindowClient::AsyncSetWallpaperFinished&) override;
+    virtual void handle(const WindowClient::DragDropped&) override;
+    virtual void handle(const WindowClient::DragAccepted&) override;
+    virtual void handle(const WindowClient::DragCancelled&) override;
 };
