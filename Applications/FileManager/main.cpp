@@ -412,17 +412,37 @@ int main(int argc, char** argv)
         }
     });
 
-    auto context_menu = make<GMenu>();
-    context_menu->add_action(copy_action);
-    context_menu->add_action(paste_action);
-    context_menu->add_action(delete_action);
-    context_menu->add_separator();
-    context_menu->add_action(open_in_text_editor_action);
-    context_menu->add_separator();
-    context_menu->add_action(properties_action);
+    auto directory_context_menu = make<GMenu>();
+    directory_context_menu->add_action(copy_action);
+    directory_context_menu->add_action(paste_action);
+    directory_context_menu->add_action(delete_action);
+    directory_context_menu->add_separator();
+    directory_context_menu->add_action(properties_action);
 
-    directory_view->on_context_menu_request = [&](const GAbstractView&, const GModelIndex&, const GContextMenuEvent& event) {
-        context_menu->popup(event.screen_position());
+    auto file_context_menu = make<GMenu>();
+    file_context_menu->add_action(copy_action);
+    file_context_menu->add_action(paste_action);
+    file_context_menu->add_action(delete_action);
+    file_context_menu->add_separator();
+    file_context_menu->add_action(open_in_text_editor_action);
+    file_context_menu->add_separator();
+    file_context_menu->add_action(properties_action);
+
+    auto directory_view_context_menu = make<GMenu>();
+    directory_view_context_menu->add_action(mkdir_action);
+
+    directory_view->on_context_menu_request = [&](const GAbstractView&, const GModelIndex& index, const GContextMenuEvent& event) {
+        if (index.is_valid()) {
+            auto& entry = directory_view->model().entry(index.row());
+
+            if (entry.is_directory()) {
+                directory_context_menu->popup(event.screen_position());
+            } else {
+                file_context_menu->popup(event.screen_position());
+            }
+        } else {
+            directory_view_context_menu->popup(event.screen_position());
+        }
     };
 
     // our initial location is defined as, in order of precedence:
