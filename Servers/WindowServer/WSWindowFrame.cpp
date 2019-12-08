@@ -173,10 +173,10 @@ void WSWindowFrame::paint(Painter& painter)
         border_color = wm.m_highlight_window_border_color;
         border_color2 = wm.m_highlight_window_border_color2;
         title_color = wm.m_highlight_window_title_color;
-    } else if (&window == wm.m_drag_window) {
-        border_color = wm.m_dragging_window_border_color;
-        border_color2 = wm.m_dragging_window_border_color2;
-        title_color = wm.m_dragging_window_title_color;
+    } else if (&window == wm.m_move_window) {
+        border_color = wm.m_moving_window_border_color;
+        border_color2 = wm.m_moving_window_border_color2;
+        title_color = wm.m_moving_window_title_color;
     } else if (&window == wm.m_active_window) {
         border_color = wm.m_active_window_border_color;
         border_color2 = wm.m_active_window_border_color2;
@@ -301,7 +301,7 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
                 return button.on_mouse_event(event.translated(-button.relative_rect().location()));
         }
         if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left)
-            wm.start_window_drag(m_window, event.translated(rect().location()));
+            wm.start_window_move(m_window, event.translated(rect().location()));
         return;
     }
 

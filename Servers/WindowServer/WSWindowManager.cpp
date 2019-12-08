@@ -29,7 +29,7 @@
 //#define DEBUG_COUNTERS
 //#define DEBUG_MENUS
 //#define RESIZE_DEBUG
-//#define DRAG_DEBUG
+//#define MOVE_DEBUG
 //#define DOUBLECLICK_DEBUG
 
 static WSWindowManager* s_the;
@@ -197,9 +197,9 @@ void WSWindowManager::reload_config(bool set_screen)
     m_inactive_window_border_color2 = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder2", Color::Red);
     m_inactive_window_title_color = m_wm_config->read_color_entry("Colors", "InactiveWindowTitle", Color::Red);
 
-    m_dragging_window_border_color = m_wm_config->read_color_entry("Colors", "DraggingWindowBorder", Color::Red);
-    m_dragging_window_border_color2 = m_wm_config->read_color_entry("Colors", "DraggingWindowBorder2", Color::Red);
-    m_dragging_window_title_color = m_wm_config->read_color_entry("Colors", "DraggingWindowTitle", Color::Red);
+    m_moving_window_border_color = m_wm_config->read_color_entry("Colors", "MovingWindowBorder", Color::Red);
+    m_moving_window_border_color2 = m_wm_config->read_color_entry("Colors", "MovingWindowBorder2", Color::Red);
+    m_moving_window_title_color = m_wm_config->read_color_entry("Colors", "MovingWindowTitle", Color::Red);
 
     m_highlight_window_border_color = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder", Color::Red);
     m_highlight_window_border_color2 = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder2", Color::Red);
@@ -410,15 +410,15 @@ void WSWindowManager::pick_new_active_window()
     });
 }
 
-void WSWindowManager::start_window_drag(WSWindow& window, const WSMouseEvent& event)
+void WSWindowManager::start_window_move(WSWindow& window, const WSMouseEvent& event)
 {
-#ifdef DRAG_DEBUG
-    dbg() << "[WM] Begin dragging WSWindow{" << &window << "}";
+#ifdef MOVE_DEBUG
+    dbg() << "[WM] Begin moving WSWindow{" << &window << "}";
 #endif
     move_to_front_and_make_active(window);
-    m_drag_window = window.make_weak_ptr();
-    m_drag_origin = event.position();
-    m_drag_window_origin = window.position();
+    m_move_window = window.make_weak_ptr();
+    m_move_origin = event.position();
+    m_move_window_origin = window.position();
     invalidate(window);
 }
 
@@ -459,53 +459,53 @@ void WSWindowManager::start_window_resize(WSWindow& window, const WSMouseEvent& 
     start_window_resize(window, event.position(), event.button());
 }
 
-bool WSWindowManager::process_ongoing_window_drag(WSMouseEvent& event, WSWindow*& hovered_window)
+bool WSWindowManager::process_ongoing_window_move(WSMouseEvent& event, WSWindow*& hovered_window)
 {
-    if (!m_drag_window)
+    if (!m_move_window)
         return false;
     if (event.type() == WSEvent::MouseUp && event.button() == MouseButton::Left) {
-#ifdef DRAG_DEBUG
-        dbg() << "[WM] Finish dragging WSWindow{" << m_drag_window << "}";
+#ifdef MOVE_DEBUG
+        dbg() << "[WM] Finish moving WSWindow{" << m_move_window << "}";
 #endif
-        invalidate(*m_drag_window);
-        if (m_drag_window->rect().contains(event.position()))
-            hovered_window = m_drag_window;
-        if (m_drag_window->is_resizable()) {
-            process_event_for_doubleclick(*m_drag_window, event);
+        invalidate(*m_move_window);
+        if (m_move_window->rect().contains(event.position()))
+            hovered_window = m_move_window;
+        if (m_move_window->is_resizable()) {
+            process_event_for_doubleclick(*m_move_window, event);
             if (event.type() == WSEvent::MouseDoubleClick) {
 #if defined(DOUBLECLICK_DEBUG)
                 dbg() << "[WM] Click up became doubleclick!";
 #endif
-                m_drag_window->set_maximized(!m_drag_window->is_maximized());
+                m_move_window->set_maximized(!m_move_window->is_maximized());
             }
         }
-        m_drag_window = nullptr;
+        m_move_window = nullptr;
         return true;
     }
     if (event.type() == WSEvent::MouseMove) {
 
-#ifdef DRAG_DEBUG
-        dbg() << "[WM] Dragging, origin: " << m_drag_origin << ", now: " << event.position();
-        if (m_drag_window->is_maximized()) {
-            dbg() << "  [!] The window is still maximized. Not dragging yet.";
+#ifdef MOVE_DEBUG
+        dbg() << "[WM] Moving, origin: " << m_move_origin << ", now: " << event.position();
+        if (m_move_window->is_maximized()) {
+            dbg() << "  [!] The window is still maximized. Not moving yet.";
         }
 #endif
-        if (m_drag_window->is_maximized()) {
-            auto pixels_moved_from_start = event.position().pixels_moved(m_drag_origin);
-            // dbg() << "[WM] " << pixels_moved_from_start << " moved since start of drag";
+        if (m_move_window->is_maximized()) {
+            auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
+            // dbg() << "[WM] " << pixels_moved_from_start << " moved since start of window move";
             if (pixels_moved_from_start > 5) {
                 // dbg() << "[WM] de-maximizing window";
-                m_drag_origin = event.position();
-                auto width_before_resize = m_drag_window->width();
-                m_drag_window->set_maximized(false);
-                m_drag_window->move_to(m_drag_origin.x() - (m_drag_window->width() * ((float)m_drag_origin.x() / width_before_resize)), m_drag_origin.y());
-                m_drag_window_origin = m_drag_window->position();
+                m_move_origin = event.position();
+                auto width_before_resize = m_move_window->width();
+                m_move_window->set_maximized(false);
+                m_move_window->move_to(m_move_origin.x() - (m_move_window->width() * ((float)m_move_origin.x() / width_before_resize)), m_move_origin.y());
+                m_move_window_origin = m_move_window->position();
             }
         } else {
-            Point pos = m_drag_window_origin.translated(event.position() - m_drag_origin);
-            m_drag_window->set_position_without_repaint(pos);
-            if (m_drag_window->rect().contains(event.position()))
-                hovered_window = m_drag_window;
+            Point pos = m_move_window_origin.translated(event.position() - m_move_origin);
+            m_move_window->set_position_without_repaint(pos);
+            if (m_move_window->rect().contains(event.position()))
+                hovered_window = m_move_window;
             return true;
         }
     }
@@ -743,7 +743,7 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
     if (process_ongoing_drag(event, hovered_window))
         return;
 
-    if (process_ongoing_window_drag(event, hovered_window))
+    if (process_ongoing_window_move(event, hovered_window))
         return;
 
     if (process_ongoing_window_resize(event, hovered_window))
@@ -812,8 +812,8 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         // client application. We must keep delivering to that client
         // application until the input sequence is done.
         //
-        // This prevents e.g. dragging on one window out of the bounds starting
-        // a drag in that other unrelated window, and other silly shennanigans.
+        // This prevents e.g. moving on one window out of the bounds starting
+        // a move in that other unrelated window, and other silly shenanigans.
         if (!windows_who_received_mouse_event_due_to_cursor_tracking.contains(m_active_input_window)) {
             auto translated_event = event.translated(-m_active_input_window->position());
             deliver_mouse_event(*m_active_input_window, translated_event);
@@ -839,12 +839,12 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
             if (&window != m_resize_candidate.ptr())
                 clear_resize_candidate();
 
-            // First check if we should initiate a drag or resize (Logo+LMB or Logo+RMB).
+            // First check if we should initiate a move or resize (Logo+LMB or Logo+RMB).
             // In those cases, the event is swallowed by the window manager.
             if (window.is_movable()) {
                 if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
                     hovered_window = &window;
-                    start_window_drag(window, event);
+                    start_window_move(window, event);
                     return IterationDecision::Break;
                 }
                 if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
@@ -1107,7 +1107,7 @@ const WSCursor& WSWindowManager::active_cursor() const
     if (m_dnd_client)
         return *m_drag_cursor;
 
-    if (m_drag_window)
+    if (m_move_window)
         return *m_move_cursor;
 
     if (m_resize_window || m_resize_candidate) {
