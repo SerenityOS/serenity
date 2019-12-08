@@ -164,9 +164,9 @@ private:
     void process_event_for_doubleclick(WSWindow& window, WSMouseEvent& event);
     void deliver_mouse_event(WSWindow& window, WSMouseEvent& event);
     bool process_ongoing_window_resize(const WSMouseEvent&, WSWindow*& hovered_window);
-    bool process_ongoing_window_drag(WSMouseEvent&, WSWindow*& hovered_window);
+    bool process_ongoing_window_move(WSMouseEvent&, WSWindow*& hovered_window);
     bool process_ongoing_drag(WSMouseEvent&, WSWindow*& hovered_window);
-    void start_window_drag(WSWindow&, const WSMouseEvent&);
+    void start_window_move(WSWindow&, const WSMouseEvent&);
     void set_hovered_window(WSWindow*);
     template<typename Callback>
     IterationDecision for_each_visible_window_of_type_from_back_to_front(WSWindowType, Callback, bool ignore_highlight = false);
@@ -206,9 +206,9 @@ private:
     Color m_inactive_window_border_color;
     Color m_inactive_window_border_color2;
     Color m_inactive_window_title_color;
-    Color m_dragging_window_border_color;
-    Color m_dragging_window_border_color2;
-    Color m_dragging_window_title_color;
+    Color m_moving_window_border_color;
+    Color m_moving_window_border_color2;
+    Color m_moving_window_title_color;
     Color m_highlight_window_border_color;
     Color m_highlight_window_border_color2;
     Color m_highlight_window_title_color;
@@ -246,9 +246,9 @@ private:
     WeakPtr<WSWindow> m_highlight_window;
     WeakPtr<WSWindow> m_active_input_window;
 
-    WeakPtr<WSWindow> m_drag_window;
-    Point m_drag_origin;
-    Point m_drag_window_origin;
+    WeakPtr<WSWindow> m_move_window;
+    Point m_move_origin;
+    Point m_move_window_origin;
 
     WeakPtr<WSWindow> m_resize_window;
     WeakPtr<WSWindow> m_resize_candidate;

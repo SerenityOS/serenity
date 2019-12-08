@@ -397,7 +397,7 @@ void WSCompositor::invalidate_cursor()
 void WSCompositor::draw_geometry_label()
 {
     auto& wm = WSWindowManager::the();
-    auto* window_being_moved_or_resized = wm.m_drag_window ? wm.m_drag_window.ptr() : (wm.m_resize_window ? wm.m_resize_window.ptr() : nullptr);
+    auto* window_being_moved_or_resized = wm.m_move_window ? wm.m_move_window.ptr() : (wm.m_resize_window ? wm.m_resize_window.ptr() : nullptr);
     if (!window_being_moved_or_resized) {
         m_last_geometry_label_rect = {};
         return;
