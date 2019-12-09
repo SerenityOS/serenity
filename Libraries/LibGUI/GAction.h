@@ -69,9 +69,12 @@ public:
     const GraphicsBitmap* icon() const { return m_icon.ptr(); }
     void set_icon(const GraphicsBitmap* icon) { m_icon = icon; }
 
+    const CObject* activator() const { return m_activator.ptr(); }
+    CObject* activator() { return m_activator.ptr(); }
+
     Function<void(GAction&)> on_activation;
 
-    void activate();
+    void activate(CObject* activator = nullptr);
 
     bool is_enabled() const { return m_enabled; }
     void set_enabled(bool);
@@ -117,4 +120,5 @@ private:
     HashTable<GMenuItem*> m_menu_items;
     WeakPtr<GWidget> m_widget;
     WeakPtr<GActionGroup> m_action_group;
+    WeakPtr<CObject> m_activator;
 };

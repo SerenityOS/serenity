@@ -127,10 +127,13 @@ GAction::~GAction()
         m_widget->unregister_local_shortcut_action({}, *this);
 }
 
-void GAction::activate()
+void GAction::activate(CObject* activator)
 {
+    if (activator)
+        m_activator = activator->make_weak_ptr();
     if (on_activation)
         on_activation(*this);
+    m_activator = nullptr;
 }
 
 void GAction::register_button(Badge<GButton>, GButton& button)
