@@ -6,7 +6,7 @@
 //#define SLAVEPTY_DEBUG
 
 SlavePTY::SlavePTY(MasterPTY& master, unsigned index)
-    : TTY(101, index)
+    : TTY(201, index)
     , m_master(master)
     , m_index(index)
 {
