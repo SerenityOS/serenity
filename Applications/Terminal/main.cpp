@@ -195,7 +195,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("Terminal");
+    auto app_menu = GMenu::construct("Terminal");
     app_menu->add_action(GAction::create("Open new terminal", { Mod_Ctrl | Mod_Shift, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/app-terminal.png"), [&](auto&) {
         if (!fork()) {
             execl("/bin/Terminal", "Terminal", nullptr);
@@ -221,12 +221,12 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(app_menu));
 
-    auto edit_menu = make<GMenu>("Edit");
+    auto edit_menu = GMenu::construct("Edit");
     edit_menu->add_action(terminal->copy_action());
     edit_menu->add_action(terminal->paste_action());
     menubar->add_menu(move(edit_menu));
 
-    auto font_menu = make<GMenu>("Font");
+    auto font_menu = GMenu::construct("Font");
     GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
         font_menu->add_action(GAction::create(font_name, [&](const GAction& action) {
             terminal->set_font(GFontDatabase::the().get_by_name(action.text()));
@@ -239,7 +239,7 @@ int main(int argc, char** argv)
     });
     menubar->add_menu(move(font_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("Terminal", load_png("/res/icons/32x32/app-terminal.png"), window);
     }));

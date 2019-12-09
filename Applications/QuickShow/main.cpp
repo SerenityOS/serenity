@@ -15,17 +15,17 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("QuickShow");
+    auto app_menu = GMenu::construct("QuickShow");
     app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         GApplication::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto file_menu = make<GMenu>("File");
+    auto file_menu = GMenu::construct("File");
     menubar->add_menu(move(file_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));

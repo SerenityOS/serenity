@@ -3,15 +3,17 @@
 #include <AK/Function.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/NonnullRefPtr.h>
+#include <LibCore/CObject.h>
 #include <LibGUI/GMenuItem.h>
 
 class GAction;
 class Point;
 
-class GMenu {
+class GMenu final : public CObject {
+    C_OBJECT(GMenu)
 public:
     explicit GMenu(const StringView& name = "");
-    ~GMenu();
+    virtual ~GMenu() override;
 
     static GMenu* from_menu_id(int);
 
@@ -21,7 +23,7 @@ public:
 
     void add_action(NonnullRefPtr<GAction>);
     void add_separator();
-    void add_submenu(NonnullOwnPtr<GMenu>);
+    void add_submenu(NonnullRefPtr<GMenu>);
 
     void popup(const Point& screen_position);
     void dismiss();

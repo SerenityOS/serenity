@@ -123,7 +123,7 @@ void IRCAppWindow::setup_actions()
 void IRCAppWindow::setup_menus()
 {
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("IRC Client");
+    auto app_menu = GMenu::construct("IRC Client");
     app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         dbgprintf("Terminal: Quit menu activated!\n");
         GApplication::the().quit(0);
@@ -131,7 +131,7 @@ void IRCAppWindow::setup_menus()
     }));
     menubar->add_menu(move(app_menu));
 
-    auto server_menu = make<GMenu>("Server");
+    auto server_menu = GMenu::construct("Server");
     server_menu->add_action(*m_change_nick_action);
     server_menu->add_separator();
     server_menu->add_action(*m_join_action);
@@ -142,7 +142,7 @@ void IRCAppWindow::setup_menus()
     server_menu->add_action(*m_close_query_action);
     menubar->add_menu(move(server_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [this](const GAction&) {
         GAboutDialog::show("IRC Client", load_png("/res/icons/32x32/app-irc-client.png"), this);
     }));

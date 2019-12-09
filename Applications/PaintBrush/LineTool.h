@@ -23,6 +23,6 @@ private:
     GMouseButton m_drawing_button { GMouseButton::None };
     Point m_line_start_position;
     Point m_line_end_position;
-    OwnPtr<GMenu> m_context_menu;
+    RefPtr<GMenu> m_context_menu;
     int m_thickness { 1 };
 };

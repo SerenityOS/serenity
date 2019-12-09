@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("Help");
+    auto app_menu = GMenu::construct("Help");
     app_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("Help", load_png("/res/icons/16x16/book.png"), window);
     }));
@@ -139,7 +139,7 @@ int main(int argc, char* argv[])
     }));
     menubar->add_menu(move(app_menu));
 
-    auto go_menu = make<GMenu>("Go");
+    auto go_menu = GMenu::construct("Go");
     go_menu->add_action(*go_back_action);
     go_menu->add_action(*go_forward_action);
     menubar->add_menu(move(go_menu));

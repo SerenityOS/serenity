@@ -22,6 +22,6 @@ private:
     RefPtr<CTimer> m_timer;
     Point m_last_pos;
     Color m_color;
-    OwnPtr<GMenu> m_context_menu;
+    RefPtr<GMenu> m_context_menu;
     int m_thickness { 1 };
 };

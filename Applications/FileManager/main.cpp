@@ -322,7 +322,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("File Manager");
+    auto app_menu = GMenu::construct("File Manager");
     app_menu->add_action(mkdir_action);
     app_menu->add_action(copy_action);
     app_menu->add_action(paste_action);
@@ -333,19 +333,19 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(app_menu));
 
-    auto view_menu = make<GMenu>("View");
+    auto view_menu = GMenu::construct("View");
     view_menu->add_action(*view_as_icons_action);
     view_menu->add_action(*view_as_table_action);
     menubar->add_menu(move(view_menu));
 
-    auto go_menu = make<GMenu>("Go");
+    auto go_menu = GMenu::construct("Go");
     go_menu->add_action(go_back_action);
     go_menu->add_action(go_forward_action);
     go_menu->add_action(open_parent_directory_action);
     go_menu->add_action(go_home_action);
     menubar->add_menu(move(go_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
@@ -412,14 +412,14 @@ int main(int argc, char** argv)
         }
     });
 
-    auto directory_context_menu = make<GMenu>();
+    auto directory_context_menu = GMenu::construct();
     directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(paste_action);
     directory_context_menu->add_action(delete_action);
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
-    auto file_context_menu = make<GMenu>();
+    auto file_context_menu = GMenu::construct();
     file_context_menu->add_action(copy_action);
     file_context_menu->add_action(paste_action);
     file_context_menu->add_action(delete_action);
@@ -428,7 +428,7 @@ int main(int argc, char** argv)
     file_context_menu->add_separator();
     file_context_menu->add_action(properties_action);
 
-    auto directory_view_context_menu = make<GMenu>();
+    auto directory_view_context_menu = GMenu::construct();
     directory_view_context_menu->add_action(mkdir_action);
 
     directory_view->on_context_menu_request = [&](const GAbstractView&, const GModelIndex& index, const GContextMenuEvent& event) {

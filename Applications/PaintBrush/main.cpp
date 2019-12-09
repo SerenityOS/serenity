@@ -39,7 +39,7 @@ int main(int argc, char** argv)
     window->show();
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("PaintBrush");
+    auto app_menu = GMenu::construct("PaintBrush");
 
     app_menu->add_action(GCommonActions::make_open_action([&](auto&) {
         Optional<String> open_path = GFilePicker::get_open_filepath();
@@ -62,10 +62,10 @@ int main(int argc, char** argv)
 
     menubar->add_menu(move(app_menu));
 
-    auto edit_menu = make<GMenu>("Edit");
+    auto edit_menu = GMenu::construct("Edit");
     menubar->add_menu(move(edit_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](auto&) {
         GAboutDialog::show("PaintBrush", load_png("/res/icons/32x32/app-paintbrush.png"), window);
     }));

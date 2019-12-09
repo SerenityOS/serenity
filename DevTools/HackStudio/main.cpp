@@ -348,19 +348,19 @@ int main(int argc, char** argv)
     });
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("HackStudio");
+    auto app_menu = GMenu::construct("HackStudio");
     app_menu->add_action(save_action);
     app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
 
-    auto project_menu = make<GMenu>("Project");
+    auto project_menu = GMenu::construct("Project");
     project_menu->add_action(new_action);
     project_menu->add_action(add_existing_file_action);
     menubar->add_menu(move(project_menu));
 
-    auto edit_menu = make<GMenu>("Edit");
+    auto edit_menu = GMenu::construct("Edit");
     edit_menu->add_action(GAction::create("Find in files...", { Mod_Ctrl | Mod_Shift, Key_F }, [&](auto&) {
         reveal_action_tab(find_in_files_widget);
         find_in_files_widget->focus_textbox_and_select_all();
@@ -391,13 +391,13 @@ int main(int argc, char** argv)
     toolbar->add_action(run_action);
     toolbar->add_action(stop_action);
 
-    auto build_menu = make<GMenu>("Build");
+    auto build_menu = GMenu::construct("Build");
     build_menu->add_action(build_action);
     build_menu->add_action(run_action);
     build_menu->add_action(stop_action);
     menubar->add_menu(move(build_menu));
 
-    auto view_menu = make<GMenu>("View");
+    auto view_menu = GMenu::construct("View");
     view_menu->add_action(hide_action_tabs_action);
     view_menu->add_action(open_locator_action);
     view_menu->add_separator();
@@ -407,7 +407,7 @@ int main(int argc, char** argv)
 
     auto small_icon = GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png");
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](auto&) {
         GAboutDialog::show("HackStudio", small_icon, g_window);
     }));

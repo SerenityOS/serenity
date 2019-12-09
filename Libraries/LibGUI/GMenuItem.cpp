@@ -21,7 +21,7 @@ GMenuItem::GMenuItem(unsigned menu_id, NonnullRefPtr<GAction>&& action)
         m_checked = m_action->is_checked();
 }
 
-GMenuItem::GMenuItem(unsigned menu_id, NonnullOwnPtr<GMenu>&& submenu)
+GMenuItem::GMenuItem(unsigned menu_id, NonnullRefPtr<GMenu>&& submenu)
     : m_type(Submenu)
     , m_menu_id(menu_id)
     , m_submenu(move(submenu))

@@ -31,14 +31,14 @@ int main(int argc, char** argv)
     };
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("Visual Builder");
+    auto app_menu = GMenu::construct("Visual Builder");
     app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         GApplication::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto file_menu = make<GMenu>("File");
+    auto file_menu = GMenu::construct("File");
     file_menu->add_action(GAction::create("Dump Form", [&](auto&) {
         form1->dump();
     }));
@@ -54,7 +54,7 @@ int main(int argc, char** argv)
 
     window->show();
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("Visual Builder", load_png("/res/icons/32x32/app-visual-builder.png"), window);
     }));

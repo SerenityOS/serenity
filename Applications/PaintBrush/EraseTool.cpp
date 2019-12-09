@@ -48,7 +48,7 @@ void EraseTool::on_mousemove(GMouseEvent& event)
 void EraseTool::on_contextmenu(GContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = make<GMenu>();
+        m_context_menu = GMenu::construct();
 
         NonnullRefPtr<GAction> eraser_color_toggler = GAction::create("Use secondary color", [&](GAction& action) {
             bool toggled = !m_use_secondary_color;

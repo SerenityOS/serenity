@@ -98,5 +98,5 @@ protected:
     int m_hovered_column_header_index { -1 };
 
     GMenu& ensure_header_context_menu();
-    OwnPtr<GMenu> m_header_context_menu;
+    RefPtr<GMenu> m_header_context_menu;
 };
