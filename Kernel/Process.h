@@ -219,6 +219,7 @@ public:
     int sys$release_shared_buffer(int shared_buffer_id);
     int sys$seal_shared_buffer(int shared_buffer_id);
     int sys$get_shared_buffer_size(int shared_buffer_id);
+    int sys$set_shared_buffer_volatile(int shared_buffer_id, bool);
     int sys$halt();
     int sys$reboot();
     int sys$set_process_icon(int icon_id);

@@ -1,8 +1,8 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
-#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PurgeableVMObject.h>
 
 struct SharedBuffer {
 private:
@@ -20,7 +20,7 @@ private:
 public:
     SharedBuffer(int id, int size)
         : m_shared_buffer_id(id)
-        , m_vmobject(AnonymousVMObject::create_with_size(size))
+        , m_vmobject(PurgeableVMObject::create_with_size(size))
     {
 #ifdef SHARED_BUFFER_DEBUG
         dbgprintf("Created shared buffer %d of size %d\n", m_shared_buffer_id, size);
@@ -44,12 +44,14 @@ public:
     size_t size() const { return m_vmobject->size(); }
     void destroy_if_unused();
     void seal();
+    PurgeableVMObject& vmobject() { return m_vmobject; }
+    const PurgeableVMObject& vmobject() const { return m_vmobject; }
     int id() const { return m_shared_buffer_id; }
 
     int m_shared_buffer_id { -1 };
     bool m_writable { true };
     bool m_global { false };
-    NonnullRefPtr<AnonymousVMObject> m_vmobject;
+    NonnullRefPtr<PurgeableVMObject> m_vmobject;
     Vector<Reference, 2> m_refs;
     unsigned m_total_refs { 0 };
 };
