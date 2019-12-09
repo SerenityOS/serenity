@@ -9,7 +9,7 @@
 //#define MASTERPTY_DEBUG
 
 MasterPTY::MasterPTY(unsigned index)
-    : CharacterDevice(10, index)
+    : CharacterDevice(100, index)
     , m_slave(adopt(*new SlavePTY(*this, index)))
     , m_index(index)
 {
