@@ -59,7 +59,7 @@ public:
     {
     }
 
-    String(const char* cstring, int length, ShouldChomp shouldChomp = NoChomp)
+    String(const char* cstring, size_t length, ShouldChomp shouldChomp = NoChomp)
         : m_impl(StringImpl::create(cstring, length, shouldChomp))
     {
     }
@@ -89,7 +89,7 @@ public:
         CaseSensitive,
     };
 
-    static String repeated(char, int count);
+    static String repeated(char, size_t count);
     bool matches(const StringView& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     // FIXME: These should be shared between String and StringView somehow!
@@ -112,18 +112,18 @@ public:
 
     bool contains(const String&) const;
 
-    Vector<String> split_limit(char separator, int limit) const;
+    Vector<String> split_limit(char separator, size_t limit) const;
     Vector<String> split(char separator) const;
-    String substring(int start, int length) const;
+    String substring(size_t start, size_t length) const;
 
     Vector<StringView> split_view(char separator, bool keep_empty = false) const;
-    StringView substring_view(int start, int length) const;
+    StringView substring_view(size_t start, size_t length) const;
 
     bool is_null() const { return !m_impl; }
     bool is_empty() const { return length() == 0; }
-    int length() const { return m_impl ? m_impl->length() : 0; }
+    size_t length() const { return m_impl ? m_impl->length() : 0; }
     const char* characters() const { return m_impl ? m_impl->characters() : nullptr; }
-    char operator[](int i) const
+    char operator[](size_t i) const
     {
         ASSERT(m_impl);
         return (*m_impl)[i];

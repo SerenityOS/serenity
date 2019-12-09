@@ -48,7 +48,7 @@ void Parser::begin_redirect_write(int fd)
 
 Vector<Command> Parser::parse()
 {
-    for (int i = 0; i < m_input.length(); ++i) {
+    for (size_t i = 0; i < m_input.length(); ++i) {
         char ch = m_input.characters()[i];
         switch (m_state) {
         case State::Free:
@@ -107,7 +107,7 @@ Vector<Command> Parser::parse()
             // redirection from zsh-style multi-digit fd, such as {10}>file
             if (ch == '{') {
                 bool is_multi_fd_redirection = false;
-                int redir_end = i + 1;
+                size_t redir_end = i + 1;
 
                 while (redir_end < m_input.length()) {
                     char lookahead_ch = m_input.characters()[redir_end];

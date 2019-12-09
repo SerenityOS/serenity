@@ -148,6 +148,12 @@ public:
         m_buffer[m_offset++] = (u8)(value >> 24);
         return *this;
     }
+
+    BufferStream& operator<<(size_t value)
+    {
+        return *this << (u32)value;
+    }
+
     BufferStream& operator>>(u32& value)
     {
         if (m_offset + sizeof(value) > unsigned(m_buffer.size())) {
@@ -200,7 +206,7 @@ public:
 
     BufferStream& operator<<(const StringView& value)
     {
-        for (ssize_t i = 0; i < value.length(); ++i)
+        for (size_t i = 0; i < value.length(); ++i)
             m_buffer[m_offset++] = value[i];
         return *this;
     }

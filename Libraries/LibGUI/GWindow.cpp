@@ -338,7 +338,7 @@ void GWindow::paint_keybinds()
             continue;
         auto& widget = *keypair.value;
         bool could_be_keybind = true;
-        for (int i = 0; i < m_entered_keybind.length(); ++i) {
+        for (size_t i = 0; i < m_entered_keybind.length(); ++i) {
             if (keypair.key.characters()[i] != m_entered_keybind.characters()[i]) {
                 could_be_keybind = false;
                 break;

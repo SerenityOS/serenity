@@ -10,12 +10,12 @@ class StringBuilder {
 public:
     using OutputType = String;
 
-    explicit StringBuilder(int initial_capacity = 16);
+    explicit StringBuilder(size_t initial_capacity = 16);
     ~StringBuilder() {}
 
     void append(const StringView&);
     void append(char);
-    void append(const char*, int);
+    void append(const char*, size_t);
     void appendf(const char*, ...);
     void appendvf(const char*, va_list);
 
@@ -27,14 +27,14 @@ public:
     StringView string_view() const;
     void clear();
 
-    int length() const { return m_length; }
-    void trim(int count) { m_length -= count; }
+    size_t length() const { return m_length; }
+    void trim(size_t count) { m_length -= count; }
 
 private:
-    void will_append(int);
+    void will_append(size_t);
 
     ByteBuffer m_buffer;
-    int m_length { 0 };
+    size_t m_length { 0 };
 };
 
 }

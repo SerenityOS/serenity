@@ -12,7 +12,7 @@ StringView::StringView(const String& string)
 
 StringView::StringView(const ByteBuffer& buffer)
     : m_characters((const char*)buffer.data())
-    , m_length(buffer.size())
+    , m_length((size_t)buffer.size())
 {
 }
 
@@ -22,17 +22,17 @@ Vector<StringView> StringView::split_view(const char separator, bool keep_empty)
         return {};
 
     Vector<StringView> v;
-    ssize_t substart = 0;
-    for (ssize_t i = 0; i < length(); ++i) {
+    size_t substart = 0;
+    for (size_t i = 0; i < length(); ++i) {
         char ch = characters_without_null_termination()[i];
         if (ch == separator) {
-            ssize_t sublen = i - substart;
+            size_t sublen = i - substart;
             if (sublen != 0 || keep_empty)
                 v.append(substring_view(substart, sublen));
             substart = i + 1;
         }
     }
-    ssize_t taillen = length() - substart;
+    size_t taillen = length() - substart;
     if (taillen != 0 || keep_empty)
         v.append(substring_view(substart, taillen));
     if (characters_without_null_termination()[length() - 1] == separator && keep_empty)
@@ -49,10 +49,10 @@ Vector<StringView> StringView::lines(bool consider_cr) const
         return split_view('\n', true);
 
     Vector<StringView> v;
-    ssize_t substart = 0;
+    size_t substart = 0;
     bool last_ch_was_cr = false;
     bool split_view = false;
-    for (ssize_t i = 0; i < length(); ++i) {
+    for (size_t i = 0; i < length(); ++i) {
         char ch = characters_without_null_termination()[i];
         if (ch == '\n') {
             split_view = true;
@@ -67,13 +67,13 @@ Vector<StringView> StringView::lines(bool consider_cr) const
             last_ch_was_cr = true;
         }
         if (split_view) {
-            ssize_t sublen = i - substart;
+            size_t sublen = i - substart;
             v.append(substring_view(substart, sublen));
             substart = i + 1;
         }
         split_view = false;
     }
-    ssize_t taillen = length() - substart;
+    size_t taillen = length() - substart;
     if (taillen != 0)
         v.append(substring_view(substart, taillen));
     return v;
@@ -92,7 +92,7 @@ bool StringView::starts_with(const StringView& str) const
     return !memcmp(characters_without_null_termination(), str.characters_without_null_termination(), str.length());
 }
 
-StringView StringView::substring_view(int start, int length) const
+StringView StringView::substring_view(size_t start, size_t length) const
 {
     if (!length)
         return {};
@@ -105,7 +105,7 @@ StringView StringView::substring_view_starting_from_substring(const StringView& 
     const char* remaining_characters = substring.characters_without_null_termination();
     ASSERT(remaining_characters >= m_characters);
     ASSERT(remaining_characters <= m_characters + m_length);
-    int remaining_length = m_length - (remaining_characters - m_characters);
+    size_t remaining_length = m_length - (remaining_characters - m_characters);
     return { remaining_characters, remaining_length };
 }
 
@@ -114,7 +114,7 @@ StringView StringView::substring_view_starting_after_substring(const StringView&
     const char* remaining_characters = substring.characters_without_null_termination() + substring.length();
     ASSERT(remaining_characters >= m_characters);
     ASSERT(remaining_characters <= m_characters + m_length);
-    int remaining_length = m_length - (remaining_characters - m_characters);
+    size_t remaining_length = m_length - (remaining_characters - m_characters);
     return { remaining_characters, remaining_length };
 }
 
@@ -122,7 +122,7 @@ int StringView::to_int(bool& ok) const
 {
     bool negative = false;
     int value = 0;
-    int i = 0;
+    size_t i = 0;
 
     if (is_empty()) {
         ok = false;
@@ -149,7 +149,7 @@ int StringView::to_int(bool& ok) const
 unsigned StringView::to_uint(bool& ok) const
 {
     unsigned value = 0;
-    for (ssize_t i = 0; i < length(); ++i) {
+    for (size_t i = 0; i < length(); ++i) {
         if (characters_without_null_termination()[i] < '0' || characters_without_null_termination()[i] > '9') {
             ok = false;
             return 0;

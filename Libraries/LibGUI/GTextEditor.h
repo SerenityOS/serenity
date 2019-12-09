@@ -56,7 +56,7 @@ public:
     void set_text(const StringView&);
     void scroll_cursor_into_view();
     void scroll_position_into_view(const GTextPosition&);
-    int line_count() const { return document().line_count(); }
+    size_t line_count() const { return document().line_count(); }
     int line_spacing() const { return m_line_spacing; }
     int line_height() const { return font().glyph_height() + m_line_spacing; }
     GTextPosition cursor() const { return m_cursor; }
@@ -99,7 +99,7 @@ public:
 
     void add_custom_context_menu_action(GAction&);
 
-    void set_cursor(int line, int column);
+    void set_cursor(size_t line, size_t column);
     void set_cursor(const GTextPosition&);
 
 protected:
@@ -130,8 +130,8 @@ private:
 
     // ^GTextDocument::Client
     virtual void document_did_append_line() override;
-    virtual void document_did_insert_line(int) override;
-    virtual void document_did_remove_line(int) override;
+    virtual void document_did_insert_line(size_t) override;
+    virtual void document_did_remove_line(size_t) override;
     virtual void document_did_remove_all_lines() override;
     virtual void document_did_change() override;
     virtual void document_did_set_text() override;
@@ -142,19 +142,19 @@ private:
     void update_content_size();
     void did_change();
 
-    Rect line_content_rect(int item_index) const;
-    Rect line_widget_rect(int line_index) const;
+    Rect line_content_rect(size_t item_index) const;
+    Rect line_widget_rect(size_t line_index) const;
     Rect cursor_content_rect() const;
     Rect content_rect_for_position(const GTextPosition&) const;
     void update_cursor();
     const NonnullOwnPtrVector<GTextDocumentLine>& lines() const { return document().lines(); }
     NonnullOwnPtrVector<GTextDocumentLine>& lines() { return document().lines(); }
-    GTextDocumentLine& line(int index) { return document().line(index); }
-    const GTextDocumentLine& line(int index) const { return document().line(index); }
+    GTextDocumentLine& line(size_t index) { return document().line(index); }
+    const GTextDocumentLine& line(size_t index) const { return document().line(index); }
     GTextDocumentLine& current_line() { return line(m_cursor.line()); }
     const GTextDocumentLine& current_line() const { return line(m_cursor.line()); }
     int ruler_width() const;
-    Rect ruler_content_rect(int line) const;
+    Rect ruler_content_rect(size_t line) const;
     void toggle_selection_if_needed_for_event(const GKeyEvent&);
     void insert_at_cursor_or_replace_selection(const StringView&);
     void delete_selection();
@@ -165,13 +165,13 @@ private:
     void recompute_all_visual_lines();
     void ensure_cursor_is_valid();
     void flush_pending_change_notification_if_needed();
-    void get_selection_line_boundaries(int& first_line, int& last_line);
+    void get_selection_line_boundaries(size_t& first_line, size_t& last_line);
     void move_selected_lines_up();
     void move_selected_lines_down();
     void sort_selected_lines();
 
-    int visual_line_containing(int line_index, int column) const;
-    void recompute_visual_lines(int line_index);
+    size_t visual_line_containing(size_t line_index, size_t column) const;
+    void recompute_visual_lines(size_t line_index);
 
     template<class T, class... Args>
     inline void execute(Args&&... args)
@@ -193,7 +193,7 @@ private:
     bool m_line_wrapping_enabled { false };
     bool m_readonly { false };
     int m_line_spacing { 4 };
-    int m_soft_tab_width { 4 };
+    size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 2 };
     GTextRange m_selection;
     OwnPtr<GMenu> m_context_menu;
@@ -209,10 +209,10 @@ private:
     RefPtr<GTextDocument> m_document;
 
     template<typename Callback>
-    void for_each_visual_line(int line_index, Callback) const;
+    void for_each_visual_line(size_t line_index, Callback) const;
 
     struct LineVisualData {
-        Vector<int, 1> visual_line_breaks;
+        Vector<size_t, 1> visual_line_breaks;
         Rect visual_rect;
     };
 

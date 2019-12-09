@@ -81,7 +81,7 @@ hostent* gethostbyname(const char* name)
         return nullptr;
     }
 
-    ASSERT(nsent == line.length());
+    ASSERT((size_t)nsent == line.length());
 
     char buffer[1024];
     int nrecv = read(fd, buffer, sizeof(buffer) - 1);
@@ -144,7 +144,7 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         return nullptr;
     }
 
-    ASSERT(nsent == line.length());
+    ASSERT((size_t)nsent == line.length());
 
     char buffer[1024];
     int nrecv = read(fd, buffer, sizeof(buffer) - 1);

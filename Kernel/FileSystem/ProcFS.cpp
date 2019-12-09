@@ -1085,11 +1085,11 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
             if (!entry.name)
                 continue;
             if (entry.proc_file_type > __FI_Root_Start && entry.proc_file_type < __FI_Root_End)
-                callback({ entry.name, (int)strlen(entry.name), to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type), 0 });
+                callback({ entry.name, strlen(entry.name), to_identifier(fsid(), PDI_Root, 0, (ProcFileType)entry.proc_file_type), 0 });
         }
         for (auto pid_child : Process::all_pids()) {
             char name[16];
-            int name_length = sprintf(name, "%u", pid_child);
+            size_t name_length = (size_t)sprintf(name, "%u", pid_child);
             callback({ name, name_length, to_identifier(fsid(), PDI_Root, pid_child, FI_PID), 0 });
         }
         break;
@@ -1119,7 +1119,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
                 if (entry.proc_file_type == FI_PID_exe && !process.executable())
                     continue;
                 // FIXME: strlen() here is sad.
-                callback({ entry.name, (int)strlen(entry.name), to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
+                callback({ entry.name, strlen(entry.name), to_identifier(fsid(), PDI_PID, pid, (ProcFileType)entry.proc_file_type), 0 });
             }
         }
     } break;
@@ -1134,7 +1134,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
             if (!description)
                 continue;
             char name[16];
-            int name_length = sprintf(name, "%u", i);
+            size_t name_length = (size_t)sprintf(name, "%u", i);
             callback({ name, name_length, to_identifier_with_fd(fsid(), pid, i), 0 });
         }
     } break;

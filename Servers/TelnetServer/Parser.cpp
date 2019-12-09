@@ -6,7 +6,7 @@
 
 void Parser::write(const StringView& data)
 {
-    for (int i = 0; i < data.length(); i++) {
+    for (size_t i = 0; i < data.length(); i++) {
         u8 ch = data[i];
 
         switch (m_state) {

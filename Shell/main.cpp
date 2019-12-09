@@ -457,7 +457,7 @@ struct CommandTimer {
 
 static bool is_glob(const StringView& s)
 {
-    for (int i = 0; i < s.length(); i++) {
+    for (size_t i = 0; i < s.length(); i++) {
         char c = s.characters_without_null_termination()[i];
         if (c == '*' || c == '?')
             return true;
@@ -469,19 +469,19 @@ static Vector<StringView> split_path(const StringView& path)
 {
     Vector<StringView> parts;
 
-    ssize_t substart = 0;
-    for (ssize_t i = 0; i < path.length(); i++) {
+    size_t substart = 0;
+    for (size_t i = 0; i < path.length(); i++) {
         char ch = path.characters_without_null_termination()[i];
         if (ch != '/')
             continue;
-        ssize_t sublen = i - substart;
+        size_t sublen = i - substart;
         if (sublen != 0)
             parts.append(path.substring_view(substart, sublen));
         parts.append(path.substring_view(i, 1));
         substart = i + 1;
     }
 
-    ssize_t taillen = path.length() - substart;
+    size_t taillen = path.length() - substart;
     if (taillen != 0)
         parts.append(path.substring_view(substart, taillen));
 

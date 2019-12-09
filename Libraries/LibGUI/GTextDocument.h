@@ -66,8 +66,8 @@ public:
     public:
         virtual ~Client();
         virtual void document_did_append_line() = 0;
-        virtual void document_did_insert_line(int) = 0;
-        virtual void document_did_remove_line(int) = 0;
+        virtual void document_did_insert_line(size_t) = 0;
+        virtual void document_did_remove_line(size_t) = 0;
         virtual void document_did_remove_all_lines() = 0;
         virtual void document_did_change() = 0;
         virtual void document_did_set_text() = 0;
@@ -79,9 +79,9 @@ public:
         return adopt(*new GTextDocument(client));
     }
 
-    int line_count() const { return m_lines.size(); }
-    const GTextDocumentLine& line(int line_index) const { return m_lines[line_index]; }
-    GTextDocumentLine& line(int line_index) { return m_lines[line_index]; }
+    size_t line_count() const { return (size_t)m_lines.size(); }
+    const GTextDocumentLine& line(size_t line_index) const { return m_lines[(int)line_index]; }
+    GTextDocumentLine& line(size_t line_index) { return m_lines[(int)line_index]; }
 
     void set_spans(const Vector<GTextDocumentSpan>& spans) { m_spans = spans; }
 
@@ -92,12 +92,12 @@ public:
 
     bool has_spans() const { return !m_spans.is_empty(); }
     const Vector<GTextDocumentSpan>& spans() const { return m_spans; }
-    void set_span_at_index(int index, GTextDocumentSpan span) { m_spans[index] = move(span); }
+    void set_span_at_index(size_t index, GTextDocumentSpan span) { m_spans[(int)index] = move(span); }
 
     void append_line(NonnullOwnPtr<GTextDocumentLine>);
-    void remove_line(int line_index);
+    void remove_line(size_t line_index);
     void remove_all_lines();
-    void insert_line(int line_index, NonnullOwnPtr<GTextDocumentLine>);
+    void insert_line(size_t line_index, NonnullOwnPtr<GTextDocumentLine>);
 
     void register_client(Client&);
     void unregister_client(Client&);
@@ -156,18 +156,18 @@ public:
     explicit GTextDocumentLine(GTextDocument&);
     explicit GTextDocumentLine(GTextDocument&, const StringView&);
 
-    StringView view() const { return { characters(), length() }; }
+    StringView view() const { return { characters(), (size_t)length() }; }
     const char* characters() const { return m_text.data(); }
-    int length() const { return m_text.size() - 1; }
+    size_t length() const { return (size_t)m_text.size() - 1; }
     void set_text(GTextDocument&, const StringView&);
     void append(GTextDocument&, char);
     void prepend(GTextDocument&, char);
-    void insert(GTextDocument&, int index, char);
-    void remove(GTextDocument&, int index);
-    void append(GTextDocument&, const char*, int);
-    void truncate(GTextDocument&, int length);
+    void insert(GTextDocument&, size_t index, char);
+    void remove(GTextDocument&, size_t index);
+    void append(GTextDocument&, const char*, size_t);
+    void truncate(GTextDocument&, size_t length);
     void clear(GTextDocument&);
-    int first_non_whitespace_column() const;
+    size_t first_non_whitespace_column() const;
 
 private:
     // NOTE: This vector is null terminated.

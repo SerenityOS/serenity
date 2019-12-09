@@ -4,7 +4,7 @@
 static String unescape(const StringView& text)
 {
     StringBuilder builder;
-    for (int i = 0; i < text.length(); ++i) {
+    for (size_t i = 0; i < text.length(); ++i) {
         if (text[i] == '\\' && i != text.length() - 1) {
             builder.append(text[i + 1]);
             i++;
@@ -125,10 +125,10 @@ String MDText::render_for_terminal() const
 bool MDText::parse(const StringView& str)
 {
     Style current_style;
-    int current_span_start = 0;
+    size_t current_span_start = 0;
     int first_span_in_the_current_link = -1;
 
-    auto append_span_if_needed = [&](int offset) {
+    auto append_span_if_needed = [&](size_t offset) {
         if (current_span_start != offset) {
             Span span {
                 unescape(str.substring_view(current_span_start, offset - current_span_start)),
@@ -138,7 +138,7 @@ bool MDText::parse(const StringView& str)
         }
     };
 
-    for (int offset = 0; offset < str.length(); offset++) {
+    for (size_t offset = 0; offset < str.length(); offset++) {
         char ch = str[offset];
 
         bool is_escape = ch == '\\';
@@ -179,7 +179,7 @@ bool MDText::parse(const StringView& str)
             offset++;
             ASSERT(str[offset] == '(');
             offset++;
-            int start_of_href = offset;
+            size_t start_of_href = offset;
 
             do
                 offset++;

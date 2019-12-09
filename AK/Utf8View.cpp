@@ -30,7 +30,7 @@ const unsigned char* Utf8View::end_ptr() const
 
 Utf8CodepointIterator Utf8View::begin() const
 {
-    return { begin_ptr(), m_string.length() };
+    return { begin_ptr(), (int)m_string.length() };
 }
 
 Utf8CodepointIterator Utf8View::end() const

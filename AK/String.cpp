@@ -76,7 +76,7 @@ String String::isolated_copy() const
     return String(move(*impl));
 }
 
-String String::substring(int start, int length) const
+String String::substring(size_t start, size_t length) const
 {
     if (!length)
         return {};
@@ -86,7 +86,7 @@ String String::substring(int start, int length) const
     return { characters() + start, length };
 }
 
-StringView String::substring_view(int start, int length) const
+StringView String::substring_view(size_t start, size_t length) const
 {
     if (!length)
         return {};
@@ -101,23 +101,23 @@ Vector<String> String::split(const char separator) const
     return split_limit(separator, 0);
 }
 
-Vector<String> String::split_limit(const char separator, int limit) const
+Vector<String> String::split_limit(const char separator, size_t limit) const
 {
     if (is_empty())
         return {};
 
     Vector<String> v;
-    int substart = 0;
-    for (int i = 0; i < length() && (v.size() + 1) != limit; ++i) {
+    size_t substart = 0;
+    for (size_t i = 0; i < length() && ((size_t)v.size() + 1) != limit; ++i) {
         char ch = characters()[i];
         if (ch == separator) {
-            int sublen = i - substart;
+            size_t sublen = i - substart;
             if (sublen != 0)
                 v.append(substring(substart, sublen));
             substart = i + 1;
         }
     }
-    int taillen = length() - substart;
+    size_t taillen = length() - substart;
     if (taillen != 0)
         v.append(substring(substart, taillen));
     if (characters()[length() - 1] == separator)
@@ -131,17 +131,17 @@ Vector<StringView> String::split_view(const char separator, bool keep_empty) con
         return {};
 
     Vector<StringView> v;
-    int substart = 0;
-    for (int i = 0; i < length(); ++i) {
+    size_t substart = 0;
+    for (size_t i = 0; i < length(); ++i) {
         char ch = characters()[i];
         if (ch == separator) {
-            int sublen = i - substart;
+            size_t sublen = i - substart;
             if (sublen != 0 || keep_empty)
                 v.append(substring_view(substart, sublen));
             substart = i + 1;
         }
     }
-    int taillen = length() - substart;
+    size_t taillen = length() - substart;
     if (taillen != 0 || keep_empty)
         v.append(substring_view(substart, taillen));
     if (characters()[length() - 1] == separator && keep_empty)
@@ -160,7 +160,7 @@ int String::to_int(bool& ok) const
 {
     bool negative = false;
     int value = 0;
-    int i = 0;
+    size_t i = 0;
 
     if (is_empty()) {
         ok = false;
@@ -187,7 +187,7 @@ int String::to_int(bool& ok) const
 unsigned String::to_uint(bool& ok) const
 {
     unsigned value = 0;
-    for (int i = 0; i < length(); ++i) {
+    for (size_t i = 0; i < length(); ++i) {
         if (characters()[i] < '0' || characters()[i] > '9') {
             ok = false;
             return 0;
@@ -250,7 +250,7 @@ bool String::ends_with(const StringView& str) const
     return !memcmp(characters() + (length() - str.length()), str.characters_without_null_termination(), str.length());
 }
 
-String String::repeated(char ch, int count)
+String String::repeated(char ch, size_t count)
 {
     if (!count)
         return empty();

@@ -33,7 +33,7 @@ String MDCodeBlock::render_to_html() const
         builder.appendf("<code style=\"white-space: pre;\" class=\"%s\">", style_language.characters());
 
     // TODO: This should also be done in other places.
-    for (int i = 0; i < m_code.length(); i++)
+    for (size_t i = 0; i < m_code.length(); i++)
         if (m_code[i] == '<')
             builder.append("&lt;");
         else if (m_code[i] == '>')

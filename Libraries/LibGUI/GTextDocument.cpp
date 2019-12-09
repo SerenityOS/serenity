@@ -22,17 +22,17 @@ void GTextDocument::set_text(const StringView& text)
     m_spans.clear();
     remove_all_lines();
 
-    int start_of_current_line = 0;
+    size_t start_of_current_line = 0;
 
-    auto add_line = [&](int current_position) {
-        int line_length = current_position - start_of_current_line;
+    auto add_line = [&](size_t current_position) {
+        size_t line_length = current_position - start_of_current_line;
         auto line = make<GTextDocumentLine>(*this);
         if (line_length)
             line->set_text(*this, text.substring_view(start_of_current_line, current_position - start_of_current_line));
         append_line(move(line));
         start_of_current_line = current_position + 1;
     };
-    int i = 0;
+    size_t i = 0;
     for (i = 0; i < text.length(); ++i) {
         if (text[i] == '\n')
             add_line(i);
@@ -44,10 +44,10 @@ void GTextDocument::set_text(const StringView& text)
         client->document_did_set_text();
 }
 
-int GTextDocumentLine::first_non_whitespace_column() const
+size_t GTextDocumentLine::first_non_whitespace_column() const
 {
-    for (int i = 0; i < length(); ++i) {
-        if (!isspace(m_text[i]))
+    for (size_t i = 0; i < length(); ++i) {
+        if (!isspace(m_text[(int)i]))
             return i;
     }
     return length();
@@ -78,12 +78,12 @@ void GTextDocumentLine::set_text(GTextDocument& document, const StringView& text
         clear(document);
         return;
     }
-    m_text.resize(text.length() + 1);
+    m_text.resize((int)text.length() + 1);
     memcpy(m_text.data(), text.characters_without_null_termination(), text.length() + 1);
     document.update_views({});
 }
 
-void GTextDocumentLine::append(GTextDocument& document, const char* characters, int length)
+void GTextDocumentLine::append(GTextDocument& document, const char* characters, size_t length)
 {
     int old_length = m_text.size() - 1;
     m_text.resize(m_text.size() + length);
@@ -102,31 +102,31 @@ void GTextDocumentLine::prepend(GTextDocument& document, char ch)
     insert(document, 0, ch);
 }
 
-void GTextDocumentLine::insert(GTextDocument& document, int index, char ch)
+void GTextDocumentLine::insert(GTextDocument& document, size_t index, char ch)
 {
     if (index == length()) {
         m_text.last() = ch;
         m_text.append(0);
     } else {
-        m_text.insert(index, move(ch));
+        m_text.insert((int)index, move(ch));
     }
     document.update_views({});
 }
 
-void GTextDocumentLine::remove(GTextDocument& document, int index)
+void GTextDocumentLine::remove(GTextDocument& document, size_t index)
 {
     if (index == length()) {
         m_text.take_last();
         m_text.last() = 0;
     } else {
-        m_text.remove(index);
+        m_text.remove((int)index);
     }
     document.update_views({});
 }
 
-void GTextDocumentLine::truncate(GTextDocument& document, int length)
+void GTextDocumentLine::truncate(GTextDocument& document, size_t length)
 {
-    m_text.resize(length + 1);
+    m_text.resize((int)length + 1);
     m_text.last() = 0;
     document.update_views({});
 }
@@ -140,18 +140,18 @@ void GTextDocument::append_line(NonnullOwnPtr<GTextDocumentLine> line)
     }
 }
 
-void GTextDocument::insert_line(int line_index, NonnullOwnPtr<GTextDocumentLine> line)
+void GTextDocument::insert_line(size_t line_index, NonnullOwnPtr<GTextDocumentLine> line)
 {
-    lines().insert(line_index, move(line));
+    lines().insert((int)line_index, move(line));
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
             client->document_did_insert_line(line_index);
     }
 }
 
-void GTextDocument::remove_line(int line_index)
+void GTextDocument::remove_line(size_t line_index)
 {
-    lines().remove(line_index);
+    lines().remove((int)line_index);
     if (m_client_notifications_enabled) {
         for (auto* client : m_clients)
             client->document_did_remove_line(line_index);
@@ -207,10 +207,10 @@ String GTextDocument::text_in_range(const GTextRange& a_range) const
     auto range = a_range.normalized();
 
     StringBuilder builder;
-    for (int i = range.start().line(); i <= range.end().line(); ++i) {
-        auto& line = lines()[i];
-        int selection_start_column_on_line = range.start().line() == i ? range.start().column() : 0;
-        int selection_end_column_on_line = range.end().line() == i ? range.end().column() : line.length();
+    for (size_t i = range.start().line(); i <= range.end().line(); ++i) {
+        auto& line = this->line(i);
+        size_t selection_start_column_on_line = range.start().line() == i ? range.start().column() : 0;
+        size_t selection_end_column_on_line = range.end().line() == i ? range.end().column() : line.length();
         builder.append(line.characters() + selection_start_column_on_line, selection_end_column_on_line - selection_start_column_on_line);
         if (i != range.end().line())
             builder.append('\n');
@@ -222,7 +222,7 @@ String GTextDocument::text_in_range(const GTextRange& a_range) const
 char GTextDocument::character_at(const GTextPosition& position) const
 {
     ASSERT(position.line() < line_count());
-    auto& line = lines()[position.line()];
+    auto& line = this->line(position.line());
     if (position.column() == line.length())
         return '\n';
     return line.characters()[position.column()];
@@ -230,7 +230,7 @@ char GTextDocument::character_at(const GTextPosition& position) const
 
 GTextPosition GTextDocument::next_position_after(const GTextPosition& position, SearchShouldWrap should_wrap) const
 {
-    auto& line = lines()[position.line()];
+    auto& line = this->line(position.line());
     if (position.column() == line.length()) {
         if (position.line() == line_count() - 1) {
             if (should_wrap == SearchShouldWrap::Yes)
@@ -247,12 +247,12 @@ GTextPosition GTextDocument::previous_position_before(const GTextPosition& posit
     if (position.column() == 0) {
         if (position.line() == 0) {
             if (should_wrap == SearchShouldWrap::Yes) {
-                auto& last_line = lines()[line_count() - 1];
+                auto& last_line = this->line(line_count() - 1);
                 return { line_count() - 1, last_line.length() };
             }
             return {};
         }
-        auto& prev_line = lines()[position.line() - 1];
+        auto& prev_line = this->line(position.line() - 1);
         return { position.line() - 1, prev_line.length() };
     }
     return { position.line(), position.column() - 1 };
@@ -267,7 +267,7 @@ GTextRange GTextDocument::find_next(const StringView& needle, const GTextPositio
     GTextPosition original_position = position;
 
     GTextPosition start_of_potential_match;
-    int needle_index = 0;
+    size_t needle_index = 0;
 
     do {
         auto ch = character_at(position);
@@ -298,16 +298,16 @@ GTextRange GTextDocument::find_previous(const StringView& needle, const GTextPos
     GTextPosition original_position = position;
 
     GTextPosition end_of_potential_match;
-    int needle_index = needle.length() - 1;
+    size_t needle_index = needle.length() - 1;
 
     do {
         auto ch = character_at(position);
         if (ch == needle[needle_index]) {
             if (needle_index == needle.length() - 1)
                 end_of_potential_match = position;
-            --needle_index;
-            if (needle_index < 0)
+            if (needle_index == 0)
                 return { position, next_position_after(end_of_potential_match, should_wrap) };
+            --needle_index;
         } else {
             if (needle_index < needle.length() - 1)
                 position = end_of_potential_match;
@@ -441,9 +441,8 @@ void GTextDocument::update_undo_timer()
 GTextPosition GTextDocument::insert_at(const GTextPosition& position, const StringView& text)
 {
     GTextPosition cursor = position;
-    for (int i = 0; i < text.length(); ++i) {
+    for (size_t i = 0; i < text.length(); ++i)
         cursor = insert_at(cursor, text[i]);
-    }
     return cursor;
 }
 
@@ -451,7 +450,7 @@ GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch)
 {
     // FIXME: We need these from GTextEditor!
     bool m_automatic_indentation_enabled = true;
-    int m_soft_tab_width = 4;
+    size_t m_soft_tab_width = 4;
 
     bool at_head = position.column() == 0;
     bool at_tail = position.column() == line(position.line()).length();
@@ -459,9 +458,9 @@ GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch)
         if (at_tail || at_head) {
             String new_line_contents;
             if (m_automatic_indentation_enabled && at_tail) {
-                int leading_spaces = 0;
+                size_t leading_spaces = 0;
                 auto& old_line = lines()[position.line()];
-                for (int i = 0; i < old_line.length(); ++i) {
+                for (size_t i = 0; i < old_line.length(); ++i) {
                     if (old_line.characters()[i] == ' ')
                         ++leading_spaces;
                     else
@@ -471,9 +470,9 @@ GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch)
                     new_line_contents = String::repeated(' ', leading_spaces);
             }
 
-            int row = position.line();
+            size_t row = position.line();
             Vector<char> line_content;
-            for (int i = position.column(); i < line(row).length(); i++)
+            for (size_t i = position.column(); i < line(row).length(); i++)
                 line_content.append(line(row).characters()[i]);
             insert_line(position.line() + (at_tail ? 1 : 0), make<GTextDocumentLine>(*this, new_line_contents));
             notify_did_change();
@@ -483,7 +482,7 @@ GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch)
         new_line->append(*this, line(position.line()).characters() + position.column(), line(position.line()).length() - position.column());
 
         Vector<char> line_content;
-        for (int i = 0; i < new_line->length(); i++)
+        for (size_t i = 0; i < new_line->length(); i++)
             line_content.append(new_line->characters()[i]);
         line(position.line()).truncate(*this, position.column());
         insert_line(position.line() + 1, move(new_line));
@@ -491,9 +490,9 @@ GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch)
         return { position.line() + 1, 0 };
     }
     if (ch == '\t') {
-        int next_soft_tab_stop = ((position.column() + m_soft_tab_width) / m_soft_tab_width) * m_soft_tab_width;
-        int spaces_to_insert = next_soft_tab_stop - position.column();
-        for (int i = 0; i < spaces_to_insert; ++i) {
+        size_t next_soft_tab_stop = ((position.column() + m_soft_tab_width) / m_soft_tab_width) * m_soft_tab_width;
+        size_t spaces_to_insert = next_soft_tab_stop - position.column();
+        for (size_t i = 0; i < spaces_to_insert; ++i) {
             line(position.line()).insert(*this, position.column(), ' ');
         }
         notify_did_change();
@@ -512,14 +511,14 @@ void GTextDocument::remove(const GTextRange& unnormalized_range)
     auto range = unnormalized_range.normalized();
 
     // First delete all the lines in between the first and last one.
-    for (int i = range.start().line() + 1; i < range.end().line();) {
+    for (size_t i = range.start().line() + 1; i < range.end().line();) {
         remove_line(i);
         range.end().set_line(range.end().line() - 1);
     }
 
     if (range.start().line() == range.end().line()) {
         // Delete within same line.
-        auto& line = lines()[range.start().line()];
+        auto& line = this->line(range.start().line());
         bool whole_line_is_selected = range.start().column() == 0 && range.end().column() == line.length();
 
         if (whole_line_is_selected) {
@@ -535,8 +534,8 @@ void GTextDocument::remove(const GTextRange& unnormalized_range)
     } else {
         // Delete across a newline, merging lines.
         ASSERT(range.start().line() == range.end().line() - 1);
-        auto& first_line = lines()[range.start().line()];
-        auto& second_line = lines()[range.end().line()];
+        auto& first_line = line(range.start().line());
+        auto& second_line = line(range.end().line());
         auto before_selection = String(first_line.characters(), first_line.length()).substring(0, range.start().column());
         auto after_selection = String(second_line.characters(), second_line.length()).substring(range.end().column(), second_line.length() - range.end().column());
         StringBuilder builder(before_selection.length() + after_selection.length());

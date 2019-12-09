@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
         go_forward_action->set_enabled(history.can_go_forward());
     };
 
-    auto open_page = [&](String path) {
+    auto open_page = [&](const String& path) {
         if (path.is_null()) {
             html_view->set_document(nullptr);
             return;
@@ -73,7 +73,7 @@ int main(int argc, char* argv[])
             return;
         }
         auto buffer = file->read_all();
-        StringView source { (char*)buffer.data(), buffer.size() };
+        StringView source { (const char*)buffer.data(), (size_t)buffer.size() };
 
         MDDocument md_document;
         bool success = md_document.parse(source);

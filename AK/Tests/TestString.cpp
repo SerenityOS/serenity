@@ -20,8 +20,8 @@ TEST_CASE(construct_contents)
     String test_string = "ABCDEF";
     EXPECT(!test_string.is_empty());
     EXPECT(!test_string.is_null());
-    EXPECT_EQ(test_string.length(), 6);
-    EXPECT_EQ(test_string.length(), (int)strlen(test_string.characters()));
+    EXPECT_EQ(test_string.length(), 6u);
+    EXPECT_EQ(test_string.length(), strlen(test_string.characters()));
     EXPECT(test_string.characters() != nullptr);
     EXPECT(!strcmp(test_string.characters(), "ABCDEF"));
 
