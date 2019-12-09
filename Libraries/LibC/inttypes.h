@@ -26,3 +26,4 @@
 
 #define PRIdPTR __PRIPTR_PREFIX "d"
 #define PRIiPTR __PRIPTR_PREFIX "i"
+#define PRIXPTR __PRIPTR_PREFIX "X"
