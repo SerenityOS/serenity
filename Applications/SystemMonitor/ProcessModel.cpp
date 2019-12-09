@@ -59,6 +59,10 @@ String ProcessModel::column_name(int column) const
         return "Virtual";
     case Column::Physical:
         return "Physical";
+    case Column::PurgeableVolatile:
+        return "Purg:V";
+    case Column::PurgeableNonvolatile:
+        return "Purg:N";
     case Column::CPU:
         return "CPU";
     case Column::Name:
@@ -106,6 +110,10 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
     case Column::Virtual:
         return { 65, TextAlignment::CenterRight };
     case Column::Physical:
+        return { 65, TextAlignment::CenterRight };
+    case Column::PurgeableVolatile:
+        return { 65, TextAlignment::CenterRight };
+    case Column::PurgeableNonvolatile:
         return { 65, TextAlignment::CenterRight };
     case Column::CPU:
         return { 32, TextAlignment::CenterRight };
@@ -175,6 +183,10 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return (int)thread.current_state.amount_virtual;
         case Column::Physical:
             return (int)thread.current_state.amount_resident;
+        case Column::PurgeableVolatile:
+            return (int)thread.current_state.amount_purgeable_volatile;
+        case Column::PurgeableNonvolatile:
+            return (int)thread.current_state.amount_purgeable_nonvolatile;
         case Column::CPU:
             return thread.current_state.cpu_percent;
         case Column::Name:
@@ -239,6 +251,10 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return pretty_byte_size(thread.current_state.amount_virtual);
         case Column::Physical:
             return pretty_byte_size(thread.current_state.amount_resident);
+        case Column::PurgeableVolatile:
+            return pretty_byte_size(thread.current_state.amount_purgeable_volatile);
+        case Column::PurgeableNonvolatile:
+            return pretty_byte_size(thread.current_state.amount_purgeable_nonvolatile);
         case Column::CPU:
             return thread.current_state.cpu_percent;
         case Column::Name:
@@ -297,6 +313,8 @@ void ProcessModel::update()
             state.file_write_bytes = thread.file_write_bytes;
             state.amount_virtual = it.value.amount_virtual;
             state.amount_resident = it.value.amount_resident;
+            state.amount_purgeable_volatile = it.value.amount_purgeable_volatile;
+            state.amount_purgeable_nonvolatile = it.value.amount_purgeable_nonvolatile;
             state.icon_id = it.value.icon_id;
 
             state.name = thread.name;
