@@ -1,5 +1,6 @@
-#include <Kernel/VM/PurgeableVMObject.h>
+#include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PhysicalPage.h>
+#include <Kernel/VM/PurgeableVMObject.h>
 
 NonnullRefPtr<PurgeableVMObject> PurgeableVMObject::create_with_size(size_t size)
 {
@@ -37,5 +38,10 @@ int PurgeableVMObject::purge()
         m_physical_pages[i] = nullptr;
     }
     m_was_purged = true;
+
+    for_each_region([&](auto& region) {
+        region.remap();
+    });
+
     return purged_page_count;
 }
