@@ -69,7 +69,7 @@ RefPtr<Inode> DevPtsFS::get_inode(InodeIdentifier inode_id) const
         return m_root_inode;
 
     unsigned pty_index = inode_index_to_pty_index(inode_id.index());
-    auto* device = Device::get_device(11, pty_index);
+    auto* device = Device::get_device(201, pty_index);
     ASSERT(device);
 
     auto inode = adopt(*new DevPtsFSInode(const_cast<DevPtsFS&>(*this), inode_id.index()));
