@@ -238,7 +238,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
             packet = m_receive_queue.take_first();
             m_can_read = !m_receive_queue.is_empty();
 #ifdef IPV4_SOCKET_DEBUG
-            kprintf("IPv4Socket(%p): recvfrom without blocking %d bytes, packets in queue: %d\n", this, packet.data.value().size(), m_receive_queue.size_slow());
+            kprintf("IPv4Socket(%p): recvfrom without blocking %d bytes, packets in queue: %zu\n", this, packet.data.value().size(), m_receive_queue.size_slow());
 #endif
         }
     }
@@ -264,7 +264,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
         packet = m_receive_queue.take_first();
         m_can_read = !m_receive_queue.is_empty();
 #ifdef IPV4_SOCKET_DEBUG
-        kprintf("IPv4Socket(%p): recvfrom with blocking %d bytes, packets in queue: %d\n", this, packet.data.value().size(), m_receive_queue.size_slow());
+        kprintf("IPv4Socket(%p): recvfrom with blocking %d bytes, packets in queue: %zu\n", this, packet.data.value().size(), m_receive_queue.size_slow());
 #endif
     }
     ASSERT(packet.data.has_value());
@@ -306,7 +306,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     m_can_read = true;
     m_bytes_received += packet_size;
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %d\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
+    kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %zu\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
 #endif
     return true;
 }

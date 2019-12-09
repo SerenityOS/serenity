@@ -74,7 +74,7 @@ Vector<pid_t> Process::all_pids()
 {
     Vector<pid_t> pids;
     InterruptDisabler disabler;
-    pids.ensure_capacity(g_processes->size_slow());
+    pids.ensure_capacity((int)g_processes->size_slow());
     for (auto& process : *g_processes)
         pids.append(process.pid());
     return pids;
@@ -84,7 +84,7 @@ Vector<Process*> Process::all_processes()
 {
     Vector<Process*> processes;
     InterruptDisabler disabler;
-    processes.ensure_capacity(g_processes->size_slow());
+    processes.ensure_capacity((int)g_processes->size_slow());
     for (auto& process : *g_processes)
         processes.append(&process);
     return processes;

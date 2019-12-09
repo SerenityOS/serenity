@@ -53,9 +53,9 @@ public:
 
     bool is_empty() const { return !head(); }
 
-    inline int size_slow() const
+    inline size_t size_slow() const
     {
-        int size = 0;
+        size_t size = 0;
         for (auto* node = m_head; node; node = node->next)
             ++size;
         return size;
