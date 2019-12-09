@@ -8,7 +8,7 @@ CppLexer::CppLexer(const StringView& input)
 {
 }
 
-char CppLexer::peek(int offset) const
+char CppLexer::peek(size_t offset) const
 {
     if ((m_index + offset) >= m_input.length())
         return 0;
@@ -191,7 +191,7 @@ Vector<CppToken> CppLexer::lex()
 {
     Vector<CppToken> tokens;
 
-    int token_start_index = 0;
+    size_t token_start_index = 0;
     CppPosition token_start_position;
 
     auto emit_token = [&](auto type) {

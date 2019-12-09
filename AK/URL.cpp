@@ -31,7 +31,7 @@ bool URL::parse(const StringView& string)
     Vector<char, 256> buffer;
     State state { State::InProtocol };
 
-    int index = 0;
+    size_t index = 0;
 
     auto peek = [&] {
         if (index >= string.length())

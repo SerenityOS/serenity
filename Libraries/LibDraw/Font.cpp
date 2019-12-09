@@ -154,7 +154,7 @@ bool Font::write_to_file(const StringView& path)
     header.glyph_height = m_glyph_height;
     header.type = 0;
     header.is_variable_width = !m_fixed_width;
-    memcpy(header.name, m_name.characters(), min(m_name.length(), 63));
+    memcpy(header.name, m_name.characters(), min(m_name.length(), (size_t)63));
 
     size_t bytes_per_glyph = sizeof(unsigned) * m_glyph_height;
 

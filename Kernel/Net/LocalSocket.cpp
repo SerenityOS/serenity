@@ -274,7 +274,7 @@ ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t
 
 StringView LocalSocket::socket_path() const
 {
-    int len = strnlen(m_address.sun_path, sizeof(m_address.sun_path));
+    size_t len = strnlen(m_address.sun_path, sizeof(m_address.sun_path));
     return { m_address.sun_path, len };
 }
 

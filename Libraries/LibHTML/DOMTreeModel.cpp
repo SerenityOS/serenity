@@ -68,7 +68,7 @@ int DOMTreeModel::column_count(const GModelIndex&) const
 static String with_whitespace_collapsed(const StringView& string)
 {
     StringBuilder builder;
-    for (int i = 0; i < string.length(); ++i) {
+    for (size_t i = 0; i < string.length(); ++i) {
         if (isspace(string[i])) {
             builder.append(' ');
             while (i < string.length()) {

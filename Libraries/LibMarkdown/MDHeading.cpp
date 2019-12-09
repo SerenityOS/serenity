@@ -38,14 +38,14 @@ bool MDHeading::parse(Vector<StringView>::ConstIterator& lines)
 
     const StringView& line = *lines;
 
-    for (m_level = 0; m_level < line.length(); m_level++)
-        if (line[m_level] != '#')
+    for (m_level = 0; m_level < (int)line.length(); m_level++)
+        if (line[(size_t)m_level] != '#')
             break;
 
-    if (m_level >= line.length() || line[m_level] != ' ')
+    if (m_level >= (int)line.length() || line[(size_t)m_level] != ' ')
         return false;
 
-    StringView title_view = line.substring_view(m_level + 1, line.length() - m_level - 1);
+    StringView title_view = line.substring_view((size_t)m_level + 1, line.length() - (size_t)m_level - 1);
     bool success = m_text.parse(title_view);
     ASSERT(success);
 

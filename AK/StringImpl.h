@@ -14,9 +14,9 @@ enum ShouldChomp {
 
 class StringImpl : public RefCounted<StringImpl> {
 public:
-    static NonnullRefPtr<StringImpl> create_uninitialized(int length, char*& buffer);
+    static NonnullRefPtr<StringImpl> create_uninitialized(size_t length, char*& buffer);
     static RefPtr<StringImpl> create(const char* cstring, ShouldChomp = NoChomp);
-    static RefPtr<StringImpl> create(const char* cstring, int length, ShouldChomp = NoChomp);
+    static RefPtr<StringImpl> create(const char* cstring, size_t length, ShouldChomp = NoChomp);
     NonnullRefPtr<StringImpl> to_lowercase() const;
     NonnullRefPtr<StringImpl> to_uppercase() const;
 
@@ -29,11 +29,11 @@ public:
 
     ~StringImpl();
 
-    int length() const { return m_length; }
+    size_t length() const { return m_length; }
     const char* characters() const { return &m_inline_buffer[0]; }
-    char operator[](int i) const
+    char operator[](size_t i) const
     {
-        ASSERT(i >= 0 && i < m_length);
+        ASSERT(i < m_length);
         return characters()[i];
     }
 
@@ -56,20 +56,20 @@ private:
     enum ConstructWithInlineBufferTag {
         ConstructWithInlineBuffer
     };
-    StringImpl(ConstructWithInlineBufferTag, int length);
+    StringImpl(ConstructWithInlineBufferTag, size_t length);
 
     void compute_hash() const;
 
-    int m_length { 0 };
+    size_t m_length { 0 };
     mutable unsigned m_hash { 0 };
     mutable bool m_has_hash { false };
     char m_inline_buffer[0];
 };
 
-inline constexpr u32 string_hash(const char* characters, int length)
+inline constexpr u32 string_hash(const char* characters, size_t length)
 {
     u32 hash = 0;
-    for (int i = 0; i < length; ++i) {
+    for (size_t i = 0; i < length; ++i) {
         hash += (u32)characters[i];
         hash += (hash << 10);
         hash ^= (hash >> 6);

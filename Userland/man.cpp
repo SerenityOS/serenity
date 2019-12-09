@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     }
     dbg() << "Loading man page from " << file->filename();
     auto buffer = file->read_all();
-    String source { (char*)buffer.data(), buffer.size() };
+    String source { (const char*)buffer.data(), (size_t)buffer.size() };
 
     printf("%s(%s)\t\tSerenity manual\n", name.characters(), section.characters());
 

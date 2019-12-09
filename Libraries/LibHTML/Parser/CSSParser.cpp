@@ -135,15 +135,15 @@ public:
 
     bool next_is(const char* str) const
     {
-        int len = strlen(str);
-        for (int i = 0; i < len; ++i) {
+        size_t len = strlen(str);
+        for (size_t i = 0; i < len; ++i) {
             if (peek(i) != str[i])
                 return false;
         }
         return true;
     }
 
-    char peek(int offset = 0) const
+    char peek(size_t offset = 0) const
     {
         if ((index + offset) < css.length())
             return css[index + offset];
@@ -169,7 +169,7 @@ public:
 
     bool consume_whitespace_or_comments()
     {
-        int original_index = index;
+        size_t original_index = index;
         bool in_comment = false;
         for (; index < css.length(); ++index) {
             char ch = peek();
@@ -582,7 +582,7 @@ private:
     CurrentRule current_rule;
     Vector<char> buffer;
 
-    int index = 0;
+    size_t index = 0;
 
     StringView css;
 };

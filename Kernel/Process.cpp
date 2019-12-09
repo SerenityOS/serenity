@@ -319,7 +319,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
     if (!validate_write(buffer, size))
         return -EFAULT;
     LOCKER(*s_hostname_lock);
-    if (size < (s_hostname->length() + 1))
+    if ((size_t)size < (s_hostname->length() + 1))
         return -ENAMETOOLONG;
     strcpy(buffer, s_hostname->characters());
     return 0;
@@ -1038,7 +1038,7 @@ int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
     if (!description->is_tty())
         return -ENOTTY;
     auto tty_name = description->tty()->tty_name();
-    if (size < tty_name.length() + 1)
+    if ((size_t)size < tty_name.length() + 1)
         return -ERANGE;
     memcpy(buffer, tty_name.characters_without_null_termination(), tty_name.length());
     buffer[tty_name.length()] = '\0';
@@ -1058,7 +1058,7 @@ int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
     if (!master_pty)
         return -ENOTTY;
     auto pts_name = master_pty->pts_name();
-    if (size < pts_name.length() + 1)
+    if ((size_t)size < pts_name.length() + 1)
         return -ERANGE;
     strcpy(buffer, pts_name.characters());
     return 0;
@@ -1347,7 +1347,7 @@ int Process::sys$getcwd(char* buffer, ssize_t size)
     if (!validate_write(buffer, size))
         return -EFAULT;
     auto path = current_directory().absolute_path();
-    if (size < path.length() + 1)
+    if ((size_t)size < path.length() + 1)
         return -ERANGE;
     strcpy(buffer, path.characters());
     return 0;
@@ -2991,11 +2991,14 @@ int Process::sys$join_thread(int tid, void** exit_value)
 
 int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
 {
+    if (buffer_size < 0)
+        return -EINVAL;
+
     if (!validate_read(buffer, buffer_size))
         return -EFAULT;
 
     const size_t max_thread_name_size = 64;
-    if (strnlen(buffer, buffer_size) > max_thread_name_size)
+    if (strnlen(buffer, (size_t)buffer_size) > max_thread_name_size)
         return -EINVAL;
 
     Thread* thread = nullptr;
@@ -3015,7 +3018,7 @@ int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
     if (thread == &current->process().main_thread())
         return -EINVAL;
 
-    thread->set_name({buffer, buffer_size});
+    thread->set_name({ buffer, (size_t)buffer_size });
 
     return 0;
 }
@@ -3039,7 +3042,7 @@ int Process::sys$get_thread_name(int tid, char* buffer, int buffer_size)
     if (!thread)
         return -ESRCH;
 
-    if (thread->name().length() >= buffer_size)
+    if (thread->name().length() >= (size_t)buffer_size)
         return -ENAMETOOLONG;
 
     strncpy(buffer, thread->name().characters(), buffer_size);
@@ -3112,10 +3115,13 @@ int Process::sys$ftruncate(int fd, off_t length)
 
 int Process::sys$watch_file(const char* path, int path_length)
 {
+    if (path_length < 0)
+        return -EINVAL;
+
     if (!validate_read(path, path_length))
         return -EFAULT;
 
-    auto custody_or_error = VFS::the().resolve_path({ path, path_length }, current_directory());
+    auto custody_or_error = VFS::the().resolve_path({ path, (size_t)path_length }, current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
 
@@ -3335,10 +3341,10 @@ int Process::sys$get_process_name(char* buffer, int buffer_size)
     if (!validate_write(buffer, buffer_size))
         return -EFAULT;
 
-    if (m_name.length() >= buffer_size)
+    if (m_name.length() >= (size_t)buffer_size)
         return -ENAMETOOLONG;
 
-    strncpy(buffer, m_name.characters(), buffer_size);
+    strncpy(buffer, m_name.characters(), (size_t)buffer_size);
     return 0;
 }
 

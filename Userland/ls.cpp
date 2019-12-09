@@ -28,8 +28,8 @@ static bool flag_human_readable = false;
 static bool flag_sort_by_timestamp = false;
 static bool flag_reverse_sort = false;
 
-static int terminal_rows = 0;
-static int terminal_columns = 0;
+static size_t terminal_rows = 0;
+static size_t terminal_columns = 0;
 static bool output_is_terminal = false;
 
 int main(int argc, char** argv)
@@ -326,7 +326,7 @@ int do_file_system_object_short(const char* path)
     }
 
     Vector<String> names;
-    int longest_name = 0;
+    size_t longest_name = 0;
     while (di.has_next()) {
         String name = di.next_path();
         names.append(name);
@@ -335,7 +335,7 @@ int do_file_system_object_short(const char* path)
     }
     quick_sort(names.begin(), names.end(), [](auto& a, auto& b) { return a < b; });
 
-    int printed_on_row = 0;
+    size_t printed_on_row = 0;
     int nprinted;
     for (int i = 0; i < names.size(); ++i) {
         auto& name = names[i];
@@ -352,10 +352,10 @@ int do_file_system_object_short(const char* path)
         // The offset must be at least 2 because:
         // - With each file an aditional char is printed e.g. '@','*'.
         // - Each filename must be separated by a space.
-        int column_width = longest_name + (offset > 0 ? offset : 2);
+        size_t column_width = longest_name + (offset > 0 ? offset : 2);
         printed_on_row += column_width;
 
-        for (int j = nprinted; i != (names.size() - 1) && j < column_width; ++j)
+        for (int j = nprinted; i != (names.size() - 1) && j < (int)column_width; ++j)
             printf(" ");
         if ((printed_on_row + column_width) >= terminal_columns) {
             printf("\n");

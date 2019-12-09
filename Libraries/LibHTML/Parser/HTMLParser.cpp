@@ -129,8 +129,8 @@ static bool parse_html_document(const StringView& html, Document& document, Pare
         }
     };
 
-    for (int i = 0; i < html.length(); ++i) {
-        auto peek = [&](int offset) -> char {
+    for (size_t i = 0; i < html.length(); ++i) {
+        auto peek = [&](size_t offset) -> char {
             if (i + offset >= html.length())
                 return '\0';
             return html[i + offset];
@@ -356,7 +356,7 @@ RefPtr<Document> parse_html_document(const StringView& html, const URL& url)
 String escape_html_entities(const StringView& html)
 {
     StringBuilder builder;
-    for (int i = 0; i < html.length(); ++i) {
+    for (size_t i = 0; i < html.length(); ++i) {
         if (html[i] == '<')
             builder.append("&lt;");
         else if (html[i] == '>')

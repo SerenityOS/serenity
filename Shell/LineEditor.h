@@ -23,14 +23,14 @@ public:
 private:
     void clear_line();
     void append(const String&);
-    void cut_mismatching_chars(String& completion, const String& program, int token_length);
+    void cut_mismatching_chars(String& completion, const String& program, size_t token_length);
     void tab_complete_first_token();
     void vt_save_cursor();
     void vt_restore_cursor();
     void vt_clear_to_end_of_line();
 
     Vector<char, 1024> m_buffer;
-    int m_cursor { 0 };
+    size_t m_cursor { 0 };
 
     // FIXME: This should be something more take_first()-friendly.
     Vector<String> m_history;

@@ -66,20 +66,20 @@ void TextWidget::resize_event(GResizeEvent& event)
 void TextWidget::wrap_and_set_height()
 {
     Vector<String> words;
-    int start = -1;
-    for (int i = 0; i < m_text.length(); i++) {
+    Optional<size_t> start;
+    for (size_t i = 0; i < m_text.length(); i++) {
         auto ch = m_text[i];
 
         if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
-            if (start != -1)
-                words.append(m_text.substring(start, i - start));
+            if (start.has_value())
+                words.append(m_text.substring(start.value(), i - start.value()));
             start = -1;
-        } else if (start == -1) {
+        } else if (!start.has_value()) {
             start = i;
         }
     }
-    if (start != -1)
-        words.append(m_text.substring(start, m_text.length() - start));
+    if (start.has_value())
+        words.append(m_text.substring(start, m_text.length() - start.value()));
 
     auto rect = frame_inner_rect();
     if (frame_thickness() > 0)

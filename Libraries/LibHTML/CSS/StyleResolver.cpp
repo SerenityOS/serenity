@@ -100,17 +100,17 @@ static Vector<String> split_on_whitespace(const StringView& string)
         return {};
 
     Vector<String> v;
-    int substart = 0;
-    for (int i = 0; i < string.length(); ++i) {
+    size_t substart = 0;
+    for (size_t i = 0; i < string.length(); ++i) {
         char ch = string.characters_without_null_termination()[i];
         if (isspace(ch)) {
-            int sublen = i - substart;
+            size_t sublen = i - substart;
             if (sublen != 0)
                 v.append(string.substring_view(substart, sublen));
             substart = i + 1;
         }
     }
-    int taillen = string.length() - substart;
+    size_t taillen = string.length() - substart;
     if (taillen != 0)
         v.append(string.substring_view(substart, taillen));
     return v;

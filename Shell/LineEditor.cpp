@@ -21,7 +21,7 @@ void LineEditor::add_to_history(const String& line)
 
 void LineEditor::clear_line()
 {
-    for (int i = 0; i < m_cursor; ++i)
+    for (size_t i = 0; i < m_cursor; ++i)
         fputc(0x8, stdout);
     fputs("\033[K", stdout);
     fflush(stdout);
@@ -31,10 +31,10 @@ void LineEditor::clear_line()
 
 void LineEditor::append(const String& string)
 {
-    m_buffer.append(string.characters(), string.length());
+    m_buffer.append(string.characters(), (int)string.length());
     fputs(string.characters(), stdout);
     fflush(stdout);
-    m_cursor = m_buffer.size();
+    m_cursor = (size_t)m_buffer.size();
 }
 
 void LineEditor::cache_path()
@@ -68,9 +68,9 @@ void LineEditor::cache_path()
     quick_sort(m_path.begin(), m_path.end(), AK::is_less_than<String>);
 }
 
-void LineEditor::cut_mismatching_chars(String& completion, const String& program, int token_length)
+void LineEditor::cut_mismatching_chars(String& completion, const String& program, size_t token_length)
 {
-    int i = token_length;
+    size_t i = token_length;
     while (i < completion.length() && i < program.length() && completion[i] == program[i])
         ++i;
     completion = completion.substring(0, i);
@@ -139,17 +139,17 @@ String LineEditor::get_line(const String& prompt)
         }
 
         auto do_delete = [&] {
-            if (m_cursor == m_buffer.size()) {
+            if (m_cursor == (size_t)m_buffer.size()) {
                 fputc('\a', stdout);
                 fflush(stdout);
                 return;
             }
-            m_buffer.remove(m_cursor - 1);
+            m_buffer.remove((int)m_cursor - 1);
             fputs("\033[3~", stdout);
             fflush(stdout);
             vt_save_cursor();
             vt_clear_to_end_of_line();
-            for (int i = m_cursor; i < m_buffer.size(); ++i)
+            for (size_t i = m_cursor; i < (size_t)m_buffer.size(); ++i)
                 fputc(m_buffer[i], stdout);
             vt_restore_cursor();
         };
@@ -195,7 +195,7 @@ String LineEditor::get_line(const String& prompt)
                     m_state = InputState::Free;
                     continue;
                 case 'C': // right
-                    if (m_cursor < m_buffer.size()) {
+                    if (m_cursor < (size_t)m_buffer.size()) {
                         ++m_cursor;
                         fputs("\033[C", stdout);
                         fflush(stdout);
@@ -204,17 +204,17 @@ String LineEditor::get_line(const String& prompt)
                     continue;
                 case 'H':
                     if (m_cursor > 0) {
-                        fprintf(stdout, "\033[%dD", m_cursor);
+                        fprintf(stdout, "\033[%zuD", m_cursor);
                         fflush(stdout);
                         m_cursor = 0;
                     }
                     m_state = InputState::Free;
                     continue;
                 case 'F':
-                    if (m_cursor < m_buffer.size()) {
-                        fprintf(stdout, "\033[%dC", m_buffer.size() - m_cursor);
+                    if (m_cursor < (size_t)m_buffer.size()) {
+                        fprintf(stdout, "\033[%zuC", (size_t)m_buffer.size() - m_cursor);
                         fflush(stdout);
-                        m_cursor = m_buffer.size();
+                        m_cursor = (size_t)m_buffer.size();
                     }
                     m_state = InputState::Free;
                     continue;
@@ -264,13 +264,13 @@ String LineEditor::get_line(const String& prompt)
                     fflush(stdout);
                     return;
                 }
-                m_buffer.remove(m_cursor - 1);
+                m_buffer.remove((int)m_cursor - 1);
                 --m_cursor;
                 putchar(8);
                 vt_save_cursor();
                 vt_clear_to_end_of_line();
-                for (int i = m_cursor; i < m_buffer.size(); ++i)
-                    fputc(m_buffer[i], stdout);
+                for (size_t i = m_cursor; i < (size_t)m_buffer.size(); ++i)
+                    fputc(m_buffer[(int)i], stdout);
                 vt_restore_cursor();
             };
 
@@ -281,7 +281,7 @@ String LineEditor::get_line(const String& prompt)
             if (ch == g.termios.c_cc[VWERASE]) {
                 bool has_seen_nonspace = false;
                 while (m_cursor > 0) {
-                    if (isspace(m_buffer[m_cursor - 1])) {
+                    if (isspace(m_buffer[(int)m_cursor - 1])) {
                         if (has_seen_nonspace)
                             break;
                     } else {
@@ -301,14 +301,14 @@ String LineEditor::get_line(const String& prompt)
                 fputs(prompt.characters(), stdout);
                 for (int i = 0; i < m_buffer.size(); ++i)
                     fputc(m_buffer[i], stdout);
-                if (m_cursor < m_buffer.size())
-                    printf("\033[%dD", m_buffer.size() - m_cursor); // Move cursor N steps left.
+                if (m_cursor < (size_t)m_buffer.size())
+                    printf("\033[%zuD", (size_t)m_buffer.size() - m_cursor); // Move cursor N steps left.
                 fflush(stdout);
                 continue;
             }
             if (ch == 0x01) { // ^A
                 if (m_cursor > 0) {
-                    printf("\033[%dD", m_cursor);
+                    printf("\033[%zuD", m_cursor);
                     fflush(stdout);
                     m_cursor = 0;
                 }
@@ -322,10 +322,10 @@ String LineEditor::get_line(const String& prompt)
                 continue;
             }
             if (ch == 0x05) { // ^E
-                if (m_cursor < m_buffer.size()) {
-                    printf("\033[%dC", m_buffer.size() - m_cursor);
+                if (m_cursor < (size_t)m_buffer.size()) {
+                    printf("\033[%zuC", (size_t)m_buffer.size() - m_cursor);
                     fflush(stdout);
-                    m_cursor = m_buffer.size();
+                    m_cursor = (size_t)m_buffer.size();
                 }
                 continue;
             }
@@ -337,17 +337,17 @@ String LineEditor::get_line(const String& prompt)
                 return string;
             }
 
-            if (m_cursor == m_buffer.size()) {
+            if (m_cursor == (size_t)m_buffer.size()) {
                 m_buffer.append(ch);
                 ++m_cursor;
                 continue;
             }
             vt_save_cursor();
             vt_clear_to_end_of_line();
-            for (int i = m_cursor; i < m_buffer.size(); ++i)
-                fputc(m_buffer[i], stdout);
+            for (size_t i = m_cursor; i < (size_t)m_buffer.size(); ++i)
+                fputc(m_buffer[(int)i], stdout);
             vt_restore_cursor();
-            m_buffer.insert(m_cursor, move(ch));
+            m_buffer.insert((int)m_cursor, move(ch));
             ++m_cursor;
         }
     }

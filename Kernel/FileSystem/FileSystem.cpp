@@ -46,7 +46,7 @@ FS::DirectoryEntry::DirectoryEntry(const char* n, InodeIdentifier i, u8 ft)
     name[name_length] = '\0';
 }
 
-FS::DirectoryEntry::DirectoryEntry(const char* n, int nl, InodeIdentifier i, u8 ft)
+FS::DirectoryEntry::DirectoryEntry(const char* n, size_t nl, InodeIdentifier i, u8 ft)
     : name_length(nl)
     , inode(i)
     , file_type(ft)

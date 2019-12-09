@@ -20,7 +20,7 @@ LayoutText::~LayoutText()
 
 static bool is_all_whitespace(const String& string)
 {
-    for (int i = 0; i < string.length(); ++i) {
+    for (size_t i = 0; i < string.length(); ++i) {
         if (!isspace(string[i]))
             return false;
     }

@@ -47,7 +47,7 @@ String JsonParser::consume_quoted_string()
     Vector<char, 1024> buffer;
 
     for (;;) {
-        int peek_index = m_index;
+        size_t peek_index = m_index;
         char ch = 0;
         for (;;) {
             if (peek_index == m_input.length())
@@ -104,7 +104,7 @@ String JsonParser::consume_quoted_string()
         return String::empty();
 
     auto& last_string_starting_with_character = m_last_string_starting_with_character[(int)buffer.first()];
-    if (last_string_starting_with_character.length() == buffer.size()) {
+    if (last_string_starting_with_character.length() == (size_t)buffer.size()) {
         if (!memcmp(last_string_starting_with_character.characters(), buffer.data(), buffer.size()))
             return last_string_starting_with_character;
     }

@@ -25,8 +25,8 @@
     __TOKEN(Identifier)
 
 struct CppPosition {
-    int line { -1 };
-    int column { -1 };
+    size_t line;
+    size_t column;
 };
 
 struct CppToken {
@@ -60,11 +60,11 @@ public:
     Vector<CppToken> lex();
 
 private:
-    char peek(int offset = 0) const;
+    char peek(size_t offset = 0) const;
     char consume();
 
     StringView m_input;
-    int m_index { 0 };
+    size_t m_index { 0 };
     CppPosition m_previous_position { 0, 0 };
     CppPosition m_position { 0, 0 };
 };

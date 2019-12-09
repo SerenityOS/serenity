@@ -50,9 +50,9 @@ public:
     // FIXME: This data structure is very clunky and unpleasant. Replace it with something nicer.
     struct DirectoryEntry {
         DirectoryEntry(const char* name, InodeIdentifier, u8 file_type);
-        DirectoryEntry(const char* name, int name_length, InodeIdentifier, u8 file_type);
+        DirectoryEntry(const char* name, size_t name_length, InodeIdentifier, u8 file_type);
         char name[256];
-        int name_length { 0 };
+        size_t name_length { 0 };
         InodeIdentifier inode;
         u8 file_type { 0 };
     };

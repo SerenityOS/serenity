@@ -1,3 +1,4 @@
+#include "Client.h"
 #include <AK/BufferStream.h>
 #include <AK/ByteBuffer.h>
 #include <AK/String.h>
@@ -7,8 +8,7 @@
 #include <LibCore/CNotifier.h>
 #include <LibCore/CTCPSocket.h>
 #include <stdio.h>
-
-#include "Client.h"
+#include <unistd.h>
 
 Client::Client(int id, RefPtr<CTCPSocket> socket, int ptm_fd)
     : m_id(id)
@@ -56,7 +56,7 @@ void Client::drain_pty()
         quit();
         return;
     }
-    send_data(StringView(buffer, nread));
+    send_data(StringView(buffer, (size_t)nread));
 }
 
 void Client::handle_data(const StringView& data)
@@ -105,7 +105,7 @@ void Client::handle_error()
 void Client::send_data(StringView data)
 {
     bool fast = true;
-    for (int i = 0; i < data.length(); i++) {
+    for (size_t i = 0; i < data.length(); i++) {
         u8 c = data[i];
         if (c == '\n' || c == 0xff)
             fast = false;
@@ -117,7 +117,7 @@ void Client::send_data(StringView data)
     }
 
     StringBuilder builder;
-    for (int i = 0; i < data.length(); i++) {
+    for (size_t i = 0; i < data.length(); i++) {
         u8 c = data[i];
 
         switch (c) {
@@ -135,7 +135,6 @@ void Client::send_data(StringView data)
 
     m_socket->write(builder.to_string());
 }
-
 
 void Client::send_command(Command command)
 {

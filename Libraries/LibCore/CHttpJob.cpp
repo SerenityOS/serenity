@@ -101,7 +101,7 @@ void CHttpJob::on_socket_connected()
             }
             auto name = parts[0];
             if (chomped_line.length() < name.length() + 2) {
-                fprintf(stderr, "CHttpJob: Malformed HTTP header: '%s' (%d)\n", chomped_line.characters(), chomped_line.length());
+                fprintf(stderr, "CHttpJob: Malformed HTTP header: '%s' (%zu)\n", chomped_line.characters(), chomped_line.length());
                 return deferred_invoke([this](auto&) { did_fail(CNetworkJob::Error::ProtocolFailed); });
             }
             auto value = chomped_line.substring(name.length() + 2, chomped_line.length() - name.length() - 2);

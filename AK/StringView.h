@@ -11,12 +11,12 @@ class StringImpl;
 class StringView {
 public:
     StringView() {}
-    StringView(const char* characters, int length)
+    StringView(const char* characters, size_t length)
         : m_characters(characters)
         , m_length(length)
     {
     }
-    StringView(const unsigned char* characters, int length)
+    StringView(const unsigned char* characters, size_t length)
         : m_characters((const char*)characters)
         , m_length(length)
     {
@@ -36,14 +36,14 @@ public:
     bool is_null() const { return !m_characters; }
     bool is_empty() const { return m_length == 0; }
     const char* characters_without_null_termination() const { return m_characters; }
-    int length() const { return m_length; }
-    char operator[](int index) const { return m_characters[index]; }
+    size_t length() const { return m_length; }
+    char operator[](size_t index) const { return m_characters[index]; }
 
     unsigned hash() const;
 
     bool starts_with(const StringView&) const;
 
-    StringView substring_view(int start, int length) const;
+    StringView substring_view(size_t start, size_t length) const;
     Vector<StringView> split_view(char, bool keep_empty = false) const;
 
     // Create a Vector of StringViews split by line endings. As of CommonMark
@@ -81,7 +81,7 @@ public:
             return !cstring;
         if (!cstring)
             return false;
-        int other_length = strlen(cstring);
+        size_t other_length = strlen(cstring);
         if (m_length != other_length)
             return false;
         return !memcmp(m_characters, cstring, m_length);
@@ -113,7 +113,7 @@ private:
     friend class String;
     const StringImpl* m_impl { nullptr };
     const char* m_characters { nullptr };
-    int m_length { 0 };
+    size_t m_length { 0 };
 };
 
 }

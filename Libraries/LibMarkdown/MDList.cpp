@@ -49,7 +49,7 @@ bool MDList::parse(Vector<StringView>::ConstIterator& lines)
             break;
 
         bool appears_unordered = false;
-        int offset = 0;
+        size_t offset = 0;
         if (line.length() > 2)
             if (line[1] == ' ' && (line[0] == '*' || line[0] == '-')) {
                 appears_unordered = true;
@@ -57,7 +57,7 @@ bool MDList::parse(Vector<StringView>::ConstIterator& lines)
             }
 
         bool appears_ordered = false;
-        for (int i = 0; i < 10 && i < line.length(); i++) {
+        for (size_t i = 0; i < 10 && i < line.length(); i++) {
             char ch = line[i];
             if ('0' <= ch && ch <= '9')
                 continue;
