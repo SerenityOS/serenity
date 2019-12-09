@@ -10,7 +10,7 @@ GMenuBar::~GMenuBar()
     unrealize_menubar();
 }
 
-void GMenuBar::add_menu(NonnullOwnPtr<GMenu>&& menu)
+void GMenuBar::add_menu(NonnullRefPtr<GMenu> menu)
 {
     m_menus.append(move(menu));
 }

@@ -550,7 +550,7 @@ GMenu& GTableView::ensure_header_context_menu()
     //        or if the column count/names change.
     if (!m_header_context_menu) {
         ASSERT(model());
-        m_header_context_menu = make<GMenu>();
+        m_header_context_menu = GMenu::construct();
 
         for (int column = 0; column < model()->column_count(); ++column) {
             auto& column_data = this->column_data(column);

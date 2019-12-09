@@ -28,7 +28,7 @@ VBForm::VBForm(const String& name, GWidget* parent)
     set_background_color(Color::WarmGray);
     set_greedy_for_hits(true);
 
-    m_context_menu = make<GMenu>();
+    m_context_menu = GMenu::construct();
     m_context_menu->add_action(GCommonActions::make_move_to_front_action([this](auto&) {
         if (auto* widget = single_selected_widget())
             widget->gwidget()->move_to_front();

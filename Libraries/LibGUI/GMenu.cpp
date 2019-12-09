@@ -39,7 +39,7 @@ void GMenu::add_action(NonnullRefPtr<GAction> action)
 #endif
 }
 
-void GMenu::add_submenu(NonnullOwnPtr<GMenu> submenu)
+void GMenu::add_submenu(NonnullRefPtr<GMenu> submenu)
 {
     m_items.append(make<GMenuItem>(m_menu_id, move(submenu)));
 }

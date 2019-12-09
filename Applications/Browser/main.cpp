@@ -126,7 +126,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("Browser");
+    auto app_menu = GMenu::construct("Browser");
     app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
@@ -135,7 +135,7 @@ int main(int argc, char** argv)
     RefPtr<GWindow> dom_inspector_window;
     RefPtr<GTreeView> dom_tree_view;
 
-    auto inspect_menu = make<GMenu>("Inspect");
+    auto inspect_menu = GMenu::construct("Inspect");
     inspect_menu->add_action(GAction::create("View source", { Mod_Ctrl, Key_U }, [&](auto&) {
         String filename_to_open;
         char tmp_filename[] = "/tmp/view-source.XXXXXX";
@@ -176,7 +176,7 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(inspect_menu));
 
-    auto debug_menu = make<GMenu>("Debug");
+    auto debug_menu = GMenu::construct("Debug");
     debug_menu->add_action(GAction::create("Dump DOM tree", [&](auto&) {
         dump_tree(*html_widget->document());
     }));
@@ -199,7 +199,7 @@ int main(int argc, char** argv)
     debug_menu->add_action(line_box_borders_action);
     menubar->add_menu(move(debug_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("Browser", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     }));

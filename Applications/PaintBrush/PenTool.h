@@ -19,6 +19,6 @@ private:
     virtual const char* class_name() const override { return "PenTool"; }
 
     Point m_last_drawing_event_position { -1, -1 };
-    OwnPtr<GMenu> m_context_menu;
+    RefPtr<GMenu> m_context_menu;
     int m_thickness { 1 };
 };

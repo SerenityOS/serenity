@@ -48,13 +48,13 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("HTML");
+    auto app_menu = GMenu::construct("HTML");
     app_menu->add_action(GCommonActions::make_quit_action([&](auto&) {
         app.quit();
     }));
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("HTML", GraphicsBitmap::load_from_file("/res/icons/32x32/filetype-html.png"), window);
     }));

@@ -648,7 +648,7 @@ void TerminalWidget::beep()
 void TerminalWidget::context_menu_event(GContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = make<GMenu>();
+        m_context_menu = GMenu::construct();
         m_context_menu->add_action(copy_action());
         m_context_menu->add_action(paste_action());
     }

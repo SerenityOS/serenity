@@ -1180,7 +1180,7 @@ void GTextEditor::did_update_selection()
 void GTextEditor::context_menu_event(GContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = make<GMenu>();
+        m_context_menu = GMenu::construct();
         m_context_menu->add_action(undo_action());
         m_context_menu->add_action(redo_action());
         m_context_menu->add_separator();

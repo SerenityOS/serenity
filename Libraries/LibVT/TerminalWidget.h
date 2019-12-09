@@ -128,7 +128,7 @@ private:
     RefPtr<GAction> m_copy_action;
     RefPtr<GAction> m_paste_action;
 
-    OwnPtr<GMenu> m_context_menu;
+    RefPtr<GMenu> m_context_menu;
 
     CElapsedTimer m_triple_click_timer;
 };

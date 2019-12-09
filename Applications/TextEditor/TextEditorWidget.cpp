@@ -192,7 +192,7 @@ TextEditorWidget::TextEditorWidget()
     m_line_wrapping_setting_action->set_checked(m_editor->is_line_wrapping_enabled());
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("Text Editor");
+    auto app_menu = GMenu::construct("Text Editor");
     app_menu->add_action(*m_new_action);
     app_menu->add_action(*m_open_action);
     app_menu->add_action(*m_save_action);
@@ -205,7 +205,7 @@ TextEditorWidget::TextEditorWidget()
     }));
     menubar->add_menu(move(app_menu));
 
-    auto edit_menu = make<GMenu>("Edit");
+    auto edit_menu = GMenu::construct("Edit");
     edit_menu->add_action(m_editor->undo_action());
     edit_menu->add_action(m_editor->redo_action());
     edit_menu->add_separator();
@@ -219,7 +219,7 @@ TextEditorWidget::TextEditorWidget()
     edit_menu->add_action(*m_find_previous_action);
     menubar->add_menu(move(edit_menu));
 
-    auto font_menu = make<GMenu>("Font");
+    auto font_menu = GMenu::construct("Font");
     GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
         font_menu->add_action(GAction::create(font_name, [this](const GAction& action) {
             m_editor->set_font(GFontDatabase::the().get_by_name(action.text()));
@@ -227,13 +227,13 @@ TextEditorWidget::TextEditorWidget()
         }));
     });
 
-    auto view_menu = make<GMenu>("View");
+    auto view_menu = GMenu::construct("View");
     view_menu->add_action(*m_line_wrapping_setting_action);
     view_menu->add_separator();
     view_menu->add_submenu(move(font_menu));
     menubar->add_menu(move(view_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("TextEditor", load_png("/res/icons/32x32/app-texteditor.png"), window());
     }));

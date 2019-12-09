@@ -106,7 +106,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("Hex Editor");
+    auto app_menu = GMenu::construct("Hex Editor");
     app_menu->add_action(*m_new_action);
     app_menu->add_action(*m_open_action);
     app_menu->add_action(*m_save_action);
@@ -119,7 +119,7 @@ HexEditorWidget::HexEditorWidget()
     }));
     menubar->add_menu(move(app_menu));
 
-    auto bytes_per_row_menu = make<GMenu>("Bytes Per Row");
+    auto bytes_per_row_menu = GMenu::construct("Bytes Per Row");
     for (int i = 8; i <= 32; i += 8) {
         bytes_per_row_menu->add_action(GAction::create(String::number(i), [this, i](auto&) {
             m_editor->set_bytes_per_row(i);
@@ -146,7 +146,7 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
-    auto edit_menu = make<GMenu>("Edit");
+    auto edit_menu = GMenu::construct("Edit");
     edit_menu->add_action(GAction::create("Fill selection...", [&](const GAction&) {
         auto input_box = GInputBox::construct("Fill byte (hex):", "Fill Selection", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
@@ -170,11 +170,11 @@ HexEditorWidget::HexEditorWidget()
     }));
     menubar->add_menu(move(edit_menu));
 
-    auto view_menu = make<GMenu>("View");
+    auto view_menu = GMenu::construct("View");
     view_menu->add_submenu(move(bytes_per_row_menu));
     menubar->add_menu(move(view_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("Hex Editor", load_png("/res/icons/32x32/app-hexeditor.png"), window());
     }));

@@ -116,20 +116,20 @@ int main(int argc, char** argv)
     window->set_main_widget(keeper);
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("System Monitor");
+    auto app_menu = GMenu::construct("System Monitor");
     app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
         GApplication::the().quit(0);
         return;
     }));
     menubar->add_menu(move(app_menu));
 
-    auto process_menu = make<GMenu>("Process");
+    auto process_menu = GMenu::construct("Process");
     process_menu->add_action(kill_action);
     process_menu->add_action(stop_action);
     process_menu->add_action(continue_action);
     menubar->add_menu(move(process_menu));
 
-    auto process_context_menu = make<GMenu>();
+    auto process_context_menu = GMenu::construct();
     process_context_menu->add_action(kill_action);
     process_context_menu->add_action(stop_action);
     process_context_menu->add_action(continue_action);
@@ -138,7 +138,7 @@ int main(int argc, char** argv)
         process_context_menu->popup(event.screen_position());
     };
 
-    auto frequency_menu = make<GMenu>("Frequency");
+    auto frequency_menu = GMenu::construct("Frequency");
     frequency_menu->add_action(GAction::create("0.25 sec", [&](auto&) {
         refresh_timer->restart(250);
     }));
@@ -156,7 +156,7 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(frequency_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
         GAboutDialog::show("SystemMonitor", load_png("/res/icons/32x32/app-system-monitor.png"), window);
     }));

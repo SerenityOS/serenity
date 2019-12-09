@@ -11,7 +11,7 @@ public:
     GMenuBar();
     ~GMenuBar();
 
-    void add_menu(NonnullOwnPtr<GMenu>&&);
+    void add_menu(NonnullRefPtr<GMenu>);
 
     void notify_added_to_application(Badge<GApplication>);
     void notify_removed_from_application(Badge<GApplication>);
@@ -21,5 +21,5 @@ private:
     void unrealize_menubar();
 
     int m_menubar_id { -1 };
-    NonnullOwnPtrVector<GMenu> m_menus;
+    NonnullRefPtrVector<GMenu> m_menus;
 };

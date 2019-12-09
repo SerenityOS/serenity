@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-sound-player.png"));
 
     auto menubar = make<GMenuBar>();
-    auto app_menu = make<GMenu>("SoundPlayer");
+    auto app_menu = GMenu::construct("SoundPlayer");
     auto player = SoundPlayerWidget::construct(window, audio_client);
 
     if (argc > 1) {
@@ -51,7 +51,7 @@ int main(int argc, char** argv)
         app.quit();
     }));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [](auto&) {
         GAboutDialog::show("SoundPlayer", GraphicsBitmap::load_from_file("/res/icons/32x32/app-sound-player.png"));
     }));

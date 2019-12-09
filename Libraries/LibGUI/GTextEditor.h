@@ -196,7 +196,7 @@ private:
     size_t m_soft_tab_width { 4 };
     int m_horizontal_content_padding { 2 };
     GTextRange m_selection;
-    OwnPtr<GMenu> m_context_menu;
+    RefPtr<GMenu> m_context_menu;
     RefPtr<GAction> m_undo_action;
     RefPtr<GAction> m_redo_action;
     RefPtr<GAction> m_cut_action;

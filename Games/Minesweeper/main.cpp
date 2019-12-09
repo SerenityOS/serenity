@@ -46,7 +46,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("Minesweeper");
+    auto app_menu = GMenu::construct("Minesweeper");
 
     app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [&](const GAction&) {
         field->reset();
@@ -73,7 +73,7 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(app_menu));
 
-    auto difficulty_menu = make<GMenu>("Difficulty");
+    auto difficulty_menu = GMenu::construct("Difficulty");
     difficulty_menu->add_action(GAction::create("Beginner", { Mod_Ctrl, Key_B }, [&](const GAction&) {
         field->set_field_size(9, 9, 10);
     }));
@@ -88,7 +88,7 @@ int main(int argc, char** argv)
     }));
     menubar->add_menu(move(difficulty_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));

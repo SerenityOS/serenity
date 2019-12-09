@@ -50,7 +50,7 @@ void PenTool::on_mousemove(GMouseEvent& event)
 void PenTool::on_contextmenu(GContextMenuEvent& event)
 {
     if (!m_context_menu) {
-        m_context_menu = make<GMenu>();
+        m_context_menu = GMenu::construct();
         m_context_menu->add_action(GAction::create("1", [this](auto&) {
             m_thickness = 1;
         }));

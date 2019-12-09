@@ -61,5 +61,5 @@ private:
     Point m_next_insertion_position;
     Direction m_resize_direction { Direction::None };
     Direction m_mouse_direction_type { Direction::None };
-    OwnPtr<GMenu> m_context_menu;
+    RefPtr<GMenu> m_context_menu;
 };

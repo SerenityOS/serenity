@@ -23,7 +23,7 @@ int main(int argc, char** argv)
 
     auto menubar = make<GMenuBar>();
 
-    auto app_menu = make<GMenu>("Snake");
+    auto app_menu = GMenu::construct("Snake");
 
     app_menu->add_action(GAction::create("New game", { Mod_None, Key_F2 }, [&](const GAction&) {
         game->reset();
@@ -34,7 +34,7 @@ int main(int argc, char** argv)
 
     menubar->add_menu(move(app_menu));
 
-    auto help_menu = make<GMenu>("Help");
+    auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [](const GAction&) {
         dbgprintf("FIXME: Implement Help/About\n");
     }));
