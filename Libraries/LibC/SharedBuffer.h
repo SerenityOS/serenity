@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/RefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/RefPtr.h>
 
 class SharedBuffer : public RefCounted<SharedBuffer> {
 public:
@@ -15,6 +15,8 @@ public:
     int size() const { return m_size; }
     void* data() { return m_data; }
     const void* data() const { return m_data; }
+    void set_volatile();
+    [[nodiscard]] bool set_nonvolatile();
 
 private:
     SharedBuffer(int shared_buffer_id, int size, void*);

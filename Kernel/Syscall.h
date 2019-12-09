@@ -146,7 +146,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(set_thread_name)        \
     __ENUMERATE_SYSCALL(get_thread_name)        \
     __ENUMERATE_SYSCALL(madvise)                \
-    __ENUMERATE_SYSCALL(purge)
+    __ENUMERATE_SYSCALL(purge)                  \
+    __ENUMERATE_SYSCALL(set_shared_buffer_volatile)
 
 namespace Syscall {
 

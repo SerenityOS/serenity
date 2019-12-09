@@ -1,4 +1,5 @@
 #include <AK/kmalloc.h>
+#include <Kernel/Syscall.h>
 #include <SharedBuffer.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -63,4 +64,20 @@ void SharedBuffer::seal()
         perror("seal_shared_buffer");
         ASSERT_NOT_REACHED();
     }
+}
+
+void SharedBuffer::set_volatile()
+{
+    u32 rc = syscall(SC_set_shared_buffer_volatile, m_shared_buffer_id, true);
+    ASSERT(rc == 0);
+}
+
+bool SharedBuffer::set_nonvolatile()
+{
+    u32 rc = syscall(SC_set_shared_buffer_volatile, m_shared_buffer_id, false);
+    if (rc == 0)
+        return true;
+    if (rc == 1)
+        return false;
+    ASSERT_NOT_REACHED();
 }

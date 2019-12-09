@@ -2909,6 +2909,28 @@ int Process::sys$get_shared_buffer_size(int shared_buffer_id)
     return shared_buffer.size();
 }
 
+int Process::sys$set_shared_buffer_volatile(int shared_buffer_id, bool state)
+{
+    LOCKER(shared_buffers().lock());
+    auto it = shared_buffers().resource().find(shared_buffer_id);
+    if (it == shared_buffers().resource().end())
+        return -EINVAL;
+    auto& shared_buffer = *(*it).value;
+    if (!shared_buffer.is_shared_with(m_pid))
+        return -EPERM;
+#ifdef SHARED_BUFFER_DEBUG
+    kprintf("%s(%u): Set shared buffer %d volatile: %u\n", name().characters(), pid(), shared_buffer_id, state);
+#endif
+    if (!state) {
+        bool was_purged = shared_buffer.vmobject().was_purged();
+        shared_buffer.vmobject().set_volatile(state);
+        shared_buffer.vmobject().set_was_purged(false);
+        return was_purged ? 1 : 0;
+    }
+    shared_buffer.vmobject().set_volatile(true);
+    return 0;
+}
+
 void Process::terminate_due_to_signal(u8 signal)
 {
     ASSERT_INTERRUPTS_DISABLED();
