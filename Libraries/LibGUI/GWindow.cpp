@@ -210,8 +210,15 @@ void GWindow::event(CEvent& event)
             m_back_bitmap = nullptr;
         }
         bool created_new_backing_store = !m_back_bitmap;
-        if (!m_back_bitmap)
+        if (!m_back_bitmap) {
             m_back_bitmap = create_backing_bitmap(paint_event.window_size());
+        } else if (m_double_buffering_enabled) {
+            bool still_has_pixels = m_back_bitmap->shared_buffer()->set_nonvolatile();
+            if (!still_has_pixels) {
+                m_back_bitmap = create_backing_bitmap(paint_event.window_size());
+                created_new_backing_store = true;
+            }
+        }
 
         auto rect = rects.first();
         if (rect.is_empty() || created_new_backing_store) {
@@ -547,6 +554,8 @@ void GWindow::flip(const Vector<Rect, 32>& dirty_rects)
     Painter painter(*m_back_bitmap);
     for (auto& dirty_rect : dirty_rects)
         painter.blit(dirty_rect.location(), *m_front_bitmap, dirty_rect);
+
+    m_back_bitmap->shared_buffer()->set_volatile();
 }
 
 NonnullRefPtr<GraphicsBitmap> GWindow::create_shared_bitmap(GraphicsBitmap::Format format, const Size& size)
