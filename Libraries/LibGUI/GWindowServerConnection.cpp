@@ -209,7 +209,7 @@ void GWindowServerConnection::handle(const WindowClient::MenuItemActivated& mess
         return;
     }
     if (auto* action = menu->action_at(message.identifier()))
-        action->activate();
+        action->activate(menu);
 }
 
 void GWindowServerConnection::handle(const WindowClient::WM_WindowStateChanged& message)
