@@ -1204,7 +1204,7 @@ void WSWindowManager::end_dnd_drag()
 Rect WSWindowManager::dnd_rect() const
 {
     int bitmap_width = m_dnd_bitmap ? m_dnd_bitmap->width() : 0;
-    int bitmap_height = m_dnd_bitmap ? m_dnd_bitmap->width() : 0;
+    int bitmap_height = m_dnd_bitmap ? m_dnd_bitmap->height() : 0;
     int width = font().width(m_dnd_text) + bitmap_width;
     int height = max((int)font().glyph_height(), bitmap_height);
     auto location = WSCompositor::the().current_cursor_rect().center().translated(8, 8);
