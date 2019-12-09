@@ -36,6 +36,7 @@
 #include <Kernel/TTY/MasterPTY.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/InodeVMObject.h>
+#include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>
 #include <LibC/signal_numbers.h>
 #include <LibELF/ELFLoader.h>
@@ -224,6 +225,18 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         return (void*)-EINVAL;
 
     // FIXME: The rest of this function seems like it could share more code..
+    if (flags & MAP_PURGEABLE) {
+        auto vmobject = PurgeableVMObject::create_with_size(size);
+        auto* region = allocate_region_with_vmo(VirtualAddress((u32)addr), size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
+        if (!region)
+            return (void*)-ENOMEM;
+        if (flags & MAP_SHARED)
+            region->set_shared(true);
+
+        region->set_mmap(true);
+        return region->vaddr().as_ptr();
+    }
+
     if (flags & MAP_ANONYMOUS) {
         auto* region = allocate_region(VirtualAddress((u32)addr), size, name ? name : "mmap", prot, false);
         if (!region)
@@ -310,6 +323,52 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
     region->set_writable(prot & PROT_WRITE);
     region->remap();
     return 0;
+}
+
+int Process::sys$madvise(void* address, size_t size, int advice)
+{
+    auto* region = region_from_range({ VirtualAddress((u32)address), size });
+    if (!region)
+        return -EINVAL;
+    if (!region->is_mmap())
+        return -EPERM;
+    if ((advice & MADV_SET_VOLATILE) && (advice & MADV_SET_NONVOLATILE))
+        return -EINVAL;
+    if (advice & MADV_SET_VOLATILE) {
+        if (!region->vmobject().is_purgeable())
+            return -EPERM;
+        auto& vmobject = static_cast<PurgeableVMObject&>(region->vmobject());
+        vmobject.set_volatile(true);
+        return 0;
+    }
+    if (advice & MADV_SET_NONVOLATILE) {
+        if (!region->vmobject().is_purgeable())
+            return -EPERM;
+        auto& vmobject = static_cast<PurgeableVMObject&>(region->vmobject());
+        vmobject.set_volatile(false);
+        bool was_purged = vmobject.was_purged();
+        vmobject.set_was_purged(false);
+        return was_purged ? 1 : 0;
+    }
+    return -EINVAL;
+}
+
+int Process::sys$purge()
+{
+    NonnullRefPtrVector<PurgeableVMObject> vmobjects;
+    {
+        InterruptDisabler disabler;
+        MM.for_each_vmobject([&](auto& vmobject) {
+            if (vmobject.is_purgeable())
+                vmobjects.append(static_cast<PurgeableVMObject&>(vmobject));
+            return IterationDecision::Continue;
+        });
+    }
+    int purged_page_count = 0;
+    for (auto& vmobject : vmobjects) {
+        purged_page_count += vmobject.purge();
+    }
+    return purged_page_count;
 }
 
 int Process::sys$gethostname(char* buffer, ssize_t size)
@@ -842,7 +901,7 @@ void Process::dump_regions()
     kprintf("Process %s(%u) regions:\n", name().characters(), pid());
     kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
     for (auto& region : m_regions) {
-        kprintf("%08x -- %08x    %08x    %c%c%c%c%c     %s\n",
+        kprintf("%08x -- %08x    %08x    %c%c%c%c%c%c    %s\n",
             region.vaddr().get(),
             region.vaddr().offset(region.size() - 1).get(),
             region.size(),
@@ -851,6 +910,7 @@ void Process::dump_regions()
             region.is_executable() ? 'X' : ' ',
             region.is_shared() ? 'S' : ' ',
             region.is_stack() ? 'T' : ' ',
+            region.vmobject().is_purgeable() ? 'P' : ' ',
             region.name().characters());
     }
 }
@@ -2406,6 +2466,26 @@ size_t Process::amount_shared() const
     size_t amount = 0;
     for (auto& region : m_regions) {
         amount += region.amount_shared();
+    }
+    return amount;
+}
+
+size_t Process::amount_purgeable_volatile() const
+{
+    size_t amount = 0;
+    for (auto& region : m_regions) {
+        if (region.vmobject().is_purgeable() && static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile())
+            amount += region.amount_resident();
+    }
+    return amount;
+}
+
+size_t Process::amount_purgeable_nonvolatile() const
+{
+    size_t amount = 0;
+    for (auto& region : m_regions) {
+        if (region.vmobject().is_purgeable() && !static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile())
+            amount += region.amount_resident();
     }
     return amount;
 }

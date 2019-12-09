@@ -56,4 +56,11 @@ int shm_unlink(const char* name)
     int rc = syscall(SC_shm_unlink, name);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+int madvise(void* address, size_t size, int advice)
+{
+    int rc = syscall(SC_madvise, address, size, advice);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
+
 }

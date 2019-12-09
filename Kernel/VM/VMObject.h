@@ -22,6 +22,7 @@ public:
     virtual NonnullRefPtr<VMObject> clone() = 0;
 
     virtual bool is_anonymous() const { return false; }
+    virtual bool is_purgeable() const { return false; }
     virtual bool is_inode() const { return false; }
 
     size_t page_count() const { return m_physical_pages.size(); }
@@ -42,11 +43,10 @@ protected:
     void for_each_region(Callback);
 
     FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
+    Lock m_paging_lock { "VMObject" };
 
 private:
     VMObject& operator=(const VMObject&) = delete;
     VMObject& operator=(VMObject&&) = delete;
     VMObject(VMObject&&) = delete;
-
-    Lock m_paging_lock { "VMObject" };
 };
