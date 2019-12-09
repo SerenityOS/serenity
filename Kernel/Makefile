@@ -93,6 +93,7 @@ CXX_OBJS = \
     VM/PageDirectory.o \
     VM/PhysicalPage.o \
     VM/PhysicalRegion.o \
+    VM/PurgeableVMObject.o \
     VM/RangeAllocator.o \
     VM/Region.o \
     VM/VMObject.o \

@@ -24,6 +24,7 @@
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>
 
 enum ProcParentDirectory {
@@ -262,6 +263,11 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.add("writable", region.is_writable());
         region_object.add("stack", region.is_stack());
         region_object.add("shared", region.is_shared());
+        region_object.add("purgeable", region.vmobject().is_purgeable());
+        if (region.vmobject().is_purgeable()) {
+            region_object.add("volatile", static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile());
+        }
+        region_object.add("purgeable", region.vmobject().is_purgeable());
         region_object.add("address", region.vaddr().get());
         region_object.add("size", (u32)region.size());
         region_object.add("amount_resident", (u32)region.amount_resident());
@@ -716,6 +722,8 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("amount_virtual", (u32)process.amount_virtual());
         process_object.add("amount_resident", (u32)process.amount_resident());
         process_object.add("amount_shared", (u32)process.amount_shared());
+        process_object.add("amount_purgeable_volatile", (u32)process.amount_purgeable_volatile());
+        process_object.add("amount_purgeable_nonvolatile", (u32)process.amount_purgeable_nonvolatile());
         process_object.add("icon_id", process.icon_id());
         auto thread_array = process_object.add_array("threads");
         process.for_each_thread([&](const Thread& thread) {

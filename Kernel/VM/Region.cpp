@@ -299,10 +299,11 @@ PageFaultResponse Region::handle_zero_fault(size_t page_index_in_region)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(vmobject().is_anonymous());
 
-    auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
+    sti();
+    LOCKER(vmobject().m_paging_lock);
+    cli();
 
-    // NOTE: We don't need to acquire the VMObject's lock.
-    //       This function is already exclusive due to interrupts being blocked.
+    auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index_in_region];
 
     if (!vmobject_physical_page_entry.is_null()) {
 #ifdef PAGE_FAULT_DEBUG

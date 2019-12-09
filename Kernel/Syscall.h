@@ -144,7 +144,9 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(module_unload)          \
     __ENUMERATE_SYSCALL(detach_thread)          \
     __ENUMERATE_SYSCALL(set_thread_name)        \
-    __ENUMERATE_SYSCALL(get_thread_name)
+    __ENUMERATE_SYSCALL(get_thread_name)        \
+    __ENUMERATE_SYSCALL(madvise)                \
+    __ENUMERATE_SYSCALL(purge)
 
 namespace Syscall {
 

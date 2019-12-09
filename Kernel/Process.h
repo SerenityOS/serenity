@@ -139,6 +139,8 @@ public:
     int sys$munmap(void*, size_t size);
     int sys$set_mmap_name(void*, size_t, const char*);
     int sys$mprotect(void*, size_t, int prot);
+    int sys$madvise(void*, size_t, int advice);
+    int sys$purge();
     int sys$select(const Syscall::SC_select_params*);
     int sys$poll(pollfd*, int nfds, int timeout);
     ssize_t sys$get_dir_entries(int fd, void*, ssize_t);
@@ -266,6 +268,8 @@ public:
     size_t amount_virtual() const;
     size_t amount_resident() const;
     size_t amount_shared() const;
+    size_t amount_purgeable_volatile() const;
+    size_t amount_purgeable_nonvolatile() const;
 
     Process* fork(RegisterDump&);
     int exec(String path, Vector<String> arguments, Vector<String> environment);

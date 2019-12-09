@@ -9,6 +9,7 @@
 #define MAP_ANONYMOUS 0x20
 #define MAP_ANON MAP_ANONYMOUS
 #define MAP_STACK 0x40
+#define MAP_PURGEABLE 0x80
 
 #define PROT_READ 0x1
 #define PROT_WRITE 0x2
@@ -16,6 +17,9 @@
 #define PROT_NONE 0x0
 
 #define MAP_FAILED ((void*)-1)
+
+#define MADV_SET_VOLATILE 0x100
+#define MADV_SET_NONVOLATILE 0x200
 
 __BEGIN_DECLS
 
@@ -26,5 +30,6 @@ int mprotect(void*, size_t, int prot);
 int set_mmap_name(void*, size_t, const char*);
 int shm_open(const char* name, int flags, mode_t);
 int shm_unlink(const char* name);
+int madvise(void*, size_t, int advice);
 
 __END_DECLS
