@@ -30,6 +30,13 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
             builder.append('T');
         return builder.to_string();
     });
+    pid_vm_fields.empend("Purgeable", TextAlignment::CenterLeft, [](auto& object) {
+        if (!object.get("purgeable").to_bool())
+            return "";
+        if (object.get("volatile").to_bool())
+            return "Volatile";
+        return "Non-volatile";
+    });
     pid_vm_fields.empend("name", "Name", TextAlignment::CenterLeft);
     m_json_model = GJsonArrayModel::create({}, move(pid_vm_fields));
     m_table_view->set_model(GSortingProxyModel::create(*m_json_model));

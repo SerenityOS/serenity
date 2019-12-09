@@ -30,6 +30,8 @@ public:
         TID,
         Virtual,
         Physical,
+        PurgeableVolatile,
+        PurgeableNonvolatile,
         Syscalls,
         InodeFaults,
         ZeroFaults,
@@ -70,6 +72,8 @@ private:
         String priority;
         size_t amount_virtual;
         size_t amount_resident;
+        size_t amount_purgeable_volatile;
+        size_t amount_purgeable_nonvolatile;
         unsigned syscall_count;
         unsigned inode_faults;
         unsigned zero_faults;
