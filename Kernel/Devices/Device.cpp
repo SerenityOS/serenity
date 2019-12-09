@@ -29,7 +29,9 @@ Device::Device(unsigned major, unsigned minor)
     : m_major(major)
     , m_minor(minor)
 {
-    all_devices().set(encoded_device(m_major, m_minor), this);
+    u32 device_id = encoded_device(major, minor);
+    ASSERT(!all_devices().contains(device_id));
+    all_devices().set(device_id, this);
 }
 
 Device::~Device()
