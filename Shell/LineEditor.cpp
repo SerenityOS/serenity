@@ -106,10 +106,8 @@ void LineEditor::cut_mismatching_chars(String& completion, const String& program
     completion = completion.substring(0, i);
 }
 
-void LineEditor::tab_complete_first_token()
+void LineEditor::tab_complete_first_token(const String& token)
 {
-    String token = String::copy(m_buffer);
-
     auto match = binary_search(m_path.data(), m_path.size(), token, [](const String& token, const String& program) -> int {
         return strncmp(token.characters(), program.characters(), token.length());
     });
@@ -122,15 +120,23 @@ void LineEditor::tab_complete_first_token()
     // other program names starting with our token and cut off any mismatching
     // characters.
 
+    bool seen_others = false;
     int index = match - m_path.data();
-    for (int i = index - 1; i >= 0 && m_path[i].starts_with(token); --i)
+    for (int i = index - 1; i >= 0 && m_path[i].starts_with(token); --i) {
         cut_mismatching_chars(completion, m_path[i], token.length());
-    for (int i = index + 1; i < m_path.size() && m_path[i].starts_with(token); ++i)
+        seen_others = true;
+    }
+    for (int i = index + 1; i < m_path.size() && m_path[i].starts_with(token); ++i) {
         cut_mismatching_chars(completion, m_path[i], token.length());
+        seen_others = true;
+    }
 
-    if (token.length() == completion.length())
-        return;
-    insert(completion.substring(token.length(), completion.length() - token.length()));
+    // If we have characters to add, add them.
+    if (completion.length() > token.length())
+        insert(completion.substring(token.length(), completion.length() - token.length()));
+    // If we have a single match, we add a space, unless we already have one.
+    if (!seen_others && (m_cursor == (size_t)m_buffer.size() || m_buffer[(int)m_cursor] != ' '))
+        insert(' ');
 }
 
 String LineEditor::get_line(const String& prompt)
@@ -270,20 +276,28 @@ String LineEditor::get_line(const String& prompt)
             }
 
             if (ch == '\t') {
-                if (m_buffer.is_empty())
-                    continue;
+                bool is_empty_token = m_cursor == 0 || m_buffer[(int)m_cursor - 1] == ' ';
+
+                int token_start = (int)m_cursor - 1;
+                if (!is_empty_token) {
+                    while (token_start >= 0 && m_buffer[token_start] != ' ')
+                        --token_start;
+                    ++token_start;
+                }
 
                 bool is_first_token = true;
-                for (const auto& character : m_buffer) {
-                    if (isspace(character)) {
+                for (int i = token_start - 1; i >= 0; --i) {
+                    if (m_buffer[i] != ' ') {
                         is_first_token = false;
                         break;
                     }
                 }
 
+                String token = is_empty_token ? String() : String(&m_buffer[token_start], m_cursor - (size_t)token_start);
+
                 // FIXME: Implement tab-completion for other tokens (paths).
                 if (is_first_token)
-                    tab_complete_first_token();
+                    tab_complete_first_token(token);
 
                 continue;
             }
