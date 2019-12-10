@@ -98,10 +98,10 @@ void LineEditor::cache_path()
     quick_sort(m_path.begin(), m_path.end(), AK::is_less_than<String>);
 }
 
-void LineEditor::cut_mismatching_chars(String& completion, const String& program, size_t token_length)
+void LineEditor::cut_mismatching_chars(String& completion, const String& other, size_t start_compare)
 {
-    size_t i = token_length;
-    while (i < completion.length() && i < program.length() && completion[i] == program[i])
+    size_t i = start_compare;
+    while (i < completion.length() && i < other.length() && completion[i] == other[i])
         ++i;
     completion = completion.substring(0, i);
 }
@@ -137,6 +137,66 @@ void LineEditor::tab_complete_first_token(const String& token)
     // If we have a single match, we add a space, unless we already have one.
     if (!seen_others && (m_cursor == (size_t)m_buffer.size() || m_buffer[(int)m_cursor] != ' '))
         insert(' ');
+}
+
+void LineEditor::tab_complete_other_token(String& token)
+{
+    String path;
+
+    int last_slash = (int)token.length() - 1;
+    while (last_slash >= 0 && token[last_slash] != '/')
+        --last_slash;
+
+    if (last_slash >= 0) {
+        // Split on the last slash. We'll use the first part as the directory
+        // to search and the second part as the token to complete.
+        path = token.substring(0, (size_t)last_slash + 1);
+        if (path[0] != '/')
+            path = String::format("%s/%s", g.cwd.characters(), path.characters());
+        path = canonicalized_path(path);
+        token = token.substring((size_t)last_slash + 1, token.length() - (size_t)last_slash - 1);
+    } else {
+        // We have no slashes, so the directory to search is the current
+        // directory and the token to complete is just the original token.
+        path = g.cwd;
+    }
+
+    String completion;
+
+    bool seen_others = false;
+    CDirIterator files(path, CDirIterator::SkipDots);
+    while (files.has_next()) {
+        auto file = files.next_path();
+        if (file.starts_with(token)) {
+            if (completion.is_empty()) {
+                completion = file; // Will only be set once.
+            } else {
+                cut_mismatching_chars(completion, file, token.length());
+                if (completion.is_empty()) // We cut everything off!
+                    return;
+                seen_others = true;
+            }
+        }
+    }
+    if (completion.is_empty())
+        return;
+
+    // If we have characters to add, add them.
+    if (completion.length() > token.length())
+        insert(completion.substring(token.length(), completion.length() - token.length()));
+    // If we have a single match and it's a directory, we add a slash. If it's
+    // a regular file, we add a space, unless we already have one.
+    if (!seen_others) {
+        String file_path = String::format("%s/%s", path.characters(), completion.characters());
+        struct stat program_status;
+        int stat_error = stat(file_path.characters(), &program_status);
+        if (!stat_error) {
+            if (S_ISDIR(program_status.st_mode))
+                insert('/');
+            else if (m_cursor == (size_t)m_buffer.size() || m_buffer[(int)m_cursor] != ' ')
+                insert(' ');
+        }
+    }
 }
 
 String LineEditor::get_line(const String& prompt)
@@ -295,9 +355,10 @@ String LineEditor::get_line(const String& prompt)
 
                 String token = is_empty_token ? String() : String(&m_buffer[token_start], m_cursor - (size_t)token_start);
 
-                // FIXME: Implement tab-completion for other tokens (paths).
                 if (is_first_token)
                     tab_complete_first_token(token);
+                else
+                    tab_complete_other_token(token);
 
                 continue;
             }
