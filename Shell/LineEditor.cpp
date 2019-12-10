@@ -51,17 +51,11 @@ void LineEditor::cache_path()
         CDirIterator programs(directory.characters(), CDirIterator::SkipDots);
         while (programs.has_next()) {
             auto program = programs.next_path();
-
-            StringBuilder program_path;
-            program_path.append(directory.characters());
-            program_path.append('/');
-            program_path.append(program.characters());
+            String program_path = String::format("%s/%s", directory.characters(), program.characters());
             struct stat program_status;
-            int stat_error = stat(program_path.to_string().characters(), &program_status);
-            if (stat_error || !(program_status.st_mode & S_IXUSR))
-                continue;
-
-            m_path.append(program.characters());
+            int stat_error = stat(program_path.characters(), &program_status);
+            if (!stat_error && (program_status.st_mode & S_IXUSR))
+                m_path.append(program.characters());
         }
     }
 

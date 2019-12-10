@@ -3,7 +3,6 @@
 #include <AK/BinarySearch.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
-#include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/CDirIterator.h>
 #include <sys/stat.h>
