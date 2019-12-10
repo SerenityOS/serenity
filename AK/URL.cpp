@@ -157,8 +157,14 @@ URL URL::complete_url(const String& string) const
     if (url.is_valid())
         return url;
 
-    FileSystemPath fspath(path());
+    if (string.starts_with("/")) {
+        url = *this;
+        url.set_path(string);
+        return url;
+    }
+
     StringBuilder builder;
+    FileSystemPath fspath(path());
     builder.append('/');
 
     bool document_url_ends_in_slash = path()[path().length() - 1] == '/';
