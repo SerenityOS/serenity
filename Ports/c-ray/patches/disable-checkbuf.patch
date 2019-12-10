@@ -1,0 +1,23 @@
+diff --git a/src/utils/filehandler.c b/src/utils/filehandler.c
+index 99638f3..feded8f 100644
+--- a/src/utils/filehandler.c
++++ b/src/utils/filehandler.c
+@@ -162,7 +162,7 @@ char *loadFile(char *inputFileName, size_t *bytes) {
+ //Wait for 2 secs and abort if nothing is coming in from stdin
+ void checkBuf() {
+ #ifndef WINDOWS
+-	fd_set set;
++	/*fd_set set;
+ 	struct timeval timeout;
+ 	int rv;
+ 	FD_ZERO(&set);
+@@ -176,7 +176,8 @@ void checkBuf() {
+ 		logr(error, "No input found after %i seconds. Hint: Try `./bin/c-ray input/scene.json`.\n", timeout.tv_sec);
+ 	} else {
+ 		return;
+-	}
++	}*/
++	return;
+ #endif
+ }
+ 
