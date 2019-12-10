@@ -116,6 +116,8 @@ public:
 
     char character_at(const GTextPosition&) const;
 
+    GTextRange range_for_entire_line(size_t line_index) const;
+
     Optional<GTextDocumentSpan> first_non_skippable_span_before(const GTextPosition&) const;
     Optional<GTextDocumentSpan> first_non_skippable_span_after(const GTextPosition&) const;
 
