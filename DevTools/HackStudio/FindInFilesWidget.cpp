@@ -1,55 +1,100 @@
 #include "FindInFilesWidget.h"
 #include "Project.h"
+#include <AK/StringBuilder.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
-#include <LibGUI/GListView.h>
+#include <LibGUI/GTableView.h>
 #include <LibGUI/GTextBox.h>
 
 extern GTextEditor& current_editor();
 extern void open_file(const String&);
 extern OwnPtr<Project> g_project;
 
-struct FilenameAndRange {
+struct Match {
     String filename;
     GTextRange range;
+    String text;
 };
 
 class SearchResultsModel final : public GModel {
 public:
-    explicit SearchResultsModel(const Vector<FilenameAndRange>&& matches)
+    enum Column {
+        Filename,
+        Location,
+        MatchedText,
+        __Count
+    };
+
+    explicit SearchResultsModel(const Vector<Match>&& matches)
         : m_matches(move(matches))
     {
     }
 
     virtual int row_count(const GModelIndex& = GModelIndex()) const override { return m_matches.size(); }
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return 1; }
+    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return Column::__Count; }
+
+    virtual String column_name(int column) const override
+    {
+        switch (column) {
+        case Column::Filename:
+            return "Filename";
+        case Column::Location:
+            return "#";
+        case Column::MatchedText:
+            return "Text";
+        default:
+            ASSERT_NOT_REACHED();
+        }
+    }
+
     virtual GVariant data(const GModelIndex& index, Role role = Role::Display) const override
     {
         if (role == Role::Display) {
             auto& match = m_matches.at(index.row());
-            return String::format("%s: (%d,%d - %d,%d)",
-                match.filename.characters(),
-                match.range.start().line() + 1,
-                match.range.start().column(),
-                match.range.end().line() + 1,
-                match.range.end().column());
+            switch (index.column()) {
+            case Column::Filename:
+                return match.filename;
+            case Column::Location:
+                return (int)match.range.start().line();
+            case Column::MatchedText:
+                return match.text;
+            }
         }
         return {};
     }
+
+    virtual ColumnMetadata column_metadata(int column) const override
+    {
+        if (column == Column::MatchedText) {
+            return { 0, TextAlignment::CenterLeft, &Font::default_fixed_width_font() };
+        }
+        return {};
+    }
+
     virtual void update() override {}
     virtual GModelIndex index(int row, int column = 0, const GModelIndex& = GModelIndex()) const override { return create_index(row, column, &m_matches.at(row)); }
 
 private:
-    Vector<FilenameAndRange> m_matches;
+    Vector<Match> m_matches;
 };
 
 static RefPtr<SearchResultsModel> find_in_files(const StringView& text)
 {
-    Vector<FilenameAndRange> matches;
+    Vector<Match> matches;
     g_project->for_each_text_file([&](auto& file) {
         auto matches_in_file = file.document().find_all(text);
         for (auto& range : matches_in_file) {
-            matches.append({ file.name(), range });
+            auto whole_line_range = file.document().range_for_entire_line(range.start().line());
+            auto whole_line_containing_match = file.document().text_in_range(whole_line_range);
+            auto left_part = whole_line_containing_match.substring(0, range.start().column());
+            auto right_part = whole_line_containing_match.substring(range.end().column(), whole_line_containing_match.length() - range.end().column());
+            StringBuilder builder;
+            builder.append(left_part);
+            builder.append(0x01);
+            builder.append(file.document().text_in_range(range));
+            builder.append(0x02);
+            builder.append(right_part);
+            matches.append({ file.name(), range, builder.to_string() });
         }
     });
 
@@ -67,10 +112,11 @@ FindInFilesWidget::FindInFilesWidget(GWidget* parent)
     m_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_button->set_preferred_size(0, 20);
 
-    m_result_view = GListView::construct(this);
+    m_result_view = GTableView::construct(this);
+    m_result_view->set_size_columns_to_fit_content(true);
 
     m_result_view->on_activation = [](auto& index) {
-        auto& match = *(const FilenameAndRange*)index.internal_data();
+        auto& match = *(const Match*)index.internal_data();
         open_file(match.filename);
         current_editor().set_selection(match.range);
         current_editor().set_focus(true);
