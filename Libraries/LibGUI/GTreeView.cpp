@@ -94,11 +94,13 @@ void GTreeView::doubleclick_event(GMouseEvent& event)
     if (!index.is_valid())
         return;
 
-    if (selection().first() != index)
-        selection().set(index);
+    if (event.button() == GMouseButton::Left) {
+        if (selection().first() != index)
+            selection().set(index);
 
-    if (model.row_count(index))
-        toggle_index(index);
+        if (model.row_count(index))
+            toggle_index(index);
+    }
 }
 
 void GTreeView::toggle_index(const GModelIndex& index)
