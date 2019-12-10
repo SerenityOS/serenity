@@ -3,7 +3,7 @@
 #include <LibGUI/GWidget.h>
 
 class GButton;
-class GListView;
+class GTableView;
 class GTextBox;
 
 class FindInFilesWidget final : public GWidget {
@@ -18,5 +18,5 @@ private:
 
     RefPtr<GTextBox> m_textbox;
     RefPtr<GButton> m_button;
-    RefPtr<GListView> m_result_view;
+    RefPtr<GTableView> m_result_view;
 };
