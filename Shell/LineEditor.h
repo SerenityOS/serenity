@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/BinarySearch.h>
+#include <AK/FileSystemPath.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/Vector.h>
@@ -23,8 +24,9 @@ private:
     void clear_line();
     void insert(const String&);
     void insert(const char);
-    void cut_mismatching_chars(String& completion, const String& program, size_t token_length);
+    void cut_mismatching_chars(String& completion, const String& other, size_t start_compare);
     void tab_complete_first_token(const String&);
+    void tab_complete_other_token(String&);
     void vt_save_cursor();
     void vt_restore_cursor();
     void vt_clear_to_end_of_line();
