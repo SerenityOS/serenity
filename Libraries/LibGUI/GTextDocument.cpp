@@ -552,3 +552,10 @@ void GTextDocument::remove(const GTextRange& unnormalized_range)
 
     notify_did_change();
 }
+
+GTextRange GTextDocument::range_for_entire_line(size_t line_index) const
+{
+    if (line_index >= line_count())
+        return {};
+    return { { line_index, 0 }, { line_index, line(line_index).length() } };
+}
