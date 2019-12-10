@@ -60,10 +60,8 @@ double sin(double angle)
 
 double pow(double x, double y)
 {
-    (void)x;
-    (void)y;
-    ASSERT_NOT_REACHED();
-    return 0;
+    //FIXME: Extremely unlikely to be standards compliant.
+    return exp(y * log(x));
 }
 
 double ldexp(double, int exp)
