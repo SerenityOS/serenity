@@ -21,7 +21,8 @@ public:
 
 private:
     void clear_line();
-    void append(const String&);
+    void insert(const String&);
+    void insert(const char);
     void cut_mismatching_chars(String& completion, const String& program, size_t token_length);
     void tab_complete_first_token();
     void vt_save_cursor();
