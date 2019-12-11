@@ -3,6 +3,7 @@
 #include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
+#include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
 
@@ -550,6 +551,17 @@ void Scheduler::timer_tick(RegisterDump& regs)
     if (s_beep_timeout && g_uptime > s_beep_timeout) {
         PCSpeaker::tone_off();
         s_beep_timeout = 0;
+    }
+
+    if (current->process().is_profiling()) {
+        auto backtrace = current->raw_backtrace(regs.ebp);
+        auto& sample = Profiling::next_sample_slot();
+        sample.pid = current->pid();
+        sample.tid = current->tid();
+        sample.timestamp = g_uptime;
+        for (size_t i = 0; i < min((size_t)backtrace.size(), Profiling::max_stack_frame_count); ++i) {
+            sample.frames[i] = backtrace[i];
+        }
     }
 
     if (current->tick())

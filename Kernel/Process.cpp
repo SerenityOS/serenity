@@ -28,6 +28,7 @@
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessTracer.h>
+#include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/SharedBuffer.h>
@@ -3699,5 +3700,31 @@ int Process::sys$module_unload(const char* name, size_t name_length)
         it->value->module_fini();
 
     g_modules->remove(it);
+    return 0;
+}
+
+int Process::sys$profiling_enable(pid_t pid)
+{
+    InterruptDisabler disabler;
+    auto* process = Process::from_pid(pid);
+    if (!process)
+        return -ESRCH;
+    if (!is_superuser() && process->uid() != m_uid)
+        return -EPERM;
+    Profiling::start(*process);
+    process->set_profiling(true);
+    return 0;
+}
+
+int Process::sys$profiling_disable(pid_t pid)
+{
+    InterruptDisabler disabler;
+    auto* process = Process::from_pid(pid);
+    if (!process)
+        return -ESRCH;
+    if (!is_superuser() && process->uid() != m_uid)
+        return -EPERM;
+    process->set_profiling(false);
+    Profiling::stop();
     return 0;
 }

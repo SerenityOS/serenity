@@ -23,6 +23,7 @@
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
 #include <Kernel/PCI.h>
+#include <Kernel/Profiling.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>
@@ -55,6 +56,7 @@ enum ProcFileType {
     FI_Root_uptime,
     FI_Root_cmdline,
     FI_Root_modules,
+    FI_Root_profile,
     FI_Root_self, // symlink
     FI_Root_sys,  // directory
     FI_Root_net,  // directory
@@ -349,6 +351,31 @@ Optional<KBuffer> procfs$modules(InodeIdentifier)
         }
         obj.add("size", size);
     }
+    array.finish();
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$profile(InodeIdentifier)
+{
+    InterruptDisabler disabler;
+    KBufferBuilder builder;
+    JsonArraySerializer array(builder);
+    Profiling::for_each_sample([&](auto& sample) {
+        auto object = array.add_object();
+        object.add("pid", sample.pid);
+        object.add("tid", sample.tid);
+        object.add("timestamp", sample.timestamp);
+        auto sample_array = object.add_array("samples");
+        for (size_t i = 0; i < Profiling::max_stack_frame_count; ++i) {
+            if (sample.frames[i] == 0)
+                break;
+            auto frame_object = sample_array.add_object();
+            frame_object.add("address", JsonValue((u32)sample.frames[i]));
+            frame_object.add("symbol", sample.symbolicated_frames[i]);
+            frame_object.finish();
+        }
+        sample_array.finish();
+    });
     array.finish();
     return builder.build();
 }
@@ -1333,6 +1360,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, procfs$uptime };
     m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, procfs$cmdline };
     m_entries[FI_Root_modules] = { "modules", FI_Root_modules, procfs$modules };
+    m_entries[FI_Root_profile] = { "profile", FI_Root_profile, procfs$profile };
     m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
     m_entries[FI_Root_net] = { "net", FI_Root_net };
 

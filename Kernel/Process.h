@@ -44,6 +44,9 @@ public:
     static Vector<pid_t> all_pids();
     static Vector<Process*> all_processes();
 
+    bool is_profiling() const { return m_profiling; }
+    void set_profiling(bool profiling) { m_profiling = profiling; }
+
     enum RingLevel : u8 {
         Ring0 = 0,
         Ring3 = 3,
@@ -228,6 +231,8 @@ public:
     int sys$setkeymap(char* map, char* shift_map, char* alt_map);
     int sys$module_load(const char* path, size_t path_length);
     int sys$module_unload(const char* name, size_t name_length);
+    int sys$profiling_enable(pid_t);
+    int sys$profiling_disable(pid_t);
 
     static void initialize();
 
@@ -352,6 +357,7 @@ private:
 
     bool m_being_inspected { false };
     bool m_dead { false };
+    bool m_profiling { false };
 
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;

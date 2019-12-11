@@ -76,6 +76,7 @@ CXX_OBJS = \
     PCI.o \
     Process.o \
     ProcessTracer.o \
+    Profiling.o \
     RTC.o \
     Scheduler.o \
     SharedBuffer.o \
