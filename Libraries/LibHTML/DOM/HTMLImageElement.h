@@ -26,5 +26,5 @@ private:
 
     RefPtr<ImageDecoder> m_image_decoder;
     mutable RefPtr<GraphicsBitmap> m_bitmap;
-    ByteBuffer m_image_data;
+    ByteBuffer m_encoded_data;
 };

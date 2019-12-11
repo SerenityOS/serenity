@@ -33,8 +33,8 @@ void HTMLImageElement::load_image(const String& src)
             return;
         }
 
-        m_image_data = data;
-        m_image_decoder = ImageDecoder::create(m_image_data.data(), m_image_data.size());
+        m_encoded_data = data;
+        m_image_decoder = ImageDecoder::create(m_encoded_data.data(), m_encoded_data.size());
         document().update_layout();
     });
 }
