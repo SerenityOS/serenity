@@ -707,6 +707,19 @@ String Thread::backtrace_impl() const
     return builder.to_string();
 }
 
+Vector<u32> Thread::raw_backtrace(u32 ebp) const
+{
+    auto& process = const_cast<Process&>(this->process());
+    ProcessPagingScope paging_scope(process);
+    Vector<u32> backtrace;
+    backtrace.append(ebp);
+    for (u32* stack_ptr = (u32*)ebp; process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+        u32 retaddr = stack_ptr[1];
+        backtrace.append(retaddr);
+    }
+    return backtrace;
+}
+
 void Thread::make_thread_specific_region(Badge<Process>)
 {
     size_t thread_specific_region_alignment = max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
