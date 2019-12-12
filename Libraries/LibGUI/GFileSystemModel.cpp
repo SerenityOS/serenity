@@ -160,6 +160,8 @@ void GFileSystemModel::update()
     m_root = new Node;
     m_root->name = m_root_path;
     m_root->reify_if_needed(*this);
+
+    did_update();
 }
 
 void GFileSystemModel::cleanup()
