@@ -372,6 +372,7 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
             auto frame_object = frames_array.add_object();
             frame_object.add("address", JsonValue((u32)sample.frames[i]));
             frame_object.add("symbol", sample.symbolicated_frames[i]);
+            frame_object.add("offset", JsonValue((u32)sample.offsets[i]));
             frame_object.finish();
         }
         frames_array.finish();

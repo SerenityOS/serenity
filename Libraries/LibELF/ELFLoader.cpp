@@ -102,7 +102,7 @@ char* ELFLoader::symbol_ptr(const char* name)
     return found_ptr;
 }
 
-String ELFLoader::symbolicate(u32 address) const
+String ELFLoader::symbolicate(u32 address, u32* out_offset) const
 {
     SortedSymbol* sorted_symbols = nullptr;
 #ifdef KERNEL
@@ -139,6 +139,10 @@ String ELFLoader::symbolicate(u32 address) const
             if (i == 0)
                 return "!!";
             auto& symbol = sorted_symbols[i - 1];
+            if (out_offset) {
+                *out_offset = address - symbol.address;
+                return demangle(symbol.name);
+            }
             return String::format("%s +%u", demangle(symbol.name).characters(), address - symbol.address);
         }
     }

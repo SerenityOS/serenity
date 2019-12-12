@@ -15,6 +15,7 @@ struct Sample {
     i32 tid;
     u64 timestamp;
     u32 frames[max_stack_frame_count];
+    u32 offsets[max_stack_frame_count];
     String symbolicated_frames[max_stack_frame_count];
 };
 
