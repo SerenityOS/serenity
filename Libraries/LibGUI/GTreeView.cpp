@@ -334,3 +334,17 @@ void GTreeView::keydown_event(GKeyEvent& event)
         return;
     }
 }
+
+void GTreeView::context_menu_event(GContextMenuEvent& event)
+{
+    if (!model())
+        return;
+    auto adjusted_position = event.position().translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
+    bool is_toggle;
+    auto index = index_at_content_position(adjusted_position, is_toggle);
+    if (index.is_valid()) {
+        if (on_context_menu_request)
+            on_context_menu_request(index, event);
+    }
+    GAbstractView::context_menu_event(event);
+}
