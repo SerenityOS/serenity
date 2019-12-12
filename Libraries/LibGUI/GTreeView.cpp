@@ -250,6 +250,7 @@ void GTreeView::scroll_into_view(const GModelIndex& a_index, Orientation orienta
 
 void GTreeView::did_update_model()
 {
+    m_view_metadata.clear();
     GAbstractView::did_update_model();
     update_content_size();
     update();
