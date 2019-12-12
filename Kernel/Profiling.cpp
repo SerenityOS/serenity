@@ -57,19 +57,24 @@ static void symbolicate(Sample& stack)
     for (auto& symbol : recognized_symbols) {
         if (!symbol.address)
             break;
-        auto& symbol_string_slot = stack.symbolicated_frames[i++];
+        auto& symbol_string_slot = stack.symbolicated_frames[i];
+        auto& offset_slot = stack.offsets[i];
+        ++i;
         if (!symbol.ksym) {
             if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
-                symbol_string_slot = String::format("%s", process.elf_loader()->symbolicate(symbol.address).characters());
+                symbol_string_slot = process.elf_loader()->symbolicate(symbol.address, &offset_slot);
             else
                 symbol_string_slot = String::empty();
             continue;
         }
-        unsigned offset = symbol.address - symbol.ksym->address;
-        if (symbol.ksym->address == ksym_highest_address && offset > 4096)
+        u32 offset = symbol.address - symbol.ksym->address;
+        if (symbol.ksym->address == ksym_highest_address && offset > 4096) {
             symbol_string_slot = String::empty();
-        else
-            symbol_string_slot = String::format("%s +%u", demangle(symbol.ksym->name).characters(), offset);
+            offset_slot = 0;
+        } else {
+            symbol_string_slot = demangle(symbol.ksym->name);
+            offset_slot = offset;
+        }
     }
 }
 

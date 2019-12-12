@@ -27,7 +27,7 @@ public:
 
     bool has_symbols() const { return m_image.symbol_count(); }
 
-    String symbolicate(u32 address) const;
+    String symbolicate(u32 address, u32* offset = nullptr) const;
 
 private:
     bool layout();
