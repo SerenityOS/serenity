@@ -4,7 +4,7 @@
 #include <LibCore/CFile.h>
 #include <stdio.h>
 
-Profile::Profile(const JsonArray& json, NonnullRefPtrVector<ProfileNode>&& roots)
+Profile::Profile(const JsonArray& json, Vector<NonnullRefPtr<ProfileNode>>&& roots)
     : m_json(json)
     , m_roots(move(roots))
 {

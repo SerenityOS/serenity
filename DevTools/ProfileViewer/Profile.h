@@ -43,7 +43,7 @@ public:
             }
         }
         auto new_child = ProfileNode::create(symbol, address, offset);
-        m_children.append(new_child);
+        add_child(new_child);
         return new_child;
     };
 
@@ -77,12 +77,12 @@ public:
 
     GModel& model();
 
-    const NonnullRefPtrVector<ProfileNode>& roots() const { return m_roots; }
+    const Vector<NonnullRefPtr<ProfileNode>>& roots() const { return m_roots; }
 
 private:
-    explicit Profile(const JsonArray&, NonnullRefPtrVector<ProfileNode>&&);
+    explicit Profile(const JsonArray&, Vector<NonnullRefPtr<ProfileNode>>&&);
 
     JsonArray m_json;
     RefPtr<ProfileModel> m_model;
-    NonnullRefPtrVector<ProfileNode> m_roots;
+    Vector<NonnullRefPtr<ProfileNode>> m_roots;
 };
