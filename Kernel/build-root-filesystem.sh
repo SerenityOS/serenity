@@ -98,6 +98,7 @@ cp ../Demos/Fire/Fire mnt/bin/Fire
 cp ../DevTools/HackStudio/HackStudio mnt/bin/HackStudio
 cp ../DevTools/VisualBuilder/VisualBuilder mnt/bin/VisualBuilder
 cp ../DevTools/Inspector/Inspector mnt/bin/Inspector
+cp ../DevTools/ProfileViewer/ProfileViewer mnt/bin/ProfileViewer
 cp ../Games/Minesweeper/Minesweeper mnt/bin/Minesweeper
 cp ../Games/Snake/Snake mnt/bin/Snake
 cp ../Servers/LookupServer/LookupServer mnt/bin/LookupServer
@@ -136,6 +137,7 @@ ln -s Help mnt/bin/help
 ln -s Browser mnt/bin/br
 ln -s HackStudio mnt/bin/hs
 ln -s SystemMonitor mnt/bin/sm
+ln -s ProfileViewer mnt/bin/pv
 echo "done"
 
 mkdir -p mnt/boot/
