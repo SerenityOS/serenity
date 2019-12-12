@@ -365,16 +365,16 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
         object.add("pid", sample.pid);
         object.add("tid", sample.tid);
         object.add("timestamp", sample.timestamp);
-        auto sample_array = object.add_array("samples");
+        auto frames_array = object.add_array("frames");
         for (size_t i = 0; i < Profiling::max_stack_frame_count; ++i) {
             if (sample.frames[i] == 0)
                 break;
-            auto frame_object = sample_array.add_object();
+            auto frame_object = frames_array.add_object();
             frame_object.add("address", JsonValue((u32)sample.frames[i]));
             frame_object.add("symbol", sample.symbolicated_frames[i]);
             frame_object.finish();
         }
-        sample_array.finish();
+        frames_array.finish();
     });
     array.finish();
     return builder.build();
