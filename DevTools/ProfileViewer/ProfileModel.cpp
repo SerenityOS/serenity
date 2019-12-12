@@ -19,7 +19,7 @@ GModelIndex ProfileModel::index(int row, int column, const GModelIndex& parent) 
     if (!parent.is_valid()) {
         if (m_profile.roots().is_empty())
             return {};
-        return create_index(row, column, &m_profile.roots().at(row));
+        return create_index(row, column, m_profile.roots().at(row).ptr());
     }
     auto& remote_parent = *static_cast<ProfileNode*>(parent.internal_data());
     return create_index(row, column, remote_parent.children().at(row).ptr());
@@ -33,11 +33,12 @@ GModelIndex ProfileModel::parent_index(const GModelIndex& index) const
     if (!node.parent())
         return {};
 
-    // NOTE: If the parent has no parent, it's a root, so we have to look among the remote roots.
+    // NOTE: If the parent has no parent, it's a root, so we have to look among the roots.
     if (!node.parent()->parent()) {
         for (int row = 0; row < m_profile.roots().size(); ++row) {
-            if (&m_profile.roots()[row] == node.parent())
+            if (m_profile.roots()[row].ptr() == node.parent()) {
                 return create_index(row, 0, node.parent());
+            }
         }
         ASSERT_NOT_REACHED();
         return {};
