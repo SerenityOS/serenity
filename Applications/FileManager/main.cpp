@@ -192,7 +192,7 @@ int main(int argc, char** argv)
 
     auto copy_action = GCommonActions::make_copy_action([&](const GAction& action) {
         Vector<String> paths;
-        if (action.activator() == directory_context_menu) {
+        if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
             paths = selected_file_paths();
         } else {
             paths = tree_view_selected_file_paths();
@@ -245,7 +245,7 @@ int main(int argc, char** argv)
               auto& model = directory_view->model();
               String path;
               Vector<String> selected;
-              if (action.activator() == directory_context_menu) {
+              if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
                   path = directory_view->path();
                   selected = selected_file_paths();
               } else {
@@ -267,7 +267,7 @@ int main(int argc, char** argv)
 
     auto do_delete = [&](ConfirmBeforeDelete confirm, const GAction& action) {
         Vector<String> paths;
-        if (action.activator() == directory_context_menu) {
+        if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
             paths = selected_file_paths();
         } else {
             paths = tree_view_selected_file_paths();
