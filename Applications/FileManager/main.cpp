@@ -89,17 +89,20 @@ int main(int argc, char** argv)
         directory_view->open(location_textbox->text());
     };
 
-    tree_view->on_selection_change = [&] {
-        auto path = file_system_model->path(tree_view->selection().first());
-        if (directory_view->path() == path)
-            return;
-        directory_view->open(path);
-    };
-
     auto refresh_tree_view = [&] {
         file_system_model->update();
 
         auto current_path = directory_view->path();
+
+        struct stat st;
+        // If the directory no longer exists, we find a parent that does.
+        while (lstat(current_path.characters(), &st) != 0) {
+            directory_view->open_parent_directory();
+            current_path = directory_view->path();
+            if (current_path == file_system_model->root_path()) {
+                break;
+            }
+        }
 
         // not exactly sure why i have to reselect the root node first, but the index() fails if I dont
         auto root_index = file_system_model->index(file_system_model->root_path());
@@ -113,6 +116,12 @@ int main(int argc, char** argv)
 
         directory_view->refresh();
     };
+
+    auto directory_context_menu = GMenu::construct("Directory View Directory");
+    auto file_context_menu = GMenu::construct("Directory View File");
+    auto directory_view_context_menu = GMenu::construct("Directory View");
+    auto tree_view_directory_context_menu = GMenu::construct("Tree View Directory");
+    auto tree_view_context_menu = GMenu::construct("Tree View");
 
     auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [&](const GAction&) {
         directory_view->open_parent_directory();
@@ -172,8 +181,22 @@ int main(int argc, char** argv)
         return paths;
     };
 
-    auto copy_action = GCommonActions::make_copy_action([&](const GAction&) {
-        auto paths = selected_file_paths();
+    auto tree_view_selected_file_paths = [&] {
+        Vector<String> paths;
+        auto& view = tree_view;
+        view->selection().for_each_index([&](const GModelIndex& index) {
+            paths.append(file_system_model->path(index));
+        });
+        return paths;
+    };
+
+    auto copy_action = GCommonActions::make_copy_action([&](const GAction& action) {
+        Vector<String> paths;
+        if (action.activator() == directory_context_menu) {
+            paths = selected_file_paths();
+        } else {
+            paths = tree_view_selected_file_paths();
+        }
         if (paths.is_empty())
             return;
         StringBuilder copy_text;
@@ -206,6 +229,8 @@ int main(int argc, char** argv)
                 auto error_message = String::format("Could not paste %s.",
                     current_path.characters());
                 GMessageBox::show(error_message, "File Manager", GMessageBox::Type::Error);
+            } else {
+                refresh_tree_view();
             }
         }
     });
@@ -216,13 +241,20 @@ int main(int argc, char** argv)
     };
 
     auto properties_action
-        = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [&](auto&) {
+        = GAction::create("Properties...", { Mod_Alt, Key_Return }, GraphicsBitmap::load_from_file("/res/icons/16x16/properties.png"), [&](const GAction& action) {
               auto& model = directory_view->model();
-              auto selected = selected_file_paths();
-
+              String path;
+              Vector<String> selected;
+              if (action.activator() == directory_context_menu) {
+                  path = directory_view->path();
+                  selected = selected_file_paths();
+              } else {
+                  path = file_system_model->path(tree_view->selection().first());
+                  selected = tree_view_selected_file_paths();
+              }
               RefPtr<PropertiesDialog> properties;
               if (selected.is_empty()) {
-                  properties = PropertiesDialog::construct(model, directory_view->path(), true, window);
+                  properties = PropertiesDialog::construct(model, path, true, window);
               } else {
                   properties = PropertiesDialog::construct(model, selected.first(), false, window);
               }
@@ -233,8 +265,13 @@ int main(int argc, char** argv)
     enum class ConfirmBeforeDelete { No,
         Yes };
 
-    auto do_delete = [&](ConfirmBeforeDelete confirm) {
-        auto paths = selected_file_paths();
+    auto do_delete = [&](ConfirmBeforeDelete confirm, const GAction& action) {
+        Vector<String> paths;
+        if (action.activator() == directory_context_menu) {
+            paths = selected_file_paths();
+        } else {
+            paths = tree_view_selected_file_paths();
+        }
         if (paths.is_empty())
             return;
         {
@@ -299,12 +336,12 @@ int main(int argc, char** argv)
         }
     };
 
-    auto force_delete_action = GAction::create("Delete without confirmation", { Mod_Shift, Key_Delete }, [&](const GAction&) {
-        do_delete(ConfirmBeforeDelete::No);
+    auto force_delete_action = GAction::create("Delete without confirmation", { Mod_Shift, Key_Delete }, [&](const GAction& action) {
+        do_delete(ConfirmBeforeDelete::No, action);
     });
 
-    auto delete_action = GCommonActions::make_delete_action([&](const GAction&) {
-        do_delete(ConfirmBeforeDelete::Yes);
+    auto delete_action = GCommonActions::make_delete_action([&](const GAction& action) {
+        do_delete(ConfirmBeforeDelete::Yes, action);
     });
     delete_action->set_enabled(false);
 
@@ -372,9 +409,11 @@ int main(int argc, char** argv)
         window->set_title(String::format("File Manager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
         auto new_index = file_system_model->index(new_path);
-        tree_view->selection().set(new_index);
-        tree_view->scroll_into_view(new_index, Orientation::Vertical);
-        tree_view->update();
+        if (new_index.is_valid()) {
+            tree_view->selection().set(new_index);
+            tree_view->scroll_into_view(new_index, Orientation::Vertical);
+            tree_view->update();
+        }
 
         go_forward_action->set_enabled(directory_view->path_history_position()
             < directory_view->path_history_size() - 1);
@@ -412,14 +451,12 @@ int main(int argc, char** argv)
         }
     });
 
-    auto directory_context_menu = GMenu::construct();
     directory_context_menu->add_action(copy_action);
     directory_context_menu->add_action(paste_action);
     directory_context_menu->add_action(delete_action);
     directory_context_menu->add_separator();
     directory_context_menu->add_action(properties_action);
 
-    auto file_context_menu = GMenu::construct();
     file_context_menu->add_action(copy_action);
     file_context_menu->add_action(paste_action);
     file_context_menu->add_action(delete_action);
@@ -428,8 +465,15 @@ int main(int argc, char** argv)
     file_context_menu->add_separator();
     file_context_menu->add_action(properties_action);
 
-    auto directory_view_context_menu = GMenu::construct();
     directory_view_context_menu->add_action(mkdir_action);
+
+    tree_view_directory_context_menu->add_action(copy_action);
+    tree_view_directory_context_menu->add_action(paste_action);
+    tree_view_directory_context_menu->add_action(delete_action);
+    tree_view_directory_context_menu->add_separator();
+    tree_view_directory_context_menu->add_action(properties_action);
+    tree_view_directory_context_menu->add_separator();
+    tree_view_directory_context_menu->add_action(mkdir_action);
 
     directory_view->on_context_menu_request = [&](const GAbstractView&, const GModelIndex& index, const GContextMenuEvent& event) {
         if (index.is_valid()) {
@@ -442,6 +486,21 @@ int main(int argc, char** argv)
             }
         } else {
             directory_view_context_menu->popup(event.screen_position());
+        }
+    };
+
+    tree_view->on_selection_change = [&] {
+        auto path = file_system_model->path(tree_view->selection().first());
+        if (directory_view->path() == path)
+            return;
+        directory_view->open(path);
+        copy_action->set_enabled(!tree_view->selection().is_empty());
+        delete_action->set_enabled(!tree_view->selection().is_empty());
+    };
+
+    tree_view->on_context_menu_request = [&](const GModelIndex& index, const GContextMenuEvent& event) {
+        if (index.is_valid()) {
+            tree_view_directory_context_menu->popup(event.screen_position());
         }
     };
 
