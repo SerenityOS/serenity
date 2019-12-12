@@ -101,25 +101,25 @@ public:
         return as_bool();
     }
 
-    int as_i32() const
+    i32 as_i32() const
     {
         ASSERT(is_i32());
         return m_value.as_i32;
     }
 
-    int as_u32() const
+    u32 as_u32() const
     {
         ASSERT(is_u32());
         return m_value.as_u32;
     }
 
-    int as_i64() const
+    i64 as_i64() const
     {
         ASSERT(is_i64());
         return m_value.as_i64;
     }
 
-    int as_u64() const
+    u64 as_u64() const
     {
         ASSERT(is_u64());
         return m_value.as_u64;
