@@ -2,10 +2,15 @@
 #include "GlobalState.h"
 #include <ctype.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <unistd.h>
 
 LineEditor::LineEditor()
 {
+    struct winsize ws;
+    int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+    ASSERT(rc == 0);
+    m_num_columns = ws.ws_col;
 }
 
 LineEditor::~LineEditor()
@@ -106,15 +111,18 @@ void LineEditor::cut_mismatching_chars(String& completion, const String& other, 
     completion = completion.substring(0, i);
 }
 
-void LineEditor::tab_complete_first_token(const String& token)
+// Function returns Vector<String> as assignment is made from return value at callsite
+// (instead of StringView)
+Vector<String> LineEditor::tab_complete_first_token(const String& token)
 {
     auto match = binary_search(m_path.data(), m_path.size(), token, [](const String& token, const String& program) -> int {
         return strncmp(token.characters(), program.characters(), token.length());
     });
     if (!match)
-        return;
+        return Vector<String>();
 
     String completion = *match;
+    Vector<String> suggestions;
 
     // Now that we have a program name starting with our token, we look at
     // other program names starting with our token and cut off any mismatching
@@ -123,13 +131,16 @@ void LineEditor::tab_complete_first_token(const String& token)
     bool seen_others = false;
     int index = match - m_path.data();
     for (int i = index - 1; i >= 0 && m_path[i].starts_with(token); --i) {
+        suggestions.append(m_path[i]);
         cut_mismatching_chars(completion, m_path[i], token.length());
         seen_others = true;
     }
     for (int i = index + 1; i < m_path.size() && m_path[i].starts_with(token); ++i) {
         cut_mismatching_chars(completion, m_path[i], token.length());
+        suggestions.append(m_path[i]);
         seen_others = true;
     }
+    suggestions.append(m_path[index]);
 
     // If we have characters to add, add them.
     if (completion.length() > token.length())
@@ -137,11 +148,14 @@ void LineEditor::tab_complete_first_token(const String& token)
     // If we have a single match, we add a space, unless we already have one.
     if (!seen_others && (m_cursor == (size_t)m_buffer.size() || m_buffer[(int)m_cursor] != ' '))
         insert(' ');
+
+    return suggestions;
 }
 
-void LineEditor::tab_complete_other_token(String& token)
+Vector<String> LineEditor::tab_complete_other_token(String& token)
 {
     String path;
+    Vector<String> suggestions;
 
     int last_slash = (int)token.length() - 1;
     while (last_slash >= 0 && token[last_slash] != '/')
@@ -161,6 +175,17 @@ void LineEditor::tab_complete_other_token(String& token)
         path = g.cwd;
     }
 
+    // This is a bit naughty, but necessary without reordering the loop
+    // below. The loop terminates early, meaning that
+    // the suggestions list is incomplete.
+    // We only do this if the token is empty though.
+    if (token.is_empty()) {
+        CDirIterator suggested_files(path, CDirIterator::SkipDots);
+        while (suggested_files.has_next()) {
+            suggestions.append(suggested_files.next_path());
+        }
+    }
+
     String completion;
 
     bool seen_others = false;
@@ -168,18 +193,20 @@ void LineEditor::tab_complete_other_token(String& token)
     while (files.has_next()) {
         auto file = files.next_path();
         if (file.starts_with(token)) {
+            if (!token.is_empty())
+                suggestions.append(file);
             if (completion.is_empty()) {
                 completion = file; // Will only be set once.
             } else {
                 cut_mismatching_chars(completion, file, token.length());
                 if (completion.is_empty()) // We cut everything off!
-                    return;
+                    return suggestions;
                 seen_others = true;
             }
         }
     }
     if (completion.is_empty())
-        return;
+        return suggestions;
 
     // If we have characters to add, add them.
     if (completion.length() > token.length())
@@ -197,6 +224,8 @@ void LineEditor::tab_complete_other_token(String& token)
                 insert(' ');
         }
     }
+
+    return {}; // Return an empty vector
 }
 
 String LineEditor::get_line(const String& prompt)
@@ -223,6 +252,12 @@ String LineEditor::get_line(const String& prompt)
                     g.was_resized = false;
                     printf("\033[2K\r");
                     m_buffer.clear();
+
+                    struct winsize ws;
+                    int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
+                    ASSERT(rc == 0);
+                    m_num_columns = ws.ws_col;
+
                     return String::empty();
                 }
                 m_buffer.clear();
@@ -337,6 +372,7 @@ String LineEditor::get_line(const String& prompt)
 
             if (ch == '\t') {
                 bool is_empty_token = m_cursor == 0 || m_buffer[(int)m_cursor - 1] == ' ';
+                m_times_tab_pressed++;
 
                 int token_start = (int)m_cursor - 1;
                 if (!is_empty_token) {
@@ -354,14 +390,45 @@ String LineEditor::get_line(const String& prompt)
                 }
 
                 String token = is_empty_token ? String() : String(&m_buffer[token_start], m_cursor - (size_t)token_start);
+                Vector<String> suggestions;
 
                 if (is_first_token)
-                    tab_complete_first_token(token);
+                    suggestions = tab_complete_first_token(token);
                 else
-                    tab_complete_other_token(token);
+                    suggestions = tab_complete_other_token(token);
 
+                if (m_times_tab_pressed > 1 && !suggestions.is_empty()) {
+                    size_t longest_suggestion_length = 0;
+
+                    for (auto& suggestion : suggestions)
+                        longest_suggestion_length = max(longest_suggestion_length, suggestion.length());
+
+                    size_t num_printed = 0;
+                    putchar('\n');
+                    for (auto& suggestion : suggestions) {
+                        int next_column = num_printed + suggestion.length() + longest_suggestion_length + 2;
+
+                        if (next_column > m_num_columns) {
+                            putchar('\n');
+                            num_printed = 0;
+                        }
+
+                        num_printed += fprintf(stderr, "%-*s", static_cast<int>(longest_suggestion_length) + 2, suggestion.characters());
+                    }
+
+                    putchar('\n');
+                    write(STDOUT_FILENO, prompt.characters(), prompt.length());
+                    write(STDOUT_FILENO, m_buffer.data(), m_cursor);
+                    // Prevent not printing characters in case the user has moved the cursor and then pressed tab
+                    write(STDOUT_FILENO, m_buffer.data() + m_cursor, m_buffer.size() - m_cursor);
+                    m_cursor = m_buffer.size(); // bash doesn't do this, but it makes a little bit more sense
+                }
+
+                suggestions.clear_with_capacity();
                 continue;
             }
+
+            m_times_tab_pressed = 0; // Safe to say if we get here, the user didn't press TAB
 
             auto do_backspace = [&] {
                 if (m_cursor == 0) {
@@ -401,7 +468,7 @@ String LineEditor::get_line(const String& prompt)
                     do_backspace();
                 continue;
             }
-            if (ch == 0xc) { // ^L
+            if (ch == 0xc) {                    // ^L
                 printf("\033[3J\033[H\033[2J"); // Clear screen.
                 fputs(prompt.characters(), stdout);
                 for (int i = 0; i < m_buffer.size(); ++i)
