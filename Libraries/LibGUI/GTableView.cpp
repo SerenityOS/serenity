@@ -35,8 +35,9 @@ void GTableView::paint_event(GPaintEvent& event)
     int exposed_width = max(content_size().width(), width());
     int y_offset = header_height();
 
-    int first_visible_row = index_at_event_position(frame_inner_rect().top_left()).row();
-    int last_visible_row = index_at_event_position(frame_inner_rect().bottom_right()).row();
+    bool dummy;
+    int first_visible_row = index_at_event_position(frame_inner_rect().top_left(), dummy).row();
+    int last_visible_row = index_at_event_position(frame_inner_rect().bottom_right(), dummy).row();
 
     if (first_visible_row == -1)
         first_visible_row = 0;

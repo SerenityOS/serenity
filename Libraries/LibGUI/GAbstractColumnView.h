@@ -35,7 +35,6 @@ public:
     int horizontal_padding() const { return m_horizontal_padding; }
 
     Point adjusted_position(const Point&) const;
-    GModelIndex index_at_event_position(const Point&) const;
 
     virtual Rect content_rect(const GModelIndex&) const override;
     Rect content_rect(int row, int column) const;
@@ -55,6 +54,9 @@ protected:
     virtual void keydown_event(GKeyEvent&) override;
     virtual void leave_event(CEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
+
+    virtual GModelIndex index_at_event_position(const Point&, bool& is_toggle) const;
+    virtual void toggle_index(const GModelIndex&) {}
 
     void paint_headers(GPainter&);
     Rect header_rect(int column) const;
@@ -80,8 +82,8 @@ protected:
     Rect column_resize_grabbable_rect(int) const;
     int column_width(int) const;
     void update_content_size();
-    void update_column_sizes();
-    int item_count() const;
+    virtual void update_column_sizes();
+    virtual int item_count() const;
 
 private:
     bool m_headers_visible { true };

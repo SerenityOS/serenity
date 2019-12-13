@@ -1,19 +1,20 @@
 #pragma once
 
-#include <LibGUI/GAbstractView.h>
+#include <LibGUI/GAbstractColumnView.h>
 
-class GTreeView : public GAbstractView {
+class GTreeView : public GAbstractColumnView {
     C_OBJECT(GTreeView)
 public:
     virtual ~GTreeView() override;
 
     virtual void scroll_into_view(const GModelIndex&, Orientation);
 
+    virtual int item_count() const override;
+
 protected:
     explicit GTreeView(GWidget*);
 
     virtual void paint_event(GPaintEvent&) override;
-    virtual void mousedown_event(GMouseEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void did_update_selection() override;
@@ -21,7 +22,8 @@ protected:
     virtual void context_menu_event(GContextMenuEvent&) override;
 
 private:
-    GModelIndex index_at_content_position(const Point&, bool& is_toggle) const;
+    virtual GModelIndex index_at_event_position(const Point&, bool& is_toggle) const override;
+
     int item_height() const { return 16; }
     int max_item_width() const { return frame_inner_rect().width(); }
     int indent_width_in_pixels() const { return 16; }
@@ -29,8 +31,8 @@ private:
     int icon_spacing() const { return 2; }
     int toggle_size() const { return 9; }
     int text_padding() const { return 2; }
-    void update_content_size();
-    void toggle_index(const GModelIndex&);
+    virtual void toggle_index(const GModelIndex&) override;
+    virtual void update_column_sizes() override;
 
     template<typename Callback>
     void traverse_in_paint_order(Callback) const;

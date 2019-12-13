@@ -21,36 +21,33 @@ GTreeView::MetadataForIndex& GTreeView::ensure_metadata_for_index(const GModelIn
 }
 
 GTreeView::GTreeView(GWidget* parent)
-    : GAbstractView(parent)
+    : GAbstractColumnView(parent)
 {
-    set_frame_shape(FrameShape::Container);
-    set_frame_shadow(FrameShadow::Sunken);
-    set_frame_thickness(2);
-
+    set_size_columns_to_fit_content(true);
+    set_headers_visible(false);
     m_expand_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-expand.png");
     m_collapse_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-collapse.png");
-
-    set_should_hide_unnecessary_scrollbars(true);
 }
 
 GTreeView::~GTreeView()
 {
 }
 
-GModelIndex GTreeView::index_at_content_position(const Point& position, bool& is_toggle) const
+GModelIndex GTreeView::index_at_event_position(const Point& a_position, bool& is_toggle) const
 {
+    auto position = a_position.translated(0, -header_height()).translated(-frame_thickness(), -frame_thickness());
     is_toggle = false;
     if (!model())
         return {};
     GModelIndex result;
     traverse_in_paint_order([&](const GModelIndex& index, const Rect& rect, const Rect& toggle_rect, int) {
-        if (rect.contains(position)) {
-            result = index;
-            return IterationDecision::Break;
-        }
         if (toggle_rect.contains(position)) {
             result = index;
             is_toggle = true;
+            return IterationDecision::Break;
+        }
+        if (rect.contains_vertically(position.y())) {
+            result = index;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
@@ -58,39 +55,13 @@ GModelIndex GTreeView::index_at_content_position(const Point& position, bool& is
     return result;
 }
 
-void GTreeView::mousedown_event(GMouseEvent& event)
-{
-    if (!model())
-        return;
-    auto& model = *this->model();
-    auto adjusted_position = event.position().translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
-    bool is_toggle;
-    auto index = index_at_content_position(adjusted_position, is_toggle);
-    if (!index.is_valid()) {
-        if (event.button() == GMouseButton::Left && !(event.modifiers() & Mod_Ctrl))
-            selection().clear();
-        return;
-    }
-
-    if (event.button() == GMouseButton::Left) {
-        if (event.modifiers() & Mod_Ctrl) {
-            selection().toggle(index);
-        } else {
-            selection().set(index);
-        }
-        if (is_toggle && model.row_count(index))
-            toggle_index(index);
-    }
-}
-
 void GTreeView::doubleclick_event(GMouseEvent& event)
 {
     if (!model())
         return;
     auto& model = *this->model();
-    auto adjusted_position = event.position().translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
     bool is_toggle;
-    auto index = index_at_content_position(adjusted_position, is_toggle);
+    auto index = index_at_event_position(event.position(), is_toggle);
     if (!index.is_valid())
         return;
 
@@ -106,6 +77,7 @@ void GTreeView::doubleclick_event(GMouseEvent& event)
 void GTreeView::toggle_index(const GModelIndex& index)
 {
     ASSERT(model()->row_count(index));
+    dbg() << "toggling index " << index << " with child count: " << model()->row_count(index);
     auto& metadata = ensure_metadata_for_index(index);
     metadata.open = !metadata.open;
     update_content_size();
@@ -119,12 +91,18 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
     auto& model = *this->model();
     int indent_level = 1;
     int y_offset = 0;
+    int tree_column = model.tree_column();
+    int tree_column_x_offset = 0;
+
+    for (int i = 0; i < tree_column; ++i) {
+        tree_column_x_offset += column_width(i);
+    }
 
     Function<IterationDecision(const GModelIndex&)> traverse_index = [&](const GModelIndex& index) {
         int row_count_at_index = model.row_count(index);
         if (index.is_valid()) {
             auto& metadata = ensure_metadata_for_index(index);
-            int x_offset = indent_level * indent_width_in_pixels();
+            int x_offset = tree_column_x_offset + horizontal_padding() + indent_level * indent_width_in_pixels();
             auto node_text = model.data(index, GModel::Role::Display).to_string();
             Rect rect = {
                 x_offset, y_offset,
@@ -132,7 +110,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
             };
             Rect toggle_rect;
             if (row_count_at_index > 0) {
-                int toggle_x = indent_width_in_pixels() * indent_level - icon_size() / 2 - 4;
+                int toggle_x = tree_column_x_offset + horizontal_padding() + indent_width_in_pixels() * indent_level - icon_size() / 2 - 4;
                 toggle_rect = { toggle_x, rect.y(), toggle_size(), toggle_size() };
                 toggle_rect.center_vertically_within(rect);
             }
@@ -147,7 +125,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
         ++indent_level;
         int row_count = model.row_count(index);
         for (int i = 0; i < row_count; ++i) {
-            if (traverse_index(model.index(i, 0, index)) == IterationDecision::Break)
+            if (traverse_index(model.index(i, model.tree_column(), index)) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         --indent_level;
@@ -155,7 +133,7 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
     };
     int root_count = model.row_count();
     for (int root_index = 0; root_index < root_count; ++root_index) {
-        if (traverse_index(model.index(root_index, 0, GModelIndex())) == IterationDecision::Break)
+        if (traverse_index(model.index(root_index, model.tree_column(), GModelIndex())) == IterationDecision::Break)
             break;
     }
 }
@@ -167,70 +145,137 @@ void GTreeView::paint_event(GPaintEvent& event)
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
     painter.fill_rect(event.rect(), Color::White);
-    painter.translate(frame_inner_rect().location());
-    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     if (!model())
         return;
     auto& model = *this->model();
-    auto visible_content_rect = this->visible_content_rect();
 
-    traverse_in_paint_order([&](const GModelIndex& index, const Rect& rect, const Rect& toggle_rect, int indent_level) {
-        if (!rect.intersects(visible_content_rect))
+    painter.translate(frame_inner_rect().location());
+    painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
+
+    auto visible_content_rect = this->visible_content_rect();
+    int tree_column = model.tree_column();
+    int tree_column_x_offset = 0;
+    for (int i = 0; i < tree_column; ++i) {
+        tree_column_x_offset += column_width(i);
+    }
+    int y_offset = header_height();
+
+    int painted_row_index = 0;
+
+    traverse_in_paint_order([&](const GModelIndex& index, const Rect& a_rect, const Rect& a_toggle_rect, int indent_level) {
+        if (!a_rect.intersects_vertically(visible_content_rect))
             return IterationDecision::Continue;
+
+        auto rect = a_rect.translated(0, y_offset);
+        auto toggle_rect = a_toggle_rect.translated(0, y_offset);
+
 #ifdef DEBUG_ITEM_RECTS
         painter.fill_rect(rect, Color::WarmGray);
 #endif
 
-        Color background_color = Color::from_rgb(0xffffff);
-        Color text_color = Color::from_rgb(0x000000);
+        bool is_selected_row = selection().contains(index);
 
-        Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
-        auto icon = model.data(index, GModel::Role::Icon);
-        if (icon.is_icon()) {
-            if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size()))
-                painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
-        }
-        Rect text_rect = {
-            icon_rect.right() + 1 + icon_spacing(), rect.y(),
-            rect.width() - icon_size() - icon_spacing(), rect.height()
-        };
-        if (selection().contains(index)) {
+        Color text_color = Color::Black;
+        if (is_selected_row)
+            text_color = Color::White;
+
+        Color background_color;
+        Color key_column_background_color;
+        if (is_selected_row) {
             background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
-            text_color = Color::from_rgb(0xffffff);
-            painter.fill_rect(text_rect, background_color);
-        }
-        auto node_text = model.data(index, GModel::Role::Display).to_string();
-        painter.draw_text(text_rect, node_text, TextAlignment::Center, text_color);
-        auto index_at_indent = index;
-        for (int i = indent_level; i >= 0; --i) {
-            auto parent_of_index_at_indent = index_at_indent.parent();
-            bool index_at_indent_is_last_in_parent = index_at_indent.row() == model.row_count(parent_of_index_at_indent) - 1;
-            Point a { indent_width_in_pixels() * i - icon_size() / 2, rect.y() - 2 };
-            Point b { a.x(), a.y() + item_height() - 1 };
-            if (index_at_indent_is_last_in_parent)
-                b.set_y(rect.center().y());
-            if (!(i != indent_level && index_at_indent_is_last_in_parent))
-                painter.draw_line(a, b, Color::MidGray);
-
-            if (i == indent_level) {
-                Point c { a.x(), rect.center().y() };
-                Point d { c.x() + icon_size() / 2, c.y() };
-                painter.draw_line(c, d, Color::MidGray);
+            key_column_background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
+        } else {
+            if (alternating_row_colors() && (painted_row_index % 2)) {
+                background_color = Color(220, 220, 220);
+                key_column_background_color = Color(200, 200, 200);
+            } else {
+                background_color = Color::White;
+                key_column_background_color = Color(220, 220, 220);
             }
-            index_at_indent = parent_of_index_at_indent;
         }
 
-        if (!toggle_rect.is_empty()) {
-            auto& metadata = ensure_metadata_for_index(index);
-            if (metadata.open)
-                painter.blit(toggle_rect.location(), *m_collapse_bitmap, m_collapse_bitmap->rect());
-            else
-                painter.blit(toggle_rect.location(), *m_expand_bitmap, m_expand_bitmap->rect());
+        Rect row_rect { 0, rect.y(), frame_inner_rect().width(), rect.height() };
+        painter.fill_rect(row_rect, background_color);
+
+        int x_offset = 0;
+        for (int column_index = 0; column_index < model.column_count(); ++column_index) {
+            if (is_column_hidden(column_index))
+                continue;
+            auto column_metadata = model.column_metadata(column_index);
+            int column_width = this->column_width(column_index);
+            auto& font = column_metadata.font ? *column_metadata.font : this->font();
+
+            painter.draw_rect(toggle_rect, text_color);
+
+            if (column_index != tree_column) {
+                Rect cell_rect(horizontal_padding() + x_offset, rect.y(), column_width, item_height());
+                auto cell_index = model.sibling(index.row(), column_index, index.parent());
+
+                if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
+                    delegate->paint(painter, cell_rect, model, cell_index);
+                } else {
+                    auto data = model.data(cell_index);
+
+                    if (data.is_bitmap()) {
+                        painter.blit(cell_rect.location(), data.as_bitmap(), data.as_bitmap().rect());
+                    } else if (data.is_icon()) {
+                        if (auto bitmap = data.as_icon().bitmap_for_size(16))
+                            painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
+                    } else {
+                        if (!is_selected_row)
+                            text_color = model.data(cell_index, GModel::Role::ForegroundColor).to_color(Color::Black);
+                        painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
+                    }
+                }
+            } else {
+                // It's the tree column!
+                Rect icon_rect = { rect.x(), rect.y(), icon_size(), icon_size() };
+                auto icon = model.data(index, GModel::Role::Icon);
+                if (icon.is_icon()) {
+                    if (auto* bitmap = icon.as_icon().bitmap_for_size(icon_size()))
+                        painter.blit(icon_rect.location(), *bitmap, bitmap->rect());
+                }
+                Rect text_rect = {
+                    icon_rect.right() + 1 + icon_spacing(), rect.y(),
+                    rect.width() - icon_size() - icon_spacing(), rect.height()
+                };
+                auto node_text = model.data(index, GModel::Role::Display).to_string();
+                painter.draw_text(text_rect, node_text, TextAlignment::Center, text_color);
+                auto index_at_indent = index;
+                for (int i = indent_level; i > 0; --i) {
+                    auto parent_of_index_at_indent = index_at_indent.parent();
+                    bool index_at_indent_is_last_in_parent = index_at_indent.row() == model.row_count(parent_of_index_at_indent) - 1;
+                    Point a { tree_column_x_offset + horizontal_padding() + indent_width_in_pixels() * i - icon_size() / 2, rect.y() - 2 };
+                    Point b { a.x(), a.y() + item_height() - 1 };
+                    if (index_at_indent_is_last_in_parent)
+                        b.set_y(rect.center().y());
+                    if (!(i != indent_level && index_at_indent_is_last_in_parent))
+                        painter.draw_line(a, b, Color::MidGray);
+
+                    if (i == indent_level) {
+                        Point c { a.x(), rect.center().y() };
+                        Point d { c.x() + icon_size() / 2, c.y() };
+                        painter.draw_line(c, d, Color::MidGray);
+                    }
+                    index_at_indent = parent_of_index_at_indent;
+                }
+
+                if (!toggle_rect.is_empty()) {
+                    auto& metadata = ensure_metadata_for_index(index);
+                    if (metadata.open)
+                        painter.blit(toggle_rect.location(), *m_collapse_bitmap, m_collapse_bitmap->rect());
+                    else
+                        painter.blit(toggle_rect.location(), *m_expand_bitmap, m_expand_bitmap->rect());
+                }
+            }
+            x_offset += column_width + horizontal_padding() * 2;
         }
 
         return IterationDecision::Continue;
     });
+
+    paint_headers(painter);
 }
 
 void GTreeView::scroll_into_view(const GModelIndex& a_index, Orientation orientation)
@@ -251,9 +296,7 @@ void GTreeView::scroll_into_view(const GModelIndex& a_index, Orientation orienta
 void GTreeView::did_update_model()
 {
     m_view_metadata.clear();
-    GAbstractView::did_update_model();
-    update_content_size();
-    update();
+    GAbstractColumnView::did_update_model();
 }
 
 void GTreeView::did_update_selection()
@@ -263,6 +306,7 @@ void GTreeView::did_update_selection()
     auto index = selection().first();
     if (!index.is_valid())
         return;
+#if 0
     bool opened_any = false;
     for (auto current = index; current.is_valid(); current = current.parent()) {
         auto& metadata_for_ancestor = ensure_metadata_for_index(current);
@@ -274,20 +318,9 @@ void GTreeView::did_update_selection()
     if (opened_any)
         update_content_size();
     update();
+#endif
     if (activates_on_selection())
         activate(index);
-}
-
-void GTreeView::update_content_size()
-{
-    int height = 0;
-    int width = 0;
-    traverse_in_paint_order([&](const GModelIndex&, const Rect& rect, const Rect&, int) {
-        width = max(width, rect.right());
-        height += rect.height();
-        return IterationDecision::Continue;
-    });
-    set_content_size({ width, height });
 }
 
 void GTreeView::keydown_event(GKeyEvent& event)
@@ -334,18 +367,97 @@ void GTreeView::keydown_event(GKeyEvent& event)
             selection().set(found_index);
         return;
     }
+    if (event.key() == KeyCode::Key_Left) {
+        if (model()->row_count(cursor_index)) {
+            auto& metadata = ensure_metadata_for_index(cursor_index);
+            if (metadata.open) {
+                metadata.open = false;
+                update_content_size();
+                update();
+            }
+            return;
+        }
+    }
+    if (event.key() == KeyCode::Key_Right) {
+        if (model()->row_count(cursor_index)) {
+            auto& metadata = ensure_metadata_for_index(cursor_index);
+            if (!metadata.open) {
+                metadata.open = true;
+                update_content_size();
+                update();
+            }
+            return;
+        }
+    }
 }
 
 void GTreeView::context_menu_event(GContextMenuEvent& event)
 {
     if (!model())
         return;
-    auto adjusted_position = event.position().translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
     bool is_toggle;
-    auto index = index_at_content_position(adjusted_position, is_toggle);
+    auto index = index_at_event_position(event.position(), is_toggle);
     if (index.is_valid()) {
         if (on_context_menu_request)
             on_context_menu_request(index, event);
     }
-    GAbstractView::context_menu_event(event);
+    GAbstractColumnView::context_menu_event(event);
+}
+
+int GTreeView::item_count() const
+{
+    int count = 0;
+    traverse_in_paint_order([&](const GModelIndex&, const Rect&, const Rect&, int) {
+        ++count;
+        return IterationDecision::Continue;
+    });
+    return count;
+}
+
+void GTreeView::update_column_sizes()
+{
+    if (!size_columns_to_fit_content())
+        return;
+
+    if (!model())
+        return;
+
+    auto& model = *this->model();
+    int column_count = model.column_count();
+    int row_count = model.row_count();
+    int tree_column = model.tree_column();
+
+    for (int column = 0; column < column_count; ++column) {
+        if (column == tree_column)
+            continue;
+        if (is_column_hidden(column))
+            continue;
+        int header_width = header_font().width(model.column_name(column));
+        int column_width = header_width;
+
+        for (int row = 0; row < row_count; ++row) {
+            auto cell_data = model.data(model.index(row, column));
+            int cell_width = 0;
+            if (cell_data.is_bitmap()) {
+                cell_width = cell_data.as_bitmap().width();
+            } else {
+                cell_width = font().width(cell_data.to_string());
+            }
+            column_width = max(column_width, cell_width);
+        }
+        auto& column_data = this->column_data(column);
+        column_data.width = max(column_data.width, column_width);
+        column_data.has_initialized_width = true;
+    }
+
+    int tree_column_width = 0;
+    traverse_in_paint_order([&](const GModelIndex&, const Rect& rect, const Rect&, int) {
+        tree_column_width = max(rect.width(), tree_column_width);
+        return IterationDecision::Continue;
+    });
+    dbg() << "Found tree column width: " << tree_column_width;
+
+    auto& column_data = this->column_data(tree_column);
+    column_data.width = max(column_data.width, tree_column_width);
+    column_data.has_initialized_width = true;
 }
