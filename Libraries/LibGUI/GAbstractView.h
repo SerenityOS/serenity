@@ -12,9 +12,6 @@ class GAbstractView : public GScrollableWidget {
     friend class GModel;
 
 public:
-    explicit GAbstractView(GWidget* parent);
-    virtual ~GAbstractView() override;
-
     void set_model(RefPtr<GModel>&&);
     GModel* model() { return m_model.ptr(); }
     const GModel* model() const { return m_model.ptr(); }
@@ -48,6 +45,9 @@ public:
     NonnullRefPtr<Font> font_for_index(const GModelIndex&) const;
 
 protected:
+    explicit GAbstractView(GWidget* parent);
+    virtual ~GAbstractView() override;
+
     virtual void did_scroll() override;
     void activate(const GModelIndex&);
     void update_edit_widget_position();
