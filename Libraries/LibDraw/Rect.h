@@ -200,6 +200,18 @@ public:
         move_by(0, delta);
     }
 
+    bool intersects_vertically(const Rect& other) const
+    {
+        return top() <= other.bottom()
+            && other.top() <= bottom();
+    }
+
+    bool intersects_horizontally(const Rect& other) const
+    {
+        return left() <= other.right()
+            && other.left() <= right();
+    }
+
     bool intersects(const Rect& other) const
     {
         return left() <= other.right()
