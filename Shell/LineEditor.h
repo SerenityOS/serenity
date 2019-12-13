@@ -25,14 +25,16 @@ private:
     void insert(const String&);
     void insert(const char);
     void cut_mismatching_chars(String& completion, const String& other, size_t start_compare);
-    void tab_complete_first_token(const String&);
-    void tab_complete_other_token(String&);
+    Vector<String> tab_complete_first_token(const String&);
+    Vector<String> tab_complete_other_token(String&);
     void vt_save_cursor();
     void vt_restore_cursor();
     void vt_clear_to_end_of_line();
 
     Vector<char, 1024> m_buffer;
     size_t m_cursor { 0 };
+    int m_times_tab_pressed { 0 };
+    int m_num_columns { 0 };
 
     // FIXME: This should be something more take_first()-friendly.
     Vector<String> m_history;
