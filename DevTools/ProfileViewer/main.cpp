@@ -11,9 +11,11 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    auto profile = Profile::load_from_file(argv[1]);
+    const char* path = argv[1];
+
+    auto profile = Profile::load_from_file(path);
     if (!profile) {
-        fprintf(stderr, "Unable to load profile '%s'\n", argv[1]);
+        fprintf(stderr, "Unable to load profile '%s'\n", path);
         return 1;
     }
 
@@ -24,6 +26,8 @@ int main(int argc, char** argv)
     window->set_rect(100, 100, 800, 600);
 
     auto tree_view = GTreeView::construct(nullptr);
+    tree_view->set_headers_visible(true);
+    tree_view->set_size_columns_to_fit_content(true);
     tree_view->set_model(profile->model());
 
     window->set_main_widget(tree_view);
