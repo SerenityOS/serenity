@@ -96,6 +96,8 @@ void GAbstractColumnView::set_hovered_header_index(int index)
 
 void GAbstractColumnView::paint_headers(GPainter& painter)
 {
+    if (!headers_visible())
+        return;
     int exposed_width = max(content_size().width(), width());
     painter.fill_rect({ 0, 0, exposed_width, header_height() }, Color::WarmGray);
     painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
@@ -327,18 +329,24 @@ void GAbstractColumnView::mousedown_event(GMouseEvent& event)
         return;
     }
 
-    auto index = index_at_event_position(event.position());
+    bool is_toggle;
+    auto index = index_at_event_position(event.position(), is_toggle);
     if (!index.is_valid()) {
         selection().clear();
         return;
     }
+    if (is_toggle && model()->row_count(index)) {
+        toggle_index(index);
+        return;
+    }
+
     if (event.modifiers() & Mod_Ctrl)
         selection().toggle(index);
     else
         selection().set(index);
 }
 
-GModelIndex GAbstractColumnView::index_at_event_position(const Point& position) const
+GModelIndex GAbstractColumnView::index_at_event_position(const Point& position, bool&) const
 {
     if (!model())
         return {};
@@ -464,7 +472,8 @@ void GAbstractColumnView::context_menu_event(GContextMenuEvent& event)
         return;
     }
 
-    auto index = index_at_event_position(event.position());
+    bool is_toggle;
+    auto index = index_at_event_position(event.position(), is_toggle);
     if (index.is_valid()) {
         if (!selection().contains(index))
             selection().set(index);

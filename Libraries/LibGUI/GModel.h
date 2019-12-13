@@ -52,6 +52,7 @@ public:
     virtual GModelIndex sibling(int row, int column, const GModelIndex& parent) const;
     virtual bool is_editable(const GModelIndex&) const { return false; }
     virtual void set_data(const GModelIndex&, const GVariant&) {}
+    virtual int tree_column() const { return 0; }
 
     bool is_valid(const GModelIndex& index) const
     {

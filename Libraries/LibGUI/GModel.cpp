@@ -42,7 +42,7 @@ GModelIndex GModel::create_index(int row, int column, const void* data) const
 GModelIndex GModel::sibling(int row, int column, const GModelIndex& parent) const
 {
     if (!parent.is_valid())
-        return {};
+        return index(row, column, {});
     int row_count = this->row_count(parent);
     if (row < 0 || row > row_count)
         return {};
