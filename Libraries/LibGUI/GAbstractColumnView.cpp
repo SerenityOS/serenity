@@ -346,8 +346,9 @@ void GAbstractColumnView::mousedown_event(GMouseEvent& event)
         selection().set(index);
 }
 
-GModelIndex GAbstractColumnView::index_at_event_position(const Point& position, bool&) const
+GModelIndex GAbstractColumnView::index_at_event_position(const Point& position, bool& is_toggle) const
 {
+    is_toggle = false;
     if (!model())
         return {};
 
