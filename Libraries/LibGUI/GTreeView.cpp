@@ -35,7 +35,7 @@ GTreeView::~GTreeView()
 
 GModelIndex GTreeView::index_at_event_position(const Point& a_position, bool& is_toggle) const
 {
-    auto position = a_position.translated(0, -header_height()).translated(-frame_thickness(), -frame_thickness());
+    auto position = a_position.translated(0, -header_height()).translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
     is_toggle = false;
     if (!model())
         return {};
@@ -77,9 +77,9 @@ void GTreeView::doubleclick_event(GMouseEvent& event)
 void GTreeView::toggle_index(const GModelIndex& index)
 {
     ASSERT(model()->row_count(index));
-    dbg() << "toggling index " << index << " with child count: " << model()->row_count(index);
     auto& metadata = ensure_metadata_for_index(index);
     metadata.open = !metadata.open;
+    update_column_sizes();
     update_content_size();
     update();
 }
@@ -372,6 +372,7 @@ void GTreeView::keydown_event(GKeyEvent& event)
             auto& metadata = ensure_metadata_for_index(cursor_index);
             if (metadata.open) {
                 metadata.open = false;
+                update_column_sizes();
                 update_content_size();
                 update();
             }
@@ -383,6 +384,7 @@ void GTreeView::keydown_event(GKeyEvent& event)
             auto& metadata = ensure_metadata_for_index(cursor_index);
             if (!metadata.open) {
                 metadata.open = true;
+                update_column_sizes();
                 update_content_size();
                 update();
             }
@@ -426,6 +428,7 @@ void GTreeView::update_column_sizes()
     int column_count = model.column_count();
     int row_count = model.row_count();
     int tree_column = model.tree_column();
+    int tree_column_x_offset = 0;
 
     for (int column = 0; column < column_count; ++column) {
         if (column == tree_column)
@@ -448,14 +451,17 @@ void GTreeView::update_column_sizes()
         auto& column_data = this->column_data(column);
         column_data.width = max(column_data.width, column_width);
         column_data.has_initialized_width = true;
+
+        if (column < tree_column)
+            tree_column_x_offset += column_width;
     }
 
-    int tree_column_width = 0;
+    int tree_column_header_width = header_font().width(model.column_name(tree_column));
+    int tree_column_width = tree_column_header_width;
     traverse_in_paint_order([&](const GModelIndex&, const Rect& rect, const Rect&, int) {
-        tree_column_width = max(rect.width(), tree_column_width);
+        tree_column_width = max(rect.right() - tree_column_x_offset, tree_column_width);
         return IterationDecision::Continue;
     });
-    dbg() << "Found tree column width: " << tree_column_width;
 
     auto& column_data = this->column_data(tree_column);
     column_data.width = max(column_data.width, tree_column_width);
