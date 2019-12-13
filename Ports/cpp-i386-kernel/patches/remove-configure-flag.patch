@@ -1,0 +1,13 @@
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 510e1af..6464944 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -106,7 +106,7 @@ target_compile_options(tinyprintf PRIVATE "-ffreestanding" "-nostdlib")
+ # the flags at the beginning rather than the end.
+ set(
+   CMAKE_CXX_LINK_EXECUTABLE
+-  "<CMAKE_LINKER> -T ${CMAKE_SOURCE_DIR}/linker.ld --coverage -ffreestanding -nostdlib -fno-exceptions -fno-rtti <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
++  "<CMAKE_LINKER> -T ${CMAKE_SOURCE_DIR}/linker.ld -ffreestanding -nostdlib -fno-exceptions -fno-rtti <FLAGS> <CMAKE_CXX_LINK_FLAGS> <LINK_FLAGS> -o <TARGET> <OBJECTS> <LINK_LIBRARIES>"
+   )
+ 
+ execute_process(COMMAND ${CMAKE_CXX_COMPILER} -print-file-name=crtbegin.o
