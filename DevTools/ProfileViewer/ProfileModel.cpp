@@ -63,17 +63,43 @@ int ProfileModel::row_count(const GModelIndex& index) const
 
 int ProfileModel::column_count(const GModelIndex&) const
 {
-    return 1;
+    return Column::__Count;
+}
+
+String ProfileModel::column_name(int column) const
+{
+    switch (column) {
+    case Column::SampleCount:
+        return "# Samples";
+    case Column::StackFrame:
+        return "Stack Frame";
+    default:
+        ASSERT_NOT_REACHED();
+        return {};
+    }
+}
+
+GModel::ColumnMetadata ProfileModel::column_metadata(int column) const
+{
+    if (column == Column::SampleCount)
+        return ColumnMetadata { 0, TextAlignment::CenterRight };
+    return {};
 }
 
 GVariant ProfileModel::data(const GModelIndex& index, Role role) const
 {
     auto* node = static_cast<ProfileNode*>(index.internal_data());
     if (role == Role::Icon) {
-        return m_frame_icon;
+        if (index.column() == Column::StackFrame)
+            return m_frame_icon;
+        return {};
     }
     if (role == Role::Display) {
-        return String::format("%s (%u)", node->symbol().characters(), node->sample_count());
+        if (index.column() == Column::SampleCount)
+            return node->sample_count();
+        if (index.column() == Column::StackFrame)
+            return node->symbol();
+        return {};
     }
     return {};
 }
