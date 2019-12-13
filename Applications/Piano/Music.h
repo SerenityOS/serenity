@@ -9,7 +9,7 @@ struct Sample {
     i16 right;
 };
 
-enum WaveType { Sine, Saw, Square, InvalidWave };
+enum WaveType { Sine, Saw, Square, Triangle, Noise, InvalidWave };
 
 enum PianoKey {
     K_None,

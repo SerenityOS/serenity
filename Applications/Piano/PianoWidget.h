@@ -25,6 +25,8 @@ private:
     double w_sine(size_t);
     double w_saw(size_t);
     double w_square(size_t);
+    double w_triangle(size_t);
+    double w_noise();
 
     Rect define_piano_key_rect(int index, PianoKey) const;
     PianoKey find_key_for_relative_position(int x, int y) const;
@@ -49,6 +51,7 @@ private:
     double m_sin_pos[note_count];
     double m_square_pos[note_count];
     double m_saw_pos[note_count];
+    double m_triangle_pos[note_count];
 
     int m_octave_min { 1 };
     int m_octave_max { 6 };

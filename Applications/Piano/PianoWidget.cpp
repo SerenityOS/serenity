@@ -32,6 +32,10 @@ void PianoWidget::paint_event(GPaintEvent& event)
         wave_color = Color(240, 100, 128);
     else if (m_wave_type == WaveType::Square)
         wave_color = Color(128, 160, 255);
+    else if (m_wave_type == WaveType::Triangle)
+        wave_color = Color(35, 171, 35);
+    else if (m_wave_type == WaveType::Noise)
+        wave_color = Color(197, 214, 225);
 
     int prev_x = 0;
     int prev_y = m_height / 2;
@@ -70,6 +74,10 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
                 val = ((volume * m_power[n]) * w_saw(n));
             else if (m_wave_type == WaveType::Square)
                 val = ((volume * m_power[n]) * w_square(n));
+            else if (m_wave_type == WaveType::Triangle)
+                val = ((volume * m_power[n]) * w_triangle(n));
+            else if (m_wave_type == WaveType::Noise)
+                val = ((volume * m_power[n]) * w_noise());
             if (sst[i].left == 0)
                 sst[i].left = val;
             else
@@ -145,6 +153,20 @@ double PianoWidget::w_square(size_t n)
     //printf("w: %g, step: %g\n", w, square_step);
     m_square_pos[n] += square_step;
     return w;
+}
+
+double PianoWidget::w_triangle(size_t n)
+{
+    double triangle_step = note_frequency[n] / 44100.0;
+    double t = m_triangle_pos[n];
+    double w = fabs(fmod((4 * t) + 1, 4) - 2) - 1;
+    m_triangle_pos[n] += triangle_step;
+    return w;
+}
+
+double PianoWidget::w_noise()
+{
+    return (((double)rand() / RAND_MAX) * 2.0) - 1.0;
 }
 
 int PianoWidget::octave_base() const
@@ -393,6 +415,14 @@ void PianoWidget::render_knobs(GPainter& painter)
         r = 128;
         g = 160;
         b = 255;
+    } else if (m_wave_type == WaveType::Triangle) {
+        r = 35;
+        g = 171;
+        b = 35;
+    } else if (m_wave_type == WaveType::Noise) {
+        r = 197;
+        g = 214;
+        b = 225;
     }
     Rect wave_knob_rect(m_width - knob_width - 16 - knob_width - 16, m_height - 30, knob_width, 16);
     const char* wave_name = "";
@@ -402,6 +432,10 @@ void PianoWidget::render_knobs(GPainter& painter)
         wave_name = "C: Sawtooth";
     else if (m_wave_type == WaveType::Square)
         wave_name = "C: Square  ";
+    else if (m_wave_type == WaveType::Triangle)
+        wave_name = "C: Triangle";
+    else if (m_wave_type == WaveType::Noise)
+        wave_name = "C: Noise   ";
     painter.draw_rect(wave_knob_rect, Color(r, g, b));
     painter.draw_text(wave_knob_rect, wave_name, TextAlignment::Center, Color(r, g, b));
 }
