@@ -30,7 +30,9 @@ bool CSocket::connect(const String& hostname, int port)
     }
 
     IPv4Address host_address((const u8*)hostent->h_addr_list[0]);
+#ifdef CSOCKET_DEBUG
     dbg() << "CSocket::connect: Resolved '" << hostname << "' to " << host_address;
+#endif
     return connect(host_address, port);
 }
 
@@ -49,7 +51,9 @@ bool CSocket::connect(const CSocketAddress& address, int port)
 {
     ASSERT(!is_connected());
     ASSERT(address.type() == CSocketAddress::Type::IPv4);
+#ifdef CSOCKET_DEBUG
     dbg() << *this << " connecting to " << address << "...";
+#endif
 
     ASSERT(port > 0 && port <= 65535);
 
@@ -70,7 +74,9 @@ bool CSocket::connect(const CSocketAddress& address)
 {
     ASSERT(!is_connected());
     ASSERT(address.type() == CSocketAddress::Type::Local);
+#ifdef CSOCKET_DEBUG
     dbg() << *this << " connecting to " << address << "...";
+#endif
 
     sockaddr_un saddr;
     saddr.sun_family = AF_LOCAL;
@@ -84,10 +90,14 @@ bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
     int rc = ::connect(fd(), addr, addrlen);
     if (rc < 0) {
         if (errno == EINPROGRESS) {
+#ifdef CSOCKET_DEBUG
             dbg() << *this << " connection in progress (EINPROGRESS)";
+#endif
             m_notifier = CNotifier::construct(fd(), CNotifier::Event::Write, this);
             m_notifier->on_ready_to_write = [this] {
+#ifdef CSOCKET_DEBUG
                 dbg() << *this << " connected!";
+#endif
                 m_connected = true;
                 ensure_read_notifier();
                 m_notifier->set_event_mask(CNotifier::Event::None);
@@ -99,7 +109,9 @@ bool CSocket::common_connect(const struct sockaddr* addr, socklen_t addrlen)
         perror("CSocket::common_connect: connect");
         return false;
     }
+#ifdef CSOCKET_DEBUG
     dbg() << *this << " connected ok!";
+#endif
     m_connected = true;
     ensure_read_notifier();
     if (on_connected)
