@@ -3,6 +3,8 @@
 #include <AK/NetworkOrdered.h>
 #include <Kernel/Net/MACAddress.h>
 
+#pragma GCC diagnostic ignored "-Warray-bounds"
+
 class [[gnu::packed]] EthernetFrameHeader
 {
 public:
