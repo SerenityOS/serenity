@@ -5,19 +5,22 @@
 #include <stdio.h>
 #include <unistd.h>
 
-
-#define CHTTPJOB_DEBUG
+//#define CHTTPJOB_DEBUG
 
 static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& content_encoding)
 {
+#ifdef CHTTPJOB_DEBUG
     dbg() << "CHttpJob::handle_content_encoding: buf has content_encoding = " << content_encoding;
+#endif
 
     if (content_encoding == "gzip") {
         if (!CGzip::is_compressed(buf)) {
             dbg() << "CHttpJob::handle_content_encoding: buf is not gzip compressed!";
         }
 
+#ifdef CHTTPJOB_DEBUG
         dbg() << "CHttpJob::handle_content_encoding: buf is gzip compressed!";
+#endif
 
         auto uncompressed = CGzip::decompress(buf);
         if (!uncompressed.has_value()) {
@@ -25,9 +28,11 @@ static ByteBuffer handle_content_encoding(const ByteBuffer& buf, const String& c
             return buf;
         }
 
+#ifdef CHTTPJOB_DEBUG
         dbg() << "CHttpJob::handle_content_encoding: Gzip::decompress() successful.\n"
               << "  Input size = " << buf.size() << "\n"
               << "  Output size = " << uncompressed.value().size();
+#endif
 
         return uncompressed.value();
     }
