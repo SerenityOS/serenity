@@ -28,16 +28,16 @@ void ProfileTimelineWidget::paint_event(GPaintEvent& event)
 
     float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
 
-    m_profile.for_each_sample([&](const JsonObject& sample) {
-        u64 t = sample.get("timestamp").to_number<u64>() - m_profile.first_timestamp();
+    for (auto& sample : m_profile.sample_data()) {
+        u64 t = sample.timestamp;
         int x = (int)((float)t * column_width);
         int cw = max(1, (int)column_width);
 
-        bool in_kernel = sample.get("frames").as_array().at(1).as_object().get("address").to_number<u32>() < (8 * MB);
+        bool in_kernel = sample.in_kernel;
         Color color = in_kernel ? Color::from_rgb(0xc25e5a) : Color::from_rgb(0x5a65c2);
         for (int i = 0; i < cw; ++i)
             painter.draw_line({ x + i, frame_thickness() }, { x + i, height() - frame_thickness() * 2 }, color);
-    });
+    }
 
     u64 normalized_start_time = min(m_select_start_time, m_select_end_time);
     u64 normalized_end_time = max(m_select_start_time, m_select_end_time);

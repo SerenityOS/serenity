@@ -12,6 +12,13 @@ Profile::Profile(const JsonArray& json)
 
     m_model = ProfileModel::create(*this);
     rebuild_tree();
+
+    m_sample_data.ensure_capacity(m_json.size());
+    m_json.for_each([&](const JsonValue& sample) {
+        u64 timestamp = sample.as_object().get("timestamp").to_number<u64>() - m_first_timestamp;
+        bool in_kernel = sample.as_object().get("frames").as_array().at(1).as_object().get("address").to_number<u32>() < (8 * MB);
+        m_sample_data.append({ timestamp, in_kernel });
+    });
 }
 
 Profile::~Profile()
