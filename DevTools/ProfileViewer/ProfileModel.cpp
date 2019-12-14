@@ -7,7 +7,8 @@
 ProfileModel::ProfileModel(Profile& profile)
     : m_profile(profile)
 {
-    m_frame_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
+    m_user_frame_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/inspector-object.png"));
+    m_kernel_frame_icon.set_bitmap_for_size(16, GraphicsBitmap::load_from_file("/res/icons/16x16/inspector-object-red.png"));
 }
 
 ProfileModel::~ProfileModel()
@@ -90,8 +91,11 @@ GVariant ProfileModel::data(const GModelIndex& index, Role role) const
 {
     auto* node = static_cast<ProfileNode*>(index.internal_data());
     if (role == Role::Icon) {
-        if (index.column() == Column::StackFrame)
-            return m_frame_icon;
+        if (index.column() == Column::StackFrame) {
+            if (node->address() < (8 * MB))
+                return m_kernel_frame_icon;
+            return m_user_frame_icon;
+        }
         return {};
     }
     if (role == Role::Display) {
