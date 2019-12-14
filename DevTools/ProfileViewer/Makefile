@@ -3,6 +3,7 @@ include ../../Makefile.common
 OBJS = \
     Profile.o \
     ProfileModel.o \
+    ProfileTimelineWidget.o \
     main.o
 
 APP = ProfileViewer

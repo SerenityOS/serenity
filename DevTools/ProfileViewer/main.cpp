@@ -1,5 +1,7 @@
 #include "Profile.h"
+#include "ProfileTimelineWidget.h"
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GTreeView.h>
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
@@ -25,12 +27,17 @@ int main(int argc, char** argv)
     window->set_title("ProfileViewer");
     window->set_rect(100, 100, 800, 600);
 
-    auto tree_view = GTreeView::construct(nullptr);
+    auto main_widget = GWidget::construct();
+    window->set_main_widget(main_widget);
+    main_widget->set_fill_with_background_color(true);
+    main_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+
+    auto timeline_widget = ProfileTimelineWidget::construct(*profile, main_widget);
+
+    auto tree_view = GTreeView::construct(main_widget);
     tree_view->set_headers_visible(true);
     tree_view->set_size_columns_to_fit_content(true);
     tree_view->set_model(profile->model());
-
-    window->set_main_widget(tree_view);
 
     window->show();
     return app.exec();
