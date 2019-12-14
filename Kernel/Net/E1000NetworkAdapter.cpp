@@ -340,10 +340,13 @@ void E1000NetworkAdapter::send_raw(const u8* data, int length)
 #endif
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
     out32(REG_TXDESCTAIL, tx_current);
+    cli();
     enable_irq();
     for (;;) {
-        if (descriptor.status)
+        if (descriptor.status) {
+            sti();
             break;
+        }
         current->wait_on(m_wait_queue);
     }
 #ifdef E1000_DEBUG
