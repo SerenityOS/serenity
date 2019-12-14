@@ -72,4 +72,6 @@ private:
 
     e1000_rx_desc* m_rx_descriptors;
     e1000_tx_desc* m_tx_descriptors;
+
+    WaitQueue m_wait_queue;
 };

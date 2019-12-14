@@ -1,6 +1,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/PCI.h>
+#include <Kernel/Thread.h>
 
 #define REG_CTRL 0x0000
 #define REG_STATUS 0x0008
@@ -167,6 +168,8 @@ void E1000NetworkAdapter::handle_irq()
     if (status & 0x80) {
         receive();
     }
+
+    m_wait_queue.wake_all();
 }
 
 void E1000NetworkAdapter::detect_eeprom()
@@ -321,6 +324,7 @@ u32 E1000NetworkAdapter::in32(u16 address)
 
 void E1000NetworkAdapter::send_raw(const u8* data, int length)
 {
+    disable_irq();
     u32 tx_current = in32(REG_TXDESCTAIL);
 #ifdef E1000_DEBUG
     kprintf("E1000: Sending packet (%d bytes)\n", length);
@@ -336,8 +340,12 @@ void E1000NetworkAdapter::send_raw(const u8* data, int length)
 #endif
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
     out32(REG_TXDESCTAIL, tx_current);
-    while (!descriptor.status)
-        ;
+    enable_irq();
+    for (;;) {
+        if (descriptor.status)
+            break;
+        current->wait_on(m_wait_queue);
+    }
 #ifdef E1000_DEBUG
     kprintf("E1000: Sent packet, status is now %b!\n", descriptor.status);
 #endif
