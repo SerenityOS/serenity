@@ -367,6 +367,20 @@ void handle_tcp(const IPv4Packet& ipv4_packet)
     auto socket = TCPSocket::from_tuple(tuple);
     if (!socket) {
         kprintf("handle_tcp: No TCP socket for tuple %s\n", tuple.to_string().characters());
+        kprintf("handle_tcp: source=%s:%u, destination=%s:%u seq_no=%u, ack_no=%u, flags=%w (%s%s%s%s), window_size=%u, payload_size=%u\n",
+            ipv4_packet.source().to_string().characters(),
+            tcp_packet.source_port(),
+            ipv4_packet.destination().to_string().characters(),
+            tcp_packet.destination_port(),
+            tcp_packet.sequence_number(),
+            tcp_packet.ack_number(),
+            tcp_packet.flags(),
+            tcp_packet.has_syn() ? "SYN " : "",
+            tcp_packet.has_ack() ? "ACK " : "",
+            tcp_packet.has_fin() ? "FIN " : "",
+            tcp_packet.has_rst() ? "RST " : "",
+            tcp_packet.window_size(),
+            payload_size);
         return;
     }
 
