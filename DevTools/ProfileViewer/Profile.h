@@ -90,6 +90,13 @@ public:
         });
     }
 
+    struct SampleData {
+        u64 timestamp { 0 };
+        bool in_kernel { false };
+    };
+
+    const Vector<SampleData>& sample_data() const { return m_sample_data; }
+
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
     u64 last_timestamp() const { return m_first_timestamp; }
@@ -108,6 +115,8 @@ private:
     Vector<NonnullRefPtr<ProfileNode>> m_roots;
     u64 m_first_timestamp { 0 };
     u64 m_last_timestamp { 0 };
+
+    Vector<SampleData> m_sample_data;
 
     bool m_has_timestamp_filter_range { false };
     u64 m_timestamp_filter_range_start { 0 };
