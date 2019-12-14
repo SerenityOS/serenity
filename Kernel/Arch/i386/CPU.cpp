@@ -437,15 +437,16 @@ void flush_idt()
     asm("lidt %0" ::"m"(s_idtr));
 }
 
-/* If an 8259 gets cranky, it'll generate a spurious IRQ7.
- * ATM I don't have a clear grasp on when/why this happens,
- * so I ignore them and assume it makes no difference.
- */
-
 extern "C" void irq7_handler();
 asm(
-    ".globl irq7_handler \n"
-    "irq7_handler: \n"
+    ".globl irq7_handler\n"
+    "irq7_handler:\n"
+    "   iret\n");
+
+extern "C" void irq15_handler();
+asm(
+    ".globl irq15_handler\n"
+    "irq15_handler:\n"
     "   iret\n");
 
 void idt_init()
@@ -475,6 +476,7 @@ void idt_init()
     register_interrupt_handler(0x10, _exception16);
 
     register_interrupt_handler(0x57, irq7_handler);
+    register_interrupt_handler(0x5f, irq15_handler);
 
     for (u8 i = 0; i < 16; ++i) {
         s_irq_handler[i] = nullptr;
