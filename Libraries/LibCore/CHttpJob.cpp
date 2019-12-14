@@ -113,7 +113,7 @@ void CHttpJob::on_socket_connected()
         }
         ASSERT(m_state == State::InBody);
         ASSERT(m_socket->can_read());
-        auto payload = m_socket->receive(PAGE_SIZE);
+        auto payload = m_socket->receive(64 * KB);
         if (!payload) {
             if (m_socket->eof())
                 return finish_up();
