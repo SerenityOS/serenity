@@ -235,8 +235,9 @@ int main(int argc, char** argv)
             builder.append('(');
             for (int i = 0; i < parameters.size(); ++i) {
                 auto& parameter = parameters[i];
+                builder.append("const ");
                 builder.append(parameter.type);
-                builder.append(' ');
+                builder.append("& ");
                 builder.append(parameter.name);
                 if (i != parameters.size() - 1)
                     builder.append(", ");
