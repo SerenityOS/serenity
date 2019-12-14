@@ -62,67 +62,67 @@ asm(
     "    add $0x4, %esp\n"
     "    iret\n");
 
-#define EH_ENTRY(ec)                                        \
-    extern "C" void exception_##ec##_handler(RegisterDump); \
-    extern "C" void exception_##ec##_entry();               \
-    asm(                                                    \
-        ".globl exception_" #ec "_entry\n"                  \
-        "exception_" #ec "_entry: \n"                       \
-        "    pusha\n"                                       \
-        "    pushw %ds\n"                                   \
-        "    pushw %es\n"                                   \
-        "    pushw %fs\n"                                   \
-        "    pushw %gs\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    popw %ds\n"                                    \
-        "    popw %es\n"                                    \
-        "    popw %fs\n"                                    \
-        "    popw %gs\n"                                    \
-        "    cld\n"                                         \
-        "    call exception_" #ec "_handler\n"              \
-        "    popw %gs\n"                                    \
-        "    popw %gs\n"                                    \
-        "    popw %fs\n"                                    \
-        "    popw %es\n"                                    \
-        "    popw %ds\n"                                    \
-        "    popa\n"                                        \
-        "    add $0x4, %esp\n"                              \
+#define EH_ENTRY(ec, title)                        \
+    extern "C" void title##_asm_entry();           \
+    extern "C" void title##_handler(RegisterDump); \
+    asm(                                           \
+        ".globl " #title "_asm_entry\n"            \
+        "" #title "_asm_entry: \n"                 \
+        "    pusha\n"                              \
+        "    pushw %ds\n"                          \
+        "    pushw %es\n"                          \
+        "    pushw %fs\n"                          \
+        "    pushw %gs\n"                          \
+        "    pushw %ss\n"                          \
+        "    pushw %ss\n"                          \
+        "    pushw %ss\n"                          \
+        "    pushw %ss\n"                          \
+        "    pushw %ss\n"                          \
+        "    popw %ds\n"                           \
+        "    popw %es\n"                           \
+        "    popw %fs\n"                           \
+        "    popw %gs\n"                           \
+        "    cld\n"                                \
+        "    call " #title "_handler\n"            \
+        "    popw %gs\n"                           \
+        "    popw %gs\n"                           \
+        "    popw %fs\n"                           \
+        "    popw %es\n"                           \
+        "    popw %ds\n"                           \
+        "    popa\n"                               \
+        "    add $0x4, %esp\n"                     \
         "    iret\n");
 
-#define EH_ENTRY_NO_CODE(ec)                                \
-    extern "C" void exception_##ec##_handler(RegisterDump); \
-    extern "C" void exception_##ec##_entry();               \
-    asm(                                                    \
-        ".globl exception_" #ec "_entry\n"                  \
-        "exception_" #ec "_entry: \n"                       \
-        "    pushl $0x0\n"                                  \
-        "    pusha\n"                                       \
-        "    pushw %ds\n"                                   \
-        "    pushw %es\n"                                   \
-        "    pushw %fs\n"                                   \
-        "    pushw %gs\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    pushw %ss\n"                                   \
-        "    popw %ds\n"                                    \
-        "    popw %es\n"                                    \
-        "    popw %fs\n"                                    \
-        "    popw %gs\n"                                    \
-        "    cld\n"                                         \
-        "    call exception_" #ec "_handler\n"              \
-        "    popw %gs\n"                                    \
-        "    popw %gs\n"                                    \
-        "    popw %fs\n"                                    \
-        "    popw %es\n"                                    \
-        "    popw %ds\n"                                    \
-        "    popa\n"                                        \
-        "    add $0x4, %esp\n"                              \
+#define EH_ENTRY_NO_CODE(ec, title)                \
+    extern "C" void title##_handler(RegisterDump); \
+    extern "C" void title##_asm_entry();           \
+    asm(                                           \
+        ".globl " #title "_asm_entry\n"            \
+        "" #title "_asm_entry: \n"                 \
+        "    pushl $0x0\n"                         \
+        "    pusha\n"                              \
+        "    pushw %ds\n"                          \
+        "    pushw %es\n"                          \
+        "    pushw %fs\n"                          \
+        "    pushw %gs\n"                          \
+        "    pushw %ss\n"                          \
+        "    pushw %ss\n"                          \
+        "    pushw %ss\n"                          \
+        "    pushw %ss\n"                          \
+        "    pushw %ss\n"                          \
+        "    popw %ds\n"                           \
+        "    popw %es\n"                           \
+        "    popw %fs\n"                           \
+        "    popw %gs\n"                           \
+        "    cld\n"                                \
+        "    call " #title "_handler\n"            \
+        "    popw %gs\n"                           \
+        "    popw %gs\n"                           \
+        "    popw %fs\n"                           \
+        "    popw %es\n"                           \
+        "    popw %ds\n"                           \
+        "    popa\n"                               \
+        "    add $0x4, %esp\n"                     \
         "    iret\n");
 
 static void dump(const RegisterDump& regs)
@@ -184,27 +184,27 @@ void handle_crash(RegisterDump& regs, const char* description, int signal)
     current->process().crash(signal, regs.eip);
 }
 
-EH_ENTRY_NO_CODE(6);
-void exception_6_handler(RegisterDump regs)
+EH_ENTRY_NO_CODE(6, illegal_instruction);
+void illegal_instruction_handler(RegisterDump regs)
 {
     handle_crash(regs, "Illegal instruction", SIGILL);
 }
 
-EH_ENTRY_NO_CODE(0);
-void exception_0_handler(RegisterDump regs)
+EH_ENTRY_NO_CODE(0, divide_error);
+void divide_error_handler(RegisterDump regs)
 {
-    handle_crash(regs, "Division by zero", SIGFPE);
+    handle_crash(regs, "Divide error", SIGFPE);
 }
 
-EH_ENTRY(13);
-void exception_13_handler(RegisterDump regs)
+EH_ENTRY(13, general_protection_fault);
+void general_protection_fault_handler(RegisterDump regs)
 {
     handle_crash(regs, "General protection fault", SIGSEGV);
 }
 
 // 7: FPU not available exception
-EH_ENTRY_NO_CODE(7);
-void exception_7_handler(RegisterDump regs)
+EH_ENTRY_NO_CODE(7, fpu_exception);
+void fpu_exception_handler(RegisterDump regs)
 {
     (void)regs;
 
@@ -235,8 +235,8 @@ void exception_7_handler(RegisterDump regs)
 }
 
 // 14: Page Fault
-EH_ENTRY(14);
-void exception_14_handler(RegisterDump regs)
+EH_ENTRY(14, page_fault);
+void page_fault_handler(RegisterDump regs)
 {
     ASSERT(current);
 
@@ -457,21 +457,21 @@ void idt_init()
     for (u8 i = 0xff; i > 0x10; --i)
         register_interrupt_handler(i, unimp_trap);
 
-    register_interrupt_handler(0x00, exception_0_entry);
+    register_interrupt_handler(0x00, divide_error_asm_entry);
     register_interrupt_handler(0x01, _exception1);
     register_interrupt_handler(0x02, _exception2);
     register_interrupt_handler(0x03, _exception3);
     register_interrupt_handler(0x04, _exception4);
     register_interrupt_handler(0x05, _exception5);
-    register_interrupt_handler(0x06, exception_6_entry);
-    register_interrupt_handler(0x07, exception_7_entry);
+    register_interrupt_handler(0x06, illegal_instruction_asm_entry);
+    register_interrupt_handler(0x07, fpu_exception_asm_entry);
     register_interrupt_handler(0x08, _exception8);
     register_interrupt_handler(0x09, _exception9);
     register_interrupt_handler(0x0a, _exception10);
     register_interrupt_handler(0x0b, _exception11);
     register_interrupt_handler(0x0c, _exception12);
-    register_interrupt_handler(0x0d, exception_13_entry);
-    register_interrupt_handler(0x0e, exception_14_entry);
+    register_interrupt_handler(0x0d, general_protection_fault_asm_entry);
+    register_interrupt_handler(0x0e, page_fault_asm_entry);
     register_interrupt_handler(0x0f, _exception15);
     register_interrupt_handler(0x10, _exception16);
 

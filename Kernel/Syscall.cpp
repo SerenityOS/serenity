@@ -4,12 +4,12 @@
 #include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
 
-extern "C" void syscall_trap_entry(RegisterDump);
-extern "C" void syscall_trap_handler();
+extern "C" void syscall_handler(RegisterDump);
+extern "C" void syscall_asm_entry();
 
 asm(
-    ".globl syscall_trap_handler \n"
-    "syscall_trap_handler:\n"
+    ".globl syscall_asm_entry\n"
+    "syscall_asm_entry:\n"
     "    pushl $0x0\n"
     "    pusha\n"
     "    pushw %ds\n"
@@ -26,7 +26,7 @@ asm(
     "    popw %fs\n"
     "    popw %gs\n"
     "    cld\n"
-    "    call syscall_trap_entry\n"
+    "    call syscall_handler\n"
     "    popw %gs\n"
     "    popw %gs\n"
     "    popw %fs\n"
@@ -42,7 +42,7 @@ static int handle(RegisterDump&, u32 function, u32 arg1, u32 arg2, u32 arg3);
 
 void initialize()
 {
-    register_user_callable_interrupt_handler(0x82, syscall_trap_handler);
+    register_user_callable_interrupt_handler(0x82, syscall_asm_entry);
     kprintf("Syscall: int 0x82 handler installed\n");
 }
 
@@ -95,7 +95,7 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 }
 
-void syscall_trap_entry(RegisterDump regs)
+void syscall_handler(RegisterDump regs)
 {
     auto& process = current->process();
 
