@@ -21,6 +21,7 @@ namespace PIC {
 
 void disable(u8 irq)
 {
+    InterruptDisabler disabler;
     u8 imr;
     if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
@@ -35,6 +36,7 @@ void disable(u8 irq)
 
 void enable(u8 irq)
 {
+    InterruptDisabler disabler;
     u8 imr;
     if (irq & 8) {
         imr = IO::in8(PIC1_CMD);
