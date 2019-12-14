@@ -2607,7 +2607,6 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
-    kprintf("sendto %p (%u), flags=%u, addr: %p (%u)\n", data, data_length, flags, addr, addr_length);
     return socket.sendto(*description, data, data_length, flags, addr, addr_length);
 }
 
