@@ -335,8 +335,9 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     auto packet_size = packet.size();
 
     if (buffer_mode() == BufferMode::Bytes) {
-        ASSERT(m_receive_buffer.bytes_in_write_buffer() < 65536);
-        size_t space_in_receive_buffer = 65536 - (size_t)m_receive_buffer.bytes_in_write_buffer();
+        constexpr size_t max_buffer_amount = 128 * KB;
+        ASSERT((size_t)m_receive_buffer.bytes_in_write_buffer() < max_buffer_amount);
+        size_t space_in_receive_buffer = max_buffer_amount - (size_t)m_receive_buffer.bytes_in_write_buffer();
         if (packet_size > space_in_receive_buffer) {
             kprintf("IPv4Socket(%p): did_receive refusing packet since buffer is full.\n", this);
             ASSERT(m_can_read);
