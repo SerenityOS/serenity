@@ -38,16 +38,50 @@ void ProfileTimelineWidget::paint_event(GPaintEvent& event)
         for (int i = 0; i < cw; ++i)
             painter.draw_line({ x + i, frame_thickness() }, { x + i, height() - frame_thickness() * 2 }, color);
     });
+
+    u64 normalized_start_time = min(m_select_start_time, m_select_end_time);
+    u64 normalized_end_time = max(m_select_start_time, m_select_end_time);
+
+    int select_start_x = (int)((float)(normalized_start_time - m_profile.first_timestamp()) * column_width);
+    int select_end_x = (int)((float)(normalized_end_time - m_profile.first_timestamp()) * column_width);
+    painter.fill_rect({ select_start_x, frame_thickness(), select_end_x - select_start_x, height() - frame_thickness() * 2 }, Color(0, 0, 0, 60));
 }
 
-void ProfileTimelineWidget::mousedown_event(GMouseEvent&)
+u64 ProfileTimelineWidget::timestamp_at_x(int x) const
 {
+    float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
+    float ms_into_profile = (float)x / column_width;
+    return m_profile.first_timestamp() + (u64)ms_into_profile;
 }
 
-void ProfileTimelineWidget::mousemove_event(GMouseEvent&)
+void ProfileTimelineWidget::mousedown_event(GMouseEvent& event)
 {
+    if (event.button() != GMouseButton::Left)
+        return;
+
+    m_selecting = true;
+    m_select_start_time = timestamp_at_x(event.x());
+    m_select_end_time = m_select_start_time;
+    m_profile.set_timestamp_filter_range(m_select_start_time, m_select_end_time);
+    update();
 }
 
-void ProfileTimelineWidget::mouseup_event(GMouseEvent&)
+void ProfileTimelineWidget::mousemove_event(GMouseEvent& event)
 {
+    if (!m_selecting)
+        return;
+
+    m_select_end_time = timestamp_at_x(event.x());
+    m_profile.set_timestamp_filter_range(m_select_start_time, m_select_end_time);
+    update();
+}
+
+void ProfileTimelineWidget::mouseup_event(GMouseEvent& event)
+{
+    if (event.button() != GMouseButton::Left)
+        return;
+
+    m_selecting = false;
+    if (m_select_start_time == m_select_end_time)
+        m_profile.clear_timestamp_filter_range();
 }
