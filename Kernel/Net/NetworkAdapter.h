@@ -37,7 +37,7 @@ public:
     void send(const MACAddress&, const ARPPacket&);
     void send_ipv4(const MACAddress&, const IPv4Address&, IPv4Protocol, const u8* payload, size_t payload_size, u8 ttl);
 
-    Optional<KBuffer> dequeue_packet();
+    size_t dequeue_packet(u8* buffer, size_t buffer_size);
 
     bool has_queued_packets() const { return !m_packet_queue.is_empty(); }
 
@@ -64,6 +64,8 @@ private:
     IPv4Address m_ipv4_netmask;
     IPv4Address m_ipv4_gateway;
     SinglyLinkedList<KBuffer> m_packet_queue;
+    SinglyLinkedList<KBuffer> m_unused_packet_buffers;
+    size_t m_unused_packet_buffers_count { 0 };
     String m_name;
     u32 m_packets_in { 0 };
     u32 m_bytes_in { 0 };

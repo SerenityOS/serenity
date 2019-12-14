@@ -1,11 +1,11 @@
 #include <AK/HashTable.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/Heap/kmalloc.h>
 #include <Kernel/Lock.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/StdLib.h>
-#include <Kernel/Heap/kmalloc.h>
 
 static Lockable<HashTable<NetworkAdapter*>>& all_adapters()
 {
@@ -103,17 +103,42 @@ void NetworkAdapter::did_receive(const u8* data, int length)
     InterruptDisabler disabler;
     m_packets_in++;
     m_bytes_in += length;
-    m_packet_queue.append(KBuffer::copy(data, length));
+
+    Optional<KBuffer> buffer;
+
+    if (m_unused_packet_buffers.is_empty()) {
+        buffer = KBuffer::copy(data, length);
+    } else {
+        buffer = m_unused_packet_buffers.take_first();
+        --m_unused_packet_buffers_count;
+        if ((size_t)length <= buffer.value().size()) {
+            memcpy(buffer.value().data(), data, length);
+            buffer.value().set_size(length);
+        } else {
+            buffer = KBuffer::copy(data, length);
+        }
+    }
+
+    m_packet_queue.append(buffer.value());
+
     if (on_receive)
         on_receive();
 }
 
-Optional<KBuffer> NetworkAdapter::dequeue_packet()
+size_t NetworkAdapter::dequeue_packet(u8* buffer, size_t buffer_size)
 {
     InterruptDisabler disabler;
     if (m_packet_queue.is_empty())
-        return {};
-    return m_packet_queue.take_first();
+        return 0;
+    auto packet = m_packet_queue.take_first();
+    size_t packet_size = packet.size();
+    ASSERT(packet_size <= buffer_size);
+    memcpy(buffer, packet.data(), packet_size);
+    if (m_unused_packet_buffers_count < 100) {
+        m_unused_packet_buffers.append(packet);
+        ++m_unused_packet_buffers_count;
+    }
+    return packet_size;
 }
 
 void NetworkAdapter::set_ipv4_address(const IPv4Address& address)

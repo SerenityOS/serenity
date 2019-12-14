@@ -57,47 +57,47 @@ void NetworkTask_main()
         };
     });
 
-    auto dequeue_packet = [&pending_packets]() -> Optional<KBuffer> {
+    auto dequeue_packet = [&pending_packets](u8* buffer, size_t buffer_size) -> size_t {
         if (pending_packets == 0)
-            return {};
-        Optional<KBuffer> packet;
-        NetworkAdapter::for_each([&packet, &pending_packets](auto& adapter) {
-            if (packet.has_value() || !adapter.has_queued_packets())
+            return 0;
+        size_t packet_size = 0;
+        NetworkAdapter::for_each([&](auto& adapter) {
+            if (packet_size || !adapter.has_queued_packets())
                 return;
-            packet = adapter.dequeue_packet();
+            packet_size = adapter.dequeue_packet(buffer, buffer_size);
             pending_packets--;
 #ifdef NETWORK_TASK_DEBUG
             kprintf("NetworkTask: Dequeued packet from %s (%d bytes)\n", adapter.name().characters(), packet.value().size());
 #endif
         });
-        return packet;
+        return packet_size;
     };
 
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
-        auto packet_maybe_null = dequeue_packet();
-        if (!packet_maybe_null.has_value()) {
+        u8 packet[64 * KB];
+        size_t packet_size = dequeue_packet(packet, sizeof(packet));
+        if (!packet_size) {
             current->wait_on(packet_wait_queue);
             continue;
         }
-        auto& packet = packet_maybe_null.value();
-        if (packet.size() < sizeof(EthernetFrameHeader)) {
-            kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%zu)\n", packet.size());
+        if (packet_size < sizeof(EthernetFrameHeader)) {
+            kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%zu)\n", packet_size);
             continue;
         }
-        auto& eth = *(const EthernetFrameHeader*)packet.data();
+        auto& eth = *(const EthernetFrameHeader*)packet;
 #ifdef ETHERNET_DEBUG
         kprintf("NetworkTask: From %s to %s, ether_type=%w, packet_length=%u\n",
             eth.source().to_string().characters(),
             eth.destination().to_string().characters(),
             eth.ether_type(),
-            packet.size());
+            packet_size);
 #endif
 
 #ifdef ETHERNET_VERY_DEBUG
-        u8* data = packet.data();
+        u8* data = packet;
 
-        for (size_t i = 0; i < packet.size(); i++) {
+        for (size_t i = 0; i < packet_size; i++) {
             kprintf("%b", data[i]);
 
             switch (i % 16) {
@@ -118,10 +118,10 @@ void NetworkTask_main()
 
         switch (eth.ether_type()) {
         case EtherType::ARP:
-            handle_arp(eth, packet.size());
+            handle_arp(eth, packet_size);
             break;
         case EtherType::IPv4:
-            handle_ipv4(eth, packet.size());
+            handle_ipv4(eth, packet_size);
             break;
         case EtherType::IPv6:
             // ignore
