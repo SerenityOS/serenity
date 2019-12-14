@@ -33,5 +33,7 @@ private:
     explicit ProfileModel(Profile&);
 
     Profile& m_profile;
-    GIcon m_frame_icon;
+
+    GIcon m_user_frame_icon;
+    GIcon m_kernel_frame_icon;
 };
