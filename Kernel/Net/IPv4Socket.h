@@ -53,6 +53,12 @@ public:
 
     u8 ttl() const { return m_ttl; }
 
+    enum class BufferMode {
+        Packets,
+        Bytes,
+    };
+    BufferMode buffer_mode() const { return m_buffer_mode; }
+
 protected:
     IPv4Socket(int type, int protocol);
     virtual const char* class_name() const override { return "IPv4Socket"; }
@@ -84,6 +90,8 @@ private:
 
     SinglyLinkedList<ReceivedPacket> m_receive_queue;
 
+    DoubleBuffer m_receive_buffer;
+
     u16 m_local_port { 0 };
     u16 m_peer_port { 0 };
 
@@ -92,4 +100,8 @@ private:
     u8 m_ttl { 64 };
 
     bool m_can_read { false };
+
+    BufferMode m_buffer_mode { BufferMode::Packets };
+
+    Optional<KBuffer> m_scratch_buffer;
 };

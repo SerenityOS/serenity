@@ -40,6 +40,10 @@ IPv4Socket::IPv4Socket(int type, int protocol)
 #ifdef IPV4_SOCKET_DEBUG
     kprintf("%s(%u) IPv4Socket{%p} created with type=%u, protocol=%d\n", current->process().name().characters(), current->pid(), this, type, protocol);
 #endif
+    m_buffer_mode = type == SOCK_STREAM ? BufferMode::Bytes : BufferMode::Packets;
+    if (m_buffer_mode == BufferMode::Bytes) {
+        m_scratch_buffer = KBuffer::create_with_size(65536);
+    }
     LOCKER(all_sockets().lock());
     all_sockets().resource().set(this);
 }
@@ -214,13 +218,44 @@ ssize_t IPv4Socket::sendto(FileDescription&, const void* data, size_t data_lengt
 
 ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t buffer_length, int flags, sockaddr* addr, socklen_t* addr_length)
 {
-    (void)flags;
     if (addr_length && *addr_length < sizeof(sockaddr_in))
         return -EINVAL;
 
 #ifdef IPV4_SOCKET_DEBUG
     kprintf("recvfrom: type=%d, local_port=%u\n", type(), local_port());
 #endif
+
+    if (buffer_mode() == BufferMode::Bytes) {
+        LOCKER(lock());
+        if (m_receive_buffer.is_empty()) {
+            if (protocol_is_disconnected()) {
+                return 0;
+            }
+            if (!description.is_blocking()) {
+                return -EAGAIN;
+            }
+
+            load_receive_deadline();
+            auto res = current->block<Thread::ReceiveBlocker>(description);
+
+            LOCKER(lock());
+            if (!m_can_read) {
+                if (res == Thread::BlockResult::InterruptedBySignal)
+                    return -EINTR;
+
+                // Unblocked due to timeout.
+                return -EAGAIN;
+            }
+        }
+
+        ASSERT(!m_receive_buffer.is_empty());
+        int nreceived = m_receive_buffer.read((u8*)buffer, buffer_length);
+        if (nreceived > 0)
+            current->did_ipv4_socket_read((size_t)nreceived);
+
+        m_can_read = !m_receive_buffer.is_empty();
+        return nreceived;
+    }
 
     ReceivedPacket packet;
     {
@@ -297,16 +332,34 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
 bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port, KBuffer&& packet)
 {
     LOCKER(lock());
-    if (m_receive_queue.size_slow() > 2000) {
-        kprintf("IPv4Socket(%p): did_receive refusing packet since queue is full.\n", this);
-        return false;
-    }
     auto packet_size = packet.size();
-    m_receive_queue.append({ source_address, source_port, move(packet) });
-    m_can_read = true;
+
+    if (buffer_mode() == BufferMode::Bytes) {
+        ASSERT(m_receive_buffer.bytes_in_write_buffer() < 65536);
+        size_t space_in_receive_buffer = 65536 - (size_t)m_receive_buffer.bytes_in_write_buffer();
+        if (packet_size > space_in_receive_buffer) {
+            kprintf("IPv4Socket(%p): did_receive refusing packet since buffer is full.\n", this);
+            ASSERT(m_can_read);
+            return false;
+        }
+        int nreceived = protocol_receive(packet, m_scratch_buffer.value().data(), m_scratch_buffer.value().size(), 0);
+        m_receive_buffer.write(m_scratch_buffer.value().data(), nreceived);
+        m_can_read = !m_receive_buffer.is_empty();
+    } else {
+        // FIXME: Maybe track the number of packets so we don't have to walk the entire packet queue to count them..
+        if (m_receive_queue.size_slow() > 2000) {
+            kprintf("IPv4Socket(%p): did_receive refusing packet since queue is full.\n", this);
+            return false;
+        }
+        m_receive_queue.append({ source_address, source_port, move(packet) });
+        m_can_read = true;
+    }
     m_bytes_received += packet_size;
 #ifdef IPV4_SOCKET_DEBUG
-    kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %zu\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
+    if (buffer_mode() == BufferMode::Bytes)
+        kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, bytes in buffer: %zu\n", this, packet_size, m_bytes_received, m_receive_buffer.bytes_in_write_buffer());
+    else
+        kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %zu\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
 #endif
     return true;
 }
@@ -354,7 +407,7 @@ KResult IPv4Socket::setsockopt(int level, int option, const void* value, socklen
             return KResult(-EINVAL);
         if (*(const int*)value < 0 || *(const int*)value > 255)
             return KResult(-EINVAL);
-        m_ttl = (u8)*(const int*)value;
+        m_ttl = (u8) * (const int*)value;
         return KSuccess;
     default:
         return KResult(-ENOPROTOOPT);
