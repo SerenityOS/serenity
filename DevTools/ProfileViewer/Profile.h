@@ -94,12 +94,22 @@ public:
     u64 first_timestamp() const { return m_first_timestamp; }
     u64 last_timestamp() const { return m_first_timestamp; }
 
+    void set_timestamp_filter_range(u64 start, u64 end);
+    void clear_timestamp_filter_range();
+    bool has_timestamp_filter_range() const { return m_has_timestamp_filter_range; }
+
 private:
-    explicit Profile(const JsonArray&, Vector<NonnullRefPtr<ProfileNode>>&&, u64 first_timestamp, u64 last_timestamp);
+    explicit Profile(const JsonArray&);
+
+    void rebuild_tree();
 
     JsonArray m_json;
     RefPtr<ProfileModel> m_model;
     Vector<NonnullRefPtr<ProfileNode>> m_roots;
     u64 m_first_timestamp { 0 };
     u64 m_last_timestamp { 0 };
+
+    bool m_has_timestamp_filter_range { false };
+    u64 m_timestamp_filter_range_start { 0 };
+    u64 m_timestamp_filter_range_end { 0 };
 };

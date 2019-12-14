@@ -4,13 +4,14 @@
 #include <LibCore/CFile.h>
 #include <stdio.h>
 
-Profile::Profile(const JsonArray& json, Vector<NonnullRefPtr<ProfileNode>>&& roots, u64 first_timestamp, u64 last_timestamp)
+Profile::Profile(const JsonArray& json)
     : m_json(json)
-    , m_roots(move(roots))
-    , m_first_timestamp(first_timestamp)
-    , m_last_timestamp(last_timestamp)
 {
+    m_first_timestamp = m_json.at(0).as_object().get("timestamp").to_number<u64>();
+    m_last_timestamp = m_json.at(m_json.size() - 1).as_object().get("timestamp").to_number<u64>();
+
     m_model = ProfileModel::create(*this);
+    rebuild_tree();
 }
 
 Profile::~Profile()
@@ -22,24 +23,8 @@ GModel& Profile::model()
     return *m_model;
 }
 
-OwnPtr<Profile> Profile::load_from_file(const StringView& path)
+void Profile::rebuild_tree()
 {
-    auto file = CFile::construct(path);
-    if (!file->open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "Unable to open %s, error: %s\n", String(path).characters(), file->error_string());
-        return nullptr;
-    }
-
-    auto json = JsonValue::from_string(file->read_all());
-    if (!json.is_array()) {
-        fprintf(stderr, "Invalid format (not a JSON array)\n");
-        return nullptr;
-    }
-
-    auto& samples = json.as_array();
-    if (samples.is_empty())
-        return nullptr;
-
     NonnullRefPtrVector<ProfileNode> roots;
 
     auto find_or_create_root = [&roots](const String& symbol, u32 address, u32 offset, u64 timestamp) -> ProfileNode& {
@@ -54,10 +39,13 @@ OwnPtr<Profile> Profile::load_from_file(const StringView& path)
         return new_root;
     };
 
-    u64 first_timestamp = samples.at(0).as_object().get("timestamp").to_number<u64>();
-    u64 last_timestamp = samples.at(samples.size() - 1).as_object().get("timestamp").to_number<u64>();
+    m_json.for_each([&](const JsonValue& sample) {
+        if (has_timestamp_filter_range()) {
+            auto timestamp = sample.as_object().get("timestamp").to_number<u64>();
+            if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
+                return;
+        }
 
-    samples.for_each([&](const JsonValue& sample) {
         auto frames_value = sample.as_object().get("frames");
         auto& frames = frames_value.as_array();
         ProfileNode* node = nullptr;
@@ -85,7 +73,29 @@ OwnPtr<Profile> Profile::load_from_file(const StringView& path)
         root.sort_children();
     }
 
-    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(move(samples), move(roots), first_timestamp, last_timestamp));
+    m_roots = move(roots);
+    m_model->update();
+}
+
+OwnPtr<Profile> Profile::load_from_file(const StringView& path)
+{
+    auto file = CFile::construct(path);
+    if (!file->open(CIODevice::ReadOnly)) {
+        fprintf(stderr, "Unable to open %s, error: %s\n", String(path).characters(), file->error_string());
+        return nullptr;
+    }
+
+    auto json = JsonValue::from_string(file->read_all());
+    if (!json.is_array()) {
+        fprintf(stderr, "Invalid format (not a JSON array)\n");
+        return nullptr;
+    }
+
+    auto& samples = json.as_array();
+    if (samples.is_empty())
+        return nullptr;
+
+    return NonnullOwnPtr<Profile>(NonnullOwnPtr<Profile>::Adopt, *new Profile(move(samples)));
 }
 
 void ProfileNode::sort_children()
@@ -96,4 +106,24 @@ void ProfileNode::sort_children()
 
     for (auto& child : m_children)
         child->sort_children();
+}
+
+void Profile::set_timestamp_filter_range(u64 start, u64 end)
+{
+    if (m_has_timestamp_filter_range && m_timestamp_filter_range_start == start && m_timestamp_filter_range_end == end)
+        return;
+    m_has_timestamp_filter_range = true;
+
+    m_timestamp_filter_range_start = min(start, end);
+    m_timestamp_filter_range_end = max(start, end);
+
+    rebuild_tree();
+}
+
+void Profile::clear_timestamp_filter_range()
+{
+    if (!m_has_timestamp_filter_range)
+        return;
+    m_has_timestamp_filter_range = false;
+    rebuild_tree();
 }

@@ -15,5 +15,11 @@ private:
 
     ProfileTimelineWidget(Profile&, GWidget* parent);
 
+    u64 timestamp_at_x(int x) const;
+
     Profile& m_profile;
+
+    bool m_selecting { false };
+    u64 m_select_start_time { 0 };
+    u64 m_select_end_time { 0 };
 };
