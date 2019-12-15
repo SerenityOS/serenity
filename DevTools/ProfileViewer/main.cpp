@@ -1,7 +1,10 @@
 #include "Profile.h"
 #include "ProfileTimelineWidget.h"
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GMenu.h>
+#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GTreeView.h>
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
@@ -38,6 +41,14 @@ int main(int argc, char** argv)
     tree_view->set_headers_visible(true);
     tree_view->set_size_columns_to_fit_content(true);
     tree_view->set_model(profile->model());
+
+    auto menubar = make<GMenuBar>();
+    auto app_menu = GMenu::construct("ProfileViewer");
+    app_menu->add_action(GCommonActions::make_quit_action([&](auto&) { app.quit(); }));
+
+    menubar->add_menu(move(app_menu));
+
+    app.set_menubar(move(menubar));
 
     window->show();
     return app.exec();
