@@ -393,19 +393,6 @@ void GTreeView::keydown_event(GKeyEvent& event)
     }
 }
 
-void GTreeView::context_menu_event(GContextMenuEvent& event)
-{
-    if (!model())
-        return;
-    bool is_toggle;
-    auto index = index_at_event_position(event.position(), is_toggle);
-    if (index.is_valid()) {
-        if (on_context_menu_request)
-            on_context_menu_request(index, event);
-    }
-    GAbstractColumnView::context_menu_event(event);
-}
-
 int GTreeView::item_count() const
 {
     int count = 0;
