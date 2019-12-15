@@ -78,8 +78,10 @@ void MemoryManager::initialize_paging()
     // 8 MB   -> MAX            Userspace physical pages (available for allocation!)
 
     // Basic virtual memory map:
-    // 0 MB   -> 8MB            Identity mapped.
-    // 0xc0000000-0xffffffff    Kernel-only virtual address space.
+    // 0 -> 4 KB                Null page (so nullptr dereferences crash!)
+    // 4 KB -> 8 MB             Identity mapped.
+    // 8 MB -> 3 GB             Available to userspace.
+    // 3GB  -> 4 GB             Kernel-only virtual address space (>0xc0000000)
 
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
