@@ -57,7 +57,8 @@ NonnullOwnPtr<Region> Region::clone()
     // NOTE: Kernel-only regions should never be cloned.
     ASSERT(is_user_accessible());
 
-    if (m_shared || (is_readable() && !is_writable())) {
+    // FIXME: What should we do for privately mapped InodeVMObjects?
+    if (m_shared || vmobject().is_inode()) {
         ASSERT(!m_stack);
 #ifdef MM_DEBUG
         dbgprintf("%s<%u> Region::clone(): sharing %s (V%p)\n",
