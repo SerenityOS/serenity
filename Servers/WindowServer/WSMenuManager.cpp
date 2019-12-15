@@ -25,7 +25,7 @@ WSMenuManager::WSMenuManager()
     m_muted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-muted.png");
 
     m_username = getlogin();
-    m_needs_window_resize = false;
+    m_needs_window_resize = true;
 
     m_timer = CTimer::construct(300, [this] {
         static time_t last_update_time;
@@ -35,26 +35,6 @@ WSMenuManager::WSMenuManager()
             last_update_time = now;
         }
     });
-
-    auto menubar_rect = this->menubar_rect();
-
-    int username_width = Font::default_bold_font().width(m_username);
-    m_username_rect = {
-        menubar_rect.right() - menubar_menu_margin() / 2 - Font::default_bold_font().width(m_username),
-        menubar_rect.y(),
-        username_width,
-        menubar_rect.height()
-    };
-
-    int time_width = Font::default_font().width("2222-22-22 22:22:22");
-    m_time_rect = {
-        m_username_rect.left() - menubar_menu_margin() / 2 - time_width,
-        menubar_rect.y(),
-        time_width,
-        menubar_rect.height()
-    };
-
-    m_audio_rect = { m_time_rect.right() - time_width - 20, m_time_rect.y() + 1, 12, 16 };
 }
 
 WSMenuManager::~WSMenuManager()
@@ -82,6 +62,39 @@ void WSMenuManager::draw()
     auto menubar_rect = this->menubar_rect();
 
     if (m_needs_window_resize) {
+        int username_width = Font::default_bold_font().width(m_username);
+
+        m_username_rect = {
+            menubar_rect.right() - menubar_menu_margin() / 2 - Font::default_bold_font().width(m_username),
+            menubar_rect.y(),
+            username_width,
+            menubar_rect.height()
+        };
+
+
+        int time_width = Font::default_font().width("2222-22-22 22:22:22");
+        m_time_rect = {
+            m_username_rect.left() - menubar_menu_margin() / 2 - time_width,
+            menubar_rect.y(),
+            time_width,
+            menubar_rect.height()
+        };
+
+        m_audio_rect = { m_time_rect.right() - time_width - 20, m_time_rect.y() + 1, 12, 16 };
+
+        int right_edge_x = m_audio_rect.x() - 4;
+        for (auto& existing_applet : m_applets) {
+            if (! existing_applet)
+                continue;
+            
+            Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
+            Rect dummy_menubar_rect(0, 0, 0, 18);
+            new_applet_rect.center_vertically_within(dummy_menubar_rect);
+
+            existing_applet->set_rect_in_menubar(new_applet_rect);        
+            right_edge_x = existing_applet->rect_in_menubar().x() - 4;
+        }
+
         m_window->set_rect(menubar_rect);
         m_needs_window_resize = false;
     }
