@@ -166,11 +166,11 @@ int main(int argc, char** argv)
 
     auto process_tab_widget = GTabWidget::construct(process_container_splitter);
 
-    auto open_files_widget = ProcessFileDescriptorMapWidget::construct(nullptr);
-    process_tab_widget->add_widget("Open files", open_files_widget);
-
     auto memory_map_widget = ProcessMemoryMapWidget::construct(nullptr);
     process_tab_widget->add_widget("Memory map", memory_map_widget);
+
+    auto open_files_widget = ProcessFileDescriptorMapWidget::construct(nullptr);
+    process_tab_widget->add_widget("Open files", open_files_widget);
 
     auto stacks_widget = ProcessStacksWidget::construct(nullptr);
     process_tab_widget->add_widget("Stacks", stacks_widget);
