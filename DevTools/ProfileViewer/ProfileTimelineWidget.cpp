@@ -28,8 +28,8 @@ void ProfileTimelineWidget::paint_event(GPaintEvent& event)
 
     float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
 
-    for (auto& sample : m_profile.sample_data()) {
-        u64 t = sample.timestamp;
+    for (auto& sample : m_profile.samples()) {
+        u64 t = sample.timestamp - m_profile.first_timestamp();
         int x = (int)((float)t * column_width);
         int cw = max(1, (int)column_width);
 

@@ -82,20 +82,19 @@ public:
 
     const Vector<NonnullRefPtr<ProfileNode>>& roots() const { return m_roots; }
 
-    template<typename Callback>
-    void for_each_sample(Callback callback)
-    {
-        m_json.for_each([&](auto& value) {
-            callback(value.as_object());
-        });
-    }
-
-    struct SampleData {
-        u64 timestamp { 0 };
-        bool in_kernel { false };
+    struct Frame {
+        String symbol;
+        u32 address { 0 };
+        u32 offset { 0 };
     };
 
-    const Vector<SampleData>& sample_data() const { return m_sample_data; }
+    struct Sample {
+        u64 timestamp { 0 };
+        bool in_kernel { false };
+        Vector<Frame> frames;
+    };
+
+    const Vector<Sample>& samples() const { return m_samples; }
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
@@ -116,7 +115,7 @@ private:
     u64 m_first_timestamp { 0 };
     u64 m_last_timestamp { 0 };
 
-    Vector<SampleData> m_sample_data;
+    Vector<Sample> m_samples;
 
     bool m_has_timestamp_filter_range { false };
     u64 m_timestamp_filter_range_start { 0 };
