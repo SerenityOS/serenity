@@ -392,6 +392,8 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
     tell_wm_listeners_window_rect_changed(window);
+
+    m_menu_manager.refresh();
 }
 
 void WSWindowManager::notify_minimization_state_changed(WSWindow& window)
