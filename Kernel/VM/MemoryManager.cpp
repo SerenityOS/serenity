@@ -369,6 +369,17 @@ OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size
     return allocate_kernel_region(size, name, true);
 }
 
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name)
+{
+    InterruptDisabler disabler;
+    ASSERT(!(size % PAGE_SIZE));
+    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
+    ASSERT(range.is_valid());
+    auto region = make<Region>(range, vmobject, 0, name, PROT_READ | PROT_WRITE | PROT_EXEC);
+    region->map(kernel_page_directory());
+    return region;
+}
+
 void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
 {
     for (auto& region : m_user_physical_regions) {

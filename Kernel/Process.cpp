@@ -58,7 +58,8 @@ static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
 static String* s_hostname;
 static Lock* s_hostname_lock;
-static VirtualAddress s_info_page_address;
+static VirtualAddress s_info_page_address_for_userspace;
+static VirtualAddress s_info_page_address_for_kernel;
 VirtualAddress g_return_to_ring3_from_signal_trampoline;
 VirtualAddress g_return_to_ring0_from_signal_trampoline;
 HashMap<String, OwnPtr<Module>>* g_modules;
@@ -78,7 +79,7 @@ void Process::initialize()
 
 void Process::update_info_page_timestamp(const timeval& tv)
 {
-    auto* info_page = (KernelInfoPage*)s_info_page_address.as_ptr();
+    auto* info_page = (KernelInfoPage*)s_info_page_address_for_kernel.as_ptr();
     info_page->serial++;
     const_cast<timeval&>(info_page->now) = tv;
 }
@@ -994,9 +995,15 @@ void create_signal_trampolines()
 
 void create_kernel_info_page()
 {
-    auto* info_page_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Kernel info page").leak_ptr();
-    s_info_page_address = info_page_region->vaddr();
-    memset(s_info_page_address.as_ptr(), 0, PAGE_SIZE);
+    auto* info_page_region_for_userspace = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Kernel info page").leak_ptr();
+    auto* info_page_region_for_kernel = MM.allocate_kernel_region_with_vmobject(info_page_region_for_userspace->vmobject(), PAGE_SIZE, "Kernel info page").leak_ptr();
+    s_info_page_address_for_userspace = info_page_region_for_userspace->vaddr();
+    s_info_page_address_for_kernel = info_page_region_for_kernel->vaddr();
+
+    memset(s_info_page_address_for_kernel.as_ptr(), 0, PAGE_SIZE);
+
+    info_page_region_for_userspace->set_writable(false);
+    info_page_region_for_userspace->remap();
 }
 
 int Process::sys$restore_signal_mask(u32 mask)
@@ -1700,7 +1707,7 @@ int Process::sys$sleep(unsigned seconds)
 
 timeval kgettimeofday()
 {
-    return const_cast<const timeval&>(((KernelInfoPage*)s_info_page_address.as_ptr())->now);
+    return const_cast<const timeval&>(((KernelInfoPage*)s_info_page_address_for_kernel.as_ptr())->now);
 }
 
 void kgettimeofday(timeval& tv)
@@ -3751,5 +3758,5 @@ int Process::sys$profiling_disable(pid_t pid)
 
 void* Process::sys$get_kernel_info_page()
 {
-    return s_info_page_address.as_ptr();
+    return s_info_page_address_for_userspace.as_ptr();
 }
