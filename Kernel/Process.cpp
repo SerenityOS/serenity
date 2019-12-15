@@ -570,6 +570,9 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         entry_eip = loader->entry().get();
     }
 
+    region->set_user_accessible(false);
+    region->remap();
+
     m_elf_loader = move(loader);
     m_executable = description->custody();
 

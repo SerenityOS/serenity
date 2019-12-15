@@ -265,6 +265,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.add("writable", region.is_writable());
         region_object.add("stack", region.is_stack());
         region_object.add("shared", region.is_shared());
+        region_object.add("user_accessible", region.is_user_accessible());
         region_object.add("purgeable", region.vmobject().is_purgeable());
         if (region.vmobject().is_purgeable()) {
             region_object.add("volatile", static_cast<const PurgeableVMObject&>(region.vmobject()).is_volatile());

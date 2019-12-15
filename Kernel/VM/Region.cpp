@@ -54,9 +54,6 @@ NonnullOwnPtr<Region> Region::clone()
 {
     ASSERT(current);
 
-    // NOTE: Kernel-only regions should never be cloned.
-    ASSERT(is_user_accessible());
-
     // FIXME: What should we do for privately mapped InodeVMObjects?
     if (m_shared || vmobject().is_inode()) {
         ASSERT(!m_stack);
