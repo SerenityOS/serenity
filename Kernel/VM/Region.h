@@ -105,6 +105,8 @@ public:
     bool should_cow(size_t page_index) const;
     void set_should_cow(size_t page_index, bool);
 
+    u32 cow_pages() const;
+
     void set_writable(bool b)
     {
         if (b)

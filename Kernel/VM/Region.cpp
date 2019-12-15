@@ -113,6 +113,16 @@ int Region::commit()
     return 0;
 }
 
+u32 Region::cow_pages() const
+{
+    if (!m_cow_map)
+        return 0;
+    u32 count = 0;
+    for (int i = 0; i < m_cow_map->size(); ++i)
+        count += m_cow_map->get(i);
+    return count;
+}
+
 size_t Region::amount_resident() const
 {
     size_t bytes = 0;
