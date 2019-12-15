@@ -241,7 +241,7 @@ public:
     u32 frame_ptr() const { return m_tss.ebp; }
     u32 stack_ptr() const { return m_tss.esp; }
 
-    RegisterDump& get_RegisterDump_from_stack();
+    RegisterDump& get_register_dump_from_stack();
 
     u16 selector() const { return m_far_ptr.selector; }
     TSS32& tss() { return m_tss; }
