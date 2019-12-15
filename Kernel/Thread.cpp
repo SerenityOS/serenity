@@ -544,7 +544,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         // FIXME: This state is such a hack. It avoids trouble if 'current' is the process receiving a signal.
         set_state(Skip1SchedulerPass);
     } else {
-        auto& regs = get_RegisterDump_from_stack();
+        auto& regs = get_register_dump_from_stack();
         u32* stack = &regs.esp_if_crossRing;
         setup_stack(regs, stack);
         regs.eip = g_return_to_ring3_from_signal_trampoline.get();
@@ -571,12 +571,12 @@ void Thread::push_value_on_stack(u32 value)
     *stack_ptr = value;
 }
 
-RegisterDump& Thread::get_RegisterDump_from_stack()
+RegisterDump& Thread::get_register_dump_from_stack()
 {
     // The userspace registers should be stored at the top of the stack
     // We have to subtract 2 because the processor decrements the kernel
     // stack before pushing the args.
-    return *(RegisterDump*)(kernel_stack_top() - sizeof(RegisterDump) - 2);
+    return *(RegisterDump*)(kernel_stack_top() - sizeof(RegisterDump));
 }
 
 void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
