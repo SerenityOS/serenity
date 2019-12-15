@@ -376,11 +376,11 @@ private:
 
 struct [[gnu::packed]] RegisterDump
 {
-    u16 ss;
-    u16 gs;
-    u16 fs;
-    u16 es;
-    u16 ds;
+    u32 ss;
+    u32 gs;
+    u32 fs;
+    u32 es;
+    u32 ds;
     u32 edi;
     u32 esi;
     u32 ebp;
@@ -390,13 +390,12 @@ struct [[gnu::packed]] RegisterDump
     u32 ecx;
     u32 eax;
     u16 exception_code;
-    u16 __exception_code_padding;
+    u16 isr_number;
     u32 eip;
-    u16 cs;
-    u16 __csPadding;
+    u32 cs;
     u32 eflags;
     u32 esp_if_crossRing;
-    u16 ss_if_crossRing;
+    u32 ss_if_crossRing;
 };
 
 struct [[gnu::aligned(16)]] FPUState

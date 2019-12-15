@@ -40,24 +40,36 @@ void gdt_free_entry(u16 entry)
     s_gdt_freelist->append(entry);
 }
 
-extern "C" void handle_irq();
-extern "C" void asm_irq_entry();
+extern "C" void handle_irq(RegisterDump);
+extern "C" void irq_common_asm_entry();
+
+#define GENERATE_IRQ_ASM_ENTRY(irq, isr_number) \
+    extern "C" void irq_##irq##_asm_entry();    \
+    asm(".globl irq_" #irq "_asm_entry\n"       \
+        "irq_" #irq "_asm_entry:\n"             \
+        "    pushw $" #isr_number "\n"          \
+        "    pushw $0\n"                        \
+        "    jmp irq_common_asm_entry\n");
 
 asm(
-    ".globl asm_irq_entry\n"
-    "asm_irq_entry: \n"
-    "    pushl $0x0\n"
+    ".globl irq_common_asm_entry\n"
+    "irq_common_asm_entry: \n"
     "    pusha\n"
-    "    pushw %ds\n"
-    "    pushw %es\n"
-    "    pushw %ss\n"
-    "    pushw %ss\n"
-    "    popw %ds\n"
-    "    popw %es\n"
+    "    pushl %ds\n"
+    "    pushl %es\n"
+    "    pushl %fs\n"
+    "    pushl %gs\n"
+    "    pushl %ss\n"
+    "    mov $0x10, %ax\n"
+    "    mov %ax, %ds\n"
+    "    mov %ax, %es\n"
     "    cld\n"
     "    call handle_irq\n"
-    "    popw %es\n"
-    "    popw %ds\n"
+    "    add $0x4, %esp\n" // "popl %ss"
+    "    popl %gs\n"
+    "    popl %fs\n"
+    "    popl %es\n"
+    "    popl %ds\n"
     "    popa\n"
     "    add $0x4, %esp\n"
     "    iret\n");
@@ -69,26 +81,21 @@ asm(
         ".globl " #title "_asm_entry\n"            \
         "" #title "_asm_entry: \n"                 \
         "    pusha\n"                              \
-        "    pushw %ds\n"                          \
-        "    pushw %es\n"                          \
-        "    pushw %fs\n"                          \
-        "    pushw %gs\n"                          \
-        "    pushw %ss\n"                          \
-        "    pushw %ss\n"                          \
-        "    pushw %ss\n"                          \
-        "    pushw %ss\n"                          \
-        "    pushw %ss\n"                          \
-        "    popw %ds\n"                           \
-        "    popw %es\n"                           \
-        "    popw %fs\n"                           \
-        "    popw %gs\n"                           \
+        "    pushl %ds\n"                          \
+        "    pushl %es\n"                          \
+        "    pushl %fs\n"                          \
+        "    pushl %gs\n"                          \
+        "    pushl %ss\n"                          \
+        "    mov $0x10, %ax\n"                     \
+        "    mov %ax, %ds\n"                       \
+        "    mov %ax, %es\n"                       \
         "    cld\n"                                \
         "    call " #title "_handler\n"            \
-        "    popw %gs\n"                           \
-        "    popw %gs\n"                           \
-        "    popw %fs\n"                           \
-        "    popw %es\n"                           \
-        "    popw %ds\n"                           \
+        "    add $0x4, %esp \n"                    \
+        "    popl %gs\n"                           \
+        "    popl %fs\n"                           \
+        "    popl %es\n"                           \
+        "    popl %ds\n"                           \
         "    popa\n"                               \
         "    add $0x4, %esp\n"                     \
         "    iret\n");
@@ -101,26 +108,21 @@ asm(
         "" #title "_asm_entry: \n"                 \
         "    pushl $0x0\n"                         \
         "    pusha\n"                              \
-        "    pushw %ds\n"                          \
-        "    pushw %es\n"                          \
-        "    pushw %fs\n"                          \
-        "    pushw %gs\n"                          \
-        "    pushw %ss\n"                          \
-        "    pushw %ss\n"                          \
-        "    pushw %ss\n"                          \
-        "    pushw %ss\n"                          \
-        "    pushw %ss\n"                          \
-        "    popw %ds\n"                           \
-        "    popw %es\n"                           \
-        "    popw %fs\n"                           \
-        "    popw %gs\n"                           \
+        "    pushl %ds\n"                          \
+        "    pushl %es\n"                          \
+        "    pushl %fs\n"                          \
+        "    pushl %gs\n"                          \
+        "    pushl %ss\n"                          \
+        "    mov $0x10, %ax\n"                     \
+        "    mov %ax, %ds\n"                       \
+        "    mov %ax, %es\n"                       \
         "    cld\n"                                \
         "    call " #title "_handler\n"            \
-        "    popw %gs\n"                           \
-        "    popw %gs\n"                           \
-        "    popw %fs\n"                           \
-        "    popw %es\n"                           \
-        "    popw %ds\n"                           \
+        "    add $0x4, %esp\n"                     \
+        "    popl %gs\n"                           \
+        "    popl %fs\n"                           \
+        "    popl %es\n"                           \
+        "    popl %ds\n"                           \
         "    popa\n"                               \
         "    add $0x4, %esp\n"                     \
         "    iret\n");
@@ -137,11 +139,10 @@ static void dump(const RegisterDump& regs)
         esp = regs.esp_if_crossRing;
     }
 
-    kprintf("exception code: %04x\n", regs.exception_code);
-    kprintf("  pc=%04x:%08x ds=%04x es=%04x fs=%04x gs=%04x\n", regs.cs, regs.eip, regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("exception code: %04x (isr: %04x)\n", regs.exception_code, regs.isr_number);
+    kprintf("  pc=%04x:%08x flags=%04x\n", regs.cs, regs.eip, regs.eflags);
     kprintf(" stk=%04x:%08x\n", ss, esp);
-    if (current)
-        kprintf("kstk=%04x:%08x, base=%08x\n", current->tss().ss0, current->tss().esp0, current->kernel_stack_base());
+    kprintf("  ds=%04x es=%04x fs=%04x gs=%04x\n", regs.ds, regs.es, regs.fs, regs.gs);
     kprintf("eax=%08x ebx=%08x ecx=%08x edx=%08x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%08x esp=%08x esi=%08x edi=%08x\n", regs.ebp, esp, regs.esi, regs.edi);
 
@@ -409,7 +410,6 @@ void register_irq_handler(u8 irq, IRQHandler& handler)
 {
     ASSERT(!s_irq_handler[irq]);
     s_irq_handler[irq] = &handler;
-    register_interrupt_handler(IRQ_VECTOR_BASE + irq, asm_irq_entry);
 }
 
 void unregister_irq_handler(u8 irq, IRQHandler& handler)
@@ -437,17 +437,22 @@ void flush_idt()
     asm("lidt %0" ::"m"(s_idtr));
 }
 
-extern "C" void irq7_handler();
-asm(
-    ".globl irq7_handler\n"
-    "irq7_handler:\n"
-    "   iret\n");
-
-extern "C" void irq15_handler();
-asm(
-    ".globl irq15_handler\n"
-    "irq15_handler:\n"
-    "   iret\n");
+GENERATE_IRQ_ASM_ENTRY(0, 0x50)
+GENERATE_IRQ_ASM_ENTRY(1, 0x51)
+GENERATE_IRQ_ASM_ENTRY(2, 0x52)
+GENERATE_IRQ_ASM_ENTRY(3, 0x53)
+GENERATE_IRQ_ASM_ENTRY(4, 0x54)
+GENERATE_IRQ_ASM_ENTRY(5, 0x55)
+GENERATE_IRQ_ASM_ENTRY(6, 0x56)
+GENERATE_IRQ_ASM_ENTRY(7, 0x57)
+GENERATE_IRQ_ASM_ENTRY(8, 0x58)
+GENERATE_IRQ_ASM_ENTRY(9, 0x59)
+GENERATE_IRQ_ASM_ENTRY(10, 0x5a)
+GENERATE_IRQ_ASM_ENTRY(11, 0x5b)
+GENERATE_IRQ_ASM_ENTRY(12, 0x5c)
+GENERATE_IRQ_ASM_ENTRY(13, 0x5d)
+GENERATE_IRQ_ASM_ENTRY(14, 0x5e)
+GENERATE_IRQ_ASM_ENTRY(15, 0x5f)
 
 void idt_init()
 {
@@ -475,8 +480,22 @@ void idt_init()
     register_interrupt_handler(0x0f, _exception15);
     register_interrupt_handler(0x10, _exception16);
 
-    register_interrupt_handler(0x57, irq7_handler);
-    register_interrupt_handler(0x5f, irq15_handler);
+    register_interrupt_handler(0x50, irq_0_asm_entry);
+    register_interrupt_handler(0x51, irq_1_asm_entry);
+    register_interrupt_handler(0x52, irq_2_asm_entry);
+    register_interrupt_handler(0x53, irq_3_asm_entry);
+    register_interrupt_handler(0x54, irq_4_asm_entry);
+    register_interrupt_handler(0x55, irq_5_asm_entry);
+    register_interrupt_handler(0x56, irq_6_asm_entry);
+    register_interrupt_handler(0x57, irq_7_asm_entry);
+    register_interrupt_handler(0x58, irq_8_asm_entry);
+    register_interrupt_handler(0x59, irq_9_asm_entry);
+    register_interrupt_handler(0x5a, irq_10_asm_entry);
+    register_interrupt_handler(0x5b, irq_11_asm_entry);
+    register_interrupt_handler(0x5c, irq_12_asm_entry);
+    register_interrupt_handler(0x5d, irq_13_asm_entry);
+    register_interrupt_handler(0x5e, irq_14_asm_entry);
+    register_interrupt_handler(0x5f, irq_15_asm_entry);
 
     for (u8 i = 0; i < 16; ++i) {
         s_irq_handler[i] = nullptr;
@@ -490,24 +509,10 @@ void load_task_register(u16 selector)
     asm("ltr %0" ::"r"(selector));
 }
 
-void handle_irq()
+void handle_irq(RegisterDump regs)
 {
-    u16 isr = PIC::get_isr();
-    if (!isr) {
-        kprintf("Spurious IRQ\n");
-        return;
-    }
-
-    u8 irq = 0;
-    for (u8 i = 0; i < 16; ++i) {
-        if (i == 2)
-            continue;
-        if (isr & (1 << i)) {
-            irq = i;
-            break;
-        }
-    }
-
+    ASSERT(regs.isr_number >= 0x50 && regs.isr_number <= 0x5f);
+    u8 irq = (u8)(regs.isr_number - 0x50);
     if (s_irq_handler[irq])
         s_irq_handler[irq]->handle_irq();
     PIC::eoi(irq);
