@@ -99,7 +99,7 @@ public:
 
     u64 length_in_ms() const { return m_last_timestamp - m_first_timestamp; }
     u64 first_timestamp() const { return m_first_timestamp; }
-    u64 last_timestamp() const { return m_first_timestamp; }
+    u64 last_timestamp() const { return m_last_timestamp; }
 
     void set_timestamp_filter_range(u64 start, u64 end);
     void clear_timestamp_filter_range();
