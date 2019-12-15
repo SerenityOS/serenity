@@ -67,6 +67,8 @@ public:
 
     static Process* from_pid(pid_t);
 
+    static void update_info_page_timestamp(const timeval&);
+
     const String& name() const { return m_name; }
     pid_t pid() const { return m_pid; }
     pid_t sid() const { return m_sid; }
@@ -233,6 +235,7 @@ public:
     int sys$module_unload(const char* name, size_t name_length);
     int sys$profiling_enable(pid_t);
     int sys$profiling_disable(pid_t);
+    void* sys$get_kernel_info_page();
 
     static void initialize();
 
