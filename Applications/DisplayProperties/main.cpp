@@ -12,6 +12,7 @@ int main(int argc, char** argv)
 
     auto window = GWindow::construct();
     window->set_title("Display Properties");
+    window->move_to(100,100);
     window->resize(400, 448);
     window->set_resizable(false);
     window->set_main_widget(instance.root_widget());
