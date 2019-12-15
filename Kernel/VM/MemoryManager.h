@@ -63,6 +63,7 @@ public:
     void map_for_kernel(VirtualAddress, PhysicalAddress, bool cache_disabled = false);
 
     OwnPtr<Region> allocate_kernel_region(size_t, const StringView& name, bool user_accessible = false, bool should_commit = true);
+    OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, const StringView& name);
     OwnPtr<Region> allocate_user_accessible_kernel_region(size_t, const StringView& name);
 
     unsigned user_physical_pages() const { return m_user_physical_pages; }
