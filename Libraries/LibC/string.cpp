@@ -406,6 +406,8 @@ const char* const sys_errlist[] = {
     "Wrong protocol type",
     "Operation in progress",
     "No such thread",
+    "Protocol error",
+    "Not supported",
     "The highest errno +1 :^)",
 };
 
