@@ -57,6 +57,7 @@ public:
     void set_mmap(bool mmap) { m_mmap = mmap; }
 
     bool is_user_accessible() const { return m_user_accessible; }
+    void set_user_accessible(bool b) { m_user_accessible = b; }
 
     PageFaultResponse handle_fault(const PageFault&);
 
