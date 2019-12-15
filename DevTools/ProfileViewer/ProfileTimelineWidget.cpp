@@ -27,16 +27,19 @@ void ProfileTimelineWidget::paint_event(GPaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     float column_width = (float)frame_inner_rect().width() / (float)m_profile.length_in_ms();
+    float frame_height = (float)frame_inner_rect().height() / (float)m_profile.deepest_stack_depth();
 
     for (auto& sample : m_profile.samples()) {
         u64 t = sample.timestamp - m_profile.first_timestamp();
         int x = (int)((float)t * column_width);
         int cw = max(1, (int)column_width);
 
+        int column_height = frame_inner_rect().height() - (int)((float)sample.frames.size() * frame_height);
+
         bool in_kernel = sample.in_kernel;
         Color color = in_kernel ? Color::from_rgb(0xc25e5a) : Color::from_rgb(0x5a65c2);
         for (int i = 0; i < cw; ++i)
-            painter.draw_line({ x + i, frame_thickness() }, { x + i, height() - frame_thickness() * 2 }, color);
+            painter.draw_line({ x + i, frame_thickness() + column_height }, { x + i, height() - frame_thickness() * 2 }, color);
     }
 
     u64 normalized_start_time = min(m_select_start_time, m_select_end_time);
