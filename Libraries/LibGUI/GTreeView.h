@@ -19,7 +19,6 @@ protected:
     virtual void keydown_event(GKeyEvent&) override;
     virtual void did_update_selection() override;
     virtual void did_update_model() override;
-    virtual void context_menu_event(GContextMenuEvent&) override;
 
 private:
     virtual GModelIndex index_at_event_position(const Point&, bool& is_toggle) const override;
