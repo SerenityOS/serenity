@@ -273,6 +273,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.add("address", region.vaddr().get());
         region_object.add("size", (u32)region.size());
         region_object.add("amount_resident", (u32)region.amount_resident());
+        region_object.add("cow_pages", region.cow_pages());
         region_object.add("name", region.name());
     }
     array.finish();

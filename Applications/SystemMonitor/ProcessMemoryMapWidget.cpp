@@ -37,6 +37,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
             return "Volatile";
         return "Non-volatile";
     });
+    pid_vm_fields.empend("cow_pages", "# CoW", TextAlignment::CenterRight);
     pid_vm_fields.empend("name", "Name", TextAlignment::CenterLeft);
     m_json_model = GJsonArrayModel::create({}, move(pid_vm_fields));
     m_table_view->set_model(GSortingProxyModel::create(*m_json_model));
