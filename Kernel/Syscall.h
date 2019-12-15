@@ -149,7 +149,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(purge)                      \
     __ENUMERATE_SYSCALL(set_shared_buffer_volatile) \
     __ENUMERATE_SYSCALL(profiling_enable)           \
-    __ENUMERATE_SYSCALL(profiling_disable)
+    __ENUMERATE_SYSCALL(profiling_disable)          \
+    __ENUMERATE_SYSCALL(get_kernel_info_page)
 
 namespace Syscall {
 

@@ -548,6 +548,11 @@ void Scheduler::timer_tick(RegisterDump& regs)
 
     ++g_uptime;
 
+    timeval tv;
+    tv.tv_sec = RTC::boot_time() + PIT::seconds_since_boot();
+    tv.tv_usec = PIT::ticks_this_second() * 1000;
+    Process::update_info_page_timestamp(tv);
+
     if (s_beep_timeout && g_uptime > s_beep_timeout) {
         PCSpeaker::tone_off();
         s_beep_timeout = 0;

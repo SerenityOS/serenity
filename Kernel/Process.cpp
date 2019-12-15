@@ -23,6 +23,7 @@
 #include <Kernel/IO.h>
 #include <Kernel/KBufferBuilder.h>
 #include <Kernel/KSyms.h>
+#include <Kernel/KernelInfoPage.h>
 #include <Kernel/Module.h>
 #include <Kernel/Multiboot.h>
 #include <Kernel/Net/Socket.h>
@@ -51,11 +52,13 @@
 //#define SHARED_BUFFER_DEBUG
 
 static void create_signal_trampolines();
+static void create_kernel_info_page();
 
 static pid_t next_pid;
 InlineLinkedList<Process>* g_processes;
 static String* s_hostname;
 static Lock* s_hostname_lock;
+static VirtualAddress s_info_page_address;
 VirtualAddress g_return_to_ring3_from_signal_trampoline;
 VirtualAddress g_return_to_ring0_from_signal_trampoline;
 HashMap<String, OwnPtr<Module>>* g_modules;
@@ -70,6 +73,14 @@ void Process::initialize()
     s_hostname_lock = new Lock;
 
     create_signal_trampolines();
+    create_kernel_info_page();
+}
+
+void Process::update_info_page_timestamp(const timeval& tv)
+{
+    auto* info_page = (KernelInfoPage*)s_info_page_address.as_ptr();
+    info_page->serial++;
+    const_cast<timeval&>(info_page->now) = tv;
 }
 
 Vector<pid_t> Process::all_pids()
@@ -981,6 +992,13 @@ void create_signal_trampolines()
     trampoline_region->remap();
 }
 
+void create_kernel_info_page()
+{
+    auto* info_page_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Kernel info page").leak_ptr();
+    s_info_page_address = info_page_region->vaddr();
+    memset(s_info_page_address.as_ptr(), 0, PAGE_SIZE);
+}
+
 int Process::sys$restore_signal_mask(u32 mask)
 {
     current->m_signal_mask = mask;
@@ -1682,10 +1700,7 @@ int Process::sys$sleep(unsigned seconds)
 
 timeval kgettimeofday()
 {
-    timeval tv;
-    tv.tv_sec = RTC::boot_time() + PIT::seconds_since_boot();
-    tv.tv_usec = PIT::ticks_this_second() * 1000;
-    return tv;
+    return const_cast<const timeval&>(((KernelInfoPage*)s_info_page_address.as_ptr())->now);
 }
 
 void kgettimeofday(timeval& tv)
@@ -1697,7 +1712,7 @@ int Process::sys$gettimeofday(timeval* tv)
 {
     if (!validate_write_typed(tv))
         return -EFAULT;
-    kgettimeofday(*tv);
+    *tv = kgettimeofday();
     return 0;
 }
 
@@ -3732,4 +3747,9 @@ int Process::sys$profiling_disable(pid_t pid)
     process->set_profiling(false);
     Profiling::stop();
     return 0;
+}
+
+void* Process::sys$get_kernel_info_page()
+{
+    return s_info_page_address.as_ptr();
 }
