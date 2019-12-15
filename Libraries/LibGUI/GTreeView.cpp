@@ -275,6 +275,8 @@ void GTreeView::paint_event(GPaintEvent& event)
         return IterationDecision::Continue;
     });
 
+    // Untranslate the painter vertically and do the column headers.
+    painter.translate(0, vertical_scrollbar().value());
     paint_headers(painter);
 }
 
