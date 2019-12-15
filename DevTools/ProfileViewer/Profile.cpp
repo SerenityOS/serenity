@@ -11,14 +11,30 @@ Profile::Profile(const JsonArray& json)
     m_last_timestamp = m_json.at(m_json.size() - 1).as_object().get("timestamp").to_number<u64>();
 
     m_model = ProfileModel::create(*this);
-    rebuild_tree();
 
-    m_sample_data.ensure_capacity(m_json.size());
-    m_json.for_each([&](const JsonValue& sample) {
-        u64 timestamp = sample.as_object().get("timestamp").to_number<u64>() - m_first_timestamp;
-        bool in_kernel = sample.as_object().get("frames").as_array().at(1).as_object().get("address").to_number<u32>() < (8 * MB);
-        m_sample_data.append({ timestamp, in_kernel });
-    });
+    m_samples.ensure_capacity(m_json.size());
+    for (auto& sample_value : m_json.values()) {
+        auto& sample_object = sample_value.as_object();
+
+        Sample sample;
+        sample.timestamp = sample_object.get("timestamp").to_number<u64>();
+        sample.in_kernel = sample_object.get("frames").as_array().at(1).as_object().get("address").to_number<u32>() < (8 * MB);
+
+        auto frames_value = sample_object.get("frames");
+        auto& frames_array = frames_value.as_array();
+        for (int i = frames_array.size() - 1; i >= 0; --i) {
+            auto& frame_value = frames_array.at(i);
+            auto& frame_object = frame_value.as_object();
+            Frame frame;
+            frame.symbol = frame_object.get("symbol").as_string_or({});
+            frame.address = frame_object.get("address").as_u32();
+            frame.offset = frame_object.get("offset").as_u32();
+            sample.frames.append(move(frame));
+        };
+        m_samples.append(move(sample));
+    }
+
+    rebuild_tree();
 }
 
 Profile::~Profile()
@@ -46,35 +62,32 @@ void Profile::rebuild_tree()
         return new_root;
     };
 
-    m_json.for_each([&](const JsonValue& sample) {
+    for (auto& sample : m_samples) {
         if (has_timestamp_filter_range()) {
-            auto timestamp = sample.as_object().get("timestamp").to_number<u64>();
+            auto timestamp = sample.timestamp;
             if (timestamp < m_timestamp_filter_range_start || timestamp > m_timestamp_filter_range_end)
-                return;
+                continue;
         }
 
-        auto frames_value = sample.as_object().get("frames");
-        auto& frames = frames_value.as_array();
         ProfileNode* node = nullptr;
-        for (int i = frames.size() - 1; i >= 0; --i) {
-            auto& frame = frames.at(i);
+        for (int i = 0; i < sample.frames.size(); ++i) {
+            auto& frame = sample.frames.at(i);
 
-            auto symbol = frame.as_object().get("symbol").as_string_or({});
-            auto address = frame.as_object().get("address").as_u32();
-            auto offset = frame.as_object().get("offset").as_u32();
-            auto timestamp = frame.as_object().get("timestamp").to_number<u64>();
+            auto& symbol = frame.symbol;
+            auto& address = frame.address;
+            auto& offset = frame.offset;
 
             if (symbol.is_empty())
                 break;
 
             if (!node)
-                node = &find_or_create_root(symbol, address, offset, timestamp);
+                node = &find_or_create_root(symbol, address, offset, sample.timestamp);
             else
-                node = &node->find_or_create_child(symbol, address, offset, timestamp);
+                node = &node->find_or_create_child(symbol, address, offset, sample.timestamp);
 
             node->increment_sample_count();
         }
-    });
+    }
 
     for (auto& root : roots) {
         root.sort_children();
