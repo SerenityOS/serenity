@@ -31,6 +31,9 @@ Profile::Profile(const JsonArray& json)
             frame.offset = frame_object.get("offset").as_u32();
             sample.frames.append(move(frame));
         };
+
+        m_deepest_stack_depth = max((u32)frames_array.size(), m_deepest_stack_depth);
+
         m_samples.append(move(sample));
     }
 
