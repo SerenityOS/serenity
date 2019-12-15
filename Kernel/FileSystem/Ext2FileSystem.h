@@ -74,6 +74,8 @@ public:
 
     virtual KResult prepare_to_unmount() const override;
 
+    virtual bool supports_watchers() const override { return true; }
+
 private:
     typedef unsigned BlockIndex;
     typedef unsigned GroupIndex;

@@ -17,6 +17,8 @@ public:
 
     virtual const char* class_name() const override { return "TmpFS"; }
 
+    virtual bool supports_watchers() const override { return true; }
+
     virtual InodeIdentifier root_inode() const override;
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 

@@ -341,21 +341,23 @@ void GDirectoryModel::open(const StringView& a_path)
     if (!dirp)
         return;
     closedir(dirp);
-    if (m_notifier)
+    if (m_notifier) {
         close(m_notifier->fd());
+        m_notifier = nullptr;
+    }
     m_path = path;
     int watch_fd = watch_file(path.characters(), path.length());
     if (watch_fd < 0) {
         perror("watch_file");
-        ASSERT_NOT_REACHED();
+    } else {
+        m_notifier = CNotifier::construct(watch_fd, CNotifier::Event::Read);
+        m_notifier->on_ready_to_read = [this] {
+            update();
+            char buffer[32];
+            int rc = read(m_notifier->fd(), buffer, sizeof(buffer));
+            ASSERT(rc >= 0);
+        };
     }
-    m_notifier = CNotifier::construct(watch_fd, CNotifier::Event::Read);
-    m_notifier->on_ready_to_read = [this] {
-        update();
-        char buffer[32];
-        int rc = read(m_notifier->fd(), buffer, sizeof(buffer));
-        ASSERT(rc >= 0);
-    };
     if (on_path_change)
         on_path_change();
     update();

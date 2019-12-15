@@ -3230,6 +3230,9 @@ int Process::sys$watch_file(const char* path, int path_length)
     auto& custody = custody_or_error.value();
     auto& inode = custody->inode();
 
+    if (!inode.fs().supports_watchers())
+        return -ENOTSUP;
+
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
