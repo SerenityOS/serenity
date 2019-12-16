@@ -12,7 +12,6 @@ public:
     {
         m_audio_client = make<AClientConnection>();
         m_audio_client->on_muted_state_change = [this](bool muted) {
-            dbg() << "Muted state changed: " << muted;
             if (m_audio_muted == muted)
                 return;
             m_audio_muted = muted;
@@ -29,7 +28,6 @@ private:
     {
         if (event.button() != GMouseButton::Left)
             return;
-        dbg() << "set_muted: " << !m_audio_muted;
         m_audio_client->set_muted(!m_audio_muted);
         update();
     }
