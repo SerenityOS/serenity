@@ -22,6 +22,7 @@ public:
             Hover,
             FirstChild,
             LastChild,
+            OnlyChild,
             Empty,
         };
         PseudoClass pseudo_class { PseudoClass::None };
