@@ -28,10 +28,15 @@ Profile::Profile(const JsonArray& json)
 
         Sample sample;
         sample.timestamp = sample_object.get("timestamp").to_number<u64>();
-        sample.in_kernel = sample_object.get("frames").as_array().at(1).as_object().get("address").to_number<u32>() < (8 * MB);
 
         auto frames_value = sample_object.get("frames");
         auto& frames_array = frames_value.as_array();
+
+        if (frames_array.size() < 2)
+            continue;
+
+        sample.in_kernel = frames_array.at(1).as_object().get("address").to_number<u32>() < (8 * MB);
+
         for (int i = frames_array.size() - 1; i >= 1; --i) {
             auto& frame_value = frames_array.at(i);
             auto& frame_object = frame_value.as_object();
