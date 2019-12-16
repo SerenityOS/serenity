@@ -321,6 +321,10 @@ public:
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Link;
             else if (pseudo_name == "hover")
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Hover;
+            else if (pseudo_name == "first-child")
+                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::FirstChild;
+            else if (pseudo_name == "last-child")
+                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::LastChild;
         }
 
         return simple_selector;
