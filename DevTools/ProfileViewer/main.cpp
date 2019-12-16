@@ -48,6 +48,17 @@ int main(int argc, char** argv)
 
     menubar->add_menu(move(app_menu));
 
+    auto view_menu = GMenu::construct("View");
+    auto invert_action = GAction::create("Invert tree", { Mod_Ctrl, Key_I }, [&](auto& action) {
+        action.set_checked(!action.is_checked());
+        profile->set_inverted(action.is_checked());
+    });
+    invert_action->set_checkable(true);
+    invert_action->set_checked(true);
+    view_menu->add_action(invert_action);
+
+    menubar->add_menu(move(view_menu));
+
     app.set_menubar(move(menubar));
 
     window->show();

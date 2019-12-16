@@ -105,6 +105,9 @@ public:
     void clear_timestamp_filter_range();
     bool has_timestamp_filter_range() const { return m_has_timestamp_filter_range; }
 
+    bool is_inverted() const { return m_inverted; }
+    void set_inverted(bool);
+
 private:
     explicit Profile(const JsonArray&);
 
@@ -123,4 +126,5 @@ private:
     u64 m_timestamp_filter_range_end { 0 };
 
     u32 m_deepest_stack_depth { 0 };
+    bool m_inverted { false };
 };
