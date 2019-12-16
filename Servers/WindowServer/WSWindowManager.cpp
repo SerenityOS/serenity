@@ -260,7 +260,7 @@ void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
         menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
         next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
         ++index;
-        return true;
+        return IterationDecision::Continue;
     });
     m_menu_manager.refresh();
 }
