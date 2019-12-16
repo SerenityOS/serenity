@@ -370,7 +370,7 @@ void GTreeView::keydown_event(GKeyEvent& event)
         return;
     }
     if (event.key() == KeyCode::Key_Left) {
-        if (model()->row_count(cursor_index)) {
+        if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
             auto& metadata = ensure_metadata_for_index(cursor_index);
             if (metadata.open) {
                 metadata.open = false;
@@ -382,7 +382,7 @@ void GTreeView::keydown_event(GKeyEvent& event)
         }
     }
     if (event.key() == KeyCode::Key_Right) {
-        if (model()->row_count(cursor_index)) {
+        if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
             auto& metadata = ensure_metadata_for_index(cursor_index);
             if (!metadata.open) {
                 metadata.open = true;
