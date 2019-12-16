@@ -116,6 +116,7 @@ Optional<Color> Color::from_string(const StringView& string)
         { 0x000000, "black" },
         { 0xc0c0c0, "silver" },
         { 0x808080, "gray" },
+        { 0xffc0cb, "pink" },
         { 0x000000, nullptr }
     };
 
