@@ -9,4 +9,5 @@ enum class GWindowType {
     Taskbar,
     Tooltip,
     Menubar,
+    MenuApplet,
 };

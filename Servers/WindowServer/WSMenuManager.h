@@ -3,7 +3,6 @@
 #include "WSMenu.h"
 #include <LibCore/CObject.h>
 #include <LibCore/CTimer.h>
-#include <WindowServer/WSMenuApplet.h>
 #include <WindowServer/WSWindow.h>
 
 class AClientConnection;
@@ -36,9 +35,9 @@ public:
     void close_everyone_not_in_lineage(WSMenu&);
     void close_menu_and_descendants(WSMenu&);
 
-    void add_applet(WSMenuApplet&);
-    void remove_applet(WSMenuApplet&);
-    void invalidate_applet(WSMenuApplet&, const Rect&);
+    void add_applet(WSWindow&);
+    void remove_applet(WSWindow&);
+    void invalidate_applet(const WSWindow&, const Rect&);
 
 private:
     void close_menus(const Vector<WSMenu*>&);
@@ -49,7 +48,7 @@ private:
     void handle_menu_mouse_event(WSMenu&, const WSMouseEvent&);
 
     void draw();
-    void draw_applet(const WSMenuApplet&);
+    void draw_applet(const WSWindow&);
     void tick_clock();
 
     RefPtr<WSWindow> m_window;
@@ -62,7 +61,7 @@ private:
     RefPtr<GraphicsBitmap> m_muted_bitmap;
     RefPtr<GraphicsBitmap> m_unmuted_bitmap;
 
-    Vector<WeakPtr<WSMenuApplet>> m_applets;
+    Vector<WeakPtr<WSWindow>> m_applets;
 
     OwnPtr<AClientConnection> m_audio_client;
 

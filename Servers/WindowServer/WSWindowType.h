@@ -9,4 +9,5 @@ enum class WSWindowType {
     Taskbar,
     Tooltip,
     Menubar,
+    MenuApplet,
 };
