@@ -4,6 +4,16 @@
 #include <LibCore/CFile.h>
 #include <stdio.h>
 
+static void sort_profile_nodes(Vector<NonnullRefPtr<ProfileNode>>& nodes)
+{
+    quick_sort(nodes.begin(), nodes.end(), [](auto& a, auto& b) {
+        return a->sample_count() >= b->sample_count();
+    });
+
+    for (auto& child : nodes)
+        child->sort_children();
+}
+
 Profile::Profile(const JsonArray& json)
     : m_json(json)
 {
@@ -22,7 +32,7 @@ Profile::Profile(const JsonArray& json)
 
         auto frames_value = sample_object.get("frames");
         auto& frames_array = frames_value.as_array();
-        for (int i = frames_array.size() - 1; i >= 0; --i) {
+        for (int i = frames_array.size() - 1; i >= 1; --i) {
             auto& frame_value = frames_array.at(i);
             auto& frame_object = frame_value.as_object();
             Frame frame;
@@ -51,12 +61,12 @@ GModel& Profile::model()
 
 void Profile::rebuild_tree()
 {
-    NonnullRefPtrVector<ProfileNode> roots;
+    Vector<NonnullRefPtr<ProfileNode>> roots;
 
     auto find_or_create_root = [&roots](const String& symbol, u32 address, u32 offset, u64 timestamp) -> ProfileNode& {
         for (int i = 0; i < roots.size(); ++i) {
             auto& root = roots[i];
-            if (root.symbol() == symbol) {
+            if (root->symbol() == symbol) {
                 return root;
             }
         }
@@ -73,15 +83,29 @@ void Profile::rebuild_tree()
         }
 
         ProfileNode* node = nullptr;
-        for (int i = 0; i < sample.frames.size(); ++i) {
-            auto& frame = sample.frames.at(i);
 
+        auto for_each_frame = [&]<typename Callback>(Callback callback)
+        {
+            if (!m_inverted) {
+                for (int i = 0; i < sample.frames.size(); ++i) {
+                    if (callback(sample.frames.at(i)) == IterationDecision::Break)
+                        break;
+                }
+            } else {
+                for (int i = sample.frames.size() - 1; i >= 0; --i) {
+                    if (callback(sample.frames.at(i)) == IterationDecision::Break)
+                        break;
+                }
+            }
+        };
+
+        for_each_frame([&](const Frame& frame) {
             auto& symbol = frame.symbol;
             auto& address = frame.address;
             auto& offset = frame.offset;
 
             if (symbol.is_empty())
-                break;
+                return IterationDecision::Break;
 
             if (!node)
                 node = &find_or_create_root(symbol, address, offset, sample.timestamp);
@@ -89,12 +113,11 @@ void Profile::rebuild_tree()
                 node = &node->find_or_create_child(symbol, address, offset, sample.timestamp);
 
             node->increment_sample_count();
-        }
+            return IterationDecision::Continue;
+        });
     }
 
-    for (auto& root : roots) {
-        root.sort_children();
-    }
+    sort_profile_nodes(roots);
 
     m_roots = move(roots);
     m_model->update();
@@ -123,12 +146,7 @@ OwnPtr<Profile> Profile::load_from_file(const StringView& path)
 
 void ProfileNode::sort_children()
 {
-    quick_sort(m_children.begin(), m_children.end(), [](auto& a, auto& b) {
-        return a->sample_count() >= b->sample_count();
-    });
-
-    for (auto& child : m_children)
-        child->sort_children();
+    sort_profile_nodes(m_children);
 }
 
 void Profile::set_timestamp_filter_range(u64 start, u64 end)
@@ -148,5 +166,13 @@ void Profile::clear_timestamp_filter_range()
     if (!m_has_timestamp_filter_range)
         return;
     m_has_timestamp_filter_range = false;
+    rebuild_tree();
+}
+
+void Profile::set_inverted(bool inverted)
+{
+    if (m_inverted == inverted)
+        return;
+    m_inverted = inverted;
     rebuild_tree();
 }
