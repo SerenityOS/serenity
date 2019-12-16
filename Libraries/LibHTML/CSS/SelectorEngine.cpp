@@ -27,6 +27,14 @@ bool matches(const Selector::SimpleSelector& component, const Element& element)
         if (!matches_hover_pseudo_class(element))
             return false;
         break;
+    case Selector::SimpleSelector::PseudoClass::FirstChild:
+        if (element.previous_element_sibling())
+            return false;
+        break;
+    case Selector::SimpleSelector::PseudoClass::LastChild:
+        if (element.next_element_sibling())
+            return false;
+        break;
     }
 
     switch (component.attribute_match_type) {

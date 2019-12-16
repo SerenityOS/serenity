@@ -20,6 +20,8 @@ public:
             None,
             Link,
             Hover,
+            FirstChild,
+            LastChild,
         };
         PseudoClass pseudo_class { PseudoClass::None };
 
