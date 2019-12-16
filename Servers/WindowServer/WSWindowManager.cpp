@@ -1072,6 +1072,11 @@ void WSWindowManager::invalidate(const WSWindow& window)
 
 void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
 {
+    if (window.type() == WSWindowType::MenuApplet) {
+        menu_manager().invalidate_applet(window, rect);
+        return;
+    }
+
     if (rect.is_empty()) {
         invalidate(window);
         return;

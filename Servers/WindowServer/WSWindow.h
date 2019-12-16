@@ -118,12 +118,19 @@ public:
 
     virtual void event(CEvent&) override;
 
+    // Only used by WSWindowType::MenuApplet. Perhaps it could be a WSWindow subclass? I don't know.
+    void set_rect_in_menubar(const Rect& rect) { m_rect_in_menubar = rect; }
+    const Rect& rect_in_menubar() const { return m_rect_in_menubar; }
+
+    const GraphicsBitmap* backing_store() const { return m_backing_store.ptr(); }
     GraphicsBitmap* backing_store() { return m_backing_store.ptr(); }
+
     void set_backing_store(RefPtr<GraphicsBitmap>&& backing_store)
     {
         m_last_backing_store = move(m_backing_store);
         m_backing_store = move(backing_store);
     }
+
     void swap_backing_stores()
     {
         swap(m_backing_store, m_last_backing_store);
@@ -200,6 +207,7 @@ private:
     unsigned m_wm_event_mask { 0 };
     DisjointRectSet m_pending_paint_rects;
     Rect m_unmaximized_rect;
+    Rect m_rect_in_menubar;
     RefPtr<WSMenu> m_window_menu;
     int m_minimize_animation_step { -1 };
 };
