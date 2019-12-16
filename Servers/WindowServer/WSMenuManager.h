@@ -58,18 +58,11 @@ private:
     WeakPtr<WSMenu> m_current_menu;
     Vector<WeakPtr<WSMenu>> m_open_menu_stack;
 
-    RefPtr<GraphicsBitmap> m_muted_bitmap;
-    RefPtr<GraphicsBitmap> m_unmuted_bitmap;
-
     Vector<WeakPtr<WSWindow>> m_applets;
 
-    OwnPtr<AClientConnection> m_audio_client;
-
-    Rect m_audio_rect;
     Rect m_username_rect;
     Rect m_time_rect;
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
-    bool m_audio_muted { false };
 };

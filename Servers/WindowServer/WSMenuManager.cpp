@@ -1,4 +1,3 @@
-#include <LibAudio/AClientConnection.h>
 #include <LibCore/CTimer.h>
 #include <LibDraw/Font.h>
 #include <LibDraw/Painter.h>
@@ -10,20 +9,6 @@
 
 WSMenuManager::WSMenuManager()
 {
-    m_audio_client = make<AClientConnection>();
-    m_audio_client->on_muted_state_change = [this](bool muted) {
-        if (m_audio_muted == muted)
-            return;
-        m_audio_muted = muted;
-        if (m_window) {
-            draw();
-            m_window->invalidate();
-        }
-    };
-
-    m_unmuted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-unmuted.png");
-    m_muted_bitmap = GraphicsBitmap::load_from_file("/res/icons/audio-muted.png");
-
     m_username = getlogin();
     m_needs_window_resize = true;
 
@@ -71,7 +56,6 @@ void WSMenuManager::draw()
             menubar_rect.height()
         };
 
-
         int time_width = Font::default_font().width("2222-22-22 22:22:22");
         m_time_rect = {
             m_username_rect.left() - menubar_menu_margin() / 2 - time_width,
@@ -80,18 +64,16 @@ void WSMenuManager::draw()
             menubar_rect.height()
         };
 
-        m_audio_rect = { m_time_rect.right() - time_width - 20, m_time_rect.y() + 1, 12, 16 };
-
-        int right_edge_x = m_audio_rect.x() - 4;
+        int right_edge_x = m_time_rect.left() - 4;
         for (auto& existing_applet : m_applets) {
-            if (! existing_applet)
+            if (!existing_applet)
                 continue;
-            
+
             Rect new_applet_rect(right_edge_x - existing_applet->size().width(), 0, existing_applet->size().width(), existing_applet->size().height());
             Rect dummy_menubar_rect(0, 0, 0, 18);
             new_applet_rect.center_vertically_within(dummy_menubar_rect);
 
-            existing_applet->set_rect_in_menubar(new_applet_rect);        
+            existing_applet->set_rect_in_menubar(new_applet_rect);
             right_edge_x = existing_applet->rect_in_menubar().x() - 4;
         }
 
@@ -118,7 +100,7 @@ void WSMenuManager::draw()
             TextAlignment::CenterLeft,
             text_color);
         ++index;
-        return true;
+        return IterationDecision::Continue;
     });
 
     painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, Color::Black);
@@ -133,11 +115,7 @@ void WSMenuManager::draw()
         tm->tm_min,
         tm->tm_sec);
 
-
     painter.draw_text(m_time_rect, time_text, wm.font(), TextAlignment::CenterRight, Color::Black);
-
-    auto& audio_bitmap = m_audio_muted ? *m_muted_bitmap : *m_unmuted_bitmap;
-    painter.blit(m_audio_rect.location(), audio_bitmap, audio_bitmap.rect());
 
     for (auto& applet : m_applets) {
         if (!applet)
@@ -165,21 +143,23 @@ void WSMenuManager::event(CEvent& event)
         return CObject::event(event);
 
     if (event.type() == WSEvent::MouseMove || event.type() == WSEvent::MouseUp || event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseWheel) {
+
         auto& mouse_event = static_cast<WSMouseEvent&>(event);
         WSWindowManager::the().for_each_active_menubar_menu([&](WSMenu& menu) {
             if (menu.rect_in_menubar().contains(mouse_event.position())) {
                 handle_menu_mouse_event(menu, mouse_event);
-                return false;
+                return IterationDecision::Break;
             }
-            return true;
+            return IterationDecision::Continue;
         });
 
-        if (mouse_event.type() == WSEvent::MouseDown
-            && mouse_event.button() == MouseButton::Left
-            && m_audio_rect.contains(mouse_event.position())) {
-            m_audio_client->set_muted(!m_audio_muted);
-            draw();
-            m_window->invalidate();
+        for (auto& applet : m_applets) {
+            if (!applet)
+                continue;
+            if (!applet->rect_in_menubar().contains(mouse_event.position()))
+                continue;
+            auto local_event = mouse_event.translated(-applet->rect_in_menubar().location());
+            applet->event(local_event);
         }
     }
     return CObject::event(event);
@@ -300,7 +280,7 @@ void WSMenuManager::close_bar()
 
 void WSMenuManager::add_applet(WSWindow& applet)
 {
-    int right_edge_x = m_audio_rect.x() - 4;
+    int right_edge_x = m_time_rect.left() - 4;
     for (auto& existing_applet : m_applets) {
         if (existing_applet)
             right_edge_x = existing_applet->rect_in_menubar().x() - 4;

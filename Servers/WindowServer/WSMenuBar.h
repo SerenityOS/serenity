@@ -23,7 +23,7 @@ public:
     void for_each_menu(Callback callback)
     {
         for (auto& menu : m_menus) {
-            if (!callback(*menu))
+            if (callback(*menu) == IterationDecision::Break)
                 return;
         }
     }

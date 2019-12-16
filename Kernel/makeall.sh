@@ -93,6 +93,7 @@ build_targets="$build_targets ../Shell"
 
 build_targets="$build_targets ../Userland"
 
+build_targets="$build_targets ../MenuApplets/Audio"
 build_targets="$build_targets ../MenuApplets/CPUGraph"
 
 build_targets="$build_targets ." # the kernel

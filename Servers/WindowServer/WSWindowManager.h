@@ -149,7 +149,8 @@ public:
     template<typename Callback>
     void for_each_active_menubar_menu(Callback callback)
     {
-        callback(*m_system_menu);
+        if (callback(*m_system_menu) == IterationDecision::Break)
+            return;
         if (m_current_menubar)
             m_current_menubar->for_each_menu(callback);
     }
