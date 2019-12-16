@@ -1,6 +1,7 @@
 #include <LibHTML/CSS/SelectorEngine.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
+#include <LibHTML/DOM/Text.h>
 
 namespace SelectorEngine {
 
@@ -33,6 +34,10 @@ bool matches(const Selector::SimpleSelector& component, const Element& element)
         break;
     case Selector::SimpleSelector::PseudoClass::LastChild:
         if (element.next_element_sibling())
+            return false;
+        break;
+    case Selector::SimpleSelector::PseudoClass::Empty:
+        if (element.first_child_of_type<Element>() || element.first_child_of_type<Text>())
             return false;
         break;
     }
