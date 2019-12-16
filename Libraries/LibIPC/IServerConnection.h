@@ -148,6 +148,12 @@ private:
             }
             ASSERT(decoded_bytes);
         }
+
+        if (!m_unprocessed_messages.is_empty()) {
+            deferred_invoke([this](auto&) {
+                handle_messages();
+            });
+        }
         return true;
     }
 
