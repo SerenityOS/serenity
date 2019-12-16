@@ -33,7 +33,7 @@ WindowClientEndpoint.h: WindowClient.ipc
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 $(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -ldraw -lcore -lthread -lpthread -laudio -lipc
+	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -ldraw -lcore -lthread -lpthread -lipc
 
 .cpp.o:
 	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
