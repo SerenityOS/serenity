@@ -36,6 +36,10 @@ bool matches(const Selector::SimpleSelector& component, const Element& element)
         if (element.next_element_sibling())
             return false;
         break;
+    case Selector::SimpleSelector::PseudoClass::OnlyChild:
+        if (element.previous_element_sibling() || element.next_element_sibling())
+            return false;
+        break;
     case Selector::SimpleSelector::PseudoClass::Empty:
         if (element.first_child_of_type<Element>() || element.first_child_of_type<Text>())
             return false;

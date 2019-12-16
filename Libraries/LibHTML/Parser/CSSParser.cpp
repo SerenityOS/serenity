@@ -325,6 +325,8 @@ public:
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::FirstChild;
             else if (pseudo_name == "last-child")
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::LastChild;
+            else if (pseudo_name == "only-child")
+                simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::OnlyChild;
             else if (pseudo_name == "empty")
                 simple_selector.pseudo_class = Selector::SimpleSelector::PseudoClass::Empty;
         }
