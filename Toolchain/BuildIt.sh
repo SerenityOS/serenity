@@ -42,7 +42,10 @@ pushd "$DIR/Tarballs"
         tar -xf "binutils-2.32.tar.gz"
 
         pushd "binutils-2.32"
-            patch -p1 < "$DIR"/Patches/binutils.patch > /dev/null
+            git init
+            git add .
+            git commit -am "BASE"
+            git apply "$DIR"/Patches/binutils.patch
         popd
     else
         echo "Skipped extracting binutils"
@@ -53,7 +56,10 @@ pushd "$DIR/Tarballs"
         tar -xf "gcc-8.3.0.tar.gz"
 
         pushd "gcc-8.3.0"
-            patch -p1 < "$DIR"/Patches/gcc.patch > /dev/null
+            git init
+            git add .
+            git commit -am "BASE"
+            git apply "$DIR"/Patches/gcc.patch
         popd
     else
         echo "Skipped extracting gcc"
