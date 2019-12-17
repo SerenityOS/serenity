@@ -527,6 +527,14 @@ public:
         return find([&](auto& other) { return value == other; });
     }
 
+    int find_first_index(const T& value)
+    {
+        for (int i = 0; i < m_size; ++i) {
+            if (value == at(i))
+                return i;
+        }
+        return -1;
+    }
 private:
     void reset_capacity()
     {
