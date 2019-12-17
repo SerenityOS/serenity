@@ -16,6 +16,8 @@ public:
     void inode_contents_changed(Badge<Inode>, off_t, ssize_t, const u8*);
     void inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size);
 
+    int purge() override;
+
 private:
     explicit InodeVMObject(Inode&);
     explicit InodeVMObject(const InodeVMObject&);

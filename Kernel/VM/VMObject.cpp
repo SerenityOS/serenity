@@ -19,3 +19,21 @@ VMObject::~VMObject()
 {
     MM.unregister_vmo(*this);
 }
+
+int VMObject::do_purge()
+{
+    LOCKER(m_paging_lock);
+
+    int purged_page_count = 0;
+    for (size_t i = 0; i < m_physical_pages.size(); ++i) {
+        if (m_physical_pages[i])
+            ++purged_page_count;
+        m_physical_pages[i] = nullptr;
+    }
+
+    for_each_region([&](auto& region) {
+        region.remap();
+    });
+
+    return purged_page_count;
+}

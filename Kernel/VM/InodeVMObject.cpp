@@ -102,3 +102,21 @@ void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t s
         region.remap();
     });
 }
+
+int InodeVMObject::purge()
+{
+    LOCKER(m_paging_lock);
+
+    bool some_region_is_mapped_as_private = false;
+    for_each_region([&](auto& region) {
+        if (!region.is_shared()) {
+            some_region_is_mapped_as_private = true;
+            return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    });
+    if (some_region_is_mapped_as_private)
+        return 0;
+
+    return do_purge();
+}

@@ -44,6 +44,8 @@ protected:
     template<typename Callback>
     void for_each_region(Callback);
 
+    int do_purge();
+
     FixedArray<RefPtr<PhysicalPage>> m_physical_pages;
     Lock m_paging_lock { "VMObject" };
 
