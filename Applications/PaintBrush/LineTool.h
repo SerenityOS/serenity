@@ -16,6 +16,7 @@ public:
     virtual void on_contextmenu(GContextMenuEvent&) override;
     virtual void on_second_paint(GPaintEvent&) override;
     virtual void on_keydown(GKeyEvent&) override;
+    virtual void on_keyup(GKeyEvent&) override;
 
 private:
     virtual const char* class_name() const override { return "LineTool"; }
@@ -25,4 +26,5 @@ private:
     Point m_line_end_position;
     RefPtr<GMenu> m_context_menu;
     int m_thickness { 1 };
+    bool m_constrain_angle { false };
 };
