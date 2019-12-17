@@ -29,6 +29,8 @@ public:
     const FixedArray<RefPtr<PhysicalPage>>& physical_pages() const { return m_physical_pages; }
     FixedArray<RefPtr<PhysicalPage>>& physical_pages() { return m_physical_pages; }
 
+    virtual int purge() { return 0; }
+
     size_t size() const { return m_physical_pages.size() * PAGE_SIZE; }
 
     // For InlineLinkedListNode

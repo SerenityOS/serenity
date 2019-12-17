@@ -368,12 +368,11 @@ int Process::sys$madvise(void* address, size_t size, int advice)
 
 int Process::sys$purge()
 {
-    NonnullRefPtrVector<PurgeableVMObject> vmobjects;
+    NonnullRefPtrVector<VMObject> vmobjects;
     {
         InterruptDisabler disabler;
         MM.for_each_vmobject([&](auto& vmobject) {
-            if (vmobject.is_purgeable())
-                vmobjects.append(static_cast<PurgeableVMObject&>(vmobject));
+            vmobjects.append(vmobject);
             return IterationDecision::Continue;
         });
     }

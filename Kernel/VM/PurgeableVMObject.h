@@ -9,7 +9,7 @@ public:
     static NonnullRefPtr<PurgeableVMObject> create_with_size(size_t);
     virtual NonnullRefPtr<VMObject> clone() override;
 
-    int purge();
+    int purge() override;
 
     bool was_purged() const { return m_was_purged; }
     void set_was_purged(bool b) { m_was_purged = b; }
