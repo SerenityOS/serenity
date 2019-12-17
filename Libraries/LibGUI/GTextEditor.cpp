@@ -410,11 +410,11 @@ void GTextEditor::paint_event(GPaintEvent& event)
                     bool selection_ends_on_current_visual_line = visual_line_index == last_visual_line_with_selection;
 
                     int selection_left = selection_begins_on_current_visual_line
-                        ? content_x_for_position({ line_index, selection_start_column_within_line })
+                        ? content_x_for_position({ line_index, (size_t)selection_start_column_within_line })
                         : m_horizontal_content_padding;
 
                     int selection_right = selection_ends_on_current_visual_line
-                        ? content_x_for_position({ line_index, selection_end_column_within_line })
+                        ? content_x_for_position({ line_index, (size_t)selection_end_column_within_line })
                         : visual_line_rect.right() + 1;
 
                     Rect selection_rect {
@@ -426,7 +426,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
 
                     painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
 
-                    size_t start_of_selection_within_visual_line = max((size_t)0, selection_start_column_within_line - start_of_visual_line);
+                    size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
                     size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
 
                     StringView visual_selected_text {
