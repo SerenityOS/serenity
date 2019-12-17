@@ -24,10 +24,10 @@
 DisplayPropertiesWidget::DisplayPropertiesWidget()
     : m_wm_config(CConfigFile::get_for_app("WindowManager"))
 {
-    create_root_widget();
-    create_frame();
     create_resolution_list();
     create_wallpaper_list();
+    create_root_widget();
+    create_frame();
 }
 
 void DisplayPropertiesWidget::create_resolution_list()
@@ -126,6 +126,13 @@ void DisplayPropertiesWidget::create_frame()
     auto resolution_list = GListView::construct(settings_content);
     resolution_list->set_background_color(Color::White);
     resolution_list->set_model(*ItemListModel<Size>::create(m_resolutions));
+
+    auto resolution_model = resolution_list->model();
+    auto find_first_index = m_resolutions.find_first_index(m_selected_resolution);
+    auto resolution_index_in_model = resolution_model->index(find_first_index, resolution_list->model_column());
+    if (resolution_model->is_valid(resolution_index_in_model))
+        resolution_list->selection().set(resolution_index_in_model);
+
     resolution_list->horizontal_scrollbar().set_visible(false);
     resolution_list->on_selection = [this](auto& index) {
         m_selected_resolution = m_resolutions.at(index.row());
