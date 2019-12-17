@@ -7,7 +7,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "$DIR"
 
-TARGET=i686-pc-serenity
+ARCH=${ARCH:-"i686"}
+TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local"
 SYSROOT="$DIR/../Root"
 
@@ -15,45 +16,62 @@ echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
-
 source "$DIR/UseIt.sh"
 
+BINUTILS_VERSION="2.33.1"
+BINUTILS_MD5SUM="d1119c93fc0ed3007be4a84dd186af5"
+BINUTILS_NAME="binutils-$BINUTILS_VERSION"
+BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
+BINUTILS_BASE_URL="http://ftp.gnu.org/gnu/binutils"
+
+GCC_VERSION="9.2.0"
+GCC_MD5SUM="e03739b042a14376d727ddcfd05a9bc3"
+GCC_NAME="gcc-$GCC_VERSION"
+GCC_PKG="${GCC_NAME}.tar.gz"
+GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
+
 pushd "$DIR/Tarballs"
-    md5="$(md5sum binutils-2.32.tar.gz | cut -f1 -d' ')"
+    md5="$(md5sum $BINUTILS_PKG | cut -f1 -d' ')"
     echo "bu md5='$md5'"
-    if [ ! -e "binutils-2.32.tar.gz" ] || [ "$md5" != "d1119c93fc0ed3007be4a84dd186af55" ] ; then
-        rm -f binutils-2.32.tar.gz
-        curl -O "http://ftp.gnu.org/gnu/binutils/binutils-2.32.tar.gz"
+    if [ ! -e $BINUTILS_PKG ] || [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
+        rm -f $BINUTILS_PKG
+        wget "$BINUTILS_BASE_URL/$BINUTILS_PKG"
     else
         echo "Skipped downloading binutils"
     fi
 
-    md5="$(md5sum gcc-8.3.0.tar.gz | cut -f1 -d' ')"
+    md5="$(md5sum ${GCC_PKG} | cut -f1 -d' ')"
     echo "gc md5='$md5'"
-    if [ ! -e "gcc-8.3.0.tar.gz" ] || [ "$md5" != "9972f8c24c02ebcb5a342c1b30de69ff" ] ; then
-        rm -f gcc-8.3.0.tar.gz
-        curl -O "http://ftp.gnu.org/gnu/gcc/gcc-8.3.0/gcc-8.3.0.tar.gz"
+    if [ ! -e $GCC_PKG ] || [ "$md5" != ${GCC_MD5SUM} ] ; then
+        rm -f $GCC_PKG
+        wget "$GCC_BASE_URL/$GCC_NAME/$GCC_PKG"
     else
         echo "Skipped downloading gcc"
     fi
 
-    if [ ! -d "binutils-2.32" ]; then
+    if [ ! -d ${BINUTILS_NAME} ]; then
         echo "Extracting binutils..."
-        tar -xf "binutils-2.32.tar.gz"
+        tar -xf ${BINUTILS_PKG}
 
-        pushd "binutils-2.32"
-            patch -p1 < "$DIR"/Patches/binutils.patch > /dev/null
+        pushd ${BINUTILS_NAME}
+            git init
+            git add .
+            git commit -am "BASE"
+            git apply "$DIR"/Patches/binutils.patch
         popd
     else
         echo "Skipped extracting binutils"
     fi
 
-    if [ ! -d "gcc-8.3.0" ]; then
+    if [ ! -d $GCC_NAME ]; then
         echo "Extracting gcc..."
-        tar -xf "gcc-8.3.0.tar.gz"
+        tar -xf $GCC_PKG
 
-        pushd "gcc-8.3.0"
-            patch -p1 < "$DIR"/Patches/gcc.patch > /dev/null
+        pushd $GCC_NAME
+            git init
+            git add .
+            git commit -am "BASE"
+            git apply "$DIR"/Patches/gcc.patch
         popd
     else
         echo "Skipped extracting gcc"
@@ -73,7 +91,7 @@ pushd "$DIR/Build/"
     unset PKG_CONFIG_LIBDIR # Just in case
 
     pushd binutils
-        "$DIR"/Tarballs/binutils-2.32/configure --prefix="$PREFIX" \
+        "$DIR"/Tarballs/binutils-2.33.1/configure --prefix="$PREFIX" \
                                                 --target="$TARGET" \
                                                 --with-sysroot="$SYSROOT" \
                                                 --disable-nls || exit 1
@@ -82,7 +100,7 @@ pushd "$DIR/Build/"
     popd
 
     pushd gcc
-        "$DIR"/Tarballs/gcc-8.3.0/configure --prefix="$PREFIX" \
+        "$DIR"/Tarballs/gcc-9.2.0/configure --prefix="$PREFIX" \
                                             --target="$TARGET" \
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
