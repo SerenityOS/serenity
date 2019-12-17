@@ -109,8 +109,8 @@ OBJS = $(CXX_OBJS) Arch/i386/Boot/boot.ao
 KERNEL = kernel
 CXXFLAGS += -ffreestanding -mno-80387 -mno-mmx -mno-sse -mno-sse2 -fno-asynchronous-unwind-tables
 CXXFLAGS += -nostdlib -nostdinc -nostdinc++
-CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/8.3.0/
-CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/8.3.0/i686-pc-serenity/
+CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.2.0/
+CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.2.0/i686-pc-serenity/
 DEFINES += -DKERNEL
 LDFLAGS += -Ttext 0x100000 -Wl,-T linker.ld -nostdlib
 
