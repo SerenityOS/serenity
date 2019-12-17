@@ -134,7 +134,7 @@ size_t malloc_good_size(size_t size)
 
 static void* os_alloc(size_t size, const char* name)
 {
-    return mmap_with_name(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, name);
+    return mmap_with_name(nullptr, size, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE | MAP_PURGEABLE, 0, 0, name);
 }
 
 static void os_free(void* ptr, size_t size)
@@ -162,10 +162,18 @@ void* malloc(size_t size)
         if (auto* allocator = big_allocator_for_size(real_size)) {
             if (!allocator->blocks.is_empty()) {
                 auto* block = allocator->blocks.take_last();
+                int rc = madvise(block, real_size, MADV_SET_NONVOLATILE);
+                bool this_block_was_purged = rc == 1;
+                if (rc < 0) {
+                    perror("madvise");
+                    ASSERT_NOT_REACHED();
+                }
                 if (mprotect(block, real_size, PROT_READ | PROT_WRITE) < 0) {
                     perror("mprotect");
                     ASSERT_NOT_REACHED();
                 }
+                if (this_block_was_purged)
+                    new (block) BigAllocationBlock(real_size);
                 set_mmap_name(block, PAGE_SIZE, "malloc: BigAllocationBlock (reused)");
                 return &block->m_slot[0];
             }
@@ -185,11 +193,19 @@ void* malloc(size_t size)
 
     if (!block && allocator->empty_block_count) {
         block = allocator->empty_blocks[--allocator->empty_block_count];
-        int rc = mprotect(block, PAGE_SIZE, PROT_READ | PROT_WRITE);
+        int rc = madvise(block, PAGE_SIZE, MADV_SET_NONVOLATILE);
+        bool this_block_was_purged = rc == 1;
+        if (rc < 0) {
+            perror("madvise");
+            ASSERT_NOT_REACHED();
+        }
+        rc = mprotect(block, PAGE_SIZE, PROT_READ | PROT_WRITE);
         if (rc < 0) {
             perror("mprotect");
             ASSERT_NOT_REACHED();
         }
+        if (this_block_was_purged)
+            new (block) ChunkedBlock(good_size);
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu) (reused)", good_size);
         set_mmap_name(block, PAGE_SIZE, buffer);
@@ -246,6 +262,10 @@ void free(void* ptr)
                     perror("mprotect");
                     ASSERT_NOT_REACHED();
                 }
+                if (madvise(block, PAGE_SIZE, MADV_SET_VOLATILE) != 0) {
+                    perror("madvise");
+                    ASSERT_NOT_REACHED();
+                }
                 return;
             }
         }
@@ -293,6 +313,7 @@ void free(void* ptr)
             snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu) (free)", good_size);
             set_mmap_name(block, PAGE_SIZE, buffer);
             mprotect(block, PAGE_SIZE, PROT_NONE);
+            madvise(block, PAGE_SIZE, MADV_SET_VOLATILE);
             return;
         }
 #ifdef MALLOC_DEBUG
