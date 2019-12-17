@@ -7,7 +7,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 echo "$DIR"
 
-TARGET=i686-pc-serenity
+TARGET=${TARGET:-"i686-pc-serenity"}
 PREFIX="$DIR/Local"
 SYSROOT="$DIR/../Root"
 
