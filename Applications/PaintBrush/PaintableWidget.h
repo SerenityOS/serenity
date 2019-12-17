@@ -39,6 +39,7 @@ private:
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
+    virtual void keyup_event(GKeyEvent&) override;
 
     RefPtr<GraphicsBitmap> m_bitmap;
 
