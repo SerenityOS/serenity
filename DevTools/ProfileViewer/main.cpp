@@ -54,7 +54,7 @@ int main(int argc, char** argv)
         profile->set_inverted(action.is_checked());
     });
     invert_action->set_checkable(true);
-    invert_action->set_checked(true);
+    invert_action->set_checked(false);
     view_menu->add_action(invert_action);
 
     menubar->add_menu(move(view_menu));
