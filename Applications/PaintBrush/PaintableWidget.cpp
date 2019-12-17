@@ -103,6 +103,13 @@ void PaintableWidget::keydown_event(GKeyEvent& event)
     GWidget::keydown_event(event);
 }
 
+void PaintableWidget::keyup_event(GKeyEvent& event)
+{
+    if (m_tool)
+        m_tool->on_keyup(event);
+    GWidget::keyup_event(event);
+}
+
 void PaintableWidget::set_primary_color(Color color)
 {
     if (m_primary_color == color)
