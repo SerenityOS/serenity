@@ -517,6 +517,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     auto vmo = InodeVMObject::create_with_inode(*description->inode());
     auto* region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, description->absolute_path(), PROT_READ);
     ASSERT(region);
+    region->set_shared(true);
 
     // NOTE: We yank this out of 'm_regions' since we're about to manipulate the vector
     //       and we don't want it getting lost.
@@ -542,8 +543,10 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            if (!allocate_region_with_vmo(vaddr, size, vmo, offset_in_image, String(name), prot))
+            auto* region = allocate_region_with_vmo(vaddr, size, vmo, offset_in_image, String(name), prot);
+            if (!region)
                 return nullptr;
+            region->set_shared(true);
             return vaddr.as_ptr();
         };
         loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
