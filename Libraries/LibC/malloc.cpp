@@ -25,8 +25,8 @@ static LibThread::Lock& malloc_lock()
     return *reinterpret_cast<LibThread::Lock*>(&lock_storage);
 }
 
-static const int number_of_chunked_blocks_to_keep_around_per_size_class = 32;
-static const int number_of_big_blocks_to_keep_around_per_size_class = 8;
+constexpr int number_of_chunked_blocks_to_keep_around_per_size_class = 32;
+constexpr int number_of_big_blocks_to_keep_around_per_size_class = 8;
 
 static bool s_log_malloc = false;
 static bool s_scrub_malloc = true;
@@ -89,7 +89,8 @@ struct ChunkedBlock : public CommonHeader
 struct Allocator {
     size_t size { 0 };
     size_t block_count { 0 };
-    ChunkedBlock* empty_block_queue { nullptr };
+    size_t empty_block_count { 0 };
+    ChunkedBlock* empty_blocks[number_of_chunked_blocks_to_keep_around_per_size_class] { nullptr };
     InlineLinkedList<ChunkedBlock> usable_blocks;
     InlineLinkedList<ChunkedBlock> full_blocks;
 };
@@ -182,14 +183,13 @@ void* malloc(size_t size)
             break;
     }
 
-    if (!block && allocator->empty_block_queue) {
-        block = allocator->empty_block_queue;
+    if (!block && allocator->empty_block_count) {
+        block = allocator->empty_blocks[--allocator->empty_block_count];
         int rc = mprotect(block, PAGE_SIZE, PROT_READ | PROT_WRITE);
         if (rc < 0) {
             perror("mprotect");
             ASSERT_NOT_REACHED();
         }
-        allocator->empty_block_queue = block->m_next;
         char buffer[64];
         snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu) (reused)", good_size);
         set_mmap_name(block, PAGE_SIZE, buffer);
@@ -288,8 +288,7 @@ void free(void* ptr)
             dbgprintf("Keeping block %p around for size class %u\n", block, good_size);
 #endif
             allocator->usable_blocks.remove(block);
-            block->m_next = allocator->empty_block_queue;
-            allocator->empty_block_queue = block;
+            allocator->empty_blocks[allocator->empty_block_count++] = block;
             char buffer[64];
             snprintf(buffer, sizeof(buffer), "malloc: ChunkedBlock(%zu) (free)", good_size);
             set_mmap_name(block, PAGE_SIZE, buffer);
