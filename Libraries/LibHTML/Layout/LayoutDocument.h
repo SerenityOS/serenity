@@ -15,6 +15,8 @@ public:
     const LayoutRange& selection() const { return m_selection; }
     LayoutRange& selection() { return m_selection; }
 
+    void did_set_viewport_rect(Badge<Frame>, const Rect&);
+
 private:
     LayoutRange m_selection;
 };

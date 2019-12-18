@@ -80,3 +80,17 @@ const GraphicsBitmap* HTMLImageElement::bitmap() const
         return nullptr;
     return m_image_decoder->bitmap();
 }
+
+void HTMLImageElement::set_volatile(Badge<LayoutDocument>, bool v)
+{
+    if (!m_image_decoder)
+        return;
+    if (v) {
+        m_image_decoder->set_volatile();
+        return;
+    }
+    bool has_image = m_image_decoder->set_nonvolatile();
+    if (has_image)
+        return;
+    m_image_decoder = ImageDecoder::create(m_encoded_data.data(), m_encoded_data.size());
+}
