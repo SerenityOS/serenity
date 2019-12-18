@@ -23,6 +23,8 @@ h3 {
 }
 
 pre {
+    font-family: Csilla;
+    font-weight: lighter;
     margin-bottom: 8;
     margin-top: 8;
     white-space: pre;
