@@ -133,3 +133,7 @@ tr {
 td {
     display: table-cell;
 }
+
+basefont {
+    display: block;
+}
