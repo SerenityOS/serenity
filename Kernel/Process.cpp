@@ -616,11 +616,17 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         }
     }
 
+    // NOTE: We create the new stack before disabling interrupts since it will zero-fault
+    //       and we don't want to deal with faults after this point.
+    u32 new_userspace_esp = main_thread().make_userspace_stack_for_main_thread(move(arguments), move(environment));
+
     // We cli() manually here because we don't want to get interrupted between do_exec() and Schedule::yield().
     // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
     // If we used an InterruptDisabler that sti()'d on exit, we might timer tick'd too soon in exec().
     if (&current->process() == this)
         cli();
+
+    // NOTE: Be careful to not trigger any page faults below!
 
     Scheduler::prepare_to_modify_tss(main_thread());
 
@@ -645,7 +651,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     main_thread().m_tss.gs = thread_specific_selector() | 3;
     main_thread().m_tss.ss = 0x23;
     main_thread().m_tss.cr3 = page_directory().cr3();
-    main_thread().make_userspace_stack_for_main_thread(move(arguments), move(environment));
+    main_thread().m_tss.esp = new_userspace_esp;
     main_thread().m_tss.ss0 = 0x10;
     main_thread().m_tss.esp0 = old_esp0;
     main_thread().m_tss.ss2 = m_pid;
