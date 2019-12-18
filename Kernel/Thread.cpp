@@ -579,13 +579,16 @@ RegisterDump& Thread::get_register_dump_from_stack()
     return *(RegisterDump*)(kernel_stack_top() - sizeof(RegisterDump));
 }
 
-void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
+u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment)
 {
     auto* region = m_process.allocate_region(VirtualAddress(), default_userspace_stack_size, "Stack (Main thread)", PROT_READ | PROT_WRITE, false);
     ASSERT(region);
     region->set_stack(true);
-    m_tss.esp = region->vaddr().offset(default_userspace_stack_size).get();
 
+    u32 new_esp = region->vaddr().offset(default_userspace_stack_size).get();
+
+    // FIXME: This is weird, we put the argument contents at the base of the stack,
+    //        and the argument pointers at the top? Why?
     char* stack_base = (char*)region->vaddr().get();
     int argc = arguments.size();
     char** argv = (char**)stack_base;
@@ -608,11 +611,19 @@ void Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vect
     }
     env[environment.size()] = nullptr;
 
+    auto push_on_new_stack = [&new_esp](u32 value)
+    {
+        new_esp -= 4;
+        u32* stack_ptr = (u32*)new_esp;
+        *stack_ptr = value;
+    };
+
     // NOTE: The stack needs to be 16-byte aligned.
-    push_value_on_stack((u32)env);
-    push_value_on_stack((u32)argv);
-    push_value_on_stack((u32)argc);
-    push_value_on_stack(0);
+    push_on_new_stack((u32)env);
+    push_on_new_stack((u32)argv);
+    push_on_new_stack((u32)argc);
+    push_on_new_stack(0);
+    return new_esp;
 }
 
 Thread* Thread::clone(Process& process)
