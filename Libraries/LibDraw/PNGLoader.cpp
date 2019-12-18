@@ -515,7 +515,7 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
 #ifdef PNG_STOPWATCH_DEBUG
         Stopwatch sw("load_png_impl: create bitmap");
 #endif
-        context.bitmap = GraphicsBitmap::create(context.has_alpha() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, { context.width, context.height });
+        context.bitmap = GraphicsBitmap::create_purgeable(context.has_alpha() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, { context.width, context.height });
     }
 
     unfilter(context);
@@ -700,4 +700,17 @@ RefPtr<GraphicsBitmap> PNGImageDecoderPlugin::bitmap()
 
     ASSERT(m_context->bitmap);
     return m_context->bitmap;
+}
+
+void PNGImageDecoderPlugin::set_volatile()
+{
+    if (m_context->bitmap)
+        m_context->bitmap->set_volatile();
+}
+
+bool PNGImageDecoderPlugin::set_nonvolatile()
+{
+    if (!m_context->bitmap)
+        return false;
+    return m_context->bitmap->set_nonvolatile();
 }
