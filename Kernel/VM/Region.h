@@ -98,7 +98,8 @@ public:
         return m_offset_in_vmo;
     }
 
-    int commit();
+    bool commit();
+    bool commit(size_t page_index);
 
     size_t amount_resident() const;
     size_t amount_shared() const;
