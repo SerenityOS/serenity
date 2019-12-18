@@ -177,9 +177,9 @@ void Document::layout()
 
 void Document::update_style()
 {
-    for_each_in_subtree([&](Node& node) {
-        if (node.needs_style_update())
-            to<Element>(node).recompute_style();
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (element.needs_style_update())
+            element.recompute_style();
         return IterationDecision::Continue;
     });
     update_layout();
@@ -252,23 +252,23 @@ void Document::set_hovered_node(Node* node)
 
 const Element* Document::get_element_by_id(const String& id) const
 {
-    const Element* element = nullptr;
-    for_each_in_subtree([&](auto& node) {
-        if (is<Element>(node) && to<Element>(node).attribute("id") == id) {
-            element = &to<Element>(node);
+    const Element* found_element = nullptr;
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (element.attribute("id") == id) {
+            found_element = &element;
             return IterationDecision::Break;
         }
         return IterationDecision::Continue;
     });
-    return element;
+    return found_element;
 }
 
 Vector<const Element*> Document::get_elements_by_name(const String& name) const
 {
     Vector<const Element*> elements;
-    for_each_in_subtree([&](auto& node) {
-        if (is<Element>(node) && to<Element>(node).attribute("name") == name)
-            elements.append(&to<Element>(node));
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        if (element.attribute("name") == name)
+            elements.append(&element);
         return IterationDecision::Continue;
     });
     return elements;

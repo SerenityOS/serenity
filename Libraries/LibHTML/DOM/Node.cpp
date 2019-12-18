@@ -74,9 +74,8 @@ RefPtr<LayoutNode> Node::create_layout_node(const StyleProperties*) const
 
 void Node::invalidate_style()
 {
-    for_each_in_subtree([&](auto& node) {
-        if (is<Element>(node))
-            node.set_needs_style_update(true);
+    for_each_in_subtree_of_type<Element>([&](auto& element) {
+        element.set_needs_style_update(true);
         return IterationDecision::Continue;
     });
     document().schedule_style_update();

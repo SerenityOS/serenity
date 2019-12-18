@@ -34,12 +34,10 @@ void HTMLFormElement::submit()
 
     Vector<NameAndValue> parameters;
 
-    for_each_in_subtree([&](auto& node) {
-        if (is<HTMLInputElement>(node)) {
-            auto& input = to<HTMLInputElement>(node);
-            if (!input.name().is_null())
-                parameters.append({ input.name(), input.value() });
-        }
+    for_each_in_subtree_of_type<HTMLInputElement>([&](auto& node) {
+        auto& input = to<HTMLInputElement>(node);
+        if (!input.name().is_null())
+            parameters.append({ input.name(), input.value() });
         return IterationDecision::Continue;
     });
 

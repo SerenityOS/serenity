@@ -4,6 +4,15 @@
 #include <AK/NonnullRefPtr.h>
 #include <AK/Weakable.h>
 
+// FIXME: I wish I didn't have to forward declare these, but I can't seem to avoid
+//        it if I still want to have for_each_in_subtree_of_type<U> inline here.
+class Node;
+class LayoutNode;
+template<typename T>
+bool is(const Node&);
+template<typename T>
+bool is(const LayoutNode&);
+
 template<typename T>
 class TreeNode : public Weakable<T> {
 public:
@@ -117,6 +126,34 @@ public:
             return IterationDecision::Break;
         for (auto* child = first_child(); child; child = child->next_sibling()) {
             if (child->for_each_in_subtree(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename U, typename Callback>
+    IterationDecision for_each_in_subtree_of_type(Callback callback)
+    {
+        if (is<U>(static_cast<const T&>(*this))) {
+            if (callback(static_cast<U&>(*this)) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->template for_each_in_subtree_of_type<U>(callback) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        return IterationDecision::Continue;
+    }
+
+    template<typename U, typename Callback>
+    IterationDecision for_each_in_subtree_of_type(Callback callback) const
+    {
+        if (is<U>(static_cast<const T&>(*this))) {
+            if (callback(static_cast<const U&>(*this)) == IterationDecision::Break)
+                return IterationDecision::Break;
+        }
+        for (auto* child = first_child(); child; child = child->next_sibling()) {
+            if (child->template for_each_in_subtree_of_type<U>(callback) == IterationDecision::Break)
                 return IterationDecision::Break;
         }
         return IterationDecision::Continue;
