@@ -16,7 +16,7 @@ HTMLImageElement::~HTMLImageElement()
 
 void HTMLImageElement::parse_attribute(const String& name, const String& value)
 {
-    if (name == "src")
+    if (name.equals_ignoring_case("src"))
         load_image(value);
 }
 
