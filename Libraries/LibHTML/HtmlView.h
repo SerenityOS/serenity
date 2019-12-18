@@ -47,6 +47,8 @@ protected:
     virtual void keydown_event(GKeyEvent&) override;
 
 private:
+    virtual void did_scroll() override;
+
     void layout_and_sync_size();
     void dump_selection(const char* event_name);
 

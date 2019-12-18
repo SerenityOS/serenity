@@ -95,6 +95,8 @@ void HtmlView::layout_and_sync_size()
         set_content_size(enclosing_int_rect(layout_root()->rect()).size());
     }
 
+    main_frame().set_viewport_rect(visible_content_rect());
+
 #ifdef HTML_DEBUG
     dbgprintf("\033[33;1mLayout tree after layout:\033[0m\n");
     ::dump_tree(*layout_root());
@@ -380,4 +382,9 @@ void HtmlView::dump_selection(const char* event_name)
     dbg() << event_name << " selection start: "
           << layout_root()->selection().start().layout_node << ":" << layout_root()->selection().start().index_in_node << ", end: "
           << layout_root()->selection().end().layout_node << ":" << layout_root()->selection().end().index_in_node;
+}
+
+void HtmlView::did_scroll()
+{
+    main_frame().set_viewport_rect(visible_content_rect());
 }

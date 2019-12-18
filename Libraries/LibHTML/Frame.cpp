@@ -32,6 +32,13 @@ void Frame::set_size(const Size& size)
     m_size = size;
 }
 
+void Frame::set_viewport_rect(const Rect& rect)
+{
+    if (m_viewport_rect == rect)
+        return;
+    m_viewport_rect = rect;
+}
+
 void Frame::set_needs_display(const Rect& rect)
 {
     if (!on_set_needs_display)

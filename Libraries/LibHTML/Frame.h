@@ -30,10 +30,14 @@ public:
     void set_needs_display(const Rect&);
     Function<void(const Rect&)> on_set_needs_display;
 
+    void set_viewport_rect(const Rect&);
+    Rect viewport_rect() const { return m_viewport_rect; }
+
 private:
     explicit Frame(HtmlView&);
 
     WeakPtr<HtmlView> m_html_view;
     RefPtr<Document> m_document;
     Size m_size;
+    Rect m_viewport_rect;
 };
