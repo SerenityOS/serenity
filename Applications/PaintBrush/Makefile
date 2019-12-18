@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     PaintableWidget.o \
     PaletteWidget.o \
@@ -14,6 +12,8 @@ OBJS = \
     PickerTool.o \
     main.o
 
-APP = PaintBrush
+PROGRAM = PaintBrush
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

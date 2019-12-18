@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     IRCClient.o \
     IRCChannel.o \
@@ -11,6 +9,8 @@ OBJS = \
     IRCChannelMemberListModel.o \
     main.o
 
-APP = IRCClient
+PROGRAM = IRCClient
 
-include ../Makefile.common
+LDFLAGS = -lgui -lhtml -ldraw -lprotocol -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

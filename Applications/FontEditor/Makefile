@@ -1,17 +1,18 @@
-include ../../Makefile.common
-
 OBJS = \
     FontEditor.o \
     GlyphMapWidget.o \
     GlyphEditorWidget.o \
     main.o
 
-APP = FontEditor
+PROGRAM = FontEditor
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lcore -lc
 
 FontEditor.cpp: UI_FontEditorBottom.h
 
 UI_FontEditorBottom.h: FontEditorBottom.frm
 	../../DevTools/FormCompiler/FormCompiler $< > $@
 
+EXTRA_CLEAN = UI_FontEditorBottom.h
+
+include ../../Makefile.common

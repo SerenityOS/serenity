@@ -1,10 +1,10 @@
-include ../../Makefile.common
-
 OBJS = \
     ThreadCatalogModel.o \
     BoardListModel.o \
     main.o
 
-APP = ChanViewer
+PROGRAM = ChanViewer
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

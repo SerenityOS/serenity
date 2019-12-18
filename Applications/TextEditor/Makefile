@@ -1,9 +1,9 @@
-include ../../Makefile.common
-
 OBJS = \
     TextEditorWidget.o \
-    main.o 
+    main.o
 
-APP = TextEditor
+PROGRAM = TextEditor
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lvt -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common
