@@ -45,6 +45,9 @@ void Frame::set_viewport_rect(const Rect& rect)
 
 void Frame::set_needs_display(const Rect& rect)
 {
+    if (!m_viewport_rect.intersects(rect))
+        return;
+
     if (!on_set_needs_display)
         return;
     on_set_needs_display(rect);
