@@ -36,6 +36,7 @@
 
 #define MADV_SET_VOLATILE 0x100
 #define MADV_SET_NONVOLATILE 0x200
+#define MADV_GET_VOLATILE 0x400
 
 #define F_DUPFD 0
 #define F_GETFD 1
