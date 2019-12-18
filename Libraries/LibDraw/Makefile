@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     CharacterBitmap.o \
     Color.o \
@@ -15,17 +13,10 @@ OBJS = \
     Emoji.o
 
 LIBRARY = libdraw.a
-DEFINES += -DUSERLAND
 
-all: $(LIBRARY)
+install:
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibDraw/
+	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/LibDraw/
+	cp $(LIBRARY) $(SERENITY_BASE_DIR)/Root/usr/lib/
 
-$(LIBRARY): $(OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(OBJS) $(LIBS)
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
+include ../../Makefile.common

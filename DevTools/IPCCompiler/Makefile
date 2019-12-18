@@ -1,3 +1,5 @@
+HOST_CXX = 1
+
 PROGRAM = IPCCompiler
 
 OBJS = \
@@ -19,15 +21,4 @@ OBJS = \
     ../../Libraries/LibCore/CLocalServer.o \
     ../../Libraries/LibCore/CEventLoop.o
 
-all: $(PROGRAM)
-
-CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3
-
-%.o: %.cpp
-	$(PRE_CXX) $(CXX) $(CXXFLAGS) -I../ -I../../ -I../../Libraries/ -o $@ -c $<
-
-$(PROGRAM): $(OBJS)
-	$(CXX) $(LDFLAGS) -I../ -I../../ -I../../Libraries/ -o $(PROGRAM) $(OBJS)
-
-clean:
-	rm -f $(PROGRAM) $(OBJS)
+include ../../Makefile.common

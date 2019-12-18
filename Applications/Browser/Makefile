@@ -1,8 +1,8 @@
-include ../../Makefile.common
-
 OBJS = \
     main.o
 
-APP = Browser
+PROGRAM = Browser
 
-include ../Makefile.common
+LDFLAGS = -lgui -lhtml -ldraw -lprotocol -lipc -lcore -lc
+
+include ../../Makefile.common

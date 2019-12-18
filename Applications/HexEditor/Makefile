@@ -1,10 +1,10 @@
-include ../../Makefile.common
-
 OBJS = \
-	HexEditor.o \
+    HexEditor.o \
     HexEditorWidget.o \
-    main.o 
+    main.o
 
-APP = HexEditor
+PROGRAM = HexEditor
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

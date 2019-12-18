@@ -1,11 +1,11 @@
-include ../../Makefile.common
-
 OBJS = \
-	Calculator.o \
-	Keypad.o \
-	CalculatorWidget.o \
-	main.o
+    Calculator.o \
+    Keypad.o \
+    CalculatorWidget.o \
+    main.o
 
-APP = Calculator
+PROGRAM = Calculator
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lcore -lc
+
+include ../../Makefile.common

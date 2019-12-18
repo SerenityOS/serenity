@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     Project.o \
     ProjectFile.o \
@@ -18,20 +16,8 @@ OBJS = \
     WidgetTreeModel.o \
     main.o
 
-APP = HackStudio
+PROGRAM = HackStudio
 
-DEFINES += -DUSERLAND
+LDFLAGS = -lvt -lhtml -lprotocol -lipc -lmarkdown -lgui -ldraw -lthread -lpthread -lcore -lc
 
-all: $(APP)
-
-$(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lvt -lhtml -lprotocol -lipc -lmarkdown -lgui -ldraw -lthread -lpthread -lcore -lc
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d
-
+include ../../Makefile.common

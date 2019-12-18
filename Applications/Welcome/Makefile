@@ -1,14 +1,14 @@
-include ../../Makefile.common
-
 OBJS = \
     main.o \
     TextWidget.o \
     background.png.o
 
-APP = Welcome
+PROGRAM = Welcome
+
+LDFLAGS = -lgui -ldraw -lipc -lcore -lc
 
 .SUFFIXES: .png
 %.png.o: %.png
 	@echo "LINK $<"; $(LINK) --relocatable --format binary --output $@ $<
 
-include ../Makefile.common
+include ../../Makefile.common
