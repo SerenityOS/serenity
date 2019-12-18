@@ -25,10 +25,10 @@ public:
     const StyleProperties& style() const { return parent()->style(); }
 
 private:
+    void split_preformatted_into_lines(LayoutBlock& container);
+
     template<typename Callback>
     void for_each_word(Callback) const;
-    template<typename Callback>
-    void for_each_source_line(Callback) const;
 
     String m_text_for_rendering;
 };
