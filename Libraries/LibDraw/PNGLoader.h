@@ -15,6 +15,8 @@ public:
 
     virtual Size size() override;
     virtual RefPtr<GraphicsBitmap> bitmap() override;
+    virtual void set_volatile() override;
+    [[nodiscard]] virtual bool set_nonvolatile() override;
 
 private:
     OwnPtr<PNGLoadingContext> m_context;
