@@ -110,6 +110,8 @@ public:
         return m_impl->to_uppercase();
     }
 
+    bool equals_ignoring_case(const StringView&) const;
+
     bool contains(const String&) const;
 
     Vector<String> split_limit(char separator, size_t limit) const;

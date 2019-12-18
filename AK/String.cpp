@@ -7,6 +7,13 @@
 extern "C" char* strstr(const char* haystack, const char* needle);
 #endif
 
+static inline char to_lowercase(char c)
+{
+    if (c >= 'A' && c <= 'Z')
+        return c | 0x20;
+    return c;
+}
+
 namespace AK {
 
 bool String::operator==(const String& other) const
@@ -322,5 +329,17 @@ bool String::contains(const String& needle) const
     return strstr(characters(), needle.characters());
 }
 
+bool String::equals_ignoring_case(const StringView& other) const
+{
+    if (other.m_impl == impl())
+        return true;
+    if (length() != other.length())
+        return false;
+    for (size_t i = 0; i < length(); ++i) {
+        if (::to_lowercase(characters()[i]) != ::to_lowercase(other.characters_without_null_termination()[i]))
+            return false;
+    }
+    return true;
 }
 
+}
