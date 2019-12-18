@@ -1,6 +1,7 @@
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/Frame.h>
 #include <LibHTML/HtmlView.h>
+#include <LibHTML/Layout/LayoutDocument.h>
 
 Frame::Frame(HtmlView& html_view)
     : m_html_view(html_view.make_weak_ptr())
@@ -37,6 +38,9 @@ void Frame::set_viewport_rect(const Rect& rect)
     if (m_viewport_rect == rect)
         return;
     m_viewport_rect = rect;
+
+    if (m_document && m_document->layout_node())
+        m_document->layout_node()->did_set_viewport_rect({}, rect);
 }
 
 void Frame::set_needs_display(const Rect& rect)
