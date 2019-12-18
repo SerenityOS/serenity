@@ -358,6 +358,8 @@ int Process::sys$madvise(void* address, size_t size, int advice)
         if (!region->vmobject().is_purgeable())
             return -EPERM;
         auto& vmobject = static_cast<PurgeableVMObject&>(region->vmobject());
+        if (!vmobject.is_volatile())
+            return 0;
         vmobject.set_volatile(false);
         bool was_purged = vmobject.was_purged();
         vmobject.set_was_purged(false);
