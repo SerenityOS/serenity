@@ -1,20 +1,11 @@
-include ../../Makefile.common
-
 OBJS = \
     Database.o
 
 LIBRARY = libpcidb.a
-DEFINES += -DUSERLAND
 
-all: $(LIBRARY)
+install:
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibPCIDB/
+	cp ./*.h $(SERENITY_BASE_DIR)/Root/usr/include/LibPCIDB/
+	cp $(LIBRARY) $(SERENITY_BASE_DIR)/Root/usr/lib/
 
-$(LIBRARY): $(OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(OBJS) $(LIBS)
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
+include ../../Makefile.common

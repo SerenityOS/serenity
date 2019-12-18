@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 AK_OBJS = \
     ../../AK/StringImpl.o \
     ../../AK/String.o \
@@ -57,30 +55,37 @@ LIBC_OBJS = \
        serenity.o \
        syslog.o
 
-ASM_OBJS = setjmp.ao crti.ao crtn.ao
+OBJS = $(AK_OBJS) $(LIBC_OBJS)
 
-CPP_OBJS = $(AK_OBJS) $(WIDGETS_OBJS) $(LIBC_OBJS)
+EXTRA_OBJS = setjmp.ao crti.ao crtn.ao
+
+.PHONY: startfiles
+startfiles: $(EXTRA_OBJS)
+	$(QUIET) cp crti.ao crti.o
+	$(QUIET) cp crtn.ao crtn.o
+
+EXTRA_CLEAN = crt0.d
+
+DEFINES = -DSERENITY_LIBC_BUILD
 
 LIBRARY = libc.a
-DEFINES += -DUSERLAND -DSERENITY_LIBC_BUILD
 
 all: $(LIBRARY) startfiles
 
-startfiles: $(ASM_OBJS)
-	@echo "CXX crt0.o"; $(CXX) $(CXXFLAGS) -o crt0.o -c crt0.cpp
-	cp crti.ao crti.o
-	cp crtn.ao crtn.o
+install:
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/sys/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/bits/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/lib/
+	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/
+	cp sys/*.h $(SERENITY_BASE_DIR)/Root/usr/include/sys/
+	cp bits/*.h $(SERENITY_BASE_DIR)/Root/usr/include/bits/
+	cp arpa/*.h $(SERENITY_BASE_DIR)/Root/usr/include/arpa/
+	cp netinet/*.h $(SERENITY_BASE_DIR)/Root/usr/include/netinet/
+	cp libc.a $(SERENITY_BASE_DIR)/Root/usr/lib/
+	cp crt0.o $(SERENITY_BASE_DIR)/Root/usr/lib/
+	cp crti.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crti.o
+	cp crtn.ao $(SERENITY_BASE_DIR)/Root/usr/lib/crtn.o
 
-$(LIBRARY): $(CPP_OBJS) $(ASM_OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(CPP_OBJS) $(ASM_OBJS)
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
-%.ao: %.S
-	@echo "AS $@"; $(AS) -o $@ $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(CPP_OBJS) $(ASM_OBJS) *.d
+include ../../Makefile.common

@@ -1,9 +1,9 @@
-include ../../Makefile.common
-
 OBJS = \
 	DisplayProperties.o \
 	main.o \
 
-APP = DisplayProperties
+PROGRAM = DisplayProperties
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

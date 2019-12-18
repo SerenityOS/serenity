@@ -7,16 +7,14 @@ OPTIMIZATION_FLAGS = -Os
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 SERENITY_BASE_DIR := $(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
 
-INCLUDE_FLAGS = \
+INCLUDE_FLAGS += \
     -I. \
+    -I$(SERENITY_BASE_DIR)/DevTools \
     -I$(SERENITY_BASE_DIR) \
     -I$(SERENITY_BASE_DIR)/Libraries \
-    -I$(SERENITY_BASE_DIR)/Libraries/LibC \
-    -I$(SERENITY_BASE_DIR)/Servers \
-    -I$(SERENITY_BASE_DIR)/Libraries/LibM \
-    -I$(SERENITY_BASE_DIR)/Libraries/LibPthread
+    -I$(SERENITY_BASE_DIR)/Servers
 
-LDFLAGS = \
+LDFLAGS += \
     -L$(SERENITY_BASE_DIR)/Libraries/LibC \
     -L$(SERENITY_BASE_DIR)/Libraries/LibPthread \
     -L$(SERENITY_BASE_DIR)/Libraries/LibCore \
@@ -31,15 +29,82 @@ LDFLAGS = \
     -L$(SERENITY_BASE_DIR)/Libraries/LibProtocol \
     -L$(SERENITY_BASE_DIR)/Libraries/LibAudio
 
-CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
+VERBOSE = 0
+
+ifneq ($(HOST_CXX),)
+    CXX = g++
+    AS = as
+    LINK = ld
+    OBJ_SUFFIX ?= .host
+else
+    TOOLCHAIN_PATH = $(SERENITY_BASE_DIR)/Toolchain/Local/bin
+    CXX = $(PRE_CXX) $(TOOLCHAIN_PATH)/i686-pc-serenity-g++
+    AS = $(TOOLCHAIN_PATH)/i686-pc-serenity-as
+    LINK = $(TOOLCHAIN_PATH)/i686-pc-serenity-ld
+    DEFINES += -DDEBUG
+
+    INCLUDE_FLAGS += \
+    	-I$(SERENITY_BASE_DIR)/Libraries/LibC \
+    	-I$(SERENITY_BASE_DIR)/Libraries/LibM
+
+    LDFLAGS += \
+        -L$(SERENITY_BASE_DIR)/Libraries/LibC
+
+    ifdef KERNEL
+        DEFINES += -DKERNEL
+    else
+        DEFINES += -DUSERLAND
+    endif
+
+    OBJ_SUFFIX ?=
+endif
+
+#CXX = clang $(CLANG_FLAGS)
+#CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
+
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES)
-#CXX = clang $(CLANG_FLAGS)
-CXX = $(PRE_CXX) i686-pc-serenity-g++
-LD = i686-pc-serenity-g++
-AS = i686-pc-serenity-as
-LINK = i686-pc-serenity-ld
 
-DEFINES = -DSANITIZE_PTRS -DDEBUG -DGIT_COMMIT=\"`git rev-parse --short HEAD`\" -DGIT_BRANCH=\"`git rev-parse --abbrev-ref HEAD`\" -DGIT_CHANGES=\"`git diff-index --quiet HEAD -- && echo "tracked"|| echo "untracked"`\"
+DEFINES += -DSANITIZE_PTRS -DGIT_COMMIT=\"`git rev-parse --short HEAD`\" -DGIT_BRANCH=\"`git rev-parse --abbrev-ref HEAD`\" -DGIT_CHANGES=\"`git diff-index --quiet HEAD -- && echo "tracked"|| echo "untracked"`\"
 
 IPCCOMPILER = $(SERENITY_BASE_DIR)/DevTools/IPCCompiler/IPCCompiler
+
+SUFFIXED_OBJS = $(patsubst %.o,%$(OBJ_SUFFIX).o,$(OBJS))
+
+ifeq ($(VERBOSE),1)
+    QUIET =
+else
+    QUIET = @
+endif
+
+-include $(SUFFIXED_OBJS:%.o=%.d)
+
+%$(OBJ_SUFFIX).o: %.cpp $(EXTRA_SOURCES)
+	@echo "CPP $@"
+	$(QUIET) $(CXX) $(CXXFLAGS) -o $@ -c $<
+
+%.ao: %.S
+	@echo "AS $@"
+	$(QUIET) $(AS) -o $@ $<
+
+$(PROGRAM): $(SUFFIXED_OBJS) $(EXTRA_OBJS)
+	@echo "LINK $(PROGRAM)"
+	$(QUIET) $(CXX) -o $(PROGRAM) $(EXTRA_OBJS) $(SUFFIXED_OBJS) $(LDFLAGS)
+
+$(LIBRARY): $(SUFFIXED_OBJS) $(EXTRA_OBJS)
+	@echo "LIB $@"
+	$(QUIET) $(AR) rcs $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+
+.DEFAULT_GOAL := all
+
+all: $(PROGRAM) $(LIBRARY)
+
+EXTRA_CLEAN ?=
+
+clean:
+	@echo "CLEAN"
+	$(QUIET) rm -f $(PROGRAM) $(LIBRARY) $(SUFFIXED_OBJS) $(EXTRA_OBJS) *.d $(EXTRA_CLEAN)
+
+install:
+
+.PHONY: all clean

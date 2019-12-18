@@ -1,9 +1,9 @@
-include ../../Makefile.common
-
 OBJS = \
     QSWidget.o \
     main.o
 
-APP = QuickShow
+PROGRAM = QuickShow
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lprotocol -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

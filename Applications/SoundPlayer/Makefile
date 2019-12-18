@@ -1,11 +1,11 @@
-include ../../Makefile.common
-
 OBJS = \
-	PlaybackManager.o \
+    PlaybackManager.o \
     SampleWidget.o \
-	SoundPlayerWidget.o \
+    SoundPlayerWidget.o \
     main.o
 
-APP = SoundPlayer
+PROGRAM = SoundPlayer
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -laudio -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

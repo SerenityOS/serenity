@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     ProcessModel.o \
     DevicesModel.o \
@@ -12,6 +10,8 @@ OBJS = \
     NetworkStatisticsWidget.o \
     main.o
 
-APP = SystemMonitor
+PROGRAM = SystemMonitor
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lprotocol -lpcidb -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

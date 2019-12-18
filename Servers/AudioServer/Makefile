@@ -1,17 +1,14 @@
-include ../../Makefile.common
-
-AUDIOSERVER_OBJS = \
+OBJS = \
     main.o \
     ASMixer.o \
     ASClientConnection.o \
     ASEventLoop.o
 
-APP = AudioServer
-OBJS = $(AUDIOSERVER_OBJS)
+PROGRAM = AudioServer
 
-DEFINES += -DUSERLAND
+LDFLAGS = -lc -lcore -lipc -lthread -lpthread
 
-all: $(APP)
+EXTRA_CLEAN = AudioServerEndpoint.h AudioClientEndpoint.h
 
 *.cpp: AudioServerEndpoint.h AudioClientEndpoint.h
 
@@ -21,14 +18,8 @@ AudioServerEndpoint.h: AudioServer.ipc
 AudioClientEndpoint.h: AudioClient.ipc
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
-$(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore -lipc -lthread -lpthread
+install:
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/AudioServer/
+	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/AudioServer/
 
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d AudioServerEndpoint.h AudioClientEndpoint.h
-
+include ../../Makefile.common

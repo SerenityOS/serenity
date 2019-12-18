@@ -1,6 +1,4 @@
-include ../Makefile.common
-
-CXX_OBJS = \
+OBJS = \
     ../AK/FileSystemPath.o \
     ../AK/JsonParser.o \
     ../AK/JsonValue.o \
@@ -102,34 +100,32 @@ CXX_OBJS = \
     init.o \
     kprintf.o
 
+OBJ_SUFFIX = .kernel
+
 MODULE_OBJS = TestModule.o
 
-OBJS = $(CXX_OBJS) Arch/i386/Boot/boot.ao
+EXTRA_OBJS = Arch/i386/Boot/boot.ao
 
-KERNEL = kernel
+KERNEL = 1
+
+PROGRAM = kernel
+
 CXXFLAGS += -ffreestanding -mno-80387 -mno-mmx -mno-sse -mno-sse2 -fno-asynchronous-unwind-tables
 CXXFLAGS += -nostdlib -nostdinc -nostdinc++
 CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.2.0/
 CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.2.0/i686-pc-serenity/
-DEFINES += -DKERNEL
-LDFLAGS += -Ttext 0x100000 -Wl,-T linker.ld -nostdlib
+LDFLAGS += -Ttext 0x100000 -Wl,-T linker.ld -nostdlib -lgcc -lstdc++
 
-all: $(KERNEL) $(MODULE_OBJS) kernel.map
+all: $(PROGRAM) $(MODULE_OBJS) kernel.map
 
 kernel.map: kernel
-	@echo "MKMAP $@"; sh mkmap.sh
+	@echo "MKMAP $@"
+	$(QUIET) sh mkmap.sh
 
-$(KERNEL): $(OBJS)
-	@echo "LD $@"; $(LD) $(LDFLAGS) -o $@ $(OBJS) -lgcc -lstdc++
+EXTRA_CLEAN += kernel.map
 
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
+install:
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/Kernel/
+	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/Kernel/
 
-%.ao: %.S
-	@echo "AS $@"; $(AS) -o $@  $<
-
--include $(CXX_OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(KERNEL) $(OBJS) *.d
-
+include ../Makefile.common

@@ -1,23 +1,9 @@
-include ../../Makefile.common
-
 OBJS = \
     Field.o \
     main.o
 
-APP = Minesweeper
+PROGRAM = Minesweeper
 
-DEFINES += -DUSERLAND
+LDFLAGS = -lgui -ldraw -lipc -lcore -lc
 
-all: $(APP)
-
-$(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lgui -ldraw -lipc -lcore -lc
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d
-
+include ../../Makefile.common

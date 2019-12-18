@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     ManualModel.o \
     ManualSectionNode.o \
@@ -7,6 +5,8 @@ OBJS = \
     History.o \
     main.o
 
-APP = Help
+PROGRAM = Help
 
-include ../Makefile.common
+LDFLAGS = -lgui -lhtml -lmarkdown -ldraw -lipc -lprotocol -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

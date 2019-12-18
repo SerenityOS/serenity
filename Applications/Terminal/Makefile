@@ -1,8 +1,8 @@
-include ../../Makefile.common
-
 OBJS = \
     main.o
 
-APP = Terminal
+PROGRAM = Terminal
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lvt -lprotocol -lipc -lcore -lc
+
+include ../../Makefile.common

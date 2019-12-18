@@ -1,8 +1,8 @@
-include ../../Makefile.common
-
 OBJS = \
     main.o
 
-APP = SystemDialog
+PROGRAM = SystemDialog
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lcore -lc
+
+include ../../Makefile.common

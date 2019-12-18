@@ -1,24 +1,13 @@
-include ../../Makefile.common
-
-SYSTEMSERVER_OBJS = \
+OBJS = \
     Service.o \
     main.o
 
-APP = SystemServer
-OBJS = $(SYSTEMSERVER_OBJS)
+PROGRAM = SystemServer
 
-DEFINES += -DUSERLAND
+LDFLAGS = -lcore -lc
 
-all: $(APP)
+install:
+	mkdir -p ../../Root/usr/include/SystemServer/
+	cp *.h ../../Root/usr/include/SystemServer/
 
-$(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d
-
+include ../../Makefile.common

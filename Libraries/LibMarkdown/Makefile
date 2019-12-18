@@ -1,25 +1,16 @@
-include ../../Makefile.common
-
 OBJS = \
     MDDocument.o \
-		MDParagraph.o \
-		MDHeading.o \
-		MDCodeBlock.o \
-		MDList.o \
-		MDText.o
+    MDParagraph.o \
+    MDHeading.o \
+    MDCodeBlock.o \
+    MDList.o \
+    MDText.o
 
 LIBRARY = libmarkdown.a
-DEFINES += -DUSERLAND
 
-all: $(LIBRARY)
+install:
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibMarkdown/
+	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/LibMarkdown/
+	cp $(LIBRARY) $(SERENITY_BASE_DIR)/Root/usr/lib/
 
-$(LIBRARY): $(OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(OBJS) $(LIBS)
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
+include ../../Makefile.common

@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     PSClientConnection.o \
     Protocol.o \
@@ -8,11 +6,9 @@ OBJS = \
     HttpDownload.o \
     main.o
 
-APP = ProtocolServer
+PROGRAM = ProtocolServer
 
-DEFINES += -DUSERLAND
-
-all: $(APP)
+LDFLAGS = -lc -lcore -lipc
 
 *.cpp: ProtocolServerEndpoint.h ProtocolClientEndpoint.h
 
@@ -22,14 +18,4 @@ ProtocolServerEndpoint.h: ProtocolServer.ipc
 ProtocolClientEndpoint.h: ProtocolClient.ipc
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
-$(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -lcore -lipc
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d ProtocolClientEndpoint.h ProtocolServerEndpoint.h
-
+include ../../Makefile.common

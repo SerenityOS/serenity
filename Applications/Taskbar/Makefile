@@ -1,11 +1,11 @@
-include ../../Makefile.common
-
 OBJS = \
     TaskbarWindow.o \
     TaskbarButton.o \
     WindowList.o \
     main.o
 
-APP = Taskbar
+PROGRAM = Taskbar
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lcore -lc
+
+include ../../Makefile.common

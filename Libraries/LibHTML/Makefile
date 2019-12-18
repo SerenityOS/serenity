@@ -1,9 +1,3 @@
-include ../../Makefile.common
-
-LIBRARY = libhtml.a
-
-all: $(LIBRARY)
-
 LIBHTML_OBJS = \
     CSS/DefaultStyleSheetSource.o \
     CSS/PropertyID.o \
@@ -68,33 +62,32 @@ LIBHTML_OBJS = \
     Parser/HTMLParser.o \
     ResourceLoader.o
 
-GENERATED_SOURCES = \
+EXTRA_SOURCES = \
     CSS/DefaultStyleSheetSource.cpp \
     CSS/PropertyID.h \
     CSS/PropertyID.cpp
 
+CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSource.sh
+	@echo "GENERATE $@"
+	$(QUIET) Scripts/GenerateStyleSheetSource.sh default_stylesheet_source $< > $@
+
+CSS/PropertyID.h: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h.cpp
+	@echo "GENERATE $@"
+	$(QUIET) CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h $< > $@
+
+CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp.cpp
+	@echo "GENERATE $@"
+	$(QUIET) CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp $< > $@
+
 OBJS = $(EXTRA_OBJS) $(LIBHTML_OBJS)
 
 LIBRARY = libhtml.a
-DEFINES += -DUSERLAND
 
-CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSource.sh
-	@echo "GENERATE $@"; Scripts/GenerateStyleSheetSource.sh default_stylesheet_source $< > $@
+install:
+	for dir in . Parser DOM CSS Layout; do \
+	    mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibHTML/$$dir; \
+	    cp $$dir/*.h $(SERENITY_BASE_DIR)/Root/usr/include/LibHTML/$$dir/; \
+	done
+	cp $(LIBRARY) $(SERENITY_BASE_DIR)/Root/usr/lib/
 
-CSS/PropertyID.h: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h.cpp
-	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h $< > $@
-
-CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp.cpp
-	@echo "GENERATE $@"; CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp $< > $@
-
-%.o: %.cpp $(GENERATED_SOURCES)
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d $(GENERATED_SOURCES)
-
-$(LIBRARY): $(GENERATED_SOURCES) $(LIBHTML_OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(LIBHTML_OBJS)
-
+include ../../Makefile.common

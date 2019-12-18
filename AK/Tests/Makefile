@@ -1,4 +1,20 @@
-PROGRAMS = TestBinarySearch TestAtomic TestString TestQueue TestVector TestHashMap TestJSON TestWeakPtr TestNonnullRefPtr TestRefPtr TestFixedArray TestFileSystemPath TestURL TestStringView TestUtf8 TestCircularQueue
+PROGRAMS = \
+	TestBinarySearch \
+	TestAtomic \
+	TestString \
+	TestQueue \
+	TestVector \
+	TestHashMap \
+	TestJSON \
+	TestWeakPtr \
+	TestNonnullRefPtr \
+	TestRefPtr \
+	TestFixedArray \
+	TestFileSystemPath \
+	TestURL \
+	TestStringView \
+	TestUtf8 \
+	TestCircularQueue
 
 CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 

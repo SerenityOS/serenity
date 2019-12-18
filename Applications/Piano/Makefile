@@ -1,9 +1,9 @@
-include ../../Makefile.common
-
 OBJS = \
     PianoWidget.o \
     main.o
 
-APP = Piano
+PROGRAM = Piano
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -laudio -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common

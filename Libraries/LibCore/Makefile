@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     CArgsParser.o \
     CIODevice.o \
@@ -27,17 +25,10 @@ OBJS = \
     CGzip.o
 
 LIBRARY = libcore.a
-DEFINES += -DUSERLAND
 
-all: $(LIBRARY)
+install:
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibCore/
+	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/LibCore/
+	cp $(LIBRARY) $(SERENITY_BASE_DIR)/Root/usr/lib/
 
-$(LIBRARY): $(OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(OBJS) $(LIBS)
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
+include ../../Makefile.common

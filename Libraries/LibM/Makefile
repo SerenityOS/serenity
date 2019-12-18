@@ -1,19 +1,11 @@
-include ../../Makefile.common
-
 OBJS = math.o
 
 LIBRARY = libm.a
-DEFINES += -DUSERLAND
 
-all: $(LIBRARY)
+install:
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/sys/
+	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/lib/
+	cp *.h $(SERENITY_BASE_DIR)/Root/usr/include/
+	cp $(LIBRARY) $(SERENITY_BASE_DIR)/Root/usr/lib/
 
-$(LIBRARY): $(OBJS)
-	@echo "LIB $@"; $(AR) rcs $@ $(OBJS)
-
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
-
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(LIBRARY) $(OBJS) *.d
+include ../../Makefile.common

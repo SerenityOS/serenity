@@ -1,5 +1,3 @@
-include ../../Makefile.common
-
 OBJS = \
     WSEventLoop.o \
     WSWindow.o \
@@ -18,11 +16,9 @@ OBJS = \
     WSMenuManager.o \
     main.o
 
-APP = WindowServer
+PROGRAM = WindowServer
 
-DEFINES += -DUSERLAND
-
-all: $(APP)
+LDFLAGS = -lc -ldraw -lcore -lthread -lpthread -lipc
 
 *.cpp: WindowServerEndpoint.h WindowClientEndpoint.h
 
@@ -32,14 +28,10 @@ WindowServerEndpoint.h: WindowServer.ipc
 WindowClientEndpoint.h: WindowClient.ipc
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
-$(APP): $(OBJS)
-	$(LD) -o $(APP) $(LDFLAGS) $(OBJS) -lc -ldraw -lcore -lthread -lpthread -lipc
+EXTRA_CLEAN = WindowServerEndpoint.h WindowClientEndpoint.h
 
-.cpp.o:
-	@echo "CXX $<"; $(CXX) $(CXXFLAGS) -o $@ -c $<
+install:
+	mkdir -p ../../Root/usr/include/WindowServer/
+	cp *.h ../../Root/usr/include/WindowServer/
 
--include $(OBJS:%.o=%.d)
-
-clean:
-	@echo "CLEAN"; rm -f $(APP) $(OBJS) *.d WindowServerEndpoint.h WindowClientEndpoint.h
-
+include ../../Makefile.common

@@ -1,11 +1,11 @@
-include ../../Makefile.common
-
 OBJS = \
     DirectoryView.o \
     FileUtils.o \
-	PropertiesDialog.o \
+    PropertiesDialog.o \
     main.o
 
-APP = FileManager
+PROGRAM = FileManager
 
-include ../Makefile.common
+LDFLAGS = -lgui -ldraw -lipc -lthread -lpthread -lcore -lc
+
+include ../../Makefile.common
