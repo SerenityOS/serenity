@@ -107,23 +107,24 @@ void LayoutText::for_each_source_line(Callback callback) const
     auto commit_line = [&](auto it) {
         int start = view.byte_offset_of(start_of_line);
         int length = view.byte_offset_of(it) - view.byte_offset_of(start_of_line);
-
-        if (length > 0) {
-            callback(view.substring_view(start, length), start, length);
-        }
+        callback(view.substring_view(start, length), start, length);
     };
 
+    bool last_was_newline = false;
     for (auto it = view.begin(); it != view.end();) {
         bool did_commit = false;
         if (*it == '\n') {
             commit_line(it);
             did_commit = true;
+            last_was_newline = true;
+        } else {
+            last_was_newline = false;
         }
         ++it;
         if (did_commit)
             start_of_line = it;
     }
-    if (start_of_line != view.end())
+    if (start_of_line != view.end() || last_was_newline)
         commit_line(view.end());
 }
 
@@ -140,9 +141,14 @@ void LayoutText::split_into_lines(LayoutBlock& container)
     bool is_preformatted = style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre";
     if (is_preformatted) {
         m_text_for_rendering = node().data();
+        int line_count = 0;
         for_each_source_line([&](const Utf8View& view, int start, int length) {
+            if (line_count == 1)
+                line_boxes.append(LineBox());
             line_boxes.last().add_fragment(*this, start, length, font.width(view), font.glyph_height());
-            line_boxes.append(LineBox());
+            if (line_count != 0 && line_boxes.last().width() > 0)
+                line_boxes.append(LineBox());
+            ++line_count;
         });
         return;
     }
