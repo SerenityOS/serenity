@@ -15,15 +15,15 @@ HTMLBodyElement::~HTMLBodyElement()
 void HTMLBodyElement::apply_presentational_hints(StyleProperties& style) const
 {
     for_each_attribute([&](auto& name, auto& value) {
-        if (name == "bgcolor") {
+        if (name.equals_ignoring_case("bgcolor")) {
             auto color = Color::from_string(value);
             if (color.has_value())
                 style.set_property(CSS::PropertyID::BackgroundColor, ColorStyleValue::create(color.value()));
-        } else if (name == "text") {
+        } else if (name.equals_ignoring_case("text")) {
             auto color = Color::from_string(value);
             if (color.has_value())
                 style.set_property(CSS::PropertyID::Color, ColorStyleValue::create(color.value()));
-        } else if (name == "background") {
+        } else if (name.equals_ignoring_case("background")) {
             style.set_property(CSS::PropertyID::BackgroundImage, ImageStyleValue::create(document().complete_url(value), const_cast<Document&>(document())));
         }
     });
@@ -31,15 +31,15 @@ void HTMLBodyElement::apply_presentational_hints(StyleProperties& style) const
 
 void HTMLBodyElement::parse_attribute(const String& name, const String& value)
 {
-    if (name == "link") {
+    if (name.equals_ignoring_case("link")) {
         auto color = Color::from_string(value);
         if (color.has_value())
             document().set_link_color(color.value());
-    } else if (name == "alink") {
+    } else if (name.equals_ignoring_case("alink")) {
         auto color = Color::from_string(value);
         if (color.has_value())
             document().set_active_link_color(color.value());
-    } else if (name == "vlink") {
+    } else if (name.equals_ignoring_case("vlink")) {
         auto color = Color::from_string(value);
         if (color.has_value())
             document().set_visited_link_color(color.value());
