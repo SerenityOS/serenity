@@ -95,9 +95,12 @@ void LayoutText::for_each_word(Callback callback) const
         commit_word(view.end());
 }
 
-template<typename Callback>
-void LayoutText::for_each_source_line(Callback callback) const
+void LayoutText::split_preformatted_into_lines(LayoutBlock& container)
 {
+    auto& font = style().font();
+    auto& line_boxes = container.line_boxes();
+    m_text_for_rendering = node().data();
+
     Utf8View view(m_text_for_rendering);
     if (view.is_empty())
         return;
@@ -107,7 +110,8 @@ void LayoutText::for_each_source_line(Callback callback) const
     auto commit_line = [&](auto it) {
         int start = view.byte_offset_of(start_of_line);
         int length = view.byte_offset_of(it) - view.byte_offset_of(start_of_line);
-        callback(view.substring_view(start, length), start, length);
+        if (length > 0)
+            line_boxes.last().add_fragment(*this, start, length, font.width(view), font.glyph_height());
     };
 
     bool last_was_newline = false;
@@ -115,6 +119,7 @@ void LayoutText::for_each_source_line(Callback callback) const
         bool did_commit = false;
         if (*it == '\n') {
             commit_line(it);
+            line_boxes.append(LineBox());
             did_commit = true;
             last_was_newline = true;
         } else {
@@ -138,20 +143,10 @@ void LayoutText::split_into_lines(LayoutBlock& container)
         line_boxes.append(LineBox());
     float available_width = container.width() - line_boxes.last().width();
 
-    bool is_preformatted = style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre";
-    if (is_preformatted) {
-        m_text_for_rendering = node().data();
-        int line_count = 0;
-        for_each_source_line([&](const Utf8View& view, int start, int length) {
-            if (line_count == 1)
-                line_boxes.append(LineBox());
-            line_boxes.last().add_fragment(*this, start, length, font.width(view), font.glyph_height());
-            if (line_count != 0 && line_boxes.last().width() > 0)
-                line_boxes.append(LineBox());
-            ++line_count;
-        });
+    if (style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre") {
+        split_preformatted_into_lines(container);
         return;
-    }
+   }
 
     // Collapse whitespace into single spaces
     auto utf8_view = Utf8View(node().data());
