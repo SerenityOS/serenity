@@ -90,25 +90,37 @@ NonnullOwnPtr<Region> Region::clone()
     return clone_region;
 }
 
-int Region::commit()
+bool Region::commit()
 {
     InterruptDisabler disabler;
 #ifdef MM_DEBUG
     dbgprintf("MM: commit %u pages in Region %p (VMO=%p) at V%p\n", vmobject().page_count(), this, &vmobject(), vaddr().get());
 #endif
     for (size_t i = 0; i < page_count(); ++i) {
-        auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + i];
-        if (!vmobject_physical_page_entry.is_null())
-            continue;
-        auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
-        if (!physical_page) {
-            kprintf("MM: commit was unable to allocate a physical page\n");
-            return -ENOMEM;
-        }
-        vmobject_physical_page_entry = move(physical_page);
-        remap_page(i);
+        if (!commit(i))
+            return false;
     }
-    return 0;
+    return true;
+}
+
+bool Region::commit(size_t page_index)
+{
+    ASSERT(vmobject().is_anonymous() || vmobject().is_purgeable());
+    InterruptDisabler disabler;
+#ifdef MM_DEBUG
+    dbgprintf("MM: commit single page (%zu) in Region %p (VMO=%p) at V%p\n", page_index, vmobject().page_count(), this, &vmobject(), vaddr().get());
+#endif
+    auto& vmobject_physical_page_entry = vmobject().physical_pages()[first_page_index() + page_index];
+    if (!vmobject_physical_page_entry.is_null())
+        return true;
+    auto physical_page = MM.allocate_user_physical_page(MemoryManager::ShouldZeroFill::Yes);
+    if (!physical_page) {
+        kprintf("MM: commit was unable to allocate a physical page\n");
+        return false;
+    }
+    vmobject_physical_page_entry = move(physical_page);
+    remap_page(page_index);
+    return true;
 }
 
 u32 Region::cow_pages() const
