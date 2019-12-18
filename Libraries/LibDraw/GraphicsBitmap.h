@@ -20,6 +20,7 @@ public:
     };
 
     static NonnullRefPtr<GraphicsBitmap> create(Format, const Size&);
+    static NonnullRefPtr<GraphicsBitmap> create_purgeable(Format, const Size&);
     static NonnullRefPtr<GraphicsBitmap> create_wrapper(Format, const Size&, size_t pitch, RGBA32*);
     static RefPtr<GraphicsBitmap> load_from_file(const StringView& path);
     static RefPtr<GraphicsBitmap> load_from_file(Format, const StringView& path, const Size&);
@@ -98,8 +99,14 @@ public:
         set_pixel(position.x(), position.y(), color);
     }
 
+    bool is_purgeable() const { return m_purgeable; }
+    bool is_volatile() const { return m_volatile; }
+    void set_volatile();
+    [[nodiscard]] bool set_nonvolatile();
+
 private:
-    GraphicsBitmap(Format, const Size&);
+    enum class Purgeable { No, Yes };
+    GraphicsBitmap(Format, const Size&, Purgeable);
     GraphicsBitmap(Format, const Size&, size_t pitch, RGBA32*);
     GraphicsBitmap(Format, const Size&, MappedFile&&);
     GraphicsBitmap(Format, NonnullRefPtr<SharedBuffer>&&, const Size&);
@@ -110,6 +117,8 @@ private:
     size_t m_pitch { 0 };
     Format m_format { Format::Invalid };
     bool m_needs_munmap { false };
+    bool m_purgeable { false };
+    bool m_volatile { false };
     MappedFile m_mapped_file;
     RefPtr<SharedBuffer> m_shared_buffer;
 };

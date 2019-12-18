@@ -9,17 +9,24 @@
 
 NonnullRefPtr<GraphicsBitmap> GraphicsBitmap::create(Format format, const Size& size)
 {
-    return adopt(*new GraphicsBitmap(format, size));
+    return adopt(*new GraphicsBitmap(format, size, Purgeable::No));
 }
 
-GraphicsBitmap::GraphicsBitmap(Format format, const Size& size)
+NonnullRefPtr<GraphicsBitmap> GraphicsBitmap::create_purgeable(Format format, const Size& size)
+{
+    return adopt(*new GraphicsBitmap(format, size, Purgeable::Yes));
+}
+
+GraphicsBitmap::GraphicsBitmap(Format format, const Size& size, Purgeable purgeable)
     : m_size(size)
     , m_pitch(round_up_to_power_of_two(size.width() * sizeof(RGBA32), 16))
     , m_format(format)
+    , m_purgeable(purgeable == Purgeable::Yes)
 {
     if (format == Format::Indexed8)
         m_palette = new RGBA32[256];
-    m_data = (RGBA32*)mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
+    int map_flags = purgeable == Purgeable::Yes ? (MAP_PURGEABLE | MAP_PRIVATE) : (MAP_ANONYMOUS | MAP_PRIVATE);
+    m_data = (RGBA32*)mmap_with_name(nullptr, size_in_bytes(), PROT_READ | PROT_WRITE, map_flags, 0, 0, String::format("GraphicsBitmap [%dx%d]", width(), height()).characters());
     ASSERT(m_data && m_data != (void*)-1);
     m_needs_munmap = true;
 }
@@ -110,4 +117,31 @@ void GraphicsBitmap::fill(Color color)
         auto* scanline = this->scanline(y);
         fast_u32_fill(scanline, color.value(), width());
     }
+}
+
+void GraphicsBitmap::set_volatile()
+{
+    ASSERT(m_purgeable);
+    if (m_volatile)
+        return;
+    int rc = madvise(m_data, size_in_bytes(), MADV_SET_VOLATILE);
+    if (rc < 0) {
+        perror("madvise(MADV_SET_VOLATILE)");
+        ASSERT_NOT_REACHED();
+    }
+    m_volatile = true;
+}
+
+[[nodiscard]] bool GraphicsBitmap::set_nonvolatile()
+{
+    ASSERT(m_purgeable);
+    if (!m_volatile)
+        return true;
+    int rc = madvise(m_data, size_in_bytes(), MADV_SET_NONVOLATILE);
+    if (rc < 0) {
+        perror("madvise(MADV_SET_NONVOLATILE)");
+        ASSERT_NOT_REACHED();
+    }
+    m_volatile = false;
+    return rc == 0;
 }
