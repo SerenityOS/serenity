@@ -44,30 +44,32 @@ int main(int argc, char** argv)
     if (argc > 1)
         path = argv[1];
 
-    auto bitmap = load_png(path);
+    auto bitmap = GraphicsBitmap::load_from_file(path);
     if (!bitmap) {
         fprintf(stderr, "Failed to load %s\n", path);
         return 1;
     }
 
     auto window = GWindow::construct();
+    auto widget = QSWidget::construct();
+    widget->set_path(path);
+    widget->set_bitmap(*bitmap);
 
     auto update_window_title = [&](int scale) {
-        window->set_title(String::format("QuickShow: %s %s %d%%", path, bitmap->size().to_string().characters(), scale));
+        window->set_title(String::format("QuickShow: %s %s %d%%", widget->path().characters(), widget->bitmap()->size().to_string().characters(), scale));
     };
 
     window->set_double_buffering_enabled(true);
     update_window_title(100);
     window->set_rect(200, 200, bitmap->width(), bitmap->height());
 
-    auto widget = QSWidget::construct();
     widget->on_scale_change = [&](int scale) {
         update_window_title(scale);
     };
-    widget->set_bitmap(*bitmap);
     window->set_main_widget(widget);
 
     window->show();
 
+    bitmap = nullptr;
     return app.exec();
 }

@@ -11,6 +11,10 @@ public:
     virtual ~QSWidget() override;
 
     void set_bitmap(NonnullRefPtr<GraphicsBitmap>);
+    const GraphicsBitmap* bitmap() const { return m_bitmap.ptr(); }
+
+    void set_path(const String&);
+    const String& path() const { return m_path; }
 
     Function<void(int)> on_scale_change;
 
@@ -22,6 +26,7 @@ private:
     virtual void mouseup_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
     virtual void mousewheel_event(GMouseEvent&) override;
+    virtual void drop_event(GDropEvent&) override;
 
     void relayout();
 
@@ -30,4 +35,5 @@ private:
     int m_scale { 100 };
     Point m_pan_origin;
     Point m_pan_bitmap_origin;
+    String m_path;
 };

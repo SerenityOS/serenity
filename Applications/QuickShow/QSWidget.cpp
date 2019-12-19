@@ -1,6 +1,9 @@
 #include "QSWidget.h"
-#include <LibGUI/GPainter.h>
+#include <AK/URL.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibGUI/GMessageBox.h>
+#include <LibGUI/GPainter.h>
+#include <LibGUI/GWindow.h>
 
 QSWidget::QSWidget(GWidget* parent)
     : GFrame(parent)
@@ -88,5 +91,40 @@ void QSWidget::mousewheel_event(GMouseEvent& event)
     if (old_scale != m_scale) {
         if (on_scale_change)
             on_scale_change(m_scale);
+    }
+}
+
+void QSWidget::set_path(const String& path)
+{
+    m_path = path;
+}
+
+void QSWidget::drop_event(GDropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.data_type() == "url-list") {
+        auto lines = event.data().split_view('\n');
+        if (lines.is_empty())
+            return;
+        if (lines.size() > 1) {
+            GMessageBox::show("QuickShow can only open one file at a time!", "One at a time please!", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            return;
+        }
+        URL url(lines[0]);
+        auto bitmap = GraphicsBitmap::load_from_file(url.path());
+        if (!bitmap) {
+            GMessageBox::show(String::format("Failed to open %s", url.to_string().characters()), "Cannot open image", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            return;
+        }
+
+        m_path = url.path();
+        m_bitmap = bitmap;
+        m_scale = 100;
+        if (on_scale_change)
+            on_scale_change(m_scale);
+        relayout();
+        m_bitmap_rect.center_within(rect());
     }
 }
