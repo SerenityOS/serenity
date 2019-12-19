@@ -26,6 +26,8 @@ private:
     void set_path(const FileSystemPath& file);
     void update_title();
 
+    virtual void drop_event(GDropEvent&) override;
+
     RefPtr<GTextEditor> m_editor;
     String m_path;
     String m_name;
