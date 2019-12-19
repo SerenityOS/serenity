@@ -1,6 +1,7 @@
 #include "TextEditorWidget.h"
 #include <AK/Optional.h>
 #include <AK/StringBuilder.h>
+#include <AK/URL.h>
 #include <LibCore/CFile.h>
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
@@ -301,4 +302,22 @@ bool TextEditorWidget::request_close()
         return true;
     auto result = GMessageBox::show("The document has been modified. Quit without saving?", "Quit without saving?", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
     return result == GMessageBox::ExecOK;
+}
+
+void TextEditorWidget::drop_event(GDropEvent& event)
+{
+    event.accept();
+    window()->move_to_front();
+
+    if (event.data_type() == "url-list") {
+        auto lines = event.data().split_view('\n');
+        if (lines.is_empty())
+            return;
+        if (lines.size() > 1) {
+            GMessageBox::show("TextEditor can only open one file at a time!", "One at a time please!", GMessageBox::Type::Error, GMessageBox::InputType::OK, window());
+            return;
+        }
+        URL url(lines[0]);
+        open_sesame(url.path());
+    }
 }
