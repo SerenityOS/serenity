@@ -1199,6 +1199,7 @@ void WSWindowManager::start_dnd_drag(WSClientConnection& client, const String& t
     m_dnd_data_type = data_type;
     m_dnd_data = data;
     WSCompositor::the().invalidate_cursor();
+    m_active_input_window = nullptr;
 }
 
 void WSWindowManager::end_dnd_drag()
