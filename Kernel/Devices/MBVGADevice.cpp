@@ -27,11 +27,11 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, Virtual
 {
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
-    auto vmo = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
-    auto* region = process.allocate_region_with_vmo(
+    auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
+    auto* region = process.allocate_region_with_vmobject(
         preferred_vaddr,
         framebuffer_size_in_bytes(),
-        move(vmo),
+        move(vmobject),
         0,
         "MBVGA Framebuffer",
         prot);

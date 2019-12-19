@@ -8,9 +8,9 @@ NonnullRefPtr<InodeVMObject> InodeVMObject::create_with_inode(Inode& inode)
     InterruptDisabler disabler;
     if (inode.vmobject())
         return *inode.vmobject();
-    auto vmo = adopt(*new InodeVMObject(inode));
-    vmo->inode().set_vmo(*vmo);
-    return vmo;
+    auto vmobject = adopt(*new InodeVMObject(inode));
+    vmobject->inode().set_vmobject(*vmobject);
+    return vmobject;
 }
 
 NonnullRefPtr<VMObject> InodeVMObject::clone()

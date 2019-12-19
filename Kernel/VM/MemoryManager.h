@@ -87,8 +87,8 @@ private:
     MemoryManager(u32 physical_address_for_kernel_page_tables);
     ~MemoryManager();
 
-    void register_vmo(VMObject&);
-    void unregister_vmo(VMObject&);
+    void register_vmobject(VMObject&);
+    void unregister_vmobject(VMObject&);
     void register_region(Region&);
     void unregister_region(Region&);
 

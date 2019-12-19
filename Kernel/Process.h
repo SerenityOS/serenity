@@ -284,12 +284,12 @@ public:
 
     bool is_superuser() const { return m_euid == 0; }
 
-    Region* allocate_region_with_vmo(VirtualAddress, size_t, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String& name, int prot);
+    Region* allocate_region_with_vmobject(VirtualAddress, size_t, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String& name, int prot);
     Region* allocate_file_backed_region(VirtualAddress, size_t, NonnullRefPtr<Inode>, const String& name, int prot);
     Region* allocate_region(VirtualAddress, size_t, const String& name, int prot = PROT_READ | PROT_WRITE, bool commit = true);
     bool deallocate_region(Region& region);
 
-    Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmo);
+    Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
 
     void set_being_inspected(bool b) { m_being_inspected = b; }
     bool is_being_inspected() const { return m_being_inspected; }

@@ -61,7 +61,7 @@ void* SharedBuffer::ref_for_process_and_get_address(Process& process)
             ref.count++;
             m_total_refs++;
             if (ref.region == nullptr) {
-                ref.region = process.allocate_region_with_vmo(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
+                ref.region = process.allocate_region_with_vmobject(VirtualAddress(), size(), m_vmobject, 0, "SharedBuffer", PROT_READ | (m_writable ? PROT_WRITE : 0));
                 ref.region->set_shared(true);
             }
             sanity_check("ref_for_process_and_get_address");

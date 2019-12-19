@@ -93,5 +93,5 @@ KResultOr<Region*> SharedMemory::mmap(Process& process, FileDescription&, Virtua
 {
     if (!vmobject())
         return KResult(-ENODEV);
-    return process.allocate_region_with_vmo(vaddr, size, *vmobject(), offset, name(), prot);
+    return process.allocate_region_with_vmobject(vaddr, size, *vmobject(), offset, name(), prot);
 }

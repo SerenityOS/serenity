@@ -74,7 +74,7 @@ enum ProcFileType {
 
     __FI_PID_Start,
     FI_PID_vm,
-    FI_PID_vmo,
+    FI_PID_vmobjects,
     FI_PID_stack,
     FI_PID_regs,
     FI_PID_fds,
@@ -478,7 +478,7 @@ Optional<KBuffer> procfs$net_local(InodeIdentifier)
     return builder.build();
 }
 
-Optional<KBuffer> procfs$pid_vmo(InodeIdentifier identifier)
+Optional<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
 {
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
@@ -1374,7 +1374,7 @@ ProcFS::ProcFS()
     m_entries[FI_Root_net_local] = { "local", FI_Root_net_local, procfs$net_local };
 
     m_entries[FI_PID_vm] = { "vm", FI_PID_vm, procfs$pid_vm };
-    m_entries[FI_PID_vmo] = { "vmo", FI_PID_vmo, procfs$pid_vmo };
+    m_entries[FI_PID_vmobjects] = { "vmobjects", FI_PID_vmobjects, procfs$pid_vmobjects };
     m_entries[FI_PID_stack] = { "stack", FI_PID_stack, procfs$pid_stack };
     m_entries[FI_PID_regs] = { "regs", FI_PID_regs, procfs$pid_regs };
     m_entries[FI_PID_fds] = { "fds", FI_PID_fds, procfs$pid_fds };

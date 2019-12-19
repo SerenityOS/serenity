@@ -587,16 +587,16 @@ bool MemoryManager::validate_user_write(const Process& process, VirtualAddress v
     return region && region->is_writable();
 }
 
-void MemoryManager::register_vmo(VMObject& vmo)
+void MemoryManager::register_vmobject(VMObject& vmobject)
 {
     InterruptDisabler disabler;
-    m_vmobjects.append(&vmo);
+    m_vmobjects.append(&vmobject);
 }
 
-void MemoryManager::unregister_vmo(VMObject& vmo)
+void MemoryManager::unregister_vmobject(VMObject& vmobject)
 {
     InterruptDisabler disabler;
-    m_vmobjects.remove(&vmo);
+    m_vmobjects.remove(&vmobject);
 }
 
 void MemoryManager::register_region(Region& region)
