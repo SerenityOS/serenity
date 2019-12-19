@@ -159,7 +159,7 @@ void GWindow::event(CEvent& event)
         if (!m_main_widget)
             return;
         auto result = m_main_widget->hit_test(drop_event.position());
-        auto local_event = make<GDropEvent>(result.local_position, drop_event.text());
+        auto local_event = make<GDropEvent>(result.local_position, drop_event.text(), drop_event.data_type(), drop_event.data());
         ASSERT(result.widget);
         return result.widget->dispatch_event(*local_event, this);
     }

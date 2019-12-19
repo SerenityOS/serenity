@@ -28,7 +28,7 @@ GDragOperation::Outcome GDragOperation::exec()
         bitmap_size = shared_bitmap->size();
     }
 
-    auto response = GWindowServerConnection::the().send_sync<WindowServer::StartDrag>(m_text, bitmap_id, bitmap_size);
+    auto response = GWindowServerConnection::the().send_sync<WindowServer::StartDrag>(m_text, m_data_type, m_data, bitmap_id, bitmap_size);
     if (!response->started()) {
         m_outcome = Outcome::Cancelled;
         return m_outcome;

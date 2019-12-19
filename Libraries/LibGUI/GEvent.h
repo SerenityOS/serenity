@@ -282,17 +282,23 @@ private:
 
 class GDropEvent final : public GEvent {
 public:
-    GDropEvent(const Point& position, const String& text)
+    GDropEvent(const Point& position, const String& text, const String& data_type, const String& data)
         : GEvent(GEvent::Drop)
         , m_position(position)
         , m_text(text)
+        , m_data_type(data_type)
+        , m_data(data)
     {
     }
 
     const Point& position() const { return m_position; }
     const String& text() const { return m_text; }
+    const String& data_type() const { return m_data_type; }
+    const String& data() const { return m_data; }
 
 private:
     Point m_position;
     String m_text;
+    String m_data_type;
+    String m_data;
 };

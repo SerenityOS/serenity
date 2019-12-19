@@ -266,7 +266,7 @@ void GWindowServerConnection::handle(const WindowClient::AsyncSetWallpaperFinish
 void GWindowServerConnection::handle(const WindowClient::DragDropped& message)
 {
     if (auto* window = GWindow::from_window_id(message.window_id()))
-        CEventLoop::current().post_event(*window, make<GDropEvent>(message.mouse_position(), message.text()));
+        CEventLoop::current().post_event(*window, make<GDropEvent>(message.mouse_position(), message.text(), message.data_type(), message.data()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::DragAccepted&)
