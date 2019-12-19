@@ -355,6 +355,7 @@ void GWidget::change_event(GEvent&)
 void GWidget::drop_event(GDropEvent& event)
 {
     dbg() << class_name() << "{" << this << "} DROP  position: " << event.position() << ", text: '" << event.text() << "'";
+    event.ignore();
 }
 
 void GWidget::update()
