@@ -19,7 +19,6 @@ QSWidget::~QSWidget()
 
 void QSWidget::set_bitmap(NonnullRefPtr<GraphicsBitmap> bitmap)
 {
-    set_fill_with_background_color(bitmap->has_alpha_channel());
     m_bitmap = move(bitmap);
 }
 
