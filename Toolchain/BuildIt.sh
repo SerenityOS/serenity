@@ -19,7 +19,7 @@ mkdir -p "$DIR/Tarballs"
 source "$DIR/UseIt.sh"
 
 BINUTILS_VERSION="2.33.1"
-BINUTILS_MD5SUM="d1119c93fc0ed3007be4a84dd186af5"
+BINUTILS_MD5SUM="1a6b16bcc926e312633fcc3fae14ba0a"
 BINUTILS_NAME="binutils-$BINUTILS_VERSION"
 BINUTILS_PKG="${BINUTILS_NAME}.tar.gz"
 BINUTILS_BASE_URL="http://ftp.gnu.org/gnu/binutils"
