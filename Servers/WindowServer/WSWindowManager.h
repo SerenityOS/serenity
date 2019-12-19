@@ -68,10 +68,12 @@ public:
 
     WSClientConnection* dnd_client() { return m_dnd_client.ptr(); }
     const String& dnd_text() const { return m_dnd_text; }
+    const String& dnd_data_type() const { return m_dnd_data_type; }
+    const String& dnd_data() const { return m_dnd_data; }
     const GraphicsBitmap* dnd_bitmap() const { return m_dnd_bitmap; }
     Rect dnd_rect() const;
 
-    void start_dnd_drag(WSClientConnection&, const String& text, GraphicsBitmap*);
+    void start_dnd_drag(WSClientConnection&, const String& text, GraphicsBitmap*, const String& data_type, const String& data);
     void end_dnd_drag();
 
     WSWindow* active_window() { return m_active_window.ptr(); }
@@ -283,6 +285,8 @@ private:
 
     WeakPtr<WSClientConnection> m_dnd_client;
     String m_dnd_text;
+    String m_dnd_data_type;
+    String m_dnd_data;
     RefPtr<GraphicsBitmap> m_dnd_bitmap;
 };
 

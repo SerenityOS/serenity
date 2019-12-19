@@ -649,7 +649,7 @@ bool WSWindowManager::process_ongoing_drag(WSMouseEvent& event, WSWindow*& hover
         m_dnd_client->post_message(WindowClient::DragAccepted());
         if (hovered_window->client()) {
             auto translated_event = event.translated(-hovered_window->position());
-            hovered_window->client()->post_message(WindowClient::DragDropped(hovered_window->window_id(), translated_event.position(), m_dnd_text));
+            hovered_window->client()->post_message(WindowClient::DragDropped(hovered_window->window_id(), translated_event.position(), m_dnd_text, m_dnd_data_type, m_dnd_data));
         }
     } else {
         m_dnd_client->post_message(WindowClient::DragCancelled());
@@ -1190,12 +1190,14 @@ WSMenu* WSWindowManager::find_internal_menu_by_id(int menu_id)
     return nullptr;
 }
 
-void WSWindowManager::start_dnd_drag(WSClientConnection& client, const String& text, GraphicsBitmap* bitmap)
+void WSWindowManager::start_dnd_drag(WSClientConnection& client, const String& text, GraphicsBitmap* bitmap, const String& data_type, const String& data)
 {
     ASSERT(!m_dnd_client);
     m_dnd_client = client.make_weak_ptr();
     m_dnd_text = text;
     m_dnd_bitmap = bitmap;
+    m_dnd_data_type = data_type;
+    m_dnd_data = data;
     WSCompositor::the().invalidate_cursor();
 }
 

@@ -19,6 +19,11 @@ public:
 
     void set_text(const String& text) { m_text = text; }
     void set_bitmap(const GraphicsBitmap* bitmap) { m_bitmap = bitmap; }
+    void set_data(const String& data_type, const String& data)
+    {
+        m_data_type = data_type;
+        m_data = data;
+    }
 
     Outcome exec();
     Outcome outcome() const { return m_outcome; }
@@ -35,5 +40,7 @@ private:
     OwnPtr<CEventLoop> m_event_loop;
     Outcome m_outcome { Outcome::None };
     String m_text;
+    String m_data_type;
+    String m_data;
     RefPtr<GraphicsBitmap> m_bitmap;
 };

@@ -651,6 +651,6 @@ OwnPtr<WindowServer::StartDragResponse> WSClientConnection::handle(const WindowS
         bitmap = GraphicsBitmap::create_with_shared_buffer(GraphicsBitmap::Format::RGBA32, *shared_buffer, message.bitmap_size());
     }
 
-    wm.start_dnd_drag(*this, message.text(), bitmap);
+    wm.start_dnd_drag(*this, message.text(), bitmap, message.data_type(), message.data());
     return make<WindowServer::StartDragResponse>(true);
 }

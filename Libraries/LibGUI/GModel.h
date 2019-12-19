@@ -36,6 +36,7 @@ public:
         BackgroundColor,
         Icon,
         Font,
+        DragData,
     };
 
     virtual ~GModel();

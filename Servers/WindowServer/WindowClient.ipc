@@ -31,5 +31,5 @@ endpoint WindowClient = 4
     DragAccepted() =|
     DragCancelled() =|
 
-    DragDropped(i32 window_id, Point mouse_position, String text) =|
+    DragDropped(i32 window_id, Point mouse_position, String text, String data_type, String data) =|
 }

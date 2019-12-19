@@ -115,11 +115,16 @@ void GItemView::mousemove_event(GMouseEvent& event)
 
             RefPtr<GraphicsBitmap> bitmap;
 
-            StringBuilder builder;
+            StringBuilder text_builder;
+            StringBuilder data_builder;
             selection().for_each_index([&](auto& index) {
-                auto data = model()->data(index);
-                builder.append(data.to_string());
-                builder.append(" ");
+                auto text_data = model()->data(index);
+                text_builder.append(text_data.to_string());
+                text_builder.append(" ");
+
+                auto drag_data = model()->data(index, GModel::Role::DragData);
+                data_builder.append(drag_data.to_string());
+                data_builder.append('\n');
 
                 if (!bitmap) {
                     GVariant icon_data = model()->data(index, GModel::Role::Icon);
@@ -128,8 +133,9 @@ void GItemView::mousemove_event(GMouseEvent& event)
                 }
             });
 
-            drag_operation->set_text(builder.to_string());
+            drag_operation->set_text(text_builder.to_string());
             drag_operation->set_bitmap(bitmap);
+            drag_operation->set_data("url-list", data_builder.to_string());
             auto outcome = drag_operation->exec();
             switch (outcome) {
             case GDragOperation::Outcome::Accepted:

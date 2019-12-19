@@ -247,6 +247,15 @@ GVariant GDirectoryModel::data(const GModelIndex& index, Role role) const
         ASSERT(index.column() == Column::Name);
         return entry.full_path(*this);
     }
+    if (role == Role::DragData) {
+        if (index.column() == Column::Name) {
+            StringBuilder builder;
+            builder.append("file://");
+            builder.append(entry.full_path(*this));
+            return builder.to_string();
+        }
+        return {};
+    }
     if (role == Role::Sort) {
         switch (index.column()) {
         case Column::Icon:
