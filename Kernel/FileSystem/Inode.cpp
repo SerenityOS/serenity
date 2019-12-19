@@ -114,9 +114,9 @@ int Inode::decrement_link_count()
     return -ENOTIMPL;
 }
 
-void Inode::set_vmo(VMObject& vmo)
+void Inode::set_vmobject(VMObject& vmobject)
 {
-    m_vmobject = vmo.make_weak_ptr();
+    m_vmobject = vmobject.make_weak_ptr();
 }
 
 bool Inode::bind_socket(LocalSocket& socket)

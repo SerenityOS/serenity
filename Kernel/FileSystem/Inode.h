@@ -71,7 +71,7 @@ public:
 
     void will_be_destroyed();
 
-    void set_vmo(VMObject&);
+    void set_vmobject(VMObject&);
     InodeVMObject* vmobject() { return m_vmobject.ptr(); }
     const InodeVMObject* vmobject() const { return m_vmobject.ptr(); }
 

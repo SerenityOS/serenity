@@ -80,7 +80,7 @@ public:
 
     size_t first_page_index() const
     {
-        return m_offset_in_vmo / PAGE_SIZE;
+        return m_offset_in_vmobject / PAGE_SIZE;
     }
 
     size_t last_page_index() const
@@ -95,7 +95,7 @@ public:
 
     size_t offset_in_vmobject() const
     {
-        return m_offset_in_vmo;
+        return m_offset_in_vmobject;
     }
 
     bool commit();
@@ -141,7 +141,7 @@ public:
 
     // NOTE: These are public so we can make<> them.
     Region(const Range&, const String&, u8 access);
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmo, const String&, u8 access);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access);
     Region(const Range&, NonnullRefPtr<Inode>, const String&, u8 access);
 
 private:
@@ -153,7 +153,7 @@ private:
 
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;
-    size_t m_offset_in_vmo { 0 };
+    size_t m_offset_in_vmobject { 0 };
     NonnullRefPtr<VMObject> m_vmobject;
     String m_name;
     u8 m_access { 0 };

@@ -6,16 +6,16 @@
 VMObject::VMObject(const VMObject& other)
     : m_physical_pages(other.m_physical_pages)
 {
-    MM.register_vmo(*this);
+    MM.register_vmobject(*this);
 }
 
 VMObject::VMObject(size_t size)
     : m_physical_pages(ceil_div(size, PAGE_SIZE))
 {
-    MM.register_vmo(*this);
+    MM.register_vmobject(*this);
 }
 
 VMObject::~VMObject()
 {
-    MM.unregister_vmo(*this);
+    MM.unregister_vmobject(*this);
 }

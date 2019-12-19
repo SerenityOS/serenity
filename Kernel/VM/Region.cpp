@@ -27,10 +27,10 @@ Region::Region(const Range& range, NonnullRefPtr<Inode> inode, const String& nam
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject> vmo, size_t offset_in_vmo, const String& name, u8 access)
+Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access)
     : m_range(range)
-    , m_offset_in_vmo(offset_in_vmo)
-    , m_vmobject(move(vmo))
+    , m_offset_in_vmobject(offset_in_vmobject)
+    , m_vmobject(move(vmobject))
     , m_name(name)
     , m_access(access)
 {
@@ -65,7 +65,7 @@ NonnullOwnPtr<Region> Region::clone()
             vaddr().get());
 #endif
         // Create a new region backed by the same VMObject.
-        return Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmo, m_name, m_access);
+        return Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
     }
 
 #ifdef MM_DEBUG
@@ -78,7 +78,7 @@ NonnullOwnPtr<Region> Region::clone()
     // Set up a COW region. The parent (this) region becomes COW as well!
     ensure_cow_map().fill(true);
     remap();
-    auto clone_region = Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmo, m_name, m_access);
+    auto clone_region = Region::create_user_accessible(m_range, m_vmobject->clone(), m_offset_in_vmobject, m_name, m_access);
     clone_region->ensure_cow_map();
     if (m_stack) {
         ASSERT(is_readable());

@@ -130,9 +130,9 @@ static unsigned prot_to_region_access_flags(int prot)
     return access;
 }
 
-Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmo)
+Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
 {
-    m_regions.append(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmo, source_region.name(), source_region.access()));
+    m_regions.append(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
     return m_regions.last();
 }
 
@@ -158,13 +158,13 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
     return &m_regions.last();
 }
 
-Region* Process::allocate_region_with_vmo(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmo, size_t offset_in_vmo, const String& name, int prot)
+Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    offset_in_vmo &= PAGE_MASK;
-    m_regions.append(Region::create_user_accessible(range, move(vmo), offset_in_vmo, name, prot_to_region_access_flags(prot)));
+    offset_in_vmobject &= PAGE_MASK;
+    m_regions.append(Region::create_user_accessible(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
     m_regions.last().map(page_directory());
     return &m_regions.last();
 }
@@ -240,7 +240,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     // FIXME: The rest of this function seems like it could share more code..
     if (flags & MAP_PURGEABLE) {
         auto vmobject = PurgeableVMObject::create_with_size(size);
-        auto* region = allocate_region_with_vmo(VirtualAddress((u32)addr), size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
+        auto* region = allocate_region_with_vmobject(VirtualAddress((u32)addr), size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
         if (!region)
             return (void*)-ENOMEM;
         if (flags & MAP_SHARED)
@@ -516,8 +516,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     ProcessPagingScope paging_scope(*this);
 
     ASSERT(description->inode());
-    auto vmo = InodeVMObject::create_with_inode(*description->inode());
-    auto* region = allocate_region_with_vmo(VirtualAddress(), metadata.size, vmo, 0, description->absolute_path(), PROT_READ);
+    auto vmobject = InodeVMObject::create_with_inode(*description->inode());
+    auto* region = allocate_region_with_vmobject(VirtualAddress(), metadata.size, vmobject, 0, description->absolute_path(), PROT_READ);
     ASSERT(region);
 
     // NOTE: We yank this out of 'm_regions' since we're about to manipulate the vector
@@ -544,7 +544,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            if (!allocate_region_with_vmo(vaddr, size, vmo, offset_in_image, String(name), prot))
+            if (!allocate_region_with_vmobject(vaddr, size, vmobject, offset_in_image, String(name), prot))
                 return nullptr;
             return vaddr.as_ptr();
         };
@@ -2838,7 +2838,7 @@ int Process::sys$create_shared_buffer(int size, void** buffer)
     *buffer = shared_buffer->ref_for_process_and_get_address(*this);
     ASSERT((int)shared_buffer->size() >= size);
 #ifdef SHARED_BUFFER_DEBUG
-    kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmo is %u)\n", name().characters(), pid(), shared_buffer_id, *buffer, size, shared_buffer->size());
+    kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmobject is %u)\n", name().characters(), pid(), shared_buffer_id, *buffer, size, shared_buffer->size());
 #endif
     shared_buffers().resource().set(shared_buffer_id, move(shared_buffer));
 
