@@ -405,9 +405,9 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
     return 0;
 }
 
-Process* Process::fork(RegisterDump& regs)
+pid_t Process::sys$fork(RegisterDump& regs)
 {
-    auto* child = new Process(String(m_name), m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
+    auto* child = new Process(m_name, m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
@@ -459,13 +459,6 @@ Process* Process::fork(RegisterDump& regs)
 
     child->main_thread().set_state(Thread::State::Skip1SchedulerPass);
 
-    return child;
-}
-
-pid_t Process::sys$fork(RegisterDump& regs)
-{
-    auto* child = fork(regs);
-    ASSERT(child);
     return child->pid();
 }
 
@@ -846,7 +839,7 @@ Process* Process::create_kernel_process(String&& name, void (*e)())
     return process;
 }
 
-Process::Process(String&& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+Process::Process(const String& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)

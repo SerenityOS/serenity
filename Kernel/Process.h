@@ -280,7 +280,6 @@ public:
     size_t amount_purgeable_volatile() const;
     size_t amount_purgeable_nonvolatile() const;
 
-    Process* fork(RegisterDump&);
     int exec(String path, Vector<String> arguments, Vector<String> environment);
 
     bool is_superuser() const { return m_euid == 0; }
@@ -311,7 +310,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(String&& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(const String& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     Range allocate_range(VirtualAddress, size_t);
 
