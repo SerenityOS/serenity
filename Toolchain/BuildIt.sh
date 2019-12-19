@@ -54,10 +54,10 @@ pushd "$DIR/Tarballs"
         tar -xf ${BINUTILS_PKG}
 
         pushd ${BINUTILS_NAME}
-            git init
-            git add .
-            git commit -am "BASE"
-            git apply "$DIR"/Patches/binutils.patch
+            git init >/dev/null
+            git add . >/dev/null
+            git commit -am "BASE" >/dev/null
+            git apply "$DIR"/Patches/binutils.patch >/dev/null
         popd
     else
         echo "Skipped extracting binutils"
@@ -68,10 +68,10 @@ pushd "$DIR/Tarballs"
         tar -xf $GCC_PKG
 
         pushd $GCC_NAME
-            git init
-            git add .
-            git commit -am "BASE"
-            git apply "$DIR"/Patches/gcc.patch
+            git init >/dev/null
+            git add . >/dev/null
+            git commit -am "BASE" >/dev/null
+            git apply "$DIR"/Patches/gcc.patch >/dev/null
         popd
     else
         echo "Skipped extracting gcc"
