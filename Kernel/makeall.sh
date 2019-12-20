@@ -14,6 +14,5 @@ sudo id
 
 make -C ../ && \
     make -C ../ test && \
-    make -C ../ install
-
-sudo -E PATH="$PATH" ./build-image-qemu.sh
+    make -C ../ install &&
+    sudo -E PATH="$PATH" ./build-image-qemu.sh
