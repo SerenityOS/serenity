@@ -36,7 +36,7 @@ const LogStream& operator<<(const LogStream& stream, const void* value)
     return stream << String::format("%p", value);
 }
 
-#ifdef USERLAND
+#if defined (__serenity__) && !defined(KERNEL)
 static TriState got_process_name = TriState::Unknown;
 static char process_name_buffer[256];
 #endif
@@ -44,7 +44,7 @@ static char process_name_buffer[256];
 DebugLogStream dbg()
 {
     DebugLogStream stream;
-#ifdef USERLAND
+#if defined (__serenity__) && !defined(KERNEL)
     if (got_process_name == TriState::Unknown) {
         if (get_process_name(process_name_buffer, sizeof(process_name_buffer)) == 0)
             got_process_name = TriState::True;

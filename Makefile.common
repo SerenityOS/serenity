@@ -54,8 +54,6 @@ else
 
     ifdef KERNEL
         DEFINES += -DKERNEL
-    else
-        DEFINES += -DUSERLAND
     endif
 
     OBJ_SUFFIX ?=

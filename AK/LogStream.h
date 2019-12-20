@@ -3,7 +3,7 @@
 #include <AK/Types.h>
 #include <AK/kstdio.h>
 
-#ifdef USERLAND
+#ifndef KERNEL
 #    include <AK/ScopedValueRollback.h>
 #    include <AK/StringView.h>
 #    include <errno.h>
@@ -18,7 +18,7 @@ class StringView;
 class LogStream {
 public:
     LogStream()
-#ifdef USERLAND
+#ifndef KERNEL
         : m_errno_restorer(errno)
 #endif
     {
@@ -28,7 +28,7 @@ public:
     virtual void write(const char*, int) const = 0;
 
 private:
-#ifdef USERLAND
+#ifndef KERNEL
     ScopedValueRollback<int> m_errno_restorer;
 #endif
 };
