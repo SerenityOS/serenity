@@ -389,7 +389,7 @@ void VirtualConsole::scroll_up()
                 clear_vga_row(24);
             }
         } else {
-            memcpy(m_buffer, m_buffer + 160, 160 * 24);
+            memmove(m_buffer, m_buffer + 160, 160 * 24);
             u16* linemem = (u16*)&m_buffer[24 * 160];
             for (u16 i = 0; i < columns(); ++i)
                 linemem[i] = 0x0720;
