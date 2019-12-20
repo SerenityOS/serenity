@@ -65,7 +65,7 @@ endif
 #SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
 CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
 
-DEFINES += -DSANITIZE_PTRS -DGIT_COMMIT=\"`git rev-parse --short HEAD`\" -DGIT_BRANCH=\"`git rev-parse --abbrev-ref HEAD`\" -DGIT_CHANGES=\"`git diff-index --quiet HEAD -- && echo "tracked"|| echo "untracked"`\"
+DEFINES += -DSANITIZE_PTRS
 
 IPCCOMPILER = $(SERENITY_BASE_DIR)/DevTools/IPCCompiler/IPCCompiler
 
