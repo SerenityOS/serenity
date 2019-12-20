@@ -386,7 +386,7 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
         if (!region.contains(page)) {
             kprintf(
                 "MM: deallocate_user_physical_page: %p not in %p -> %p\n",
-                page.paddr(), region.lower().get(), region.upper().get());
+                page.paddr().get(), region.lower().get(), region.upper().get());
             continue;
         }
 
@@ -396,7 +396,7 @@ void MemoryManager::deallocate_user_physical_page(PhysicalPage&& page)
         return;
     }
 
-    kprintf("MM: deallocate_user_physical_page couldn't figure out region for user page @ %p\n", page.paddr());
+    kprintf("MM: deallocate_user_physical_page couldn't figure out region for user page @ %p\n", page.paddr().get());
     ASSERT_NOT_REACHED();
 }
 
@@ -446,7 +446,7 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
         if (!region.contains(page)) {
             kprintf(
                 "MM: deallocate_supervisor_physical_page: %p not in %p -> %p\n",
-                page.paddr(), region.lower().get(), region.upper().get());
+                page.paddr().get(), region.lower().get(), region.upper().get());
             continue;
         }
 
@@ -455,7 +455,7 @@ void MemoryManager::deallocate_supervisor_physical_page(PhysicalPage&& page)
         return;
     }
 
-    kprintf("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ %p\n", page.paddr());
+    kprintf("MM: deallocate_supervisor_physical_page couldn't figure out region for super page @ %p\n", page.paddr().get());
     ASSERT_NOT_REACHED();
 }
 
