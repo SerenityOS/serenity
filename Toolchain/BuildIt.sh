@@ -16,7 +16,6 @@ echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
-source "$DIR/UseIt.sh"
 
 BINUTILS_VERSION="2.33.1"
 BINUTILS_MD5SUM="1a6b16bcc926e312633fcc3fae14ba0a"
