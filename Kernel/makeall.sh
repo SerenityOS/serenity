@@ -12,7 +12,8 @@ export build_group=$(id -g)
 
 sudo id
 
-make -C ../ && \
+make -C ../ clean && \
+    make -C ../ && \
     make -C ../ test && \
     make -C ../ install &&
     sudo -E PATH="$PATH" ./build-image-qemu.sh
