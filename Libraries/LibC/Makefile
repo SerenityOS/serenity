@@ -71,7 +71,7 @@ DEFINES = -DSERENITY_LIBC_BUILD
 
 LIBRARY = libc.a
 
-all: $(LIBRARY) startfiles
+all: $(LIBRARY) startfiles install
 
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/sys/
