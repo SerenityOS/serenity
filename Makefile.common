@@ -1,7 +1,7 @@
 ARCH_FLAGS =
 STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation -fno-sized-deallocation
 WARNING_FLAGS = -Werror -Wextra -Wall -Wno-nonnull-compare -Wno-deprecated-copy -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-expansion-to-defined
-FLAVOR_FLAGS = -fno-exceptions -fno-rtti
+FLAVOR_FLAGS = -fno-exceptions -fno-rtti -fstack-protector
 OPTIMIZATION_FLAGS = -Os
 
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
