@@ -32,7 +32,7 @@ LDFLAGS += \
 VERBOSE = 0
 
 ifneq ($(HOST_CXX),)
-    CXX = g++
+    CXX = $(PRE_CXX) g++
     AS = as
     LINK = ld
     OBJ_SUFFIX ?= .host
