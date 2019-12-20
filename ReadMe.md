@@ -77,9 +77,9 @@ sudo apt-get install gcc-8 g++-8
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 ```
 
-Go into the `Toolchain/` directory and run the **BuildIt.sh** script. Then ***source*** the **UseIt.sh** script to put the `i686-pc-serenity` toolchain in your `$PATH`.
+Go into the `Toolchain/` directory and run the **BuildIt.sh** script.
 
-Once you've done both of those, go into the `Kernel/` directory, then run
+Once you've built the toolchain, go into the `Kernel/` directory, then run
 **./makeall.sh**, and if nothing breaks too much, take it for a spin by using
 **./run**.
 

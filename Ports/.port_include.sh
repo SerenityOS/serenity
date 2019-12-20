@@ -1,13 +1,13 @@
 #!/bin/bash
-if [ -z "$SERENITY_ROOT" ]; then
-    echo "You must source UseIt.sh to build ports."
-    exit 1
-fi
 set -eu
-prefix=$(pwd)/..
+
+SCRIPT=`dirname $0`
+export SERENITY_ROOT=`realpath $SCRIPT/../`
+prefix=$SERENITY_ROOT/Ports
 
 export CC=i686-pc-serenity-gcc
 export CXX=i686-pc-serenity-g++
+export PATH=$SERENITY_ROOT/Toolchain/Local/bin:$PATH
 
 . "$@"
 shift
