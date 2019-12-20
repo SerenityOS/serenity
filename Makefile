@@ -5,9 +5,10 @@ SUBDIRS = \
 	Libraries/LibHTML/CodeGenerators/Generate_CSS_PropertyID_cpp \
 	Libraries/LibHTML/CodeGenerators/Generate_CSS_PropertyID_h
 
-# Build LibC, LibCore, LibIPC and LibThread before IPC servers, since they depend on them.
+# Build some libraries before IPC servers, since they depend on them.
 SUBDIRS += \
 	Libraries/LibC \
+	Libraries/LibM \
 	Libraries/LibCore \
 	Libraries/LibDraw \
 	Libraries/LibIPC \
