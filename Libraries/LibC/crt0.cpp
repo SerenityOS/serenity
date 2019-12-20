@@ -1,3 +1,4 @@
+#include <AK/Types.h>
 #include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -50,5 +51,13 @@ int _start(int argc, char** argv, char** env)
 
 void __cxa_atexit()
 {
+}
+
+extern u32 __stack_chk_guard;
+u32 __stack_chk_guard = (u32)0xc0000c13;
+
+[[noreturn]] void __stack_chk_fail()
+{
+    ASSERT_NOT_REACHED();
 }
 }
