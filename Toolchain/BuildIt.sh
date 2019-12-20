@@ -113,8 +113,8 @@ pushd "$DIR/Build/"
         make install-gcc install-target-libgcc || exit 1
 
         echo "XXX serenity libc and libm"
-        ( cd "$DIR/../Libraries/LibC/" && make clean && make && ./install.sh )
-        ( cd "$DIR/../Libraries/LibM/" && make clean && make && ./install.sh )
+        ( cd "$DIR/../Libraries/LibC/" && make clean && make && make install )
+        ( cd "$DIR/../Libraries/LibM/" && make clean && make && make install )
 
         echo "XXX build libstdc++"
         make all-target-libstdc++-v3 || exit 1 
