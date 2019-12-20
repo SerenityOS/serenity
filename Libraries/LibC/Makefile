@@ -61,6 +61,7 @@ EXTRA_OBJS = setjmp.ao crti.ao crtn.ao
 
 .PHONY: startfiles
 startfiles: $(EXTRA_OBJS)
+	$(CXX) $(CXXFLAGS) -o crt0.o -c crt0.cpp
 	$(QUIET) cp crti.ao crti.o
 	$(QUIET) cp crtn.ao crtn.o
 
