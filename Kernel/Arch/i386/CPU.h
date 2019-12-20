@@ -85,8 +85,6 @@ union [[gnu::packed]] Descriptor
 };
 
 class PageDirectoryEntry {
-    AK_MAKE_NONCOPYABLE(PageDirectoryEntry);
-
 public:
     PageTableEntry* page_table_base() { return reinterpret_cast<PageTableEntry*>(m_raw & 0xfffff000u); }
     void set_page_table_base(u32 value)
@@ -138,8 +136,6 @@ private:
 };
 
 class PageTableEntry {
-    AK_MAKE_NONCOPYABLE(PageTableEntry);
-
 public:
     void* physical_page_base() { return reinterpret_cast<void*>(m_raw & 0xfffff000u); }
     void set_physical_page_base(u32 value)
