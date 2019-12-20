@@ -26,6 +26,7 @@ LDFLAGS += \
     -L$(SERENITY_BASE_DIR)/Libraries/LibMarkdown \
     -L$(SERENITY_BASE_DIR)/Libraries/LibThread \
     -L$(SERENITY_BASE_DIR)/Libraries/LibVT \
+    -L$(SERENITY_BASE_DIR)/Libraries/LibPCIDB \
     -L$(SERENITY_BASE_DIR)/Libraries/LibProtocol \
     -L$(SERENITY_BASE_DIR)/Libraries/LibAudio
 
