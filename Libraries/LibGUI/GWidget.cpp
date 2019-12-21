@@ -50,7 +50,6 @@ GWidgetClassRegistration::GWidgetClassRegistration(const String& class_name, Fun
 
 GWidgetClassRegistration::~GWidgetClassRegistration()
 {
-    ASSERT_NOT_REACHED();
 }
 
 void GWidgetClassRegistration::for_each(Function<void(const GWidgetClassRegistration&)> callback)
