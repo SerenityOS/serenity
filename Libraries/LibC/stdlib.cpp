@@ -106,14 +106,13 @@ static inline T strtol_impl(const char* nptr, char** endptr, int base)
 
 extern "C" {
 
-typedef void (*__atexit_handler)();
-static int __atexit_handler_count = 0;
-static __atexit_handler __atexit_handlers[32];
+// Itanium C++ ABI methods defined in crt0.cpp 
+extern int __cxa_atexit(void (*function)(void*), void* paramter, void* dso_handle);
+extern void __cxa_finalize(void* dso_handle);
 
 void exit(int status)
 {
-    for (int i = 0; i < __atexit_handler_count; ++i)
-        __atexit_handlers[i]();
+    __cxa_finalize(nullptr);
     extern void _fini();
     _fini();
     fflush(stdout);
@@ -122,11 +121,14 @@ void exit(int status)
     ASSERT_NOT_REACHED();
 }
 
+static void __atexit_to_cxa_atexit(void* handler)
+{
+    reinterpret_cast<void (*)()>(handler)();
+}
+
 int atexit(void (*handler)())
 {
-    ASSERT(__atexit_handler_count < 32);
-    __atexit_handlers[__atexit_handler_count++] = handler;
-    return 0;
+    return __cxa_atexit(__atexit_to_cxa_atexit, (void*)handler, nullptr);
 }
 
 void abort()
