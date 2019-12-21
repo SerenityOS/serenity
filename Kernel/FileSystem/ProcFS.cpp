@@ -263,6 +263,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         auto region_object = array.add_object();
         region_object.add("readable", region.is_readable());
         region_object.add("writable", region.is_writable());
+        region_object.add("executable", region.is_executable());
         region_object.add("stack", region.is_stack());
         region_object.add("shared", region.is_shared());
         region_object.add("user_accessible", region.is_user_accessible());
