@@ -153,6 +153,14 @@ TextEditorWidget::TextEditorWidget()
         if (!open_path.has_value())
             return;
 
+        if (m_document_dirty) {
+            auto save_document_first_box = GMessageBox::construct("Save Document First?", "Warning", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel, window());
+            auto save_document_first_result = save_document_first_box->exec();
+
+            if (save_document_first_result == GDialog::ExecResult::ExecOK)
+                m_save_action->activate();
+        }
+
         open_sesame(open_path.value());
     });
 
