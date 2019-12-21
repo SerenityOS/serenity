@@ -431,8 +431,11 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
         kprintf("MM: handle_inode_fault was unable to allocate a physical page\n");
         return PageFaultResponse::ShouldCrash;
     }
-    remap_page(page_index_in_region);
-    u8* dest_ptr = vaddr().offset(page_index_in_region * PAGE_SIZE).as_ptr();
+
+    u8* dest_ptr = MM.quickmap_page(*vmobject_physical_page_entry);
     memcpy(dest_ptr, page_buffer, PAGE_SIZE);
+    MM.unquickmap_page();
+
+    remap_page(page_index_in_region);
     return PageFaultResponse::Continue;
 }

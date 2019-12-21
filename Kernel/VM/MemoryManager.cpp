@@ -174,7 +174,7 @@ void MemoryManager::initialize_paging()
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
     asm volatile(
         "movl %%cr0, %%eax\n"
-        "orl $0x80000001, %%eax\n"
+        "orl $0x80010001, %%eax\n"
         "movl %%eax, %%cr0\n" ::
             : "%eax", "memory");
 
