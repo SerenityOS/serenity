@@ -26,6 +26,8 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
             builder.append('R');
         if (object.get("writable").to_bool())
             builder.append('W');
+        if (object.get("executable").to_bool())
+            builder.append('X');
         if (object.get("shared").to_bool())
             builder.append('S');
         if (object.get("stack").to_bool())
