@@ -169,22 +169,27 @@ VFS* vfs;
     // accept keyboard input.
     if (text_debug) {
         tty0->set_graphical(false);
-        auto* shell_process = Process::create_user_process("/bin/Shell", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
+        Thread* thread = nullptr;
+        Process::create_user_process(thread, "/bin/Shell", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
         if (error != 0) {
             kprintf("init_stage2: error spawning Shell: %d\n", error);
             hang();
         }
-        shell_process->main_thread().set_priority(ThreadPriority::High);
+        thread->set_priority(ThreadPriority::High);
     } else {
         tty0->set_graphical(true);
-        auto* system_server_process = Process::create_user_process("/bin/SystemServer", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
+        Thread* thread = nullptr;
+        Process::create_user_process(thread, "/bin/SystemServer", (uid_t)0, (gid_t)0, (pid_t)0, error, {}, {}, tty0);
         if (error != 0) {
             kprintf("init_stage2: error spawning SystemServer: %d\n", error);
             hang();
         }
-        system_server_process->main_thread().set_priority(ThreadPriority::High);
+        thread->set_priority(ThreadPriority::High);
     }
-    Process::create_kernel_process("NetworkTask", NetworkTask_main);
+    {
+        Thread* thread = nullptr;
+        Process::create_kernel_process(thread, "NetworkTask", NetworkTask_main);
+    }
 
     current->process().sys$exit(0);
     ASSERT_NOT_REACHED();
@@ -308,15 +313,19 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
 
     Process::initialize();
     Thread::initialize();
-    Process::create_kernel_process("init_stage2", init_stage2);
-    Process::create_kernel_process("syncd", [] {
+
+    Thread* init_stage2_thread = nullptr;
+    Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
+
+    Thread* syncd_thread = nullptr;
+    Process::create_kernel_process(syncd_thread, "syncd", [] {
         for (;;) {
             VFS::the().sync();
             current->sleep(1 * TICKS_PER_SECOND);
         }
     });
-    Process::create_kernel_process("Finalizer", [] {
-        g_finalizer = current;
+
+    Process::create_kernel_process(g_finalizer, "Finalizer", [] {
         current->set_priority(ThreadPriority::Low);
         for (;;) {
             current->wait_on(*g_finalizer_wait_queue);

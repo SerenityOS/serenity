@@ -47,6 +47,7 @@ static u32 time_slice_for(ThreadPriority priority)
 Thread* current;
 Thread* g_last_fpu_thread;
 Thread* g_finalizer;
+Thread* g_colonel;
 WaitQueue* g_finalizer_wait_queue;
 static Process* s_colonel_process;
 u64 g_uptime;
@@ -222,7 +223,7 @@ bool Thread::WaitBlocker::should_unblock(Thread& thread, time_t, long)
             return IterationDecision::Continue;
 
         bool child_exited = child.is_dead();
-        bool child_stopped = child.main_thread().state() == Thread::State::Stopped;
+        bool child_stopped = child.thread_count() && child.any_thread().state() == Thread::State::Stopped;
 
         bool wait_finished = ((m_wait_options & WEXITED) && child_exited)
             || ((m_wait_options & WSTOPPED) && child_stopped);
@@ -288,7 +289,7 @@ bool Scheduler::pick_next()
     if (!current) {
         // XXX: The first ever context_switch() goes to the idle process.
         //      This to setup a reliable place we can return to.
-        return context_switch(s_colonel_process->main_thread());
+        return context_switch(*g_colonel);
     }
 
     struct timeval now;
@@ -305,7 +306,7 @@ bool Scheduler::pick_next()
 
     Process::for_each([&](Process& process) {
         if (process.is_dead()) {
-            if (current != &process.main_thread() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
+            if (current->pid() != process.pid() && (!process.ppid() || !Process::from_pid(process.ppid()))) {
                 auto name = process.name();
                 auto pid = process.pid();
                 auto exit_status = Process::reap(process);
@@ -369,7 +370,7 @@ bool Scheduler::pick_next()
 
     auto& runnable_list = g_scheduler_data->m_runnable_threads;
     if (runnable_list.is_empty())
-        return context_switch(s_colonel_process->main_thread());
+        return context_switch(*g_colonel);
 
     auto* previous_head = runnable_list.first();
     for (;;) {
@@ -386,7 +387,7 @@ bool Scheduler::pick_next()
 
         if (thread == previous_head) {
             // Back at process_head, nothing wants to run. Send in the colonel!
-            return context_switch(s_colonel_process->main_thread());
+            return context_switch(*g_colonel);
         }
     }
 }
@@ -535,9 +536,9 @@ void Scheduler::initialize()
     g_finalizer_wait_queue = new WaitQueue;
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
-    s_colonel_process = Process::create_kernel_process("colonel", nullptr);
+    s_colonel_process = Process::create_kernel_process(g_colonel, "colonel", nullptr);
     // Make sure the colonel uses a smallish time slice.
-    s_colonel_process->main_thread().set_priority(ThreadPriority::Idle);
+    g_colonel->set_priority(ThreadPriority::Idle);
     load_task_register(s_redirection.selector);
 }
 
@@ -614,7 +615,7 @@ static bool s_should_stop_idling = false;
 
 void Scheduler::stop_idling()
 {
-    if (current != &s_colonel_process->main_thread())
+    if (current != g_colonel)
         return;
 
     s_should_stop_idling = true;
