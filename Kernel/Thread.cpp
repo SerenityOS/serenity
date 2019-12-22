@@ -178,8 +178,11 @@ void Thread::die_if_needed()
     if (!m_should_die)
         return;
 
+    m_process.big_lock().unlock_if_locked();
+
     InterruptDisabler disabler;
     set_state(Thread::State::Dying);
+
     if (!Scheduler::is_active())
         Scheduler::pick_next_and_switch_now();
 }
