@@ -37,6 +37,7 @@ private:
     const ProjectTreeNode& root_node() const { return *m_root_node; }
     void rebuild_tree();
 
+    String m_name;
     String m_path;
     RefPtr<GModel> m_model;
     NonnullRefPtrVector<ProjectFile> m_files;
