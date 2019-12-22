@@ -1,6 +1,6 @@
 #!/bin/sh
 
-#SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=br0,file=e1000.pcap"
+#SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
 [ -e /dev/kvm -a -r /dev/kvm -a -w /dev/kvm ] && SERENITY_KVM_ARG="-enable-kvm"
 
