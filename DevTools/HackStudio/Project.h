@@ -40,7 +40,7 @@ private:
     String m_path;
     RefPtr<GModel> m_model;
     NonnullRefPtrVector<ProjectFile> m_files;
-    OwnPtr<ProjectTreeNode> m_root_node;
+    RefPtr<ProjectTreeNode> m_root_node;
 
     GIcon m_directory_icon;
     GIcon m_file_icon;

@@ -1,12 +1,13 @@
 #include "Project.h"
 #include <AK/FileSystemPath.h>
+#include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <stdio.h>
 #include <string.h>
 #include <sys/stat.h>
 
-struct Project::ProjectTreeNode {
+struct Project::ProjectTreeNode : public RefCounted<ProjectTreeNode> {
     enum class Type {
         Invalid,
         Project,
@@ -20,7 +21,7 @@ struct Project::ProjectTreeNode {
             if (child->type == Type::Directory && child->name == name)
                 return *child;
         }
-        auto new_child = make<ProjectTreeNode>();
+        auto new_child = adopt(*new ProjectTreeNode);
         new_child->type = Type::Directory;
         new_child->name = name;
         new_child->parent = this;
@@ -29,9 +30,21 @@ struct Project::ProjectTreeNode {
         return *ptr;
     }
 
+    void sort()
+    {
+        if (type == Type::File)
+            return;
+        quick_sort(children.begin(), children.end(), [](auto& a, auto& b) {
+            return a->name < b->name;
+        });
+        for (auto& child : children)
+            child->sort();
+    }
+
     Type type { Type::Invalid };
     String name;
-    Vector<OwnPtr<ProjectTreeNode>> children;
+    String path;
+    Vector<NonnullRefPtr<ProjectTreeNode>> children;
     ProjectTreeNode* parent { nullptr };
 };
 
@@ -59,10 +72,10 @@ public:
     {
         auto* node = static_cast<Project::ProjectTreeNode*>(index.internal_data());
         if (role == Role::Display) {
-            return FileSystemPath(node->name).basename();
+            return node->name;
         }
         if (role == Role::Custom) {
-            return node->name;
+            return node->path;
         }
         if (role == Role::Icon) {
             if (node->type == Project::ProjectTreeNode::Type::Project)
@@ -196,7 +209,7 @@ ProjectFile* Project::get_file(const String& filename)
 
 void Project::rebuild_tree()
 {
-    auto root = make<ProjectTreeNode>();
+    auto root = adopt(*new ProjectTreeNode);
     root->type = ProjectTreeNode::Type::Project;
 
     for (auto& file : m_files) {
@@ -220,8 +233,9 @@ void Project::rebuild_tree()
                 current = &current->find_or_create_subdirectory(part);
                 continue;
             }
-            auto file_node = make<ProjectTreeNode>();
-            file_node->name = file.name();
+            auto file_node = adopt(*new ProjectTreeNode);
+            file_node->name = part;
+            file_node->path = path.string();
             file_node->type = Project::ProjectTreeNode::Type::File;
             file_node->parent = current;
             current->children.append(move(file_node));
@@ -229,6 +243,9 @@ void Project::rebuild_tree()
         }
     }
 
+    root->sort();
+
+#if 0
     Function<void(ProjectTreeNode&, int indent)> dump_tree = [&](ProjectTreeNode& node, int indent) {
         for (int i = 0; i < indent; ++i)
             printf(" ");
@@ -241,9 +258,8 @@ void Project::rebuild_tree()
         }
     };
 
-    printf("begin tree dump\n");
     dump_tree(*root, 0);
-    printf("end tree dump\n");
+#endif
 
     m_root_node = move(root);
     m_model->update();
