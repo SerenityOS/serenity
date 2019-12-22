@@ -80,7 +80,7 @@ endif
 -include $(SUFFIXED_OBJS:%.o=%.d)
 
 %$(OBJ_SUFFIX).o: %.cpp $(EXTRA_SOURCES)
-	@echo "CPP $@"
+	@echo "C++ $@"
 	$(QUIET) $(CXX) $(CXXFLAGS) -o $@ -c $<
 
 %.ao: %.S
