@@ -20,7 +20,6 @@
 #include <LibGUI/GFilePicker.h>
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GLabel.h>
-#include <LibGUI/GListView.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
@@ -43,7 +42,7 @@ RefPtr<EditorWrapper> g_current_editor_wrapper;
 String g_currently_open_file;
 OwnPtr<Project> g_project;
 RefPtr<GWindow> g_window;
-RefPtr<GListView> g_project_list_view;
+RefPtr<GTreeView> g_project_tree_view;
 RefPtr<GStackWidget> g_right_hand_stack;
 RefPtr<GSplitter> g_text_inner_splitter;
 RefPtr<GWidget> g_form_inner_container;
@@ -120,10 +119,10 @@ int main(int argc, char** argv)
     auto toolbar = GToolBar::construct(widget);
 
     auto outer_splitter = GSplitter::construct(Orientation::Horizontal, widget);
-    g_project_list_view = GListView::construct(outer_splitter);
-    g_project_list_view->set_model(g_project->model());
-    g_project_list_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    g_project_list_view->set_preferred_size(140, 0);
+    g_project_tree_view = GTreeView::construct(outer_splitter);
+    g_project_tree_view->set_model(g_project->model());
+    g_project_tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    g_project_tree_view->set_preferred_size(140, 0);
 
     g_right_hand_stack = GStackWidget::construct(outer_splitter);
 
@@ -306,8 +305,8 @@ int main(int argc, char** argv)
     toolbar->add_action(GCommonActions::make_redo_action([&](auto&) { current_editor().redo_action().activate(); }));
     toolbar->add_separator();
 
-    g_project_list_view->on_activation = [&](auto& index) {
-        auto filename = g_project_list_view->model()->data(index).to_string();
+    g_project_tree_view->on_activation = [&](auto& index) {
+        auto filename = g_project_tree_view->model()->data(index, GModel::Role::Custom).to_string();
         open_file(filename);
     };
 
@@ -512,7 +511,7 @@ void open_file(const String& filename)
 
     g_currently_open_file = filename;
     g_window->set_title(String::format("%s - HackStudio", g_currently_open_file.characters()));
-    g_project_list_view->update();
+    g_project_tree_view->update();
 
     current_editor_wrapper().filename_label().set_text(filename);
 

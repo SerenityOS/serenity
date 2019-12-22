@@ -1,5 +1,39 @@
 #include "Project.h"
+#include <AK/FileSystemPath.h>
+#include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
+#include <stdio.h>
+#include <string.h>
+#include <sys/stat.h>
+
+struct Project::ProjectTreeNode {
+    enum class Type {
+        Invalid,
+        Project,
+        Directory,
+        File,
+    };
+
+    ProjectTreeNode& find_or_create_subdirectory(const String& name)
+    {
+        for (auto& child : children) {
+            if (child->type == Type::Directory && child->name == name)
+                return *child;
+        }
+        auto new_child = make<ProjectTreeNode>();
+        new_child->type = Type::Directory;
+        new_child->name = name;
+        new_child->parent = this;
+        auto* ptr = new_child.ptr();
+        children.append(move(new_child));
+        return *ptr;
+    }
+
+    Type type { Type::Invalid };
+    String name;
+    Vector<OwnPtr<ProjectTreeNode>> children;
+    ProjectTreeNode* parent { nullptr };
+};
 
 class ProjectModel final : public GModel {
 public:
@@ -8,22 +42,80 @@ public:
     {
     }
 
-    virtual int row_count(const GModelIndex& = GModelIndex()) const override { return m_project.m_files.size(); }
-    virtual int column_count(const GModelIndex& = GModelIndex()) const override { return 1; }
+    virtual int row_count(const GModelIndex& index) const override
+    {
+        if (!index.is_valid())
+            return 1;
+        auto* node = static_cast<Project::ProjectTreeNode*>(index.internal_data());
+        return node->children.size();
+    }
+
+    virtual int column_count(const GModelIndex&) const override
+    {
+        return 1;
+    }
+
     virtual GVariant data(const GModelIndex& index, Role role = Role::Display) const override
     {
-        int row = index.row();
+        auto* node = static_cast<Project::ProjectTreeNode*>(index.internal_data());
         if (role == Role::Display) {
-            return m_project.m_files.at(row).name();
+            return FileSystemPath(node->name).basename();
+        }
+        if (role == Role::Custom) {
+            return node->name;
+        }
+        if (role == Role::Icon) {
+            if (node->type == Project::ProjectTreeNode::Type::Project)
+                return m_project.m_project_icon;
+            if (node->type == Project::ProjectTreeNode::Type::Directory)
+                return m_project.m_directory_icon;
+            if (node->name.ends_with(".cpp"))
+                return m_project.m_cplusplus_icon;
+            if (node->name.ends_with(".h"))
+                return m_project.m_header_icon;
+            return m_project.m_file_icon;
         }
         if (role == Role::Font) {
             extern String g_currently_open_file;
-            if (m_project.m_files.at(row).name() == g_currently_open_file)
+            if (node->name == g_currently_open_file)
                 return Font::default_bold_font();
             return {};
         }
         return {};
     }
+
+    virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override
+    {
+        if (!parent.is_valid()) {
+            return create_index(row, column, &m_project.root_node());
+        }
+        auto& node = *static_cast<Project::ProjectTreeNode*>(parent.internal_data());
+        return create_index(row, column, node.children.at(row).ptr());
+    }
+
+    GModelIndex parent_index(const GModelIndex& index) const override
+    {
+        if (!index.is_valid())
+            return {};
+        auto& node = *static_cast<Project::ProjectTreeNode*>(index.internal_data());
+        if (!node.parent)
+            return {};
+
+        if (!node.parent->parent) {
+            return create_index(0, 0, &m_project.root_node());
+            ASSERT_NOT_REACHED();
+            return {};
+        }
+
+        for (int row = 0; row < node.parent->parent->children.size(); ++row) {
+            if (node.parent->parent->children[row].ptr() == node.parent)
+                return create_index(row, 0, node.parent);
+        }
+
+        ASSERT_NOT_REACHED();
+        return {};
+    }
+
     virtual void update() override
     {
         did_update();
@@ -36,10 +128,23 @@ private:
 Project::Project(const String& path, Vector<String>&& filenames)
     : m_path(path)
 {
+    m_file_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
+    m_cplusplus_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"));
+    m_header_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-header.png"));
+    m_directory_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-folder.png"));
+    m_project_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-hack-studio.png"));
+
     for (auto& filename : filenames) {
         m_files.append(ProjectFile::construct_with_name(filename));
     }
+
     m_model = adopt(*new ProjectModel(*this));
+
+    rebuild_tree();
+}
+
+Project::~Project()
+{
 }
 
 OwnPtr<Project> Project::load_from_file(const String& path)
@@ -87,4 +192,59 @@ ProjectFile* Project::get_file(const String& filename)
             return &file;
     }
     return nullptr;
+}
+
+void Project::rebuild_tree()
+{
+    auto root = make<ProjectTreeNode>();
+    root->type = ProjectTreeNode::Type::Project;
+
+    for (auto& file : m_files) {
+        FileSystemPath path(file.name());
+        ProjectTreeNode* current = root.ptr();
+        StringBuilder partial_path;
+
+        for (int i = 0; i < path.parts().size(); ++i) {
+            auto& part = path.parts().at(i);
+            if (part == ".")
+                continue;
+            if (i != path.parts().size() - 1) {
+                current = &current->find_or_create_subdirectory(part);
+                continue;
+            }
+            struct stat st;
+            if (lstat(path.string().characters(), &st) < 0)
+                continue;
+
+            if (S_ISDIR(st.st_mode)) {
+                current = &current->find_or_create_subdirectory(part);
+                continue;
+            }
+            auto file_node = make<ProjectTreeNode>();
+            file_node->name = file.name();
+            file_node->type = Project::ProjectTreeNode::Type::File;
+            file_node->parent = current;
+            current->children.append(move(file_node));
+            break;
+        }
+    }
+
+    Function<void(ProjectTreeNode&, int indent)> dump_tree = [&](ProjectTreeNode& node, int indent) {
+        for (int i = 0; i < indent; ++i)
+            printf(" ");
+        if (node.name.is_null())
+            printf("(null)\n");
+        else
+            printf("%s\n", node.name.characters());
+        for (auto& child : node.children) {
+            dump_tree(*child, indent + 2);
+        }
+    };
+
+    printf("begin tree dump\n");
+    dump_tree(*root, 0);
+    printf("end tree dump\n");
+
+    m_root_node = move(root);
+    m_model->update();
 }
