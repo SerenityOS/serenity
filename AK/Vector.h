@@ -360,6 +360,18 @@ public:
         }
     }
 
+    template<typename Callback>
+    void remove_all_matching(Callback callback)
+    {
+        for (int i = 0; i < size();) {
+            if (callback(at(i))) {
+                remove(i);
+            } else {
+                ++i;
+            }
+        }
+    }
+
     void unchecked_append(T&& value)
     {
         ASSERT((size() + 1) <= capacity());
@@ -535,6 +547,7 @@ public:
         }
         return -1;
     }
+
 private:
     void reset_capacity()
     {
