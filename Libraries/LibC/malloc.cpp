@@ -99,8 +99,9 @@ struct BigAllocator {
     Vector<BigAllocationBlock*, number_of_big_blocks_to_keep_around_per_size_class> blocks;
 };
 
-static Allocator g_allocators[num_size_classes];
-static BigAllocator g_big_allocators[1];
+// Allocators will be mmapped in __malloc_init
+Allocator* g_allocators = nullptr;
+BigAllocator* g_big_allocators = nullptr;
 
 static Allocator* allocator_for_size(size_t size, size_t& good_size)
 {
@@ -369,5 +370,18 @@ void __malloc_init()
         s_scrub_free = false;
     if (getenv("LIBC_LOG_MALLOC"))
         s_log_malloc = true;
+
+    g_allocators = (Allocator*)mmap_with_name(nullptr, sizeof(Allocator) * num_size_classes, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "LibC Allocators");
+    for (size_t i = 0; i < num_size_classes; ++i) {
+        new (&g_allocators[i]) Allocator();
+        g_allocators[i].size = size_classes[i];
+    }
+
+    g_big_allocators = (BigAllocator*)mmap_with_name(nullptr, sizeof(BigAllocator), PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, "LibC BigAllocators");
+    new (g_big_allocators) (BigAllocator);
+
+    // We could mprotect the mmaps here with atexit, but, since this method is called in _start before
+    // _init and __init_array entries, our mprotect method would always be the last thing run before _exit.
 }
+
 }
