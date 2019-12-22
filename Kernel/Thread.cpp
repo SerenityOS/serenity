@@ -43,9 +43,14 @@ HashTable<Thread*>& thread_table()
 
 Thread::Thread(Process& process)
     : m_process(process)
-    , m_tid(process.m_next_tid++)
     , m_name(process.name())
 {
+    if (m_process.m_thread_count == 0) {
+        // First thread gets TID == PID
+        m_tid = process.pid();
+    } else {
+        m_tid = Process::allocate_pid();
+    }
     process.m_thread_count++;
     dbgprintf("Thread{%p}: New thread TID=%u in %s(%u)\n", this, m_tid, process.name().characters(), process.pid());
     set_default_signal_dispositions();

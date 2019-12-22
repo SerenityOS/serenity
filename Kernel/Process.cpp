@@ -64,6 +64,12 @@ VirtualAddress g_return_to_ring3_from_signal_trampoline;
 VirtualAddress g_return_to_ring0_from_signal_trampoline;
 HashMap<String, OwnPtr<Module>>* g_modules;
 
+pid_t Process::allocate_pid()
+{
+    InterruptDisabler disabler;
+    return next_pid++;
+}
+
 void Process::initialize()
 {
     g_modules = new HashMap<String, OwnPtr<Module>>;
@@ -854,7 +860,7 @@ Process* Process::create_kernel_process(Thread*& first_thread, String&& name, vo
 
 Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
-    , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
+    , m_pid(allocate_pid())
     , m_uid(uid)
     , m_gid(gid)
     , m_euid(uid)
