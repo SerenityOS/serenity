@@ -114,11 +114,11 @@ int pthread_mutex_destroy(pthread_mutex_t*)
 
 int pthread_mutex_lock(pthread_mutex_t* mutex)
 {
-    auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex->lock);
+    auto& atomic = reinterpret_cast<Atomic<u32>&>(mutex->lock);
     pthread_t this_thread = pthread_self();
     for (;;) {
         u32 expected = false;
-        if (!atomic->compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+        if (!atomic.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
             if (mutex->type == PTHREAD_MUTEX_RECURSIVE && mutex->owner == this_thread) {
                 mutex->level++;
                 return 0;
@@ -134,9 +134,9 @@ int pthread_mutex_lock(pthread_mutex_t* mutex)
 
 int pthread_mutex_trylock(pthread_mutex_t* mutex)
 {
-    auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex->lock);
+    auto& atomic = reinterpret_cast<Atomic<u32>&>(mutex->lock);
     u32 expected = false;
-    if (!atomic->compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+    if (!atomic.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
         if (mutex->type == PTHREAD_MUTEX_RECURSIVE && mutex->owner == pthread_self()) {
             mutex->level++;
             return 0;
