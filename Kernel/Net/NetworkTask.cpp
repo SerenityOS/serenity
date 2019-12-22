@@ -75,7 +75,7 @@ void NetworkTask_main()
 
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
-        u8 packet[64 * KB];
+        u8 packet[32 * KB];
         size_t packet_size = dequeue_packet(packet, sizeof(packet));
         if (!packet_size) {
             current->wait_on(packet_wait_queue);
