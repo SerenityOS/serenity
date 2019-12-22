@@ -141,6 +141,8 @@ private:
 Project::Project(const String& path, Vector<String>&& filenames)
     : m_path(path)
 {
+    m_name = FileSystemPath(m_path).basename();
+
     m_file_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-unknown.png"));
     m_cplusplus_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-cplusplus.png"));
     m_header_icon = GIcon(GraphicsBitmap::load_from_file("/res/icons/16x16/filetype-header.png"));
@@ -210,6 +212,7 @@ ProjectFile* Project::get_file(const String& filename)
 void Project::rebuild_tree()
 {
     auto root = adopt(*new ProjectTreeNode);
+    root->name = m_name;
     root->type = ProjectTreeNode::Type::Project;
 
     for (auto& file : m_files) {
