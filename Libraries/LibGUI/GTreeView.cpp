@@ -71,6 +71,8 @@ void GTreeView::doubleclick_event(GMouseEvent& event)
 
         if (model.row_count(index))
             toggle_index(index);
+        else
+            activate(index);
     }
 }
 
