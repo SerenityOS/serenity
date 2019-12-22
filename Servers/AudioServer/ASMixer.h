@@ -96,9 +96,10 @@ public:
 
 private:
     Vector<NonnullRefPtr<ASBufferQueue>> m_pending_mixing;
+    pthread_mutex_t m_pending_mutex;
+    pthread_cond_t m_pending_cond;
 
     RefPtr<CFile> m_device;
-    LibThread::Lock m_lock;
 
     LibThread::Thread m_sound_thread;
 
