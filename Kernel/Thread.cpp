@@ -776,3 +776,25 @@ const char* to_string(ThreadPriority priority)
     ASSERT_NOT_REACHED();
     return nullptr;
 }
+
+void Thread::wait_on(WaitQueue& queue, Thread* beneficiary, const char* reason)
+{
+    bool did_unlock = unlock_process_if_locked();
+    cli();
+    set_state(State::Queued);
+    queue.enqueue(*current);
+    // Yield and wait for the queue to wake us up again.
+    if (beneficiary)
+        Scheduler::donate_to(beneficiary, reason);
+    else
+        Scheduler::yield();
+    // We've unblocked, relock the process if needed and carry on.
+    if (did_unlock)
+        relock_process();
+}
+
+void Thread::wake_from_queue()
+{
+    ASSERT(state() == State::Queued);
+    set_state(State::Runnable);
+}
