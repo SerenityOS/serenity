@@ -49,6 +49,8 @@ void ASMixer::mix()
             continue;
         }
 
+        active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->client(); });
+
         ASample mixed_buffer[1024];
         auto mixed_buffer_length = (int)(sizeof(mixed_buffer) / sizeof(ASample));
 
