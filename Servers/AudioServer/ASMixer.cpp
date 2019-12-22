@@ -2,18 +2,24 @@
 #include <AudioServer/ASClientConnection.h>
 #include <AudioServer/ASMixer.h>
 #include <limits>
+#include <pthread.h>
 
 ASMixer::ASMixer()
     : m_device(CFile::construct("/dev/audio", this))
-    , m_sound_thread([this] {
-        mix();
-        return 0;
-    }, "AudioServer[mixer]")
+    , m_sound_thread(
+          [this] {
+              mix();
+              return 0;
+          },
+          "AudioServer[mixer]")
 {
     if (!m_device->open(CIODevice::WriteOnly)) {
         dbgprintf("Can't open audio device: %s\n", m_device->error_string());
         return;
     }
+
+    pthread_mutex_init(&m_pending_mutex, nullptr);
+    pthread_cond_init(&m_pending_cond, nullptr);
 
     m_zero_filled_buffer = (u8*)malloc(4096);
     bzero(m_zero_filled_buffer, 4096);
@@ -26,9 +32,11 @@ ASMixer::~ASMixer()
 
 NonnullRefPtr<ASBufferQueue> ASMixer::create_queue(ASClientConnection& client)
 {
-    LOCKER(m_lock);
     auto queue = adopt(*new ASBufferQueue(client));
+    pthread_mutex_lock(&m_pending_mutex);
     m_pending_mixing.append(*queue);
+    pthread_cond_signal(&m_pending_cond);
+    pthread_mutex_unlock(&m_pending_mutex);
     return queue;
 }
 
@@ -37,16 +45,11 @@ void ASMixer::mix()
     decltype(m_pending_mixing) active_mix_queues;
 
     for (;;) {
-        {
-            LOCKER(m_lock);
+        if (active_mix_queues.is_empty()) {
+            pthread_mutex_lock(&m_pending_mutex);
+            pthread_cond_wait(&m_pending_cond, &m_pending_mutex);
             active_mix_queues.append(move(m_pending_mixing));
-        }
-
-        // ### use a wakeup of some kind rather than this garbage
-        if (active_mix_queues.size() == 0) {
-            // nothing to mix yet
-            usleep(10000);
-            continue;
+            pthread_mutex_unlock(&m_pending_mutex);
         }
 
         active_mix_queues.remove_all_matching([&](auto& entry) { return !entry->client(); });
