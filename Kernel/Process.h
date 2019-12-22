@@ -310,6 +310,7 @@ private:
     friend class Region;
 
     Process(Thread*& first_thread, const String& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    static pid_t allocate_pid();
 
     Range allocate_range(VirtualAddress, size_t);
 
