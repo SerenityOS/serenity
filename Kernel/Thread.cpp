@@ -46,6 +46,7 @@ Thread::Thread(Process& process)
     , m_tid(process.m_next_tid++)
     , m_name(process.name())
 {
+    process.m_thread_count++;
     dbgprintf("Thread{%p}: New thread TID=%u in %s(%u)\n", this, m_tid, process.name().characters(), process.pid());
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
@@ -121,6 +122,9 @@ Thread::~Thread()
 
     if (m_userspace_stack_region)
         m_process.deallocate_region(*m_userspace_stack_region);
+
+    ASSERT(m_process.m_thread_count);
+    m_process.m_thread_count--;
 }
 
 void Thread::unblock()
@@ -135,8 +139,10 @@ void Thread::unblock()
 
 void Thread::set_should_die()
 {
-    if (m_should_die)
+    if (m_should_die) {
+        dbgprintf("Should already die (%u)\n", m_tid);
         return;
+    }
     InterruptDisabler disabler;
 
     // Remember that we should die instead of returning to
@@ -258,13 +264,6 @@ void Thread::finalize()
 
     if (m_dump_backtrace_on_finalization)
         dbg() << backtrace_impl();
-
-    if (this == &m_process.main_thread()) {
-        m_process.finalize();
-        return;
-    }
-
-    delete this;
 }
 
 void Thread::finalize_dying_threads()
@@ -278,8 +277,15 @@ void Thread::finalize_dying_threads()
             return IterationDecision::Continue;
         });
     }
-    for (auto* thread : dying_threads)
+    dbgprintf("Finalizing %u dying threads\n", dying_threads.size());
+    for (auto* thread : dying_threads) {
+        auto& process = thread->process();
         thread->finalize();
+        delete thread;
+        if (process.m_thread_count == 0)
+            process.finalize();
+    }
+    dbgprintf("Done\n");
 }
 
 bool Thread::tick()

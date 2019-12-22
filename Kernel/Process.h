@@ -37,8 +37,8 @@ class Process : public InlineLinkedListNode<Process>
     friend class Thread;
 
 public:
-    static Process* create_kernel_process(String&& name, void (*entry)());
-    static Process* create_user_process(const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
+    static Process* create_kernel_process(Thread*& first_thread, String&& name, void (*entry)());
+    static Process* create_user_process(Thread*& first_thread, const String& path, uid_t, gid_t, pid_t ppid, int& error, Vector<String>&& arguments = Vector<String>(), Vector<String>&& environment = Vector<String>(), TTY* = nullptr);
     ~Process();
 
     static Vector<pid_t> all_pids();
@@ -55,9 +55,6 @@ public:
     KBuffer backtrace(ProcessInspectionHandle&) const;
 
     bool is_dead() const { return m_dead; }
-
-    Thread& main_thread() { return *m_main_thread; }
-    const Thread& main_thread() const { return *m_main_thread; }
 
     bool is_ring0() const { return m_ring == Ring0; }
     bool is_ring3() const { return m_ring == Ring3; }
@@ -297,7 +294,9 @@ public:
     void terminate_due_to_signal(u8 signal);
     void send_signal(u8, Process* sender);
 
-    int thread_count() const;
+    u16 thread_count() const { return m_thread_count; }
+
+    Thread& any_thread();
 
     Lock& big_lock() { return m_big_lock; }
 
@@ -310,7 +309,7 @@ private:
     friend class Scheduler;
     friend class Region;
 
-    Process(const String& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
+    Process(Thread*& first_thread, const String& name, uid_t, gid_t, pid_t ppid, RingLevel, RefPtr<Custody> cwd = nullptr, RefPtr<Custody> executable = nullptr, TTY* = nullptr, Process* fork_parent = nullptr);
 
     Range allocate_range(VirtualAddress, size_t);
 
@@ -324,8 +323,6 @@ private:
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(pid_t pgrp, int signal);
-
-    Thread* m_main_thread { nullptr };
 
     RefPtr<PageDirectory> m_page_directory;
 
@@ -356,6 +353,7 @@ private:
     RingLevel m_ring { Ring0 };
     u8 m_termination_status { 0 };
     u8 m_termination_signal { 0 };
+    u16 m_thread_count { 0 };
 
     bool m_being_inspected { false };
     bool m_dead { false };
@@ -465,8 +463,8 @@ inline void Process::for_each_thread(Callback callback) const
     pid_t my_pid = pid();
 
     if (my_pid == 0) {
-        // NOTE: Special case the colonel thread, since its main thread is not in the global thread table.
-        callback(const_cast<Thread&>(main_thread()));
+        // NOTE: Special case the colonel process, since its main thread is not in the global thread table.
+        callback(*g_colonel);
         return;
     }
 

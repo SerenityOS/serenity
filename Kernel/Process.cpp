@@ -407,7 +407,8 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
 
 pid_t Process::sys$fork(RegisterDump& regs)
 {
-    auto* child = new Process(m_name, m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
+    Thread* child_first_thread = nullptr;
+    auto* child = new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
@@ -427,7 +428,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
     for (auto gid : m_gids)
         child->m_gids.set(gid);
 
-    auto& child_tss = child->main_thread().m_tss;
+    auto& child_tss = child_first_thread->m_tss;
     child_tss.eax = 0; // fork() returns 0 in the child :^)
     child_tss.ebx = regs.ebx;
     child_tss.ecx = regs.ecx;
@@ -457,8 +458,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
     kprintf("Process %u (%s) forked from %u @ %p\n", child->pid(), child->name().characters(), m_pid, child_tss.eip);
 #endif
 
-    child->main_thread().set_state(Thread::State::Skip1SchedulerPass);
-
+    child_first_thread->set_state(Thread::State::Skip1SchedulerPass);
     return child->pid();
 }
 
@@ -609,9 +609,21 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         }
     }
 
+    // FIXME: Should we just make a new Thread here instead?
+    Thread* new_main_thread = nullptr;
+    if (&current->process() == this) {
+        new_main_thread = current;
+    } else {
+        for_each_thread([&](auto& thread) {
+            new_main_thread = &thread;
+            return IterationDecision::Break;
+        });
+    }
+    ASSERT(new_main_thread);
+
     // NOTE: We create the new stack before disabling interrupts since it will zero-fault
     //       and we don't want to deal with faults after this point.
-    u32 new_userspace_esp = main_thread().make_userspace_stack_for_main_thread(move(arguments), move(environment));
+    u32 new_userspace_esp = new_main_thread->make_userspace_stack_for_main_thread(move(arguments), move(environment));
 
     // We cli() manually here because we don't want to get interrupted between do_exec() and Schedule::yield().
     // The reason is that the task redirection we've set up above will be clobbered by the timer IRQ.
@@ -621,39 +633,40 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     // NOTE: Be careful to not trigger any page faults below!
 
-    Scheduler::prepare_to_modify_tss(main_thread());
+    Scheduler::prepare_to_modify_tss(*new_main_thread);
 
     m_name = parts.take_last();
-    main_thread().set_name(m_name);
+    new_main_thread->set_name(m_name);
 
-    // ss0 sp!!!!!!!!!
-    u32 old_esp0 = main_thread().m_tss.esp0;
+    auto& tss = new_main_thread->m_tss;
+
+    u32 old_esp0 = tss.esp0;
 
     m_master_tls_size = master_tls_size;
     m_master_tls_alignment = master_tls_alignment;
 
-    main_thread().make_thread_specific_region({});
+    new_main_thread->make_thread_specific_region({});
 
-    memset(&main_thread().m_tss, 0, sizeof(main_thread().m_tss));
-    main_thread().m_tss.eflags = 0x0202;
-    main_thread().m_tss.eip = entry_eip;
-    main_thread().m_tss.cs = 0x1b;
-    main_thread().m_tss.ds = 0x23;
-    main_thread().m_tss.es = 0x23;
-    main_thread().m_tss.fs = 0x23;
-    main_thread().m_tss.gs = thread_specific_selector() | 3;
-    main_thread().m_tss.ss = 0x23;
-    main_thread().m_tss.cr3 = page_directory().cr3();
-    main_thread().m_tss.esp = new_userspace_esp;
-    main_thread().m_tss.ss0 = 0x10;
-    main_thread().m_tss.esp0 = old_esp0;
-    main_thread().m_tss.ss2 = m_pid;
+    memset(&tss, 0, sizeof(TSS32));
+    tss.eflags = 0x0202;
+    tss.eip = entry_eip;
+    tss.cs = 0x1b;
+    tss.ds = 0x23;
+    tss.es = 0x23;
+    tss.fs = 0x23;
+    tss.gs = thread_specific_selector() | 3;
+    tss.ss = 0x23;
+    tss.cr3 = page_directory().cr3();
+    tss.esp = new_userspace_esp;
+    tss.ss0 = 0x10;
+    tss.esp0 = old_esp0;
+    tss.ss2 = m_pid;
 
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), main_thread().tss().eip);
+    kprintf("Process %u (%s) exec'd %s @ %p\n", pid(), name().characters(), path.characters(), tss.eip);
 #endif
 
-    main_thread().set_state(Thread::State::Skip1SchedulerPass);
+    new_main_thread->set_state(Thread::State::Skip1SchedulerPass);
     big_lock().unlock_if_locked();
     return 0;
 }
@@ -786,7 +799,7 @@ int Process::sys$execve(const char* filename, const char** argv, const char** en
     return rc;
 }
 
-Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, pid_t parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
+Process* Process::create_user_process(Thread*& first_thread, const String& path, uid_t uid, gid_t gid, pid_t parent_pid, int& error, Vector<String>&& arguments, Vector<String>&& environment, TTY* tty)
 {
     // FIXME: Don't split() the path twice (sys$spawn also does it...)
     auto parts = path.split('/');
@@ -803,7 +816,7 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
     if (!cwd)
         cwd = VFS::the().root_custody();
 
-    auto* process = new Process(parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
+    auto* process = new Process(first_thread, parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
 
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {
@@ -816,30 +829,30 @@ Process* Process::create_user_process(const String& path, uid_t uid, gid_t gid, 
         g_processes->prepend(process);
     }
 #ifdef TASK_DEBUG
-    kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->main_thread().tss().eip);
+    kprintf("Process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), first_thread->tss().eip);
 #endif
     error = 0;
     return process;
 }
 
-Process* Process::create_kernel_process(String&& name, void (*e)())
+Process* Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)())
 {
-    auto* process = new Process(move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
-    process->main_thread().tss().eip = (u32)e;
+    auto* process = new Process(first_thread, move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
+    first_thread->tss().eip = (u32)e;
 
     if (process->pid() != 0) {
         InterruptDisabler disabler;
         g_processes->prepend(process);
 #ifdef TASK_DEBUG
-        kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), process->main_thread().tss().eip);
+        kprintf("Kernel process %u (%s) spawned @ %p\n", process->pid(), process->name().characters(), first_thread->tss().eip);
 #endif
     }
 
-    process->main_thread().set_state(Thread::State::Runnable);
+    first_thread->set_state(Thread::State::Runnable);
     return process;
 }
 
-Process::Process(const String& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
+Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel ring, RefPtr<Custody> cwd, RefPtr<Custody> executable, TTY* tty, Process* fork_parent)
     : m_name(move(name))
     , m_pid(next_pid++) // FIXME: RACE: This variable looks racy!
     , m_uid(uid)
@@ -861,9 +874,9 @@ Process::Process(const String& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel
 
     // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the main thread in the new process.
     if (fork_parent)
-        m_main_thread = current->clone(*this);
+        first_thread = current->clone(*this);
     else
-        m_main_thread = new Thread(*this);
+        first_thread = new Thread(*this);
 
     m_gids.set(m_gid);
 
@@ -906,17 +919,8 @@ Process::Process(const String& name, uid_t uid, gid_t gid, pid_t ppid, RingLevel
 
 Process::~Process()
 {
-    dbgprintf("~Process{%p} name=%s pid=%d, m_fds=%d\n", this, m_name.characters(), pid(), m_fds.size());
-    delete m_main_thread;
-    m_main_thread = nullptr;
-
-    Vector<Thread*, 16> my_threads;
-    for_each_thread([&my_threads](auto& thread) {
-        my_threads.append(&thread);
-        return IterationDecision::Continue;
-    });
-    for (auto* thread : my_threads)
-        delete thread;
+    dbgprintf("~Process{%p} name=%s pid=%d, m_fds=%d, m_thread_count=%u\n", this, m_name.characters(), pid(), m_fds.size(), m_thread_count);
+    ASSERT(thread_count() == 0);
 }
 
 void Process::dump_regions()
@@ -1782,7 +1786,7 @@ int Process::reap(Process& process)
             }
         }
 
-        dbgprintf("reap: %s(%u) {%s}\n", process.name().characters(), process.pid(), process.main_thread().state_string());
+        dbgprintf("reap: %s(%u)\n", process.name().characters(), process.pid());
         ASSERT(process.is_dead());
         g_processes->remove(&process);
     }
@@ -1854,7 +1858,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     if (waitee_process->is_dead()) {
         exit_status = reap(*waitee_process);
     } else {
-        ASSERT(waitee_process->main_thread().state() == Thread::State::Stopped);
+        ASSERT(waitee_process->any_thread().state() == Thread::State::Stopped);
         exit_status = 0x7f;
     }
     return waitee_pid;
@@ -2438,7 +2442,7 @@ void Process::finalize()
         InterruptDisabler disabler;
         if (auto* parent_process = Process::from_pid(m_ppid)) {
             // FIXME(Thread): What should we do here? Should we look at all threads' signal actions?
-            if (parent_process->main_thread().m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
+            if (parent_process->thread_count() && parent_process->any_thread().m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
                 // NOTE: If the parent doesn't care about this process, let it go.
                 m_ppid = 0;
             } else {
@@ -2465,6 +2469,7 @@ void Process::die()
         // Tell the threads to unwind and die.
         InterruptDisabler disabler;
         for_each_thread([](Thread& thread) {
+            kprintf("Mark PID %u TID %u for death\n", thread.pid(), thread.tid());
             thread.set_should_die();
             return IterationDecision::Continue;
         });
@@ -2750,7 +2755,7 @@ int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
     if (param->sched_priority < (int)ThreadPriority::First || param->sched_priority > (int)ThreadPriority::Last)
         return -EINVAL;
 
-    peer->main_thread().set_priority((ThreadPriority)param->sched_priority);
+    peer->any_thread().set_priority((ThreadPriority)param->sched_priority);
     return 0;
 }
 
@@ -2770,7 +2775,7 @@ int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
     if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
         return -EPERM;
 
-    param->sched_priority = (int)peer->main_thread().priority();
+    param->sched_priority = (int)peer->any_thread().priority();
     return 0;
 }
 
@@ -2976,17 +2981,7 @@ void Process::terminate_due_to_signal(u8 signal)
 void Process::send_signal(u8 signal, Process* sender)
 {
     // FIXME(Thread): Find the appropriate thread to deliver the signal to.
-    main_thread().send_signal(signal, sender);
-}
-
-int Process::thread_count() const
-{
-    int count = 0;
-    for_each_thread([&count](auto&) {
-        ++count;
-        return IterationDecision::Continue;
-    });
-    return count;
+    any_thread().send_signal(signal, sender);
 }
 
 int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Syscall::SC_create_thread_params* params)
@@ -3045,13 +3040,8 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
 
 void Process::sys$exit_thread(void* exit_value)
 {
-    current->m_exit_value = exit_value;
     cli();
-    if (&current->process().main_thread() == current) {
-        // FIXME: For POSIXy reasons, we should only sys$exit once *all* threads have exited.
-        sys$exit(0);
-        return;
-    }
+    current->m_exit_value = exit_value;
     current->set_should_die();
     big_lock().unlock_if_locked();
     current->die_if_needed();
@@ -3147,13 +3137,7 @@ int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
     if (!thread)
         return -ESRCH;
 
-    // Forbid renaming the main thread of a process
-    // That guy should always be named after the process
-    if (thread == &current->process().main_thread())
-        return -EINVAL;
-
     thread->set_name({ buffer, (size_t)buffer_size });
-
     return 0;
 }
 int Process::sys$get_thread_name(int tid, char* buffer, int buffer_size)
@@ -3766,4 +3750,15 @@ int Process::sys$profiling_disable(pid_t pid)
 void* Process::sys$get_kernel_info_page()
 {
     return s_info_page_address_for_userspace.as_ptr();
+}
+
+Thread& Process::any_thread()
+{
+    Thread* found_thread = nullptr;
+    for_each_thread([&](auto& thread) {
+        found_thread = &thread;
+        return IterationDecision::Break;
+    });
+    ASSERT(found_thread);
+    return *found_thread;
 }
