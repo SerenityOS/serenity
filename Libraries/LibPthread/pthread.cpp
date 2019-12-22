@@ -100,9 +100,10 @@ int pthread_sigmask(int how, const sigset_t* set, sigset_t* old_set)
 
 int pthread_mutex_init(pthread_mutex_t* mutex, const pthread_mutexattr_t* attributes)
 {
-    // FIXME: Implement mutex attributes
-    UNUSED_PARAM(attributes);
-    *mutex = 0;
+    mutex->lock = 0;
+    mutex->owner = 0;
+    mutex->level = 0;
+    mutex->type = attributes ? attributes->type : PTHREAD_MUTEX_NORMAL;
     return 0;
 }
 
@@ -114,27 +115,47 @@ int pthread_mutex_destroy(pthread_mutex_t*)
 int pthread_mutex_lock(pthread_mutex_t* mutex)
 {
     auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex);
+    pthread_t this_thread = pthread_self();
     for (;;) {
         u32 expected = false;
-        if (atomic->compare_exchange_strong(expected, true, AK::memory_order_acq_rel))
-            return 0;
-        sched_yield();
+        if (!atomic->compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+            if (mutex->type == PTHREAD_MUTEX_RECURSIVE && mutex->owner == this_thread) {
+                mutex->level++;
+                return 0;
+            }
+            sched_yield();
+            continue;
+        }
+        mutex->owner = this_thread;
+        mutex->level = 0;
+        return 0;
     }
 }
 
 int pthread_mutex_trylock(pthread_mutex_t* mutex)
 {
-    auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex);
+    auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex->lock);
     u32 expected = false;
-    if (atomic->compare_exchange_strong(expected, true, AK::memory_order_acq_rel))
-        return 0;
-    return EBUSY;
+    if (!atomic->compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
+        if (mutex->type == PTHREAD_MUTEX_RECURSIVE && mutex->owner == pthread_self()) {
+            mutex->level++;
+            return 0;
+        }
+        return EBUSY;
+    }
+    mutex->owner = pthread_self();
+    mutex->level = 0;
+    return 0;
 }
 
 int pthread_mutex_unlock(pthread_mutex_t* mutex)
 {
-    auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex);
-    atomic->store(false, AK::memory_order_release);
+    if (mutex->type == PTHREAD_MUTEX_RECURSIVE && mutex->level > 0) {
+        mutex->level--;
+        return 0;
+    }
+    mutex->owner = 0;
+    mutex->lock = 0;
     return 0;
 }
 
@@ -146,6 +167,16 @@ int pthread_mutexattr_init(pthread_mutexattr_t* attr)
 
 int pthread_mutexattr_destroy(pthread_mutexattr_t*)
 {
+    return 0;
+}
+
+int pthread_mutexattr_settype(pthread_mutexattr_t* attr, int type)
+{
+    if (!attr)
+        return EINVAL;
+    if (type != PTHREAD_MUTEX_NORMAL && type != PTHREAD_MUTEX_RECURSIVE)
+        return EINVAL;
+    attr->type = type;
     return 0;
 }
 
@@ -492,7 +523,7 @@ struct KeyTable {
     // FIXME: Invoke key destructors on thread exit!
     KeyDestructor destructors[64] { nullptr };
     int next { 0 };
-    pthread_mutex_t mutex { PTHREAD_MUTEX_INITIALIZER };
+    pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
 };
 
 struct SpecificTable {
