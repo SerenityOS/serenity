@@ -19,7 +19,7 @@ public:
         return *this;
     }
     T& operator*() { return *m_node; }
-    T* operator->() { return &m_node; }
+    T* operator->() { return m_node; }
     bool is_end() const { return !m_node; }
     static InlineLinkedListIterator universal_end() { return InlineLinkedListIterator(nullptr); }
 
