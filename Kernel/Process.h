@@ -233,6 +233,7 @@ public:
     int sys$profiling_enable(pid_t);
     int sys$profiling_disable(pid_t);
     void* sys$get_kernel_info_page();
+    int sys$futex(const Syscall::SC_futex_params*);
 
     static void initialize();
 
@@ -391,6 +392,9 @@ private:
     u64 m_alarm_deadline { 0 };
 
     int m_icon_id { -1 };
+
+    WaitQueue& futex_queue(i32*);
+    HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
 };
 
 class ProcessInspectionHandle {

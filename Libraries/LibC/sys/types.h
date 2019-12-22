@@ -77,7 +77,9 @@ typedef struct __pthread_mutexattr_t {
 } pthread_mutexattr_t;
 
 typedef struct __pthread_cond_t {
-    void* storage;
+    int32_t value;
+    uint32_t previous;
+    int clockid; // clockid_t
 } pthread_cond_t;
 
 typedef void* pthread_rwlock_t;

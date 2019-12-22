@@ -53,7 +53,7 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
 #define PTHREAD_MUTEX_RECURSIVE 1
 #define PTHREAD_MUTEX_DEFAULT PTHREAD_MUTEX_NORMAL
 #define PTHREAD_MUTEX_INITIALIZER { 0, 0, 0, PTHREAD_MUTEX_DEFAULT }
-#define PTHREAD_COND_INITIALIZER { NULL }
+#define PTHREAD_COND_INITIALIZER { 0, 0, CLOCK_MONOTONIC }
 
 int pthread_key_create(pthread_key_t* key, void (*destructor)(void*));
 int pthread_key_delete(pthread_key_t key);

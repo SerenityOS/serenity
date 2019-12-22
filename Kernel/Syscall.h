@@ -150,7 +150,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(set_shared_buffer_volatile) \
     __ENUMERATE_SYSCALL(profiling_enable)           \
     __ENUMERATE_SYSCALL(profiling_disable)          \
-    __ENUMERATE_SYSCALL(get_kernel_info_page)
+    __ENUMERATE_SYSCALL(get_kernel_info_page)       \
+    __ENUMERATE_SYSCALL(futex)
 
 namespace Syscall {
 
@@ -258,6 +259,13 @@ struct SC_setsockopt_params {
     int option;
     const void* value;
     socklen_t value_size;
+};
+
+struct SC_futex_params {
+    i32* userspace_address;
+    int futex_op;
+    i32 val;
+    const timespec* timeout;
 };
 
 struct SC_create_thread_params {

@@ -46,6 +46,9 @@
 
 #define FD_CLOEXEC 1
 
+#define FUTEX_WAIT 1
+#define FUTEX_WAKE 2
+
 /* c_cc characters */
 #define VINTR 0
 #define VQUIT 1

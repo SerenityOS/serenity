@@ -3807,3 +3807,47 @@ Thread& Process::any_thread()
     ASSERT(found_thread);
     return *found_thread;
 }
+
+WaitQueue& Process::futex_queue(i32* userspace_address)
+{
+    auto& queue = m_futex_queues.ensure((u32)userspace_address);
+    if (!queue)
+        queue = make<WaitQueue>();
+    return *queue;
+}
+
+int Process::sys$futex(const Syscall::SC_futex_params* params)
+{
+    if (!validate_read_typed(params))
+        return -EFAULT;
+
+    auto& [userspace_address, futex_op, value, timeout] = *params;
+
+    if (!validate_read_typed(userspace_address))
+        return -EFAULT;
+
+    if (timeout && !validate_read_typed(timeout))
+        return -EFAULT;
+
+    switch (futex_op) {
+    case FUTEX_WAIT:
+        if (*userspace_address != value)
+            return -EAGAIN;
+        // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
+        // FIXME: Support timeout!
+        current->wait_on(futex_queue(userspace_address));
+        break;
+    case FUTEX_WAKE:
+        if (value == 0)
+            return 0;
+        if (value == 1) {
+            futex_queue(userspace_address).wake_one();
+        } else {
+            // FIXME: Wake exactly (value) waiters.
+            futex_queue(userspace_address).wake_all();
+        }
+        break;
+    }
+
+    return 0;
+}

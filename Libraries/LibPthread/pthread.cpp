@@ -1,10 +1,10 @@
 #include <AK/Assertions.h>
 #include <AK/Atomic.h>
-#include <AK/InlineLinkedList.h>
 #include <AK/StdLibExtras.h>
 #include <Kernel/Syscall.h>
 #include <limits.h>
 #include <pthread.h>
+#include <serenity.h>
 #include <signal.h>
 #include <stdio.h>
 #include <sys/mman.h>
@@ -418,42 +418,27 @@ int pthread_setschedparam(pthread_t thread, int policy, const struct sched_param
     return 0;
 }
 
-struct WaitNode : public InlineLinkedListNode<WaitNode> {
-    volatile bool waiting { true };
-    WaitNode* m_next { nullptr };
-    WaitNode* m_prev { nullptr };
-};
-
-struct ConditionVariable {
-    InlineLinkedList<WaitNode> waiters;
-    clockid_t clock { CLOCK_MONOTONIC };
-};
-
 int pthread_cond_init(pthread_cond_t* cond, const pthread_condattr_t* attr)
 {
-    auto& condvar = *new ConditionVariable;
-    cond->storage = &condvar;
-    if (attr)
-        condvar.clock = attr->clockid;
+    cond->value = 0;
+    cond->previous = 0;
+    cond->clockid = attr ? attr->clockid : CLOCK_MONOTONIC;
     return 0;
 }
 
-int pthread_cond_destroy(pthread_cond_t* cond)
+int pthread_cond_destroy(pthread_cond_t*)
 {
-    delete static_cast<ConditionVariable*>(cond->storage);
     return 0;
 }
 
 int pthread_cond_wait(pthread_cond_t* cond, pthread_mutex_t* mutex)
 {
-    WaitNode node;
-    auto& condvar = *(ConditionVariable*)cond->storage;
-    condvar.waiters.append(&node);
-    while (node.waiting) {
-        pthread_mutex_unlock(mutex);
-        sched_yield();
-        pthread_mutex_lock(mutex);
-    }
+    i32 value = cond->value;
+    cond->previous = value;
+    pthread_mutex_unlock(mutex);
+    int rc = futex(&cond->value, FUTEX_WAIT, value, nullptr);
+    ASSERT(rc == 0);
+    pthread_mutex_lock(mutex);
     return 0;
 }
 
@@ -476,42 +461,27 @@ int pthread_condattr_setclock(pthread_condattr_t* attr, clockid_t clock)
 
 int pthread_cond_timedwait(pthread_cond_t* cond, pthread_mutex_t* mutex, const struct timespec* abstime)
 {
-    WaitNode node;
-    auto& condvar = *(ConditionVariable*)cond->storage;
-    condvar.waiters.append(&node);
-    while (node.waiting) {
-        struct timespec now;
-        if (clock_gettime(condvar.clock, &now) < 0) {
-            dbgprintf("pthread_cond_timedwait: clock_gettime() failed\n");
-            return errno;
-        }
-        if ((abstime->tv_sec < now.tv_sec) || (abstime->tv_sec == now.tv_sec && abstime->tv_nsec <= now.tv_nsec)) {
-            return ETIMEDOUT;
-        }
-        pthread_mutex_unlock(mutex);
-        sched_yield();
-        pthread_mutex_lock(mutex);
-    }
+    // FIXME: Implement timeout.
+    (void)abstime;
+    pthread_cond_wait(cond, mutex);
     return 0;
 }
 
 int pthread_cond_signal(pthread_cond_t* cond)
 {
-    auto& condvar = *(ConditionVariable*)cond->storage;
-    if (condvar.waiters.is_empty())
-        return 0;
-    auto* node = condvar.waiters.remove_head();
-    node->waiting = false;
+    u32 value = cond->previous + 1;
+    cond->value = value;
+    int rc = futex(&cond->value, FUTEX_WAKE, 1, nullptr);
+    ASSERT(rc == 0);
     return 0;
 }
 
 int pthread_cond_broadcast(pthread_cond_t* cond)
 {
-    auto& condvar = *(ConditionVariable*)cond->storage;
-    while (!condvar.waiters.is_empty()) {
-        auto* node = condvar.waiters.remove_head();
-        node->waiting = false;
-    }
+    u32 value = cond->previous + 1;
+    cond->value = value;
+    int rc = futex(&cond->value, FUTEX_WAKE, INT32_MAX, nullptr);
+    ASSERT(rc == 0);
     return 0;
 }
 

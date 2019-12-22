@@ -44,4 +44,9 @@ int module_unload(const char* name, size_t name_length);
 int profiling_enable(pid_t);
 int profiling_disable(pid_t);
 
+#define FUTEX_WAIT 1
+#define FUTEX_WAKE 2
+
+int futex(int32_t* userspace_address, int futex_op, int32_t value, const struct timespec* timeout);
+
 __END_DECLS
