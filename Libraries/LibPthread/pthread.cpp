@@ -114,7 +114,7 @@ int pthread_mutex_destroy(pthread_mutex_t*)
 
 int pthread_mutex_lock(pthread_mutex_t* mutex)
 {
-    auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex);
+    auto* atomic = reinterpret_cast<Atomic<u32>*>(mutex->lock);
     pthread_t this_thread = pthread_self();
     for (;;) {
         u32 expected = false;
