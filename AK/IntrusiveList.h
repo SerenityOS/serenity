@@ -27,6 +27,8 @@ public:
     T* first() const;
     T* last() const;
 
+    T* take_first();
+
     class Iterator {
     public:
         Iterator();
@@ -191,6 +193,16 @@ template<class T, IntrusiveListNode T::*member>
 inline T* IntrusiveList<T, member>::first() const
 {
     return m_storage.m_first ? node_to_value(*m_storage.m_first) : nullptr;
+}
+
+template<class T, IntrusiveListNode T::*member>
+inline T* IntrusiveList<T, member>::take_first()
+{
+    if (auto* ptr = first()) {
+        remove(*ptr);
+        return ptr;
+    }
+    return nullptr;
 }
 
 template<class T, IntrusiveListNode T::*member>
