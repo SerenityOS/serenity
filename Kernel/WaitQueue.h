@@ -1,8 +1,7 @@
 #pragma once
 
 #include <AK/SinglyLinkedList.h>
-
-class Thread;
+#include <Kernel/Thread.h>
 
 class WaitQueue {
 public:
@@ -14,5 +13,6 @@ public:
     void wake_all();
 
 private:
-    SinglyLinkedList<Thread*> m_threads;
+    typedef IntrusiveList<Thread, &Thread::m_wait_queue_node> ThreadList;
+    ThreadList m_threads;
 };

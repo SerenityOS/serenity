@@ -11,7 +11,6 @@
 #include <Kernel/Scheduler.h>
 #include <Kernel/UnixTypes.h>
 #include <Kernel/VM/Region.h>
-#include <Kernel/WaitQueue.h>
 #include <LibC/fd_set.h>
 
 class Alarm;
@@ -291,27 +290,8 @@ public:
         return block<ConditionBlocker>(state_string, move(condition));
     }
 
-    void wait_on(WaitQueue& queue, Thread* beneficiary = nullptr, const char* reason = nullptr)
-    {
-        bool did_unlock = unlock_process_if_locked();
-        cli();
-        set_state(State::Queued);
-        queue.enqueue(*current);
-        // Yield and wait for the queue to wake us up again.
-        if (beneficiary)
-            Scheduler::donate_to(beneficiary, reason);
-        else
-            Scheduler::yield();
-        // We've unblocked, relock the process if needed and carry on.
-        if (did_unlock)
-            relock_process();
-    }
-
-    void wake_from_queue()
-    {
-        ASSERT(state() == State::Queued);
-        set_state(State::Runnable);
-    }
+    void wait_on(WaitQueue& queue, Thread* beneficiary = nullptr, const char* reason = nullptr);
+    void wake_from_queue();
 
     void unblock();
 
@@ -423,9 +403,11 @@ public:
 
 private:
     IntrusiveListNode m_runnable_list_node;
+    IntrusiveListNode m_wait_queue_node;
 
 private:
     friend class SchedulerData;
+    friend class WaitQueue;
     bool unlock_process_if_locked();
     void relock_process();
 

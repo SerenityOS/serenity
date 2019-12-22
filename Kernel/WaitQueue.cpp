@@ -12,7 +12,7 @@ WaitQueue::~WaitQueue()
 void WaitQueue::enqueue(Thread& thread)
 {
     InterruptDisabler disabler;
-    m_threads.append(&thread);
+    m_threads.append(thread);
 }
 
 void WaitQueue::wake_one()
