@@ -4,6 +4,8 @@
 
 [ -e /dev/kvm -a -r /dev/kvm -a -w /dev/kvm ] && SERENITY_KVM_ARG="-enable-kvm"
 
+[ -z "$SERENITY_BOCHS_BIN" ] && SERENITY_BOCHS_BIN="bochs"
+
 [ -z "$SERENITY_QEMU_BIN" ] && SERENITY_QEMU_BIN="qemu-system-i386"
 
 [ -z "$SERENITY_KERNEL_CMDLINE" ] && SERENITY_KERNEL_CMDLINE="hello"
@@ -25,7 +27,7 @@ export SDL_VIDEO_X11_DGAMOUSE=0
 
 if [ "$1" = "b" ]; then
     # ./run b: bochs
-    bochs -q -f .bochsrc
+    $SERENITY_BOCHS_BIN -q -f .bochsrc
 elif [ "$1" = "qn" ]; then
     # ./run qn: qemu without network
     $SERENITY_QEMU_BIN \
