@@ -6,6 +6,7 @@
 #include "WSMenuItem.h"
 #include "WSScreen.h"
 #include "WSWindow.h"
+#include <AK/FileSystemPath.h>
 #include <AK/LogStream.h>
 #include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
@@ -17,6 +18,7 @@
 #include <LibDraw/PNGLoader.h>
 #include <LibDraw/Painter.h>
 #include <LibDraw/StylePainter.h>
+#include <LibDraw/SystemTheme.h>
 #include <WindowServer/WSButton.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSCursor.h>
@@ -47,19 +49,21 @@ WSWindowManager::WSWindowManager()
     reload_config(false);
 
     HashTable<String> seen_app_categories;
-    CDirIterator dt("/res/apps", CDirIterator::SkipDots);
-    while (dt.has_next()) {
-        auto af_name = dt.next_path();
-        auto af_path = String::format("/res/apps/%s", af_name.characters());
-        auto af = CConfigFile::open(af_path);
-        if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
-            continue;
-        auto app_name = af->read_entry("App", "Name");
-        auto app_executable = af->read_entry("App", "Executable");
-        auto app_category = af->read_entry("App", "Category");
-        auto app_icon_path = af->read_entry("Icons", "16x16");
-        m_apps.append({ app_executable, app_name, app_icon_path, app_category });
-        seen_app_categories.set(app_category);
+    {
+        CDirIterator dt("/res/apps", CDirIterator::SkipDots);
+        while (dt.has_next()) {
+            auto af_name = dt.next_path();
+            auto af_path = String::format("/res/apps/%s", af_name.characters());
+            auto af = CConfigFile::open(af_path);
+            if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
+                continue;
+            auto app_name = af->read_entry("App", "Name");
+            auto app_executable = af->read_entry("App", "Executable");
+            auto app_category = af->read_entry("App", "Category");
+            auto app_icon_path = af->read_entry("Icons", "16x16");
+            m_apps.append({ app_executable, app_name, app_icon_path, app_category });
+            seen_app_categories.set(app_category);
+        }
     }
 
     Vector<String> sorted_app_categories;
@@ -99,7 +103,55 @@ WSWindowManager::WSWindowManager()
     }
 
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+
+    m_themes_menu = WSMenu::construct(nullptr, 9000, "Themes");
+
+    auto themes_menu_item = make<WSMenuItem>(*m_system_menu, 100, "Themes");
+    themes_menu_item->set_submenu_id(m_themes_menu->menu_id());
+    m_system_menu->add_item(move(themes_menu_item));
+
+    {
+        CDirIterator dt("/res/themes", CDirIterator::SkipDots);
+        while (dt.has_next()) {
+            auto theme_name = dt.next_path();
+            auto theme_path = String::format("/res/themes/%s", theme_name.characters());
+            m_themes.append({ FileSystemPath(theme_name).title(), theme_path });
+        }
+        quick_sort(m_themes.begin(), m_themes.end(), [](auto& a, auto& b) { return a.name < b.name; });
+    }
+
+    {
+        int theme_identifier = 9000;
+        for (auto& theme : m_themes) {
+            m_themes_menu->add_item(make<WSMenuItem>(*m_themes_menu, theme_identifier++, theme.name));
+        }
+    }
+
+    m_themes_menu->on_item_activation = [this](WSMenuItem& item) {
+        auto& theme = m_themes[(int)item.identifier() - 9000];
+        auto new_theme = load_system_theme(theme.path);
+        ASSERT(new_theme);
+        set_system_theme(*new_theme);
+        HashTable<WSClientConnection*> notified_clients;
+        for_each_window([&](WSWindow& window) {
+            if (window.client()) {
+                if (!notified_clients.contains(window.client())) {
+                    window.client()->post_message(WindowClient::UpdateSystemTheme(current_system_theme_buffer_id()));
+                    notified_clients.set(window.client());
+                }
+            }
+            return IterationDecision::Continue;
+        });
+        ++m_theme_index;
+        auto wm_config = CConfigFile::get_for_app("WindowManager");
+        wm_config->write_entry("Theme", "Name", theme.name);
+        wm_config->sync();
+        invalidate();
+    };
+
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
+
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, load_png("/res/icons/16x16/ladybug.png")));
     m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
@@ -186,26 +238,6 @@ void WSWindowManager::reload_config(bool set_screen)
     m_disallowed_cursor = get_cursor("Disallowed");
     m_move_cursor = get_cursor("Move");
     m_drag_cursor = get_cursor("Drag");
-
-    m_background_color = m_wm_config->read_color_entry("Colors", "Background", Color::Red);
-
-    m_active_window_border_color = m_wm_config->read_color_entry("Colors", "ActiveWindowBorder", Color::Red);
-    m_active_window_border_color2 = m_wm_config->read_color_entry("Colors", "ActiveWindowBorder2", Color::Red);
-    m_active_window_title_color = m_wm_config->read_color_entry("Colors", "ActiveWindowTitle", Color::Red);
-
-    m_inactive_window_border_color = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder", Color::Red);
-    m_inactive_window_border_color2 = m_wm_config->read_color_entry("Colors", "InactiveWindowBorder2", Color::Red);
-    m_inactive_window_title_color = m_wm_config->read_color_entry("Colors", "InactiveWindowTitle", Color::Red);
-
-    m_moving_window_border_color = m_wm_config->read_color_entry("Colors", "MovingWindowBorder", Color::Red);
-    m_moving_window_border_color2 = m_wm_config->read_color_entry("Colors", "MovingWindowBorder2", Color::Red);
-    m_moving_window_title_color = m_wm_config->read_color_entry("Colors", "MovingWindowTitle", Color::Red);
-
-    m_highlight_window_border_color = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder", Color::Red);
-    m_highlight_window_border_color2 = m_wm_config->read_color_entry("Colors", "HighlightWindowBorder2", Color::Red);
-    m_highlight_window_title_color = m_wm_config->read_color_entry("Colors", "HighlightWindowTitle", Color::Red);
-
-    m_menu_selection_color = m_wm_config->read_color_entry("Colors", "MenuSelectionColor", Color::Red);
 }
 
 const Font& WSWindowManager::font() const
@@ -1183,6 +1215,8 @@ Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
 
 WSMenu* WSWindowManager::find_internal_menu_by_id(int menu_id)
 {
+    if (m_themes_menu->menu_id() == menu_id)
+        return m_themes_menu.ptr();
     for (auto& it : m_app_category_menus) {
         if (menu_id == it.value->menu_id())
             return it.value;

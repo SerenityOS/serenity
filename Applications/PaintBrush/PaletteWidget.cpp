@@ -51,7 +51,7 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     set_frame_shadow(FrameShadow::Raised);
     set_frame_thickness(0);
     set_fill_with_background_color(true);
-    set_background_color(Color::WarmGray);
+    set_background_color(SystemColor::Window);
 
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 34);

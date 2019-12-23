@@ -25,6 +25,17 @@ bool SharedBuffer::share_with(pid_t peer)
     return true;
 }
 
+bool SharedBuffer::share_globally()
+{
+    int ret = share_buffer_globally(shared_buffer_id());
+    if (ret < 0) {
+        perror("share_buffer_globally");
+        return false;
+    }
+    return true;
+}
+
+
 RefPtr<SharedBuffer> SharedBuffer::create_from_shared_buffer_id(int shared_buffer_id)
 {
     void* data = get_shared_buffer(shared_buffer_id);

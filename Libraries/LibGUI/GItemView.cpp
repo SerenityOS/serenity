@@ -191,7 +191,7 @@ void GItemView::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), Color::White);
+    painter.fill_rect(event.rect(), SystemColor::Base);
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     auto column_metadata = model()->column_metadata(m_model_column);
@@ -203,7 +203,7 @@ void GItemView::paint_event(GPaintEvent& event)
         if (is_selected_item) {
             background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
         } else {
-            background_color = Color::White;
+            background_color = SystemColor::Base;
         }
 
         Rect item_rect = this->item_rect(item_index);
@@ -230,7 +230,7 @@ void GItemView::paint_event(GPaintEvent& event)
         if (is_selected_item)
             text_color = Color::White;
         else
-            text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(Color::Black);
+            text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(SystemColor::Text);
         painter.fill_rect(text_rect, background_color);
         painter.draw_text(text_rect, item_text.to_string(), font, TextAlignment::Center, text_color, TextElision::Right);
     };

@@ -12,7 +12,7 @@ GGroupBox::GGroupBox(const StringView& title, GWidget* parent)
     , m_title(title)
 {
     set_fill_with_background_color(true);
-    set_background_color(Color::WarmGray);
+    set_background_color(SystemColor::Window);
 }
 
 GGroupBox::~GGroupBox()

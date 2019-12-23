@@ -686,3 +686,10 @@ void GWindow::schedule_relayout()
         m_layout_pending = false;
     });
 }
+
+void GWindow::update_all_windows(Badge<GWindowServerConnection>)
+{
+    for (auto* window : all_windows) {
+        window->update();
+    }
+}

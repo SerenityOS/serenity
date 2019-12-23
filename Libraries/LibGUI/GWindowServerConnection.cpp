@@ -1,3 +1,4 @@
+#include <LibDraw/SystemTheme.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GClipboard.h>
@@ -19,11 +20,25 @@ GWindowServerConnection& GWindowServerConnection::the()
     return *s_connection;
 }
 
+static void set_system_theme_from_shared_buffer_id(int id)
+{
+    auto system_theme = SharedBuffer::create_from_shared_buffer_id(id);
+    ASSERT(system_theme);
+    set_system_theme(*system_theme);
+}
+
 void GWindowServerConnection::handshake()
 {
     auto response = send_sync<WindowServer::Greet>();
     set_my_client_id(response->client_id());
+    set_system_theme_from_shared_buffer_id(response->system_theme_buffer_id());
     GDesktop::the().did_receive_screen_rect({}, response->screen_rect());
+}
+
+void GWindowServerConnection::handle(const WindowClient::UpdateSystemTheme& message)
+{
+    set_system_theme_from_shared_buffer_id(message.system_theme_buffer_id());
+    GWindow::update_all_windows({});
 }
 
 void GWindowServerConnection::handle(const WindowClient::Paint& message)

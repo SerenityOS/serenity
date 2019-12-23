@@ -110,36 +110,6 @@ int CConfigFile::read_num_entry(const String& group, const String& key, int defa
     return value;
 }
 
-Color CConfigFile::read_color_entry(const String& group, const String& key, Color default_value) const
-{
-    if (!has_key(group, key)) {
-        const_cast<CConfigFile&>(*this).write_color_entry(group, key, default_value);
-        return default_value;
-    }
-
-    auto shades = read_entry(group, key).split(',');
-    if (shades.size() < 3)
-        return default_value;
-    bool ok1 = true,
-         ok2 = true,
-         ok3 = true,
-         ok4 = true;
-    Color value;
-    if (shades.size() == 3) {
-        value = Color(shades[0].to_uint(ok1),
-            shades[1].to_uint(ok2),
-            shades[2].to_uint(ok3));
-    } else {
-        value = Color(shades[0].to_uint(ok1),
-            shades[1].to_uint(ok2),
-            shades[2].to_uint(ok3),
-            shades[3].to_uint(ok4));
-    }
-    if (!(ok1 && ok2 && ok3 && ok4))
-        return default_value;
-    return value;
-}
-
 bool CConfigFile::read_bool_entry(const String& group, const String& key, bool default_value) const
 {
     return read_entry(group, key, default_value ? "1" : "0") == "1";

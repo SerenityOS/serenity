@@ -1,6 +1,6 @@
 endpoint WindowServer = 2
 {
-    Greet() => (i32 client_id, Rect screen_rect)
+    Greet() => (i32 client_id, Rect screen_rect, i32 system_theme_buffer_id)
 
     CreateMenubar() => (i32 menubar_id)
     DestroyMenubar(i32 menubar_id) => ()

@@ -124,7 +124,7 @@ RefPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigF
     slider_container->set_preferred_size(100, 50);
     auto slider = GSlider::construct(Orientation::Horizontal, slider_container);
     slider->set_fill_with_background_color(true);
-    slider->set_background_color(Color::WarmGray);
+    slider->set_background_color(SystemColor::Window);
 
     slider->on_value_changed = [&terminal, &config](int value) {
         terminal.set_opacity(value);

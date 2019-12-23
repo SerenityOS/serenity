@@ -32,4 +32,6 @@ endpoint WindowClient = 4
     DragCancelled() =|
 
     DragDropped(i32 window_id, Point mouse_position, String text, String data_type, String data) =|
+
+    UpdateSystemTheme(i32 system_theme_buffer_id) =|
 }

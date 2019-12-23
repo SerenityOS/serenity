@@ -25,7 +25,7 @@ void GTableView::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), Color::White);
+    painter.fill_rect(event.rect(), SystemColor::Base);
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
@@ -60,7 +60,7 @@ void GTableView::paint_event(GPaintEvent& event)
                 background_color = Color(220, 220, 220);
                 key_column_background_color = Color(200, 200, 200);
             } else {
-                background_color = Color::White;
+                background_color = SystemColor::Base;
                 key_column_background_color = Color(220, 220, 220);
             }
         }
@@ -105,7 +105,7 @@ void GTableView::paint_event(GPaintEvent& event)
     };
 
     Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
-    painter.fill_rect(unpainted_rect, Color::White);
+    painter.fill_rect(unpainted_rect, SystemColor::Base);
 
     // Untranslate the painter vertically and do the column headers.
     painter.translate(0, vertical_scrollbar().value());

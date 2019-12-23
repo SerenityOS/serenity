@@ -113,7 +113,7 @@ void WSCompositor::compose()
         if (wm.any_opaque_window_contains_rect(dirty_rect))
             continue;
         // FIXME: If the wallpaper is opaque, no need to fill with color!
-        m_back_painter->fill_rect(dirty_rect, wm.m_background_color);
+        m_back_painter->fill_rect(dirty_rect, SystemColor::DesktopBackground);
         if (m_wallpaper) {
             if (m_wallpaper_mode == WallpaperMode::Simple) {
                 m_back_painter->blit(dirty_rect.location(), *m_wallpaper, dirty_rect);

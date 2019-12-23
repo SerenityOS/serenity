@@ -1,5 +1,6 @@
 #include <LibC/SharedBuffer.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/SystemTheme.h>
 #include <SharedBuffer.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSClipboard.h>
@@ -605,7 +606,7 @@ void WSClientConnection::handle(const WindowServer::WM_SetWindowMinimized& messa
 
 OwnPtr<WindowServer::GreetResponse> WSClientConnection::handle(const WindowServer::Greet&)
 {
-    return make<WindowServer::GreetResponse>(client_id(), WSScreen::the().rect());
+    return make<WindowServer::GreetResponse>(client_id(), WSScreen::the().rect(), current_system_theme_buffer_id());
 }
 
 bool WSClientConnection::is_showing_modal_window() const

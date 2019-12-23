@@ -9,6 +9,7 @@ public:
     static RefPtr<SharedBuffer> create_from_shared_buffer_id(int);
     ~SharedBuffer();
 
+    bool share_globally();
     bool share_with(pid_t);
     int shared_buffer_id() const { return m_shared_buffer_id; }
     void seal();

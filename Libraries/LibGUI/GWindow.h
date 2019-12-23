@@ -1,15 +1,17 @@
 #pragma once
 
-#include <AK/String.h>
+#include <AK/Badge.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/Rect.h>
 #include <LibGUI/GWindowType.h>
 
-class GWidget;
 class GWMEvent;
+class GWidget;
+class GWindowServerConnection;
 
 enum class GStandardCursor {
     None = 0,
@@ -132,6 +134,8 @@ public:
     virtual void save_to(AK::JsonObject&) override;
 
     void schedule_relayout();
+
+    static void update_all_windows(Badge<GWindowServerConnection>);
 
 protected:
     GWindow(CObject* parent = nullptr);

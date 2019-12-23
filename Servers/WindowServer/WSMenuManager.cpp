@@ -83,14 +83,14 @@ void WSMenuManager::draw()
 
     Painter painter(*window().backing_store());
 
-    painter.fill_rect(menubar_rect, Color::WarmGray);
-    painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, Color::MidGray);
+    painter.fill_rect(menubar_rect, SystemColor::Window);
+    painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, SystemColor::ThreedShadow1);
     int index = 0;
     wm.for_each_active_menubar_menu([&](WSMenu& menu) {
-        Color text_color = Color::Black;
+        Color text_color = SystemColor::Text;
         if (is_open(menu)) {
-            painter.fill_rect(menu.rect_in_menubar(), Color::from_rgb(0xad714f));
-            painter.draw_rect(menu.rect_in_menubar(), Color::from_rgb(0x793016));
+            painter.fill_rect(menu.rect_in_menubar(), SystemColor::MenuSelection);
+            painter.draw_rect(menu.rect_in_menubar(), Color(SystemColor::MenuSelection).darkened());
             text_color = Color::White;
         }
         painter.draw_text(
@@ -103,7 +103,7 @@ void WSMenuManager::draw()
         return IterationDecision::Continue;
     });
 
-    painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, Color::Black);
+    painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, SystemColor::Text);
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
@@ -115,7 +115,7 @@ void WSMenuManager::draw()
         tm->tm_min,
         tm->tm_sec);
 
-    painter.draw_text(m_time_rect, time_text, wm.font(), TextAlignment::CenterRight, Color::Black);
+    painter.draw_text(m_time_rect, time_text, wm.font(), TextAlignment::CenterRight, SystemColor::Text);
 
     for (auto& applet : m_applets) {
         if (!applet)
@@ -182,6 +182,7 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
             return;
         close_everyone();
         if (!menu.is_empty()) {
+            menu.redraw_if_theme_changed();
             auto& menu_window = menu.ensure_menu_window();
             menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
             menu_window.set_visible(true);

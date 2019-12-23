@@ -54,7 +54,7 @@ void GCheckBox::paint_event(GPaintEvent& event)
         0, height() / 2 - s_box_height / 2 - 1,
         s_box_width, s_box_height
     };
-    painter.fill_rect(box_rect, Color::White);
+    painter.fill_rect(box_rect, SystemColor::Base);
     StylePainter::paint_frame(painter, box_rect, FrameShape::Container, FrameShadow::Sunken, 2);
 
     if (is_being_pressed())
@@ -63,7 +63,7 @@ void GCheckBox::paint_event(GPaintEvent& event)
     if (is_checked()) {
         if (!s_checked_bitmap)
             s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
-        painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, foreground_color());
+        painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, SystemColor::Text);
     }
 
     paint_text(painter, text_rect, font(), TextAlignment::TopLeft);

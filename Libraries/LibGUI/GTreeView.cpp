@@ -146,7 +146,7 @@ void GTreeView::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), Color::White);
+    painter.fill_rect(event.rect(), SystemColor::Base);
 
     if (!model())
         return;
@@ -192,7 +192,7 @@ void GTreeView::paint_event(GPaintEvent& event)
                 background_color = Color(220, 220, 220);
                 key_column_background_color = Color(200, 200, 200);
             } else {
-                background_color = Color::White;
+                background_color = SystemColor::Base;
                 key_column_background_color = Color(220, 220, 220);
             }
         }
