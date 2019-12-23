@@ -1,18 +1,30 @@
-diff -Nru ../gcc-8.3.0/config.sub gcc-8.3.0-serenity/config.sub
---- ../gcc-8.3.0/config.sub	2018-01-03 05:25:18.000000000 +0100
-+++ gcc-8.3.0-serenity/config.sub	2019-04-04 19:51:43.000000000 +0200
-@@ -1391,6 +1391,7 @@
- 	# Each alternative MUST end in a * to match a version number.
- 	# -sysv* is not here because it comes later, after sysvr4.
- 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
-+              | -serenity* \
- 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
- 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
- 	      | -sym* | -kopensolaris* | -plan9* \
-diff -Nru ../gcc-8.3.0/fixincludes/mkfixinc.sh gcc-8.3.0-serenity/fixincludes/mkfixinc.sh
---- ../gcc-8.3.0/fixincludes/mkfixinc.sh	2016-06-21 23:57:20.000000000 +0200
-+++ gcc-8.3.0-serenity/fixincludes/mkfixinc.sh	2019-04-04 19:58:19.000000000 +0200
-@@ -11,6 +11,7 @@
+diff --git a/config.sub b/config.sub
+index 75bb6a313..da281fb48 100755
+--- a/config.sub
++++ b/config.sub
+@@ -2,7 +2,7 @@
+ # Configuration validation subroutine script.
+ #   Copyright 1992-2019 Free Software Foundation, Inc.
+ 
+-timestamp='2019-01-01'
++timestamp='2019-12-17'
+ 
+ # This file is free software; you can redistribute it and/or modify it
+ # under the terms of the GNU General Public License as published by
+@@ -1363,7 +1363,7 @@ case $os in
+ 	     | powermax* | dnix* | nx6 | nx7 | sei* | dragonfly* \
+ 	     | skyos* | haiku* | rdos* | toppers* | drops* | es* \
+ 	     | onefs* | tirtos* | phoenix* | fuchsia* | redox* | bme* \
+-	     | midnightbsd* | amdhsa* | unleashed* | emscripten*)
++	     | midnightbsd* | amdhsa* | unleashed* | emscripten* | serenity*)
+ 	# Remember, each alternative MUST END IN *, to match a version number.
+ 		;;
+ 	qnx*)
+diff --git a/fixincludes/mkfixinc.sh b/fixincludes/mkfixinc.sh
+index 0f9648608..1a6031479 100755
+--- a/fixincludes/mkfixinc.sh
++++ b/fixincludes/mkfixinc.sh
+@@ -11,6 +11,7 @@ target=fixinc.sh
  
  # Check for special fix rules for particular targets
  case $machine in
@@ -20,10 +32,115 @@ diff -Nru ../gcc-8.3.0/fixincludes/mkfixinc.sh gcc-8.3.0-serenity/fixincludes/mk
      i?86-*-cygwin* | \
      i?86-*-mingw32* | \
      x86_64-*-mingw32* | \
-diff -Nru ../gcc-8.3.0/gcc/config/serenity.h gcc-8.3.0-serenity/gcc/config/serenity.h
---- ../gcc-8.3.0/gcc/config/serenity.h	1970-01-01 01:00:00.000000000 +0100
-+++ gcc-8.3.0-serenity/gcc/config/serenity.h	2019-04-04 19:56:31.000000000 +0200
-@@ -0,0 +1,32 @@
+diff --git a/gcc/config.gcc b/gcc/config.gcc
+index ddd3b8f4d..b3308d4fd 100644
+--- a/gcc/config.gcc
++++ b/gcc/config.gcc
+@@ -675,6 +675,11 @@ x86_cpus="generic intel"
+ 
+ # Common parts for widely ported systems.
+ case ${target} in
++*-*-serenity*)
++  gas=yes
++  gnu_ld=yes
++  default_use_cxa_atexit=yes
++  ;;
+ *-*-darwin*)
+   tmake_file="t-darwin "
+   tm_file="${tm_file} darwin.h"
+@@ -978,6 +983,15 @@ case ${target} in
+ esac
+ 
+ case ${target} in
++i[34567]86-*-serenity*)
++    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h serenity.h"
++    ;;
++x86_64-*-serenity*)
++    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h serenity.h"
++    ;;
++arm-*-serenity*)
++    tm_file="dbxelf.h elfos.h arm/elf.h arm/aout.h glibc-stdint.h arm/serenity-elf.h ${tm_file} serenity.h"
++    ;;
+ aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
+ 	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h"
+ 	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-elf-raw.h"
+diff --git a/gcc/config/arm/serenity-elf.h b/gcc/config/arm/serenity-elf.h
+new file mode 100644
+index 000000000..24b29c3da
+--- /dev/null
++++ b/gcc/config/arm/serenity-elf.h
+@@ -0,0 +1,65 @@
++/* Definitions of target machine for GNU compiler, NetBSD/arm ELF version.
++   Copyright (C) 2002-2018 Free Software Foundation, Inc.
++   Contributed by Wasabi Systems, Inc.
++
++   This file is part of GCC.
++
++   GCC is free software; you can redistribute it and/or modify it
++   under the terms of the GNU General Public License as published
++   by the Free Software Foundation; either version 3, or (at your
++   option) any later version.
++
++   GCC is distributed in the hope that it will be useful, but WITHOUT
++   ANY WARRANTY; without even the implied warranty of MERCHANTABILITY
++   or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public
++   License for more details.
++
++   Under Section 7 of GPL version 3, you are granted additional
++   permissions described in the GCC Runtime Library Exception, version
++   3.1, as published by the Free Software Foundation.
++
++   You should have received a copy of the GNU General Public License and
++   a copy of the GCC Runtime Library Exception along with this program;
++   see the files COPYING3 and COPYING.RUNTIME respectively.  If not, see
++   <http://www.gnu.org/licenses/>.  */
++
++/* Run-time Target Specification.  */
++
++/* arm.h defaults to ARM6 CPU.  */
++
++/* This defaults us to little-endian.  */
++#ifndef TARGET_ENDIAN_DEFAULT
++#define TARGET_ENDIAN_DEFAULT 0
++#endif
++
++#undef MULTILIB_DEFAULTS
++
++/* Default it to use ATPCS with soft-VFP.  */
++#undef TARGET_DEFAULT
++#define TARGET_DEFAULT			\
++  (MASK_APCS_FRAME			\
++   | TARGET_ENDIAN_DEFAULT)
++
++#undef ARM_DEFAULT_ABI
++#define ARM_DEFAULT_ABI ARM_ABI_ATPCS
++
++#undef SUBTARGET_CPP_SPEC
++#define SUBTARGET_CPP_SPEC "%{posix:-D_POSIX_SOURCE} %{pthread:-D_REENTRANT -D_PTHREADS}"
++
++#undef SUBTARGET_EXTRA_ASM_SPEC
++#define SUBTARGET_EXTRA_ASM_SPEC	\
++  "%{" FPIE_OR_FPIC_SPEC ":-k}"
++
++/* Default to full VFP if -mfloat-abi=hard is specified.  */
++#undef SUBTARGET_ASM_FLOAT_SPEC
++#define SUBTARGET_ASM_FLOAT_SPEC	\
++  "%{mfloat-abi=hard:{!mfpu=*:-mfpu=vfp}}"
++
++
++/* Make GCC agree with <machine/ansi.h>.  */
++
++#undef SIZE_TYPE
++#define SIZE_TYPE "long unsigned int"
++
++#undef PTRDIFF_TYPE
++#define PTRDIFF_TYPE "long int"
+diff --git a/gcc/config/serenity.h b/gcc/config/serenity.h
+new file mode 100644
+index 000000000..60ebec583
+--- /dev/null
++++ b/gcc/config/serenity.h
+@@ -0,0 +1,28 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
@@ -42,10 +159,6 @@ diff -Nru ../gcc-8.3.0/gcc/config/serenity.h gcc-8.3.0-serenity/gcc/config/seren
 +#undef ENDFILE_SPEC
 +#define ENDFILE_SPEC "crtend.o%s crtn.o%s"
 + 
-+/* Don't automatically add extern "C" { } around header files. */
-+#undef  NO_IMPLICIT_EXTERN_C
-+#define NO_IMPLICIT_EXTERN_C 1
-+ 
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS
 +#define TARGET_OS_CPP_BUILTINS()      \
@@ -56,38 +169,11 @@ diff -Nru ../gcc-8.3.0/gcc/config/serenity.h gcc-8.3.0-serenity/gcc/config/seren
 +    builtin_assert ("system=unix");   \
 +    builtin_assert ("system=posix");   \
 +  } while(0);
-diff -Nru ../gcc-8.3.0/gcc/config.gcc gcc-8.3.0-serenity/gcc/config.gcc
---- ../gcc-8.3.0/gcc/config.gcc	2019-01-29 16:31:10.000000000 +0100
-+++ gcc-8.3.0-serenity/gcc/config.gcc	2019-04-04 19:52:58.000000000 +0200
-@@ -646,6 +646,11 @@
- 
- # Common parts for widely ported systems.
- case ${target} in
-+*-*-serenity*)
-+  gas=yes
-+  gnu_ld=yes
-+  default_use_cxa_atexit=yes
-+  ;;
- *-*-darwin*)
-   tmake_file="t-darwin ${cpu_type}/t-darwin"
-   tm_file="${tm_file} darwin.h"
-@@ -938,6 +943,12 @@
- esac
- 
- case ${target} in
-+i[34567]86-*-serenity*)
-+    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h serenity.h"
-+    ;;
-+x86_64-*-serenity*)
-+    tm_file="${tm_file} i386/unix.h i386/att.h dbxelf.h elfos.h glibc-stdint.h i386/i386elf.h i386/x86-64.h serenity.h"
-+    ;;
- aarch64*-*-elf | aarch64*-*-fuchsia* | aarch64*-*-rtems*)
- 	tm_file="${tm_file} dbxelf.h elfos.h newlib-stdint.h"
- 	tm_file="${tm_file} aarch64/aarch64-elf.h aarch64/aarch64-elf-raw.h"
-diff -Nru ../gcc-8.3.0/libgcc/config.host gcc-8.3.0-serenity/libgcc/config.host
---- ../gcc-8.3.0/libgcc/config.host	2018-04-06 22:04:17.000000000 +0200
-+++ gcc-8.3.0-serenity/libgcc/config.host	2019-04-04 20:31:21.000000000 +0200
-@@ -1359,6 +1359,14 @@
+diff --git a/libgcc/config.host b/libgcc/config.host
+index 91abc84da..659376d14 100644
+--- a/libgcc/config.host
++++ b/libgcc/config.host
+@@ -1414,6 +1414,22 @@ nvptx-*)
  	tmake_file="$tmake_file nvptx/t-nvptx"
  	extra_parts="crt0.o"
  	;;
@@ -99,13 +185,22 @@ diff -Nru ../gcc-8.3.0/libgcc/config.host gcc-8.3.0-serenity/libgcc/config.host
 +	extra_parts="$extra_parts crti.o crtbegin.o crtend.o crtn.o"
 +	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
 +	;;
++arm-*-serenity*)
++	tmake_file="${tmake_file} t-fixedpoint-gnu-prefix t-crtfm"
++	tmake_file="$tmake_file arm/t-arm arm/t-elf t-softfp-sfdf t-softfp-excl arm/t-softfp t-softfp"
++	tmake_file="${tmake_file} arm/t-bpabi"
++	tm_file="$tm_file arm/bpabi-lib.h"
++	unwind_header=config/arm/unwind-arm.h
++	extra_parts="$extra_parts crti.o crtn.o"
++	;;
  *)
  	echo "*** Configuration ${host} not supported" 1>&2
  	exit 1
-diff -Nru ../gcc-8.3.0/libstdc++-v3/configure gcc-8.3.0-serenity/libstdc++-v3/configure
---- ../gcc-8.3.0/libstdc++-v3/configure	2018-08-13 21:15:40.000000000 +0200
-+++ gcc-8.3.0-serenity/libstdc++-v3/configure	2019-04-04 20:01:11.000000000 +0200
-@@ -28973,6 +28973,5985 @@
+diff --git a/libstdc++-v3/configure b/libstdc++-v3/configure
+index 5acf79cba..bc594989c 100755
+--- a/libstdc++-v3/configure
++++ b/libstdc++-v3/configure
+@@ -29301,6 +29301,5985 @@ else
  
  # Base decisions on target environment.
  case "${host}" in
@@ -6091,10 +6186,11 @@ diff -Nru ../gcc-8.3.0/libstdc++-v3/configure gcc-8.3.0-serenity/libstdc++-v3/co
    arm*-*-symbianelf*)
      # This is a freestanding configuration; there is nothing to do here.
      ;;
-diff -Nru ../gcc-8.3.0/libstdc++-v3/crossconfig.m4 gcc-8.3.0-serenity/libstdc++-v3/crossconfig.m4
---- ../gcc-8.3.0/libstdc++-v3/crossconfig.m4	2018-07-04 13:45:51.000000000 +0200
-+++ gcc-8.3.0-serenity/libstdc++-v3/crossconfig.m4	2019-04-04 19:56:55.000000000 +0200
-@@ -5,6 +5,14 @@
+diff --git a/libstdc++-v3/crossconfig.m4 b/libstdc++-v3/crossconfig.m4
+index 344eec09d..c71585fb9 100644
+--- a/libstdc++-v3/crossconfig.m4
++++ b/libstdc++-v3/crossconfig.m4
+@@ -5,6 +5,14 @@ dnl
  AC_DEFUN([GLIBCXX_CROSSCONFIG],[
  # Base decisions on target environment.
  case "${host}" in
