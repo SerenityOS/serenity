@@ -10,6 +10,7 @@ OBJS = \
     ImageDecoder.o \
     Rect.o \
     StylePainter.o \
+    SystemTheme.o \
     Emoji.o
 
 LIBRARY = libdraw.a

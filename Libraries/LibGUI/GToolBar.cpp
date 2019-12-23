@@ -93,5 +93,5 @@ void GToolBar::paint_event(GPaintEvent& event)
     if (m_has_frame)
         StylePainter::paint_surface(painter, rect(), x() != 0, y() != 0);
     else
-        painter.fill_rect(event.rect(), Color::WarmGray);
+        painter.fill_rect(event.rect(), background_color());
 }

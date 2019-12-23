@@ -109,7 +109,7 @@ void GListView::paint_event(GPaintEvent& event)
             if (alternating_row_colors() && (painted_item_index % 2))
                 background_color = Color(210, 210, 210);
             else
-                background_color = Color::White;
+                background_color = SystemColor::Base;
         }
 
         auto column_metadata = model()->column_metadata(m_model_column);
@@ -140,7 +140,7 @@ void GListView::paint_event(GPaintEvent& event)
     };
 
     Rect unpainted_rect(0, painted_item_index * item_height(), exposed_width, height());
-    painter.fill_rect(unpainted_rect, Color::White);
+    painter.fill_rect(unpainted_rect, SystemColor::Base);
 }
 
 int GListView::item_count() const

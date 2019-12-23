@@ -170,21 +170,21 @@ void WSWindowFrame::paint(Painter& painter)
     auto& wm = WSWindowManager::the();
 
     if (&window == wm.m_highlight_window) {
-        border_color = wm.m_highlight_window_border_color;
-        border_color2 = wm.m_highlight_window_border_color2;
-        title_color = wm.m_highlight_window_title_color;
+        border_color = SystemColor::HighlightWindowBorder1;
+        border_color2 = SystemColor::HighlightWindowBorder2;
+        title_color = SystemColor::HighlightWindowTitle;
     } else if (&window == wm.m_move_window) {
-        border_color = wm.m_moving_window_border_color;
-        border_color2 = wm.m_moving_window_border_color2;
-        title_color = wm.m_moving_window_title_color;
+        border_color = SystemColor::MovingWindowBorder1;
+        border_color2 = SystemColor::MovingWindowBorder2;
+        title_color = SystemColor::MovingWindowTitle;
     } else if (&window == wm.m_active_window) {
-        border_color = wm.m_active_window_border_color;
-        border_color2 = wm.m_active_window_border_color2;
-        title_color = wm.m_active_window_title_color;
+        border_color = SystemColor::ActiveWindowBorder1;
+        border_color2 = SystemColor::ActiveWindowBorder2;
+        title_color = SystemColor::ActiveWindowTitle;
     } else {
-        border_color = wm.m_inactive_window_border_color;
-        border_color2 = wm.m_inactive_window_border_color2;
-        title_color = wm.m_inactive_window_title_color;
+        border_color = SystemColor::InactiveWindowBorder1;
+        border_color2 = SystemColor::InactiveWindowBorder2;
+        title_color = SystemColor::InactiveWindowTitle;
     }
 
     StylePainter::paint_window_frame(painter, outer_rect);

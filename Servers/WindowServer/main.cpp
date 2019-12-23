@@ -1,4 +1,5 @@
 #include <LibCore/CConfigFile.h>
+#include <LibDraw/SystemTheme.h>
 #include <WindowServer/WSCompositor.h>
 #include <WindowServer/WSEventLoop.h>
 #include <WindowServer/WSScreen.h>
@@ -18,9 +19,15 @@ int main(int, char**)
         return 1;
     }
 
+    auto wm_config = CConfigFile::get_for_app("WindowManager");
+    auto theme_name = wm_config->read_entry("Theme", "Name", "Default");
+
+    auto theme = load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));
+    ASSERT(theme);
+    set_system_theme(*theme);
+
     WSEventLoop loop;
 
-    auto wm_config = CConfigFile::get_for_app("WindowManager");
     WSScreen screen(wm_config->read_num_entry("Screen", "Width", 1024),
         wm_config->read_num_entry("Screen", "Height", 768));
     WSCompositor::the();

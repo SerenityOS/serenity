@@ -25,7 +25,7 @@ VBForm::VBForm(const String& name, GWidget* parent)
 {
     s_current = this;
     set_fill_with_background_color(true);
-    set_background_color(Color::WarmGray);
+    set_background_color(SystemColor::Window);
     set_greedy_for_hits(true);
 
     m_context_menu = GMenu::construct();

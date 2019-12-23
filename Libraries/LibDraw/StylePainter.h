@@ -32,5 +32,5 @@ public:
     static void paint_window_frame(Painter&, const Rect&);
     static void paint_progress_bar(Painter&, const Rect&, int min, int max, int value, const StringView& text = {});
 
-    static Color hover_highlight_color() { return Color::from_rgb(0xe6e5e2); }
+    static Color hover_highlight_color() { return SystemColor::HoverHighlight; }
 };

@@ -7,7 +7,7 @@ GTabWidget::GTabWidget(GWidget* parent)
     : GWidget(parent)
 {
     set_fill_with_background_color(true);
-    set_background_color(Color::WarmGray);
+    set_background_color(SystemColor::Window);
 }
 
 GTabWidget::~GTabWidget()

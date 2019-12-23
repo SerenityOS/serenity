@@ -159,6 +159,8 @@ public:
 
     WSMenu* find_internal_menu_by_id(int);
 
+    int theme_index() const { return m_theme_index; }
+
 private:
     NonnullRefPtr<WSCursor> get_cursor(const String& name);
     NonnullRefPtr<WSCursor> get_cursor(const String& name, const Point& hotspot);
@@ -266,6 +268,8 @@ private:
     Color m_menu_selection_color;
     WeakPtr<WSMenuBar> m_current_menubar;
 
+    int m_theme_index { 0 };
+
     WSWindowSwitcher m_switcher;
     WSMenuManager m_menu_manager;
 
@@ -282,6 +286,13 @@ private:
     };
     Vector<AppMetadata> m_apps;
     HashMap<String, NonnullRefPtr<WSMenu>> m_app_category_menus;
+
+    struct ThemeMetadata {
+        String name;
+        String path;
+    };
+    Vector<ThemeMetadata> m_themes;
+    RefPtr<WSMenu> m_themes_menu;
 
     WeakPtr<WSClientConnection> m_dnd_client;
     String m_dnd_text;

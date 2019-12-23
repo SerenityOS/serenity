@@ -23,7 +23,6 @@ public:
     String read_entry(const String& group, const String& key, const String& default_vaule = String()) const;
     int read_num_entry(const String& group, const String& key, int default_value = 0) const;
     bool read_bool_entry(const String& group, const String& key, bool default_value = false) const;
-    Color read_color_entry(const String& group, const String& key, Color default_value) const;
 
     void write_entry(const String& group, const String& key, const String& value);
     void write_num_entry(const String& group, const String& key, int value);

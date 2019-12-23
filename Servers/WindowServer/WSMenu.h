@@ -78,6 +78,8 @@ public:
 
     bool is_menu_ancestor_of(const WSMenu&) const;
 
+    void redraw_if_theme_changed();
+
 private:
     virtual void event(CEvent&) override;
 
@@ -92,4 +94,5 @@ private:
     WSMenuItem* m_hovered_item { nullptr };
     NonnullOwnPtrVector<WSMenuItem> m_items;
     RefPtr<WSWindow> m_menu_window;
+    int m_theme_index_at_last_paint { -1 };
 };

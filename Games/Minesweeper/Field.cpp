@@ -121,7 +121,7 @@ Field::Field(GLabel& flag_label, GLabel& time_label, GButton& face_button, GWidg
         m_number_bitmap[i] = GraphicsBitmap::load_from_file(String::format("/res/icons/minesweeper/%u.png", i + 1));
 
     set_fill_with_background_color(true);
-    set_background_color(Color::WarmGray);
+    set_background_color(SystemColor::Window);
     reset();
 
     m_face_button.on_click = [this](auto&) { reset(); };

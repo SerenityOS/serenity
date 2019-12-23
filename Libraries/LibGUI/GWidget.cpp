@@ -68,8 +68,8 @@ GWidget::GWidget(GWidget* parent)
     : CObject(parent, true)
     , m_font(Font::default_font())
 {
-    m_background_color = Color::WarmGray;
-    m_foreground_color = Color::Black;
+    m_background_color = SystemColor::Window;
+    m_foreground_color = SystemColor::Text;
 }
 
 GWidget::~GWidget()

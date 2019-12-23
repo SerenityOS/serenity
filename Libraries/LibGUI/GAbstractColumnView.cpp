@@ -99,9 +99,9 @@ void GAbstractColumnView::paint_headers(GPainter& painter)
     if (!headers_visible())
         return;
     int exposed_width = max(content_size().width(), width());
-    painter.fill_rect({ 0, 0, exposed_width, header_height() }, Color::WarmGray);
-    painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, Color::White);
-    painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, Color::MidGray);
+    painter.fill_rect({ 0, 0, exposed_width, header_height() }, SystemColor::Window);
+    painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, SystemColor::ThreedHighlight);
+    painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, SystemColor::ThreedShadow1);
     int x_offset = 0;
     int column_count = model()->column_count();
     for (int column_index = 0; column_index < column_count; ++column_index) {
@@ -129,7 +129,7 @@ void GAbstractColumnView::paint_headers(GPainter& painter)
         auto text_rect = cell_rect.translated(horizontal_padding(), 0);
         if (pressed)
             text_rect.move_by(1, 1);
-        painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, Color::Black);
+        painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, SystemColor::Text);
         x_offset += column_width + horizontal_padding() * 2;
     }
 }
