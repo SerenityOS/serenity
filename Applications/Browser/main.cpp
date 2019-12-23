@@ -77,6 +77,7 @@ int main(int argc, char** argv)
     }));
 
     toolbar->add_action(GCommonActions::make_reload_action([&](auto&) {
+        TemporaryChange<bool> change(should_push_loads_to_history, false);
         html_widget->reload();
     }));
 
