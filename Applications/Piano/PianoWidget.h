@@ -36,8 +36,13 @@ private:
     void render_knobs(GPainter&);
     void render_knob(GPainter&, const Rect&, bool state, const StringView&);
 
-    void note(Music::PianoKey offset_n, KeyCode key_code);
-    void update_keys();
+    enum SwitchNote {
+        Off,
+        On
+    };
+    void note(KeyCode, SwitchNote);
+    void note(PianoKey, SwitchNote);
+
     int octave_base() const;
 
     int m_sample_count { 0 };
@@ -46,7 +51,7 @@ private:
 
 #define note_count sizeof(note_frequency) / sizeof(double)
 
-    bool m_note_on[note_count];
+    u8 m_note_on[note_count];
     double m_power[note_count];
     double m_sin_pos[note_count];
     double m_square_pos[note_count];

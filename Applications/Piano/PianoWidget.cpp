@@ -64,7 +64,7 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
     auto* sst = (Sample*)stream;
     for (int i = 0; i < m_sample_count; ++i) {
         static const double volume = 1800;
-        for (size_t n = 0; n < (sizeof(m_note_on) / sizeof(bool)); ++n) {
+        for (size_t n = 0; n < (sizeof(m_note_on) / sizeof(u8)); ++n) {
             if (!m_note_on[n])
                 continue;
             double val = 0;
@@ -85,7 +85,7 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
 
     // Release pressed notes.
     if (m_release_enabled) {
-        for (size_t n = 0; n < (sizeof(m_note_on) / sizeof(bool)); ++n) {
+        for (size_t n = 0; n < (sizeof(m_note_on) / sizeof(u8)); ++n) {
             if (m_note_on[n])
                 m_power[n] *= 0.965;
         }
@@ -171,21 +171,6 @@ int PianoWidget::octave_base() const
     return (m_octave - m_octave_min) * 12;
 }
 
-void PianoWidget::note(PianoKey offset_n, KeyCode key_code)
-{
-    bool is_down = keys[key_code] || (m_mouse_pressed && m_piano_key_under_mouse == offset_n);
-
-    int n = offset_n + octave_base();
-    if (m_note_on[n] == is_down)
-        return;
-    m_note_on[n] = is_down;
-    m_sin_pos[n] = 0;
-    m_saw_pos[n] = 0;
-    if (is_down)
-        m_power[n] = 1;
-    //printf("note[%u] = %u (%g)\n", (unsigned)n, is_down, note_frequency[n]);
-}
-
 struct KeyDefinition {
     int index;
     PianoKey piano_key;
@@ -216,14 +201,45 @@ const KeyDefinition key_definitions[] = {
     { 10, K_Gb2, "]", KeyCode::Key_RightBracket },
 };
 
-void PianoWidget::update_keys()
+void PianoWidget::note(KeyCode key_code, SwitchNote switch_note)
 {
-    for (auto& kd : key_definitions)
-        note(kd.piano_key, kd.key_code);
+    for (auto& kd : key_definitions) {
+        if (kd.key_code == key_code) {
+            note(kd.piano_key, switch_note);
+            return;
+        }
+    }
+}
+
+void PianoWidget::note(PianoKey piano_key, SwitchNote switch_note)
+{
+    int n = octave_base() + piano_key;
+
+    if (switch_note == On) {
+        if (m_note_on[n] == 0) {
+            m_sin_pos[n] = 0;
+            m_square_pos[n] = 0;
+            m_saw_pos[n] = 0;
+            m_triangle_pos[n] = 0;
+        }
+        ++m_note_on[n];
+        m_power[n] = 1;
+    } else {
+        if (m_note_on[n] > 1) {
+            --m_note_on[n];
+        } else if (m_note_on[n] == 1) {
+            --m_note_on[n];
+            m_power[n] = 0;
+        }
+    }
 }
 
 void PianoWidget::keydown_event(GKeyEvent& event)
 {
+    if (keys[event.key()])
+        return;
+    keys[event.key()] = true;
+
     switch (event.key()) {
     case KeyCode::Key_C:
 
@@ -246,17 +262,17 @@ void PianoWidget::keydown_event(GKeyEvent& event)
             ++m_octave;
         memset(m_note_on, 0, sizeof(m_note_on));
         break;
+    default:
+        note((KeyCode)event.key(), On);
     }
 
-    keys[event.key()] = true;
-    update_keys();
     update();
 }
 
 void PianoWidget::keyup_event(GKeyEvent& event)
 {
     keys[event.key()] = false;
-    update_keys();
+    note((KeyCode)event.key(), Off);
     update();
 }
 
@@ -266,7 +282,10 @@ void PianoWidget::mousedown_event(GMouseEvent& event)
 
     m_piano_key_under_mouse = find_key_for_relative_position(event.x() - x(), event.y() - y());
 
-    update_keys();
+    if (!m_piano_key_under_mouse)
+        return;
+
+    note(m_piano_key_under_mouse, On);
     update();
 }
 
@@ -274,7 +293,7 @@ void PianoWidget::mouseup_event(GMouseEvent&)
 {
     m_mouse_pressed = false;
 
-    update_keys();
+    note(m_piano_key_under_mouse, Off);
     update();
 }
 
@@ -283,14 +302,17 @@ void PianoWidget::mousemove_event(GMouseEvent& event)
     if (!m_mouse_pressed)
         return;
 
-    int mouse_was_over = m_piano_key_under_mouse;
+    PianoKey mouse_was_over = m_piano_key_under_mouse;
 
     m_piano_key_under_mouse = find_key_for_relative_position(event.x() - x(), event.y() - y());
 
     if (m_piano_key_under_mouse == mouse_was_over)
         return;
 
-    update_keys();
+    if (mouse_was_over)
+        note(mouse_was_over, Off);
+    if (m_piano_key_under_mouse)
+        note(m_piano_key_under_mouse, On);
     update();
 }
 
