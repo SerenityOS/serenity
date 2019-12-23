@@ -9,8 +9,12 @@ installopts="DESTDIR=$SERENITY_ROOT/Root install-gcc install-target-libgcc insta
 depends="binutils"
 
 fetch() {
-    read url filename <<< $(echo "$files")    
-    run_nocd curl -O "$url" -o "$filename"
+    read url filename <<< $(echo "$files")
+    if [ -f "$filename" ]; then
+        echo "$filename already exists"
+    else
+        run_nocd curl -O "$url" -o "$filename"
+    fi
     run_nocd tar xf "$filename"
     run contrib/download_prerequisites
     for f in patches/*; do
