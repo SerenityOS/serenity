@@ -78,10 +78,7 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
                 val = ((volume * m_power[n]) * w_triangle(n));
             else if (m_wave_type == WaveType::Noise)
                 val = ((volume * m_power[n]) * w_noise());
-            if (sst[i].left == 0)
-                sst[i].left = val;
-            else
-                sst[i].left += val;
+            sst[i].left += val;
         }
         sst[i].right = sst[i].left;
     }
