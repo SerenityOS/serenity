@@ -28,13 +28,24 @@ private:
     double w_triangle(size_t);
     double w_noise();
 
+    struct RollNote {
+        bool pressed;
+        bool playing;
+    };
+
     Rect define_piano_key_rect(int index, PianoKey) const;
     PianoKey find_key_for_relative_position(int x, int y) const;
+    Rect define_roll_note_rect(int column, int row) const;
+    RollNote* find_roll_note_for_relative_position(int x, int y);
 
     void render_piano_key(GPainter&, int index, PianoKey, const StringView&);
     void render_piano(GPainter&);
     void render_knobs(GPainter&);
     void render_knob(GPainter&, const Rect&, bool state, const StringView&);
+    void render_roll_note(GPainter&, int column, int row, PianoKey);
+    void render_roll(GPainter&);
+
+    void change_roll_column();
 
     enum SwitchNote {
         Off,
@@ -73,4 +84,9 @@ private:
 
     PianoKey m_piano_key_under_mouse { K_None };
     bool m_mouse_pressed { false };
+
+    RollNote m_roll_notes[20][32] { { false, false } };
+
+    int m_time { 0 };
+    int m_tick { 10 };
 };
