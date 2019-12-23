@@ -42,7 +42,11 @@ func_defined fetch || fetch() {
     for f in $files; do
         IFS=$OLDIFS
         read url filename <<< $(echo "$f")
-        run_nocd curl ${curlopts:-} "$url" -o "$filename"
+        if [ -f "$filename" ]; then
+            echo "$filename already exists"
+        else
+            run_nocd curl ${curlopts:-} "$url" -o "$filename"
+        fi
         case "$filename" in
             *.tar*|.tbz*|*.txz|*.tgz)
                 run_nocd tar xf "$filename"
@@ -57,7 +61,7 @@ func_defined fetch || fetch() {
                 echo "Note: no case for file $filename."
                 ;;
         esac
-    done    
+    done
     if [ -d patches ]; then
         for f in patches/*; do
             run patch -p"$patchlevel" < "$f"
