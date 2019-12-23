@@ -42,8 +42,8 @@ void PianoWidget::paint_event(GPaintEvent& event)
     for (int x = 0; x < m_sample_count; ++x) {
         double val = samples[x].left;
         val /= 32768;
-        val *= m_height * 2;
-        int y = (m_height / 2) + val;
+        val *= m_height;
+        int y = ((m_height / 8) - 8) + val;
         if (x == 0)
             painter.set_pixel({ x, y }, wave_color);
         else
@@ -54,10 +54,16 @@ void PianoWidget::paint_event(GPaintEvent& event)
 
     render_piano(painter);
     render_knobs(painter);
+    render_roll(painter);
 }
 
 void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
 {
+    if (++m_time == m_tick) {
+        m_time = 0;
+        change_roll_column();
+    }
+
     m_sample_count = len / sizeof(Sample);
     memset(stream, 0, len);
 
@@ -92,7 +98,7 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
     }
 
     static Queue<Sample*> delay_frames;
-    static const int delay_length_in_frames = 50;
+    static const int delay_length_in_frames = m_tick * 4;
 
     if (m_delay_enabled) {
         if (delay_frames.size() >= delay_length_in_frames) {
@@ -281,11 +287,15 @@ void PianoWidget::mousedown_event(GMouseEvent& event)
     m_mouse_pressed = true;
 
     m_piano_key_under_mouse = find_key_for_relative_position(event.x() - x(), event.y() - y());
-
-    if (!m_piano_key_under_mouse)
+    if (m_piano_key_under_mouse) {
+        note(m_piano_key_under_mouse, On);
+        update();
         return;
+    }
 
-    note(m_piano_key_under_mouse, On);
+    RollNote* roll_note_under_mouse = find_roll_note_for_relative_position(event.x() - x(), event.y() - y());
+    if (roll_note_under_mouse)
+        roll_note_under_mouse->pressed = !roll_note_under_mouse->pressed;
     update();
 }
 
@@ -457,6 +467,90 @@ void PianoWidget::render_knobs(GPainter& painter)
         wave_name = "C: Noise   ";
     painter.draw_rect(wave_knob_rect, Color(r, g, b));
     painter.draw_text(wave_knob_rect, wave_name, TextAlignment::Center, Color(r, g, b));
+}
+
+static int roll_columns = 32;
+static int roll_rows = 20;
+static int roll_note_size = 512 / roll_columns;
+static int roll_height = roll_note_size * roll_rows;
+static int roll_y = 512 - white_key_height - roll_height - 16;
+
+Rect PianoWidget::define_roll_note_rect(int column, int row) const
+{
+    Rect rect;
+    rect.set_width(roll_note_size);
+    rect.set_height(roll_note_size);
+    rect.set_x(column * roll_note_size);
+    rect.set_y(roll_y + (row * roll_note_size));
+
+    return rect;
+}
+
+PianoWidget::RollNote* PianoWidget::find_roll_note_for_relative_position(int x, int y)
+{
+    for (int row = 0; row < roll_rows; ++row) {
+        for (int column = 0; column < roll_columns; ++column) {
+            auto rect = define_roll_note_rect(column, row);
+            if (rect.contains(x, y))
+                return &m_roll_notes[row][column];
+        }
+    }
+
+    return nullptr;
+}
+
+void PianoWidget::render_roll_note(GPainter& painter, int column, int row, PianoKey key)
+{
+    Color color;
+    auto roll_note = m_roll_notes[row][column];
+    if (roll_note.pressed) {
+        if (roll_note.playing)
+            color = Color(24, 24, 255);
+        else
+            color = Color(64, 64, 255);
+    } else {
+        if (roll_note.playing)
+            color = Color(104, 104, 255);
+        else
+            color = is_white(key) ? Color::White : Color::MidGray;
+    }
+
+    auto rect = define_roll_note_rect(column, row);
+
+    painter.fill_rect(rect, color);
+    painter.draw_rect(rect, Color::Black);
+}
+
+void PianoWidget::render_roll(GPainter& painter)
+{
+    for (int row = 0; row < roll_rows; ++row) {
+        PianoKey key = (PianoKey)(roll_rows - row);
+        for (int column = 0; column < roll_columns; ++column)
+            render_roll_note(painter, column, row, key);
+    }
+}
+
+void PianoWidget::change_roll_column()
+{
+    static int current_column = 0;
+    static int previous_column = roll_columns - 1;
+
+    for (int row = 0; row < roll_rows; ++row) {
+        m_roll_notes[row][previous_column].playing = false;
+        if (m_roll_notes[row][previous_column].pressed)
+            note((PianoKey)(roll_rows - row), Off);
+
+        m_roll_notes[row][current_column].playing = true;
+        if (m_roll_notes[row][current_column].pressed)
+            note((PianoKey)(roll_rows - row), On);
+    }
+
+    if (++current_column == roll_columns)
+        current_column = 0;
+    if (++previous_column == roll_columns)
+        previous_column = 0;
+
+    update();
 }
 
 void PianoWidget::custom_event(CCustomEvent&)
