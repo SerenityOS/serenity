@@ -1,5 +1,8 @@
 #!/bin/sh
 
+script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
+cd "$script_path"
+
 #SERENITY_PACKET_LOGGING_ARG="-object filter-dump,id=hue,netdev=breh,file=e1000.pcap"
 
 [ -e /dev/kvm -a -r /dev/kvm -a -w /dev/kvm ] && SERENITY_KVM_ARG="-enable-kvm"
