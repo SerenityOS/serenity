@@ -26,6 +26,7 @@ Toolchain/Tarballs
 Toolchain/Build
 Toolchain/Local
 .vscode
+.ccls-cache
 .DS_Store
 compile_commands.json
 .clang_complete
