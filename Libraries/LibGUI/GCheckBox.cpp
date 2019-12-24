@@ -63,7 +63,7 @@ void GCheckBox::paint_event(GPaintEvent& event)
     if (is_checked()) {
         if (!s_checked_bitmap)
             s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
-        painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, SystemColor::Text);
+        painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, SystemColor::ButtonText);
     }
 
     paint_text(painter, text_rect, font(), TextAlignment::TopLeft);

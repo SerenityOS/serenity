@@ -192,7 +192,7 @@ void WSWindowFrame::paint(Painter& painter)
     if (!window.show_titlebar())
         return;
 
-    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), Color::WarmGray);
+    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), SystemColor::Button);
 
     auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last().relative_rect();
 

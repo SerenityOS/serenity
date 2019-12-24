@@ -129,7 +129,7 @@ void GListView::paint_event(GPaintEvent& event)
             if (is_selected_row)
                 text_color = Color::White;
             else
-                text_color = model()->data(index, GModel::Role::ForegroundColor).to_color(SystemColor::Text);
+                text_color = model()->data(index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
             auto text_rect = row_rect;
             text_rect.move_by(horizontal_padding(), 0);
             text_rect.set_width(text_rect.width() - horizontal_padding() * 2);

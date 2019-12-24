@@ -129,7 +129,7 @@ void GAbstractColumnView::paint_headers(GPainter& painter)
         auto text_rect = cell_rect.translated(horizontal_padding(), 0);
         if (pressed)
             text_rect.move_by(1, 1);
-        painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, SystemColor::Text);
+        painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, SystemColor::ButtonText);
         x_offset += column_width + horizontal_padding() * 2;
     }
 }

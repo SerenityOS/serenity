@@ -20,7 +20,7 @@ void GResizeCorner::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(rect(), SystemColor::Window);
+    painter.fill_rect(rect(), SystemColor::Button);
     painter.blit({ 0, 0 }, *m_bitmap, m_bitmap->rect());
     GWidget::paint_event(event);
 }

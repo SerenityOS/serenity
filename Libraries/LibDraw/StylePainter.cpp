@@ -3,7 +3,7 @@
 
 void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool active, bool hovered, bool enabled)
 {
-    Color base_color = SystemColor::Window;
+    Color base_color = SystemColor::Button;
     Color highlight_color2 = SystemColor::ThreedHighlight;
     Color shadow_color1 = SystemColor::ThreedShadow1;
     Color shadow_color2 = SystemColor::ThreedShadow2;
@@ -44,7 +44,7 @@ void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool act
 
 static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, bool checked, bool hovered, bool enabled)
 {
-    Color button_color = SystemColor::Window;
+    Color button_color = SystemColor::Button;
     Color highlight_color2 = SystemColor::ThreedHighlight;
     Color shadow_color1 = SystemColor::ThreedShadow1;
     Color shadow_color2 = SystemColor::ThreedShadow2;
@@ -53,7 +53,7 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, b
         if (hovered)
             button_color = SystemColor::HoverHighlight;
         else
-            button_color = SystemColor::Window;
+            button_color = SystemColor::Button;
     } else if (hovered && enabled)
         button_color = StylePainter::hover_highlight_color();
 
@@ -92,7 +92,7 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
     if (button_style == ButtonStyle::Normal)
         return paint_button_new(painter, rect, pressed, checked, hovered, enabled);
 
-    Color button_color = SystemColor::Window;
+    Color button_color = SystemColor::Button;
     Color highlight_color = Color::White;
     Color shadow_color = Color(96, 96, 96);
 
@@ -129,8 +129,8 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
 
 void StylePainter::paint_surface(Painter& painter, const Rect& rect, bool paint_vertical_lines, bool paint_top_line)
 {
-    painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, SystemColor::Window);
-    painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? SystemColor::ThreedHighlight : SystemColor::Window);
+    painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, SystemColor::Button);
+    painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? SystemColor::ThreedHighlight : SystemColor::Button);
     painter.draw_line(rect.bottom_left(), rect.bottom_right(), SystemColor::ThreedShadow1);
     if (paint_vertical_lines) {
         painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), SystemColor::ThreedHighlight);
@@ -176,7 +176,7 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
         Color top_left_color;
         Color bottom_right_color;
         Color dark_shade = SystemColor::ThreedShadow2;
-        Color light_shade = SystemColor::Window;
+        Color light_shade = SystemColor::Button;
         if (shadow == FrameShadow::Raised) {
             dark_shade = SystemColor::ThreedShadow1;
             top_left_color = light_shade;
@@ -207,7 +207,7 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
 
 void StylePainter::paint_window_frame(Painter& painter, const Rect& rect)
 {
-    Color base_color = SystemColor::Window;
+    Color base_color = SystemColor::Button;
     Color dark_shade = SystemColor::ThreedShadow2;
     Color mid_shade = SystemColor::ThreedShadow1;
     Color light_shade = SystemColor::ThreedHighlight;

@@ -69,7 +69,7 @@ GWidget::GWidget(GWidget* parent)
     , m_font(Font::default_font())
 {
     m_background_color = SystemColor::Window;
-    m_foreground_color = SystemColor::Text;
+    m_foreground_color = SystemColor::WindowText;
 }
 
 GWidget::~GWidget()

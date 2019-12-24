@@ -28,8 +28,10 @@ struct SystemTheme {
     Color menu_selection;
 
     Color window;
-    Color text;
+    Color window_text;
     Color base;
+    Color button;
+    Color button_text;
 
     Color threed_highlight;
     Color threed_shadow1;
