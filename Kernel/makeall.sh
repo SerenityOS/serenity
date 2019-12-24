@@ -5,8 +5,10 @@ script_path=$(cd -P -- "$(dirname -- "$0")" && pwd -P)
 cd "$script_path"
 
 # Get user and group details for setting qemu disk image ownership
-export build_user=$(id -u)
-export build_group=$(id -g)
+build_user=$(id -u)
+build_group=$(id -g)
+export build_user
+export build_group
 
 sudo id
 
