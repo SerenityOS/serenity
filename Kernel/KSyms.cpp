@@ -104,12 +104,12 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     int recognized_symbol_count = 0;
     if (use_ksyms) {
-        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr)) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (u32*)*stack_ptr) {
+        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (u32*)*stack_ptr) {
             u32 retaddr = stack_ptr[1];
             recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
         }
     } else {
-        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2); stack_ptr = (u32*)*stack_ptr) {
             u32 retaddr = stack_ptr[1];
             dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (u32*)*stack_ptr : 0);
         }
