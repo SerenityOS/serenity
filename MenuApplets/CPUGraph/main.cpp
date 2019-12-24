@@ -1,5 +1,6 @@
 #include <AK/CircularQueue.h>
 #include <LibCore/CProcessStatisticsReader.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWidget.h>
@@ -41,7 +42,7 @@ private:
             painter.draw_line(
                 { i, rect().bottom() },
                 { i, (int)(height() - (cpu_usage * (float)height())) },
-                Color::from_rgb(0xaa6d4b));
+                palette().menu_selection());
             ++i;
         }
     }
