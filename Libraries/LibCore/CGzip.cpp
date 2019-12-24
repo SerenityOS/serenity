@@ -2,7 +2,6 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Optional.h>
 #include <LibCore/puff.h>
-#include <LibCore/puff.c>
 #include <limits.h>
 #include <stddef.h>
 
