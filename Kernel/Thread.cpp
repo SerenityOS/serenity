@@ -84,20 +84,21 @@ Thread::Thread(Process& process)
     m_tss.cr3 = m_process.page_directory().cr3();
 
     if (m_process.is_ring0()) {
-        // FIXME: This memory is leaked.
-        // But uh, there's also no kernel process termination, so I guess it's not technically leaked...
-        m_kernel_stack_base = (u32)kmalloc_eternal(default_kernel_stack_size);
-        m_kernel_stack_top = (m_kernel_stack_base + default_kernel_stack_size) & 0xfffffff8u;
+        m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d; Ring0)", m_tid), false, true);
+        m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
+        m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
         m_tss.esp = m_kernel_stack_top;
-
+        kprintf("Allocated ring0 stack @ %p - %p\n", m_kernel_stack_base, m_kernel_stack_top);
     } else {
         // Ring3 processes need a separate stack for Ring0.
-        m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid));
+        m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d; Ring3)", m_tid), false, true);
         m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
         m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
         m_tss.ss0 = 0x10;
         m_tss.esp0 = m_kernel_stack_top;
+        kprintf("Allocated ring3 stack @ %p - %p\n", m_kernel_stack_base, m_kernel_stack_top);
     }
+    m_process.page_directory().update_kernel_mappings();
 
     // HACK: Ring2 SS in the TSS is the current PID.
     m_tss.ss2 = m_process.pid();
