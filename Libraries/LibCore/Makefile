@@ -22,7 +22,8 @@ OBJS = \
     CProcessStatisticsReader.o \
     CDirIterator.o \
     CUserInfo.o \
-    CGzip.o
+    CGzip.o \
+    puff.o
 
 LIBRARY = libcore.a
 
