@@ -95,7 +95,7 @@ void GTableView::paint_event(GPaintEvent& event)
                     if (is_selected_row)
                         text_color = Color::White;
                     else
-                        text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(Color::Black);
+                        text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(SystemColor::Text);
                     painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
                 }
             }
