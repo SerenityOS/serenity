@@ -303,15 +303,15 @@ void GTextEditor::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), Color::White);
+    painter.fill_rect(event.rect(), SystemColor::Base);
 
     painter.translate(frame_thickness(), frame_thickness());
 
     auto ruler_rect = ruler_rect_in_inner_coordinates();
 
     if (m_ruler_visible) {
-        painter.fill_rect(ruler_rect, Color::WarmGray);
-        painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color::DarkGray);
+        painter.fill_rect(ruler_rect, Color(SystemColor::Base).darkened(0.85f));
+        painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color(SystemColor::Base).darkened(0.5f));
     }
 
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
@@ -333,7 +333,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                 String::number(i + 1),
                 is_current_line ? Font::default_bold_font() : font(),
                 TextAlignment::TopRight,
-                is_current_line ? Color::DarkGray : Color::MidGray);
+                is_current_line ? Color(SystemColor::Base).darkened(0.6f) : Color(SystemColor::Base).darkened(0.7f));
         }
     }
 
@@ -369,13 +369,13 @@ void GTextEditor::paint_event(GPaintEvent& event)
         size_t visual_line_index = 0;
         for_each_visual_line(line_index, [&](const Rect& visual_line_rect, const StringView& visual_line_text, size_t start_of_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
-                painter.fill_rect(visual_line_rect, Color(230, 230, 230));
+                painter.fill_rect(visual_line_rect, Color(SystemColor::Base).darkened(0.9f));
 #ifdef DEBUG_GTEXTEDITOR
             painter.draw_rect(visual_line_rect, Color::Cyan);
 #endif
             if (!document().has_spans()) {
                 // Fast-path for plain text
-                painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, Color::Black);
+                painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, SystemColor::WindowText);
             } else {
                 int advance = font().glyph_width(' ') + font().glyph_spacing();
                 Rect character_rect = { visual_line_rect.location(), { font().glyph_width(' '), line_height() } };
