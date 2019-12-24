@@ -209,8 +209,8 @@ void GScrollBar::paint_event(GPaintEvent& event)
     StylePainter::paint_button(painter, increment_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
 
     if (length(orientation()) > default_button_size()) {
-        painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
-        painter.draw_bitmap(increment_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? Color::Black : Color::MidGray);
+        painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? SystemColor::Text : SystemColor::DisabledText);
+        painter.draw_bitmap(increment_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? SystemColor::Text : SystemColor::DisabledText);
     }
 
     if (has_scrubber())
