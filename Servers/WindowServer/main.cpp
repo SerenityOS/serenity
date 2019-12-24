@@ -1,4 +1,5 @@
 #include <LibCore/CConfigFile.h>
+#include <LibDraw/Palette.h>
 #include <LibDraw/SystemTheme.h>
 #include <WindowServer/WSCompositor.h>
 #include <WindowServer/WSEventLoop.h>
@@ -25,13 +26,14 @@ int main(int, char**)
     auto theme = load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));
     ASSERT(theme);
     set_system_theme(*theme);
+    auto palette = Palette::create_with_shared_buffer(*theme);
 
     WSEventLoop loop;
 
     WSScreen screen(wm_config->read_num_entry("Screen", "Width", 1024),
         wm_config->read_num_entry("Screen", "Height", 768));
     WSCompositor::the();
-    auto wm = WSWindowManager::construct();
+    auto wm = WSWindowManager::construct(*palette);
 
     dbgprintf("Entering WindowServer main loop.\n");
     loop.exec();

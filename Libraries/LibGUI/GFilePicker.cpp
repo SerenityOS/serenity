@@ -58,7 +58,6 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     horizontal_container->set_layout(make<GBoxLayout>(Orientation::Horizontal));
     horizontal_container->layout()->set_margins({ 4, 4, 4, 4 });
     horizontal_container->set_fill_with_background_color(true);
-    horizontal_container->set_background_color(SystemColor::Window);
 
     auto vertical_container = GWidget::construct(horizontal_container.ptr());
     vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));

@@ -9,6 +9,7 @@
 #include <LibDraw/Font.h>
 #include <LibDraw/Orientation.h>
 #include <LibDraw/Rect.h>
+#include <LibDraw/SystemTheme.h>
 #include <LibGUI/GEvent.h>
 #include <LibGUI/GShortcut.h>
 
@@ -16,11 +17,12 @@
     extern GWidgetClassRegistration registration_##class_name; \
     GWidgetClassRegistration registration_##class_name(#class_name, [](GWidget* parent) { return class_name::construct(parent); });
 
-class GraphicsBitmap;
 class GAction;
 class GLayout;
 class GMenu;
 class GWindow;
+class GraphicsBitmap;
+class Palette;
 
 enum class SizePolicy {
     Fixed,
@@ -149,6 +151,12 @@ public:
     void move_by(int x, int y) { move_by({ x, y }); }
     void move_by(const Point& delta) { set_relative_rect({ relative_position().translated(delta), size() }); }
 
+    ColorRole background_role() const { return m_background_role; }
+    void set_background_role(ColorRole role) { m_background_role = role; }
+
+    ColorRole foreground_role() const { return m_foreground_role; }
+    void set_foreground_role(ColorRole role) { m_foreground_role = role; }
+
     Color background_color() const { return m_background_color; }
     Color foreground_color() const { return m_foreground_color; }
 
@@ -230,6 +238,9 @@ public:
 
     void do_layout();
 
+    const Palette& palette() const { return *m_palette; }
+    void set_palette(const Palette&);
+
 protected:
     explicit GWidget(GWidget* parent = nullptr);
 
@@ -271,6 +282,8 @@ private:
     OwnPtr<GLayout> m_layout;
 
     Rect m_relative_rect;
+    ColorRole m_background_role { ColorRole::Window };
+    ColorRole m_foreground_role { ColorRole::WindowText };
     Color m_background_color;
     Color m_foreground_color;
     NonnullRefPtr<Font> m_font;
@@ -288,6 +301,8 @@ private:
     bool m_updates_enabled { true };
 
     HashMap<GShortcut, GAction*> m_local_shortcut_actions;
+
+    NonnullRefPtr<Palette> m_palette;
 };
 
 template<>

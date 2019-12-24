@@ -118,7 +118,7 @@ void HtmlView::paint_event(GPaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     if (!layout_root()) {
-        painter.fill_rect(event.rect(), background_color());
+        painter.fill_rect(event.rect(), palette().color(background_role()));
         return;
     }
 
@@ -131,7 +131,7 @@ void HtmlView::paint_event(GPaintEvent& event)
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
-    RenderingContext context { painter };
+    RenderingContext context(painter, palette());
     context.set_should_show_line_box_borders(m_should_show_line_box_borders);
     context.set_viewport_rect(visible_content_rect());
     layout_root()->render(context);

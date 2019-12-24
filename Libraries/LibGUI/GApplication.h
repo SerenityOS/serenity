@@ -10,7 +10,10 @@ class GAction;
 class GKeyEvent;
 class GMenuBar;
 class GWindow;
+class GWindowServerConnection;
+class Palette;
 class Point;
+class SharedBuffer;
 
 class GApplication {
 public:
@@ -39,9 +42,16 @@ public:
     const String& invoked_as() const { return m_invoked_as; }
     const Vector<String>& args() const { return m_args; }
 
+    const Palette& palette() const { return *m_palette; }
+    void set_palette(const Palette&);
+
+    void set_system_palette(SharedBuffer&);
+
 private:
     OwnPtr<CEventLoop> m_event_loop;
     OwnPtr<GMenuBar> m_menubar;
+    RefPtr<Palette> m_palette;
+    RefPtr<Palette> m_system_palette;
     HashMap<GShortcut, GAction*> m_global_shortcut_actions;
     class TooltipWindow;
     TooltipWindow* m_tooltip_window { nullptr };

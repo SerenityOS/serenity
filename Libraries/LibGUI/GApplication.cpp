@@ -1,3 +1,4 @@
+#include <LibDraw/Palette.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GDesktop.h>
@@ -141,4 +142,20 @@ void GApplication::did_delete_last_window(Badge<GWindow>)
 {
     if (m_quit_when_last_window_deleted)
         m_event_loop->quit(0);
+}
+
+void GApplication::set_system_palette(SharedBuffer& buffer)
+{
+    if (!m_system_palette)
+        m_system_palette = Palette::create_with_shared_buffer(buffer);
+    else
+        m_system_palette->replace_internal_buffer({}, buffer);
+
+    if (!m_palette)
+        m_palette = m_system_palette;
+}
+
+void GApplication::set_palette(const Palette& palette)
+{
+    m_palette = palette;
 }

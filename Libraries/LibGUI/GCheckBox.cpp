@@ -1,8 +1,9 @@
 #include <Kernel/KeyCode.h>
+#include <LibDraw/CharacterBitmap.h>
+#include <LibDraw/Palette.h>
+#include <LibDraw/StylePainter.h>
 #include <LibGUI/GCheckBox.h>
 #include <LibGUI/GPainter.h>
-#include <LibDraw/CharacterBitmap.h>
-#include <LibDraw/StylePainter.h>
 
 static const char* s_checked_bitmap_data = {
     "         "
@@ -48,14 +49,14 @@ void GCheckBox::paint_event(GPaintEvent& event)
     text_rect.set_height(font().glyph_height());
 
     if (fill_with_background_color())
-        painter.fill_rect(rect(), background_color());
+        painter.fill_rect(rect(), palette().window());
 
     Rect box_rect {
         0, height() / 2 - s_box_height / 2 - 1,
         s_box_width, s_box_height
     };
-    painter.fill_rect(box_rect, SystemColor::Base);
-    StylePainter::paint_frame(painter, box_rect, FrameShape::Container, FrameShadow::Sunken, 2);
+    painter.fill_rect(box_rect, palette().base());
+    StylePainter::paint_frame(painter, box_rect, palette(), FrameShape::Container, FrameShadow::Sunken, 2);
 
     if (is_being_pressed())
         painter.draw_rect(box_rect.shrunken(4, 4), Color::MidGray);
@@ -63,7 +64,7 @@ void GCheckBox::paint_event(GPaintEvent& event)
     if (is_checked()) {
         if (!s_checked_bitmap)
             s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
-        painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, SystemColor::ButtonText);
+        painter.draw_bitmap(box_rect.shrunken(4, 4).location(), *s_checked_bitmap, palette().button_text());
     }
 
     paint_text(painter, text_rect, font(), TextAlignment::TopLeft);

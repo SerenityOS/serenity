@@ -1,3 +1,4 @@
+#include <LibDraw/Palette.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
 #include <LibGUI/GBoxLayout.h>
@@ -71,8 +72,8 @@ public:
         GPainter painter(*this);
         painter.add_clip_rect(event.rect());
         painter.translate(rect().center().x() - 1, 0);
-        painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, SystemColor::ThreedShadow1);
-        painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, SystemColor::ThreedHighlight);
+        painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, palette().threed_shadow1());
+        painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, palette().threed_highlight());
     }
 };
 
@@ -90,7 +91,7 @@ void GToolBar::paint_event(GPaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     if (m_has_frame)
-        StylePainter::paint_surface(painter, rect(), x() != 0, y() != 0);
+        StylePainter::paint_surface(painter, rect(), palette(), x() != 0, y() != 0);
     else
-        painter.fill_rect(event.rect(), background_color());
+        painter.fill_rect(event.rect(), palette().button());
 }

@@ -58,5 +58,5 @@ void GProgressBar::paint_event(GPaintEvent& event)
         progress_text = builder.to_string();
     }
 
-    StylePainter::paint_progress_bar(painter, rect, m_min, m_max, m_value, progress_text);
+    StylePainter::paint_progress_bar(painter, rect, palette(), m_min, m_max, m_value, progress_text);
 }

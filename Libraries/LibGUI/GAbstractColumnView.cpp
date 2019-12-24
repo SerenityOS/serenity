@@ -1,4 +1,5 @@
 #include <AK/StringBuilder.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GAbstractColumnView.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
@@ -99,9 +100,9 @@ void GAbstractColumnView::paint_headers(GPainter& painter)
     if (!headers_visible())
         return;
     int exposed_width = max(content_size().width(), width());
-    painter.fill_rect({ 0, 0, exposed_width, header_height() }, SystemColor::Window);
-    painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, SystemColor::ThreedHighlight);
-    painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, SystemColor::ThreedShadow1);
+    painter.fill_rect({ 0, 0, exposed_width, header_height() }, palette().button());
+    painter.draw_line({ 0, 0 }, { exposed_width - 1, 0 }, palette().threed_highlight());
+    painter.draw_line({ 0, header_height() - 1 }, { exposed_width - 1, header_height() - 1 }, palette().threed_shadow1());
     int x_offset = 0;
     int column_count = model()->column_count();
     for (int column_index = 0; column_index < column_count; ++column_index) {
@@ -112,7 +113,7 @@ void GAbstractColumnView::paint_headers(GPainter& painter)
         Rect cell_rect(x_offset, 0, column_width + horizontal_padding() * 2, header_height());
         bool pressed = column_index == m_pressed_column_header_index && m_pressed_column_header_is_pressed;
         bool hovered = column_index == m_hovered_column_header_index && model()->column_metadata(column_index).sortable == GModel::ColumnMetadata::Sortable::True;
-        StylePainter::paint_button(painter, cell_rect, ButtonStyle::Normal, pressed, hovered);
+        StylePainter::paint_button(painter, cell_rect, palette(), ButtonStyle::Normal, pressed, hovered);
         String text;
         if (is_key_column) {
             StringBuilder builder;
@@ -129,7 +130,7 @@ void GAbstractColumnView::paint_headers(GPainter& painter)
         auto text_rect = cell_rect.translated(horizontal_padding(), 0);
         if (pressed)
             text_rect.move_by(1, 1);
-        painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, SystemColor::ButtonText);
+        painter.draw_text(text_rect, text, header_font(), TextAlignment::CenterLeft, palette().button_text());
         x_offset += column_width + horizontal_padding() * 2;
     }
 }

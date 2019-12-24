@@ -53,7 +53,6 @@ int main(int argc, char** argv)
     auto keeper = GWidget::construct();
     keeper->set_layout(make<GBoxLayout>(Orientation::Vertical));
     keeper->set_fill_with_background_color(true);
-    keeper->set_background_color(SystemColor::Window);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
 
     auto tabwidget = GTabWidget::construct(keeper);
@@ -192,7 +191,7 @@ class ProgressBarPaintingDelegate final : public GTableCellPaintingDelegate {
 public:
     virtual ~ProgressBarPaintingDelegate() override {}
 
-    virtual void paint(GPainter& painter, const Rect& a_rect, const GModel& model, const GModelIndex& index) override
+    virtual void paint(GPainter& painter, const Rect& a_rect, const Palette& palette, const GModel& model, const GModelIndex& index) override
     {
         auto rect = a_rect.shrunken(2, 2);
         auto percentage = model.data(index, GModel::Role::Custom).to_int();
@@ -201,7 +200,7 @@ public:
         String text;
         if (data.is_string())
             text = data.as_string();
-        StylePainter::paint_progress_bar(painter, rect, 0, 100, percentage, text);
+        StylePainter::paint_progress_bar(painter, rect, palette, 0, 100, percentage, text);
         painter.draw_rect(rect, Color::Black);
     }
 };
@@ -355,7 +354,7 @@ NonnullRefPtr<GWidget> build_graphs_tab()
 
     graphs_container->on_first_show = [](auto& self) {
         self.set_fill_with_background_color(true);
-        self.set_background_color(SystemColor::Window);
+        self.set_background_role(ColorRole::Button);
         self.set_layout(make<GBoxLayout>(Orientation::Vertical));
         self.layout()->set_margins({ 4, 4, 4, 4 });
 

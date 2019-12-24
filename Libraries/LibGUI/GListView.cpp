@@ -1,4 +1,5 @@
 #include <Kernel/KeyCode.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GListView.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
@@ -6,6 +7,7 @@
 GListView::GListView(GWidget* parent)
     : GAbstractView(parent)
 {
+    set_background_role(ColorRole::Base);
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
@@ -104,12 +106,12 @@ void GListView::paint_event(GPaintEvent& event)
 
         Color background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? Color(SystemColor::SelectionText) : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection_text() : Color::from_rgb(0x606060);
         } else {
             if (alternating_row_colors() && (painted_item_index % 2))
                 background_color = Color(210, 210, 210);
             else
-                background_color = SystemColor::Base;
+                background_color = palette().color(background_role());
         }
 
         auto column_metadata = model()->column_metadata(m_model_column);
@@ -129,7 +131,7 @@ void GListView::paint_event(GPaintEvent& event)
             if (is_selected_row)
                 text_color = Color::White;
             else
-                text_color = model()->data(index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
+                text_color = model()->data(index, GModel::Role::ForegroundColor).to_color(palette().color(foreground_role()));
             auto text_rect = row_rect;
             text_rect.move_by(horizontal_padding(), 0);
             text_rect.set_width(text_rect.width() - horizontal_padding() * 2);
@@ -140,7 +142,7 @@ void GListView::paint_event(GPaintEvent& event)
     };
 
     Rect unpainted_rect(0, painted_item_index * item_height(), exposed_width, height());
-    painter.fill_rect(unpainted_rect, SystemColor::Base);
+    painter.fill_rect(unpainted_rect, palette().color(background_role()));
 }
 
 int GListView::item_count() const

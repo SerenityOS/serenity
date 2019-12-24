@@ -1,3 +1,4 @@
+#include <LibDraw/Palette.h>
 #include <LibGUI/GAbstractButton.h>
 #include <LibGUI/GPainter.h>
 
@@ -154,7 +155,7 @@ void GAbstractButton::paint_text(GPainter& painter, const Rect& rect, const Font
 
     if (text().is_empty())
         return;
-    painter.draw_text(clipped_rect, text(), font, text_alignment, SystemColor::ButtonText, TextElision::Right);
+    painter.draw_text(clipped_rect, text(), font, text_alignment, palette().button_text(), TextElision::Right);
     if (is_focused())
         painter.draw_rect(clipped_rect.inflated(6, 4), Color(140, 140, 140));
 }

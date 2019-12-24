@@ -11,7 +11,6 @@ NetworkStatisticsWidget::NetworkStatisticsWidget(GWidget* parent)
         set_layout(make<GBoxLayout>(Orientation::Vertical));
         layout()->set_margins({ 4, 4, 4, 4 });
         set_fill_with_background_color(true);
-        set_background_color(SystemColor::Window);
 
         auto adapters_group_box = GGroupBox::construct("Adapters", this);
         adapters_group_box->set_layout(make<GBoxLayout>(Orientation::Vertical));

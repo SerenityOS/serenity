@@ -1,6 +1,7 @@
 #include <AK/QuickSort.h>
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GFontDatabase.h>
@@ -295,6 +296,7 @@ Rect GTextEditor::visible_text_rect_in_inner_coordinates() const
 
 void GTextEditor::paint_event(GPaintEvent& event)
 {
+    Color widget_background_color = palette().color(background_role());
     // NOTE: This ensures that spans are updated before we look at them.
     flush_pending_change_notification_if_needed();
 
@@ -303,15 +305,15 @@ void GTextEditor::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), SystemColor::Base);
+    painter.fill_rect(event.rect(), widget_background_color);
 
     painter.translate(frame_thickness(), frame_thickness());
 
     auto ruler_rect = ruler_rect_in_inner_coordinates();
 
     if (m_ruler_visible) {
-        painter.fill_rect(ruler_rect, Color(SystemColor::Base).darkened(0.85f));
-        painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), Color(SystemColor::Base).darkened(0.5f));
+        painter.fill_rect(ruler_rect, widget_background_color.darkened(0.85f));
+        painter.draw_line(ruler_rect.top_right(), ruler_rect.bottom_right(), widget_background_color.darkened(0.5f));
     }
 
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
@@ -333,7 +335,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                 String::number(i + 1),
                 is_current_line ? Font::default_bold_font() : font(),
                 TextAlignment::TopRight,
-                is_current_line ? Color(SystemColor::Base).darkened(0.6f) : Color(SystemColor::Base).darkened(0.7f));
+                is_current_line ? widget_background_color.darkened(0.6f) : widget_background_color.darkened(0.7f));
         }
     }
 
@@ -369,13 +371,13 @@ void GTextEditor::paint_event(GPaintEvent& event)
         size_t visual_line_index = 0;
         for_each_visual_line(line_index, [&](const Rect& visual_line_rect, const StringView& visual_line_text, size_t start_of_visual_line) {
             if (is_multi_line() && line_index == m_cursor.line())
-                painter.fill_rect(visual_line_rect, Color(SystemColor::Base).darkened(0.9f));
+                painter.fill_rect(visual_line_rect, widget_background_color.darkened(0.9f));
 #ifdef DEBUG_GTEXTEDITOR
             painter.draw_rect(visual_line_rect, Color::Cyan);
 #endif
             if (!document().has_spans()) {
                 // Fast-path for plain text
-                painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, SystemColor::WindowText);
+                painter.draw_text(visual_line_rect, visual_line_text, m_text_alignment, palette().color(foreground_role()));
             } else {
                 int advance = font().glyph_width(' ') + font().glyph_spacing();
                 Rect character_rect = { visual_line_rect.location(), { font().glyph_width(' '), line_height() } };
@@ -424,7 +426,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                         visual_line_rect.height()
                     };
 
-                    painter.fill_rect(selection_rect, SystemColor::Selection);
+                    painter.fill_rect(selection_rect, palette().selection());
 
                     size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
                     size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
@@ -434,7 +436,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                         end_of_selection_within_visual_line - start_of_selection_within_visual_line
                     };
 
-                    painter.draw_text(selection_rect, visual_selected_text, TextAlignment::CenterLeft, SystemColor::SelectionText);
+                    painter.draw_text(selection_rect, visual_selected_text, TextAlignment::CenterLeft, palette().selection_text());
                 }
             }
             ++visual_line_index;

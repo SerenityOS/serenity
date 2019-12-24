@@ -1,15 +1,16 @@
 #include <LibDraw/Painter.h>
+#include <LibDraw/Palette.h>
 #include <LibDraw/StylePainter.h>
 
-void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool active, bool hovered, bool enabled)
+void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, const Palette& palette, bool active, bool hovered, bool enabled)
 {
-    Color base_color = SystemColor::Button;
-    Color highlight_color2 = SystemColor::ThreedHighlight;
-    Color shadow_color1 = SystemColor::ThreedShadow1;
-    Color shadow_color2 = SystemColor::ThreedShadow2;
+    Color base_color = palette.button();
+    Color highlight_color2 = palette.threed_highlight();
+    Color shadow_color1 = palette.threed_shadow1();
+    Color shadow_color2 = palette.threed_shadow2();
 
     if (hovered && enabled && !active)
-        base_color = StylePainter::hover_highlight_color();
+        base_color = palette.hover_highlight();
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
@@ -42,20 +43,20 @@ void StylePainter::paint_tab_button(Painter& painter, const Rect& rect, bool act
         shadow_color2);
 }
 
-static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, bool checked, bool hovered, bool enabled)
+static void paint_button_new(Painter& painter, const Rect& rect, const Palette& palette, bool pressed, bool checked, bool hovered, bool enabled)
 {
-    Color button_color = SystemColor::Button;
-    Color highlight_color2 = SystemColor::ThreedHighlight;
-    Color shadow_color1 = SystemColor::ThreedShadow1;
-    Color shadow_color2 = SystemColor::ThreedShadow2;
+    Color button_color = palette.button();
+    Color highlight_color2 = palette.threed_highlight();
+    Color shadow_color1 = palette.threed_shadow1();
+    Color shadow_color2 = palette.threed_shadow2();
 
     if (checked && enabled) {
         if (hovered)
-            button_color = SystemColor::HoverHighlight;
+            button_color = palette.hover_highlight();
         else
-            button_color = SystemColor::Button;
+            button_color = palette.button();
     } else if (hovered && enabled)
-        button_color = StylePainter::hover_highlight_color();
+        button_color = palette.hover_highlight();
 
     PainterStateSaver saver(painter);
     painter.translate(rect.location());
@@ -87,14 +88,14 @@ static void paint_button_new(Painter& painter, const Rect& rect, bool pressed, b
     }
 }
 
-void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled)
+void StylePainter::paint_button(Painter& painter, const Rect& rect, const Palette& palette, ButtonStyle button_style, bool pressed, bool hovered, bool checked, bool enabled)
 {
     if (button_style == ButtonStyle::Normal)
-        return paint_button_new(painter, rect, pressed, checked, hovered, enabled);
+        return paint_button_new(painter, rect, palette, pressed, checked, hovered, enabled);
 
-    Color button_color = SystemColor::Button;
-    Color highlight_color = SystemColor::ThreedHighlight;
-    Color shadow_color = Color(96, 96, 96);
+    Color button_color = palette.button();
+    Color highlight_color = palette.threed_highlight();
+    Color shadow_color = palette.threed_shadow1();
 
     if (button_style == ButtonStyle::CoolBar && !enabled)
         return;
@@ -127,27 +128,27 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
     }
 }
 
-void StylePainter::paint_surface(Painter& painter, const Rect& rect, bool paint_vertical_lines, bool paint_top_line)
+void StylePainter::paint_surface(Painter& painter, const Rect& rect, const Palette& palette, bool paint_vertical_lines, bool paint_top_line)
 {
-    painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, SystemColor::Button);
-    painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? SystemColor::ThreedHighlight : SystemColor::Button);
-    painter.draw_line(rect.bottom_left(), rect.bottom_right(), SystemColor::ThreedShadow1);
+    painter.fill_rect({ rect.x(), rect.y() + 1, rect.width(), rect.height() - 2 }, palette.button());
+    painter.draw_line(rect.top_left(), rect.top_right(), paint_top_line ? palette.threed_highlight() : palette.button());
+    painter.draw_line(rect.bottom_left(), rect.bottom_right(), palette.threed_shadow1());
     if (paint_vertical_lines) {
-        painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), SystemColor::ThreedHighlight);
-        painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), SystemColor::ThreedShadow1);
+        painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left().translated(0, -1), palette.threed_highlight());
+        painter.draw_line(rect.top_right(), rect.bottom_right().translated(0, -1), palette.threed_shadow1());
     }
 }
 
-void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
+void StylePainter::paint_frame(Painter& painter, const Rect& rect, const Palette& palette, FrameShape shape, FrameShadow shadow, int thickness, bool skip_vertical_lines)
 {
     Color top_left_color;
     Color bottom_right_color;
-    Color dark_shade = SystemColor::ThreedShadow1;
-    Color light_shade = SystemColor::ThreedHighlight;
+    Color dark_shade = palette.threed_shadow1();
+    Color light_shade = palette.threed_highlight();
 
     if (shape == FrameShape::Container && thickness >= 2) {
         if (shadow == FrameShadow::Raised) {
-            dark_shade = SystemColor::ThreedShadow2;
+            dark_shade = palette.threed_shadow2();
         }
     }
 
@@ -175,10 +176,10 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
     if (shape == FrameShape::Container && thickness >= 2) {
         Color top_left_color;
         Color bottom_right_color;
-        Color dark_shade = SystemColor::ThreedShadow2;
-        Color light_shade = SystemColor::Button;
+        Color dark_shade = palette.threed_shadow2();
+        Color light_shade = palette.button();
         if (shadow == FrameShadow::Raised) {
-            dark_shade = SystemColor::ThreedShadow1;
+            dark_shade = palette.threed_shadow1();
             top_left_color = light_shade;
             bottom_right_color = dark_shade;
         } else if (shadow == FrameShadow::Sunken) {
@@ -205,12 +206,12 @@ void StylePainter::paint_frame(Painter& painter, const Rect& rect, FrameShape sh
     }
 }
 
-void StylePainter::paint_window_frame(Painter& painter, const Rect& rect)
+void StylePainter::paint_window_frame(Painter& painter, const Rect& rect, const Palette& palette)
 {
-    Color base_color = SystemColor::Button;
-    Color dark_shade = SystemColor::ThreedShadow2;
-    Color mid_shade = SystemColor::ThreedShadow1;
-    Color light_shade = SystemColor::ThreedHighlight;
+    Color base_color = palette.button();
+    Color dark_shade = palette.threed_shadow2();
+    Color mid_shade = palette.threed_shadow1();
+    Color light_shade = palette.threed_highlight();
 
     painter.draw_line(rect.top_left(), rect.top_right(), base_color);
     painter.draw_line(rect.top_left().translated(0, 1), rect.bottom_left(), base_color);
@@ -227,7 +228,7 @@ void StylePainter::paint_window_frame(Painter& painter, const Rect& rect)
     painter.draw_line(rect.bottom_left().translated(2, -2), rect.bottom_right().translated(-2, -2), base_color);
 }
 
-void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, int min, int max, int value, const StringView& text)
+void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const Palette& palette, int min, int max, int value, const StringView& text)
 {
     // First we fill the entire widget with the gradient. This incurs a bit of
     // overdraw but ensures a consistent look throughout the progression.
@@ -249,7 +250,7 @@ void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, int mi
     Rect hole_rect { (int)progress_width, 0, (int)(rect.width() - progress_width), rect.height() };
     hole_rect.move_by(rect.location());
     PainterStateSaver saver(painter);
-    painter.fill_rect(hole_rect, Color::White);
+    painter.fill_rect(hole_rect, palette.base());
 
     painter.add_clip_rect(hole_rect);
     if (!text.is_null())

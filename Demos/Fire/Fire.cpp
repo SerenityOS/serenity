@@ -31,7 +31,7 @@
 #define FIRE_HEIGHT 168
 #define FIRE_MAX 29
 
-const Color palette[] = {
+static const Color s_palette[] = {
     Color(0x07, 0x07, 0x07), Color(0x1F, 0x07, 0x07), Color(0x2F, 0x0F, 0x07),
     Color(0x47, 0x0F, 0x07), Color(0x57, 0x17, 0x07), Color(0x67, 0x1F, 0x07),
     Color(0x77, 0x1F, 0x07), Color(0x9F, 0x2F, 0x07), Color(0xAF, 0x3F, 0x07),
@@ -93,7 +93,7 @@ Fire::Fire(GWidget* parent)
 
     /* Initialize fire palette */
     for (int i = 0; i < 30; i++)
-        bitmap->set_palette_color(i, palette[i]);
+        bitmap->set_palette_color(i, s_palette[i]);
 
     /* Set remaining entries to white */
     for (int i = 30; i < 256; i++)

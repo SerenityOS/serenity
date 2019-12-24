@@ -18,14 +18,15 @@ WSButton::~WSButton()
 
 void WSButton::paint(Painter& painter)
 {
+    auto& palette = WSWindowManager::the().palette();
     PainterStateSaver saver(painter);
     painter.translate(relative_rect().location());
-    StylePainter::paint_button(painter, rect(), ButtonStyle::Normal, m_pressed, m_hovered);
+    StylePainter::paint_button(painter, rect(), palette, ButtonStyle::Normal, m_pressed, m_hovered);
     auto x_location = rect().center();
     x_location.move_by(-(m_bitmap->width() / 2), -(m_bitmap->height() / 2));
     if (m_pressed)
         x_location.move_by(1, 1);
-    painter.draw_bitmap(x_location, *m_bitmap, SystemColor::ButtonText);
+    painter.draw_bitmap(x_location, *m_bitmap, palette.button_text());
 }
 
 void WSButton::on_mouse_event(const WSMouseEvent& event)

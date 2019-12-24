@@ -1,3 +1,4 @@
+#include <LibDraw/Palette.h>
 #include <LibDraw/SystemTheme.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
@@ -25,6 +26,7 @@ static void set_system_theme_from_shared_buffer_id(int id)
     auto system_theme = SharedBuffer::create_from_shared_buffer_id(id);
     ASSERT(system_theme);
     set_system_theme(*system_theme);
+    GApplication::the().set_system_palette(*system_theme);
 }
 
 void GWindowServerConnection::handshake()

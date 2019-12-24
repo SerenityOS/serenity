@@ -7,7 +7,6 @@ FormWidget::FormWidget(FormEditorWidget& parent)
     : GWidget(&parent)
 {
     set_fill_with_background_color(true);
-    set_background_color(SystemColor::Window);
     set_relative_rect(5, 5, 400, 300);
 
     set_greedy_for_hits(true);

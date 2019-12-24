@@ -1,3 +1,4 @@
+#include <LibDraw/Palette.h>
 #include <LibDraw/StylePainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GPainter.h>
@@ -6,8 +7,6 @@
 GTabWidget::GTabWidget(GWidget* parent)
     : GWidget(parent)
 {
-    set_fill_with_background_color(true);
-    set_background_color(SystemColor::Window);
 }
 
 GTabWidget::~GTabWidget()
@@ -112,19 +111,19 @@ void GTabWidget::paint_event(GPaintEvent& event)
     auto container_rect = this->container_rect();
     auto padding_rect = container_rect;
     for (int i = 0; i < container_padding(); ++i) {
-        painter.draw_rect(padding_rect, background_color());
+        painter.draw_rect(padding_rect, palette().button());
         padding_rect.shrink(2, 2);
     }
 
-    StylePainter::paint_frame(painter, container_rect, FrameShape::Container, FrameShadow::Raised, 2);
+    StylePainter::paint_frame(painter, container_rect, palette(), FrameShape::Container, FrameShadow::Raised, 2);
 
     for (int i = 0; i < m_tabs.size(); ++i) {
         if (m_tabs[i].widget == m_active_widget)
             continue;
         bool hovered = i == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
-        StylePainter::paint_tab_button(painter, button_rect, false, hovered, m_tabs[i].widget->is_enabled());
-        painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, TextAlignment::Center, SystemColor::ButtonText);
+        StylePainter::paint_tab_button(painter, button_rect, palette(), false, hovered, m_tabs[i].widget->is_enabled());
+        painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, TextAlignment::Center, palette().button_text());
     }
 
     for (int i = 0; i < m_tabs.size(); ++i) {
@@ -132,9 +131,9 @@ void GTabWidget::paint_event(GPaintEvent& event)
             continue;
         bool hovered = i == m_hovered_tab_index;
         auto button_rect = this->button_rect(i);
-        StylePainter::paint_tab_button(painter, button_rect, true, hovered, m_tabs[i].widget->is_enabled());
-        painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, TextAlignment::Center, SystemColor::ButtonText);
-        painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), SystemColor::Button);
+        StylePainter::paint_tab_button(painter, button_rect, palette(), true, hovered, m_tabs[i].widget->is_enabled());
+        painter.draw_text(button_rect.translated(0, 1), m_tabs[i].title, TextAlignment::Center, palette().button_text());
+        painter.draw_line(button_rect.bottom_left().translated(1, 1), button_rect.bottom_right().translated(-1, 1), palette().button());
         break;
     }
 }

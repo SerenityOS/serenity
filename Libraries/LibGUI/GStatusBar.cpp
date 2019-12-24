@@ -66,5 +66,5 @@ void GStatusBar::paint_event(GPaintEvent& event)
 {
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
-    StylePainter::paint_surface(painter, rect(), !spans_entire_window_horizontally());
+    StylePainter::paint_surface(painter, rect(), palette(), !spans_entire_window_horizontally());
 }

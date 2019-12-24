@@ -1,6 +1,7 @@
 #include "HexEditor.h"
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GFontDatabase.h>
@@ -492,7 +493,7 @@ void HexEditor::paint_event(GPaintEvent& event)
                 text_color = Color::Red;
             }
 
-            Color highlight_color = SystemColor::Selection;
+            Color highlight_color = palette().selection();
             auto highlight_flag = false;
             if (m_selection_start > -1 && m_selection_end > -1) {
                 if (byte_position >= m_selection_start && byte_position <= m_selection_end) {

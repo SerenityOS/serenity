@@ -18,5 +18,5 @@ void GFrame::paint_event(GPaintEvent& event)
 
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
-    StylePainter::paint_frame(painter, rect(), m_shape, m_shadow, m_thickness, spans_entire_window_horizontally());
+    StylePainter::paint_frame(painter, rect(), palette(), m_shape, m_shadow, m_thickness, spans_entire_window_horizontally());
 }
