@@ -1,11 +1,17 @@
-ARCH_FLAGS =
-STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation -fno-sized-deallocation
-WARNING_FLAGS = -Werror -Wextra -Wall -Wno-nonnull-compare -Wno-deprecated-copy -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-expansion-to-defined
-FLAVOR_FLAGS = -fno-exceptions -fno-rtti -fstack-protector
-OPTIMIZATION_FLAGS = -Os
-
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 SERENITY_BASE_DIR := $(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
+
+CXX_STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation -fno-sized-deallocation
+CXX_WARNING_FLAGS = -Werror -Wextra -Wall -Wno-nonnull-compare -Wno-deprecated-copy -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-expansion-to-defined
+CXX_FLAVOR_FLAGS = -fno-exceptions -fno-rtti -fstack-protector
+#CXX_SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
+
+C_STANDARD_FLAGS =
+C_WARNING_FLAGS = -Werror -Wextra -Wall -Wno-nonnull-compare -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-expansion-to-defined
+C_FLAVOR_FLAGS = -fstack-protector
+
+ARCH_FLAGS =
+OPTIMIZATION_FLAGS = -Os
 
 INCLUDE_FLAGS += \
     -I. \
@@ -40,6 +46,7 @@ ifneq ($(HOST_CXX),)
 else
     TOOLCHAIN_PATH = $(SERENITY_BASE_DIR)/Toolchain/Local/bin
     CXX = $(PRE_CXX) $(TOOLCHAIN_PATH)/i686-pc-serenity-g++
+    CC = $(PRE_CC) $(TOOLCHAIN_PATH)/i686-pc-serenity-gcc
     AS = $(TOOLCHAIN_PATH)/i686-pc-serenity-as
     LINK = $(TOOLCHAIN_PATH)/i686-pc-serenity-ld
     DEFINES += -DDEBUG
@@ -62,8 +69,8 @@ endif
 #CXX = clang $(CLANG_FLAGS)
 #CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
 
-#SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
-CXXFLAGS = -MMD -MP $(WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(FLAVOR_FLAGS) $(ARCH_FLAGS) $(STANDARD_FLAGS) $(SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
+CXXFLAGS = -MMD -MP $(CXX_WARNING_FLAGS) $(CXX_OPTIMIZATION_FLAGS) $(CXX_FLAVOR_FLAGS) $(ARCH_FLAGS) $(CXX_STANDARD_FLAGS) $(CXX_SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
+CFLAGS = -MMD -MP $(C_FLAVOR_FLAGS) $(ARCH_FLAGS) $(C_STANDARD_FLAGS) $(C_SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
 
 DEFINES += -DSANITIZE_PTRS
 
@@ -82,6 +89,10 @@ endif
 %$(OBJ_SUFFIX).o: %.cpp $(EXTRA_SOURCES)
 	@echo "C++ $@"
 	$(QUIET) $(CXX) $(CXXFLAGS) -o $@ -c $<
+
+%$(OBJ_SUFFIX).o: %.c
+	@echo "C $@"
+	$(QUIET) $(CC) $(CFLAGS) -o $@ -c $<
 
 %.ao: %.S
 	@echo "AS $@"
