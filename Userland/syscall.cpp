@@ -29,16 +29,21 @@ int main(int argc, char** argv)
 {
     int oflag;
     int opt;
-    while ((opt = getopt(argc, argv, "oh")) != -1) {
+    while ((opt = getopt(argc, argv, "olh")) != -1) {
         switch (opt) {
         case 'o':
             oflag = 1;
             break;
+        case 'l':
+            for (auto sc : syscall_table) {
+                fprintf(stdout, "%s ", Syscall::to_string(sc));
+            }
+            return EXIT_SUCCESS;
         case 'h':
-            fprintf(stderr, "usage: \tsyscall [-o] entry [args; buf==BUFSIZ buffer]\n");
+            fprintf(stderr, "usage: \tsyscall [-o] [-l] [-h] <syscall-name> <args...> [buf==BUFSIZ buffer]\n");
             fprintf(stderr, "\tsyscall write 1 hello 5\n");
             fprintf(stderr, "\tsyscall -o read 0 buf 5\n");
-            fprintf(stderr, "\tsyscall -o getcwd buf 100\n");
+            fprintf(stderr, "\tsyscall sleep 3\n");
             break;
         default:
             exit(EXIT_FAILURE);
@@ -61,7 +66,7 @@ int main(int argc, char** argv)
                 perror("syscall");
             } else {
                 if (oflag)
-                    printf("%s", buf);
+                    fwrite(buf, 1, sizeof(buf), stdout);
             }
 
             fprintf(stderr, "Syscall return: %d\n", rc);
