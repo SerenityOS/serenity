@@ -3699,6 +3699,11 @@ int Process::sys$module_load(const char* path, size_t path_length)
     if (!module->module_init)
         return -EINVAL;
 
+    if (g_modules->contains(module->name)) {
+        dbg() << "a module with the name " << module->name << " is already loaded; please unload it first";
+        return -EEXIST;
+    }
+
     module->module_init();
 
     auto name = module->name;
