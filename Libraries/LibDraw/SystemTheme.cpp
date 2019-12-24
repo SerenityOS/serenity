@@ -54,6 +54,7 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(Window);
     DO_COLOR(WindowText);
     DO_COLOR(Base);
+    DO_COLOR(BaseText);
     DO_COLOR(Button);
     DO_COLOR(ButtonText);
     DO_COLOR(DesktopBackground);

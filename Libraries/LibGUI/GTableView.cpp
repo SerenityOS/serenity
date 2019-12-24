@@ -14,6 +14,7 @@ GTableView::GTableView(GWidget* parent)
     : GAbstractColumnView(parent)
 {
     set_background_role(ColorRole::Base);
+    set_foreground_role(ColorRole::BaseText);
 }
 
 GTableView::~GTableView()
