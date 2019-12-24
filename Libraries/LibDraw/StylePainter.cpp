@@ -232,13 +232,13 @@ void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const 
 {
     // First we fill the entire widget with the gradient. This incurs a bit of
     // overdraw but ensures a consistent look throughout the progression.
-    Color start_color(110, 34, 9);
-    Color end_color(244, 202, 158);
+    Color start_color = palette.active_window_border1();
+    Color end_color = palette.active_window_border2();
     painter.fill_rect_with_gradient(rect, start_color, end_color);
 
     if (!text.is_null()) {
         painter.draw_text(rect.translated(1, 1), text, TextAlignment::Center, Color::Black);
-        painter.draw_text(rect, text, TextAlignment::Center, Color::White);
+        painter.draw_text(rect, text, TextAlignment::Center, palette.base_text());
     }
 
     float range_size = max - min;
@@ -254,5 +254,5 @@ void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const 
 
     painter.add_clip_rect(hole_rect);
     if (!text.is_null())
-        painter.draw_text(rect.translated(0, 0), text, TextAlignment::Center, Color::Black);
+        painter.draw_text(rect.translated(0, 0), text, TextAlignment::Center, palette.base_text());
 }
