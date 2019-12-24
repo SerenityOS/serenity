@@ -492,7 +492,7 @@ void HexEditor::paint_event(GPaintEvent& event)
                 text_color = Color::Red;
             }
 
-            Color highlight_color = Color::from_rgb(0x84351a);
+            Color highlight_color = SystemColor::Selection;
             auto highlight_flag = false;
             if (m_selection_start > -1 && m_selection_end > -1) {
                 if (byte_position >= m_selection_start && byte_position <= m_selection_end) {

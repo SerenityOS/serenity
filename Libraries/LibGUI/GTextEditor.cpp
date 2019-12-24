@@ -424,7 +424,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                         visual_line_rect.height()
                     };
 
-                    painter.fill_rect(selection_rect, Color::from_rgb(0x955233));
+                    painter.fill_rect(selection_rect, SystemColor::Selection);
 
                     size_t start_of_selection_within_visual_line = (size_t)max(0, (int)selection_start_column_within_line - (int)start_of_visual_line);
                     size_t end_of_selection_within_visual_line = selection_end_column_within_line - start_of_visual_line;
@@ -434,7 +434,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                         end_of_selection_within_visual_line - start_of_selection_within_visual_line
                     };
 
-                    painter.draw_text(selection_rect, visual_selected_text, TextAlignment::CenterLeft, Color::White);
+                    painter.draw_text(selection_rect, visual_selected_text, TextAlignment::CenterLeft, SystemColor::SelectionText);
                 }
             }
             ++visual_line_index;

@@ -53,8 +53,8 @@ void GTableView::paint_event(GPaintEvent& event)
         Color background_color;
         Color key_column_background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
-            key_column_background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
+            background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
+            key_column_background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
         } else {
             if (alternating_row_colors() && (painted_item_index % 2)) {
                 background_color = Color(SystemColor::Base).darkened(0.8f);
@@ -93,7 +93,7 @@ void GTableView::paint_event(GPaintEvent& event)
                 } else {
                     Color text_color;
                     if (is_selected_row)
-                        text_color = Color::White;
+                        text_color = SystemColor::SelectionText;
                     else
                         text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
                     painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);

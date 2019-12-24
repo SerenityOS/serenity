@@ -74,7 +74,7 @@ void GlyphMapWidget::paint_event(GPaintEvent& event)
                 font().max_glyph_width(),
                 font().glyph_height());
             if (glyph == m_selected_glyph) {
-                painter.fill_rect(outer_rect, Color::from_rgb(0x84351a));
+                painter.fill_rect(outer_rect, SystemColor::Selection);
                 painter.draw_glyph(inner_rect.location(), glyph, Color::White);
             } else {
                 painter.draw_glyph(inner_rect.location(), glyph, Color::Black);

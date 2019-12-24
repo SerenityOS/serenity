@@ -35,6 +35,12 @@ Color::Color(SystemColor system_color)
     case SystemColor::HoverHighlight:
         m_value = theme.hover_highlight.value();
         break;
+    case SystemColor::Selection:
+        m_value = theme.selection.value();
+        break;
+    case SystemColor::SelectionText:
+        m_value = theme.selection_text.value();
+        break;
     case SystemColor::DesktopBackground:
         m_value = theme.desktop_background.value();
         break;

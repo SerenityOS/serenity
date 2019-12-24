@@ -38,6 +38,9 @@ struct SystemTheme {
     Color threed_shadow2;
 
     Color hover_highlight;
+
+    Color selection;
+    Color selection_text;
 };
 
 const SystemTheme& current_system_theme();
