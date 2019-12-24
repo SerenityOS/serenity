@@ -3641,6 +3641,8 @@ int Process::sys$module_load(const char* path, size_t path_length)
         return IterationDecision::Continue;
     });
 
+    bool missing_symbols = false;
+
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
         auto* section_storage = section_storage_by_name.get(section.name()).value_or(nullptr);
         ASSERT(section_storage);
@@ -3651,6 +3653,8 @@ int Process::sys$module_load(const char* path, size_t path_length)
                 // PC-relative relocation
                 dbg() << "PC-relative relocation: " << relocation.symbol().name();
                 u32 symbol_address = address_for_kernel_symbol(relocation.symbol().name());
+                if (symbol_address == 0)
+                    missing_symbols = true;
                 dbg() << "   Symbol address: " << (void*)symbol_address;
                 ptrdiff_t relative_offset = (char*)symbol_address - ((char*)&patch_ptr + 4);
                 patch_ptr = relative_offset;
@@ -3662,9 +3666,17 @@ int Process::sys$module_load(const char* path, size_t path_length)
                 if (relocation.symbol().bind() == STB_LOCAL) {
                     auto* section_storage_containing_symbol = section_storage_by_name.get(relocation.symbol().section().name()).value_or(nullptr);
                     ASSERT(section_storage_containing_symbol);
-                    patch_ptr += (ptrdiff_t)(section_storage_containing_symbol + relocation.symbol().value());
+                    u32 symbol_address = (ptrdiff_t)(section_storage_containing_symbol + relocation.symbol().value());
+                    if (symbol_address == 0)
+                        missing_symbols = true;
+                    dbg() << "   Symbol address: " << (void*)symbol_address;
+                    patch_ptr += symbol_address;
                 } else if (relocation.symbol().bind() == STB_GLOBAL) {
-                    patch_ptr += address_for_kernel_symbol(relocation.symbol().name());
+                    u32 symbol_address = address_for_kernel_symbol(relocation.symbol().name());
+                    if (symbol_address == 0)
+                        missing_symbols = true;
+                    dbg() << "   Symbol address: " << (void*)symbol_address;
+                    patch_ptr += symbol_address;
                 } else {
                     ASSERT_NOT_REACHED();
                 }
@@ -3675,6 +3687,9 @@ int Process::sys$module_load(const char* path, size_t path_length)
 
         return IterationDecision::Continue;
     });
+
+    if (missing_symbols)
+        return -ENOENT;
 
     auto* text_base = section_storage_by_name.get(".text").value_or(nullptr);
     if (!text_base) {
