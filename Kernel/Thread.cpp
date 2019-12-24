@@ -85,6 +85,7 @@ Thread::Thread(Process& process)
 
     if (m_process.is_ring0()) {
         m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d; Ring0)", m_tid), false, true);
+        m_kernel_stack_region->set_stack(true);
         m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
         m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
         m_tss.esp = m_kernel_stack_top;
@@ -92,6 +93,7 @@ Thread::Thread(Process& process)
     } else {
         // Ring3 processes need a separate stack for Ring0.
         m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d; Ring3)", m_tid), false, true);
+        m_kernel_stack_region->set_stack(true);
         m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
         m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
         m_tss.ss0 = 0x10;
