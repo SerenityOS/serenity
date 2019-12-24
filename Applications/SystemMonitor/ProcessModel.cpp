@@ -191,27 +191,26 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return thread.current_state.cpu_percent;
         case Column::Name:
             return thread.current_state.name;
-        // FIXME: GVariant with unsigned?
         case Column::Syscalls:
-            return (int)thread.current_state.syscall_count;
+            return thread.current_state.syscall_count;
         case Column::InodeFaults:
-            return (int)thread.current_state.inode_faults;
+            return thread.current_state.inode_faults;
         case Column::ZeroFaults:
-            return (int)thread.current_state.zero_faults;
+            return thread.current_state.zero_faults;
         case Column::CowFaults:
-            return (int)thread.current_state.cow_faults;
+            return thread.current_state.cow_faults;
         case Column::IPv4SocketReadBytes:
-            return (int)thread.current_state.ipv4_socket_read_bytes;
+            return thread.current_state.ipv4_socket_read_bytes;
         case Column::IPv4SocketWriteBytes:
-            return (int)thread.current_state.ipv4_socket_write_bytes;
+            return thread.current_state.ipv4_socket_write_bytes;
         case Column::UnixSocketReadBytes:
-            return (int)thread.current_state.unix_socket_read_bytes;
+            return thread.current_state.unix_socket_read_bytes;
         case Column::UnixSocketWriteBytes:
-            return (int)thread.current_state.unix_socket_write_bytes;
+            return thread.current_state.unix_socket_write_bytes;
         case Column::FileReadBytes:
-            return (int)thread.current_state.file_read_bytes;
+            return thread.current_state.file_read_bytes;
         case Column::FileWriteBytes:
-            return (int)thread.current_state.file_write_bytes;
+            return thread.current_state.file_write_bytes;
         }
         ASSERT_NOT_REACHED();
         return {};
@@ -259,27 +258,26 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return thread.current_state.cpu_percent;
         case Column::Name:
             return thread.current_state.name;
-        // FIXME: It's weird that GVariant doesn't support unsigned ints. Should it?
         case Column::Syscalls:
-            return (int)thread.current_state.syscall_count;
+            return thread.current_state.syscall_count;
         case Column::InodeFaults:
-            return (int)thread.current_state.inode_faults;
+            return thread.current_state.inode_faults;
         case Column::ZeroFaults:
-            return (int)thread.current_state.zero_faults;
+            return thread.current_state.zero_faults;
         case Column::CowFaults:
-            return (int)thread.current_state.cow_faults;
+            return thread.current_state.cow_faults;
         case Column::IPv4SocketReadBytes:
-            return (int)thread.current_state.ipv4_socket_read_bytes;
+            return thread.current_state.ipv4_socket_read_bytes;
         case Column::IPv4SocketWriteBytes:
-            return (int)thread.current_state.ipv4_socket_write_bytes;
+            return thread.current_state.ipv4_socket_write_bytes;
         case Column::UnixSocketReadBytes:
-            return (int)thread.current_state.unix_socket_read_bytes;
+            return thread.current_state.unix_socket_read_bytes;
         case Column::UnixSocketWriteBytes:
-            return (int)thread.current_state.unix_socket_write_bytes;
+            return thread.current_state.unix_socket_write_bytes;
         case Column::FileReadBytes:
-            return (int)thread.current_state.file_read_bytes;
+            return thread.current_state.file_read_bytes;
         case Column::FileWriteBytes:
-            return (int)thread.current_state.file_write_bytes;
+            return thread.current_state.file_write_bytes;
         }
     }
 
