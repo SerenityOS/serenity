@@ -25,7 +25,7 @@ void WSButton::paint(Painter& painter)
     x_location.move_by(-(m_bitmap->width() / 2), -(m_bitmap->height() / 2));
     if (m_pressed)
         x_location.move_by(1, 1);
-    painter.draw_bitmap(x_location, *m_bitmap, Color::Black);
+    painter.draw_bitmap(x_location, *m_bitmap, SystemColor::Text);
 }
 
 void WSButton::on_mouse_event(const WSMouseEvent& event)
