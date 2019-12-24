@@ -57,11 +57,11 @@ void GTableView::paint_event(GPaintEvent& event)
             key_column_background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
         } else {
             if (alternating_row_colors() && (painted_item_index % 2)) {
-                background_color = Color(220, 220, 220);
-                key_column_background_color = Color(200, 200, 200);
+                background_color = Color(SystemColor::Base).darkened(0.8f);
+                key_column_background_color = Color(SystemColor::Base).darkened(0.7f);
             } else {
                 background_color = SystemColor::Base;
-                key_column_background_color = Color(220, 220, 220);
+                key_column_background_color = Color(SystemColor::Base).darkened(0.9f);
             }
         }
         painter.fill_rect(row_rect(painted_item_index), background_color);
