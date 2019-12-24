@@ -62,7 +62,6 @@ public:
         : GWidget(parent)
     {
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
-        set_background_color(Color::White);
         set_preferred_size(8, 22);
     }
     virtual ~SeparatorWidget() override {}
@@ -72,8 +71,8 @@ public:
         GPainter painter(*this);
         painter.add_clip_rect(event.rect());
         painter.translate(rect().center().x() - 1, 0);
-        painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, Color::MidGray);
-        painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, Color::White);
+        painter.draw_line({ 0, 0 }, { 0, rect().bottom() }, SystemColor::ThreedShadow1);
+        painter.draw_line({ 1, 0 }, { 1, rect().bottom() }, SystemColor::ThreedHighlight);
     }
 };
 
