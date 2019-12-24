@@ -93,7 +93,7 @@ void StylePainter::paint_button(Painter& painter, const Rect& rect, ButtonStyle 
         return paint_button_new(painter, rect, pressed, checked, hovered, enabled);
 
     Color button_color = SystemColor::Button;
-    Color highlight_color = Color::White;
+    Color highlight_color = SystemColor::ThreedHighlight;
     Color shadow_color = Color(96, 96, 96);
 
     if (button_style == ButtonStyle::CoolBar && !enabled)
