@@ -4,43 +4,43 @@
 #include <LibC/SharedBuffer.h>
 #include <LibDraw/Color.h>
 
+enum class ColorRole {
+    NoRole,
+    DesktopBackground,
+    ActiveWindowBorder1,
+    ActiveWindowBorder2,
+    ActiveWindowTitle,
+    InactiveWindowBorder1,
+    InactiveWindowBorder2,
+    InactiveWindowTitle,
+    MovingWindowBorder1,
+    MovingWindowBorder2,
+    MovingWindowTitle,
+    HighlightWindowBorder1,
+    HighlightWindowBorder2,
+    HighlightWindowTitle,
+    MenuStripe,
+    MenuBase,
+    MenuSelection,
+    Window,
+    WindowText,
+    Button,
+    ButtonText,
+    Base,
+    ThreedHighlight,
+    ThreedShadow1,
+    ThreedShadow2,
+    HoverHighlight,
+    Selection,
+    SelectionText,
+
+    __Count,
+
+    DisabledText = ThreedShadow1,
+};
+
 struct SystemTheme {
-    Color desktop_background;
-
-    Color active_window_border1;
-    Color active_window_border2;
-    Color active_window_title;
-
-    Color inactive_window_border1;
-    Color inactive_window_border2;
-    Color inactive_window_title;
-
-    Color moving_window_border1;
-    Color moving_window_border2;
-    Color moving_window_title;
-
-    Color highlight_window_border1;
-    Color highlight_window_border2;
-    Color highlight_window_title;
-
-    Color menu_stripe;
-    Color menu_base;
-    Color menu_selection;
-
-    Color window;
-    Color window_text;
-    Color base;
-    Color button;
-    Color button_text;
-
-    Color threed_highlight;
-    Color threed_shadow1;
-    Color threed_shadow2;
-
-    Color hover_highlight;
-
-    Color selection;
-    Color selection_text;
+    Color color[(int)ColorRole::__Count];
 };
 
 const SystemTheme& current_system_theme();

@@ -1,6 +1,7 @@
-#include "GLabel.h"
-#include <LibGUI/GPainter.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/Palette.h>
+#include <LibGUI/GLabel.h>
+#include <LibGUI/GPainter.h>
 
 GLabel::GLabel(GWidget* parent)
     : GFrame(parent)
@@ -58,7 +59,7 @@ void GLabel::paint_event(GPaintEvent& event)
     text_rect.set_width(text_rect.width() - indent * 2);
 
     if (is_enabled()) {
-        painter.draw_text(text_rect, text(), m_text_alignment, foreground_color(), TextElision::Right);
+        painter.draw_text(text_rect, text(), m_text_alignment, palette().window_text(), TextElision::Right);
     } else {
         painter.draw_text(text_rect.translated(1, 1), text(), font(), text_alignment(), Color::White, TextElision::Right);
         painter.draw_text(text_rect, text(), font(), text_alignment(), Color::from_rgb(0x808080), TextElision::Right);

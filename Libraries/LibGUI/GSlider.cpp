@@ -62,8 +62,8 @@ void GSlider::paint_event(GPaintEvent& event)
         track_rect.center_horizontally_within(inner_rect());
     }
 
-    StylePainter::paint_frame(painter, track_rect, FrameShape::Panel, FrameShadow::Sunken, 1);
-    StylePainter::paint_button(painter, knob_rect(), ButtonStyle::Normal, false, m_knob_hovered);
+    StylePainter::paint_frame(painter, track_rect, palette(), FrameShape::Panel, FrameShadow::Sunken, 1);
+    StylePainter::paint_button(painter, knob_rect(), palette(), ButtonStyle::Normal, false, m_knob_hovered);
 }
 
 Rect GSlider::knob_rect() const

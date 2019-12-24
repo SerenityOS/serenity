@@ -9,6 +9,7 @@
 #include <LibDraw/Color.h>
 #include <LibDraw/DisjointRectSet.h>
 #include <LibDraw/Painter.h>
+#include <LibDraw/Palette.h>
 #include <LibDraw/Rect.h>
 #include <WindowServer/WSCursor.h>
 #include <WindowServer/WSEvent.h>
@@ -50,10 +51,15 @@ class WSWindowManager : public CObject {
 public:
     static WSWindowManager& the();
 
-    WSWindowManager();
+    explicit WSWindowManager(const Palette&);
     virtual ~WSWindowManager() override;
 
-    RefPtr<CConfigFile> wm_config() const { return m_wm_config; }
+    const Palette& palette() const { return *m_palette; }
+
+    RefPtr<CConfigFile> wm_config() const
+    {
+        return m_wm_config;
+    }
     void reload_config(bool);
 
     void add_window(WSWindow&);
@@ -275,6 +281,8 @@ private:
 
     WeakPtr<WSButton> m_cursor_tracking_button;
     WeakPtr<WSButton> m_hovered_button;
+
+    NonnullRefPtr<Palette> m_palette;
 
     RefPtr<CConfigFile> m_wm_config;
 

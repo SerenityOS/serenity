@@ -41,34 +41,37 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
         return color.value();
     };
 
-    data->desktop_background = get("DesktopBackground");
-    data->threed_highlight = get("ThreedHighlight");
-    data->threed_shadow1 = get("ThreedShadow1");
-    data->threed_shadow2 = get("ThreedShadow2");
-    data->hover_highlight = get("HoverHighlight");
-    data->selection = get("Selection");
-    data->selection_text = get("SelectionText");
-    data->window = get("Window");
-    data->window_text = get("WindowText");
-    data->base = get("Base");
-    data->button = get("Button");
-    data->button_text = get("ButtonText");
-    data->desktop_background = get("DesktopBackground");
-    data->active_window_border1 = get("ActiveWindowBorder1");
-    data->active_window_border2 = get("ActiveWindowBorder2");
-    data->active_window_title = get("ActiveWindowTitle");
-    data->inactive_window_border1 = get("InactiveWindowBorder1");
-    data->inactive_window_border2 = get("InactiveWindowBorder2");
-    data->inactive_window_title = get("InactiveWindowTitle");
-    data->moving_window_border1 = get("MovingWindowBorder1");
-    data->moving_window_border2 = get("MovingWindowBorder2");
-    data->moving_window_title = get("MovingWindowTitle");
-    data->highlight_window_border1 = get("HighlightWindowBorder1");
-    data->highlight_window_border2 = get("HighlightWindowBorder2");
-    data->highlight_window_title = get("HighlightWindowTitle");
-    data->menu_stripe = get("MenuStripe");
-    data->menu_base = get("MenuBase");
-    data->menu_selection = get("MenuSelection");
+#define DO_COLOR(x) \
+    data->color[(int)ColorRole::x] = get(#x)
+
+    DO_COLOR(DesktopBackground);
+    DO_COLOR(ThreedHighlight);
+    DO_COLOR(ThreedShadow1);
+    DO_COLOR(ThreedShadow2);
+    DO_COLOR(HoverHighlight);
+    DO_COLOR(Selection);
+    DO_COLOR(SelectionText);
+    DO_COLOR(Window);
+    DO_COLOR(WindowText);
+    DO_COLOR(Base);
+    DO_COLOR(Button);
+    DO_COLOR(ButtonText);
+    DO_COLOR(DesktopBackground);
+    DO_COLOR(ActiveWindowBorder1);
+    DO_COLOR(ActiveWindowBorder2);
+    DO_COLOR(ActiveWindowTitle);
+    DO_COLOR(InactiveWindowBorder1);
+    DO_COLOR(InactiveWindowBorder2);
+    DO_COLOR(InactiveWindowTitle);
+    DO_COLOR(MovingWindowBorder1);
+    DO_COLOR(MovingWindowBorder2);
+    DO_COLOR(MovingWindowTitle);
+    DO_COLOR(HighlightWindowBorder1);
+    DO_COLOR(HighlightWindowBorder2);
+    DO_COLOR(HighlightWindowTitle);
+    DO_COLOR(MenuStripe);
+    DO_COLOR(MenuBase);
+    DO_COLOR(MenuSelection);
 
     buffer->seal();
     buffer->share_globally();

@@ -70,9 +70,10 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 
 void WSWindowSwitcher::draw()
 {
+    auto& palette = WSWindowManager::the().palette();
     Painter painter(*m_switcher_window->backing_store());
-    painter.fill_rect({ {}, m_rect.size() }, SystemColor::Window);
-    painter.draw_rect({ {}, m_rect.size() }, SystemColor::ThreedShadow2);
+    painter.fill_rect({ {}, m_rect.size() }, palette.window());
+    painter.draw_rect({ {}, m_rect.size() }, palette.threed_shadow2());
     for (int index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
         Rect item_rect {
@@ -84,21 +85,21 @@ void WSWindowSwitcher::draw()
         Color text_color;
         Color rect_text_color;
         if (index == m_selected_index) {
-            painter.fill_rect(item_rect, SystemColor::Selection);
-            text_color = SystemColor::SelectionText;
-            rect_text_color = SystemColor::ThreedShadow1;
+            painter.fill_rect(item_rect, palette.selection());
+            text_color = palette.selection_text();
+            rect_text_color = palette.threed_shadow1();
         } else {
-            text_color = SystemColor::WindowText;
-            rect_text_color = SystemColor::ThreedShadow2;
+            text_color = palette.window_text();
+            rect_text_color = palette.threed_shadow2();
         }
         item_rect.shrink(item_padding(), 0);
         Rect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
         if (window.backing_store()) {
             painter.draw_scaled_bitmap(thumbnail_rect, *window.backing_store(), window.backing_store()->rect());
-            StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), FrameShape::Container, FrameShadow::Sunken, 2);
+            StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), palette, FrameShape::Container, FrameShadow::Sunken, 2);
         }
         Rect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
-        painter.fill_rect(icon_rect, SystemColor::Window);
+        painter.fill_rect(icon_rect, palette.window());
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WSWindowManager::the().window_title_font(), TextAlignment::CenterLeft, text_color);
         painter.draw_text(item_rect, window.rect().to_string(), TextAlignment::CenterRight, rect_text_color);

@@ -4,44 +4,13 @@
 #include <AK/String.h>
 #include <AK/Types.h>
 
+enum class ColorRole;
 typedef u32 RGBA32;
 
 inline constexpr u32 make_rgb(u8 r, u8 g, u8 b)
 {
     return ((r << 16) | (g << 8) | b);
 }
-
-enum class SystemColor {
-    DesktopBackground,
-    ActiveWindowBorder1,
-    ActiveWindowBorder2,
-    ActiveWindowTitle,
-    InactiveWindowBorder1,
-    InactiveWindowBorder2,
-    InactiveWindowTitle,
-    MovingWindowBorder1,
-    MovingWindowBorder2,
-    MovingWindowTitle,
-    HighlightWindowBorder1,
-    HighlightWindowBorder2,
-    HighlightWindowTitle,
-    MenuStripe,
-    MenuBase,
-    MenuSelection,
-    Window,
-    WindowText,
-    Button,
-    ButtonText,
-    Base,
-    ThreedHighlight,
-    ThreedShadow1,
-    ThreedShadow2,
-    HoverHighlight,
-    Selection,
-    SelectionText,
-
-    DisabledText = ThreedShadow1,
-};
 
 class Color {
 public:
@@ -71,7 +40,6 @@ public:
 
     Color() {}
     Color(NamedColor);
-    Color(SystemColor);
     Color(u8 r, u8 g, u8 b)
         : m_value(0xff000000 | (r << 16) | (g << 8) | b)
     {

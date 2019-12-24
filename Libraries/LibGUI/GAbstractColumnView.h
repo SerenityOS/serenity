@@ -9,7 +9,7 @@ class GTableCellPaintingDelegate {
 public:
     virtual ~GTableCellPaintingDelegate() {}
 
-    virtual void paint(GPainter&, const Rect&, const GModel&, const GModelIndex&) = 0;
+    virtual void paint(GPainter&, const Rect&, const Palette&, const GModel&, const GModelIndex&) = 0;
 };
 
 class GAbstractColumnView : public GAbstractView {

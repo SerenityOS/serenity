@@ -11,6 +11,7 @@ OBJS = \
     Rect.o \
     StylePainter.o \
     SystemTheme.o \
+    Palette.o \
     Emoji.o
 
 LIBRARY = libdraw.a

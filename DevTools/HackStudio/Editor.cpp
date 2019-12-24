@@ -68,7 +68,7 @@ void Editor::paint_event(GPaintEvent& event)
             rect.set_width(rect.width() - vertical_scrollbar().width());
         if (horizontal_scrollbar().is_visible())
             rect.set_height(rect.height() - horizontal_scrollbar().height());
-        painter.draw_rect(rect, SystemColor::Selection);
+        painter.draw_rect(rect, palette().selection());
     }
 }
 

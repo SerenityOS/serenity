@@ -43,7 +43,7 @@ void LayoutImage::render(RenderingContext& context)
 
     if (renders_as_alt_text()) {
         context.painter().set_font(Font::default_font());
-        StylePainter::paint_frame(context.painter(), enclosing_int_rect(rect()), FrameShape::Container, FrameShadow::Sunken, 2);
+        StylePainter::paint_frame(context.painter(), enclosing_int_rect(rect()), context.palette(), FrameShape::Container, FrameShadow::Sunken, 2);
         auto alt = node().alt();
         if (alt.is_empty())
             alt = node().src();

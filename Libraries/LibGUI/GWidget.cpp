@@ -1,26 +1,26 @@
 #include <AK/Assertions.h>
 #include <AK/JsonObject.h>
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GButton.h>
+#include <LibGUI/GCheckBox.h>
 #include <LibGUI/GEvent.h>
+#include <LibGUI/GGroupBox.h>
+#include <LibGUI/GLabel.h>
 #include <LibGUI/GLayout.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GPainter.h>
-#include <LibGUI/GWidget.h>
-#include <LibGUI/GWindow.h>
-#include <LibGUI/GWindowServerConnection.h>
-#include <unistd.h>
-
-#include <LibGUI/GButton.h>
-#include <LibGUI/GCheckBox.h>
-#include <LibGUI/GGroupBox.h>
-#include <LibGUI/GLabel.h>
 #include <LibGUI/GRadioButton.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GSlider.h>
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GTextBox.h>
+#include <LibGUI/GWidget.h>
+#include <LibGUI/GWindow.h>
+#include <LibGUI/GWindowServerConnection.h>
+#include <unistd.h>
 
 REGISTER_GWIDGET(GButton)
 REGISTER_GWIDGET(GCheckBox)
@@ -67,9 +67,8 @@ const GWidgetClassRegistration* GWidgetClassRegistration::find(const String& cla
 GWidget::GWidget(GWidget* parent)
     : CObject(parent, true)
     , m_font(Font::default_font())
+    , m_palette(GApplication::the().palette())
 {
-    m_background_color = SystemColor::Window;
-    m_foreground_color = SystemColor::WindowText;
 }
 
 GWidget::~GWidget()
@@ -173,7 +172,7 @@ void GWidget::handle_paint_event(GPaintEvent& event)
     ASSERT(is_visible());
     if (fill_with_background_color()) {
         GPainter painter(*this);
-        painter.fill_rect(event.rect(), background_color());
+        painter.fill_rect(event.rect(), palette().color(background_role()));
     } else {
 #ifdef DEBUG_WIDGET_UNDERDRAW
         // FIXME: This is a bit broken.
@@ -692,4 +691,9 @@ Vector<GWidget*> GWidget::child_widgets() const
             widgets.append(static_cast<GWidget*>(&child));
     }
     return widgets;
+}
+
+void GWidget::set_palette(const Palette& palette)
+{
+    m_palette = palette;
 }

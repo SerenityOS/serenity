@@ -42,7 +42,8 @@ WSWindowManager& WSWindowManager::the()
     return *s_the;
 }
 
-WSWindowManager::WSWindowManager()
+WSWindowManager::WSWindowManager(const Palette& palette)
+    : m_palette(palette)
 {
     s_the = this;
 
@@ -132,6 +133,7 @@ WSWindowManager::WSWindowManager()
         auto new_theme = load_system_theme(theme.path);
         ASSERT(new_theme);
         set_system_theme(*new_theme);
+        m_palette = Palette::create_with_shared_buffer(*new_theme);
         HashTable<WSClientConnection*> notified_clients;
         for_each_window([&](WSWindow& window) {
             if (window.client()) {

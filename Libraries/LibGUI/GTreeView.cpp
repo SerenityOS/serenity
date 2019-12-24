@@ -1,3 +1,4 @@
+#include <LibDraw/Palette.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
 #include <LibGUI/GTreeView.h>
@@ -23,6 +24,7 @@ GTreeView::MetadataForIndex& GTreeView::ensure_metadata_for_index(const GModelIn
 GTreeView::GTreeView(GWidget* parent)
     : GAbstractColumnView(parent)
 {
+    set_background_role(ColorRole::Base);
     set_size_columns_to_fit_content(true);
     set_headers_visible(false);
     m_expand_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-expand.png");
@@ -146,7 +148,7 @@ void GTreeView::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), SystemColor::Base);
+    painter.fill_rect(event.rect(), palette().color(background_role()));
 
     if (!model())
         return;
@@ -178,21 +180,21 @@ void GTreeView::paint_event(GPaintEvent& event)
 
         bool is_selected_row = selection().contains(index);
 
-        Color text_color = SystemColor::WindowText;
+        Color text_color = palette().color(foreground_role());
         if (is_selected_row)
             text_color = Color::White;
 
         Color background_color;
         Color key_column_background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
-            key_column_background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
+            key_column_background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
         } else {
             if (alternating_row_colors() && (painted_row_index % 2)) {
                 background_color = Color(220, 220, 220);
                 key_column_background_color = Color(200, 200, 200);
             } else {
-                background_color = SystemColor::Base;
+                background_color = palette().color(background_role());
                 key_column_background_color = Color(220, 220, 220);
             }
         }
@@ -215,7 +217,7 @@ void GTreeView::paint_event(GPaintEvent& event)
                 auto cell_index = model.sibling(index.row(), column_index, index.parent());
 
                 if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
-                    delegate->paint(painter, cell_rect, model, cell_index);
+                    delegate->paint(painter, cell_rect, palette(), model, cell_index);
                 } else {
                     auto data = model.data(cell_index);
 
@@ -226,7 +228,7 @@ void GTreeView::paint_event(GPaintEvent& event)
                             painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
                     } else {
                         if (!is_selected_row)
-                            text_color = model.data(cell_index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
+                            text_color = model.data(cell_index, GModel::Role::ForegroundColor).to_color(palette().color(foreground_role()));
                         painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
                     }
                 }

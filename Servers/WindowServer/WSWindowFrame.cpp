@@ -153,6 +153,7 @@ void WSWindowFrame::paint(Painter& painter)
     if (m_window.type() != WSWindowType::Normal)
         return;
 
+    auto& palette = WSWindowManager::the().palette();
     auto& window = m_window;
 
     auto titlebar_rect = title_bar_rect();
@@ -170,29 +171,29 @@ void WSWindowFrame::paint(Painter& painter)
     auto& wm = WSWindowManager::the();
 
     if (&window == wm.m_highlight_window) {
-        border_color = SystemColor::HighlightWindowBorder1;
-        border_color2 = SystemColor::HighlightWindowBorder2;
-        title_color = SystemColor::HighlightWindowTitle;
+        border_color = palette.highlight_window_border1();
+        border_color2 = palette.highlight_window_border2();
+        title_color = palette.highlight_window_title();
     } else if (&window == wm.m_move_window) {
-        border_color = SystemColor::MovingWindowBorder1;
-        border_color2 = SystemColor::MovingWindowBorder2;
-        title_color = SystemColor::MovingWindowTitle;
+        border_color = palette.moving_window_border1();
+        border_color2 = palette.moving_window_border2();
+        title_color = palette.moving_window_title();
     } else if (&window == wm.m_active_window) {
-        border_color = SystemColor::ActiveWindowBorder1;
-        border_color2 = SystemColor::ActiveWindowBorder2;
-        title_color = SystemColor::ActiveWindowTitle;
+        border_color = palette.active_window_border1();
+        border_color2 = palette.active_window_border2();
+        title_color = palette.active_window_title();
     } else {
-        border_color = SystemColor::InactiveWindowBorder1;
-        border_color2 = SystemColor::InactiveWindowBorder2;
-        title_color = SystemColor::InactiveWindowTitle;
+        border_color = palette.inactive_window_border1();
+        border_color2 = palette.inactive_window_border2();
+        title_color = palette.inactive_window_title();
     }
 
-    StylePainter::paint_window_frame(painter, outer_rect);
+    StylePainter::paint_window_frame(painter, outer_rect, palette);
 
     if (!window.show_titlebar())
         return;
 
-    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), SystemColor::Button);
+    painter.draw_line(titlebar_rect.bottom_left().translated(0, 1), titlebar_rect.bottom_right().translated(0, 1), palette.button());
 
     auto leftmost_button_rect = m_buttons.is_empty() ? Rect() : m_buttons.last().relative_rect();
 

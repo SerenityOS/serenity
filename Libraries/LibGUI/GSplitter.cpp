@@ -1,3 +1,4 @@
+#include <LibDraw/Palette.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GWindow.h>
@@ -6,9 +7,9 @@ GSplitter::GSplitter(Orientation orientation, GWidget* parent)
     : GFrame(parent)
     , m_orientation(orientation)
 {
+    set_background_role(ColorRole::Button);
     set_layout(make<GBoxLayout>(orientation));
     set_fill_with_background_color(true);
-    set_background_color(SystemColor::Window);
     layout()->set_spacing(3);
 }
 
@@ -18,14 +19,14 @@ GSplitter::~GSplitter()
 
 void GSplitter::enter_event(CEvent&)
 {
-    set_background_color(StylePainter::hover_highlight_color());
+    set_background_role(ColorRole::HoverHighlight);
     window()->set_override_cursor(m_orientation == Orientation::Horizontal ? GStandardCursor::ResizeHorizontal : GStandardCursor::ResizeVertical);
     update();
 }
 
 void GSplitter::leave_event(CEvent&)
 {
-    set_background_color(SystemColor::Window);
+    set_background_role(ColorRole::Button);
     if (!m_resizing)
         window()->set_override_cursor(GStandardCursor::None);
     update();

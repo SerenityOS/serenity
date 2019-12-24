@@ -44,6 +44,7 @@ bool WSMenuManager::is_open(const WSMenu& menu) const
 void WSMenuManager::draw()
 {
     auto& wm = WSWindowManager::the();
+    auto& palette = wm.palette();
     auto menubar_rect = this->menubar_rect();
 
     if (m_needs_window_resize) {
@@ -83,14 +84,14 @@ void WSMenuManager::draw()
 
     Painter painter(*window().backing_store());
 
-    painter.fill_rect(menubar_rect, SystemColor::Window);
-    painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, SystemColor::ThreedShadow1);
+    painter.fill_rect(menubar_rect, palette.window());
+    painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow1());
     int index = 0;
     wm.for_each_active_menubar_menu([&](WSMenu& menu) {
-        Color text_color = SystemColor::WindowText;
+        Color text_color = palette.window_text();
         if (is_open(menu)) {
-            painter.fill_rect(menu.rect_in_menubar(), SystemColor::MenuSelection);
-            painter.draw_rect(menu.rect_in_menubar(), Color(SystemColor::MenuSelection).darkened());
+            painter.fill_rect(menu.rect_in_menubar(), palette.menu_selection());
+            painter.draw_rect(menu.rect_in_menubar(), palette.menu_selection().darkened());
             text_color = Color::White;
         }
         painter.draw_text(
@@ -103,7 +104,7 @@ void WSMenuManager::draw()
         return IterationDecision::Continue;
     });
 
-    painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, SystemColor::WindowText);
+    painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, palette.window_text());
 
     time_t now = time(nullptr);
     auto* tm = localtime(&now);
@@ -115,7 +116,7 @@ void WSMenuManager::draw()
         tm->tm_min,
         tm->tm_sec);
 
-    painter.draw_text(m_time_rect, time_text, wm.font(), TextAlignment::CenterRight, SystemColor::WindowText);
+    painter.draw_text(m_time_rect, time_text, wm.font(), TextAlignment::CenterRight, palette.window_text());
 
     for (auto& applet : m_applets) {
         if (!applet)

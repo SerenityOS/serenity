@@ -1,5 +1,6 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GDragOperation.h>
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GModel.h>
@@ -186,12 +187,13 @@ void GItemView::doubleclick_event(GMouseEvent& event)
 
 void GItemView::paint_event(GPaintEvent& event)
 {
+    Color widget_background_color = palette().color(background_role());
     GFrame::paint_event(event);
 
     GPainter painter(*this);
     painter.add_clip_rect(widget_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), SystemColor::Base);
+    painter.fill_rect(event.rect(), widget_background_color);
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
     auto column_metadata = model()->column_metadata(m_model_column);
@@ -201,9 +203,9 @@ void GItemView::paint_event(GPaintEvent& event)
         bool is_selected_item = selection().contains(model()->index(item_index, m_model_column));
         Color background_color;
         if (is_selected_item) {
-            background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
         } else {
-            background_color = SystemColor::Base;
+            background_color = widget_background_color;
         }
 
         Rect item_rect = this->item_rect(item_index);
@@ -228,9 +230,9 @@ void GItemView::paint_event(GPaintEvent& event)
 
         Color text_color;
         if (is_selected_item)
-            text_color = SystemColor::SelectionText;
+            text_color = palette().selection_text();
         else
-            text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
+            text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(palette().color(foreground_role()));
         painter.fill_rect(text_rect, background_color);
         painter.draw_text(text_rect, item_text.to_string(), font, TextAlignment::Center, text_color, TextElision::Right);
     };

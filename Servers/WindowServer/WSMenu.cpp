@@ -126,6 +126,7 @@ WSWindow& WSMenu::ensure_menu_window()
 
 void WSMenu::draw()
 {
+    auto& palette = WSWindowManager::the().palette();
     m_theme_index_at_last_paint = WSWindowManager::the().theme_index();
 
     ASSERT(menu_window());
@@ -133,8 +134,8 @@ void WSMenu::draw()
     Painter painter(*menu_window()->backing_store());
 
     Rect rect { {}, menu_window()->size() };
-    painter.fill_rect(rect.shrunken(6, 6), SystemColor::MenuBase);
-    StylePainter::paint_window_frame(painter, rect);
+    painter.fill_rect(rect.shrunken(6, 6), palette.menu_base());
+    StylePainter::paint_window_frame(painter, rect, palette);
     int width = this->width();
 
     if (!s_checked_bitmap)
@@ -148,15 +149,15 @@ void WSMenu::draw()
     }
 
     Rect stripe_rect { frame_thickness(), frame_thickness(), s_stripe_width, height() - frame_thickness() * 2 };
-    painter.fill_rect(stripe_rect, SystemColor::MenuStripe);
-    painter.draw_line(stripe_rect.top_right(), stripe_rect.bottom_right(), Color(SystemColor::MenuStripe).darkened());
+    painter.fill_rect(stripe_rect, palette.menu_stripe());
+    painter.draw_line(stripe_rect.top_right(), stripe_rect.bottom_right(), palette.menu_stripe().darkened());
 
     for (auto& item : m_items) {
         if (item.type() == WSMenuItem::Text) {
-            Color text_color = SystemColor::WindowText;
+            Color text_color = palette.window_text();
             if (&item == m_hovered_item && item.is_enabled()) {
-                painter.fill_rect(item.rect(), SystemColor::MenuSelection);
-                painter.draw_rect(item.rect(), Color(SystemColor::MenuSelection).darkened());
+                painter.fill_rect(item.rect(), palette.menu_selection());
+                painter.draw_rect(item.rect(), palette.menu_selection().darkened());
                 text_color = Color::White;
             } else if (!item.is_enabled()) {
                 text_color = Color::MidGray;
@@ -166,10 +167,10 @@ void WSMenu::draw()
                 Rect checkmark_rect { item.rect().x() + 7, 0, s_checked_bitmap_width, s_checked_bitmap_height };
                 checkmark_rect.center_vertically_within(text_rect);
                 Rect checkbox_rect = checkmark_rect.inflated(4, 4);
-                painter.fill_rect(checkbox_rect, SystemColor::Base);
-                StylePainter::paint_frame(painter, checkbox_rect, FrameShape::Container, FrameShadow::Sunken, 2);
+                painter.fill_rect(checkbox_rect, palette.base());
+                StylePainter::paint_frame(painter, checkbox_rect, palette, FrameShape::Container, FrameShadow::Sunken, 2);
                 if (item.is_checked()) {
-                    painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, SystemColor::ButtonText);
+                    painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, palette.button_text());
                 }
             } else if (item.icon()) {
                 Rect icon_rect { item.rect().x() + 3, 0, s_item_icon_width, s_item_icon_width };
@@ -189,13 +190,13 @@ void WSMenu::draw()
                     s_submenu_arrow_bitmap_height
                 };
                 submenu_arrow_rect.center_vertically_within(item.rect());
-                painter.draw_bitmap(submenu_arrow_rect.location(), submenu_arrow_bitmap, SystemColor::WindowText);
+                painter.draw_bitmap(submenu_arrow_rect.location(), submenu_arrow_bitmap, palette.window_text());
             }
         } else if (item.type() == WSMenuItem::Separator) {
             Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y() - 1);
             Point p2(width - 7, item.rect().center().y() - 1);
-            painter.draw_line(p1, p2, SystemColor::ThreedShadow1);
-            painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), SystemColor::ThreedHighlight);
+            painter.draw_line(p1, p2, palette.threed_shadow1());
+            painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), palette.threed_highlight());
         }
     }
 }

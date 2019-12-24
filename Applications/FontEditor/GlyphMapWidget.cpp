@@ -1,4 +1,5 @@
 #include "GlyphMapWidget.h"
+#include <LibDraw/Palette.h>
 #include <LibGUI/GPainter.h>
 
 GlyphMapWidget::GlyphMapWidget(Font& mutable_font, GWidget* parent)
@@ -74,7 +75,7 @@ void GlyphMapWidget::paint_event(GPaintEvent& event)
                 font().max_glyph_width(),
                 font().glyph_height());
             if (glyph == m_selected_glyph) {
-                painter.fill_rect(outer_rect, SystemColor::Selection);
+                painter.fill_rect(outer_rect, palette().selection());
                 painter.draw_glyph(inner_rect.location(), glyph, Color::White);
             } else {
                 painter.draw_glyph(inner_rect.location(), glyph, Color::Black);

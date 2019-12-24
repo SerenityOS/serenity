@@ -1,5 +1,6 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GModel.h>
@@ -12,6 +13,7 @@
 GTableView::GTableView(GWidget* parent)
     : GAbstractColumnView(parent)
 {
+    set_background_role(ColorRole::Base);
 }
 
 GTableView::~GTableView()
@@ -20,12 +22,13 @@ GTableView::~GTableView()
 
 void GTableView::paint_event(GPaintEvent& event)
 {
+    Color widget_background_color = palette().color(background_role());
     GFrame::paint_event(event);
 
     GPainter painter(*this);
     painter.add_clip_rect(frame_inner_rect());
     painter.add_clip_rect(event.rect());
-    painter.fill_rect(event.rect(), SystemColor::Base);
+    painter.fill_rect(event.rect(), widget_background_color);
     painter.translate(frame_thickness(), frame_thickness());
     painter.translate(-horizontal_scrollbar().value(), -vertical_scrollbar().value());
 
@@ -53,15 +56,15 @@ void GTableView::paint_event(GPaintEvent& event)
         Color background_color;
         Color key_column_background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
-            key_column_background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
+            key_column_background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
         } else {
             if (alternating_row_colors() && (painted_item_index % 2)) {
-                background_color = Color(SystemColor::Base).darkened(0.8f);
-                key_column_background_color = Color(SystemColor::Base).darkened(0.7f);
+                background_color = widget_background_color.darkened(0.8f);
+                key_column_background_color = widget_background_color.darkened(0.7f);
             } else {
-                background_color = SystemColor::Base;
-                key_column_background_color = Color(SystemColor::Base).darkened(0.9f);
+                background_color = widget_background_color;
+                key_column_background_color = widget_background_color.darkened(0.9f);
             }
         }
         painter.fill_rect(row_rect(painted_item_index), background_color);
@@ -82,7 +85,7 @@ void GTableView::paint_event(GPaintEvent& event)
             auto cell_index = model()->index(row_index, column_index);
 
             if (auto* delegate = column_data(column_index).cell_painting_delegate.ptr()) {
-                delegate->paint(painter, cell_rect, *model(), cell_index);
+                delegate->paint(painter, cell_rect, palette(), *model(), cell_index);
             } else {
                 auto data = model()->data(cell_index);
                 if (data.is_bitmap()) {
@@ -93,9 +96,9 @@ void GTableView::paint_event(GPaintEvent& event)
                 } else {
                     Color text_color;
                     if (is_selected_row)
-                        text_color = SystemColor::SelectionText;
+                        text_color = palette().selection_text();
                     else
-                        text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
+                        text_color = model()->data(cell_index, GModel::Role::ForegroundColor).to_color(palette().color(foreground_role()));
                     painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
                 }
             }
@@ -105,7 +108,7 @@ void GTableView::paint_event(GPaintEvent& event)
     };
 
     Rect unpainted_rect(0, header_height() + painted_item_index * item_height(), exposed_width, height());
-    painter.fill_rect(unpainted_rect, SystemColor::Base);
+    painter.fill_rect(unpainted_rect, widget_background_color);
 
     // Untranslate the painter vertically and do the column headers.
     painter.translate(0, vertical_scrollbar().value());
