@@ -27,6 +27,7 @@ enum class ColorRole {
     Button,
     ButtonText,
     Base,
+    BaseText,
     ThreedHighlight,
     ThreedShadow1,
     ThreedShadow2,

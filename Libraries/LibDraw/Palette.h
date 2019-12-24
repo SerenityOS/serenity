@@ -31,6 +31,7 @@ public:
     Color menu_base() const { return color(ColorRole::MenuBase); }
     Color menu_selection() const { return color(ColorRole::MenuSelection); }
     Color base() const { return color(ColorRole::Base); }
+    Color base_text() const { return color(ColorRole::BaseText); }
     Color button() const { return color(ColorRole::Button); }
     Color button_text() const { return color(ColorRole::ButtonText); }
     Color threed_highlight() const { return color(ColorRole::ThreedHighlight); }

@@ -26,6 +26,8 @@ GTextEditor::GTextEditor(Type type, GWidget* parent)
     : GScrollableWidget(parent)
     , m_type(type)
 {
+    set_background_role(ColorRole::Base);
+    set_foreground_role(ColorRole::BaseText);
     set_document(GTextDocument::create());
     set_frame_shape(FrameShape::Container);
     set_frame_shadow(FrameShadow::Sunken);

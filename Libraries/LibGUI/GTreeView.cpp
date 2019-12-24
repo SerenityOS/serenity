@@ -25,6 +25,7 @@ GTreeView::GTreeView(GWidget* parent)
     : GAbstractColumnView(parent)
 {
     set_background_role(ColorRole::Base);
+    set_foreground_role(ColorRole::BaseText);
     set_size_columns_to_fit_content(true);
     set_headers_visible(false);
     m_expand_bitmap = GraphicsBitmap::load_from_file("/res/icons/treeview-expand.png");
