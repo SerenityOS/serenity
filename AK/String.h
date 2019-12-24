@@ -93,8 +93,10 @@ public:
     bool matches(const StringView& pattern, CaseSensitivity = CaseSensitivity::CaseInsensitive) const;
 
     // FIXME: These should be shared between String and StringView somehow!
-    int to_int(bool& ok) const;
-    unsigned to_uint(bool& ok) const;
+    int to_int(bool& ok, int default_value = 0) const;
+    unsigned to_uint(bool& ok, unsigned default_value = 0) const;
+    bool to_int(int& result) const;
+    bool to_uint(unsigned& result) const;
 
     String to_lowercase() const
     {

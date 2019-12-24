@@ -163,7 +163,7 @@ ByteBuffer String::to_byte_buffer() const
     return ByteBuffer::copy(reinterpret_cast<const u8*>(characters()), length());
 }
 
-int String::to_int(bool& ok) const
+int String::to_int(bool& ok, int default_value) const
 {
     bool negative = false;
     int value = 0;
@@ -171,7 +171,7 @@ int String::to_int(bool& ok) const
 
     if (is_empty()) {
         ok = false;
-        return 0;
+        return default_value;
     }
 
     if (characters()[0] == '-') {
@@ -181,7 +181,7 @@ int String::to_int(bool& ok) const
     for (; i < length(); i++) {
         if (characters()[i] < '0' || characters()[i] > '9') {
             ok = false;
-            return 0;
+            return default_value;
         }
         value = value * 10;
         value += characters()[i] - '0';
@@ -191,19 +191,35 @@ int String::to_int(bool& ok) const
     return negative ? -value : value;
 }
 
-unsigned String::to_uint(bool& ok) const
+unsigned String::to_uint(bool& ok, unsigned default_value) const
 {
     unsigned value = 0;
     for (size_t i = 0; i < length(); ++i) {
         if (characters()[i] < '0' || characters()[i] > '9') {
             ok = false;
-            return 0;
+            return default_value;
         }
         value = value * 10;
         value += characters()[i] - '0';
     }
     ok = true;
     return value;
+}
+
+bool String::to_int(int& result) const
+{
+    bool ok = false;
+    result = to_int(ok);
+
+    return ok;
+}
+
+bool String::to_uint(unsigned& result) const
+{
+    bool ok = false;
+    result = to_uint(ok);
+
+    return ok;
 }
 
 String String::number(u64 value)
