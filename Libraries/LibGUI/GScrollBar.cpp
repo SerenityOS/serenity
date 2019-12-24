@@ -203,14 +203,14 @@ void GScrollBar::paint_event(GPaintEvent& event)
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    painter.fill_rect(rect(), Color::from_rgb(0xd6d2ce));
+    painter.fill_rect(rect(), Color(SystemColor::Button).lightened());
 
     StylePainter::paint_button(painter, decrement_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::DecrementButton);
     StylePainter::paint_button(painter, increment_button_rect(), ButtonStyle::Normal, false, m_hovered_component == Component::IncrementButton);
 
     if (length(orientation()) > default_button_size()) {
-        painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? SystemColor::Text : SystemColor::DisabledText);
-        painter.draw_bitmap(increment_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? SystemColor::Text : SystemColor::DisabledText);
+        painter.draw_bitmap(decrement_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_up_arrow_bitmap : *s_left_arrow_bitmap, has_scrubber() ? SystemColor::ButtonText : SystemColor::DisabledText);
+        painter.draw_bitmap(increment_button_rect().location().translated(3, 3), orientation() == Orientation::Vertical ? *s_down_arrow_bitmap : *s_right_arrow_bitmap, has_scrubber() ? SystemColor::ButtonText : SystemColor::DisabledText);
     }
 
     if (has_scrubber())

@@ -178,7 +178,7 @@ void GTreeView::paint_event(GPaintEvent& event)
 
         bool is_selected_row = selection().contains(index);
 
-        Color text_color = SystemColor::Text;
+        Color text_color = SystemColor::WindowText;
         if (is_selected_row)
             text_color = Color::White;
 
@@ -226,7 +226,7 @@ void GTreeView::paint_event(GPaintEvent& event)
                             painter.blit(cell_rect.location(), *bitmap, bitmap->rect());
                     } else {
                         if (!is_selected_row)
-                            text_color = model.data(cell_index, GModel::Role::ForegroundColor).to_color(SystemColor::Text);
+                            text_color = model.data(cell_index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
                         painter.draw_text(cell_rect, data.to_string(), font, column_metadata.text_alignment, text_color, TextElision::Right);
                     }
                 }

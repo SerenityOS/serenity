@@ -11,8 +11,8 @@ Color::Color(SystemColor system_color)
     case SystemColor::Window:
         m_value = theme.window.value();
         break;
-    case SystemColor::Text:
-        m_value = theme.text.value();
+    case SystemColor::WindowText:
+        m_value = theme.window_text.value();
         break;
     case SystemColor::Base:
         m_value = theme.base.value();
@@ -25,6 +25,12 @@ Color::Color(SystemColor system_color)
         break;
     case SystemColor::ThreedHighlight:
         m_value = theme.threed_highlight.value();
+        break;
+    case SystemColor::Button:
+        m_value = theme.button.value();
+        break;
+    case SystemColor::ButtonText:
+        m_value = theme.button_text.value();
         break;
     case SystemColor::HoverHighlight:
         m_value = theme.hover_highlight.value();

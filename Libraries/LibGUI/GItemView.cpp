@@ -230,7 +230,7 @@ void GItemView::paint_event(GPaintEvent& event)
         if (is_selected_item)
             text_color = Color::White;
         else
-            text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(SystemColor::Text);
+            text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
         painter.fill_rect(text_rect, background_color);
         painter.draw_text(text_rect, item_text.to_string(), font, TextAlignment::Center, text_color, TextElision::Right);
     };

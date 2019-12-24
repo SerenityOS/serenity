@@ -153,7 +153,7 @@ void WSMenu::draw()
 
     for (auto& item : m_items) {
         if (item.type() == WSMenuItem::Text) {
-            Color text_color = Color::Black;
+            Color text_color = SystemColor::WindowText;
             if (&item == m_hovered_item && item.is_enabled()) {
                 painter.fill_rect(item.rect(), SystemColor::MenuSelection);
                 painter.draw_rect(item.rect(), Color(SystemColor::MenuSelection).darkened());
@@ -169,7 +169,7 @@ void WSMenu::draw()
                 painter.fill_rect(checkbox_rect, SystemColor::Base);
                 StylePainter::paint_frame(painter, checkbox_rect, FrameShape::Container, FrameShadow::Sunken, 2);
                 if (item.is_checked()) {
-                    painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, SystemColor::Text);
+                    painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, SystemColor::ButtonText);
                 }
             } else if (item.icon()) {
                 Rect icon_rect { item.rect().x() + 3, 0, s_item_icon_width, s_item_icon_width };
@@ -189,13 +189,13 @@ void WSMenu::draw()
                     s_submenu_arrow_bitmap_height
                 };
                 submenu_arrow_rect.center_vertically_within(item.rect());
-                painter.draw_bitmap(submenu_arrow_rect.location(), submenu_arrow_bitmap, Color::Black);
+                painter.draw_bitmap(submenu_arrow_rect.location(), submenu_arrow_bitmap, SystemColor::WindowText);
             }
         } else if (item.type() == WSMenuItem::Separator) {
             Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y() - 1);
             Point p2(width - 7, item.rect().center().y() - 1);
-            painter.draw_line(p1, p2, Color::MidGray);
-            painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), Color::White);
+            painter.draw_line(p1, p2, SystemColor::ThreedShadow1);
+            painter.draw_line(p1.translated(0, 1), p2.translated(0, 1), SystemColor::ThreedHighlight);
         }
     }
 }
