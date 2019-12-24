@@ -11,6 +11,7 @@
 //#define VFS_DEBUG
 
 static VFS* s_the;
+static constexpr int symlink_recursion_limit { 5 }; // FIXME: increase?
 
 VFS& VFS::the()
 {
@@ -615,7 +616,6 @@ InodeIdentifier VFS::Mount::host() const
     return m_host_custody->inode().identifier();
 }
 
-
 void VFS::for_each_mount(Function<void(const Mount&)> callback) const
 {
     for (auto& mount : m_mounts) {
@@ -635,10 +635,12 @@ Custody& VFS::root_custody()
     return *m_root_custody;
 }
 
-KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* parent_custody, int options)
+KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* parent_custody, int options, int symlink_recursion_level)
 {
     // FIXME: resolve_path currently doesn't deal with .. and . . If path is ../. and base is /home/anon, it returns
     //        /home/anon/../. instead of /home .
+    if (symlink_recursion_level >= symlink_recursion_limit)
+        return KResult(-ELOOP);
 
     if (path.is_empty())
         return KResult(-EINVAL);
@@ -712,13 +714,8 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
             if (!symlink_contents)
                 return KResult(-ENOENT);
 
-            // FIXME: We should limit the recursion here and return -ELOOP if it goes to deep.
-            auto symlink_target = resolve_path(
-                StringView(symlink_contents.data(),
-                    symlink_contents.size()),
-                current_parent,
-                parent_custody,
-                options);
+            auto symlink_path = StringView(symlink_contents.data(), symlink_contents.size());
+            auto symlink_target = resolve_path(symlink_path, current_parent, parent_custody, options, symlink_recursion_level + 1);
 
             if (symlink_target.is_error())
                 return symlink_target;
@@ -731,7 +728,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
                 return symlink_target;
 
             StringView remaining_path = path.substring_view_starting_from_substring(parts[i + 1]);
-            return resolve_path(remaining_path, *symlink_target.value(), parent_custody, options);
+            return resolve_path(remaining_path, *symlink_target.value(), parent_custody, options, symlink_recursion_level + 1);
         }
     }
     return custody_chain.last();
