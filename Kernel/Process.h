@@ -255,7 +255,7 @@ public:
     u32 m_ticks_in_user_for_dead_children { 0 };
     u32 m_ticks_in_kernel_for_dead_children { 0 };
 
-    bool validate_read_from_kernel(VirtualAddress) const;
+    bool validate_read_from_kernel(VirtualAddress, ssize_t) const;
 
     bool validate_read(const void*, ssize_t) const;
     bool validate_write(void*, ssize_t) const;
