@@ -138,14 +138,14 @@ public:
         return Color(gray, gray, gray, alpha());
     }
 
-    Color darkened(float amount = 0.5) const
+    Color darkened(float amount = 0.5f) const
     {
         return Color(red() * amount, green() * amount, blue() * amount, alpha());
     }
 
-    Color lightened() const
+    Color lightened(float amount = 1.2f) const
     {
-        return Color(min(255.0, red() * 1.2), min(255.0, green() * 1.2), min(255.0, blue() * 1.2), alpha());
+        return Color(min(255, (int)((float)red() * amount)), min(255, (int)((float)green() * amount)), min(255, (int)((float)blue() * amount)), alpha());
     }
 
     Color inverted() const
