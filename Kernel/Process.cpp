@@ -1896,7 +1896,7 @@ static KernelMemoryCheckResult check_kernel_memory_access(VirtualAddress vaddr, 
     return KernelMemoryCheckResult::NotInsideKernelMemory;
 }
 
-bool Process::validate_read_from_kernel(VirtualAddress vaddr) const
+bool Process::validate_read_from_kernel(VirtualAddress vaddr, ssize_t size) const
 {
     if (vaddr.is_null())
         return false;
@@ -1909,7 +1909,7 @@ bool Process::validate_read_from_kernel(VirtualAddress vaddr) const
         return false;
     if (is_kmalloc_address(vaddr.as_ptr()))
         return true;
-    return validate_read(vaddr.as_ptr(), 1);
+    return validate_read(vaddr.as_ptr(), size);
 }
 
 bool Process::validate_read_str(const char* str)

@@ -708,7 +708,7 @@ String Thread::backtrace_impl() const
     StringBuilder builder;
     Vector<RecognizedSymbol, 64> recognized_symbols;
     recognized_symbols.append({ tss().eip, ksymbolicate(tss().eip) });
-    for (u32* stack_ptr = (u32*)frame_ptr(); process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+    for (u32* stack_ptr = (u32*)frame_ptr(); process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2); stack_ptr = (u32*)*stack_ptr) {
         u32 retaddr = stack_ptr[1];
         recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
     }
@@ -738,7 +738,7 @@ Vector<u32> Thread::raw_backtrace(u32 ebp) const
     ProcessPagingScope paging_scope(process);
     Vector<u32> backtrace;
     backtrace.append(ebp);
-    for (u32* stack_ptr = (u32*)ebp; process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr)); stack_ptr = (u32*)*stack_ptr) {
+    for (u32* stack_ptr = (u32*)ebp; process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2); stack_ptr = (u32*)*stack_ptr) {
         u32 retaddr = stack_ptr[1];
         backtrace.append(retaddr);
     }
