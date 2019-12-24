@@ -201,7 +201,7 @@ void GItemView::paint_event(GPaintEvent& event)
         bool is_selected_item = selection().contains(model()->index(item_index, m_model_column));
         Color background_color;
         if (is_selected_item) {
-            background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
+            background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
         } else {
             background_color = SystemColor::Base;
         }
@@ -228,7 +228,7 @@ void GItemView::paint_event(GPaintEvent& event)
 
         Color text_color;
         if (is_selected_item)
-            text_color = Color::White;
+            text_color = SystemColor::SelectionText;
         else
             text_color = model()->data(model_index, GModel::Role::ForegroundColor).to_color(SystemColor::WindowText);
         painter.fill_rect(text_rect, background_color);

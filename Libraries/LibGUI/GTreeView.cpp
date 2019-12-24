@@ -185,8 +185,8 @@ void GTreeView::paint_event(GPaintEvent& event)
         Color background_color;
         Color key_column_background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
-            key_column_background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
+            background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
+            key_column_background_color = is_focused() ? Color(SystemColor::Selection) : Color::from_rgb(0x606060);
         } else {
             if (alternating_row_colors() && (painted_row_index % 2)) {
                 background_color = Color(220, 220, 220);

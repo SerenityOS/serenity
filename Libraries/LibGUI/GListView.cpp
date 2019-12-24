@@ -104,7 +104,7 @@ void GListView::paint_event(GPaintEvent& event)
 
         Color background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? Color::from_rgb(0x84351a) : Color::from_rgb(0x606060);
+            background_color = is_focused() ? Color(SystemColor::SelectionText) : Color::from_rgb(0x606060);
         } else {
             if (alternating_row_colors() && (painted_item_index % 2))
                 background_color = Color(210, 210, 210);

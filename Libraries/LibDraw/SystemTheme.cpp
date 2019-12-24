@@ -46,6 +46,8 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     data->threed_shadow1 = get("ThreedShadow1");
     data->threed_shadow2 = get("ThreedShadow2");
     data->hover_highlight = get("HoverHighlight");
+    data->selection = get("Selection");
+    data->selection_text = get("SelectionText");
     data->window = get("Window");
     data->window_text = get("WindowText");
     data->base = get("Base");

@@ -37,6 +37,8 @@ enum class SystemColor {
     ThreedShadow1,
     ThreedShadow2,
     HoverHighlight,
+    Selection,
+    SelectionText,
 
     DisabledText = ThreedShadow1,
 };

@@ -71,8 +71,8 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 void WSWindowSwitcher::draw()
 {
     Painter painter(*m_switcher_window->backing_store());
-    painter.fill_rect({ {}, m_rect.size() }, Color::WarmGray);
-    painter.draw_rect({ {}, m_rect.size() }, Color::DarkGray);
+    painter.fill_rect({ {}, m_rect.size() }, SystemColor::Window);
+    painter.draw_rect({ {}, m_rect.size() }, SystemColor::ThreedShadow2);
     for (int index = 0; index < m_windows.size(); ++index) {
         auto& window = *m_windows.at(index);
         Rect item_rect {
@@ -84,12 +84,12 @@ void WSWindowSwitcher::draw()
         Color text_color;
         Color rect_text_color;
         if (index == m_selected_index) {
-            painter.fill_rect(item_rect, Color::from_rgb(0x84351a));
-            text_color = Color::White;
-            rect_text_color = Color::WarmGray;
+            painter.fill_rect(item_rect, SystemColor::Selection);
+            text_color = SystemColor::SelectionText;
+            rect_text_color = SystemColor::ThreedShadow1;
         } else {
-            text_color = Color::Black;
-            rect_text_color = Color::MidGray;
+            text_color = SystemColor::WindowText;
+            rect_text_color = SystemColor::ThreedShadow2;
         }
         item_rect.shrink(item_padding(), 0);
         Rect thumbnail_rect = { item_rect.location().translated(0, 5), { thumbnail_width(), thumbnail_height() } };
@@ -98,7 +98,7 @@ void WSWindowSwitcher::draw()
             StylePainter::paint_frame(painter, thumbnail_rect.inflated(4, 4), FrameShape::Container, FrameShadow::Sunken, 2);
         }
         Rect icon_rect = { thumbnail_rect.bottom_right().translated(-window.icon().width(), -window.icon().height()), { window.icon().width(), window.icon().height() } };
-        painter.fill_rect(icon_rect, Color::WarmGray);
+        painter.fill_rect(icon_rect, SystemColor::Window);
         painter.blit(icon_rect.location(), window.icon(), window.icon().rect());
         painter.draw_text(item_rect.translated(thumbnail_width() + 12, 0), window.title(), WSWindowManager::the().window_title_font(), TextAlignment::CenterLeft, text_color);
         painter.draw_text(item_rect, window.rect().to_string(), TextAlignment::CenterRight, rect_text_color);
