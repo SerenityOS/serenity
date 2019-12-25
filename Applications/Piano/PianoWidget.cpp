@@ -6,9 +6,6 @@
 
 PianoWidget::PianoWidget()
 {
-    m_front_buffer = new Sample[2048];
-    m_back_buffer = new Sample[2048];
-
     set_font(Font::default_fixed_width_font());
 }
 
