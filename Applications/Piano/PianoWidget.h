@@ -57,8 +57,10 @@ private:
     int octave_base() const;
 
     int m_sample_count { 0 };
-    Sample* m_front_buffer { nullptr };
-    Sample* m_back_buffer { nullptr };
+    Sample m_front[2048] { 0, 0 };
+    Sample m_back[2048] { 0, 0 };
+    Sample* m_front_buffer { m_front };
+    Sample* m_back_buffer { m_back };
 
 #define note_count sizeof(note_frequency) / sizeof(double)
 
