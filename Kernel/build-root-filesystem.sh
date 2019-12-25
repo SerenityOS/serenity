@@ -24,7 +24,8 @@ echo "done"
 printf "setting up device nodes... "
 mkdir -p mnt/dev
 mkdir -p mnt/dev/pts
-mknod -m 666 mnt/dev/fb0 b 29 0
+mknod mnt/dev/fb0 b 29 0
+chmod 666 mnt/dev/fb0
 mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
@@ -33,15 +34,23 @@ mknod mnt/dev/ttyS0 c 4 64
 mknod mnt/dev/ttyS1 c 4 65
 mknod mnt/dev/ttyS2 c 4 66
 mknod mnt/dev/ttyS3 c 4 67
-mknod -m 666 mnt/dev/random c 1 8
-mknod -m 666 mnt/dev/null c 1 3
-mknod -m 666 mnt/dev/zero c 1 5
-mknod -m 666 mnt/dev/full c 1 7
-mknod -m 666 mnt/dev/debuglog c 1 18
+mknod mnt/dev/random c 1 8
+mknod mnt/dev/null c 1 3
+mknod mnt/dev/zero c 1 5
+mknod mnt/dev/full c 1 7
+mknod mnt/dev/debuglog c 1 18
+# random, is failing (randomly) on fuse-ext2 on macos :)
+chmod 666 mnt/dev/random || true 
+chmod 666 mnt/dev/null
+chmod 666 mnt/dev/zero
+chmod 666 mnt/dev/full
+chmod 666 mnt/dev/debuglog
 mknod mnt/dev/keyboard c 85 1
 mknod mnt/dev/psaux c 10 1
-mknod -m 666 mnt/dev/audio c 42 42
-mknod -m 666 mnt/dev/ptmx c 5 2
+mknod mnt/dev/audio c 42 42
+mknod mnt/dev/ptmx c 5 2
+chmod 666 mnt/dev/audio
+chmod 666 mnt/dev/ptmx
 mknod mnt/dev/hda b 3 0
 mknod mnt/dev/hdb b 3 1
 mknod mnt/dev/hdc b 4 0
@@ -66,7 +75,12 @@ chown -R 200:200 mnt/home/nona
 echo "done"
 
 printf "installing userland... "
+
+if [ "$(uname)" != "Darwin" ]; then
 find ../Userland/ -type f -executable -exec cp {} mnt/bin/ \;
+else
+find ../Userland/ -type f -perm +111 -exec cp {} mnt/bin/ \;
+fi
 chmod 4755 mnt/bin/su
 echo "done"
 

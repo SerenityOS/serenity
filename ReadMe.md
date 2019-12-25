@@ -64,6 +64,7 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 
 ## How do I build and run this?
 
+### Linux prerequisites
 Make sure you have all the dependencies installed:
 
 ```bash
@@ -77,6 +78,30 @@ sudo apt-get install gcc-8 g++-8
 sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
 ```
 
+### macOS prerequisites
+Make sure you have all the dependencies installed:
+```bash
+brew install coreutils
+brew install qemu
+brew install wget
+brew install e2fsprogs
+brew install m4
+brew install autoconf
+brew install libtool
+brew install automake
+brew cask install osxfuse
+Toolchain/BuildFuseExt2.sh
+```
+
+Notes: 
+- fuse-ext2 is not available as brew formula so it must be installed using `BuildFuseExt2.sh`
+- Xcode and `xcode-tools` must be installed (`git` is required by some scripts)
+- coreutils is needed to build gcc cross compiler
+- qemu is needed to run the compiled OS image. You can also build it using the `BuildQemu.sh` script
+- osxfuse, e2fsprogs, m4, autoconf, automake, libtool and `BuildFuseExt2.sh` are needed if you want to build the root filesystem disk image natively on macOS. This allows mounting an EXT2 fs and also installs commands like `mke2fs` that are not available on stock macOS. 
+- If you install some commercial EXT2 macOS fs handler instead of osxfuse and fuse-ext2, you will need to `brew install e2fsprogs` to obtain `mke2fs` anyway.
+
+### Build
 Go into the `Toolchain/` directory and run the **BuildIt.sh** script.
 
 Once you've built the toolchain, go into the `Kernel/` directory, then run
