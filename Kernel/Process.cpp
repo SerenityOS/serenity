@@ -235,6 +235,9 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     if ((flags & MAP_SHARED) && (flags & MAP_PRIVATE))
         return (void*)-EINVAL;
 
+    if ((prot & PROT_WRITE) && (prot & PROT_EXEC))
+        return (void*)-EINVAL;
+
     // EINVAL: MAP_STACK cannot be used with shared or file-backed mappings
     if ((flags & MAP_STACK) && ((flags & MAP_SHARED) || !(flags & MAP_PRIVATE) || !(flags & MAP_ANONYMOUS)))
         return (void*)-EINVAL;
@@ -338,8 +341,11 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         return -EINVAL;
     if (!region->is_mmap())
         return -EPERM;
+    if ((prot & PROT_WRITE) && (prot & PROT_EXEC))
+        return -EINVAL;
     region->set_readable(prot & PROT_READ);
     region->set_writable(prot & PROT_WRITE);
+    region->set_executable(prot & PROT_EXEC);
     region->remap();
     return 0;
 }
