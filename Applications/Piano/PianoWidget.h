@@ -62,7 +62,7 @@ private:
 
 #define note_count sizeof(note_frequency) / sizeof(double)
 
-    u8 m_note_on[note_count];
+    u8 m_note_on[note_count] { 0 };
     double m_power[note_count];
     double m_sin_pos[note_count];
     double m_square_pos[note_count];
