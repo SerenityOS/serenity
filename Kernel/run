@@ -18,6 +18,7 @@ cd "$script_path"
 [ -z "$SERENITY_COMMON_QEMU_ARGS" ] && SERENITY_COMMON_QEMU_ARGS="
 $SERENITY_EXTRA_QEMU_ARGS
 -s -m $SERENITY_RAM_SIZE
+-cpu max
 -d cpu_reset,guest_errors 
 -device VGA,vgamem_mb=64
 -hda _disk_image
