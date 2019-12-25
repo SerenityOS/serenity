@@ -10,3 +10,7 @@ configopts="-DCMAKE_TOOLCHAIN_FILE=$SERENITY_ROOT/Toolchain/CMakeToolchain.txt -
 configure() {
     run cmake $configopts
 }
+
+install() {
+    run make install
+}
