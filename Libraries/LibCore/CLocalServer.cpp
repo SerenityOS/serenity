@@ -5,6 +5,9 @@
 #include <sys/socket.h>
 #include <sys/stat.h>
 #include <unistd.h>
+#ifndef SOCK_NONBLOCK
+#include <sys/ioctl.h>
+#endif
 
 CLocalServer::CLocalServer(CObject* parent)
     : CObject(parent)
@@ -71,7 +74,14 @@ bool CLocalServer::listen(const String& address)
 
     int rc;
 
+#ifdef SOCK_NONBLOCK
     m_fd = socket(AF_LOCAL, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
+#else
+    m_fd = socket(AF_LOCAL, SOCK_STREAM, 0);
+    int option = 1;
+    ioctl(m_fd, FIONBIO, &option);
+    fcntl(m_fd, F_SETFD, FD_CLOEXEC);
+#endif
     ASSERT(m_fd >= 0);
 
     auto socket_address = CSocketAddress::local(address);
