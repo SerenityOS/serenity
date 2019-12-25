@@ -219,6 +219,25 @@ int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
     return 0;
 }
 
+static bool validate_mmap_prot(int prot, bool map_stack)
+{
+    bool readable = prot & PROT_READ;
+    bool writable = prot & PROT_WRITE;
+    bool executable = prot & PROT_EXEC;
+
+    if (writable && executable)
+        return false;
+
+    if (map_stack) {
+        if (executable)
+            return false;
+        if (!readable || !writable)
+            return false;
+    }
+
+    return true;
+}
+
 void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 {
     if (!validate_read(params, sizeof(Syscall::SC_mmap_params)))
@@ -228,62 +247,60 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 
     if (name && !validate_read_str(name))
         return (void*)-EFAULT;
+
     if (size == 0)
         return (void*)-EINVAL;
     if ((u32)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
-    if ((flags & MAP_SHARED) && (flags & MAP_PRIVATE))
+
+    bool map_shared = flags & MAP_SHARED;
+    bool map_anonymous = flags & MAP_ANONYMOUS;
+    bool map_purgeable = flags & MAP_PURGEABLE;
+    bool map_private = flags & MAP_PRIVATE;
+    bool map_stack = flags & MAP_STACK;
+
+    if (map_shared && map_private)
         return (void*)-EINVAL;
 
-    if ((prot & PROT_WRITE) && (prot & PROT_EXEC))
+    if (!map_shared && !map_private)
         return (void*)-EINVAL;
 
-    // EINVAL: MAP_STACK cannot be used with shared or file-backed mappings
-    if ((flags & MAP_STACK) && ((flags & MAP_SHARED) || !(flags & MAP_PRIVATE) || !(flags & MAP_ANONYMOUS)))
+    if (!validate_mmap_prot(prot, map_stack))
         return (void*)-EINVAL;
 
-    // EINVAL: MAP_STACK cannot be used with non-readable or non-writable memory
-    if ((flags & MAP_STACK) && (!(prot & PROT_READ) || !(prot & PROT_WRITE)))
+    if (map_stack && (!map_private || !map_anonymous))
         return (void*)-EINVAL;
 
-    // FIXME: The rest of this function seems like it could share more code..
-    if (flags & MAP_PURGEABLE) {
+    Region* region = nullptr;
+
+    if (map_purgeable) {
         auto vmobject = PurgeableVMObject::create_with_size(size);
-        auto* region = allocate_region_with_vmobject(VirtualAddress((u32)addr), size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
-        if (!region)
-            return (void*)-ENOMEM;
-        if (flags & MAP_SHARED)
-            region->set_shared(true);
-
-        region->set_mmap(true);
-        return region->vaddr().as_ptr();
+        region = allocate_region_with_vmobject(VirtualAddress((u32)addr), size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
+    } else if (map_anonymous) {
+        region = allocate_region(VirtualAddress((u32)addr), size, name ? name : "mmap", prot, false);
+    } else {
+        if (offset < 0)
+            return (void*)-EINVAL;
+        if (static_cast<size_t>(offset) & ~PAGE_MASK)
+            return (void*)-EINVAL;
+        auto* description = file_description(fd);
+        if (!description)
+            return (void*)-EBADF;
+        auto region_or_error = description->mmap(*this, VirtualAddress((u32)addr), static_cast<size_t>(offset), size, prot);
+        if (region_or_error.is_error())
+            return (void*)(int)region_or_error.error();
+        region = region_or_error.value();
     }
 
-    if (flags & MAP_ANONYMOUS) {
-        auto* region = allocate_region(VirtualAddress((u32)addr), size, name ? name : "mmap", prot, false);
-        if (!region)
-            return (void*)-ENOMEM;
-        if (flags & MAP_SHARED)
-            region->set_shared(true);
-        if (flags & MAP_STACK)
-            region->set_stack(true);
-        region->set_mmap(true);
-        return region->vaddr().as_ptr();
-    }
-    if (offset & ~PAGE_MASK)
-        return (void*)-EINVAL;
-    auto* description = file_description(fd);
-    if (!description)
-        return (void*)-EBADF;
-    auto region_or_error = description->mmap(*this, VirtualAddress((u32)addr), offset, size, prot);
-    if (region_or_error.is_error())
-        return (void*)(int)region_or_error.error();
-    auto region = region_or_error.value();
-    if (flags & MAP_SHARED)
+    if (!region)
+        return (void*)-ENOMEM;
+    region->set_mmap(true);
+    if (map_shared)
         region->set_shared(true);
+    if (map_stack)
+        region->set_stack(true);
     if (name)
         region->set_name(name);
-    region->set_mmap(true);
     return region->vaddr().as_ptr();
 }
 
@@ -341,7 +358,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
         return -EINVAL;
     if (!region->is_mmap())
         return -EPERM;
-    if ((prot & PROT_WRITE) && (prot & PROT_EXEC))
+    if (!validate_mmap_prot(prot, region->is_stack()))
         return -EINVAL;
     region->set_readable(prot & PROT_READ);
     region->set_writable(prot & PROT_WRITE);
