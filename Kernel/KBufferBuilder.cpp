@@ -17,7 +17,7 @@ KBuffer KBufferBuilder::build()
 }
 
 KBufferBuilder::KBufferBuilder()
-    : m_buffer(KBuffer::create_with_size(1048576 * 4))
+    : m_buffer(KBuffer::create_with_size(4 * MB, Region::Access::Read | Region::Access::Write))
 {
 }
 

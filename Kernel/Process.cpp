@@ -1019,7 +1019,7 @@ void create_signal_trampolines()
     InterruptDisabler disabler;
 
     // NOTE: We leak this region.
-    auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines").leak_ptr();
+    auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write | Region::Access::Execute).leak_ptr();
     g_return_to_ring3_from_signal_trampoline = trampoline_region->vaddr();
 
     u8* trampoline = (u8*)asm_signal_trampoline;
@@ -1035,15 +1035,11 @@ void create_signal_trampolines()
 
 void create_kernel_info_page()
 {
-    auto* info_page_region_for_userspace = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Kernel info page").leak_ptr();
-    auto* info_page_region_for_kernel = MM.allocate_kernel_region_with_vmobject(info_page_region_for_userspace->vmobject(), PAGE_SIZE, "Kernel info page").leak_ptr();
+    auto* info_page_region_for_userspace = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Kernel info page", Region::Access::Read).leak_ptr();
+    auto* info_page_region_for_kernel = MM.allocate_kernel_region_with_vmobject(info_page_region_for_userspace->vmobject(), PAGE_SIZE, "Kernel info page", Region::Access::Read | Region::Access::Write).leak_ptr();
     s_info_page_address_for_userspace = info_page_region_for_userspace->vaddr();
     s_info_page_address_for_kernel = info_page_region_for_kernel->vaddr();
-
     memset(s_info_page_address_for_kernel.as_ptr(), 0, PAGE_SIZE);
-
-    info_page_region_for_userspace->set_writable(false);
-    info_page_region_for_userspace->remap();
 }
 
 int Process::sys$restore_signal_mask(u32 mask)

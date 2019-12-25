@@ -334,7 +334,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return region->handle_fault(fault);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, bool user_accessible, bool should_commit)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool should_commit)
 {
     InterruptDisabler disabler;
     ASSERT(!(size % PAGE_SIZE));
@@ -342,9 +342,9 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     ASSERT(range.is_valid());
     OwnPtr<Region> region;
     if (user_accessible)
-        region = Region::create_user_accessible(range, name, PROT_READ | PROT_WRITE | PROT_EXEC);
+        region = Region::create_user_accessible(range, name, access);
     else
-        region = Region::create_kernel_only(range, name, PROT_READ | PROT_WRITE | PROT_EXEC);
+        region = Region::create_kernel_only(range, name, access);
     region->map(kernel_page_directory());
     // FIXME: It would be cool if these could zero-fill on demand instead.
     if (should_commit)
@@ -352,18 +352,18 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     return region;
 }
 
-OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name)
+OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name, u8 access)
 {
-    return allocate_kernel_region(size, name, true);
+    return allocate_kernel_region(size, name, access, true);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name)
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name, u8 access)
 {
     InterruptDisabler disabler;
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
-    auto region = make<Region>(range, vmobject, 0, name, PROT_READ | PROT_WRITE | PROT_EXEC);
+    auto region = make<Region>(range, vmobject, 0, name, access);
     region->map(kernel_page_directory());
     return region;
 }

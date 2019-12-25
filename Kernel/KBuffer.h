@@ -17,16 +17,16 @@
 
 class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
-    static NonnullRefPtr<KBufferImpl> create_with_size(size_t size)
+    static NonnullRefPtr<KBufferImpl> create_with_size(size_t size, u8 access)
     {
-        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), "KBuffer", false, false);
+        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), "KBuffer", access, false, false);
         ASSERT(region);
         return adopt(*new KBufferImpl(region.release_nonnull(), size));
     }
 
-    static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size)
+    static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size, u8 access)
     {
-        auto buffer = create_with_size(size);
+        auto buffer = create_with_size(size, access);
         memcpy(buffer->data(), data, size);
         return buffer;
     }
@@ -55,14 +55,14 @@ private:
 
 class KBuffer {
 public:
-    static KBuffer create_with_size(size_t size)
+    static KBuffer create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write)
     {
-        return KBuffer(KBufferImpl::create_with_size(size));
+        return KBuffer(KBufferImpl::create_with_size(size, access));
     }
 
-    static KBuffer copy(const void* data, size_t size)
+    static KBuffer copy(const void* data, size_t size, u8 access = Region::Access::Read | Region::Access::Write)
     {
-        return KBuffer(KBufferImpl::copy(data, size));
+        return KBuffer(KBufferImpl::copy(data, size, access));
     }
 
     u8* data() { return m_impl->data(); }
@@ -74,8 +74,8 @@ public:
 
     const KBufferImpl& impl() const { return m_impl; }
 
-    KBuffer(const ByteBuffer& buffer)
-        : m_impl(KBufferImpl::copy(buffer.data(), buffer.size()))
+    KBuffer(const ByteBuffer& buffer, u8 access = Region::Access::Read | Region::Access::Write)
+        : m_impl(KBufferImpl::copy(buffer.data(), buffer.size(), access))
     {
     }
 
