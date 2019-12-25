@@ -56,6 +56,14 @@ void MemoryManager::initialize_paging()
     // Every process shares these mappings.
     create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (8 * MB) - PAGE_SIZE);
 
+    // Disable execution from 0MB through 1MB (BIOS data, legacy things, ...)
+    for (size_t i = 0; i < (1 * MB); ++i)
+        ensure_pte(kernel_page_directory(), VirtualAddress(i)).set_execute_disabled(true);
+
+    // Disable execution from 2MB through 8MB (kmalloc, kmalloc_eternal, slabs, page tables, ...)
+    for (size_t i = 1; i < 4; ++i)
+        kernel_page_directory().table().directory(0)[i].set_execute_disabled(true);
+
     // FIXME: We should move everything kernel-related above the 0xc0000000 virtual mark.
 
     // Basic physical memory map:
