@@ -18,14 +18,14 @@ OBJS = \
 
 PROGRAM = WindowServer
 
-LDFLAGS = -lc -ldraw -lcore -lthread -lpthread -lipc
+LIB_DEPS = Draw Core Thread Pthread IPC
 
 *.cpp: WindowServerEndpoint.h WindowClientEndpoint.h
 
-WindowServerEndpoint.h: WindowServer.ipc
+WindowServerEndpoint.h: WindowServer.ipc IPCCOMPILER
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
-WindowClientEndpoint.h: WindowClient.ipc
+WindowClientEndpoint.h: WindowClient.ipc IPCCOMPILER
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 EXTRA_CLEAN = WindowServerEndpoint.h WindowClientEndpoint.h

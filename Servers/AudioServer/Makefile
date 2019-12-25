@@ -6,16 +6,16 @@ OBJS = \
 
 PROGRAM = AudioServer
 
-LDFLAGS = -lc -lcore -lipc -lthread -lpthread
+LIB_DEPS = Core IPC Thread Pthread
 
 EXTRA_CLEAN = AudioServerEndpoint.h AudioClientEndpoint.h
 
 *.cpp: AudioServerEndpoint.h AudioClientEndpoint.h
 
-AudioServerEndpoint.h: AudioServer.ipc
+AudioServerEndpoint.h: AudioServer.ipc IPCCOMPILER
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
-AudioClientEndpoint.h: AudioClient.ipc
+AudioClientEndpoint.h: AudioClient.ipc IPCCOMPILER
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 install:

@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = Piano
 
-LDFLAGS = -lgui -ldraw -laudio -lipc -lthread -lpthread -lcore -lc
+LIB_DEPS = GUI Draw Audio IPC Thread Pthread Core
 
 include ../../Makefile.common

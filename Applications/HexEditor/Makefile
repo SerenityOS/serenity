@@ -5,6 +5,6 @@ OBJS = \
 
 PROGRAM = HexEditor
 
-LDFLAGS = -lgui -ldraw -lipc -lthread -lpthread -lcore -lc
+LIB_DEPS = GUI Draw IPC Thread Pthread Core
 
 include ../../Makefile.common

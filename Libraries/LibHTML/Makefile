@@ -67,17 +67,28 @@ EXTRA_SOURCES = \
     CSS/PropertyID.h \
     CSS/PropertyID.cpp
 
+GENERATE_CSS_PROPERTYID_CPP = CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp
+GENERATE_CSS_PROPERTYID_H = CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h
+
+$(GENERATE_CSS_PROPERTYID_H):
+	@$(MAKE) -C $(dir $(GENERATE_CSS_PROPERTYID_H))
+
+$(GENERATE_CSS_PROPERTYID_CPP):
+	@$(MAKE) -C $(dir $(GENERATE_CSS_PROPERTYID_CPP))
+
 CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSource.sh
 	@echo "GENERATE $@"
 	$(QUIET) Scripts/GenerateStyleSheetSource.sh default_stylesheet_source $< > $@
 
-CSS/PropertyID.h: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h.cpp
+CSS/PropertyID.h: CSS/Properties.json $(GENERATE_CSS_PROPERTYID_H)
 	@echo "GENERATE $@"
-	$(QUIET) CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h $< > $@
+	$(QUIET) $(GENERATE_CSS_PROPERTYID_H) $< > $@
 
-CSS/PropertyID.cpp: CSS/Properties.json CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp.cpp
+CSS/PropertyID.cpp: CSS/Properties.json $(GENERATE_CSS_PROPERTYID_CPP)
 	@echo "GENERATE $@"
-	$(QUIET) CodeGenerators/Generate_CSS_PropertyID_cpp/Generate_CSS_PropertyID_cpp $< > $@
+	$(QUIET) $(GENERATE_CSS_PROPERTYID_CPP) $< > $@
+
+EXTRA_CLEAN = CSS/DefaultStyleSheetSource.cpp CSS/PropertyID.h CSS/PropertyID.cpp
 
 OBJS = $(EXTRA_OBJS) $(LIBHTML_OBJS)
 
@@ -91,3 +102,7 @@ install:
 	cp $(LIBRARY) $(SERENITY_BASE_DIR)/Root/usr/lib/
 
 include ../../Makefile.common
+
+SUBDIRS = CodeGenerators
+
+include ../../Makefile.subdir
