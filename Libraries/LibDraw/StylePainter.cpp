@@ -249,6 +249,7 @@ void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const 
     float progress_width = progress * rect.width();
     Rect hole_rect { (int)progress_width, 0, (int)(rect.width() - progress_width), rect.height() };
     hole_rect.move_by(rect.location());
+    hole_rect.set_right_without_resize(rect.right());
     PainterStateSaver saver(painter);
     painter.fill_rect(hole_rect, palette.base());
 
