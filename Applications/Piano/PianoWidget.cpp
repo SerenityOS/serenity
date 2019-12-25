@@ -20,41 +20,7 @@ void PianoWidget::paint_event(GPaintEvent& event)
 
     painter.fill_rect(event.rect(), Color::Black);
 
-    auto* samples = m_front_buffer;
-    Color wave_color;
-    switch (m_wave_type) {
-    case WaveType::Sine:
-        wave_color = Color(255, 192, 0);
-        break;
-    case WaveType::Saw:
-        wave_color = Color(240, 100, 128);
-        break;
-    case WaveType::Square:
-        wave_color = Color(128, 160, 255);
-        break;
-    case WaveType::Triangle:
-        wave_color = Color(35, 171, 35);
-        break;
-    case WaveType::Noise:
-        wave_color = Color(197, 214, 225);
-        break;
-    }
-
-    int prev_x = 0;
-    int prev_y = m_height / 2;
-    for (int x = 0; x < m_sample_count; ++x) {
-        double val = samples[x].left;
-        val /= 32768;
-        val *= m_height;
-        int y = ((m_height / 8) - 8) + val;
-        if (x == 0)
-            painter.set_pixel({ x, y }, wave_color);
-        else
-            painter.draw_line({ prev_x, prev_y }, { x, y }, wave_color);
-        prev_x = x;
-        prev_y = y;
-    }
-
+    render_wave(painter);
     render_piano(painter);
     render_knobs(painter);
     render_roll(painter);
@@ -334,6 +300,43 @@ void PianoWidget::mousemove_event(GMouseEvent& event)
     if (m_piano_key_under_mouse)
         note(m_piano_key_under_mouse, On);
     update();
+}
+
+void PianoWidget::render_wave(GPainter& painter)
+{
+    Color wave_color;
+    switch (m_wave_type) {
+    case WaveType::Sine:
+        wave_color = Color(255, 192, 0);
+        break;
+    case WaveType::Saw:
+        wave_color = Color(240, 100, 128);
+        break;
+    case WaveType::Square:
+        wave_color = Color(128, 160, 255);
+        break;
+    case WaveType::Triangle:
+        wave_color = Color(35, 171, 35);
+        break;
+    case WaveType::Noise:
+        wave_color = Color(197, 214, 225);
+        break;
+    }
+
+    int prev_x = 0;
+    int prev_y = m_height / 2;
+    for (int x = 0; x < m_sample_count; ++x) {
+        double val = m_front_buffer[x].left;
+        val /= 32768;
+        val *= m_height;
+        int y = ((m_height / 8) - 8) + val;
+        if (x == 0)
+            painter.set_pixel({ x, y }, wave_color);
+        else
+            painter.draw_line({ prev_x, prev_y }, { x, y }, wave_color);
+        prev_x = x;
+        prev_y = y;
+    }
 }
 
 static int white_key_width = 22;
