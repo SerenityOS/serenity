@@ -12,6 +12,6 @@ OBJS = \
 
 PROGRAM = SystemMonitor
 
-LDFLAGS = -lgui -ldraw -lprotocol -lpcidb -lipc -lthread -lpthread -lcore -lc
+LIB_DEPS = GUI Draw Protocol PCIDB IPC Thread Pthread Core
 
 include ../../Makefile.common

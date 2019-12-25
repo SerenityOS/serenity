@@ -1,3 +1,5 @@
+.NOTPARALLEL:
+
 AK_OBJS = \
     ../../AK/StringImpl.o \
     ../../AK/String.o \
@@ -59,19 +61,22 @@ OBJS = $(AK_OBJS) $(LIBC_OBJS)
 
 EXTRA_OBJS = setjmp.ao crti.ao crtn.ao
 
-.PHONY: startfiles
-startfiles: $(EXTRA_OBJS)
-	$(CXX) $(CXXFLAGS) -o crt0.o -c crt0.cpp
+crt0.o: crt0.cpp
+	$(QUIET) $(CXX) $(CXXFLAGS) -o crt0.o -c crt0.cpp
+
+crtio.o: crti.ao
 	$(QUIET) cp crti.ao crti.o
+
+crtn.o: crtin.ao
 	$(QUIET) cp crtn.ao crtn.o
 
-EXTRA_CLEAN = crt0.d
+EXTRA_CLEAN = crt0.d crt0.o
 
 DEFINES = -DSERENITY_LIBC_BUILD
 
 LIBRARY = libc.a
 
-all: $(LIBRARY) startfiles install
+all: crt0.o $(EXTRA_OBJS) $(LIBRARY) install
 
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/sys/

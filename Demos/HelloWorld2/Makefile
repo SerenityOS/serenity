@@ -3,7 +3,7 @@ OBJS = \
 
 PROGRAM = HelloWorld2
 
-LDFLAGS = -lgui -ldraw -lipc -lcore -lc
+LIB_DEPS = GUI IPC Draw Core
 
 main.cpp: UI_HelloWorld2.h
 

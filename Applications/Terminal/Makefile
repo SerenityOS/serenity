@@ -3,6 +3,6 @@ OBJS = \
 
 PROGRAM = Terminal
 
-LDFLAGS = -lgui -ldraw -lvt -lprotocol -lipc -lcore -lc
+LIB_DEPS = GUI Draw VT IPC Protocol Core
 
 include ../../Makefile.common

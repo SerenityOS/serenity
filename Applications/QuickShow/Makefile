@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = QuickShow
 
-LDFLAGS = -lgui -ldraw -lprotocol -lipc -lthread -lpthread -lcore -lc
+LIB_DEPS = GUI Draw Protocol IPC Thread Pthread Core
 
 include ../../Makefile.common

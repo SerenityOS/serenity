@@ -11,6 +11,6 @@ OBJS = \
 
 PROGRAM = IRCClient
 
-LDFLAGS = -lgui -lhtml -ldraw -lprotocol -lipc -lthread -lpthread -lcore -lc
+LIB_DEPS = GUI HTML Draw Protocol IPC Thread Pthread Core
 
 include ../../Makefile.common

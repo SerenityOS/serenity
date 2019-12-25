@@ -4,7 +4,7 @@ OBJS = \
 
 PROGRAM = SystemServer
 
-LDFLAGS = -lcore -lc
+LIB_DEPS = Core
 
 install:
 	mkdir -p ../../Root/usr/include/SystemServer/

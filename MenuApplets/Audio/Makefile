@@ -2,6 +2,6 @@ OBJS = main.o
 
 PROGRAM = Audio.MenuApplet
 
-LDFLAGS = -laudio -lgui -lipc -ldraw -lthread -lpthread -lcore -lc
+LIB_DEPS = Audio GUI IPC Draw Thread Pthread Core
 
 include ../../Makefile.common

@@ -18,6 +18,6 @@ OBJS = \
 
 PROGRAM = HackStudio
 
-LDFLAGS = -lvt -lhtml -lprotocol -lipc -lmarkdown -lgui -ldraw -lthread -lpthread -lcore -lc
+LIB_DEPS = GUI HTML VT Protocol Markdown Draw IPC Thread Pthread Core
 
 include ../../Makefile.common

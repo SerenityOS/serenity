@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = LookupServer
 
-LDFLAGS = -lc -lcore
+LIB_DEPS = Core
 
 include ../../Makefile.common

@@ -20,22 +20,6 @@ INCLUDE_FLAGS += \
     -I$(SERENITY_BASE_DIR)/Libraries \
     -I$(SERENITY_BASE_DIR)/Servers
 
-LDFLAGS += \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibC \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibPthread \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibCore \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibIPC \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibM \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibDraw \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibGUI \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibHTML \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibMarkdown \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibThread \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibVT \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibPCIDB \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibProtocol \
-    -L$(SERENITY_BASE_DIR)/Libraries/LibAudio
-
 VERBOSE = 0
 
 ifneq ($(HOST_CXX),)
@@ -56,12 +40,21 @@ else
     	-I$(SERENITY_BASE_DIR)/Libraries/LibM \
     	-I$(SERENITY_BASE_DIR)/Libraries/LibPthread
 
-    LDFLAGS += \
-        -L$(SERENITY_BASE_DIR)/Libraries/LibC
-
     ifdef KERNEL
         DEFINES += -DKERNEL
+    else
+        # everything else gets -lc -lm
+        LIB_DEPS += C M
     endif
+
+    # turn "LIB_DEPS=C Core Thread" into "-lc -lcore -lthread -L.../LibC ..."
+    LDFLAGS += $(foreach lib,$(LIB_DEPS),\
+        -l$(shell echo $(lib) | tr A-Z a-z))
+    LDFLAGS += $(foreach lib,$(LIB_DEPS),\
+        -L$(SERENITY_BASE_DIR)/Libraries/Lib$(lib))
+
+    STATIC_LIB_DEPS = $(foreach lib,$(LIB_DEPS),\
+        $(SERENITY_BASE_DIR)/Libraries/Lib$(lib)/lib$(shell echo $(lib) | tr A-Z a-z).a)
 
     OBJ_SUFFIX ?=
 endif
@@ -69,12 +62,10 @@ endif
 #CXX = clang $(CLANG_FLAGS)
 #CLANG_FLAGS = -Wconsumed -m32 -ffreestanding -march=i686
 
-CXXFLAGS = -MMD -MP $(CXX_WARNING_FLAGS) $(CXX_OPTIMIZATION_FLAGS) $(CXX_FLAVOR_FLAGS) $(ARCH_FLAGS) $(CXX_STANDARD_FLAGS) $(CXX_SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
+CXXFLAGS = -MMD -MP $(CXX_WARNING_FLAGS) $(OPTIMIZATION_FLAGS) $(CXX_FLAVOR_FLAGS) $(ARCH_FLAGS) $(CXX_STANDARD_FLAGS) $(CXX_SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
 CFLAGS = -MMD -MP $(C_FLAVOR_FLAGS) $(ARCH_FLAGS) $(C_STANDARD_FLAGS) $(C_SUGGEST_FLAGS) $(INCLUDE_FLAGS) $(DEFINES) $(SUBPROJECT_CXXFLAGS)
 
 DEFINES += -DSANITIZE_PTRS
-
-IPCCOMPILER = $(SERENITY_BASE_DIR)/DevTools/IPCCompiler/IPCCompiler
 
 SUFFIXED_OBJS = $(patsubst %.o,%$(OBJ_SUFFIX).o,$(OBJS))
 
@@ -98,13 +89,26 @@ endif
 	@echo "AS $@"
 	$(QUIET) $(AS) -o $@ $<
 
-$(PROGRAM): $(SUFFIXED_OBJS) $(EXTRA_OBJS)
+$(PROGRAM): $(SUFFIXED_OBJS) $(EXTRA_OBJS) $(STATIC_LIB_DEPS)
 	@echo "LINK $(PROGRAM)"
 	$(QUIET) $(CXX) -o $(PROGRAM) $(EXTRA_OBJS) $(SUFFIXED_OBJS) $(LDFLAGS)
 
 $(LIBRARY): $(SUFFIXED_OBJS) $(EXTRA_OBJS)
 	@echo "LIB $@"
 	$(QUIET) $(AR) rcs $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+
+$(STATIC_LIB_DEPS):
+	@$(MAKE) -C $(dir $(@))
+
+IPCCOMPILER = $(SERENITY_BASE_DIR)/DevTools/IPCCompiler/IPCCompiler
+IPCCOMPILER: $(IPCCOMPILER)
+$(IPCCOMPILER):
+	@$(MAKE) -C $(dir $(@))
+
+FORMCOMPILER = $(SERENITY_BASE_DIR)/DevTools/FormCompiler/FormCompiler
+FORMCOMPILER: $(FORMCOMPILER)
+$(FORMCOMPILER):
+	@$(MAKE) -C $(dir $(@))
 
 .DEFAULT_GOAL := all
 
@@ -117,5 +121,7 @@ clean:
 	$(QUIET) rm -f $(PROGRAM) $(LIBRARY) $(SUFFIXED_OBJS) $(EXTRA_OBJS) *.d $(EXTRA_CLEAN)
 
 install:
+
+.DELETE_ON_ERROR:
 
 .PHONY: all clean install
