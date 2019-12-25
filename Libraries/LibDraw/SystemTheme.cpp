@@ -72,7 +72,9 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(HighlightWindowTitle);
     DO_COLOR(MenuStripe);
     DO_COLOR(MenuBase);
+    DO_COLOR(MenuBaseText);
     DO_COLOR(MenuSelection);
+    DO_COLOR(MenuSelectionText);
 
     buffer->seal();
     buffer->share_globally();

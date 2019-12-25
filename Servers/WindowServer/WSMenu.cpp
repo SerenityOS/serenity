@@ -154,11 +154,11 @@ void WSMenu::draw()
 
     for (auto& item : m_items) {
         if (item.type() == WSMenuItem::Text) {
-            Color text_color = palette.window_text();
+            Color text_color = palette.menu_base_text();
             if (&item == m_hovered_item && item.is_enabled()) {
                 painter.fill_rect(item.rect(), palette.menu_selection());
                 painter.draw_rect(item.rect(), palette.menu_selection().darkened());
-                text_color = Color::White;
+                text_color = palette.menu_selection_text();
             } else if (!item.is_enabled()) {
                 text_color = Color::MidGray;
             }
@@ -190,7 +190,7 @@ void WSMenu::draw()
                     s_submenu_arrow_bitmap_height
                 };
                 submenu_arrow_rect.center_vertically_within(item.rect());
-                painter.draw_bitmap(submenu_arrow_rect.location(), submenu_arrow_bitmap, palette.window_text());
+                painter.draw_bitmap(submenu_arrow_rect.location(), submenu_arrow_bitmap, text_color);
             }
         } else if (item.type() == WSMenuItem::Separator) {
             Point p1(item.rect().translated(stripe_rect.width() + 4, 0).x(), item.rect().center().y() - 1);
