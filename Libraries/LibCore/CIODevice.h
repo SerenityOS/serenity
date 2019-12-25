@@ -5,7 +5,7 @@
 #include <LibCore/CObject.h>
 
 class CIODevice : public CObject {
-    C_OBJECT(CIODevice)
+    C_OBJECT_ABSTRACT(CIODevice)
 public:
     enum OpenMode {
         NotOpen = 0,
