@@ -33,6 +33,9 @@ else
     CC = $(PRE_CC) $(TOOLCHAIN_PATH)/i686-pc-serenity-gcc
     AS = $(TOOLCHAIN_PATH)/i686-pc-serenity-as
     LINK = $(TOOLCHAIN_PATH)/i686-pc-serenity-ld
+    RANLIB = $(TOOLCHAIN_PATH)/i686-pc-serenity-ranlib
+    AR = $(TOOLCHAIN_PATH)/i686-pc-serenity-ar
+    
     DEFINES += -DDEBUG
 
     INCLUDE_FLAGS += \
