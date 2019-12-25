@@ -140,9 +140,9 @@ static void dump(const RegisterDump& regs)
     }
 
     kprintf("exception code: %04x (isr: %04x)\n", regs.exception_code, regs.isr_number);
-    kprintf("  pc=%04x:%08x flags=%04x\n", regs.cs, regs.eip, regs.eflags);
+    kprintf("  pc=%04x:%08x flags=%04x\n", (u16)regs.cs, regs.eip, (u16)regs.eflags);
     kprintf(" stk=%04x:%08x\n", ss, esp);
-    kprintf("  ds=%04x es=%04x fs=%04x gs=%04x\n", regs.ds, regs.es, regs.fs, regs.gs);
+    kprintf("  ds=%04x es=%04x fs=%04x gs=%04x\n", (u16)regs.ds, (u16)regs.es, (u16)regs.fs, (u16)regs.gs);
     kprintf("eax=%08x ebx=%08x ecx=%08x edx=%08x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%08x esp=%08x esi=%08x edi=%08x\n", regs.ebp, esp, regs.esi, regs.edi);
 
@@ -279,11 +279,12 @@ void page_fault_handler(RegisterDump regs)
             return;
         }
 
-        kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s address %p\033[0m\n",
+        kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s%s address %p\033[0m\n",
             current->process().name().characters(),
             current->pid(),
             current->tid(),
-            regs.exception_code & 2 ? "write to" : "read from",
+            regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
+            regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
             fault_address);
 
         u32 malloc_scrub_pattern = explode_byte(MALLOC_SCRUB_BYTE);
