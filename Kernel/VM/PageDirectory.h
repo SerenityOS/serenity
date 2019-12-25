@@ -17,7 +17,7 @@ public:
         return adopt(*new PageDirectory(process, parent_range_allocator));
     }
     static NonnullRefPtr<PageDirectory> create_at_fixed_address(PhysicalAddress paddr) { return adopt(*new PageDirectory(paddr)); }
-    static RefPtr<PageDirectory> find_by_pdb(u32);
+    static RefPtr<PageDirectory> find_by_cr3(u32);
 
     ~PageDirectory();
 
