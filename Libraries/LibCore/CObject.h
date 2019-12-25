@@ -26,6 +26,10 @@ public:                                                                \
     {                                                                  \
         return adopt(*new klass(forward<Args>(args)...));              \
     }
+    
+#define C_OBJECT_ABSTRACT(klass)                                       \
+public:                                                                \
+    virtual const char* class_name() const override { return #klass; } 
 
 class CObject
     : public RefCounted<CObject>
