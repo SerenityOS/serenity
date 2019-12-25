@@ -348,7 +348,8 @@ struct PageFaultFlags {
         Write = 0x02,
         UserMode = 0x04,
         SupervisorMode = 0x00,
-        InstructionFetch = 0x08,
+        ReservedBitViolation = 0x08,
+        InstructionFetch = 0x10,
     };
 };
 
