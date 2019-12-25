@@ -22,16 +22,23 @@ void PianoWidget::paint_event(GPaintEvent& event)
 
     auto* samples = m_front_buffer;
     Color wave_color;
-    if (m_wave_type == WaveType::Sine)
+    switch (m_wave_type) {
+    case WaveType::Sine:
         wave_color = Color(255, 192, 0);
-    else if (m_wave_type == WaveType::Saw)
+        break;
+    case WaveType::Saw:
         wave_color = Color(240, 100, 128);
-    else if (m_wave_type == WaveType::Square)
+        break;
+    case WaveType::Square:
         wave_color = Color(128, 160, 255);
-    else if (m_wave_type == WaveType::Triangle)
+        break;
+    case WaveType::Triangle:
         wave_color = Color(35, 171, 35);
-    else if (m_wave_type == WaveType::Noise)
+        break;
+    case WaveType::Noise:
         wave_color = Color(197, 214, 225);
+        break;
+    }
 
     int prev_x = 0;
     int prev_y = m_height / 2;
@@ -70,16 +77,23 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
             if (!m_note_on[n])
                 continue;
             double val = 0;
-            if (m_wave_type == WaveType::Sine)
+            switch (m_wave_type) {
+            case WaveType::Sine:
                 val = ((volume * m_power[n]) * w_sine(n));
-            else if (m_wave_type == WaveType::Saw)
+                break;
+            case WaveType::Saw:
                 val = ((volume * m_power[n]) * w_saw(n));
-            else if (m_wave_type == WaveType::Square)
+                break;
+            case WaveType::Square:
                 val = ((volume * m_power[n]) * w_square(n));
-            else if (m_wave_type == WaveType::Triangle)
+                break;
+            case WaveType::Triangle:
                 val = ((volume * m_power[n]) * w_triangle(n));
-            else if (m_wave_type == WaveType::Noise)
+                break;
+            case WaveType::Noise:
                 val = ((volume * m_power[n]) * w_noise());
+                break;
+            }
             sst[i].left += val;
         }
         sst[i].right = sst[i].left;
@@ -427,42 +441,29 @@ void PianoWidget::render_knobs(GPainter& painter)
     painter.draw_rect(octave_knob_rect, Color(oshade, oshade, oshade));
     painter.draw_text(octave_knob_rect, text, TextAlignment::Center, Color(oshade, oshade, oshade));
 
-    int r = 0, g = 0, b = 0;
-    if (m_wave_type == WaveType::Sine) {
-        r = 255;
-        g = 192;
-        b = 0;
-    } else if (m_wave_type == WaveType::Saw) {
-        r = 240;
-        g = 100;
-        b = 128;
-    } else if (m_wave_type == WaveType::Square) {
-        r = 128;
-        g = 160;
-        b = 255;
-    } else if (m_wave_type == WaveType::Triangle) {
-        r = 35;
-        g = 171;
-        b = 35;
-    } else if (m_wave_type == WaveType::Noise) {
-        r = 197;
-        g = 214;
-        b = 225;
-    }
     Rect wave_knob_rect(m_width - knob_width - 16 - knob_width - 16, m_height - 30, knob_width, 16);
-    const char* wave_name = "";
-    if (m_wave_type == WaveType::Sine)
-        wave_name = "C: Sine    ";
-    else if (m_wave_type == WaveType::Saw)
-        wave_name = "C: Sawtooth";
-    else if (m_wave_type == WaveType::Square)
-        wave_name = "C: Square  ";
-    else if (m_wave_type == WaveType::Triangle)
-        wave_name = "C: Triangle";
-    else if (m_wave_type == WaveType::Noise)
-        wave_name = "C: Noise   ";
-    painter.draw_rect(wave_knob_rect, Color(r, g, b));
-    painter.draw_text(wave_knob_rect, wave_name, TextAlignment::Center, Color(r, g, b));
+    switch (m_wave_type) {
+    case WaveType::Sine:
+        painter.draw_rect(wave_knob_rect, Color(255, 192, 0));
+        painter.draw_text(wave_knob_rect, "C: Sine    ", TextAlignment::Center, Color(255, 192, 0));
+        break;
+    case WaveType::Saw:
+        painter.draw_rect(wave_knob_rect, Color(240, 100, 128));
+        painter.draw_text(wave_knob_rect, "C: Sawtooth", TextAlignment::Center, Color(240, 100, 128));
+        break;
+    case WaveType::Square:
+        painter.draw_rect(wave_knob_rect, Color(128, 160, 255));
+        painter.draw_text(wave_knob_rect, "C: Square  ", TextAlignment::Center, Color(128, 160, 255));
+        break;
+    case WaveType::Triangle:
+        painter.draw_rect(wave_knob_rect, Color(35, 171, 35));
+        painter.draw_text(wave_knob_rect, "C: Triangle", TextAlignment::Center, Color(35, 171, 35));
+        break;
+    case WaveType::Noise:
+        painter.draw_rect(wave_knob_rect, Color(197, 214, 225));
+        painter.draw_text(wave_knob_rect, "C: Noise   ", TextAlignment::Center, Color(197, 214, 225));
+        break;
+    }
 }
 
 static int roll_columns = 32;
