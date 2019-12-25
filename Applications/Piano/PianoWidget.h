@@ -80,7 +80,7 @@ private:
     bool m_delay_enabled { false };
     bool m_release_enabled { false };
 
-    bool keys[256];
+    bool keys[256] { false };
 
     PianoKey m_piano_key_under_mouse { K_None };
     bool m_mouse_pressed { false };
