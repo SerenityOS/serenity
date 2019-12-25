@@ -38,6 +38,7 @@ private:
     Rect define_roll_note_rect(int column, int row) const;
     RollNote* find_roll_note_for_relative_position(int x, int y);
 
+    void render_wave(GPainter&);
     void render_piano_key(GPainter&, int index, PianoKey, const StringView&);
     void render_piano(GPainter&);
     void render_knobs(GPainter&);
