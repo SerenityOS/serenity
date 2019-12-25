@@ -100,7 +100,6 @@ Thread::Thread(Process& process)
         m_tss.esp0 = m_kernel_stack_top;
         kprintf("Allocated ring0 stack @ %p - %p\n", m_kernel_stack_base, m_kernel_stack_top);
     }
-    m_process.page_directory().update_kernel_mappings();
 
     // HACK: Ring2 SS in the TSS is the current PID.
     m_tss.ss2 = m_process.pid();

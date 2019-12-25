@@ -42,8 +42,6 @@ public:
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
-    void populate_page_directory(PageDirectory&);
-
     void enter_process_paging_scope(Process&);
 
     bool validate_user_stack(const Process&, VirtualAddress) const;
@@ -114,8 +112,7 @@ private:
     PageTableEntry& ensure_pte(PageDirectory&, VirtualAddress);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
-    PageTableEntry* m_page_table_zero { nullptr };
-    PageTableEntry* m_page_table_one { nullptr };
+    PageTableEntry* m_low_page_tables[4] { nullptr };
 
     VirtualAddress m_quickmap_addr;
 

@@ -21,8 +21,8 @@ public:
 
     ~PageDirectory();
 
-    u32 cr3() const { return m_directory_page->paddr().get(); }
-    PageDirectoryEntry* entries() { return reinterpret_cast<PageDirectoryEntry*>(cr3()); }
+    u32 cr3() const { return m_directory_table->paddr().get(); }
+    PageDirectoryPointerTable& table() { return *reinterpret_cast<PageDirectoryPointerTable*>(cr3()); }
 
     void flush(VirtualAddress);
 
@@ -31,14 +31,13 @@ public:
     Process* process() { return m_process; }
     const Process* process() const { return m_process; }
 
-    void update_kernel_mappings();
-
 private:
     PageDirectory(Process&, const RangeAllocator* parent_range_allocator);
     explicit PageDirectory(PhysicalAddress);
 
     Process* m_process { nullptr };
     RangeAllocator m_range_allocator;
-    RefPtr<PhysicalPage> m_directory_page;
+    RefPtr<PhysicalPage> m_directory_table;
+    RefPtr<PhysicalPage> m_directory_pages[4];
     HashMap<unsigned, RefPtr<PhysicalPage>> m_physical_pages;
 };
