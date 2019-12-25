@@ -109,21 +109,9 @@ public:
 
     u32 cow_pages() const;
 
-    void set_writable(bool b)
-    {
-        if (b)
-            m_access |= Access::Write;
-        else
-            m_access &= ~Access::Write;
-    }
-
-    void set_readable(bool b)
-    {
-        if (b)
-            m_access |= Access::Read;
-        else
-            m_access &= ~Access::Read;
-    }
+    void set_readable(bool b) { set_access_bit(Access::Read, b); }
+    void set_writable(bool b) { set_access_bit(Access::Write, b); }
+    void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
     void map(PageDirectory&);
     enum class ShouldDeallocateVirtualMemoryRange {
@@ -146,6 +134,14 @@ public:
 
 private:
     Bitmap& ensure_cow_map() const;
+
+    void set_access_bit(Access access, bool b)
+    {
+        if (b)
+            m_access |= access;
+        else
+            m_access &= ~access;
+    }
 
     PageFaultResponse handle_cow_fault(size_t page_index);
     PageFaultResponse handle_inode_fault(size_t page_index);
