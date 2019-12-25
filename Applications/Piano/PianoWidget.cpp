@@ -88,8 +88,8 @@ void PianoWidget::fill_audio_buffer(uint8_t* stream, int len)
         sst[i].right = sst[i].left;
     }
 
-    // Release pressed notes.
-    if (m_release_enabled) {
+    // Decay pressed notes.
+    if (m_decay_enabled) {
         for (size_t n = 0; n < (sizeof(m_note_on) / sizeof(u8)); ++n) {
             if (m_note_on[n])
                 m_power[n] *= 0.965;
@@ -255,7 +255,7 @@ void PianoWidget::keydown_event(GKeyEvent& event)
         m_delay_enabled = !m_delay_enabled;
         break;
     case KeyCode::Key_B:
-        m_release_enabled = !m_release_enabled;
+        m_decay_enabled = !m_decay_enabled;
         break;
     case KeyCode::Key_Z:
         if (m_octave > m_octave_min)
@@ -420,8 +420,8 @@ void PianoWidget::render_knobs(GPainter& painter)
     Rect delay_knob_rect(m_width - knob_width - 16, m_height - 50, knob_width, 16);
     render_knob(painter, delay_knob_rect, m_delay_enabled, "V: Delay   ");
 
-    Rect release_knob_rect(m_width - knob_width - 16, m_height - 30, knob_width, 16);
-    render_knob(painter, release_knob_rect, m_release_enabled, "B: Release ");
+    Rect decay_knob_rect(m_width - knob_width - 16, m_height - 30, knob_width, 16);
+    render_knob(painter, decay_knob_rect, m_decay_enabled, "B: Decay   ");
 
     Rect octave_knob_rect(m_width - knob_width - 16 - knob_width - 16, m_height - 50, knob_width, 16);
     auto text = String::format("Z/X: Oct %d ", m_octave);
