@@ -75,6 +75,13 @@ pushd "$DIR/Tarballs"
     else
         echo "Skipped extracting gcc"
     fi
+
+    if [ "$(uname)" = "Darwin" ]; then
+        pushd "gcc-${GCC_VERSION}"
+        ./contrib/download_prerequisites
+        popd
+    fi
+
 popd
 
 mkdir -p "$PREFIX"
