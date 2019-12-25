@@ -33,11 +33,14 @@ void GAbstractColumnView::update_column_sizes()
     auto& model = *this->model();
     int column_count = model.column_count();
     int row_count = model.row_count();
+    int key_column = model.key_column();
 
     for (int column = 0; column < column_count; ++column) {
         if (is_column_hidden(column))
             continue;
         int header_width = header_font().width(model.column_name(column));
+        if (column == key_column)
+            header_width += font().width(" \xc3\xb6");
         int column_width = header_width;
         for (int row = 0; row < row_count; ++row) {
             auto cell_data = model.data(model.index(row, column));
