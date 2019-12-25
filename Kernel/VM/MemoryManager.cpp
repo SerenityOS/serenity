@@ -168,7 +168,7 @@ void MemoryManager::initialize_paging()
     // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
     asm volatile(
         "mov %cr4, %eax\n"
-        "orl $0x40, %eax\n"
+        "orl $0x80, %eax\n"
         "mov %eax, %cr4\n");
 
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
