@@ -30,6 +30,7 @@ kinds of crashes.
 * `-S`: Make a syscall from writeable memory.
 * `-x`: Read from recently freed memory. (Tests an opportunistic malloc guard.)
 * `-y`: Write to recently freed memory. (Tests an opportunistic malloc guard.)
+* `-X`: Attempt to execute non-executable memory. (Not mapped with PROT\_EXEC.)
 
 ## Examples
 

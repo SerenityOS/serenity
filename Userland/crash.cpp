@@ -6,7 +6,7 @@
 
 static void print_usage_and_exit()
 {
-    printf("usage: crash -[sdiamfMFTt]\n");
+    printf("usage: crash -[sdiamfMFTtSxyX]\n");
     exit(0);
 }
 
@@ -28,6 +28,7 @@ int main(int argc, char** argv)
         SyscallFromWritableMemory,
         WriteToFreedMemoryStillCachedByMalloc,
         ReadFromFreedMemoryStillCachedByMalloc,
+        ExecuteNonExecutableMemory,
     };
     Mode mode = SegmentationViolation;
 
@@ -62,6 +63,8 @@ int main(int argc, char** argv)
         mode = ReadFromFreedMemoryStillCachedByMalloc;
     else if (String(argv[1]) == "-y")
         mode = WriteToFreedMemoryStillCachedByMalloc;
+    else if (String(argv[1]) == "-X")
+        mode = ExecuteNonExecutableMemory;
     else
         print_usage_and_exit();
 
@@ -181,6 +184,18 @@ int main(int argc, char** argv)
         free(ptr);
         dbgprintf("ptr = %p\n", ptr);
         *ptr = 'x';
+        ASSERT_NOT_REACHED();
+    }
+
+    if (mode == ExecuteNonExecutableMemory) {
+        auto* ptr = (u8*)mmap(nullptr, PAGE_SIZE, PROT_READ | PROT_WRITE, MAP_ANONYMOUS | MAP_PRIVATE, 0, 0);
+        ASSERT(ptr != MAP_FAILED);
+
+        ptr[0] = 0xc3; // ret
+
+        typedef void* (*CrashyFunctionPtr)();
+        ((CrashyFunctionPtr)ptr)();
+
         ASSERT_NOT_REACHED();
     }
 
