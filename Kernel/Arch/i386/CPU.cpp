@@ -279,10 +279,11 @@ void page_fault_handler(RegisterDump regs)
             return;
         }
 
-        kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s%s address %p\033[0m\n",
+        kprintf("\033[31;1m%s(%u:%u) Unrecoverable page fault, %s%s%s address %p\033[0m\n",
             current->process().name().characters(),
             current->pid(),
             current->tid(),
+                regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "",
             regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
             regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
             fault_address);
