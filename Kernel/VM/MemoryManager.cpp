@@ -23,8 +23,11 @@ MemoryManager& MM
 MemoryManager::MemoryManager(u32 physical_address_for_kernel_page_tables)
 {
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(physical_address_for_kernel_page_tables));
-    m_page_table_zero = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE);
-    m_page_table_one = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * 2);
+    for (size_t i = 0; i < 4; ++i) {
+        m_low_page_tables[i] = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * (5 + i));
+        memset(m_low_page_tables[i], 0, PAGE_SIZE);
+    }
+
     initialize_paging();
 
     kprintf("MM initialized.\n");
@@ -34,21 +37,8 @@ MemoryManager::~MemoryManager()
 {
 }
 
-void MemoryManager::populate_page_directory(PageDirectory& page_directory)
-{
-    page_directory.m_directory_page = allocate_supervisor_physical_page();
-    page_directory.entries()[0].copy_from({}, kernel_page_directory().entries()[0]);
-    page_directory.entries()[1].copy_from({}, kernel_page_directory().entries()[1]);
-    // Defer to the kernel page tables for 0xC0000000-0xFFFFFFFF
-    for (int i = 768; i < 1024; ++i)
-        page_directory.entries()[i].copy_from({}, kernel_page_directory().entries()[i]);
-}
-
 void MemoryManager::initialize_paging()
 {
-    memset(m_page_table_zero, 0, PAGE_SIZE);
-    memset(m_page_table_one, 0, PAGE_SIZE);
-
 #ifdef MM_DEBUG
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
 #endif
@@ -171,6 +161,12 @@ void MemoryManager::initialize_paging()
         "orl $0x80, %eax\n"
         "mov %eax, %cr4\n");
 
+    // Turn on CR4.PAE
+    asm volatile(
+        "mov %cr4, %eax\n"
+        "orl $0x20, %eax\n"
+        "mov %eax, %cr4\n");
+
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
     asm volatile(
         "movl %%cr0, %%eax\n"
@@ -186,30 +182,23 @@ void MemoryManager::initialize_paging()
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    u32 page_directory_index = (vaddr.get() >> 22) & 0x3ff;
-    u32 page_table_index = (vaddr.get() >> 12) & 0x3ff;
+    u32 page_directory_table_index = (vaddr.get() >> 30) & 0x3;
+    u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
+    u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
 
-    PageDirectoryEntry& pde = page_directory.entries()[page_directory_index];
+    PageDirectoryEntry& pde = page_directory.table().directory(page_directory_table_index)[page_directory_index];
     if (!pde.is_present()) {
 #ifdef MM_DEBUG
         dbgprintf("MM: PDE %u not present (requested for V%p), allocating\n", page_directory_index, vaddr.get());
 #endif
-        if (page_directory_index == 0) {
+        if (page_directory_table_index == 0 && page_directory_index < 4) {
             ASSERT(&page_directory == m_kernel_page_directory);
-            pde.set_page_table_base((u32)m_page_table_zero);
-            pde.set_user_allowed(false);
-            pde.set_present(true);
-            pde.set_writable(true);
-            pde.set_global(true);
-        } else if (page_directory_index == 1) {
-            ASSERT(&page_directory == m_kernel_page_directory);
-            pde.set_page_table_base((u32)m_page_table_one);
+            pde.set_page_table_base((u32)m_low_page_tables[page_directory_index]);
             pde.set_user_allowed(false);
             pde.set_present(true);
             pde.set_writable(true);
             pde.set_global(true);
         } else {
-            //ASSERT(&page_directory != m_kernel_page_directory.ptr());
             auto page_table = allocate_supervisor_physical_page();
 #ifdef MM_DEBUG
             dbgprintf("MM: PD K%p (%s) at P%p allocated page table #%u (for V%p) at P%p\n",
@@ -220,7 +209,6 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
                 vaddr.get(),
                 page_table->paddr().get());
 #endif
-
             pde.set_page_table_base(page_table->paddr().get());
             pde.set_user_allowed(true);
             pde.set_present(true);
@@ -322,21 +310,6 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     dbgprintf("MM: handle_page_fault(%w) at V%p\n", fault.code(), fault.vaddr().get());
 #endif
     ASSERT(fault.vaddr() != m_quickmap_addr);
-    if (fault.type() == PageFault::Type::PageNotPresent && fault.vaddr().get() >= 0xc0000000) {
-        auto* current_page_directory = reinterpret_cast<PageDirectoryEntry*>(cpu_cr3());
-        u32 page_directory_index = (fault.vaddr().get() >> 22) & 0x3ff;
-        auto& kernel_pde = kernel_page_directory().entries()[page_directory_index];
-        auto& current_pde = current_page_directory[page_directory_index];
-
-        if (kernel_pde.is_present() && !current_pde.is_present()) {
-#ifdef PAGE_FAULT_DEBUG
-            dbg() << "NP(kernel): Copying new kernel mapping for " << fault.vaddr() << " into current page directory";
-#endif
-            current_pde.copy_from({}, kernel_pde);
-            flush_tlb(fault.vaddr().page_base());
-            return PageFaultResponse::Continue;
-        }
-    }
     auto* region = region_from_vaddr(fault.vaddr());
     if (!region) {
         kprintf("NP(error) fault at invalid address V%p\n", fault.vaddr().get());
@@ -493,11 +466,6 @@ void MemoryManager::enter_process_paging_scope(Process& process)
 {
     ASSERT(current);
     InterruptDisabler disabler;
-
-    // NOTE: To prevent triple-faulting here, we have to ensure that the current stack
-    //       is accessible to the incoming page directory. We achieve this by forcing
-    //       an update of the kernel VM mappings in the entered scope's page directory.
-    process.page_directory().update_kernel_mappings();
 
     current->tss().cr3 = process.page_directory().cr3();
     asm volatile("movl %%eax, %%cr3" ::"a"(process.page_directory().cr3())

@@ -34,7 +34,7 @@ stack_top:
 .section .page_tables
 .align 4096
 page_tables_start:
-.skip 4096*3
+.skip 4096*9
 
 .section .text
 
