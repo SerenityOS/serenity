@@ -29,7 +29,9 @@ public:
     Color highlight_window_title() const { return color(ColorRole::HighlightWindowTitle); }
     Color menu_stripe() const { return color(ColorRole::MenuStripe); }
     Color menu_base() const { return color(ColorRole::MenuBase); }
+    Color menu_base_text() const { return color(ColorRole::MenuBaseText); }
     Color menu_selection() const { return color(ColorRole::MenuSelection); }
+    Color menu_selection_text() const { return color(ColorRole::MenuSelectionText); }
     Color base() const { return color(ColorRole::Base); }
     Color base_text() const { return color(ColorRole::BaseText); }
     Color button() const { return color(ColorRole::Button); }
