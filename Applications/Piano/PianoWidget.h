@@ -78,7 +78,7 @@ private:
 
     int m_wave_type { 0 };
     bool m_delay_enabled { false };
-    bool m_release_enabled { false };
+    bool m_decay_enabled { false };
 
     bool keys[256] { false };
 
