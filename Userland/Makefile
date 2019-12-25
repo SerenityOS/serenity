@@ -4,7 +4,7 @@ APPS = ${SRCS:.cpp=}
 
 EXTRA_CLEAN = $(APPS)
 
-LDFLAGS = -lc -lhtml -lgui -ldraw -laudio -lipc -lthread -lcore -lpcidb -lmarkdown -lpthread -lprotocol -lipc
+LIB_DEPS = HTML GUI Draw Audio Protocol IPC Thread Pthread Core PCIDB Markdown
 
 all: $(OBJS) $(APPS)
 

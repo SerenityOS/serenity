@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = Minesweeper
 
-LDFLAGS = -lgui -ldraw -lipc -lcore -lc
+LIB_DEPS = GUI IPC Draw Core
 
 include ../../Makefile.common

@@ -5,6 +5,6 @@ OBJS = \
 
 PROGRAM = TelnetServer
 
-LDFLAGS = -lcore -lc
+LIB_DEPS = Core
 
 include ../../Makefile.common

@@ -7,6 +7,6 @@ OBJS = \
 
 PROGRAM = Inspector
 
-LDFLAGS = -lgui -ldraw -lipc -lcore -lc
+LIB_DEPS = GUI Draw IPC Core
 
 include ../../Makefile.common

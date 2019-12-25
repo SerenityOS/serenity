@@ -5,6 +5,6 @@ OBJS = \
 
 PROGRAM = Shell
 
-LDFLAGS = -lcore -lc
+LIB_DEPS = Core
 
 include ../Makefile.common

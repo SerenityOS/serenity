@@ -6,12 +6,12 @@ OBJS = \
 
 PROGRAM = FontEditor
 
-LDFLAGS = -lgui -ldraw -lipc -lcore -lc
+LIB_DEPS = GUI Draw Core IPC
 
 FontEditor.cpp: UI_FontEditorBottom.h
 
-UI_FontEditorBottom.h: FontEditorBottom.frm
-	../../DevTools/FormCompiler/FormCompiler $< > $@
+UI_FontEditorBottom.h: FontEditorBottom.frm FORMCOMPILER
+	$(QUIET) $(FORMCOMPILER) $< > $@
 
 EXTRA_CLEAN = UI_FontEditorBottom.h
 

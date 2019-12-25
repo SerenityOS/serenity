@@ -4,6 +4,6 @@ OBJS = \
 
 PROGRAM = TextEditor
 
-LDFLAGS = -lgui -ldraw -lvt -lipc -lthread -lpthread -lcore -lc
+LIB_DEPS = GUI Draw VT IPC Thread Pthread Core
 
 include ../../Makefile.common

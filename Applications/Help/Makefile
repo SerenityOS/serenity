@@ -7,6 +7,6 @@ OBJS = \
 
 PROGRAM = Help
 
-LDFLAGS = -lgui -lhtml -lmarkdown -ldraw -lipc -lprotocol -lthread -lpthread -lcore -lc
+LIB_DEPS = GUI HTML Draw Markdown IPC Protocol Thread Pthread Core
 
 include ../../Makefile.common
