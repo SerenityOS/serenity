@@ -136,7 +136,14 @@ CEventLoop::CEventLoop()
 
     if (!s_main_event_loop) {
         s_main_event_loop = this;
+#if defined(SOCK_NONBLOCK)
         int rc = pipe2(s_wake_pipe_fds, O_CLOEXEC);
+#else
+        int rc = pipe(s_wake_pipe_fds);
+        fcntl(s_wake_pipe_fds[0], F_SETFD, FD_CLOEXEC);
+        fcntl(s_wake_pipe_fds[1], F_SETFD, FD_CLOEXEC);
+
+#endif
         ASSERT(rc == 0);
         s_event_loop_stack->append(this);
 
