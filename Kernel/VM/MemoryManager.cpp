@@ -167,6 +167,13 @@ void MemoryManager::initialize_paging()
         "orl $0x20, %eax\n"
         "mov %eax, %cr4\n");
 
+    // Turn on IA32_EFER.NXE
+    asm volatile(
+        "movl $0xc0000080, %ecx\n"
+        "rdmsr\n"
+        "orl $0x800, %eax\n"
+        "wrmsr\n");
+
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
     asm volatile(
         "movl %%cr0, %%eax\n"
