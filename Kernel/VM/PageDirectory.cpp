@@ -6,7 +6,7 @@
 static const u32 userspace_range_base = 0x01000000;
 static const u32 kernelspace_range_base = 0xc0000000;
 
-static HashMap<u32, PageDirectory*>& pdb_map()
+static HashMap<u32, PageDirectory*>& cr3_map()
 {
     ASSERT_INTERRUPTS_DISABLED();
     static HashMap<u32, PageDirectory*>* map;
@@ -15,10 +15,10 @@ static HashMap<u32, PageDirectory*>& pdb_map()
     return *map;
 }
 
-RefPtr<PageDirectory> PageDirectory::find_by_pdb(u32 pdb)
+RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
 {
     InterruptDisabler disabler;
-    return pdb_map().get(pdb).value_or({});
+    return cr3_map().get(cr3).value_or({});
 }
 
 PageDirectory::PageDirectory(PhysicalAddress paddr)
@@ -26,7 +26,7 @@ PageDirectory::PageDirectory(PhysicalAddress paddr)
 {
     m_directory_page = PhysicalPage::create(paddr, true, false);
     InterruptDisabler disabler;
-    pdb_map().set(m_directory_page->paddr().get(), this);
+    cr3_map().set(cr3(), this);
 }
 
 PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_range_allocator)
@@ -35,7 +35,7 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
 {
     MM.populate_page_directory(*this);
     InterruptDisabler disabler;
-    pdb_map().set(m_directory_page->paddr().get(), this);
+    cr3_map().set(cr3(), this);
 }
 
 PageDirectory::~PageDirectory()
@@ -44,7 +44,7 @@ PageDirectory::~PageDirectory()
     dbgprintf("MM: ~PageDirectory K%x\n", this);
 #endif
     InterruptDisabler disabler;
-    pdb_map().remove(m_directory_page->paddr().get());
+    cr3_map().remove(cr3());
 }
 
 void PageDirectory::flush(VirtualAddress vaddr)

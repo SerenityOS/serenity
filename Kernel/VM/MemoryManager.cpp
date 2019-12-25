@@ -307,7 +307,7 @@ Region* MemoryManager::region_from_vaddr(VirtualAddress vaddr)
 {
     if (auto* region = kernel_region_from_vaddr(vaddr))
         return region;
-    auto page_directory = PageDirectory::find_by_pdb(cpu_cr3());
+    auto page_directory = PageDirectory::find_by_cr3(cpu_cr3());
     if (!page_directory)
         return nullptr;
     ASSERT(page_directory->process());
