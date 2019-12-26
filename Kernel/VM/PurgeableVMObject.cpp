@@ -29,6 +29,19 @@ NonnullRefPtr<VMObject> PurgeableVMObject::clone()
 int PurgeableVMObject::purge()
 {
     LOCKER(m_paging_lock);
+    return purge_impl();
+}
+
+int PurgeableVMObject::purge_with_interrupts_disabled(Badge<MemoryManager>)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    if (m_paging_lock.is_locked())
+        return 0;
+    return purge_impl();
+}
+
+int PurgeableVMObject::purge_impl()
+{
     if (!m_volatile)
         return 0;
     int purged_page_count = 0;

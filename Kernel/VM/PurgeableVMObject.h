@@ -10,6 +10,7 @@ public:
     virtual NonnullRefPtr<VMObject> clone() override;
 
     int purge();
+    int purge_with_interrupts_disabled(Badge<MemoryManager>);
 
     bool was_purged() const { return m_was_purged; }
     void set_was_purged(bool b) { m_was_purged = b; }
@@ -20,6 +21,8 @@ public:
 private:
     explicit PurgeableVMObject(size_t);
     explicit PurgeableVMObject(const PurgeableVMObject&);
+
+    int purge_impl();
 
     PurgeableVMObject& operator=(const PurgeableVMObject&) = delete;
     PurgeableVMObject& operator=(PurgeableVMObject&&) = delete;
