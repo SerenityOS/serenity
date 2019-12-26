@@ -716,9 +716,9 @@ Optional<KBuffer> procfs$memstat(InodeIdentifier)
     json.add("kmalloc_available", (u32)sum_free);
     json.add("kmalloc_eternal_allocated", (u32)kmalloc_sum_eternal);
     json.add("user_physical_allocated", MM.user_physical_pages_used());
-    json.add("user_physical_available", MM.user_physical_pages());
+    json.add("user_physical_available", MM.user_physical_pages() - MM.user_physical_pages_used());
     json.add("super_physical_allocated", MM.super_physical_pages_used());
-    json.add("super_physical_available", MM.super_physical_pages());
+    json.add("super_physical_available", MM.super_physical_pages() - MM.super_physical_pages_used());
     json.add("kmalloc_call_count", g_kmalloc_call_count);
     json.add("kfree_call_count", g_kfree_call_count);
     slab_alloc_stats([&json](size_t slab_size, size_t num_allocated, size_t num_free) {
