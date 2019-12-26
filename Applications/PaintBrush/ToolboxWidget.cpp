@@ -5,6 +5,7 @@
 #include "PaintableWidget.h"
 #include "PenTool.h"
 #include "PickerTool.h"
+#include "RectangleTool.h"
 #include "SprayTool.h"
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GBoxLayout.h>
@@ -70,6 +71,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
     add_tool("Color Picker", "picker", make<PickerTool>());
     add_tool("Erase", "eraser", make<EraseTool>());
     add_tool("Line", "line", make<LineTool>());
+    add_tool("Rectangle", "rectangle", make<RectangleTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()
