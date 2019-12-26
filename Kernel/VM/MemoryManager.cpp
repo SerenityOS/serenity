@@ -9,6 +9,7 @@
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
+#include <Kernel/VM/PurgeableVMObject.h>
 
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
@@ -424,9 +425,25 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
             kprintf("MM: no user physical regions available (?)\n");
         }
 
-        kprintf("MM: no user physical pages available\n");
-        ASSERT_NOT_REACHED();
-        return {};
+        for_each_vmobject([&](auto& vmobject) {
+            if (vmobject.is_purgeable()) {
+                auto& purgeable_vmobject = static_cast<PurgeableVMObject&>(vmobject);
+                int purged_page_count = purgeable_vmobject.purge_with_interrupts_disabled({});
+                if (purged_page_count) {
+                    kprintf("MM: Purge saved the day! Purged %d pages from PurgeableVMObject{%p}\n", purged_page_count, &purgeable_vmobject);
+                    page = find_free_user_physical_page();
+                    ASSERT(page);
+                    return IterationDecision::Break;
+                }
+            }
+            return IterationDecision::Continue;
+        });
+
+        if (!page) {
+            kprintf("MM: no user physical pages available\n");
+            ASSERT_NOT_REACHED();
+            return {};
+        }
     }
 
 #ifdef MM_DEBUG
