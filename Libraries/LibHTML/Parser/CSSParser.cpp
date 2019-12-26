@@ -19,7 +19,6 @@ static Optional<Color> parse_css_color(const StringView& view)
     if (color.has_value())
         return color;
 
-    // FIXME: Parse all valid color strings :^)
     return {};
 }
 
