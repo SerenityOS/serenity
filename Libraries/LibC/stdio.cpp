@@ -635,7 +635,17 @@ void funlockfile(FILE* filehandle)
 
 FILE* tmpfile()
 {
-    dbgprintf("FIXME: Implement tmpfile()\n");
-    ASSERT_NOT_REACHED();
+    char tmp_path[] = "/tmp/XXXXXX";
+    if (!__generate_unique_filename(tmp_path))
+        return nullptr;
+
+    int fd = open(tmp_path, O_CREAT | O_EXCL | O_RDWR, S_IWUSR | S_IRUSR);
+    if (fd < 0)
+        return nullptr;
+
+    // FIXME: instead of using this hack, implement with O_TMPFILE or similar
+    unlink(tmp_path);
+
+    return make_FILE(fd);
 }
 }
