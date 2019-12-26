@@ -104,13 +104,13 @@ static inline T strtol_impl(const char* nptr, char** endptr, int base)
     return num;
 }
 
-[[nodiscard]] bool __generate_unique_filename(char* pattern)
+[[nodiscard]] int __generate_unique_filename(char* pattern)
 {
     int length = strlen(pattern);
 
     if (length < 6 || !String(pattern).ends_with("XXXXXX")) {
         errno = EINVAL;
-        return false;
+        return -1;
     }
 
     int start = length - 6;
@@ -123,10 +123,10 @@ static inline T strtol_impl(const char* nptr, char** endptr, int base)
         struct stat st;
         int rc = lstat(pattern, &st);
         if (rc < 0 && errno == ENOENT)
-            return true;
+            return 0;
     }
     errno = EEXIST;
-    return false;
+    return -1;
 }
 
 extern "C" {
@@ -533,7 +533,7 @@ int system(const char* command)
 
 char* mktemp(char* pattern)
 {
-    if (!__generate_unique_filename(pattern))
+    if (__generate_unique_filename(pattern) < 0)
         pattern[0] = '\0';
 
     return pattern;
@@ -552,7 +552,7 @@ int mkstemp(char* pattern)
 
 char* mkdtemp(char* pattern)
 {
-    if (!__generate_unique_filename(pattern))
+    if (__generate_unique_filename(pattern) < 0)
         return nullptr;
 
     if (mkdir(pattern, 0700) < 0)
