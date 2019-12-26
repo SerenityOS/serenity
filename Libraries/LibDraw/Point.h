@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/LogStream.h>
+#include <AK/String.h>
 #include <LibDraw/Orientation.h>
 
 class Rect;
@@ -107,14 +107,20 @@ public:
             set_y(value);
     }
 
-    // Returns pixels moved from other in either direction
-    int pixels_moved(const Point &other) const
+    int dx_relative_to(const Point& other) const
     {
-        auto pixels_moved = max(
-            abs(other.x() - x()),
-            abs(other.y() - y())
-        );
-        return pixels_moved;
+        return x() - other.x();
+    }
+
+    int dy_relative_to(const Point& other) const
+    {
+        return y() - other.y();
+    }
+
+    // Returns pixels moved from other in either direction
+    int pixels_moved(const Point& other) const
+    {
+        return max(abs(dx_relative_to(other)), abs(dy_relative_to(other)));
     }
 
 private:
