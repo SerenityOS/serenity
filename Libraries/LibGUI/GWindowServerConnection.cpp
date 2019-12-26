@@ -295,3 +295,9 @@ void GWindowServerConnection::handle(const WindowClient::DragCancelled&)
 {
     GDragOperation::notify_cancelled({});
 }
+
+void GWindowServerConnection::handle(const WindowClient::WindowStateChanged& message)
+{
+    if (auto* window = GWindow::from_window_id(message.window_id()))
+        window->notify_state_changed({}, message.minimized());
+}

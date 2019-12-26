@@ -693,3 +693,18 @@ void GWindow::update_all_windows(Badge<GWindowServerConnection>)
         window->update();
     }
 }
+
+void GWindow::notify_state_changed(Badge<GWindowServerConnection>, bool minimized)
+{
+    // When double buffering is enabled, minimization means we can mark the front bitmap volatile (in addition to the back bitmap.)
+    // When double buffering is disabled, there is only the back bitmap (which we can now mark volatile!)
+    RefPtr<GraphicsBitmap>& bitmap = m_double_buffering_enabled ? m_front_bitmap : m_back_bitmap;
+    if (!bitmap)
+        return;
+    if (minimized) {
+        bitmap->shared_buffer()->set_volatile();
+    } else {
+        if (!bitmap->shared_buffer()->set_nonvolatile())
+            bitmap = nullptr;
+    }
+}
