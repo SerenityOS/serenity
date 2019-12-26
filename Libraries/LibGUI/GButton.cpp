@@ -72,11 +72,6 @@ void GButton::click()
         m_action->activate(this);
 }
 
-bool GButton::supports_keyboard_activation() const
-{
-    return is_enabled();
-}
-
 void GButton::set_action(GAction& action)
 {
     m_action = action.make_weak_ptr();
