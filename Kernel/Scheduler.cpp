@@ -1,6 +1,5 @@
 #include <AK/TemporaryChange.h>
 #include <Kernel/Arch/i386/PIT.h>
-#include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <Kernel/Profiling.h>
@@ -51,7 +50,6 @@ Thread* g_colonel;
 WaitQueue* g_finalizer_wait_queue;
 static Process* s_colonel_process;
 u64 g_uptime;
-static u64 s_beep_timeout;
 
 struct TaskRedirectionData {
     u16 selector;
@@ -63,12 +61,6 @@ static bool s_active;
 bool Scheduler::is_active()
 {
     return s_active;
-}
-
-void Scheduler::beep()
-{
-    PCSpeaker::tone_on(440);
-    s_beep_timeout = g_uptime + 100;
 }
 
 Thread::JoinBlocker::JoinBlocker(Thread& joinee, void*& joinee_exit_value)
@@ -553,11 +545,6 @@ void Scheduler::timer_tick(RegisterDump& regs)
     tv.tv_sec = RTC::boot_time() + PIT::seconds_since_boot();
     tv.tv_usec = PIT::ticks_this_second() * 1000;
     Process::update_info_page_timestamp(tv);
-
-    if (s_beep_timeout && g_uptime > s_beep_timeout) {
-        PCSpeaker::tone_off();
-        s_beep_timeout = 0;
-    }
 
     if (current->process().is_profiling()) {
         auto backtrace = current->raw_backtrace(regs.ebp);
