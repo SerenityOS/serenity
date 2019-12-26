@@ -216,7 +216,8 @@ void Region::remap_page(size_t index)
         pte.set_writable(false);
     else
         pte.set_writable(is_writable());
-    pte.set_execute_disabled(!is_executable());
+    if (MM.has_nx_support())
+        pte.set_execute_disabled(!is_executable());
     pte.set_user_allowed(is_user_accessible());
     m_page_directory->flush(page_vaddr);
 #ifdef MM_DEBUG
@@ -265,7 +266,8 @@ void Region::map(PageDirectory& page_directory)
                 pte.set_writable(false);
             else
                 pte.set_writable(is_writable());
-            pte.set_execute_disabled(!is_executable());
+            if (MM.has_nx_support())
+                pte.set_execute_disabled(!is_executable());
         } else {
             pte.set_physical_page_base(0);
             pte.set_present(false);

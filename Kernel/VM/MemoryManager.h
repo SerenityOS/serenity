@@ -111,6 +111,8 @@ private:
 
     PageTableEntry& ensure_pte(PageDirectory&, VirtualAddress);
 
+    bool has_nx_support() const { return m_has_nx_support; }
+
     RefPtr<PageDirectory> m_kernel_page_directory;
     PageTableEntry* m_low_page_tables[4] { nullptr };
 
@@ -130,6 +132,7 @@ private:
     InlineLinkedList<VMObject> m_vmobjects;
 
     bool m_quickmap_in_use { false };
+    bool m_has_nx_support { false };
 };
 
 struct ProcessPagingScope {
