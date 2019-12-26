@@ -104,9 +104,34 @@ static inline T strtol_impl(const char* nptr, char** endptr, int base)
     return num;
 }
 
+[[nodiscard]] bool __generate_unique_filename(char* pattern)
+{
+    int length = strlen(pattern);
+
+    if (length < 6 || !String(pattern).ends_with("XXXXXX")) {
+        errno = EINVAL;
+        return false;
+    }
+
+    int start = length - 6;
+
+    static constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+
+    for (int attempt = 0; attempt < 100; ++attempt) {
+        for (int i = 0; i < 6; ++i)
+            pattern[start + i] = random_characters[(rand() % sizeof(random_characters))];
+        struct stat st;
+        int rc = lstat(pattern, &st);
+        if (rc < 0 && errno == ENOENT)
+            return true;
+    }
+    errno = EEXIST;
+    return false;
+}
+
 extern "C" {
 
-// Itanium C++ ABI methods defined in crt0.cpp 
+// Itanium C++ ABI methods defined in crt0.cpp
 extern int __cxa_atexit(void (*function)(void*), void* paramter, void* dso_handle);
 extern void __cxa_finalize(void* dso_handle);
 
@@ -508,28 +533,9 @@ int system(const char* command)
 
 char* mktemp(char* pattern)
 {
-    int length = strlen(pattern);
-
-    if (length < 6 || !String(pattern).ends_with("XXXXXX")) {
+    if (!__generate_unique_filename(pattern))
         pattern[0] = '\0';
-        errno = EINVAL;
-        return pattern;
-    }
 
-    int start = length - 6;
-
-    static constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
-
-    for (int attempt = 0; attempt < 100; ++attempt) {
-        for (int i = 0; i < 6; ++i)
-            pattern[start + i] = random_characters[(rand() % sizeof(random_characters))];
-        struct stat st;
-        int rc = lstat(pattern, &st);
-        if (rc < 0 && errno == ENOENT)
-            return pattern;
-    }
-    pattern[0] = '\0';
-    errno = EEXIST;
     return pattern;
 }
 
@@ -546,31 +552,13 @@ int mkstemp(char* pattern)
 
 char* mkdtemp(char* pattern)
 {
-    int length = strlen(pattern);
-
-    if (length < 6 || !String(pattern).ends_with("XXXXXX")) {
-        errno = EINVAL;
+    if (!__generate_unique_filename(pattern))
         return nullptr;
-    }
 
-    int start = length - 6;
+    if (mkdir(pattern, 0700) < 0)
+        return nullptr;
 
-    static constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
-
-    for (int attempt = 0; attempt < 100; ++attempt) {
-        for (int i = 0; i < 6; ++i)
-            pattern[start + i] = random_characters[(rand() % sizeof(random_characters))];
-        struct stat st;
-        int rc = lstat(pattern, &st);
-        if (rc < 0 && errno == ENOENT) {
-            if (mkdir(pattern, 0700) < 0)
-                return nullptr;
-            return pattern;
-        }
-    }
-
-    errno = EEXIST;
-    return nullptr;
+    return pattern;
 }
 
 void* bsearch(const void* key, const void* base, size_t nmemb, size_t size, int (*compar)(const void*, const void*))
