@@ -22,6 +22,9 @@ MemoryManager& MM
 
 MemoryManager::MemoryManager(u32 physical_address_for_kernel_page_tables)
 {
+    CPUID id(0x80000001);
+    m_has_nx_support = (id.edx() & (1 << 20)) != 0;
+
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(physical_address_for_kernel_page_tables));
     for (size_t i = 0; i < 4; ++i) {
         m_low_page_tables[i] = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * (5 + i));
@@ -57,12 +60,18 @@ void MemoryManager::initialize_paging()
     create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (8 * MB) - PAGE_SIZE);
 
     // Disable execution from 0MB through 1MB (BIOS data, legacy things, ...)
-    for (size_t i = 0; i < (1 * MB); ++i)
-        ensure_pte(kernel_page_directory(), VirtualAddress(i)).set_execute_disabled(true);
+    for (size_t i = 0; i < (1 * MB); ++i) {
+        auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
+        if (m_has_nx_support)
+            pte.set_execute_disabled(true);
+    }
 
     // Disable execution from 2MB through 8MB (kmalloc, kmalloc_eternal, slabs, page tables, ...)
-    for (size_t i = 1; i < 4; ++i)
-        kernel_page_directory().table().directory(0)[i].set_execute_disabled(true);
+    for (size_t i = 1; i < 4; ++i) {
+        auto& pte = kernel_page_directory().table().directory(0)[i];
+        if (m_has_nx_support)
+            pte.set_execute_disabled(true);
+    }
 
     // FIXME: We should move everything kernel-related above the 0xc0000000 virtual mark.
 
@@ -175,12 +184,18 @@ void MemoryManager::initialize_paging()
         "orl $0x20, %eax\n"
         "mov %eax, %cr4\n");
 
-    // Turn on IA32_EFER.NXE
-    asm volatile(
-        "movl $0xc0000080, %ecx\n"
-        "rdmsr\n"
-        "orl $0x800, %eax\n"
-        "wrmsr\n");
+    if (m_has_nx_support) {
+        kprintf("MM: NX support detected; enabling NXE flag\n");
+
+        // Turn on IA32_EFER.NXE
+        asm volatile(
+            "movl $0xc0000080, %ecx\n"
+            "rdmsr\n"
+            "orl $0x800, %eax\n"
+            "wrmsr\n");
+    } else {
+        kprintf("MM: NX support not detected\n");
+    }
 
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
     asm volatile(
