@@ -1,5 +1,6 @@
 #include "ToolboxWidget.h"
 #include "BucketTool.h"
+#include "EllipseTool.h"
 #include "EraseTool.h"
 #include "LineTool.h"
 #include "PaintableWidget.h"
@@ -72,6 +73,7 @@ ToolboxWidget::ToolboxWidget(GWidget* parent)
     add_tool("Erase", "eraser", make<EraseTool>());
     add_tool("Line", "line", make<LineTool>());
     add_tool("Rectangle", "rectangle", make<RectangleTool>());
+    add_tool("Ellipse", "circle", make<EllipseTool>());
 }
 
 ToolboxWidget::~ToolboxWidget()
