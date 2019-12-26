@@ -22,6 +22,7 @@ public:
     void lock();
     void unlock();
     bool unlock_if_locked();
+    bool is_locked() const { return m_holder; }
 
     const char* name() const { return m_name; }
 
