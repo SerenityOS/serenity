@@ -1,7 +1,6 @@
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
-#include <AK/StringBuilder.h>
 #include <LibC/SharedBuffer.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
@@ -230,8 +229,6 @@ void GWindow::event(CEvent& event)
         for (auto& rect : rects)
             m_main_widget->dispatch_event(*make<GPaintEvent>(rect), this);
 
-        paint_keybinds();
-
         if (m_double_buffering_enabled)
             flip(rects);
         else if (created_new_backing_store)
@@ -247,53 +244,14 @@ void GWindow::event(CEvent& event)
     }
 
     if (event.type() == GEvent::KeyUp || event.type() == GEvent::KeyDown) {
-        auto keyevent = static_cast<GKeyEvent&>(event);
-        if (keyevent.logo() && event.type() == GEvent::KeyUp) {
-            if (m_keybind_mode) {
-                m_keybind_mode = false;
-            } else {
-                m_keybind_mode = true;
-                collect_keyboard_activation_targets();
-                m_entered_keybind = "";
-            }
-            update();
-            return;
-        }
-
-        if (m_keybind_mode) {
-            if (event.type() == GEvent::KeyUp) {
-                StringBuilder builder;
-                builder.append(m_entered_keybind);
-                builder.append(keyevent.text());
-                m_entered_keybind = builder.to_string();
-
-                auto found_widget = m_keyboard_activation_targets.find(m_entered_keybind);
-                if (found_widget != m_keyboard_activation_targets.end()) {
-                    m_keybind_mode = false;
-                    auto event = make<GMouseEvent>(GEvent::MouseDown, Point(), 0, GMouseButton::Left, 0, 0);
-                    found_widget->value->dispatch_event(*event, this);
-                    event = make<GMouseEvent>(GEvent::MouseUp, Point(), 0, GMouseButton::Left, 0, 0);
-                    found_widget->value->dispatch_event(*event, this);
-                } else if (m_entered_keybind.length() >= m_max_keybind_length) {
-                    m_keybind_mode = false;
-                }
-                update();
-            }
-        } else {
-            if (m_focused_widget)
-                return m_focused_widget->dispatch_event(event, this);
-            if (m_main_widget)
-                return m_main_widget->dispatch_event(event, this);
-        }
+        if (m_focused_widget)
+            return m_focused_widget->dispatch_event(event, this);
+        if (m_main_widget)
+            return m_main_widget->dispatch_event(event, this);
         return;
     }
 
     if (event.type() == GEvent::WindowBecameActive || event.type() == GEvent::WindowBecameInactive) {
-        if (event.type() == GEvent::WindowBecameInactive && m_keybind_mode) {
-            m_keybind_mode = false;
-            update();
-        }
-
         m_is_active = event.type() == GEvent::WindowBecameActive;
         if (m_main_widget)
             m_main_widget->dispatch_event(event, this);
@@ -333,76 +291,6 @@ void GWindow::event(CEvent& event)
         return wm_event(static_cast<GWMEvent&>(event));
 
     CObject::event(event);
-}
-
-void GWindow::paint_keybinds()
-{
-    if (!m_keybind_mode)
-        return;
-    GPainter painter(*m_main_widget);
-
-    for (auto& keypair : m_keyboard_activation_targets) {
-        if (!keypair.value)
-            continue;
-        auto& widget = *keypair.value;
-        bool could_be_keybind = true;
-        for (size_t i = 0; i < m_entered_keybind.length(); ++i) {
-            if (keypair.key.characters()[i] != m_entered_keybind.characters()[i]) {
-                could_be_keybind = false;
-                break;
-            }
-        }
-
-        if (could_be_keybind) {
-            Rect rect { widget.x() - 5, widget.y() - 5, 4 + Font::default_font().width(keypair.key), 16 };
-            Rect highlight_rect { widget.x() - 3, widget.y() - 5, 0, 16 };
-
-            painter.fill_rect(rect, Color::WarmGray);
-            painter.draw_rect(rect, Color::Black);
-            painter.draw_text(rect, keypair.key.characters(), TextAlignment::Center, Color::Black);
-            painter.draw_text(highlight_rect, m_entered_keybind.characters(), TextAlignment::CenterLeft, Color::MidGray);
-        }
-    }
-}
-
-static void collect_keyboard_activation_targets_impl(GWidget& widget, Vector<GWidget*>& targets)
-{
-    widget.for_each_child_widget([&](auto& child) {
-        if (child.supports_keyboard_activation()) {
-            targets.append(&child);
-            collect_keyboard_activation_targets_impl(child, targets);
-        }
-        return IterationDecision::Continue;
-    });
-}
-
-void GWindow::collect_keyboard_activation_targets()
-{
-    m_keyboard_activation_targets.clear();
-    if (!m_main_widget)
-        return;
-
-    Vector<GWidget*> targets;
-    collect_keyboard_activation_targets_impl(*m_main_widget, targets);
-
-    m_max_keybind_length = ceil_div(targets.size(), ('z' - 'a'));
-    size_t buffer_length = m_max_keybind_length + 1;
-    char keybind_buffer[buffer_length];
-    for (size_t i = 0; i < buffer_length - 1; ++i)
-        keybind_buffer[i] = 'a';
-    keybind_buffer[buffer_length - 1] = '\0';
-
-    for (auto& widget : targets) {
-        m_keyboard_activation_targets.set(String(keybind_buffer), widget->make_weak_ptr());
-        for (size_t i = 0; i < buffer_length - 1; ++i) {
-            if (keybind_buffer[i] >= 'z') {
-                keybind_buffer[i] = 'a';
-            } else {
-                ++keybind_buffer[i];
-                break;
-            }
-        }
-    }
 }
 
 bool GWindow::is_visible() const

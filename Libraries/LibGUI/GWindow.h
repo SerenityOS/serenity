@@ -145,10 +145,6 @@ protected:
 private:
     virtual bool is_window() const override final { return true; }
 
-    void paint_keybinds();
-
-    void collect_keyboard_activation_targets();
-
     NonnullRefPtr<GraphicsBitmap> create_backing_bitmap(const Size&);
     NonnullRefPtr<GraphicsBitmap> create_shared_bitmap(GraphicsBitmap::Format, const Size&);
     void set_current_backing_bitmap(GraphicsBitmap&, bool flush_immediately = false);
@@ -178,9 +174,5 @@ private:
     bool m_resizable { true };
     bool m_fullscreen { false };
     bool m_show_titlebar { true };
-    bool m_keybind_mode { false };
-    String m_entered_keybind;
-    size_t m_max_keybind_length { 0 };
-    HashMap<String, WeakPtr<GWidget>> m_keyboard_activation_targets;
     bool m_layout_pending { false };
 };

@@ -121,7 +121,6 @@ public:
     void update(const Rect&);
 
     virtual bool accepts_focus() const { return false; }
-    virtual bool supports_keyboard_activation() const { return false; }
 
     bool is_focused() const;
     void set_focus(bool);

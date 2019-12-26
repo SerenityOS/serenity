@@ -30,7 +30,6 @@ public:
 
     virtual void click() = 0;
     virtual bool accepts_focus() const override { return true; }
-    virtual bool supports_keyboard_activation() const override { return true; }
     virtual bool is_uncheckable() const { return true; }
 
     int auto_repeat_interval() const { return m_auto_repeat_interval; }
