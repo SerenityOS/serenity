@@ -203,7 +203,7 @@ bool Project::add_file(const String& filename)
 ProjectFile* Project::get_file(const String& filename)
 {
     for (auto& file : m_files) {
-        if (file.name() == filename)
+        if (FileSystemPath(file.name()).string() == FileSystemPath(filename).string())
             return &file;
     }
     return nullptr;
