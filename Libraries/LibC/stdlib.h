@@ -4,7 +4,7 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
-__attribute__((warn_unused_result)) bool __generate_unique_filename(char* pattern);
+__attribute__((warn_unused_result)) int __generate_unique_filename(char* pattern);
 
 __BEGIN_DECLS
 
