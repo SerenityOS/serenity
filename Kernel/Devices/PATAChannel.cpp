@@ -118,19 +118,23 @@ void PATAChannel::initialize(bool force_pio)
             kprintf("PATAChannel: PATA Controller found! id=%w:%w\n", id.vendor_id, id.device_id);
         }
     });
-    m_force_pio.resource() = false;
-    if (!m_pci_address.is_null()) {
-        // Let's try to set up DMA transfers.
-        PCI::enable_bus_mastering(m_pci_address);
-        m_prdt.end_of_table = 0x8000;
-        m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
-        m_dma_buffer_page = MM.allocate_supervisor_physical_page();
-        kprintf("PATAChannel: Bus master IDE: I/O @ %x\n", m_bus_master_base);
-        if (force_pio) {
-            m_force_pio.resource() = true;
-            kprintf("PATAChannel: Requested to force PIO mode!\n");
-        }
+
+    if (m_pci_address.is_null()) {
+        kprintf("PATAChannel: PCI address was null; can not set up DMA\n");
+        return;
     }
+
+    if (force_pio) {
+        kprintf("PATAChannel: Requested to force PIO mode; not setting up DMA\n");
+        return;
+    }
+
+    // Let's try to set up DMA transfers.
+    PCI::enable_bus_mastering(m_pci_address);
+    m_prdt.end_of_table = 0x8000;
+    m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
+    m_dma_buffer_page = MM.allocate_supervisor_physical_page();
+    kprintf("PATAChannel: Bus master IDE: I/O @ %x\n", m_bus_master_base);
 }
 
 static void print_ide_status(u8 status)
