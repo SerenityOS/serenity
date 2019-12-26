@@ -1,5 +1,6 @@
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
+#include <AK/NeverDestroyed.h>
 #include <AK/StringBuilder.h>
 #include <LibC/SharedBuffer.h>
 #include <LibC/stdio.h>
@@ -15,13 +16,13 @@
 
 //#define UPDATE_COALESCING_DEBUG
 
-static HashTable<GWindow*> all_windows;
-static HashMap<int, GWindow*> reified_windows;
+static NeverDestroyed<HashTable<GWindow*>> all_windows;
+static NeverDestroyed<HashMap<int, GWindow*>> reified_windows;
 
 GWindow* GWindow::from_window_id(int window_id)
 {
-    auto it = reified_windows.find(window_id);
-    if (it != reified_windows.end())
+    auto it = reified_windows->find(window_id);
+    if (it != reified_windows->end())
         return (*it).value;
     return nullptr;
 }
@@ -29,14 +30,14 @@ GWindow* GWindow::from_window_id(int window_id)
 GWindow::GWindow(CObject* parent)
     : CObject(parent)
 {
-    all_windows.set(this);
+    all_windows->set(this);
     m_rect_when_windowless = { 100, 400, 140, 140 };
     m_title_when_windowless = "GWindow";
 }
 
 GWindow::~GWindow()
 {
-    all_windows.remove(this);
+    all_windows->remove(this);
     hide();
 }
 
@@ -74,7 +75,7 @@ void GWindow::show()
 
     apply_icon();
 
-    reified_windows.set(m_window_id, this);
+    reified_windows->set(m_window_id, this);
     GApplication::the().did_create_window({});
     update();
 }
@@ -83,7 +84,7 @@ void GWindow::hide()
 {
     if (!m_window_id)
         return;
-    reified_windows.remove(m_window_id);
+    reified_windows->remove(m_window_id);
     GWindowServerConnection::the().send_sync<WindowServer::DestroyWindow>(m_window_id);
     m_window_id = 0;
     m_pending_paint_event_rects.clear();
@@ -91,7 +92,7 @@ void GWindow::hide()
     m_front_bitmap = nullptr;
 
     bool app_has_visible_windows = false;
-    for (auto& window : all_windows) {
+    for (auto& window : *all_windows) {
         if (window->is_visible()) {
             app_has_visible_windows = true;
             break;
@@ -689,7 +690,7 @@ void GWindow::schedule_relayout()
 
 void GWindow::update_all_windows(Badge<GWindowServerConnection>)
 {
-    for (auto* window : all_windows) {
+    for (auto* window : *all_windows) {
         window->update();
     }
 }
