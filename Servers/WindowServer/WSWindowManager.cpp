@@ -434,6 +434,9 @@ void WSWindowManager::notify_minimization_state_changed(WSWindow& window)
 {
     tell_wm_listeners_window_state_changed(window);
 
+    if (window.client())
+        window.client()->post_message(WindowClient::WindowStateChanged(window.window_id(), window.is_minimized()));
+
     if (window.is_active() && window.is_minimized())
         pick_new_active_window();
 }

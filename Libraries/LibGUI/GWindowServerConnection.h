@@ -45,4 +45,5 @@ private:
     virtual void handle(const WindowClient::DragAccepted&) override;
     virtual void handle(const WindowClient::DragCancelled&) override;
     virtual void handle(const WindowClient::UpdateSystemTheme&) override;
+    virtual void handle(const WindowClient::WindowStateChanged&) override;
 };

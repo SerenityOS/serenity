@@ -136,6 +136,7 @@ public:
     void schedule_relayout();
 
     static void update_all_windows(Badge<GWindowServerConnection>);
+    void notify_state_changed(Badge<GWindowServerConnection>, bool minimized);
 
 protected:
     GWindow(CObject* parent = nullptr);
