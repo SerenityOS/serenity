@@ -487,7 +487,7 @@ inline void Process::for_each_in_pgrp(pid_t pgid, Callback callback)
     ASSERT_INTERRUPTS_DISABLED();
     for (auto* process = g_processes->head(); process;) {
         auto* next_process = process->next();
-        if (process->pgid() == pgid) {
+        if (!process->is_dead() && process->pgid() == pgid) {
             if (callback(*process) == IterationDecision::Break)
                 break;
         }
