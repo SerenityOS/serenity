@@ -140,6 +140,24 @@ void Painter::fill_rect_with_gradient(const Rect& a_rect, Color gradient_start, 
     }
 }
 
+void Painter::draw_ellipse_intersecting(const Rect& rect, Color color, int thickness)
+{
+    constexpr int number_samples = 100; // FIXME: dynamically work out the number of samples based upon the rect size
+    double increment = M_PI / number_samples;
+
+    auto ellipse_x = [&](double theta) -> int {
+        return (cos(theta) * rect.width() / sqrt(2)) + rect.center().x();
+    };
+
+    auto ellipse_y = [&](double theta) -> int {
+        return (sin(theta) * rect.height() / sqrt(2)) + rect.center().y();
+    };
+
+    for (float theta = 0; theta < 2 * M_PI; theta += increment) {
+        draw_line({ ellipse_x(theta), ellipse_y(theta) }, { ellipse_x(theta + increment), ellipse_y(theta + increment) }, color, thickness);
+    }
+}
+
 void Painter::draw_rect(const Rect& a_rect, Color color, bool rough)
 {
     Rect rect = a_rect.translated(translation());
