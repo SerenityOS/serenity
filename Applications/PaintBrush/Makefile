@@ -5,6 +5,7 @@ OBJS = \
     Tool.o \
     PenTool.o \
     LineTool.o \
+    RectangleTool.o \
     EraseTool.o \
     BucketTool.o \
     ColorDialog.o \
