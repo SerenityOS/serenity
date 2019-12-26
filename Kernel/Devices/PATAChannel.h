@@ -69,7 +69,6 @@ private:
     RefPtr<PhysicalPage> m_dma_buffer_page;
     u16 m_bus_master_base { 0 };
     Lockable<bool> m_dma_enabled;
-    Lockable<bool> m_force_pio;
 
     RefPtr<PATADiskDevice> m_master;
     RefPtr<PATADiskDevice> m_slave;
