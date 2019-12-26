@@ -8,6 +8,7 @@
 #include <Kernel/Console.h>
 #include <Kernel/Devices/KeyboardDevice.h>
 #include <Kernel/Devices/NullDevice.h>
+#include <Kernel/Devices/PCSpeaker.h>
 #include <Kernel/Devices/RandomDevice.h>
 #include <Kernel/FileSystem/Custody.h>
 #include <Kernel/FileSystem/DevPtsFS.h>
@@ -3623,7 +3624,11 @@ int Process::sys$yield()
 
 int Process::sys$beep()
 {
-    Scheduler::beep();
+    PCSpeaker::tone_on(440);
+    u64 wakeup_time = current->sleep(100);
+    PCSpeaker::tone_off();
+    if (wakeup_time > g_uptime)
+        return -EINTR;
     return 0;
 }
 
