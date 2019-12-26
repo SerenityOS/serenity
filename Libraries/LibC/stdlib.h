@@ -4,6 +4,8 @@
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
+[[nodiscard]] bool __generate_unique_filename(char* pattern);
+
 __BEGIN_DECLS
 
 #define EXIT_SUCCESS 0
