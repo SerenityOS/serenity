@@ -2,7 +2,6 @@
 
 #include "WSMenu.h"
 #include <LibCore/CObject.h>
-#include <LibCore/CTimer.h>
 #include <WindowServer/WSWindow.h>
 
 class AClientConnection;
@@ -53,7 +52,6 @@ private:
 
     RefPtr<WSWindow> m_window;
     String m_username;
-    RefPtr<CTimer> m_timer;
 
     WeakPtr<WSMenu> m_current_menu;
     Vector<WeakPtr<WSMenu>> m_open_menu_stack;
@@ -61,7 +59,6 @@ private:
     Vector<WeakPtr<WSWindow>> m_applets;
 
     Rect m_username_rect;
-    Rect m_time_rect;
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
