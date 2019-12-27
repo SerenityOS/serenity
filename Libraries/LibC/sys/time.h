@@ -9,23 +9,23 @@ __BEGIN_DECLS
 #define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
 #define timercmp(tvp, uvp, cmp) \
     (((tvp)->tv_sec == (uvp)->tv_sec) ? ((tvp)->tv_usec cmp(uvp)->tv_usec) : ((tvp)->tv_sec cmp(uvp)->tv_sec))
-#define timeradd(tvp, uvp)                \
-    do {                                  \
-        (tvp)->tv_sec += (uvp)->tv_sec;   \
-        (tvp)->tv_usec += (uvp)->tv_usec; \
-        if ((tvp)->tv_usec >= 1000000) {  \
-            (tvp)->tv_sec++;              \
-            (tvp)->tv_usec -= 1000000;    \
-        }                                 \
+#define timeradd(a, b, out)                           \
+    do {                                              \
+        (out)->tv_sec = (a)->tv_sec + (b)->tv_sec;    \
+        (out)->tv_usec = (a)->tv_usec + (b)->tv_usec; \
+        if ((out)->tv_usec >= 1000000) {              \
+            (out)->tv_sec++;                          \
+            (out)->tv_usec -= 1000000;                \
+        }                                             \
     } while (0)
-#define timersub(tvp, uvp)                \
-    do {                                  \
-        (tvp)->tv_sec -= (uvp)->tv_sec;   \
-        (tvp)->tv_usec -= (uvp)->tv_usec; \
-        if ((tvp)->tv_usec < 0) {         \
-            (tvp)->tv_sec--;              \
-            (tvp)->tv_usec += 1000000;    \
-        }                                 \
+#define timersub(a, b, out)                           \
+    do {                                              \
+        (out)->tv_sec = (a)->tv_sec - (b)->tv_sec;    \
+        (out)->tv_usec = (a)->tv_usec - (b)->tv_usec; \
+        if ((out)->tv_usec < 0) {                     \
+            (out)->tv_sec--;                          \
+            (out)->tv_usec += 1000000;                \
+        }                                             \
     } while (0)
 
 struct timeval {
