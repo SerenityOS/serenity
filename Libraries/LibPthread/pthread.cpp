@@ -60,7 +60,7 @@ int pthread_create(pthread_t* thread, pthread_attr_t* attributes, void* (*start_
     }
 
 #ifdef PTHREAD_DEBUG
-    printf("pthread_create: Creating thread with attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
+    dbgprintf("pthread_create: Creating thread with attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
         used_attributes,
         (PTHREAD_CREATE_JOINABLE == used_attributes->m_detach_state) ? "joinable" : "detached",
         used_attributes->m_schedule_priority,
@@ -186,7 +186,7 @@ int pthread_attr_init(pthread_attr_t* attributes)
     *attributes = impl;
 
 #ifdef PTHREAD_DEBUG
-    printf("pthread_attr_init: New thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
+    dbgprintf("pthread_attr_init: New thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
         impl,
         (PTHREAD_CREATE_JOINABLE == impl->m_detach_state) ? "joinable" : "detached",
         impl->m_schedule_priority,
@@ -229,7 +229,7 @@ int pthread_attr_setdetachstate(pthread_attr_t* attributes, int detach_state)
     attributes_impl->m_detach_state = detach_state;
 
 #ifdef PTHREAD_DEBUG
-    printf("pthread_attr_setdetachstate: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
+    dbgprintf("pthread_attr_setdetachstate: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->m_detach_state) ? "joinable" : "detached",
         attributes_impl->m_schedule_priority,
@@ -273,7 +273,7 @@ int pthread_attr_setguardsize(pthread_attr_t* attributes, size_t guard_size)
     attributes_impl->m_reported_guard_page_size = guard_size; // POSIX, why?
 
 #ifdef PTHREAD_DEBUG
-    printf("pthread_attr_setguardsize: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
+    dbgprintf("pthread_attr_setguardsize: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->m_detach_state) ? "joinable" : "detached",
         attributes_impl->m_schedule_priority,
@@ -309,7 +309,7 @@ int pthread_attr_setschedparam(pthread_attr_t* attributes, const struct sched_pa
     attributes_impl->m_schedule_priority = p_sched_param->sched_priority;
 
 #ifdef PTHREAD_DEBUG
-    printf("pthread_attr_setschedparam: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
+    dbgprintf("pthread_attr_setschedparam: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->m_detach_state) ? "joinable" : "detached",
         attributes_impl->m_schedule_priority,
@@ -354,7 +354,7 @@ int pthread_attr_setstack(pthread_attr_t* attributes, void* p_stack, size_t stac
     attributes_impl->m_stack_location = p_stack;
 
 #ifdef PTHREAD_DEBUG
-    printf("pthread_attr_setstack: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
+    dbgprintf("pthread_attr_setstack: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->m_detach_state) ? "joinable" : "detached",
         attributes_impl->m_schedule_priority,
@@ -390,7 +390,7 @@ int pthread_attr_setstacksize(pthread_attr_t* attributes, size_t stack_size)
     attributes_impl->m_stack_size = stack_size;
 
 #ifdef PTHREAD_DEBUG
-    printf("pthread_attr_setstacksize: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
+    dbgprintf("pthread_attr_setstacksize: Thread attributes at %p, detach state %s, priority %d, guard page size %d, stack size %d, stack location %p\n",
         attributes_impl,
         (PTHREAD_CREATE_JOINABLE == attributes_impl->m_detach_state) ? "joinable" : "detached",
         attributes_impl->m_schedule_priority,
