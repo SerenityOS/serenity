@@ -68,6 +68,8 @@ public:
     void notify_title_changed(WSWindow&);
     void notify_rect_changed(WSWindow&, const Rect& oldRect, const Rect& newRect);
     void notify_minimization_state_changed(WSWindow&);
+    void notify_opacity_changed(WSWindow&);
+    void notify_occlusion_state_changed(WSWindow&);
     void notify_client_changed_app_menubar(WSClientConnection&);
 
     Rect maximized_window_rect(const WSWindow&) const;
@@ -198,6 +200,8 @@ private:
     void tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow&);
     void tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow&);
     void pick_new_active_window();
+
+    void recompute_occlusions();
 
     RefPtr<WSCursor> m_arrow_cursor;
     RefPtr<WSCursor> m_hand_cursor;

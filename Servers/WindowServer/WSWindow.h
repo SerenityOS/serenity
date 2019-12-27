@@ -47,6 +47,9 @@ public:
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
 
+    bool is_occluded() const { return m_occluded; }
+    void set_occluded(bool);
+
     bool show_titlebar() const { return m_show_titlebar; }
     void set_show_titlebar(bool show) { m_show_titlebar = show; }
 
@@ -72,7 +75,7 @@ public:
     void set_title(const String&);
 
     float opacity() const { return m_opacity; }
-    void set_opacity(float opacity) { m_opacity = opacity; }
+    void set_opacity(float);
 
     int x() const { return m_rect.x(); }
     int y() const { return m_rect.y(); }
@@ -193,6 +196,7 @@ private:
     bool m_minimized { false };
     bool m_maximized { false };
     bool m_fullscreen { false };
+    bool m_occluded { false };
     bool m_show_titlebar { true };
     RefPtr<GraphicsBitmap> m_backing_store;
     RefPtr<GraphicsBitmap> m_last_backing_store;

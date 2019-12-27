@@ -425,9 +425,32 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
 #endif
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
+
+    recompute_occlusions();
+
     tell_wm_listeners_window_rect_changed(window);
 
     m_menu_manager.refresh();
+}
+
+void WSWindowManager::recompute_occlusions()
+{
+    for_each_visible_window_from_back_to_front([&](WSWindow& window) {
+        if (m_switcher.is_visible()) {
+            window.set_occluded(false);
+        } else {
+            if (any_opaque_window_above_this_one_contains_rect(window, window.frame().rect()))
+                window.set_occluded(true);
+            else
+                window.set_occluded(false);
+        }
+        return IterationDecision::Continue;
+    });
+}
+
+void WSWindowManager::notify_opacity_changed(WSWindow&)
+{
+    recompute_occlusions();
 }
 
 void WSWindowManager::notify_minimization_state_changed(WSWindow& window)
@@ -435,10 +458,16 @@ void WSWindowManager::notify_minimization_state_changed(WSWindow& window)
     tell_wm_listeners_window_state_changed(window);
 
     if (window.client())
-        window.client()->post_message(WindowClient::WindowStateChanged(window.window_id(), window.is_minimized()));
+        window.client()->post_message(WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
 
     if (window.is_active() && window.is_minimized())
         pick_new_active_window();
+}
+
+void WSWindowManager::notify_occlusion_state_changed(WSWindow& window)
+{
+    if (window.client())
+        window.client()->post_message(WindowClient::WindowStateChanged(window.window_id(), window.is_minimized(), window.is_occluded()));
 }
 
 void WSWindowManager::pick_new_active_window()

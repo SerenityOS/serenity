@@ -101,7 +101,8 @@ public:
     const GWidget* focused_widget() const { return m_focused_widget; }
     void set_focused_widget(GWidget*);
 
-    void update(const Rect& = Rect());
+    void update();
+    void update(const Rect&);
 
     void set_global_cursor_tracking_widget(GWidget*);
     GWidget* global_cursor_tracking_widget() { return m_global_cursor_tracking_widget.ptr(); }
@@ -136,7 +137,7 @@ public:
     void schedule_relayout();
 
     static void update_all_windows(Badge<GWindowServerConnection>);
-    void notify_state_changed(Badge<GWindowServerConnection>, bool minimized);
+    void notify_state_changed(Badge<GWindowServerConnection>, bool minimized, bool occluded);
 
 protected:
     GWindow(CObject* parent = nullptr);

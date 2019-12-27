@@ -28,6 +28,7 @@ void WSWindowSwitcher::set_visible(bool visible)
     if (m_visible == visible)
         return;
     m_visible = visible;
+    WSWindowManager::the().recompute_occlusions();
     if (m_switcher_window)
         m_switcher_window->set_visible(visible);
     if (!m_visible)

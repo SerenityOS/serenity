@@ -110,6 +110,22 @@ void WSWindow::set_minimized(bool minimized)
     WSWindowManager::the().notify_minimization_state_changed(*this);
 }
 
+void WSWindow::set_opacity(float opacity)
+{
+     if (m_opacity == opacity)
+         return;
+     m_opacity = opacity;
+     WSWindowManager::the().notify_opacity_changed(*this);
+}
+
+void WSWindow::set_occluded(bool occluded)
+{
+    if (m_occluded == occluded)
+        return;
+    m_occluded = occluded;
+    WSWindowManager::the().notify_occlusion_state_changed(*this);
+}
+
 void WSWindow::set_maximized(bool maximized)
 {
     if (m_maximized == maximized)
