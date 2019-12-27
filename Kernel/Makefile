@@ -80,6 +80,7 @@ OBJS = \
     SharedBuffer.o \
     StdLib.o \
     Syscall.o \
+    TimerQueue.o \
     TTY/MasterPTY.o \
     TTY/PTYMultiplexer.o \
     TTY/SlavePTY.o \
