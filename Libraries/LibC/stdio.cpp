@@ -327,6 +327,26 @@ long ftell(FILE* stream)
     return lseek(stream->fd, 0, SEEK_CUR);
 }
 
+int fgetpos(FILE* stream, fpos_t* pos)
+{
+    assert(stream);
+    assert(pos);
+
+    long val = ftell(stream);
+    if (val == -1L)
+        return 1;
+
+    *pos = val;
+    return 0;
+}
+
+int fsetpos(FILE* stream, const fpos_t* pos)
+{
+    assert(stream);
+    assert(pos);
+    return fseek(stream, (long) *pos, SEEK_SET);
+}
+
 void rewind(FILE* stream)
 {
     ASSERT(stream);
