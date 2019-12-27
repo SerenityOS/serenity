@@ -312,6 +312,8 @@ void WSWindowManager::add_window(WSWindow& window)
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
+    recompute_occlusions();
+
     if (window.listens_to_wm_events()) {
         for_each_window([&](WSWindow& other_window) {
             if (&window != &other_window) {
@@ -335,6 +337,8 @@ void WSWindowManager::move_to_front_and_make_active(WSWindow& window)
     m_windows_in_order.remove(&window);
     m_windows_in_order.append(&window);
 
+    recompute_occlusions();
+
     set_active_window(&window);
 }
 
@@ -346,6 +350,8 @@ void WSWindowManager::remove_window(WSWindow& window)
         pick_new_active_window();
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
+
+    recompute_occlusions();
 
     for_each_window_listening_to_wm_events([&window](WSWindow& listener) {
         if (!(listener.wm_event_mask() & WSWMEventMask::WindowRemovals))
