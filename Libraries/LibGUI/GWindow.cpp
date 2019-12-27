@@ -65,7 +65,6 @@ void GWindow::show()
         m_fullscreen,
         m_show_titlebar,
         m_opacity_when_windowless,
-        m_background_color,
         m_base_size,
         m_size_increment,
         (i32)m_window_type,

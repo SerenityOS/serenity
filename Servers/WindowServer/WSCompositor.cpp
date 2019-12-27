@@ -147,7 +147,7 @@ void WSCompositor::compose()
             PainterStateSaver saver(*m_back_painter);
             m_back_painter->add_clip_rect(dirty_rect);
             if (!backing_store)
-                m_back_painter->fill_rect(dirty_rect, window.background_color());
+                m_back_painter->fill_rect(dirty_rect, wm.palette().window());
             if (!window.is_fullscreen())
                 window.frame().paint(*m_back_painter);
             if (!backing_store)
@@ -197,7 +197,7 @@ void WSCompositor::compose()
 
             m_back_painter->blit(dst, *backing_store, dirty_rect_in_backing_coordinates, window.opacity());
             for (auto background_rect : window.rect().shatter(backing_rect))
-                m_back_painter->fill_rect(background_rect, window.background_color());
+                m_back_painter->fill_rect(background_rect, wm.palette().window());
         }
         return IterationDecision::Continue;
     };
