@@ -436,7 +436,7 @@ OwnPtr<WindowServer::DestroyWindowResponse> WSClientConnection::handle(const Win
 void WSClientConnection::post_paint_message(WSWindow& window)
 {
     auto rect_set = window.take_pending_paint_rects();
-    if (window.is_minimized())
+    if (window.is_minimized() || window.is_occluded())
         return;
 
     Vector<Rect> rects;
