@@ -1,3 +1,4 @@
+#include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Thread.h>
 
@@ -18,6 +19,9 @@ bool RoutingDecision::is_zero() const
 
 RoutingDecision route_to(const IPv4Address& target, const IPv4Address& source)
 {
+    if (target[0] == 127)
+        return { LoopbackAdapter::the().make_weak_ptr(), {} };
+
     auto target_addr = target.to_u32();
     auto source_addr = source.to_u32();
 

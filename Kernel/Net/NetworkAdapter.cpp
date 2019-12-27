@@ -4,6 +4,7 @@
 #include <Kernel/Lock.h>
 #include <Kernel/Net/EtherType.h>
 #include <Kernel/Net/EthernetFrameHeader.h>
+#include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/StdLib.h>
 
@@ -29,6 +30,8 @@ WeakPtr<NetworkAdapter> NetworkAdapter::from_ipv4_address(const IPv4Address& add
         if (adapter->ipv4_address() == address)
             return adapter->make_weak_ptr();
     }
+    if (address[0] == 127)
+        return LoopbackAdapter::the().make_weak_ptr();
     return nullptr;
 }
 
