@@ -1,25 +1,14 @@
-#include <LibCore/CTimer.h>
 #include <LibDraw/Font.h>
 #include <LibDraw/Painter.h>
 #include <WindowServer/WSMenuManager.h>
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>
-#include <time.h>
 #include <unistd.h>
 
 WSMenuManager::WSMenuManager()
 {
     m_username = getlogin();
     m_needs_window_resize = true;
-
-    m_timer = CTimer::construct(300, [this] {
-        static time_t last_update_time;
-        time_t now = time(nullptr);
-        if (now != last_update_time) {
-            tick_clock();
-            last_update_time = now;
-        }
-    });
 }
 
 WSMenuManager::~WSMenuManager()
@@ -57,15 +46,7 @@ void WSMenuManager::draw()
             menubar_rect.height()
         };
 
-        int time_width = Font::default_font().width("2222-22-22 22:22:22");
-        m_time_rect = {
-            m_username_rect.left() - menubar_menu_margin() / 2 - time_width,
-            menubar_rect.y(),
-            time_width,
-            menubar_rect.height()
-        };
-
-        int right_edge_x = m_time_rect.left() - 4;
+        int right_edge_x = m_username_rect.left() - 4;
         for (auto& existing_applet : m_applets) {
             if (!existing_applet)
                 continue;
@@ -105,18 +86,6 @@ void WSMenuManager::draw()
     });
 
     painter.draw_text(m_username_rect, m_username, Font::default_bold_font(), TextAlignment::CenterRight, palette.window_text());
-
-    time_t now = time(nullptr);
-    auto* tm = localtime(&now);
-    auto time_text = String::format("%4u-%02u-%02u %02u:%02u:%02u",
-        tm->tm_year + 1900,
-        tm->tm_mon + 1,
-        tm->tm_mday,
-        tm->tm_hour,
-        tm->tm_min,
-        tm->tm_sec);
-
-    painter.draw_text(m_time_rect, time_text, wm.font(), TextAlignment::CenterRight, palette.window_text());
 
     for (auto& applet : m_applets) {
         if (!applet)
@@ -282,7 +251,7 @@ void WSMenuManager::close_bar()
 
 void WSMenuManager::add_applet(WSWindow& applet)
 {
-    int right_edge_x = m_time_rect.left() - 4;
+    int right_edge_x = m_username_rect.left() - 4;
     for (auto& existing_applet : m_applets) {
         if (existing_applet)
             right_edge_x = existing_applet->rect_in_menubar().x() - 4;
