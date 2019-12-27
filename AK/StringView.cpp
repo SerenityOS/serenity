@@ -102,6 +102,7 @@ StringView StringView::substring_view(size_t start, size_t length) const
 
 StringView StringView::substring_view_starting_from_substring(const StringView& substring) const
 {
+    ASSERT(!substring.is_null());
     const char* remaining_characters = substring.characters_without_null_termination();
     ASSERT(remaining_characters >= m_characters);
     ASSERT(remaining_characters <= m_characters + m_length);
@@ -111,6 +112,7 @@ StringView StringView::substring_view_starting_from_substring(const StringView& 
 
 StringView StringView::substring_view_starting_after_substring(const StringView& substring) const
 {
+    ASSERT(!substring.is_null());
     const char* remaining_characters = substring.characters_without_null_termination() + substring.length();
     ASSERT(remaining_characters >= m_characters);
     ASSERT(remaining_characters <= m_characters + m_length);
