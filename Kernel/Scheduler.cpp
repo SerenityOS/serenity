@@ -5,6 +5,7 @@
 #include <Kernel/Profiling.h>
 #include <Kernel/RTC.h>
 #include <Kernel/Scheduler.h>
+#include <Kernel/TimerQueue.h>
 
 //#define LOG_EVERY_CONTEXT_SWITCH
 //#define SCHEDULER_DEBUG
@@ -578,6 +579,8 @@ void Scheduler::timer_tick(RegisterDump& regs)
             sample.frames[i] = backtrace[i];
         }
     }
+
+    TimerQueue::the().fire();
 
     if (current->tick())
         return;
