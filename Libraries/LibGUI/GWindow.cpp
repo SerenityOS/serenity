@@ -298,6 +298,11 @@ bool GWindow::is_visible() const
     return m_window_id != 0;
 }
 
+void GWindow::update()
+{
+    update({ 0, 0, width(), height() });
+}
+
 void GWindow::update(const Rect& a_rect)
 {
     if (!m_window_id)
@@ -583,17 +588,19 @@ void GWindow::update_all_windows(Badge<GWindowServerConnection>)
     }
 }
 
-void GWindow::notify_state_changed(Badge<GWindowServerConnection>, bool minimized)
+void GWindow::notify_state_changed(Badge<GWindowServerConnection>, bool minimized, bool occluded)
 {
-    // When double buffering is enabled, minimization means we can mark the front bitmap volatile (in addition to the back bitmap.)
+    // When double buffering is enabled, minimization/occlusion means we can mark the front bitmap volatile (in addition to the back bitmap.)
     // When double buffering is disabled, there is only the back bitmap (which we can now mark volatile!)
     RefPtr<GraphicsBitmap>& bitmap = m_double_buffering_enabled ? m_front_bitmap : m_back_bitmap;
     if (!bitmap)
         return;
-    if (minimized) {
+    if (minimized || occluded) {
         bitmap->shared_buffer()->set_volatile();
     } else {
-        if (!bitmap->shared_buffer()->set_nonvolatile())
+        if (!bitmap->shared_buffer()->set_nonvolatile()) {
             bitmap = nullptr;
+            update();
+        }
     }
 }

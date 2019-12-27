@@ -12,7 +12,7 @@ endpoint WindowClient = 4
     KeyUp(i32 window_id, u8 character, u32 key, u32 modifiers) =|
     WindowActivated(i32 window_id) =|
     WindowDeactivated(i32 window_id) =|
-    WindowStateChanged(i32 window_id, bool minimized) =|
+    WindowStateChanged(i32 window_id, bool minimized, bool occluded) =|
     WindowCloseRequest(i32 window_id) =|
     WindowResized(i32 window_id, Rect old_rect, Rect new_rect) =|
 
