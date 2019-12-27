@@ -137,10 +137,10 @@ index 000000000..24b29c3da
 +#define PTRDIFF_TYPE "long int"
 diff --git a/gcc/config/serenity.h b/gcc/config/serenity.h
 new file mode 100644
-index 000000000..60ebec583
+index 000000000..925c88dd6
 --- /dev/null
 +++ b/gcc/config/serenity.h
-@@ -0,0 +1,28 @@
+@@ -0,0 +1,31 @@
 +/* Useful if you wish to make target-specific GCC changes. */
 +#undef TARGET_SERENITY
 +#define TARGET_SERENITY 1
@@ -158,6 +158,9 @@ index 000000000..60ebec583
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
 +#define ENDFILE_SPEC "crtend.o%s crtn.o%s"
++
++#undef LINK_SPEC
++#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!shared: %{!static: %{rdynamic:-export-dynamic}}}"
 + 
 +/* Additional predefined macros. */
 +#undef TARGET_OS_CPP_BUILTINS

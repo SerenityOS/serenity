@@ -100,6 +100,7 @@ pushd "$DIR/Build/"
         "$DIR"/Tarballs/binutils-2.33.1/configure --prefix="$PREFIX" \
                                                 --target="$TARGET" \
                                                 --with-sysroot="$SYSROOT" \
+                                                --enable-shared \
                                                 --disable-nls || exit 1
         make -j "$MAKEJOBS" || exit 1
         make install || exit 1
@@ -111,6 +112,7 @@ pushd "$DIR/Build/"
                                             --with-sysroot="$SYSROOT" \
                                             --disable-nls \
                                             --with-newlib \
+                                            --enable-shared \
                                             --enable-languages=c,c++ || exit 1
 
         echo "XXX build gcc and libgcc"
