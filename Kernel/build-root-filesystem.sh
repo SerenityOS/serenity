@@ -125,6 +125,7 @@ cp ../Servers/ProtocolServer/ProtocolServer mnt/bin/ProtocolServer
 cp ../Shell/Shell mnt/bin/Shell
 cp ../MenuApplets/Audio/Audio.MenuApplet mnt/bin/
 cp ../MenuApplets/CPUGraph/CPUGraph.MenuApplet mnt/bin/
+cp ../MenuApplets/Clock/Clock.MenuApplet mnt/bin/
 echo "done"
 
 printf "installing shortcuts... "
