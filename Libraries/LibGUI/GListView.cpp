@@ -107,12 +107,14 @@ void GListView::paint_event(GPaintEvent& event)
 
         Color background_color;
         if (is_selected_row) {
-            background_color = is_focused() ? palette().selection_text() : Color::from_rgb(0x606060);
+            background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
         } else {
-            if (alternating_row_colors() && (painted_item_index % 2))
-                background_color = Color(210, 210, 210);
-            else
-                background_color = palette().color(background_role());
+            Color row_fill_color = palette().color(background_role());
+            if (alternating_row_colors() && (painted_item_index % 2)) {
+                background_color = row_fill_color.darkened(0.8f);
+            } else {
+                background_color = row_fill_color;
+            }
         }
 
         auto column_metadata = model()->column_metadata(m_model_column);
@@ -130,7 +132,7 @@ void GListView::paint_event(GPaintEvent& event)
         } else {
             Color text_color;
             if (is_selected_row)
-                text_color = Color::White;
+                text_color = palette().selection_text();
             else
                 text_color = model()->data(index, GModel::Role::ForegroundColor).to_color(palette().color(foreground_role()));
             auto text_rect = row_rect;
