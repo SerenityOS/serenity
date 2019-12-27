@@ -24,7 +24,6 @@ endpoint WindowServer = 2
         bool fullscreen,
         bool show_titlebar,
         float opacity,
-        Color background_color,
         Size base_size,
         Size size_increment,
         i32 type,

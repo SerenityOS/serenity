@@ -397,7 +397,6 @@ OwnPtr<WindowServer::CreateWindowResponse> WSClientConnection::handle(const Wind
 {
     int window_id = m_next_window_id++;
     auto window = WSWindow::construct(*this, (WSWindowType)message.type(), window_id, message.modal(), message.resizable(), message.fullscreen());
-    window->set_background_color(message.background_color());
     window->set_has_alpha_channel(message.has_alpha_channel());
     window->set_title(message.title());
     if (!message.fullscreen())

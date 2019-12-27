@@ -35,9 +35,6 @@ public:
     unsigned wm_event_mask() const { return m_wm_event_mask; }
     void set_wm_event_mask(unsigned mask) { m_wm_event_mask = mask; }
 
-    Color background_color() const { return m_background_color; }
-    void set_background_color(Color color) { m_background_color = color; }
-
     bool is_minimized() const { return m_minimized; }
     void set_minimized(bool);
 
@@ -207,7 +204,6 @@ private:
     NonnullRefPtr<GraphicsBitmap> m_icon;
     RefPtr<WSCursor> m_override_cursor;
     WSWindowFrame m_frame;
-    Color m_background_color { Color::WarmGray };
     unsigned m_wm_event_mask { 0 };
     DisjointRectSet m_pending_paint_rects;
     Rect m_unmaximized_rect;
