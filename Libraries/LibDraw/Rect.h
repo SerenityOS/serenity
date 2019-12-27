@@ -20,11 +20,6 @@ public:
         , m_size(size)
     {
     }
-    Rect(const Rect& other)
-        : m_location(other.m_location)
-        , m_size(other.m_size)
-    {
-    }
 
     bool is_null() const
     {
