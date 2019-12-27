@@ -225,11 +225,6 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-pid_t wait(int* wstatus)
-{
-    return waitpid(-1, wstatus, 0);
-}
-
 int lstat(const char* path, struct stat* statbuf)
 {
     int rc = syscall(SC_lstat, path, statbuf);
