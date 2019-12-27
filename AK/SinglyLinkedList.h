@@ -194,6 +194,58 @@ public:
         delete iterator.m_node;
     }
 
+    void insert_before(Iterator iterator, const T& value)
+    {
+        auto* node = new Node(value);
+        node->next = iterator.m_node;
+        if (m_head == iterator.m_node)
+            m_head = node;
+        if (iterator.m_prev)
+            iterator.m_prev->next = node;
+    }
+
+    void insert_before(Iterator iterator, T&& value)
+    {
+        auto* node = new Node(move(value));
+        node->next = iterator.m_node;
+        if (m_head == iterator.m_node)
+            m_head = node;
+        if (iterator.m_prev)
+            iterator.m_prev->next = node;
+    }
+
+    void insert_after(Iterator iterator, const T& value)
+    {
+        if (iterator.is_end()) {
+            append(value);
+            return;
+        }
+
+        auto* node = new Node(value);
+        node->next = iterator.m_node->next;
+
+        iterator.m_node->next = node;
+
+        if (m_tail == iterator.m_node)
+            m_tail = node;
+    }
+
+    void insert_after(Iterator iterator, T&& value)
+    {
+        if (iterator.is_end()) {
+            append(value);
+            return;
+        }
+
+        auto* node = new Node(move(value));
+        node->next = iterator.m_node->next;
+
+        iterator.m_node->next = node;
+
+        if (m_tail == iterator.m_node)
+            m_tail = node;
+    }
+
 private:
     Node* head() { return m_head; }
     const Node* head() const { return m_head; }
