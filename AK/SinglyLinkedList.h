@@ -107,14 +107,7 @@ public:
 
     void append(const T& value)
     {
-        auto* node = new Node(value);
-        if (!m_head) {
-            m_head = node;
-            m_tail = node;
-            return;
-        }
-        m_tail->next = node;
-        m_tail = node;
+        append(T(value));
     }
 
     void append(T&& value)
@@ -196,12 +189,7 @@ public:
 
     void insert_before(Iterator iterator, const T& value)
     {
-        auto* node = new Node(value);
-        node->next = iterator.m_node;
-        if (m_head == iterator.m_node)
-            m_head = node;
-        if (iterator.m_prev)
-            iterator.m_prev->next = node;
+        insert_before(T(value));
     }
 
     void insert_before(Iterator iterator, T&& value)
@@ -216,18 +204,7 @@ public:
 
     void insert_after(Iterator iterator, const T& value)
     {
-        if (iterator.is_end()) {
-            append(value);
-            return;
-        }
-
-        auto* node = new Node(value);
-        node->next = iterator.m_node->next;
-
-        iterator.m_node->next = node;
-
-        if (m_tail == iterator.m_node)
-            m_tail = node;
+        insert_after(T(value));
     }
 
     void insert_after(Iterator iterator, T&& value)
