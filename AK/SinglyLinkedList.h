@@ -189,7 +189,7 @@ public:
 
     void insert_before(Iterator iterator, const T& value)
     {
-        insert_before(T(value));
+        insert_before(iterator, T(value));
     }
 
     void insert_before(Iterator iterator, T&& value)
@@ -204,7 +204,7 @@ public:
 
     void insert_after(Iterator iterator, const T& value)
     {
-        insert_after(T(value));
+        insert_after(iterator, T(value));
     }
 
     void insert_after(Iterator iterator, T&& value)
