@@ -45,7 +45,7 @@ extern FILE* stdin;
 extern FILE* stdout;
 extern FILE* stderr;
 
-typedef size_t fpos_t;
+typedef long fpos_t;
 
 int fseek(FILE*, long offset, int whence);
 int fgetpos(FILE*, fpos_t*);
