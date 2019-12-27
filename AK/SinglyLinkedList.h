@@ -187,7 +187,7 @@ public:
         delete iterator.m_node;
     }
 
-    void insert_before(Iterator iterator, const T& value)
+    void insert_before(Iterator, const T& value)
     {
         insert_before(T(value));
     }
@@ -202,7 +202,7 @@ public:
             iterator.m_prev->next = node;
     }
 
-    void insert_after(Iterator iterator, const T& value)
+    void insert_after(Iterator, const T& value)
     {
         insert_after(T(value));
     }
