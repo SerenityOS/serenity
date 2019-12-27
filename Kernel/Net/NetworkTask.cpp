@@ -73,10 +73,13 @@ void NetworkTask_main()
         return packet_size;
     };
 
+    size_t buffer_size = 64 * KB;
+    auto buffer_region = MM.allocate_kernel_region(buffer_size, "Kernel Packet Buffer", Region::Access::Read | Region::Access::Write, false, true);
+    auto buffer = (u8*)buffer_region->vaddr().get();
+
     kprintf("NetworkTask: Enter main loop.\n");
     for (;;) {
-        u8 packet[32 * KB];
-        size_t packet_size = dequeue_packet(packet, sizeof(packet));
+        size_t packet_size = dequeue_packet(buffer, buffer_size);
         if (!packet_size) {
             current->wait_on(packet_wait_queue);
             continue;
@@ -85,7 +88,7 @@ void NetworkTask_main()
             kprintf("NetworkTask: Packet is too small to be an Ethernet packet! (%zu)\n", packet_size);
             continue;
         }
-        auto& eth = *(const EthernetFrameHeader*)packet;
+        auto& eth = *(const EthernetFrameHeader*)buffer;
 #ifdef ETHERNET_DEBUG
         kprintf("NetworkTask: From %s to %s, ether_type=%w, packet_length=%u\n",
             eth.source().to_string().characters(),
@@ -95,10 +98,8 @@ void NetworkTask_main()
 #endif
 
 #ifdef ETHERNET_VERY_DEBUG
-        u8* data = packet;
-
         for (size_t i = 0; i < packet_size; i++) {
-            kprintf("%b", data[i]);
+            kprintf("%b", buffer[i]);
 
             switch (i % 16) {
             case 7:
