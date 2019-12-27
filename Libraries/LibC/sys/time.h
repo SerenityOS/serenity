@@ -5,6 +5,29 @@
 
 __BEGIN_DECLS
 
+#define timerclear(tvp) (tvp)->tv_sec = (tvp)->tv_usec = 0
+#define timerisset(tvp) ((tvp)->tv_sec || (tvp)->tv_usec)
+#define timercmp(tvp, uvp, cmp) \
+    (((tvp)->tv_sec == (uvp)->tv_sec) ? ((tvp)->tv_usec cmp(uvp)->tv_usec) : ((tvp)->tv_sec cmp(uvp)->tv_sec))
+#define timeradd(tvp, uvp)                \
+    do {                                  \
+        (tvp)->tv_sec += (uvp)->tv_sec;   \
+        (tvp)->tv_usec += (uvp)->tv_usec; \
+        if ((tvp)->tv_usec >= 1000000) {  \
+            (tvp)->tv_sec++;              \
+            (tvp)->tv_usec -= 1000000;    \
+        }                                 \
+    } while (0)
+#define timersub(tvp, uvp)                \
+    do {                                  \
+        (tvp)->tv_sec -= (uvp)->tv_sec;   \
+        (tvp)->tv_usec -= (uvp)->tv_usec; \
+        if ((tvp)->tv_usec < 0) {         \
+            (tvp)->tv_sec--;              \
+            (tvp)->tv_usec += 1000000;    \
+        }                                 \
+    } while (0)
+
 struct timeval {
     time_t tv_sec;
     suseconds_t tv_usec;
