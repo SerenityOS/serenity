@@ -720,11 +720,10 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
             if (symlink_target.is_error())
                 return symlink_target;
 
-            bool have_more_parts = i + 1 < parts.size();
-            if (i + 1 == parts.size() - 1 && parts[i + 1].is_empty())
-                have_more_parts = false;
+            if (i == parts.size() - 1)
+                return symlink_target;
 
-            if (!have_more_parts)
+            if (parts[i + 1].is_empty())
                 return symlink_target;
 
             StringView remaining_path = path.substring_view_starting_from_substring(parts[i + 1]);
