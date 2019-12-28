@@ -6,13 +6,17 @@ EXTRA_CLEAN = $(APPS)
 
 LIB_DEPS = HTML GUI Draw Audio Protocol IPC Thread Pthread Core PCIDB Markdown
 
-all: $(OBJS) $(APPS)
+include ../Makefile.common
+
+all: $(APPS)
 
 list:
 	@echo $(APPS)
 
-$(APPS): %: %.o $(OBJS)
+%.o: %.cpp
+	@echo "C++ $@"
+	$(QUIET) $(CXX) $(CXXFLAGS) -o $@ -c $<
+
+$(APPS): %: %.o $(STATIC_LIB_DEPS)
 	@echo "LINK $@"
 	$(QUIET) $(CXX) -o $@ $< $(LDFLAGS)
-
-include ../Makefile.common
