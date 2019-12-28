@@ -88,6 +88,10 @@ CSS/PropertyID.cpp: CSS/Properties.json $(GENERATE_CSS_PROPERTYID_CPP)
 	@echo "GENERATE $@"
 	$(QUIET) flock CSS $(GENERATE_CSS_PROPERTYID_CPP) $< > $@
 
+ResourceLoader.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h
+../../Servers/ProtocolServer/ProtocolClientEndpoint.h:
+	@$(MAKE) -C $(dir $(@))
+
 EXTRA_CLEAN = CSS/DefaultStyleSheetSource.cpp CSS/PropertyID.h CSS/PropertyID.cpp
 
 OBJS = $(EXTRA_OBJS) $(LIBHTML_OBJS)
