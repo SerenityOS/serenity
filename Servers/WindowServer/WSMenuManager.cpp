@@ -33,7 +33,7 @@ bool WSMenuManager::is_open(const WSMenu& menu) const
 void WSMenuManager::draw()
 {
     auto& wm = WSWindowManager::the();
-    auto& palette = wm.palette();
+    auto palette = wm.palette();
     auto menubar_rect = this->menubar_rect();
 
     if (m_needs_window_resize) {

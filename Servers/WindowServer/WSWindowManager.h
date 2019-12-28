@@ -51,10 +51,10 @@ class WSWindowManager : public CObject {
 public:
     static WSWindowManager& the();
 
-    explicit WSWindowManager(const Palette&);
+    explicit WSWindowManager(const PaletteImpl&);
     virtual ~WSWindowManager() override;
 
-    const Palette& palette() const { return *m_palette; }
+    Palette palette() const { return Palette(*m_palette); }
 
     RefPtr<CConfigFile> wm_config() const
     {
@@ -286,7 +286,7 @@ private:
     WeakPtr<WSButton> m_cursor_tracking_button;
     WeakPtr<WSButton> m_hovered_button;
 
-    NonnullRefPtr<Palette> m_palette;
+    NonnullRefPtr<PaletteImpl> m_palette;
 
     RefPtr<CConfigFile> m_wm_config;
 

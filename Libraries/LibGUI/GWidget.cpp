@@ -67,7 +67,7 @@ const GWidgetClassRegistration* GWidgetClassRegistration::find(const String& cla
 GWidget::GWidget(GWidget* parent)
     : CObject(parent, true)
     , m_font(Font::default_font())
-    , m_palette(GApplication::the().palette())
+    , m_palette(GApplication::the().palette().impl())
 {
 }
 
@@ -695,5 +695,5 @@ Vector<GWidget*> GWidget::child_widgets() const
 
 void GWidget::set_palette(const Palette& palette)
 {
-    m_palette = palette;
+    m_palette = palette.impl();
 }

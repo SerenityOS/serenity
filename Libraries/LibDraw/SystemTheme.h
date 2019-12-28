@@ -39,6 +39,7 @@ enum class ColorRole {
 
     __Count,
 
+    Background = Window,
     DisabledText = ThreedShadow1,
 };
 

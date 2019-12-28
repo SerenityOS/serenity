@@ -71,7 +71,7 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 
 void WSWindowSwitcher::draw()
 {
-    auto& palette = WSWindowManager::the().palette();
+    auto palette = WSWindowManager::the().palette();
     Painter painter(*m_switcher_window->backing_store());
     painter.fill_rect({ {}, m_rect.size() }, palette.window());
     painter.draw_rect({ {}, m_rect.size() }, palette.threed_shadow2());

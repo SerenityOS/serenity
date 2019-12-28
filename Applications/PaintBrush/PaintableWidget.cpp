@@ -1,6 +1,7 @@
 #include "PaintableWidget.h"
 #include "Tool.h"
 #include <LibDraw/GraphicsBitmap.h>
+#include <LibDraw/Palette.h>
 #include <LibGUI/GPainter.h>
 
 static PaintableWidget* s_the;
@@ -16,6 +17,9 @@ PaintableWidget::PaintableWidget(GWidget* parent)
     ASSERT(!s_the);
     s_the = this;
     set_fill_with_background_color(true);
+    auto pal = palette();
+    pal.set_color(ColorRole::Window, Color::MidGray);
+    set_palette(pal);
     set_background_color(Color::MidGray);
     m_bitmap = GraphicsBitmap::create(GraphicsBitmap::Format::RGB32, { 600, 400 });
     m_bitmap->fill(Color::White);

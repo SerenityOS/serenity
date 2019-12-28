@@ -18,7 +18,7 @@ WSButton::~WSButton()
 
 void WSButton::paint(Painter& painter)
 {
-    auto& palette = WSWindowManager::the().palette();
+    auto palette = WSWindowManager::the().palette();
     PainterStateSaver saver(painter);
     painter.translate(relative_rect().location());
     StylePainter::paint_button(painter, rect(), palette, ButtonStyle::Normal, m_pressed, m_hovered);

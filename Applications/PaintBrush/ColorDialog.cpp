@@ -36,8 +36,10 @@ void ColorDialog::build()
     };
 
     m_preview_widget = GFrame::construct(right_vertical_container);
-    m_preview_widget->set_background_color(m_color);
+    auto pal = m_preview_widget->palette();
+    pal.set_color(ColorRole::Background, m_color);
     m_preview_widget->set_fill_with_background_color(true);
+    m_preview_widget->set_palette(pal);
     right_vertical_container->layout()->add_spacer();
     auto cancel_button = GButton::construct("Cancel", right_vertical_container);
     cancel_button->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
@@ -68,7 +70,9 @@ void ColorDialog::build()
              if (component == Blue)
                 m_color.set_blue(value);
 
-             m_preview_widget->set_background_color(m_color);
+             auto pal = m_preview_widget->palette();
+             pal.set_color(ColorRole::Background, m_color);
+             m_preview_widget->set_palette(pal);
              m_preview_widget->update();
          };
          return spinbox;
