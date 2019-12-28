@@ -102,6 +102,15 @@ pushd "$DIR/Build/"
                                                 --with-sysroot="$SYSROOT" \
                                                 --enable-shared \
                                                 --disable-nls || exit 1
+        if [ "$(uname)" = "Darwin" ]; then
+            # under macOS generated makefiles are not resolving the "intl"
+            # dependency properly to allow linking its own copy of
+            # libintl when building with --enable-shared.
+            make -j "$MAKEJOBS" || true
+            pushd intl
+            make all-yes
+            popd
+        fi
         make -j "$MAKEJOBS" || exit 1
         make install || exit 1
     popd
