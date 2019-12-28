@@ -90,7 +90,7 @@ CSS/PropertyID.cpp: CSS/Properties.json $(GENERATE_CSS_PROPERTYID_CPP)
 
 ResourceLoader.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h
 ../../Servers/ProtocolServer/ProtocolClientEndpoint.h:
-	@$(MAKE) -C $(dir $(@))
+	@flock ../../Servers/ProtocolServer $(MAKE) -C $(dir $(@))
 
 EXTRA_CLEAN = CSS/DefaultStyleSheetSource.cpp CSS/PropertyID.h CSS/PropertyID.cpp
 
