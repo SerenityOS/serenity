@@ -103,19 +103,21 @@ $(PROGRAM): $(STATIC_LIB_DEPS) $(SUFFIXED_OBJS) $(EXTRA_OBJS)
 $(LIBRARY): $(SUFFIXED_OBJS) $(EXTRA_OBJS)
 	@echo "LIB $@"
 	$(QUIET) $(AR) rcs $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
+	$(POST_LIBRARY_BUILD)
 
+#.PHONY: $(STATIC_LIB_DEPS)
 $(STATIC_LIB_DEPS):
-	@$(MAKE) -C $(dir $(@))
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
 IPCCOMPILER = $(SERENITY_BASE_DIR)/DevTools/IPCCompiler/IPCCompiler
 IPCCOMPILER: $(IPCCOMPILER)
 $(IPCCOMPILER):
-	@$(MAKE) -C $(dir $(@))
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
 FORMCOMPILER = $(SERENITY_BASE_DIR)/DevTools/FormCompiler/FormCompiler
 FORMCOMPILER: $(FORMCOMPILER)
 $(FORMCOMPILER):
-	@$(MAKE) -C $(dir $(@))
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
 .DEFAULT_GOAL := all
 

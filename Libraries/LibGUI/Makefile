@@ -66,7 +66,7 @@ LIBRARY = libgui.a
 GWindowServerConnection.cpp: ../../Servers/WindowServer/WindowServerEndpoint.h
 
 ../../Servers/WindowServer/WindowServerEndpoint.h:
-	@$(MAKE) -C $(dir $(@))
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibGUI/
