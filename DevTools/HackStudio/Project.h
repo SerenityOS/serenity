@@ -16,6 +16,8 @@ public:
     static OwnPtr<Project> load_from_file(const String& path);
 
     [[nodiscard]] bool add_file(const String& filename);
+    [[nodiscard]] bool remove_file(const String& filename);
+    [[nodiscard]] bool save();
 
     ProjectFile* get_file(const String& filename);
 
