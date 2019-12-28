@@ -8,6 +8,7 @@
 #include <LibDraw/Color.h>
 #include <LibDraw/Font.h>
 #include <LibDraw/Orientation.h>
+#include <LibDraw/Palette.h>
 #include <LibDraw/Rect.h>
 #include <LibDraw/SystemTheme.h>
 #include <LibGUI/GEvent.h>
@@ -22,7 +23,6 @@ class GLayout;
 class GMenu;
 class GWindow;
 class GraphicsBitmap;
-class Palette;
 
 enum class SizePolicy {
     Fixed,
@@ -237,7 +237,7 @@ public:
 
     void do_layout();
 
-    const Palette& palette() const { return *m_palette; }
+    Palette palette() const { return Palette(*m_palette); }
     void set_palette(const Palette&);
 
 protected:
@@ -301,7 +301,7 @@ private:
 
     HashMap<GShortcut, GAction*> m_local_shortcut_actions;
 
-    NonnullRefPtr<Palette> m_palette;
+    NonnullRefPtr<PaletteImpl> m_palette;
 };
 
 template<>

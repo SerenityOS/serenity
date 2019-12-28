@@ -26,7 +26,7 @@ int main(int, char**)
     auto theme = load_system_theme(String::format("/res/themes/%s.ini", theme_name.characters()));
     ASSERT(theme);
     set_system_theme(*theme);
-    auto palette = Palette::create_with_shared_buffer(*theme);
+    auto palette = PaletteImpl::create_with_shared_buffer(*theme);
 
     WSEventLoop loop;
 

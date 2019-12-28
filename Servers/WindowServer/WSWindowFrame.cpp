@@ -153,7 +153,7 @@ void WSWindowFrame::paint(Painter& painter)
     if (m_window.type() != WSWindowType::Normal)
         return;
 
-    auto& palette = WSWindowManager::the().palette();
+    auto palette = WSWindowManager::the().palette();
     auto& window = m_window;
 
     auto titlebar_rect = title_bar_rect();

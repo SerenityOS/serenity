@@ -147,7 +147,7 @@ void GApplication::did_delete_last_window(Badge<GWindow>)
 void GApplication::set_system_palette(SharedBuffer& buffer)
 {
     if (!m_system_palette)
-        m_system_palette = Palette::create_with_shared_buffer(buffer);
+        m_system_palette = PaletteImpl::create_with_shared_buffer(buffer);
     else
         m_system_palette->replace_internal_buffer({}, buffer);
 
@@ -157,5 +157,5 @@ void GApplication::set_system_palette(SharedBuffer& buffer)
 
 void GApplication::set_palette(const Palette& palette)
 {
-    m_palette = palette;
+    m_palette = palette.impl();
 }

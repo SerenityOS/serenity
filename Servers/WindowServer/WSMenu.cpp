@@ -126,7 +126,7 @@ WSWindow& WSMenu::ensure_menu_window()
 
 void WSMenu::draw()
 {
-    auto& palette = WSWindowManager::the().palette();
+    auto palette = WSWindowManager::the().palette();
     m_theme_index_at_last_paint = WSWindowManager::the().theme_index();
 
     ASSERT(menu_window());

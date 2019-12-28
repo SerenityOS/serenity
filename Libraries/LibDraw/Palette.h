@@ -1,13 +1,33 @@
 #pragma once
 
 #include <AK/Badge.h>
+#include <AK/Noncopyable.h>
 #include <LibDraw/SystemTheme.h>
 
 class GApplication;
 
-class Palette : public RefCounted<Palette> {
+class PaletteImpl : public RefCounted<PaletteImpl> {
+    AK_MAKE_NONCOPYABLE(PaletteImpl)
+    AK_MAKE_NONMOVABLE(PaletteImpl)
 public:
-    static NonnullRefPtr<Palette> create_with_shared_buffer(SharedBuffer&);
+    static NonnullRefPtr<PaletteImpl> create_with_shared_buffer(SharedBuffer&);
+    NonnullRefPtr<PaletteImpl> clone() const;
+
+    Color color(ColorRole) const;
+    const SystemTheme& theme() const;
+
+    void replace_internal_buffer(Badge<GApplication>, SharedBuffer& buffer) { m_theme_buffer = buffer; }
+
+private:
+    explicit PaletteImpl(SharedBuffer&);
+
+    RefPtr<SharedBuffer> m_theme_buffer;
+};
+
+class Palette {
+
+public:
+    explicit Palette(const PaletteImpl&);
     ~Palette();
 
     Color window() const { return color(ColorRole::Window); }
@@ -41,14 +61,14 @@ public:
     Color threed_shadow2() const { return color(ColorRole::ThreedShadow2); }
     Color hover_highlight() const { return color(ColorRole::ThreedHighlight); }
 
-    Color color(ColorRole) const;
+    Color color(ColorRole role) const { return m_impl->color(role); }
+    void set_color(ColorRole, Color);
 
-    const SystemTheme& theme() const;
+    const SystemTheme& theme() const { return m_impl->theme(); }
 
-    void replace_internal_buffer(Badge<GApplication>, SharedBuffer& buffer) { m_theme_buffer = buffer; }
+    PaletteImpl& impl() { return *m_impl; }
+    const PaletteImpl& impl() const { return *m_impl; }
 
 private:
-    explicit Palette(SharedBuffer&);
-
-    RefPtr<SharedBuffer> m_theme_buffer;
+    NonnullRefPtr<PaletteImpl> m_impl;
 };

@@ -26,7 +26,9 @@ public:
             auto dialog = ColorDialog::construct(m_color, window());
             if (dialog->exec() == GDialog::ExecOK) {
                 m_color = dialog->color();
-                set_background_color(m_color);
+                auto pal = palette();
+                pal.set_color(ColorRole::Background, m_color);
+                set_palette(pal);
                 update();
             }
             return;
@@ -97,7 +99,9 @@ PaletteWidget::PaletteWidget(PaintableWidget& paintable_widget, GWidget* parent)
     auto add_color_widget = [&](GWidget* container, Color color) {
         auto color_widget = ColorWidget::construct(color, *this, container);
         color_widget->set_fill_with_background_color(true);
-        color_widget->set_background_color(color);
+        auto pal = color_widget->palette();
+        pal.set_color(ColorRole::Background, color);
+        color_widget->set_palette(pal);
     };
 
     add_color_widget(top_color_container, Color::from_rgb(0x000000));
@@ -138,13 +142,17 @@ PaletteWidget::~PaletteWidget()
 void PaletteWidget::set_primary_color(Color color)
 {
     m_paintable_widget.set_primary_color(color);
-    m_primary_color_widget->set_background_color(color);
+    auto pal = m_primary_color_widget->palette();
+    pal.set_color(ColorRole::Background, color);
+    m_primary_color_widget->set_palette(pal);
     m_primary_color_widget->update();
 }
 
 void PaletteWidget::set_secondary_color(Color color)
 {
     m_paintable_widget.set_secondary_color(color);
-    m_secondary_color_widget->set_background_color(color);
+    auto pal = m_secondary_color_widget->palette();
+    pal.set_color(ColorRole::Background, color);
+    m_secondary_color_widget->set_palette(pal);
     m_secondary_color_widget->update();
 }
