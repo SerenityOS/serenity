@@ -34,6 +34,7 @@
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
 #include <stdio.h>
+#include <sys/wait.h>
 #include <unistd.h>
 
 NonnullRefPtrVector<EditorWrapper> g_all_editor_wrappers;
@@ -91,6 +92,7 @@ Editor& current_editor()
 static void build(TerminalWrapper&);
 static void run(TerminalWrapper&);
 void open_file(const String&);
+bool make_is_available();
 
 int main(int argc, char** argv)
 {
@@ -108,6 +110,9 @@ int main(int argc, char** argv)
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
+
+    if (!make_is_available())
+        GMessageBox::show("The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
 
     if (chdir("/home/anon/little") < 0) {
         perror("chdir");
@@ -577,4 +582,22 @@ void open_file(const String& filename)
     current_editor_wrapper().filename_label().set_text(filename);
 
     current_editor().set_focus(true);
+}
+
+bool make_is_available()
+{
+    auto pid = fork();
+    if (pid < 0)
+        return false;
+
+    if (!pid) {
+        int rc = execlp("make", "make", "--version", nullptr);
+        ASSERT(rc < 0);
+        perror("execl");
+        exit(127);
+    }
+
+    int wstatus;
+    waitpid(pid, &wstatus, 0);
+    return WEXITSTATUS(wstatus) == 0;
 }
