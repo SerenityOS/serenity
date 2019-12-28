@@ -39,7 +39,7 @@ else
     LINK = $(TOOLCHAIN_PATH)/i686-pc-serenity-ld
     RANLIB = $(TOOLCHAIN_PATH)/i686-pc-serenity-ranlib
     AR = $(TOOLCHAIN_PATH)/i686-pc-serenity-ar
-    
+
     DEFINES += -DDEBUG
 
     INCLUDE_FLAGS += \
@@ -51,7 +51,7 @@ else
         DEFINES += -DKERNEL
     else
         # everything else gets -lc -lm
-        LIB_DEPS += C M
+        LIB_DEPS := C M $(LIB_DEPS)
     endif
 
     # turn "LIB_DEPS=C Core Thread" into "-lc -lcore -lthread -L.../LibC ..."
