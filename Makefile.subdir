@@ -1,17 +1,17 @@
 subdirs: $(SUBDIRS)
 $(SUBDIRS):
-	@$(MAKE) -C $@
+	@flock $@ $(MAKE) -C $@
 
 all: $(subdirs)
 
 SUBDIRS_CLEAN = $(addsuffix .clean,$(SUBDIRS))
 clean: $(SUBDIRS_CLEAN)
 $(SUBDIRS_CLEAN): %.clean:
-	@$(MAKE) -C $* clean
+	@flock $* $(MAKE) -C $* clean
 
 SUBDIRS_INSTALL = $(addsuffix .install,$(SUBDIRS))
 install: $(SUBDIRS_INSTALL)
 $(SUBDIRS_INSTALL): %.install:
-	@$(MAKE) -C $* install
+	@flock $* $(MAKE) -C $* install
 
 .PHONY: all clean install $(SUBDIRS)

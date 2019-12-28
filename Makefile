@@ -23,6 +23,6 @@ ifeq ($(UNAME_S),Darwin)
 test: 
 else
 test:
-	$(QUIET) $(MAKE) -C AK/Tests clean all clean
+	$(QUIET) flock AK/Tests $(MAKE) -C AK/Tests clean all clean
 endif
 

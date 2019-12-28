@@ -71,10 +71,10 @@ GENERATE_CSS_PROPERTYID_CPP = CodeGenerators/Generate_CSS_PropertyID_cpp/Generat
 GENERATE_CSS_PROPERTYID_H = CodeGenerators/Generate_CSS_PropertyID_h/Generate_CSS_PropertyID_h
 
 $(GENERATE_CSS_PROPERTYID_H):
-	@$(MAKE) -C $(dir $(GENERATE_CSS_PROPERTYID_H))
+	@flock $(dir $(GENERATE_CSS_PROPERTYID_H)) $(MAKE) -C $(dir $(GENERATE_CSS_PROPERTYID_H))
 
 $(GENERATE_CSS_PROPERTYID_CPP):
-	@$(MAKE) -C $(dir $(GENERATE_CSS_PROPERTYID_CPP))
+	@flock $(dir $(GENERATE_CSS_PROPERTYID_CPP)) $(MAKE) -C $(dir $(GENERATE_CSS_PROPERTYID_CPP))
 
 CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSource.sh
 	@echo "GENERATE $@"
@@ -82,11 +82,11 @@ CSS/DefaultStyleSheetSource.cpp: CSS/Default.css Scripts/GenerateStyleSheetSourc
 
 CSS/PropertyID.h: CSS/Properties.json $(GENERATE_CSS_PROPERTYID_H)
 	@echo "GENERATE $@"
-	$(QUIET) $(GENERATE_CSS_PROPERTYID_H) $< > $@
+	$(QUIET) flock CSS $(GENERATE_CSS_PROPERTYID_H) $< > $@
 
 CSS/PropertyID.cpp: CSS/Properties.json $(GENERATE_CSS_PROPERTYID_CPP)
 	@echo "GENERATE $@"
-	$(QUIET) $(GENERATE_CSS_PROPERTYID_CPP) $< > $@
+	$(QUIET) flock CSS $(GENERATE_CSS_PROPERTYID_CPP) $< > $@
 
 EXTRA_CLEAN = CSS/DefaultStyleSheetSource.cpp CSS/PropertyID.h CSS/PropertyID.cpp
 
