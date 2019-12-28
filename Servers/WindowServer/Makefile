@@ -22,10 +22,10 @@ LIB_DEPS = Draw Core Thread Pthread IPC
 
 *.cpp: WindowServerEndpoint.h WindowClientEndpoint.h
 
-WindowServerEndpoint.h: WindowServer.ipc IPCCOMPILER
+WindowServerEndpoint.h: WindowServer.ipc | IPCCOMPILER
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
-WindowClientEndpoint.h: WindowClient.ipc IPCCOMPILER
+WindowClientEndpoint.h: WindowClient.ipc | IPCCOMPILER
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 EXTRA_CLEAN = WindowServerEndpoint.h WindowClientEndpoint.h

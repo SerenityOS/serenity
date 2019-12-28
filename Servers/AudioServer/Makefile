@@ -12,10 +12,10 @@ EXTRA_CLEAN = AudioServerEndpoint.h AudioClientEndpoint.h
 
 *.cpp: AudioServerEndpoint.h AudioClientEndpoint.h
 
-AudioServerEndpoint.h: AudioServer.ipc IPCCOMPILER
+AudioServerEndpoint.h: AudioServer.ipc | IPCCOMPILER
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
-AudioClientEndpoint.h: AudioClient.ipc IPCCOMPILER
+AudioClientEndpoint.h: AudioClient.ipc | IPCCOMPILER
 	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 install:
