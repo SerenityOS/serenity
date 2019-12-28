@@ -82,6 +82,8 @@ sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /
 Make sure you have all the dependencies installed:
 ```bash
 brew install coreutils
+brew tap discoteq/discoteq
+brew install flock
 brew install qemu
 brew install wget
 brew install e2fsprogs
@@ -97,6 +99,7 @@ Notes:
 - fuse-ext2 is not available as brew formula so it must be installed using `BuildFuseExt2.sh`
 - Xcode and `xcode-tools` must be installed (`git` is required by some scripts)
 - coreutils is needed to build gcc cross compiler
+- `flock` command an also be installed with `brew install util-linux` but in that case you will need to add it to `$PATH`
 - qemu is needed to run the compiled OS image. You can also build it using the `BuildQemu.sh` script
 - osxfuse, e2fsprogs, m4, autoconf, automake, libtool and `BuildFuseExt2.sh` are needed if you want to build the root filesystem disk image natively on macOS. This allows mounting an EXT2 fs and also installs commands like `mke2fs` that are not available on stock macOS. 
 - If you install some commercial EXT2 macOS fs handler instead of osxfuse and fuse-ext2, you will need to `brew install e2fsprogs` to obtain `mke2fs` anyway.
