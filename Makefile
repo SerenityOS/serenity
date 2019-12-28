@@ -1,11 +1,13 @@
 SUBDIRS += \
 	AK \
-	Applications \
 	DevTools \
-	Kernel \
 	Libraries \
+	Servers
+
+SUBDIRS += \
+	Applications \
+	Kernel \
 	MenuApplets \
-	Servers \
 	Shell \
 	Userland
 
