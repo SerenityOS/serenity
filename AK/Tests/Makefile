@@ -35,7 +35,6 @@ SHARED_TEST_OBJS = \
 
 define execute-command
 $(1)
-
 endef
 
 all: $(PROGRAMS)

@@ -6,6 +6,6 @@ LIBRARY = libprotocol.a
 
 Download.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h
 ../../Servers/ProtocolServer/ProtocolClientEndpoint.h:
-	@$(MAKE) -C $(dir $(@))
+	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
 include ../../Makefile.common
