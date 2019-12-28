@@ -67,7 +67,7 @@ void NetworkTask_main()
             packet_size = adapter.dequeue_packet(buffer, buffer_size);
             pending_packets--;
 #ifdef NETWORK_TASK_DEBUG
-            kprintf("NetworkTask: Dequeued packet from %s (%d bytes)\n", adapter.name().characters(), packet.value().size());
+            kprintf("NetworkTask: Dequeued packet from %s (%d bytes)\n", adapter.name().characters(), packet_size);
 #endif
         });
         return packet_size;
