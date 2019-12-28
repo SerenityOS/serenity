@@ -181,6 +181,24 @@ OwnPtr<Project> Project::load_from_file(const String& path)
 
 bool Project::add_file(const String& filename)
 {
+    m_files.append(ProjectFile::construct_with_name(filename));
+    rebuild_tree();
+    m_model->update();
+    return save();
+}
+
+bool Project::remove_file(const String& filename)
+{
+    if (!get_file(filename))
+        return false;
+    m_files.remove_first_matching([filename](auto& file) { return file->name() == filename; });
+    rebuild_tree();
+    m_model->update();
+    return save();
+}
+
+bool Project::save()
+{
     auto project_file = CFile::construct(m_path);
     if (!project_file->open(CFile::WriteOnly))
         return false;
@@ -190,13 +208,9 @@ bool Project::add_file(const String& filename)
         project_file->printf("%s\n", file.name().characters());
     }
 
-    project_file->printf("%s\n", filename.characters());
-
     if (!project_file->close())
         return false;
 
-    m_files.append(ProjectFile::construct_with_name(filename));
-    m_model->update();
     return true;
 }
 

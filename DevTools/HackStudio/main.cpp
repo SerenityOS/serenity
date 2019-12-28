@@ -118,11 +118,101 @@ int main(int argc, char** argv)
 
     auto toolbar = GToolBar::construct(widget);
 
+    auto selected_file_names = [&] {
+        Vector<String> files;
+        g_project_tree_view->selection().for_each_index([&](const GModelIndex& index) {
+            files.append(g_project->model().data(index).as_string());
+        });
+        return files;
+    };
+
+    auto new_action = GAction::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
+        auto input_box = GInputBox::construct("Enter name of new file:", "Add new file to project", g_window);
+        if (input_box->exec() == GInputBox::ExecCancel)
+            return;
+        auto filename = input_box->text_value();
+        auto file = CFile::construct(filename);
+        if (!file->open((CIODevice::OpenMode)(CIODevice::WriteOnly | CIODevice::MustBeNew))) {
+            GMessageBox::show(String::format("Failed to create '%s'", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            return;
+        }
+        if (!g_project->add_file(filename)) {
+            GMessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            // FIXME: Should we unlink the file here maybe?
+            return;
+        }
+        open_file(filename);
+    });
+
+    auto add_existing_file_action = GAction::create("Add existing file to project...", GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
+        auto result = GFilePicker::get_open_filepath("Add existing file to project");
+        if (!result.has_value())
+            return;
+        auto& filename = result.value();
+        if (!g_project->add_file(filename)) {
+            GMessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
+            return;
+        }
+        open_file(filename);
+    });
+
+    auto delete_action = GCommonActions::make_delete_action([&](const GAction& action) {
+        (void)action;
+
+        auto files = selected_file_names();
+        if (files.is_empty())
+            return;
+
+        String message;
+        if (files.size() == 1) {
+            message = String::format("Really remove %s from the project?", FileSystemPath(files[0]).basename().characters());
+        } else {
+            message = String::format("Really remove %d files from the project?", files.size());
+        }
+
+        auto result = GMessageBox::show(
+            message,
+            "Confirm deletion",
+            GMessageBox::Type::Warning,
+            GMessageBox::InputType::OKCancel,
+            g_window);
+        if (result == GMessageBox::ExecCancel)
+            return;
+
+        for (auto& file : files) {
+            if (!g_project->remove_file(file)) {
+                GMessageBox::show(
+                    String::format("Removing file %s from the project failed.", file.characters()),
+                    "Removal failed",
+                    GMessageBox::Type::Error,
+                    GMessageBox::InputType::OK,
+                    g_window);
+                break;
+            }
+        }
+    });
+    delete_action->set_enabled(false);
+
+    auto project_tree_view_context_menu = GMenu::construct("Project Files");
+    project_tree_view_context_menu->add_action(new_action);
+    project_tree_view_context_menu->add_action(add_existing_file_action);
+    project_tree_view_context_menu->add_action(delete_action);
+
     auto outer_splitter = GSplitter::construct(Orientation::Horizontal, widget);
     g_project_tree_view = GTreeView::construct(outer_splitter);
     g_project_tree_view->set_model(g_project->model());
     g_project_tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     g_project_tree_view->set_preferred_size(140, 0);
+
+    g_project_tree_view->on_context_menu_request = [&](const GModelIndex& index, const GContextMenuEvent& event) {
+        if (index.is_valid()) {
+            project_tree_view_context_menu->popup(event.screen_position());
+        }
+    };
+
+    g_project_tree_view->on_selection_change = [&] {
+        delete_action->set_enabled(!g_project_tree_view->selection().is_empty());
+    };
 
     g_right_hand_stack = GStackWidget::construct(outer_splitter);
 
@@ -210,36 +300,6 @@ int main(int argc, char** argv)
     g_text_inner_splitter->layout()->set_margins({ 0, 3, 0, 0 });
     add_new_editor(*g_text_inner_splitter);
 
-    auto new_action = GAction::create("Add new file to project...", { Mod_Ctrl, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/new.png"), [&](const GAction&) {
-        auto input_box = GInputBox::construct("Enter name of new file:", "Add new file to project", g_window);
-        if (input_box->exec() == GInputBox::ExecCancel)
-            return;
-        auto filename = input_box->text_value();
-        auto file = CFile::construct(filename);
-        if (!file->open((CIODevice::OpenMode)(CIODevice::WriteOnly | CIODevice::MustBeNew))) {
-            GMessageBox::show(String::format("Failed to create '%s'", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
-            return;
-        }
-        if (!g_project->add_file(filename)) {
-            GMessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
-            // FIXME: Should we unlink the file here maybe?
-            return;
-        }
-        open_file(filename);
-    });
-
-    auto add_existing_file_action = GAction::create("Add existing file to project...", GraphicsBitmap::load_from_file("/res/icons/16x16/open.png"), [&](auto&) {
-        auto result = GFilePicker::get_open_filepath("Add existing file to project");
-        if (!result.has_value())
-            return;
-        auto& filename = result.value();
-        if (!g_project->add_file(filename)) {
-            GMessageBox::show(String::format("Failed to add '%s' to project", filename.characters()), "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
-            return;
-        }
-        open_file(filename);
-    });
-
     auto switch_to_next_editor = GAction::create("Switch to next editor", { Mod_Ctrl, Key_E }, [&](auto&) {
         if (g_all_editor_wrappers.size() <= 1)
             return;
@@ -295,6 +355,7 @@ int main(int argc, char** argv)
     toolbar->add_action(new_action);
     toolbar->add_action(add_existing_file_action);
     toolbar->add_action(save_action);
+    toolbar->add_action(delete_action);
     toolbar->add_separator();
 
     toolbar->add_action(GCommonActions::make_cut_action([&](auto&) { current_editor().cut_action().activate(); }));
