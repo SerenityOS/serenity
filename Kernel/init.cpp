@@ -275,7 +275,7 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     tty1 = new VirtualConsole(1);
     VirtualConsole::switch_to(0);
 
-    kprintf("Starting Serenity Operating System...\n");
+    kprintf("Starting SerenityOS...\n");
 
     MemoryManager::initialize(physical_address_for_kernel_page_tables);
 

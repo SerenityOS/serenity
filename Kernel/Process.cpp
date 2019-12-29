@@ -1656,7 +1656,7 @@ int Process::sys$uname(utsname* buf)
 {
     if (!validate_write_typed(buf))
         return -EFAULT;
-    strcpy(buf->sysname, "Serenity");
+    strcpy(buf->sysname, "SerenityOS");
     strcpy(buf->release, "1.0-dev");
     strcpy(buf->version, "FIXME");
     strcpy(buf->machine, "i686");
