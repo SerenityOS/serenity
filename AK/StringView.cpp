@@ -92,6 +92,17 @@ bool StringView::starts_with(const StringView& str) const
     return !memcmp(characters_without_null_termination(), str.characters_without_null_termination(), str.length());
 }
 
+bool StringView::ends_with(const StringView& str) const
+{
+    if (str.is_empty())
+        return true;
+    if (is_empty())
+        return false;
+    if (str.length() > length())
+        return false;
+    return !memcmp(characters_without_null_termination() + length() - str.length(), str.characters_without_null_termination(), str.length());
+}
+
 StringView StringView::substring_view(size_t start, size_t length) const
 {
     if (!length)

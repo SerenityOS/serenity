@@ -42,6 +42,7 @@ public:
     unsigned hash() const;
 
     bool starts_with(const StringView&) const;
+    bool ends_with(const StringView&) const;
 
     StringView substring_view(size_t start, size_t length) const;
     Vector<StringView> split_view(char, bool keep_empty = false) const;
