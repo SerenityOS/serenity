@@ -56,10 +56,28 @@ public:
         m_is_error = other.m_is_error;
         if (m_is_error)
             m_error = other.m_error;
-        else
+        else {
             new (&m_storage) T(move(other.value()));
+            other.value().~T();
+        }
         other.m_is_error = true;
         other.m_error = KSuccess;
+    }
+
+    KResultOr& operator=(KResultOr&& other)
+    {
+        if (!m_is_error)
+           value().~T();
+        m_is_error = other.m_is_error;
+        if (m_is_error)
+            m_error = other.m_error;
+        else {
+            new (&m_storage) T(move(other.value()));
+            other.value().~T();
+        }
+        other.m_is_error = true;
+        other.m_error = KSuccess;
+        return *this;
     }
 
     ~KResultOr()
