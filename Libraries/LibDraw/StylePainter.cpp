@@ -237,8 +237,8 @@ void StylePainter::paint_progress_bar(Painter& painter, const Rect& rect, const 
     painter.fill_rect_with_gradient(rect, start_color, end_color);
 
     if (!text.is_null()) {
-        painter.draw_text(rect.translated(1, 1), text, TextAlignment::Center, Color::Black);
-        painter.draw_text(rect, text, TextAlignment::Center, palette.base_text());
+        painter.draw_text(rect.translated(1, 1), text, TextAlignment::Center, palette.base_text());
+        painter.draw_text(rect, text, TextAlignment::Center, palette.base_text().inverted());
     }
 
     float range_size = max - min;
