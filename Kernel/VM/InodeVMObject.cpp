@@ -39,7 +39,8 @@ InodeVMObject::~InodeVMObject()
 size_t InodeVMObject::amount_clean() const
 {
     size_t count = 0;
-    for (int i = 0; i < m_dirty_pages.size(); ++i) {
+    ASSERT(page_count() == (size_t)m_dirty_pages.size());
+    for (size_t i = 0; i < page_count(); ++i) {
         if (!m_dirty_pages.get(i) && m_physical_pages[i])
             ++count;
     }
@@ -124,4 +125,26 @@ void InodeVMObject::inode_contents_changed(Badge<Inode>, off_t offset, ssize_t s
     for_each_region([](auto& region) {
         region.remap();
     });
+}
+
+int InodeVMObject::release_all_clean_pages()
+{
+    LOCKER(m_paging_lock);
+    return release_all_clean_pages_impl();
+}
+
+int InodeVMObject::release_all_clean_pages_impl()
+{
+    int count = 0;
+    InterruptDisabler disabler;
+    for (size_t i = 0; i < page_count(); ++i) {
+        if (!m_dirty_pages.get(i) && m_physical_pages[i]) {
+            m_physical_pages[i] = nullptr;
+            ++count;
+        }
+    }
+    for_each_region([](auto& region) {
+        region.remap();
+    });
+    return count;
 }

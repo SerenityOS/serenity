@@ -410,6 +410,10 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     LOCKER(vmobject().m_paging_lock);
     cli();
 
+#ifdef PAGE_FAULT_DEBUG
+    dbg() << *current << " inode fault in " << name() << " page index: " << page_index_in_region;
+#endif
+
     if (!vmobject_physical_page_entry.is_null()) {
 #ifdef PAGE_FAULT_DEBUG
         dbgprintf("MM: page_in_from_inode() but page already present. Fine with me!\n");

@@ -467,3 +467,5 @@ struct ifreq {
 
 #define AT_FDCWD -100
 
+#define PURGE_ALL_VOLATILE 0x1
+#define PURGE_ALL_CLEAN_INODE 0x2
