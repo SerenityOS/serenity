@@ -139,6 +139,8 @@ public:
     static void update_all_windows(Badge<GWindowServerConnection>);
     void notify_state_changed(Badge<GWindowServerConnection>, bool minimized, bool occluded);
 
+    virtual bool is_visible_for_timer_purposes() const override { return m_visible_for_timer_purposes; }
+
 protected:
     GWindow(CObject* parent = nullptr);
     virtual void wm_event(GWMEvent&);
@@ -176,4 +178,5 @@ private:
     bool m_fullscreen { false };
     bool m_show_titlebar { true };
     bool m_layout_pending { false };
+    bool m_visible_for_timer_purposes { true };
 };
