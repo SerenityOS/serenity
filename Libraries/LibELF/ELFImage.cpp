@@ -45,43 +45,43 @@ unsigned ELFImage::symbol_count() const
 
 void ELFImage::dump() const
 {
-    kprintf("ELFImage{%p} {\n", this);
-    kprintf("    is_valid: %u\n", is_valid());
+    dbgprintf("ELFImage{%p} {\n", this);
+    dbgprintf("    is_valid: %u\n", is_valid());
 
     if (!is_valid()) {
-        kprintf("}\n");
+        dbgprintf("}\n");
         return;
     }
 
-    kprintf("    type:    %s\n", object_file_type_to_string(header().e_type));
-    kprintf("    machine: %u\n", header().e_machine);
-    kprintf("    entry:   %x\n", header().e_entry);
-    kprintf("    shoff:   %u\n", header().e_shoff);
-    kprintf("    shnum:   %u\n", header().e_shnum);
-    kprintf(" shstrndx:   %u\n", header().e_shstrndx);
+    dbgprintf("    type:    %s\n", object_file_type_to_string(header().e_type));
+    dbgprintf("    machine: %u\n", header().e_machine);
+    dbgprintf("    entry:   %x\n", header().e_entry);
+    dbgprintf("    shoff:   %u\n", header().e_shoff);
+    dbgprintf("    shnum:   %u\n", header().e_shnum);
+    dbgprintf(" shstrndx:   %u\n", header().e_shstrndx);
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {
         auto& section = this->section(i);
-        kprintf("    Section %u: {\n", i);
-        kprintf("        name: %s\n", section.name());
-        kprintf("        type: %x\n", section.type());
-        kprintf("      offset: %x\n", section.offset());
-        kprintf("        size: %u\n", section.size());
-        kprintf("        \n");
-        kprintf("    }\n");
+        dbgprintf("    Section %u: {\n", i);
+        dbgprintf("        name: %s\n", section.name());
+        dbgprintf("        type: %x\n", section.type());
+        dbgprintf("      offset: %x\n", section.offset());
+        dbgprintf("        size: %u\n", section.size());
+        dbgprintf("        \n");
+        dbgprintf("    }\n");
     }
 
-    kprintf("Symbol count: %u (table is %u)\n", symbol_count(), m_symbol_table_section_index);
+    dbgprintf("Symbol count: %u (table is %u)\n", symbol_count(), m_symbol_table_section_index);
     for (unsigned i = 1; i < symbol_count(); ++i) {
         auto& sym = symbol(i);
-        kprintf("Symbol @%u:\n", i);
-        kprintf("    Name: %s\n", sym.name());
-        kprintf("    In section: %s\n", section_index_to_string(sym.section_index()));
-        kprintf("    Value: %x\n", sym.value());
-        kprintf("    Size: %u\n", sym.size());
+        dbgprintf("Symbol @%u:\n", i);
+        dbgprintf("    Name: %s\n", sym.name());
+        dbgprintf("    In section: %s\n", section_index_to_string(sym.section_index()));
+        dbgprintf("    Value: %x\n", sym.value());
+        dbgprintf("    Size: %u\n", sym.size());
     }
 
-    kprintf("}\n");
+    dbgprintf("}\n");
 }
 
 unsigned ELFImage::section_count() const
@@ -98,7 +98,7 @@ bool ELFImage::parse()
 {
     // We only support i386.
     if (header().e_machine != 3) {
-        kprintf("ELFImage::parse(): e_machine=%u not supported!\n", header().e_machine);
+        dbgprintf("ELFImage::parse(): e_machine=%u not supported!\n", header().e_machine);
         return false;
     }
 
@@ -195,14 +195,14 @@ const ELFImage::RelocationSection ELFImage::Section::relocations() const
     sprintf(relocation_sectionName, ".rel%s", name());
 
 #ifdef ELFIMAGE_DEBUG
-    kprintf("looking for '%s'\n", relocation_sectionName);
+    dbgprintf("looking for '%s'\n", relocation_sectionName);
 #endif
     auto relocation_section = m_image.lookup_section(relocation_sectionName);
     if (relocation_section.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
 #ifdef ELFIMAGE_DEBUG
-    kprintf("Found relocations for %s in %s\n", name(), relocation_section.name());
+    dbgprintf("Found relocations for %s in %s\n", name(), relocation_section.name());
 #endif
     return static_cast<const RelocationSection>(relocation_section);
 }
