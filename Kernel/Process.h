@@ -272,6 +272,7 @@ public:
     int number_of_open_file_descriptors() const;
     int max_open_file_descriptors() const { return m_max_open_file_descriptors; }
 
+    size_t amount_clean_inode() const;
     size_t amount_dirty_private() const;
     size_t amount_virtual() const;
     size_t amount_resident() const;

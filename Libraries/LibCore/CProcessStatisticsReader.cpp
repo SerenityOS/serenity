@@ -39,6 +39,7 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
         process.amount_resident = process_object.get("amount_resident").to_u32();
         process.amount_shared = process_object.get("amount_shared").to_u32();
         process.amount_dirty_private = process_object.get("amount_dirty_private").to_u32();
+        process.amount_clean_inode = process_object.get("amount_clean_inode").to_u32();
         process.amount_purgeable_volatile = process_object.get("amount_purgeable_volatile").to_u32();
         process.amount_purgeable_nonvolatile = process_object.get("amount_purgeable_nonvolatile").to_u32();
         process.icon_id = process_object.get("icon_id").to_int();

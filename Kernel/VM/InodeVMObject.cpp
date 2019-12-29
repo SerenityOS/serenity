@@ -36,6 +36,16 @@ InodeVMObject::~InodeVMObject()
     ASSERT(inode().vmobject() == this);
 }
 
+size_t InodeVMObject::amount_clean() const
+{
+    size_t count = 0;
+    for (int i = 0; i < m_dirty_pages.size(); ++i) {
+        if (!m_dirty_pages.get(i) && m_physical_pages[i])
+            ++count;
+    }
+    return count * PAGE_SIZE;
+}
+
 size_t InodeVMObject::amount_dirty() const
 {
     size_t count = 0;

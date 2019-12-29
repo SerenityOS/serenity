@@ -17,6 +17,7 @@ public:
     void inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size);
 
     size_t amount_dirty() const;
+    size_t amount_clean() const;
 
 private:
     explicit InodeVMObject(Inode&);

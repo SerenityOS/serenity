@@ -2504,11 +2504,27 @@ void Process::die()
 
 size_t Process::amount_dirty_private() const
 {
+    // FIXME: This gets a bit more complicated for Regions sharing the same underlying VMObject.
+    //        The main issue I'm thinking of is when the VMObject has physical pages that none of the Regions are mapping.
+    //        That's probably a situation that needs to be looked at in general.
     size_t amount = 0;
     for (auto& region : m_regions) {
         if (!region.is_shared())
             amount += region.amount_dirty();
     }
+    return amount;
+}
+
+size_t Process::amount_clean_inode() const
+{
+    HashTable<const InodeVMObject*> vmobjects;
+    for (auto& region : m_regions) {
+        if (region.vmobject().is_inode())
+            vmobjects.set(&static_cast<const InodeVMObject&>(region.vmobject()));
+    }
+    size_t amount = 0;
+    for (auto& vmobject : vmobjects)
+        amount += vmobject->amount_clean();
     return amount;
 }
 
