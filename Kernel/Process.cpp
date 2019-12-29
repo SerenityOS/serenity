@@ -259,6 +259,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     bool map_purgeable = flags & MAP_PURGEABLE;
     bool map_private = flags & MAP_PRIVATE;
     bool map_stack = flags & MAP_STACK;
+    bool map_fixed = flags & MAP_FIXED;
 
     if (map_shared && map_private)
         return (void*)-EINVAL;
@@ -277,8 +278,12 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     if (map_purgeable) {
         auto vmobject = PurgeableVMObject::create_with_size(size);
         region = allocate_region_with_vmobject(VirtualAddress((u32)addr), size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
+        if (!region && (!map_fixed && addr != 0))
+            region = allocate_region_with_vmobject({}, size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
     } else if (map_anonymous) {
         region = allocate_region(VirtualAddress((u32)addr), size, name ? name : "mmap", prot, false);
+        if (!region && (!map_fixed && addr != 0))
+            region = allocate_region({}, size, name ? name : "mmap", prot, false);
     } else {
         if (offset < 0)
             return (void*)-EINVAL;
@@ -288,6 +293,12 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         if (!description)
             return (void*)-EBADF;
         auto region_or_error = description->mmap(*this, VirtualAddress((u32)addr), static_cast<size_t>(offset), size, prot);
+        if (region_or_error.is_error()) {
+            // Fail if MAP_FIXED or address is 0, retry otherwise
+            if (map_fixed || addr == 0)
+                return (void*)(int)region_or_error.error();
+            region_or_error = description->mmap(*this, {}, static_cast<size_t>(offset), size, prot);
+        }
         if (region_or_error.is_error())
             return (void*)(int)region_or_error.error();
         region = region_or_error.value();
