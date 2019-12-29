@@ -227,8 +227,8 @@ void GWidget::notify_layout_changed(Badge<GLayout>)
 
 void GWidget::handle_resize_event(GResizeEvent& event)
 {
+    resize_event(event);
     do_layout();
-    return resize_event(event);
 }
 
 void GWidget::handle_mouseup_event(GMouseEvent& event)
