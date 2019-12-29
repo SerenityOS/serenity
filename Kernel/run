@@ -65,7 +65,7 @@ elif [ "$1" = "qcmd" ]; then
         SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE $1"
     done
     echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
-    # ./run: qemu with serenity with custom commandline
+    # ./run: qemu with SerenityOS with custom commandline
     $SERENITY_QEMU_BIN \
         $SERENITY_COMMON_QEMU_ARGS \
         -device e1000 \
