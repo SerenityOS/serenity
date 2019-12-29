@@ -65,7 +65,7 @@ I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](
 
 ## How do I build and run this?
 
-See the [https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md](SerenityOS build instructions).
+See the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md)
 
 ## Wanna talk?
 
