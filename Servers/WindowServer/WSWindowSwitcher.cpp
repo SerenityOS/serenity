@@ -47,8 +47,10 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
 {
     if (event.type() == WSEvent::KeyUp) {
         if (event.key() == Key_Logo) {
-            if (auto* window = selected_window())
+            if (auto* window = selected_window()) {
+                window->set_minimized(false);
                 WSWindowManager::the().move_to_front_and_make_active(*window);
+            }
             WSWindowManager::the().set_highlight_window(nullptr);
             hide();
         }
@@ -119,7 +121,7 @@ void WSWindowSwitcher::refresh()
     m_selected_index = 0;
     int window_count = 0;
     int longest_title_width = 0;
-    wm.for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, [&](WSWindow& window) {
+    wm.for_each_window_of_type_from_front_to_back(WSWindowType::Normal, [&](WSWindow& window) {
         ++window_count;
         longest_title_width = max(longest_title_width, wm.font().width(window.title()));
         if (selected_window == &window)
