@@ -2502,6 +2502,16 @@ void Process::die()
     }
 }
 
+size_t Process::amount_dirty_private() const
+{
+    size_t amount = 0;
+    for (auto& region : m_regions) {
+        if (!region.is_shared())
+            amount += region.amount_dirty();
+    }
+    return amount;
+}
+
 size_t Process::amount_virtual() const
 {
     size_t amount = 0;

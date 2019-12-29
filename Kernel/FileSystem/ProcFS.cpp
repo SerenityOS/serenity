@@ -275,6 +275,7 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
         region_object.add("address", region.vaddr().get());
         region_object.add("size", (u32)region.size());
         region_object.add("amount_resident", (u32)region.amount_resident());
+        region_object.add("amount_dirty", (u32)region.amount_dirty());
         region_object.add("cow_pages", region.cow_pages());
         region_object.add("name", region.name());
     }
@@ -752,6 +753,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("tty", process.tty() ? process.tty()->tty_name() : "notty");
         process_object.add("amount_virtual", (u32)process.amount_virtual());
         process_object.add("amount_resident", (u32)process.amount_resident());
+        process_object.add("amount_dirty_private", (u32)process.amount_dirty_private());
         process_object.add("amount_shared", (u32)process.amount_shared());
         process_object.add("amount_purgeable_volatile", (u32)process.amount_purgeable_volatile());
         process_object.add("amount_purgeable_nonvolatile", (u32)process.amount_purgeable_nonvolatile());

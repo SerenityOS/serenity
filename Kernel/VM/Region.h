@@ -103,6 +103,7 @@ public:
 
     size_t amount_resident() const;
     size_t amount_shared() const;
+    size_t amount_dirty() const;
 
     bool should_cow(size_t page_index) const;
     void set_should_cow(size_t page_index, bool);

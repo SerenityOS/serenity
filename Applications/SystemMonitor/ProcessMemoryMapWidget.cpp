@@ -18,6 +18,7 @@ ProcessMemoryMapWidget::ProcessMemoryMapWidget(GWidget* parent)
     });
     pid_vm_fields.empend("size", "Size", TextAlignment::CenterRight);
     pid_vm_fields.empend("amount_resident", "Resident", TextAlignment::CenterRight);
+    pid_vm_fields.empend("amount_dirty", "Dirty", TextAlignment::CenterRight);
     pid_vm_fields.empend("Access", TextAlignment::CenterLeft, [](auto& object) {
         StringBuilder builder;
         if (!object.get("user_accessible").to_bool())

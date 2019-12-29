@@ -39,6 +39,7 @@ struct CProcessStatistics {
     size_t amount_virtual;
     size_t amount_resident;
     size_t amount_shared;
+    size_t amount_dirty_private;
     size_t amount_purgeable_volatile;
     size_t amount_purgeable_nonvolatile;
     int icon_id;
