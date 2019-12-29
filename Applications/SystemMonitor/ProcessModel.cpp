@@ -59,6 +59,8 @@ String ProcessModel::column_name(int column) const
         return "Virtual";
     case Column::Physical:
         return "Physical";
+    case Column::DirtyPrivate:
+        return "DirtyP";
     case Column::PurgeableVolatile:
         return "Purg:V";
     case Column::PurgeableNonvolatile:
@@ -110,6 +112,8 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
     case Column::Virtual:
         return { 65, TextAlignment::CenterRight };
     case Column::Physical:
+        return { 65, TextAlignment::CenterRight };
+    case Column::DirtyPrivate:
         return { 65, TextAlignment::CenterRight };
     case Column::PurgeableVolatile:
         return { 65, TextAlignment::CenterRight };
@@ -183,6 +187,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return (int)thread.current_state.amount_virtual;
         case Column::Physical:
             return (int)thread.current_state.amount_resident;
+        case Column::DirtyPrivate:
+            return (int)thread.current_state.amount_dirty_private;
         case Column::PurgeableVolatile:
             return (int)thread.current_state.amount_purgeable_volatile;
         case Column::PurgeableNonvolatile:
@@ -250,6 +256,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return pretty_byte_size(thread.current_state.amount_virtual);
         case Column::Physical:
             return pretty_byte_size(thread.current_state.amount_resident);
+        case Column::DirtyPrivate:
+            return pretty_byte_size(thread.current_state.amount_dirty_private);
         case Column::PurgeableVolatile:
             return pretty_byte_size(thread.current_state.amount_purgeable_volatile);
         case Column::PurgeableNonvolatile:
@@ -311,6 +319,7 @@ void ProcessModel::update()
             state.file_write_bytes = thread.file_write_bytes;
             state.amount_virtual = it.value.amount_virtual;
             state.amount_resident = it.value.amount_resident;
+            state.amount_dirty_private = it.value.amount_dirty_private;
             state.amount_purgeable_volatile = it.value.amount_purgeable_volatile;
             state.amount_purgeable_nonvolatile = it.value.amount_purgeable_nonvolatile;
             state.icon_id = it.value.icon_id;

@@ -21,6 +21,7 @@ NonnullRefPtr<VMObject> InodeVMObject::clone()
 InodeVMObject::InodeVMObject(Inode& inode)
     : VMObject(inode.size())
     , m_inode(inode)
+    , m_dirty_pages(page_count(), false)
 {
 }
 
@@ -35,6 +36,16 @@ InodeVMObject::~InodeVMObject()
     ASSERT(inode().vmobject() == this);
 }
 
+size_t InodeVMObject::amount_dirty() const
+{
+    size_t count = 0;
+    for (int i = 0; i < m_dirty_pages.size(); ++i) {
+        if (m_dirty_pages.get(i))
+            ++count;
+    }
+    return count * PAGE_SIZE;
+}
+
 void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new_size)
 {
     dbgprintf("VMObject::inode_size_changed: {%u:%u} %u -> %u\n",
@@ -45,6 +56,8 @@ void InodeVMObject::inode_size_changed(Badge<Inode>, size_t old_size, size_t new
 
     auto new_page_count = PAGE_ROUND_UP(new_size) / PAGE_SIZE;
     m_physical_pages.resize(new_page_count);
+
+    m_dirty_pages.grow(new_page_count, false);
 
     // FIXME: Consolidate with inode_contents_changed() so we only do a single walk.
     for_each_region([](auto& region) {

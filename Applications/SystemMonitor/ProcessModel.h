@@ -30,6 +30,7 @@ public:
         TID,
         Virtual,
         Physical,
+        DirtyPrivate,
         PurgeableVolatile,
         PurgeableNonvolatile,
         Syscalls,
@@ -72,6 +73,7 @@ private:
         String priority;
         size_t amount_virtual;
         size_t amount_resident;
+        size_t amount_dirty_private;
         size_t amount_purgeable_volatile;
         size_t amount_purgeable_nonvolatile;
         unsigned syscall_count;
