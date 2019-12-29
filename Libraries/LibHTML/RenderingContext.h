@@ -24,7 +24,7 @@ public:
 
 private:
     GPainter& m_painter;
-    const Palette& m_palette;
+    Palette m_palette;
     Rect m_viewport_rect;
     bool m_should_show_line_box_borders { false };
 };
