@@ -53,7 +53,8 @@ LIBC_OBJS = \
        libgen.o \
        wchar.o \
        serenity.o \
-       syslog.o
+       syslog.o \
+       cxxabi.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)
 
