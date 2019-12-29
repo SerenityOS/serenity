@@ -193,6 +193,8 @@ private:
     void for_each_window_listening_to_wm_events(Callback);
     template<typename Callback>
     void for_each_window(Callback);
+    template<typename Callback>
+    IterationDecision for_each_window_of_type_from_front_to_back(WSWindowType, Callback, bool ignore_highlight = false);
 
     virtual void event(CEvent&) override;
     void paint_window_frame(const WSWindow&);
@@ -411,4 +413,23 @@ void WSWindowManager::for_each_window(Callback callback)
         if (callback(*window) == IterationDecision::Break)
             return;
     }
+}
+
+template<typename Callback>
+IterationDecision WSWindowManager::for_each_window_of_type_from_front_to_back(WSWindowType type, Callback callback, bool ignore_highlight)
+{
+    if (!ignore_highlight && m_highlight_window && m_highlight_window->type() == type && m_highlight_window->is_visible()) {
+        if (callback(*m_highlight_window) == IterationDecision::Break)
+            return IterationDecision::Break;
+    }
+
+    for (auto* window = m_windows_in_order.tail(); window; window = window->prev()) {
+        if (window->type() != type)
+            continue;
+        if (!ignore_highlight && window == m_highlight_window)
+            continue;
+        if (callback(*window) == IterationDecision::Break)
+            return IterationDecision::Break;
+    }
+    return IterationDecision::Continue;
 }
