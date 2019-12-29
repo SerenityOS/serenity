@@ -42,6 +42,16 @@ TEST_CASE(starts_with)
     EXPECT(!test_string_view.starts_with("DEF"));
 }
 
+TEST_CASE(ends_with)
+{
+    String test_string = "ABCDEF";
+    StringView test_string_view = test_string.view();
+    EXPECT(test_string_view.ends_with("DEF"));
+    EXPECT(test_string_view.ends_with("ABCDEF"));
+    EXPECT(!test_string_view.ends_with("ABCDE"));
+    EXPECT(!test_string_view.ends_with("ABCDEFG"));
+}
+
 TEST_CASE(lines)
 {
     String test_string = "a\nb\r\nc\rd";
