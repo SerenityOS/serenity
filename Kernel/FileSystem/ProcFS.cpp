@@ -754,6 +754,7 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
         process_object.add("amount_virtual", (u32)process.amount_virtual());
         process_object.add("amount_resident", (u32)process.amount_resident());
         process_object.add("amount_dirty_private", (u32)process.amount_dirty_private());
+        process_object.add("amount_clean_inode", (u32)process.amount_clean_inode());
         process_object.add("amount_shared", (u32)process.amount_shared());
         process_object.add("amount_purgeable_volatile", (u32)process.amount_purgeable_volatile());
         process_object.add("amount_purgeable_nonvolatile", (u32)process.amount_purgeable_nonvolatile());

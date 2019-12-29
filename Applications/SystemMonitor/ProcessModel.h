@@ -31,6 +31,7 @@ public:
         Virtual,
         Physical,
         DirtyPrivate,
+        CleanInode,
         PurgeableVolatile,
         PurgeableNonvolatile,
         Syscalls,
@@ -74,6 +75,7 @@ private:
         size_t amount_virtual;
         size_t amount_resident;
         size_t amount_dirty_private;
+        size_t amount_clean_inode;
         size_t amount_purgeable_volatile;
         size_t amount_purgeable_nonvolatile;
         unsigned syscall_count;
