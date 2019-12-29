@@ -1,4 +1,4 @@
-# Serenity
+# SerenityOS
 
 Graphical Unix-like operating system for x86 computers.
 
@@ -6,9 +6,7 @@ Graphical Unix-like operating system for x86 computers.
 
 ## About
 
-*I always wondered what it would be like to write my own operating system, but I never took it seriously. Until now.*
-
-Serenity is a love letter to '90s user interfaces with a custom Unix-like core. It flatters with sincerity by stealing beautiful ideas from various other systems.
+SerenityOS is a love letter to '90s user interfaces with a custom Unix-like core. It flatters with sincerity by stealing beautiful ideas from various other systems.
 
 Roughly speaking, the goal is a marriage between the aesthetic of late-1990s productivity software and the power-user accessibility of late-2000s \*nix. This is a system by me, for me, based on the things I like.
 
@@ -18,13 +16,13 @@ I regularly post raw hacking sessions and demos on [my YouTube channel](https://
 
 Sometimes I write about the system on [my github.io blog](https://awesomekling.github.io/).
 
-There's also a [Patreon](https://www.patreon.com/serenityos) if you would like to show some support that way.
+I'm also on [Patreon](https://www.patreon.com/serenityos) and [GitHub Sponsors](https://github.com/sponsors/awesomekling) if you would like to show some support that way.
 
 ## Screenshot
 
 ![Screenshot as of 1133aca](https://raw.githubusercontent.com/SerenityOS/serenity/master/Meta/screenshot-1133aca.png)
 
-## Current features (all under development)
+## Current features (all under development, some more mature than others)
 
 * Pre-emptive multitasking
 * Multithreading
@@ -35,6 +33,7 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * POSIX signals
 * Shell with pipes and I/O redirection
 * mmap()
+* Purgeable memory
 * /proc filesystem
 * Local sockets
 * Pseudoterminals (with /dev/pts filesystem)
@@ -46,6 +45,7 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * HTML/CSS engine
 * Web browser
 * C++ IDE
+* Sampling profiler with GUI
 * Emojis (UTF-8)
 * HTTP downloads
 * SoundBlaster 16 driver
@@ -59,67 +59,17 @@ There's also a [Patreon](https://www.patreon.com/serenityos) if you would like t
 * Simple painting application
 * DNS lookup
 * Desktop games: Minesweeper and Snake
+* Color theming
 * Ports system (needs more packages!)
 * Other stuff I can't think of right now...
 
 ## How do I build and run this?
 
-### Linux prerequisites
-Make sure you have all the dependencies installed:
+See the [https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md](SerenityOS build instructions).
 
-```bash
-sudo apt install build-essential curl libmpfr-dev libmpc-dev libgmp-dev e2fsprogs qemu-system-i386 qemu-utils
-```
+## Wanna talk?
 
-Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
-```bash
-sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt-get install gcc-8 g++-8
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
-```
-
-### macOS prerequisites
-Make sure you have all the dependencies installed:
-```bash
-brew install coreutils
-brew tap discoteq/discoteq
-brew install flock
-brew install qemu
-brew install wget
-brew install e2fsprogs
-brew install m4
-brew install autoconf
-brew install libtool
-brew install automake
-brew cask install osxfuse
-Toolchain/BuildFuseExt2.sh
-```
-
-Notes: 
-- fuse-ext2 is not available as brew formula so it must be installed using `BuildFuseExt2.sh`
-- Xcode and `xcode-tools` must be installed (`git` is required by some scripts)
-- coreutils is needed to build gcc cross compiler
-- `flock` command an also be installed with `brew install util-linux` but in that case you will need to add it to `$PATH`
-- qemu is needed to run the compiled OS image. You can also build it using the `BuildQemu.sh` script
-- osxfuse, e2fsprogs, m4, autoconf, automake, libtool and `BuildFuseExt2.sh` are needed if you want to build the root filesystem disk image natively on macOS. This allows mounting an EXT2 fs and also installs commands like `mke2fs` that are not available on stock macOS. 
-- If you install some commercial EXT2 macOS fs handler instead of osxfuse and fuse-ext2, you will need to `brew install e2fsprogs` to obtain `mke2fs` anyway.
-
-### Build
-Go into the `Toolchain/` directory and run the **BuildIt.sh** script.
-
-Once you've built the toolchain, go into the `Kernel/` directory, then run
-**./makeall.sh**, and if nothing breaks too much, take it for a spin by using
-**./run**.
-
-You can vastly reduce the build time of successive rebuilds of Serenity by installing `ccache` and `export`ing ```PRE_CXX=ccache```
-
-Bare curious users may even consider sourcing suitable hardware to [install Serenity on a physical PC.](https://github.com/SerenityOS/serenity/blob/master/INSTALL.md)
-
-Later on, when you `git pull` to get the latest changes, there's no need to rebuild the toolchain. You can simply rerun **./makeall.sh** in the `Kernel/` directory and you'll be good to **./run** again.
-
-## IRC
-
-Come chat in `#serenityos` on the Freenode IRC network.
+Come chat with us in `#serenityos` on the Freenode IRC network.
 
 ## Author
 
@@ -135,4 +85,4 @@ Come chat in `#serenityos` on the Freenode IRC network.
 
 ## License
 
-Serenity is licensed under a 2-clause BSD license.
+SerenityOS is licensed under a 2-clause BSD license.
