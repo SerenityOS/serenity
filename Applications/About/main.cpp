@@ -11,7 +11,7 @@ int main(int argc, char** argv)
     GApplication app(argc, argv);
 
     auto window = GWindow::construct();
-    window->set_title("About Serenity");
+    window->set_title("About SerenityOS");
     Rect window_rect { 0, 0, 240, 180 };
     window_rect.center_within(GDesktop::the().rect());
     window->set_resizable(false);
@@ -31,7 +31,7 @@ int main(int argc, char** argv)
 
     auto label = GLabel::construct(widget);
     label->set_font(Font::default_bold_font());
-    label->set_text("Serenity Operating System");
+    label->set_text("SerenityOS");
     label->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     label->set_preferred_size(0, 11);
 
