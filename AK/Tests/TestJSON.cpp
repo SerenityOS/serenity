@@ -74,4 +74,12 @@ TEST_CASE(json_empty_string)
     EXPECT_EQ(json.as_string().is_empty(), true);
 }
 
+TEST_CASE(json_utf8_character)
+{
+    auto json = JsonValue::from_string("\"\xc3\x84\"");
+    EXPECT_EQ(json.type(), JsonValue::Type::String);
+    EXPECT_EQ(json.as_string().is_null(), false);
+    EXPECT_EQ(json.as_string().length(), 2);
+}
+
 TEST_MAIN(JSON)
