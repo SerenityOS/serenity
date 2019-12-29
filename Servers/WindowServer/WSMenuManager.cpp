@@ -277,6 +277,7 @@ void WSMenuManager::draw_applet(const WSWindow& applet)
     if (!applet.backing_store())
         return;
     Painter painter(*window().backing_store());
+    painter.fill_rect(applet.rect_in_menubar(), WSWindowManager::the().palette().window());
     painter.blit(applet.rect_in_menubar().location(), *applet.backing_store(), applet.backing_store()->rect());
 }
 
