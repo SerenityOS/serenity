@@ -589,6 +589,8 @@ void GWindow::update_all_windows(Badge<GWindowServerConnection>)
 
 void GWindow::notify_state_changed(Badge<GWindowServerConnection>, bool minimized, bool occluded)
 {
+    m_visible_for_timer_purposes = !minimized && !occluded;
+
     // When double buffering is enabled, minimization/occlusion means we can mark the front bitmap volatile (in addition to the back bitmap.)
     // When double buffering is disabled, there is only the back bitmap (which we can now mark volatile!)
     RefPtr<GraphicsBitmap>& bitmap = m_double_buffering_enabled ? m_front_bitmap : m_back_bitmap;

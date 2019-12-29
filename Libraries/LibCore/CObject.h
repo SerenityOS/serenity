@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/Noncopyable.h>
@@ -13,7 +14,13 @@ namespace AK {
 class JsonObject;
 }
 
+enum class TimerShouldFireWhenNotVisible {
+    No = 0,
+    Yes
+};
+
 class CEvent;
+class CEventLoop;
 class CChildEvent;
 class CCustomEvent;
 class CTimerEvent;
@@ -26,10 +33,10 @@ public:                                                                \
     {                                                                  \
         return adopt(*new klass(forward<Args>(args)...));              \
     }
-    
-#define C_OBJECT_ABSTRACT(klass)                                       \
-public:                                                                \
-    virtual const char* class_name() const override { return #klass; } 
+
+#define C_OBJECT_ABSTRACT(klass) \
+public:                          \
+    virtual const char* class_name() const override { return #klass; }
 
 class CObject
     : public RefCounted<CObject>
@@ -69,7 +76,7 @@ public:
     CObject* parent() { return m_parent; }
     const CObject* parent() const { return m_parent; }
 
-    void start_timer(int ms);
+    void start_timer(int ms, TimerShouldFireWhenNotVisible = TimerShouldFireWhenNotVisible::No);
     void stop_timer();
     bool has_timer() const { return m_timer_id; }
 
@@ -95,6 +102,8 @@ public:
         if (m_parent)
             m_parent->remove_child(*this);
     }
+
+    virtual bool is_visible_for_timer_purposes() const;
 
 protected:
     explicit CObject(CObject* parent = nullptr, bool is_widget = false);

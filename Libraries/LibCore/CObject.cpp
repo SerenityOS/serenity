@@ -100,14 +100,14 @@ void CObject::custom_event(CCustomEvent&)
 {
 }
 
-void CObject::start_timer(int ms)
+void CObject::start_timer(int ms, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     if (m_timer_id) {
         dbgprintf("CObject{%p} already has a timer!\n", this);
         ASSERT_NOT_REACHED();
     }
 
-    m_timer_id = CEventLoop::register_timer(*this, ms, true);
+    m_timer_id = CEventLoop::register_timer(*this, ms, true, fire_when_not_visible);
 }
 
 void CObject::stop_timer()
@@ -164,4 +164,11 @@ void CObject::dispatch_event(CEvent& e, CObject* stay_within)
         target->event(e);
         target = target->parent();
     } while (target && target != stay_within && !e.is_accepted());
+}
+
+bool CObject::is_visible_for_timer_purposes() const
+{
+    if (parent())
+        return parent()->is_visible_for_timer_purposes();
+    return true;
 }

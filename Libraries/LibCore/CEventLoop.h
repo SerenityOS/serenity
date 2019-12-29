@@ -38,7 +38,7 @@ public:
 
     bool was_exit_requested() const { return m_exit_requested; }
 
-    static int register_timer(CObject&, int milliseconds, bool should_reload);
+    static int register_timer(CObject&, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible);
     static bool unregister_timer(int timer_id);
 
     static void register_notifier(Badge<CNotifier>, CNotifier&);
@@ -77,6 +77,7 @@ private:
         int interval { 0 };
         timeval fire_time { 0, 0 };
         bool should_reload { false };
+        TimerShouldFireWhenNotVisible fire_when_not_visible { TimerShouldFireWhenNotVisible::No };
         WeakPtr<CObject> owner;
 
         void reload(const timeval& now);

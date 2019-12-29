@@ -366,6 +366,11 @@ void CEventLoop::wait_for_event(WaitMode mode)
         auto& timer = *it.value;
         if (!timer.has_expired(now))
             continue;
+        if (it.value->fire_when_not_visible == TimerShouldFireWhenNotVisible::No
+            && it.value->owner
+            && !it.value->owner->is_visible_for_timer_purposes()) {
+            continue;
+        }
 #ifdef CEVENTLOOP_DEBUG
         dbg() << "CEventLoop: Timer " << timer.timer_id << " has expired, sending CTimerEvent to " << timer.owner;
 #endif
@@ -411,13 +416,18 @@ void CEventLoop::get_next_timer_expiration(timeval& soonest)
     bool has_checked_any = false;
     for (auto& it : *s_timers) {
         auto& fire_time = it.value->fire_time;
+        if (it.value->fire_when_not_visible == TimerShouldFireWhenNotVisible::No
+            && it.value->owner
+            && !it.value->owner->is_visible_for_timer_purposes()) {
+            continue;
+        }
         if (!has_checked_any || fire_time.tv_sec < soonest.tv_sec || (fire_time.tv_sec == soonest.tv_sec && fire_time.tv_usec < soonest.tv_usec))
             soonest = fire_time;
         has_checked_any = true;
     }
 }
 
-int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_reload)
+int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_reload, TimerShouldFireWhenNotVisible fire_when_not_visible)
 {
     ASSERT(milliseconds >= 0);
     auto timer = make<EventLoopTimer>();
@@ -427,6 +437,7 @@ int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_re
     gettimeofday(&now, nullptr);
     timer->reload(now);
     timer->should_reload = should_reload;
+    timer->fire_when_not_visible = fire_when_not_visible;
     int timer_id = ++s_next_timer_id; // FIXME: This will eventually wrap around.
     ASSERT(timer_id);                 // FIXME: Aforementioned wraparound.
     timer->timer_id = timer_id;
