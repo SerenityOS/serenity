@@ -404,20 +404,36 @@ int Process::sys$madvise(void* address, size_t size, int advice)
     return -EINVAL;
 }
 
-int Process::sys$purge()
+int Process::sys$purge(int mode)
 {
-    NonnullRefPtrVector<PurgeableVMObject> vmobjects;
-    {
-        InterruptDisabler disabler;
-        MM.for_each_vmobject([&](auto& vmobject) {
-            if (vmobject.is_purgeable())
-                vmobjects.append(static_cast<PurgeableVMObject&>(vmobject));
-            return IterationDecision::Continue;
-        });
-    }
     int purged_page_count = 0;
-    for (auto& vmobject : vmobjects) {
-        purged_page_count += vmobject.purge();
+    if (mode & PURGE_ALL_VOLATILE) {
+        NonnullRefPtrVector<PurgeableVMObject> vmobjects;
+        {
+            InterruptDisabler disabler;
+            MM.for_each_vmobject([&](auto& vmobject) {
+                if (vmobject.is_purgeable())
+                    vmobjects.append(static_cast<PurgeableVMObject&>(vmobject));
+                return IterationDecision::Continue;
+            });
+        }
+        for (auto& vmobject : vmobjects) {
+            purged_page_count += vmobject.purge();
+        }
+    }
+    if (mode & PURGE_ALL_CLEAN_INODE) {
+        NonnullRefPtrVector<InodeVMObject> vmobjects;
+        {
+            InterruptDisabler disabler;
+            MM.for_each_vmobject([&](auto& vmobject) {
+                if (vmobject.is_inode())
+                    vmobjects.append(static_cast<InodeVMObject&>(vmobject));
+                return IterationDecision::Continue;
+            });
+        }
+        for (auto& vmobject : vmobjects) {
+            purged_page_count += vmobject.release_all_clean_pages();
+        }
     }
     return purged_page_count;
 }

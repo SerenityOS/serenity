@@ -19,6 +19,8 @@ public:
     size_t amount_dirty() const;
     size_t amount_clean() const;
 
+    int release_all_clean_pages();
+
 private:
     explicit InodeVMObject(Inode&);
     explicit InodeVMObject(const InodeVMObject&);
@@ -28,6 +30,8 @@ private:
     InodeVMObject(InodeVMObject&&) = delete;
 
     virtual bool is_inode() const override { return true; }
+
+    int release_all_clean_pages_impl();
 
     NonnullRefPtr<Inode> m_inode;
     Bitmap m_dirty_pages;

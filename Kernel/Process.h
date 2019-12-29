@@ -142,7 +142,7 @@ public:
     int sys$set_mmap_name(void*, size_t, const char*);
     int sys$mprotect(void*, size_t, int prot);
     int sys$madvise(void*, size_t, int advice);
-    int sys$purge();
+    int sys$purge(int mode);
     int sys$select(const Syscall::SC_select_params*);
     int sys$poll(pollfd*, int nfds, int timeout);
     ssize_t sys$get_dir_entries(int fd, void*, ssize_t);
