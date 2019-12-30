@@ -16,6 +16,7 @@ kinds of crashes.
 
 ## Options
 
+* `-A`: Test that all of the following crashes crash as intended.
 * `-s`: Perform a segmentation violation by dereferencing an invalid pointer.
 * `-d`: Perform a division by zero.
 * `-i`: Execute an illegal CPU instruction.
@@ -36,5 +37,6 @@ kinds of crashes.
 
 ```sh
 $ crash -F
+Testing: "Write to freed memory"
 Shell: crash(33) exitied due to signal "Segmentation violation"
 ```
