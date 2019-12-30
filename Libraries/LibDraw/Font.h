@@ -63,7 +63,6 @@ public:
     u8 glyph_height() const { return m_glyph_height; }
     u8 min_glyph_width() const { return m_min_glyph_width; }
     u8 max_glyph_width() const { return m_max_glyph_width; }
-    u8 glyph_spacing() const { return m_fixed_width ? 0 : 1; }
     int width(const StringView&) const;
     int width(const Utf8View&) const;
 
@@ -73,6 +72,9 @@ public:
     bool is_fixed_width() const { return m_fixed_width; }
     void set_fixed_width(bool b) { m_fixed_width = b; }
 
+    u8 glyph_spacing() const { return m_glyph_spacing; }
+    void set_glyph_spacing(u8 spacing) { m_glyph_spacing = spacing; }
+
     void set_glyph_width(char ch, u8 width)
     {
         ASSERT(m_glyph_widths);
@@ -80,7 +82,7 @@ public:
     }
 
 private:
-    Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height);
+    Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing);
 
     static RefPtr<Font> load_from_memory(const u8*);
 
@@ -94,6 +96,7 @@ private:
     u8 m_glyph_height { 0 };
     u8 m_min_glyph_width { 0 };
     u8 m_max_glyph_width { 0 };
+    u8 m_glyph_spacing { 0 };
 
     bool m_fixed_width { false };
 };

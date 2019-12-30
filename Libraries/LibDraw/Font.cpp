@@ -19,7 +19,8 @@ struct [[gnu::packed]] FontFileHeader
     u8 glyph_height;
     u8 type;
     u8 is_variable_width;
-    u8 unused[6];
+    u8 glyph_spacing;
+    u8 unused[5];
     char name[64];
 };
 
@@ -78,10 +79,10 @@ RefPtr<Font> Font::clone() const
         memcpy(new_widths, m_glyph_widths, 256);
     else
         memset(new_widths, m_glyph_width, 256);
-    return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height));
+    return adopt(*new Font(m_name, new_rows, new_widths, m_fixed_width, m_glyph_width, m_glyph_height, m_glyph_spacing));
 }
 
-Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height)
+Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_width, u8 glyph_width, u8 glyph_height, u8 glyph_spacing)
     : m_name(name)
     , m_rows(rows)
     , m_glyph_widths(widths)
@@ -89,6 +90,7 @@ Font::Font(const StringView& name, unsigned* rows, u8* widths, bool is_fixed_wid
     , m_glyph_height(glyph_height)
     , m_min_glyph_width(glyph_width)
     , m_max_glyph_width(glyph_width)
+    , m_glyph_spacing(glyph_spacing)
     , m_fixed_width(is_fixed_width)
 {
     if (!m_fixed_width) {
@@ -125,7 +127,7 @@ RefPtr<Font> Font::load_from_memory(const u8* data)
     u8* widths = nullptr;
     if (header.is_variable_width)
         widths = (u8*)(rows) + 256 * bytes_per_glyph;
-    return adopt(*new Font(String(header.name), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height));
+    return adopt(*new Font(String(header.name), rows, widths, !header.is_variable_width, header.glyph_width, header.glyph_height, header.glyph_spacing));
 }
 
 RefPtr<Font> Font::load_from_file(const StringView& path)
@@ -154,6 +156,7 @@ bool Font::write_to_file(const StringView& path)
     header.glyph_height = m_glyph_height;
     header.type = 0;
     header.is_variable_width = !m_fixed_width;
+    header.glyph_spacing = m_glyph_spacing;
     memcpy(header.name, m_name.characters(), min(m_name.length(), (size_t)63));
 
     size_t bytes_per_glyph = sizeof(unsigned) * m_glyph_height;
