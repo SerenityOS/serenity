@@ -49,6 +49,7 @@ public:
     explicit Thread(Process&);
     ~Thread();
 
+    static Thread* from_tid(int);
     static void initialize();
     static void finalize_dying_threads();
 
@@ -61,7 +62,10 @@ public:
     void set_priority(u32 p) { m_priority = p; }
     u32 priority() const { return m_priority; }
 
-    u32 effective_priority() const { return m_priority + m_extra_priority; }
+    void set_priority_boost(u32 boost) { m_priority_boost = boost; }
+    u32 priority_boost() const { return m_priority_boost; }
+
+    u32 effective_priority() const { return m_priority + m_priority_boost + m_extra_priority; }
 
     void set_joinable(bool j) { m_is_joinable = j; }
     bool is_joinable() const { return m_is_joinable; }
@@ -452,6 +456,7 @@ private:
     String m_name;
     u32 m_priority { THREAD_PRIORITY_NORMAL };
     u32 m_extra_priority { 0 };
+    u32 m_priority_boost { 0 };
     bool m_has_used_fpu { false };
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };

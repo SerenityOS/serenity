@@ -234,6 +234,7 @@ public:
     int sys$profiling_disable(pid_t);
     void* sys$get_kernel_info_page();
     int sys$futex(const Syscall::SC_futex_params*);
+    int sys$set_thread_boost(int tid, int amount);
 
     static void initialize();
 
