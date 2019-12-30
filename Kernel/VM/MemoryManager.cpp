@@ -586,8 +586,8 @@ void MemoryManager::unquickmap_page()
 
 bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress vaddr) const
 {
-    auto* region = region_from_vaddr(process, vaddr);
-    return region && region->is_stack();
+    auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
+    return region && region->is_user_accessible() && region->is_stack();
 }
 
 bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr) const
