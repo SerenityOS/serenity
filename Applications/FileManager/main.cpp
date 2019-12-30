@@ -6,6 +6,7 @@
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CUserInfo.h>
 #include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
 #include <LibGUI/GApplication.h>
@@ -383,8 +384,8 @@ int main(int argc, char** argv)
     menubar->add_menu(move(go_menu));
 
     auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("File Manager", load_png("/res/icons/32x32/filetype-folder.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

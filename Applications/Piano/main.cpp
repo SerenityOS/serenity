@@ -3,9 +3,9 @@
 #include <LibAudio/AClientConnection.h>
 #include <LibCore/CFile.h>
 #include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
-#include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
 #include <LibThread/Thread.h>
@@ -50,6 +50,12 @@ int main(int argc, char** argv)
         return;
     }));
     menubar->add_menu(move(app_menu));
+
+    auto help_menu = GMenu::construct("Help");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("Piano", load_png("/res/icons/32x32/app-piano.png"), window);
+    }));
+    menubar->add_menu(move(help_menu));
 
     app.set_menubar(move(menubar));
 

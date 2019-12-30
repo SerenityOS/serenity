@@ -1,5 +1,6 @@
 #include "SnakeGame.h"
 #include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -35,8 +36,8 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("Snake", load_png("/res/icons/32x32/app-snake.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

@@ -1,6 +1,7 @@
 #include "Field.h"
 #include <LibCore/CConfigFile.h>
 #include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
@@ -89,8 +90,8 @@ int main(int argc, char** argv)
     menubar->add_menu(move(difficulty_menu));
 
     auto help_menu = GMenu::construct("Help");
-    help_menu->add_action(GAction::create("About", [](const GAction&) {
-        dbgprintf("FIXME: Implement Help/About\n");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("Minesweeper", load_png("/res/icons/32x32/app-minesweeper.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 

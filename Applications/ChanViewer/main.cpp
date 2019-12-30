@@ -1,9 +1,12 @@
 #include "BoardListModel.h"
 #include "ThreadCatalogModel.h"
 #include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GComboBox.h>
+#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GStatusBar.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GWindow.h>
@@ -52,6 +55,23 @@ int main(int argc, char** argv)
     };
 
     window->show();
+
+    auto menubar = make<GMenuBar>();
+
+    auto app_menu = GMenu::construct("ChanViewer");
+    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
+        GApplication::the().quit(0);
+        return;
+    }));
+    menubar->add_menu(move(app_menu));
+
+    auto help_menu = GMenu::construct("Help");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("ChanViewer", load_png("/res/icons/32x32/app-chanviewer.png"), window);
+    }));
+    menubar->add_menu(move(help_menu));
+
+    app.set_menubar(move(menubar));
 
     return app.exec();
 }
