@@ -40,10 +40,30 @@ char* read_map(const JsonObject& json, const String& name)
     return map;
 }
 
-int read_map_from_file(String filename)
+RefPtr<CFile> open_keymap_file(String& filename)
 {
     auto file = CFile::construct(filename);
-    if (!file->open(CIODevice::ReadOnly)) {
+    if (file->open(CIODevice::ReadOnly))
+        return file;
+
+    if (!filename.ends_with(".json")) {
+        StringBuilder full_path;
+        full_path.append("/res/keymaps/");
+        full_path.append(filename);
+        full_path.append(".json");
+        filename = full_path.to_string();
+        file = CFile::construct(filename);
+        if (file->open(CIODevice::ReadOnly))
+            return file;
+    }
+
+    return file;
+}
+
+int read_map_from_file(String& filename)
+{
+    auto file = open_keymap_file(filename);
+    if (!file->is_open()) {
         fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file->error_string());
         return 1;
     }
@@ -61,7 +81,7 @@ int read_map_from_file(String filename)
 int main(int argc, char** argv)
 {
     if (argc != 2) {
-        fprintf(stderr, "usage: keymap <file>\n");
+        fprintf(stderr, "usage: keymap <name|file>\n");
         return 0;
     }
 
