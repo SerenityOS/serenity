@@ -15,10 +15,8 @@
 #include <WindowServer/WSWindowSwitcher.h>
 #include <WindowServer/WindowClientEndpoint.h>
 #include <errno.h>
+#include <serenity.h>
 #include <stdio.h>
-#include <sys/ioctl.h>
-#include <sys/socket.h>
-#include <sys/uio.h>
 #include <unistd.h>
 
 HashMap<int, NonnullRefPtr<WSClientConnection>>* s_connections;
@@ -653,4 +651,16 @@ OwnPtr<WindowServer::StartDragResponse> WSClientConnection::handle(const WindowS
 
     wm.start_dnd_drag(*this, message.text(), bitmap, message.data_type(), message.data());
     return make<WindowServer::StartDragResponse>(true);
+}
+
+void WSClientConnection::boost()
+{
+    if (set_thread_boost(client_pid(), 10) < 0)
+        perror("boost: set_thread_boost");
+}
+
+void WSClientConnection::deboost()
+{
+    if (set_thread_boost(client_pid(), 0) < 0)
+        perror("deboost: set_thread_boost");
 }

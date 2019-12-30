@@ -1095,12 +1095,18 @@ void WSWindowManager::set_active_window(WSWindow* window)
         return;
 
     auto* previously_active_window = m_active_window.ptr();
+
+    WSClientConnection* previously_active_client = nullptr;
+    WSClientConnection* active_client = nullptr;
+
     if (previously_active_window) {
+        previously_active_client = previously_active_window->client();
         CEventLoop::current().post_event(*previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
         invalidate(*previously_active_window);
     }
     m_active_window = window->make_weak_ptr();
     if (m_active_window) {
+        active_client = m_active_window->client();
         CEventLoop::current().post_event(*m_active_window, make<WSEvent>(WSEvent::WindowActivated));
         invalidate(*m_active_window);
 
@@ -1110,6 +1116,13 @@ void WSWindowManager::set_active_window(WSWindow* window)
         if (previously_active_window)
             tell_wm_listeners_window_state_changed(*previously_active_window);
         tell_wm_listeners_window_state_changed(*m_active_window);
+    }
+
+    if (active_client != previously_active_client) {
+        if (previously_active_client)
+            previously_active_client->deboost();
+        if (active_client)
+            active_client->boost();
     }
 }
 
