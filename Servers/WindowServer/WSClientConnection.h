@@ -22,6 +22,9 @@ public:
     ~WSClientConnection() override;
     virtual void die() override;
 
+    void boost();
+    void deboost();
+
     static WSClientConnection* from_client_id(int client_id);
     static void for_each_client(Function<void(WSClientConnection&)>);
 
