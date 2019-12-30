@@ -3906,3 +3906,19 @@ int Process::sys$futex(const Syscall::SC_futex_params* params)
 
     return 0;
 }
+
+int Process::sys$set_thread_boost(int tid, int amount)
+{
+    if (amount < 0 || amount > 20)
+        return -EINVAL;
+    InterruptDisabler disabler;
+    auto* thread = Thread::from_tid(tid);
+    if (!thread)
+        return -ESRCH;
+    if (thread->state() == Thread::State::Dead || thread->state() == Thread::State::Dying)
+        return -ESRCH;
+    if (!is_superuser() && thread->process().uid() != euid())
+        return -EPERM;
+    thread->set_priority_boost(amount);
+    return 0;
+}

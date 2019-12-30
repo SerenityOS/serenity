@@ -786,3 +786,15 @@ void Thread::wake_from_queue()
     ASSERT(state() == State::Queued);
     set_state(State::Runnable);
 }
+
+Thread* Thread::from_tid(int tid)
+{
+    ASSERT_INTERRUPTS_DISABLED();
+    Thread* found_thread = nullptr;
+    Thread::for_each([&](auto& thread) {
+        if (thread.tid() == tid)
+            found_thread = &thread;
+        return IterationDecision::Continue;
+    });
+    return found_thread;
+}
