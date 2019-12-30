@@ -5,7 +5,7 @@ syscall - test a system call
 ## Synopsis
 
 ```**sh
-$ syscall [-o] [-l] [-h] <syscall-name> <args...> [buf==BUFSIZ buffer]`
+$ syscall [-o] [-l] [-h] <syscall-name> <args...> [buf==BUFSIZ buffer]
 ```
 
 ## Description
