@@ -44,7 +44,8 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
         process.amount_purgeable_nonvolatile = process_object.get("amount_purgeable_nonvolatile").to_u32();
         process.icon_id = process_object.get("icon_id").to_int();
 
-        auto thread_array = process_object.get("threads").as_array();
+        auto& thread_array = process_object.get_ptr("threads")->as_array();
+        process.threads.ensure_capacity(thread_array.size());
         thread_array.for_each([&](auto& value) {
             auto& thread_object = value.as_object();
             CThreadStatistics thread;
