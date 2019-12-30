@@ -175,7 +175,7 @@ VFS* vfs;
             kprintf("init_stage2: error spawning Shell: %d\n", error);
             hang();
         }
-        thread->set_priority(ThreadPriority::High);
+        thread->set_priority(THREAD_PRIORITY_HIGH);
     } else {
         tty0->set_graphical(true);
         Thread* thread = nullptr;
@@ -184,7 +184,7 @@ VFS* vfs;
             kprintf("init_stage2: error spawning SystemServer: %d\n", error);
             hang();
         }
-        thread->set_priority(ThreadPriority::High);
+        thread->set_priority(THREAD_PRIORITY_HIGH);
     }
     {
         Thread* thread = nullptr;
@@ -326,7 +326,7 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     });
 
     Process::create_kernel_process(g_finalizer, "Finalizer", [] {
-        current->set_priority(ThreadPriority::Low);
+        current->set_priority(THREAD_PRIORITY_LOW);
         for (;;) {
             current->wait_on(*g_finalizer_wait_queue);
             Thread::finalize_dying_threads();

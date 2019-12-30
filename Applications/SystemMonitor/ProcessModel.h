@@ -25,6 +25,7 @@ public:
         CPU,
         State,
         Priority,
+        EffectivePriority,
         User,
         PID,
         TID,
@@ -71,7 +72,8 @@ private:
         String name;
         String state;
         String user;
-        String priority;
+        u32 priority;
+        u32 effective_priority;
         size_t amount_virtual;
         size_t amount_resident;
         size_t amount_dirty_private;

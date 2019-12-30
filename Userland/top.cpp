@@ -37,7 +37,7 @@ struct ThreadData {
     unsigned cpu_percent { 0 };
     unsigned cpu_percent_decimal { 0 };
 
-    String priority;
+    u32 priority;
     String username;
     String state;
 };
@@ -146,10 +146,10 @@ int main(int, char**)
         });
 
         for (auto* thread : threads) {
-            printf("%6d %3d %c    %-8s  %-10s  %6zu  %6zu  %2u.%1u  %s\n",
+            printf("%6d %3d %2u   %-8s  %-10s  %6zu  %6zu  %2u.%1u  %s\n",
                 thread->pid,
                 thread->tid,
-                thread->priority[0],
+                thread->priority,
                 thread->username.characters(),
                 thread->state.characters(),
                 thread->amount_virtual / 1024,
