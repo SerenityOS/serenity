@@ -34,6 +34,11 @@ int set_thread_boost(int tid, int amount)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int set_process_boost(int tid, int amount)
+{
+    int rc = syscall(SC_set_process_boost, tid, amount);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 
 int futex(int32_t* userspace_address, int futex_op, int32_t value, const struct timespec* timeout)
 {

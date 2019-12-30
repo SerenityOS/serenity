@@ -152,7 +152,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(profiling_disable)          \
     __ENUMERATE_SYSCALL(get_kernel_info_page)       \
     __ENUMERATE_SYSCALL(futex)                      \
-    __ENUMERATE_SYSCALL(set_thread_boost)
+    __ENUMERATE_SYSCALL(set_thread_boost)           \
+    __ENUMERATE_SYSCALL(set_process_boost)
 
 namespace Syscall {
 

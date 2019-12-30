@@ -65,7 +65,7 @@ public:
     void set_priority_boost(u32 boost) { m_priority_boost = boost; }
     u32 priority_boost() const { return m_priority_boost; }
 
-    u32 effective_priority() const { return m_priority + m_priority_boost + m_extra_priority; }
+    u32 effective_priority() const;
 
     void set_joinable(bool j) { m_is_joinable = j; }
     bool is_joinable() const { return m_is_joinable; }

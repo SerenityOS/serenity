@@ -235,6 +235,7 @@ public:
     void* sys$get_kernel_info_page();
     int sys$futex(const Syscall::SC_futex_params*);
     int sys$set_thread_boost(int tid, int amount);
+    int sys$set_process_boost(pid_t, int amount);
 
     static void initialize();
 
@@ -307,6 +308,8 @@ public:
     const ELFLoader* elf_loader() const { return m_elf_loader.ptr(); }
 
     int icon_id() const { return m_icon_id; }
+
+    u32 priority_boost() const { return m_priority_boost; }
 
 private:
     friend class MemoryManager;
@@ -395,6 +398,8 @@ private:
     u64 m_alarm_deadline { 0 };
 
     int m_icon_id { -1 };
+
+    u32 m_priority_boost { 0 };
 
     WaitQueue& futex_queue(i32*);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;
@@ -519,4 +524,9 @@ inline int Thread::pid() const
 inline const LogStream& operator<<(const LogStream& stream, const Process& process)
 {
     return stream << process.name() << '(' << process.pid() << ')';
+}
+
+inline u32 Thread::effective_priority() const
+{
+    return m_priority + m_process.priority_boost() + m_priority_boost + m_extra_priority;
 }

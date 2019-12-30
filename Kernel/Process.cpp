@@ -3922,3 +3922,17 @@ int Process::sys$set_thread_boost(int tid, int amount)
     thread->set_priority_boost(amount);
     return 0;
 }
+
+int Process::sys$set_process_boost(pid_t pid, int amount)
+{
+    if (amount < 0 || amount > 20)
+        return -EINVAL;
+    InterruptDisabler disabler;
+    auto* process = Process::from_pid(pid);
+    if (!process || process->is_dead())
+        return -ESRCH;
+    if (!is_superuser() && process->uid() != euid())
+        return -EPERM;
+    process->m_priority_boost = amount;
+    return 0;
+}
