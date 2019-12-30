@@ -157,7 +157,7 @@ int main(int argc, char** argv)
 
     auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("SystemMonitor", load_png("/res/icons/32x32/app-system-monitor.png"), window);
+        GAboutDialog::show("System Monitor", load_png("/res/icons/32x32/app-system-monitor.png"), window);
     }));
     menubar->add_menu(move(help_menu));
 
