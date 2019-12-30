@@ -42,10 +42,16 @@ public:
 
     JsonValue get(const String& key) const
     {
+        auto* value = get_ptr(key);
+        return value ? *value : JsonValue(JsonValue::Type::Undefined);
+    }
+
+    const JsonValue* get_ptr(const String& key) const
+    {
         auto it = m_members.find(key);
         if (it == m_members.end())
-            return JsonValue(JsonValue::Type::Undefined);
-        return (*it).value;
+            return nullptr;
+        return &(*it).value;
     }
 
     bool has(const String& key) const
