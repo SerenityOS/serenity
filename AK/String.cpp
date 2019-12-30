@@ -3,6 +3,10 @@
 #include <AK/StringBuilder.h>
 #include <stdarg.h>
 
+#ifndef KERNEL
+#include <inttypes.h>
+#endif
+
 #ifdef KERNEL
 extern "C" char* strstr(const char* haystack, const char* needle);
 #endif
@@ -208,21 +212,28 @@ unsigned String::to_uint(bool& ok) const
 
 String String::number(u64 value)
 {
+    int size;
+    char buffer[32];
 #ifdef __serenity__
-    return String::format("%Q", value);
+    size = sprintf(buffer, "%llu", value);
 #else
-    return String::format("%llu", value);
+    size = sprintf(buffer, "%" PRIu64, value);
 #endif
+    return String(buffer, size);
 }
 
 String String::number(u32 value)
 {
-    return String::format("%u", value);
+    char buffer[32];
+    int size = sprintf(buffer, "%u", value);
+    return String(buffer, size);
 }
 
 String String::number(i32 value)
 {
-    return String::format("%d", value);
+    char buffer[32];
+    int size = sprintf(buffer, "%d", value);
+    return String(buffer, size);
 }
 
 String String::format(const char* fmt, ...)
@@ -343,3 +354,4 @@ bool String::equals_ignoring_case(const StringView& other) const
 }
 
 }
+
