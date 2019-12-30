@@ -201,6 +201,7 @@ int main(int argc, char** argv)
     dbg() << "#include <AK/OwnPtr.h>";
     dbg() << "#include <LibDraw/Color.h>";
     dbg() << "#include <LibDraw/Rect.h>";
+    dbg() << "#include <LibIPC/IEncoder.h>";
     dbg() << "#include <LibIPC/IEndpoint.h>";
     dbg() << "#include <LibIPC/IMessage.h>";
     dbg();
@@ -358,11 +359,11 @@ int main(int argc, char** argv)
             dbg() << "        size_in_bytes = stream.offset();";
             dbg() << "        return make<" << name << ">(" << builder.to_string() << ");";
             dbg() << "    }";
-            dbg() << "    virtual ByteBuffer encode() const override";
+            dbg() << "    virtual IMessageBuffer encode() const override";
             dbg() << "    {";
             // FIXME: Support longer messages:
-            dbg() << "        auto buffer = ByteBuffer::create_uninitialized(4096);";
-            dbg() << "        BufferStream stream(buffer);";
+            dbg() << "        IMessageBuffer buffer;";
+            dbg() << "        IEncoder stream(buffer);";
             dbg() << "        stream << endpoint_magic();";
             dbg() << "        stream << (int)MessageID::" << name << ";";
             for (auto& parameter : parameters) {
@@ -398,7 +399,6 @@ int main(int argc, char** argv)
                     dbg() << "        stream << m_" << parameter.name << ";";
                 }
             }
-            dbg() << "        stream.snip();";
             dbg() << "        return buffer;";
             dbg() << "    }";
             for (auto& parameter : parameters) {
