@@ -239,6 +239,25 @@ static bool validate_mmap_prot(int prot, bool map_stack)
     return true;
 }
 
+// Carve out a virtual address range from a region and return the two regions on either side
+Vector<Region*, 2> Process::split_region_around_range(const Region& source_region, const Range& desired_range)
+{
+    Range old_region_range = source_region.range();
+    auto remaining_ranges_after_unmap = old_region_range.carve(desired_range);
+    ASSERT(!remaining_ranges_after_unmap.is_empty());
+    auto make_replacement_region = [&](const Range& new_range) -> Region& {
+        ASSERT(new_range.base() >= old_region_range.base());
+        ASSERT(new_range.end() <= old_region_range.end());
+        size_t new_range_offset_in_vmobject = source_region.offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
+        return allocate_split_region(source_region, new_range, new_range_offset_in_vmobject);
+    };
+    Vector<Region*, 2> new_regions;
+    for (auto& new_range : remaining_ranges_after_unmap) {
+        new_regions.unchecked_append(&make_replacement_region(new_range));
+    }
+    return new_regions;
+}
+
 void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 {
     if (!validate_read(params, sizeof(Syscall::SC_mmap_params)))
@@ -330,19 +349,8 @@ int Process::sys$munmap(void* addr, size_t size)
     if (auto* old_region = region_containing(range_to_unmap)) {
         if (!old_region->is_mmap())
             return -EPERM;
-        Range old_region_range = old_region->range();
-        auto remaining_ranges_after_unmap = old_region_range.carve(range_to_unmap);
-        ASSERT(!remaining_ranges_after_unmap.is_empty());
-        auto make_replacement_region = [&](const Range& new_range) -> Region& {
-            ASSERT(new_range.base() >= old_region_range.base());
-            ASSERT(new_range.end() <= old_region_range.end());
-            size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (new_range.base().get() - old_region_range.base().get());
-            return allocate_split_region(*old_region, new_range, new_range_offset_in_vmobject);
-        };
-        Vector<Region*, 2> new_regions;
-        for (auto& new_range : remaining_ranges_after_unmap) {
-            new_regions.unchecked_append(&make_replacement_region(new_range));
-        }
+
+        auto new_regions = split_region_around_range(*old_region, range_to_unmap);
 
         // We manually unmap the old region here, specifying that we *don't* want the VM deallocated.
         old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
@@ -351,7 +359,7 @@ int Process::sys$munmap(void* addr, size_t size)
         // Instead we give back the unwanted VM manually.
         page_directory().range_allocator().deallocate(range_to_unmap);
 
-        // And finally we map the new region(s).
+        // And finally we map the new region(s) using our page directory (they were just allocated and don't have one).
         for (auto* new_region : new_regions) {
             new_region->map(page_directory());
         }
@@ -365,18 +373,56 @@ int Process::sys$munmap(void* addr, size_t size)
 
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
-    auto* region = region_from_range({ VirtualAddress((u32)addr), size });
-    if (!region)
-        return -EINVAL;
-    if (!region->is_mmap())
-        return -EPERM;
-    if (!validate_mmap_prot(prot, region->is_stack()))
-        return -EINVAL;
-    region->set_readable(prot & PROT_READ);
-    region->set_writable(prot & PROT_WRITE);
-    region->set_executable(prot & PROT_EXEC);
-    region->remap();
-    return 0;
+    Range range_to_mprotect = { VirtualAddress((u32)addr), size };
+
+    if (auto* whole_region = region_from_range(range_to_mprotect)) {
+        if (!whole_region->is_mmap())
+            return -EPERM;
+        if (!validate_mmap_prot(prot, whole_region->is_stack()))
+            return -EINVAL;
+        if (whole_region->access() == prot_to_region_access_flags(prot))
+            return 0;
+        whole_region->set_readable(prot & PROT_READ);
+        whole_region->set_writable(prot & PROT_WRITE);
+        whole_region->set_executable(prot & PROT_EXEC);
+        whole_region->remap();
+        return 0;
+    }
+
+    // Check if we can carve out the desired range from an existing region
+    if (auto* old_region = region_containing(range_to_mprotect)) {
+        if (!old_region->is_mmap())
+            return -EPERM;
+        if (!validate_mmap_prot(prot, old_region->is_stack()))
+            return -EINVAL;
+        if (old_region->access() == prot_to_region_access_flags(prot))
+            return 0;
+
+        // This vector is the region(s) adjacent to our range.
+        // We need to allocate a new region for the range we wanted to change permission bits on.
+        auto adjacent_regions = split_region_around_range(*old_region, range_to_mprotect);
+
+        size_t new_range_offset_in_vmobject = old_region->offset_in_vmobject() + (range_to_mprotect.base().get() - old_region->range().base().get());
+        auto& new_region = allocate_split_region(*old_region, range_to_mprotect, new_range_offset_in_vmobject);
+        new_region.set_readable(prot & PROT_READ);
+        new_region.set_writable(prot & PROT_WRITE);
+        new_region.set_executable(prot & PROT_EXEC);
+
+        // Unmap the old region here, specifying that we *don't* want the VM deallocated.
+        old_region->unmap(Region::ShouldDeallocateVirtualMemoryRange::No);
+        deallocate_region(*old_region);
+
+        // Map the new regions using our page directory (they were just allocated and don't have one).
+        for (auto* adjacent_region : adjacent_regions) {
+            adjacent_region->map(page_directory());
+        }
+        new_region.map(page_directory());
+        return 0;
+    }
+
+    // FIXME: We should also support mprotect() across multiple regions. (#175) (#964)
+
+    return -EINVAL;
 }
 
 int Process::sys$madvise(void* address, size_t size, int advice)
