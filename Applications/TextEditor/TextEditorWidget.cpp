@@ -244,7 +244,7 @@ TextEditorWidget::TextEditorWidget()
 
     auto help_menu = GMenu::construct("Help");
     help_menu->add_action(GAction::create("About", [&](const GAction&) {
-        GAboutDialog::show("TextEditor", load_png("/res/icons/32x32/app-texteditor.png"), window());
+        GAboutDialog::show("Text Editor", load_png("/res/icons/32x32/app-texteditor.png"), window());
     }));
     menubar->add_menu(move(help_menu));
 
