@@ -283,10 +283,8 @@ void WSMenuManager::draw_applet(const WSWindow& applet)
 
 void WSMenuManager::invalidate_applet(const WSWindow& applet, const Rect& rect)
 {
-    // FIXME: This should only invalidate the applet's own rect, not the whole menubar.
-    (void)rect;
     draw_applet(applet);
-    window().invalidate();
+    window().invalidate(rect.translated(applet.rect_in_menubar().location()));
 }
 
 Rect WSMenuManager::menubar_rect() const
