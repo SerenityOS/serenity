@@ -1,5 +1,9 @@
 #include "CalculatorWidget.h"
+#include <LibDraw/PNGLoader.h>
+#include <LibGUI/GAboutDialog.h>
+#include <LibGUI/GAction.h>
 #include <LibGUI/GApplication.h>
+#include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
 
 int main(int argc, char** argv)
@@ -16,5 +20,23 @@ int main(int argc, char** argv)
 
     window->show();
     window->set_icon(GraphicsBitmap::load_from_file("/res/icons/16x16/app-calculator.png"));
+
+    auto menubar = make<GMenuBar>();
+
+    auto app_menu = GMenu::construct("Calculator");
+    app_menu->add_action(GCommonActions::make_quit_action([](auto&) {
+        GApplication::the().quit(0);
+        return;
+    }));
+    menubar->add_menu(move(app_menu));
+
+    auto help_menu = GMenu::construct("Help");
+    help_menu->add_action(GAction::create("About", [&](const GAction&) {
+        GAboutDialog::show("Calculator", load_png("/res/icons/16x16/app-calculator.png"), window);
+    }));
+    menubar->add_menu(move(help_menu));
+
+    app.set_menubar(move(menubar));
+
     return app.exec();
 }
