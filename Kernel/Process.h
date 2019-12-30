@@ -292,6 +292,7 @@ public:
     bool deallocate_region(Region& region);
 
     Region& allocate_split_region(const Region& source_region, const Range&, size_t offset_in_vmobject);
+    Vector<Region*, 2> split_region_around_range(const Region& source_region, const Range&);
 
     void set_being_inspected(bool b) { m_being_inspected = b; }
     bool is_being_inspected() const { return m_being_inspected; }
