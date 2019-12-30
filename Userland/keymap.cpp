@@ -16,32 +16,32 @@ char* read_map(const JsonObject& json, const String& name)
     char* map = new char[80];
 
     auto map_arr = json.get(name).as_array();
-    for(int i=0; i<map_arr.size(); i++) 
-    {
+    for (int i = 0; i < map_arr.size(); i++) {
         auto key_value = map_arr.at(i).as_string();
         char character = 0;
-        if( key_value.length() == 0) {
+        if (key_value.length() == 0) {
             ;
-        } else if(key_value.length() == 1){
+        } else if (key_value.length() == 1) {
             character = key_value.characters()[0];
-        } else if(key_value.length() == 4){
-            if(key_value == "0x08"){
+        } else if (key_value.length() == 4) {
+            if (key_value == "0x08") {
                 character = 0x08;
-            }else if(key_value == "0x33"){
+            } else if (key_value == "0x33") {
                 character = 0x33;
             }
         } else {
-            fprintf(stderr, "Unknown character in %s[%u] = %s.\n", name.characters(), i, key_value.characters());       
+            fprintf(stderr, "Unknown character in %s[%u] = %s.\n", name.characters(), i, key_value.characters());
             ASSERT_NOT_REACHED();
         }
-        
+
         map[i] = character;
     }
 
     return map;
 }
 
-int read_map_from_file(String filename){
+int read_map_from_file(String filename)
+{
     auto file = CFile::construct(filename);
     if (!file->open(CIODevice::ReadOnly)) {
         fprintf(stderr, "Failed to open %s: %s\n", filename.characters(), file->error_string());
@@ -50,7 +50,7 @@ int read_map_from_file(String filename){
 
     auto file_contents = file->read_all();
     auto json = JsonValue::from_string(file_contents).as_object();
- 
+
     char* map = read_map(json, "map");
     char* shift_map = read_map(json, "shift_map");
     char* alt_map = read_map(json, "alt_map");
@@ -59,7 +59,7 @@ int read_map_from_file(String filename){
 }
 
 int main(int argc, char** argv)
-{   
+{
     if (argc != 2) {
         fprintf(stderr, "usage: keymap <file>\n");
         return 0;
@@ -68,10 +68,10 @@ int main(int argc, char** argv)
     String filename = argv[1];
     int ret_val = read_map_from_file(filename);
 
-    if(ret_val == -EPERM)
+    if (ret_val == -EPERM)
         fprintf(stderr, "Permission denied.\n");
 
-    if(ret_val == 0)
+    if (ret_val == 0)
         fprintf(stderr, "New keymap loaded from \"%s\".\n", filename.characters());
 
     return ret_val;
