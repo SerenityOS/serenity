@@ -115,6 +115,7 @@ public:
     Size size() const { return m_rect.size(); }
 
     void invalidate();
+    void invalidate(const Rect&);
 
     virtual void event(CEvent&) override;
 
