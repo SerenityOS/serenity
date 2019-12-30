@@ -592,14 +592,14 @@ bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress v
 
 bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr) const
 {
-    auto* region = region_from_vaddr(process, vaddr);
-    return region && region->is_readable();
+    auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
+    return region && region->is_user_accessible() && region->is_readable();
 }
 
 bool MemoryManager::validate_user_write(const Process& process, VirtualAddress vaddr) const
 {
-    auto* region = region_from_vaddr(process, vaddr);
-    return region && region->is_writable();
+    auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
+    return region && region->is_user_accessible() && region->is_writable();
 }
 
 void MemoryManager::register_vmobject(VMObject& vmobject)
