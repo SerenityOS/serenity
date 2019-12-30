@@ -655,12 +655,12 @@ OwnPtr<WindowServer::StartDragResponse> WSClientConnection::handle(const WindowS
 
 void WSClientConnection::boost()
 {
-    if (set_thread_boost(client_pid(), 10) < 0)
-        perror("boost: set_thread_boost");
+    if (set_process_boost(client_pid(), 10) < 0)
+        perror("boost: set_process_boost");
 }
 
 void WSClientConnection::deboost()
 {
-    if (set_thread_boost(client_pid(), 0) < 0)
-        perror("deboost: set_thread_boost");
+    if (set_process_boost(client_pid(), 0) < 0)
+        perror("deboost: set_process_boost");
 }
