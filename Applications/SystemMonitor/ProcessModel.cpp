@@ -55,6 +55,8 @@ String ProcessModel::column_name(int column) const
         return "User";
     case Column::Priority:
         return "Pr";
+    case Column::EffectivePriority:
+        return "EPr";
     case Column::Virtual:
         return "Virtual";
     case Column::Physical:
@@ -108,7 +110,9 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
     case Column::State:
         return { 75, TextAlignment::CenterLeft };
     case Column::Priority:
-        return { 16, TextAlignment::CenterLeft };
+        return { 16, TextAlignment::CenterRight };
+    case Column::EffectivePriority:
+        return { 16, TextAlignment::CenterRight };
     case Column::User:
         return { 50, TextAlignment::CenterLeft };
     case Column::Virtual:
@@ -177,16 +181,9 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
         case Column::User:
             return thread.current_state.user;
         case Column::Priority:
-            if (thread.current_state.priority == "Idle")
-                return 0;
-            if (thread.current_state.priority == "Low")
-                return 1;
-            if (thread.current_state.priority == "Normal")
-                return 2;
-            if (thread.current_state.priority == "High")
-                return 3;
-            ASSERT_NOT_REACHED();
-            return 3;
+            return thread.current_state.priority;
+        case Column::EffectivePriority:
+            return thread.current_state.effective_priority;
         case Column::Virtual:
             return (int)thread.current_state.amount_virtual;
         case Column::Physical:
@@ -249,15 +246,9 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
         case Column::User:
             return thread.current_state.user;
         case Column::Priority:
-            if (thread.current_state.priority == "Idle")
-                return String::empty();
-            if (thread.current_state.priority == "High")
-                return *m_high_priority_icon;
-            if (thread.current_state.priority == "Low")
-                return *m_low_priority_icon;
-            if (thread.current_state.priority == "Normal")
-                return *m_normal_priority_icon;
             return thread.current_state.priority;
+        case Column::EffectivePriority:
+            return thread.current_state.effective_priority;
         case Column::Virtual:
             return pretty_byte_size(thread.current_state.amount_virtual);
         case Column::Physical:
@@ -338,6 +329,7 @@ void ProcessModel::update()
             state.tid = thread.tid;
             state.times_scheduled = thread.times_scheduled;
             state.priority = thread.priority;
+            state.effective_priority = thread.effective_priority;
             state.state = thread.state;
             sum_times_scheduled += thread.times_scheduled;
             {

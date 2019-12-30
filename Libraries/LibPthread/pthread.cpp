@@ -302,8 +302,7 @@ int pthread_attr_setschedparam(pthread_attr_t* attributes, const struct sched_pa
     if (!attributes_impl || !p_sched_param)
         return EINVAL;
 
-    // NOTE: This must track sched_get_priority_[min,max] and ThreadPriority enum in Thread.h
-    if (p_sched_param->sched_priority < 0 || p_sched_param->sched_priority > 3)
+    if (p_sched_param->sched_priority < THREAD_PRIORITY_MIN || p_sched_param->sched_priority > THREAD_PRIORITY_MAX)
         return ENOTSUP;
 
     attributes_impl->m_schedule_priority = p_sched_param->sched_priority;

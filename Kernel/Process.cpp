@@ -2831,10 +2831,10 @@ int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
     if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
         return -EPERM;
 
-    if (param->sched_priority < (int)ThreadPriority::First || param->sched_priority > (int)ThreadPriority::Last)
+    if (param->sched_priority < THREAD_PRIORITY_MIN || param->sched_priority > THREAD_PRIORITY_MAX)
         return -EINVAL;
 
-    peer->any_thread().set_priority((ThreadPriority)param->sched_priority);
+    peer->any_thread().set_priority((u32)param->sched_priority);
     return 0;
 }
 
@@ -3078,12 +3078,9 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
 
     // FIXME: return EAGAIN if Thread::all_threads().size() is greater than PTHREAD_THREADS_MAX
 
-    ThreadPriority requested_thread_priority = static_cast<ThreadPriority>(params->m_schedule_priority);
-    if (requested_thread_priority < ThreadPriority::First || requested_thread_priority > ThreadPriority::Last)
+    int requested_thread_priority = params->m_schedule_priority;
+    if (requested_thread_priority < THREAD_PRIORITY_MIN || requested_thread_priority > THREAD_PRIORITY_MAX)
         return -EINVAL;
-
-    if (requested_thread_priority != ThreadPriority::Normal && !is_superuser())
-        return -EPERM;
 
     bool is_thread_joinable = (0 == params->m_detach_state);
 

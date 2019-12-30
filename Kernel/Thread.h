@@ -35,14 +35,11 @@ struct ThreadSpecificData {
     ThreadSpecificData* self;
 };
 
-enum class ThreadPriority : u8 {
-    Idle,
-    Low,
-    Normal,
-    High,
-    First = Low,
-    Last = High,
-};
+#define THREAD_PRIORITY_MIN 1
+#define THREAD_PRIORITY_LOW 10
+#define THREAD_PRIORITY_NORMAL 30
+#define THREAD_PRIORITY_HIGH 50
+#define THREAD_PRIORITY_MAX 99
 
 class Thread {
     friend class Process;
@@ -61,8 +58,10 @@ public:
     int tid() const { return m_tid; }
     int pid() const;
 
-    void set_priority(ThreadPriority p) { m_priority = p; }
-    ThreadPriority priority() const { return m_priority; }
+    void set_priority(u32 p) { m_priority = p; }
+    u32 priority() const { return m_priority; }
+
+    u32 effective_priority() const { return m_priority + m_extra_priority; }
 
     void set_joinable(bool j) { m_is_joinable = j; }
     bool is_joinable() const { return m_is_joinable; }
@@ -451,7 +450,8 @@ private:
     FPUState* m_fpu_state { nullptr };
     State m_state { Invalid };
     String m_name;
-    ThreadPriority m_priority { ThreadPriority::Normal };
+    u32 m_priority { THREAD_PRIORITY_NORMAL };
+    u32 m_extra_priority { 0 };
     bool m_has_used_fpu { false };
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
@@ -501,15 +501,13 @@ const LogStream& operator<<(const LogStream&, const Thread&);
 struct SchedulerData {
     typedef IntrusiveList<Thread, &Thread::m_runnable_list_node> ThreadList;
 
-    static constexpr size_t num_thread_priorities = (size_t)ThreadPriority::Last - (size_t)ThreadPriority::First + 1;
-    ThreadList m_runnable_threads[num_thread_priorities];
-
+    ThreadList m_runnable_threads;
     ThreadList m_nonrunnable_threads;
 
-    ThreadList& thread_list_for_state_and_priority(Thread::State state, ThreadPriority priority)
+    ThreadList& thread_list_for_state(Thread::State state)
     {
         if (Thread::is_runnable_state(state))
-            return m_runnable_threads[(u8)priority - (u8)ThreadPriority::First];
+            return m_runnable_threads;
         return m_nonrunnable_threads;
     }
 };
@@ -518,13 +516,12 @@ template<typename Callback>
 inline IterationDecision Scheduler::for_each_runnable(Callback callback)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    for (auto& tl : g_scheduler_data->m_runnable_threads) {
-        for (auto it = tl.begin(); it != tl.end();) {
-            auto& thread = *it;
-            it = ++it;
-            if (callback(thread) == IterationDecision::Break)
-                return IterationDecision::Break;
-        }
+    auto& tl = g_scheduler_data->m_runnable_threads;
+    for (auto it = tl.begin(); it != tl.end();) {
+        auto& thread = *it;
+        it = ++it;
+        if (callback(thread) == IterationDecision::Break)
+            return IterationDecision::Break;
     }
 
     return IterationDecision::Continue;

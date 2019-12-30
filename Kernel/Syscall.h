@@ -270,7 +270,7 @@ struct SC_futex_params {
 
 struct SC_create_thread_params {
     unsigned int m_detach_state = 0; // JOINABLE or DETACHED
-    int m_schedule_priority = 2;     // ThreadPriority::Normal
+    int m_schedule_priority = 30;    // THREAD_PRIORITY_NORMAL
     // FIXME: Implment guard pages in create_thread (unreadable pages at "overflow" end of stack)
     // "If an implementation rounds up the value of guardsize to a multiple of {PAGESIZE},
     // a call to pthread_attr_getguardsize() specifying attr shall store in the guardsize

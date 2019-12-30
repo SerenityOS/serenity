@@ -432,8 +432,6 @@ private:
     Process& m_process;
 };
 
-const char* to_string(ThreadPriority);
-
 extern InlineLinkedList<Process>* g_processes;
 
 template<typename Callback>

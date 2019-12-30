@@ -1,3 +1,4 @@
+#include <AK/QuickSort.h>
 #include <AK/TemporaryChange.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/FileSystem/FileDescription.h>
@@ -21,7 +22,7 @@ void Scheduler::init_thread(Thread& thread)
 void Scheduler::update_state_for_thread(Thread& thread)
 {
     ASSERT_INTERRUPTS_DISABLED();
-    auto& list = g_scheduler_data->thread_list_for_state_and_priority(thread.state(), thread.priority());
+    auto& list = g_scheduler_data->thread_list_for_state(thread.state());
 
     if (list.contains(thread))
         return;
@@ -29,35 +30,12 @@ void Scheduler::update_state_for_thread(Thread& thread)
     list.append(thread);
 }
 
-template<typename Callback>
-static inline IterationDecision for_each_runnable_with_priority(ThreadPriority priority, Callback callback)
-{
-    ASSERT_INTERRUPTS_DISABLED();
-    auto& tl = g_scheduler_data->m_runnable_threads[(u8)priority - (u8)ThreadPriority::First];
-    for (auto it = tl.begin(); it != tl.end();) {
-        auto& thread = *it;
-        it = ++it;
-        if (callback(thread) == IterationDecision::Break)
-            return IterationDecision::Break;
-    }
-
-    return IterationDecision::Continue;
-}
-
-static u32 time_slice_for(ThreadPriority priority)
+static u32 time_slice_for(const Thread& thread)
 {
     // One time slice unit == 1ms
-    switch (priority) {
-    case ThreadPriority::High:
-        return 20;
-    case ThreadPriority::Normal:
-        return 15;
-    case ThreadPriority::Low:
-        return 5;
-    case ThreadPriority::Idle:
+    if (&thread == g_colonel)
         return 1;
-    }
-    ASSERT_NOT_REACHED();
+    return 10;
 }
 
 Thread* current;
@@ -364,46 +342,54 @@ bool Scheduler::pick_next()
 #ifdef SCHEDULER_RUNNABLE_DEBUG
     dbgprintf("Non-runnables:\n");
     Scheduler::for_each_nonrunnable([](Thread& thread) -> IterationDecision {
-        auto& process = thread.process();
-        dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", &process, thread.state_string(), process.name().characters(), process.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
+        dbgprintf("  %-12s %s(%u:%u) @ %w:%x\n", thread.state_string(), thread.name().characters(), thread.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
         return IterationDecision::Continue;
     });
 
-    for (u8 priority = (u8)ThreadPriority::Last; priority >= (u8)ThreadPriority::First; --priority) {
-        dbgprintf("Runnables (%s):\n", to_string((ThreadPriority)priority));
-        for_each_runnable_with_priority((ThreadPriority)priority, [](Thread& thread) -> IterationDecision {
-            auto& process = thread.process();
-            dbgprintf("[K%x] %-12s %s(%u:%u) @ %w:%x\n", &process, thread.state_string(), process.name().characters(), process.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
-            return IterationDecision::Continue;
-        });
-    }
+    dbgprintf("Runnables:\n");
+    Scheduler::for_each_runnable([](Thread& thread) -> IterationDecision {
+        dbgprintf("  %3u/%2u %-12s %s(%u:%u) @ %w:%x\n", thread.effective_priority(), thread.priority(), thread.state_string(), thread.name().characters(), thread.pid(), thread.tid(), thread.tss().cs, thread.tss().eip);
+        return IterationDecision::Continue;
+    });
 #endif
 
-    for (u8 priority = (u8)ThreadPriority::Last; priority >= (u8)ThreadPriority::First; --priority) {
-        auto& runnable_list = g_scheduler_data->m_runnable_threads[priority - (u8)ThreadPriority::First];
-        if (runnable_list.is_empty())
+    Vector<Thread*, 128> sorted_runnables;
+    for_each_runnable([&sorted_runnables](auto& thread) {
+        sorted_runnables.append(&thread);
+        return IterationDecision::Continue;
+    });
+    quick_sort(sorted_runnables.begin(), sorted_runnables.end(), [](auto& a, auto& b) { return a->effective_priority() >= b->effective_priority(); });
+
+    Thread* thread_to_schedule = nullptr;
+
+    for (auto* thread : sorted_runnables) {
+        if (thread->process().is_being_inspected())
             continue;
 
-        auto* previous_head = runnable_list.first();
-        for (;;) {
-            // Move head to tail.
-            runnable_list.append(*runnable_list.first());
-            auto* thread = runnable_list.first();
+        ASSERT(thread->state() == Thread::Runnable || thread->state() == Thread::Running);
 
-            if (!thread->process().is_being_inspected() && (thread->state() == Thread::Runnable || thread->state() == Thread::Running)) {
-#ifdef SCHEDULER_DEBUG
-                dbgprintf("switch to %s(%u:%u) @ %w:%x\n", thread->process().name().characters(), thread->process().pid(), thread->tid(), thread->tss().cs, thread->tss().eip);
-#endif
-                return context_switch(*thread);
-            }
-
-            if (thread == previous_head)
-                break;
+        if (!thread_to_schedule) {
+            thread->m_extra_priority = 0;
+            thread_to_schedule = thread;
+        } else {
+            thread->m_extra_priority++;
         }
     }
 
-    // Nothing wants to run. Send in the colonel!
-    return context_switch(*g_colonel);
+
+    if (!thread_to_schedule)
+        thread_to_schedule = g_colonel;
+
+#ifdef SCHEDULER_DEBUG
+    dbgprintf("switch to %s(%u:%u) @ %w:%x\n",
+        thread_to_schedule->name().characters(),
+        thread_to_schedule->pid(),
+        thread_to_schedule->tid(),
+        thread_to_schedule->tss().cs,
+        thread_to_schedule->tss().eip);
+#endif
+
+    return context_switch(*thread_to_schedule);
 }
 
 bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
@@ -417,7 +403,7 @@ bool Scheduler::donate_to(Thread* beneficiary, const char* reason)
     if (!beneficiary || beneficiary->state() != Thread::Runnable || ticks_left <= 1)
         return yield();
 
-    unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(beneficiary->priority()));
+    unsigned ticks_to_donate = min(ticks_left - 1, time_slice_for(*beneficiary));
 #ifdef SCHEDULER_DEBUG
     dbgprintf("%s(%u:%u) donating %u ticks to %s(%u:%u), reason=%s\n", current->process().name().characters(), current->pid(), current->tid(), ticks_to_donate, beneficiary->process().name().characters(), beneficiary->pid(), beneficiary->tid(), reason);
 #endif
@@ -459,7 +445,7 @@ void Scheduler::switch_now()
 
 bool Scheduler::context_switch(Thread& thread)
 {
-    thread.set_ticks_left(time_slice_for(thread.priority()));
+    thread.set_ticks_left(time_slice_for(thread));
     thread.did_schedule();
 
     if (current == &thread)
@@ -472,10 +458,10 @@ bool Scheduler::context_switch(Thread& thread)
             current->set_state(Thread::Runnable);
 
 #ifdef LOG_EVERY_CONTEXT_SWITCH
-        dbgprintf("Scheduler: %s(%u:%u) -> %s(%u:%u) [%s] %w:%x\n",
+        dbgprintf("Scheduler: %s(%u:%u) -> %s(%u:%u) [%u] %w:%x\n",
             current->process().name().characters(), current->process().pid(), current->tid(),
             thread.process().name().characters(), thread.process().pid(), thread.tid(),
-            to_string(thread.priority()),
+            thread.priority(),
             thread.tss().cs, thread.tss().eip);
 #endif
     }
@@ -552,8 +538,7 @@ void Scheduler::initialize()
     s_redirection.selector = gdt_alloc_entry();
     initialize_redirection();
     s_colonel_process = Process::create_kernel_process(g_colonel, "colonel", nullptr);
-    // Make sure the colonel uses a smallish time slice.
-    g_colonel->set_priority(ThreadPriority::Idle);
+    g_colonel->set_priority(THREAD_PRIORITY_MIN);
     load_task_register(s_redirection.selector);
 }
 

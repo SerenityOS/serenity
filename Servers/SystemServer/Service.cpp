@@ -211,14 +211,12 @@ Service::Service(const CConfigFile& config, const StringView& name)
     m_stdio_file_path = config.read_entry(name, "StdIO");
 
     String prio = config.read_entry(name, "Priority");
-    if (prio == "idle")
-        m_priority = 0;
-    else if (prio == "low")
-        m_priority = 1;
+    if (prio == "low")
+        m_priority = 10;
     else if (prio == "normal" || prio.is_null())
-        m_priority = 2;
+        m_priority = 30;
     else if (prio == "high")
-        m_priority = 3;
+        m_priority = 50;
     else
         ASSERT_NOT_REACHED();
 

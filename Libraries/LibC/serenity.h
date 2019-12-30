@@ -44,6 +44,12 @@ int module_unload(const char* name, size_t name_length);
 int profiling_enable(pid_t);
 int profiling_disable(pid_t);
 
+#define THREAD_PRIORITY_MIN 1
+#define THREAD_PRIORITY_LOW 10
+#define THREAD_PRIORITY_NORMAL 30
+#define THREAD_PRIORITY_HIGH 50
+#define THREAD_PRIORITY_MAX 99
+
 #define FUTEX_WAIT 1
 #define FUTEX_WAKE 2
 

@@ -54,7 +54,8 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
             thread.name = thread_object.get("name").to_string();
             thread.state = thread_object.get("state").to_string();
             thread.ticks = thread_object.get("ticks").to_u32();
-            thread.priority = thread_object.get("priority").to_string();
+            thread.priority = thread_object.get("priority").to_u32();
+            thread.effective_priority = thread_object.get("effective_priority").to_u32();
             thread.syscall_count = thread_object.get("syscall_count").to_u32();
             thread.inode_faults = thread_object.get("inode_faults").to_u32();
             thread.zero_faults = thread_object.get("zero_faults").to_u32();
