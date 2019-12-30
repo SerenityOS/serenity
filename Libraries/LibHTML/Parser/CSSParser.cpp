@@ -528,8 +528,8 @@ public:
         if (index >= css.length())
             return;
 
-        // FIXME: We ignore @media rules for now.
-        if (next_is("@media")) {
+        // FIXME: We ignore @-rules for now.
+        if (peek() == '@') {
             while (peek() != '{')
                 consume_one();
             int level = 0;
