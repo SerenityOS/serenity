@@ -41,6 +41,8 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_fon
     m_ui->fixed_width_checkbox->set_text("Fixed width");
     m_ui->fixed_width_checkbox->set_checked(m_edited_font->is_fixed_width());
 
+    m_ui->spacing_spinbox->set_value(m_edited_font->glyph_spacing());
+
     m_ui->path_textbox->set_text(m_path);
     m_ui->path_textbox->on_change = [this] {
         m_path = m_ui->path_textbox->text();
@@ -101,6 +103,11 @@ FontEditorWidget::FontEditorWidget(const String& path, RefPtr<Font>&& edited_fon
         m_edited_font->set_glyph_width(m_glyph_map_widget->selected_glyph(), value);
         m_glyph_editor_widget->update();
         m_glyph_map_widget->update_glyph(m_glyph_map_widget->selected_glyph());
+        update_demo();
+    };
+
+    m_ui->spacing_spinbox->on_change = [this, update_demo](int value) {
+        m_edited_font->set_glyph_spacing(value);
         update_demo();
     };
 
