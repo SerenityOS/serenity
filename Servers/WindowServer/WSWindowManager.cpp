@@ -348,6 +348,8 @@ void WSWindowManager::remove_window(WSWindow& window)
     m_windows_in_order.remove(&window);
     if (window.is_active())
         pick_new_active_window();
+    if (m_active_window.ptr() == &window)
+        set_active_window(nullptr);
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
@@ -1122,6 +1124,8 @@ void WSWindowManager::set_active_window(WSWindow* window)
         ASSERT(client);
         set_current_menubar(client->app_menubar());
         tell_wm_listeners_window_state_changed(*m_active_window);
+    } else {
+        set_current_menubar(nullptr);
     }
 
     if (active_client != previously_active_client) {
