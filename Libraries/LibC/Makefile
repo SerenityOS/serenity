@@ -56,7 +56,11 @@ LIBC_OBJS = \
        syslog.o \
        cxxabi.o
 
-OBJS = $(AK_OBJS) $(LIBC_OBJS)
+ELF_OBJS = \
+        ../LibELF/ELFDynamicObject.o \
+        ../LibELF/ELFImage.o
+
+OBJS = $(AK_OBJS) $(LIBC_OBJS) $(ELF_OBJS)
 
 EXTRA_OBJS = setjmp.ao crti.ao crtn.ao
 
