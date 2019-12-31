@@ -3695,10 +3695,8 @@ int Process::sys$beep()
 
 int Process::sys$module_load(const char* path, size_t path_length)
 {
-#if 0
     if (!is_superuser())
         return -EPERM;
-#endif
     if (!validate_read(path, path_length))
         return -EFAULT;
     auto description_or_error = VFS::the().open(path, 0, 0, current_directory());
@@ -3814,10 +3812,8 @@ int Process::sys$module_load(const char* path, size_t path_length)
 
 int Process::sys$module_unload(const char* name, size_t name_length)
 {
-#if 0
     if (!is_superuser())
         return -EPERM;
-#endif
     if (!validate_read(name, name_length))
         return -EFAULT;
 
