@@ -1040,8 +1040,11 @@ InodeMetadata ProcFSInode::metadata() const
     }
 
     if (proc_file_type > FI_Invalid && proc_file_type < FI_MaxStaticFileIndex) {
-        if (fs().m_entries[proc_file_type].supervisor_only)
+        if (fs().m_entries[proc_file_type].supervisor_only) {
+            metadata.uid = 0;
+            metadata.gid = 0;
             metadata.mode &= ~077;
+        }
     }
 
 #ifdef PROCFS_DEBUG
