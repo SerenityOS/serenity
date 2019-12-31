@@ -2609,6 +2609,8 @@ size_t Process::amount_purgeable_nonvolatile() const
 
 int Process::sys$socket(int domain, int type, int protocol)
 {
+    if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !is_superuser())
+        return -EACCES;
     int fd = alloc_fd();
     if (fd < 0)
         return fd;

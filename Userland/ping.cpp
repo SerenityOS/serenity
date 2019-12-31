@@ -37,6 +37,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (setgid(getgid()) || setuid(getuid())) {
+        fprintf(stderr, "Failed to drop privileges.\n");
+        return 1;
+    }
+
     struct timeval timeout {
         1, 0
     };
