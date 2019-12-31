@@ -9,6 +9,7 @@ static_assert(sizeof(size_t) == 4);
 void* memcpy(void*, const void*, size_t);
 char* strcpy(char*, const char*);
 char* strncpy(char*, const char*, size_t);
+int strncmp(const char* s1, const char* s2, size_t n);
 int strcmp(char const*, const char*);
 size_t strlen(const char*);
 size_t strnlen(const char*, size_t);
