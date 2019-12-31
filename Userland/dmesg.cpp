@@ -10,7 +10,7 @@ int main(int argc, char** argv)
     (void)argv;
     auto f = CFile::construct("/proc/dmesg");
     if (!f->open(CIODevice::ReadOnly)) {
-        fprintf(stderr, "open: failed to open /proc/dmesg: %s", f->error_string());
+        fprintf(stderr, "open: failed to open /proc/dmesg: %s\n", f->error_string());
         return 1;
     }
     const auto& b = f->read_all();
