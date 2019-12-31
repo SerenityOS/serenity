@@ -189,7 +189,7 @@ int main(int argc, char** argv)
     if (mode == ReadFromFreedMemory || mode == TestAllCrashTypes) {
         Crash("Read from freed memory", []() {
             auto* uninitialized_memory = (volatile u32**)malloc(1024);
-            if (true)
+            if (!uninitialized_memory)
                 return Crash::Failure::UnexpectedError;
 
             free(uninitialized_memory);
