@@ -5,6 +5,9 @@
 #include "Scheduler.h"
 #include "kstdio.h"
 #include <AK/Types.h>
+#include <Kernel/ACPI/ACPIDynamicParser.h>
+#include <Kernel/ACPI/ACPIStaticParser.h>
+#include <Kernel/ACPI/DMIDecoder.h>
 #include <Kernel/Arch/i386/APIC.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
@@ -39,7 +42,8 @@
 #include <Kernel/Net/LoopbackAdapter.h>
 #include <Kernel/Net/NetworkTask.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
-#include <Kernel/PCI.h>
+#include <Kernel/PCI/Access.h>
+#include <Kernel/PCI/Initializer.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -245,6 +249,35 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     new KParams(String(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline)));
 
     bool text_debug = KParams::the().has("text_debug");
+    bool complete_acpi_disable = KParams::the().has("noacpi");
+    bool dynamic_acpi_disable = KParams::the().has("noacpi_aml");
+    bool pci_mmio_disable = KParams::the().has("nopci_mmio");
+    bool pci_force_probing = KParams::the().has("pci_nodmi");
+    bool dmi_unreliable = KParams::the().has("dmi_unreliable");
+
+    MemoryManager::initialize(physical_address_for_kernel_page_tables);
+
+    if (dmi_unreliable) {
+        DMIDecoder::initialize_untrusted();
+    } else {
+        DMIDecoder::initialize();
+    }
+
+    if (complete_acpi_disable) {
+        ACPIParser::initialize_limited();
+    } else {
+        if (!dynamic_acpi_disable) {
+            ACPIDynamicParser::initialize_without_rsdp();
+        } else {
+            ACPIStaticParser::initialize_without_rsdp();
+        }
+    }
+
+    // Sample test to see if the ACPI parser is working...
+    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
+
+    PCI::Initializer::the().test_and_initialize(pci_mmio_disable, pci_force_probing);
+    PCI::Initializer::the().dismiss();
 
     vfs = new VFS;
     dev_debuglog = new DebugLogDevice;
@@ -298,15 +331,14 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     tty1 = new VirtualConsole(1);
     VirtualConsole::switch_to(0);
 
-    MemoryManager::initialize(physical_address_for_kernel_page_tables);
-
     if (APIC::init())
         APIC::enable(0);
 
     PIT::initialize();
 
     PCI::enumerate_all([](const PCI::Address& address, PCI::ID id) {
-        kprintf("PCI device: bus=%d slot=%d function=%d id=%w:%w\n",
+        kprintf("PCI: device @ %w:%b:%b.%d [%w:%w]\n",
+            address.seg(),
             address.bus(),
             address.slot(),
             address.function(),
