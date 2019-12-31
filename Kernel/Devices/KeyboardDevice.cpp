@@ -20,6 +20,7 @@
 char *map;
 char *shift_map;
 char *alt_map;
+char *altgr_map;
 
 static char en_map[0x80] = {
     0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, '\t',
@@ -246,7 +247,7 @@ static KeyCode numpad_key_map[13] = { Key_7, Key_8, Key_9, Key_Invalid, Key_4, K
 void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
 {
     KeyCode key = (m_modifiers & Mod_Shift) ? shifted_key_map[raw] : unshifted_key_map[raw];
-    char character = (m_modifiers & Mod_Shift) ? shift_map[raw]: (m_modifiers & Mod_Alt) ? alt_map[raw] : map[raw];
+    char character = (m_modifiers & Mod_Shift) ? shift_map[raw] : (m_modifiers & Mod_Alt) ? alt_map[raw] : (m_modifiers & Mod_AltGr) ? altgr_map[raw] : map[raw];
 
     if (key == Key_NumLock && pressed)
         m_num_lock_on = !m_num_lock_on;
@@ -318,7 +319,10 @@ void KeyboardDevice::handle_irq()
 #endif
         switch (ch) {
         case 0x38:
-            update_modifier(Mod_Alt, pressed);
+            if (m_has_e0_prefix)
+                update_modifier(Mod_AltGr, pressed);
+            else
+                update_modifier(Mod_Alt, pressed);
             break;
         case 0x1d:
             update_modifier(Mod_Ctrl, pressed);
@@ -368,7 +372,7 @@ KeyboardDevice::KeyboardDevice()
 {
     s_the = this;
 
-    KeyboardDevice::set_maps(en_map, en_shift_map, en_map);
+    KeyboardDevice::set_maps(en_map, en_shift_map, en_map, en_map);
 
     // Empty the buffer of any pending data.
     // I don't care what you've been pressing until now!
@@ -412,19 +416,22 @@ KeyboardClient::~KeyboardClient()
 {
 }
 
-void KeyboardDevice::set_maps(char* n_map, char* n_shift_map, char* n_alt_map)
+void KeyboardDevice::set_maps(const char* n_map, const char* n_shift_map, const char* n_alt_map, const char* n_altgr_map)
 {
     kfree(map);
     kfree(shift_map);
     kfree(alt_map);
+    kfree(altgr_map);
 
     map = (char*) kmalloc(0x80);
     shift_map = (char*) kmalloc(0x80);
     alt_map = (char*) kmalloc(0x80);
+    altgr_map = (char*) kmalloc(0x80);
 
     for(int i=0; i < 0x80; i++) {
         map[i] = n_map[i];
         shift_map[i] = n_shift_map[i];
         alt_map[i] = n_alt_map[i];
+        altgr_map[i] = n_altgr_map[i];
     }
 }

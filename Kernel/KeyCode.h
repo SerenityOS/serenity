@@ -119,7 +119,8 @@ enum KeyModifier {
     Mod_Ctrl = 0x02,
     Mod_Shift = 0x04,
     Mod_Logo = 0x08,
-    Mod_Mask = 0x0f,
+    Mod_AltGr = 0x10,
+    Mod_Mask = 0x1f,
 
     Is_Press = 0x80,
 };
@@ -132,6 +133,7 @@ struct KeyEvent {
     bool ctrl() const { return flags & Mod_Ctrl; }
     bool shift() const { return flags & Mod_Shift; }
     bool logo() const { return flags & Mod_Logo; }
+    bool altgr() const { return flags & Mod_AltGr; }
     unsigned modifiers() const { return flags & Mod_Mask; }
     bool is_press() const { return flags & Is_Press; }
 };

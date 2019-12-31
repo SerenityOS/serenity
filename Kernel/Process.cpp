@@ -3584,19 +3584,24 @@ int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags 
     return 0;
 }
 
-int Process::sys$setkeymap(char* map, char* shift_map, char* alt_map)
+int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* params)
 {
     if (!is_superuser())
         return -EPERM;
 
-    if (!validate_read(map, 0x80))
-        return -EFAULT;
-    if (!validate_read(shift_map, 0x80))
-        return -EFAULT;
-    if (!validate_read(alt_map, 0x80))
+    if (!validate_read_typed(params))
         return -EFAULT;
 
-    KeyboardDevice::the().set_maps(map, shift_map, alt_map);
+    if (!validate_read(params->map, 0x80))
+        return -EFAULT;
+    if (!validate_read(params->shift_map, 0x80))
+        return -EFAULT;
+    if (!validate_read(params->alt_map, 0x80))
+        return -EFAULT;
+    if (!validate_read(params->altgr_map, 0x80))
+        return -EFAULT;
+
+    KeyboardDevice::the().set_maps(params->map, params->shift_map, params->alt_map, params->altgr_map);
     return 0;
 }
 
