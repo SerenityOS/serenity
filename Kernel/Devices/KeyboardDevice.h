@@ -21,7 +21,7 @@ public:
     KeyboardDevice();
 
     void set_client(KeyboardClient* client) { m_client = client; }
-    void set_maps(char* n_map, char* n_shift_map, char* n_alt_map);
+    void set_maps(const char* n_map, const char* n_shift_map, const char* n_alt_map, const char* n_altgr_map);
 
     // ^CharacterDevice
     virtual ssize_t read(FileDescription&, u8* buffer, ssize_t) override;

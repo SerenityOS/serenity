@@ -270,6 +270,13 @@ struct SC_futex_params {
     const timespec* timeout;
 };
 
+struct SC_setkeymap_params {
+    const char* map;
+    const char* shift_map;
+    const char* alt_map;
+    const char* altgr_map;
+};
+
 struct SC_create_thread_params {
     unsigned int m_detach_state = 0; // JOINABLE or DETACHED
     int m_schedule_priority = 30;    // THREAD_PRIORITY_NORMAL
