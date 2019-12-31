@@ -584,20 +584,31 @@ void MemoryManager::unquickmap_page()
     m_quickmap_in_use = false;
 }
 
+static inline bool is_user_address(VirtualAddress vaddr)
+{
+    return vaddr.get() >= (8 * MB) && vaddr.get() < 0xc0000000;
+}
+
 bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress vaddr) const
 {
+    if (!is_user_address(vaddr))
+        return false;
     auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
     return region && region->is_user_accessible() && region->is_stack();
 }
 
 bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr) const
 {
+    if (!is_user_address(vaddr))
+        return false;
     auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
     return region && region->is_user_accessible() && region->is_readable();
 }
 
 bool MemoryManager::validate_user_write(const Process& process, VirtualAddress vaddr) const
 {
+    if (!is_user_address(vaddr))
+        return false;
     auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
     return region && region->is_user_accessible() && region->is_writable();
 }
