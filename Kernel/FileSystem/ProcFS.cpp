@@ -22,7 +22,7 @@
 #include <Kernel/Net/Routing.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Net/UDPSocket.h>
-#include <Kernel/PCI.h>
+#include <Kernel/PCI/Access.h>
 #include <Kernel/Profiling.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PurgeableVMObject.h>
@@ -289,6 +289,7 @@ Optional<KBuffer> procfs$pci(InodeIdentifier)
     JsonArraySerializer array { builder };
     PCI::enumerate_all([&array](PCI::Address address, PCI::ID id) {
         auto obj = array.add_object();
+        obj.add("seg", address.seg());
         obj.add("bus", address.bus());
         obj.add("slot", address.slot());
         obj.add("function", address.function());

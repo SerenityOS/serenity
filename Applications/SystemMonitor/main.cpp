@@ -290,10 +290,11 @@ RefPtr<GWidget> build_pci_devices_tab()
         pci_fields.empend(
             "Address", TextAlignment::CenterLeft,
             [](const JsonObject& object) {
+                auto seg = object.get("seg").to_u32();
                 auto bus = object.get("bus").to_u32();
                 auto slot = object.get("slot").to_u32();
                 auto function = object.get("function").to_u32();
-                return String::format("%02x:%02x.%d", bus, slot, function);
+                return String::format("%04x:%02x:%02x.%d", seg, bus, slot, function);
             });
         pci_fields.empend(
             "Class", TextAlignment::CenterLeft,

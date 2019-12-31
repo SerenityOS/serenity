@@ -1,6 +1,6 @@
 #include <Kernel/Devices/BXVGADevice.h>
 #include <Kernel/IO.h>
-#include <Kernel/PCI.h>
+#include <Kernel/PCI/Access.h>
 #include <Kernel/Process.h>
 #include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>

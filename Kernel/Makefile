@@ -71,7 +71,10 @@ OBJS = \
     Net/Socket.o \
     Net/TCPSocket.o \
     Net/UDPSocket.o \
-    PCI.o \
+    PCI/Access.o \
+    PCI/IOAccess.o \
+    PCI/MMIOAccess.o \
+    PCI/Initializer.o \
     Process.o \
     ProcessTracer.o \
     Profiling.o \
@@ -97,6 +100,10 @@ OBJS = \
     VM/RangeAllocator.o \
     VM/Region.o \
     VM/VMObject.o \
+    ACPI/ACPIParser.o \
+    ACPI/ACPIStaticParser.o \
+    ACPI/ACPIDynamicParser.o \
+    ACPI/DMIDecoder.o \
     WaitQueue.o \
     init.o \
     kprintf.o

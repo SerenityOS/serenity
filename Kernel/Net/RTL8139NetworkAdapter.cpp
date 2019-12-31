@@ -1,6 +1,5 @@
 #include <Kernel/IO.h>
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
-#include <Kernel/PCI.h>
 
 //#define RTL8139_DEBUG
 

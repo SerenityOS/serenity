@@ -14,7 +14,7 @@
 #include <AK/RefPtr.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
-#include <Kernel/PCI.h>
+#include <Kernel/PCI/Access.h>
 #include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>

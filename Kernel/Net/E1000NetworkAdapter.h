@@ -3,7 +3,7 @@
 #include <AK/OwnPtr.h>
 #include <Kernel/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
-#include <Kernel/PCI.h>
+#include <Kernel/PCI/Access.h>
 
 class E1000NetworkAdapter final : public NetworkAdapter
     , public IRQHandler {
