@@ -128,7 +128,7 @@ HexEditorWidget::HexEditorWidget()
     }
 
     m_goto_decimal_offset_action = GAction::create("Go To Offset (Decimal)...", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
-        auto input_box = GInputBox::construct("Enter offset:", "Go To", this);
+        auto input_box = GInputBox::construct("Enter Decimal offset:", "Go To", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto valid = false;
             auto new_offset = input_box->text_value().to_int(valid);
@@ -139,7 +139,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     m_goto_hex_offset_action = GAction::create("Go To Offset (Hex)...", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
-        auto input_box = GInputBox::construct("Enter offset:", "Go To", this);
+        auto input_box = GInputBox::construct("Enter Hex offset:", "Go To", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_offset = strtol(input_box->text_value().characters(), nullptr, 16);
             m_editor->set_position(new_offset);
