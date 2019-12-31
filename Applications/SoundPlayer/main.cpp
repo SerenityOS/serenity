@@ -33,7 +33,7 @@ int main(int argc, char** argv)
         player->manager().play();
     }
 
-    auto hide_scope = GAction::create("Hide scope", [&](GAction& action) {
+    auto hide_scope = GAction::create("Hide scope", { Mod_Ctrl, Key_H }, [&](GAction& action) {
         action.set_checked(!action.is_checked());
         player->hide_scope(action.is_checked());
     });

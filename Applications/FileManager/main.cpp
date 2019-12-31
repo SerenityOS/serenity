@@ -128,7 +128,7 @@ int main(int argc, char** argv)
         directory_view->open_parent_directory();
     });
 
-    auto mkdir_action = GAction::create("New directory...", GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GAction&) {
+    auto mkdir_action = GAction::create("New directory...", { Mod_Ctrl | Mod_Shift, Key_N }, GraphicsBitmap::load_from_file("/res/icons/16x16/mkdir.png"), [&](const GAction&) {
         auto input_box = GInputBox::construct("Enter name:", "New directory", window);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_dir_path = canonicalized_path(

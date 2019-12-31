@@ -156,7 +156,7 @@ int main(int argc, char** argv)
             ASSERT_NOT_REACHED();
         }
     }));
-    inspect_menu->add_action(GAction::create("Inspect DOM tree", [&](auto&) {
+    inspect_menu->add_action(GAction::create("Inspect DOM tree", { Mod_None, Key_F12 }, [&](auto&) {
         if (!dom_inspector_window) {
             dom_inspector_window = GWindow::construct();
             dom_inspector_window->set_rect(100, 100, 300, 500);
