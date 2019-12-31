@@ -1013,27 +1013,37 @@ InodeMetadata ProcFSInode::metadata() const
     }
 
     if (proc_parent_directory == PDI_PID_fd) {
-        metadata.mode = 00120777;
+        metadata.mode = 00120700;
         return metadata;
     }
 
     switch (proc_file_type) {
     case FI_Root_self:
+        metadata.mode = 0120444;
+        break;
     case FI_PID_cwd:
     case FI_PID_exe:
-        metadata.mode = 0120777;
+        metadata.mode = 0120400;
         break;
     case FI_Root:
     case FI_Root_sys:
     case FI_Root_net:
+        metadata.mode = 040555;
+        break;
     case FI_PID:
     case FI_PID_fd:
-        metadata.mode = 040777;
+        metadata.mode = 040500;
         break;
     default:
-        metadata.mode = 0100644;
+        metadata.mode = 0100444;
         break;
     }
+
+    if (proc_file_type > FI_Invalid && proc_file_type < FI_MaxStaticFileIndex) {
+        if (fs().m_entries[proc_file_type].supervisor_only)
+            metadata.mode &= ~077;
+    }
+
 #ifdef PROCFS_DEBUG
     dbgprintf("Returning mode %o\n", metadata.mode);
 #endif
@@ -1354,38 +1364,38 @@ ProcFS::ProcFS()
 {
     m_root_inode = adopt(*new ProcFSInode(*this, 1));
     m_entries.resize(FI_MaxStaticFileIndex);
-    m_entries[FI_Root_mm] = { "mm", FI_Root_mm, procfs$mm };
-    m_entries[FI_Root_mounts] = { "mounts", FI_Root_mounts, procfs$mounts };
-    m_entries[FI_Root_df] = { "df", FI_Root_df, procfs$df };
-    m_entries[FI_Root_all] = { "all", FI_Root_all, procfs$all };
-    m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, procfs$memstat };
-    m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, procfs$cpuinfo };
-    m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, procfs$inodes };
-    m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, procfs$dmesg };
-    m_entries[FI_Root_self] = { "self", FI_Root_self, procfs$self };
-    m_entries[FI_Root_pci] = { "pci", FI_Root_pci, procfs$pci };
-    m_entries[FI_Root_devices] = { "devices", FI_Root_devices, procfs$devices };
-    m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, procfs$uptime };
-    m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, procfs$cmdline };
-    m_entries[FI_Root_modules] = { "modules", FI_Root_modules, procfs$modules };
-    m_entries[FI_Root_profile] = { "profile", FI_Root_profile, procfs$profile };
-    m_entries[FI_Root_sys] = { "sys", FI_Root_sys };
-    m_entries[FI_Root_net] = { "net", FI_Root_net };
+    m_entries[FI_Root_mm] = { "mm", FI_Root_mm, true, procfs$mm };
+    m_entries[FI_Root_mounts] = { "mounts", FI_Root_mounts, false, procfs$mounts };
+    m_entries[FI_Root_df] = { "df", FI_Root_df, false, procfs$df };
+    m_entries[FI_Root_all] = { "all", FI_Root_all, false, procfs$all };
+    m_entries[FI_Root_memstat] = { "memstat", FI_Root_memstat, false, procfs$memstat };
+    m_entries[FI_Root_cpuinfo] = { "cpuinfo", FI_Root_cpuinfo, false, procfs$cpuinfo };
+    m_entries[FI_Root_inodes] = { "inodes", FI_Root_inodes, true, procfs$inodes };
+    m_entries[FI_Root_dmesg] = { "dmesg", FI_Root_dmesg, true, procfs$dmesg };
+    m_entries[FI_Root_self] = { "self", FI_Root_self, false, procfs$self };
+    m_entries[FI_Root_pci] = { "pci", FI_Root_pci, false, procfs$pci };
+    m_entries[FI_Root_devices] = { "devices", FI_Root_devices, false, procfs$devices };
+    m_entries[FI_Root_uptime] = { "uptime", FI_Root_uptime, false, procfs$uptime };
+    m_entries[FI_Root_cmdline] = { "cmdline", FI_Root_cmdline, true, procfs$cmdline };
+    m_entries[FI_Root_modules] = { "modules", FI_Root_modules, true, procfs$modules };
+    m_entries[FI_Root_profile] = { "profile", FI_Root_profile, false, procfs$profile };
+    m_entries[FI_Root_sys] = { "sys", FI_Root_sys, true };
+    m_entries[FI_Root_net] = { "net", FI_Root_net, false };
 
-    m_entries[FI_Root_net_adapters] = { "adapters", FI_Root_net_adapters, procfs$net_adapters };
-    m_entries[FI_Root_net_arp] = { "arp", FI_Root_net_arp, procfs$net_arp };
-    m_entries[FI_Root_net_tcp] = { "tcp", FI_Root_net_tcp, procfs$net_tcp };
-    m_entries[FI_Root_net_udp] = { "udp", FI_Root_net_udp, procfs$net_udp };
-    m_entries[FI_Root_net_local] = { "local", FI_Root_net_local, procfs$net_local };
+    m_entries[FI_Root_net_adapters] = { "adapters", FI_Root_net_adapters, false, procfs$net_adapters };
+    m_entries[FI_Root_net_arp] = { "arp", FI_Root_net_arp, true, procfs$net_arp };
+    m_entries[FI_Root_net_tcp] = { "tcp", FI_Root_net_tcp, false, procfs$net_tcp };
+    m_entries[FI_Root_net_udp] = { "udp", FI_Root_net_udp, false, procfs$net_udp };
+    m_entries[FI_Root_net_local] = { "local", FI_Root_net_local, false, procfs$net_local };
 
-    m_entries[FI_PID_vm] = { "vm", FI_PID_vm, procfs$pid_vm };
-    m_entries[FI_PID_vmobjects] = { "vmobjects", FI_PID_vmobjects, procfs$pid_vmobjects };
-    m_entries[FI_PID_stack] = { "stack", FI_PID_stack, procfs$pid_stack };
-    m_entries[FI_PID_regs] = { "regs", FI_PID_regs, procfs$pid_regs };
-    m_entries[FI_PID_fds] = { "fds", FI_PID_fds, procfs$pid_fds };
-    m_entries[FI_PID_exe] = { "exe", FI_PID_exe, procfs$pid_exe };
-    m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, procfs$pid_cwd };
-    m_entries[FI_PID_fd] = { "fd", FI_PID_fd };
+    m_entries[FI_PID_vm] = { "vm", FI_PID_vm, false, procfs$pid_vm };
+    m_entries[FI_PID_vmobjects] = { "vmobjects", FI_PID_vmobjects, true, procfs$pid_vmobjects };
+    m_entries[FI_PID_stack] = { "stack", FI_PID_stack, false, procfs$pid_stack };
+    m_entries[FI_PID_regs] = { "regs", FI_PID_regs, true, procfs$pid_regs };
+    m_entries[FI_PID_fds] = { "fds", FI_PID_fds, false, procfs$pid_fds };
+    m_entries[FI_PID_exe] = { "exe", FI_PID_exe, false, procfs$pid_exe };
+    m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, false, procfs$pid_cwd };
+    m_entries[FI_PID_fd] = { "fd", FI_PID_fd, false };
 }
 
 ProcFS::ProcFSDirectoryEntry* ProcFS::get_directory_entry(InodeIdentifier identifier) const
