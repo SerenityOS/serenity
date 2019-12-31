@@ -2010,7 +2010,7 @@ bool Process::validate_write(void* address, ssize_t size) const
         if (!MM.validate_user_write(*this, last_address))
             return false;
     }
-    return MM.validate_user_write(*this, last_address);
+    return MM.validate_user_write(*this, first_address);
 }
 
 pid_t Process::sys$getsid(pid_t pid)
