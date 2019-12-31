@@ -961,6 +961,11 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
             event_window_with_frame = &window;
             return IterationDecision::Break;
         });
+
+        // Clicked outside of any window
+        if (!hovered_window && event.type() == WSEvent::MouseDown)
+            set_active_window(nullptr);
+
     }
 
     if (event_window_with_frame != m_resize_candidate.ptr())
@@ -1088,7 +1093,7 @@ void WSWindowManager::set_active_window(WSWindow* window)
     if (window && window->is_blocked_by_modal_window())
         return;
 
-    if (window->type() != WSWindowType::Normal)
+    if (window && window->type() != WSWindowType::Normal)
         return;
 
     if (window == m_active_window)
@@ -1103,9 +1108,11 @@ void WSWindowManager::set_active_window(WSWindow* window)
         previously_active_client = previously_active_window->client();
         CEventLoop::current().post_event(*previously_active_window, make<WSEvent>(WSEvent::WindowDeactivated));
         invalidate(*previously_active_window);
+        m_active_window = nullptr;
     }
-    m_active_window = window->make_weak_ptr();
-    if (m_active_window) {
+
+    if (window) {
+        m_active_window = window->make_weak_ptr();
         active_client = m_active_window->client();
         CEventLoop::current().post_event(*m_active_window, make<WSEvent>(WSEvent::WindowActivated));
         invalidate(*m_active_window);
