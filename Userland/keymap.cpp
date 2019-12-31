@@ -13,9 +13,12 @@
 
 char* read_map(const JsonObject& json, const String& name)
 {
-    char* map = new char[80];
+    if (!json.has(name))
+        return nullptr;
 
+    char* map = new char[80];
     auto map_arr = json.get(name).as_array();
+
     for (int i = 0; i < map_arr.size(); i++) {
         auto key_value = map_arr.at(i).as_string();
         char character = 0;
@@ -74,8 +77,15 @@ int read_map_from_file(String& filename)
     char* map = read_map(json, "map");
     char* shift_map = read_map(json, "shift_map");
     char* alt_map = read_map(json, "alt_map");
+    char* altgr_map = read_map(json, "altgr_map");
 
-    return syscall(SC_setkeymap, map, shift_map, alt_map);
+    if (!altgr_map) {
+        // AltGr map was not found, using Alt map as fallback.
+        altgr_map = alt_map;
+    }
+
+    Syscall::SC_setkeymap_params params { map, shift_map, alt_map, altgr_map };
+    return syscall(SC_setkeymap, &params);
 }
 
 int main(int argc, char** argv)
