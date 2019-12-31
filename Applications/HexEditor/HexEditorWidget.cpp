@@ -90,7 +90,7 @@ HexEditorWidget::HexEditorWidget()
         m_save_as_action->activate();
     });
 
-    m_save_as_action = GAction::create("Save as...", { Mod_None, Key_F12 }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
+    m_save_as_action = GAction::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
         Optional<String> save_path = GFilePicker::get_save_filepath(m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "bin" : m_extension);
         if (!save_path.has_value())
             return;
@@ -127,7 +127,7 @@ HexEditorWidget::HexEditorWidget()
         }));
     }
 
-    m_goto_decimal_offset_action = GAction::create("Go To Offset (Decimal)...", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
+    m_goto_decimal_offset_action = GAction::create("Go To Offset (Decimal)...", { Mod_Ctrl | Mod_Shift, Key_G }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
         auto input_box = GInputBox::construct("Enter Decimal offset:", "Go To", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto valid = false;
@@ -138,7 +138,7 @@ HexEditorWidget::HexEditorWidget()
         }
     });
 
-    m_goto_hex_offset_action = GAction::create("Go To Offset (Hex)...", GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
+    m_goto_hex_offset_action = GAction::create("Go To Offset (Hex)...", { Mod_Ctrl, Key_G }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](const GAction&) {
         auto input_box = GInputBox::construct("Enter Hex offset:", "Go To", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_offset = strtol(input_box->text_value().characters(), nullptr, 16);
@@ -147,7 +147,7 @@ HexEditorWidget::HexEditorWidget()
     });
 
     auto edit_menu = GMenu::construct("Edit");
-    edit_menu->add_action(GAction::create("Fill selection...", [&](const GAction&) {
+    edit_menu->add_action(GAction::create("Fill selection...", { Mod_Ctrl, Key_B }, [&](const GAction&) {
         auto input_box = GInputBox::construct("Fill byte (hex):", "Fill Selection", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto fill_byte = strtol(input_box->text_value().characters(), nullptr, 16);
@@ -158,14 +158,14 @@ HexEditorWidget::HexEditorWidget()
     edit_menu->add_action(*m_goto_decimal_offset_action);
     edit_menu->add_action(*m_goto_hex_offset_action);
     edit_menu->add_separator();
-    edit_menu->add_action(GAction::create("Copy Hex", [&](const GAction&) {
+    edit_menu->add_action(GAction::create("Copy Hex", { Mod_Ctrl, Key_C }, [&](const GAction&) {
         m_editor->copy_selected_hex_to_clipboard();
     }));
-    edit_menu->add_action(GAction::create("Copy Text", [&](const GAction&) {
+    edit_menu->add_action(GAction::create("Copy Text", { Mod_Ctrl | Mod_Shift, Key_C }, [&](const GAction&) {
         m_editor->copy_selected_text_to_clipboard();
     }));
     edit_menu->add_separator();
-    edit_menu->add_action(GAction::create("Copy As C Code", [&](const GAction&) {
+    edit_menu->add_action(GAction::create("Copy As C Code", { Mod_Alt | Mod_Shift, Key_C }, [&](const GAction&) {
         m_editor->copy_selected_hex_to_clipboard_as_c_code();
     }));
     menubar->add_menu(move(edit_menu));
