@@ -227,7 +227,7 @@ public:
     int sys$set_process_icon(int icon_id);
     int sys$realpath(const char* pathname, char*, size_t);
     ssize_t sys$getrandom(void*, size_t, unsigned int);
-    int sys$setkeymap(char* map, char* shift_map, char* alt_map);
+    int sys$setkeymap(const Syscall::SC_setkeymap_params*);
     int sys$module_load(const char* path, size_t path_length);
     int sys$module_unload(const char* name, size_t name_length);
     int sys$profiling_enable(pid_t);
