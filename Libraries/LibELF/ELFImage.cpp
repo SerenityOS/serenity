@@ -43,6 +43,11 @@ unsigned ELFImage::symbol_count() const
     return section(m_symbol_table_section_index).entry_count();
 }
 
+unsigned ELFImage::dynamic_symbol_count() const
+{
+    return section(m_dynamic_symbol_table_section_index).entry_count();
+}
+
 void ELFImage::dump() const
 {
     dbgprintf("ELFImage{%p} {\n", this);
@@ -110,8 +115,25 @@ bool ELFImage::parse()
             m_symbol_table_section_index = i;
         }
         if (sh.sh_type == SHT_STRTAB && i != header().e_shstrndx) {
-            ASSERT(!m_string_table_section_index || m_string_table_section_index == i);
-            m_string_table_section_index = i;
+            if (StringView(".strtab") == section_header_table_string(sh.sh_name))
+                m_string_table_section_index = i;
+            else if (StringView(".dynstr") == section_header_table_string(sh.sh_name))
+                m_dynamic_string_table_section_index = i;
+            else
+                ASSERT_NOT_REACHED();
+        }
+        if (sh.sh_type == SHT_DYNAMIC) {
+            ASSERT(!m_dynamic_section_index || m_dynamic_section_index == i);
+            m_dynamic_section_index = i;
+        }
+        if (sh.sh_type == SHT_DYNSYM) {
+            ASSERT(!m_dynamic_symbol_table_section_index || m_dynamic_symbol_table_section_index == i);
+            m_dynamic_symbol_table_section_index = i;
+        }
+        if (sh.sh_type == SHT_REL) {
+            if (StringView(".rel.dyn") == section_header_table_string(sh.sh_name)) {
+                m_dynamic_relocation_section_index = i;
+            }
         }
     }
 
@@ -140,6 +162,14 @@ const char* ELFImage::table_string(unsigned offset) const
     return raw_data(sh.sh_offset + offset);
 }
 
+const char* ELFImage::dynamic_table_string(unsigned offset) const
+{
+    auto& sh = section_header(m_dynamic_string_table_section_index);
+    if (sh.sh_type != SHT_STRTAB)
+        return nullptr;
+    return raw_data(sh.sh_offset + offset);
+}
+
 const char* ELFImage::raw_data(unsigned offset) const
 {
     return reinterpret_cast<const char*>(m_buffer) + offset;
@@ -159,7 +189,7 @@ const Elf32_Phdr& ELFImage::program_header_internal(unsigned index) const
 const Elf32_Shdr& ELFImage::section_header(unsigned index) const
 {
     ASSERT(index < header().e_shnum);
-    return *reinterpret_cast<const Elf32_Shdr*>(raw_data(header().e_shoff + (index * sizeof(Elf32_Shdr))));
+    return *reinterpret_cast<const Elf32_Shdr*>(raw_data(header().e_shoff + (index * header().e_shentsize)));
 }
 
 const ELFImage::Symbol ELFImage::symbol(unsigned index) const
@@ -167,6 +197,13 @@ const ELFImage::Symbol ELFImage::symbol(unsigned index) const
     ASSERT(index < symbol_count());
     auto* raw_syms = reinterpret_cast<const Elf32_Sym*>(raw_data(section(m_symbol_table_section_index).offset()));
     return Symbol(*this, index, raw_syms[index]);
+}
+
+const ELFImage::DynamicSymbol ELFImage::dynamic_symbol(unsigned index) const
+{
+    ASSERT(index < symbol_count());
+    auto* raw_syms = reinterpret_cast<const Elf32_Sym*>(raw_data(section(m_dynamic_symbol_table_section_index).offset()));
+    return DynamicSymbol(*this, index, raw_syms[index]);
 }
 
 const ELFImage::Section ELFImage::section(unsigned index) const
@@ -186,6 +223,13 @@ const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned inde
     ASSERT(index < relocation_count());
     auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
     return Relocation(m_image, rels[index]);
+}
+
+const ELFImage::DynamicRelocation ELFImage::DynamicRelocationSection::relocation(unsigned index) const
+{
+    ASSERT(index < relocation_count());
+    auto* rels = reinterpret_cast<const Elf32_Rel*>(m_image.raw_data(offset()));
+    return DynamicRelocation(m_image, rels[index]);
 }
 
 const ELFImage::RelocationSection ELFImage::Section::relocations() const
@@ -212,4 +256,16 @@ const ELFImage::Section ELFImage::lookup_section(const char* name) const
     if (auto it = m_sections.find(name); it != m_sections.end())
         return section((*it).value);
     return section(0);
+}
+
+const ELFImage::DynamicSection ELFImage::dynamic_section() const
+{
+    ASSERT(is_dynamic());
+    return section(m_dynamic_section_index);
+}
+
+const ELFImage::DynamicRelocationSection ELFImage::dynamic_relocation_section() const
+{
+    ASSERT(is_dynamic());
+    return section(m_dynamic_relocation_section_index);
 }

@@ -775,7 +775,17 @@ struct elf_args {
 
 #define ELF_TARG_VER 1 /* The ver for which this code is intended */
 
-#define R_386_32 1
-#define R_386_PC32 2
+/* Relocation types */
+#define R_386_NONE 0
+#define R_386_32 1       /* Symbol + Addend */
+#define R_386_PC32 2     /* Symbol + Addend - Section offset */
+#define R_386_GOT32 3    /* Used by build-time linker to create GOT entry */
+#define R_386_PLT32 4    /* Used by build-time linker to create PLT entry */
+#define R_386_COPY 5     /* https://docs.oracle.com/cd/E23824_01/html/819-0690/chapter4-10454.html#chapter4-84604 */
+#define R_386_GLOB_DAT 6 /* Relation b/w GOT entry and symbol */
+#define R_386_JMP_SLOT 7 /* Fixed up by dynamic loader */
+#define R_386_RELATIVE 8 /* Base address + Addned */
+#define R_386_TLS_TPOFF 14 /* Negative offset into the static TLS storage */
+
 
 #endif /* _SYS_EXEC_ELF_H_ */
