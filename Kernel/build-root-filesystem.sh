@@ -110,6 +110,7 @@ cp ../Demos/HelloWorld/HelloWorld mnt/bin/HelloWorld
 cp ../Demos/HelloWorld2/HelloWorld2 mnt/bin/HelloWorld2
 cp ../Demos/WidgetGallery/WidgetGallery mnt/bin/WidgetGallery
 cp ../Demos/Fire/Fire mnt/bin/Fire
+cp ../Demos/DynamicLink/LinkDemo/LinkDemo mnt/bin/LinkDemo
 cp ../DevTools/HackStudio/HackStudio mnt/bin/HackStudio
 cp ../DevTools/VisualBuilder/VisualBuilder mnt/bin/VisualBuilder
 cp ../DevTools/Inspector/Inspector mnt/bin/Inspector
@@ -127,6 +128,10 @@ cp ../Shell/Shell mnt/bin/Shell
 cp ../MenuApplets/Audio/Audio.MenuApplet mnt/bin/
 cp ../MenuApplets/CPUGraph/CPUGraph.MenuApplet mnt/bin/
 cp ../MenuApplets/Clock/Clock.MenuApplet mnt/bin/
+echo "done"
+
+printf "installing dynamic libraries... "
+cp ../Demos/DynamicLink/LinkLib/libDynamicLib.so mnt/usr/lib
 echo "done"
 
 printf "installing shortcuts... "
