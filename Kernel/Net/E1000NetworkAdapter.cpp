@@ -1,6 +1,5 @@
 #include <Kernel/IO.h>
 #include <Kernel/Net/E1000NetworkAdapter.h>
-#include <Kernel/PCI.h>
 #include <Kernel/Thread.h>
 
 #define REG_CTRL 0x0000
@@ -119,6 +118,7 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
     enable_bus_mastering(m_pci_address);
 
     m_mmio_base = PhysicalAddress(PCI::get_BAR0(m_pci_address));
+    u32 mmio_base_size = PCI::get_BAR_Space_Size(pci_address, 0);
     MM.map_for_kernel(VirtualAddress(m_mmio_base.get()), m_mmio_base);
     MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(4096).get()), m_mmio_base.offset(4096));
     MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(8192).get()), m_mmio_base.offset(8192));
@@ -129,6 +129,7 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
     m_interrupt_line = PCI::get_interrupt_line(m_pci_address);
     kprintf("E1000: IO port base: %w\n", m_io_base);
     kprintf("E1000: MMIO base: P%x\n", m_mmio_base);
+    kprintf("E1000: MMIO base size: %u bytes\n", mmio_base_size);
     kprintf("E1000: Interrupt line: %u\n", m_interrupt_line);
     detect_eeprom();
     kprintf("E1000: Has EEPROM? %u\n", m_has_eeprom);

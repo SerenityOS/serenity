@@ -24,7 +24,7 @@ int main(int argc, char** argv)
     auto json = JsonValue::from_string(file_contents).as_array();
     json.for_each([db](auto& value) {
         auto dev = value.as_object();
-
+        auto seg = dev.get("seg").to_u32();
         auto bus = dev.get("bus").to_u32();
         auto slot = dev.get("slot").to_u32();
         auto function = dev.get("function").to_u32();
@@ -48,8 +48,8 @@ int main(int argc, char** argv)
         if (class_ptr != "")
             class_name = class_ptr;
 
-        printf("%02x:%02x.%d %s: %s %s (rev %02x)\n",
-            bus, slot, function,
+        printf("%04x:%02x:%02x.%d %s: %s %s (rev %02x)\n",
+            seg, bus, slot, function,
             class_name.characters(), vendor_name.characters(),
             device_name.characters(), revision_id);
     });
