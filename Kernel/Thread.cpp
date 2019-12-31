@@ -89,7 +89,6 @@ Thread::Thread(Process& process)
         m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
         m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
         m_tss.esp = m_kernel_stack_top;
-        kprintf("Allocated ring0 stack @ %p - %p\n", m_kernel_stack_base, m_kernel_stack_top);
     } else {
         // Ring3 processes need a separate stack for Ring0.
         m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid), Region::Access::Read | Region::Access::Write, false, true);
@@ -98,7 +97,6 @@ Thread::Thread(Process& process)
         m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
         m_tss.ss0 = 0x10;
         m_tss.esp0 = m_kernel_stack_top;
-        kprintf("Allocated ring0 stack @ %p - %p\n", m_kernel_stack_base, m_kernel_stack_top);
     }
 
     // HACK: Ring2 SS in the TSS is the current PID.
