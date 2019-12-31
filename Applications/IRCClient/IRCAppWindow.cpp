@@ -82,13 +82,13 @@ void IRCAppWindow::setup_client()
 
 void IRCAppWindow::setup_actions()
 {
-    m_join_action = GAction::create("Join channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
+    m_join_action = GAction::create("Join channel", { Mod_Ctrl, Key_J }, GraphicsBitmap::load_from_file("/res/icons/16x16/irc-join.png"), [&](auto&) {
         auto input_box = GInputBox::construct("Enter channel name:", "Join channel", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty())
             m_client.handle_join_action(input_box->text_value());
     });
 
-    m_part_action = GAction::create("Part from channel", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
+    m_part_action = GAction::create("Part from channel", { Mod_Ctrl, Key_P }, GraphicsBitmap::load_from_file("/res/icons/16x16/irc-part.png"), [this](auto&) {
         auto* window = m_client.current_window();
         if (!window || window->type() != IRCWindow::Type::Channel) {
             // FIXME: Perhaps this action should have been disabled instead of allowing us to activate it.
@@ -103,13 +103,13 @@ void IRCAppWindow::setup_actions()
             m_client.handle_whois_action(input_box->text_value());
     });
 
-    m_open_query_action = GAction::create("Open query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
+    m_open_query_action = GAction::create("Open query", { Mod_Ctrl, Key_O }, GraphicsBitmap::load_from_file("/res/icons/16x16/irc-open-query.png"), [&](auto&) {
         auto input_box = GInputBox::construct("Enter nickname:", "Open IRC query with...", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty())
             m_client.handle_open_query_action(input_box->text_value());
     });
 
-    m_close_query_action = GAction::create("Close query", GraphicsBitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
+    m_close_query_action = GAction::create("Close query", { Mod_Ctrl, Key_D }, GraphicsBitmap::load_from_file("/res/icons/16x16/irc-close-query.png"), [](auto&) {
         printf("FIXME: Implement close-query action\n");
     });
 

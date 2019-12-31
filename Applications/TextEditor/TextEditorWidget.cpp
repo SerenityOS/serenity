@@ -164,7 +164,7 @@ TextEditorWidget::TextEditorWidget()
         open_sesame(open_path.value());
     });
 
-    m_save_as_action = GAction::create("Save as...", { Mod_None, Key_F12 }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
+    m_save_as_action = GAction::create("Save as...", { Mod_Ctrl | Mod_Shift, Key_S }, GraphicsBitmap::load_from_file("/res/icons/16x16/save.png"), [this](const GAction&) {
         Optional<String> save_path = GFilePicker::get_save_filepath(m_name.is_null() ? "Untitled" : m_name, m_extension.is_null() ? "txt" : m_extension);
         if (!save_path.has_value())
             return;

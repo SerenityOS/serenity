@@ -87,19 +87,19 @@ int main(int argc, char** argv)
             memory_stats_widget->refresh();
     });
 
-    auto kill_action = GAction::create("Kill process", GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GAction&) {
+    auto kill_action = GAction::create("Kill process", { Mod_Ctrl, Key_K }, GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGKILL);
     });
 
-    auto stop_action = GAction::create("Stop process", GraphicsBitmap::load_from_file("/res/icons/stop16.png"), [process_table_view](const GAction&) {
+    auto stop_action = GAction::create("Stop process", { Mod_Ctrl, Key_S }, GraphicsBitmap::load_from_file("/res/icons/stop16.png"), [process_table_view](const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGSTOP);
     });
 
-    auto continue_action = GAction::create("Continue process", GraphicsBitmap::load_from_file("/res/icons/continue16.png"), [process_table_view](const GAction&) {
+    auto continue_action = GAction::create("Continue process", { Mod_Ctrl, Key_C }, GraphicsBitmap::load_from_file("/res/icons/continue16.png"), [process_table_view](const GAction&) {
         pid_t pid = process_table_view->selected_pid();
         if (pid != -1)
             kill(pid, SIGCONT);
