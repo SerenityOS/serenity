@@ -35,7 +35,7 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, Virtual
         0,
         "MBVGA Framebuffer",
         prot);
-    kprintf("MBVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with vaddr V%p\n",
+    dbgprintf("MBVGA: %s(%u) created Region{%p} with size %u for framebuffer P%x with vaddr V%p\n",
         process.name().characters(), process.pid(),
         region, region->size(), m_framebuffer_address.as_ptr(), region->vaddr().get());
     ASSERT(region);

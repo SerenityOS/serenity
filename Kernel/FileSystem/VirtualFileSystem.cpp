@@ -2,6 +2,7 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/Devices/CharacterDevice.h>
 #include <Kernel/FileSystem/Custody.h>
+#include <Kernel/FileSystem/DiskBackedFileSystem.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
@@ -99,10 +100,14 @@ bool VFS::mount_root(NonnullRefPtr<FS>&& file_system)
     }
 
     m_root_inode = move(root_inode);
-
-    kprintf("VFS: mounted root on %s{%p}\n",
-        m_root_inode->fs().class_name(),
-        &m_root_inode->fs());
+    char device_name[32];
+    if (m_root_inode->fs().is_disk_backed()) {
+        auto& device = static_cast<DiskBackedFS&>(m_root_inode->fs()).device();
+        sprintf(device_name, "%d,%d", device.major(), device.minor());
+    } else {
+        sprintf(device_name, "not-a-disk");
+    }
+    kprintf("VFS: mounted root on %s (%s)\n", m_root_inode->fs().class_name(), device_name);
 
     m_mounts.append(move(mount));
     return true;
