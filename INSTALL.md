@@ -17,7 +17,7 @@ At present there is no real GPU support so don't expect OpenGL, Vulkan nor accel
 
 ## Creating a Serenity GRUB disk image
 
-Before creating a Serenity disk image, you need to build the OS as described in the **"How do I build and run this?"** section of the [Serenity ReadMe](https://github.com/SerenityOS/serenity/blob/master/ReadMe.md). Follow those instructions up to and including running **./makeall.sh**. After the OS has built, run **sudo ./build-image-grub.sh** to replace the qemu **_disk_image** file in the Kernel directory with one that has GRUB2 installed that can be booted on a real PC. Alternately, you can run **sudo ./build-gpt-image-grub.sh** to create an image that uses GPT partitioning. 
+Before creating a Serenity disk image, you need to build the OS as described in the [SerenityOS build instructions](https://github.com/SerenityOS/serenity/blob/master/Documentation/BuildInstructions.md). Follow those instructions up to and including running **./makeall.sh**. After the OS has built, run **sudo ./build-image-grub.sh** to replace the qemu **_disk_image** file in the Kernel directory with one that has GRUB2 installed that can be booted on a real PC. Alternately, you can run **sudo ./build-gpt-image-grub.sh** to create an image that uses GPT partitioning. 
 
 The final step is copying **_disk_image** onto the disk you wish to boot Serenity off using a command such as:
 
