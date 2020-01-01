@@ -526,6 +526,7 @@ bool g_cpu_supports_pae;
 bool g_cpu_supports_pge;
 bool g_cpu_supports_smep;
 bool g_cpu_supports_sse;
+bool g_cpu_supports_tsc;
 bool g_cpu_supports_umip;
 
 void detect_cpu_features()
@@ -534,6 +535,7 @@ void detect_cpu_features()
     g_cpu_supports_pae = (processor_info.edx() & (1 << 6));
     g_cpu_supports_pge = (processor_info.edx() & (1 << 13));
     g_cpu_supports_sse = (processor_info.edx() & (1 << 25));
+    g_cpu_supports_tsc = (processor_info.edx() & (1 << 4));
 
     CPUID extended_processor_info(0x80000001);
     g_cpu_supports_nx = (extended_processor_info.edx() & (1 << 20));

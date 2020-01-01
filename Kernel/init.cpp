@@ -266,6 +266,14 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
         kprintf("x86: UMIP support enabled\n");
     }
 
+    if (g_cpu_supports_tsc) {
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x4, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: RDTSC support restricted\n");
+    }
+
     RTC::initialize();
     PIC::initialize();
     gdt_init();

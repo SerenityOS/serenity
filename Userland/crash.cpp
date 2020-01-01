@@ -11,7 +11,7 @@
 
 static void print_usage_and_exit()
 {
-    printf("usage: crash -[AsdiamfMFTtSxyXUI]\n");
+    printf("usage: crash -[AsdiamfMFTtSxyXUIc]\n");
     exit(0);
 }
 
@@ -101,6 +101,7 @@ int main(int argc, char** argv)
         ExecuteNonExecutableMemory,
         TriggerUserModeInstructionPrevention,
         UseIOInstruction,
+        ReadTimestampCounter,
     };
     Mode mode = SegmentationViolation;
 
@@ -143,6 +144,8 @@ int main(int argc, char** argv)
         mode = TriggerUserModeInstructionPrevention;
     else if (String(argv[1]) == "-I")
         mode = UseIOInstruction;
+    else if (String(argv[1]) == "-c")
+        mode = ReadTimestampCounter;
     else
         print_usage_and_exit();
 
@@ -338,6 +341,13 @@ int main(int argc, char** argv)
         Crash("Attempt to use an I/O instruction", [] {
             u8 keyboard_status = IO::in8(0x64);
             printf("Keyboard status: %#02x\n", keyboard_status);
+            return Crash::Failure::DidNotCrash;
+        }).run(run_type);
+    }
+
+    if (mode == ReadTimestampCounter || mode == TestAllCrashTypes) {
+        Crash("Read the CPU timestamp counter", [] {
+            asm volatile("rdtsc");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }

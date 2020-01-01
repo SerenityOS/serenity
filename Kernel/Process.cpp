@@ -2452,6 +2452,8 @@ int Process::sys$read_tsc(u32* lsw, u32* msw)
     if (!validate_write_typed(msw))
         return -EFAULT;
     read_tsc(*lsw, *msw);
+    if (!is_superuser())
+        *lsw &= ~0xfff;
     return 0;
 }
 
