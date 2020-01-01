@@ -290,14 +290,8 @@ bool ELFDynamicObject::load(unsigned flags)
 #ifdef DYNAMIC_LOAD_DEBUG
     dbgprintf("Calling DT_INIT at %p\n", init_function);
 #endif
-    // FIXME:
-    // Disassembly of section .init:
-    //
-    //  00007e98 <_init>:
-    //        7e98:       55                      push   ebp
-    //
-    // Where da ret at? related to -nostartfiles for sure...
-    //(init_function)();
+
+    (init_function)();
 
     InitFunc* init_begin = (InitFunc*)(load_addr + m_init_array_offset);
     u32 init_end = (u32)((u8*)init_begin + m_init_array_size);
