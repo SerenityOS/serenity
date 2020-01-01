@@ -148,6 +148,8 @@ private:
     PageFaultResponse handle_inode_fault(size_t page_index);
     PageFaultResponse handle_zero_fault(size_t page_index);
 
+    void map_individual_page_impl(size_t page_index);
+
     RefPtr<PageDirectory> m_page_directory;
     Range m_range;
     size_t m_offset_in_vmobject { 0 };
