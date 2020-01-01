@@ -584,9 +584,9 @@ bool WSWindowManager::process_ongoing_window_move(WSMouseEvent& event, WSWindow*
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
             const int tiling_deadzone = 5;
 
-            if (event.x() <= tiling_deadzone) {
+            if (m_move_window->is_resizable() && event.x() <= tiling_deadzone) {
                 m_move_window->set_tiled(WindowTileType::Left);
-            } else if (event.x() >= WSScreen::the().width() - tiling_deadzone) {
+            } else if (m_move_window->is_resizable() && event.x() >= WSScreen::the().width() - tiling_deadzone) {
                 m_move_window->set_tiled(WindowTileType::Right);
             } else if (pixels_moved_from_start > 5 || m_move_window->tiled() == WindowTileType::None) {
                 m_move_window->set_tiled(WindowTileType::None);
