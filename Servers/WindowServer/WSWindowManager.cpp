@@ -543,6 +543,7 @@ bool WSWindowManager::process_ongoing_window_move(WSMouseEvent& event, WSWindow*
 #ifdef MOVE_DEBUG
         dbg() << "[WM] Finish moving WSWindow{" << m_move_window << "}";
 #endif
+
         invalidate(*m_move_window);
         if (m_move_window->rect().contains(event.position()))
             hovered_window = m_move_window;
@@ -565,7 +566,9 @@ bool WSWindowManager::process_ongoing_window_move(WSMouseEvent& event, WSWindow*
         if (m_move_window->is_maximized()) {
             dbg() << "  [!] The window is still maximized. Not moving yet.";
         }
+
 #endif
+
         if (m_move_window->is_maximized()) {
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
             // dbg() << "[WM] " << pixels_moved_from_start << " moved since start of window move";
@@ -578,10 +581,20 @@ bool WSWindowManager::process_ongoing_window_move(WSMouseEvent& event, WSWindow*
                 m_move_window_origin = m_move_window->position();
             }
         } else {
-            Point pos = m_move_window_origin.translated(event.position() - m_move_origin);
-            m_move_window->set_position_without_repaint(pos);
-            if (m_move_window->rect().contains(event.position()))
-                hovered_window = m_move_window;
+            auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
+            const int tiling_deadzone = 5;
+
+            if (event.x() <= tiling_deadzone) {
+                m_move_window->set_tiled(WindowTileType::Left);
+            } else if (event.x() >= WSScreen::the().width() - tiling_deadzone) {
+                m_move_window->set_tiled(WindowTileType::Right);
+            } else if (pixels_moved_from_start > 5 || m_move_window->tiled() == WindowTileType::None) {
+                m_move_window->set_tiled(WindowTileType::None);
+                Point pos = m_move_window_origin.translated(event.position() - m_move_origin);
+                m_move_window->set_position_without_repaint(pos);
+                if (m_move_window->rect().contains(event.position()))
+                    hovered_window = m_move_window;
+            }
             return true;
         }
     }
