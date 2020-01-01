@@ -59,6 +59,7 @@ Thread::Thread(Process& process)
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
     memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
     memset(&m_tss, 0, sizeof(m_tss));
+    m_tss.iomapbase = sizeof(TSS32);
 
     // Only IF is set when a process boots.
     m_tss.eflags = 0x0202;

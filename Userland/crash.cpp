@@ -1,5 +1,6 @@
 #include <AK/Function.h>
 #include <AK/String.h>
+#include <Kernel/IO.h>
 #include <Kernel/Syscall.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -10,7 +11,7 @@
 
 static void print_usage_and_exit()
 {
-    printf("usage: crash -[AsdiamfMFTtSxyXU]\n");
+    printf("usage: crash -[AsdiamfMFTtSxyXUI]\n");
     exit(0);
 }
 
@@ -99,6 +100,7 @@ int main(int argc, char** argv)
         ReadFromFreedMemoryStillCachedByMalloc,
         ExecuteNonExecutableMemory,
         TriggerUserModeInstructionPrevention,
+        UseIOInstruction,
     };
     Mode mode = SegmentationViolation;
 
@@ -139,6 +141,8 @@ int main(int argc, char** argv)
         mode = ExecuteNonExecutableMemory;
     else if (String(argv[1]) == "-U")
         mode = TriggerUserModeInstructionPrevention;
+    else if (String(argv[1]) == "-I")
+        mode = UseIOInstruction;
     else
         print_usage_and_exit();
 
@@ -330,6 +334,13 @@ int main(int argc, char** argv)
         }).run(run_type);
     }
 
+    if (mode == UseIOInstruction || mode == TestAllCrashTypes) {
+        Crash("Attempt to use an I/O instruction", [] {
+            u8 keyboard_status = IO::in8(0x64);
+            printf("Keyboard status: %#02x\n", keyboard_status);
+            return Crash::Failure::DidNotCrash;
+        }).run(run_type);
+    }
+
     return 0;
 }
-
