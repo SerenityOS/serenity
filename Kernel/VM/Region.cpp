@@ -209,27 +209,37 @@ Bitmap& Region::ensure_cow_map() const
     return *m_cow_map;
 }
 
-void Region::remap_page(size_t index)
+void Region::map_individual_page_impl(size_t page_index)
+{
+    auto page_vaddr = vaddr().offset(page_index * PAGE_SIZE);
+    auto& pte = MM.ensure_pte(*m_page_directory, page_vaddr);
+    auto& physical_page = vmobject().physical_pages()[first_page_index() + page_index];
+    if (!physical_page) {
+        pte.set_physical_page_base(0);
+        pte.set_present(false);
+    } else {
+        pte.set_physical_page_base(physical_page->paddr().get());
+        pte.set_present(is_readable());
+        if (should_cow(page_index))
+            pte.set_writable(false);
+        else
+            pte.set_writable(is_writable());
+        if (g_cpu_supports_nx)
+            pte.set_execute_disabled(!is_executable());
+        pte.set_user_allowed(is_user_accessible());
+    }
+    m_page_directory->flush(page_vaddr);
+#ifdef MM_DEBUG
+    dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
+#endif
+}
+
+void Region::remap_page(size_t page_index)
 {
     ASSERT(m_page_directory);
     InterruptDisabler disabler;
-    auto page_vaddr = vaddr().offset(index * PAGE_SIZE);
-    auto& pte = MM.ensure_pte(*m_page_directory, page_vaddr);
-    auto& physical_page = vmobject().physical_pages()[first_page_index() + index];
-    ASSERT(physical_page);
-    pte.set_physical_page_base(physical_page->paddr().get());
-    pte.set_present(is_readable());
-    if (should_cow(index))
-        pte.set_writable(false);
-    else
-        pte.set_writable(is_writable());
-    if (g_cpu_supports_nx)
-        pte.set_execute_disabled(!is_executable());
-    pte.set_user_allowed(is_user_accessible());
-    m_page_directory->flush(page_vaddr);
-#ifdef MM_DEBUG
-    dbg() << "MM: >> region.remap_page (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
-#endif
+    ASSERT(vmobject().physical_pages()[first_page_index() + page_index]);
+    map_individual_page_impl(page_index);
 }
 
 void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
@@ -260,32 +270,10 @@ void Region::map(PageDirectory& page_directory)
     InterruptDisabler disabler;
     m_page_directory = page_directory;
 #ifdef MM_DEBUG
-    dbgprintf("MM: map_region_at_address will map VMO pages %u - %u (VMO page count: %u)\n", first_page_index(), last_page_index(), vmobject().page_count());
+    dbgprintf("MM: Region::map() will map VMO pages %u - %u (VMO page count: %u)\n", first_page_index(), last_page_index(), vmobject().page_count());
 #endif
-    for (size_t i = 0; i < page_count(); ++i) {
-        auto page_vaddr = vaddr().offset(i * PAGE_SIZE);
-        auto& pte = MM.ensure_pte(page_directory, page_vaddr);
-        auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
-        if (physical_page) {
-            pte.set_physical_page_base(physical_page->paddr().get());
-            pte.set_present(is_readable());
-            if (should_cow(i))
-                pte.set_writable(false);
-            else
-                pte.set_writable(is_writable());
-            if (g_cpu_supports_nx)
-                pte.set_execute_disabled(!is_executable());
-        } else {
-            pte.set_physical_page_base(0);
-            pte.set_present(false);
-            pte.set_writable(is_writable());
-        }
-        pte.set_user_allowed(is_user_accessible());
-        page_directory.flush(page_vaddr);
-#ifdef MM_DEBUG
-        dbgprintf("MM: >> map_region_at_address (PD=%p) '%s' V%p => P%p (@%p)\n", &page_directory, name().characters(), page_vaddr.get(), physical_page ? physical_page->paddr().get() : 0, physical_page.ptr());
-#endif
-    }
+    for (size_t page_index = 0; page_index < page_count(); ++page_index)
+        map_individual_page_impl(page_index);
 }
 
 void Region::remap()
