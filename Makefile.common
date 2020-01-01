@@ -84,24 +84,26 @@ endif
 
 -include $(SUFFIXED_OBJS:%.o=%.d)
 
+.SUFFIXES:
+
 %$(OBJ_SUFFIX).o: %.cpp $(EXTRA_SOURCES)
-	@echo "C++ $@"
+	@echo "$(notdir $(CURDIR)): C++ $@"
 	$(QUIET) $(CXX) $(CXXFLAGS) -o $@ -c $<
 
 %$(OBJ_SUFFIX).o: %.c
-	@echo "C $@"
+	@echo "$(notdir $(CURDIR)): C $@"
 	$(QUIET) $(CC) $(CFLAGS) -o $@ -c $<
 
 %.ao: %.S
-	@echo "AS $@"
+	@echo "$(notdir $(CURDIR)): AS $@"
 	$(QUIET) $(AS) -o $@ $<
 
 $(PROGRAM): $(STATIC_LIB_DEPS) $(SUFFIXED_OBJS) $(EXTRA_OBJS)
-	@echo "LINK $(PROGRAM)"
+	@echo "$(notdir $(CURDIR)): LINK $(PROGRAM)"
 	$(QUIET) $(CXX) -o $(PROGRAM) $(EXTRA_OBJS) $(SUFFIXED_OBJS) $(LDFLAGS)
 
 $(LIBRARY): $(SUFFIXED_OBJS) $(EXTRA_OBJS)
-	@echo "LIB $@"
+	@echo "$(notdir $(CURDIR)): LIB $@"
 	$(QUIET) $(AR) rcs $@ $(OBJS) $(EXTRA_OBJS) $(LIBS)
 	$(POST_LIBRARY_BUILD)
 
@@ -126,7 +128,7 @@ all: $(PROGRAM) $(LIBRARY)
 EXTRA_CLEAN ?=
 
 clean:
-	@echo "CLEAN"
+	@echo "$(notdir $(CURDIR)): CLEAN"
 	$(QUIET) rm -f $(PROGRAM) $(LIBRARY) $(SUFFIXED_OBJS) $(EXTRA_OBJS) *.d $(EXTRA_CLEAN)
 
 install:
