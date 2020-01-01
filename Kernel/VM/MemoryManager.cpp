@@ -21,10 +21,18 @@ MemoryManager& MM
     return *s_the;
 }
 
+void MemoryManager::detect_cpu_features()
+{
+    CPUID extended_processor_info(0x80000001);
+    m_has_nx_support = (extended_processor_info.edx() & (1 << 20)) != 0;
+
+    CPUID extended_features(0x7);
+    m_has_smep_support = (extended_features.ebx() & (1 << 7)) != 0;
+}
+
 MemoryManager::MemoryManager(u32 physical_address_for_kernel_page_tables)
 {
-    CPUID id(0x80000001);
-    m_has_nx_support = (id.edx() & (1 << 20)) != 0;
+    detect_cpu_features();
 
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(physical_address_for_kernel_page_tables));
     for (size_t i = 0; i < 4; ++i) {
@@ -184,6 +192,17 @@ void MemoryManager::initialize_paging()
         "mov %cr4, %eax\n"
         "orl $0x20, %eax\n"
         "mov %eax, %cr4\n");
+
+    if (m_has_smep_support) {
+        kprintf("MM: SMEP support detected; enabling\n");
+    // Turn on CR4.SMEP
+    asm volatile(
+        "mov %cr4, %eax\n"
+        "orl $0x100000, %eax\n"
+        "mov %eax, %cr4\n");
+    } else {
+        kprintf("MM: SMEP support not detected\n");
+    }
 
     if (m_has_nx_support) {
         kprintf("MM: NX support detected; enabling NXE flag\n");
