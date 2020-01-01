@@ -28,6 +28,9 @@ public:
 
     void dump();
 
+    // Will be called from _fixup_plt_entry, as part of the PLT trampoline
+    Elf32_Addr patch_plt_entry(u32 relocation_offset);
+
 private:
     class ProgramHeaderRegion {
     public:
@@ -68,6 +71,12 @@ private:
 
     explicit ELFDynamicObject(const char* filename, int fd, size_t file_size);
 
+    void parse_dynamic_section();
+    void load_program_headers();
+    void do_relocations();
+    void setup_plt_trampoline();
+    void call_object_init_functions();
+
     String m_filename;
     size_t m_file_size { 0 };
     int m_image_fd { -1 };
@@ -75,11 +84,6 @@ private:
     bool m_valid { false };
 
     OwnPtr<ELFImage> m_image;
-
-    void parse_dynamic_section();
-    void do_relocations();
-
-    static void patch_plt_entry(u32 got_offset, void* dso_got_tag);
 
     Vector<ProgramHeaderRegion> m_program_header_regions;
     ProgramHeaderRegion* m_text_region { nullptr };
