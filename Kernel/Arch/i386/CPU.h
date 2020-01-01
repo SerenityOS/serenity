@@ -81,7 +81,7 @@ union [[gnu::packed]] Descriptor
     void set_limit(u32 l)
     {
         limit_lo = (u32)l & 0xffff;
-        limit_hi = ((u32)l >> 16) & 0xff;
+        limit_hi = ((u32)l >> 16) & 0xf;
     }
 };
 
