@@ -283,7 +283,7 @@ void page_fault_handler(RegisterDump regs)
             current->process().name().characters(),
             current->pid(),
             current->tid(),
-                regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "",
+            regs.exception_code & PageFaultFlags::ReservedBitViolation ? "reserved bit violation / " : "",
             regs.exception_code & PageFaultFlags::InstructionFetch ? "instruction fetch / " : "",
             regs.exception_code & PageFaultFlags::Write ? "write to" : "read from",
             fault_address);
@@ -542,4 +542,24 @@ void sse_init()
         "mov %cr4, %eax\n"
         "orl $0x600, %eax\n"
         "mov %eax, %cr4\n");
+}
+
+bool g_cpu_supports_nx;
+bool g_cpu_supports_pae;
+bool g_cpu_supports_pge;
+bool g_cpu_supports_smep;
+bool g_cpu_supports_sse;
+
+void detect_cpu_features()
+{
+    CPUID processor_info(0x1);
+    g_cpu_supports_pae = (processor_info.edx() & (1 << 6));
+    g_cpu_supports_pge = (processor_info.edx() & (1 << 13));
+    g_cpu_supports_sse = (processor_info.edx() & (1 << 25));
+
+    CPUID extended_processor_info(0x80000001);
+    g_cpu_supports_nx = (extended_processor_info.edx() & (1 << 20));
+
+    CPUID extended_features(0x7);
+    g_cpu_supports_smep = (extended_features.ebx() & (1 << 7));
 }

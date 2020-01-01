@@ -21,19 +21,8 @@ MemoryManager& MM
     return *s_the;
 }
 
-void MemoryManager::detect_cpu_features()
-{
-    CPUID extended_processor_info(0x80000001);
-    m_has_nx_support = (extended_processor_info.edx() & (1 << 20)) != 0;
-
-    CPUID extended_features(0x7);
-    m_has_smep_support = (extended_features.ebx() & (1 << 7)) != 0;
-}
-
 MemoryManager::MemoryManager(u32 physical_address_for_kernel_page_tables)
 {
-    detect_cpu_features();
-
     m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(physical_address_for_kernel_page_tables));
     for (size_t i = 0; i < 4; ++i) {
         m_low_page_tables[i] = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * (5 + i));
@@ -51,6 +40,11 @@ MemoryManager::~MemoryManager()
 
 void MemoryManager::initialize_paging()
 {
+    if (!g_cpu_supports_pae) {
+        kprintf("x86: Cannot boot on machines without PAE support.\n");
+        hang();
+    }
+
 #ifdef MM_DEBUG
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
 #endif
@@ -71,14 +65,14 @@ void MemoryManager::initialize_paging()
     // Disable execution from 0MB through 1MB (BIOS data, legacy things, ...)
     for (size_t i = 0; i < (1 * MB); ++i) {
         auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
-        if (m_has_nx_support)
+        if (g_cpu_supports_nx)
             pte.set_execute_disabled(true);
     }
 
     // Disable execution from 2MB through 8MB (kmalloc, kmalloc_eternal, slabs, page tables, ...)
     for (size_t i = 1; i < 4; ++i) {
         auto& pte = kernel_page_directory().table().directory(0)[i];
-        if (m_has_nx_support)
+        if (g_cpu_supports_nx)
             pte.set_execute_disabled(true);
     }
 
@@ -181,40 +175,44 @@ void MemoryManager::initialize_paging()
     dbgprintf("MM: Installing page directory\n");
 #endif
 
-    // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
-    asm volatile(
-        "mov %cr4, %eax\n"
-        "orl $0x80, %eax\n"
-        "mov %eax, %cr4\n");
-
     // Turn on CR4.PAE
     asm volatile(
         "mov %cr4, %eax\n"
         "orl $0x20, %eax\n"
         "mov %eax, %cr4\n");
 
-    if (m_has_smep_support) {
-        kprintf("MM: SMEP support detected; enabling\n");
-    // Turn on CR4.SMEP
-    asm volatile(
-        "mov %cr4, %eax\n"
-        "orl $0x100000, %eax\n"
-        "mov %eax, %cr4\n");
+    if (g_cpu_supports_pge) {
+        // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x80, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: PGE support enabled\n");
     } else {
-        kprintf("MM: SMEP support not detected\n");
+        kprintf("x86: PGE support not detected\n");
     }
 
-    if (m_has_nx_support) {
-        kprintf("MM: NX support detected; enabling NXE flag\n");
+    if (g_cpu_supports_smep) {
+        // Turn on CR4.SMEP
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x100000, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: SMEP support enabled\n");
+    } else {
+        kprintf("x86: SMEP support not detected\n");
+    }
 
+    if (g_cpu_supports_nx) {
         // Turn on IA32_EFER.NXE
         asm volatile(
             "movl $0xc0000080, %ecx\n"
             "rdmsr\n"
             "orl $0x800, %eax\n"
             "wrmsr\n");
+        kprintf("x86: NX support enabled\n");
     } else {
-        kprintf("MM: NX support not detected\n");
+        kprintf("x86: NX support not detected\n");
     }
 
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
