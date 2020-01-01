@@ -82,7 +82,6 @@ else
 find ../Userland/ -type f -perm +111 -exec cp {} mnt/bin/ \;
 fi
 chmod 4755 mnt/bin/su
-chmod 4755 mnt/bin/ping
 echo "done"
 
 printf "installing applications... "

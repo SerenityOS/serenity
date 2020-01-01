@@ -9,21 +9,6 @@
 #include <time.h>
 #include <unistd.h>
 
-uint16_t internet_checksum(const void* ptr, size_t count)
-{
-    uint32_t checksum = 0;
-    auto* w = (const uint16_t*)ptr;
-    while (count > 1) {
-        checksum += ntohs(*w++);
-        if (checksum & 0x80000000)
-            checksum = (checksum & 0xffff) | (checksum >> 16);
-        count -= 2;
-    }
-    while (checksum >> 16)
-        checksum = (checksum & 0xffff) + (checksum >> 16);
-    return htons(~checksum);
-}
-
 int main(int argc, char** argv)
 {
     if (argc != 2) {
@@ -31,14 +16,9 @@ int main(int argc, char** argv)
         return 0;
     }
 
-    int fd = socket(AF_INET, SOCK_RAW, IPPROTO_ICMP);
+    int fd = socket(AF_INET, SOCK_DGRAM, IPPROTO_ICMP);
     if (fd < 0) {
         perror("socket");
-        return 1;
-    }
-
-    if (setgid(getgid()) || setuid(getuid())) {
-        fprintf(stderr, "Failed to drop privileges.\n");
         return 1;
     }
 
@@ -83,8 +63,6 @@ int main(int argc, char** argv)
         ping_packet.header.un.echo.id = htons(pid);
         ping_packet.header.un.echo.sequence = htons(seq++);
         strcpy(ping_packet.msg, "Hello there!\n");
-
-        ping_packet.header.checksum = internet_checksum(&ping_packet, sizeof(PingPacket));
 
         struct timeval tv_send;
         gettimeofday(&tv_send, nullptr);
