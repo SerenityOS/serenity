@@ -611,8 +611,8 @@ void TerminalWidget::terminal_history_changed()
 
 void TerminalWidget::terminal_did_resize(u16 columns, u16 rows)
 {
-    m_pixel_width = (frame_thickness() * 2) + (m_inset * 2) + (columns * font().glyph_width('x'));
-    m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (rows * (font().glyph_height() + m_line_spacing)) - m_line_spacing;
+    m_pixel_width = (frame_thickness() * 2) + (m_inset * 2) + (columns * font().glyph_width('x')) + m_scrollbar->width();
+    m_pixel_height = (frame_thickness() * 2) + (m_inset * 2) + (rows * (font().glyph_height() + m_line_spacing));
 
     if (m_automatic_size_policy) {
         set_size_policy(SizePolicy::Fixed, SizePolicy::Fixed);
