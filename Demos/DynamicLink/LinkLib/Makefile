@@ -1,7 +1,8 @@
-
 include ../../../Makefile.common
 
 DYNLIBRARY = libDynamicLib.so
+
+EXTRA_CLEAN = *.o *.so
 
 .PHONY: clean all
 
@@ -15,6 +16,3 @@ DynamicLib.o: DynamicLib.cpp
 #     which is clearly wrong. Isn't it? We don't want _start...
 $(DYNLIBRARY): DynamicLib.o
 	$(CXX) -shared -nostartfiles -ffreestanding -o $(DYNLIBRARY) $<
-
-clean:
-	rm -f *.o *.d *.so
