@@ -32,6 +32,7 @@ kinds of crashes.
 * `-x`: Read from recently freed memory. (Tests an opportunistic malloc guard.)
 * `-y`: Write to recently freed memory. (Tests an opportunistic malloc guard.)
 * `-X`: Attempt to execute non-executable memory. (Not mapped with PROT\_EXEC.)
+* `-U`: Attempt to trigger an x86 User Mode Instruction Prevention fault.
 
 ## Examples
 

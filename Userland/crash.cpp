@@ -10,7 +10,7 @@
 
 static void print_usage_and_exit()
 {
-    printf("usage: crash -[AsdiamfMFTtSxyX]\n");
+    printf("usage: crash -[AsdiamfMFTtSxyXU]\n");
     exit(0);
 }
 
@@ -98,6 +98,7 @@ int main(int argc, char** argv)
         WriteToFreedMemoryStillCachedByMalloc,
         ReadFromFreedMemoryStillCachedByMalloc,
         ExecuteNonExecutableMemory,
+        TriggerUserModeInstructionPrevention,
     };
     Mode mode = SegmentationViolation;
 
@@ -136,6 +137,8 @@ int main(int argc, char** argv)
         mode = WriteToFreedMemoryStillCachedByMalloc;
     else if (String(argv[1]) == "-X")
         mode = ExecuteNonExecutableMemory;
+    else if (String(argv[1]) == "-U")
+        mode = TriggerUserModeInstructionPrevention;
     else
         print_usage_and_exit();
 
@@ -316,6 +319,13 @@ int main(int argc, char** argv)
             ptr[0] = 0xc3; // ret
             typedef void* (*CrashyFunctionPtr)();
             ((CrashyFunctionPtr)ptr)();
+            return Crash::Failure::DidNotCrash;
+        }).run(run_type);
+    }
+
+    if (mode == TriggerUserModeInstructionPrevention || mode == TestAllCrashTypes) {
+        Crash("Trigger x86 User Mode Instruction Prevention", []() {
+            asm volatile("str %eax");
             return Crash::Failure::DidNotCrash;
         }).run(run_type);
     }
