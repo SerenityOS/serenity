@@ -90,6 +90,7 @@ private:
     void register_region(Region&);
     void unregister_region(Region&);
 
+    void detect_cpu_features();
     void initialize_paging();
     void flush_entire_tlb();
     void flush_tlb(VirtualAddress);
@@ -133,6 +134,7 @@ private:
 
     bool m_quickmap_in_use { false };
     bool m_has_nx_support { false };
+    bool m_has_smep_support { false };
 };
 
 struct ProcessPagingScope {
