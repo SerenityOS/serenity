@@ -92,6 +92,12 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 void syscall_handler(RegisterDump regs)
 {
+    // Apply a random offset in the range 0-255 to the stack pointer,
+    // to make kernel stacks a bit less deterministic.
+    auto* ptr = (char*)__builtin_alloca(read_tsc() & 0xff);
+    asm volatile(""
+                 : "=m"(*ptr));
+
     auto& process = current->process();
 
     if (!MM.validate_user_stack(process, VirtualAddress(regs.esp_if_crossRing))) {

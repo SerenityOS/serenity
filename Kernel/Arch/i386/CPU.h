@@ -447,6 +447,14 @@ inline void read_tsc(u32& lsw, u32& msw)
                  : "=d"(msw), "=a"(lsw));
 }
 
+inline u64 read_tsc()
+{
+    u32 lsw;
+    u32 msw;
+    read_tsc(lsw, msw);
+    return ((u64)msw << 32) | lsw;
+}
+
 struct Stopwatch {
     union SplitQword {
         struct {
