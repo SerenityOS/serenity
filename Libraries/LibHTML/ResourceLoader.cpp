@@ -1,4 +1,4 @@
-#include <LibC/SharedBuffer.h>
+#include <AK/SharedBuffer.h>
 #include <LibCore/CFile.h>
 #include <LibHTML/ResourceLoader.h>
 #include <LibProtocol/Client.h>

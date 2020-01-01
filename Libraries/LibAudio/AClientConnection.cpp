@@ -1,6 +1,6 @@
+#include <AK/SharedBuffer.h>
 #include <LibAudio/ABuffer.h>
 #include <LibAudio/AClientConnection.h>
-#include <SharedBuffer.h>
 
 AClientConnection::AClientConnection()
     : IServerConnection(*this, "/tmp/portal/audio")

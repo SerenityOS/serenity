@@ -1,8 +1,8 @@
 #pragma once
 
+#include <AK/SharedBuffer.h>
 #include <AK/Types.h>
 #include <LibDraw/Color.h>
-#include <SharedBuffer.h>
 
 enum class ColorRole {
     NoRole,

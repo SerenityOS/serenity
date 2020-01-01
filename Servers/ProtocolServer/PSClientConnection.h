@@ -4,8 +4,11 @@
 #include <LibIPC/IClientConnection.h>
 #include <ProtocolServer/ProtocolServerEndpoint.h>
 
-class Download;
+namespace AK {
 class SharedBuffer;
+}
+
+class Download;
 
 class PSClientConnection final : public IClientConnection<ProtocolServerEndpoint>
     , public ProtocolServerEndpoint {
@@ -26,5 +29,5 @@ private:
     virtual OwnPtr<ProtocolServer::StopDownloadResponse> handle(const ProtocolServer::StopDownload&) override;
     virtual OwnPtr<ProtocolServer::DisownSharedBufferResponse> handle(const ProtocolServer::DisownSharedBuffer&) override;
 
-    HashMap<i32, RefPtr<SharedBuffer>> m_shared_buffers;
+    HashMap<i32, RefPtr<AK::SharedBuffer>> m_shared_buffers;
 };

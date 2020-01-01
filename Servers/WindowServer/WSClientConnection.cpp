@@ -1,7 +1,6 @@
-#include <LibC/SharedBuffer.h>
+#include <AK/SharedBuffer.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/SystemTheme.h>
-#include <SharedBuffer.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WSClipboard.h>
 #include <WindowServer/WSCompositor.h>

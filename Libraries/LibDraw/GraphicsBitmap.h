@@ -6,9 +6,9 @@
 #include <AK/MappedFile.h>
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
+#include <AK/SharedBuffer.h>
 #include <AK/String.h>
 #include <AK/StringView.h>
-#include <SharedBuffer.h>
 
 class GraphicsBitmap : public RefCounted<GraphicsBitmap> {
 public:
@@ -105,7 +105,8 @@ public:
     [[nodiscard]] bool set_nonvolatile();
 
 private:
-    enum class Purgeable { No, Yes };
+    enum class Purgeable { No,
+        Yes };
     GraphicsBitmap(Format, const Size&, Purgeable);
     GraphicsBitmap(Format, const Size&, size_t pitch, RGBA32*);
     GraphicsBitmap(Format, const Size&, MappedFile&&);

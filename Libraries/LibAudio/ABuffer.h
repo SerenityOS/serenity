@@ -3,7 +3,7 @@
 #include <AK/ByteBuffer.h>
 #include <AK/Types.h>
 #include <AK/Vector.h>
-#include <LibC/SharedBuffer.h>
+#include <AK/SharedBuffer.h>
 
 // A single sample in an audio buffer.
 // Values are floating point, and should range from -1.0 to +1.0

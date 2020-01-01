@@ -3,7 +3,7 @@
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
-#include <LibC/SharedBuffer.h>
+#include <AK/SharedBuffer.h>
 #include <LibCore/CProcessStatisticsReader.h>
 #include <fcntl.h>
 #include <stdio.h>

@@ -1,5 +1,5 @@
 #include <AK/URL.h>
-#include <LibC/SharedBuffer.h>
+#include <AK/SharedBuffer.h>
 #include <LibCore/CEventLoop.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>

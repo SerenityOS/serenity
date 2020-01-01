@@ -1,7 +1,7 @@
 #include <AK/HashMap.h>
 #include <AK/JsonObject.h>
 #include <AK/NeverDestroyed.h>
-#include <LibC/SharedBuffer.h>
+#include <AK/SharedBuffer.h>
 #include <LibC/stdio.h>
 #include <LibC/stdlib.h>
 #include <LibC/unistd.h>
