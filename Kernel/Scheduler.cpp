@@ -476,10 +476,10 @@ bool Scheduler::context_switch(Thread& thread)
         thread.set_selector(gdt_alloc_entry());
         auto& descriptor = get_gdt_entry(thread.selector());
         descriptor.set_base(&thread.tss());
-        descriptor.set_limit(0xffff);
+        descriptor.set_limit(sizeof(TSS32));
         descriptor.dpl = 0;
         descriptor.segment_present = 1;
-        descriptor.granularity = 1;
+        descriptor.granularity = 0;
         descriptor.zero = 0;
         descriptor.operation_size = 1;
         descriptor.descriptor_type = 0;
@@ -501,10 +501,10 @@ static void initialize_redirection()
 {
     auto& descriptor = get_gdt_entry(s_redirection.selector);
     descriptor.set_base(&s_redirection.tss);
-    descriptor.set_limit(0xffff);
+    descriptor.set_limit(sizeof(TSS32));
     descriptor.dpl = 0;
     descriptor.segment_present = 1;
-    descriptor.granularity = 1;
+    descriptor.granularity = 0;
     descriptor.zero = 0;
     descriptor.operation_size = 1;
     descriptor.descriptor_type = 0;

@@ -705,6 +705,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     new_main_thread->make_thread_specific_region({});
 
     memset(&tss, 0, sizeof(TSS32));
+    tss.iomapbase = sizeof(TSS32);
+
     tss.eflags = 0x0202;
     tss.eip = entry_eip;
     tss.cs = 0x1b;
