@@ -549,6 +549,7 @@ bool g_cpu_supports_pae;
 bool g_cpu_supports_pge;
 bool g_cpu_supports_smep;
 bool g_cpu_supports_sse;
+bool g_cpu_supports_umip;
 
 void detect_cpu_features()
 {
@@ -562,4 +563,5 @@ void detect_cpu_features()
 
     CPUID extended_features(0x7);
     g_cpu_supports_smep = (extended_features.ebx() & (1 << 7));
+    g_cpu_supports_umip = (extended_features.ecx() & (1 << 2));
 }
