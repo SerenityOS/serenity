@@ -13,10 +13,6 @@ all: $(APPS)
 list:
 	@echo $(APPS)
 
-%.o: %.cpp
-	@echo "C++ $@"
-	$(QUIET) $(CXX) $(CXXFLAGS) -o $@ -c $<
-
 $(APPS): %: %.o $(STATIC_LIB_DEPS)
 	@echo "LINK $@"
 	$(QUIET) $(CXX) -o $@ $< $(LDFLAGS)
