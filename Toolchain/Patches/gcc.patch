@@ -7,7 +7,7 @@ index 75bb6a313..da281fb48 100755
  #   Copyright 1992-2019 Free Software Foundation, Inc.
  
 -timestamp='2019-01-01'
-+timestamp='2019-12-17'
++timestamp='2020-01-01'
  
  # This file is free software; you can redistribute it and/or modify it
  # under the terms of the GNU General Public License as published by
@@ -153,11 +153,11 @@ index 000000000..925c88dd6
 +/* Files that are linked before user code.
 +   The %s tells GCC to look for these files in the library directory. */
 +#undef STARTFILE_SPEC
-+#define STARTFILE_SPEC "crt0.o%s crti.o%s crtbegin.o%s"
++#define STARTFILE_SPEC "%{!shared:crt0.o%s} crti.o%s %{shared:crtbeginS.o%s; :crtbegin.o%s}"
 + 
 +/* Files that are linked after user code. */
 +#undef ENDFILE_SPEC
-+#define ENDFILE_SPEC "crtend.o%s crtn.o%s"
++#define ENDFILE_SPEC "%{shared:crtendS.o%s; :crtend.o%s} crtn.o%s"
 +
 +#undef LINK_SPEC
 +#define LINK_SPEC "%{shared:-shared} %{static:-static} %{!shared: %{!static: %{rdynamic:-export-dynamic}}}"
@@ -181,11 +181,11 @@ index 91abc84da..659376d14 100644
  	extra_parts="crt0.o"
  	;;
 +i[34567]86-*-serenity*)
-+	extra_parts="$extra_parts crti.o crtbegin.o crtend.o crtn.o"
++	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
 +	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
 +	;;
 +x86_64-*-serenity*)
-+	extra_parts="$extra_parts crti.o crtbegin.o crtend.o crtn.o"
++	extra_parts="$extra_parts crti.o crtbegin.o crtbeginS.o crtend.o crtendS.o crtn.o"
 +	tmake_file="$tmake_file i386/t-crtstuff t-crtstuff-pic t-libgcc-pic"
 +	;;
 +arm-*-serenity*)
