@@ -3,14 +3,10 @@
 #include <assert.h>
 #include <stdio.h>
 
-// FIXME: See Makefile. We need -ffreestanding and -nostartfiles to
-//     Get GCC to stop linking crt0.o w/our .so.
-//     So, we need __dso_handle. ... Yikes
-extern void* __dso_handle __attribute__((__section__(".sdata")));
-extern void* __dso_handle __attribute__((__visibility__("hidden")));
-void* __dso_handle = (void*)1234; // FIXME: Is the dynamic linker supposed to set this value?
 
 // FIXME: Things defined in crt0 >:(
+//     We need to figure out a better way to get these symbols defined and available
+//     Even if we're linking a shared object.
 __thread int errno;
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
 char** environ = __static_environ;
