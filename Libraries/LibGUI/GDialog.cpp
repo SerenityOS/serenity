@@ -1,5 +1,6 @@
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GDialog.h>
+#include <LibGUI/GEvent.h>
 
 GDialog::GDialog(CObject* parent)
     : GWindow(parent)
@@ -38,6 +39,19 @@ void GDialog::done(int result)
     m_result = result;
     dbgprintf("%s: quit event loop with result %d\n", class_name(), result);
     m_event_loop->quit(result);
+}
+
+void GDialog::event(CEvent& event)
+{
+    if (event.type() == GEvent::KeyUp) {
+        auto& key_event = static_cast<GKeyEvent&>(event);
+        if (key_event.key() == KeyCode::Key_Escape) {
+            done(ExecCancel);
+            return;
+        }
+    }
+
+    GWindow::event(event);
 }
 
 void GDialog::close()
