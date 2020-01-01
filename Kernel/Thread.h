@@ -329,8 +329,6 @@ public:
     bool has_signal_handler(u8 signal) const;
 
     FPUState& fpu_state() { return *m_fpu_state; }
-    bool has_used_fpu() const { return m_has_used_fpu; }
-    void set_has_used_fpu(bool b) { m_has_used_fpu = b; }
 
     void set_default_signal_dispositions();
     void push_value_on_stack(u32);
@@ -457,7 +455,6 @@ private:
     u32 m_priority { THREAD_PRIORITY_NORMAL };
     u32 m_extra_priority { 0 };
     u32 m_priority_boost { 0 };
-    bool m_has_used_fpu { false };
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
 

@@ -12,7 +12,6 @@ struct RegisterDump;
 struct SchedulerData;
 
 extern Thread* current;
-extern Thread* g_last_fpu_thread;
 extern Thread* g_finalizer;
 extern Thread* g_colonel;
 extern WaitQueue* g_finalizer_wait_queue;

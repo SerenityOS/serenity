@@ -39,7 +39,6 @@ static u32 time_slice_for(const Thread& thread)
 }
 
 Thread* current;
-Thread* g_last_fpu_thread;
 Thread* g_finalizer;
 Thread* g_colonel;
 WaitQueue* g_finalizer_wait_queue;
@@ -376,7 +375,6 @@ bool Scheduler::pick_next()
         }
     }
 
-
     if (!thread_to_schedule)
         thread_to_schedule = g_colonel;
 
@@ -457,6 +455,9 @@ bool Scheduler::context_switch(Thread& thread)
         if (current->state() == Thread::Running)
             current->set_state(Thread::Runnable);
 
+        asm volatile("fxsave %0"
+                     : "=m"(current->fpu_state()));
+
 #ifdef LOG_EVERY_CONTEXT_SWITCH
         dbgprintf("Scheduler: %s(%u:%u) -> %s(%u:%u) [%u] %w:%x\n",
             current->process().name().characters(), current->process().pid(), current->tid(),
@@ -468,6 +469,8 @@ bool Scheduler::context_switch(Thread& thread)
 
     current = &thread;
     thread.set_state(Thread::Running);
+
+    asm volatile("fxrstor %0" ::"m"(current->fpu_state()));
 
     if (!thread.selector()) {
         thread.set_selector(gdt_alloc_entry());

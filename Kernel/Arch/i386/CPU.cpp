@@ -205,34 +205,11 @@ void general_protection_fault_handler(RegisterDump regs)
 
 // 7: FPU not available exception
 EH_ENTRY_NO_CODE(7, fpu_exception);
-void fpu_exception_handler(RegisterDump regs)
+void fpu_exception_handler(RegisterDump)
 {
-    (void)regs;
-
+    // Just clear the TS flag. We've already restored the FPU state eagerly.
+    // FIXME: It would be nice if we didn't have to do this at all.
     asm volatile("clts");
-    if (g_last_fpu_thread == current)
-        return;
-    if (g_last_fpu_thread) {
-        asm volatile("fxsave %0"
-                     : "=m"(g_last_fpu_thread->fpu_state()));
-    } else {
-        asm volatile("fnclex");
-    }
-    g_last_fpu_thread = current;
-
-    if (current->has_used_fpu()) {
-        asm volatile("fxrstor %0" ::"m"(current->fpu_state()));
-    } else {
-        asm volatile("fninit");
-        asm volatile("fxsave %0"
-                     : "=m"(current->fpu_state()));
-        current->set_has_used_fpu(true);
-    }
-
-#ifdef FPU_EXCEPTION_DEBUG
-    kprintf("%s FPU not available exception: %u(%s)\n", current->process().is_ring0() ? "Kernel" : "Process", current->pid(), current->process().name().characters());
-    dump(regs);
-#endif
 }
 
 // 14: Page Fault

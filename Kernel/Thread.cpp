@@ -10,6 +10,8 @@
 
 //#define SIGNAL_DEBUG
 
+static FPUState s_clean_fpu_state;
+
 u16 thread_specific_selector()
 {
     static u16 selector;
@@ -55,7 +57,7 @@ Thread::Thread(Process& process)
     dbgprintf("Thread{%p}: New thread TID=%u in %s(%u)\n", this, m_tid, process.name().characters(), process.pid());
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
-    memset(m_fpu_state, 0, sizeof(FPUState));
+    memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
     memset(&m_tss, 0, sizeof(m_tss));
 
     // Only IF is set when a process boots.
@@ -118,9 +120,6 @@ Thread::~Thread()
         InterruptDisabler disabler;
         thread_table().remove(this);
     }
-
-    if (g_last_fpu_thread == this)
-        g_last_fpu_thread = nullptr;
 
     if (selector())
         gdt_free_entry(selector());
@@ -625,8 +624,7 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     }
     env[environment.size()] = nullptr;
 
-    auto push_on_new_stack = [&new_esp](u32 value)
-    {
+    auto push_on_new_stack = [&new_esp](u32 value) {
         new_esp -= 4;
         u32* stack_ptr = (u32*)new_esp;
         *stack_ptr = value;
@@ -646,7 +644,6 @@ Thread* Thread::clone(Process& process)
     memcpy(clone->m_signal_action_data, m_signal_action_data, sizeof(m_signal_action_data));
     clone->m_signal_mask = m_signal_mask;
     memcpy(clone->m_fpu_state, m_fpu_state, sizeof(FPUState));
-    clone->m_has_used_fpu = m_has_used_fpu;
     clone->m_thread_specific_data = m_thread_specific_data;
     return clone;
 }
@@ -654,6 +651,9 @@ Thread* Thread::clone(Process& process)
 void Thread::initialize()
 {
     Scheduler::initialize();
+    asm volatile("fninit");
+    asm volatile("fxsave %0"
+                 : "=m"(s_clean_fpu_state));
 }
 
 Vector<Thread*> Thread::all_threads()
