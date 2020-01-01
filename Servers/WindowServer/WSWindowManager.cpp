@@ -1065,7 +1065,8 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
 
-        if (key_event.type() == WSEvent::KeyDown && key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab)
+        if (key_event.type() == WSEvent::KeyDown && ((key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab) ||
+            (key_event.modifiers() == (Mod_Logo | Mod_Shift) && key_event.key() == Key_Tab)))
             m_switcher.show();
         if (m_switcher.is_visible()) {
             m_switcher.on_key_event(key_event);
