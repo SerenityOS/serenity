@@ -513,4 +513,5 @@ extern bool g_cpu_supports_pae;
 extern bool g_cpu_supports_pge;
 extern bool g_cpu_supports_smep;
 extern bool g_cpu_supports_sse;
+extern bool g_cpu_supports_tsc;
 extern bool g_cpu_supports_umip;
