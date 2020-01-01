@@ -12,10 +12,12 @@
 #ifdef DYNAMIC_LOAD_VERBOSE
 #    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
 #else
-#    define VERBOSE(fmt, ...) do { } while (0)
+#    define VERBOSE(fmt, ...) \
+        do {                  \
+        } while (0)
 #endif
 
-static bool s_always_bind_now = true;
+static bool s_always_bind_now = false;
 
 static const char* name_for_dtag(Elf32_Sword tag);
 
@@ -77,6 +79,43 @@ ELFDynamicObject::~ELFDynamicObject()
 {
     if (MAP_FAILED != m_file_mapping)
         munmap(m_file_mapping, m_file_size);
+}
+
+void* ELFDynamicObject::symbol_for_name(const char* name)
+{
+    // FIXME: If we enable gnu hash in the compiler, we should use that here instead
+    //     The algo is way better with less collisions
+    uint32_t hash_value = calculate_elf_hash(name);
+
+    u8* load_addr = m_text_region->load_address().as_ptr();
+
+    // NOTE: We need to use the loaded hash/string/symbol tables here to get the right
+    //    addresses. The ones that are in the ELFImage won't cut it, they aren't relocated
+    u32* hash_table_begin = (u32*)(load_addr + m_hash_table_offset);
+    Elf32_Sym* symtab = (Elf32_Sym*)(load_addr + m_symbol_table_offset);
+    const char* strtab = (const char*)load_addr + m_string_table_offset;
+
+    size_t num_buckets = hash_table_begin[0];
+
+    // This is here for completeness, but, since we're using the fact that every chain
+    // will end at chain 0 (which means 'not found'), we don't need to check num_chains.
+    // Interestingly, num_chains is required to be num_symbols
+    //size_t num_chains = hash_table_begin[1];
+
+    u32* buckets = &hash_table_begin[2];
+    u32* chains = &buckets[num_buckets];
+
+    for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
+        if (strcmp(name, strtab + symtab[i].st_name) == 0) {
+            void* symbol_address = load_addr + symtab[i].st_value;
+#ifdef DYNAMIC_LOAD_DEBUG
+            dbgprintf("Returning dynamic symbol with index %d for %s: %p\n", i, strtab + symtab[i].st_name, symbol_address);
+#endif
+            return symbol_address;
+        }
+    }
+
+    return nullptr;
 }
 
 void ELFDynamicObject::dump()
@@ -194,8 +233,37 @@ bool ELFDynamicObject::load(unsigned flags)
 #endif
 
     parse_dynamic_section();
+    load_program_headers();
 
-    // FIXME: be more flexible?
+    if (m_has_text_relocations) {
+        if (0 > mprotect(m_text_region->load_address().as_ptr(), m_text_region->required_load_size(), PROT_READ | PROT_WRITE)) {
+            perror("mprotect"); // FIXME: dlerror?
+            return false;
+        }
+    }
+
+    do_relocations();
+    setup_plt_trampoline();
+
+    // Clean up our setting of .text to PROT_READ | PROT_WRITE
+    if (m_has_text_relocations) {
+        if (0 > mprotect(m_text_region->load_address().as_ptr(), m_text_region->required_load_size(), PROT_READ | PROT_EXEC)) {
+            perror("mprotect"); // FIXME: dlerror?
+            return false;
+        }
+    }
+
+    call_object_init_functions();
+
+#ifdef DYNAMIC_LOAD_DEBUG
+    dbgprintf("Loaded %s\n", m_filename.characters());
+#endif
+    // FIXME: return false sometimes? missing symbol etc
+    return true;
+}
+
+void ELFDynamicObject::load_program_headers()
+{
     size_t total_required_allocation_size = 0;
 
     // FIXME: Can we re-use ELFLoader? This and what follows looks a lot like what's in there...
@@ -245,149 +313,6 @@ bool ELFDynamicObject::load(unsigned flags)
     // sanity check
     u8* end_of_in_memory_image = (u8*)data_segment_begin + data_segment_size;
     ASSERT((ptrdiff_t)total_required_allocation_size == (ptrdiff_t)(end_of_in_memory_image - (u8*)text_segment_begin));
-
-    if (m_has_text_relocations) {
-        if (0 > mprotect(m_text_region->load_address().as_ptr(), m_text_region->required_load_size(), PROT_READ | PROT_WRITE)) {
-            perror("mprotect"); // FIXME: dlerror?
-            return false;
-        }
-    }
-
-    do_relocations();
-
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Done relocating!\n");
-#endif
-
-    // FIXME: PLT patching doesn't seem to work as expected.
-    //     Need to dig into the spec to see what we're doing wrong
-    //     Hopefully it won't need an assembly entry point... :/
-    ///    For now we can just BIND_NOW every time
-
-    // This should be the address of section ".got.plt"
-    const ELFImage::Section& got_section = m_image->lookup_section(".got.plt");
-    VirtualAddress got_address = m_text_region->load_address().offset(got_section.address());
-
-    u32* got_u32_ptr = reinterpret_cast<u32*>(got_address.as_ptr());
-    got_u32_ptr[1] = (u32)this;
-    got_u32_ptr[2] = (u32)&ELFDynamicObject::patch_plt_entry;
-
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Set GOT PLT entries at %p: [0] = %p [1] = %p, [2] = %p\n", got_u32_ptr, got_u32_ptr[0], got_u32_ptr[1], got_u32_ptr[2]);
-#endif
-
-    // Clean up our setting of .text to PROT_READ | PROT_WRITE
-    if (m_has_text_relocations) {
-        if (0 > mprotect(m_text_region->load_address().as_ptr(), m_text_region->required_load_size(), PROT_READ | PROT_EXEC)) {
-            perror("mprotect"); // FIXME: dlerror?
-            return false;
-        }
-    }
-
-    u8* load_addr = m_text_region->load_address().as_ptr();
-    InitFunc init_function = (InitFunc)(load_addr + m_init_offset);
-
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Calling DT_INIT at %p\n", init_function);
-#endif
-
-    (init_function)();
-
-    InitFunc* init_begin = (InitFunc*)(load_addr + m_init_array_offset);
-    u32 init_end = (u32)((u8*)init_begin + m_init_array_size);
-    while ((u32)init_begin < init_end) {
-        // Andriod sources claim that these can be -1, to be ignored.
-        // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
-        if (!*init_begin || ((i32)*init_begin == -1))
-            continue;
-#ifdef DYNAMIC_LOAD_DEBUG
-        dbgprintf("Calling DT_INITARRAY entry at %p\n", *init_begin);
-#endif
-        (*init_begin)();
-        ++init_begin;
-    }
-
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Loaded %s\n", m_filename.characters());
-#endif
-    // FIXME: return false sometimes? missing symbol etc
-    return true;
-}
-
-void* ELFDynamicObject::symbol_for_name(const char* name)
-{
-    // FIXME: If we enable gnu hash in the compiler, we should use that here instead
-    //     The algo is way better with less collisions
-    uint32_t hash_value = calculate_elf_hash(name);
-
-    u8* load_addr = m_text_region->load_address().as_ptr();
-
-    // NOTE: We need to use the loaded hash/string/symbol tables here to get the right
-    //    addresses. The ones that are in the ELFImage won't cut it, they aren't relocated
-    u32* hash_table_begin = (u32*)(load_addr + m_hash_table_offset);
-    Elf32_Sym* symtab = (Elf32_Sym*)(load_addr + m_symbol_table_offset);
-    const char* strtab = (const char*)load_addr + m_string_table_offset;
-
-    size_t num_buckets = hash_table_begin[0];
-
-    // This is here for completeness, but, since we're using the fact that every chain
-    // will end at chain 0 (which means 'not found'), we don't need to check num_chains.
-    // Interestingly, num_chains is required to be num_symbols
-    //size_t num_chains = hash_table_begin[1];
-
-    u32* buckets = &hash_table_begin[2];
-    u32* chains = &buckets[num_buckets];
-
-    for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
-        if (strcmp(name, strtab + symtab[i].st_name) == 0) {
-            void* retval = load_addr + symtab[i].st_value;
-#ifdef DYNAMIC_LOAD_DEBUG
-            dbgprintf("Returning dynamic symbol with index %d for %s: %p\n", i, strtab + symtab[i].st_name, retval);
-#endif
-            return retval;
-        }
-    }
-
-    return nullptr;
-}
-
-// offset is from PLT entry
-// Tag is inserted into GOT #2 for 'this' DSO (literally the this pointer)
-void ELFDynamicObject::patch_plt_entry(u32 got_offset, void* dso_got_tag)
-{
-    // FIXME: This is never called :(
-    CRASH();
-    dbgprintf("------ PATCHING PLT ENTRY -------");
-    // NOTE: We put 'this' into the GOT when we loaded it into memory
-    auto* dynamic_object_object = reinterpret_cast<ELFDynamicObject*>(dso_got_tag);
-
-    // FIXME: might actually be a RelA, check m_plt_relocation_type
-    // u32 base_addr_offset = dynamic_object_object->m_relocation_table_offset + got_offset;
-    // Elf32_Rel relocation = *reinterpret_cast<Elf32_Rel*>(&((u8*)dynamic_object_object->m_file_mapping)[base_addr_offset]);
-    u32 relocation_index = got_offset / dynamic_object_object->m_size_of_relocation_entry;
-    auto relocation = dynamic_object_object->m_image->dynamic_relocation_section().relocation(relocation_index);
-
-    ASSERT(relocation.type() == R_386_JMP_SLOT);
-
-    auto sym = relocation.symbol();
-
-    auto* text_load_address = dynamic_object_object->m_text_region->load_address().as_ptr();
-    u8* relocation_address = text_load_address + relocation.offset();
-
-    if (0 > mprotect(text_load_address, dynamic_object_object->m_text_region->required_load_size(), PROT_READ | PROT_WRITE)) {
-        ASSERT_NOT_REACHED(); // uh oh, no can do boss
-    }
-
-    dbgprintf("Found relocation address: %p for %s", relocation_address, sym.name());
-
-    *(u32*)relocation_address = (u32)(text_load_address + sym.value());
-
-    if (0 > mprotect(text_load_address, dynamic_object_object->m_text_region->required_load_size(), PROT_READ | PROT_EXEC)) {
-        ASSERT_NOT_REACHED(); // uh oh, no can do boss
-    }
-
-    CRASH();
-    // FIXME: Call the relocated method here?
 }
 
 void ELFDynamicObject::do_relocations()
@@ -476,27 +401,100 @@ void ELFDynamicObject::do_relocations()
         return IterationDecision::Continue;
     });
 
-    // FIXME: Or BIND_NOW flag passed in?
-    if (m_must_bind_now || s_always_bind_now) {
-        // FIXME: Why do we keep jumping to the entry in the GOT without going to our callback first?
-        //     that would make this s_always_bind_now redundant
-
-        for (size_t idx = 0; idx < m_size_of_plt_relocation_entry_list; idx += m_size_of_relocation_entry) {
+    // Handle PLT Global offset table relocations.
+    for (size_t idx = 0; idx < m_size_of_plt_relocation_entry_list; idx += m_size_of_relocation_entry) {
+        // FIXME: Or BIND_NOW flag passed in?
+        if (m_must_bind_now || s_always_bind_now) {
+            // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
+            // The patch method returns the address for the LAZY fixup path, but we don't need it here
+            (void)patch_plt_entry(idx);
+        } else {
+            // LAZY-ily bind the PLT slots by just adding the base address to the offsets stored there
+            // This avoids doing symbol lookup, which might be expensive
             VirtualAddress relocation_vaddr = m_text_region->load_address().offset(m_plt_relocation_offset_location).offset(idx);
             Elf32_Rel* jump_slot_relocation = (Elf32_Rel*)relocation_vaddr.as_ptr();
 
             ASSERT(ELF32_R_TYPE(jump_slot_relocation->r_info) == R_386_JMP_SLOT);
 
-            auto sym = m_image->dynamic_symbol(ELF32_R_SYM(jump_slot_relocation->r_info));
-
             auto* image_base_address = m_text_region->base_address().as_ptr();
             u8* relocation_address = image_base_address + jump_slot_relocation->r_offset;
-            u32 symbol_location = (u32)(image_base_address + sym.value());
 
-            VERBOSE("ELFDynamicObject: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
-
-            *(u32*)relocation_address = symbol_location;
+            *(u32*)relocation_address += (u32)image_base_address;
         }
+    }
+
+#ifdef DYNAMIC_LOAD_DEBUG
+    dbgprintf("Done relocating!\n");
+#endif
+}
+
+// Defined in <arch>/plt_trampoline.S
+extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
+
+void ELFDynamicObject::setup_plt_trampoline()
+{
+    const ELFImage::Section& got_section = m_image->lookup_section(".got.plt");
+    VirtualAddress got_address = m_text_region->load_address().offset(got_section.address());
+
+    u32* got_u32_ptr = reinterpret_cast<u32*>(got_address.as_ptr());
+    got_u32_ptr[1] = (u32)this;
+    got_u32_ptr[2] = (u32)&_plt_trampoline;
+
+#ifdef DYNAMIC_LOAD_DEBUG
+    dbgprintf("Set GOT PLT entries at %p offset(%p): [0] = %p [1] = %p, [2] = %p\n", got_u32_ptr, got_section.offset(), got_u32_ptr[0], got_u32_ptr[1], got_u32_ptr[2]);
+#endif
+}
+
+// Called from our ASM routine _plt_trampoline
+extern "C" Elf32_Addr _fixup_plt_entry(ELFDynamicObject* object, u32 relocation_idx)
+{
+    return object->patch_plt_entry(relocation_idx);
+}
+
+// offset is in PLT relocation table
+Elf32_Addr ELFDynamicObject::patch_plt_entry(u32 relocation_idx)
+{
+    VirtualAddress plt_relocation_table_address = m_text_region->load_address().offset(m_plt_relocation_offset_location);
+    VirtualAddress relocation_entry_address = plt_relocation_table_address.offset(relocation_idx);
+    Elf32_Rel* jump_slot_relocation = (Elf32_Rel*)relocation_entry_address.as_ptr();
+
+    ASSERT(ELF32_R_TYPE(jump_slot_relocation->r_info) == R_386_JMP_SLOT);
+
+    auto sym = m_image->dynamic_symbol(ELF32_R_SYM(jump_slot_relocation->r_info));
+
+    auto* image_base_address = m_text_region->base_address().as_ptr();
+    u8* relocation_address = image_base_address + jump_slot_relocation->r_offset;
+    u32 symbol_location = (u32)(image_base_address + sym.value());
+
+    VERBOSE("ELFDynamicObject: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
+
+    *(u32*)relocation_address = symbol_location;
+
+    return symbol_location;
+}
+
+void ELFDynamicObject::call_object_init_functions()
+{
+    u8* load_addr = m_text_region->load_address().as_ptr();
+    InitFunc init_function = (InitFunc)(load_addr + m_init_offset);
+
+#ifdef DYNAMIC_LOAD_DEBUG
+    dbgprintf("Calling DT_INIT at %p\n", init_function);
+#endif
+    (init_function)();
+
+    InitFunc* init_begin = (InitFunc*)(load_addr + m_init_array_offset);
+    u32 init_end = (u32)((u8*)init_begin + m_init_array_size);
+    while ((u32)init_begin < init_end) {
+        // Andriod sources claim that these can be -1, to be ignored.
+        // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
+        if (!*init_begin || ((i32)*init_begin == -1))
+            continue;
+#ifdef DYNAMIC_LOAD_DEBUG
+        dbgprintf("Calling DT_INITARRAY entry at %p\n", *init_begin);
+#endif
+        (*init_begin)();
+        ++init_begin;
     }
 }
 
