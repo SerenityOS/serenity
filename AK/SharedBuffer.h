@@ -3,6 +3,8 @@
 #include <AK/RefCounted.h>
 #include <AK/RefPtr.h>
 
+namespace AK {
+
 class SharedBuffer : public RefCounted<SharedBuffer> {
 public:
     static RefPtr<SharedBuffer> create_with_size(int);
@@ -26,3 +28,7 @@ private:
     int m_size { 0 };
     void* m_data;
 };
+
+}
+
+using AK::SharedBuffer;

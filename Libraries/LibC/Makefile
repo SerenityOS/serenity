@@ -9,10 +9,10 @@ AK_OBJS = \
     ../../AK/JsonParser.o \
     ../../AK/LogStream.o \
     ../../AK/MappedFile.o \
+    ../../AK/SharedBuffer.o \
     ../../AK/Utf8View.o
 
 LIBC_OBJS = \
-       SharedBuffer.o \
        stdio.o \
        unistd.o \
        string.o \

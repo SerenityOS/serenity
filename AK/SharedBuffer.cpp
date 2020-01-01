@@ -1,8 +1,10 @@
+#include <AK/SharedBuffer.h>
 #include <AK/kmalloc.h>
 #include <Kernel/Syscall.h>
-#include <SharedBuffer.h>
 #include <stdio.h>
 #include <unistd.h>
+
+namespace AK {
 
 RefPtr<SharedBuffer> SharedBuffer::create_with_size(int size)
 {
@@ -34,7 +36,6 @@ bool SharedBuffer::share_globally()
     }
     return true;
 }
-
 
 RefPtr<SharedBuffer> SharedBuffer::create_from_shared_buffer_id(int shared_buffer_id)
 {
@@ -91,4 +92,6 @@ bool SharedBuffer::set_nonvolatile()
     if (rc == 1)
         return false;
     ASSERT_NOT_REACHED();
+}
+
 }

@@ -1,6 +1,6 @@
+#include <AK/SharedBuffer.h>
 #include <LibProtocol/Client.h>
 #include <LibProtocol/Download.h>
-#include <SharedBuffer.h>
 
 namespace LibProtocol {
 

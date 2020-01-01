@@ -6,6 +6,10 @@
 #include <LibDraw/Palette.h>
 #include <LibGUI/GShortcut.h>
 
+namespace AK {
+class SharedBuffer;
+}
+
 class CEventLoop;
 class GAction;
 class GKeyEvent;
@@ -14,7 +18,6 @@ class GWindow;
 class GWindowServerConnection;
 class Palette;
 class Point;
-class SharedBuffer;
 
 class GApplication {
 public:

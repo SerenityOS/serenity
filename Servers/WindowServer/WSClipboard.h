@@ -1,8 +1,8 @@
 #pragma once
 
 #include <AK/Function.h>
+#include <AK/SharedBuffer.h>
 #include <AK/String.h>
-#include <SharedBuffer.h>
 
 class WSClipboard {
 public:
