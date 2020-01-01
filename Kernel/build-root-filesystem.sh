@@ -166,7 +166,7 @@ mkdir -p mnt/boot/
 cp kernel mnt/boot/
 
 mkdir -p mnt/mod/
-cp TestModule.o mnt/mod
+cp TestModule.kernel.o mnt/mod/TestModule.o
 
 # Run local sync script, if it exists
 if [ -f sync-local.sh ]; then

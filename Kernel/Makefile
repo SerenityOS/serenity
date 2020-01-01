@@ -103,7 +103,7 @@ OBJS = \
 
 OBJ_SUFFIX = .kernel
 
-MODULE_OBJS = TestModule.o
+MODULE_OBJS = TestModule$(OBJ_SUFFIX).o
 
 EXTRA_OBJS = Arch/i386/Boot/boot.ao
 
