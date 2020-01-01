@@ -5,8 +5,8 @@
 #include "Scheduler.h"
 #include "kstdio.h"
 #include <AK/Types.h>
-#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/APIC.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/CMOS.h>
@@ -199,7 +199,7 @@ extern "C" {
 multiboot_info_t* multiboot_info_ptr;
 }
 
-typedef void (*ctor_func_t)(); 
+typedef void (*ctor_func_t)();
 
 // Defined in the linker script
 extern ctor_func_t start_ctors;
@@ -207,9 +207,9 @@ extern ctor_func_t end_ctors;
 
 // Define some Itanium C++ ABI methods to stop the linker from complaining
 // If we actually call these something has gone horribly wrong
-void* __dso_handle __attribute__((visibility ("hidden")));
+void* __dso_handle __attribute__((visibility("hidden")));
 
-extern "C" int __cxa_atexit ( void (*)(void *), void *, void *)
+extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 {
     ASSERT_NOT_REACHED();
     return 0;
@@ -236,7 +236,7 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     if (multiboot_info_ptr->cmdline && bad_prefix_check(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline), "serial_debug"))
         set_serial_debug(true);
 
-    sse_init();
+    detect_cpu_features();
 
     kmalloc_init();
     slab_alloc_init();
@@ -250,6 +250,13 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     dev_debuglog = new DebugLogDevice;
 
     auto console = make<Console>();
+
+    kprintf("Starting SerenityOS...\n");
+
+    if (g_cpu_supports_sse) {
+        sse_init();
+        kprintf("x86: SSE support enabled\n");
+    }
 
     RTC::initialize();
     PIC::initialize();
@@ -274,8 +281,6 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
     tty1 = new VirtualConsole(1);
     VirtualConsole::switch_to(0);
-
-    kprintf("Starting SerenityOS...\n");
 
     MemoryManager::initialize(physical_address_for_kernel_page_tables);
 

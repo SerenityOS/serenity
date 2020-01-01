@@ -223,7 +223,7 @@ void Region::remap_page(size_t index)
         pte.set_writable(false);
     else
         pte.set_writable(is_writable());
-    if (MM.has_nx_support())
+    if (g_cpu_supports_nx)
         pte.set_execute_disabled(!is_executable());
     pte.set_user_allowed(is_user_accessible());
     m_page_directory->flush(page_vaddr);
@@ -273,7 +273,7 @@ void Region::map(PageDirectory& page_directory)
                 pte.set_writable(false);
             else
                 pte.set_writable(is_writable());
-            if (MM.has_nx_support())
+            if (g_cpu_supports_nx)
                 pte.set_execute_disabled(!is_executable());
         } else {
             pte.set_physical_page_base(0);
