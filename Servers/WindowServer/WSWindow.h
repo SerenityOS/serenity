@@ -21,6 +21,12 @@ enum WSWMEventMask {
     WindowRemovals = 1 << 3,
 };
 
+enum class WindowTileType {
+    None = 0,
+    Left,
+    Right,
+};
+
 class WSWindow final : public CObject
     , public InlineLinkedListNode<WSWindow> {
     C_OBJECT(WSWindow)
@@ -43,6 +49,9 @@ public:
 
     bool is_fullscreen() const { return m_fullscreen; }
     void set_fullscreen(bool);
+
+    WindowTileType tiled() const { return m_tiled; }
+    void set_tiled(WindowTileType);
 
     bool is_occluded() const { return m_occluded; }
     void set_occluded(bool);
@@ -194,6 +203,8 @@ private:
     bool m_minimized { false };
     bool m_maximized { false };
     bool m_fullscreen { false };
+    WindowTileType m_tiled { WindowTileType::None };
+    Rect m_untiled_rect;
     bool m_occluded { false };
     bool m_show_titlebar { true };
     RefPtr<GraphicsBitmap> m_backing_store;

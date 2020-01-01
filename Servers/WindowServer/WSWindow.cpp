@@ -340,3 +340,33 @@ void WSWindow::set_fullscreen(bool fullscreen)
     CEventLoop::current().post_event(*this, make<WSResizeEvent>(m_rect, new_window_rect));
     set_rect(new_window_rect);
 }
+
+void WSWindow::set_tiled(WindowTileType tiled)
+{
+    if (m_tiled == tiled)
+        return;
+    m_tiled = tiled;
+    auto old_rect = m_rect;
+
+    auto frame_width = m_frame.rect().width() - m_rect.width();
+    switch (tiled) {
+        case WindowTileType::None :
+        set_rect(m_untiled_rect);
+        break;
+    case WindowTileType::Left :
+        m_untiled_rect = m_rect;
+        set_rect(0,
+                WSWindowManager::the().maximized_window_rect(*this).y(),
+                WSScreen::the().width() / 2,
+                WSWindowManager::the().maximized_window_rect(*this).height());
+        break;
+    case WindowTileType::Right :
+        m_untiled_rect = m_rect;
+        set_rect(WSScreen::the().width() / 2 + frame_width,
+                WSWindowManager::the().maximized_window_rect(*this).y(),
+                (WSScreen::the().width() / 2),
+                WSWindowManager::the().maximized_window_rect(*this).height());
+        break;
+    }
+    CEventLoop::current().post_event(*this, make<WSResizeEvent>(old_rect, m_rect));
+}
