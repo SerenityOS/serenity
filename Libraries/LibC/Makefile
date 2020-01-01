@@ -62,7 +62,11 @@ ELF_OBJS = \
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS) $(ELF_OBJS)
 
-EXTRA_OBJS = setjmp.ao crti.ao crtn.ao
+EXTRA_OBJS = \
+        setjmp.ao \
+        crti.ao \
+        crtn.ao  \
+        ../LibELF/Arch/i386/plt_trampoline.ao
 
 crt0.o: crt0.cpp
 
