@@ -1,7 +1,7 @@
 SUBDIRS += \
+	Libraries \
 	AK \
 	DevTools \
-	Libraries \
 	Servers
 
 SUBDIRS += \
@@ -25,6 +25,6 @@ ifeq ($(UNAME_S),Darwin)
 test: 
 else
 test:
-	$(QUIET) flock AK/Tests $(MAKE) -C AK/Tests clean all clean
+	$(QUIET) flock AK/Tests -c "$(MAKE) -C AK/Tests clean all && $(MAKE) -C AK/Tests clean"
 endif
 
