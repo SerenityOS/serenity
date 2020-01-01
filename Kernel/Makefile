@@ -69,6 +69,7 @@ OBJS = \
     Net/RTL8139NetworkAdapter.o \
     Net/Routing.o \
     Net/Socket.o \
+    Net/ICMPSocket.o \
     Net/TCPSocket.o \
     Net/UDPSocket.o \
     PCI.o \

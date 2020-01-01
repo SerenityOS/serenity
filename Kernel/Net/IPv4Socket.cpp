@@ -2,6 +2,7 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Net/ARP.h>
 #include <Kernel/Net/ICMP.h>
+#include <Kernel/Net/ICMPSocket.h>
 #include <Kernel/Net/IPv4.h>
 #include <Kernel/Net/IPv4Socket.h>
 #include <Kernel/Net/NetworkAdapter.h>
@@ -29,6 +30,8 @@ NonnullRefPtr<IPv4Socket> IPv4Socket::create(int type, int protocol)
 {
     if (type == SOCK_STREAM)
         return TCPSocket::create(protocol);
+    if (type == SOCK_DGRAM && protocol == IPPROTO_ICMP)
+        return ICMPSocket::create();
     if (type == SOCK_DGRAM)
         return UDPSocket::create(protocol);
     return adopt(*new IPv4Socket(type, protocol));
