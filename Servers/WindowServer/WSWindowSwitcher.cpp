@@ -56,13 +56,23 @@ void WSWindowSwitcher::on_key_event(const WSKeyEvent& event)
         }
         return;
     }
+
+    if (event.key() == Key_LeftShift || event.key() == Key_RightShift)
+        return;
     if (event.key() != Key_Tab) {
         WSWindowManager::the().set_highlight_window(nullptr);
         hide();
         return;
     }
     ASSERT(!m_windows.is_empty());
-    m_selected_index = (m_selected_index + 1) % m_windows.size();
+
+    if (!event.shift()) {
+        m_selected_index = (m_selected_index + 1) % m_windows.size();
+    } else {
+        m_selected_index = (m_selected_index - 1) % m_windows.size();
+        if (m_selected_index < 0)
+            m_selected_index = m_windows.size() - 1;
+    }
     ASSERT(m_selected_index < m_windows.size());
     auto* highlight_window = m_windows.at(m_selected_index).ptr();
     ASSERT(highlight_window);
