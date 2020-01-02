@@ -92,7 +92,7 @@ GVariant ProfileModel::data(const GModelIndex& index, Role role) const
     auto* node = static_cast<ProfileNode*>(index.internal_data());
     if (role == Role::Icon) {
         if (index.column() == Column::StackFrame) {
-            if (node->address() < (8 * MB))
+            if (node->address() < (8 * MB) || node->address() >= 0xc0000000)
                 return m_kernel_frame_icon;
             return m_user_frame_icon;
         }
