@@ -7,6 +7,8 @@ void GJsonArrayModel::update()
     auto file = CFile::construct(m_json_path);
     if (!file->open(CIODevice::ReadOnly)) {
         dbg() << "Unable to open " << file->filename();
+        m_array.clear();
+        did_update();
         return;
     }
 
