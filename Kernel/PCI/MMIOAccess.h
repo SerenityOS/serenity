@@ -4,8 +4,10 @@
 #include <AK/Types.h>
 #include <Kernel/ACPI/Definitions.h>
 #include <Kernel/PCI/Access.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/PhysicalRegion.h>
 #include <Kernel/VM/Region.h>
+#include <Kernel/VM/VMObject.h>
 
 class PCI::MMIOAccess final : public PCI::Access {
 public:
@@ -15,7 +17,7 @@ public:
     virtual String get_access_type() override final { return "MMIO-Access"; };
 
 protected:
-    MMIOAccess(ACPI_RAW::MCFG&);
+    explicit MMIOAccess(ACPI_RAW::MCFG&);
 
 private:
     virtual u8 read8_field(Address address, u32) override final;
@@ -35,7 +37,9 @@ private:
 
     ACPI_RAW::MCFG& m_mcfg;
     HashMap<u16, MMIOSegment*>& m_segments;
-    OwnPtr<Region> m_mmio_segment;
+    RefPtr<VMObject> m_mmio_window;
+    OwnPtr<Region> m_mmio_window_region;
+    PCI::ChangeableAddress m_mapped_address;
 };
 
 class PCI::MMIOSegment {
