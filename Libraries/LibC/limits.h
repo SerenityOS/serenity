@@ -2,7 +2,9 @@
 
 #include <bits/stdint.h>
 
+#ifndef PAGE_SIZE
 #define PAGE_SIZE 4096
+#endif
 
 #define PATH_MAX 4096
 #if !defined MAXPATHLEN && defined PATH_MAX

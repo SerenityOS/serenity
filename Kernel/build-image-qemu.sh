@@ -10,7 +10,7 @@ die() {
 if [ "$(id -u)" != 0 ]; then
     die "this script needs to run as root"
 fi
-if [ "$(uname)" = "Darwin" ]; then
+if [ "$(uname -s)" = "Darwin" ]; then
     export PATH="/usr/local/opt/e2fsprogs/bin:$PATH"
     export PATH="/usr/local/opt/e2fsprogs/sbin:$PATH"
 fi
@@ -20,13 +20,21 @@ chown "$build_user":"$build_group" _disk_image || die "couldn't adjust permissio
 echo "done"
 
 printf "creating new filesystem... "
-mke2fs -q -I 128 _disk_image || die "couldn't create filesystem"
+if [ "$(uname -s)" = "OpenBSD" ]; then
+    VND=`vnconfig _disk_image`
+    (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e $VND
+    mkfs.ext2 -I 128 -F /dev/${VND}i || die "couldn't create filesystem"
+else
+    mke2fs -q -I 128 _disk_image || die "couldn't create filesystem"
+fi
 echo "done"
 
 printf "mounting filesystem... "
 mkdir -p mnt
-if [ "$(uname)" = "Darwin" ]; then
+if [ "$(uname -s)" = "Darwin" ]; then
     fuse-ext2 _disk_image mnt -o rw+,allow_other,uid=501,gid=20 || die "couldn't mount filesystem"
+elif [ "$(uname -s)" = "OpenBSD" ]; then
+    mount -t ext2fs /dev/${VND}i mnt/ || die "couldn't mount filesystem"
 else
     mount _disk_image mnt/ || die "couldn't mount filesystem"
 fi
@@ -37,6 +45,9 @@ cleanup() {
         printf "unmounting filesystem... "
         umount mnt || ( sleep 1 && sync && umount mnt )
         rm -rf mnt
+        if [ "$(uname -s)" = "OpenBSD" ]; then
+           vnconfig -u $VND
+        fi
         echo "done"
     fi
 }

@@ -12,8 +12,14 @@ export build_group
 
 sudo id
 
-make -C ../ clean && \
-    make -C ../ && \
-    make -C ../ test && \
-    make -C ../ install &&
+MAKE=make
+
+if [ "$(uname -s)" = "OpenBSD" ]; then
+	MAKE=gmake
+fi
+
+$MAKE -C ../ clean && \
+    $MAKE -C ../ && \
+    $MAKE -C ../ test && \
+    $MAKE -C ../ install &&
     sudo -E PATH="$PATH" ./build-image-qemu.sh

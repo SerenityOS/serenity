@@ -40,6 +40,13 @@ Notes:
 - osxfuse, e2fsprogs, m4, autoconf, automake, libtool and `BuildFuseExt2.sh` are needed if you want to build the root filesystem disk image natively on macOS. This allows mounting an EXT2 fs and also installs commands like `mke2fs` that are not available on stock macOS. 
 - If you install some commercial EXT2 macOS fs handler instead of osxfuse and fuse-ext2, you will need to `brew install e2fsprogs` to obtain `mke2fs` anyway.
 
+### OpenBSD prerequisites
+```
+pkg_add bash gmp gcc git flock gmake sudo
+```
+
+When building with `make`, `gmake` must be used.  The `makeall.sh` script will do this automatically when building on OpenBSD.
+
 ### Build
 Go into the `Toolchain/` directory and run the **BuildIt.sh** script.
 
