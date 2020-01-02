@@ -151,7 +151,7 @@ void dump_backtrace()
 
 void load_ksyms()
 {
-    auto result = VFS::the().open("/kernel.map", 0, 0, VFS::the().root_custody());
+    auto result = VFS::the().open("/res/kernel.map", 0, 0, VFS::the().root_custody());
     ASSERT(!result.is_error());
     auto description = result.value();
     auto buffer = description->read_entire_file();
