@@ -167,8 +167,10 @@ void Service::spawn()
         }
 
         if (!m_user.is_null()) {
-            setuid(m_uid);
-            setgid(m_gid);
+            if (setgid(m_gid) < 0 || setuid(m_uid) < 0) {
+                fprintf(stderr, "Failed to drop privileges (GID=%u, UID=%u)\n", m_gid, m_uid);
+                exit(1);
+            }
         }
 
         char* argv[m_extra_arguments.size() + 2];
