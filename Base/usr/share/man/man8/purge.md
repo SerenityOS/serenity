@@ -23,6 +23,6 @@ If no options are specified, all possible memory is released.
 ## Examples
 
 ```sh
-$ purge
+# purge
 Purged page count: 744
 ```

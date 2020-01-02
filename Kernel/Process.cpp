@@ -463,6 +463,8 @@ int Process::sys$madvise(void* address, size_t size, int advice)
 
 int Process::sys$purge(int mode)
 {
+    if (!is_superuser())
+        return -EPERM;
     int purged_page_count = 0;
     if (mode & PURGE_ALL_VOLATILE) {
         NonnullRefPtrVector<PurgeableVMObject> vmobjects;
