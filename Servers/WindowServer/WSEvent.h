@@ -25,11 +25,6 @@ public:
         WindowDeactivated,
         WindowCloseRequest,
         WindowResized,
-
-        WM_WindowRemoved,
-        WM_WindowStateChanged,
-        WM_WindowRectChanged,
-        WM_WindowIconBitmapChanged,
     };
 
     WSEvent() {}
@@ -120,87 +115,5 @@ public:
 
 private:
     Rect m_old_rect;
-    Rect m_rect;
-};
-
-class WSWMEvent : public WSEvent {
-public:
-    WSWMEvent(Type type, int client_id, int window_id)
-        : WSEvent(type)
-        , m_client_id(client_id)
-        , m_window_id(window_id)
-    {
-    }
-
-    int client_id() const { return m_client_id; }
-    int window_id() const { return m_window_id; }
-
-private:
-    int m_client_id;
-    int m_window_id;
-};
-
-class WSWMWindowRemovedEvent : public WSWMEvent {
-public:
-    WSWMWindowRemovedEvent(int client_id, int window_id)
-        : WSWMEvent(WSEvent::WM_WindowRemoved, client_id, window_id)
-    {
-    }
-};
-
-class WSWMWindowStateChangedEvent : public WSWMEvent {
-public:
-    WSWMWindowStateChangedEvent(int client_id, int window_id, const String& title, const Rect& rect, bool is_active, WSWindowType window_type, bool is_minimized)
-        : WSWMEvent(WSEvent::WM_WindowStateChanged, client_id, window_id)
-        , m_title(title)
-        , m_rect(rect)
-        , m_active(is_active)
-        , m_window_type(window_type)
-        , m_minimized(is_minimized)
-    {
-    }
-
-    String title() const { return m_title; }
-    Rect rect() const { return m_rect; }
-    bool is_active() const { return m_active; }
-    WSWindowType window_type() const { return m_window_type; }
-    bool is_minimized() const { return m_minimized; }
-
-private:
-    String m_title;
-    Rect m_rect;
-    bool m_active;
-    WSWindowType m_window_type;
-    bool m_minimized;
-};
-
-class WSWMWindowIconBitmapChangedEvent : public WSWMEvent {
-public:
-    WSWMWindowIconBitmapChangedEvent(int client_id, int window_id, int icon_buffer_id, const Size& icon_size)
-        : WSWMEvent(WSEvent::WM_WindowIconBitmapChanged, client_id, window_id)
-        , m_icon_buffer_id(icon_buffer_id)
-        , m_icon_size(icon_size)
-    {
-    }
-
-    int icon_buffer_id() const { return m_icon_buffer_id; }
-    const Size icon_size() const { return m_icon_size; }
-
-private:
-    int m_icon_buffer_id;
-    Size m_icon_size;
-};
-
-class WSWMWindowRectChangedEvent : public WSWMEvent {
-public:
-    WSWMWindowRectChangedEvent(int client_id, int window_id, const Rect& rect)
-        : WSWMEvent(WSEvent::WM_WindowRectChanged, client_id, window_id)
-        , m_rect(rect)
-    {
-    }
-
-    Rect rect() const { return m_rect; }
-
-private:
     Rect m_rect;
 };

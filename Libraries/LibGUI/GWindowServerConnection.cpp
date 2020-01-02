@@ -234,7 +234,7 @@ void GWindowServerConnection::handle(const WindowClient::WM_WindowStateChanged& 
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
-    if (auto* window = GWindow::from_window_id(message.window_id()))
+    if (auto* window = GWindow::from_window_id(message.wm_id()))
         CEventLoop::current().post_event(*window, make<GWMWindowStateChangedEvent>(message.client_id(), message.window_id(), message.title(), message.rect(), message.is_active(), (GWindowType)message.window_type(), message.is_minimized()));
 }
 
@@ -243,7 +243,7 @@ void GWindowServerConnection::handle(const WindowClient::WM_WindowRectChanged& m
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
-    if (auto* window = GWindow::from_window_id(message.window_id()))
+    if (auto* window = GWindow::from_window_id(message.wm_id()))
         CEventLoop::current().post_event(*window, make<GWMWindowRectChangedEvent>(message.client_id(), message.window_id(), message.rect()));
 }
 
@@ -252,7 +252,7 @@ void GWindowServerConnection::handle(const WindowClient::WM_WindowIconBitmapChan
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
-    if (auto* window = GWindow::from_window_id(message.window_id()))
+    if (auto* window = GWindow::from_window_id(message.wm_id()))
         CEventLoop::current().post_event(*window, make<GWMWindowIconBitmapChangedEvent>(message.client_id(), message.window_id(), message.icon_buffer_id(), message.icon_size()));
 }
 
@@ -261,7 +261,7 @@ void GWindowServerConnection::handle(const WindowClient::WM_WindowRemoved& messa
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("GEventLoop: handle_wm_event: %d\n", (int)event.type);
 #endif
-    if (auto* window = GWindow::from_window_id(message.window_id()))
+    if (auto* window = GWindow::from_window_id(message.wm_id()))
         CEventLoop::current().post_event(*window, make<GWMWindowRemovedEvent>(message.client_id(), message.window_id()));
 }
 

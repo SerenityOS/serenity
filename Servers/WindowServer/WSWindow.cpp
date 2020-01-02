@@ -193,53 +193,6 @@ void WSWindow::event(CEvent& event)
                 static_cast<const WSResizeEvent&>(event).old_rect(),
                 static_cast<const WSResizeEvent&>(event).rect()));
         break;
-    case WSEvent::WM_WindowRemoved: {
-        auto& removed_event = static_cast<const WSWMWindowRemovedEvent&>(event);
-        m_client->post_message(WindowClient::WM_WindowRemoved(
-            removed_event.client_id(),
-            removed_event.window_id()));
-        break;
-    }
-    case WSEvent::WM_WindowStateChanged: {
-        auto& changed_event = static_cast<const WSWMWindowStateChangedEvent&>(event);
-        m_client->post_message(WindowClient::WM_WindowStateChanged(
-            changed_event.client_id(),
-            changed_event.window_id(),
-            changed_event.is_active(),
-            changed_event.is_minimized(),
-            (i32)(changed_event.window_type()),
-            changed_event.title(),
-            changed_event.rect()));
-        break;
-    }
-
-    case WSEvent::WM_WindowIconBitmapChanged: {
-        auto& changed_event = static_cast<const WSWMWindowIconBitmapChangedEvent&>(event);
-        // FIXME: Perhaps we should update the bitmap sharing list somewhere else instead?
-        dbg() << "WindowServer: Sharing icon buffer " << changed_event.icon_buffer_id() << " with PID " << client()->client_pid();
-        if (share_buffer_with(changed_event.icon_buffer_id(), m_client->client_pid()) < 0) {
-            ASSERT_NOT_REACHED();
-        }
-        m_client->post_message(
-            WindowClient::WM_WindowIconBitmapChanged(
-                changed_event.client_id(),
-                changed_event.window_id(),
-                changed_event.icon_buffer_id(),
-                changed_event.icon_size()));
-
-        break;
-    }
-
-    case WSEvent::WM_WindowRectChanged: {
-        auto& changed_event = static_cast<const WSWMWindowRectChangedEvent&>(event);
-        m_client->post_message(
-            WindowClient::WM_WindowRectChanged(
-                changed_event.client_id(),
-                changed_event.window_id(),
-                changed_event.rect()));
-        break;
-    }
-
     default:
         break;
     }
