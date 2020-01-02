@@ -359,7 +359,7 @@ void WSWindowManager::remove_window(WSWindow& window)
         if (!(listener.wm_event_mask() & WSWMEventMask::WindowRemovals))
             return IterationDecision::Continue;
         if (window.client())
-            CEventLoop::current().post_event(listener, make<WSWMWindowRemovedEvent>(window.client()->client_id(), window.window_id()));
+            listener.client()->post_message(WindowClient::WM_WindowRemoved(listener.window_id(), window.client()->client_id(), window.window_id()));
         return IterationDecision::Continue;
     });
 }
@@ -368,24 +368,33 @@ void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow
 {
     if (!(listener.wm_event_mask() & WSWMEventMask::WindowStateChanges))
         return;
-    if (window.client())
-        CEventLoop::current().post_event(listener, make<WSWMWindowStateChangedEvent>(window.client()->client_id(), window.window_id(), window.title(), window.rect(), window.is_active(), window.type(), window.is_minimized()));
+    if (!window.client())
+        return;
+    listener.client()->post_message(WindowClient::WM_WindowStateChanged(listener.window_id(), window.client()->client_id(), window.window_id(), window.is_active(), window.is_minimized(), (i32)window.type(), window.title(), window.rect()));
 }
 
 void WSWindowManager::tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow& window)
 {
     if (!(listener.wm_event_mask() & WSWMEventMask::WindowRectChanges))
         return;
-    if (window.client())
-        CEventLoop::current().post_event(listener, make<WSWMWindowRectChangedEvent>(window.client()->client_id(), window.window_id(), window.rect()));
+    if (!window.client())
+        return;
+    listener.client()->post_message(WindowClient::WM_WindowRectChanged(listener.window_id(), window.client()->client_id(), window.window_id(), window.rect()));
 }
 
 void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow& window)
 {
     if (!(listener.wm_event_mask() & WSWMEventMask::WindowIconChanges))
         return;
-    if (window.client() && window.icon().shared_buffer_id() != -1)
-        CEventLoop::current().post_event(listener, make<WSWMWindowIconBitmapChangedEvent>(window.client()->client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));
+    if (!window.client())
+        return;
+    if (window.icon().shared_buffer_id() == -1)
+        return;
+    dbg() << "WindowServer: Sharing icon buffer " << window.icon().shared_buffer_id() << " with PID " << listener.client()->client_pid();
+    if (share_buffer_with(window.icon().shared_buffer_id(), listener.client()->client_pid()) < 0) {
+        ASSERT_NOT_REACHED();
+    }
+    listener.client()->post_message(WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client()->client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
@@ -980,7 +989,6 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         // Clicked outside of any window
         if (!hovered_window && !event_window_with_frame && event.type() == WSEvent::MouseDown)
             set_active_window(nullptr);
-
     }
 
     if (event_window_with_frame != m_resize_candidate.ptr())
@@ -1078,8 +1086,7 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
 
-        if (key_event.type() == WSEvent::KeyDown && ((key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab) ||
-            (key_event.modifiers() == (Mod_Logo | Mod_Shift) && key_event.key() == Key_Tab)))
+        if (key_event.type() == WSEvent::KeyDown && ((key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab) || (key_event.modifiers() == (Mod_Logo | Mod_Shift) && key_event.key() == Key_Tab)))
             m_switcher.show();
         if (m_switcher.is_visible()) {
             m_switcher.on_key_event(key_event);
