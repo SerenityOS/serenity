@@ -63,10 +63,11 @@ void MemoryManager::initialize_paging()
     create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (8 * MB) - PAGE_SIZE);
 
     // Disable execution from 0MB through 1MB (BIOS data, legacy things, ...)
-    for (size_t i = 0; i < (1 * MB); ++i) {
-        auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
-        if (g_cpu_supports_nx)
+    if (g_cpu_supports_nx) {
+        for (size_t i = 0; i < (1 * MB); i += PAGE_SIZE) {
+            auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
+        }
     }
 
     // Disable execution from 2MB through 8MB (kmalloc, kmalloc_eternal, slabs, page tables, ...)
