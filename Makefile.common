@@ -22,12 +22,16 @@ INCLUDE_FLAGS += \
 
 VERBOSE = 0
 
-ifneq ($(HOST_CXX),)
+ifneq ($(USE_HOST_CXX),)
     ifeq '' '$(findstring clang++,$(CXX))'
         C_WARNING_FLAGS += -Wno-unknown-warning-option
         CXX_WARNING_FLAGS += -Wno-unknown-warning-option
     endif
-    CXX = $(PRE_CXX) g++
+    ifeq ($(HOST_CXX),)
+        CXX = $(PRE_CXX) g++
+    else
+        CXX = $(HOST_CXX)
+    endif
     AS = as
     LINK = ld
     OBJ_SUFFIX ?= .host
