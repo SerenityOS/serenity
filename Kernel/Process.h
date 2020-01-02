@@ -108,8 +108,6 @@ public:
     int sys$dump_backtrace();
     int sys$gettid();
     int sys$donate(int tid);
-    int sys$shm_open(const char* name, int flags, mode_t);
-    int sys$shm_unlink(const char* name);
     int sys$ftruncate(int fd, off_t);
     pid_t sys$setsid();
     pid_t sys$getsid(pid_t);

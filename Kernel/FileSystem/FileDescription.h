@@ -18,7 +18,6 @@ class MasterPTY;
 class Process;
 class Region;
 class CharacterDevice;
-class SharedMemory;
 
 class FileDescription : public RefCounted<FileDescription> {
 public:
@@ -86,10 +85,6 @@ public:
     FIFO* fifo();
     FIFO::Direction fifo_direction() { return m_fifo_direction; }
     void set_fifo_direction(Badge<FIFO>, FIFO::Direction direction) { m_fifo_direction = direction; }
-
-    bool is_shared_memory() const;
-    SharedMemory* shared_memory();
-    const SharedMemory* shared_memory() const;
 
     Optional<KBuffer>& generator_cache() { return m_generator_cache; }
 
