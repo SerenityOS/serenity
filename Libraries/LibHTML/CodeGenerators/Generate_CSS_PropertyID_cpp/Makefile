@@ -1,4 +1,4 @@
-HOST_CXX = 1
+USE_HOST_CXX = 1
 
 PROGRAM = Generate_CSS_PropertyID_cpp
 
