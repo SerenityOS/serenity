@@ -27,10 +27,10 @@ char* read_map(const JsonObject& json, const String& name)
         } else if (key_value.length() == 1) {
             character = key_value.characters()[0];
         } else if (key_value.length() == 4) {
-            if (key_value == "0x08") {
-                character = 0x08;
-            } else if (key_value == "0x33") {
-                character = 0x33;
+            // FIXME: Replace this workaround with "\u001B" in the keymap files
+            //     after these kind of escape sequences are implemented in JsonParser.
+            if (key_value == "0x1B") {
+                character = 0x1B;
             }
         } else {
             fprintf(stderr, "Unknown character in %s[%u] = %s.\n", name.characters(), i, key_value.characters());
