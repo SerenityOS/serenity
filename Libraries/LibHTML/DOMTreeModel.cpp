@@ -1,6 +1,7 @@
 #include "DOMTreeModel.h"
 #include <AK/StringBuilder.h>
 #include <LibHTML/DOM/Document.h>
+#include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOM/Text.h>
 #include <ctype.h>
 #include <stdio.h>
@@ -88,20 +89,34 @@ static String with_whitespace_collapsed(const StringView& string)
 
 GVariant DOMTreeModel::data(const GModelIndex& index, Role role) const
 {
-    auto* node = static_cast<Node*>(index.internal_data());
+    auto& node = *static_cast<Node*>(index.internal_data());
     if (role == Role::Icon) {
-        if (node->is_document())
+        if (node.is_document())
             return m_document_icon;
-        if (node->is_element())
+        if (node.is_element())
             return m_element_icon;
         // FIXME: More node type icons?
         return m_text_icon;
     }
     if (role == Role::Display) {
-        if (node->is_text()) {
-            return String::format("%s", with_whitespace_collapsed(to<Text>(*node).data()).characters());
-        }
-        return String::format("<%s>", node->tag_name().characters());
+        if (node.is_text())
+            return String::format("%s", with_whitespace_collapsed(to<Text>(node).data()).characters());
+        if (!node.is_element())
+            return node.tag_name();
+        auto& element = to<Element>(node);
+        StringBuilder builder;
+        builder.append('<');
+        builder.append(element.tag_name());
+        element.for_each_attribute([&](auto& name, auto& value) {
+            builder.append(' ');
+            builder.append(name);
+            builder.append('=');
+            builder.append('"');
+            builder.append(value);
+            builder.append('"');
+        });
+        builder.append('>');
+        return builder.to_string();
     }
     return {};
 }
