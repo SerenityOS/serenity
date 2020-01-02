@@ -63,7 +63,8 @@ echo "done"
 printf "installing base system... "
 cp -R ../Base/* mnt/
 cp -R ../Root/* mnt/
-cp kernel.map mnt/
+cp kernel.map mnt/res/
+chmod 400 mnt/res/kernel.map
 echo "done"
 
 printf "installing users... "
