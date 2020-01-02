@@ -35,17 +35,6 @@ struct sockaddr {
     char sa_data[14];
 };
 
-struct in_addr {
-    uint32_t s_addr;
-};
-
-struct sockaddr_in {
-    uint16_t sin_family;
-    uint16_t sin_port;
-    struct in_addr sin_addr;
-    char sin_zero[8];
-};
-
 struct ucred {
     pid_t pid;
     uid_t uid;
