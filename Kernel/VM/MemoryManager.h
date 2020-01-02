@@ -45,8 +45,10 @@ public:
     void enter_process_paging_scope(Process&);
 
     bool validate_user_stack(const Process&, VirtualAddress) const;
-    bool validate_user_read(const Process&, VirtualAddress) const;
-    bool validate_user_write(const Process&, VirtualAddress) const;
+    bool validate_user_read(const Process&, VirtualAddress, size_t) const;
+    bool validate_user_write(const Process&, VirtualAddress, size_t) const;
+
+    bool validate_kernel_read(const Process&, VirtualAddress, size_t) const;
 
     enum class ShouldZeroFill {
         No,
@@ -84,6 +86,11 @@ public:
 private:
     MemoryManager(u32 physical_address_for_kernel_page_tables);
     ~MemoryManager();
+
+    enum class AccessSpace { Kernel, User };
+    enum class AccessType { Read, Write };
+    template<AccessSpace, AccessType>
+    bool validate_range(const Process&, VirtualAddress, size_t) const;
 
     void register_vmobject(VMObject&);
     void unregister_vmobject(VMObject&);

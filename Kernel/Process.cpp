@@ -1958,7 +1958,7 @@ bool Process::validate_read_from_kernel(VirtualAddress vaddr, ssize_t size) cons
         return false;
     if (is_kmalloc_address(vaddr.as_ptr()))
         return true;
-    return validate_read(vaddr.as_ptr(), size);
+    return MM.validate_kernel_read(*this, vaddr, size);
 }
 
 bool Process::validate_read_str(const char* str)
@@ -1984,23 +1984,15 @@ bool Process::validate_read(const void* address, ssize_t size) const
         if (is_kmalloc_address(address))
             return true;
     }
-    ASSERT(size);
     if (!size)
         return false;
-    if (first_address.page_base() != last_address.page_base()) {
-        if (!MM.validate_user_read(*this, last_address))
-            return false;
-    }
-    return MM.validate_user_read(*this, first_address);
+    return MM.validate_user_read(*this, first_address, size);
 }
 
 bool Process::validate_write(void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
     VirtualAddress first_address((u32)address);
-    VirtualAddress last_address = first_address.offset(size - 1);
-    if (last_address < first_address)
-        return false;
     if (is_ring0()) {
         if (is_kmalloc_address(address))
             return true;
@@ -2012,11 +2004,7 @@ bool Process::validate_write(void* address, ssize_t size) const
     }
     if (!size)
         return false;
-    if (first_address.page_base() != last_address.page_base()) {
-        if (!MM.validate_user_write(*this, last_address))
-            return false;
-    }
-    return MM.validate_user_write(*this, first_address);
+    return MM.validate_user_write(*this, first_address, size);
 }
 
 pid_t Process::sys$getsid(pid_t pid)
