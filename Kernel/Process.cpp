@@ -2571,7 +2571,6 @@ void Process::die()
         // Tell the threads to unwind and die.
         InterruptDisabler disabler;
         for_each_thread([](Thread& thread) {
-            kprintf("Mark PID %u TID %u for death\n", thread.pid(), thread.tid());
             thread.set_should_die();
             return IterationDecision::Continue;
         });
