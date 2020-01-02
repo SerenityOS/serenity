@@ -1,4 +1,5 @@
 #include "History.h"
+#include "InspectorWidget.h"
 #include <LibCore/CFile.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
@@ -9,7 +10,6 @@
 #include <LibGUI/GStatusBar.h>
 #include <LibGUI/GTextBox.h>
 #include <LibGUI/GToolBar.h>
-#include <LibGUI/GTreeView.h>
 #include <LibGUI/GWindow.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Element.h>
@@ -134,7 +134,6 @@ int main(int argc, char** argv)
     menubar->add_menu(move(app_menu));
 
     RefPtr<GWindow> dom_inspector_window;
-    RefPtr<GTreeView> dom_tree_view;
 
     auto inspect_menu = GMenu::construct("Inspect");
     inspect_menu->add_action(GAction::create("View source", { Mod_Ctrl, Key_U }, [&](auto&) {
@@ -161,17 +160,11 @@ int main(int argc, char** argv)
             dom_inspector_window = GWindow::construct();
             dom_inspector_window->set_rect(100, 100, 300, 500);
             dom_inspector_window->set_title("DOM inspector");
-            dom_tree_view = GTreeView::construct(nullptr);
-            dom_tree_view->on_selection = [](auto& index) {
-                auto* node = static_cast<Node*>(index.internal_data());
-                node->document().set_inspected_node(node);
-            };
-            dom_inspector_window->set_main_widget(dom_tree_view);
+            auto dom_inspector_widget = InspectorWidget::construct(nullptr);
+            dom_inspector_window->set_main_widget(dom_inspector_widget);
         }
-        if (html_widget->document())
-            dom_tree_view->set_model(DOMTreeModel::create(*html_widget->document()));
-        else
-            dom_tree_view->set_model(nullptr);
+        auto* inspector_widget = static_cast<InspectorWidget*>(dom_inspector_window->main_widget());
+        inspector_widget->set_document(html_widget->document());
         dom_inspector_window->show();
         dom_inspector_window->move_to_front();
     }));
