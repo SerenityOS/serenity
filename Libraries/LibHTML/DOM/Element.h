@@ -56,6 +56,8 @@ public:
 
     String name() const { return attribute("name"); }
 
+    const StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
+
 private:
     RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
 
@@ -64,6 +66,8 @@ private:
 
     String m_tag_name;
     Vector<Attribute> m_attributes;
+
+    RefPtr<StyleProperties> m_resolved_style;
 };
 
 template<>
