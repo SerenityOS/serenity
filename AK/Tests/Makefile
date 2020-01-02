@@ -17,7 +17,7 @@ APPS = ${SRCS:.cpp=}
 
 EXTRA_CLEAN = $(APPS) *.o
 
-HOST_CXX = 1
+USE_HOST_CXX = 1
 
 include ../../Makefile.common
 
