@@ -51,6 +51,7 @@ struct ID {
 };
 
 struct Address {
+public:
     Address() {}
     Address(u16 seg)
         : m_seg(seg)
@@ -80,11 +81,45 @@ struct Address {
         return 0x80000000u | (m_bus << 16u) | (m_slot << 11u) | (m_function << 8u) | (field & 0xfc);
     }
 
-private:
+protected:
     u32 m_seg { 0 };
     u8 m_bus { 0 };
     u8 m_slot { 0 };
     u8 m_function { 0 };
+};
+
+struct ChangeableAddress : public Address {
+    ChangeableAddress()
+        : Address(0)
+    {
+    }
+    explicit ChangeableAddress(u16 seg)
+        : Address(seg)
+    {
+    }
+    ChangeableAddress(u16 seg, u8 bus, u8 slot, u8 function)
+        : Address(seg, bus, slot, function)
+    {
+    }
+    void set_seg(u16 seg) { m_seg = seg; }
+    void set_bus(u8 bus) { m_bus = bus; }
+    void set_slot(u8 slot) { m_slot = slot; }
+    void set_function(u8 function) { m_function = function; }
+    bool operator==(const Address& address)
+    {
+        if (m_seg == address.seg() && m_bus == address.bus() && m_slot == address.slot() && m_function == address.function())
+            return true;
+        else
+            return false;
+    }
+    const ChangeableAddress& operator=(const Address& address)
+    {
+        set_seg(address.seg());
+        set_bus(address.bus());
+        set_slot(address.slot());
+        set_function(address.function());
+        return *this;
+    }
 };
 
 void enumerate_all(Function<void(Address, ID)> callback);

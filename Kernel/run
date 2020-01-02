@@ -22,6 +22,22 @@ $SERENITY_EXTRA_QEMU_ARGS
 -d cpu_reset,guest_errors 
 -device VGA,vgamem_mb=64
 -hda _disk_image
+-device ich9-ahci
+-debugcon stdio
+-soundhw pcspk
+-soundhw sb16
+"
+
+[ -z "$SERENITY_COMMON_QEMU_Q35_ARGS" ] && SERENITY_COMMON_QEMU_Q35_ARGS="
+$SERENITY_EXTRA_QEMU_ARGS
+-s -m $SERENITY_RAM_SIZE
+-cpu max
+-machine q35
+-d cpu_reset,guest_errors 
+-device VGA,vgamem_mb=64
+-device piix3-ide
+-drive file=_disk_image,id=disk,if=none
+-device ide-hd,bus=ide.6,drive=disk,unit=0
 -debugcon stdio
 -soundhw pcspk
 -soundhw sb16
@@ -57,6 +73,20 @@ elif [ "$1" = "qgrub" ]; then
         $SERENITY_PACKET_LOGGING_ARG \
         -netdev user,id=breh,hostfwd=tcp:127.0.0.1:8888-10.0.2.15:8888,hostfwd=tcp:127.0.0.1:8823-10.0.2.15:23 \
         -device e1000,netdev=breh
+elif [ "$1" = "q35_cmd" ]; then
+    SERENITY_KERNEL_CMDLINE=""
+    # FIXME: Someone who knows sh syntax better, please help:
+    for i in `seq 2 $#`; do
+        shift
+        SERENITY_KERNEL_CMDLINE="$SERENITY_KERNEL_CMDLINE $1"
+    done
+    echo "Starting SerenityOS, Commandline: ${SERENITY_KERNEL_CMDLINE}"
+    # ./run: qemu with SerenityOS with custom commandline
+    $SERENITY_QEMU_BIN \
+        $SERENITY_COMMON_QEMU_Q35_ARGS \
+        -device e1000 \
+        -kernel kernel \
+        -append "${SERENITY_KERNEL_CMDLINE}"
 elif [ "$1" = "qcmd" ]; then
     SERENITY_KERNEL_CMDLINE=""
     # FIXME: Someone who knows sh syntax better, please help:
