@@ -2117,11 +2117,29 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
     InterruptDisabler disabler; // FIXME: Use a ProcessHandle
     pid_t pid = specified_pid ? specified_pid : m_pid;
-    if (specified_pgid < 0)
+    if (specified_pgid < 0) {
+        // The value of the pgid argument is less than 0, or is not a value supported by the implementation.
         return -EINVAL;
+    }
     auto* process = Process::from_pid(pid);
     if (!process)
         return -ESRCH;
+    if (process != this && process->ppid() != m_pid) {
+        // The value of the pid argument does not match the process ID
+        // of the calling process or of a child process of the calling process.
+        return -ESRCH;
+    }
+    if (process->pid() == process->sid()) {
+        // The process indicated by the pid argument is a session leader.
+        return -EPERM;
+    }
+    if (process->ppid() == m_pid && process->sid() != sid()) {
+        // The value of the pid argument matches the process ID of a child
+        // process of the calling process and the child process is not in
+        // the same session as the calling process.
+        return -EPERM;
+    }
+
     pid_t new_pgid = specified_pgid ? specified_pgid : process->m_pid;
     pid_t current_sid = get_sid_from_pgid(process->m_pgid);
     pid_t new_sid = get_sid_from_pgid(new_pgid);
