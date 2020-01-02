@@ -3483,7 +3483,7 @@ int Process::sys$mknod(const char* pathname, mode_t mode, dev_t dev)
             return -EPERM;
     }
 
-    return VFS::the().mknod(StringView(pathname), mode, dev, current_directory());
+    return VFS::the().mknod(StringView(pathname), mode & ~umask(), dev, current_directory());
 }
 
 int Process::sys$dump_backtrace()
