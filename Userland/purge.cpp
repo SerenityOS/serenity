@@ -1,9 +1,7 @@
 #include <Kernel/Syscall.h>
+#include <serenity.h>
 #include <stdio.h>
 #include <string.h>
-
-#define PURGE_ALL_VOLATILE 0x1
-#define PURGE_ALL_CLEAN_INODE 0x2
 
 int main(int argc, char** argv)
 {
@@ -20,7 +18,11 @@ int main(int argc, char** argv)
             return 1;
         }
     }
-    int purged_page_count = syscall(SC_purge, mode);
+    int purged_page_count = purge(mode);
+    if (purged_page_count < 0) {
+        perror("purge");
+        return 1;
+    }
     printf("Purged page count: %d\n", purged_page_count);
     return 0;
 }

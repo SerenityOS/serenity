@@ -58,4 +58,9 @@ int set_process_boost(pid_t, int amount);
 
 int futex(int32_t* userspace_address, int futex_op, int32_t value, const struct timespec* timeout);
 
+#define PURGE_ALL_VOLATILE 0x1
+#define PURGE_ALL_CLEAN_INODE 0x2
+
+int purge(int mode);
+
 __END_DECLS
