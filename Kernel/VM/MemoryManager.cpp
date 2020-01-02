@@ -606,6 +606,35 @@ static inline bool is_user_address(VirtualAddress vaddr)
     return vaddr.get() >= (8 * MB) && vaddr.get() < 0xc0000000;
 }
 
+template<MemoryManager::AccessSpace space, MemoryManager::AccessType access_type>
+bool MemoryManager::validate_range(const Process& process, VirtualAddress base_vaddr, size_t size) const
+{
+    ASSERT(size);
+    VirtualAddress vaddr = base_vaddr.page_base();
+    VirtualAddress end_vaddr = base_vaddr.offset(size - 1).page_base();
+    if (end_vaddr < vaddr) {
+        dbg() << *current << " Shenanigans! Asked to validate " << base_vaddr << " size=" << size;
+        return false;
+    }
+    const Region* region = nullptr;
+    while (vaddr <= end_vaddr) {
+        if (!region || !region->contains(vaddr)) {
+            if (space == AccessSpace::Kernel)
+                region = kernel_region_from_vaddr(vaddr);
+            if (!region || !region->contains(vaddr))
+                region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
+            if (!region
+                || (space == AccessSpace::User && !region->is_user_accessible())
+                || (access_type == AccessType::Read && !region->is_readable())
+                || (access_type == AccessType::Write && !region->is_writable())) {
+                return false;
+            }
+        }
+        vaddr = vaddr.offset(PAGE_SIZE);
+    }
+    return true;
+}
+
 bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress vaddr) const
 {
     if (!is_user_address(vaddr))
@@ -614,20 +643,23 @@ bool MemoryManager::validate_user_stack(const Process& process, VirtualAddress v
     return region && region->is_user_accessible() && region->is_stack();
 }
 
-bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr) const
+bool MemoryManager::validate_kernel_read(const Process& process, VirtualAddress vaddr, size_t size) const
 {
-    if (!is_user_address(vaddr))
-        return false;
-    auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
-    return region && region->is_user_accessible() && region->is_readable();
+    return validate_range<AccessSpace::Kernel, AccessType::Read>(process, vaddr, size);
 }
 
-bool MemoryManager::validate_user_write(const Process& process, VirtualAddress vaddr) const
+bool MemoryManager::validate_user_read(const Process& process, VirtualAddress vaddr, size_t size) const
 {
     if (!is_user_address(vaddr))
         return false;
-    auto* region = user_region_from_vaddr(const_cast<Process&>(process), vaddr);
-    return region && region->is_user_accessible() && region->is_writable();
+    return validate_range<AccessSpace::User, AccessType::Read>(process, vaddr, size);
+}
+
+bool MemoryManager::validate_user_write(const Process& process, VirtualAddress vaddr, size_t size) const
+{
+    if (!is_user_address(vaddr))
+        return false;
+    return validate_range<AccessSpace::User, AccessType::Write>(process, vaddr, size);
 }
 
 void MemoryManager::register_vmobject(VMObject& vmobject)
