@@ -13,4 +13,15 @@ in_addr_t inet_addr(const char*);
 
 #define IP_TTL 2
 
+struct in_addr {
+    uint32_t s_addr;
+};
+
+struct sockaddr_in {
+    uint16_t sin_family;
+    uint16_t sin_port;
+    struct in_addr sin_addr;
+    char sin_zero[8];
+};
+
 __END_DECLS
