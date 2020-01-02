@@ -77,10 +77,12 @@ echo "done"
 
 printf "installing userland... "
 
-if [ "$(uname)" != "Darwin" ]; then
-find ../Userland/ -type f -executable -exec cp {} mnt/bin/ \;
+if [ "$(uname -s)" = "Darwin" ]; then
+    find ../Userland/ -type f -perm +111 -exec cp {} mnt/bin/ \;
+elif [ "$(uname -s)" = "OpenBSD" ]; then
+    find ../Userland/ -type f -perm -555 -exec cp {} mnt/bin/ \;
 else
-find ../Userland/ -type f -perm +111 -exec cp {} mnt/bin/ \;
+    find ../Userland/ -type f -executable -exec cp {} mnt/bin/ \;
 fi
 chmod 4755 mnt/bin/su
 chmod 4755 mnt/bin/ping

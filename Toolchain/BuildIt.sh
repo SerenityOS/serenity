@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 
 # This file will need to be run in bash, for now.
@@ -11,6 +11,20 @@ ARCH=${ARCH:-"i686"}
 TARGET="$ARCH-pc-serenity"
 PREFIX="$DIR/Local"
 SYSROOT="$DIR/../Root"
+
+MAKE=make
+MD5SUM=md5sum
+NPROC=nproc
+
+if [ `uname -s` = "OpenBSD" ]; then
+    MAKE=gmake
+    MD5SUM="md5 -q"
+    NPROC="sysctl -n hw.ncpuonline"
+    export CC=egcc
+    export CXX=eg++
+    export with_gmp=/usr/local
+    export LDFLAGS=-Wl,-z,notext
+fi
 
 echo PREFIX is "$PREFIX"
 echo SYSROOT is "$SYSROOT"
@@ -30,7 +44,7 @@ GCC_PKG="${GCC_NAME}.tar.gz"
 GCC_BASE_URL="http://ftp.gnu.org/gnu/gcc"
 
 pushd "$DIR/Tarballs"
-    md5="$(md5sum $BINUTILS_PKG | cut -f1 -d' ')"
+    md5="$($MD5SUM $BINUTILS_PKG | cut -f1 -d' ')"
     echo "bu md5='$md5'"
     if [ ! -e $BINUTILS_PKG ] || [ "$md5" != ${BINUTILS_MD5SUM} ] ; then
         rm -f $BINUTILS_PKG
@@ -39,7 +53,7 @@ pushd "$DIR/Tarballs"
         echo "Skipped downloading binutils"
     fi
 
-    md5="$(md5sum ${GCC_PKG} | cut -f1 -d' ')"
+    md5="$($MD5SUM ${GCC_PKG} | cut -f1 -d' ')"
     echo "gc md5='$md5'"
     if [ ! -e $GCC_PKG ] || [ "$md5" != ${GCC_MD5SUM} ] ; then
         rm -f $GCC_PKG
@@ -50,7 +64,7 @@ pushd "$DIR/Tarballs"
 
     if [ ! -d ${BINUTILS_NAME} ]; then
         echo "Extracting binutils..."
-        tar -xf ${BINUTILS_PKG}
+        tar -xzf ${BINUTILS_PKG}
 
         pushd ${BINUTILS_NAME}
             git init >/dev/null
@@ -64,7 +78,7 @@ pushd "$DIR/Tarballs"
 
     if [ ! -d $GCC_NAME ]; then
         echo "Extracting gcc..."
-        tar -xf $GCC_PKG
+        tar -xzf $GCC_PKG
 
         pushd $GCC_NAME
             git init >/dev/null
@@ -90,7 +104,7 @@ mkdir -p "$DIR/Build/binutils"
 mkdir -p "$DIR/Build/gcc"
 
 if [ -z "$MAKEJOBS" ]; then
-    MAKEJOBS=$(nproc)
+    MAKEJOBS=$($NPROC)
 fi
 
 pushd "$DIR/Build/"
@@ -106,16 +120,20 @@ pushd "$DIR/Build/"
             # under macOS generated makefiles are not resolving the "intl"
             # dependency properly to allow linking its own copy of
             # libintl when building with --enable-shared.
-            make -j "$MAKEJOBS" || true
+            "$MAKE" -j "$MAKEJOBS" || true
             pushd intl
-            make all-yes
+            "$MAKE" all-yes
             popd
         fi
-        make -j "$MAKEJOBS" || exit 1
-        make install || exit 1
+        "$MAKE" -j "$MAKEJOBS" || exit 1
+        "$MAKE" install || exit 1
     popd
 
     pushd gcc
+        if [ `uname -s` = "OpenBSD" ]; then
+            perl -pi -e 's/-no-pie/-nopie/g' "$DIR"/Tarballs/gcc-9.2.0/gcc/configure
+        fi
+
         "$DIR"/Tarballs/gcc-9.2.0/configure --prefix="$PREFIX" \
                                             --target="$TARGET" \
                                             --with-sysroot="$SYSROOT" \
@@ -125,18 +143,22 @@ pushd "$DIR/Build/"
                                             --enable-languages=c,c++ || exit 1
 
         echo "XXX build gcc and libgcc"
-        make -j "$MAKEJOBS" all-gcc all-target-libgcc || exit 1
+        "$MAKE" -j "$MAKEJOBS" all-gcc all-target-libgcc || exit 1
         echo "XXX install gcc and libgcc"
-        make install-gcc install-target-libgcc || exit 1
+        "$MAKE" install-gcc install-target-libgcc || exit 1
 
         echo "XXX serenity libc and libm"
-        ( cd "$DIR/../Libraries/LibC/" && make clean && make && make install )
-        ( cd "$DIR/../Libraries/LibM/" && make clean && make && make install )
+        ( cd "$DIR/../Libraries/LibC/" && "$MAKE" clean && "$MAKE" && "$MAKE" install )
+        ( cd "$DIR/../Libraries/LibM/" && "$MAKE" clean && "$MAKE" && "$MAKE" install )
 
         echo "XXX build libstdc++"
-        make all-target-libstdc++-v3 || exit 1 
+        "$MAKE" all-target-libstdc++-v3 || exit 1
         echo "XXX install libstdc++"
-        make install-target-libstdc++-v3 || exit 1
+        "$MAKE" install-target-libstdc++-v3 || exit 1
+
+        if [ `uname -s` = "OpenBSD" ]; then
+            cd "$DIR"/Local/libexec/gcc/i686-pc-serenity/9.2.0 && ln -sf liblto_plugin.so.0.0 liblto_plugin.so
+        fi
     popd
 popd
 

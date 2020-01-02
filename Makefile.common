@@ -23,6 +23,11 @@ INCLUDE_FLAGS += \
 VERBOSE = 0
 
 ifneq ($(USE_HOST_CXX),)
+    UNAME_S := $(shell uname -s)
+    ifeq ($(UNAME_S),OpenBSD)
+        HOST_CXX ?= clang++
+    endif
+
     ifeq '' '$(findstring clang++,$(CXX))'
         C_WARNING_FLAGS += -Wno-unknown-warning-option
         CXX_WARNING_FLAGS += -Wno-unknown-warning-option
