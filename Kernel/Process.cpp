@@ -40,6 +40,7 @@
 #include <Kernel/VM/InodeVMObject.h>
 #include <Kernel/VM/PurgeableVMObject.h>
 #include <LibC/errno_numbers.h>
+#include <LibC/limits.h>
 #include <LibC/signal_numbers.h>
 #include <LibELF/ELFLoader.h>
 #include <LibELF/exec_elf.h>
@@ -1272,7 +1273,12 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     if (!validate_read_typed(iov, iov_count))
         return -EFAULT;
 
-    // FIXME: Return EINVAL if sum of iovecs is greater than INT_MAX
+    u64 total_length = 0;
+    for (int i = 0; i < iov_count; ++i) {
+        total_length += iov[i].iov_len;
+        if (total_length > INT32_MAX)
+            return -EINVAL;
+    }
 
     auto* description = file_description(fd);
     if (!description)
