@@ -264,11 +264,8 @@ bool ELFDynamicObject::load(unsigned flags)
 
 void ELFDynamicObject::load_program_headers()
 {
-    size_t total_required_allocation_size = 0;
+    size_t total_required_allocation_size = 0; // NOTE: If we don't have any TEXTREL, we can keep RO data RO, which would be nice
 
-    // FIXME: Can we re-use ELFLoader? This and what follows looks a lot like what's in there...
-    //     With the exception of using desired_load_address().offset(text_segment_begin)
-    //     It seems kinda gross to expect the program headers to be in a specific order..
     m_image->for_each_program_header([&](const ELFImage::ProgramHeader& program_header) {
         ProgramHeaderRegion new_region(program_header.raw_header());
         if (new_region.is_load())
@@ -340,21 +337,9 @@ void ELFDynamicObject::do_relocations()
             break;
         case R_386_32: {
             auto symbol = relocation.symbol();
-
             VERBOSE("Absolute relocation: name: '%s', value: %p\n", symbol.name(), symbol.value());
-            if (symbol.bind() == STB_LOCAL) {
-                u32 symbol_address = symbol.section().address() + symbol.value();
-                *patch_ptr += symbol_address;
-            } else if (symbol.bind() == STB_GLOBAL) {
-                u32 symbol_address = symbol.value() + (u32)load_base_address;
-                *patch_ptr += symbol_address;
-            } else if (symbol.bind() == STB_WEAK) {
-                // FIXME: Handle weak symbols...
-                dbgprintf("ELFDynamicObject: Ignoring weak symbol %s\n", symbol.name());
-            } else {
-                VERBOSE("Found new fun symbol bind value %d\n", symbol.bind());
-                ASSERT_NOT_REACHED();
-            }
+            u32 symbol_address = symbol.value() + (u32)load_base_address;
+            *patch_ptr += symbol_address;
             VERBOSE("   Symbol address: %p\n", *patch_ptr);
             break;
         }
@@ -369,7 +354,7 @@ void ELFDynamicObject::do_relocations()
         case R_386_GLOB_DAT: {
             auto symbol = relocation.symbol();
             VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 symbol_location = (u32)(m_data_region->base_address().as_ptr() + symbol.value());
+            u32 symbol_location = (u32)(load_base_address + symbol.value());
             *patch_ptr = symbol_location;
             VERBOSE("   Symbol address: %p\n", *patch_ptr);
             break;
@@ -486,7 +471,7 @@ void ELFDynamicObject::call_object_init_functions()
     InitFunc* init_begin = (InitFunc*)(load_addr + m_init_array_offset);
     u32 init_end = (u32)((u8*)init_begin + m_init_array_size);
     while ((u32)init_begin < init_end) {
-        // Andriod sources claim that these can be -1, to be ignored.
+        // Android sources claim that these can be -1, to be ignored.
         // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
         if (!*init_begin || ((i32)*init_begin == -1))
             continue;
