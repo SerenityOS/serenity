@@ -72,7 +72,7 @@ public:
     pid_t pgid() const { return m_pgid; }
     uid_t uid() const { return m_uid; }
     gid_t gid() const { return m_gid; }
-    const HashTable<gid_t>& gids() const { return m_gids; }
+    const HashTable<gid_t>& extra_gids() const { return m_extra_gids; }
     uid_t euid() const { return m_euid; }
     gid_t egid() const { return m_egid; }
     pid_t ppid() const { return m_ppid; }
@@ -381,7 +381,7 @@ private:
 
     static void notify_waiters(pid_t waitee, int exit_status, int signal);
 
-    HashTable<gid_t> m_gids;
+    HashTable<gid_t> m_extra_gids;
 
     int m_next_tid { 0 };
 
@@ -502,17 +502,17 @@ inline void Process::for_each_in_pgrp(pid_t pgid, Callback callback)
 
 inline bool InodeMetadata::may_read(Process& process) const
 {
-    return may_read(process.euid(), process.gids());
+    return may_read(process.euid(), process.egid(), process.extra_gids());
 }
 
 inline bool InodeMetadata::may_write(Process& process) const
 {
-    return may_write(process.euid(), process.gids());
+    return may_write(process.euid(), process.egid(), process.extra_gids());
 }
 
 inline bool InodeMetadata::may_execute(Process& process) const
 {
-    return may_execute(process.euid(), process.gids());
+    return may_execute(process.euid(), process.egid(), process.extra_gids());
 }
 
 inline int Thread::pid() const
