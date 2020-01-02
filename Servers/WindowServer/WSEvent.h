@@ -11,7 +11,6 @@ class WSEvent : public CEvent {
 public:
     enum Type {
         Invalid = 3000,
-        WM_DeferredCompose,
         MouseMove,
         MouseDown,
         MouseDoubleClick,
