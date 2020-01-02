@@ -22,6 +22,7 @@ returns -1 and sets `errno` to describe the error.
 
 ## Errors
 
+* `EPERM`: The calling process does not have superuser permissions.
 * `EFAULT`: `path` pointed to memory that was not accessible for the caller.
 * `ENOEXEC`: The specified file could not be parsed as an ELF object.
 * `ENOENT`: One or more symbols referred to by the module could not be resolved.

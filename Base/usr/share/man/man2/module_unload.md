@@ -21,6 +21,7 @@ Otherwise, it returns -1 and sets `errno` to describe the error.
 
 ## Errors
 
+* `EPERM`: The calling process does not have superuser permissions.
 * `EFAULT`: `path` pointed to memory that was not accessible for the caller.
 * `ENOENT`: There was no module loaded with the specified name.
 
