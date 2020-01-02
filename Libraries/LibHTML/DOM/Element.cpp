@@ -78,6 +78,7 @@ bool Element::has_class(const StringView& class_name) const
 RefPtr<LayoutNode> Element::create_layout_node(const StyleProperties* parent_style) const
 {
     auto style = document().style_resolver().resolve_style(*this, parent_style);
+    const_cast<Element&>(*this).m_resolved_style = style;
     auto display = style->string_or_fallback(CSS::PropertyID::Display, "inline");
 
     if (display == "none")
@@ -139,6 +140,7 @@ void Element::recompute_style()
         return;
     ASSERT(parent_layout_node);
     auto style = document().style_resolver().resolve_style(*this, &parent_layout_node->style());
+    m_resolved_style = style;
     if (!layout_node()) {
         if (style->string_or_fallback(CSS::PropertyID::Display, "inline") == "none")
             return;
