@@ -29,8 +29,6 @@ void* mmap_with_name(void* addr, size_t, int prot, int flags, int fd, off_t, con
 int munmap(void*, size_t);
 int mprotect(void*, size_t, int prot);
 int set_mmap_name(void*, size_t, const char*);
-int shm_open(const char* name, int flags, mode_t);
-int shm_unlink(const char* name);
 int madvise(void*, size_t, int advice);
 
 __END_DECLS

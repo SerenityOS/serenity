@@ -17,7 +17,6 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/FileSystem/ProcFS.h>
-#include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/FileSystem/TmpFS.h>
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Heap/kmalloc.h>
@@ -3318,28 +3317,6 @@ int Process::sys$rename(const char* oldpath, const char* newpath)
     if (!validate_read_str(newpath))
         return -EFAULT;
     return VFS::the().rename(StringView(oldpath), StringView(newpath), current_directory());
-}
-
-int Process::sys$shm_open(const char* name, int flags, mode_t mode)
-{
-    if (!validate_read_str(name))
-        return -EFAULT;
-    int fd = alloc_fd();
-    if (fd < 0)
-        return fd;
-    auto shm_or_error = SharedMemory::open(String(name), flags, mode);
-    if (shm_or_error.is_error())
-        return shm_or_error.error();
-    auto description = FileDescription::create(shm_or_error.value());
-    m_fds[fd].set(move(description), FD_CLOEXEC);
-    return fd;
-}
-
-int Process::sys$shm_unlink(const char* name)
-{
-    if (!validate_read_str(name))
-        return -EFAULT;
-    return SharedMemory::unlink(String(name));
 }
 
 int Process::sys$ftruncate(int fd, off_t length)

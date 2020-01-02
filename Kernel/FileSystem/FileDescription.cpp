@@ -6,7 +6,6 @@
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeFile.h>
-#include <Kernel/FileSystem/SharedMemory.h>
 #include <Kernel/Net/Socket.h>
 #include <Kernel/Process.h>
 #include <Kernel/TTY/MasterPTY.h>
@@ -242,25 +241,6 @@ KResultOr<Region*> FileDescription::mmap(Process& process, VirtualAddress vaddr,
 KResult FileDescription::truncate(off_t length)
 {
     return m_file->truncate(length);
-}
-
-bool FileDescription::is_shared_memory() const
-{
-    return m_file->is_shared_memory();
-}
-
-SharedMemory* FileDescription::shared_memory()
-{
-    if (!is_shared_memory())
-        return nullptr;
-    return static_cast<SharedMemory*>(m_file.ptr());
-}
-
-const SharedMemory* FileDescription::shared_memory() const
-{
-    if (!is_shared_memory())
-        return nullptr;
-    return static_cast<const SharedMemory*>(m_file.ptr());
 }
 
 bool FileDescription::is_fifo() const

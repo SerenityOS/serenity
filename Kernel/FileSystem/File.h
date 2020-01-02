@@ -63,7 +63,6 @@ public:
     virtual bool is_seekable() const { return false; }
 
     virtual bool is_inode() const { return false; }
-    virtual bool is_shared_memory() const { return false; }
     virtual bool is_fifo() const { return false; }
     virtual bool is_device() const { return false; }
     virtual bool is_tty() const { return false; }

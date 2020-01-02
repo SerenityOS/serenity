@@ -107,8 +107,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(gettid)                     \
     __ENUMERATE_SYSCALL(donate)                     \
     __ENUMERATE_SYSCALL(rename)                     \
-    __ENUMERATE_SYSCALL(shm_open)                   \
-    __ENUMERATE_SYSCALL(shm_unlink)                 \
+    __ENUMERATE_REMOVED_SYSCALL(shm_open)           \
+    __ENUMERATE_REMOVED_SYSCALL(shm_unlink)         \
     __ENUMERATE_SYSCALL(ftruncate)                  \
     __ENUMERATE_SYSCALL(systrace)                   \
     __ENUMERATE_SYSCALL(exit_thread)                \

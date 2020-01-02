@@ -50,7 +50,6 @@ OBJS = \
     FileSystem/InodeFile.o \
     FileSystem/InodeWatcher.o \
     FileSystem/ProcFS.o \
-    FileSystem/SharedMemory.o \
     FileSystem/TmpFS.o \
     FileSystem/VirtualFileSystem.o \
     Heap/SlabAllocator.o \

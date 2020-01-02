@@ -45,18 +45,6 @@ int set_mmap_name(void* addr, size_t size, const char* name)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int shm_open(const char* name, int flags, mode_t mode)
-{
-    int rc = syscall(SC_shm_open, name, flags, mode);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
-int shm_unlink(const char* name)
-{
-    int rc = syscall(SC_shm_unlink, name);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int madvise(void* address, size_t size, int advice)
 {
     int rc = syscall(SC_madvise, address, size, advice);
