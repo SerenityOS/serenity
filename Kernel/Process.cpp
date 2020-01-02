@@ -113,7 +113,7 @@ Vector<Process*> Process::all_processes()
 
 bool Process::in_group(gid_t gid) const
 {
-    return m_gids.contains(gid);
+    return m_gid == gid || m_extra_gids.contains(gid);
 }
 
 Range Process::allocate_range(VirtualAddress vaddr, size_t size)
@@ -530,8 +530,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
             child->m_master_tls_region = &child->m_regions.last();
     }
 
-    for (auto gid : m_gids)
-        child->m_gids.set(gid);
+    child->m_extra_gids = m_extra_gids;
 
     auto& child_tss = child_first_thread->m_tss;
     child_tss.eax = 0; // fork() returns 0 in the child :^)
@@ -605,7 +604,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     auto description = result.value();
     auto metadata = description->metadata();
 
-    if (!metadata.may_execute(m_euid, m_gids))
+    if (!metadata.may_execute(*this))
         return -EACCES;
 
     if (!metadata.size)
@@ -789,7 +788,7 @@ KResultOr<Vector<String>> Process::find_shebang_interpreter_for_executable(const
     auto description = result.value();
     auto metadata = description->metadata();
 
-    if (!metadata.may_execute(m_euid, m_gids))
+    if (!metadata.may_execute(*this))
         return KResult(-EACCES);
 
     if (metadata.size < 3)
@@ -985,7 +984,7 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
     else
         first_thread = new Thread(*this);
 
-    m_gids.set(m_gid);
+    //m_gids.set(m_gid);
 
     if (fork_parent) {
         m_sid = fork_parent->m_sid;
@@ -2247,13 +2246,13 @@ int Process::sys$getgroups(ssize_t count, gid_t* gids)
     if (count < 0)
         return -EINVAL;
     if (!count)
-        return m_gids.size();
-    if (count != (int)m_gids.size())
+        return m_extra_gids.size();
+    if (count != (int)m_extra_gids.size())
         return -EINVAL;
-    if (!validate_write_typed(gids, m_gids.size()))
+    if (!validate_write_typed(gids, m_extra_gids.size()))
         return -EFAULT;
     size_t i = 0;
-    for (auto gid : m_gids)
+    for (auto gid : m_extra_gids)
         gids[i++] = gid;
     return 0;
 }
@@ -2266,10 +2265,12 @@ int Process::sys$setgroups(ssize_t count, const gid_t* gids)
         return -EPERM;
     if (!validate_read(gids, count))
         return -EFAULT;
-    m_gids.clear();
-    m_gids.set(m_gid);
-    for (int i = 0; i < count; ++i)
-        m_gids.set(gids[i]);
+    m_extra_gids.clear();
+    for (int i = 0; i < count; ++i) {
+        if (gids[i] == m_gid)
+            continue;
+        m_extra_gids.set(gids[i]);
+    }
     return 0;
 }
 

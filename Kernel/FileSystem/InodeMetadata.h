@@ -30,35 +30,35 @@ struct InodeMetadata {
     bool may_write(Process&) const;
     bool may_execute(Process&) const;
 
-    bool may_read(uid_t u, const HashTable<gid_t>& g) const
+    bool may_read(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
     {
         if (u == 0)
             return true;
         if (uid == u)
             return mode & 0400;
-        if (g.contains(gid))
+        if (gid == g || eg.contains(gid))
             return mode & 0040;
         return mode & 0004;
     }
 
-    bool may_write(uid_t u, const HashTable<gid_t>& g) const
+    bool may_write(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
     {
         if (u == 0)
             return true;
         if (uid == u)
             return mode & 0200;
-        if (g.contains(gid))
+        if (gid == g || eg.contains(gid))
             return mode & 0020;
         return mode & 0002;
     }
 
-    bool may_execute(uid_t u, const HashTable<gid_t>& g) const
+    bool may_execute(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
     {
         if (u == 0)
             return true;
         if (uid == u)
             return mode & 0100;
-        if (g.contains(gid))
+        if (gid == g || eg.contains(gid))
             return mode & 0010;
         return mode & 0001;
     }
