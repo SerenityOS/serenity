@@ -49,6 +49,7 @@ WSClientConnection::WSClientConnection(CLocalSocket& client_socket, int client_i
 
 WSClientConnection::~WSClientConnection()
 {
+    WSWindowManager::the().menu_manager().close_all_menus_from_client({}, *this);
     auto windows = move(m_windows);
 }
 

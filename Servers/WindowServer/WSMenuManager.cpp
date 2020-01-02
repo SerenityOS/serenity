@@ -171,6 +171,15 @@ void WSMenuManager::set_needs_window_resize()
     m_needs_window_resize = true;
 }
 
+void WSMenuManager::close_all_menus_from_client(Badge<WSClientConnection>, WSClientConnection & client)
+{
+    if (m_open_menu_stack.is_empty())
+        return;
+    if (m_open_menu_stack.first()->client() != &client)
+        return;
+    close_everyone();
+}
+
 void WSMenuManager::close_everyone()
 {
     for (auto& menu : m_open_menu_stack) {
