@@ -159,3 +159,8 @@ void VMObject::for_each_region(Callback callback)
             callback(region);
     }
 }
+
+inline bool is_user_address(VirtualAddress vaddr)
+{
+    return vaddr.get() >= (8 * MB) && vaddr.get() < 0xc0000000;
+}

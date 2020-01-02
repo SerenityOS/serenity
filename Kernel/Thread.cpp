@@ -714,21 +714,27 @@ String Thread::backtrace_impl() const
         recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
     }
 
+    bool mask_kernel_addresses = !current->process().is_superuser();
     for (auto& symbol : recognized_symbols) {
         if (!symbol.address)
             break;
         if (!symbol.ksym) {
-            if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
-                builder.appendf("%p  %s\n", symbol.address, process.elf_loader()->symbolicate(symbol.address).characters());
-            else
-                builder.appendf("%p\n", symbol.address);
+            if (!is_user_address(VirtualAddress(symbol.address))) {
+                builder.append("0xdeadc0de\n");
+            } else {
+                if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
+                    builder.appendf("%p  %s\n", symbol.address, process.elf_loader()->symbolicate(symbol.address).characters());
+                else
+                    builder.appendf("%p\n", symbol.address);
+            }
             continue;
         }
         unsigned offset = symbol.address - symbol.ksym->address;
-        if (symbol.ksym->address == ksym_highest_address && offset > 4096)
-            builder.appendf("%p\n", symbol.address);
-        else
-            builder.appendf("%p  %s +%u\n", symbol.address, demangle(symbol.ksym->name).characters(), offset);
+        if (symbol.ksym->address == ksym_highest_address && offset > 4096) {
+            builder.appendf("%p\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address);
+        } else {
+            builder.appendf("%p  %s +%u\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address, demangle(symbol.ksym->name).characters(), offset);
+        }
     }
     return builder.to_string();
 }

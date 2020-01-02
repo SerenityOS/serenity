@@ -601,11 +601,6 @@ void MemoryManager::unquickmap_page()
     m_quickmap_in_use = false;
 }
 
-static inline bool is_user_address(VirtualAddress vaddr)
-{
-    return vaddr.get() >= (8 * MB) && vaddr.get() < 0xc0000000;
-}
-
 template<MemoryManager::AccessSpace space, MemoryManager::AccessType access_type>
 bool MemoryManager::validate_range(const Process& process, VirtualAddress base_vaddr, size_t size) const
 {

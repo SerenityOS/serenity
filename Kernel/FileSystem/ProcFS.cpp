@@ -365,6 +365,7 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
     InterruptDisabler disabler;
     KBufferBuilder builder;
     JsonArraySerializer array(builder);
+    bool mask_kernel_addresses = !current->process().is_superuser();
     Profiling::for_each_sample([&](auto& sample) {
         auto object = array.add_object();
         object.add("pid", sample.pid);
@@ -375,7 +376,10 @@ Optional<KBuffer> procfs$profile(InodeIdentifier)
             if (sample.frames[i] == 0)
                 break;
             auto frame_object = frames_array.add_object();
-            frame_object.add("address", JsonValue((u32)sample.frames[i]));
+            u32 address = (u32)sample.frames[i];
+            if (mask_kernel_addresses && !is_user_address(VirtualAddress(address)))
+                address = 0xdeadc0de;
+            frame_object.add("address", address);
             frame_object.add("symbol", sample.symbolicated_frames[i]);
             frame_object.add("offset", JsonValue((u32)sample.offsets[i]));
             frame_object.finish();
