@@ -34,6 +34,8 @@ public:
     void close_everyone_not_in_lineage(WSMenu&);
     void close_menu_and_descendants(WSMenu&);
 
+    void close_all_menus_from_client(Badge<WSClientConnection>, WSClientConnection&);
+
     void add_applet(WSWindow&);
     void remove_applet(WSWindow&);
     void invalidate_applet(const WSWindow&, const Rect&);
