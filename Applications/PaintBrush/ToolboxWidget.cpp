@@ -27,6 +27,7 @@ public:
 
     virtual void context_menu_event(GContextMenuEvent& event) override
     {
+        set_checked(true);
         m_tool->on_contextmenu(event);
     }
 
