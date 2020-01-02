@@ -3478,6 +3478,11 @@ int Process::sys$mknod(const char* pathname, mode_t mode, dev_t dev)
     if (!validate_read_str(pathname))
         return -EFAULT;
 
+    if (!is_superuser()) {
+        if (!is_regular_file(mode) && !is_fifo(mode) && !is_socket(mode))
+            return -EPERM;
+    }
+
     return VFS::the().mknod(StringView(pathname), mode, dev, current_directory());
 }
 
