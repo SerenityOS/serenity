@@ -41,8 +41,8 @@ GAboutDialog::GAboutDialog(const StringView& name, const GraphicsBitmap* icon, C
             label->set_font(Font::default_bold_font());
     };
     make_label(m_name, true);
-    make_label("Serenity Operating System");
-    make_label("(C) The Serenity Developers");
+    make_label("SerenityOS");
+    make_label("(C) The SerenityOS developers");
 
     right_container->layout()->add_spacer();
 
