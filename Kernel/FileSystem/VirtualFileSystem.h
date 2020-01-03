@@ -31,6 +31,11 @@ class Custody;
 class Device;
 class FileDescription;
 
+struct UidAndGid {
+    uid_t uid;
+    gid_t gid;
+};
+
 class VFS {
     AK_MAKE_ETERNAL
 public:
@@ -62,8 +67,8 @@ public:
     KResult mount(NonnullRefPtr<FS>&&, Custody& mount_point);
     KResult unmount(InodeIdentifier guest_inode_id);
 
-    KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base);
-    KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody);
+    KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
+    KResultOr<NonnullRefPtr<FileDescription>> create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> = {});
     KResult mkdir(StringView path, mode_t mode, Custody& base);
     KResult link(StringView old_path, StringView new_path, Custody& base);
     KResult unlink(StringView path, Custody& base);

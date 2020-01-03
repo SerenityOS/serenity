@@ -947,13 +947,13 @@ const char* ProcFS::class_name() const
     return "ProcFS";
 }
 
-RefPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, int&)
+RefPtr<Inode> ProcFS::create_inode(InodeIdentifier, const String&, mode_t, off_t, dev_t, uid_t, gid_t, int&)
 {
     kprintf("FIXME: Implement ProcFS::create_inode()?\n");
     return {};
 }
 
-RefPtr<Inode> ProcFS::create_directory(InodeIdentifier, const String&, mode_t, int& error)
+RefPtr<Inode> ProcFS::create_directory(InodeIdentifier, const String&, mode_t, uid_t, gid_t, int& error)
 {
     error = -EROFS;
     return nullptr;

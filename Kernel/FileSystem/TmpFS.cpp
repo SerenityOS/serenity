@@ -62,7 +62,7 @@ RefPtr<Inode> TmpFS::get_inode(InodeIdentifier identifier) const
     return it->value;
 }
 
-RefPtr<Inode> TmpFS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, int& error)
+RefPtr<Inode> TmpFS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid, int& error)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
@@ -75,8 +75,8 @@ RefPtr<Inode> TmpFS::create_inode(InodeIdentifier parent_id, const String& name,
 
     InodeMetadata metadata;
     metadata.mode = mode;
-    metadata.uid = current->process().euid();
-    metadata.gid = current->process().egid();
+    metadata.uid = uid;
+    metadata.gid = gid;
     metadata.atime = now.tv_sec;
     metadata.ctime = now.tv_sec;
     metadata.mtime = now.tv_sec;
@@ -91,12 +91,12 @@ RefPtr<Inode> TmpFS::create_inode(InodeIdentifier parent_id, const String& name,
     return inode;
 }
 
-RefPtr<Inode> TmpFS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, int& error)
+RefPtr<Inode> TmpFS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid, int& error)
 {
     // Ensure it's a directory.
     mode &= ~0170000;
     mode |= 0040000;
-    return create_inode(parent_id, name, mode, 0, 0, error);
+    return create_inode(parent_id, name, mode, 0, 0, uid, gid, error);
 }
 
 TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)
