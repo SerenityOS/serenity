@@ -2515,18 +2515,6 @@ int Process::sys$rmdir(const char* pathname)
     return VFS::the().rmdir(StringView(pathname), current_directory());
 }
 
-int Process::sys$read_tsc(u32* lsw, u32* msw)
-{
-    if (!validate_write_typed(lsw))
-        return -EFAULT;
-    if (!validate_write_typed(msw))
-        return -EFAULT;
-    read_tsc(*lsw, *msw);
-    if (!is_superuser())
-        *lsw &= ~0xfff;
-    return 0;
-}
-
 int Process::sys$chmod(const char* pathname, mode_t mode)
 {
     if (!validate_read_str(pathname))
