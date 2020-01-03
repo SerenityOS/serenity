@@ -2024,9 +2024,6 @@ bool Process::validate_read(const void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
     VirtualAddress first_address((u32)address);
-    VirtualAddress last_address = first_address.offset(size - 1);
-    if (last_address < first_address)
-        return false;
     if (is_ring0()) {
         auto kmc_result = check_kernel_memory_access(first_address, false);
         if (kmc_result == KernelMemoryCheckResult::AccessGranted)
