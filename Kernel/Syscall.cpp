@@ -1,6 +1,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Process.h>
 #include <Kernel/ProcessTracer.h>
+#include <Kernel/Random.h>
 #include <Kernel/Syscall.h>
 #include <Kernel/VM/MemoryManager.h>
 
@@ -94,7 +95,7 @@ void syscall_handler(RegisterDump regs)
 {
     // Apply a random offset in the range 0-255 to the stack pointer,
     // to make kernel stacks a bit less deterministic.
-    auto* ptr = (char*)__builtin_alloca(read_tsc() & 0xff);
+    auto* ptr = (char*)__builtin_alloca(get_fast_random<u8>());
     asm volatile(""
                  : "=m"(*ptr));
 
