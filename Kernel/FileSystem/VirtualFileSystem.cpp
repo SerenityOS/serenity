@@ -163,7 +163,7 @@ KResult VFS::utime(StringView path, Custody& base, time_t atime, time_t mtime)
     auto& inode = *descriptor_or_error.value()->inode();
     if (inode.fs().is_readonly())
         return KResult(-EROFS);
-    if (inode.metadata().uid != current->process().euid())
+    if (!current->process().is_superuser() && inode.metadata().uid != current->process().euid())
         return KResult(-EACCES);
 
     int error = inode.set_atime(atime);
