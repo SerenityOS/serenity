@@ -30,6 +30,8 @@ public:
     virtual ssize_t sendto(FileDescription&, const void*, size_t, int, const sockaddr*, socklen_t) override;
     virtual ssize_t recvfrom(FileDescription&, void*, size_t, int flags, sockaddr*, socklen_t*) override;
     virtual KResult getsockopt(FileDescription&, int level, int option, void*, socklen_t*) override;
+    virtual KResult chown(uid_t, gid_t) override;
+    virtual KResult chmod(mode_t) override;
 
 private:
     explicit LocalSocket(int type);
@@ -42,6 +44,10 @@ private:
 
     // An open socket file on the filesystem.
     RefPtr<FileDescription> m_file;
+
+    uid_t m_prebind_uid { 0 };
+    uid_t m_prebind_gid { 0 };
+    mode_t m_prebind_mode { 0 };
 
     // A single LocalSocket is shared between two file descriptions
     // on the connect side and the accept side; so we need to store

@@ -34,6 +34,10 @@ LocalSocket::LocalSocket(int type)
     LOCKER(all_sockets().lock());
     all_sockets().resource().append(this);
 
+    m_prebind_uid = current->process().uid();
+    m_prebind_gid = current->process().gid();
+    m_prebind_mode = 0666;
+
 #ifdef DEBUG_LOCAL_SOCKET
     kprintf("%s(%u) LocalSocket{%p} created with type=%u\n", current->process().name().characters(), current->pid(), this, type);
 #endif
@@ -76,7 +80,9 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
     kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->process().name().characters(), current->pid(), this, safe_address);
 #endif
 
-    auto result = VFS::the().open(safe_address, O_CREAT | O_EXCL, S_IFSOCK | 0666, current->process().current_directory());
+    mode_t mode = S_IFSOCK | (m_prebind_mode & ~current->process().umask());
+    UidAndGid owner { m_prebind_uid, m_prebind_gid };
+    auto result = VFS::the().open( safe_address, O_CREAT | O_EXCL, mode, current->process().current_directory(), owner);
     if (result.is_error()) {
         if (result.error() == -EEXIST)
             return KResult(-EADDRINUSE);
@@ -333,4 +339,26 @@ KResult LocalSocket::getsockopt(FileDescription& description, int level, int opt
     default:
         return Socket::getsockopt(description, level, option, value, value_size);
     }
+}
+
+KResult LocalSocket::chmod(mode_t mode)
+{
+    if (m_file)
+        return m_file->chmod(mode);
+
+    m_prebind_mode = mode & 04777;
+    return KSuccess;
+}
+
+KResult LocalSocket::chown(uid_t uid, gid_t gid)
+{
+    if (m_file)
+        return m_file->chown(uid, gid);
+
+    if (!current->process().is_superuser() && (current->process().euid() != uid || !current->process().in_group(gid)))
+        return KResult(-EPERM);
+
+    m_prebind_uid = uid;
+    m_prebind_gid = gid;
+    return KSuccess;
 }

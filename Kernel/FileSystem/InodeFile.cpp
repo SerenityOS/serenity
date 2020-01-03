@@ -52,3 +52,13 @@ KResult InodeFile::truncate(off_t size)
 {
     return m_inode->truncate(size);
 }
+
+KResult InodeFile::chown(uid_t uid, gid_t gid)
+{
+    return VFS::the().chown(*m_inode, uid, gid);
+}
+
+KResult InodeFile::chmod(mode_t mode)
+{
+    return VFS::the().chmod(*m_inode, mode);
+}

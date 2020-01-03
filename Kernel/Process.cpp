@@ -2524,7 +2524,7 @@ int Process::sys$fchmod(int fd, mode_t mode)
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
-    return description->fchmod(mode);
+    return description->chmod(mode);
 }
 
 int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
