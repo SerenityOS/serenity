@@ -1689,8 +1689,6 @@ int Process::sys$killpg(int pgrp, int signum)
         return -EINVAL;
 
     InterruptDisabler disabler;
-    if (pgrp == 0)
-        return do_killpg(m_pgid, signum);
     return do_killpg(pgrp, signum);
 }
 
@@ -1791,9 +1789,7 @@ int Process::sys$kill(pid_t pid, int signal)
 {
     if (signal < 0 || signal >= 32)
         return -EINVAL;
-    if (pid == 0)
-        return do_killpg(m_pgid, signal);
-    if (pid < 0)
+    if (pid <= 0)
         return do_killpg(-pid, signal);
     if (pid == -1) {
         // FIXME: Send to all processes.
