@@ -23,6 +23,8 @@
 //#define CEVENTLOOP_DEBUG
 //#define DEFERRED_INVOKE_DEBUG
 
+class RPCClient;
+
 static CEventLoop* s_main_event_loop;
 static Vector<CEventLoop*>* s_event_loop_stack;
 HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
@@ -30,13 +32,18 @@ HashTable<CNotifier*>* CEventLoop::s_notifiers;
 int CEventLoop::s_next_timer_id = 1;
 int CEventLoop::s_wake_pipe_fds[2];
 RefPtr<CLocalServer> CEventLoop::s_rpc_server;
+HashMap<int, RefPtr<RPCClient>> s_rpc_clients;
+// FIXME: It's not great if this wraps around.
+static int s_next_client_id = 0;
 
 class RPCClient : public CObject {
     C_OBJECT(RPCClient)
 public:
     explicit RPCClient(RefPtr<CLocalSocket> socket)
         : m_socket(move(socket))
+        , m_client_id(s_next_client_id++)
     {
+        s_rpc_clients.set(m_client_id, this);
         add_child(*m_socket);
         m_socket->on_ready_to_read = [this] {
             i32 length;
@@ -118,12 +125,12 @@ public:
 
     void shutdown()
     {
-        // FIXME: This is quite a hackish way to clean ourselves up.
-        delete this;
+        s_rpc_clients.remove(m_client_id);
     }
 
 private:
     RefPtr<CLocalSocket> m_socket;
+    int m_client_id { -1 };
 };
 
 CEventLoop::CEventLoop()
@@ -159,10 +166,7 @@ CEventLoop::CEventLoop()
         ASSERT(listening);
 
         s_rpc_server->on_ready_to_accept = [&] {
-            auto client_socket = s_rpc_server->accept();
-            ASSERT(client_socket);
-            // NOTE: RPCClient will delete itself in RPCClient::shutdown().
-            (void)RPCClient::construct(move(client_socket)).leak_ref();
+            RPCClient::construct(s_rpc_server->accept());
         };
     }
 
