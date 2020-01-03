@@ -6,6 +6,7 @@
 #include <Kernel/Net/TCP.h>
 #include <Kernel/Net/TCPSocket.h>
 #include <Kernel/Process.h>
+#include <Kernel/Random.h>
 
 //#define TCP_SOCKET_DEBUG
 
@@ -358,7 +359,7 @@ int TCPSocket::protocol_allocate_local_port()
     static const u16 first_ephemeral_port = 32768;
     static const u16 last_ephemeral_port = 60999;
     static const u16 ephemeral_port_range_size = last_ephemeral_port - first_ephemeral_port;
-    u16 first_scan_port = first_ephemeral_port + RandomDevice::random_value() % ephemeral_port_range_size;
+    u16 first_scan_port = first_ephemeral_port + get_good_random<u16>() % ephemeral_port_range_size;
 
     LOCKER(sockets_by_tuple().lock());
     for (u16 port = first_scan_port;;) {

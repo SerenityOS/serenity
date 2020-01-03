@@ -307,6 +307,12 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
         kprintf("x86: RDTSC support restricted\n");
     }
 
+    if (g_cpu_supports_rdrand) {
+        kprintf("x86: Using RDRAND for good randomness\n");
+    } else {
+        kprintf("x86: No RDRAND support detected. Randomness will be shitty\n");
+    }
+
     RTC::initialize();
     PIC::initialize();
     gdt_init();
