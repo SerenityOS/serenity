@@ -22,7 +22,7 @@ public:
     int release_all_clean_pages();
 
 private:
-    explicit InodeVMObject(Inode&);
+    explicit InodeVMObject(Inode&, size_t);
     explicit InodeVMObject(const InodeVMObject&);
 
     InodeVMObject& operator=(const InodeVMObject&) = delete;
