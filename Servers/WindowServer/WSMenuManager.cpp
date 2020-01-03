@@ -263,6 +263,15 @@ void WSMenuManager::event(CEvent& event)
             applet->event(local_event);
         }
     }
+
+    if (event.type() == WSEvent::KeyDown) {
+        for_each_active_menubar_menu([&](WSMenu& menu) {
+            if (is_open(menu))
+                menu.dispatch_event(event);
+            return IterationDecision::Continue;
+        });
+    }
+
     return CObject::event(event);
 }
 
@@ -270,7 +279,7 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
 {
     bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove
         && !m_open_menu_stack.is_empty()
-        && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == system_menu());
+        && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == m_system_menu.ptr());
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != m_current_menu && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
@@ -278,17 +287,7 @@ void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& ev
         m_bar_open = !m_bar_open;
 
     if (should_open_menu && m_bar_open) {
-        if (m_current_menu == &menu)
-            return;
-        close_everyone();
-        if (!menu.is_empty()) {
-            menu.redraw_if_theme_changed();
-            auto& menu_window = menu.ensure_menu_window();
-            menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
-            menu_window.set_visible(true);
-        }
-        set_current_menu(&menu);
-        refresh();
+        open_menu(menu);
         return;
     }
 
@@ -366,6 +365,20 @@ void WSMenuManager::close_menu_and_descendants(WSMenu& menu)
     Vector<WSMenu*> menus_to_close;
     collect_menu_subtree(menu, menus_to_close);
     close_menus(menus_to_close);
+}
+
+void WSMenuManager::open_menu(WSMenu& menu)
+{
+    if (is_open(menu))
+        return;
+    if (!menu.is_empty()) {
+        menu.redraw_if_theme_changed();
+        auto& menu_window = menu.ensure_menu_window();
+        menu_window.move_to({ menu.rect_in_menubar().x(), menu.rect_in_menubar().bottom() + 2 });
+        menu_window.set_visible(true);
+    }
+    set_current_menu(&menu);
+    refresh();
 }
 
 void WSMenuManager::set_current_menu(WSMenu* menu, bool is_submenu)
