@@ -1285,6 +1285,9 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     if (!description)
         return -EBADF;
 
+    if (!description->is_writable())
+        return -EBADF;
+
     int nwritten = 0;
     for (int i = 0; i < iov_count; ++i) {
         int rc = do_write(*description, (const u8*)iov[i].iov_base, iov[i].iov_len);
@@ -1357,6 +1360,8 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
+    if (!description->is_writable())
+        return -EBADF;
 
     return do_write(*description, data, size);
 }
@@ -1374,6 +1379,8 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
 #endif
     auto* description = file_description(fd);
     if (!description)
+        return -EBADF;
+    if (!description->is_readable())
         return -EBADF;
     if (description->is_directory())
         return -EISDIR;
@@ -1589,6 +1596,7 @@ int Process::sys$open(const Syscall::SC_open_params* params)
     if (result.is_error())
         return result.error();
     auto description = result.value();
+    description->set_rw_mode(options);
     description->set_file_flags(options);
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(description), fd_flags);
@@ -1627,6 +1635,7 @@ int Process::sys$openat(const Syscall::SC_openat_params* params)
     if (result.is_error())
         return result.error();
     auto description = result.value();
+    description->set_rw_mode(options);
     description->set_file_flags(options);
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(description), fd_flags);
@@ -1660,10 +1669,12 @@ int Process::sys$pipe(int pipefd[2], int flags)
 
     int reader_fd = alloc_fd();
     m_fds[reader_fd].set(fifo->open_direction(FIFO::Direction::Reader), fd_flags);
+    m_fds[reader_fd].description->set_readable(true);
     pipefd[0] = reader_fd;
 
     int writer_fd = alloc_fd();
     m_fds[writer_fd].set(fifo->open_direction(FIFO::Direction::Writer), fd_flags);
+    m_fds[writer_fd].description->set_writable(true);
     pipefd[1] = writer_fd;
 
     return 0;
@@ -2684,6 +2695,8 @@ int Process::sys$socket(int domain, int type, int protocol)
     if (result.is_error())
         return result.error();
     auto description = FileDescription::create(*result.value());
+    description->set_readable(true);
+    description->set_writable(true);
     unsigned flags = 0;
     if (type & SOCK_CLOEXEC)
         flags |= FD_CLOEXEC;
@@ -2747,6 +2760,8 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     bool success = accepted_socket->get_peer_address(address, address_size);
     ASSERT(success);
     auto accepted_socket_description = FileDescription::create(*accepted_socket);
+    accepted_socket_description->set_readable(true);
+    accepted_socket_description->set_writable(true);
     // NOTE: The accepted socket inherits fd flags from the accepting socket.
     //       I'm not sure if this matches other systems but it makes sense to me.
     accepted_socket_description->set_blocking(accepting_socket_description->is_blocking());
@@ -3376,6 +3391,7 @@ int Process::sys$watch_file(const char* path, int path_length)
         return fd;
 
     m_fds[fd].set(FileDescription::create(*InodeWatcher::create(inode)));
+    m_fds[fd].description->set_readable(true);
     return fd;
 }
 
@@ -3391,6 +3407,7 @@ int Process::sys$systrace(pid_t pid)
     if (fd < 0)
         return fd;
     auto description = FileDescription::create(peer->ensure_tracer());
+    description->set_readable(true);
     m_fds[fd].set(move(description), 0);
     return fd;
 }
