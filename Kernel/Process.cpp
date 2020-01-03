@@ -3780,7 +3780,7 @@ int Process::sys$module_load(const char* path, size_t path_length)
     auto module = make<Module>();
 
     elf_image->for_each_section_of_type(SHT_PROGBITS, [&](const ELFImage::Section& section) {
-        auto section_storage = KBuffer::copy(section.raw_data(), section.size());
+        auto section_storage = KBuffer::copy(section.raw_data(), section.size(), Region::Access::Read | Region::Access::Write | Region::Access::Execute);
         section_storage_by_name.set(section.name(), section_storage.data());
         module->sections.append(move(section_storage));
         return IterationDecision::Continue;
