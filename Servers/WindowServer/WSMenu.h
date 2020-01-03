@@ -92,6 +92,10 @@ private:
 
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(WSMenuItem&);
+    void open_hovered_item();
+    void redraw_for_new_hovered_item();
+    void decend_into_submenu_at_hovered_item();
+
     WSClientConnection* m_client { nullptr };
     int m_menu_id { 0 };
     String m_name;
@@ -101,7 +105,11 @@ private:
     WSMenuItem* m_hovered_item { nullptr };
     NonnullOwnPtrVector<WSMenuItem> m_items;
     RefPtr<WSWindow> m_menu_window;
+
     WeakPtr<WSWindow> m_window_menu_of;
     bool m_is_window_menu_open = { false };
+
     int m_theme_index_at_last_paint { -1 };
+    int m_current_index { 0 };
+    bool m_in_submenu { false };
 };
