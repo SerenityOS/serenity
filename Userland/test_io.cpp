@@ -64,6 +64,17 @@ void test_read_from_writeonly()
     ASSERT(rc == 0);
 }
 
+void test_write_to_readonly()
+{
+    char str[] = "hello";
+    int fd = open("/tmp/abcd123", O_CREAT | O_RDONLY);
+    ASSERT(fd >= 0);
+    int rc;
+    EXPECT_ERROR_3(EBADF, write, fd, str, sizeof(str));
+    rc = close(fd);
+    ASSERT(rc == 0);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -78,6 +89,7 @@ int main(int, char**)
     test_read_from_directory();
     test_write_to_directory();
     test_read_from_writeonly();
+    test_write_to_readonly();
 
     return 0;
 }
