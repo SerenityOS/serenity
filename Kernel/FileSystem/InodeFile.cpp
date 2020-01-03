@@ -35,7 +35,6 @@ KResultOr<Region*> InodeFile::mmap(Process& process, FileDescription& descriptio
 {
     ASSERT(offset == 0);
     // FIXME: If PROT_EXEC, check that the underlying file system isn't mounted noexec.
-    InterruptDisabler disabler;
     auto* region = process.allocate_file_backed_region(preferred_vaddr, size, inode(), description.absolute_path(), prot);
     if (!region)
         return KResult(-ENOMEM);
