@@ -531,7 +531,7 @@ Ext2FSInode::~Ext2FSInode()
 
 InodeMetadata Ext2FSInode::metadata() const
 {
-    // FIXME: This should probably take the inode lock, no?
+    LOCKER(m_lock);
     InodeMetadata metadata;
     metadata.inode = identifier();
     metadata.size = m_raw_inode.i_size;
