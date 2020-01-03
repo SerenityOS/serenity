@@ -1681,7 +1681,8 @@ int Process::sys$killpg(int pgrp, int signum)
         return -EINVAL;
 
     InterruptDisabler disabler;
-
+    if (pgrp == 0)
+        return do_killpg(m_pgid, signum);
     return do_killpg(pgrp, signum);
 }
 
