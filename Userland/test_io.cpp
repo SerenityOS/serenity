@@ -53,6 +53,17 @@ void test_write_to_directory()
     ASSERT(rc == 0);
 }
 
+void test_read_from_writeonly()
+{
+    char buffer[BUFSIZ];
+    int fd = open("/tmp/xxxx123", O_CREAT | O_WRONLY);
+    ASSERT(fd >= 0);
+    int rc;
+    EXPECT_ERROR_3(EBADF, read, fd, buffer, sizeof(buffer));
+    rc = close(fd);
+    ASSERT(rc == 0);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -66,6 +77,7 @@ int main(int, char**)
 
     test_read_from_directory();
     test_write_to_directory();
+    test_read_from_writeonly();
 
     return 0;
 }
