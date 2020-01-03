@@ -315,6 +315,7 @@ void WSMenuManager::close_everyone()
     for (auto& menu : m_open_menu_stack) {
         if (menu && menu->menu_window())
             menu->menu_window()->set_visible(false);
+        menu->clear_hovered_item();
     }
     m_open_menu_stack.clear();
     m_current_menu = nullptr;
@@ -341,6 +342,7 @@ void WSMenuManager::close_menus(const Vector<WSMenu*>& menus)
             m_current_menu = nullptr;
         if (menu->menu_window())
             menu->menu_window()->set_visible(false);
+        menu->clear_hovered_item();
         m_open_menu_stack.remove_first_matching([&](auto& entry) {
             return entry == menu;
         });
