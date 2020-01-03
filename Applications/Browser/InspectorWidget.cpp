@@ -3,9 +3,11 @@
 #include <LibGUI/GSplitter.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GTreeView.h>
+#include <LibGUI/GTabWidget.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/DOMElementStyleModel.h>
+#include <LibHTML/DOMComputedElementStyleModel.h>
 #include <LibHTML/DOMTreeModel.h>
 
 InspectorWidget::InspectorWidget(GWidget* parent)
@@ -17,13 +19,24 @@ InspectorWidget::InspectorWidget(GWidget* parent)
     m_dom_tree_view->on_selection = [this](auto& index) {
         auto* node = static_cast<Node*>(index.internal_data());
         node->document().set_inspected_node(node);
-        if (node->is_element())
-            m_style_table_view->set_model(DOMElementStyleModel::create(to<Element>(*node)));
-        else
+        if (node->is_element()) {
+            auto element = to<Element>(*node);
+            m_style_table_view->set_model(DOMElementStyleModel::create(element));
+            m_computed_style_table_view->set_model(DOMComputedElementStyleModel::create(element));
+        } else {
             m_style_table_view->set_model(nullptr);
+            m_computed_style_table_view->set_model(nullptr);
+        }
     };
-    m_style_table_view = GTableView::construct(splitter);
+    m_style_table_view = GTableView::construct(nullptr);
     m_style_table_view->set_size_columns_to_fit_content(true);
+
+    m_computed_style_table_view = GTableView::construct(nullptr);
+    m_computed_style_table_view->set_size_columns_to_fit_content(true);
+
+    auto tabwidget = GTabWidget::construct(splitter);
+    tabwidget->add_widget("Styles", m_style_table_view);
+    tabwidget->add_widget("Computed", m_computed_style_table_view);
 }
 
 InspectorWidget::~InspectorWidget()

@@ -16,5 +16,6 @@ private:
 
     RefPtr<GTreeView> m_dom_tree_view;
     RefPtr<GTableView> m_style_table_view;
+    RefPtr<GTableView> m_computed_style_table_view;
     RefPtr<Document> m_document;
 };
