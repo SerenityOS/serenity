@@ -25,6 +25,26 @@ public:
     static NonnullRefPtr<FileDescription> create(File&);
     ~FileDescription();
 
+    bool is_readable() const { return m_readable; }
+    bool is_writable() const { return m_writable; }
+
+    void set_readable(bool b) { m_readable = b; }
+    void set_writable(bool b) { m_writable = b; }
+
+    void set_rw_mode(int options)
+    {
+        if (options & O_WRONLY) {
+            set_readable(false);
+            set_writable(true);
+        } else if (options & O_RDWR) {
+            set_readable(true);
+            set_writable(true);
+        } else {
+            set_readable(true);
+            set_writable(false);
+        }
+    }
+
     int close();
 
     off_t seek(off_t, int whence);
@@ -111,6 +131,8 @@ private:
 
     u32 m_file_flags { 0 };
 
+    bool m_readable { false };
+    bool m_writable { false };
     bool m_is_blocking { true };
     bool m_is_directory { false };
     bool m_should_append { false };
