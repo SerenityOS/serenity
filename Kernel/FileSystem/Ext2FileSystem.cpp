@@ -1284,7 +1284,7 @@ bool Ext2FS::set_block_allocation_state(BlockIndex block_index, bool new_state)
     return true;
 }
 
-RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, int& error)
+RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& name, mode_t mode, uid_t uid, gid_t gid, int& error)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
@@ -1296,7 +1296,7 @@ RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& 
 
     // NOTE: When creating a new directory, make the size 1 block.
     //       There's probably a better strategy here, but this works for now.
-    auto inode = create_inode(parent_id, name, mode, block_size(), 0, error);
+    auto inode = create_inode(parent_id, name, mode, block_size(), 0, uid, gid, error);
     if (!inode)
         return nullptr;
 
@@ -1328,7 +1328,7 @@ RefPtr<Inode> Ext2FS::create_directory(InodeIdentifier parent_id, const String& 
     return inode;
 }
 
-RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, int& error)
+RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name, mode_t mode, off_t size, dev_t dev, uid_t uid, gid_t gid, int& error)
 {
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
@@ -1378,8 +1378,8 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     ext2_inode e2inode;
     memset(&e2inode, 0, sizeof(ext2_inode));
     e2inode.i_mode = mode;
-    e2inode.i_uid = current->process().euid();
-    e2inode.i_gid = current->process().egid();
+    e2inode.i_uid = uid;
+    e2inode.i_gid = gid;
     e2inode.i_size = size;
     e2inode.i_atime = now.tv_sec;
     e2inode.i_ctime = now.tv_sec;
