@@ -205,6 +205,9 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
     auto& inode = custody.inode();
     auto metadata = inode.metadata();
 
+    if ((options & O_DIRECTORY) && !metadata.is_directory())
+        return KResult(-ENOTDIR);
+
     bool should_truncate_file = false;
 
     // NOTE: Read permission is a bit weird, since O_RDONLY == 0,
