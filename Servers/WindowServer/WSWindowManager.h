@@ -258,7 +258,6 @@ private:
 
     u8 m_keyboard_modifiers { 0 };
 
-
     WSWindowSwitcher m_switcher;
     WSMenuManager m_menu_manager;
 

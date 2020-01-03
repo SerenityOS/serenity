@@ -975,10 +975,18 @@ void WSWindowManager::event(CEvent& event)
                     }
                 }
             }
-
-            return m_active_window->dispatch_event(event);
+            m_active_window->dispatch_event(event);
+            return;
         }
-        return;
+
+        // FIXME: I would prefer to be WSEvent::KeyUp, and be at the top of this function
+        // However, the modifier is Invalid of Mod_Logo for a keyup event. Move after a fix is made.
+        if (key_event.type() == WSEvent::KeyDown && key_event.modifiers() == Mod_Logo) {
+            m_menu_manager.open_menu(m_menu_manager.system_menu());
+            return;
+        }
+
+        m_menu_manager.dispatch_event(event);
     }
 
     CObject::event(event);
