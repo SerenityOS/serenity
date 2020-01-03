@@ -396,6 +396,9 @@ KResult VFS::rename(StringView old_path, StringView new_path, Custody& base)
     auto& old_parent_inode = old_parent_custody->inode();
     auto& new_parent_inode = new_parent_custody->inode();
 
+    if (&old_parent_inode.fs() != &new_parent_inode.fs())
+        return KResult(-EXDEV);
+
     if (!new_parent_inode.metadata().may_write(current->process()))
         return KResult(-EACCES);
 
