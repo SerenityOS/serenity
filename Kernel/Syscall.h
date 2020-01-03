@@ -79,7 +79,7 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(select)                     \
     __ENUMERATE_SYSCALL(unlink)                     \
     __ENUMERATE_SYSCALL(poll)                       \
-    __ENUMERATE_SYSCALL(read_tsc)                   \
+    __ENUMERATE_REMOVED_SYSCALL(read_tsc)           \
     __ENUMERATE_SYSCALL(rmdir)                      \
     __ENUMERATE_SYSCALL(chmod)                      \
     __ENUMERATE_SYSCALL(usleep)                     \

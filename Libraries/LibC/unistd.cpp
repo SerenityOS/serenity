@@ -439,12 +439,6 @@ void sync()
     syscall(SC_sync);
 }
 
-int read_tsc(unsigned* lsw, unsigned* msw)
-{
-    int rc = syscall(SC_read_tsc, lsw, msw);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
-}
-
 int create_shared_buffer(int size, void** buffer)
 {
     int rc = syscall(SC_create_shared_buffer, size, buffer);
