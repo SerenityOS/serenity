@@ -692,8 +692,19 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
 
         auto& current_parent = custody_chain.last();
         crumb_id = crumb_inode->lookup(part);
-        if (!crumb_id.is_valid())
+        if (!crumb_id.is_valid()) {
+            if (i != parts.size() - 1) {
+                // We didn't find the filename we were looking for,
+                // and we didn't even reach the last path part.
+                // (ENOENT with non-null parent_custody) signals to caller that
+                // we found the immediate parent of the file, but the file itself
+                // does not exist yet.
+                // Since this is not the immediate parent, clear parent_custody.
+                if (parent_custody)
+                    *parent_custody = nullptr;
+            }
             return KResult(-ENOENT);
+        }
         if (auto mount = find_mount_for_host(crumb_id))
             crumb_id = mount->guest();
         if (inode_was_root_at_head_of_loop && crumb_id.is_root_inode() && !is_vfs_root(crumb_id) && part == "..") {
