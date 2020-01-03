@@ -1740,7 +1740,8 @@ KResult Process::do_kill(Process& process, int signal)
         kprintf("%s(%u) attempted to send SIGKILL to ring 0 process %s(%u)\n", name().characters(), m_pid, process.name().characters(), process.pid());
         return KResult(-EPERM);
     }
-    process.send_signal(signal, this);
+    if (signal != 0)
+        process.send_signal(signal, this);
     return KSuccess;
 }
 
@@ -1781,17 +1782,21 @@ int Process::sys$kill(pid_t pid, int signal)
 {
     if (signal < 0 || signal >= 32)
         return -EINVAL;
-    if (pid <= 0) {
+    if (pid == 0)
+        return do_killpg(m_pgid, signal);
+    if (pid < 0)
         return do_killpg(-pid, signal);
-    }
     if (pid == -1) {
         // FIXME: Send to all processes.
-        ASSERT(pid != -1);
+        return -ENOTIMPL;
     }
     if (pid == m_pid) {
-        // FIXME: If we ignore this signal anyway, we don't need to block here, right?
-        current->send_signal(signal, this);
-        (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+        if (signal == 0)
+            return 0;
+        if (!current->should_ignore_signal(signal)) {
+            current->send_signal(signal, this);
+            (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
+        }
         return 0;
     }
     InterruptDisabler disabler;
