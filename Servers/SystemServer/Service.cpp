@@ -86,6 +86,16 @@ void Service::setup_socket()
         ASSERT_NOT_REACHED();
     }
 
+    if (fchown(m_socket_fd, m_uid, m_gid) < 0) {
+        perror("fchown");
+        ASSERT_NOT_REACHED();
+    }
+
+    if (fchmod(m_socket_fd, 0600) < 0) {
+        perror("fchmod");
+        ASSERT_NOT_REACHED();
+    }
+
     auto socket_address = CSocketAddress::local(m_socket_path);
     auto un = socket_address.to_sockaddr_un();
     int rc = bind(m_socket_fd, (const sockaddr*)&un, sizeof(un));
@@ -225,14 +235,14 @@ Service::Service(const CConfigFile& config, const StringView& name)
     m_keep_alive = config.read_bool_entry(name, "KeepAlive");
     m_lazy = config.read_bool_entry(name, "Lazy");
 
+    m_user = config.read_entry(name, "User");
+    if (!m_user.is_null())
+        resolve_user();
+
     m_socket_path = config.read_entry(name, "Socket");
     if (!m_socket_path.is_null()) {
         setup_socket();
     }
-
-    m_user = config.read_entry(name, "User");
-    if (!m_user.is_null())
-        resolve_user();
 }
 
 void Service::save_to(JsonObject& json)
