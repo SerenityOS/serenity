@@ -84,6 +84,12 @@ bool CLocalServer::listen(const String& address)
 #endif
     ASSERT(m_fd >= 0);
 
+    rc = fchmod(m_fd, 0600);
+    if (rc < 0) {
+        perror("fchmod");
+        ASSERT_NOT_REACHED();
+    }
+
     auto socket_address = CSocketAddress::local(address);
     auto un = socket_address.to_sockaddr_un();
     rc = ::bind(m_fd, (const sockaddr*)&un, sizeof(un));
