@@ -52,7 +52,7 @@ public:
     ssize_t write(const u8* data, ssize_t);
     KResult fstat(stat&);
 
-    KResult fchmod(mode_t);
+    KResult chmod(mode_t);
 
     bool can_read() const;
     bool can_write() const;

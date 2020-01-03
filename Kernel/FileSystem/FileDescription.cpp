@@ -64,13 +64,6 @@ KResult FileDescription::fstat(stat& buffer)
     return metadata().stat(buffer);
 }
 
-KResult FileDescription::fchmod(mode_t mode)
-{
-    if (!m_inode)
-        return KResult(-EBADF);
-    return VFS::the().chmod(*m_inode, mode);
-}
-
 off_t FileDescription::seek(off_t offset, int whence)
 {
     if (!m_file->is_seekable())
@@ -282,9 +275,12 @@ void FileDescription::set_file_flags(u32 flags)
     m_file_flags = flags;
 }
 
+KResult FileDescription::chmod(mode_t mode)
+{
+    return m_file->chmod(mode);
+}
+
 KResult FileDescription::chown(uid_t uid, gid_t gid)
 {
-    if (!m_inode)
-        return KResult(-EINVAL);
-    return VFS::the().chown(*m_inode, uid, gid);
+    return m_file->chown(uid, gid);
 }
