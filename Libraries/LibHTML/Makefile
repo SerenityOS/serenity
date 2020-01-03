@@ -35,6 +35,7 @@ LIBHTML_OBJS = \
     DOM/ParentNode.o \
     DOM/Text.o \
     DOMElementStyleModel.o \
+    DOMComputedElementStyleModel.o \
     DOMTreeModel.o \
     Dump.o \
     FontCache.o \
