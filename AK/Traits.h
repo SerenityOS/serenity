@@ -38,6 +38,13 @@ struct Traits<u16> : public GenericTraits<u16> {
 };
 
 template<>
+struct Traits<u64> : public GenericTraits<u64> {
+    static constexpr bool is_trivial() { return true; }
+    static unsigned hash(u64 u) { return u64_hash(u); }
+    static void dump(u64 u) { kprintf("%u", (unsigned)u); } // FIXME: Implement unsigned long long printf specifier, instead of this sadness :(
+};
+
+template<>
 struct Traits<char> : public GenericTraits<char> {
     static constexpr bool is_trivial() { return true; }
     static unsigned hash(char c) { return int_hash(c); }
