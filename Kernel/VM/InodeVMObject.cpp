@@ -5,10 +5,11 @@
 
 NonnullRefPtr<InodeVMObject> InodeVMObject::create_with_inode(Inode& inode)
 {
+    size_t size = inode.size();
     InterruptDisabler disabler;
     if (inode.vmobject())
         return *inode.vmobject();
-    auto vmobject = adopt(*new InodeVMObject(inode));
+    auto vmobject = adopt(*new InodeVMObject(inode, size));
     vmobject->inode().set_vmobject(*vmobject);
     return vmobject;
 }
@@ -18,8 +19,8 @@ NonnullRefPtr<VMObject> InodeVMObject::clone()
     return adopt(*new InodeVMObject(*this));
 }
 
-InodeVMObject::InodeVMObject(Inode& inode)
-    : VMObject(inode.size())
+InodeVMObject::InodeVMObject(Inode& inode, size_t size)
+    : VMObject(size)
     , m_inode(inode)
     , m_dirty_pages(page_count(), false)
 {
