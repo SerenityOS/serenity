@@ -185,6 +185,9 @@ KResultOr<InodeMetadata> VFS::lookup_metadata(StringView path, Custody& base, in
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options, mode_t mode, Custody& base)
 {
+    if ((options & O_CREAT) && (options & O_DIRECTORY))
+        return KResult(-EINVAL);
+
     RefPtr<Custody> parent_custody;
     auto custody_or_error = resolve_path(path, base, &parent_custody, options);
     if (options & O_CREAT) {
