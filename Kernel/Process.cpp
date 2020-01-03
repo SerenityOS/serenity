@@ -1589,8 +1589,6 @@ int Process::sys$open(const Syscall::SC_open_params* params)
     if (result.is_error())
         return result.error();
     auto description = result.value();
-    if (options & O_DIRECTORY && !description->is_directory())
-        return -ENOTDIR; // FIXME: This should be handled by VFS::open.
     description->set_file_flags(options);
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(description), fd_flags);
@@ -1629,8 +1627,6 @@ int Process::sys$openat(const Syscall::SC_openat_params* params)
     if (result.is_error())
         return result.error();
     auto description = result.value();
-    if (options & O_DIRECTORY && !description->is_directory())
-        return -ENOTDIR; // FIXME: This should be handled by VFS::open.
     description->set_file_flags(options);
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(description), fd_flags);
