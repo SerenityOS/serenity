@@ -8,8 +8,6 @@ public:
     RandomDevice();
     virtual ~RandomDevice() override;
 
-    static u32 random_value();
-
 private:
     // ^CharacterDevice
     virtual ssize_t read(FileDescription&, u8*, ssize_t) override;

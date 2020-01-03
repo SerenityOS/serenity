@@ -524,6 +524,7 @@ void sse_init()
 bool g_cpu_supports_nx;
 bool g_cpu_supports_pae;
 bool g_cpu_supports_pge;
+bool g_cpu_supports_rdrand;
 bool g_cpu_supports_smep;
 bool g_cpu_supports_sse;
 bool g_cpu_supports_tsc;
@@ -536,6 +537,7 @@ void detect_cpu_features()
     g_cpu_supports_pge = (processor_info.edx() & (1 << 13));
     g_cpu_supports_sse = (processor_info.edx() & (1 << 25));
     g_cpu_supports_tsc = (processor_info.edx() & (1 << 4));
+    g_cpu_supports_rdrand = (processor_info.ecx() & (1 << 30));
 
     CPUID extended_processor_info(0x80000001);
     g_cpu_supports_nx = (extended_processor_info.edx() & (1 << 20));

@@ -78,6 +78,7 @@ OBJS = \
     ProcessTracer.o \
     Profiling.o \
     RTC.o \
+    Random.o \
     Scheduler.o \
     SharedBuffer.o \
     StdLib.o \
