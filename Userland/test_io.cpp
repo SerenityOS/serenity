@@ -5,14 +5,6 @@
 #include <sys/mman.h>
 #include <unistd.h>
 
-#define EXPECT_OK(syscall, address, size)                                                                                                   \
-    do {                                                                                                                                    \
-        rc = syscall(fd, (void*)(address));                                                                                                 \
-        if (rc < 0) {                                                                                                                       \
-            fprintf(stderr, "Expected success: " #syscall "(%p, %zu), got rc=%d, errno=%d\n", (void*)(address), (size_t)(size), rc, errno); \
-        }                                                                                                                                   \
-    } while (0)
-
 #define EXPECT_ERROR_2(err, syscall, arg1, arg2)                                                                                                                          \
     do {                                                                                                                                                                  \
         rc = syscall(arg1, arg2);                                                                                                                                         \
@@ -75,6 +67,26 @@ void test_write_to_readonly()
     ASSERT(rc == 0);
 }
 
+void test_read_past_eof()
+{
+    char buffer[BUFSIZ];
+    int fd = open("/home/anon/myfile.txt", O_RDONLY);
+    if (fd < 0)
+        perror("open");
+    ASSERT(fd >= 0);
+    int rc;
+    rc = lseek(fd, 9999, SEEK_SET);
+    if (rc < 0)
+        perror("lseek");
+    rc = read(fd, buffer, sizeof(buffer));
+    if (rc < 0)
+        perror("read");
+    if (rc > 0)
+        fprintf(stderr, "read %d bytes past EOF\n", rc);
+    rc = close(fd);
+    ASSERT(rc == 0);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -90,6 +102,7 @@ int main(int, char**)
     test_write_to_directory();
     test_read_from_writeonly();
     test_write_to_readonly();
+    test_read_past_eof();
 
     return 0;
 }
