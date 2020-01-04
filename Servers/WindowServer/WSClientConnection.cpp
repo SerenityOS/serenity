@@ -394,7 +394,7 @@ OwnPtr<WindowServer::GetClipboardContentsResponse> WSClientConnection::handle(co
 OwnPtr<WindowServer::CreateWindowResponse> WSClientConnection::handle(const WindowServer::CreateWindow& message)
 {
     int window_id = m_next_window_id++;
-    auto window = WSWindow::construct(*this, (WSWindowType)message.type(), window_id, message.modal(), message.resizable(), message.fullscreen());
+    auto window = WSWindow::construct(*this, (WSWindowType)message.type(), window_id, message.modal(), message.minimizable(), message.resizable(), message.fullscreen());
     window->set_has_alpha_channel(message.has_alpha_channel());
     window->set_title(message.title());
     if (!message.fullscreen())
