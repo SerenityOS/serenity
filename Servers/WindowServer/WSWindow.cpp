@@ -162,6 +162,7 @@ void WSWindow::set_maximized(bool maximized)
         return;
     if (maximized && !is_resizable())
         return;
+    set_tiled(WindowTileType::None);
     m_maximized = maximized;
     update_menu_item_text(PopupMenuItem::Maximize);
     auto old_rect = m_rect;
@@ -355,7 +356,7 @@ void WSWindow::set_tiled(WindowTileType tiled)
 
     int frame_width = (m_frame.rect().width() - m_rect.width()) / 2;
     switch (tiled) {
-        case WindowTileType::None :
+    case WindowTileType::None :
         set_rect(m_untiled_rect);
         break;
     case WindowTileType::Left :
@@ -369,7 +370,7 @@ void WSWindow::set_tiled(WindowTileType tiled)
         m_untiled_rect = m_rect;
         set_rect(WSScreen::the().width() / 2 + frame_width,
                 WSWindowManager::the().maximized_window_rect(*this).y(),
-                (WSScreen::the().width() / 2) - frame_width,
+                WSScreen::the().width() / 2 - frame_width,
                 WSWindowManager::the().maximized_window_rect(*this).height());
         break;
     }
