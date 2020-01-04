@@ -1,9 +1,9 @@
 #include <AK/NonnullRefPtrVector.h>
 #include <LibGUI/GModel.h>
 
-class Element;
+class StyleProperties;
 
-class DOMElementStyleModel final : public GModel {
+class StylePropertiesModel final : public GModel {
 public:
     enum Column {
         PropertyName,
@@ -11,7 +11,7 @@ public:
         __Count
     };
 
-    static NonnullRefPtr<DOMElementStyleModel> create(const Element& element) { return adopt(*new DOMElementStyleModel(element)); }
+    static NonnullRefPtr<StylePropertiesModel> create(const StyleProperties& properties) { return adopt(*new StylePropertiesModel(properties)); }
 
     virtual int row_count(const GModelIndex& = GModelIndex()) const override;
     virtual int column_count(const GModelIndex& = GModelIndex()) const override { return Column::__Count; }
@@ -20,10 +20,10 @@ public:
     virtual void update() override;
 
 private:
-    explicit DOMElementStyleModel(const Element&);
-    const Element& element() const { return *m_element; }
+    explicit StylePropertiesModel(const StyleProperties& properties);
+    const StyleProperties& properties() const { return *m_properties; }
 
-    NonnullRefPtr<Element> m_element;
+    NonnullRefPtr<StyleProperties> m_properties;
 
     struct Value {
         String name;
