@@ -2,6 +2,7 @@
 
 set -e
 
+wheel_gid=1
 tty_gid=2
 phys_gid=3
 audio_gid=4
@@ -99,7 +100,8 @@ elif [ "$(uname -s)" = "OpenBSD" ]; then
 else
     find ../Userland/ -type f -executable -exec cp {} mnt/bin/ \;
 fi
-chmod 4755 mnt/bin/su
+chown 0:$wheel_gid mnt/bin/su
+chmod 4750 mnt/bin/su
 chmod 4755 mnt/bin/ping
 echo "done"
 
