@@ -105,7 +105,9 @@ int print_name(const struct stat& st, const String& name, const char* path_for_l
         const char* begin_color = "";
         const char* end_color = "\033[0m";
 
-        if (S_ISLNK(st.st_mode))
+        if (st.st_mode & S_ISVTX)
+            begin_color = "\033[42;30;1m";
+        else if (S_ISLNK(st.st_mode))
             begin_color = "\033[36;1m";
         else if (S_ISDIR(st.st_mode))
             begin_color = "\033[34;1m";
