@@ -349,7 +349,7 @@ int dup2(int old_fd, int new_fd)
 
 int setgroups(size_t size, const gid_t* list)
 {
-    int rc = syscall(SC_getgroups, size, list);
+    int rc = syscall(SC_setgroups, size, list);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
