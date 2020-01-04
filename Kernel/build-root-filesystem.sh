@@ -4,9 +4,7 @@ set -e
 
 tty_gid=2
 phys_gid=3
-
-# HACK: Get rid of old "qs" binaries still lying around from before it was renamed.
-rm -f ../Userland/qs
+audio_gid=4
 
 die() {
     echo "die: $*"
@@ -60,8 +58,9 @@ mknod mnt/dev/psaux c 10 1
 chmod 440 mnt/dev/psaux
 chown 0:$phys_gid mnt/dev/psaux
 mknod mnt/dev/audio c 42 42
+chmod 220 mnt/dev/audio
+chown 0:$audio_gid mnt/dev/audio
 mknod mnt/dev/ptmx c 5 2
-chmod 666 mnt/dev/audio
 chmod 666 mnt/dev/ptmx
 mknod mnt/dev/hda b 3 0
 mknod mnt/dev/hdb b 3 1
