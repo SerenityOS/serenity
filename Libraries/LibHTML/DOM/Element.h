@@ -57,6 +57,7 @@ public:
     String name() const { return attribute("name"); }
 
     const StyleProperties* resolved_style() const { return m_resolved_style.ptr(); }
+    RefPtr<StyleProperties> computed_style();
 
 private:
     RefPtr<LayoutNode> create_layout_node(const StyleProperties* parent_style) const override;
