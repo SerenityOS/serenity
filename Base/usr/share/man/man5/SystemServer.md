@@ -18,7 +18,7 @@ describing how to launch and manage this service.
 
 * `Executable` - an executable to spawn. If no explicit executable is specified, SystemServer assumes `/bin/{service name}` (for example, `/bin/WindowServer` for a service named `WindowServer`).
 * `Arguments` - a space-separated list of arguments to pass to the service as `argv` (excluding `argv[0]`). By default, SystemServer does not pass any arguments other than `argv[0]`.
-* `StdIO` - a path to a file to be passed as standard I/O streams to the service. By default, services inherit SystemServer's own standard I/O streams, which are normally set to `/dev/tty0`.
+* `StdIO` - a path to a file to be passed as standard I/O streams to the service. By default, services run with `/dev/null` for standard I/O.
 * `Priority` - the scheduling priority to set for the service, either "low", "normal", or "high". The default is "normal".
 * `KeepAlive` - whether the service should be restarted if it exits or crashes. For lazy services, this means the service will get respawned once a new connection is attempted on their socket after they exit or crash.
 * `Lazy` - whether the service should only get spawned once a client attempts to connect to their socket.

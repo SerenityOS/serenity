@@ -190,6 +190,11 @@ void Service::spawn()
             close(STDIN_FILENO);
             close(STDOUT_FILENO);
             close(STDERR_FILENO);
+
+            int fd = open("/dev/null", O_RDWR);
+            ASSERT(fd == STDIN_FILENO);
+            dup2(STDIN_FILENO, STDOUT_FILENO);
+            dup2(STDIN_FILENO, STDERR_FILENO);
         }
 
         if (!m_socket_path.is_null()) {
