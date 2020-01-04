@@ -1,5 +1,5 @@
 [App]
-Name=DisplayProperties
+Name=Display Properties
 Executable=/bin/DisplayProperties
 Category=Graphics
 

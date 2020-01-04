@@ -1,5 +1,5 @@
 [App]
-Name=SystemMonitor
+Name=System Monitor
 Executable=/bin/SystemMonitor
 Category=Utilities
 

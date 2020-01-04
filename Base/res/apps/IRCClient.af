@@ -1,5 +1,5 @@
 [App]
-Name=IRCClient
+Name=IRC Client
 Executable=/bin/IRCClient
 Category=Internet
 

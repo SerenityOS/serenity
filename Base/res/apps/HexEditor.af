@@ -1,5 +1,5 @@
 [App]
-Name=HexEditor
+Name=Hex Editor
 Executable=/bin/HexEditor
 Category=Development
 
