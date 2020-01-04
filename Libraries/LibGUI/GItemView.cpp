@@ -71,14 +71,40 @@ Rect GItemView::item_rect(int item_index) const
     };
 }
 
+Vector<int> GItemView::items_intersecting_rect(const Rect& rect) const
+{
+    ASSERT(model());
+    const auto& column_metadata = model()->column_metadata(model_column());
+    const auto& font = column_metadata.font ? *column_metadata.font : this->font();
+    Vector<int> item_indexes;
+    for (int item_index = 0; item_index < item_count(); ++item_index) {
+        Rect item_rect;
+        Rect icon_rect;
+        Rect text_rect;
+        auto item_text = model()->data(model()->index(item_index, model_column()));
+        get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
+        if (icon_rect.intersects(rect) || text_rect.intersects(rect))
+            item_indexes.append(item_index);
+    }
+    return item_indexes;
+}
+
 int GItemView::item_at_event_position(const Point& position) const
 {
+    ASSERT(model());
     // FIXME: Since all items are the same size, just compute the clicked item index
     //        instead of iterating over everything.
     auto adjusted_position = position.translated(0, vertical_scrollbar().value());
-    for (int i = 0; i < item_count(); ++i) {
-        if (item_rect(i).contains(adjusted_position))
-            return i;
+    const auto& column_metadata = model()->column_metadata(model_column());
+    const auto& font = column_metadata.font ? *column_metadata.font : this->font();
+    for (int item_index = 0; item_index < item_count(); ++item_index) {
+        Rect item_rect;
+        Rect icon_rect;
+        Rect text_rect;
+        auto item_text = model()->data(model()->index(item_index, model_column()));
+        get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
+        if (icon_rect.contains(adjusted_position) || text_rect.contains(adjusted_position))
+            return item_index;
     }
     return -1;
 }
@@ -126,10 +152,8 @@ void GItemView::mousemove_event(GMouseEvent& event)
             m_rubber_band_current = event.position();
             auto rubber_band_rect = Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
             selection().clear();
-            for (int row_index = 0, row_count = model()->row_count(); row_index < row_count; ++row_index) {
-                auto item_rect = this->item_rect(row_index);
-                if (item_rect.intersects(rubber_band_rect))
-                    selection().add(model()->index(row_index, model_column()));
+            for (auto item_index : items_intersecting_rect(rubber_band_rect)) {
+                selection().add(model()->index(item_index, model_column()));
             }
             update();
             return;
@@ -215,6 +239,18 @@ void GItemView::doubleclick_event(GMouseEvent& event)
     }
 }
 
+void GItemView::get_item_rects(int item_index, const Font& font, const GVariant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const
+{
+    item_rect = this->item_rect(item_index);
+    icon_rect = { 0, 0, 32, 32 };
+    icon_rect.center_within(item_rect);
+    icon_rect.move_by(0, -font.glyph_height() - 6);
+    text_rect = { 0, icon_rect.bottom() + 6 + 1, font.width(item_text.to_string()), font.glyph_height() };
+    text_rect.center_horizontally_within(item_rect);
+    text_rect.inflate(6, 4);
+    text_rect.intersect(item_rect);
+}
+
 void GItemView::second_paint_event(GPaintEvent& event)
 {
     if (!m_rubber_banding)
@@ -243,7 +279,8 @@ void GItemView::paint_event(GPaintEvent& event)
     const Font& font = column_metadata.font ? *column_metadata.font : this->font();
 
     for (int item_index = 0; item_index < model()->row_count(); ++item_index) {
-        bool is_selected_item = selection().contains(model()->index(item_index, m_model_column));
+        auto model_index = model()->index(item_index, m_model_column);
+        bool is_selected_item = selection().contains(model_index);
         Color background_color;
         if (is_selected_item) {
             background_color = is_focused() ? palette().selection() : Color::from_rgb(0x606060);
@@ -251,25 +288,18 @@ void GItemView::paint_event(GPaintEvent& event)
             background_color = widget_background_color;
         }
 
-        Rect item_rect = this->item_rect(item_index);
-        auto model_index = model()->index(item_index, m_model_column);
-
         auto icon = model()->data(model_index, GModel::Role::Icon);
         auto item_text = model()->data(model_index, GModel::Role::Display);
 
-        Rect icon_rect = { 0, 0, 32, 32 };
-        icon_rect.center_within(item_rect);
-        icon_rect.move_by(0, -font.glyph_height() - 6);
+        Rect item_rect;
+        Rect icon_rect;
+        Rect text_rect;
+        get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
 
         if (icon.is_icon()) {
             if (auto bitmap = icon.as_icon().bitmap_for_size(icon_rect.width()))
                 painter.draw_scaled_bitmap(icon_rect, *bitmap, bitmap->rect());
         }
-
-        Rect text_rect { 0, icon_rect.bottom() + 6 + 1, font.width(item_text.to_string()), font.glyph_height() };
-        text_rect.center_horizontally_within(item_rect);
-        text_rect.inflate(6, 4);
-        text_rect.intersect(item_rect);
 
         Color text_color;
         if (is_selected_item)
