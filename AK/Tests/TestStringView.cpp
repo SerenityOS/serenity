@@ -7,7 +7,7 @@ TEST_CASE(construct_empty)
     EXPECT(StringView().is_null());
     EXPECT(StringView().is_empty());
     EXPECT(!StringView().characters_without_null_termination());
-    EXPECT_EQ(StringView().length(), 0);
+    EXPECT_EQ(StringView().length(), size_t { 0 });
 }
 
 TEST_CASE(view_literal)
