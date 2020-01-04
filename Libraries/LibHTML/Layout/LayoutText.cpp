@@ -46,7 +46,7 @@ void LayoutText::render_fragment(RenderingContext& context, const LineBoxFragmen
     if (background_color.has_value() && background_color.value()->is_color())
         painter.fill_rect(enclosing_int_rect(fragment.rect()), background_color.value()->to_color(document()));
 
-    auto color = style().color_or_fallback(CSS::PropertyID::Color, document(), Color::Black);
+    auto color = style().color_or_fallback(CSS::PropertyID::Color, document(), context.palette().base_text());
     auto text_decoration = style().string_or_fallback(CSS::PropertyID::TextDecoration, "none");
 
     if (document().inspected_node() == &node())
@@ -146,7 +146,7 @@ void LayoutText::split_into_lines(LayoutBlock& container)
     if (style().string_or_fallback(CSS::PropertyID::WhiteSpace, "normal") == "pre") {
         split_preformatted_into_lines(container);
         return;
-   }
+    }
 
     // Collapse whitespace into single spaces
     auto utf8_view = Utf8View(node().data());

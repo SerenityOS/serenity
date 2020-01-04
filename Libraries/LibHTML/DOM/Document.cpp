@@ -1,6 +1,7 @@
 #include <AK/FileSystemPath.h>
 #include <AK/StringBuilder.h>
 #include <LibCore/CTimer.h>
+#include <LibGUI/GApplication.h>
 #include <LibHTML/CSS/StyleResolver.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/DocumentType.h>
@@ -116,19 +117,20 @@ void Document::detach_from_frame(Badge<Frame>, Frame&)
     m_frame = nullptr;
 }
 
-Color Document::background_color() const
+Color Document::background_color(const Palette& palette) const
 {
+    auto default_color = palette.base();
     auto* body_element = body();
     if (!body_element)
-        return Color::White;
+        return default_color;
 
     auto* body_layout_node = body_element->layout_node();
     if (!body_layout_node)
-        return Color::White;
+        return default_color;
 
     auto background_color = body_layout_node->style().property(CSS::PropertyID::BackgroundColor);
     if (!background_color.has_value() || !background_color.value()->is_color())
-        return Color::White;
+        return default_color;
 
     return background_color.value()->to_color(*this);
 }
