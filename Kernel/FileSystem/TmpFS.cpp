@@ -121,7 +121,7 @@ NonnullRefPtr<TmpFSInode> TmpFSInode::create(TmpFS& fs, InodeMetadata metadata, 
 NonnullRefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
-    metadata.mode = 0040777;
+    metadata.mode = 0041777;
     return create(fs, metadata, { fs.fsid(), 1 });
 }
 
