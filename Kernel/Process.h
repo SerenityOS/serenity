@@ -377,11 +377,7 @@ private:
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
 
-    static void notify_waiters(pid_t waitee, int exit_status, int signal);
-
     HashTable<gid_t> m_extra_gids;
-
-    int m_next_tid { 0 };
 
     RefPtr<ProcessTracer> m_tracer;
     OwnPtr<ELFLoader> m_elf_loader;
