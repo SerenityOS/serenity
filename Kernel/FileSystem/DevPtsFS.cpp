@@ -77,7 +77,7 @@ RefPtr<Inode> DevPtsFS::get_inode(InodeIdentifier inode_id) const
     inode->m_metadata.size = 0;
     inode->m_metadata.uid = device->uid();
     inode->m_metadata.gid = device->gid();
-    inode->m_metadata.mode = 0020644;
+    inode->m_metadata.mode = 0020600;
     inode->m_metadata.major_device = device->major();
     inode->m_metadata.minor_device = device->minor();
     inode->m_metadata.mtime = mepoch;
