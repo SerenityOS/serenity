@@ -166,10 +166,14 @@ ln -s ProfileViewer mnt/bin/pv
 echo "done"
 
 mkdir -p mnt/boot/
+chmod 700 mnt/boot/
 cp kernel mnt/boot/
+chmod 600 mnt/boot/kernel
 
 mkdir -p mnt/mod/
+chmod 700 mnt/mod/
 cp TestModule.kernel.o mnt/mod/TestModule.o
+chmod 600 mnt/mod/*.o
 
 # Run local sync script, if it exists
 if [ -f sync-local.sh ]; then
