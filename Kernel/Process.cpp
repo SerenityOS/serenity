@@ -3700,12 +3700,6 @@ int Process::sys$sync()
     return 0;
 }
 
-int Process::sys$putch(char ch)
-{
-    Console::the().put_char(ch);
-    return 0;
-}
-
 int Process::sys$yield()
 {
     current->yield_without_holding_big_lock();

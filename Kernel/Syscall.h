@@ -16,7 +16,7 @@ typedef u32 socklen_t;
 #define ENUMERATE_SYSCALLS                          \
     __ENUMERATE_SYSCALL(sleep)                      \
     __ENUMERATE_SYSCALL(yield)                      \
-    __ENUMERATE_SYSCALL(putch)                      \
+    __ENUMERATE_REMOVED_SYSCALL(putch)              \
     __ENUMERATE_SYSCALL(open)                       \
     __ENUMERATE_SYSCALL(close)                      \
     __ENUMERATE_SYSCALL(read)                       \
