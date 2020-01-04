@@ -10,8 +10,8 @@ sudo apt install build-essential curl libmpfr-dev libmpc-dev libgmp-dev e2fsprog
 Ensure your gcc version is >= 8 with `gcc --version`. Otherwise, install it (on Ubuntu) with:
 ```bash
 sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-sudo apt-get install gcc-8 g++-8
-sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+sudo apt-get install gcc-9 g++-9
+sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /usr/bin/g++ g++ /usr/bin/g++-9
 ```
 
 ### macOS prerequisites
