@@ -1114,8 +1114,48 @@ void WSWindowManager::event(CEvent& event)
             m_switcher.on_key_event(key_event);
             return;
         }
-        if (m_active_window)
+
+        if (m_active_window) {
+            if (key_event.type() == WSEvent::KeyDown && key_event.modifiers() == Mod_Logo) {
+                if (key_event.key() == Key_Down) {
+                    if (m_active_window->is_resizable() && m_active_window->is_maximized()) {
+                        m_active_window->set_maximized(false);
+                        return;
+                    }
+                    if (m_active_window->is_minimizable())
+                        m_active_window->set_minimized(true);
+                    return;
+                }
+                if (m_active_window->is_resizable()) {
+                    if (key_event.key() == Key_Up) {
+                        m_active_window->set_maximized(!m_active_window->is_maximized());
+                        return;
+                    }
+                    if (key_event.key() == Key_Left) {
+                        if (m_active_window->tiled() != WindowTileType::None) {
+                            m_active_window->set_tiled(WindowTileType::None);
+                            return;
+                        }
+                        if (m_active_window->is_maximized())
+                            m_active_window->set_maximized(false);
+                        m_active_window->set_tiled(WindowTileType::Left);
+                        return;
+                    }
+                    if (key_event.key() == Key_Right) {
+                        if (m_active_window->tiled() != WindowTileType::None) {
+                            m_active_window->set_tiled(WindowTileType::None);
+                            return;
+                        }
+                        if (m_active_window->is_maximized())
+                            m_active_window->set_maximized(false);
+                        m_active_window->set_tiled(WindowTileType::Right);
+                        return;
+                    }
+                }
+            }
+
             return m_active_window->dispatch_event(event);
+        }
         return;
     }
 
