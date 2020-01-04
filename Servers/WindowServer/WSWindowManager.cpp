@@ -580,24 +580,34 @@ bool WSWindowManager::process_ongoing_window_move(WSMouseEvent& event, WSWindow*
 
 #endif
 
+        const int maximization_deadzone = 2;
+
         if (m_move_window->is_maximized()) {
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
             // dbg() << "[WM] " << pixels_moved_from_start << " moved since start of window move";
             if (pixels_moved_from_start > 5) {
                 // dbg() << "[WM] de-maximizing window";
                 m_move_origin = event.position();
+                if (m_move_origin.y() <= maximization_deadzone)
+                    return true;
                 auto width_before_resize = m_move_window->width();
                 m_move_window->set_maximized(false);
                 m_move_window->move_to(m_move_origin.x() - (m_move_window->width() * ((float)m_move_origin.x() / width_before_resize)), m_move_origin.y());
                 m_move_window_origin = m_move_window->position();
             }
         } else {
+            bool is_resizable = m_move_window->is_resizable();
             auto pixels_moved_from_start = event.position().pixels_moved(m_move_origin);
             const int tiling_deadzone = 5;
 
-            if (m_move_window->is_resizable() && event.x() <= tiling_deadzone) {
+            if (is_resizable && event.y() <= maximization_deadzone) {
+                m_move_window->set_tiled(WindowTileType::None);
+                m_move_window->set_maximized(true);
+                return true;
+            }
+            if (is_resizable && event.x() <= tiling_deadzone) {
                 m_move_window->set_tiled(WindowTileType::Left);
-            } else if (m_move_window->is_resizable() && event.x() >= WSScreen::the().width() - tiling_deadzone) {
+            } else if (is_resizable && event.x() >= WSScreen::the().width() - tiling_deadzone) {
                 m_move_window->set_tiled(WindowTileType::Right);
             } else if (pixels_moved_from_start > 5 || m_move_window->tiled() == WindowTileType::None) {
                 m_move_window->set_tiled(WindowTileType::None);
