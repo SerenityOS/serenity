@@ -40,6 +40,9 @@ public:
     bool is_resizable() const { return m_resizable; }
     void set_resizable(bool resizable) { m_resizable = resizable; }
 
+    bool is_minimizable() const { return m_minimizable; }
+    void set_minimizable(bool minimizable) { m_minimizable = minimizable; }
+
     void set_double_buffering_enabled(bool);
     void set_has_alpha_channel(bool);
     void set_opacity(float);
@@ -175,6 +178,7 @@ private:
     bool m_double_buffering_enabled { true };
     bool m_modal { false };
     bool m_resizable { true };
+    bool m_minimizable { true };
     bool m_fullscreen { false };
     bool m_show_titlebar { true };
     bool m_layout_pending { false };

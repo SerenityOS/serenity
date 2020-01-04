@@ -28,11 +28,12 @@ WSWindow::WSWindow(CObject& parent, WSWindowType type)
     WSWindowManager::the().add_window(*this);
 }
 
-WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal, bool resizable, bool fullscreen)
+WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int window_id, bool modal, bool minimizable, bool resizable, bool fullscreen)
     : CObject(&client)
     , m_client(&client)
     , m_type(window_type)
     , m_modal(modal)
+    , m_minimizable(minimizable)
     , m_resizable(resizable)
     , m_fullscreen(fullscreen)
     , m_window_id(window_id)
@@ -102,12 +103,22 @@ void WSWindow::set_minimized(bool minimized)
 {
     if (m_minimized == minimized)
         return;
+    if (minimized && !m_minimizable)
+        return;
     m_minimized = minimized;
     start_minimize_animation();
     if (!minimized)
         request_update({ {}, size() });
     invalidate();
     WSWindowManager::the().notify_minimization_state_changed(*this);
+}
+
+void WSWindow::set_minimizable(bool minimizable)
+{
+    if (m_minimizable == minimizable)
+        return;
+    m_minimizable = minimizable;
+    // TODO: Hide/show (or alternatively change enabled state of) window minimize button dynamically depending on value of m_minimizable
 }
 
 void WSWindow::set_opacity(float opacity)
@@ -130,6 +141,8 @@ void WSWindow::set_maximized(bool maximized)
 {
     if (m_maximized == maximized)
         return;
+    if (maximized && !is_resizable())
+        return;
     m_maximized = maximized;
     auto old_rect = m_rect;
     if (maximized) {
@@ -140,6 +153,14 @@ void WSWindow::set_maximized(bool maximized)
     }
     m_frame.did_set_maximized({}, maximized);
     CEventLoop::current().post_event(*this, make<WSResizeEvent>(old_rect, m_rect));
+}
+
+void WSWindow::set_resizable(bool resizable)
+{
+    if (m_resizable == resizable)
+        return;
+    m_resizable = resizable;
+    // TODO: Hide/show (or alternatively change enabled state of) window maximize button dynamically depending on value of is_resizable()
 }
 
 void WSWindow::event(CEvent& event)

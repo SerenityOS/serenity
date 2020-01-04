@@ -20,6 +20,7 @@ endpoint WindowServer = 2
         Rect rect,
         bool has_alpha_channel,
         bool modal,
+        bool minimizable,
         bool resizable,
         bool fullscreen,
         bool show_titlebar,

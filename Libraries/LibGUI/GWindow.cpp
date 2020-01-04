@@ -61,6 +61,7 @@ void GWindow::show()
         m_rect_when_windowless,
         m_has_alpha_channel,
         m_modal,
+        m_minimizable,
         m_resizable,
         m_fullscreen,
         m_show_titlebar,
@@ -549,6 +550,7 @@ void GWindow::save_to(AK::JsonObject& json)
     json.set("title", title());
     json.set("visible", is_visible());
     json.set("active", is_active());
+    json.set("minimizable", is_minimizable());
     json.set("resizable", is_resizable());
     json.set("fullscreen", is_fullscreen());
     json.set("rect", rect().to_string());

@@ -30,4 +30,5 @@ private:
     WSWindow& m_window;
     NonnullOwnPtrVector<WSButton> m_buttons;
     WSButton* m_maximize_button { nullptr };
+    WSButton* m_minimize_button { nullptr };
 };

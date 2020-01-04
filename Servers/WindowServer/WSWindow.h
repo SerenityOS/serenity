@@ -31,7 +31,7 @@ class WSWindow final : public CObject
     , public InlineLinkedListNode<WSWindow> {
     C_OBJECT(WSWindow)
 public:
-    WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal, bool resizable, bool fullscreen);
+    WSWindow(WSClientConnection&, WSWindowType, int window_id, bool modal, bool minimizable, bool resizable, bool fullscreen);
     WSWindow(CObject&, WSWindowType);
     virtual ~WSWindow() override;
 
@@ -43,6 +43,12 @@ public:
 
     bool is_minimized() const { return m_minimized; }
     void set_minimized(bool);
+
+    bool is_minimizable() const { return m_minimizable; }
+    void set_minimizable(bool);
+
+    bool is_resizable() const { return m_resizable && !m_fullscreen; }
+    void set_resizable(bool);
 
     bool is_maximized() const { return m_maximized; }
     void set_maximized(bool);
@@ -94,8 +100,6 @@ public:
     void set_visible(bool);
 
     bool is_modal() const { return m_modal; }
-
-    bool is_resizable() const { return m_resizable && !m_fullscreen; }
 
     Rect rect() const { return m_rect; }
     void set_rect(const Rect&);
@@ -198,6 +202,7 @@ private:
     bool m_visible { true };
     bool m_has_alpha_channel { false };
     bool m_modal { false };
+    bool m_minimizable { false };
     bool m_resizable { false };
     bool m_listens_to_wm_events { false };
     bool m_minimized { false };
