@@ -348,8 +348,6 @@ void WSWindowManager::remove_window(WSWindow& window)
     m_windows_in_order.remove(&window);
     if (window.is_active())
         pick_new_active_window();
-    if (m_active_window.ptr() == &window)
-        set_active_window(nullptr);
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
@@ -489,10 +487,14 @@ void WSWindowManager::notify_occlusion_state_changed(WSWindow& window)
 
 void WSWindowManager::pick_new_active_window()
 {
+    bool new_window_picked = false;
     for_each_visible_window_of_type_from_front_to_back(WSWindowType::Normal, [&](WSWindow& candidate) {
         set_active_window(&candidate);
+        new_window_picked = true;
         return IterationDecision::Break;
     });
+    if (!new_window_picked)
+        set_active_window(nullptr);
 }
 
 void WSWindowManager::start_window_move(WSWindow& window, const WSMouseEvent& event)
