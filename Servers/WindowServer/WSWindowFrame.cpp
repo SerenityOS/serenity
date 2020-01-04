@@ -102,9 +102,13 @@ WSWindowFrame::WSWindowFrame(WSWindow& window)
         m_buttons.append(move(button));
     }
 
-    m_buttons.append(make<WSButton>(*this, *s_minimize_button_bitmap, [this](auto&) {
-        m_window.set_minimized(true);
-    }));
+    if (window.is_minimizable()) {
+        auto button = make<WSButton>(*this, *s_minimize_button_bitmap, [this](auto&) {
+            m_window.set_minimized(true);
+        });
+        m_minimize_button = button.ptr();
+        m_buttons.append(move(button));
+    }
 }
 
 WSWindowFrame::~WSWindowFrame()
