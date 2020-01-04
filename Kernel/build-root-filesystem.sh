@@ -59,6 +59,10 @@ mknod mnt/dev/hda b 3 0
 mknod mnt/dev/hdb b 3 1
 mknod mnt/dev/hdc b 4 0
 mknod mnt/dev/hdd b 4 1
+for hd in a b c d; do
+    chmod 600 mnt/dev/hd$hd
+done
+
 ln -s /proc/self/fd/0 mnt/dev/stdin
 ln -s /proc/self/fd/1 mnt/dev/stdout
 ln -s /proc/self/fd/2 mnt/dev/stderr
