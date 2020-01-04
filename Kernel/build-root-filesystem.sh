@@ -34,6 +34,10 @@ mknod mnt/dev/ttyS0 c 4 64
 mknod mnt/dev/ttyS1 c 4 65
 mknod mnt/dev/ttyS2 c 4 66
 mknod mnt/dev/ttyS3 c 4 67
+for tty in 0 1 2 3 S0 S1 S2 S3; do
+    chmod 620 mnt/dev/tty$tty
+    chown 0:2 mnt/dev/tty$tty
+done
 mknod mnt/dev/random c 1 8
 mknod mnt/dev/null c 1 3
 mknod mnt/dev/zero c 1 5
