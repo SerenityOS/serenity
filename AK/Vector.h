@@ -146,6 +146,14 @@ public:
         m_size = other.size();
     }
 
+    template<int other_inline_capacity>
+    Vector(const Vector<T, other_inline_capacity>& other)
+    {
+        ensure_capacity(other.size());
+        TypedTransfer<T>::copy(data(), other.data(), other.size());
+        m_size = other.size();
+    }
+
     // FIXME: What about assigning from a vector with lower inline capacity?
     Vector& operator=(Vector&& other)
     {
@@ -326,6 +334,16 @@ public:
             TypedTransfer<T>::copy(data(), other.data(), other.size());
             m_size = other.size();
         }
+        return *this;
+    }
+
+    template<int other_inline_capacity>
+    Vector& operator=(const Vector<T, other_inline_capacity>& other)
+    {
+        clear();
+        ensure_capacity(other.size());
+        TypedTransfer<T>::copy(data(), other.data(), other.size());
+        m_size = other.size();
         return *this;
     }
 
