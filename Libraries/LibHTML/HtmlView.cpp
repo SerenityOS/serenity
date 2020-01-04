@@ -38,7 +38,7 @@ HtmlView::HtmlView(GWidget* parent)
     set_frame_shadow(FrameShadow::Sunken);
     set_frame_thickness(2);
     set_should_hide_unnecessary_scrollbars(true);
-    set_background_color(Color::White);
+    set_background_role(ColorRole::Base);
 }
 
 HtmlView::~HtmlView()
@@ -122,7 +122,7 @@ void HtmlView::paint_event(GPaintEvent& event)
         return;
     }
 
-    painter.fill_rect(event.rect(), document()->background_color());
+    painter.fill_rect(event.rect(), document()->background_color(palette()));
 
     if (auto background_bitmap = document()->background_image()) {
         painter.draw_tiled_bitmap(event.rect(), *background_bitmap);

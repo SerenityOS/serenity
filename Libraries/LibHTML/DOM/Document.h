@@ -10,6 +10,7 @@
 #include <LibHTML/CSS/StyleSheet.h>
 #include <LibHTML/DOM/ParentNode.h>
 
+class Palette;
 class CTimer;
 class Frame;
 class HTMLBodyElement;
@@ -60,7 +61,7 @@ public:
     Frame* frame() { return m_frame.ptr(); }
     const Frame* frame() const { return m_frame.ptr(); }
 
-    Color background_color() const;
+    Color background_color(const Palette&) const;
     RefPtr<GraphicsBitmap> background_image() const;
 
     Color link_color() const { return m_link_color; }
