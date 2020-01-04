@@ -46,7 +46,7 @@ private:
     RefPtr<FileDescription> m_file;
 
     uid_t m_prebind_uid { 0 };
-    uid_t m_prebind_gid { 0 };
+    gid_t m_prebind_gid { 0 };
     mode_t m_prebind_mode { 0 };
 
     // A single LocalSocket is shared between two file descriptions
