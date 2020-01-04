@@ -9,6 +9,7 @@
 #include <pwd.h>
 #include <sched.h>
 #include <stdio.h>
+#include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
@@ -157,15 +158,26 @@ void Service::spawn()
         }
 
         if (!m_stdio_file_path.is_null()) {
-            close(0);
+            close(STDIN_FILENO);
             int fd = open_with_path_length(m_stdio_file_path.characters(), m_stdio_file_path.length(), O_RDWR, 0);
             ASSERT(fd <= 0);
             if (fd < 0) {
                 perror("open");
                 ASSERT_NOT_REACHED();
             }
-            dup2(0, 1);
-            dup2(0, 2);
+            dup2(STDIN_FILENO, STDOUT_FILENO);
+            dup2(STDIN_FILENO, STDERR_FILENO);
+
+            if (isatty(STDIN_FILENO)) {
+                ioctl(STDIN_FILENO, TIOCSCTTY);
+            }
+        } else {
+            if (isatty(STDIN_FILENO)) {
+                ioctl(STDIN_FILENO, TIOCNOTTY);
+            }
+            close(STDIN_FILENO);
+            close(STDOUT_FILENO);
+            close(STDERR_FILENO);
         }
 
         if (!m_socket_path.is_null()) {
@@ -178,7 +190,7 @@ void Service::spawn()
 
         if (!m_user.is_null()) {
             if (setgid(m_gid) < 0 || setuid(m_uid) < 0) {
-                fprintf(stderr, "Failed to drop privileges (GID=%u, UID=%u)\n", m_gid, m_uid);
+                dbgprintf("Failed to drop privileges (GID=%u, UID=%u)\n", m_gid, m_uid);
                 exit(1);
             }
         }
