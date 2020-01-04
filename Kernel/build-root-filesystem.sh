@@ -2,6 +2,9 @@
 
 set -e
 
+tty_gid=2
+phys_gid=3
+
 # HACK: Get rid of old "qs" binaries still lying around from before it was renamed.
 rm -f ../Userland/qs
 
@@ -25,7 +28,8 @@ printf "setting up device nodes... "
 mkdir -p mnt/dev
 mkdir -p mnt/dev/pts
 mknod mnt/dev/fb0 b 29 0
-chmod 666 mnt/dev/fb0
+chmod 660 mnt/dev/fb0
+chown 0:$phys_gid mnt/dev/fb0
 mknod mnt/dev/tty0 c 4 0
 mknod mnt/dev/tty1 c 4 1
 mknod mnt/dev/tty2 c 4 2
@@ -36,7 +40,7 @@ mknod mnt/dev/ttyS2 c 4 66
 mknod mnt/dev/ttyS3 c 4 67
 for tty in 0 1 2 3 S0 S1 S2 S3; do
     chmod 620 mnt/dev/tty$tty
-    chown 0:2 mnt/dev/tty$tty
+    chown 0:$tty_gid mnt/dev/tty$tty
 done
 mknod mnt/dev/random c 1 8
 mknod mnt/dev/null c 1 3
@@ -50,7 +54,11 @@ chmod 666 mnt/dev/zero
 chmod 666 mnt/dev/full
 chmod 666 mnt/dev/debuglog
 mknod mnt/dev/keyboard c 85 1
+chmod 440 mnt/dev/keyboard
+chown 0:$phys_gid mnt/dev/keyboard
 mknod mnt/dev/psaux c 10 1
+chmod 440 mnt/dev/psaux
+chown 0:$phys_gid mnt/dev/psaux
 mknod mnt/dev/audio c 42 42
 mknod mnt/dev/ptmx c 5 2
 chmod 666 mnt/dev/audio
