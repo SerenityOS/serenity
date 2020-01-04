@@ -1,5 +1,5 @@
-#include <AK/String.h>
 #include <AK/QuickSort.h>
+#include <AK/String.h>
 #include <AK/Vector.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -8,7 +8,7 @@
 struct Index {
     enum class Type {
         SingleIndex,
-        RangedInex
+        RangedIndex
     };
     ssize_t m_from { -1 };
     ssize_t m_to { -1 };
@@ -71,7 +71,7 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
                 fprintf(stderr, "cut: byte/character positions are numbered from 1\n");
                 print_usage_and_exit(1);
             }
-            Index tmp = { index, -1, Index::Type::RangedInex };
+            Index tmp = { index, -1, Index::Type::RangedIndex };
             add_if_not_exists(indexes, tmp);
         } else {
             auto range = token.split('-');
@@ -124,12 +124,46 @@ static void expand_list(Vector<String>& tokens, Vector<Index>& indexes)
     }
 }
 
+static void cut_file(const String& file, const Vector<Index>& byte_vector)
+{
+    FILE* fp = nullptr;
+    fp = fopen(file.characters(), "r");
+
+    if (!fp) {
+        fprintf(stderr, "cut: Could not open file '%s'\n", file.characters());
+        return;
+    }
+
+    char* line = nullptr;
+    ssize_t line_length = 0;
+    size_t line_capacity = 0;
+    while ((line_length = getline(&line, &line_capacity, fp)) != -1) {
+        line[line_length - 1] = '\0';
+        line_length--;
+        for (auto& i : byte_vector) {
+            if (i.m_type == Index::Type::RangedIndex && i.m_from < line_length) {
+                printf("%s", line + i.m_from - 1);
+                break;
+            }
+
+            if (i.m_from <= line_length)
+                printf("%c", line[i.m_from - 1]);
+            else
+                break;
+        }
+        printf("\n");
+    }
+
+    if (line)
+        free(line);
+    fclose(fp);
+}
+
 int main(int argc, char** argv)
 {
-    const char* file = nullptr;
     String byte_list = "";
     Vector<String> tokens;
-
+    Vector<String> files;
     if (argc == 1) {
         print_usage_and_exit(1);
     }
@@ -147,52 +181,25 @@ int main(int argc, char** argv)
         } else if (!strcmp(argv[i], "--help") || !strcmp(argv[i], "-h")) {
             print_usage_and_exit(1);
         } else if (argv[i][0] != '-') {
-            file = argv[i++];
+            //file = argv[i++];
+            files.append(argv[i++]);
         } else {
             fprintf(stderr, "cut: invalid argument %s\n", argv[i]);
             print_usage_and_exit(1);
         }
     }
 
-    if (!file || byte_list == "") {
+    if (files.is_empty() || byte_list == "") {
         print_usage_and_exit(1);
-    }
-
-    FILE* fp = nullptr;
-    fp = fopen(file, "r");
-
-    if (!fp) {
-        fprintf(stderr, "cut: Could not open file '%s'\n", file);
-        return 1;
     }
 
     Vector<Index> byte_vector;
     expand_list(tokens, byte_vector);
     quick_sort(byte_vector.begin(), byte_vector.end(), [](auto& a, auto& b) { return a.m_from < b.m_from; });
-
-    char* line = nullptr;
-    ssize_t line_length = 0;
-    size_t line_capacity = 0;
-    while ((line_length = getline(&line, &line_capacity, fp)) != -1) {
-        line[line_length - 1] = '\0';
-        line_length--;
-        for (auto& i : byte_vector) {
-            if (i.m_type == Index::Type::RangedInex && i.m_from < line_length) {
-                printf("%s", line + i.m_from - 1);
-                break;
-            }
-
-            if (i.m_from <= line_length)
-                printf("%c", line[i.m_from - 1]);
-            else
-                break;
-        }
-	printf("\n");
+    /* Process each file */
+    for (auto& file : files) {
+        cut_file(file, byte_vector);
     }
-
-    if (line)
-        free(line);
-    fclose(fp);
 
     return 0;
 }
