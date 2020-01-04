@@ -99,6 +99,23 @@ void WSWindow::handle_mouse_event(const WSMouseEvent& event)
     }
 }
 
+void WSWindow::update_menu_item_text(PopupMenuItem item)
+{
+    if (m_window_menu) {
+        m_window_menu->item((int)item).set_text(item == PopupMenuItem::Minimize ?
+            (m_minimized ? "Unminimize" : "Minimize") : (m_maximized ? "Restore" : "Maximize"));
+        m_window_menu->redraw();
+    }
+}
+
+void WSWindow::update_menu_item_enabled(PopupMenuItem item)
+{
+    if (m_window_menu) {
+        m_window_menu->item((int)item).set_enabled(item == PopupMenuItem::Minimize ? m_minimizable : m_resizable);
+        m_window_menu->redraw();
+    }
+}
+
 void WSWindow::set_minimized(bool minimized)
 {
     if (m_minimized == minimized)
@@ -106,6 +123,7 @@ void WSWindow::set_minimized(bool minimized)
     if (minimized && !m_minimizable)
         return;
     m_minimized = minimized;
+    update_menu_item_text(PopupMenuItem::Minimize);
     start_minimize_animation();
     if (!minimized)
         request_update({ {}, size() });
@@ -118,6 +136,7 @@ void WSWindow::set_minimizable(bool minimizable)
     if (m_minimizable == minimizable)
         return;
     m_minimizable = minimizable;
+    update_menu_item_enabled(PopupMenuItem::Minimize);
     // TODO: Hide/show (or alternatively change enabled state of) window minimize button dynamically depending on value of m_minimizable
 }
 
@@ -144,6 +163,7 @@ void WSWindow::set_maximized(bool maximized)
     if (maximized && !is_resizable())
         return;
     m_maximized = maximized;
+    update_menu_item_text(PopupMenuItem::Maximize);
     auto old_rect = m_rect;
     if (maximized) {
         m_unmaximized_rect = m_rect;
@@ -160,6 +180,7 @@ void WSWindow::set_resizable(bool resizable)
     if (m_resizable == resizable)
         return;
     m_resizable = resizable;
+    update_menu_item_enabled(PopupMenuItem::Maximize);
     // TODO: Hide/show (or alternatively change enabled state of) window maximize button dynamically depending on value of is_resizable()
 }
 
@@ -271,18 +292,28 @@ void WSWindow::popup_window_menu(const Point& position)
 {
     if (!m_window_menu) {
         m_window_menu = WSMenu::construct(nullptr, -1, "(Window Menu)");
-        m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 1, "Minimize"));
-        m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 2, "Unminimize"));
+        m_window_menu->set_window_menu_of(*this);
+
+        m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 1, m_minimized ? "Unminimize" : "Minimize"));
+        m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 2, m_maximized ? "Restore" : "Maximize"));
         m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, WSMenuItem::Type::Separator));
         m_window_menu->add_item(make<WSMenuItem>(*m_window_menu, 3, "Close"));
+
+        m_window_menu->item((int)PopupMenuItem::Minimize).set_enabled(m_minimizable);
+        m_window_menu->item((int)PopupMenuItem::Maximize).set_enabled(m_resizable);
 
         m_window_menu->on_item_activation = [&](auto& item) {
             switch (item.identifier()) {
             case 1:
-                set_minimized(true);
+                set_minimized(!m_minimized);
+                if (!m_minimized)
+                    WSWindowManager::the().move_to_front_and_make_active(*this);
                 break;
             case 2:
-                set_minimized(false);
+                set_maximized(!m_maximized);
+                if (m_minimized)
+                    set_minimized(false);
+                WSWindowManager::the().move_to_front_and_make_active(*this);
                 break;
             case 3:
                 request_close();
