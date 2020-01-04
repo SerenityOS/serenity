@@ -48,13 +48,8 @@ void GWindowServerConnection::handle(const WindowClient::Paint& message)
 #ifdef GEVENTLOOP_DEBUG
     dbgprintf("WID=%d Paint\n", message.window_id());
 #endif
-    if (auto* window = GWindow::from_window_id(message.window_id())) {
-        Vector<Rect, 32> rects;
-        for (auto& r : message.rects()) {
-            rects.append(r);
-        }
-        CEventLoop::current().post_event(*window, make<GMultiPaintEvent>(rects, message.window_size()));
-    }
+    if (auto* window = GWindow::from_window_id(message.window_id()))
+        CEventLoop::current().post_event(*window, make<GMultiPaintEvent>(message.rects(), message.window_size()));
 }
 
 void GWindowServerConnection::handle(const WindowClient::WindowResized& message)

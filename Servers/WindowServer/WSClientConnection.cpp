@@ -436,12 +436,7 @@ void WSClientConnection::post_paint_message(WSWindow& window)
     if (window.is_minimized() || window.is_occluded())
         return;
 
-    Vector<Rect> rects;
-    rects.ensure_capacity(rect_set.size());
-    for (auto& r : rect_set.rects()) {
-        rects.append(r);
-    }
-    post_message(WindowClient::Paint(window.window_id(), window.size(), rects));
+    post_message(WindowClient::Paint(window.window_id(), window.size(), rect_set.rects()));
 }
 
 void WSClientConnection::handle(const WindowServer::InvalidateRect& message)
