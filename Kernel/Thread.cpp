@@ -794,11 +794,13 @@ void Thread::wake_from_queue()
 
 Thread* Thread::from_tid(int tid)
 {
-    ASSERT_INTERRUPTS_DISABLED();
+    InterruptDisabler disabler;
     Thread* found_thread = nullptr;
     Thread::for_each([&](auto& thread) {
-        if (thread.tid() == tid)
+        if (thread.tid() == tid) {
             found_thread = &thread;
+            return IterationDecision::Break;
+        }
         return IterationDecision::Continue;
     });
     return found_thread;

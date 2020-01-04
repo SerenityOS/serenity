@@ -3194,16 +3194,8 @@ void Process::sys$exit_thread(void* exit_value)
 
 int Process::sys$detach_thread(int tid)
 {
-    Thread* thread = nullptr;
-    for_each_thread([&](auto& child_thread) {
-        if (child_thread.tid() == tid) {
-            thread = &child_thread;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-
-    if (!thread)
+    auto* thread = Thread::from_tid(tid);
+    if (!thread || thread->pid() != pid())
         return -ESRCH;
 
     if (!thread->is_joinable())
@@ -3218,16 +3210,8 @@ int Process::sys$join_thread(int tid, void** exit_value)
     if (exit_value && !validate_write_typed(exit_value))
         return -EFAULT;
 
-    Thread* thread = nullptr;
-    for_each_thread([&](auto& child_thread) {
-        if (child_thread.tid() == tid) {
-            thread = &child_thread;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-
-    if (!thread)
+    auto* thread = Thread::from_tid(tid);
+    if (!thread || thread->pid() != pid())
         return -ESRCH;
 
     if (thread == current)
@@ -3269,16 +3253,8 @@ int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
     if (strnlen(buffer, (size_t)buffer_size) > max_thread_name_size)
         return -EINVAL;
 
-    Thread* thread = nullptr;
-    for_each_thread([&](auto& child_thread) {
-        if (child_thread.tid() == tid) {
-            thread = &child_thread;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-
-    if (!thread)
+    auto* thread = Thread::from_tid(tid);
+    if (!thread || thread->pid() != pid())
         return -ESRCH;
 
     thread->set_name({ buffer, (size_t)buffer_size });
@@ -3292,16 +3268,8 @@ int Process::sys$get_thread_name(int tid, char* buffer, int buffer_size)
     if (!validate_write(buffer, buffer_size))
         return -EFAULT;
 
-    Thread* thread = nullptr;
-    for_each_thread([&](auto& child_thread) {
-        if (child_thread.tid() == tid) {
-            thread = &child_thread;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-
-    if (!thread)
+    auto* thread = Thread::from_tid(tid);
+    if (!thread || thread->pid() != pid())
         return -ESRCH;
 
     if (thread->name().length() >= (size_t)buffer_size)
@@ -3321,17 +3289,10 @@ int Process::sys$donate(int tid)
     if (tid < 0)
         return -EINVAL;
     InterruptDisabler disabler;
-    Thread* beneficiary = nullptr;
-    for_each_thread([&](Thread& thread) {
-        if (thread.tid() == tid) {
-            beneficiary = &thread;
-            return IterationDecision::Break;
-        }
-        return IterationDecision::Continue;
-    });
-    if (!beneficiary)
-        return -ENOTHREAD;
-    Scheduler::donate_to(beneficiary, "sys$donate");
+    auto* thread = Thread::from_tid(tid);
+    if (!thread || thread->pid() != pid())
+        return -ESRCH;
+    Scheduler::donate_to(thread, "sys$donate");
     return 0;
 }
 
