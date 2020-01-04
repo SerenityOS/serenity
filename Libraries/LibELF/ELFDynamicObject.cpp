@@ -1,146 +1,44 @@
-#include <AK/StringBuilder.h>
 #include <LibELF/ELFDynamicObject.h>
+#include <LibELF/exec_elf.h>
+
+#include <AK/StringBuilder.h>
 
 #include <assert.h>
-#include <mman.h>
 #include <stdio.h>
-#include <stdlib.h>
 
-#define DYNAMIC_LOAD_DEBUG
-//#define DYNAMIC_LOAD_VERBOSE
+static const char* name_for_dtag(Elf32_Sword d_tag);
 
-#ifdef DYNAMIC_LOAD_VERBOSE
-#    define VERBOSE(fmt, ...) dbgprintf(fmt, ##__VA_ARGS__)
-#else
-#    define VERBOSE(fmt, ...) \
-        do {                  \
-        } while (0)
-#endif
-
-static bool s_always_bind_now = false;
-
-static const char* name_for_dtag(Elf32_Sword tag);
-
-// SYSV ELF hash algorithm
-// Note that the GNU HASH algorithm has less collisions
-static uint32_t calculate_elf_hash(const char* name)
+ELFDynamicObject::ELFDynamicObject(VirtualAddress base_address, u32 dynamic_offset)
+    : m_base_address(base_address)
+    , m_dynamic_offset(dynamic_offset)
 {
-    uint32_t hash = 0;
-    uint32_t top_nibble_of_hash = 0;
-
-    while (*name != '\0') {
-        hash = hash << 4;
-        hash += *name;
-        name++;
-
-        top_nibble_of_hash = hash & 0xF0000000U;
-        if (top_nibble_of_hash != 0)
-            hash ^= top_nibble_of_hash >> 24;
-        hash &= ~top_nibble_of_hash;
-    }
-
-    return hash;
-}
-
-NonnullRefPtr<ELFDynamicObject> ELFDynamicObject::construct(const char* filename, int fd, size_t size)
-{
-    return adopt(*new ELFDynamicObject(filename, fd, size));
-}
-
-ELFDynamicObject::ELFDynamicObject(const char* filename, int fd, size_t size)
-    : m_filename(filename)
-    , m_file_size(size)
-    , m_image_fd(fd)
-{
-    String file_mmap_name = String::format("ELF_DYN: %s", m_filename.characters());
-
-    m_file_mapping = mmap_with_name(nullptr, size, PROT_READ, MAP_PRIVATE, m_image_fd, 0, file_mmap_name.characters());
-    if (MAP_FAILED == m_file_mapping) {
-        m_valid = false;
-        return;
-    }
-
-    m_image = AK::make<ELFImage>((u8*)m_file_mapping);
-
-    m_valid = m_image->is_valid() && m_image->parse() && m_image->is_dynamic();
-
-    if (!m_valid) {
-        return;
-    }
-
-    const ELFImage::DynamicSection probably_dynamic_section = m_image->dynamic_section();
-    if (StringView(".dynamic") != probably_dynamic_section.name() || probably_dynamic_section.type() != SHT_DYNAMIC) {
-        m_valid = false;
-        return;
-    }
+    parse();
 }
 
 ELFDynamicObject::~ELFDynamicObject()
 {
-    if (MAP_FAILED != m_file_mapping)
-        munmap(m_file_mapping, m_file_size);
 }
 
-void* ELFDynamicObject::symbol_for_name(const char* name)
+void ELFDynamicObject::dump() const
 {
-    // FIXME: If we enable gnu hash in the compiler, we should use that here instead
-    //     The algo is way better with less collisions
-    uint32_t hash_value = calculate_elf_hash(name);
-
-    u8* load_addr = m_text_region->load_address().as_ptr();
-
-    // NOTE: We need to use the loaded hash/string/symbol tables here to get the right
-    //    addresses. The ones that are in the ELFImage won't cut it, they aren't relocated
-    u32* hash_table_begin = (u32*)(load_addr + m_hash_table_offset);
-    Elf32_Sym* symtab = (Elf32_Sym*)(load_addr + m_symbol_table_offset);
-    const char* strtab = (const char*)load_addr + m_string_table_offset;
-
-    size_t num_buckets = hash_table_begin[0];
-
-    // This is here for completeness, but, since we're using the fact that every chain
-    // will end at chain 0 (which means 'not found'), we don't need to check num_chains.
-    // Interestingly, num_chains is required to be num_symbols
-    //size_t num_chains = hash_table_begin[1];
-
-    u32* buckets = &hash_table_begin[2];
-    u32* chains = &buckets[num_buckets];
-
-    for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
-        if (strcmp(name, strtab + symtab[i].st_name) == 0) {
-            void* symbol_address = load_addr + symtab[i].st_value;
-#ifdef DYNAMIC_LOAD_DEBUG
-            dbgprintf("Returning dynamic symbol with index %d for %s: %p\n", i, strtab + symtab[i].st_name, symbol_address);
-#endif
-            return symbol_address;
-        }
-    }
-
-    return nullptr;
-}
-
-void ELFDynamicObject::dump()
-{
-    auto dynamic_section = m_image->dynamic_section();
-
     StringBuilder builder;
     builder.append("\nd_tag      tag_name         value\n");
     size_t num_dynamic_sections = 0;
 
-    dynamic_section.for_each_dynamic_entry([&](const ELFImage::DynamicSectionEntry& entry) {
+    for_each_dynamic_entry([&](const ELFDynamicObject::DynamicEntry& entry) {
         String name_field = String::format("(%s)", name_for_dtag(entry.tag()));
         builder.appendf("0x%08X %-17s0x%X\n", entry.tag(), name_field.characters(), entry.val());
         num_dynamic_sections++;
         return IterationDecision::Continue;
     });
 
-    dbgprintf("Dynamic section at offset 0x%x contains %zu entries:\n", dynamic_section.offset(), num_dynamic_sections);
+    dbgprintf("Dynamic section at offset 0x%x contains %zu entries:\n", m_dynamic_offset, num_dynamic_sections);
     dbgprintf(builder.to_string().characters());
 }
 
-void ELFDynamicObject::parse_dynamic_section()
+void ELFDynamicObject::parse()
 {
-    auto dynamic_section = m_image->dynamic_section();
-    dynamic_section.for_each_dynamic_entry([&](const ELFImage::DynamicSectionEntry& entry) {
+    for_each_dynamic_entry([&](const DynamicEntry& entry) {
         switch (entry.tag()) {
         case DT_INIT:
             m_init_offset = entry.ptr();
@@ -153,6 +51,12 @@ void ELFDynamicObject::parse_dynamic_section()
             break;
         case DT_INIT_ARRAYSZ:
             m_init_array_size = entry.val();
+            break;
+        case DT_FINI_ARRAY:
+            m_fini_array_offset = entry.ptr();
+            break;
+        case DT_FINI_ARRAYSZ:
+            m_fini_array_size = entry.val();
             break;
         case DT_HASH:
             m_hash_table_offset = entry.ptr();
@@ -199,14 +103,10 @@ void ELFDynamicObject::parse_dynamic_section()
             m_number_of_relocations = entry.val();
             break;
         case DT_FLAGS:
-            m_must_bind_now = entry.val() & DF_BIND_NOW;
-            m_has_text_relocations = entry.val() & DF_TEXTREL;
-            m_should_process_origin = entry.val() & DF_ORIGIN;
-            m_has_static_thread_local_storage = entry.val() & DF_STATIC_TLS;
-            m_requires_symbolic_symbol_resolution = entry.val() & DF_SYMBOLIC;
+            m_dt_flags = entry.val();
             break;
         case DT_TEXTREL:
-            m_has_text_relocations = true; // This tag seems to exist for legacy reasons only?
+            m_dt_flags |= DF_TEXTREL; // This tag seems to exist for legacy reasons only?
             break;
         default:
             dbgprintf("ELFDynamicObject: DYNAMIC tag handling not implemented for DT_%s\n", name_for_dtag(entry.tag()));
@@ -216,280 +116,130 @@ void ELFDynamicObject::parse_dynamic_section()
         }
         return IterationDecision::Continue;
     });
+
+    auto hash_section_address = hash_section().address().as_ptr();
+    auto num_hash_chains = ((u32*)hash_section_address)[1];
+    m_symbol_count = num_hash_chains;
 }
 
-typedef void (*InitFunc)();
-
-bool ELFDynamicObject::load(unsigned flags)
+const ELFDynamicObject::Relocation ELFDynamicObject::RelocationSection::relocation(unsigned index) const
 {
-    ASSERT(flags & RTLD_GLOBAL);
-    ASSERT(flags & RTLD_LAZY);
+    ASSERT(index < entry_count());
+    unsigned offset_in_section = index * entry_size();
+    auto relocation_address = (Elf32_Rel*)address().offset(offset_in_section).as_ptr();
+    return Relocation(m_dynamic, *relocation_address, offset_in_section);
+}
 
-#ifdef DYNAMIC_LOAD_DEBUG
-    dump();
-#endif
-#ifdef DYNAMIC_LOAD_VERBOSE
-    m_image->dump();
-#endif
+const ELFDynamicObject::Relocation ELFDynamicObject::RelocationSection::relocation_at_offset(unsigned offset) const
+{
+    ASSERT(offset <= (m_section_size_bytes - m_entry_size));
+    auto relocation_address = (Elf32_Rel*)address().offset(offset).as_ptr();
+    return Relocation(m_dynamic, *relocation_address, offset);
+}
 
-    parse_dynamic_section();
-    load_program_headers();
+const ELFDynamicObject::Symbol ELFDynamicObject::symbol(unsigned index) const
+{
+    auto symbol_section = Section(*this, m_symbol_table_offset, (m_symbol_count * m_size_of_symbol_table_entry), m_size_of_symbol_table_entry, "DT_SYMTAB");
+    auto symbol_entry = (Elf32_Sym*)symbol_section.address().offset(index * symbol_section.entry_size()).as_ptr();
+    return Symbol(*this, index, *symbol_entry);
+}
 
-    if (m_has_text_relocations) {
-        if (0 > mprotect(m_text_region->load_address().as_ptr(), m_text_region->required_load_size(), PROT_READ | PROT_WRITE)) {
-            perror("mprotect"); // FIXME: dlerror?
-            return false;
-        }
+const ELFDynamicObject::Section ELFDynamicObject::init_section() const
+{
+    return Section(*this, m_init_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_INIT");
+}
+
+const ELFDynamicObject::Section ELFDynamicObject::fini_section() const
+{
+    return Section(*this, m_fini_offset, sizeof(void (*)()), sizeof(void (*)()), "DT_FINI");
+}
+
+const ELFDynamicObject::Section ELFDynamicObject::init_array_section() const
+{
+    return Section(*this, m_init_array_offset, m_init_array_size, sizeof(void (*)()), "DT_INIT_ARRAY");
+}
+
+const ELFDynamicObject::Section ELFDynamicObject::fini_array_section() const
+{
+    return Section(*this, m_fini_array_offset, m_fini_array_size, sizeof(void (*)()), "DT_FINI_ARRAY");
+}
+
+const ELFDynamicObject::HashSection ELFDynamicObject::hash_section() const
+{
+    return HashSection(Section(*this, m_hash_table_offset, 0, 0, "DT_HASH"), HashType::SYSV);
+}
+
+const ELFDynamicObject::RelocationSection ELFDynamicObject::relocation_section() const
+{
+    return RelocationSection(Section(*this, m_relocation_table_offset, m_size_of_relocation_table, m_size_of_relocation_entry, "DT_REL"));
+}
+
+const ELFDynamicObject::RelocationSection ELFDynamicObject::plt_relocation_section() const
+{
+    return RelocationSection(Section(*this, m_plt_relocation_offset_location, m_size_of_plt_relocation_entry_list, m_size_of_relocation_entry, "DT_JMPREL"));
+}
+
+u32 ELFDynamicObject::HashSection::calculate_elf_hash(const char* name) const
+{
+    // SYSV ELF hash algorithm
+    // Note that the GNU HASH algorithm has less collisions
+
+    uint32_t hash = 0;
+    uint32_t top_nibble_of_hash = 0;
+
+    while (*name != '\0') {
+        hash = hash << 4;
+        hash += *name;
+        name++;
+
+        top_nibble_of_hash = hash & 0xF0000000U;
+        if (top_nibble_of_hash != 0)
+            hash ^= top_nibble_of_hash >> 24;
+        hash &= ~top_nibble_of_hash;
     }
 
-    do_relocations();
-    setup_plt_trampoline();
+    return hash;
+}
 
-    // Clean up our setting of .text to PROT_READ | PROT_WRITE
-    if (m_has_text_relocations) {
-        if (0 > mprotect(m_text_region->load_address().as_ptr(), m_text_region->required_load_size(), PROT_READ | PROT_EXEC)) {
-            perror("mprotect"); // FIXME: dlerror?
-            return false;
+u32 ELFDynamicObject::HashSection::calculate_gnu_hash(const char*) const
+{
+    // FIXME: Implement the GNU hash algorithm
+    ASSERT_NOT_REACHED();
+}
+
+const ELFDynamicObject::Symbol ELFDynamicObject::HashSection::lookup_symbol(const char* name) const
+{
+    // FIXME: If we enable gnu hash in the compiler, we should use that here instead
+    //     The algo is way better with less collisions
+    u32 hash_value = (this->*(m_hash_function))(name);
+
+    u32* hash_table_begin = (u32*)address().as_ptr();
+
+    size_t num_buckets = hash_table_begin[0];
+
+    // This is here for completeness, but, since we're using the fact that every chain
+    // will end at chain 0 (which means 'not found'), we don't need to check num_chains.
+    // Interestingly, num_chains is required to be num_symbols
+    //size_t num_chains = hash_table_begin[1];
+
+    u32* buckets = &hash_table_begin[2];
+    u32* chains = &buckets[num_buckets];
+
+    for (u32 i = buckets[hash_value % num_buckets]; i; i = chains[i]) {
+        auto symbol = m_dynamic.symbol(i);
+        if (strcmp(name, symbol.name()) == 0) {
+#ifdef DYNAMIC_LOAD_DEBUG
+            dbgprintf("Returning dynamic symbol with index %d for %s: %p\n", i, symbol.name(), symbol.address());
+#endif
+            return symbol;
         }
     }
-
-    call_object_init_functions();
-
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Loaded %s\n", m_filename.characters());
-#endif
-    // FIXME: return false sometimes? missing symbol etc
-    return true;
+    return m_dynamic.the_undefined_symbol();
 }
 
-void ELFDynamicObject::load_program_headers()
+const char* ELFDynamicObject::symbol_string_table_string(Elf32_Word index) const
 {
-    size_t total_required_allocation_size = 0; // NOTE: If we don't have any TEXTREL, we can keep RO data RO, which would be nice
-
-    m_image->for_each_program_header([&](const ELFImage::ProgramHeader& program_header) {
-        ProgramHeaderRegion new_region(program_header.raw_header());
-        if (new_region.is_load())
-            total_required_allocation_size += new_region.required_load_size();
-        m_program_header_regions.append(move(new_region));
-        auto& region = m_program_header_regions.last();
-        if (region.is_tls_template())
-            m_tls_region = &region;
-        else if (region.is_load()) {
-            if (region.is_executable())
-                m_text_region = &region;
-            else
-                m_data_region = &region;
-        }
-    });
-
-    ASSERT(m_text_region && m_data_region);
-
-    // Process regions in order: .text, .data, .tls
-    auto* region = m_text_region;
-    void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), region->mmap_prot(), MAP_PRIVATE, m_image_fd, region->offset(), String::format(".text: %s", m_filename.characters()).characters());
-    size_t text_segment_size = region->required_load_size();
-    region->set_base_address(VirtualAddress { (u32)text_segment_begin });
-    region->set_load_address(VirtualAddress { (u32)text_segment_begin });
-
-    region = m_data_region;
-    void* data_segment_begin = mmap_with_name((u8*)text_segment_begin + text_segment_size, region->required_load_size(), region->mmap_prot(), MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format(".data: %s", m_filename.characters()).characters());
-    size_t data_segment_size = region->required_load_size();
-    VirtualAddress data_segment_actual_addr = region->desired_load_address().offset((u32)text_segment_begin);
-    region->set_base_address(VirtualAddress { (u32)text_segment_begin });
-    region->set_load_address(data_segment_actual_addr);
-    memcpy(data_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
-
-    if (m_tls_region) {
-        region = m_data_region;
-        VirtualAddress tls_segment_actual_addr = region->desired_load_address().offset((u32)text_segment_begin);
-        region->set_base_address(VirtualAddress { (u32)text_segment_begin });
-        region->set_load_address(tls_segment_actual_addr);
-        memcpy(tls_segment_actual_addr.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
-    }
-
-    // sanity check
-    u8* end_of_in_memory_image = (u8*)data_segment_begin + data_segment_size;
-    ASSERT((ptrdiff_t)total_required_allocation_size == (ptrdiff_t)(end_of_in_memory_image - (u8*)text_segment_begin));
-}
-
-void ELFDynamicObject::do_relocations()
-{
-    auto dyn_relocation_section = m_image->dynamic_relocation_section();
-    if (StringView(".rel.dyn") != dyn_relocation_section.name() || SHT_REL != dyn_relocation_section.type()) {
-        ASSERT_NOT_REACHED();
-    }
-
-    u8* load_base_address = m_text_region->base_address().as_ptr();
-
-    int i = -1;
-
-    // FIXME: We should really bail on undefined symbols here. (but, there's some TLS vars that are currently undef soooo.... :) )
-
-    dyn_relocation_section.for_each_relocation([&](const ELFImage::DynamicRelocation& relocation) {
-        ++i;
-        VERBOSE("====== RELOCATION %d: offset 0x%08X, type %d, symidx %08X\n", i, relocation.offset(), relocation.type(), relocation.symbol_index());
-        u32* patch_ptr = (u32*)(load_base_address + relocation.offset());
-        switch (relocation.type()) {
-        case R_386_NONE:
-            // Apparently most loaders will just skip these?
-            // Seems if the 'link editor' generates one something is funky with your code
-            VERBOSE("None relocation. No symbol, no nothin.\n");
-            break;
-        case R_386_32: {
-            auto symbol = relocation.symbol();
-            VERBOSE("Absolute relocation: name: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 symbol_address = symbol.value() + (u32)load_base_address;
-            *patch_ptr += symbol_address;
-            VERBOSE("   Symbol address: %p\n", *patch_ptr);
-            break;
-        }
-        case R_386_PC32: {
-            auto symbol = relocation.symbol();
-            VERBOSE("PC-relative relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 relative_offset = (symbol.value() - relocation.offset());
-            *patch_ptr += relative_offset;
-            VERBOSE("   Symbol address: %p\n", *patch_ptr);
-            break;
-        }
-        case R_386_GLOB_DAT: {
-            auto symbol = relocation.symbol();
-            VERBOSE("Global data relocation: '%s', value: %p\n", symbol.name(), symbol.value());
-            u32 symbol_location = (u32)(load_base_address + symbol.value());
-            *patch_ptr = symbol_location;
-            VERBOSE("   Symbol address: %p\n", *patch_ptr);
-            break;
-        }
-        case R_386_RELATIVE: {
-            // FIXME: According to the spec, R_386_relative ones must be done first.
-            //     We could explicitly do them first using m_number_of_relocatoins from DT_RELCOUNT
-            //     However, our compiler is nice enough to put them at the front of the relocations for us :)
-            VERBOSE("Load address relocation at offset %X\n", relocation.offset());
-            VERBOSE("    patch ptr == %p, adding load base address (%p) to it and storing %p\n", *patch_ptr, load_base_address, *patch_ptr + (u32)load_base_address);
-            *patch_ptr += (u32)load_base_address; // + addend for RelA (addend for Rel is stored at addr)
-            break;
-        }
-        case R_386_TLS_TPOFF: {
-            VERBOSE("Relocation type: R_386_TLS_TPOFF at offset %X\n", relocation.offset());
-            // FIXME: this can't be right? I have no idea what "negative offset into TLS storage" means...
-            // FIXME: Check m_has_static_tls and do something different for dynamic TLS
-            VirtualAddress tls_region_loctation = m_tls_region->desired_load_address();
-            *patch_ptr = relocation.offset() - (u32)tls_region_loctation.as_ptr() - *patch_ptr;
-            break;
-        }
-        default:
-            // Raise the alarm! Someone needs to implement this relocation type
-            dbgprintf("Found a new exciting relocation type %d\n", relocation.type());
-            printf("ELFDynamicObject: Found unknown relocation type %d\n", relocation.type());
-            ASSERT_NOT_REACHED();
-            break;
-        }
-        return IterationDecision::Continue;
-    });
-
-    // Handle PLT Global offset table relocations.
-    for (size_t idx = 0; idx < m_size_of_plt_relocation_entry_list; idx += m_size_of_relocation_entry) {
-        // FIXME: Or BIND_NOW flag passed in?
-        if (m_must_bind_now || s_always_bind_now) {
-            // Eagerly BIND_NOW the PLT entries, doing all the symbol looking goodness
-            // The patch method returns the address for the LAZY fixup path, but we don't need it here
-            (void)patch_plt_entry(idx);
-        } else {
-            // LAZY-ily bind the PLT slots by just adding the base address to the offsets stored there
-            // This avoids doing symbol lookup, which might be expensive
-            VirtualAddress relocation_vaddr = m_text_region->load_address().offset(m_plt_relocation_offset_location).offset(idx);
-            Elf32_Rel* jump_slot_relocation = (Elf32_Rel*)relocation_vaddr.as_ptr();
-
-            ASSERT(ELF32_R_TYPE(jump_slot_relocation->r_info) == R_386_JMP_SLOT);
-
-            auto* image_base_address = m_text_region->base_address().as_ptr();
-            u8* relocation_address = image_base_address + jump_slot_relocation->r_offset;
-
-            *(u32*)relocation_address += (u32)image_base_address;
-        }
-    }
-
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Done relocating!\n");
-#endif
-}
-
-// Defined in <arch>/plt_trampoline.S
-extern "C" void _plt_trampoline(void) __attribute__((visibility("hidden")));
-
-void ELFDynamicObject::setup_plt_trampoline()
-{
-    const ELFImage::Section& got_section = m_image->lookup_section(".got.plt");
-    VirtualAddress got_address = m_text_region->load_address().offset(got_section.address());
-
-    u32* got_u32_ptr = reinterpret_cast<u32*>(got_address.as_ptr());
-    got_u32_ptr[1] = (u32)this;
-    got_u32_ptr[2] = (u32)&_plt_trampoline;
-
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Set GOT PLT entries at %p offset(%p): [0] = %p [1] = %p, [2] = %p\n", got_u32_ptr, got_section.offset(), got_u32_ptr[0], got_u32_ptr[1], got_u32_ptr[2]);
-#endif
-}
-
-// Called from our ASM routine _plt_trampoline
-extern "C" Elf32_Addr _fixup_plt_entry(ELFDynamicObject* object, u32 relocation_idx)
-{
-    return object->patch_plt_entry(relocation_idx);
-}
-
-// offset is in PLT relocation table
-Elf32_Addr ELFDynamicObject::patch_plt_entry(u32 relocation_idx)
-{
-    VirtualAddress plt_relocation_table_address = m_text_region->load_address().offset(m_plt_relocation_offset_location);
-    VirtualAddress relocation_entry_address = plt_relocation_table_address.offset(relocation_idx);
-    Elf32_Rel* jump_slot_relocation = (Elf32_Rel*)relocation_entry_address.as_ptr();
-
-    ASSERT(ELF32_R_TYPE(jump_slot_relocation->r_info) == R_386_JMP_SLOT);
-
-    auto sym = m_image->dynamic_symbol(ELF32_R_SYM(jump_slot_relocation->r_info));
-
-    auto* image_base_address = m_text_region->base_address().as_ptr();
-    u8* relocation_address = image_base_address + jump_slot_relocation->r_offset;
-    u32 symbol_location = (u32)(image_base_address + sym.value());
-
-    VERBOSE("ELFDynamicObject: Jump slot relocation: putting %s (%p) into PLT at %p\n", sym.name(), symbol_location, relocation_address);
-
-    *(u32*)relocation_address = symbol_location;
-
-    return symbol_location;
-}
-
-void ELFDynamicObject::call_object_init_functions()
-{
-    u8* load_addr = m_text_region->load_address().as_ptr();
-    InitFunc init_function = (InitFunc)(load_addr + m_init_offset);
-
-#ifdef DYNAMIC_LOAD_DEBUG
-    dbgprintf("Calling DT_INIT at %p\n", init_function);
-#endif
-    (init_function)();
-
-    InitFunc* init_begin = (InitFunc*)(load_addr + m_init_array_offset);
-    u32 init_end = (u32)((u8*)init_begin + m_init_array_size);
-    while ((u32)init_begin < init_end) {
-        // Android sources claim that these can be -1, to be ignored.
-        // 0 definitely shows up. Apparently 0/-1 are valid? Confusing.
-        if (!*init_begin || ((i32)*init_begin == -1))
-            continue;
-#ifdef DYNAMIC_LOAD_DEBUG
-        dbgprintf("Calling DT_INITARRAY entry at %p\n", *init_begin);
-#endif
-        (*init_begin)();
-        ++init_begin;
-    }
-}
-
-u32 ELFDynamicObject::ProgramHeaderRegion::mmap_prot() const
-{
-    int prot = 0;
-    prot |= is_executable() ? PROT_EXEC : 0;
-    prot |= is_readable() ? PROT_READ : 0;
-    prot |= is_writable() ? PROT_WRITE : 0;
-    return prot;
+    return (const char*)base_address().offset(m_string_table_offset + index).as_ptr();
 }
 
 static const char* name_for_dtag(Elf32_Sword d_tag)

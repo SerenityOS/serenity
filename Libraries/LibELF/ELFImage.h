@@ -16,13 +16,9 @@ public:
 
     class Section;
     class RelocationSection;
-    class DynamicRelocationSection;
     class Symbol;
-    class DynamicSymbol;
     class Relocation;
-    class DynamicRelocation;
     class DynamicSection;
-    class DynamicSectionEntry;
 
     class Symbol {
     public:
@@ -36,32 +32,6 @@ public:
         ~Symbol() {}
 
         const char* name() const { return m_image.table_string(m_sym.st_name); }
-        unsigned section_index() const { return m_sym.st_shndx; }
-        unsigned value() const { return m_sym.st_value; }
-        unsigned size() const { return m_sym.st_size; }
-        unsigned index() const { return m_index; }
-        unsigned type() const { return ELF32_ST_TYPE(m_sym.st_info); }
-        unsigned bind() const { return ELF32_ST_BIND(m_sym.st_info); }
-        const Section section() const { return m_image.section(section_index()); }
-
-    private:
-        const ELFImage& m_image;
-        const Elf32_Sym& m_sym;
-        const unsigned m_index;
-    };
-
-    class DynamicSymbol {
-    public:
-        DynamicSymbol(const ELFImage& image, unsigned index, const Elf32_Sym& sym)
-            : m_image(image)
-            , m_sym(sym)
-            , m_index(index)
-        {
-        }
-
-        ~DynamicSymbol() {}
-
-        const char* name() const { return m_image.dynamic_table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
         unsigned value() const { return m_sym.st_value; }
         unsigned size() const { return m_sym.st_size; }
@@ -151,38 +121,6 @@ public:
         void for_each_relocation(F) const;
     };
 
-    class DynamicRelocationSection : public Section {
-    public:
-        DynamicRelocationSection(const Section& section)
-            : Section(section.m_image, section.m_section_index)
-        {
-        }
-        unsigned relocation_count() const { return entry_count(); }
-        const DynamicRelocation relocation(unsigned index) const;
-        template<typename F>
-        void for_each_relocation(F) const;
-    };
-
-    class DynamicRelocation {
-    public:
-        DynamicRelocation(const ELFImage& image, const Elf32_Rel& rel)
-            : m_image(image)
-            , m_rel(rel)
-        {
-        }
-
-        ~DynamicRelocation() {}
-
-        unsigned offset() const { return m_rel.r_offset; }
-        unsigned type() const { return ELF32_R_TYPE(m_rel.r_info); }
-        unsigned symbol_index() const { return ELF32_R_SYM(m_rel.r_info); }
-        const DynamicSymbol symbol() const { return m_image.dynamic_symbol(symbol_index()); }
-
-    private:
-        const ELFImage& m_image;
-        const Elf32_Rel& m_rel;
-    };
-
     class Relocation {
     public:
         Relocation(const ELFImage& image, const Elf32_Rel& rel)
@@ -210,28 +148,6 @@ public:
         {
             ASSERT(type() == SHT_DYNAMIC);
         }
-
-        template<typename F>
-        void for_each_dynamic_entry(F) const;
-    };
-
-    class DynamicSectionEntry {
-    public:
-        DynamicSectionEntry(const ELFImage& image, const Elf32_Dyn& dyn)
-            : m_image(image)
-            , m_dyn(dyn)
-        {
-        }
-
-        ~DynamicSectionEntry() {}
-
-        Elf32_Sword tag() const { return m_dyn.d_tag; }
-        Elf32_Addr ptr() const { return m_dyn.d_un.d_ptr; }
-        Elf32_Word val() const { return m_dyn.d_un.d_val; }
-
-    private:
-        const ELFImage& m_image;
-        const Elf32_Dyn& m_dyn;
     };
 
     unsigned symbol_count() const;
@@ -240,11 +156,9 @@ public:
     unsigned program_header_count() const;
 
     const Symbol symbol(unsigned) const;
-    const DynamicSymbol dynamic_symbol(unsigned) const;
     const Section section(unsigned) const;
     const ProgramHeader program_header(unsigned const) const;
     const DynamicSection dynamic_section() const;
-    const DynamicRelocationSection dynamic_relocation_section() const;
 
     template<typename F>
     void for_each_section(F) const;
@@ -252,8 +166,6 @@ public:
     void for_each_section_of_type(unsigned, F) const;
     template<typename F>
     void for_each_symbol(F) const;
-    template<typename F>
-    void for_each_dynamic_symbol(F) const;
     template<typename F>
     void for_each_program_header(F) const;
 
@@ -276,17 +188,13 @@ private:
     const char* table_string(unsigned offset) const;
     const char* section_header_table_string(unsigned offset) const;
     const char* section_index_to_string(unsigned index) const;
-    const char* dynamic_table_string(unsigned offset) const;
 
     const u8* m_buffer { nullptr };
     HashMap<String, unsigned> m_sections;
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };
-    unsigned m_dynamic_symbol_table_section_index { 0 }; // .dynsym
-    unsigned m_dynamic_string_table_section_index { 0 }; // .dynstr
-    unsigned m_dynamic_section_index { 0 };              // .dynamic
-    unsigned m_dynamic_relocation_section_index { 0 };   // .rel.dyn
+    unsigned m_dynamic_section_index { 0 };
 };
 
 template<typename F>
@@ -318,27 +226,9 @@ inline void ELFImage::RelocationSection::for_each_relocation(F func) const
 }
 
 template<typename F>
-inline void ELFImage::DynamicRelocationSection::for_each_relocation(F func) const
-{
-    for (unsigned i = 0; i < relocation_count(); ++i) {
-        if (func(relocation(i)) == IterationDecision::Break)
-            break;
-    }
-}
-
-template<typename F>
 inline void ELFImage::for_each_symbol(F func) const
 {
     for (unsigned i = 0; i < symbol_count(); ++i) {
-        if (func(symbol(i)) == IterationDecision::Break)
-            break;
-    }
-}
-
-template<typename F>
-inline void ELFImage::for_each_dynamic_symbol(F func) const
-{
-    for (unsigned i = 0; i < dynamic_symbol_count(); ++i) {
         if (func(symbol(i)) == IterationDecision::Break)
             break;
     }
@@ -349,17 +239,4 @@ inline void ELFImage::for_each_program_header(F func) const
 {
     for (unsigned i = 0; i < program_header_count(); ++i)
         func(program_header(i));
-}
-
-template<typename F>
-inline void ELFImage::DynamicSection::for_each_dynamic_entry(F func) const
-{
-    auto* dyns = reinterpret_cast<const Elf32_Dyn*>(m_image.raw_data(offset()));
-    for (unsigned i = 0;; ++i) {
-        auto&& dyn = DynamicSectionEntry(m_image, dyns[i]);
-        if (dyn.tag() == DT_NULL)
-            break;
-        if (func(dyn) == IterationDecision::Break)
-            break;
-    }
 }
