@@ -2270,7 +2270,7 @@ int Process::sys$setgroups(ssize_t count, const gid_t* gids)
         return -EINVAL;
     if (!is_superuser())
         return -EPERM;
-    if (!validate_read(gids, count))
+    if (count && !validate_read(gids, count))
         return -EFAULT;
     m_extra_gids.clear();
     for (int i = 0; i < count; ++i) {
