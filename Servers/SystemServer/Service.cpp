@@ -5,6 +5,7 @@
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CLocalSocket.h>
 #include <fcntl.h>
+#include <grp.h>
 #include <libgen.h>
 #include <pwd.h>
 #include <sched.h>
@@ -13,20 +14,30 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-struct UidAndGid {
+struct UidAndGids {
     uid_t uid;
     gid_t gid;
+    Vector<gid_t> extra_gids;
 };
 
-static HashMap<String, UidAndGid>* s_user_map;
+static HashMap<String, UidAndGids>* s_user_map;
 static HashMap<pid_t, Service*> s_service_map;
 
 void Service::resolve_user()
 {
     if (s_user_map == nullptr) {
-        s_user_map = new HashMap<String, UidAndGid>;
-        for (struct passwd* passwd = getpwent(); passwd; passwd = getpwent())
-            s_user_map->set(passwd->pw_name, { passwd->pw_uid, passwd->pw_gid });
+        s_user_map = new HashMap<String, UidAndGids>;
+        for (struct passwd* passwd = getpwent(); passwd; passwd = getpwent()) {
+            Vector<gid_t> extra_gids;
+            for (struct group* group = getgrent(); group; group = getgrent()) {
+                for (size_t m = 0; group->gr_mem[m]; ++m) {
+                    if (!strcmp(group->gr_mem[m], passwd->pw_name))
+                        extra_gids.append(group->gr_gid);
+                }
+            }
+            endgrent();
+            s_user_map->set(passwd->pw_name, { passwd->pw_uid, passwd->pw_gid, move(extra_gids) });
+        }
         endpwent();
     }
 
@@ -37,6 +48,7 @@ void Service::resolve_user()
     }
     m_uid = user.value().uid;
     m_gid = user.value().gid;
+    m_extra_gids = user.value().extra_gids;
 }
 
 Service* Service::find_by_pid(pid_t pid)
@@ -189,7 +201,7 @@ void Service::spawn()
         }
 
         if (!m_user.is_null()) {
-            if (setgid(m_gid) < 0 || setuid(m_uid) < 0) {
+            if (setgid(m_gid) < 0 || setgroups(m_extra_gids.size(), m_extra_gids.data()) < 0 || setuid(m_uid) < 0) {
                 dbgprintf("Failed to drop privileges (GID=%u, UID=%u)\n", m_gid, m_uid);
                 exit(1);
             }

@@ -44,6 +44,7 @@ private:
     String m_user;
     uid_t m_uid { 0 };
     gid_t m_gid { 0 };
+    Vector<gid_t> m_extra_gids;
 
     // PID of the running instance of this service.
     pid_t m_pid { -1 };
