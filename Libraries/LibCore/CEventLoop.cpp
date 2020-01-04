@@ -1,4 +1,4 @@
-#include <AK/JsonArray.h>
+#include <AK/IDAllocator.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
 #include <AK/Time.h>
@@ -27,21 +27,19 @@ class RPCClient;
 
 static CEventLoop* s_main_event_loop;
 static Vector<CEventLoop*>* s_event_loop_stack;
+static IDAllocator s_id_allocator;
 HashMap<int, NonnullOwnPtr<CEventLoop::EventLoopTimer>>* CEventLoop::s_timers;
 HashTable<CNotifier*>* CEventLoop::s_notifiers;
-int CEventLoop::s_next_timer_id = 1;
 int CEventLoop::s_wake_pipe_fds[2];
 RefPtr<CLocalServer> CEventLoop::s_rpc_server;
 HashMap<int, RefPtr<RPCClient>> s_rpc_clients;
-// FIXME: It's not great if this wraps around.
-static int s_next_client_id = 0;
 
 class RPCClient : public CObject {
     C_OBJECT(RPCClient)
 public:
     explicit RPCClient(RefPtr<CLocalSocket> socket)
         : m_socket(move(socket))
-        , m_client_id(s_next_client_id++)
+        , m_client_id(s_id_allocator.allocate())
     {
         s_rpc_clients.set(m_client_id, this);
         add_child(*m_socket);
@@ -125,7 +123,7 @@ public:
 
     void shutdown()
     {
-        s_rpc_clients.remove(m_client_id);
+        s_id_allocator.deallocate(m_client_id);
     }
 
 private:
@@ -442,8 +440,7 @@ int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_re
     timer->reload(now);
     timer->should_reload = should_reload;
     timer->fire_when_not_visible = fire_when_not_visible;
-    int timer_id = ++s_next_timer_id; // FIXME: This will eventually wrap around.
-    ASSERT(timer_id);                 // FIXME: Aforementioned wraparound.
+    int timer_id = s_id_allocator.allocate();
     timer->timer_id = timer_id;
     s_timers->set(timer_id, move(timer));
     return timer_id;
@@ -451,6 +448,7 @@ int CEventLoop::register_timer(CObject& object, int milliseconds, bool should_re
 
 bool CEventLoop::unregister_timer(int timer_id)
 {
+    s_id_allocator.deallocate(timer_id);
     auto it = s_timers->find(timer_id);
     if (it == s_timers->end())
         return false;
