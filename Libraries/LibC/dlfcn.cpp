@@ -12,12 +12,12 @@
 #include <AK/ScopeGuard.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <LibELF/ELFDynamicObject.h>
+#include <LibELF/ELFDynamicLoader.h>
 
 // NOTE: The string here should never include a trailing newline (according to POSIX)
 String g_dlerror_msg;
 
-HashMap<String, RefPtr<ELFDynamicObject>> g_elf_objects;
+HashMap<String, RefPtr<ELFDynamicLoader>> g_elf_objects;
 
 extern "C" {
 
@@ -68,19 +68,19 @@ void* dlopen(const char* filename, int flags)
         return nullptr;
     }
 
-    auto image = ELFDynamicObject::construct(filename, fd, file_stats.st_size);
+    auto loader = ELFDynamicLoader::construct(filename, fd, file_stats.st_size);
 
-    if (!image->is_valid()) {
+    if (!loader->is_valid()) {
         g_dlerror_msg = String::format("%s is not a valid ELF dynamic shared object!", filename);
         return nullptr;
     }
 
-    if (!image->load(flags)) {
+    if (!loader->load_from_image(flags)) {
         g_dlerror_msg = String::format("Failed to load ELF object %s", filename);
         return nullptr;
     }
 
-    g_elf_objects.set(file_path.basename(), move(image));
+    g_elf_objects.set(file_path.basename(), move(loader));
     g_dlerror_msg = "Successfully loaded ELF object.";
 
     // we have one refcount already
@@ -91,7 +91,7 @@ void* dlsym(void* handle, const char* symbol_name)
 {
     // FIXME: When called with a NULL handle we're supposed to search every dso in the process... that'll get expensive
     ASSERT(handle);
-    auto* dso = reinterpret_cast<ELFDynamicObject*>(handle);
+    auto* dso = reinterpret_cast<ELFDynamicLoader*>(handle);
     void* symbol = dso->symbol_for_name(symbol_name);
     if (!symbol) {
         g_dlerror_msg = "Symbol not found";
