@@ -30,7 +30,6 @@ PTYMultiplexer::~PTYMultiplexer()
 
 KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
 {
-    UNUSED_PARAM(options);
     LOCKER(m_lock);
     if (m_freelist.is_empty())
         return KResult(-EBUSY);
@@ -39,7 +38,9 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
 #ifdef PTMX_DEBUG
     dbgprintf("PTYMultiplexer::open: Vending master %u\n", master->index());
 #endif
-    return FileDescription::create(move(master));
+    auto description = FileDescription::create(move(master));
+    description->set_rw_mode(options);
+    return description;
 }
 
 void PTYMultiplexer::notify_master_destroyed(Badge<MasterPTY>, unsigned index)

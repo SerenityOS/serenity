@@ -11,8 +11,9 @@ File::~File()
 
 KResultOr<NonnullRefPtr<FileDescription>> File::open(int options)
 {
-    UNUSED_PARAM(options);
-    return FileDescription::create(*this);
+    auto description = FileDescription::create(*this);
+    description->set_rw_mode(options);
+    return description;
 }
 
 void File::close()
