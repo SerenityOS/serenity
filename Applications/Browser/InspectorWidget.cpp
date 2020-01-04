@@ -6,9 +6,8 @@
 #include <LibGUI/GTabWidget.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
-#include <LibHTML/DOMElementStyleModel.h>
-#include <LibHTML/DOMComputedElementStyleModel.h>
 #include <LibHTML/DOMTreeModel.h>
+#include <LibHTML/StylePropertiesModel.h>
 
 InspectorWidget::InspectorWidget(GWidget* parent)
     : GWidget(parent)
@@ -21,8 +20,10 @@ InspectorWidget::InspectorWidget(GWidget* parent)
         node->document().set_inspected_node(node);
         if (node->is_element()) {
             auto element = to<Element>(*node);
-            m_style_table_view->set_model(DOMElementStyleModel::create(element));
-            m_computed_style_table_view->set_model(DOMComputedElementStyleModel::create(element));
+	    if (element.resolved_style())
+            m_style_table_view->set_model(StylePropertiesModel::create(*element.resolved_style()));
+	    if (element.layout_node() && element.layout_node()->has_style())
+                m_computed_style_table_view->set_model(StylePropertiesModel::create(element.layout_node()->style()));
         } else {
             m_style_table_view->set_model(nullptr);
             m_computed_style_table_view->set_model(nullptr);
