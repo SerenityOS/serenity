@@ -100,7 +100,7 @@ bool print_full_id_list()
     struct passwd* pw = getpwuid(uid);
     struct group* gr = getgrgid(gid);
 
-    printf("uid=%u(%s), gid=%u(%s)", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a");
+    printf("uid=%u(%s) gid=%u(%s)", uid, pw ? pw->pw_name : "n/a", gid, gr ? gr->gr_name : "n/a");
 
     int extra_gid_count = getgroups(0, nullptr);
     if (extra_gid_count) {
@@ -110,7 +110,7 @@ bool print_full_id_list()
             perror("\ngetgroups");
             return false;
         }
-        printf(", groups=");
+        printf(" groups=");
         for (int g = 0; g < extra_gid_count; ++g) {
             auto* gr = getgrgid(extra_gids[g]);
             if (gr)
