@@ -27,9 +27,11 @@ private:
 
     virtual void did_update_model() override;
     virtual void paint_event(GPaintEvent&) override;
+    virtual void second_paint_event(GPaintEvent&) override;
     virtual void resize_event(GResizeEvent&) override;
     virtual void mousedown_event(GMouseEvent&) override;
     virtual void mousemove_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
     virtual void keydown_event(GKeyEvent&) override;
     virtual void doubleclick_event(GMouseEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
@@ -47,4 +49,8 @@ private:
     Point m_left_mousedown_position;
 
     Size m_effective_item_size { 80, 80 };
+
+    bool m_rubber_banding { false };
+    Point m_rubber_band_origin;
+    Point m_rubber_band_current;
 };

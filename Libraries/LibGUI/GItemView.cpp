@@ -91,6 +91,9 @@ void GItemView::mousedown_event(GMouseEvent& event)
         m_left_mousedown_position = event.position();
         if (item_index == -1) {
             selection().clear();
+            m_rubber_banding = true;
+            m_rubber_band_origin = event.position();
+            m_rubber_band_current = event.position();
         } else {
             auto index = model()->index(item_index, m_model_column);
             if (event.modifiers() & Mod_Ctrl)
@@ -103,10 +106,35 @@ void GItemView::mousedown_event(GMouseEvent& event)
     GAbstractView::mousedown_event(event);
 }
 
+void GItemView::mouseup_event(GMouseEvent& event)
+{
+    if (m_rubber_banding && event.button() == GMouseButton::Left) {
+        m_rubber_banding = false;
+        update();
+        return;
+    }
+    GAbstractView::mouseup_event(event);
+}
+
 void GItemView::mousemove_event(GMouseEvent& event)
 {
     if (!model())
         return GAbstractView::mousemove_event(event);
+
+    if (m_rubber_banding) {
+        if (m_rubber_band_current != event.position()) {
+            m_rubber_band_current = event.position();
+            auto rubber_band_rect = Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
+            selection().clear();
+            for (int row_index = 0, row_count = model()->row_count(); row_index < row_count; ++row_index) {
+                auto item_rect = this->item_rect(row_index);
+                if (item_rect.intersects(rubber_band_rect))
+                    selection().add(model()->index(row_index, model_column()));
+            }
+            update();
+            return;
+        }
+    }
 
     if (event.buttons() & GMouseButton::Left && !selection().is_empty()) {
         auto diff = event.position() - m_left_mousedown_position;
@@ -185,6 +213,19 @@ void GItemView::doubleclick_event(GMouseEvent& event)
             activate(index);
         });
     }
+}
+
+void GItemView::second_paint_event(GPaintEvent& event)
+{
+    if (!m_rubber_banding)
+        return;
+
+    GPainter painter(*this);
+    painter.add_clip_rect(event.rect());
+
+    auto rubber_band_rect = Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
+    painter.fill_rect(rubber_band_rect, Color(244, 202, 158, 60));
+    painter.draw_rect(rubber_band_rect, Color(110, 34, 9));
 }
 
 void GItemView::paint_event(GPaintEvent& event)
