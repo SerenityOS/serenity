@@ -284,7 +284,9 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
     if (m_window.type() != WSWindowType::Normal)
         return;
 
-    if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left && title_bar_icon_rect().contains(event.position())) {
+    if (event.type() == WSEvent::MouseDown && (event.button() == MouseButton::Left || event.button() == MouseButton::Right) &&
+        title_bar_icon_rect().contains(event.position())) {
+        wm.move_to_front_and_make_active(m_window);
         m_window.popup_window_menu(event.position().translated(rect().location()));
         return;
     }
@@ -305,8 +307,14 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
             if (button.relative_rect().contains(event.position()))
                 return button.on_mouse_event(event.translated(-button.relative_rect().location()));
         }
-        if (event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left)
-            wm.start_window_move(m_window, event.translated(rect().location()));
+        if (event.type() == WSEvent::MouseDown) {
+            if (event.button() == MouseButton::Right) {
+                m_window.popup_window_menu(event.position().translated(rect().location()));
+                return;
+            }
+            if (event.button() == MouseButton::Left)
+                wm.start_window_move(m_window, event.translated(rect().location()));
+        }
         return;
     }
 

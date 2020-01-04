@@ -27,6 +27,11 @@ enum class WindowTileType {
     Right,
 };
 
+enum class PopupMenuItem {
+    Minimize = 0,
+    Maximize,
+};
+
 class WSWindow final : public CObject
     , public InlineLinkedListNode<WSWindow> {
     C_OBJECT(WSWindow)
@@ -190,6 +195,8 @@ public:
 
 private:
     void handle_mouse_event(const WSMouseEvent&);
+    void update_menu_item_text(PopupMenuItem item);
+    void update_menu_item_enabled(PopupMenuItem item);
 
     WSClientConnection* m_client { nullptr };
     String m_title;

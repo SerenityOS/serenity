@@ -5,12 +5,13 @@
 #include <AK/WeakPtr.h>
 #include <LibCore/CObject.h>
 #include <LibDraw/Rect.h>
+#include <WindowServer/WSCursor.h>
 #include <WindowServer/WSMenuItem.h>
+#include <WindowServer/WSWindow.h>
 
 class WSClientConnection;
 class WSMenuBar;
 class WSEvent;
-class WSWindow;
 class Font;
 
 class WSMenu final : public CObject {
@@ -30,6 +31,7 @@ public:
     bool is_empty() const { return m_items.is_empty(); }
     int item_count() const { return m_items.size(); }
     const WSMenuItem& item(int index) const { return m_items.at(index); }
+    WSMenuItem& item(int index) { return m_items.at(index); }
 
     void add_item(NonnullOwnPtr<WSMenuItem>&& item) { m_items.append(move(item)); }
 
@@ -50,6 +52,11 @@ public:
 
     WSWindow* menu_window() { return m_menu_window.ptr(); }
     WSWindow& ensure_menu_window();
+
+    WSWindow* window_menu_of() { return m_window_menu_of; }
+    void set_window_menu_of(WSWindow& window) { m_window_menu_of = window.make_weak_ptr(); }
+    bool is_window_menu_open() { return m_is_window_menu_open; }
+    void set_window_menu_open(bool is_open) { m_is_window_menu_open = is_open; }
 
     int width() const;
     int height() const;
@@ -94,5 +101,7 @@ private:
     WSMenuItem* m_hovered_item { nullptr };
     NonnullOwnPtrVector<WSMenuItem> m_items;
     RefPtr<WSWindow> m_menu_window;
+    WeakPtr<WSWindow> m_window_menu_of;
+    bool m_is_window_menu_open = { false };
     int m_theme_index_at_last_paint { -1 };
 };
