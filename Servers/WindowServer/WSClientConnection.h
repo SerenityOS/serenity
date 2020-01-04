@@ -32,11 +32,6 @@ public:
 
     bool is_showing_modal_window() const;
 
-    template<typename Matching, typename Callback>
-    void for_each_window_matching(Matching, Callback);
-    template<typename Callback>
-    void for_each_window(Callback);
-
     void notify_about_new_screen_rect(const Rect&);
     void notify_about_clipboard_contents_changed();
     void post_paint_message(WSWindow&);
@@ -103,23 +98,3 @@ private:
 
     RefPtr<SharedBuffer> m_last_sent_clipboard_content;
 };
-
-template<typename Matching, typename Callback>
-void WSClientConnection::for_each_window_matching(Matching matching, Callback callback)
-{
-    for (auto& it : m_windows) {
-        if (matching(*it.value)) {
-            if (callback(*it.value) == IterationDecision::Break)
-                return;
-        }
-    }
-}
-
-template<typename Callback>
-void WSClientConnection::for_each_window(Callback callback)
-{
-    for (auto& it : m_windows) {
-        if (callback(*it.value) == IterationDecision::Break)
-            return;
-    }
-}
