@@ -1,10 +1,10 @@
 #include <AK/TestSuite.h>
 
-#include <AK/String.h>
 #include <AK/HashMap.h>
 #include <AK/JsonArray.h>
 #include <AK/JsonObject.h>
 #include <AK/JsonValue.h>
+#include <AK/String.h>
 #include <AK/StringBuilder.h>
 
 TEST_CASE(load_form)
@@ -79,7 +79,7 @@ TEST_CASE(json_utf8_character)
     auto json = JsonValue::from_string("\"\xc3\x84\"");
     EXPECT_EQ(json.type(), JsonValue::Type::String);
     EXPECT_EQ(json.as_string().is_null(), false);
-    EXPECT_EQ(json.as_string().length(), 2);
+    EXPECT_EQ(json.as_string().length(), size_t { 2 });
 }
 
 TEST_MAIN(JSON)
