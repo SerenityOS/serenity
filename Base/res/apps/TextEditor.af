@@ -1,5 +1,5 @@
 [App]
-Name=TextEditor
+Name=Text Editor
 Executable=/bin/TextEditor
 Category=Utilities
 

@@ -1,5 +1,5 @@
 [App]
-Name=FontEditor
+Name=Font Editor
 Executable=/bin/FontEditor
 Category=Development
 
