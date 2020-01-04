@@ -10,6 +10,13 @@ class Color;
 class StyleProperties : public RefCounted<StyleProperties> {
 public:
     static NonnullRefPtr<StyleProperties> create() { return adopt(*new StyleProperties); }
+    static NonnullRefPtr<StyleProperties> create(const StyleProperties& properties) {
+        auto style_properties = new StyleProperties();
+        properties.for_each_property([&](auto property_id, auto& property_value) {
+            style_properties->set_property(property_id, property_value);
+        });
+        return adopt(*style_properties);
+    }
 
     template<typename Callback>
     inline void for_each_property(Callback callback) const

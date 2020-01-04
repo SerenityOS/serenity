@@ -20,10 +20,10 @@ InspectorWidget::InspectorWidget(GWidget* parent)
         node->document().set_inspected_node(node);
         if (node->is_element()) {
             auto element = to<Element>(*node);
-	    if (element.resolved_style())
-            m_style_table_view->set_model(StylePropertiesModel::create(*element.resolved_style()));
-	    if (element.layout_node() && element.layout_node()->has_style())
-                m_computed_style_table_view->set_model(StylePropertiesModel::create(element.layout_node()->style()));
+            if (element.resolved_style()) {
+                m_style_table_view->set_model(StylePropertiesModel::create(*element.resolved_style()));
+                m_computed_style_table_view->set_model(StylePropertiesModel::create(*element.computed_style()));
+            }
         } else {
             m_style_table_view->set_model(nullptr);
             m_computed_style_table_view->set_model(nullptr);

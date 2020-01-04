@@ -1,4 +1,6 @@
 #include <LibHTML/CSS/StyleResolver.h>
+#include <LibHTML/CSS/PropertyID.h>
+#include <LibHTML/CSS/Length.h>
 #include <LibHTML/DOM/Document.h>
 #include <LibHTML/DOM/Element.h>
 #include <LibHTML/Layout/LayoutBlock.h>
@@ -159,4 +161,27 @@ void Element::recompute_style()
     if (diff == StyleDifference::NeedsRepaint) {
         layout_node()->set_needs_display();
     }
+}
+
+RefPtr<StyleProperties> Element::computed_style()
+{
+    auto properties = StyleProperties::create(*m_resolved_style);
+    if (layout_node() && layout_node()->has_style()) {
+        CSS::PropertyID box_model_metrics[] = {
+            CSS::PropertyID::MarginTop,
+            CSS::PropertyID::MarginBottom,
+            CSS::PropertyID::MarginLeft,
+            CSS::PropertyID::MarginRight,
+            CSS::PropertyID::PaddingTop,
+            CSS::PropertyID::PaddingBottom,
+            CSS::PropertyID::PaddingLeft,
+            CSS::PropertyID::PaddingRight,
+        };
+        for (CSS::PropertyID id : box_model_metrics) {
+            auto prop = layout_node()->style().property(id);
+            if (prop)
+                properties->set_property(id, prop.value());
+        }
+    }
+    return properties.ptr();
 }
