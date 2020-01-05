@@ -187,5 +187,5 @@ NonnullRefPtr<StyleProperties> Element::computed_style()
                 properties->set_property(id, prop.value());
         }
     }
-    return properties.ptr();
+    return properties;
 }
