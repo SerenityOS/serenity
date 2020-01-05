@@ -1555,12 +1555,13 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     return 0;
 }
 
-int Process::sys$chdir(const char* path)
+int Process::sys$chdir(const char* user_path, size_t path_length)
 {
     SmapDisabler disabler;
-    if (!validate_read_str(path))
+    if (!validate_read(user_path, path_length))
         return -EFAULT;
-    auto directory_or_error = VFS::the().open_directory(StringView(path), current_directory());
+    auto path = copy_string_from_user(user_path, path_length);
+    auto directory_or_error = VFS::the().open_directory(path, current_directory());
     if (directory_or_error.is_error())
         return directory_or_error.error();
     m_cwd = *directory_or_error.value();
