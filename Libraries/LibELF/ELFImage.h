@@ -171,7 +171,7 @@ public:
 
     // NOTE: Returns section(0) if section with name is not found.
     // FIXME: I don't love this API.
-    const Section lookup_section(const char* name) const;
+    const Section lookup_section(const String& name) const;
 
     bool is_executable() const { return header().e_type == ET_EXEC; }
     bool is_relocatable() const { return header().e_type == ET_REL; }
