@@ -228,8 +228,8 @@ void page_fault_handler(RegisterDump regs)
 
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s V%08x\n",
-        current->process().name().characters(),
-        current->pid(),
+        current ? current->process().name().characters() : "(none)",
+        current ? current->pid() : 0,
         regs.cs & 3,
         regs.exception_code & 1 ? "PV" : "NP",
         fault_page_directory,
@@ -525,6 +525,7 @@ bool g_cpu_supports_nx;
 bool g_cpu_supports_pae;
 bool g_cpu_supports_pge;
 bool g_cpu_supports_rdrand;
+bool g_cpu_supports_smap;
 bool g_cpu_supports_smep;
 bool g_cpu_supports_sse;
 bool g_cpu_supports_tsc;
@@ -543,6 +544,24 @@ void detect_cpu_features()
     g_cpu_supports_nx = (extended_processor_info.edx() & (1 << 20));
 
     CPUID extended_features(0x7);
+    g_cpu_supports_smap = (extended_features.ebx() & (1 << 20));
     g_cpu_supports_smep = (extended_features.ebx() & (1 << 7));
     g_cpu_supports_umip = (extended_features.ecx() & (1 << 2));
+}
+
+
+void stac()
+{
+    if (!g_cpu_supports_smap)
+        return;
+    asm volatile("stac" ::
+                     : "cc");
+}
+
+void clac()
+{
+    if (!g_cpu_supports_smap)
+        return;
+    asm volatile("clac" ::
+                     : "cc");
 }

@@ -93,6 +93,9 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 void syscall_handler(RegisterDump regs)
 {
+    // Make sure SMAP protection is enabled on syscall entry.
+    clac();
+
     // Apply a random offset in the range 0-255 to the stack pointer,
     // to make kernel stacks a bit less deterministic.
     auto* ptr = (char*)__builtin_alloca(get_fast_random<u8>());

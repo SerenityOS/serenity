@@ -88,10 +88,13 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
 
 [[gnu::noinline]] void dump_backtrace_impl(u32 ebp, bool use_ksyms)
 {
+    SmapDisabler disabler;
+#if 0
     if (!current) {
         //hang();
         return;
     }
+#endif
     if (use_ksyms && !ksyms_ready) {
         hang();
         return;
@@ -104,12 +107,14 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
     RecognizedSymbol recognized_symbols[max_recognized_symbol_count];
     int recognized_symbol_count = 0;
     if (use_ksyms) {
-        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (u32*)*stack_ptr) {
+        for (u32* stack_ptr = (u32*)ebp;
+             (current ? current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2) : 1) && recognized_symbol_count < max_recognized_symbol_count; stack_ptr = (u32*)*stack_ptr) {
             u32 retaddr = stack_ptr[1];
             recognized_symbols[recognized_symbol_count++] = { retaddr, ksymbolicate(retaddr) };
         }
     } else {
-        for (u32* stack_ptr = (u32*)ebp; current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2); stack_ptr = (u32*)*stack_ptr) {
+        for (u32* stack_ptr = (u32*)ebp;
+             (current ? current->process().validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2) : 1); stack_ptr = (u32*)*stack_ptr) {
             u32 retaddr = stack_ptr[1];
             dbgprintf("%x (next: %x)\n", retaddr, stack_ptr ? (u32*)*stack_ptr : 0);
         }
@@ -121,7 +126,7 @@ static void load_ksyms_from_data(const ByteBuffer& buffer)
         if (!symbol.address)
             break;
         if (!symbol.ksym) {
-            if (current->process().elf_loader() && current->process().elf_loader()->has_symbols()) {
+            if (current && current->process().elf_loader() && current->process().elf_loader()->has_symbols()) {
                 dbgprintf("%p  %s\n", symbol.address, current->process().elf_loader()->symbolicate(symbol.address).characters());
             } else {
                 dbgprintf("%p (no ELF symbols for process)\n", symbol.address);

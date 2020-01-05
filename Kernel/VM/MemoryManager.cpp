@@ -204,6 +204,17 @@ void MemoryManager::initialize_paging()
         kprintf("x86: SMEP support not detected\n");
     }
 
+    if (g_cpu_supports_smap) {
+        // Turn on CR4.SMAP
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x200000, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: SMAP support enabled\n");
+    } else {
+        kprintf("x86: SMAP support not detected\n");
+    }
+
     if (g_cpu_supports_nx) {
         // Turn on IA32_EFER.NXE
         asm volatile(
@@ -470,7 +481,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 
     if (should_zero_fill == ShouldZeroFill::Yes) {
         auto* ptr = (u32*)quickmap_page(*page);
-        fast_u32_fill(ptr, 0, PAGE_SIZE / sizeof(u32));
+        memset_user(ptr, 0, PAGE_SIZE);
         unquickmap_page();
     }
 
