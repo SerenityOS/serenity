@@ -6,16 +6,11 @@
 #include "WSMenuItem.h"
 #include "WSScreen.h"
 #include "WSWindow.h"
-#include <AK/FileSystemPath.h>
 #include <AK/LogStream.h>
-#include <AK/QuickSort.h>
 #include <AK/StdLibExtras.h>
 #include <AK/Vector.h>
-#include <LibCore/CDirIterator.h>
-#include <LibCore/CTimer.h>
 #include <LibDraw/CharacterBitmap.h>
 #include <LibDraw/Font.h>
-#include <LibDraw/PNGLoader.h>
 #include <LibDraw/Painter.h>
 #include <LibDraw/StylePainter.h>
 #include <LibDraw/SystemTheme.h>
@@ -29,7 +24,6 @@
 #include <unistd.h>
 
 //#define DEBUG_COUNTERS
-//#define DEBUG_MENUS
 //#define RESIZE_DEBUG
 //#define MOVE_DEBUG
 //#define DOUBLECLICK_DEBUG
@@ -48,148 +42,6 @@ WSWindowManager::WSWindowManager(const PaletteImpl& palette)
     s_the = this;
 
     reload_config(false);
-
-    HashTable<String> seen_app_categories;
-    {
-        CDirIterator dt("/res/apps", CDirIterator::SkipDots);
-        while (dt.has_next()) {
-            auto af_name = dt.next_path();
-            auto af_path = String::format("/res/apps/%s", af_name.characters());
-            auto af = CConfigFile::open(af_path);
-            if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
-                continue;
-            auto app_name = af->read_entry("App", "Name");
-            auto app_executable = af->read_entry("App", "Executable");
-            auto app_category = af->read_entry("App", "Category");
-            auto app_icon_path = af->read_entry("Icons", "16x16");
-            m_apps.append({ app_executable, app_name, app_icon_path, app_category });
-            seen_app_categories.set(app_category);
-        }
-    }
-
-    Vector<String> sorted_app_categories;
-    for (auto& category : seen_app_categories)
-        sorted_app_categories.append(category);
-    quick_sort(sorted_app_categories.begin(), sorted_app_categories.end(), [](auto& a, auto& b) { return a < b; });
-
-    u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
-    m_system_menu = WSMenu::construct(nullptr, -1, String((const char*)system_menu_name));
-
-    // First we construct all the necessary app category submenus.
-    for (const auto& category : sorted_app_categories) {
-
-        if (m_app_category_menus.contains(category))
-            continue;
-        auto category_menu = WSMenu::construct(nullptr, 5000 + m_app_category_menus.size(), category);
-        category_menu->on_item_activation = [this](auto& item) {
-            if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
-                if (fork() == 0) {
-                    const auto& bin = m_apps[item.identifier() - 1].executable;
-                    execl(bin.characters(), bin.characters(), nullptr);
-                    ASSERT_NOT_REACHED();
-                }
-            }
-        };
-        auto item = make<WSMenuItem>(*m_system_menu, -1, category);
-        item->set_submenu_id(category_menu->menu_id());
-        m_system_menu->add_item(move(item));
-        m_app_category_menus.set(category, move(category_menu));
-    }
-
-    // Then we create and insert all the app menu items into the right place.
-    int app_identifier = 1;
-    for (const auto& app : m_apps) {
-        auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
-        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, load_png(app.icon_path)));
-    }
-
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-
-    m_themes_menu = WSMenu::construct(nullptr, 9000, "Themes");
-
-    auto themes_menu_item = make<WSMenuItem>(*m_system_menu, 100, "Themes");
-    themes_menu_item->set_submenu_id(m_themes_menu->menu_id());
-    m_system_menu->add_item(move(themes_menu_item));
-
-    {
-        CDirIterator dt("/res/themes", CDirIterator::SkipDots);
-        while (dt.has_next()) {
-            auto theme_name = dt.next_path();
-            auto theme_path = String::format("/res/themes/%s", theme_name.characters());
-            m_themes.append({ FileSystemPath(theme_name).title(), theme_path });
-        }
-        quick_sort(m_themes.begin(), m_themes.end(), [](auto& a, auto& b) { return a.name < b.name; });
-    }
-
-    {
-        int theme_identifier = 9000;
-        for (auto& theme : m_themes) {
-            m_themes_menu->add_item(make<WSMenuItem>(*m_themes_menu, theme_identifier++, theme.name));
-        }
-    }
-
-    m_themes_menu->on_item_activation = [this](WSMenuItem& item) {
-        auto& theme = m_themes[(int)item.identifier() - 9000];
-        auto new_theme = load_system_theme(theme.path);
-        ASSERT(new_theme);
-        set_system_theme(*new_theme);
-        m_palette = PaletteImpl::create_with_shared_buffer(*new_theme);
-        HashTable<WSClientConnection*> notified_clients;
-        for_each_window([&](WSWindow& window) {
-            if (window.client()) {
-                if (!notified_clients.contains(window.client())) {
-                    window.client()->post_message(WindowClient::UpdateSystemTheme(current_system_theme_buffer_id()));
-                    notified_clients.set(window.client());
-                }
-            }
-            return IterationDecision::Continue;
-        });
-        ++m_theme_index;
-        auto wm_config = CConfigFile::get_for_app("WindowManager");
-        wm_config->write_entry("Theme", "Name", theme.name);
-        wm_config->sync();
-        invalidate();
-    };
-
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
-
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, load_png("/res/icons/16x16/ladybug.png")));
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
-    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
-    m_system_menu->on_item_activation = [this](WSMenuItem& item) {
-        if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
-            if (fork() == 0) {
-                const auto& bin = m_apps[item.identifier() - 1].executable;
-                execl(bin.characters(), bin.characters(), nullptr);
-                ASSERT_NOT_REACHED();
-            }
-        }
-        switch (item.identifier()) {
-        case 100:
-            reload_config(true);
-            break;
-        case 200:
-            if (fork() == 0) {
-                execl("/bin/About", "/bin/About", nullptr);
-                ASSERT_NOT_REACHED();
-            }
-            return;
-        case 300:
-            if (fork() == 0) {
-                execl("/bin/SystemDialog", "/bin/SystemDialog", "--shutdown", nullptr);
-                ASSERT_NOT_REACHED();
-            }
-            return;
-        }
-#ifdef DEBUG_MENUS
-        dbg() << "WSMenu 1 item activated: " << item.text();
-#endif
-    };
-
-    // NOTE: This ensures that the system menu has the correct dimensions.
-    set_current_menubar(nullptr);
 
     m_menu_manager.setup();
 
@@ -275,28 +127,6 @@ void WSWindowManager::set_resolution(int width, int height)
         m_wm_config->write_num_entry("Screen", "Height", height);
         m_wm_config->sync();
     }
-}
-
-void WSWindowManager::set_current_menubar(WSMenuBar* menubar)
-{
-    if (menubar)
-        m_current_menubar = menubar->make_weak_ptr();
-    else
-        m_current_menubar = nullptr;
-#ifdef DEBUG_MENUS
-    dbg() << "[WM] Current menubar is now " << menubar;
-#endif
-    Point next_menu_location { WSMenuManager::menubar_menu_margin() / 2, 0 };
-    int index = 0;
-    for_each_active_menubar_menu([&](WSMenu& menu) {
-        int text_width = index == 1 ? Font::default_bold_font().width(menu.name()) : font().width(menu.name());
-        menu.set_rect_in_menubar({ next_menu_location.x() - WSMenuManager::menubar_menu_margin() / 2, 0, text_width + WSMenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
-        menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
-        next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
-        ++index;
-        return IterationDecision::Continue;
-    });
-    m_menu_manager.refresh();
 }
 
 void WSWindowManager::add_window(WSWindow& window)
@@ -1205,10 +1035,10 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
         auto* client = window->client();
         ASSERT(client);
-        set_current_menubar(client->app_menubar());
+        menu_manager().set_current_menubar(client->app_menubar());
         tell_wm_listeners_window_state_changed(*m_active_window);
     } else {
-        set_current_menubar(nullptr);
+        menu_manager().set_current_menubar(nullptr);
     }
 
     if (active_client != previously_active_client) {
@@ -1267,12 +1097,6 @@ void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
     invalidate(inner_rect);
 }
 
-void WSWindowManager::close_menubar(WSMenuBar& menubar)
-{
-    if (current_menubar() == &menubar)
-        set_current_menubar(nullptr);
-}
-
 const WSClientConnection* WSWindowManager::active_client() const
 {
     if (m_active_window)
@@ -1283,8 +1107,7 @@ const WSClientConnection* WSWindowManager::active_client() const
 void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& client)
 {
     if (active_client() == &client)
-        set_current_menubar(client.app_menubar());
-    m_menu_manager.refresh();
+        menu_manager().set_current_menubar(client.app_menubar());
 }
 
 const WSCursor& WSWindowManager::active_cursor() const
@@ -1359,17 +1182,6 @@ Rect WSWindowManager::maximized_window_rect(const WSWindow& window) const
     return rect;
 }
 
-WSMenu* WSWindowManager::find_internal_menu_by_id(int menu_id)
-{
-    if (m_themes_menu->menu_id() == menu_id)
-        return m_themes_menu.ptr();
-    for (auto& it : m_app_category_menus) {
-        if (menu_id == it.value->menu_id())
-            return it.value;
-    }
-    return nullptr;
-}
-
 void WSWindowManager::start_dnd_drag(WSClientConnection& client, const String& text, GraphicsBitmap* bitmap, const String& data_type, const String& data)
 {
     ASSERT(!m_dnd_client);
@@ -1399,4 +1211,26 @@ Rect WSWindowManager::dnd_rect() const
     int height = max((int)font().glyph_height(), bitmap_height);
     auto location = WSCompositor::the().current_cursor_rect().center().translated(8, 8);
     return Rect(location, { width, height }).inflated(4, 4);
+}
+
+void WSWindowManager::update_theme(String theme_path, String theme_name)
+{
+    auto new_theme = load_system_theme(theme_path);
+    ASSERT(new_theme);
+    set_system_theme(*new_theme);
+    m_palette = PaletteImpl::create_with_shared_buffer(*new_theme);
+    HashTable<WSClientConnection*> notified_clients;
+    for_each_window([&](WSWindow& window) {
+        if (window.client()) {
+            if (!notified_clients.contains(window.client())) {
+                window.client()->post_message(WindowClient::UpdateSystemTheme(current_system_theme_buffer_id()));
+                notified_clients.set(window.client());
+            }
+        }
+        return IterationDecision::Continue;
+    });
+    auto wm_config = CConfigFile::get_for_app("WindowManager");
+    wm_config->write_entry("Theme", "Name", theme_name);
+    wm_config->sync();
+    invalidate();
 }

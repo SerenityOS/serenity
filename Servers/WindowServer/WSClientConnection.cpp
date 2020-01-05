@@ -85,7 +85,7 @@ OwnPtr<WindowServer::DestroyMenubarResponse> WSClientConnection::handle(const Wi
         return nullptr;
     }
     auto& menubar = *(*it).value;
-    WSWindowManager::the().close_menubar(menubar);
+    WSWindowManager::the().menu_manager().close_menubar(menubar);
     m_menubars.remove(it);
     return make<WindowServer::DestroyMenubarResponse>();
 }

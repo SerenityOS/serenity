@@ -20,7 +20,6 @@
 #include <WindowServer/WSWindowType.h>
 
 class WSScreen;
-class WSMenuBar;
 class WSMouseEvent;
 class WSClientWantsToPaintMessage;
 class WSWindow;
@@ -99,9 +98,6 @@ public:
     const WSMenuManager& menu_manager() const { return m_menu_manager; }
 
     Rect menubar_rect() const;
-    WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
-    void set_current_menubar(WSMenuBar*);
-    WSMenu* system_menu() { return m_system_menu.ptr(); }
 
     const WSCursor& active_cursor() const;
     const WSCursor& arrow_cursor() const { return *m_arrow_cursor; }
@@ -126,9 +122,6 @@ public:
     const Font& menu_font() const;
     const Font& app_menu_font() const;
 
-    void close_menu(WSMenu&);
-    void close_menubar(WSMenuBar&);
-    Color menu_selection_color() const { return m_menu_selection_color; }
     int menubar_menu_margin() const;
 
     void set_resolution(int width, int height);
@@ -156,18 +149,7 @@ public:
     const WSWindow* active_fullscreen_window() const { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
     WSWindow* active_fullscreen_window() { return (m_active_window && m_active_window->is_fullscreen()) ? m_active_window : nullptr; }
 
-    template<typename Callback>
-    void for_each_active_menubar_menu(Callback callback)
-    {
-        if (callback(*m_system_menu) == IterationDecision::Break)
-            return;
-        if (m_current_menubar)
-            m_current_menubar->for_each_menu(callback);
-    }
-
-    WSMenu* find_internal_menu_by_id(int);
-
-    int theme_index() const { return m_theme_index; }
+    void update_theme(String theme_path, String theme_name);
 
 private:
     NonnullRefPtr<WSCursor> get_cursor(const String& name);
@@ -276,11 +258,6 @@ private:
 
     u8 m_keyboard_modifiers { 0 };
 
-    RefPtr<WSMenu> m_system_menu;
-    Color m_menu_selection_color;
-    WeakPtr<WSMenuBar> m_current_menubar;
-
-    int m_theme_index { 0 };
 
     WSWindowSwitcher m_switcher;
     WSMenuManager m_menu_manager;
@@ -291,22 +268,6 @@ private:
     NonnullRefPtr<PaletteImpl> m_palette;
 
     RefPtr<CConfigFile> m_wm_config;
-
-    struct AppMetadata {
-        String executable;
-        String name;
-        String icon_path;
-        String category;
-    };
-    Vector<AppMetadata> m_apps;
-    HashMap<String, NonnullRefPtr<WSMenu>> m_app_category_menus;
-
-    struct ThemeMetadata {
-        String name;
-        String path;
-    };
-    Vector<ThemeMetadata> m_themes;
-    RefPtr<WSMenu> m_themes_menu;
 
     WeakPtr<WSClientConnection> m_dnd_client;
     String m_dnd_text;

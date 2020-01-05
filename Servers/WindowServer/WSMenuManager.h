@@ -1,6 +1,8 @@
 #pragma once
 
 #include "WSMenu.h"
+#include "WSMenuBar.h"
+#include <AK/HashMap.h>
 #include <LibCore/CObject.h>
 #include <WindowServer/WSWindow.h>
 
@@ -29,6 +31,10 @@ public:
     WSMenu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(WSMenu*, bool is_submenu = false);
 
+    WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
+    void set_current_menubar(WSMenuBar*);
+    void close_menubar(WSMenuBar&);
+
     void close_bar();
     void close_everyone();
     void close_everyone_not_in_lineage(WSMenu&);
@@ -39,6 +45,20 @@ public:
     void add_applet(WSWindow&);
     void remove_applet(WSWindow&);
     void invalidate_applet(const WSWindow&, const Rect&);
+
+    Color menu_selection_color() const { return m_menu_selection_color; }
+    WSMenu* system_menu() { return m_system_menu; }
+    WSMenu* find_internal_menu_by_id(int);
+    int theme_index() const { return m_theme_index; }
+
+    template<typename Callback>
+    void for_each_active_menubar_menu(Callback callback)
+    {
+        if (callback(*system_menu()) == IterationDecision::Break)
+            return;
+        if (m_current_menubar)
+            m_current_menubar->for_each_menu(callback);
+    }
 
 private:
     void close_menus(const Vector<WSMenu*>&);
@@ -64,4 +84,28 @@ private:
 
     bool m_needs_window_resize { false };
     bool m_bar_open { false };
+
+    struct AppMetadata {
+        String executable;
+        String name;
+        String icon_path;
+        String category;
+    };
+    Vector<AppMetadata> m_apps;
+
+    HashMap<String, NonnullRefPtr<WSMenu>> m_app_category_menus;
+
+    struct ThemeMetadata {
+        String name;
+        String path;
+    };
+
+    RefPtr<WSMenu> m_system_menu;
+    Color m_menu_selection_color;
+
+    int m_theme_index { 0 };
+    Vector<ThemeMetadata> m_themes;
+    RefPtr<WSMenu> m_themes_menu;
+
+    WeakPtr<WSMenuBar> m_current_menubar;
 };
