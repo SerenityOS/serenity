@@ -123,6 +123,7 @@ public:
 
     void shutdown()
     {
+        s_rpc_clients.remove(m_client_id);
         s_id_allocator.deallocate(m_client_id);
     }
 
