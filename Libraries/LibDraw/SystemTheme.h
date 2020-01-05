@@ -36,6 +36,8 @@ enum class ColorRole {
     HoverHighlight,
     Selection,
     SelectionText,
+    RubberBandFill,
+    RubberBandBorder,
 
     __Count,
 
