@@ -1,7 +1,6 @@
 #include <AK/Assertions.h>
 #include <AK/HashMap.h>
 #include <AK/StdLibExtras.h>
-#include <AK/String.h>
 #include <AK/Types.h>
 #include <AK/Utf8View.h>
 #include <Kernel/Syscall.h>
@@ -104,16 +103,16 @@ static inline T strtol_impl(const char* nptr, char** endptr, int base)
     return num;
 }
 
-[[nodiscard]] int __generate_unique_filename(char* pattern)
+__attribute__((warn_unused_result)) int __generate_unique_filename(char* pattern)
 {
-    int length = strlen(pattern);
+    size_t length = strlen(pattern);
 
-    if (length < 6 || !String(pattern).ends_with("XXXXXX")) {
+    if (length < 6 || memcmp(pattern + length - 6, "XXXXXX", 6)) {
         errno = EINVAL;
         return -1;
     }
 
-    int start = length - 6;
+    size_t start = length - 6;
 
     static constexpr char random_characters[] = "abcdefghijklmnopqrstuvwxyz0123456789";
 
