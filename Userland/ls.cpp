@@ -107,6 +107,8 @@ int print_name(const struct stat& st, const String& name, const char* path_for_l
 
         if (st.st_mode & S_ISVTX)
             begin_color = "\033[42;30;1m";
+        else if (st.st_mode & S_ISUID)
+            begin_color = "\033[41;1m";
         else if (S_ISLNK(st.st_mode))
             begin_color = "\033[36;1m";
         else if (S_ISDIR(st.st_mode))
