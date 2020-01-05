@@ -3435,17 +3435,17 @@ int Process::sys$ftruncate(int fd, off_t length)
     return description->truncate(length);
 }
 
-int Process::sys$watch_file(const char* path, int path_length)
+int Process::sys$watch_file(const char* user_path, int path_length)
 {
     if (path_length < 0)
         return -EINVAL;
 
-    if (!validate_read(path, path_length))
+    if (!validate_read(user_path, path_length))
         return -EFAULT;
 
-    SmapDisabler disabler;
+    auto path = copy_string_from_user(user_path, path_length);
 
-    auto custody_or_error = VFS::the().resolve_path({ path, (size_t)path_length }, current_directory());
+    auto custody_or_error = VFS::the().resolve_path(path, current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
 
