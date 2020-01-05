@@ -48,5 +48,5 @@ WSMenu* WSMenuItem::submenu()
     ASSERT(is_submenu());
     if (m_menu.client())
         return m_menu.client()->find_menu_by_id(m_submenu_id);
-    return WSWindowManager::the().find_internal_menu_by_id(m_submenu_id);
+    return WSWindowManager::the().menu_manager().find_internal_menu_by_id(m_submenu_id);
 }

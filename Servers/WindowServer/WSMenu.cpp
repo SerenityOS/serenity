@@ -127,7 +127,7 @@ WSWindow& WSMenu::ensure_menu_window()
 void WSMenu::draw()
 {
     auto palette = WSWindowManager::the().palette();
-    m_theme_index_at_last_paint = WSWindowManager::the().theme_index();
+    m_theme_index_at_last_paint = WSWindowManager::the().menu_manager().theme_index();
 
     ASSERT(menu_window());
     ASSERT(menu_window()->backing_store());
@@ -279,7 +279,7 @@ void WSMenu::close()
 
 void WSMenu::redraw_if_theme_changed()
 {
-    if (m_theme_index_at_last_paint != WSWindowManager::the().theme_index())
+    if (m_theme_index_at_last_paint != WSWindowManager::the().menu_manager().theme_index())
         redraw();
 }
 

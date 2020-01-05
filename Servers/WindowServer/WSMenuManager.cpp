@@ -1,14 +1,145 @@
+#include <AK/FileSystemPath.h>
+#include <AK/QuickSort.h>
+#include <LibCore/CDirIterator.h>
 #include <LibDraw/Font.h>
+#include <LibDraw/PNGLoader.h>
 #include <LibDraw/Painter.h>
 #include <WindowServer/WSMenuManager.h>
 #include <WindowServer/WSScreen.h>
 #include <WindowServer/WSWindowManager.h>
 #include <unistd.h>
 
+//#define DEBUG_MENUS
+
 WSMenuManager::WSMenuManager()
 {
     m_username = getlogin();
     m_needs_window_resize = true;
+
+    HashTable<String> seen_app_categories;
+    {
+        CDirIterator dt("/res/apps", CDirIterator::SkipDots);
+        while (dt.has_next()) {
+            auto af_name = dt.next_path();
+            auto af_path = String::format("/res/apps/%s", af_name.characters());
+            auto af = CConfigFile::open(af_path);
+            if (!af->has_key("App", "Name") || !af->has_key("App", "Executable"))
+                continue;
+            auto app_name = af->read_entry("App", "Name");
+            auto app_executable = af->read_entry("App", "Executable");
+            auto app_category = af->read_entry("App", "Category");
+            auto app_icon_path = af->read_entry("Icons", "16x16");
+            m_apps.append({ app_executable, app_name, app_icon_path, app_category });
+            seen_app_categories.set(app_category);
+        }
+    }
+
+    Vector<String> sorted_app_categories;
+    for (auto& category : seen_app_categories)
+        sorted_app_categories.append(category);
+    quick_sort(sorted_app_categories.begin(), sorted_app_categories.end(), [](auto& a, auto& b) { return a < b; });
+
+    u8 system_menu_name[] = { 0xc3, 0xb8, 0 };
+    m_system_menu = WSMenu::construct(nullptr, -1, String((const char*)system_menu_name));
+
+    // First we construct all the necessary app category submenus.
+    for (const auto& category : sorted_app_categories) {
+
+        if (m_app_category_menus.contains(category))
+            continue;
+        auto category_menu = WSMenu::construct(nullptr, 5000 + m_app_category_menus.size(), category);
+        category_menu->on_item_activation = [this](auto& item) {
+            if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
+                if (fork() == 0) {
+                    const auto& bin = m_apps[item.identifier() - 1].executable;
+                    execl(bin.characters(), bin.characters(), nullptr);
+                    ASSERT_NOT_REACHED();
+                }
+            }
+        };
+        auto item = make<WSMenuItem>(*m_system_menu, -1, category);
+        item->set_submenu_id(category_menu->menu_id());
+        m_system_menu->add_item(move(item));
+        m_app_category_menus.set(category, move(category_menu));
+    }
+
+    // Then we create and insert all the app menu items into the right place.
+    int app_identifier = 1;
+    for (const auto& app : m_apps) {
+        auto parent_menu = m_app_category_menus.get(app.category).value_or(*m_system_menu);
+        parent_menu->add_item(make<WSMenuItem>(*m_system_menu, app_identifier++, app.name, String(), true, false, false, load_png(app.icon_path)));
+    }
+
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+
+    m_themes_menu = WSMenu::construct(nullptr, 9000, "Themes");
+
+    auto themes_menu_item = make<WSMenuItem>(*m_system_menu, 100, "Themes");
+    themes_menu_item->set_submenu_id(m_themes_menu->menu_id());
+    m_system_menu->add_item(move(themes_menu_item));
+
+    {
+        CDirIterator dt("/res/themes", CDirIterator::SkipDots);
+        while (dt.has_next()) {
+            auto theme_name = dt.next_path();
+            auto theme_path = String::format("/res/themes/%s", theme_name.characters());
+            m_themes.append({ FileSystemPath(theme_name).title(), theme_path });
+        }
+        quick_sort(m_themes.begin(), m_themes.end(), [](auto& a, auto& b) { return a.name < b.name; });
+    }
+
+    {
+        int theme_identifier = 9000;
+        for (auto& theme : m_themes) {
+            m_themes_menu->add_item(make<WSMenuItem>(*m_themes_menu, theme_identifier++, theme.name));
+        }
+    }
+
+    m_themes_menu->on_item_activation = [this](WSMenuItem& item) {
+        auto& theme = m_themes[(int)item.identifier() - 9000];
+        WSWindowManager::the().update_theme(theme.path, theme.name);
+        ++m_theme_index;
+    };
+
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 100, "Reload WM Config File"));
+
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 200, "About...", String(), true, false, false, load_png("/res/icons/16x16/ladybug.png")));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, WSMenuItem::Separator));
+    m_system_menu->add_item(make<WSMenuItem>(*m_system_menu, 300, "Shutdown..."));
+    m_system_menu->on_item_activation = [this](WSMenuItem& item) {
+        if (item.identifier() >= 1 && item.identifier() <= 1u + m_apps.size() - 1) {
+            if (fork() == 0) {
+                const auto& bin = m_apps[item.identifier() - 1].executable;
+                execl(bin.characters(), bin.characters(), nullptr);
+                ASSERT_NOT_REACHED();
+            }
+        }
+        switch (item.identifier()) {
+        case 100:
+            WSWindowManager::the().reload_config(true);
+            break;
+        case 200:
+            if (fork() == 0) {
+                execl("/bin/About", "/bin/About", nullptr);
+                ASSERT_NOT_REACHED();
+            }
+            return;
+        case 300:
+            if (fork() == 0) {
+                execl("/bin/SystemDialog", "/bin/SystemDialog", "--shutdown", nullptr);
+                ASSERT_NOT_REACHED();
+            }
+            return;
+        }
+#ifdef DEBUG_MENUS
+        dbg() << "WSMenu 1 item activated: " << item.text();
+#endif
+    };
+
+    // NOTE: This ensures that the system menu has the correct dimensions.
+    set_current_menubar(nullptr);
 }
 
 WSMenuManager::~WSMenuManager()
@@ -68,7 +199,7 @@ void WSMenuManager::draw()
     painter.fill_rect(menubar_rect, palette.window());
     painter.draw_line({ 0, menubar_rect.bottom() }, { menubar_rect.right(), menubar_rect.bottom() }, palette.threed_shadow1());
     int index = 0;
-    wm.for_each_active_menubar_menu([&](WSMenu& menu) {
+    for_each_active_menubar_menu([&](WSMenu& menu) {
         Color text_color = palette.window_text();
         if (is_open(menu)) {
             painter.fill_rect(menu.rect_in_menubar(), palette.menu_selection());
@@ -115,7 +246,7 @@ void WSMenuManager::event(CEvent& event)
     if (event.type() == WSEvent::MouseMove || event.type() == WSEvent::MouseUp || event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseWheel) {
 
         auto& mouse_event = static_cast<WSMouseEvent&>(event);
-        WSWindowManager::the().for_each_active_menubar_menu([&](WSMenu& menu) {
+        for_each_active_menubar_menu([&](WSMenu& menu) {
             if (menu.rect_in_menubar().contains(mouse_event.position())) {
                 handle_menu_mouse_event(menu, mouse_event);
                 return IterationDecision::Break;
@@ -137,10 +268,9 @@ void WSMenuManager::event(CEvent& event)
 
 void WSMenuManager::handle_menu_mouse_event(WSMenu& menu, const WSMouseEvent& event)
 {
-    auto& wm = WSWindowManager::the();
     bool is_hover_with_any_menu_open = event.type() == WSMouseEvent::MouseMove
         && !m_open_menu_stack.is_empty()
-        && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == wm.system_menu());
+        && (m_open_menu_stack.first()->menubar() || m_open_menu_stack.first() == system_menu());
     bool is_mousedown_with_left_button = event.type() == WSMouseEvent::MouseDown && event.button() == MouseButton::Left;
     bool should_open_menu = &menu != m_current_menu && (is_hover_with_any_menu_open || is_mousedown_with_left_button);
 
@@ -171,7 +301,7 @@ void WSMenuManager::set_needs_window_resize()
     m_needs_window_resize = true;
 }
 
-void WSMenuManager::close_all_menus_from_client(Badge<WSClientConnection>, WSClientConnection & client)
+void WSMenuManager::close_all_menus_from_client(Badge<WSClientConnection>, WSClientConnection& client)
 {
     if (m_open_menu_stack.is_empty())
         return;
@@ -299,4 +429,43 @@ void WSMenuManager::invalidate_applet(const WSWindow& applet, const Rect& rect)
 Rect WSMenuManager::menubar_rect() const
 {
     return { 0, 0, WSScreen::the().rect().width(), 18 };
+}
+
+WSMenu* WSMenuManager::find_internal_menu_by_id(int menu_id)
+{
+    if (m_themes_menu->menu_id() == menu_id)
+        return m_themes_menu.ptr();
+    for (auto& it : m_app_category_menus) {
+        if (menu_id == it.value->menu_id())
+            return it.value;
+    }
+    return nullptr;
+}
+
+void WSMenuManager::set_current_menubar(WSMenuBar* menubar)
+{
+    if (menubar)
+        m_current_menubar = menubar->make_weak_ptr();
+    else
+        m_current_menubar = nullptr;
+#ifdef DEBUG_MENUS
+    dbg() << "[WM] Current menubar is now " << menubar;
+#endif
+    Point next_menu_location { WSMenuManager::menubar_menu_margin() / 2, 0 };
+    int index = 0;
+    for_each_active_menubar_menu([&](WSMenu& menu) {
+        int text_width = index == 1 ? Font::default_bold_font().width(menu.name()) : Font::default_font().width(menu.name());
+        menu.set_rect_in_menubar({ next_menu_location.x() - WSMenuManager::menubar_menu_margin() / 2, 0, text_width + WSMenuManager::menubar_menu_margin(), menubar_rect().height() - 1 });
+        menu.set_text_rect_in_menubar({ next_menu_location, { text_width, menubar_rect().height() } });
+        next_menu_location.move_by(menu.rect_in_menubar().width(), 0);
+        ++index;
+        return IterationDecision::Continue;
+    });
+    refresh();
+}
+
+void WSMenuManager::close_menubar(WSMenuBar& menubar)
+{
+    if (current_menubar() == &menubar)
+        set_current_menubar(nullptr);
 }
