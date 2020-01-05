@@ -16,7 +16,7 @@ char* read_map(const JsonObject& json, const String& name)
     if (!json.has(name))
         return nullptr;
 
-    char* map = new char[80];
+    char* map = new char[0x80]();
     auto map_arr = json.get(name).as_array();
 
     for (int i = 0; i < map_arr.size(); i++) {
