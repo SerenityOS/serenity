@@ -1499,25 +1499,31 @@ int Process::sys$fstat(int fd, stat* statbuf)
     return description->fstat(*statbuf);
 }
 
-int Process::sys$lstat(const char* path, stat* statbuf)
+int Process::sys$lstat(const char* user_path, size_t path_length, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    SmapDisabler disabler;
-    auto metadata_or_error = VFS::the().lookup_metadata(StringView(path), current_directory(), O_NOFOLLOW_NOERROR);
+    if (!validate_read(user_path, path_length))
+        return -EFAULT;
+    auto path = copy_string_from_user(user_path, path_length);
+    auto metadata_or_error = VFS::the().lookup_metadata(path, current_directory(), O_NOFOLLOW_NOERROR);
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
+    SmapDisabler disabler;
     return metadata_or_error.value().stat(*statbuf);
 }
 
-int Process::sys$stat(const char* path, stat* statbuf)
+int Process::sys$stat(const char* user_path, size_t path_length, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    SmapDisabler disabler;
-    auto metadata_or_error = VFS::the().lookup_metadata(StringView(path), current_directory());
+    if (!validate_read(user_path, path_length))
+        return -EFAULT;
+    auto path = copy_string_from_user(user_path, path_length);
+    auto metadata_or_error = VFS::the().lookup_metadata(path, current_directory());
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
+    SmapDisabler disabler;
     return metadata_or_error.value().stat(*statbuf);
 }
 
