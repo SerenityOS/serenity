@@ -264,7 +264,13 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     if (!validate_read(params, sizeof(Syscall::SC_mmap_params)))
         return (void*)-EFAULT;
 
-    auto& [addr, size, prot, flags, fd, offset, name] = *params;
+    void* addr = (void*)params->addr;
+    size_t size = params->size;
+    int prot = params->prot;
+    int flags = params->flags;
+    int fd = params->fd;
+    int offset = params->offset;
+    const char* name = params->name;
 
     if (name && !validate_read_str(name))
         return (void*)-EFAULT;
@@ -1582,7 +1588,11 @@ int Process::sys$open(const Syscall::SC_open_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
-    auto& [path, path_length, options, mode] = *params;
+    const char* path = params->path;
+    int path_length = params->path_length;
+    int options = params->options;
+    u16 mode = params->mode;
+
     if (!path_length)
         return -EINVAL;
     if (!validate_read(path, path_length))
@@ -1608,7 +1618,13 @@ int Process::sys$openat(const Syscall::SC_openat_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
-    auto& [dirfd, path, path_length, options, mode] = *params;
+
+    int dirfd = params->dirfd;
+    const char* path = params->path;
+    int path_length = params->path_length;
+    int options = params->options;
+    u16 mode = params->mode;
+
     if (!validate_read(path, path_length))
         return -EFAULT;
 #ifdef DEBUG_IO
@@ -2339,7 +2355,11 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    auto& [nfds, readfds, writefds, exceptfds, timeout] = *params;
+    int nfds = params->nfds;
+    fd_set* readfds = params->readfds;
+    fd_set* writefds = params->writefds;
+    fd_set* exceptfds = params->exceptfds;
+    timeval* timeout = params->timeout;
 
     if (writefds && !validate_write_typed(writefds))
         return -EFAULT;
@@ -2367,7 +2387,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         vector.clear_with_capacity();
         if (!fds)
             return 0;
-        for (int fd = 0; fd < params->nfds; ++fd) {
+        for (int fd = 0; fd < nfds; ++fd) {
             if (FD_ISSET(fd, fds)) {
                 if (!file_description(fd)) {
                     dbg() << *current << " sys$select: Bad fd number " << fd;
@@ -2779,7 +2799,12 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    auto& [sockfd, data, data_length, flags, addr, addr_length] = *params;
+    int sockfd = params->sockfd;
+    const void* data = params->data;
+    size_t data_length = params->data_length;
+    int flags = params->flags;
+    const sockaddr* addr = params->addr;
+    socklen_t addr_length = params->addr_length;
 
     if (!validate_read(data, data_length))
         return -EFAULT;
@@ -2799,7 +2824,12 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    auto& [sockfd, buffer, buffer_length, flags, addr, addr_length] = *params;
+    int sockfd = params->sockfd;
+    void* buffer = params->buffer;
+    size_t buffer_length = params->buffer_length;
+    int flags = params->flags;
+    sockaddr* addr = params->addr;
+    socklen_t* addr_length = params->addr_length;
 
     if (!validate_write(buffer, buffer_length))
         return -EFAULT;
@@ -2931,7 +2961,11 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    auto& [sockfd, level, option, value, value_size] = *params;
+    int sockfd = params->sockfd;
+    int level = params->level;
+    int option = params->option;
+    void* value = params->value;
+    socklen_t* value_size = params->value_size;
 
     if (!validate_write_typed(value_size))
         return -EFAULT;
@@ -2951,7 +2985,11 @@ int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    auto& [sockfd, level, option, value, value_size] = *params;
+    int sockfd = params->sockfd;
+    int level = params->level;
+    int option = params->option;
+    const void* value = params->value;
+    socklen_t value_size = params->value_size;
 
     if (!validate_read(value, value_size))
         return -EFAULT;
@@ -3139,18 +3177,25 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    u32 user_stack_address = reinterpret_cast<u32>(params->m_stack_location) + params->m_stack_size;
+    unsigned detach_state = params->m_detach_state;
+    int schedule_priority = params->m_schedule_priority;
+    void* stack_location = params->m_stack_location;
+    unsigned stack_size = params->m_stack_size;
+    if (!validate_write(stack_location, stack_size))
+        return -EFAULT;
+
+    u32 user_stack_address = reinterpret_cast<u32>(stack_location) + stack_size;
 
     if (!MM.validate_user_stack(*this, VirtualAddress(user_stack_address - 4)))
         return -EFAULT;
 
     // FIXME: return EAGAIN if Thread::all_threads().size() is greater than PTHREAD_THREADS_MAX
 
-    int requested_thread_priority = params->m_schedule_priority;
+    int requested_thread_priority = schedule_priority;
     if (requested_thread_priority < THREAD_PRIORITY_MIN || requested_thread_priority > THREAD_PRIORITY_MAX)
         return -EINVAL;
 
-    bool is_thread_joinable = (0 == params->m_detach_state);
+    bool is_thread_joinable = (0 == detach_state);
 
     // FIXME: Do something with guard pages?
 
@@ -3582,16 +3627,21 @@ int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    if (!validate_read(params->map, 0x80))
+    const char* map = params->map;
+    const char* shift_map = params->shift_map;
+    const char* alt_map = params->alt_map;
+    const char* altgr_map = params->altgr_map;
+
+    if (!validate_read(map, 0x80))
         return -EFAULT;
-    if (!validate_read(params->shift_map, 0x80))
+    if (!validate_read(shift_map, 0x80))
         return -EFAULT;
-    if (!validate_read(params->alt_map, 0x80))
+    if (!validate_read(alt_map, 0x80))
         return -EFAULT;
-    if (!validate_read(params->altgr_map, 0x80))
+    if (!validate_read(altgr_map, 0x80))
         return -EFAULT;
 
-    KeyboardDevice::the().set_maps(params->map, params->shift_map, params->alt_map, params->altgr_map);
+    KeyboardDevice::the().set_maps(map, shift_map, alt_map, altgr_map);
     return 0;
 }
 
@@ -3617,7 +3667,10 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* param
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    auto& [clock_id, flags, requested_sleep, remaining_sleep] = *params;
+    int clock_id = params->clock_id;
+    int flags = params->flags;
+    const timespec* requested_sleep = params->requested_sleep;
+    timespec* remaining_sleep = params->remaining_sleep;
 
     if (requested_sleep && !validate_read_typed(requested_sleep))
         return -EFAULT;
@@ -3867,7 +3920,10 @@ int Process::sys$futex(const Syscall::SC_futex_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
-    auto& [userspace_address, futex_op, value, timeout] = *params;
+    i32* userspace_address = params->userspace_address;
+    int futex_op = params->futex_op;
+    i32 value = params->val;
+    const timespec* timeout = params->timeout;
 
     if (!validate_read_typed(userspace_address))
         return -EFAULT;
