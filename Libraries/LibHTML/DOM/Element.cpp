@@ -165,7 +165,7 @@ void Element::recompute_style()
 
 RefPtr<StyleProperties> Element::computed_style()
 {
-    auto properties = StyleProperties::create(*m_resolved_style);
+    auto properties = m_resolved_style->clone();
     if (layout_node() && layout_node()->has_style()) {
         CSS::PropertyID box_model_metrics[] = {
             CSS::PropertyID::MarginTop,
