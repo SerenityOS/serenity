@@ -46,7 +46,7 @@ private:
             tm->tm_hour,
             tm->tm_min,
             tm->tm_sec);
-     
+
         GPainter painter(*this);
         painter.fill_rect(event.rect(), palette().window());
         painter.draw_text(event.rect(), time_text, Font::default_font(), TextAlignment::Center, palette().window_text());
@@ -69,7 +69,7 @@ int main(int argc, char** argv)
     window->set_window_type(GWindowType::MenuApplet);
 
     auto widget = ClockWidget::construct();
-    
+
     window->resize(widget->get_width(), 16);
     window->set_main_widget(widget);
     window->show();
