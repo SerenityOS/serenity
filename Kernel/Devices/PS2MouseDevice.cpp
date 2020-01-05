@@ -1,7 +1,7 @@
 #include "PS2MouseDevice.h"
 #include "IO.h"
 
-#define IRQ_MOUSE 1
+#define IRQ_MOUSE 12
 #define I8042_BUFFER 0x60
 #define I8042_STATUS 0x64
 #define I8042_ACK 0xFA
@@ -28,7 +28,7 @@
 static PS2MouseDevice* s_the;
 
 PS2MouseDevice::PS2MouseDevice()
-    : IRQHandler(12)
+    : IRQHandler(IRQ_MOUSE)
     , CharacterDevice(10, 1)
 {
     s_the = this;
