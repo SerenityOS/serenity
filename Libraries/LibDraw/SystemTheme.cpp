@@ -32,17 +32,17 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
 
     auto* data = (SystemTheme*)buffer->data();
 
-    auto get = [&](auto& name) {
+    auto get_color = [&](auto& name) {
         auto color_string = file->read_entry("Colors", name);
         auto color = Color::from_string(color_string);
         if (!color.has_value())
             return Color(Color::Black);
-        dbg() << "Parsed system color '" << name << "' = " << color.value();
+        dbg() << "Parsed system theme color '" << name << "' = " << color.value();
         return color.value();
     };
 
 #define DO_COLOR(x) \
-    data->color[(int)ColorRole::x] = get(#x)
+    data->color[(int)ColorRole::x] = get_color(#x)
 
     DO_COLOR(DesktopBackground);
     DO_COLOR(ThreedHighlight);
@@ -75,6 +75,8 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(MenuBaseText);
     DO_COLOR(MenuSelection);
     DO_COLOR(MenuSelectionText);
+    DO_COLOR(RubberBandFill);
+    DO_COLOR(RubberBandBorder);
 
     buffer->seal();
     buffer->share_globally();

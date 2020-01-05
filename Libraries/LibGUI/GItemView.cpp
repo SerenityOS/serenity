@@ -260,8 +260,8 @@ void GItemView::second_paint_event(GPaintEvent& event)
     painter.add_clip_rect(event.rect());
 
     auto rubber_band_rect = Rect::from_two_points(m_rubber_band_origin, m_rubber_band_current);
-    painter.fill_rect(rubber_band_rect, Color(244, 202, 158, 60));
-    painter.draw_rect(rubber_band_rect, Color(110, 34, 9));
+    painter.fill_rect(rubber_band_rect, parent_widget()->palette().rubber_band_fill());
+    painter.draw_rect(rubber_band_rect, parent_widget()->palette().rubber_band_border());
 }
 
 void GItemView::paint_event(GPaintEvent& event)
