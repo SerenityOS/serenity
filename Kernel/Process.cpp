@@ -1289,13 +1289,11 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
     u64 total_length = 0;
     Vector<iovec, 32> vecs;
     vecs.ensure_capacity(iov_count);
-    for (int i = 0; i < iov_count; ++i) {
-        void* base = iov[i].iov_base;
-        size_t len = iov[i].iov_len;
-        if (!validate_read(base, len))
+    copy_from_user(vecs.data(), iov, iov_count * sizeof(iovec));
+    for (auto& vec : vecs) {
+        if (!validate_read(vec.iov_base, vec.iov_len))
             return -EFAULT;
-        vecs.append({ base, len });
-        total_length += len;
+        total_length += vec.iov_len;
         if (total_length > INT32_MAX)
             return -EINVAL;
     }
