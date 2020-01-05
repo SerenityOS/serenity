@@ -163,7 +163,7 @@ void Element::recompute_style()
     }
 }
 
-RefPtr<StyleProperties> Element::computed_style()
+NonnullRefPtr<StyleProperties> Element::computed_style()
 {
     auto properties = m_resolved_style->clone();
     if (layout_node() && layout_node()->has_style()) {
