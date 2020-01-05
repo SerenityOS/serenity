@@ -1282,8 +1282,15 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
         return -EFAULT;
 
     u64 total_length = 0;
+    Vector<iovec, 32> vecs;
+    vecs.ensure_capacity(iov_count);
     for (int i = 0; i < iov_count; ++i) {
-        total_length += iov[i].iov_len;
+        void* base = iov[i].iov_base;
+        size_t len = iov[i].iov_len;
+        if (!validate_read(base, len))
+            return -EFAULT;
+        vecs.append({ base, len });
+        total_length += len;
         if (total_length > INT32_MAX)
             return -EINVAL;
     }
@@ -1296,8 +1303,8 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
         return -EBADF;
 
     int nwritten = 0;
-    for (int i = 0; i < iov_count; ++i) {
-        int rc = do_write(*description, (const u8*)iov[i].iov_base, iov[i].iov_len);
+    for (auto& vec : vecs) {
+        int rc = do_write(*description, (const u8*)vec.iov_base, vec.iov_len);
         if (rc < 0) {
             if (nwritten == 0)
                 return rc;
