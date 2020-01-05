@@ -176,6 +176,10 @@ RefPtr<StyleProperties> Element::computed_style()
             CSS::PropertyID::PaddingBottom,
             CSS::PropertyID::PaddingLeft,
             CSS::PropertyID::PaddingRight,
+            CSS::PropertyID::BorderTopWidth,
+            CSS::PropertyID::BorderBottomWidth,
+            CSS::PropertyID::BorderLeftWidth,
+            CSS::PropertyID::BorderRightWidth,
         };
         for (CSS::PropertyID id : box_model_metrics) {
             auto prop = layout_node()->style().property(id);
