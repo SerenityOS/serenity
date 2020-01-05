@@ -437,7 +437,7 @@ bool Thread::has_signal_handler(u8 signal) const
 static void push_value_on_user_stack(u32* stack, u32 data)
 {
     *stack -= 4;
-    *(u32*)*stack = data;
+    copy_to_user((u32*)*stack, &data, sizeof(u32));
 }
 
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
