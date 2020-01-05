@@ -48,6 +48,7 @@ FileDescription::~FileDescription()
 
 KResult FileDescription::fstat(stat& buffer)
 {
+    SmapDisabler disabler;
     if (is_fifo()) {
         memset(&buffer, 0, sizeof(buffer));
         buffer.st_mode = 001000;
@@ -102,6 +103,7 @@ off_t FileDescription::seek(off_t offset, int whence)
 
 ssize_t FileDescription::read(u8* buffer, ssize_t count)
 {
+    SmapDisabler disabler;
     int nread = m_file->read(*this, buffer, count);
     if (nread > 0 && m_file->is_seekable())
         m_current_offset += nread;
@@ -110,6 +112,7 @@ ssize_t FileDescription::read(u8* buffer, ssize_t count)
 
 ssize_t FileDescription::write(const u8* data, ssize_t size)
 {
+    SmapDisabler disabler;
     int nwritten = m_file->write(*this, data, size);
     if (nwritten > 0 && m_file->is_seekable())
         m_current_offset += nwritten;
@@ -160,7 +163,7 @@ ssize_t FileDescription::get_dir_entries(u8* buffer, ssize_t size)
     if (size < temp_buffer.size())
         return -1;
 
-    memcpy(buffer, temp_buffer.data(), temp_buffer.size());
+    copy_to_user(buffer, temp_buffer.data(), temp_buffer.size());
     return stream.offset();
 }
 

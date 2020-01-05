@@ -379,7 +379,7 @@ PageFaultResponse Region::handle_cow_fault(size_t page_index_in_region)
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("      >> COW P%p <- P%p\n", physical_page->paddr().get(), physical_page_to_copy->paddr().get());
 #endif
-    memcpy(dest_ptr, src_ptr, PAGE_SIZE);
+    copy_to_user(dest_ptr, src_ptr, PAGE_SIZE);
     vmobject_physical_page_entry = move(physical_page);
     MM.unquickmap_page();
     set_should_cow(page_index_in_region, false);
@@ -436,7 +436,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     }
 
     u8* dest_ptr = MM.quickmap_page(*vmobject_physical_page_entry);
-    memcpy(dest_ptr, page_buffer, PAGE_SIZE);
+    copy_to_user(dest_ptr, page_buffer, PAGE_SIZE);
     MM.unquickmap_page();
 
     remap_page(page_index_in_region);

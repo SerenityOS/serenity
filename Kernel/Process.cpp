@@ -210,6 +210,7 @@ Region* Process::region_containing(const Range& range)
 
 int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(name))
         return -EFAULT;
     auto* region = region_from_range({ VirtualAddress((u32)addr), size });
@@ -264,6 +265,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
     if (!validate_read(params, sizeof(Syscall::SC_mmap_params)))
         return (void*)-EFAULT;
 
+    SmapDisabler disabler;
     void* addr = (void*)params->addr;
     size_t size = params->size;
     int prot = params->prot;
@@ -513,7 +515,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
     LOCKER(*s_hostname_lock);
     if ((size_t)size < (s_hostname->length() + 1))
         return -ENAMETOOLONG;
-    strcpy(buffer, s_hostname->characters());
+    copy_to_user(buffer, s_hostname->characters(), s_hostname->length() + 1);
     return 0;
 }
 
@@ -641,6 +643,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     OwnPtr<ELFLoader> loader;
     {
+        SmapDisabler disabler;
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
         m_regions.append(move(executable_region));
@@ -865,6 +868,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
 
 int Process::sys$execve(const char* filename, const char** argv, const char** envp)
 {
+    SmapDisabler disabler;
     // NOTE: Be extremely careful with allocating any kernel memory in exec().
     //       On success, the kernel stack will be lost.
     if (!validate_read_str(filename))
@@ -1111,7 +1115,7 @@ void create_signal_trampolines()
     size_t trampoline_size = trampoline_end - trampoline;
 
     u8* code_ptr = (u8*)trampoline_region->vaddr().as_ptr();
-    memcpy(code_ptr, trampoline, trampoline_size);
+    copy_to_user(code_ptr, trampoline, trampoline_size);
 
     trampoline_region->set_writable(false);
     trampoline_region->remap();
@@ -1134,6 +1138,8 @@ int Process::sys$restore_signal_mask(u32 mask)
 
 int Process::sys$sigreturn(RegisterDump& registers)
 {
+    SmapDisabler disabler;
+
     //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
     u32* stack_ptr = (u32*)registers.esp_if_crossRing;
     u32 smuggled_eax = *stack_ptr;
@@ -1246,11 +1252,10 @@ int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
         return -EBADF;
     if (!description->is_tty())
         return -ENOTTY;
-    auto tty_name = description->tty()->tty_name();
+    String tty_name = description->tty()->tty_name();
     if ((size_t)size < tty_name.length() + 1)
         return -ERANGE;
-    memcpy(buffer, tty_name.characters_without_null_termination(), tty_name.length());
-    buffer[tty_name.length()] = '\0';
+    copy_to_user(buffer, tty_name.characters(), tty_name.length() + 1);
     return 0;
 }
 
@@ -1269,7 +1274,7 @@ int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
     auto pts_name = master_pty->pts_name();
     if ((size_t)size < pts_name.length() + 1)
         return -ERANGE;
-    strcpy(buffer, pts_name.characters());
+    copy_to_user(buffer, pts_name.characters(), pts_name.length() + 1);
     return 0;
 }
 
@@ -1422,6 +1427,7 @@ int Process::sys$close(int fd)
 
 int Process::sys$utime(const char* pathname, const utimbuf* buf)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(pathname))
         return -EFAULT;
     if (buf && !validate_read_typed(buf))
@@ -1442,6 +1448,7 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
 
 int Process::sys$access(const char* pathname, int mode)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(pathname))
         return -EFAULT;
     return VFS::the().access(StringView(pathname), mode, current_directory());
@@ -1498,6 +1505,7 @@ int Process::sys$lstat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
+    SmapDisabler disabler;
     auto metadata_or_error = VFS::the().lookup_metadata(StringView(path), current_directory(), O_NOFOLLOW_NOERROR);
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
@@ -1508,6 +1516,7 @@ int Process::sys$stat(const char* path, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
+    SmapDisabler disabler;
     auto metadata_or_error = VFS::the().lookup_metadata(StringView(path), current_directory());
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
@@ -1518,6 +1527,7 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
 {
     if (size < 0)
         return -EINVAL;
+    SmapDisabler disabler;
     if (!validate_read_str(path))
         return -EFAULT;
     if (!validate_write(buffer, size))
@@ -1535,7 +1545,7 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
-    memcpy(buffer, contents.data(), min(size, (ssize_t)contents.size()));
+    copy_to_user(buffer, contents.data(), min(size, (ssize_t)contents.size()));
     if (contents.size() + 1 < size)
         buffer[contents.size()] = '\0';
     return 0;
@@ -1543,6 +1553,7 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
 
 int Process::sys$chdir(const char* path)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(path))
         return -EFAULT;
     auto directory_or_error = VFS::the().open_directory(StringView(path), current_directory());
@@ -1577,7 +1588,7 @@ int Process::sys$getcwd(char* buffer, ssize_t size)
     auto path = current_directory().absolute_path();
     if ((size_t)size < path.length() + 1)
         return -ERANGE;
-    strcpy(buffer, path.characters());
+    copy_to_user(buffer, path.characters(), path.length() + 1);
     return 0;
 }
 
@@ -1595,15 +1606,30 @@ int Process::sys$open(const Syscall::SC_open_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
-    const char* path = params->path;
-    int path_length = params->path_length;
-    int options = params->options;
-    u16 mode = params->mode;
+
+    const char* path_data;
+    int path_length;
+    int options;
+    u16 mode;
+
+    {
+        SmapDisabler disabler;
+        path_data = params->path;
+        path_length = params->path_length;
+        options = params->options;
+        mode = params->mode;
+    }
 
     if (!path_length)
         return -EINVAL;
-    if (!validate_read(path, path_length))
+    if (!validate_read(path_data, path_length))
         return -EFAULT;
+
+    String path;
+    {
+        SmapDisabler disabler;
+        path = String(path_data, path_length);
+    }
     int fd = alloc_fd();
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$open(\"%s\") -> %d\n", name().characters(), pid(), path, fd);
@@ -1626,6 +1652,7 @@ int Process::sys$openat(const Syscall::SC_openat_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
+    SmapDisabler disabler;
     int dirfd = params->dirfd;
     const char* path = params->path;
     int path_length = params->path_length;
@@ -1694,12 +1721,12 @@ int Process::sys$pipe(int pipefd[2], int flags)
     int reader_fd = alloc_fd();
     m_fds[reader_fd].set(fifo->open_direction(FIFO::Direction::Reader), fd_flags);
     m_fds[reader_fd].description->set_readable(true);
-    pipefd[0] = reader_fd;
+    copy_to_user(&pipefd[0], &reader_fd, sizeof(reader_fd));
 
     int writer_fd = alloc_fd();
     m_fds[writer_fd].set(fifo->open_direction(FIFO::Direction::Writer), fd_flags);
     m_fds[writer_fd].description->set_writable(true);
-    pipefd[1] = writer_fd;
+    copy_to_user(&pipefd[1], &writer_fd, sizeof(writer_fd));
 
     return 0;
 }
@@ -1751,12 +1778,14 @@ int Process::sys$uname(utsname* buf)
 {
     if (!validate_write_typed(buf))
         return -EFAULT;
-    strcpy(buf->sysname, "SerenityOS");
-    strcpy(buf->release, "1.0-dev");
-    strcpy(buf->version, "FIXME");
-    strcpy(buf->machine, "i686");
     LOCKER(*s_hostname_lock);
-    strncpy(buf->nodename, s_hostname->characters(), sizeof(utsname::nodename));
+    if (s_hostname->length() + 1 > sizeof(utsname::nodename))
+        return -ENAMETOOLONG;
+    copy_to_user(buf->sysname, "SerenityOS", 11);
+    copy_to_user(buf->release, "1.0-dev", 8);
+    copy_to_user(buf->version, "FIXME", 6);
+    copy_to_user(buf->machine, "i686", 5);
+    copy_to_user(buf->nodename, s_hostname->characters(), s_hostname->length() + 1);
     return 0;
 }
 
@@ -1943,12 +1972,10 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         options = WEXITED;
     }
 
-    if (wstatus)
-        if (!validate_write_typed(wstatus))
-            return -EFAULT;
+    if (wstatus && !validate_write_typed(wstatus))
+        return -EFAULT;
 
-    int dummy_wstatus;
-    int& exit_status = wstatus ? *wstatus : dummy_wstatus;
+    int exit_status;
 
     {
         InterruptDisabler disabler;
@@ -1968,6 +1995,8 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
                 }
                 return IterationDecision::Continue;
             });
+            if (wstatus)
+                copy_to_user(wstatus, &exit_status, sizeof(exit_status));
             return reaped_pid;
         } else {
             ASSERT(waitee > 0); // FIXME: Implement other PID specs.
@@ -2186,6 +2215,7 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
+    SmapDisabler disabler;
     return description->file().ioctl(*description, request, arg);
 }
 
@@ -2222,20 +2252,22 @@ int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
     if (old_set) {
         if (!validate_write_typed(old_set))
             return -EFAULT;
-        *old_set = current->m_signal_mask;
+        copy_to_user(old_set, &current->m_signal_mask, sizeof(current->m_signal_mask));
     }
     if (set) {
         if (!validate_read_typed(set))
             return -EFAULT;
+        sigset_t set_value;
+        copy_from_user(&set_value, set, sizeof(set_value));
         switch (how) {
         case SIG_BLOCK:
-            current->m_signal_mask &= ~(*set);
+            current->m_signal_mask &= ~set_value;
             break;
         case SIG_UNBLOCK:
-            current->m_signal_mask |= *set;
+            current->m_signal_mask |= set_value;
             break;
         case SIG_SETMASK:
-            current->m_signal_mask = *set;
+            current->m_signal_mask = set_value;
             break;
         default:
             return -EINVAL;
@@ -2248,7 +2280,7 @@ int Process::sys$sigpending(sigset_t* set)
 {
     if (!validate_write_typed(set))
         return -EFAULT;
-    *set = current->m_pending_signals;
+    copy_to_user(set, &current->m_pending_signals, sizeof(current->m_pending_signals));
     return 0;
 }
 
@@ -2263,11 +2295,11 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     if (old_act) {
         if (!validate_write_typed(old_act))
             return -EFAULT;
-        old_act->sa_flags = action.flags;
-        old_act->sa_sigaction = (decltype(old_act->sa_sigaction))action.handler_or_sigaction.get();
+        copy_to_user(&old_act->sa_flags, &action.flags, sizeof(action.flags));
+        copy_to_user(&old_act->sa_sigaction, &action.handler_or_sigaction, sizeof(action.handler_or_sigaction));
     }
-    action.flags = act->sa_flags;
-    action.handler_or_sigaction = VirtualAddress((u32)act->sa_sigaction);
+    copy_from_user(&action.flags, &act->sa_flags, sizeof(action.flags));
+    copy_from_user(&action.handler_or_sigaction, &act->sa_sigaction, sizeof(action.flags));
     return 0;
 }
 
@@ -2282,6 +2314,7 @@ int Process::sys$getgroups(ssize_t count, gid_t* gids)
     if (!validate_write_typed(gids, m_extra_gids.size()))
         return -EFAULT;
     size_t i = 0;
+    SmapDisabler disabler;
     for (auto gid : m_extra_gids)
         gids[i++] = gid;
     return 0;
@@ -2296,6 +2329,7 @@ int Process::sys$setgroups(ssize_t count, const gid_t* gids)
     if (count && !validate_read(gids, count))
         return -EFAULT;
     m_extra_gids.clear();
+    SmapDisabler disabler;
     for (int i = 0; i < count; ++i) {
         if (gids[i] == m_gid)
             continue;
@@ -2306,6 +2340,7 @@ int Process::sys$setgroups(ssize_t count, const gid_t* gids)
 
 int Process::sys$mkdir(const char* pathname, mode_t mode)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(pathname))
         return -EFAULT;
     size_t pathname_length = strlen(pathname);
@@ -2318,6 +2353,7 @@ int Process::sys$mkdir(const char* pathname, mode_t mode)
 
 int Process::sys$realpath(const char* pathname, char* buffer, size_t size)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(pathname))
         return -EFAULT;
 
@@ -2349,10 +2385,10 @@ clock_t Process::sys$times(tms* times)
 {
     if (!validate_write_typed(times))
         return -EFAULT;
-    times->tms_utime = m_ticks_in_user;
-    times->tms_stime = m_ticks_in_kernel;
-    times->tms_cutime = m_ticks_in_user_for_dead_children;
-    times->tms_cstime = m_ticks_in_kernel_for_dead_children;
+    copy_to_user(&times->tms_utime, &m_ticks_in_user, sizeof(m_ticks_in_user));
+    copy_to_user(&times->tms_stime, &m_ticks_in_kernel, sizeof(m_ticks_in_kernel));
+    copy_to_user(&times->tms_cutime, &m_ticks_in_user_for_dead_children, sizeof(m_ticks_in_user_for_dead_children));
+    copy_to_user(&times->tms_cstime, &m_ticks_in_kernel_for_dead_children, sizeof(m_ticks_in_kernel_for_dead_children));
     return g_uptime & 0x7fffffff;
 }
 
@@ -2361,6 +2397,8 @@ int Process::sys$select(const Syscall::SC_select_params* params)
     // FIXME: Return -EINVAL if timeout is invalid.
     if (!validate_read_typed(params))
         return -EFAULT;
+
+    SmapDisabler disabler;
 
     int nfds = params->nfds;
     fd_set* readfds = params->readfds;
@@ -2445,6 +2483,8 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     if (!validate_read_typed(fds))
         return -EFAULT;
 
+    SmapDisabler disabler;
+
     Thread::SelectBlocker::FDVector rfds;
     Thread::SelectBlocker::FDVector wfds;
 
@@ -2509,6 +2549,7 @@ Custody& Process::current_directory()
 
 int Process::sys$link(const char* old_path, const char* new_path)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(old_path))
         return -EFAULT;
     if (!validate_read_str(new_path))
@@ -2518,13 +2559,19 @@ int Process::sys$link(const char* old_path, const char* new_path)
 
 int Process::sys$unlink(const char* pathname)
 {
-    if (!validate_read_str(pathname))
-        return -EFAULT;
-    return VFS::the().unlink(StringView(pathname), current_directory());
+    String path;
+    {
+        SmapDisabler disabler;
+        if (!validate_read_str(pathname))
+            return -EFAULT;
+        path = pathname;
+    }
+    return VFS::the().unlink(path, current_directory());
 }
 
 int Process::sys$symlink(const char* target, const char* linkpath)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(target))
         return -EFAULT;
     if (!validate_read_str(linkpath))
@@ -2534,6 +2581,7 @@ int Process::sys$symlink(const char* target, const char* linkpath)
 
 int Process::sys$rmdir(const char* pathname)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(pathname))
         return -EFAULT;
     return VFS::the().rmdir(StringView(pathname), current_directory());
@@ -2541,6 +2589,7 @@ int Process::sys$rmdir(const char* pathname)
 
 int Process::sys$chmod(const char* pathname, mode_t mode)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(pathname))
         return -EFAULT;
     return VFS::the().chmod(StringView(pathname), mode, current_directory());
@@ -2548,6 +2597,7 @@ int Process::sys$chmod(const char* pathname, mode_t mode)
 
 int Process::sys$fchmod(int fd, mode_t mode)
 {
+    SmapDisabler disabler;
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
@@ -2556,6 +2606,7 @@ int Process::sys$fchmod(int fd, mode_t mode)
 
 int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 {
+    SmapDisabler disabler;
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
@@ -2564,6 +2615,7 @@ int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 
 int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(pathname))
         return -EFAULT;
     return VFS::the().chown(StringView(pathname), uid, gid, current_directory());
@@ -2727,6 +2779,7 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
         return -EBADF;
     if (!description->is_socket())
         return -ENOTSOCK;
+    SmapDisabler disabler;
     auto& socket = *description->socket();
     return socket.bind(address, address_length);
 }
@@ -2748,6 +2801,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
 {
     if (!validate_write_typed(address_size))
         return -EFAULT;
+    SmapDisabler disabler;
     if (!validate_write(address, *address_size))
         return -EFAULT;
     int accepted_socket_fd = alloc_fd();
@@ -2798,6 +2852,7 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
         return -ENOTSOCK;
 
     auto& socket = *description->socket();
+    SmapDisabler disabler;
     return socket.connect(*description, address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
 }
 
@@ -2805,6 +2860,8 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
+
+    SmapDisabler disabler;
 
     int sockfd = params->sockfd;
     const void* data = params->data;
@@ -2831,6 +2888,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     if (!validate_read_typed(params))
         return -EFAULT;
 
+    SmapDisabler disabler;
     int sockfd = params->sockfd;
     void* buffer = params->buffer;
     size_t buffer_length = params->buffer_length;
@@ -2871,6 +2929,7 @@ int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
     if (!validate_read_typed(addrlen))
         return -EFAULT;
 
+    SmapDisabler disabler;
     if (*addrlen <= 0)
         return -EINVAL;
 
@@ -2895,6 +2954,8 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
 {
     if (!validate_read_typed(addrlen))
         return -EFAULT;
+
+    SmapDisabler disabler;
 
     if (*addrlen <= 0)
         return -EINVAL;
@@ -2925,6 +2986,9 @@ int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
     if (!validate_read_typed(param))
         return -EFAULT;
 
+    int desired_priority;
+    copy_from_user(&desired_priority, &param->sched_priority, sizeof(desired_priority));
+
     InterruptDisabler disabler;
     auto* peer = this;
     if (pid != 0)
@@ -2936,16 +3000,16 @@ int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
     if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
         return -EPERM;
 
-    if (param->sched_priority < THREAD_PRIORITY_MIN || param->sched_priority > THREAD_PRIORITY_MAX)
+    if (desired_priority < THREAD_PRIORITY_MIN || desired_priority > THREAD_PRIORITY_MAX)
         return -EINVAL;
 
-    peer->any_thread().set_priority((u32)param->sched_priority);
+    peer->any_thread().set_priority((u32)desired_priority);
     return 0;
 }
 
 int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
 {
-    if (!validate_read_typed(param))
+    if (!validate_write_typed(param))
         return -EFAULT;
 
     InterruptDisabler disabler;
@@ -2959,7 +3023,9 @@ int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
     if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
         return -EPERM;
 
-    param->sched_priority = (int)peer->any_thread().priority();
+    // FIXME: This doesn't seem like the way to get the right thread!
+    int priority = peer->any_thread().priority();
+    copy_to_user(&param->sched_priority, &priority, sizeof(priority));
     return 0;
 }
 
@@ -2967,6 +3033,8 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
+
+    SmapDisabler disabler;
 
     int sockfd = params->sockfd;
     int level = params->level;
@@ -2991,6 +3059,8 @@ int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
+
+    SmapDisabler disabler;
 
     int sockfd = params->sockfd;
     int level = params->level;
@@ -3032,7 +3102,12 @@ int Process::sys$create_shared_buffer(int size, void** buffer)
     int shared_buffer_id = ++s_next_shared_buffer_id;
     auto shared_buffer = make<SharedBuffer>(shared_buffer_id, size);
     shared_buffer->share_with(m_pid);
-    *buffer = shared_buffer->ref_for_process_and_get_address(*this);
+
+    void* address = shared_buffer->ref_for_process_and_get_address(*this);
+    {
+        SmapDisabler disabler;
+        *buffer = address;
+    }
     ASSERT((int)shared_buffer->size() >= size);
 #ifdef SHARED_BUFFER_DEBUG
     kprintf("%s(%u): Created shared buffer %d @ %p (%u bytes, vmobject is %u)\n", name().characters(), pid(), shared_buffer_id, *buffer, size, shared_buffer->size());
@@ -3184,10 +3259,13 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
     if (!validate_read_typed(params))
         return -EFAULT;
 
+    stac();
     unsigned detach_state = params->m_detach_state;
     int schedule_priority = params->m_schedule_priority;
     void* stack_location = params->m_stack_location;
     unsigned stack_size = params->m_stack_size;
+    clac();
+
     if (!validate_write(stack_location, stack_size))
         return -EFAULT;
 
@@ -3301,6 +3379,8 @@ int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
     if (!validate_read(buffer, buffer_size))
         return -EFAULT;
 
+    SmapDisabler disabler;
+
     const size_t max_thread_name_size = 64;
     if (strnlen(buffer, (size_t)buffer_size) > max_thread_name_size)
         return -EINVAL;
@@ -3324,10 +3404,10 @@ int Process::sys$get_thread_name(int tid, char* buffer, int buffer_size)
     if (!thread || thread->pid() != pid())
         return -ESRCH;
 
-    if (thread->name().length() >= (size_t)buffer_size)
+    if (thread->name().length() + 1 > (size_t)buffer_size)
         return -ENAMETOOLONG;
 
-    strncpy(buffer, thread->name().characters(), buffer_size);
+    copy_to_user(buffer, thread->name().characters(), thread->name().length() + 1);
     return 0;
 }
 
@@ -3350,6 +3430,7 @@ int Process::sys$donate(int tid)
 
 int Process::sys$rename(const char* oldpath, const char* newpath)
 {
+    SmapDisabler disabler;
     if (!validate_read_str(oldpath))
         return -EFAULT;
     if (!validate_read_str(newpath))
@@ -3373,6 +3454,8 @@ int Process::sys$watch_file(const char* path, int path_length)
 
     if (!validate_read(path, path_length))
         return -EFAULT;
+
+    SmapDisabler disabler;
 
     auto custody_or_error = VFS::the().resolve_path({ path, (size_t)path_length }, current_directory());
     if (custody_or_error.is_error())
@@ -3444,6 +3527,8 @@ int Process::sys$mount(const char* device_path, const char* mountpoint, const ch
 {
     if (!is_superuser())
         return -EPERM;
+
+    SmapDisabler disabler;
 
     if (!validate_read_str(device_path) || !validate_read_str(mountpoint) || !validate_read_str(fstype))
         return -EFAULT;
@@ -3567,6 +3652,7 @@ int Process::sys$dbgputstr(const u8* characters, int length)
         return 0;
     if (!validate_read(characters, length))
         return -EFAULT;
+    SmapDisabler disabler;
     for (int i = 0; i < length; ++i)
         IO::out8(0xe9, characters[i]);
     return 0;
@@ -3604,10 +3690,10 @@ int Process::sys$get_process_name(char* buffer, int buffer_size)
     if (!validate_write(buffer, buffer_size))
         return -EFAULT;
 
-    if (m_name.length() >= (size_t)buffer_size)
+    if (m_name.length() + 1 > (size_t)buffer_size)
         return -ENAMETOOLONG;
 
-    strncpy(buffer, m_name.characters(), (size_t)buffer_size);
+    copy_to_user(buffer, m_name.characters(), m_name.length() + 1);
     return 0;
 }
 
@@ -3674,10 +3760,12 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* param
     if (!validate_read_typed(params))
         return -EFAULT;
 
+    stac();
     int clock_id = params->clock_id;
     int flags = params->flags;
     const timespec* requested_sleep = params->requested_sleep;
     timespec* remaining_sleep = params->remaining_sleep;
+    clac();
 
     if (requested_sleep && !validate_read_typed(requested_sleep))
         return -EFAULT;
@@ -3743,6 +3831,7 @@ int Process::sys$module_load(const char* path, size_t path_length)
         return -EPERM;
     if (!validate_read(path, path_length))
         return -EFAULT;
+    SmapDisabler disabler;
     auto description_or_error = VFS::the().open(path, 0, 0, current_directory());
     if (description_or_error.is_error())
         return description_or_error.error();
@@ -3926,6 +4015,8 @@ int Process::sys$futex(const Syscall::SC_futex_params* params)
 {
     if (!validate_read_typed(params))
         return -EFAULT;
+
+    SmapDisabler disabler;
 
     i32* userspace_address = params->userspace_address;
     int futex_op = params->futex_op;

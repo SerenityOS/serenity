@@ -1,5 +1,6 @@
 #include <AK/Demangle.h>
 #include <AK/StringBuilder.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
 #include <Kernel/Scheduler.h>
@@ -582,7 +583,7 @@ void Thread::push_value_on_stack(u32 value)
 {
     m_tss.esp -= 4;
     u32* stack_ptr = (u32*)m_tss.esp;
-    *stack_ptr = value;
+    copy_to_user(stack_ptr, &value, sizeof(value));
 }
 
 RegisterDump& Thread::get_register_dump_from_stack()
@@ -608,6 +609,8 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     char** argv = (char**)stack_base;
     char** env = argv + arguments.size() + 1;
     char* bufptr = stack_base + (sizeof(char*) * (arguments.size() + 1)) + (sizeof(char*) * (environment.size() + 1));
+
+    SmapDisabler disabler;
 
     for (int i = 0; i < arguments.size(); ++i) {
         argv[i] = bufptr;
@@ -700,6 +703,7 @@ String Thread::backtrace(ProcessInspectionHandle&) const
 
 String Thread::backtrace_impl() const
 {
+    SmapDisabler disabler;
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
     struct RecognizedSymbol {
@@ -757,6 +761,7 @@ void Thread::make_thread_specific_region(Badge<Process>)
     size_t thread_specific_region_alignment = max(process().m_master_tls_alignment, alignof(ThreadSpecificData));
     size_t thread_specific_region_size = align_up_to(process().m_master_tls_size, thread_specific_region_alignment) + sizeof(ThreadSpecificData);
     auto* region = process().allocate_region({}, thread_specific_region_size, "Thread-specific", PROT_READ | PROT_WRITE, true);
+    SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment)).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
     m_thread_specific_data = VirtualAddress((u32)thread_specific_data);

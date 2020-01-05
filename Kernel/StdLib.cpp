@@ -1,8 +1,22 @@
 #include <AK/Assertions.h>
 #include <AK/Types.h>
+#include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Heap/kmalloc.h>
+#include <Kernel/StdLib.h>
 
 extern "C" {
+
+void* copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
+{
+    SmapDisabler disabler;
+    auto* ptr = memcpy(dest_ptr, src_ptr, n);
+    return ptr;
+}
+
+void* copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
+{
+    return copy_to_user(dest_ptr, src_ptr, n);
+}
 
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
 {
@@ -55,6 +69,13 @@ char* strncpy(char* dest, const char* src, size_t n)
     for (; i < n; ++i)
         dest[i] = '\0';
     return dest;
+}
+
+void* memset_user(void* dest_ptr, int c, size_t n)
+{
+    SmapDisabler disabler;
+    auto* ptr = memset(dest_ptr, c, n);
+    return ptr;
 }
 
 void* memset(void* dest_ptr, int c, size_t n)

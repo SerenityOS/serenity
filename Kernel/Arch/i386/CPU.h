@@ -520,7 +520,30 @@ extern bool g_cpu_supports_nx;
 extern bool g_cpu_supports_pae;
 extern bool g_cpu_supports_pge;
 extern bool g_cpu_supports_rdrand;
+extern bool g_cpu_supports_smap;
 extern bool g_cpu_supports_smep;
 extern bool g_cpu_supports_sse;
 extern bool g_cpu_supports_tsc;
 extern bool g_cpu_supports_umip;
+
+void stac();
+
+void clac();
+
+class SmapDisabler {
+public:
+    SmapDisabler()
+    {
+        m_flags = cpu_flags();
+        stac();
+    }
+
+    ~SmapDisabler()
+    {
+        if (!(m_flags & 0x40000))
+            clac();
+    }
+
+private:
+    u32 m_flags;
+};
