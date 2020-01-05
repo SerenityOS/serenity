@@ -1,5 +1,6 @@
-#include "ELFImage.h"
+#include <AK/StringBuilder.h>
 #include <AK/kstdio.h>
+#include <LibELF/ELFImage.h>
 
 ELFImage::ELFImage(const u8* buffer)
     : m_buffer(buffer)
@@ -194,14 +195,11 @@ const ELFImage::Relocation ELFImage::RelocationSection::relocation(unsigned inde
 
 const ELFImage::RelocationSection ELFImage::Section::relocations() const
 {
-    // FIXME: This is ugly.
-    char relocation_sectionName[128];
-    sprintf(relocation_sectionName, ".rel%s", name());
+    StringBuilder builder;
+    builder.append(".rel");
+    builder.append(name());
 
-#ifdef ELFIMAGE_DEBUG
-    dbgprintf("looking for '%s'\n", relocation_sectionName);
-#endif
-    auto relocation_section = m_image.lookup_section(relocation_sectionName);
+    auto relocation_section = m_image.lookup_section(builder.to_string());
     if (relocation_section.type() != SHT_REL)
         return static_cast<const RelocationSection>(m_image.section(0));
 
@@ -211,7 +209,7 @@ const ELFImage::RelocationSection ELFImage::Section::relocations() const
     return static_cast<const RelocationSection>(relocation_section);
 }
 
-const ELFImage::Section ELFImage::lookup_section(const char* name) const
+const ELFImage::Section ELFImage::lookup_section(const String& name) const
 {
     if (auto it = m_sections.find(name); it != m_sections.end())
         return section((*it).value);
