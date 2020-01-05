@@ -60,8 +60,11 @@ public:
     Color threed_shadow1() const { return color(ColorRole::ThreedShadow1); }
     Color threed_shadow2() const { return color(ColorRole::ThreedShadow2); }
     Color hover_highlight() const { return color(ColorRole::ThreedHighlight); }
+    Color rubber_band_fill() const { return color(ColorRole::RubberBandFill); }
+    Color rubber_band_border() const { return color(ColorRole::RubberBandBorder); }
 
     Color color(ColorRole role) const { return m_impl->color(role); }
+
     void set_color(ColorRole, Color);
 
     const SystemTheme& theme() const { return m_impl->theme(); }

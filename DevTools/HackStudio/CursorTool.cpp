@@ -154,6 +154,6 @@ void CursorTool::on_second_paint(GPainter& painter, GPaintEvent&)
     if (!m_rubber_banding)
         return;
     auto rect = rubber_band_rect();
-    painter.fill_rect(rect, Color(244, 202, 158, 60));
-    painter.draw_rect(rect, Color(110, 34, 9));
+    painter.fill_rect(rect, m_editor.palette().rubber_band_fill());
+    painter.draw_rect(rect, m_editor.palette().rubber_band_border());
 }
