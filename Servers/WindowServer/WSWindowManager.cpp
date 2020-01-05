@@ -857,9 +857,7 @@ void WSWindowManager::clear_resize_candidate()
 bool WSWindowManager::any_opaque_window_contains_rect(const Rect& rect)
 {
     bool found_containing_window = false;
-    for_each_window([&](WSWindow& window) {
-        if (!window.is_visible())
-            return IterationDecision::Continue;
+    for_each_visible_window_from_back_to_front([&](WSWindow& window) {
         if (window.is_minimized())
             return IterationDecision::Continue;
         if (window.opacity() < 1.0f)
