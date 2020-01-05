@@ -3738,6 +3738,7 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* ts)
     if (!validate_write_typed(ts))
         return -EFAULT;
 
+    SmapDisabler disabler;
     switch (clock_id) {
     case CLOCK_MONOTONIC:
         ts->tv_sec = g_uptime / TICKS_PER_SECOND;
@@ -3770,6 +3771,7 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* param
 
     bool is_absolute = flags & TIMER_ABSTIME;
 
+    SmapDisabler disabler;
     switch (clock_id) {
     case CLOCK_MONOTONIC: {
         u64 wakeup_time;
