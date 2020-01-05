@@ -2,6 +2,12 @@
 
 #include <AK/Types.h>
 
+namespace AK {
+class String;
+}
+
+AK::String copy_string_from_user(const char*, size_t);
+
 extern "C" {
 
 static_assert(sizeof(size_t) == 4);

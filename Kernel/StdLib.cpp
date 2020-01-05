@@ -1,8 +1,16 @@
 #include <AK/Assertions.h>
+#include <AK/String.h>
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/StdLib.h>
+
+String copy_string_from_user(const char* user_str, size_t user_str_size)
+{
+    SmapDisabler disabler;
+    size_t length = strnlen(user_str, user_str_size);
+    return String(user_str, length);
+}
 
 extern "C" {
 

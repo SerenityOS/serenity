@@ -1600,34 +1600,22 @@ int Process::number_of_open_file_descriptors() const
     return count;
 }
 
-int Process::sys$open(const Syscall::SC_open_params* params)
+int Process::sys$open(const Syscall::SC_open_params* user_params)
 {
-    if (!validate_read_typed(params))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
 
-    const char* path_data;
-    int path_length;
-    int options;
-    u16 mode;
+    Syscall::SC_open_params params;
+    copy_from_user(&params, user_params, sizeof(params));
+    auto options = params.options;
+    auto mode = params.mode;
 
-    {
-        SmapDisabler disabler;
-        path_data = params->path;
-        path_length = params->path_length;
-        options = params->options;
-        mode = params->mode;
-    }
-
-    if (!path_length)
+    if (params.path_length <= 0)
         return -EINVAL;
-    if (!validate_read(path_data, path_length))
+    if (!validate_read(params.path, params.path_length))
         return -EFAULT;
 
-    String path;
-    {
-        SmapDisabler disabler;
-        path = String(path_data, path_length);
-    }
+    String path = copy_string_from_user(params.path, params.path_length);
     int fd = alloc_fd();
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$open(\"%s\") -> %d\n", name().characters(), pid(), path, fd);
@@ -1645,20 +1633,22 @@ int Process::sys$open(const Syscall::SC_open_params* params)
     return fd;
 }
 
-int Process::sys$openat(const Syscall::SC_openat_params* params)
+int Process::sys$openat(const Syscall::SC_openat_params* user_params)
 {
-    if (!validate_read_typed(params))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
 
-    SmapDisabler disabler;
-    int dirfd = params->dirfd;
-    const char* path = params->path;
-    int path_length = params->path_length;
-    int options = params->options;
-    u16 mode = params->mode;
+    Syscall::SC_openat_params params;
+    copy_from_user(&params, user_params, sizeof(params));
+    int dirfd = params.dirfd;
+    int options = params.options;
+    u16 mode = params.mode;
 
-    if (!validate_read(path, path_length))
+    if (params.path_length <= 0)
+        return -EINVAL;
+    if (!validate_read(params.path, params.path_length))
         return -EFAULT;
+    auto path = copy_string_from_user(params.path, params.path_length);
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$openat(%d, \"%s\")\n", dirfd, name().characters(), pid(), path);
 #endif
@@ -3377,17 +3367,17 @@ int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
     if (!validate_read(buffer, buffer_size))
         return -EFAULT;
 
-    SmapDisabler disabler;
+    auto name = copy_string_from_user(buffer, buffer_size);
 
     const size_t max_thread_name_size = 64;
-    if (strnlen(buffer, (size_t)buffer_size) > max_thread_name_size)
+    if (name.length() > max_thread_name_size)
         return -EINVAL;
 
     auto* thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
 
-    thread->set_name({ buffer, (size_t)buffer_size });
+    thread->set_name(name);
     return 0;
 }
 int Process::sys$get_thread_name(int tid, char* buffer, int buffer_size)
