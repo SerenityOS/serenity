@@ -245,7 +245,7 @@ int fstat(int fd, struct stat* statbuf)
 
 int chdir(const char* path)
 {
-    int rc = syscall(SC_chdir, path);
+    int rc = syscall(SC_chdir, path, strlen(path));
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
