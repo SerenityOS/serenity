@@ -68,20 +68,35 @@ void MemoryManager::initialize_paging()
             auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
+        // Disable execution from 2MB through 8MB (kmalloc, kmalloc_eternal, slabs, page tables, ...)
+        for (size_t i = 1; i < 4; ++i) {
+            auto& pte = kernel_page_directory().table().directory(0)[i];
+            pte.set_execute_disabled(true);
+        }
     }
 
-    // Disable execution from 2MB through 8MB (kmalloc, kmalloc_eternal, slabs, page tables, ...)
-    for (size_t i = 1; i < 4; ++i) {
-        auto& pte = kernel_page_directory().table().directory(0)[i];
-        if (g_cpu_supports_nx)
+    // Disable writing to the kernel text and rodata segments.
+    extern u32 start_of_kernel_text;
+    extern u32 start_of_kernel_data;
+    for (size_t i = (u32)&start_of_kernel_text; i < (u32)&start_of_kernel_data; i += PAGE_SIZE) {
+        auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
+        pte.set_writable(false);
+    }
+
+    if (g_cpu_supports_nx) {
+        // Disable execution of the kernel data and bss segments.
+        extern u32 end_of_kernel_bss;
+        for (size_t i = (u32)&start_of_kernel_data; i < (u32)&end_of_kernel_bss; i += PAGE_SIZE) {
+            auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
+        }
     }
 
     // FIXME: We should move everything kernel-related above the 0xc0000000 virtual mark.
 
     // Basic physical memory map:
     // 0      -> 1 MB           We're just leaving this alone for now.
-    // 1      -> 3 MB           Kernel image.
+    // 1      -> 2 MB           Kernel image.
     // (last page before 2MB)   Used by quickmap_page().
     // 2 MB   -> 4 MB           kmalloc_eternal() space.
     // 4 MB   -> 7 MB           kmalloc() space.
