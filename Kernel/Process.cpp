@@ -208,17 +208,24 @@ Region* Process::region_containing(const Range& range)
     return nullptr;
 }
 
-int Process::sys$set_mmap_name(void* addr, size_t size, const char* name)
+int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_params)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(name))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
-    auto* region = region_from_range({ VirtualAddress((u32)addr), size });
+
+    Syscall::SC_set_mmap_name_params params;
+    copy_from_user(&params, user_params, sizeof(params));
+
+    if (!validate_read(params.name, params.name_length))
+        return -EFAULT;
+    auto name = copy_string_from_user(params.name, params.name_length);
+
+    auto* region = region_from_range({ VirtualAddress((u32)params.addr), params.size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
         return -EPERM;
-    region->set_name(String(name));
+    region->set_name(name);
     return 0;
 }
 
