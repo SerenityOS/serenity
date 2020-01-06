@@ -331,7 +331,11 @@ int symlink(const char* target, const char* linkpath)
 
 int rmdir(const char* pathname)
 {
-    int rc = syscall(SC_rmdir, pathname);
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    int rc = syscall(SC_rmdir, pathname, strlen(pathname));
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

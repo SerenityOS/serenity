@@ -2333,17 +2333,12 @@ int Process::sys$setgroups(ssize_t count, const gid_t* gids)
     return 0;
 }
 
-int Process::sys$mkdir(const char* pathname, mode_t mode)
+int Process::sys$mkdir(const char* user_path, size_t path_length, mode_t mode)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(pathname))
-        return -EFAULT;
-    size_t pathname_length = strlen(pathname);
-    if (pathname_length == 0)
-        return -EINVAL;
-    if (pathname_length >= 255)
-        return -ENAMETOOLONG;
-    return VFS::the().mkdir(StringView(pathname, pathname_length), mode & ~umask(), current_directory());
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    return VFS::the().mkdir(path.value(), mode & ~umask(), current_directory());
 }
 
 int Process::sys$realpath(const char* pathname, char* buffer, size_t size)
@@ -2574,20 +2569,31 @@ int Process::sys$symlink(const char* target, const char* linkpath)
     return VFS::the().symlink(StringView(target), StringView(linkpath), current_directory());
 }
 
-int Process::sys$rmdir(const char* pathname)
+KResultOr<String> Process::get_syscall_path_argument(const char* user_path, size_t path_length)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(pathname))
-        return -EFAULT;
-    return VFS::the().rmdir(StringView(pathname), current_directory());
+    if (path_length == 0)
+        return KResult(-EINVAL);
+    if (path_length > PATH_MAX)
+        return KResult(-ENAMETOOLONG);
+    if (!validate_read(user_path, path_length))
+        return KResult(-EFAULT);
+    return copy_string_from_user(user_path, path_length);
 }
 
-int Process::sys$chmod(const char* pathname, mode_t mode)
+int Process::sys$rmdir(const char* user_path, size_t path_length)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(pathname))
-        return -EFAULT;
-    return VFS::the().chmod(StringView(pathname), mode, current_directory());
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    return VFS::the().rmdir(path.value(), current_directory());
+}
+
+int Process::sys$chmod(const char* user_path, size_t path_length, mode_t mode)
+{
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    return VFS::the().chmod(path.value(), mode, current_directory());
 }
 
 int Process::sys$fchmod(int fd, mode_t mode)
