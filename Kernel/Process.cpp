@@ -2611,13 +2611,12 @@ void Process::finalize()
     disown_all_shared_buffers();
     {
         InterruptDisabler disabler;
-        if (auto* parent_process = Process::from_pid(m_ppid)) {
-            // FIXME(Thread): What should we do here? Should we look at all threads' signal actions?
-            if (parent_process->thread_count() && parent_process->any_thread().m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
+        if (auto* parent_thread = Thread::from_tid(m_ppid)) {
+            if (parent_thread->m_signal_action_data[SIGCHLD].flags & SA_NOCLDWAIT) {
                 // NOTE: If the parent doesn't care about this process, let it go.
                 m_ppid = 0;
             } else {
-                parent_process->send_signal(SIGCHLD, this);
+                parent_thread->send_signal(SIGCHLD, this);
             }
         }
     }
