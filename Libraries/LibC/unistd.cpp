@@ -527,13 +527,9 @@ int ftruncate(int fd, off_t length)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-__thread int t_cached_tid = -1;
-
 int gettid()
 {
-    if (t_cached_tid == -1)
-        t_cached_tid = syscall(SC_gettid);
-    return t_cached_tid;
+    return syscall(SC_gettid);
 }
 
 int donate(int tid)
