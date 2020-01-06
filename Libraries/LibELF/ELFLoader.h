@@ -13,7 +13,7 @@ class Region;
 
 class ELFLoader {
 public:
-    explicit ELFLoader(const u8*);
+    explicit ELFLoader(const u8*, size_t);
     ~ELFLoader();
 
     bool load();

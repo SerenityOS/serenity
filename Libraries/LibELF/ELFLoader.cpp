@@ -9,8 +9,8 @@
 
 //#define ELFLOADER_DEBUG
 
-ELFLoader::ELFLoader(const u8* buffer)
-    : m_image(buffer)
+ELFLoader::ELFLoader(const u8* buffer, size_t size)
+    : m_image(buffer, size)
 {
 }
 
@@ -43,6 +43,11 @@ bool ELFLoader::layout()
                 failed = true;
                 return;
             }
+            if (!m_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
+                dbg() << "Shenanigans! ELF PT_TLS header sneaks outside of executable.";
+                failed = true;
+                return;
+            }
             memcpy(tls_image, program_header.raw_data(), program_header.size_in_image());
 #endif
             return;
@@ -62,6 +67,11 @@ bool ELFLoader::layout()
                 program_header.is_writable(),
                 String::format("elf-alloc-%s%s", program_header.is_readable() ? "r" : "", program_header.is_writable() ? "w" : ""));
             if (!allocated_section) {
+                failed = true;
+                return;
+            }
+            if (!m_image.is_within_image(program_header.raw_data(), program_header.size_in_image())) {
+                dbg() << "Shenanigans! Writable ELF PT_LOAD header sneaks outside of executable.";
                 failed = true;
                 return;
             }

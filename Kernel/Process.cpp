@@ -49,6 +49,7 @@
 //#define DEBUG_IO
 //#define TASK_DEBUG
 //#define FORK_DEBUG
+//#define EXEC_DEBUG
 //#define SIGNAL_DEBUG
 //#define SHARED_BUFFER_DEBUG
 
@@ -655,7 +656,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
         m_regions.append(move(executable_region));
-        loader = make<ELFLoader>(region->vaddr().as_ptr());
+        loader = make<ELFLoader>(region->vaddr().as_ptr(), metadata.size);
         loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
@@ -703,6 +704,11 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
         // NOTE: At this point, we've committed to the new executable.
         entry_eip = loader->entry().get();
+
+#ifdef EXEC_DEBUG
+        kprintf("Memory layout after ELF load:");
+        dump_regions();
+#endif
     }
 
     region->set_user_accessible(false);
@@ -3818,8 +3824,7 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
     memcpy(storage.data(), payload.data(), payload.size());
     payload.clear();
 
-    // FIXME: ELFImage should really be taking a size argument as well...
-    auto elf_image = make<ELFImage>(storage.data());
+    auto elf_image = make<ELFImage>(storage.data(), storage.size());
     if (!elf_image->parse())
         return -ENOEXEC;
 

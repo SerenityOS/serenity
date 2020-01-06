@@ -2,8 +2,9 @@
 #include <AK/kstdio.h>
 #include <LibELF/ELFImage.h>
 
-ELFImage::ELFImage(const u8* buffer)
+ELFImage::ELFImage(const u8* buffer, size_t size)
     : m_buffer(buffer)
+    , m_size(size)
 {
     m_valid = parse();
 }
@@ -59,6 +60,8 @@ void ELFImage::dump() const
     dbgprintf("    entry:   %x\n", header().e_entry);
     dbgprintf("    shoff:   %u\n", header().e_shoff);
     dbgprintf("    shnum:   %u\n", header().e_shnum);
+    dbgprintf("    phoff:   %u\n", header().e_phoff);
+    dbgprintf("    phnum:   %u\n", header().e_phnum);
     dbgprintf(" shstrndx:   %u\n", header().e_shstrndx);
 
     for (unsigned i = 0; i < header().e_shnum; ++i) {
