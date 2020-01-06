@@ -19,6 +19,7 @@ public:
     {
     }
     operator int() const { return m_error; }
+    int error() const { return m_error; }
 
     bool is_success() const { return m_error == ESUCCESS; }
     bool is_error() const { return !is_success(); }
