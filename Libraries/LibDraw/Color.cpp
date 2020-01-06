@@ -281,6 +281,16 @@ Optional<Color> Color::from_string(const StringView& string)
         return Color(r.value() * 17, g.value() * 17, b.value() * 17);
     }
 
+    if (string.length() == 5) {
+        Optional<u8> r = hex_nibble_to_u8(string[1]);
+        Optional<u8> g = hex_nibble_to_u8(string[2]);
+        Optional<u8> b = hex_nibble_to_u8(string[3]);
+        Optional<u8> a = hex_nibble_to_u8(string[4]);
+        if (!r.has_value() || !g.has_value() || !b.has_value() || !a.has_value())
+            return {};
+        return Color(r.value() * 17, g.value() * 17, b.value() * 17, a.value() * 17);
+    }
+
     if (string.length() != 7 && string.length() != 9)
         return {};
 
