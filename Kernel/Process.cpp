@@ -4016,27 +4016,35 @@ WaitQueue& Process::futex_queue(i32* userspace_address)
     return *queue;
 }
 
-int Process::sys$futex(const Syscall::SC_futex_params* params)
+int Process::sys$futex(const Syscall::SC_futex_params* user_params)
 {
-    if (!validate_read_typed(params))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
 
-    SmapDisabler disabler;
+    Syscall::SC_futex_params params;
+    copy_from_user(&params, user_params, sizeof(params));
 
-    i32* userspace_address = params->userspace_address;
-    int futex_op = params->futex_op;
-    i32 value = params->val;
-    const timespec* timeout = params->timeout;
+    i32* userspace_address = params.userspace_address;
+    int futex_op = params.futex_op;
+    i32 value = params.val;
+    const timespec* user_timeout = params.timeout;
 
     if (!validate_read_typed(userspace_address))
         return -EFAULT;
 
-    if (timeout && !validate_read_typed(timeout))
+    if (user_timeout && !validate_read_typed(user_timeout))
         return -EFAULT;
+
+    timespec timeout { 0, 0 };
+    if (user_timeout)
+        copy_from_user(&timeout, user_timeout, sizeof(timeout));
+
+    i32 user_value;
 
     switch (futex_op) {
     case FUTEX_WAIT:
-        if (*userspace_address != value)
+        copy_from_user(&user_value, userspace_address, sizeof(user_value));
+        if (user_value != value)
             return -EAGAIN;
         // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
         // FIXME: Support timeout!
