@@ -3222,8 +3222,11 @@ void Process::terminate_due_to_signal(u8 signal)
 
 void Process::send_signal(u8 signal, Process* sender)
 {
-    // FIXME(Thread): Find the appropriate thread to deliver the signal to.
-    any_thread().send_signal(signal, sender);
+    InterruptDisabler disabler;
+    auto* thread = Thread::from_tid(m_pid);
+    if (!thread)
+        thread = &any_thread();
+    thread->send_signal(signal, sender);
 }
 
 int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Syscall::SC_create_thread_params* params)
