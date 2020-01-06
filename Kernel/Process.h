@@ -171,7 +171,7 @@ public:
     int sys$setgid(gid_t);
     int sys$setuid(uid_t);
     unsigned sys$alarm(unsigned seconds);
-    int sys$access(const char* pathname, int mode);
+    int sys$access(const char* pathname, size_t path_length, int mode);
     int sys$fcntl(int fd, int cmd, u32 extra_arg);
     int sys$ioctl(int fd, unsigned request, unsigned arg);
     int sys$mkdir(const char* pathname, mode_t mode);
