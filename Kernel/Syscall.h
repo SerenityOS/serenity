@@ -298,6 +298,13 @@ struct SC_realpath_params {
     size_t buffer_size;
 };
 
+struct SC_set_mmap_name_params {
+    void* addr;
+    size_t size;
+    const char* name;
+    size_t name_length;
+};
+
 void initialize();
 int sync();
 

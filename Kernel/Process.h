@@ -136,7 +136,7 @@ public:
     pid_t sys$waitpid(pid_t, int* wstatus, int options);
     void* sys$mmap(const Syscall::SC_mmap_params*);
     int sys$munmap(void*, size_t size);
-    int sys$set_mmap_name(void*, size_t, const char*);
+    int sys$set_mmap_name(const Syscall::SC_set_mmap_name_params*);
     int sys$mprotect(void*, size_t, int prot);
     int sys$madvise(void*, size_t, int advice);
     int sys$purge(int mode);

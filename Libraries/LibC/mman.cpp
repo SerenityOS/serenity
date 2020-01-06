@@ -2,6 +2,7 @@
 #include <errno.h>
 #include <mman.h>
 #include <stdio.h>
+#include <string.h>
 
 extern "C" {
 
@@ -41,7 +42,12 @@ int mprotect(void* addr, size_t size, int prot)
 
 int set_mmap_name(void* addr, size_t size, const char* name)
 {
-    int rc = syscall(SC_set_mmap_name, addr, size, name);
+    if (!name) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_set_mmap_name_params params { addr, size, name, strlen(name) };
+    int rc = syscall(SC_set_mmap_name, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -50,5 +56,4 @@ int madvise(void* address, size_t size, int advice)
     int rc = syscall(SC_madvise, address, size, advice);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
 }
