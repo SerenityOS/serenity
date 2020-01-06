@@ -44,6 +44,7 @@
 #include <Kernel/Net/RTL8139NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
 #include <Kernel/PCI/Initializer.h>
+#include <Kernel/Random.h>
 #include <Kernel/TTY/PTYMultiplexer.h>
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -219,6 +220,9 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
     return 0;
 }
 
+extern u32 __stack_chk_guard;
+u32 __stack_chk_guard;
+
 extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
 {
     // this is only used one time, directly below here. we can't use this part
@@ -312,6 +316,8 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     } else {
         kprintf("x86: No RDRAND support detected. Randomness will be shitty\n");
     }
+
+    __stack_chk_guard = get_good_random<u32>();
 
     RTC::initialize();
     PIC::initialize();
