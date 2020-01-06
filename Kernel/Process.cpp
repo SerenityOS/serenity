@@ -1981,7 +1981,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     if (wstatus && !validate_write_typed(wstatus))
         return -EFAULT;
 
-    int exit_status;
+    int exit_status = 0;
 
     {
         InterruptDisabler disabler;
@@ -2001,8 +2001,6 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
                 }
                 return IterationDecision::Continue;
             });
-            if (wstatus)
-                copy_to_user(wstatus, &exit_status, sizeof(exit_status));
             return reaped_pid;
         } else {
             ASSERT(waitee > 0); // FIXME: Implement other PID specs.
@@ -2036,6 +2034,9 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
         ASSERT(waitee_process->any_thread().state() == Thread::State::Stopped);
         exit_status = 0x7f;
     }
+
+    if (wstatus)
+        copy_to_user(wstatus, &exit_status, sizeof(exit_status));
     return waitee_pid;
 }
 
