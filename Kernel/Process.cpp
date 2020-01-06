@@ -2340,21 +2340,22 @@ int Process::sys$mkdir(const char* user_path, size_t path_length, mode_t mode)
     return VFS::the().mkdir(path.value(), mode & ~umask(), current_directory());
 }
 
-int Process::sys$realpath(const char* pathname, char* buffer, size_t size)
+int Process::sys$realpath(const Syscall::SC_realpath_params* user_params)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(pathname))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
 
-    size_t pathname_length = strlen(pathname);
-    if (pathname_length == 0)
-        return -EINVAL;
-    if (pathname_length >= size)
-        return -ENAMETOOLONG;
-    if (!validate_write(buffer, size))
+    Syscall::SC_realpath_params params;
+    copy_from_user(&params, user_params, sizeof(params));
+
+    if (!validate_write(params.buffer, params.buffer_size))
         return -EFAULT;
 
-    auto custody_or_error = VFS::the().resolve_path(pathname, current_directory());
+    auto path = get_syscall_path_argument(params.path, params.path_length);
+    if (path.is_error())
+        return path.error();
+
+    auto custody_or_error = VFS::the().resolve_path(path.value(), current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = custody_or_error.value();
@@ -2366,7 +2367,10 @@ int Process::sys$realpath(const char* pathname, char* buffer, size_t size)
         ASSERT_NOT_REACHED();
     }
 
-    strncpy(buffer, canonical_path.string().characters(), size);
+    if (canonical_path.string().length() + 1 > params.buffer_size)
+        return -ENAMETOOLONG;
+
+    copy_to_user(params.buffer, canonical_path.string().characters(), canonical_path.string().length() + 1);
     return 0;
 };
 

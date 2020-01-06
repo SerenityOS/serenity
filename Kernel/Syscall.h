@@ -291,6 +291,13 @@ struct SC_create_thread_params {
     void* m_stack_location = nullptr;            // nullptr means any, o.w. process virtual address
 };
 
+struct SC_realpath_params {
+    const char* path;
+    size_t path_length;
+    char* buffer;
+    size_t buffer_size;
+};
+
 void initialize();
 int sync();
 

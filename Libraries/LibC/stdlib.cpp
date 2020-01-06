@@ -704,10 +704,15 @@ uint32_t arc4random_uniform(uint32_t max_bounds)
 
 char* realpath(const char* pathname, char* buffer)
 {
+    if (!pathname) {
+        errno = EFAULT;
+        return nullptr;
+    }
     size_t size = PATH_MAX;
     if (buffer == nullptr)
         buffer = (char*)malloc(size);
-    int rc = syscall(SC_realpath, pathname, buffer, size);
+    Syscall::SC_realpath_params params { pathname, strlen(pathname), buffer, size };
+    int rc = syscall(SC_realpath, &params);
     if (rc < 0) {
         errno = -rc;
         return nullptr;
