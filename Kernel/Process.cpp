@@ -1446,10 +1446,10 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
 
 int Process::sys$access(const char* user_path, size_t path_length, int mode)
 {
-    if (!validate_read_str(user_path))
-        return -EFAULT;
-    auto path = copy_string_from_user(user_path, path_length);
-    return VFS::the().access(path, mode, current_directory());
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    return VFS::the().access(path.value(), mode, current_directory());
 }
 
 int Process::sys$fcntl(int fd, int cmd, u32 arg)
@@ -1503,10 +1503,10 @@ int Process::sys$lstat(const char* user_path, size_t path_length, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    if (!validate_read(user_path, path_length))
-        return -EFAULT;
-    auto path = copy_string_from_user(user_path, path_length);
-    auto metadata_or_error = VFS::the().lookup_metadata(path, current_directory(), O_NOFOLLOW_NOERROR);
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    auto metadata_or_error = VFS::the().lookup_metadata(path.value(), current_directory(), O_NOFOLLOW_NOERROR);
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
     SmapDisabler disabler;
@@ -1517,10 +1517,10 @@ int Process::sys$stat(const char* user_path, size_t path_length, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    if (!validate_read(user_path, path_length))
-        return -EFAULT;
-    auto path = copy_string_from_user(user_path, path_length);
-    auto metadata_or_error = VFS::the().lookup_metadata(path, current_directory());
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    auto metadata_or_error = VFS::the().lookup_metadata(path.value(), current_directory());
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
     SmapDisabler disabler;
@@ -1557,11 +1557,10 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
 
 int Process::sys$chdir(const char* user_path, size_t path_length)
 {
-    SmapDisabler disabler;
-    if (!validate_read(user_path, path_length))
-        return -EFAULT;
-    auto path = copy_string_from_user(user_path, path_length);
-    auto directory_or_error = VFS::the().open_directory(path, current_directory());
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    auto directory_or_error = VFS::the().open_directory(path.value(), current_directory());
     if (directory_or_error.is_error())
         return directory_or_error.error();
     m_cwd = *directory_or_error.value();
@@ -3450,15 +3449,11 @@ int Process::sys$ftruncate(int fd, off_t length)
 
 int Process::sys$watch_file(const char* user_path, int path_length)
 {
-    if (path_length < 0)
-        return -EINVAL;
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
 
-    if (!validate_read(user_path, path_length))
-        return -EFAULT;
-
-    auto path = copy_string_from_user(user_path, path_length);
-
-    auto custody_or_error = VFS::the().resolve_path(path, current_directory());
+    auto custody_or_error = VFS::the().resolve_path(path.value(), current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
 
