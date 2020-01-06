@@ -184,10 +184,15 @@ void GItemView::mousemove_event(GMouseEvent& event)
 
             StringBuilder text_builder;
             StringBuilder data_builder;
+            int index_iterations = 0;
             selection().for_each_index([&](auto& index) {
+                index_iterations++;
                 auto text_data = model()->data(index);
+                if (index_iterations == 0)
+                    text_builder.append(" ");
                 text_builder.append(text_data.to_string());
-                text_builder.append(" ");
+                if (!(index_iterations == selection().size()))
+                    text_builder.append(", ");
 
                 auto drag_data = model()->data(index, GModel::Role::DragData);
                 data_builder.append(drag_data.to_string());
