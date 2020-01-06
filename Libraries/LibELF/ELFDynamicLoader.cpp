@@ -56,7 +56,7 @@ void* ELFDynamicLoader::symbol_for_name(const char* name)
 
 bool ELFDynamicLoader::load_from_image(unsigned flags)
 {
-    ELFImage elf_image((u8*)m_file_mapping);
+    ELFImage elf_image((u8*)m_file_mapping, m_file_size);
 
     m_valid = elf_image.is_valid() && elf_image.is_dynamic();
 

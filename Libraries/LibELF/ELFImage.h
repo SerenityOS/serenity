@@ -8,11 +8,20 @@
 
 class ELFImage {
 public:
-    explicit ELFImage(const u8*);
+    explicit ELFImage(const u8*, size_t);
     ~ELFImage();
     void dump() const;
     bool is_valid() const { return m_valid; }
     bool parse();
+
+    bool is_within_image(const void* address, size_t size)
+    {
+        if (address < m_buffer)
+            return false;
+        if (((const u8*)address + size) > m_buffer + m_size)
+            return false;
+        return true;
+    }
 
     class Section;
     class RelocationSection;
@@ -190,6 +199,7 @@ private:
     const char* section_index_to_string(unsigned index) const;
 
     const u8* m_buffer { nullptr };
+    size_t m_size { 0 };
     HashMap<String, unsigned> m_sections;
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
