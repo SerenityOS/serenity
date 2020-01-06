@@ -176,7 +176,7 @@ public:
     int sys$ioctl(int fd, unsigned request, unsigned arg);
     int sys$mkdir(const char* pathname, size_t path_length, mode_t mode);
     clock_t sys$times(tms*);
-    int sys$utime(const char* pathname, const struct utimbuf*);
+    int sys$utime(const char* pathname, size_t path_length, const struct utimbuf*);
     int sys$link(const char* old_path, const char* new_path);
     int sys$unlink(const char* pathname);
     int sys$symlink(const char* target, const char* linkpath);
