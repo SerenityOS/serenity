@@ -213,9 +213,6 @@ void free(void* p)
     return kfree(p);
 }
 
-extern u32 __stack_chk_guard;
-u32 __stack_chk_guard = (u32)0xc0000c13;
-
 [[noreturn]] void __stack_chk_fail()
 {
     ASSERT_NOT_REACHED();
