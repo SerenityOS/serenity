@@ -64,7 +64,7 @@ int openat(int dirfd, const char* path, int options, ...);
 int openat_with_path_length(int dirfd, const char* path, size_t path_length, int options, mode_t);
 
 int fcntl(int fd, int cmd, ...);
-int watch_file(const char* path, int path_length);
+int watch_file(const char* path, size_t path_length);
 
 #define F_RDLCK 0
 #define F_WRLCK 1

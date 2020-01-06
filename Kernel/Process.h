@@ -101,7 +101,7 @@ public:
     int sys$sync();
     int sys$beep();
     int sys$get_process_name(char* buffer, int buffer_size);
-    int sys$watch_file(const char* path, int path_length);
+    int sys$watch_file(const char* path, size_t path_length);
     int sys$dbgputch(u8);
     int sys$dbgputstr(const u8*, int length);
     int sys$dump_backtrace();
