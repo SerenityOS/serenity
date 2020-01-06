@@ -3827,14 +3827,15 @@ int Process::sys$beep()
     return 0;
 }
 
-int Process::sys$module_load(const char* path, size_t path_length)
+int Process::sys$module_load(const char* user_path, size_t path_length)
 {
     if (!is_superuser())
         return -EPERM;
-    if (!validate_read(path, path_length))
-        return -EFAULT;
-    SmapDisabler disabler;
-    auto description_or_error = VFS::the().open(path, 0, 0, current_directory());
+
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    auto description_or_error = VFS::the().open(path.value(), 0, 0, current_directory());
     if (description_or_error.is_error())
         return description_or_error.error();
     auto& description = description_or_error.value();
@@ -3952,7 +3953,9 @@ int Process::sys$module_unload(const char* name, size_t name_length)
     if (!validate_read(name, name_length))
         return -EFAULT;
 
-    auto it = g_modules->find(name);
+    auto module_name = copy_string_from_user(name, name_length);
+
+    auto it = g_modules->find(module_name);
     if (it == g_modules->end())
         return -ENOENT;
 
