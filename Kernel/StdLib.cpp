@@ -220,4 +220,9 @@ u32 __stack_chk_guard = (u32)0xc0000c13;
 {
     ASSERT_NOT_REACHED();
 }
+
+[[noreturn]] void __stack_chk_fail_local()
+{
+    ASSERT_NOT_REACHED();
+}
 }
