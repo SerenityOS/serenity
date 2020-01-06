@@ -130,6 +130,8 @@ void GItemView::mousedown_event(GMouseEvent& event)
             auto index = model()->index(item_index, m_model_column);
             if (event.modifiers() & Mod_Ctrl)
                 selection().toggle(index);
+            else if (selection().size() > 1)
+                m_might_drag = true;
             else
                 selection().set(index);
         }
@@ -145,6 +147,12 @@ void GItemView::mouseup_event(GMouseEvent& event)
         m_rubber_band_remembered_selection.clear();
         update();
         return;
+    }
+    int item_index = item_at_event_position(event.position());
+    auto index = model()->index(item_index, m_model_column);
+    if((selection().size() > 1) & m_might_drag) {
+        selection().set(index);
+        m_might_drag = false;
     }
     GAbstractView::mouseup_event(event);
 }

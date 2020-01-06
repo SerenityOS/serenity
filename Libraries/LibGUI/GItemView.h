@@ -48,6 +48,8 @@ private:
     int m_visual_column_count { 0 };
     int m_visual_row_count { 0 };
 
+    bool m_might_drag { false };
+
     Point m_left_mousedown_position;
 
     Size m_effective_item_size { 80, 80 };
