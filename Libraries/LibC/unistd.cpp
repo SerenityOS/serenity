@@ -227,12 +227,20 @@ pid_t waitpid(pid_t waitee, int* wstatus, int options)
 
 int lstat(const char* path, struct stat* statbuf)
 {
+    if (!path) {
+        errno = EFAULT;
+        return -1;
+    }
     int rc = syscall(SC_lstat, path, strlen(path), statbuf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int stat(const char* path, struct stat* statbuf)
 {
+    if (!path) {
+        errno = EFAULT;
+        return -1;
+    }
     int rc = syscall(SC_stat, path, strlen(path), statbuf);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -245,6 +253,10 @@ int fstat(int fd, struct stat* statbuf)
 
 int chdir(const char* path)
 {
+    if (!path) {
+        errno = EFAULT;
+        return -1;
+    }
     int rc = syscall(SC_chdir, path, strlen(path));
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
