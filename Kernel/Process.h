@@ -174,16 +174,16 @@ public:
     int sys$access(const char* pathname, size_t path_length, int mode);
     int sys$fcntl(int fd, int cmd, u32 extra_arg);
     int sys$ioctl(int fd, unsigned request, unsigned arg);
-    int sys$mkdir(const char* pathname, mode_t mode);
+    int sys$mkdir(const char* pathname, size_t path_length, mode_t mode);
     clock_t sys$times(tms*);
     int sys$utime(const char* pathname, const struct utimbuf*);
     int sys$link(const char* old_path, const char* new_path);
     int sys$unlink(const char* pathname);
     int sys$symlink(const char* target, const char* linkpath);
-    int sys$rmdir(const char* pathname);
+    int sys$rmdir(const char* pathname, size_t path_length);
     int sys$mount(const char* device, const char* mountpoint, const char* fstype);
     int sys$umount(const char* mountpoint);
-    int sys$chmod(const char* pathname, mode_t);
+    int sys$chmod(const char* pathname, size_t path_length, mode_t);
     int sys$fchmod(int fd, mode_t);
     int sys$chown(const char* pathname, uid_t, gid_t);
     int sys$fchown(int fd, uid_t, gid_t);
@@ -328,6 +328,8 @@ private:
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(pid_t pgrp, int signal);
+
+    KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length);
 
     RefPtr<PageDirectory> m_page_directory;
 

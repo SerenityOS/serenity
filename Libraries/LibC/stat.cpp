@@ -2,6 +2,7 @@
 #include <assert.h>
 #include <errno.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/stat.h>
 
 extern "C" {
@@ -13,13 +14,21 @@ mode_t umask(mode_t mask)
 
 int mkdir(const char* pathname, mode_t mode)
 {
-    int rc = syscall(SC_mkdir, pathname, mode);
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    int rc = syscall(SC_mkdir, pathname, strlen(pathname), mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
 int chmod(const char* pathname, mode_t mode)
 {
-    int rc = syscall(SC_chmod, pathname, mode);
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    int rc = syscall(SC_chmod, pathname, strlen(pathname), mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
