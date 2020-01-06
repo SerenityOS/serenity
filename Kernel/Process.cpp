@@ -267,22 +267,24 @@ Vector<Region*, 2> Process::split_region_around_range(const Region& source_regio
     return new_regions;
 }
 
-void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
+void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 {
-    if (!validate_read(params, sizeof(Syscall::SC_mmap_params)))
+    if (!validate_read_typed(user_params))
         return (void*)-EFAULT;
 
-    SmapDisabler disabler;
-    void* addr = (void*)params->addr;
-    size_t size = params->size;
-    int prot = params->prot;
-    int flags = params->flags;
-    int fd = params->fd;
-    int offset = params->offset;
-    const char* name = params->name;
+    Syscall::SC_mmap_params params;
+    copy_from_user(&params, user_params, sizeof(params));
 
-    if (name && !validate_read_str(name))
+    void* addr = (void*)params.addr;
+    size_t size = params.size;
+    int prot = params.prot;
+    int flags = params.flags;
+    int fd = params.fd;
+    int offset = params.offset;
+
+    if (params.name && !validate_read(params.name, params.name_length))
         return (void*)-EFAULT;
+    auto name = copy_string_from_user(params.name, params.name_length);
 
     if (size == 0)
         return (void*)-EINVAL;
@@ -312,13 +314,13 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
 
     if (map_purgeable) {
         auto vmobject = PurgeableVMObject::create_with_size(size);
-        region = allocate_region_with_vmobject(VirtualAddress((u32)addr), size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
+        region = allocate_region_with_vmobject(VirtualAddress((u32)addr), size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
         if (!region && (!map_fixed && addr != 0))
-            region = allocate_region_with_vmobject({}, size, vmobject, 0, name ? name : "mmap (purgeable)", prot);
+            region = allocate_region_with_vmobject({}, size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
     } else if (map_anonymous) {
-        region = allocate_region(VirtualAddress((u32)addr), size, name ? name : "mmap", prot, false);
+        region = allocate_region(VirtualAddress((u32)addr), size, !name.is_null() ? name : "mmap", prot, false);
         if (!region && (!map_fixed && addr != 0))
-            region = allocate_region({}, size, name ? name : "mmap", prot, false);
+            region = allocate_region({}, size, !name.is_null() ? name : "mmap", prot, false);
     } else {
         if (offset < 0)
             return (void*)-EINVAL;
@@ -346,7 +348,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* params)
         region->set_shared(true);
     if (map_stack)
         region->set_stack(true);
-    if (name)
+    if (!name.is_null())
         region->set_name(name);
     return region->vaddr().as_ptr();
 }

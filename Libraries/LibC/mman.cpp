@@ -8,22 +8,16 @@ extern "C" {
 
 void* mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset)
 {
-    Syscall::SC_mmap_params params { (u32)addr, size, prot, flags, fd, offset, nullptr };
-    int rc = syscall(SC_mmap, &params);
-    if (rc < 0 && -rc < EMAXERRNO) {
-        errno = -rc;
-        return (void*)-1;
-    }
-    return (void*)rc;
+    return mmap_with_name(addr, size, prot, flags, fd, offset, nullptr);
 }
 
 void* mmap_with_name(void* addr, size_t size, int prot, int flags, int fd, off_t offset, const char* name)
 {
-    Syscall::SC_mmap_params params { (u32)addr, size, prot, flags, fd, offset, name };
+    Syscall::SC_mmap_params params { (u32)addr, size, prot, flags, fd, offset, name, name ? strlen(name) : 0 };
     int rc = syscall(SC_mmap, &params);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
-        return (void*)-1;
+        return MAP_FAILED;
     }
     return (void*)rc;
 }

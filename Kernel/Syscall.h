@@ -196,7 +196,8 @@ struct SC_mmap_params {
     int32_t flags;
     int32_t fd;
     int32_t offset; // FIXME: 64-bit off_t?
-    const char* name { nullptr };
+    const char* name;
+    size_t name_length;
 };
 
 struct SC_open_params {
