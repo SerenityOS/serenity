@@ -3447,7 +3447,7 @@ int Process::sys$ftruncate(int fd, off_t length)
     return description->truncate(length);
 }
 
-int Process::sys$watch_file(const char* user_path, int path_length)
+int Process::sys$watch_file(const char* user_path, size_t path_length)
 {
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())

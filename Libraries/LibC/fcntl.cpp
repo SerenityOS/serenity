@@ -15,7 +15,7 @@ int fcntl(int fd, int cmd, ...)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int watch_file(const char* path, int path_length)
+int watch_file(const char* path, size_t path_length)
 {
     int rc = syscall(SC_watch_file, path, path_length);
     __RETURN_WITH_ERRNO(rc, rc, -1);
