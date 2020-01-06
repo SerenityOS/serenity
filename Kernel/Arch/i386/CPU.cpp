@@ -147,6 +147,7 @@ static void dump(const RegisterDump& regs)
     kprintf("ebp=%08x esp=%08x esi=%08x edi=%08x\n", regs.ebp, esp, regs.esi, regs.edi);
 
     if (current && current->process().validate_read((void*)regs.eip, 8)) {
+        SmapDisabler disabler;
         u8* codeptr = (u8*)regs.eip;
         kprintf("code: %02x %02x %02x %02x %02x %02x %02x %02x\n",
             codeptr[0],
