@@ -1444,12 +1444,12 @@ int Process::sys$utime(const char* pathname, const utimbuf* buf)
     return VFS::the().utime(StringView(pathname), current_directory(), atime, mtime);
 }
 
-int Process::sys$access(const char* pathname, int mode)
+int Process::sys$access(const char* user_path, size_t path_length, int mode)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(pathname))
+    if (!validate_read_str(user_path))
         return -EFAULT;
-    return VFS::the().access(StringView(pathname), mode, current_directory());
+    auto path = copy_string_from_user(user_path, path_length);
+    return VFS::the().access(path, mode, current_directory());
 }
 
 int Process::sys$fcntl(int fd, int cmd, u32 arg)

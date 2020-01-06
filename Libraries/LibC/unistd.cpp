@@ -389,7 +389,11 @@ int setgid(uid_t gid)
 
 int access(const char* pathname, int mode)
 {
-    int rc = syscall(SC_access, pathname, mode);
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    int rc = syscall(SC_access, pathname, strlen(pathname), mode);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
