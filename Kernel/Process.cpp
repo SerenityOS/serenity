@@ -1508,9 +1508,9 @@ int Process::sys$fstat(int fd, stat* statbuf)
     return description->fstat(*statbuf);
 }
 
-int Process::sys$lstat(const char* user_path, size_t path_length, stat* statbuf)
+int Process::sys$lstat(const char* user_path, size_t path_length, stat* user_statbuf)
 {
-    if (!validate_write_typed(statbuf))
+    if (!validate_write_typed(user_statbuf))
         return -EFAULT;
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
@@ -1518,13 +1518,17 @@ int Process::sys$lstat(const char* user_path, size_t path_length, stat* statbuf)
     auto metadata_or_error = VFS::the().lookup_metadata(path.value(), current_directory(), O_NOFOLLOW_NOERROR);
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
-    SmapDisabler disabler;
-    return metadata_or_error.value().stat(*statbuf);
+    stat statbuf;
+    auto result = metadata_or_error.value().stat(statbuf);
+    if (result.is_error())
+        return result;
+    copy_to_user(user_statbuf, &statbuf, sizeof(statbuf));
+    return 0;
 }
 
-int Process::sys$stat(const char* user_path, size_t path_length, stat* statbuf)
+int Process::sys$stat(const char* user_path, size_t path_length, stat* user_statbuf)
 {
-    if (!validate_write_typed(statbuf))
+    if (!validate_write_typed(user_statbuf))
         return -EFAULT;
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
@@ -1532,8 +1536,12 @@ int Process::sys$stat(const char* user_path, size_t path_length, stat* statbuf)
     auto metadata_or_error = VFS::the().lookup_metadata(path.value(), current_directory());
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
-    SmapDisabler disabler;
-    return metadata_or_error.value().stat(*statbuf);
+    stat statbuf;
+    auto result = metadata_or_error.value().stat(statbuf);
+    if (result.is_error())
+        return result;
+    copy_to_user(user_statbuf, &statbuf, sizeof(statbuf));
+    return 0;
 }
 
 int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
