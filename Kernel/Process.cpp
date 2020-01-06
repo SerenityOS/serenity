@@ -44,7 +44,6 @@
 #include <LibC/limits.h>
 #include <LibC/signal_numbers.h>
 #include <LibELF/ELFLoader.h>
-#include <LibELF/exec_elf.h>
 
 //#define DEBUG_POLL_SELECT
 //#define DEBUG_IO
@@ -2040,43 +2039,12 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     return waitee_pid;
 }
 
-enum class KernelMemoryCheckResult {
-    NotInsideKernelMemory,
-    AccessGranted,
-    AccessDenied
-};
-
-static KernelMemoryCheckResult check_kernel_memory_access(VirtualAddress vaddr, bool is_write)
-{
-    auto& sections = multiboot_info_ptr->u.elf_sec;
-
-    auto* kernel_program_headers = (Elf32_Phdr*)(sections.addr);
-    for (unsigned i = 0; i < sections.num; ++i) {
-        auto& segment = kernel_program_headers[i];
-        if (segment.p_type != PT_LOAD || !segment.p_vaddr || !segment.p_memsz)
-            continue;
-        if (vaddr.get() < segment.p_vaddr || vaddr.get() > (segment.p_vaddr + segment.p_memsz))
-            continue;
-        if (is_write && !(kernel_program_headers[i].p_flags & PF_W))
-            return KernelMemoryCheckResult::AccessDenied;
-        if (!is_write && !(kernel_program_headers[i].p_flags & PF_R))
-            return KernelMemoryCheckResult::AccessDenied;
-        return KernelMemoryCheckResult::AccessGranted;
-    }
-    return KernelMemoryCheckResult::NotInsideKernelMemory;
-}
-
 bool Process::validate_read_from_kernel(VirtualAddress vaddr, ssize_t size) const
 {
     if (vaddr.is_null())
         return false;
     // We check extra carefully here since the first 4MB of the address space is identity-mapped.
     // This code allows access outside of the known used address ranges to get caught.
-    auto kmc_result = check_kernel_memory_access(vaddr, false);
-    if (kmc_result == KernelMemoryCheckResult::AccessGranted)
-        return true;
-    if (kmc_result == KernelMemoryCheckResult::AccessDenied)
-        return false;
     if (is_kmalloc_address(vaddr.as_ptr()))
         return true;
     return MM.validate_kernel_read(*this, vaddr, size);
@@ -2094,11 +2062,6 @@ bool Process::validate_read(const void* address, ssize_t size) const
     ASSERT(size >= 0);
     VirtualAddress first_address((u32)address);
     if (is_ring0()) {
-        auto kmc_result = check_kernel_memory_access(first_address, false);
-        if (kmc_result == KernelMemoryCheckResult::AccessGranted)
-            return true;
-        if (kmc_result == KernelMemoryCheckResult::AccessDenied)
-            return false;
         if (is_kmalloc_address(address))
             return true;
     }
@@ -2114,11 +2077,6 @@ bool Process::validate_write(void* address, ssize_t size) const
     if (is_ring0()) {
         if (is_kmalloc_address(address))
             return true;
-        auto kmc_result = check_kernel_memory_access(first_address, true);
-        if (kmc_result == KernelMemoryCheckResult::AccessGranted)
-            return true;
-        if (kmc_result == KernelMemoryCheckResult::AccessDenied)
-            return false;
     }
     if (!size)
         return false;
