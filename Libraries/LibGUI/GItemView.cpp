@@ -116,7 +116,13 @@ void GItemView::mousedown_event(GMouseEvent& event)
     if (event.button() == GMouseButton::Left) {
         m_left_mousedown_position = event.position();
         if (item_index == -1) {
-            selection().clear();
+            if(event.modifiers() & Mod_Ctrl) {
+                selection().for_each_index([&](auto& index) {
+                    m_rubber_band_remembered_selection.append(index);
+                });
+            } else {
+                selection().clear();
+            }
             m_rubber_banding = true;
             m_rubber_band_origin = event.position();
             m_rubber_band_current = event.position();
@@ -136,6 +142,7 @@ void GItemView::mouseup_event(GMouseEvent& event)
 {
     if (m_rubber_banding && event.button() == GMouseButton::Left) {
         m_rubber_banding = false;
+        m_rubber_band_remembered_selection.clear();
         update();
         return;
     }
@@ -154,6 +161,11 @@ void GItemView::mousemove_event(GMouseEvent& event)
             selection().clear();
             for (auto item_index : items_intersecting_rect(rubber_band_rect)) {
                 selection().add(model()->index(item_index, model_column()));
+            }
+            if(event.modifiers() & Mod_Ctrl) {
+                for (auto storeditem : m_rubber_band_remembered_selection) {
+                    selection().add(storeditem);
+                }
             }
             update();
             return;

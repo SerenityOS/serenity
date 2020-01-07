@@ -55,4 +55,5 @@ private:
     bool m_rubber_banding { false };
     Point m_rubber_band_origin;
     Point m_rubber_band_current;
+    Vector<GModelIndex> m_rubber_band_remembered_selection;
 };
