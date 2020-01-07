@@ -192,7 +192,7 @@ int main(int argc, char** argv)
     };
 
     auto select_all_action = GAction::create("Select all", { Mod_Ctrl, KeyCode::Key_A }, [&](const GAction&) {
-        directory_view->current_view.select_all();
+        directory_view->current_view().select_all();
     });
 
     auto copy_action = GCommonActions::make_copy_action([&](const GAction& action) {
