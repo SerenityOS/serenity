@@ -155,6 +155,7 @@ ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDescr
     LOCKER(m_lock);
     ASSERT(!is_directory());
     ASSERT(size >= 0);
+    ASSERT(offset >= 0);
 
     if (!m_content.has_value())
         return 0;
@@ -170,6 +171,7 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, Fi
 {
     LOCKER(m_lock);
     ASSERT(!is_directory());
+    ASSERT(offset >= 0);
 
     off_t old_size = m_metadata.size;
     off_t new_size = m_metadata.size;
