@@ -1,13 +1,13 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
+#include <LibDraw/TextAlignment.h>
 #include <LibGUI/GModelIndex.h>
 #include <LibGUI/GVariant.h>
-#include <LibDraw/TextAlignment.h>
 
 class Font;
 class GAbstractView;
@@ -24,8 +24,11 @@ public:
         int preferred_width { 0 };
         TextAlignment text_alignment { TextAlignment::CenterLeft };
         const Font* font { nullptr };
-	enum class Sortable { False, True };
-	Sortable sortable { Sortable::True };
+        enum class Sortable {
+            False,
+            True,
+        };
+        Sortable sortable { Sortable::True };
     };
 
     enum class Role {
