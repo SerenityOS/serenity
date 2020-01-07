@@ -12,6 +12,7 @@ public:
     bool is_valid() const { return m_is_valid; }
     const String& string() const { return m_string; }
 
+    const String& dirname() const { return m_dirname; }
     const String& basename() const { return m_basename; }
     const String& title() const { return m_title; }
     const String& extension() const { return m_extension; }
@@ -25,6 +26,7 @@ private:
 
     Vector<String> m_parts;
     String m_string;
+    String m_dirname;
     String m_basename;
     String m_title;
     String m_extension;

@@ -45,9 +45,18 @@ void FileSystemPath::canonicalize()
         }
     }
     if (canonical_parts.is_empty()) {
-        m_string = m_basename = "/";
+        m_string = m_basename = m_dirname = "/";
         return;
     }
+
+    StringBuilder dirname_builder(approximate_canonical_length);
+    for (int i = 0; i < canonical_parts.size() - 1; ++i) {
+        auto& canonical_part = canonical_parts[i];
+        if (is_absolute_path || i != 0)
+            dirname_builder.append('/');
+        dirname_builder.append(canonical_part);
+    }
+    m_dirname = dirname_builder.to_string();
 
     m_basename = canonical_parts.last();
     auto name_parts = m_basename.split('.');
