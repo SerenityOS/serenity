@@ -36,7 +36,7 @@ public:
     void set_view_mode(ViewMode);
     ViewMode view_mode() const { return m_view_mode; }
 
-    const GAbstractView& current_view() const
+    GAbstractView& current_view()
     {
         switch (m_view_mode) {
         case ViewMode::List:
