@@ -16,14 +16,7 @@ Lockable<HashTable<FIFO*>>& all_fifos()
     return *s_table;
 }
 
-RefPtr<FIFO> FIFO::from_fifo_id(u32 id)
-{
-    auto* ptr = reinterpret_cast<FIFO*>(id);
-    LOCKER(all_fifos().lock());
-    if (auto it = all_fifos().resource().find(ptr); it == all_fifos().resource().end())
-        return nullptr;
-    return ptr;
-}
+static int s_next_fifo_id = 1;
 
 NonnullRefPtr<FIFO> FIFO::create(uid_t uid)
 {
@@ -43,6 +36,7 @@ FIFO::FIFO(uid_t uid)
 {
     LOCKER(all_fifos().lock());
     all_fifos().resource().set(this);
+    m_fifo_id = ++s_next_fifo_id;
 }
 
 FIFO::~FIFO()
@@ -121,5 +115,5 @@ ssize_t FIFO::write(FileDescription&, const u8* buffer, ssize_t size)
 
 String FIFO::absolute_path(const FileDescription&) const
 {
-    return String::format("fifo:%u", this);
+    return String::format("fifo:%u", m_fifo_id);
 }
