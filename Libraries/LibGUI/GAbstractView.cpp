@@ -95,6 +95,18 @@ void GAbstractView::stop_editing()
     }
 }
 
+void GAbstractView::select_all()
+{
+    ASSERT(model());
+    int rows = model()->row_count();
+    int columns = model()->column_count();
+
+    for (int i = 0; i < rows; ++i) {
+        for (int j = 0; j < columns; ++j)
+            selection().add(model()->index(i, j));
+    }
+}
+
 void GAbstractView::activate(const GModelIndex& index)
 {
     if (on_activation)
