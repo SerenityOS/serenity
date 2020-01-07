@@ -248,6 +248,16 @@ static bool validate_mmap_prot(int prot, bool map_stack)
     return true;
 }
 
+static bool validate_inode_mmap_prot(const Process& process, int prot, const Inode& inode)
+{
+    auto metadata = inode.metadata();
+    if ((prot & PROT_WRITE) && !metadata.may_write(process))
+        return false;
+    if ((prot & PROT_READ) && !metadata.may_read(process))
+        return false;
+    return true;
+}
+
 // Carve out a virtual address range from a region and return the two regions on either side
 Vector<Region*, 2> Process::split_region_around_range(const Region& source_region, const Range& desired_range)
 {
@@ -329,6 +339,14 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
         auto description = file_description(fd);
         if (!description)
             return (void*)-EBADF;
+        if ((prot & PROT_READ) && !description->is_readable())
+            return (void*)-EACCES;
+        if ((prot & PROT_WRITE) && !description->is_writable())
+            return (void*)-EACCES;
+        if (description->inode()) {
+            if (!validate_inode_mmap_prot(*this, prot, *description->inode()))
+                return (void*)-EACCES;
+        }
         auto region_or_error = description->mmap(*this, VirtualAddress((u32)addr), static_cast<size_t>(offset), size, prot);
         if (region_or_error.is_error()) {
             // Fail if MAP_FIXED or address is 0, retry otherwise
@@ -400,6 +418,10 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
             return -EINVAL;
         if (whole_region->access() == prot_to_region_access_flags(prot))
             return 0;
+        if (whole_region->vmobject().is_inode()
+            && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(whole_region->vmobject()).inode())) {
+            return -EACCES;
+        }
         whole_region->set_readable(prot & PROT_READ);
         whole_region->set_writable(prot & PROT_WRITE);
         whole_region->set_executable(prot & PROT_EXEC);
@@ -415,6 +437,10 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
             return -EINVAL;
         if (old_region->access() == prot_to_region_access_flags(prot))
             return 0;
+        if (old_region->vmobject().is_inode()
+            && !validate_inode_mmap_prot(*this, prot, static_cast<const InodeVMObject&>(old_region->vmobject()).inode())) {
+            return -EACCES;
+        }
 
         // This vector is the region(s) adjacent to our range.
         // We need to allocate a new region for the range we wanted to change permission bits on.
