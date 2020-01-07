@@ -87,6 +87,24 @@ void test_read_past_eof()
     ASSERT(rc == 0);
 }
 
+void test_ftruncate_readonly()
+{
+    int fd = open("/tmp/trunctest", O_RDONLY | O_CREAT, 0666);
+    ASSERT(fd >= 0);
+    int rc;
+    EXPECT_ERROR_2(EBADF, ftruncate, fd, 0);
+    close(fd);
+}
+
+void test_ftruncate_negative()
+{
+    int fd = open("/tmp/trunctest", O_RDWR | O_CREAT, 0666);
+    ASSERT(fd >= 0);
+    int rc;
+    EXPECT_ERROR_2(EINVAL, ftruncate, fd, -1);
+    close(fd);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -103,6 +121,8 @@ int main(int, char**)
     test_read_from_writeonly();
     test_write_to_readonly();
     test_read_past_eof();
+    test_ftruncate_readonly();
+    test_ftruncate_negative();
 
     return 0;
 }
