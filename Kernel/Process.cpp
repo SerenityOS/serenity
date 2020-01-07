@@ -326,7 +326,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
             return (void*)-EINVAL;
         if (static_cast<size_t>(offset) & ~PAGE_MASK)
             return (void*)-EINVAL;
-        auto* description = file_description(fd);
+        auto description = file_description(fd);
         if (!description)
             return (void*)-EBADF;
         auto region_or_error = description->mmap(*this, VirtualAddress((u32)addr), static_cast<size_t>(offset), size, prot);
@@ -1208,16 +1208,7 @@ Process* Process::from_pid(pid_t pid)
     return nullptr;
 }
 
-FileDescription* Process::file_description(int fd)
-{
-    if (fd < 0)
-        return nullptr;
-    if (fd < m_fds.size())
-        return m_fds[fd].description.ptr();
-    return nullptr;
-}
-
-const FileDescription* Process::file_description(int fd) const
+RefPtr<FileDescription> Process::file_description(int fd) const
 {
     if (fd < 0)
         return nullptr;
@@ -1241,7 +1232,7 @@ ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     return description->get_dir_entries((u8*)buffer, size);
@@ -1249,7 +1240,7 @@ ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
 
 int Process::sys$lseek(int fd, off_t offset, int whence)
 {
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     return description->seek(offset, whence);
@@ -1261,7 +1252,7 @@ int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     if (!description->is_tty())
@@ -1279,7 +1270,7 @@ int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
         return -EINVAL;
     if (!validate_write(buffer, size))
         return -EFAULT;
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     auto* master_pty = description->master_pty();
@@ -1312,7 +1303,7 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
             return -EINVAL;
     }
 
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
 
@@ -1388,7 +1379,7 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
 #ifdef DEBUG_IO
     dbgprintf("%s(%u): sys$write(%d, %p, %u)\n", name().characters(), pid(), fd, data, size);
 #endif
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     if (!description->is_writable())
@@ -1408,7 +1399,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$read(%d, %p, %u)\n", name().characters(), pid(), fd, buffer, size);
 #endif
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     if (!description->is_readable())
@@ -1426,7 +1417,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
 
 int Process::sys$close(int fd)
 {
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$close(%d) %p\n", name().characters(), pid(), fd, description);
 #endif
@@ -1467,7 +1458,7 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
     (void)cmd;
     (void)arg;
     dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     // NOTE: The FD flags are not shared between FileDescription objects.
@@ -1503,7 +1494,7 @@ int Process::sys$fstat(int fd, stat* statbuf)
 {
     if (!validate_write_typed(statbuf))
         return -EFAULT;
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     return description->fstat(*statbuf);
@@ -1587,7 +1578,7 @@ int Process::sys$chdir(const char* user_path, size_t path_length)
 
 int Process::sys$fchdir(int fd)
 {
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
 
@@ -1684,7 +1675,7 @@ int Process::sys$openat(const Syscall::SC_openat_params* user_params)
     if (dirfd == AT_FDCWD) {
         base = current_directory();
     } else {
-        auto* base_description = file_description(dirfd);
+        auto base_description = file_description(dirfd);
         if (!base_description)
             return -EBADF;
         if (!base_description->is_directory())
@@ -2184,7 +2175,7 @@ int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 
 int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
 {
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     SmapDisabler disabler;
@@ -2198,7 +2189,7 @@ int Process::sys$getdtablesize()
 
 int Process::sys$dup(int old_fd)
 {
-    auto* description = file_description(old_fd);
+    auto description = file_description(old_fd);
     if (!description)
         return -EBADF;
     int new_fd = alloc_fd(0);
@@ -2210,7 +2201,7 @@ int Process::sys$dup(int old_fd)
 
 int Process::sys$dup2(int old_fd, int new_fd)
 {
-    auto* description = file_description(old_fd);
+    auto description = file_description(old_fd);
     if (!description)
         return -EBADF;
     if (new_fd < 0 || new_fd >= m_max_open_file_descriptors)
@@ -2436,7 +2427,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
             return;
         FD_ZERO(fds);
         for (int fd : vector) {
-            if (auto* description = file_description(fd); description && should_mark(*description)) {
+            if (auto description = file_description(fd); description && should_mark(*description)) {
                 FD_SET(fd, fds);
                 ++marked_fd_count;
             }
@@ -2493,7 +2484,7 @@ int Process::sys$poll(pollfd* fds, int nfds, int timeout)
     int fds_with_revents = 0;
 
     for (int i = 0; i < nfds; ++i) {
-        auto* description = file_description(fds[i].fd);
+        auto description = file_description(fds[i].fd);
         if (!description) {
             fds[i].revents = POLLNVAL;
             continue;
@@ -2580,7 +2571,7 @@ int Process::sys$chmod(const char* user_path, size_t path_length, mode_t mode)
 int Process::sys$fchmod(int fd, mode_t mode)
 {
     SmapDisabler disabler;
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     return description->chmod(mode);
@@ -2589,7 +2580,7 @@ int Process::sys$fchmod(int fd, mode_t mode)
 int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 {
     SmapDisabler disabler;
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     return description->chown(uid, gid);
@@ -2755,7 +2746,7 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
 {
     if (!validate_read(address, address_length))
         return -EFAULT;
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -2767,7 +2758,7 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
 
 int Process::sys$listen(int sockfd, int backlog)
 {
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -2788,7 +2779,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     int accepted_socket_fd = alloc_fd();
     if (accepted_socket_fd < 0)
         return accepted_socket_fd;
-    auto* accepting_socket_description = file_description(accepting_socket_fd);
+    auto accepting_socket_description = file_description(accepting_socket_fd);
     if (!accepting_socket_description)
         return -EBADF;
     if (!accepting_socket_description->is_socket())
@@ -2826,7 +2817,7 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
     int fd = alloc_fd();
     if (fd < 0)
         return fd;
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -2855,7 +2846,7 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
         return -EFAULT;
     if (addr && !validate_read(addr, addr_length))
         return -EFAULT;
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -2887,7 +2878,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     } else if (addr) {
         return -EINVAL;
     }
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -2917,7 +2908,7 @@ int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
     if (!validate_write(addr, *addrlen))
         return -EFAULT;
 
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
 
@@ -2944,7 +2935,7 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
     if (!validate_write(addr, *addrlen))
         return -EFAULT;
 
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
 
@@ -3027,7 +3018,7 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
         return -EFAULT;
     if (!validate_write(value, *value_size))
         return -EFAULT;
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -3051,7 +3042,7 @@ int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
 
     if (!validate_read(value, value_size))
         return -EFAULT;
-    auto* description = file_description(sockfd);
+    auto description = file_description(sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -3426,7 +3417,7 @@ int Process::sys$ftruncate(int fd, off_t length)
 {
     if (length < 0)
         return -EINVAL;
-    auto* description = file_description(fd);
+    auto description = file_description(fd);
     if (!description)
         return -EBADF;
     if (!description->is_writable())

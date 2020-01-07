@@ -218,7 +218,7 @@ Optional<KBuffer> procfs$pid_fds(InodeIdentifier identifier)
     }
 
     for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
-        auto* description = process.file_description(i);
+        auto description = process.file_description(i);
         if (!description)
             continue;
         bool cloexec = process.fd_flags(i) & FD_CLOEXEC;
@@ -245,7 +245,7 @@ Optional<KBuffer> procfs$pid_fd_entry(InodeIdentifier identifier)
         return {};
     auto& process = handle->process();
     int fd = to_fd(identifier);
-    auto* description = process.file_description(fd);
+    auto description = process.file_description(fd);
     if (!description)
         return {};
     return description->absolute_path().to_byte_buffer();
@@ -1191,7 +1191,7 @@ bool ProcFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
             return false;
         auto& process = handle->process();
         for (int i = 0; i < process.max_open_file_descriptors(); ++i) {
-            auto* description = process.file_description(i);
+            auto description = process.file_description(i);
             if (!description)
                 continue;
             char name[16];
