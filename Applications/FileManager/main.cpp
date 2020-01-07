@@ -191,6 +191,10 @@ int main(int argc, char** argv)
         return paths;
     };
 
+    auto select_all_action = GAction::create("Select all", { Mod_Ctrl, KeyCode::Key_A }, [&](const GAction&) {
+        directory_view->current_view.select_all();
+    });
+
     auto copy_action = GCommonActions::make_copy_action([&](const GAction& action) {
         Vector<String> paths;
         if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
