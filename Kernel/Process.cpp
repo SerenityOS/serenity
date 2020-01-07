@@ -3424,10 +3424,13 @@ int Process::sys$rename(const char* oldpath, const char* newpath)
 
 int Process::sys$ftruncate(int fd, off_t length)
 {
+    if (length < 0)
+        return -EINVAL;
     auto* description = file_description(fd);
     if (!description)
         return -EBADF;
-    // FIXME: Check that fd is writable, otherwise EINVAL.
+    if (!description->is_writable())
+        return -EBADF;
     return description->truncate(length);
 }
 
