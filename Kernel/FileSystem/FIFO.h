@@ -14,8 +14,6 @@ public:
         Writer
     };
 
-    static RefPtr<FIFO> from_fifo_id(u32);
-
     static NonnullRefPtr<FIFO> create(uid_t);
     virtual ~FIFO() override;
 
@@ -43,4 +41,6 @@ private:
     DoubleBuffer m_buffer;
 
     uid_t m_uid { 0 };
+
+    int m_fifo_id { 0 };
 };
