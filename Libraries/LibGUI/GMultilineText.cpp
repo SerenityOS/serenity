@@ -1,50 +1,49 @@
-#include "TextWidget.h"
+#include "GMultilineText.h"
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibDraw/Palette.h>
 #include <LibGUI/GPainter.h>
 
-TextWidget::TextWidget(GWidget* parent)
+GMultilineText::GMultilineText(GWidget* parent)
     : GFrame(parent)
 {
 }
 
-TextWidget::TextWidget(const StringView& text, GWidget* parent)
+GMultilineText::GMultilineText(const StringView& text, GWidget* parent)
     : GFrame(parent)
     , m_text(text)
 {
 }
 
-TextWidget::~TextWidget()
+GMultilineText::~GMultilineText()
 {
 }
 
-void TextWidget::set_text(const StringView& text)
+void GMultilineText::set_text(const StringView& text)
 {
     if (text == m_text)
         return;
     m_text = text;
-    wrap_and_set_height();
+    wrap_and_set_height(frame_inner_rect().width());
     update();
 }
 
-void TextWidget::paint_event(GPaintEvent& event)
+void GMultilineText::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
 
     GPainter painter(*this);
     painter.add_clip_rect(event.rect());
 
-    int indent = 0;
-    if (frame_thickness() > 0)
-        indent = font().glyph_width('x') / 2;
+    int indent = frame_thickness();
+    int top = frame_thickness();
 
     for (int i = 0; i < m_lines.size(); i++) {
         auto& line = m_lines[i];
 
         auto text_rect = frame_inner_rect();
-        text_rect.move_by(indent, i * m_line_height);
+        text_rect.move_by(indent, top);
         if (!line.is_empty())
             text_rect.set_width(text_rect.width() - indent * 2);
 
@@ -54,16 +53,18 @@ void TextWidget::paint_event(GPaintEvent& event)
             painter.draw_text(text_rect.translated(1, 1), line, font(), text_alignment(), Color::White, TextElision::Right);
             painter.draw_text(text_rect, line, font(), text_alignment(), Color::from_rgb(0x808080), TextElision::Right);
         }
+
+        top += font().glyph_height() + m_line_spacing;
     }
 }
 
-void TextWidget::resize_event(GResizeEvent& event)
+void GMultilineText::resize_event(GResizeEvent& event)
 {
-    wrap_and_set_height();
+    wrap_and_set_height(event.size().width() - frame_thickness() * 2);
     GWidget::resize_event(event);
 }
 
-void TextWidget::wrap_and_set_height()
+void GMultilineText::wrap_and_set_height(int max_width)
 {
     Vector<String> words;
     Optional<size_t> start;
@@ -73,28 +74,26 @@ void TextWidget::wrap_and_set_height()
         if (ch == ' ' || ch == '\t' || ch == '\r' || ch == '\n') {
             if (start.has_value())
                 words.append(m_text.substring(start.value(), i - start.value()));
-            start = -1;
+            start.clear();
         } else if (!start.has_value()) {
             start = i;
         }
     }
     if (start.has_value())
-        words.append(m_text.substring(start, m_text.length() - start.value()));
-
-    auto rect = frame_inner_rect();
-    if (frame_thickness() > 0)
-        rect.set_width(rect.width() - font().glyph_width('x'));
+        words.append(m_text.substring(start.value(), m_text.length() - start.value()));
 
     StringBuilder builder;
     Vector<String> lines;
     int line_width = 0;
+    int total_height = frame_thickness() * 2;
     for (auto& word : words) {
         int word_width = font().width(word);
         if (line_width != 0)
             word_width += font().glyph_width('x');
 
-        if (line_width + word_width > rect.width()) {
+        if (line_width + word_width > max_width) {
             lines.append(builder.to_string());
+            total_height += font().glyph_height() + m_line_spacing;
             line_width = 0;
         }
 
@@ -103,13 +102,15 @@ void TextWidget::wrap_and_set_height()
         builder.append(word);
         line_width += word_width;
     }
+
     auto last_line = builder.to_string();
     if (!last_line.is_empty()) {
         lines.append(last_line);
+        total_height += font().glyph_height();
     }
 
     m_lines = lines;
 
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-    set_preferred_size(0, m_lines.size() * m_line_height + frame_thickness() * 2);
+    set_preferred_size(0, total_height);
 }

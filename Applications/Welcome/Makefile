@@ -1,6 +1,5 @@
 OBJS = \
     main.o \
-    TextWidget.o \
     background.png.o
 
 PROGRAM = Welcome

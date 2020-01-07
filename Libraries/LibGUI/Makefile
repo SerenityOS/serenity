@@ -59,7 +59,8 @@ OBJS = \
     GCommand.o \
     GUndoStack.o \
     GDragOperation.o \
-    GWindow.o
+    GWindow.o \
+    GMultilineText.o
 
 LIBRARY = libgui.a
 

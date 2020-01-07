@@ -6,10 +6,9 @@
 #include <LibGUI/GButton.h>
 #include <LibGUI/GDesktop.h>
 #include <LibGUI/GLabel.h>
+#include <LibGUI/GMultilineText.h>
 #include <LibGUI/GStackWidget.h>
 #include <LibGUI/GWindow.h>
-
-#include "TextWidget.h"
 
 extern const u8 _binary_background_png_start[];
 extern const u8 _binary_background_png_size;
@@ -125,12 +124,10 @@ int main(int argc, char** argv)
         content_title->set_preferred_size(0, 10);
 
         for (auto& paragraph : page.content) {
-            auto content_text = TextWidget::construct(content);
+            auto content_text = GMultilineText::construct(content);
             content_text->set_font(Font::default_font());
             content_text->set_text(paragraph);
             content_text->set_text_alignment(TextAlignment::TopLeft);
-            content_text->set_line_height(12);
-            content_text->wrap_and_set_height();
         }
 
         auto menu_option = GButton::construct(menu);
