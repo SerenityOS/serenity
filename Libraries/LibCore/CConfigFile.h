@@ -20,7 +20,7 @@ public:
     Vector<String> groups() const;
     Vector<String> keys(const String& group) const;
 
-    String read_entry(const String& group, const String& key, const String& default_vaule = String()) const;
+    String read_entry(const String& group, const String& key, const String& default_value = String()) const;
     int read_num_entry(const String& group, const String& key, int default_value = 0) const;
     bool read_bool_entry(const String& group, const String& key, bool default_value = false) const;
 
