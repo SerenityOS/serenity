@@ -81,8 +81,7 @@ public:
 
     bool in_group(gid_t) const;
 
-    FileDescription* file_description(int fd);
-    const FileDescription* file_description(int fd) const;
+    RefPtr<FileDescription> file_description(int fd) const;
     int fd_flags(int fd) const;
 
     template<typename Callback>
