@@ -713,38 +713,41 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         ASSERT(topmost_menu);
         auto* window = topmost_menu->menu_window();
         ASSERT(window);
+
         bool event_is_inside_current_menu = window->rect().contains(event.position());
-        if (!event_is_inside_current_menu) {
-            if (topmost_menu->hovered_item())
-                topmost_menu->clear_hovered_item();
-            if (event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseUp) {
-                auto* window_menu_of = topmost_menu->window_menu_of();
-                if (window_menu_of) {
-                    bool event_is_inside_taskbar_button = window_menu_of->taskbar_rect().contains(event.position());
-                    if (event_is_inside_taskbar_button && !topmost_menu->is_window_menu_open()) {
-                        topmost_menu->set_window_menu_open(true);
-                        return;
-                    }
-                }
-                m_menu_manager.close_bar();
-                topmost_menu->set_window_menu_open(false);
-            }
-            if (event.type() == WSEvent::MouseMove) {
-                for (auto& menu : m_menu_manager.open_menu_stack()) {
-                    if (!menu)
-                        continue;
-                    if (!menu->menu_window()->rect().contains(event.position()))
-                        continue;
-                    hovered_window = menu->menu_window();
-                    auto translated_event = event.translated(-menu->menu_window()->position());
-                    deliver_mouse_event(*menu->menu_window(), translated_event);
-                    break;
-                }
-            }
-        } else {
+        if (event_is_inside_current_menu) {
             hovered_window = window;
             auto translated_event = event.translated(-window->position());
             deliver_mouse_event(*window, translated_event);
+            return;
+        }
+
+        if (topmost_menu->hovered_item())
+            topmost_menu->clear_hovered_item();
+        if (event.type() == WSEvent::MouseDown || event.type() == WSEvent::MouseUp) {
+            auto* window_menu_of = topmost_menu->window_menu_of();
+            if (window_menu_of) {
+                bool event_is_inside_taskbar_button = window_menu_of->taskbar_rect().contains(event.position());
+                if (event_is_inside_taskbar_button && !topmost_menu->is_window_menu_open()) {
+                    topmost_menu->set_window_menu_open(true);
+                    return;
+                }
+            }
+            m_menu_manager.close_bar();
+            topmost_menu->set_window_menu_open(false);
+        }
+
+        if (event.type() == WSEvent::MouseMove) {
+            for (auto& menu : m_menu_manager.open_menu_stack()) {
+                if (!menu)
+                    continue;
+                if (!menu->menu_window()->rect().contains(event.position()))
+                    continue;
+                hovered_window = menu->menu_window();
+                auto translated_event = event.translated(-menu->menu_window()->position());
+                deliver_mouse_event(*menu->menu_window(), translated_event);
+                break;
+            }
         }
         return;
     }
