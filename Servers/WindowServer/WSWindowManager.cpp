@@ -733,8 +733,11 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
                     return;
                 }
             }
-            m_menu_manager.close_bar();
-            topmost_menu->set_window_menu_open(false);
+
+            if (event.type() == WSEvent::MouseDown) {
+                m_menu_manager.close_bar();
+                topmost_menu->set_window_menu_open(false);
+            }
         }
 
         if (event.type() == WSEvent::MouseMove) {
