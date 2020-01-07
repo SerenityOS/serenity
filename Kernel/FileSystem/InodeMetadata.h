@@ -26,9 +26,9 @@ inline bool is_setgid(mode_t mode) { return mode & 02000; }
 struct InodeMetadata {
     bool is_valid() const { return inode.is_valid(); }
 
-    bool may_read(Process&) const;
-    bool may_write(Process&) const;
-    bool may_execute(Process&) const;
+    bool may_read(const Process&) const;
+    bool may_write(const Process&) const;
+    bool may_execute(const Process&) const;
 
     bool may_read(uid_t u, gid_t g, const HashTable<gid_t>& eg) const
     {
