@@ -495,17 +495,17 @@ inline void Process::for_each_in_pgrp(pid_t pgid, Callback callback)
     }
 }
 
-inline bool InodeMetadata::may_read(Process& process) const
+inline bool InodeMetadata::may_read(const Process& process) const
 {
     return may_read(process.euid(), process.egid(), process.extra_gids());
 }
 
-inline bool InodeMetadata::may_write(Process& process) const
+inline bool InodeMetadata::may_write(const Process& process) const
 {
     return may_write(process.euid(), process.egid(), process.extra_gids());
 }
 
-inline bool InodeMetadata::may_execute(Process& process) const
+inline bool InodeMetadata::may_execute(const Process& process) const
 {
     return may_execute(process.euid(), process.egid(), process.extra_gids());
 }
