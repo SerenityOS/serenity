@@ -45,8 +45,17 @@ public:
 
     size_t size() const { return m_size; }
 
-    T& operator[](size_t index) { return m_elements[index]; }
-    const T& operator[](size_t index) const { return m_elements[index]; }
+    T& operator[](size_t index)
+    {
+        ASSERT(index < m_size);
+        return m_elements[index];
+    }
+
+    const T& operator[](size_t index) const
+    {
+        ASSERT(index < m_size);
+        return m_elements[index];
+    }
 
     void resize(size_t new_size)
     {
