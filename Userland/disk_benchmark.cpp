@@ -116,11 +116,11 @@ int main(int argc, char** argv)
 
 Result benchmark(const String& filename, int file_size, int block_size, ByteBuffer& buffer, bool allow_cache)
 {
-    int flags = O_CREAT | O_TRUNC | O_WRONLY;
+    int flags = O_CREAT | O_TRUNC | O_RDWR;
     if (!allow_cache)
         flags |= O_DIRECT;
 
-    int fd = open(filename.characters(), flags);
+    int fd = open(filename.characters(), flags, 0644);
     if (fd == -1) {
         perror("open");
         exit(1);
