@@ -167,6 +167,7 @@ OwnPtr<WindowServer::AddMenuItemResponse> WSClientConnection::handle(const Windo
         menu_item->set_icon(shared_icon);
     }
     menu_item->set_submenu_id(message.submenu_id());
+    menu_item->set_exclusive(message.exclusive());
     menu.add_item(move(menu_item));
     return make<WindowServer::AddMenuItemResponse>();
 }
