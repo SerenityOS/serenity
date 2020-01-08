@@ -156,6 +156,24 @@ void test_procfs_read_past_end()
     close(fd);
 }
 
+void test_open_create_device()
+{
+    int fd = open("/tmp/fakedevice", (O_RDWR | O_CREAT), (S_IFCHR | 0600));
+    ASSERT(fd >= 0);
+
+    struct stat st;
+    if (fstat(fd, &st) < 0) {
+        perror("stat");
+        ASSERT_NOT_REACHED();
+    }
+
+    if (st.st_mode != 0100600) {
+        fprintf(stderr, "Expected mode 0100600 after attempt to create a device node with open(O_CREAT), mode=%o\n", st.st_mode);
+    }
+    unlink("/tmp/fakedevice");
+    close(fd);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -177,6 +195,7 @@ int main(int, char**)
     test_mmap_directory();
     test_tmpfs_read_past_end();
     test_procfs_read_past_end();
+    test_open_create_device();
 
     return 0;
 }

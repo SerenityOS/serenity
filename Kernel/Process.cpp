@@ -1652,6 +1652,9 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     if (!validate_read(params.path, params.path_length))
         return -EFAULT;
 
+    // Ignore everything except permission bits.
+    mode &= 04777;
+
     String path = copy_string_from_user(params.path, params.path_length);
     int fd = alloc_fd();
 #ifdef DEBUG_IO
@@ -1680,6 +1683,9 @@ int Process::sys$openat(const Syscall::SC_openat_params* user_params)
     int dirfd = params.dirfd;
     int options = params.options;
     u16 mode = params.mode;
+
+    // Ignore everything except permission bits.
+    mode &= 04777;
 
     if (params.path_length <= 0)
         return -EINVAL;
