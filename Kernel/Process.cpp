@@ -3370,7 +3370,7 @@ int Process::sys$join_thread(int tid, void** exit_value)
     thread = nullptr;
 
     if (exit_value)
-        *exit_value = joinee_exit_value;
+        copy_to_user(exit_value, &joinee_exit_value, sizeof(joinee_exit_value));
     return 0;
 }
 
