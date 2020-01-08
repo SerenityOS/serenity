@@ -331,7 +331,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
 
     allocate_local_port_if_needed();
 
-    m_sequence_number = 0;
+    m_sequence_number = get_good_random<u32>();
     m_ack_number = 0;
 
     set_setup_state(SetupState::InProgress);
