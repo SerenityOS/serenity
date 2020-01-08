@@ -160,6 +160,9 @@ ssize_t TmpFSInode::read_bytes(off_t offset, ssize_t size, u8* buffer, FileDescr
     if (!m_content.has_value())
         return 0;
 
+    if (offset >= m_metadata.size)
+        return 0;
+
     if (static_cast<off_t>(size) > m_metadata.size - offset)
         size = m_metadata.size - offset;
 

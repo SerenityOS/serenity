@@ -121,6 +121,25 @@ void test_mmap_directory()
     close(fd);
 }
 
+void test_tmpfs_read_past_end()
+{
+    int fd = open("/tmp/x", O_RDWR | O_CREAT | O_TRUNC, 0600);
+    ASSERT(fd >= 0);
+
+    int rc = ftruncate(fd, 1);
+    ASSERT(rc == 0);
+
+    rc = lseek(fd, 4096, SEEK_SET);
+    ASSERT(rc == 4096);
+
+    char buffer[16];
+    int nread = read(fd, buffer, sizeof(buffer));
+    if (nread != 0) {
+        fprintf(stderr, "Expected 0-length read past end of file in /tmp\n");
+    }
+    close(fd);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -140,6 +159,7 @@ int main(int, char**)
     test_ftruncate_readonly();
     test_ftruncate_negative();
     test_mmap_directory();
+    test_tmpfs_read_past_end();
 
     return 0;
 }
