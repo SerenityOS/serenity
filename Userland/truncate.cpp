@@ -69,7 +69,7 @@ int main(int argc, char** argv)
 
     auto name = args.get_single_values()[0];
 
-    int fd = open(name.characters(), O_CREAT, 0666);
+    int fd = open(name.characters(), O_RDWR | O_CREAT, 0666);
     if (fd < 0) {
         perror("open");
         return -1;
