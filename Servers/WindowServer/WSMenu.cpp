@@ -164,13 +164,19 @@ void WSMenu::draw()
             }
             Rect text_rect = item.rect().translated(stripe_rect.width() + 6, 0);
             if (item.is_checkable()) {
-                Rect checkmark_rect { item.rect().x() + 7, 0, s_checked_bitmap_width, s_checked_bitmap_height };
-                checkmark_rect.center_vertically_within(text_rect);
-                Rect checkbox_rect = checkmark_rect.inflated(4, 4);
-                painter.fill_rect(checkbox_rect, palette.base());
-                StylePainter::paint_frame(painter, checkbox_rect, palette, FrameShape::Container, FrameShadow::Sunken, 2);
-                if (item.is_checked()) {
-                    painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, palette.button_text());
+                if (item.is_exclusive()) {
+                    Rect radio_rect { item.rect().x() + 5, 0, 12, 12 };
+                    radio_rect.center_vertically_within(text_rect);
+                    StylePainter::paint_radio_button(painter, radio_rect, palette, item.is_checked(), false);
+                } else {
+                    Rect checkmark_rect { item.rect().x() + 7, 0, s_checked_bitmap_width, s_checked_bitmap_height };
+                    checkmark_rect.center_vertically_within(text_rect);
+                    Rect checkbox_rect = checkmark_rect.inflated(4, 4);
+                    painter.fill_rect(checkbox_rect, palette.base());
+                    StylePainter::paint_frame(painter, checkbox_rect, palette, FrameShape::Container, FrameShadow::Sunken, 2);
+                    if (item.is_checked()) {
+                        painter.draw_bitmap(checkmark_rect.location(), *s_checked_bitmap, palette.button_text());
+                    }
                 }
             } else if (item.icon()) {
                 Rect icon_rect { item.rect().x() + 3, 0, s_item_icon_width, s_item_icon_width };

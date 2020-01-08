@@ -11,7 +11,18 @@ endpoint WindowServer = 2
     AddMenuToMenubar(i32 menubar_id, i32 menu_id) => ()
     SetApplicationMenubar(i32 menubar_id) => ()
 
-    AddMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, String text, bool enabled, bool checkable, bool checked, String shortcut, i32 icon_buffer_id) => ()
+    AddMenuItem(
+        i32 menu_id,
+        i32 identifier,
+        i32 submenu_id,
+        String text,
+        bool enabled,
+        bool checkable,
+        bool checked,
+        String shortcut,
+        i32 icon_buffer_id,
+        bool exclusive) => ()
+
     AddMenuSeparator(i32 menu_id) => ()
 
     UpdateMenuItem(i32 menu_id, i32 identifier, i32 submenu_id, String text, bool enabled, bool checkable, bool checked, String shortcut) => ()

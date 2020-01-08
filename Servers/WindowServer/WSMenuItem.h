@@ -50,6 +50,9 @@ public:
 
     WSMenu* submenu();
 
+    bool is_exclusive() const { return m_exclusive; }
+    void set_exclusive(bool exclusive) { m_exclusive = exclusive; }
+
 private:
     WSMenu& m_menu;
     Type m_type { None };
@@ -62,4 +65,5 @@ private:
     Rect m_rect;
     RefPtr<GraphicsBitmap> m_icon;
     int m_submenu_id { -1 };
+    bool m_exclusive { false };
 };

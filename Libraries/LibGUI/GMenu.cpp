@@ -1,5 +1,6 @@
 #include <AK/HashMap.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GActionGroup.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GWindowServerConnection.h>
 
@@ -87,7 +88,7 @@ int GMenu::realize_menu()
         if (item.type() == GMenuItem::Submenu) {
             auto& submenu = *item.submenu();
             submenu.realize_if_needed();
-            GWindowServerConnection::the().send_sync<WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, "", -1);
+            GWindowServerConnection::the().send_sync<WindowServer::AddMenuItem>(m_menu_id, i, submenu.menu_id(), submenu.name(), true, false, false, "", -1, false);
             continue;
         }
         if (item.type() == GMenuItem::Action) {
@@ -108,7 +109,8 @@ int GMenu::realize_menu()
                 icon_buffer_id = action.icon()->shared_buffer_id();
             }
             auto shortcut_text = action.shortcut().is_valid() ? action.shortcut().to_string() : String();
-            GWindowServerConnection::the().send_sync<WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, shortcut_text, icon_buffer_id);
+            bool exclusive = action.group() && action.group()->is_exclusive() && action.is_checkable();
+            GWindowServerConnection::the().send_sync<WindowServer::AddMenuItem>(m_menu_id, i, -1, action.text(), action.is_enabled(), action.is_checkable(), action.is_checkable() ? action.is_checked() : false, shortcut_text, icon_buffer_id, exclusive);
         }
     }
     all_menus().set(m_menu_id, this);
