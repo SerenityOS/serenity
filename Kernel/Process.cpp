@@ -339,6 +339,8 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
         auto description = file_description(fd);
         if (!description)
             return (void*)-EBADF;
+        if (description->is_directory())
+            return (void*)-ENODEV;
         if ((prot & PROT_READ) && !description->is_readable())
             return (void*)-EACCES;
         if ((prot & PROT_WRITE) && !description->is_writable())

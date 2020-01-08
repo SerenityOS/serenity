@@ -105,6 +105,22 @@ void test_ftruncate_negative()
     close(fd);
 }
 
+void test_mmap_directory()
+{
+    int fd = open("/tmp", O_RDONLY | O_DIRECTORY);
+    ASSERT(fd >= 0);
+    auto* ptr = mmap(nullptr, 4096, PROT_READ, MAP_FILE | MAP_SHARED, fd, 0);
+    if (ptr != MAP_FAILED) {
+        fprintf(stderr, "Boo! mmap() of a directory succeeded!\n");
+        return;
+    }
+    if (errno != ENODEV) {
+        fprintf(stderr, "Boo! mmap() of a directory gave errno=%d instead of ENODEV!\n", errno);
+        return;
+    }
+    close(fd);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -123,6 +139,7 @@ int main(int, char**)
     test_read_past_eof();
     test_ftruncate_readonly();
     test_ftruncate_negative();
+    test_mmap_directory();
 
     return 0;
 }
