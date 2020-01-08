@@ -11,6 +11,7 @@
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GActionGroup.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GGroupBox.h>
@@ -138,21 +139,26 @@ int main(int argc, char** argv)
     };
 
     auto frequency_menu = GMenu::construct("Frequency");
-    frequency_menu->add_action(GAction::create("0.25 sec", [&](auto&) {
-        refresh_timer->restart(250);
-    }));
-    frequency_menu->add_action(GAction::create("0.5 sec", [&](auto&) {
-        refresh_timer->restart(500);
-    }));
-    frequency_menu->add_action(GAction::create("1 sec", [&](auto&) {
-        refresh_timer->restart(1000);
-    }));
-    frequency_menu->add_action(GAction::create("3 sec", [&](auto&) {
-        refresh_timer->restart(3000);
-    }));
-    frequency_menu->add_action(GAction::create("5 sec", [&](auto&) {
-        refresh_timer->restart(5000);
-    }));
+    GActionGroup frequency_action_group;
+    frequency_action_group.set_exclusive(true);
+
+    auto make_frequency_action = [&](auto& title, int interval, bool checked = false) {
+        auto action = GAction::create(title, [&refresh_timer, interval](auto& action) {
+            refresh_timer->restart(interval);
+            action.set_checked(true);
+        });
+        action->set_checkable(true);
+        action->set_checked(checked);
+        frequency_action_group.add_action(*action);
+        frequency_menu->add_action(*action);
+    };
+
+    make_frequency_action("0.25 sec", 250);
+    make_frequency_action("0.5 sec", 500);
+    make_frequency_action("1 sec", 1000, true);
+    make_frequency_action("3 sec", 3000);
+    make_frequency_action("5 sec", 5000);
+
     menubar->add_menu(move(frequency_menu));
 
     auto help_menu = GMenu::construct("Help");
