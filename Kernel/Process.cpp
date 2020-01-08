@@ -1172,12 +1172,6 @@ void create_kernel_info_page()
     memset(s_info_page_address_for_kernel.as_ptr(), 0, PAGE_SIZE);
 }
 
-int Process::sys$restore_signal_mask(u32 mask)
-{
-    current->m_signal_mask = mask;
-    return 0;
-}
-
 int Process::sys$sigreturn(RegisterDump& registers)
 {
     SmapDisabler disabler;
