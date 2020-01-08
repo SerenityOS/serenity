@@ -11,8 +11,17 @@
 
 //#define DEBUG_MENUS
 
+static WSMenuManager* s_the;
+
+WSMenuManager& WSMenuManager::the()
+{
+    ASSERT(s_the);
+    return *s_the;
+}
+
 WSMenuManager::WSMenuManager()
 {
+    s_the = this;
     m_username = getlogin();
     m_needs_window_resize = true;
 
@@ -140,16 +149,13 @@ WSMenuManager::WSMenuManager()
 
     // NOTE: This ensures that the system menu has the correct dimensions.
     set_current_menubar(nullptr);
+
+    m_window = WSWindow::construct(*this, WSWindowType::Menubar);
+    m_window->set_rect(menubar_rect());
 }
 
 WSMenuManager::~WSMenuManager()
 {
-}
-
-void WSMenuManager::setup()
-{
-    m_window = WSWindow::construct(*this, WSWindowType::Menubar);
-    m_window->set_rect(menubar_rect());
 }
 
 bool WSMenuManager::is_open(const WSMenu& menu) const

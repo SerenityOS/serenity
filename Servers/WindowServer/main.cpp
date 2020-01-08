@@ -34,6 +34,7 @@ int main(int, char**)
         wm_config->read_num_entry("Screen", "Height", 768));
     WSCompositor::the();
     auto wm = WSWindowManager::construct(*palette);
+    auto mm = WSMenuManager::construct();
 
     dbgprintf("Entering WindowServer main loop.\n");
     loop.exec();

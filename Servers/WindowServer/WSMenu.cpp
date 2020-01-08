@@ -127,7 +127,7 @@ WSWindow& WSMenu::ensure_menu_window()
 void WSMenu::draw()
 {
     auto palette = WSWindowManager::the().palette();
-    m_theme_index_at_last_paint = WSWindowManager::the().menu_manager().theme_index();
+    m_theme_index_at_last_paint = WSMenuManager::the().theme_index();
 
     ASSERT(menu_window());
     ASSERT(menu_window()->backing_store());
@@ -205,10 +205,10 @@ void WSMenu::redraw_for_new_hovered_item()
 {
     if (m_hovered_item && m_hovered_item->is_submenu()) {
         ASSERT(m_hovered_item == &m_items.at(m_current_index));
-        WSWindowManager::the().menu_manager().close_everyone_not_in_lineage(*m_hovered_item->submenu());
+        WSMenuManager::the().close_everyone_not_in_lineage(*m_hovered_item->submenu());
         m_hovered_item->submenu()->popup(m_hovered_item->rect().top_right().translated(menu_window()->rect().location()), true);
     } else {
-        WSWindowManager::the().menu_manager().close_everyone_not_in_lineage(*this);
+        WSMenuManager::the().close_everyone_not_in_lineage(*this);
     }
     redraw();
 }
@@ -359,7 +359,7 @@ void WSMenu::did_activate(WSMenuItem& item)
     if (on_item_activation)
         on_item_activation(item);
 
-    WSWindowManager::the().menu_manager().close_bar();
+    WSMenuManager::the().close_bar();
 
     if (m_client)
         m_client->post_message(WindowClient::MenuItemActivated(m_menu_id, item.identifier()));
@@ -385,12 +385,12 @@ WSMenuItem* WSMenu::item_at(const Point& position)
 
 void WSMenu::close()
 {
-    WSWindowManager::the().menu_manager().close_menu_and_descendants(*this);
+    WSMenuManager::the().close_menu_and_descendants(*this);
 }
 
 void WSMenu::redraw_if_theme_changed()
 {
-    if (m_theme_index_at_last_paint != WSWindowManager::the().menu_manager().theme_index())
+    if (m_theme_index_at_last_paint != WSMenuManager::the().theme_index())
         redraw();
 }
 
@@ -412,7 +412,7 @@ void WSMenu::popup(const Point& position, bool is_submenu)
 
     window.move_to(adjusted_pos);
     window.set_visible(true);
-    WSWindowManager::the().menu_manager().set_current_menu(this, is_submenu);
+    WSMenuManager::the().set_current_menu(this, is_submenu);
 }
 
 bool WSMenu::is_menu_ancestor_of(const WSMenu& other) const
