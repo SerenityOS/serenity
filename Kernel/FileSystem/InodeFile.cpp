@@ -50,7 +50,13 @@ String InodeFile::absolute_path(const FileDescription& description) const
 
 KResult InodeFile::truncate(off_t size)
 {
-    return m_inode->truncate(size);
+    auto truncate_result = m_inode->truncate(size);
+    if (truncate_result.is_error())
+        return truncate_result;
+    int mtime_result = m_inode->set_mtime(kgettimeofday().tv_sec);
+    if (mtime_result != 0)
+        return KResult(mtime_result);
+    return KSuccess;
 }
 
 KResult InodeFile::chown(uid_t uid, gid_t gid)
