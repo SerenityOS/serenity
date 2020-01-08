@@ -38,6 +38,7 @@ static u32 s_seconds_since_boot;
 
 void timer_interrupt_handler(RegisterDump regs)
 {
+    clac();
     IRQHandlerScope scope(IRQ_TIMER);
     if (++s_ticks_this_second >= TICKS_PER_SECOND) {
         // FIXME: Synchronize with the RTC somehow to prevent drifting apart.
