@@ -189,18 +189,21 @@ void handle_crash(RegisterDump& regs, const char* description, int signal)
 EH_ENTRY_NO_CODE(6, illegal_instruction);
 void illegal_instruction_handler(RegisterDump regs)
 {
+    clac();
     handle_crash(regs, "Illegal instruction", SIGILL);
 }
 
 EH_ENTRY_NO_CODE(0, divide_error);
 void divide_error_handler(RegisterDump regs)
 {
+    clac();
     handle_crash(regs, "Divide error", SIGFPE);
 }
 
 EH_ENTRY(13, general_protection_fault);
 void general_protection_fault_handler(RegisterDump regs)
 {
+    clac();
     handle_crash(regs, "General protection fault", SIGSEGV);
 }
 
@@ -217,6 +220,7 @@ void fpu_exception_handler(RegisterDump)
 EH_ENTRY(14, page_fault);
 void page_fault_handler(RegisterDump regs)
 {
+    clac();
     ASSERT(current);
 
     u32 fault_address;
@@ -491,6 +495,7 @@ void load_task_register(u16 selector)
 
 void handle_irq(RegisterDump regs)
 {
+    clac();
     ASSERT(regs.isr_number >= 0x50 && regs.isr_number <= 0x5f);
     u8 irq = (u8)(regs.isr_number - 0x50);
     if (s_irq_handler[irq])
