@@ -140,6 +140,22 @@ void test_tmpfs_read_past_end()
     close(fd);
 }
 
+void test_procfs_read_past_end()
+{
+    int fd = open("/proc/uptime", O_RDONLY);
+    ASSERT(fd >= 0);
+
+    int rc = lseek(fd, 4096, SEEK_SET);
+    ASSERT(rc == 4096);
+
+    char buffer[16];
+    int nread = read(fd, buffer, sizeof(buffer));
+    if (nread != 0) {
+        fprintf(stderr, "Expected 0-length read past end of file in /proc\n");
+    }
+    close(fd);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -160,6 +176,7 @@ int main(int, char**)
     test_ftruncate_negative();
     test_mmap_directory();
     test_tmpfs_read_past_end();
+    test_procfs_read_past_end();
 
     return 0;
 }
