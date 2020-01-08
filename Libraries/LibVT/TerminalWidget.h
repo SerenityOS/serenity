@@ -72,6 +72,7 @@ private:
     virtual void focusin_event(CEvent&) override;
     virtual void focusout_event(CEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
+    virtual void did_change_font() override;
 
     // ^TerminalClient
     virtual void beep() override;
@@ -86,6 +87,8 @@ private:
 
     void update_cursor();
     void invalidate_cursor();
+
+    void relayout(const Size&);
 
     Size compute_base_size() const;
     int first_selection_column_on_row(int row) const;

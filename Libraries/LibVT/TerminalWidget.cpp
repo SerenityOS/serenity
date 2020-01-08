@@ -391,16 +391,24 @@ void TerminalWidget::force_repaint()
 
 void TerminalWidget::resize_event(GResizeEvent& event)
 {
+    relayout(event.size());
+}
+
+void TerminalWidget::relayout(const Size& size)
+{
+    if (!m_scrollbar)
+        return;
+
     auto base_size = compute_base_size();
-    int new_columns = (event.size().width() - base_size.width()) / font().glyph_width('x');
-    int new_rows = (event.size().height() - base_size.height()) / m_line_height;
+    int new_columns = (size.width() - base_size.width()) / font().glyph_width('x');
+    int new_rows = (size.height() - base_size.height()) / m_line_height;
     m_terminal.set_size(new_columns, new_rows);
 
     Rect scrollbar_rect = {
-        event.size().width() - m_scrollbar->width() - frame_thickness(),
+        size.width() - m_scrollbar->width() - frame_thickness(),
         frame_thickness(),
         m_scrollbar->width(),
-        event.size().height() - frame_thickness() * 2,
+        size.height() - frame_thickness() * 2,
     };
     m_scrollbar->set_relative_rect(scrollbar_rect);
 }
@@ -653,4 +661,12 @@ void TerminalWidget::context_menu_event(GContextMenuEvent& event)
         m_context_menu->add_action(paste_action());
     }
     m_context_menu->popup(event.screen_position());
+}
+
+void TerminalWidget::did_change_font()
+{
+    GFrame::did_change_font();
+    m_line_height = font().glyph_height() + m_line_spacing;
+    if (!size().is_empty())
+        relayout(size());
 }
