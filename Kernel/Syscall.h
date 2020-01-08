@@ -96,7 +96,7 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(chown)                      \
     __ENUMERATE_SYSCALL(fchmod)                     \
     __ENUMERATE_SYSCALL(symlink)                    \
-    __ENUMERATE_SYSCALL(restore_signal_mask)        \
+    __ENUMERATE_REMOVED_SYSCALL(set_signal_mask)    \
     __ENUMERATE_SYSCALL(get_shared_buffer_size)     \
     __ENUMERATE_SYSCALL(seal_shared_buffer)         \
     __ENUMERATE_SYSCALL(sendto)                     \

@@ -199,7 +199,6 @@ public:
     int sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen);
     int sys$sched_setparam(pid_t pid, const struct sched_param* param);
     int sys$sched_getparam(pid_t pid, struct sched_param* param);
-    int sys$restore_signal_mask(u32 mask);
     int sys$create_thread(void* (*)(void*), void* argument, const Syscall::SC_create_thread_params*);
     void sys$exit_thread(void*);
     int sys$join_thread(int tid, void** exit_value);
