@@ -4,6 +4,7 @@
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
+#include <LibGUI/GActionGroup.h>
 #include <LibGUI/GApplication.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GFontDatabase.h>
@@ -223,16 +224,25 @@ int main(int argc, char** argv)
     edit_menu->add_action(terminal->paste_action());
     menubar->add_menu(move(edit_menu));
 
+
+    GActionGroup font_action_group;
+    font_action_group.set_exclusive(true);
     auto font_menu = GMenu::construct("Font");
     GFontDatabase::the().for_each_fixed_width_font([&](const StringView& font_name) {
-        font_menu->add_action(GAction::create(font_name, [&](const GAction& action) {
+        auto action = GAction::create(font_name, [&](GAction& action) {
+            action.set_checked(true);
             terminal->set_font(GFontDatabase::the().get_by_name(action.text()));
             auto metadata = GFontDatabase::the().get_metadata_by_name(action.text());
             ASSERT(metadata.has_value());
             config->write_entry("Text", "Font", metadata.value().path);
             config->sync();
             terminal->force_repaint();
-        }));
+        });
+        font_action_group.add_action(*action);
+        action->set_checkable(true);
+        if (terminal->font().name() == font_name)
+            action->set_checked(true);
+        font_menu->add_action(*action);
     });
     menubar->add_menu(move(font_menu));
 
