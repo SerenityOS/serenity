@@ -62,6 +62,7 @@ int main(int argc, char** argv)
         GApplication::the().quit(0);
     };
 
+    quit_button->set_focus(true);
     window->show();
     return app.exec();
 }
