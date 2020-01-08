@@ -238,8 +238,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         descriptor_or_error.value()->set_original_inode({}, inode);
         return descriptor_or_error;
     }
-    if (should_truncate_file)
+    if (should_truncate_file) {
         inode.truncate(0);
+        inode.set_mtime(kgettimeofday().tv_sec);
+    }
     return FileDescription::create(custody);
 }
 
