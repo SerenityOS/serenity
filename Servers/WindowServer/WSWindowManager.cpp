@@ -43,8 +43,6 @@ WSWindowManager::WSWindowManager(const PaletteImpl& palette)
 
     reload_config(false);
 
-    m_menu_manager.setup();
-
     invalidate();
     WSCompositor::the().compose();
 }
@@ -117,7 +115,7 @@ const Font& WSWindowManager::app_menu_font() const
 void WSWindowManager::set_resolution(int width, int height)
 {
     WSCompositor::the().set_resolution(width, height);
-    m_menu_manager.set_needs_window_resize();
+    WSMenuManager::the().set_needs_window_resize();
     WSClientConnection::for_each_client([&](WSClientConnection& client) {
         client.notify_about_new_screen_rect(WSScreen::the().rect());
     });
@@ -275,7 +273,7 @@ void WSWindowManager::notify_rect_changed(WSWindow& window, const Rect& old_rect
 
     tell_wm_listeners_window_rect_changed(window);
 
-    m_menu_manager.refresh();
+    WSMenuManager::the().refresh();
 }
 
 void WSWindowManager::recompute_occlusions()
@@ -710,12 +708,12 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
 
     // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
     if (!active_window_is_modal() && menubar_rect().contains(event.position())) {
-        m_menu_manager.dispatch_event(event);
+        WSMenuManager::the().dispatch_event(event);
         return;
     }
 
-    if (!menu_manager().open_menu_stack().is_empty()) {
-        auto* topmost_menu = menu_manager().open_menu_stack().last().ptr();
+    if (!WSMenuManager::the().open_menu_stack().is_empty()) {
+        auto* topmost_menu = WSMenuManager::the().open_menu_stack().last().ptr();
         ASSERT(topmost_menu);
         auto* window = topmost_menu->menu_window();
         ASSERT(window);
@@ -741,13 +739,13 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
             }
 
             if (event.type() == WSEvent::MouseDown) {
-                m_menu_manager.close_bar();
+                WSMenuManager::the().close_bar();
                 topmost_menu->set_window_menu_open(false);
             }
         }
 
         if (event.type() == WSEvent::MouseMove) {
-            for (auto& menu : m_menu_manager.open_menu_stack()) {
+            for (auto& menu : WSMenuManager::the().open_menu_stack()) {
                 if (!menu)
                     continue;
                 if (!menu->menu_window()->rect().contains(event.position()))
@@ -914,7 +912,7 @@ Rect WSWindowManager::menubar_rect() const
 {
     if (active_fullscreen_window())
         return {};
-    return m_menu_manager.menubar_rect();
+    return WSMenuManager::the().menubar_rect();
 }
 
 void WSWindowManager::draw_window_switcher()
@@ -994,11 +992,11 @@ void WSWindowManager::event(CEvent& event)
         // FIXME: I would prefer to be WSEvent::KeyUp, and be at the top of this function
         // However, the modifier is Invalid of Mod_Logo for a keyup event. Move after a fix is made.
         if (key_event.type() == WSEvent::KeyDown && key_event.modifiers() == Mod_Logo) {
-            m_menu_manager.open_menu(m_menu_manager.system_menu());
+            WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
             return;
         }
 
-        m_menu_manager.dispatch_event(event);
+        WSMenuManager::the().dispatch_event(event);
     }
 
     CObject::event(event);
@@ -1047,10 +1045,10 @@ void WSWindowManager::set_active_window(WSWindow* window)
 
         auto* client = window->client();
         ASSERT(client);
-        menu_manager().set_current_menubar(client->app_menubar());
+        WSMenuManager::the().set_current_menubar(client->app_menubar());
         tell_wm_listeners_window_state_changed(*m_active_window);
     } else {
-        menu_manager().set_current_menubar(nullptr);
+        WSMenuManager::the().set_current_menubar(nullptr);
     }
 
     if (active_client != previously_active_client) {
@@ -1093,7 +1091,7 @@ void WSWindowManager::invalidate(const WSWindow& window)
 void WSWindowManager::invalidate(const WSWindow& window, const Rect& rect)
 {
     if (window.type() == WSWindowType::MenuApplet) {
-        menu_manager().invalidate_applet(window, rect);
+        WSMenuManager::the().invalidate_applet(window, rect);
         return;
     }
 
@@ -1119,7 +1117,7 @@ const WSClientConnection* WSWindowManager::active_client() const
 void WSWindowManager::notify_client_changed_app_menubar(WSClientConnection& client)
 {
     if (active_client() == &client)
-        menu_manager().set_current_menubar(client.app_menubar());
+        WSMenuManager::the().set_current_menubar(client.app_menubar());
 }
 
 const WSCursor& WSWindowManager::active_cursor() const

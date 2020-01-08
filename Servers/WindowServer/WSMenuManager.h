@@ -11,10 +11,11 @@ class AClientConnection;
 class WSMenuManager final : public CObject {
     C_OBJECT(WSMenuManager)
 public:
+    static WSMenuManager& the();
+
     WSMenuManager();
     virtual ~WSMenuManager() override;
 
-    void setup();
     void refresh();
 
     virtual void event(CEvent&) override;

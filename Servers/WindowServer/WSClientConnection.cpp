@@ -49,7 +49,7 @@ WSClientConnection::WSClientConnection(CLocalSocket& client_socket, int client_i
 
 WSClientConnection::~WSClientConnection()
 {
-    WSWindowManager::the().menu_manager().close_all_menus_from_client({}, *this);
+    WSMenuManager::the().close_all_menus_from_client({}, *this);
     auto windows = move(m_windows);
 }
 
@@ -85,7 +85,7 @@ OwnPtr<WindowServer::DestroyMenubarResponse> WSClientConnection::handle(const Wi
         return nullptr;
     }
     auto& menubar = *(*it).value;
-    WSWindowManager::the().menu_manager().close_menubar(menubar);
+    WSMenuManager::the().close_menubar(menubar);
     m_menubars.remove(it);
     return make<WindowServer::DestroyMenubarResponse>();
 }
@@ -405,7 +405,7 @@ OwnPtr<WindowServer::CreateWindowResponse> WSClientConnection::handle(const Wind
     window->set_base_size(message.base_size());
     window->invalidate();
     if (window->type() == WSWindowType::MenuApplet)
-        WSWindowManager::the().menu_manager().add_applet(*window);
+        WSMenuManager::the().add_applet(*window);
     m_windows.set(window_id, move(window));
     return make<WindowServer::CreateWindowResponse>(window_id);
 }
@@ -420,7 +420,7 @@ OwnPtr<WindowServer::DestroyWindowResponse> WSClientConnection::handle(const Win
     auto& window = *(*it).value;
 
     if (window.type() == WSWindowType::MenuApplet)
-        WSWindowManager::the().menu_manager().remove_applet(window);
+        WSMenuManager::the().remove_applet(window);
 
     WSWindowManager::the().invalidate(window);
     remove_child(window);

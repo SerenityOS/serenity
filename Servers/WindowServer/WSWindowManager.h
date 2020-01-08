@@ -94,9 +94,6 @@ public:
 
     void draw_window_switcher();
 
-    WSMenuManager& menu_manager() { return m_menu_manager; }
-    const WSMenuManager& menu_manager() const { return m_menu_manager; }
-
     Rect menubar_rect() const;
 
     const WSCursor& active_cursor() const;
@@ -259,7 +256,6 @@ private:
     u8 m_keyboard_modifiers { 0 };
 
     WSWindowSwitcher m_switcher;
-    WSMenuManager m_menu_manager;
 
     WeakPtr<WSButton> m_cursor_tracking_button;
     WeakPtr<WSButton> m_hovered_button;
