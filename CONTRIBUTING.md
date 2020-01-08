@@ -15,7 +15,7 @@ Nobody is perfect, and sometimes we mess things up. That said, here are some goo
 **Do:**
 
 * Write in idiomatic Serenity C++17, using the `AK` containers in all code.
-* Conform to the project coding style. Please use `clang-format` (version 8 or newer) to automatically format C++ files.
+* Conform to the project coding style found in [CodingStyle.md](https://github.com/SerenityOS/serenity/blob/master/Documentation/CodingStyle.md). Please use `clang-format` (version 8 or newer) to automatically format C++ files.
 * Choose expressive variable, function and class names. Make it as obvious as possible what the code is doing.
 * Split your changes into separate, atomic commits.
 * Make sure your commits are rebased on the master branch.
