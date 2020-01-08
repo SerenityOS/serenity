@@ -708,6 +708,12 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
         deliver_mouse_event(*window, translated_event);
     }
 
+    // FIXME: Now that the menubar has a dedicated window, is this special-casing really necessary?
+    if (!active_window_is_modal() && menubar_rect().contains(event.position())) {
+        m_menu_manager.dispatch_event(event);
+        return;
+    }
+
     if (!menu_manager().open_menu_stack().is_empty()) {
         auto* topmost_menu = menu_manager().open_menu_stack().last().ptr();
         ASSERT(topmost_menu);
