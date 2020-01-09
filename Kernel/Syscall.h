@@ -16,7 +16,6 @@ typedef u32 socklen_t;
 #define ENUMERATE_SYSCALLS                          \
     __ENUMERATE_SYSCALL(sleep)                      \
     __ENUMERATE_SYSCALL(yield)                      \
-    __ENUMERATE_REMOVED_SYSCALL(putch)              \
     __ENUMERATE_SYSCALL(open)                       \
     __ENUMERATE_SYSCALL(close)                      \
     __ENUMERATE_SYSCALL(read)                       \
@@ -50,7 +49,6 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(execve)                     \
     __ENUMERATE_SYSCALL(geteuid)                    \
     __ENUMERATE_SYSCALL(getegid)                    \
-    __ENUMERATE_REMOVED_SYSCALL(isatty)             \
     __ENUMERATE_SYSCALL(getdtablesize)              \
     __ENUMERATE_SYSCALL(dup)                        \
     __ENUMERATE_SYSCALL(dup2)                       \
@@ -79,7 +77,6 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(select)                     \
     __ENUMERATE_SYSCALL(unlink)                     \
     __ENUMERATE_SYSCALL(poll)                       \
-    __ENUMERATE_REMOVED_SYSCALL(read_tsc)           \
     __ENUMERATE_SYSCALL(rmdir)                      \
     __ENUMERATE_SYSCALL(chmod)                      \
     __ENUMERATE_SYSCALL(usleep)                     \
@@ -96,7 +93,6 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(chown)                      \
     __ENUMERATE_SYSCALL(fchmod)                     \
     __ENUMERATE_SYSCALL(symlink)                    \
-    __ENUMERATE_REMOVED_SYSCALL(set_signal_mask)    \
     __ENUMERATE_SYSCALL(get_shared_buffer_size)     \
     __ENUMERATE_SYSCALL(seal_shared_buffer)         \
     __ENUMERATE_SYSCALL(sendto)                     \
@@ -107,8 +103,6 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(gettid)                     \
     __ENUMERATE_SYSCALL(donate)                     \
     __ENUMERATE_SYSCALL(rename)                     \
-    __ENUMERATE_REMOVED_SYSCALL(shm_open)           \
-    __ENUMERATE_REMOVED_SYSCALL(shm_unlink)         \
     __ENUMERATE_SYSCALL(ftruncate)                  \
     __ENUMERATE_SYSCALL(systrace)                   \
     __ENUMERATE_SYSCALL(exit_thread)                \
