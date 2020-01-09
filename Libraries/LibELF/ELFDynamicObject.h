@@ -6,7 +6,7 @@
 
 class ELFDynamicObject {
 public:
-    explicit ELFDynamicObject(VirtualAddress base_address, u32 dynamic_offset);
+    explicit ELFDynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_address);
     ~ELFDynamicObject();
     void dump() const;
 
@@ -196,7 +196,7 @@ private:
     void for_each_dynamic_entry(F) const;
 
     VirtualAddress m_base_address;
-    u32 m_dynamic_offset;
+    VirtualAddress m_dynamic_address;
     Symbol m_the_undefined_symbol { *this, 0, {} };
 
     unsigned m_symbol_count { 0 };
@@ -255,7 +255,7 @@ inline void ELFDynamicObject::for_each_symbol(F func) const
 template<typename F>
 inline void ELFDynamicObject::for_each_dynamic_entry(F func) const
 {
-    auto* dyns = reinterpret_cast<const Elf32_Dyn*>(m_base_address.offset(m_dynamic_offset).as_ptr());
+    auto* dyns = reinterpret_cast<const Elf32_Dyn*>(m_dynamic_address.as_ptr());
     for (unsigned i = 0;; ++i) {
         auto&& dyn = DynamicEntry(dyns[i]);
         if (dyn.tag() == DT_NULL)
