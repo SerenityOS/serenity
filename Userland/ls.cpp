@@ -199,14 +199,14 @@ bool print_filesystem_object(const String& path, const String& name, const struc
     passwd* pwd = getpwuid(st.st_uid);
     group* grp = getgrgid(st.st_gid);
     if (!flag_print_numeric && pwd) {
-        printf(" %5s", pwd->pw_name);
+        printf(" %7s", pwd->pw_name);
     } else {
-        printf(" %5u", st.st_uid);
+        printf(" %7u", st.st_uid);
     }
     if (!flag_print_numeric && grp) {
-        printf(" %5s", grp->gr_name);
+        printf(" %7s", grp->gr_name);
     } else {
-        printf(" %5u", st.st_gid);
+        printf(" %7u", st.st_gid);
     }
 
     if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode)) {
