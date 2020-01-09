@@ -3,35 +3,21 @@
 #include <assert.h>
 #include <stdio.h>
 
-
-// FIXME: Things defined in crt0 >:(
-//     We need to figure out a better way to get these symbols defined and available
-//     Even if we're linking a shared object.
-__thread int errno;
 char* __static_environ[] = { nullptr }; // We don't get the environment without some libc workarounds..
-char** environ = __static_environ;
-bool __environ_is_malloced = false;
-extern unsigned __stack_chk_guard;
-unsigned __stack_chk_guard = (unsigned)0xc0000c13;
-
-[[noreturn]] void __stack_chk_fail()
-{
-    ASSERT_NOT_REACHED();
-}
 
 // FIXME: Because we need to call printf, and we don't have access to the stout file descriptor
-//     from the main executable, we need to create our own copy in __stdio_init :/
-//     Same deal for malloc init. We're essentially manually calling __libc_init here.
-extern "C" void __stdio_init();
-extern "C" void __malloc_init();
+//     from the main executable. We need to call __libc_init....
+extern "C" void __libc_init();
+extern "C" bool __environ_is_malloced;
 
 class Global {
 public:
     Global(int i)
         : m_i(i)
     {
-        __malloc_init();
-        __stdio_init();
+        __environ_is_malloced = false;
+        environ = __static_environ;
+        __libc_init();
     }
 
     int get_i() const { return m_i; }
