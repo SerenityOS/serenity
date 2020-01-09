@@ -336,6 +336,9 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
             return (void*)-EINVAL;
         if (static_cast<size_t>(offset) & ~PAGE_MASK)
             return (void*)-EINVAL;
+        // FIXME: Implement MAP_PRIVATE for FileDescription-backed mmap
+        if (map_private)
+            return (void*)-ENOTSUP;
         auto description = file_description(fd);
         if (!description)
             return (void*)-EBADF;
