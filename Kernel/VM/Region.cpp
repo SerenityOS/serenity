@@ -9,30 +9,33 @@
 //#define MM_DEBUG
 //#define PAGE_FAULT_DEBUG
 
-Region::Region(const Range& range, const String& name, u8 access)
+Region::Region(const Range& range, const String& name, u8 access, bool cacheable)
     : m_range(range)
     , m_vmobject(AnonymousVMObject::create_with_size(size()))
     , m_name(name)
     , m_access(access)
+    , m_cacheable(cacheable)
 {
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, NonnullRefPtr<Inode> inode, const String& name, u8 access)
+Region::Region(const Range& range, NonnullRefPtr<Inode> inode, const String& name, u8 access, bool cacheable)
     : m_range(range)
     , m_vmobject(InodeVMObject::create_with_inode(*inode))
     , m_name(name)
     , m_access(access)
+    , m_cacheable(cacheable)
 {
     MM.register_region(*this);
 }
 
-Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access)
+Region::Region(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, u8 access, bool cacheable)
     : m_range(range)
     , m_offset_in_vmobject(offset_in_vmobject)
     , m_vmobject(move(vmobject))
     , m_name(name)
     , m_access(access)
+    , m_cacheable(cacheable)
 {
     MM.register_region(*this);
 }
@@ -164,37 +167,37 @@ size_t Region::amount_shared() const
     return bytes;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, const StringView& name, u8 access)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, const StringView& name, u8 access, bool cacheable)
 {
-    auto region = make<Region>(range, name, access);
+    auto region = make<Region>(range, name, access, cacheable);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access);
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<Inode> inode, const StringView& name, u8 access)
+NonnullOwnPtr<Region> Region::create_user_accessible(const Range& range, NonnullRefPtr<Inode> inode, const StringView& name, u8 access, bool cacheable)
 {
-    auto region = make<Region>(range, move(inode), name, access);
+    auto region = make<Region>(range, move(inode), name, access, cacheable);
     region->m_user_accessible = true;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const StringView& name, u8 access)
+NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable)
 {
-    auto region = make<Region>(range, name, access);
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access, cacheable);
     region->m_user_accessible = false;
     return region;
 }
 
-NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access)
+NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const StringView& name, u8 access, bool cacheable)
 {
-    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access);
+    auto region = make<Region>(range, name, access, cacheable);
     region->m_user_accessible = false;
     return region;
 }
@@ -228,6 +231,7 @@ void Region::map_individual_page_impl(size_t page_index)
         pte.set_physical_page_base(0);
         pte.set_present(false);
     } else {
+        pte.set_cache_disabled(!m_cacheable);
         pte.set_physical_page_base(physical_page->paddr().get());
         pte.set_present(is_readable());
         if (should_cow(page_index))
@@ -237,11 +241,11 @@ void Region::map_individual_page_impl(size_t page_index)
         if (g_cpu_supports_nx)
             pte.set_execute_disabled(!is_executable());
         pte.set_user_allowed(is_user_accessible());
-    }
-    m_page_directory->flush(page_vaddr);
 #ifdef MM_DEBUG
     dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
 #endif
+    }
+    MM.flush_tlb(page_vaddr);
 }
 
 void Region::remap_page(size_t page_index)
@@ -263,7 +267,7 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
         pte.set_present(false);
         pte.set_writable(false);
         pte.set_user_allowed(false);
-        m_page_directory->flush(vaddr);
+        MM.flush_tlb(vaddr);
 #ifdef MM_DEBUG
         auto& physical_page = vmobject().physical_pages()[first_page_index() + i];
         dbgprintf("MM: >> Unmapped V%p => P%p <<\n", vaddr.get(), physical_page ? physical_page->paddr().get() : 0);
@@ -274,11 +278,16 @@ void Region::unmap(ShouldDeallocateVirtualMemoryRange deallocate_range)
     m_page_directory = nullptr;
 }
 
-void Region::map(PageDirectory& page_directory)
+void Region::set_page_directory(PageDirectory& page_directory)
 {
     ASSERT(!m_page_directory || m_page_directory == &page_directory);
     InterruptDisabler disabler;
     m_page_directory = page_directory;
+}
+void Region::map(PageDirectory& page_directory)
+{
+    set_page_directory(page_directory);
+    InterruptDisabler disabler;
 #ifdef MM_DEBUG
     dbgprintf("MM: Region::map() will map VMO pages %u - %u (VMO page count: %u)\n", first_page_index(), last_page_index(), vmobject().page_count());
 #endif

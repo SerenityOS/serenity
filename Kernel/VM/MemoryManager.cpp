@@ -321,7 +321,7 @@ void MemoryManager::create_identity_mapping(PageDirectory& page_directory, Virtu
         pte.set_user_allowed(false);
         pte.set_present(true);
         pte.set_writable(true);
-        page_directory.flush(pte_address);
+        flush_tlb(pte_address);
     }
 }
 
@@ -394,7 +394,7 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
     return region->handle_fault(fault);
 }
 
-OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool should_commit)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringView& name, u8 access, bool user_accessible, bool should_commit, bool cacheable)
 {
     InterruptDisabler disabler;
     ASSERT(!(size % PAGE_SIZE));
@@ -402,28 +402,47 @@ OwnPtr<Region> MemoryManager::allocate_kernel_region(size_t size, const StringVi
     ASSERT(range.is_valid());
     OwnPtr<Region> region;
     if (user_accessible)
-        region = Region::create_user_accessible(range, name, access);
+        region = Region::create_user_accessible(range, name, access, cacheable);
     else
-        region = Region::create_kernel_only(range, name, access);
-    region->map(kernel_page_directory());
+        region = Region::create_kernel_only(range, name, access, cacheable);
+    region->set_page_directory(kernel_page_directory());
     // FIXME: It would be cool if these could zero-fill on demand instead.
     if (should_commit)
         region->commit();
     return region;
 }
 
-OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name, u8 access)
-{
-    return allocate_kernel_region(size, name, access, true);
-}
-
-OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name, u8 access)
+OwnPtr<Region> MemoryManager::allocate_kernel_region(PhysicalAddress paddr, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
 {
     InterruptDisabler disabler;
     ASSERT(!(size % PAGE_SIZE));
     auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
     ASSERT(range.is_valid());
-    auto region = make<Region>(range, vmobject, 0, name, access);
+    OwnPtr<Region> region;
+    if (user_accessible)
+        region = Region::create_user_accessible(range, AnonymousVMObject::create_for_physical_range(paddr, size), 0, name, access, cacheable);
+    else
+        region = Region::create_kernel_only(range, AnonymousVMObject::create_for_physical_range(paddr, size), 0, name, access, cacheable);
+    region->map(kernel_page_directory());
+    return region;
+}
+
+OwnPtr<Region> MemoryManager::allocate_user_accessible_kernel_region(size_t size, const StringView& name, u8 access, bool cacheable)
+{
+    return allocate_kernel_region(size, name, access, true, true, cacheable);
+}
+
+OwnPtr<Region> MemoryManager::allocate_kernel_region_with_vmobject(VMObject& vmobject, size_t size, const StringView& name, u8 access, bool user_accessible, bool cacheable)
+{
+    InterruptDisabler disabler;
+    ASSERT(!(size % PAGE_SIZE));
+    auto range = kernel_page_directory().range_allocator().allocate_anywhere(size);
+    ASSERT(range.is_valid());
+    OwnPtr<Region> region;
+    if (user_accessible)
+        region = Region::create_user_accessible(range, vmobject, 0, name, access, cacheable);
+    else
+        region = Region::create_kernel_only(range, vmobject, 0, name, access, cacheable);
     region->map(kernel_page_directory());
     return region;
 }
@@ -573,6 +592,9 @@ void MemoryManager::flush_entire_tlb()
 
 void MemoryManager::flush_tlb(VirtualAddress vaddr)
 {
+#ifdef MM_DEBUG
+    dbgprintf("MM: Flush page V%p\n", vaddr.get());
+#endif
     asm volatile("invlpg %0"
                  :
                  : "m"(*(char*)vaddr.get())
