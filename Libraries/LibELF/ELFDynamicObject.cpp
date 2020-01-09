@@ -8,9 +8,9 @@
 
 static const char* name_for_dtag(Elf32_Sword d_tag);
 
-ELFDynamicObject::ELFDynamicObject(VirtualAddress base_address, u32 dynamic_offset)
+ELFDynamicObject::ELFDynamicObject(VirtualAddress base_address, VirtualAddress dynamic_section_addresss)
     : m_base_address(base_address)
-    , m_dynamic_offset(dynamic_offset)
+    , m_dynamic_address(dynamic_section_addresss)
 {
     parse();
 }
@@ -32,7 +32,7 @@ void ELFDynamicObject::dump() const
         return IterationDecision::Continue;
     });
 
-    dbgprintf("Dynamic section at offset 0x%x contains %zu entries:\n", m_dynamic_offset, num_dynamic_sections);
+    dbgprintf("Dynamic section at address 0x%x contains %zu entries:\n", m_dynamic_address.as_ptr(), num_dynamic_sections);
     dbgprintf(builder.to_string().characters());
 }
 

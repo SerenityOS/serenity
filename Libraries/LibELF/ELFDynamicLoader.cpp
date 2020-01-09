@@ -32,7 +32,8 @@ ELFDynamicLoader::ELFDynamicLoader(const char* filename, int fd, size_t size)
 {
     String file_mmap_name = String::format("ELF_DYN: %s", m_filename.characters());
 
-    m_file_mapping = mmap_with_name(nullptr, size, PROT_READ, MAP_PRIVATE, m_image_fd, 0, file_mmap_name.characters());
+    // FIXME: When MAP_PRIVATE is implemented for file-backed regions, change to MAP_PRIVATE
+    m_file_mapping = mmap_with_name(nullptr, size, PROT_READ, MAP_SHARED, m_image_fd, 0, file_mmap_name.characters());
     if (MAP_FAILED == m_file_mapping) {
         m_valid = false;
     }
@@ -64,20 +65,13 @@ bool ELFDynamicLoader::load_from_image(unsigned flags)
         return false;
     }
 
-    const ELFImage::DynamicSection probably_dynamic_section = elf_image.dynamic_section();
-    if (StringView(".dynamic") != probably_dynamic_section.name() || probably_dynamic_section.type() != SHT_DYNAMIC) {
-        m_valid = false;
-        return false;
-    }
-
 #ifdef DYNAMIC_LOAD_VERBOSE
     m_image->dump();
 #endif
 
     load_program_headers(elf_image);
 
-    const ELFImage::DynamicSection image_dynamic_section = elf_image.dynamic_section();
-    m_dynamic_object = AK::make<ELFDynamicObject>(m_text_segment_load_address, image_dynamic_section.offset());
+    m_dynamic_object = AK::make<ELFDynamicObject>(m_text_segment_load_address, m_dynamic_section_address);
 
     return load_stage_2(flags);
 }
@@ -94,7 +88,7 @@ bool ELFDynamicLoader::load_stage_2(unsigned flags)
     if (m_dynamic_object->has_text_relocations()) {
         ASSERT(m_text_segment_load_address.get() != 0);
         if (0 > mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_WRITE)) {
-            perror("mprotect"); // FIXME: dlerror?
+            perror("mprotect .text: PROT_READ | PROT_WRITE"); // FIXME: dlerror?
             return false;
         }
     }
@@ -105,7 +99,7 @@ bool ELFDynamicLoader::load_stage_2(unsigned flags)
     // Clean up our setting of .text to PROT_READ | PROT_WRITE
     if (m_dynamic_object->has_text_relocations()) {
         if (0 > mprotect(m_text_segment_load_address.as_ptr(), m_text_segment_size, PROT_READ | PROT_EXEC)) {
-            perror("mprotect"); // FIXME: dlerror?
+            perror("mprotect .text: PROT_READ | PROT_EXEC"); // FIXME: dlerror?
             return false;
         }
     }
@@ -127,6 +121,7 @@ void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
     ProgramHeaderRegion* text_region_ptr = nullptr;
     ProgramHeaderRegion* data_region_ptr = nullptr;
     ProgramHeaderRegion* tls_region_ptr = nullptr;
+    VirtualAddress dynamic_region_desired_vaddr;
 
     elf_image.for_each_program_header([&](const ELFImage::ProgramHeader& program_header) {
         ProgramHeaderRegion new_region;
@@ -143,18 +138,30 @@ void ELFDynamicLoader::load_program_headers(const ELFImage& elf_image)
             else
                 data_region_ptr = &region;
         }
+        else if (region.is_dynamic()) {
+            dynamic_region_desired_vaddr = region.desired_load_address();
+        }
     });
 
     ASSERT(text_region_ptr && data_region_ptr);
 
     // Process regions in order: .text, .data, .tls
     auto* region = text_region_ptr;
-    void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), region->mmap_prot(), MAP_PRIVATE, m_image_fd, region->offset(), String::format(".text: %s", m_filename.characters()).characters());
+    // FIXME: When MAP_PRIVATE is implemented for file-backed regions, change to MAP_PRIVATE without the mprotect and memcpy
+    //void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), region->mmap_prot(), MAP_PRIVATE, m_image_fd, region->offset(), String::format(".text: %s", m_filename.characters()).characters());
+    void* text_segment_begin = mmap_with_name(nullptr, region->required_load_size(), PROT_READ | PROT_WRITE , MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format(".text: %s", m_filename.characters()).characters());
     if (MAP_FAILED == text_segment_begin) {
         ASSERT_NOT_REACHED();
     }
     m_text_segment_size = region->required_load_size();
     m_text_segment_load_address = VirtualAddress { (u32)text_segment_begin };
+    memcpy(m_text_segment_load_address.as_ptr(), (u8*)m_file_mapping + region->offset(), region->size_in_image());
+    if (0 > mprotect(text_segment_begin, m_text_segment_size, region->mmap_prot())) {
+        perror("mprotect .text PROT_READ | PROT_EXEC");
+        ASSERT_NOT_REACHED();
+    }
+
+    m_dynamic_section_address = dynamic_region_desired_vaddr.offset(m_text_segment_load_address.get());
 
     region = data_region_ptr;
     void* data_segment_begin = mmap_with_name((u8*)text_segment_begin + m_text_segment_size, region->required_load_size(), region->mmap_prot(), MAP_ANONYMOUS | MAP_PRIVATE, 0, 0, String::format(".data: %s", m_filename.characters()).characters());

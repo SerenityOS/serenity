@@ -86,4 +86,5 @@ private:
     size_t m_text_segment_size;
 
     VirtualAddress m_tls_segment_address;
+    VirtualAddress m_dynamic_section_address;
 };
