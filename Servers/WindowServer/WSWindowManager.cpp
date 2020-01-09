@@ -940,6 +940,18 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
 
+        if (key_event.type() == WSEvent::KeyUp && key_event.key() == Key_Logo && !m_switcher.is_visible()) {
+            WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
+            return;
+        }
+
+        if (key_event.type() == WSEvent::KeyUp && key_event.key() == Key_Escape) {
+            auto current_menu = WSMenuManager::the().current_menu();
+            if (current_menu)
+                WSMenuManager::the().close_everyone();
+            return;
+        }
+
         if (key_event.type() == WSEvent::KeyDown && ((key_event.modifiers() == Mod_Logo && key_event.key() == Key_Tab) || (key_event.modifiers() == (Mod_Logo | Mod_Shift) && key_event.key() == Key_Tab)))
             m_switcher.show();
         if (m_switcher.is_visible()) {
@@ -989,13 +1001,8 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
 
-        // FIXME: I would prefer to be WSEvent::KeyUp, and be at the top of this function
-        // However, the modifier is Invalid of Mod_Logo for a keyup event. Move after a fix is made.
-        if (key_event.type() == WSEvent::KeyDown && key_event.modifiers() == Mod_Logo) {
-            WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
-            return;
-        }
-
+        // FIXME: We should send events to the MenuManager if a window is open
+        // This should take priority over sending to a window.
         WSMenuManager::the().dispatch_event(event);
     }
 
