@@ -87,6 +87,8 @@ printf "installing users... "
 mkdir -p mnt/home/anon
 mkdir -p mnt/home/nona
 cp ../ReadMe.md mnt/home/anon/
+chmod 700 mnt/home/anon
+chmod 700 mnt/home/nona
 chown -R 100:100 mnt/home/anon
 chown -R 200:200 mnt/home/nona
 echo "done"
