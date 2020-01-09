@@ -63,7 +63,6 @@ static Lock* s_hostname_lock;
 static VirtualAddress s_info_page_address_for_userspace;
 static VirtualAddress s_info_page_address_for_kernel;
 VirtualAddress g_return_to_ring3_from_signal_trampoline;
-VirtualAddress g_return_to_ring0_from_signal_trampoline;
 HashMap<String, OwnPtr<Module>>* g_modules;
 
 pid_t Process::allocate_pid()
