@@ -126,9 +126,6 @@ Thread::~Thread()
     if (selector())
         gdt_free_entry(selector());
 
-    if (m_userspace_stack_region)
-        m_process.deallocate_region(*m_userspace_stack_region);
-
     ASSERT(m_process.m_thread_count);
     m_process.m_thread_count--;
 }
