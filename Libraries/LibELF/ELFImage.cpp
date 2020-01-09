@@ -117,10 +117,6 @@ bool ELFImage::parse()
             if (StringView(".strtab") == section_header_table_string(sh.sh_name))
                 m_string_table_section_index = i;
         }
-        if (sh.sh_type == SHT_DYNAMIC) {
-            ASSERT(!m_dynamic_section_index || m_dynamic_section_index == i);
-            m_dynamic_section_index = i;
-        }
     }
 
     // Then create a name-to-index map.
@@ -217,10 +213,4 @@ const ELFImage::Section ELFImage::lookup_section(const String& name) const
     if (auto it = m_sections.find(name); it != m_sections.end())
         return section((*it).value);
     return section(0);
-}
-
-const ELFImage::DynamicSection ELFImage::dynamic_section() const
-{
-    ASSERT(is_dynamic());
-    return section(m_dynamic_section_index);
 }
