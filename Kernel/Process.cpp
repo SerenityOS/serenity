@@ -1313,9 +1313,8 @@ extern "C" void asm_signal_trampoline_end(void);
 void create_signal_trampolines()
 {
     InterruptDisabler disabler;
-
     // NOTE: We leak this region.
-    auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write | Region::Access::Execute).leak_ptr();
+    auto* trampoline_region = MM.allocate_user_accessible_kernel_region(PAGE_SIZE, "Signal trampolines", Region::Access::Read | Region::Access::Write | Region::Access::Execute, false).leak_ptr();
     g_return_to_ring3_from_signal_trampoline = trampoline_region->vaddr();
 
     u8* trampoline = (u8*)asm_signal_trampoline;

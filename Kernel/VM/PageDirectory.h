@@ -24,8 +24,6 @@ public:
     u32 cr3() const { return m_directory_table->paddr().get(); }
     PageDirectoryPointerTable& table() { return *reinterpret_cast<PageDirectoryPointerTable*>(cr3()); }
 
-    void flush(VirtualAddress);
-
     RangeAllocator& range_allocator() { return m_range_allocator; }
 
     Process* process() { return m_process; }

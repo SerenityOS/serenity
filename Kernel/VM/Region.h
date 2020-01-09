@@ -26,11 +26,11 @@ public:
         Execute = 4,
     };
 
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access);
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access);
-    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access);
-    static NonnullOwnPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access);
-    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, const StringView& name, u8 access, bool cacheable = true);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
+    static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access, bool cacheable = true);
+    static NonnullOwnPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access, bool cacheable = true);
+    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access, bool cacheable = true);
 
     ~Region();
 
@@ -40,6 +40,7 @@ public:
     bool is_readable() const { return m_access & Access::Read; }
     bool is_writable() const { return m_access & Access::Write; }
     bool is_executable() const { return m_access & Access::Execute; }
+    bool is_cacheable() const { return m_cacheable; }
     const String& name() const { return m_name; }
     unsigned access() const { return m_access; }
 
@@ -115,6 +116,7 @@ public:
     void set_writable(bool b) { set_access_bit(Access::Write, b); }
     void set_executable(bool b) { set_access_bit(Access::Execute, b); }
 
+    void set_page_directory(PageDirectory&);
     void map(PageDirectory&);
     enum class ShouldDeallocateVirtualMemoryRange {
         No,
@@ -130,9 +132,9 @@ public:
     Region* m_prev { nullptr };
 
     // NOTE: These are public so we can make<> them.
-    Region(const Range&, const String&, u8 access);
-    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access);
-    Region(const Range&, NonnullRefPtr<Inode>, const String&, u8 access);
+    Region(const Range&, const String&, u8 access, bool cacheable);
+    Region(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const String&, u8 access, bool cacheable);
+    Region(const Range&, NonnullRefPtr<Inode>, const String&, u8 access, bool cacheable);
 
 private:
     Bitmap& ensure_cow_map() const;
@@ -159,6 +161,7 @@ private:
     u8 m_access { 0 };
     bool m_shared { false };
     bool m_user_accessible { false };
+    bool m_cacheable { false };
     bool m_stack { false };
     bool m_mmap { false };
     mutable OwnPtr<Bitmap> m_cow_map;
