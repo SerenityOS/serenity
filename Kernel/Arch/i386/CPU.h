@@ -410,8 +410,8 @@ struct [[gnu::packed]] RegisterDump
     u32 eip;
     u32 cs;
     u32 eflags;
-    u32 esp_if_crossRing;
-    u32 ss_if_crossRing;
+    u32 userspace_esp;
+    u32 userspace_ss;
 };
 
 struct [[gnu::aligned(16)]] FPUState

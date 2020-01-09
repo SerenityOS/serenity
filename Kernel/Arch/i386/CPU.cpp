@@ -135,8 +135,8 @@ static void dump(const RegisterDump& regs)
         ss = regs.ss;
         esp = regs.esp;
     } else {
-        ss = regs.ss_if_crossRing;
-        esp = regs.esp_if_crossRing;
+        ss = regs.userspace_ss;
+        esp = regs.userspace_esp;
     }
 
     kprintf("exception code: %04x (isr: %04x)\n", regs.exception_code, regs.isr_number);
@@ -247,8 +247,8 @@ void page_fault_handler(RegisterDump regs)
 #endif
 
     bool faulted_in_userspace = (regs.cs & 3) == 3;
-    if (faulted_in_userspace && !MM.validate_user_stack(current->process(), VirtualAddress(regs.esp_if_crossRing))) {
-        dbgprintf("Invalid stack pointer: %p\n", regs.esp_if_crossRing);
+    if (faulted_in_userspace && !MM.validate_user_stack(current->process(), VirtualAddress(regs.userspace_esp))) {
+        dbgprintf("Invalid stack pointer: %p\n", regs.userspace_esp);
         handle_crash(regs, "Bad stack on page fault", SIGSTKFLT);
         ASSERT_NOT_REACHED();
     }

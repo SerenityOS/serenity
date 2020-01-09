@@ -587,7 +587,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
     child_tss.ecx = regs.ecx;
     child_tss.edx = regs.edx;
     child_tss.ebp = regs.ebp;
-    child_tss.esp = regs.esp_if_crossRing;
+    child_tss.esp = regs.userspace_esp;
     child_tss.esi = regs.esi;
     child_tss.edi = regs.edi;
     child_tss.eflags = regs.eflags;
@@ -597,7 +597,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
     child_tss.es = regs.es;
     child_tss.fs = regs.fs;
     child_tss.gs = regs.gs;
-    child_tss.ss = regs.ss_if_crossRing;
+    child_tss.ss = regs.userspace_ss;
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child will begin executing at %w:%x with stack %w:%x, kstack %w:%x\n", child_tss.cs, child_tss.eip, child_tss.ss, child_tss.esp, child_tss.ss0, child_tss.esp0);
@@ -1180,7 +1180,7 @@ int Process::sys$sigreturn(RegisterDump& registers)
     SmapDisabler disabler;
 
     //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
-    u32* stack_ptr = (u32*)registers.esp_if_crossRing;
+    u32* stack_ptr = (u32*)registers.userspace_esp;
     u32 smuggled_eax = *stack_ptr;
 
     //pop the stored eax, ebp, return address, handler and signal code
@@ -1199,7 +1199,7 @@ int Process::sys$sigreturn(RegisterDump& registers)
     registers.eflags = *stack_ptr;
     stack_ptr++;
 
-    registers.esp_if_crossRing = registers.esp;
+    registers.userspace_esp = registers.esp;
     return smuggled_eax;
 }
 

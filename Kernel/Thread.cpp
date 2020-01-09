@@ -557,7 +557,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
         set_state(Skip1SchedulerPass);
     } else {
         auto& regs = get_register_dump_from_stack();
-        u32* stack = &regs.esp_if_crossRing;
+        u32* stack = &regs.userspace_esp;
         setup_stack(regs, stack);
         regs.eip = g_return_to_ring3_from_signal_trampoline.get();
     }
