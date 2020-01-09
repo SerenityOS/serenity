@@ -105,6 +105,8 @@ KResult LocalSocket::connect(FileDescription& description, const sockaddr* addre
         return KResult(-EINVAL);
     if (address->sa_family != AF_LOCAL)
         return KResult(-EINVAL);
+    if (is_connected())
+        return KResult(-EISCONN);
 
     const sockaddr_un& local_address = *reinterpret_cast<const sockaddr_un*>(address);
     char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
