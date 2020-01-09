@@ -2,6 +2,7 @@
 
 #include <AK/Badge.h>
 #include <AK/Noncopyable.h>
+#include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/VirtualAddress.h>
 #include <Kernel/kstdio.h>
 
@@ -421,7 +422,12 @@ struct [[gnu::aligned(16)]] FPUState
 
 inline constexpr u32 page_base_of(u32 address)
 {
-    return address & 0xfffff000;
+    return address & PAGE_MASK;
+}
+
+inline constexpr u32 offset_in_page(u32 address)
+{
+    return address & (~PAGE_MASK);
 }
 
 class CPUID {

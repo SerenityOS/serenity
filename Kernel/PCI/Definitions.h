@@ -135,7 +135,7 @@ u8 get_subclass(Address);
 u8 get_class(Address);
 u16 get_subsystem_id(Address);
 u16 get_subsystem_vendor_id(Address);
-u32 get_BAR_Space_Size(Address, u8);
+size_t get_BAR_Space_Size(Address, u8);
 void enable_bus_mastering(Address);
 void disable_bus_mastering(Address);
 

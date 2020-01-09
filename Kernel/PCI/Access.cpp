@@ -135,7 +135,7 @@ void disable_bus_mastering(Address address)
 {
     PCI::Access::the().disable_bus_mastering(address);
 }
-u32 get_BAR_Space_Size(Address address, u8 bar_number)
+size_t get_BAR_Space_Size(Address address, u8 bar_number)
 {
     return PCI::Access::the().get_BAR_Space_Size(address, bar_number);
 }
