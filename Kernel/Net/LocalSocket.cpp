@@ -80,7 +80,7 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
     kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->process().name().characters(), current->pid(), this, safe_address);
 #endif
 
-    mode_t mode = S_IFSOCK | (m_prebind_mode & ~current->process().umask());
+    mode_t mode = S_IFSOCK | (m_prebind_mode & 04777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
     auto result = VFS::the().open( safe_address, O_CREAT | O_EXCL, mode, current->process().current_directory(), owner);
     if (result.is_error()) {
