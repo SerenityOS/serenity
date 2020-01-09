@@ -29,7 +29,6 @@ timeval kgettimeofday();
 void kgettimeofday(timeval&);
 
 extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
-extern VirtualAddress g_return_to_ring0_from_signal_trampoline;
 
 class Process : public InlineLinkedListNode<Process>
     , public Weakable<Process> {
