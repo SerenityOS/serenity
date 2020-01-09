@@ -36,16 +36,6 @@ ACPI_RAW::SDTHeader* ACPIParser::find_table(const char*)
     return nullptr;
 }
 
-void ACPIParser::mmap(VirtualAddress, PhysicalAddress, u32)
-{
-    ASSERT_NOT_REACHED();
-}
-
-void ACPIParser::mmap_region(Region&, PhysicalAddress)
-{
-    ASSERT_NOT_REACHED();
-}
-
 void ACPIParser::do_acpi_reboot()
 {
     kprintf("ACPI: Cannot invoke reboot!\n");

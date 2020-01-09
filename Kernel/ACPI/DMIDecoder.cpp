@@ -60,37 +60,40 @@ void DMIDecoder::initialize_parser()
 
 void DMIDecoder::enumerate_smbios_tables()
 {
+
     u32 table_length = m_table_length;
-    SMBIOS::TableHeader* physical_table = m_structure_table;
+    SMBIOS::TableHeader* p_table_ptr = m_structure_table;
 
-    auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(table_length), "DMI Decoder Entry Point Finding", Region::Access::Read);
-    PhysicalAddress paddr = PhysicalAddress((u32)physical_table & PAGE_MASK);
-    mmap_region(*region, paddr);
+    PhysicalAddress paddr = PhysicalAddress(page_base_of((u32)p_table_ptr));
+    auto region = MM.allocate_kernel_region(paddr, PAGE_ROUND_UP(table_length), "DMI Decoder Enumerating SMBIOS", Region::Access::Read, false, false);
 
-    auto* v_smbios_table = (SMBIOS::TableHeader*)(region->vaddr().get() + ((u32)physical_table & (~PAGE_MASK)));
+    volatile SMBIOS::TableHeader* v_table_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((u32)p_table_ptr)).as_ptr();
+#ifdef SMBIOS_DEBUG
+    dbgprintf("DMIDecoder: Total Table length %d\n", m_table_length);
+#endif
 
     u32 structures_count = 0;
     while (table_length > 0) {
 #ifdef SMBIOS_DEBUG
-        dbgprintf("DMIDecoder: Examining table @ P 0x%x\n", physical_table);
+        dbgprintf("DMIDecoder: Examining table @ P 0x%x V 0x%x\n", p_table_ptr, v_table_ptr);
 #endif
         structures_count++;
-        if (v_smbios_table->type == (u32)SMBIOS::TableType::EndOfTable) {
+        if (v_table_ptr->type == (u32)SMBIOS::TableType::EndOfTable) {
             kprintf("DMIDecoder: Detected table with type 127, End of SMBIOS data.\n");
             break;
         }
-        m_smbios_tables.append(physical_table);
-        table_length -= v_smbios_table->length;
-        kprintf("DMIDecoder: Detected table with type %u\n", v_smbios_table->type);
-        SMBIOS::TableHeader* physical_next_table = get_next_physical_table(*physical_table);
-#ifdef SMBIOS_DEBUG
-        dbgprintf("DMIDecoder: Next table @ P 0x%x\n", physical_next_table);
-#endif
-        if (physical_next_table == nullptr)
-            break;
+        kprintf("DMIDecoder: Detected table with type %d\n", v_table_ptr->type);
+        m_smbios_tables.append(p_table_ptr);
+        table_length -= v_table_ptr->length;
 
-        v_smbios_table = (SMBIOS::TableHeader*)(region->vaddr().get() + (u32)physical_next_table - paddr.get());
-        physical_table = physical_next_table;
+        size_t table_size = get_table_size(*p_table_ptr);
+        p_table_ptr = (SMBIOS::TableHeader*)((u32)p_table_ptr + (u32)table_size);
+        v_table_ptr = (SMBIOS::TableHeader*)((u32)v_table_ptr + (u32)table_size);
+#ifdef SMBIOS_DEBUG
+        dbgprintf("DMIDecoder: Next table @ P 0x%x\n", p_table_ptr);
+#endif
+        if (p_table_ptr == nullptr)
+            break;
     }
     m_structures_count = structures_count;
 }
@@ -110,7 +113,7 @@ size_t DMIDecoder::get_table_size(SMBIOS::TableHeader& table)
         index++;
     }
 #ifdef SMBIOS_DEBUG
-    dbgprintf("DMIDecoder: table size - 0x%x\n", table.length + i + 1);
+    dbgprintf("DMIDecoder: table size - 0x%x\n", table.length + index + 1);
 #endif
     return table.length + index + 1;
 }
@@ -122,14 +125,13 @@ SMBIOS::TableHeader* DMIDecoder::get_next_physical_table(SMBIOS::TableHeader& p_
 
 SMBIOS::TableHeader* DMIDecoder::get_smbios_physical_table_by_handle(u16 handle)
 {
-    auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(PAGE_SIZE * 2), "DMI Decoder Finding Table", Region::Access::Read);
 
     for (auto* table : m_smbios_tables) {
         if (!table)
             continue;
-        PhysicalAddress paddr = PhysicalAddress((u32)table & PAGE_MASK);
-        mmap_region(*region, paddr);
-        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)(region->vaddr().get() + ((u32)table & (~PAGE_MASK)));
+        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)table)), PAGE_SIZE * 2, "DMI Decoder Finding Table", Region::Access::Read, false, false);
+        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((u32)table)).as_ptr();
+
         if (table_v_ptr->handle == handle) {
             return table;
         }
@@ -138,14 +140,12 @@ SMBIOS::TableHeader* DMIDecoder::get_smbios_physical_table_by_handle(u16 handle)
 }
 SMBIOS::TableHeader* DMIDecoder::get_smbios_physical_table_by_type(u8 table_type)
 {
-    auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(PAGE_SIZE * 2), "DMI Decoder Finding Table", Region::Access::Read);
 
     for (auto* table : m_smbios_tables) {
         if (!table)
             continue;
-        PhysicalAddress paddr = PhysicalAddress((u32)table & PAGE_MASK);
-        mmap_region(*region, paddr);
-        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)(region->vaddr().get() + ((u32)table & (~PAGE_MASK)));
+        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)table)), PAGE_ROUND_UP(PAGE_SIZE * 2), "DMI Decoder Finding Table", Region::Access::Read, false, false);
+        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((u32)table)).as_ptr();
         if (table_v_ptr->type == table_type) {
             return table;
         }
@@ -167,14 +167,13 @@ DMIDecoder::DMIDecoder(bool trusted)
 
 SMBIOS::EntryPoint64bit* DMIDecoder::find_entry64bit_point()
 {
-    auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder Entry Point Finding", Region::Access::Read);
     PhysicalAddress paddr = PhysicalAddress(SMBIOS_BASE_SEARCH_ADDR);
-    mmap_region(*region, paddr);
+    auto region = MM.allocate_kernel_region(paddr, PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder Entry Point 64 bit Finding", Region::Access::Read, false, false);
 
     char* tested_physical_ptr = (char*)paddr.get();
     for (char* entry_str = (char*)(region->vaddr().get()); entry_str < (char*)(region->vaddr().get() + (SMBIOS_SEARCH_AREA_SIZE)); entry_str += 16) {
 #ifdef SMBIOS_DEBUG
-        dbgprintf("DMI Decoder: Looking for 64 bit Entry point @ P 0x%x\n", entry_str, tested_physical_ptr);
+        dbgprintf("DMI Decoder: Looking for 64 bit Entry point @ V 0x%x P 0x%x\n", entry_str, tested_physical_ptr);
 #endif
         if (!strncmp("_SM3_", entry_str, strlen("_SM3_")))
             return (SMBIOS::EntryPoint64bit*)tested_physical_ptr;
@@ -186,14 +185,13 @@ SMBIOS::EntryPoint64bit* DMIDecoder::find_entry64bit_point()
 
 SMBIOS::EntryPoint32bit* DMIDecoder::find_entry32bit_point()
 {
-    auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder Entry Point Finding", Region::Access::Read);
     PhysicalAddress paddr = PhysicalAddress(SMBIOS_BASE_SEARCH_ADDR);
-    mmap_region(*region, paddr);
+    auto region = MM.allocate_kernel_region(paddr, PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder Entry Point 32 bit Finding", Region::Access::Read, false, false);
 
     char* tested_physical_ptr = (char*)paddr.get();
     for (char* entry_str = (char*)(region->vaddr().get()); entry_str < (char*)(region->vaddr().get() + (SMBIOS_SEARCH_AREA_SIZE)); entry_str += 16) {
 #ifdef SMBIOS_DEBUG
-        dbgprintf("DMI Decoder: Looking for 32 bit Entry point @ P 0x%x\n", tested_physical_ptr);
+        dbgprintf("DMI Decoder: Looking for 32 bit Entry point @ V 0x%x P 0x%x\n", entry_str, tested_physical_ptr);
 #endif
         if (!strncmp("_SM_", entry_str, strlen("_SM_")))
             return (SMBIOS::EntryPoint32bit*)tested_physical_ptr;
@@ -201,33 +199,6 @@ SMBIOS::EntryPoint32bit* DMIDecoder::find_entry32bit_point()
         tested_physical_ptr += 16;
     }
     return nullptr;
-}
-
-void DMIDecoder::mmap(VirtualAddress vaddr, PhysicalAddress paddr, u32 length)
-{
-    unsigned i = 0;
-    while (length >= PAGE_SIZE) {
-        MM.map_for_kernel(VirtualAddress(vaddr.offset(i * PAGE_SIZE).get()), PhysicalAddress(paddr.offset(i * PAGE_SIZE).get()));
-#ifdef SMBIOS_DEBUG
-        dbgprintf("DMI Decoder: map - V 0x%x -> P 0x%x\n", vaddr.offset(i * PAGE_SIZE).get(), paddr.offset(i * PAGE_SIZE).get());
-#endif
-        length -= PAGE_SIZE;
-        i++;
-    }
-    if (length > 0) {
-        MM.map_for_kernel(vaddr.offset(i * PAGE_SIZE), paddr.offset(i * PAGE_SIZE), true);
-    }
-#ifdef SMBIOS_DEBUG
-    dbgprintf("DMI Decoder: Finished mapping\n");
-#endif
-}
-
-void DMIDecoder::mmap_region(Region& region, PhysicalAddress paddr)
-{
-#ifdef SMBIOS_DEBUG
-    dbgprintf("DMI Decoder: Mapping region, size - %u\n", region.size());
-#endif
-    mmap(region.vaddr(), paddr, region.size());
 }
 
 Vector<SMBIOS::PhysicalMemoryArray*>& DMIDecoder::get_physical_memory_areas()

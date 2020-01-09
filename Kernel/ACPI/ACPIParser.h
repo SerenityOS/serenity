@@ -27,7 +27,4 @@ public:
 protected:
     explicit ACPIParser(bool usable);
     bool m_operable;
-
-    virtual void mmap(VirtualAddress, PhysicalAddress, u32);
-    virtual void mmap_region(Region&, PhysicalAddress);
 };
