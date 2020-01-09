@@ -54,7 +54,8 @@ LIBC_OBJS = \
        wchar.o \
        serenity.o \
        syslog.o \
-       cxxabi.o
+       cxxabi.o \
+       libcinit.o
 
 ELF_OBJS = \
         ../LibELF/ELFDynamicObject.o \
