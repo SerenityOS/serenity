@@ -319,7 +319,7 @@ int link(const char* old_path, const char* new_path)
 
 int unlink(const char* pathname)
 {
-    int rc = syscall(SC_unlink, pathname);
+    int rc = syscall(SC_unlink, pathname, strlen(pathname));
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
@@ -572,7 +572,7 @@ int mount(const char* device, const char* mountpoint, const char* fstype)
 
 int umount(const char* mountpoint)
 {
-    int rc = syscall(SC_umount, mountpoint);
+    int rc = syscall(SC_umount, mountpoint, strlen(mountpoint));
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
