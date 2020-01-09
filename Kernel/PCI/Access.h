@@ -14,7 +14,7 @@ public:
     virtual u32 get_BAR4(Address address) { return read32_field(address, PCI_BAR4); }
     virtual u32 get_BAR5(Address address) { return read32_field(address, PCI_BAR5); }
 
-    virtual u32 get_BAR_Space_Size(Address address, u8 bar_number)
+    virtual size_t get_BAR_Space_Size(Address address, u8 bar_number)
     {
         // See PCI Spec 2.3, Page 222
         ASSERT(bar_number < 6);

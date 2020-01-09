@@ -1325,9 +1325,6 @@ private:
     SMBIOS::EntryPoint32bit* find_entry32bit_point();
     SMBIOS::EntryPoint64bit* find_entry64bit_point();
 
-    void mmap(VirtualAddress vaddr, PhysicalAddress paddr, u32 length);
-    void mmap_region(Region& region, PhysicalAddress paddr);
-
     SMBIOS::EntryPoint32bit* m_entry32bit_point;
     SMBIOS::EntryPoint64bit* m_entry64bit_point;
     SMBIOS::TableHeader* m_structure_table;

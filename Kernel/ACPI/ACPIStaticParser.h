@@ -18,15 +18,13 @@ protected:
     ACPIStaticParser();
     explicit ACPIStaticParser(ACPI_RAW::RSDPDescriptor20&);
 
-    virtual void mmap(VirtualAddress preferred_vaddr, PhysicalAddress paddr, u32) override;
-    virtual void mmap_region(Region& region, PhysicalAddress paddr) override;
-
 private:
     void locate_static_data();
     void locate_all_aml_tables();
     void locate_main_system_description_table();
     void initialize_main_system_description_table();
-    ACPI_RAW::SDTHeader& find_fadt();
+    size_t get_table_size(ACPI_RAW::SDTHeader&);
+    u8 get_table_revision(ACPI_RAW::SDTHeader&);
     void init_fadt();
     ACPI_RAW::RSDPDescriptor20* search_rsdp();
 
