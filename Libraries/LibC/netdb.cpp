@@ -38,6 +38,10 @@ static int connect_to_lookup_server()
         rc = connect(fd, (const sockaddr*)&address, sizeof(address));
         if (rc == 0)
             break;
+        if (rc < 0) {
+            perror("connect_to_lookup_server");
+            break;
+        }
         --retries;
         sleep(1);
     }
