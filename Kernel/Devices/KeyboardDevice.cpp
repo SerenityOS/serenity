@@ -22,7 +22,7 @@ char *shift_map;
 char *alt_map;
 char *altgr_map;
 
-static char en_map[0x80] = {
+static const char en_map[0x80] = {
     0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, '\t',
     'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0,
     'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
@@ -36,7 +36,7 @@ static char en_map[0x80] = {
     0, 0, 0, 0, 0, 0, '\\', 0, 0, 0,
 };
 
-static char en_shift_map[0x80] = {
+static const char en_shift_map[0x80] = {
     0, '\033', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0x08, '\t',
     'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0,
     'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|',
@@ -50,9 +50,9 @@ static char en_shift_map[0x80] = {
     0, 0, 0, 0, 0, 0, '|', 0, 0, 0,
 };
 
-static char numpad_map[13] = { '7', '8', '9', 0, '4', '5', '6', 0, '1', '2', '3', '0', ',' };
+static const char numpad_map[13] = { '7', '8', '9', 0, '4', '5', '6', 0, '1', '2', '3', '0', ',' };
 
-static KeyCode unshifted_key_map[0x80] = {
+static const KeyCode unshifted_key_map[0x80] = {
     Key_Invalid,
     Key_Escape,
     Key_1,
@@ -147,7 +147,7 @@ static KeyCode unshifted_key_map[0x80] = {
     Key_Logo,
 };
 
-static KeyCode shifted_key_map[0x100] = {
+static const KeyCode shifted_key_map[0x100] = {
     Key_Invalid,
     Key_Escape,
     Key_ExclamationPoint,
@@ -242,7 +242,7 @@ static KeyCode shifted_key_map[0x100] = {
     Key_Logo,
 };
 
-static KeyCode numpad_key_map[13] = { Key_7, Key_8, Key_9, Key_Invalid, Key_4, Key_5, Key_6, Key_Invalid, Key_1, Key_2, Key_3, Key_0, Key_Comma };
+static const KeyCode numpad_key_map[13] = { Key_7, Key_8, Key_9, Key_Invalid, Key_4, Key_5, Key_6, Key_Invalid, Key_1, Key_2, Key_3, Key_0, Key_Comma };
 
 void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
 {
