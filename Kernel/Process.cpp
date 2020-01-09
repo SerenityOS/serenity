@@ -2550,16 +2550,14 @@ int Process::sys$link(const char* old_path, const char* new_path)
     return VFS::the().link(StringView(old_path), StringView(new_path), current_directory());
 }
 
-int Process::sys$unlink(const char* pathname)
+int Process::sys$unlink(const char* user_path, size_t path_length)
 {
-    String path;
-    {
-        SmapDisabler disabler;
-        if (!validate_read_str(pathname))
-            return -EFAULT;
-        path = pathname;
-    }
-    return VFS::the().unlink(path, current_directory());
+    if (!validate_read(user_path, path_length))
+        return -EFAULT;
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    return VFS::the().unlink(path.value(), current_directory());
 }
 
 int Process::sys$symlink(const char* target, const char* linkpath)
@@ -3591,15 +3589,19 @@ int Process::sys$mount(const char* device_path, const char* mountpoint, const ch
     return result;
 }
 
-int Process::sys$umount(const char* mountpoint)
+int Process::sys$umount(const char* user_mountpoint, size_t mountpoint_length)
 {
     if (!is_superuser())
         return -EPERM;
 
-    if (!validate_read_str(mountpoint))
+    if (!validate_read(user_mountpoint, mountpoint_length))
         return -EFAULT;
 
-    auto metadata_or_error = VFS::the().lookup_metadata(mountpoint, current_directory());
+    auto mountpoint = get_syscall_path_argument(user_mountpoint, mountpoint_length);
+    if (mountpoint.is_error())
+        return mountpoint.error();
+
+    auto metadata_or_error = VFS::the().lookup_metadata(mountpoint.value(), current_directory());
     if (metadata_or_error.is_error())
         return metadata_or_error.error();
 
