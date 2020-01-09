@@ -38,6 +38,8 @@ private:
     bool m_keep_alive { false };
     // Path to the socket to create and listen on on behalf of this service.
     String m_socket_path;
+    // File system permissions for the socket.
+    mode_t m_socket_permissions { 0 };
     // Whether we should only spawn this service once somebody connects to the socket.
     bool m_lazy;
     // The name of the user we should run this service as.

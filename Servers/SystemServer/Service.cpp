@@ -104,7 +104,7 @@ void Service::setup_socket()
         ASSERT_NOT_REACHED();
     }
 
-    if (fchmod(m_socket_fd, 0600) < 0) {
+    if (fchmod(m_socket_fd, m_socket_permissions) < 0) {
         perror("fchmod");
         ASSERT_NOT_REACHED();
     }
@@ -270,6 +270,8 @@ Service::Service(const CConfigFile& config, const StringView& name)
 
     m_socket_path = config.read_entry(name, "Socket");
     if (!m_socket_path.is_null()) {
+        auto socket_permissions_string = config.read_entry(name, "SocketPermissions", "0600");
+        m_socket_permissions = strtol(socket_permissions_string.characters(), nullptr, 8) & 04777;
         setup_socket();
     }
 }
