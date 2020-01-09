@@ -104,8 +104,8 @@ void syscall_handler(RegisterDump regs)
 
     auto& process = current->process();
 
-    if (!MM.validate_user_stack(process, VirtualAddress(regs.esp_if_crossRing))) {
-        dbgprintf("Invalid stack pointer: %p\n", regs.esp_if_crossRing);
+    if (!MM.validate_user_stack(process, VirtualAddress(regs.userspace_esp))) {
+        dbgprintf("Invalid stack pointer: %p\n", regs.userspace_esp);
         handle_crash(regs, "Bad stack on syscall entry", SIGSTKFLT);
         ASSERT_NOT_REACHED();
     }

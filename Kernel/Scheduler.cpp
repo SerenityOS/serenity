@@ -603,8 +603,8 @@ void Scheduler::timer_tick(RegisterDump& regs)
     outgoing_tss.ss = regs.ss;
 
     if ((outgoing_tss.cs & 3) != 0) {
-        outgoing_tss.ss = regs.ss_if_crossRing;
-        outgoing_tss.esp = regs.esp_if_crossRing;
+        outgoing_tss.ss = regs.userspace_ss;
+        outgoing_tss.esp = regs.userspace_esp;
     }
     prepare_for_iret_to_new_process();
 
