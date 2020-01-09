@@ -62,7 +62,8 @@ private:
 
     PCI::Address m_pci_address;
     u16 m_io_base { 0 };
-    PhysicalAddress m_mmio_base;
+    VirtualAddress m_mmio_base;
+    OwnPtr<Region> m_mmio_region;
     u8 m_interrupt_line { 0 };
     bool m_has_eeprom { false };
     bool m_use_mmio { false };

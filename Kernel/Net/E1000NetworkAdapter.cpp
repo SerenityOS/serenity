@@ -2,6 +2,8 @@
 #include <Kernel/Net/E1000NetworkAdapter.h>
 #include <Kernel/Thread.h>
 
+//#define E1000_DEBUG
+
 #define REG_CTRL 0x0000
 #define REG_STATUS 0x0008
 #define REG_EEPROM 0x0014
@@ -113,22 +115,18 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
 {
     set_interface_name("e1k");
 
-    kprintf("E1000: Found at PCI address %b:%b:%b\n", pci_address.bus(), pci_address.slot(), pci_address.function());
+    kprintf("E1000: Found at PCI address @ %w:%b:%b.%b\n", pci_address.seg(), pci_address.bus(), pci_address.slot(), pci_address.function());
 
     enable_bus_mastering(m_pci_address);
 
-    m_mmio_base = PhysicalAddress(PCI::get_BAR0(m_pci_address));
-    u32 mmio_base_size = PCI::get_BAR_Space_Size(pci_address, 0);
-    MM.map_for_kernel(VirtualAddress(m_mmio_base.get()), m_mmio_base);
-    MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(4096).get()), m_mmio_base.offset(4096));
-    MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(8192).get()), m_mmio_base.offset(8192));
-    MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(12288).get()), m_mmio_base.offset(12288));
-    MM.map_for_kernel(VirtualAddress(m_mmio_base.offset(16384).get()), m_mmio_base.offset(16384));
+    size_t mmio_base_size = PCI::get_BAR_Space_Size(pci_address, 0);
+    m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(m_pci_address))), PAGE_ROUND_UP(mmio_base_size), "E1000 MMIO", Region::Access::Read | Region::Access::Write, false, false);
+    m_mmio_base = m_mmio_region->vaddr();
     m_use_mmio = true;
     m_io_base = PCI::get_BAR1(m_pci_address) & ~1;
     m_interrupt_line = PCI::get_interrupt_line(m_pci_address);
     kprintf("E1000: IO port base: %w\n", m_io_base);
-    kprintf("E1000: MMIO base: P%x\n", m_mmio_base);
+    kprintf("E1000: MMIO base: P%x\n", PCI::get_BAR0(pci_address) & 0xfffffffc);
     kprintf("E1000: MMIO base size: %u bytes\n", mmio_base_size);
     kprintf("E1000: Interrupt line: %u\n", m_interrupt_line);
     detect_eeprom();
@@ -274,6 +272,9 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
 
 void E1000NetworkAdapter::out8(u16 address, u8 data)
 {
+#ifdef E1000_DEBUG
+    dbgprintf("E1000: OUT @ 0x%x\n", address);
+#endif
     if (m_use_mmio) {
         auto* ptr = (volatile u8*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -284,6 +285,9 @@ void E1000NetworkAdapter::out8(u16 address, u8 data)
 
 void E1000NetworkAdapter::out16(u16 address, u16 data)
 {
+#ifdef E1000_DEBUG
+    dbgprintf("E1000: OUT @ 0x%x\n", address);
+#endif
     if (m_use_mmio) {
         auto* ptr = (volatile u16*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -294,6 +298,9 @@ void E1000NetworkAdapter::out16(u16 address, u16 data)
 
 void E1000NetworkAdapter::out32(u16 address, u32 data)
 {
+#ifdef E1000_DEBUG
+    dbgprintf("E1000: OUT @ 0x%x\n", address);
+#endif
     if (m_use_mmio) {
         auto* ptr = (volatile u32*)(m_mmio_base.get() + address);
         *ptr = data;
@@ -304,6 +311,9 @@ void E1000NetworkAdapter::out32(u16 address, u32 data)
 
 u8 E1000NetworkAdapter::in8(u16 address)
 {
+#ifdef E1000_DEBUG
+    dbgprintf("E1000: IN @ 0x%x\n", address);
+#endif
     if (m_use_mmio)
         return *(volatile u8*)(m_mmio_base.get() + address);
     return IO::in8(m_io_base + address);
@@ -311,6 +321,9 @@ u8 E1000NetworkAdapter::in8(u16 address)
 
 u16 E1000NetworkAdapter::in16(u16 address)
 {
+#ifdef E1000_DEBUG
+    dbgprintf("E1000: IN @ 0x%x\n", address);
+#endif
     if (m_use_mmio)
         return *(volatile u16*)(m_mmio_base.get() + address);
     return IO::in16(m_io_base + address);
@@ -318,6 +331,9 @@ u16 E1000NetworkAdapter::in16(u16 address)
 
 u32 E1000NetworkAdapter::in32(u16 address)
 {
+#ifdef E1000_DEBUG
+    dbgprintf("E1000: IN @ 0x%x\n", address);
+#endif
     if (m_use_mmio)
         return *(volatile u32*)(m_mmio_base.get() + address);
     return IO::in32(m_io_base + address);
