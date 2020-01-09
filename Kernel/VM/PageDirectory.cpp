@@ -75,14 +75,3 @@ PageDirectory::~PageDirectory()
     InterruptDisabler disabler;
     cr3_map().remove(cr3());
 }
-
-void PageDirectory::flush(VirtualAddress vaddr)
-{
-#ifdef MM_DEBUG
-    dbgprintf("MM: Flush page V%p\n", vaddr.get());
-#endif
-    if (!current)
-        return;
-    if (this == &MM.kernel_page_directory() || &current->process().page_directory() == this)
-        MM.flush_tlb(vaddr);
-}
