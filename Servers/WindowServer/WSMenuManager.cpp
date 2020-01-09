@@ -389,18 +389,16 @@ void WSMenuManager::open_menu(WSMenu& menu)
 
 void WSMenuManager::set_current_menu(WSMenu* menu, bool is_submenu)
 {
-    if (!is_submenu && m_current_menu)
-        m_current_menu->close();
-    if (menu)
-        m_current_menu = menu->make_weak_ptr();
-
-    if (!is_submenu) {
+    if (!is_submenu)
         close_everyone();
-        if (menu)
-            m_open_menu_stack.append(menu->make_weak_ptr());
-    } else {
-        m_open_menu_stack.append(menu->make_weak_ptr());
+
+    if (!menu) {
+        m_current_menu = nullptr;
+        return;
     }
+
+    m_open_menu_stack.append(menu->make_weak_ptr());
+    m_current_menu = menu->make_weak_ptr();
 }
 
 void WSMenuManager::close_bar()
