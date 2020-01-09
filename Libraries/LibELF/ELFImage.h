@@ -27,7 +27,6 @@ public:
     class RelocationSection;
     class Symbol;
     class Relocation;
-    class DynamicSection;
 
     class Symbol {
     public:
@@ -111,8 +110,6 @@ public:
 
     protected:
         friend class RelocationSection;
-        friend class DynamicSection;
-        friend class DynamicRelocationSection;
         const ELFImage& m_image;
         const Elf32_Shdr& m_section_header;
         unsigned m_section_index;
@@ -150,24 +147,13 @@ public:
         const Elf32_Rel& m_rel;
     };
 
-    class DynamicSection : public Section {
-    public:
-        DynamicSection(const Section& section)
-            : Section(section.m_image, section.m_section_index)
-        {
-            ASSERT(type() == SHT_DYNAMIC);
-        }
-    };
-
     unsigned symbol_count() const;
-    unsigned dynamic_symbol_count() const;
     unsigned section_count() const;
     unsigned program_header_count() const;
 
     const Symbol symbol(unsigned) const;
     const Section section(unsigned) const;
     const ProgramHeader program_header(unsigned const) const;
-    const DynamicSection dynamic_section() const;
 
     template<typename F>
     void for_each_section(F) const;
@@ -204,7 +190,6 @@ private:
     bool m_valid { false };
     unsigned m_symbol_table_section_index { 0 };
     unsigned m_string_table_section_index { 0 };
-    unsigned m_dynamic_section_index { 0 };
 };
 
 template<typename F>
