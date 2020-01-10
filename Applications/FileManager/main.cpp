@@ -272,8 +272,10 @@ int main(int argc, char** argv)
               properties->exec();
           });
 
-    enum class ConfirmBeforeDelete { No,
-        Yes };
+    enum class ConfirmBeforeDelete {
+        No,
+        Yes
+    };
 
     auto do_delete = [&](ConfirmBeforeDelete confirm, const GAction& action) {
         Vector<String> paths;

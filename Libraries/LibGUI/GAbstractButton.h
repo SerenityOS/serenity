@@ -1,8 +1,8 @@
 #pragma once
 
 #include <LibCore/CTimer.h>
-#include <LibGUI/GWidget.h>
 #include <LibDraw/TextAlignment.h>
+#include <LibGUI/GWidget.h>
 
 class GPainter;
 

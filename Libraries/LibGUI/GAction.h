@@ -1,11 +1,11 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashTable.h>
 #include <AK/NonnullRefPtr.h>
 #include <AK/RefCounted.h>
+#include <AK/String.h>
 #include <AK/WeakPtr.h>
 #include <AK/Weakable.h>
 #include <LibDraw/GraphicsBitmap.h>
