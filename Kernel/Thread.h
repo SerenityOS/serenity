@@ -99,11 +99,14 @@ public:
         virtual ~Blocker() {}
         virtual bool should_unblock(Thread&, time_t now_s, long us) = 0;
         virtual const char* state_string() const = 0;
+        void set_interrupted_by_death() { m_was_interrupted_by_death = true; }
+        bool was_interrupted_by_death() const { return m_was_interrupted_by_death; }
         void set_interrupted_by_signal() { m_was_interrupted_while_blocked = true; }
         bool was_interrupted_by_signal() const { return m_was_interrupted_while_blocked; }
 
     private:
         bool m_was_interrupted_while_blocked { false };
+        bool m_was_interrupted_by_death { false };
         friend class Thread;
     };
 
@@ -260,6 +263,7 @@ public:
     enum class BlockResult {
         WokeNormally,
         InterruptedBySignal,
+        InterruptedByDeath,
     };
 
     template<typename T, class... Args>
@@ -284,6 +288,9 @@ public:
 
         if (t.was_interrupted_by_signal())
             return BlockResult::InterruptedBySignal;
+
+        if (t.was_interrupted_by_death())
+            return BlockResult::InterruptedByDeath;
 
         return BlockResult::WokeNormally;
     }
