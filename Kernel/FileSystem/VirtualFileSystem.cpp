@@ -518,7 +518,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
 KResult VFS::unlink(StringView path, Custody& base)
 {
     RefPtr<Custody> parent_custody;
-    auto custody_or_error = resolve_path(path, base, &parent_custody);
+    auto custody_or_error = resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
