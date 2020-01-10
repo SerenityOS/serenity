@@ -2596,7 +2596,6 @@ int Process::sys$chmod(const char* user_path, size_t path_length, mode_t mode)
 
 int Process::sys$fchmod(int fd, mode_t mode)
 {
-    SmapDisabler disabler;
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
@@ -2605,7 +2604,6 @@ int Process::sys$fchmod(int fd, mode_t mode)
 
 int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 {
-    SmapDisabler disabler;
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
