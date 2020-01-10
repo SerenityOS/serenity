@@ -311,6 +311,7 @@ public:
     u32 priority_boost() const { return m_priority_boost; }
 
     Custody& root_directory();
+    Custody& root_directory_for_procfs();
     void set_root_directory(const Custody&);
 
 private:
@@ -374,6 +375,7 @@ private:
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
     RefPtr<Custody> m_root_directory;
+    RefPtr<Custody> m_root_directory_for_procfs;
 
     RefPtr<TTY> m_tty;
 

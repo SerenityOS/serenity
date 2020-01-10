@@ -80,6 +80,7 @@ enum ProcFileType {
     FI_PID_fds,
     FI_PID_exe, // symlink
     FI_PID_cwd, // symlink
+    FI_PID_root, // symlink
     FI_PID_fd,  // directory
     __FI_PID_End,
 
@@ -571,6 +572,14 @@ Optional<KBuffer> procfs$pid_cwd(InodeIdentifier identifier)
     return handle->process().current_directory().absolute_path().to_byte_buffer();
 }
 
+Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
+{
+    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
+    if (!handle)
+        return {};
+    return handle->process().root_directory_for_procfs().absolute_path().to_byte_buffer();
+}
+
 Optional<KBuffer> procfs$self(InodeIdentifier)
 {
     char buffer[16];
@@ -1030,6 +1039,7 @@ InodeMetadata ProcFSInode::metadata() const
         break;
     case FI_PID_cwd:
     case FI_PID_exe:
+    case FI_PID_root:
         metadata.mode = 0120400;
         break;
     case FI_Root:
@@ -1408,6 +1418,7 @@ ProcFS::ProcFS()
     m_entries[FI_PID_fds] = { "fds", FI_PID_fds, false, procfs$pid_fds };
     m_entries[FI_PID_exe] = { "exe", FI_PID_exe, false, procfs$pid_exe };
     m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, false, procfs$pid_cwd };
+    m_entries[FI_PID_root] = { "root", FI_PID_root, false, procfs$pid_root };
     m_entries[FI_PID_fd] = { "fd", FI_PID_fd, false };
 }
 
