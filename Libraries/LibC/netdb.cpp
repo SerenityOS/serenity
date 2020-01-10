@@ -1,6 +1,6 @@
-#include <AK/String.h>
 #include <AK/Assertions.h>
 #include <AK/ScopeGuard.h>
+#include <AK/String.h>
 #include <Kernel/Net/IPv4.h>
 #include <arpa/inet.h>
 #include <netdb.h>
@@ -32,21 +32,8 @@ static int connect_to_lookup_server()
     address.sun_family = AF_LOCAL;
     strcpy(address.sun_path, "/tmp/portal/lookup");
 
-    int retries = 3;
-    int rc = 0;
-    while (retries) {
-        rc = connect(fd, (const sockaddr*)&address, sizeof(address));
-        if (rc == 0)
-            break;
-        if (rc < 0) {
-            perror("connect_to_lookup_server");
-            break;
-        }
-        --retries;
-        sleep(1);
-    }
-
-    if (rc < 0) {
+    if (connect(fd, (const sockaddr*)&address, sizeof(address)) < 0) {
+        perror("connect_to_lookup_server");
         close(fd);
         return -1;
     }
