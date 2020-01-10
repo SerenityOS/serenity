@@ -161,9 +161,7 @@ void GListView::keydown_event(GKeyEvent& event)
         return;
     auto& model = *this->model();
     if (event.key() == KeyCode::Key_Return) {
-        selection().for_each_index([this](auto& index) {
-            activate(index);
-        });
+        activate_selected();
         return;
     }
     if (event.key() == KeyCode::Key_Up) {
@@ -233,13 +231,10 @@ void GListView::doubleclick_event(GMouseEvent& event)
         return;
     if (event.button() == GMouseButton::Left) {
         if (!selection().is_empty()) {
-            if (is_editable()) {
+            if (is_editable())
                 begin_editing(selection().first());
-            } else {
-                selection().for_each_index([this](auto& index) {
-                    activate(index);
-                });
-            }
+            else
+                activate_selected();
         }
     }
 }
