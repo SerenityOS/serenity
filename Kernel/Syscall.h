@@ -327,6 +327,11 @@ struct SC_readlink_params {
     MutableBufferArgument<char, size_t> buffer;
 };
 
+struct SC_link_params {
+    StringArgument old_path;
+    StringArgument new_path;
+};
+
 void initialize();
 int sync();
 

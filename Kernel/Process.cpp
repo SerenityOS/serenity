@@ -1564,6 +1564,15 @@ bool Process::validate(const Syscall::MutableBufferArgument<DataType, SizeType>&
     return validate_write(buffer.data, buffer.size);
 }
 
+String Process::validate_and_copy_string_from_user(const Syscall::StringArgument& string) const
+{
+    if (!validate_read(string.characters, string.length))
+        return {};
+    SmapDisabler disabler;
+    size_t length = strnlen(string.characters, string.length);
+    return String(string.characters, length);
+}
+
 int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
 {
     if (!validate_read_typed(user_params))
@@ -2548,14 +2557,17 @@ Custody& Process::current_directory()
     return *m_cwd;
 }
 
-int Process::sys$link(const char* old_path, const char* new_path)
+int Process::sys$link(const Syscall::SC_link_params* user_params)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(old_path))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
-    if (!validate_read_str(new_path))
+    Syscall::SC_link_params params;
+    copy_from_user(&params, user_params, sizeof(params));
+    auto old_path = validate_and_copy_string_from_user(params.old_path);
+    auto new_path = validate_and_copy_string_from_user(params.new_path);
+    if (old_path.is_null() || new_path.is_null())
         return -EFAULT;
-    return VFS::the().link(StringView(old_path), StringView(new_path), current_directory());
+    return VFS::the().link(old_path, new_path, current_directory());
 }
 
 int Process::sys$unlink(const char* user_path, size_t path_length)
