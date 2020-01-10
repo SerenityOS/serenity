@@ -22,9 +22,6 @@
 *.cxxflags
 *.autosave
 Root
-Toolchain/Tarballs
-Toolchain/Build
-Toolchain/Local
 .vscode
 .ccls-cache
 .DS_Store

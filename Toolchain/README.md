@@ -15,11 +15,31 @@ the cross compilation toolchain and build toolchain for ports.
 
 The cross compile toolchain contains
 
-- binutils 2.32
+- GCC 9 with its dependencies: binutils, serenity-libc, serenity-libm
+- QEMU 4.1 with its dependencies: bison
+- fuse-ext2 for macos ext2 tools
+- Python for the build of the Python port
 
-- GCC 8.3.0
+These are all built from source with some patches applied.
 
-These are built from source with some patches applied.
+To build the essential toolchain, run the script `./build-essential.sh` which will build GCC and its dependencies.
+To build the optional toolchain, run the script `./build-optional.sh` which will build QEMU, Python, fise-ext2 and its dependencies.
+
+To build specific packages, go the package subfolder and run the `./package.sh` script.
+
+To do single steps of a package you can specify them as parameter: `./package.sh build`
+Possible steps are:
+- `fetch` - download the software files
+- `configure` - run the configure command
+- `build` - run the `make` command
+- `install` - run the `make install` command
+- `clean` - clean the build directory
+- `clean_dist` - clean the downloaded files 
+- `clean_all` - clean all artifacts (downloaded and extracted files, build) 
+
+To use the optional software, the `PATH` variable has to be extended with the `Toolchain/Local/bin` folder.
+E.g. by invoking `export PATH="/path/to/serenity/Toolchain/Local/bin:$PATH"` on the command line or by adding this
+line to the shell rc script (`~/.bashrc`, `~/.zshrc`, ...)
 
 ### Dependencies
 
@@ -29,12 +49,12 @@ These are built from source with some patches applied.
     sudo apt install build-essential curl libmpfr-dev libmpc-dev libgmp-dev
     ```
 
-- GCC 8
+- GCC 9
 
     ```bash
     sudo add-apt-repository ppa:ubuntu-toolchain-r/test
-    sudo apt-get install gcc-8 g++-8
-    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-8 800 --slave /usr/bin/g++ g++ /usr/bin/g++-8
+    sudo apt-get install gcc-9 g++-9
+    sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-9 900 --slave /usr/bin/g++ g++ /usr/bin/g++-9
     ```
 
 - e2fsprogs

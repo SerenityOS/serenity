@@ -1,3 +1,5 @@
-# Created by QEMU build
-config-temp
-config.log
+packages.db
+*/*
+!*/package.sh
+!*/patches
+!*/patches/*

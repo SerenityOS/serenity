@@ -21,6 +21,6 @@ if [ -x "$(command -v python3)" ]; then
     exit 1
   fi
 else
-    echo 'Error: python3 is not installed, please build python3.6 with Toolchain/BuildPython.sh !' >&2
+    echo 'Error: python3 is not installed, please build python3.6 with Toolchain/python/package.sh !' >&2
     exit 1
 fi
