@@ -102,7 +102,10 @@ void GColumnsView::paint_event(GPaintEvent& event)
             }
         }
 
-        painter.draw_line({ column_x + column.width, 0 }, { column_x + column.width, frame_inner_rect().bottom() }, palette().button());
+        int separator_height = content_size().height();
+        if (height() > separator_height)
+            separator_height = height();
+        painter.draw_line({ column_x + column.width, 0 }, { column_x + column.width, separator_height }, palette().button());
         column_x += column.width + 1;
     }
 }
