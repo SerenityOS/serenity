@@ -96,10 +96,7 @@ RefPtr<Inode> TmpFS::create_directory(InodeIdentifier parent_id, const String& n
     // Ensure it's a directory.
     mode &= ~0170000;
     mode |= 0040000;
-    auto new_directory = create_inode(parent_id, name, mode, 0, 0, uid, gid, error);
-    new_directory->add_child(new_directory->identifier(), ".", 0);
-    new_directory->add_child(parent_id, "..", 0);
-    return new_directory;
+    return create_inode(parent_id, name, mode, 0, 0, uid, gid, error);
 }
 
 TmpFSInode::TmpFSInode(TmpFS& fs, InodeMetadata metadata, InodeIdentifier parent)
@@ -125,10 +122,7 @@ NonnullRefPtr<TmpFSInode> TmpFSInode::create_root(TmpFS& fs)
 {
     InodeMetadata metadata;
     metadata.mode = 0041777;
-    auto root_inode = create(fs, metadata, { fs.fsid(), 1 });
-    root_inode->add_child(root_inode->identifier(), ".", 0);
-    root_inode->add_child(root_inode->identifier(), "..", 0);
-    return root_inode;
+    return create(fs, metadata, { fs.fsid(), 1 });
 }
 
 InodeMetadata TmpFSInode::metadata() const
@@ -144,6 +138,9 @@ bool TmpFSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>
 
     if (!is_directory())
         return false;
+
+    callback({ ".", identifier(), 0 });
+    callback({ "..", m_parent, 0 });
 
     for (auto& it : m_children)
         callback(it.value.entry);
@@ -222,7 +219,7 @@ size_t TmpFSInode::directory_entry_count() const
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
-    return m_children.size();
+    return 2 + m_children.size();
 }
 
 void TmpFSInode::flush_metadata()
@@ -277,6 +274,9 @@ KResult TmpFSInode::remove_child(const StringView& name)
 {
     LOCKER(m_lock);
     ASSERT(is_directory());
+
+    if (name == "." || name == "..")
+        return KSuccess;
 
     auto it = m_children.find(name);
     if (it == m_children.end())
