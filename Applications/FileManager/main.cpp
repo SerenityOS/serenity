@@ -149,6 +149,7 @@ int main(int argc, char** argv)
 
     RefPtr<GAction> view_as_table_action;
     RefPtr<GAction> view_as_icons_action;
+    RefPtr<GAction> view_as_columns_action;
 
     view_as_table_action = GAction::create("Table view", { Mod_Ctrl, KeyCode::Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/table-view.png"), [&](const GAction&) {
         directory_view->set_view_mode(DirectoryView::ViewMode::List);
@@ -168,10 +169,20 @@ int main(int argc, char** argv)
     });
     view_as_icons_action->set_checkable(true);
 
+    view_as_columns_action = GAction::create("Columns view", GraphicsBitmap::load_from_file("/res/icons/16x16/columns-view.png"), [&](const GAction&) {
+        directory_view->set_view_mode(DirectoryView::ViewMode::Columns);
+        view_as_columns_action->set_checked(true);
+
+        config->write_entry("DirectoryView", "ViewMode", "Columns");
+        config->sync();
+    });
+    view_as_columns_action->set_checkable(true);
+
     auto view_type_action_group = make<GActionGroup>();
     view_type_action_group->set_exclusive(true);
     view_type_action_group->add_action(*view_as_table_action);
     view_type_action_group->add_action(*view_as_icons_action);
+    view_type_action_group->add_action(*view_as_columns_action);
 
     auto selected_file_paths = [&] {
         Vector<String> paths;
@@ -385,6 +396,7 @@ int main(int argc, char** argv)
     auto view_menu = GMenu::construct("View");
     view_menu->add_action(*view_as_icons_action);
     view_menu->add_action(*view_as_table_action);
+    view_menu->add_action(*view_as_columns_action);
     menubar->add_menu(move(view_menu));
 
     auto go_menu = GMenu::construct("Go");
@@ -416,6 +428,7 @@ int main(int argc, char** argv)
     main_toolbar->add_separator();
     main_toolbar->add_action(*view_as_icons_action);
     main_toolbar->add_action(*view_as_table_action);
+    main_toolbar->add_action(*view_as_columns_action);
 
     directory_view->on_path_change = [&](const String& new_path) {
         window->set_title(String::format("File Manager: %s", new_path.characters()));
@@ -545,6 +558,9 @@ int main(int argc, char** argv)
     if (dir_view_mode.contains("List")) {
         directory_view->set_view_mode(DirectoryView::ViewMode::List);
         view_as_table_action->set_checked(true);
+    } else if (dir_view_mode.contains("Columns")) {
+        directory_view->set_view_mode(DirectoryView::ViewMode::Columns);
+        view_as_columns_action->set_checked(true);
     } else {
         directory_view->set_view_mode(DirectoryView::ViewMode::Icon);
         view_as_icons_action->set_checked(true);

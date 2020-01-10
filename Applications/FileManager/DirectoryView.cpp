@@ -89,12 +89,16 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_item_view = GItemView::construct(this);
     m_item_view->set_model(model());
 
+    m_columns_view = GColumnsView::construct(this);
+    m_columns_view->set_model(model());
+
     m_table_view = GTableView::construct(this);
     m_table_view->set_model(GSortingProxyModel::create(m_model));
 
     m_table_view->model()->set_key_column_and_sort_order(GFileSystemModel::Column::Name, GSortOrder::Ascending);
 
     m_item_view->set_model_column(GFileSystemModel::Column::Name);
+    m_columns_view->set_model_column(GFileSystemModel::Column::Name);
 
     m_model->on_root_path_change = [this] {
         m_table_view->selection().clear();
@@ -122,6 +126,9 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_item_view->on_activation = [&](const GModelIndex& index) {
         handle_activation(index);
     };
+    m_columns_view->on_activation = [&](const GModelIndex& index) {
+        handle_activation(index);
+    };
     m_table_view->on_activation = [&](auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_table_view->model();
         handle_activation(filter_model.map_to_target(index));
@@ -137,6 +144,11 @@ DirectoryView::DirectoryView(GWidget* parent)
         if (on_selection_change)
             on_selection_change(*m_item_view);
     };
+    m_columns_view->on_selection_change = [this] {
+        update_statusbar();
+        if (on_selection_change)
+            on_selection_change(*m_columns_view);
+    };
 
     m_table_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
@@ -145,6 +157,10 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_item_view->on_context_menu_request = [this](auto& index, auto& event) {
         if (on_context_menu_request)
             on_context_menu_request(*m_item_view, index, event);
+    };
+    m_columns_view->on_context_menu_request = [this](auto& index, auto& event) {
+        if (on_context_menu_request)
+            on_context_menu_request(*m_columns_view, index, event);
     };
 
     set_view_mode(ViewMode::Icon);
@@ -162,6 +178,10 @@ void DirectoryView::set_view_mode(ViewMode mode)
     update();
     if (mode == ViewMode::List) {
         set_active_widget(m_table_view);
+        return;
+    }
+    if (mode == ViewMode::Columns) {
+        set_active_widget(m_columns_view);
         return;
     }
     if (mode == ViewMode::Icon) {
