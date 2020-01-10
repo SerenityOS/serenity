@@ -60,7 +60,8 @@ public:
 
     bool is_valid(const GModelIndex& index) const
     {
-        return index.row() >= 0 && index.row() < row_count() && index.column() >= 0 && index.column() < column_count();
+        auto parent_index = this->parent_index(index);
+        return index.row() >= 0 && index.row() < row_count(parent_index) && index.column() >= 0 && index.column() < column_count(parent_index);
     }
 
     virtual int key_column() const { return -1; }
