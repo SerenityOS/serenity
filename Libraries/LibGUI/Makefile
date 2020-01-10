@@ -41,6 +41,7 @@ OBJS = \
     GTreeView.o \
     GFileSystemModel.o \
     GFilePicker.o \
+    GColumnsView.o \
     GSplitter.o \
     GSpinBox.o \
     GGroupBox.o \
