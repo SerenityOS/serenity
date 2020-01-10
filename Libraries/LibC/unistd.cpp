@@ -326,7 +326,8 @@ int gethostname(char* buffer, size_t size)
 
 ssize_t readlink(const char* path, char* buffer, size_t size)
 {
-    int rc = syscall(SC_readlink, path, buffer, size);
+    Syscall::SC_readlink_params params { { path, strlen(path) }, { buffer, size } };
+    int rc = syscall(SC_readlink, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

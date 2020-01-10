@@ -151,7 +151,7 @@ public:
     int sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params*);
     int sys$gethostname(char*, ssize_t);
     int sys$uname(utsname*);
-    int sys$readlink(const char*, char*, ssize_t);
+    int sys$readlink(const Syscall::SC_readlink_params*);
     int sys$ttyname_r(int fd, char*, ssize_t);
     int sys$ptsname_r(int fd, char*, ssize_t);
     pid_t sys$fork(RegisterDump&);
@@ -260,6 +260,8 @@ public:
     bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T>
     bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
+    template<typename DataType, typename SizeType>
+    bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
 
     Custody& current_directory();
     Custody* executable() { return m_executable.ptr(); }

@@ -305,6 +305,12 @@ struct SyscallString {
     size_t length { 0 };
 };
 
+template<typename DataType, typename SizeType>
+struct MutableBufferArgument {
+    DataType* data { nullptr };
+    SizeType size { 0 };
+};
+
 struct SyscallStringList {
     SyscallString* strings { nullptr };
     size_t length { 0 };
@@ -314,6 +320,11 @@ struct SC_execve_params {
     SyscallString path;
     SyscallStringList arguments;
     SyscallStringList environment;
+};
+
+struct SC_readlink_params {
+    SyscallString path;
+    MutableBufferArgument<char, size_t> buffer;
 };
 
 void initialize();
