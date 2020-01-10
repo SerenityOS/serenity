@@ -5,6 +5,9 @@
 
 #ifdef KERNEL
 #include <Kernel/VM/MemoryManager.h>
+#define do_memcpy copy_to_user
+#else
+#define do_memcpy memcpy
 #endif
 
 //#define ELFLOADER_DEBUG
@@ -48,7 +51,7 @@ bool ELFLoader::layout()
                 failed = true;
                 return;
             }
-            memcpy(tls_image, program_header.raw_data(), program_header.size_in_image());
+            do_memcpy(tls_image, program_header.raw_data(), program_header.size_in_image());
 #endif
             return;
         }
@@ -75,7 +78,7 @@ bool ELFLoader::layout()
                 failed = true;
                 return;
             }
-            memcpy(program_header.vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image());
+            do_memcpy(program_header.vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image());
         } else {
             auto* mapped_section = map_section_hook(
                 program_header.vaddr(),

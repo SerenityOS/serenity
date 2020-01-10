@@ -165,13 +165,16 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
     return &m_regions.last();
 }
 
-Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot)
+Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible)
 {
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
     offset_in_vmobject &= PAGE_MASK;
-    m_regions.append(Region::create_user_accessible(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
+    if (user_accessible)
+        m_regions.append(Region::create_user_accessible(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
+    else
+        m_regions.append(Region::create_kernel_only(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
     m_regions.last().map(page_directory());
     return &m_regions.last();
 }
@@ -669,7 +672,7 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     ASSERT(description->inode());
     auto vmobject = InodeVMObject::create_with_inode(*description->inode());
-    auto* region = allocate_region_with_vmobject(VirtualAddress(), metadata.size, vmobject, 0, description->absolute_path(), PROT_READ);
+    auto* region = allocate_region_with_vmobject(VirtualAddress(), metadata.size, vmobject, 0, description->absolute_path(), PROT_READ, false);
     ASSERT(region);
 
     // NOTE: We yank this out of 'm_regions' since we're about to manipulate the vector
@@ -682,7 +685,6 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 
     OwnPtr<ELFLoader> loader;
     {
-        SmapDisabler disabler;
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
         m_regions.append(move(executable_region));
@@ -740,9 +742,6 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         dump_regions();
 #endif
     }
-
-    region->set_user_accessible(false);
-    region->remap();
 
     m_elf_loader = move(loader);
     m_executable = description->custody();
