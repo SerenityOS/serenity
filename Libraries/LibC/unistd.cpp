@@ -2,6 +2,7 @@
 #include <AK/String.h>
 #include <AK/Vector.h>
 #include <Kernel/Syscall.h>
+#include <alloca.h>
 #include <assert.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -49,7 +50,31 @@ int execv(const char* path, char* const argv[])
 
 int execve(const char* filename, char* const argv[], char* const envp[])
 {
-    int rc = syscall(SC_execve, filename, argv, envp);
+    size_t arg_count = 0;
+    for (size_t i = 0; argv[i]; ++i)
+        ++arg_count;
+
+    size_t env_count = 0;
+    for (size_t i = 0; envp[i]; ++i)
+        ++env_count;
+
+    auto copy_strings = [&](auto& vec, size_t count, auto& output) {
+        output.length = count;
+        for (size_t i = 0; vec[i]; ++i) {
+            output.strings[i].characters = vec[i];
+            output.strings[i].length = strlen(vec[i]);
+        }
+    };
+
+    Syscall::SC_execve_params params;
+    params.arguments.strings = (Syscall::SyscallString*)alloca(arg_count * sizeof(Syscall::SyscallString));
+    params.environment.strings = (Syscall::SyscallString*)alloca(env_count * sizeof(Syscall::SyscallString));
+
+    params.path = { filename, strlen(filename) };
+    copy_strings(argv, arg_count, params.arguments);
+    copy_strings(envp, env_count, params.environment);
+
+    int rc = syscall(SC_execve, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

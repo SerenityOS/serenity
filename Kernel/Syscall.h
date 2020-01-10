@@ -300,6 +300,22 @@ struct SC_set_mmap_name_params {
     size_t name_length;
 };
 
+struct SyscallString {
+    const char* characters { nullptr };
+    size_t length { 0 };
+};
+
+struct SyscallStringList {
+    SyscallString* strings { nullptr };
+    size_t length { 0 };
+};
+
+struct SC_execve_params {
+    SyscallString path;
+    SyscallStringList arguments;
+    SyscallStringList environment;
+};
+
 void initialize();
 int sync();
 
