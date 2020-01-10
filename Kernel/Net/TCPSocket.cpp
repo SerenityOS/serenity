@@ -341,7 +341,7 @@ KResult TCPSocket::protocol_connect(FileDescription& description, ShouldBlock sh
     m_direction = Direction::Outgoing;
 
     if (should_block == ShouldBlock::Yes) {
-        if (current->block<Thread::ConnectBlocker>(description) == Thread::BlockResult::InterruptedBySignal)
+        if (current->block<Thread::ConnectBlocker>(description) != Thread::BlockResult::WokeNormally)
             return KResult(-EINTR);
         ASSERT(setup_state() == SetupState::Completed);
         if (has_error()) {
