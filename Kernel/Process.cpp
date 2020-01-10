@@ -4146,6 +4146,7 @@ int Process::sys$chroot(const char* user_path, size_t path_length)
     auto directory_or_error = VFS::the().open_directory(path.value(), current_directory());
     if (directory_or_error.is_error())
         return directory_or_error.error();
+    m_root_directory_for_procfs = directory_or_error.value();
     set_root_directory(Custody::create(nullptr, "", directory_or_error.value()->inode()));
     return 0;
 }
@@ -4155,6 +4156,13 @@ Custody& Process::root_directory()
     if (!m_root_directory)
         m_root_directory = VFS::the().root_custody();
     return *m_root_directory;
+}
+
+Custody& Process::root_directory_for_procfs()
+{
+    if (!m_root_directory_for_procfs)
+        m_root_directory_for_procfs = root_directory();
+    return *m_root_directory_for_procfs;
 }
 
 void Process::set_root_directory(const Custody& root)
