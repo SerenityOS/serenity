@@ -100,7 +100,8 @@ void GTreeView::traverse_in_paint_order(Callback callback) const
     int tree_column_x_offset = 0;
 
     for (int i = 0; i < tree_column; ++i) {
-        tree_column_x_offset += column_width(i);
+        if (!is_column_hidden(i))
+            tree_column_x_offset += column_width(i);
     }
 
     Function<IterationDecision(const GModelIndex&)> traverse_index = [&](const GModelIndex& index) {
@@ -162,7 +163,8 @@ void GTreeView::paint_event(GPaintEvent& event)
     int tree_column = model.tree_column();
     int tree_column_x_offset = 0;
     for (int i = 0; i < tree_column; ++i) {
-        tree_column_x_offset += column_width(i);
+        if (!is_column_hidden(i))
+            tree_column_x_offset += column_width(i);
     }
     int y_offset = header_height();
 
