@@ -294,6 +294,7 @@ void Service::save_to(JsonObject& json)
     json.set("priority", m_priority);
     json.set("keep_alive", m_keep_alive);
     json.set("socket_path", m_socket_path);
+    json.set("socket_permissions", m_socket_permissions);
     json.set("lazy", m_lazy);
     json.set("user", m_user);
     json.set("uid", m_uid);
