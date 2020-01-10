@@ -174,6 +174,20 @@ void test_open_create_device()
     close(fd);
 }
 
+void test_unlink_symlink()
+{
+    int rc = symlink("/proc/2/foo", "/tmp/linky");
+    if (rc < 0) {
+        perror("symlink");
+        ASSERT_NOT_REACHED();
+    }
+    rc = unlink("/tmp/linky");
+    if (rc < 0) {
+        perror("unlink");
+        fprintf(stderr, "Expected unlink() of a symlink into an unreadable directory to succeed!\n");
+    }
+}
+
 int main(int, char**)
 {
     int rc;
@@ -196,6 +210,7 @@ int main(int, char**)
     test_tmpfs_read_past_end();
     test_procfs_read_past_end();
     test_open_create_device();
+    test_unlink_symlink();
 
     return 0;
 }
