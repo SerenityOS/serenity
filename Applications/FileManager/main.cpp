@@ -269,7 +269,7 @@ int main(int argc, char** argv)
 
     enum class ConfirmBeforeDelete { No,
         Yes };
-
+    bool delete_confirmation_open = false;
     auto do_delete = [&](ConfirmBeforeDelete confirm, const GAction& action) {
         Vector<String> paths;
         if (action.activator() == directory_context_menu || directory_view->active_widget()->is_focused()) {
@@ -288,17 +288,20 @@ int main(int argc, char** argv)
             }
 
             if (confirm == ConfirmBeforeDelete::Yes) {
+                delete_confirmation_open = true;
                 auto result = GMessageBox::show(
                     message,
                     "Confirm deletion",
                     GMessageBox::Type::Warning,
                     GMessageBox::InputType::OKCancel,
                     window);
-                if (result == GMessageBox::ExecCancel)
+                if (result == GMessageBox::ExecCancel) {
+                    delete_confirmation_open = false;
                     return;
+                }
             }
         }
-
+        delete_confirmation_open = false;
         for (auto& path : paths) {
             struct stat st;
             if (lstat(path.characters(), &st)) {
@@ -346,7 +349,8 @@ int main(int argc, char** argv)
     });
 
     auto delete_action = GCommonActions::make_delete_action([&](const GAction& action) {
-        do_delete(ConfirmBeforeDelete::Yes, action);
+        if (!delete_confirmation_open)
+            do_delete(ConfirmBeforeDelete::Yes, action);
     });
     delete_action->set_enabled(false);
 
