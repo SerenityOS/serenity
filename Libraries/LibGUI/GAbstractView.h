@@ -51,6 +51,7 @@ protected:
 
     virtual void did_scroll() override;
     void activate(const GModelIndex&);
+    void activate_selected();
     void update_edit_widget_position();
 
     bool m_editable { false };

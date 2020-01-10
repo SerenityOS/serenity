@@ -113,6 +113,16 @@ void GAbstractView::activate(const GModelIndex& index)
         on_activation(index);
 }
 
+void GAbstractView::activate_selected()
+{
+    if (!on_activation)
+        return;
+
+    selection().for_each_index([this](auto& index) {
+        on_activation(index);
+    });
+}
+
 void GAbstractView::notify_selection_changed(Badge<GModelSelection>)
 {
     did_update_selection();
