@@ -1,6 +1,7 @@
 #pragma once
 
 #include <AK/Vector.h>
+#include <LibGUI/GColumnsView.h>
 #include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GStackWidget.h>
@@ -31,6 +32,7 @@ public:
     enum ViewMode {
         Invalid,
         List,
+        Columns,
         Icon
     };
     void set_view_mode(ViewMode);
@@ -41,6 +43,8 @@ public:
         switch (m_view_mode) {
         case ViewMode::List:
             return *m_table_view;
+        case ViewMode::Columns:
+            return *m_columns_view;
         case ViewMode::Icon:
             return *m_item_view;
         default:
@@ -53,6 +57,7 @@ public:
     {
         callback(*m_table_view);
         callback(*m_item_view);
+        callback(*m_columns_view);
     }
 
     GFileSystemModel& model() { return *m_model; }
@@ -75,4 +80,5 @@ private:
 
     RefPtr<GTableView> m_table_view;
     RefPtr<GItemView> m_item_view;
+    RefPtr<GColumnsView> m_columns_view;
 };
