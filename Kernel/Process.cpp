@@ -932,9 +932,9 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
             return true;
         if (!validate_read_typed(list.strings, list.length))
             return false;
-        Vector<Syscall::SyscallString, 32> strings;
+        Vector<Syscall::StringArgument, 32> strings;
         strings.resize(list.length);
-        copy_from_user(strings.data(), list.strings, list.length * sizeof(Syscall::SyscallString));
+        copy_from_user(strings.data(), list.strings, list.length * sizeof(Syscall::StringArgument));
         for (size_t i = 0; i < list.length; ++i) {
             if (!validate_read(strings[i].characters, strings[i].length))
                 return false;
