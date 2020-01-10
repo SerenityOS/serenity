@@ -909,50 +909,49 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
     return 0;
 }
 
-int Process::sys$execve(const char* filename, const char** argv, const char** envp)
+int Process::sys$execve(const Syscall::SC_execve_params* user_params)
 {
-    SmapDisabler disabler;
     // NOTE: Be extremely careful with allocating any kernel memory in exec().
     //       On success, the kernel stack will be lost.
-    if (!validate_read_str(filename))
+    Syscall::SC_execve_params params;
+    if (!validate_read_typed(user_params))
         return -EFAULT;
-    if (!*filename)
+    copy_from_user(&params, user_params, sizeof(params));
+
+    if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
+        return -E2BIG;
+
+    if (!validate_read(params.path.characters, params.path.length))
+        return -EFAULT;
+
+    if (params.path.length == 0)
         return -ENOENT;
-    if (argv) {
-        if (!validate_read_typed(argv))
-            return -EFAULT;
-        for (size_t i = 0; argv[i]; ++i) {
-            if (!validate_read_str(argv[i]))
-                return -EFAULT;
-        }
-    }
-    if (envp) {
-        if (!validate_read_typed(envp))
-            return -EFAULT;
-        for (size_t i = 0; envp[i]; ++i) {
-            if (!validate_read_str(envp[i]))
-                return -EFAULT;
-        }
-    }
 
-    String path(filename);
+    auto copy_user_strings = [&](const auto& list, auto& output) {
+        if (!list.length)
+            return true;
+        if (!validate_read_typed(list.strings, list.length))
+            return false;
+        Vector<Syscall::SyscallString, 32> strings;
+        strings.resize(list.length);
+        copy_from_user(strings.data(), list.strings, list.length * sizeof(Syscall::SyscallString));
+        for (size_t i = 0; i < list.length; ++i) {
+            if (!validate_read(strings[i].characters, strings[i].length))
+                return false;
+            output.append(copy_string_from_user(strings[i].characters, strings[i].length));
+        }
+        return true;
+    };
+
     Vector<String> arguments;
-    Vector<String> environment;
-    {
-        auto parts = path.split('/');
-        if (argv) {
-            for (size_t i = 0; argv[i]; ++i) {
-                arguments.append(argv[i]);
-            }
-        } else {
-            arguments.append(parts.last());
-        }
+    if (!copy_user_strings(params.arguments, arguments))
+        return -EFAULT;
 
-        if (envp) {
-            for (size_t i = 0; envp[i]; ++i)
-                environment.append(envp[i]);
-        }
-    }
+    Vector<String> environment;
+    if (!copy_user_strings(params.environment, environment))
+        return -EFAULT;
+
+    auto path = copy_string_from_user(params.path.characters, params.path.length);
 
     int rc = exec(move(path), move(arguments), move(environment));
     ASSERT(rc < 0); // We should never continue after a successful exec!
