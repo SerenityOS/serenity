@@ -189,6 +189,13 @@ NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, const Strin
     return region;
 }
 
+NonnullOwnPtr<Region> Region::create_kernel_only(const Range& range, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const StringView& name, u8 access)
+{
+    auto region = make<Region>(range, move(vmobject), offset_in_vmobject, name, access);
+    region->m_user_accessible = false;
+    return region;
+}
+
 bool Region::should_cow(size_t page_index) const
 {
     if (m_shared)

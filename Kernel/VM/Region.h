@@ -30,6 +30,7 @@ public:
     static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access);
     static NonnullOwnPtr<Region> create_user_accessible(const Range&, NonnullRefPtr<Inode>, const StringView& name, u8 access);
     static NonnullOwnPtr<Region> create_kernel_only(const Range&, const StringView& name, u8 access);
+    static NonnullOwnPtr<Region> create_kernel_only(const Range&, NonnullRefPtr<VMObject>, size_t offset_in_vmobject, const StringView& name, u8 access);
 
     ~Region();
 
