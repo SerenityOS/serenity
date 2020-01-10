@@ -55,6 +55,8 @@ Custody::~Custody()
 
 String Custody::absolute_path() const
 {
+    if (!parent())
+        return "/";
     Vector<const Custody*, 32> custody_chain;
     for (auto* custody = this; custody; custody = custody->parent())
         custody_chain.append(custody);
