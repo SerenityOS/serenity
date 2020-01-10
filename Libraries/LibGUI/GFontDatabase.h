@@ -1,8 +1,8 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
+#include <AK/String.h>
 
 class Font;
 

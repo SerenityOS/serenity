@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GWidget.h>
 #include <LibDraw/StylePainter.h>
+#include <LibGUI/GWidget.h>
 
 class GFrame : public GWidget {
     C_OBJECT(GFrame)
