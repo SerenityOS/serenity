@@ -1,11 +1,11 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
-#include <LibGUI/GAbstractButton.h>
+#include <AK/String.h>
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/StylePainter.h>
 #include <LibDraw/TextAlignment.h>
+#include <LibGUI/GAbstractButton.h>
 
 class GAction;
 

@@ -1,6 +1,6 @@
+#include <LibDraw/StylePainter.h>
 #include <LibGUI/GFrame.h>
 #include <LibGUI/GPainter.h>
-#include <LibDraw/StylePainter.h>
 
 GFrame::GFrame(GWidget* parent)
     : GWidget(parent)

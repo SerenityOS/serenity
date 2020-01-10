@@ -1,7 +1,7 @@
 #pragma once
 
-#include <LibGUI/GFrame.h>
 #include <LibDraw/TextAlignment.h>
+#include <LibGUI/GFrame.h>
 
 class GraphicsBitmap;
 

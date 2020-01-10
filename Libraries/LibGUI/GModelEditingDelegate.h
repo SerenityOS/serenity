@@ -26,7 +26,7 @@ public:
     virtual GVariant value() const = 0;
     virtual void set_value(const GVariant&) = 0;
 
-    virtual void will_begin_editing() { }
+    virtual void will_begin_editing() {}
 
 protected:
     virtual RefPtr<GWidget> create_widget() = 0;

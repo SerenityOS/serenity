@@ -1,7 +1,7 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Function.h>
+#include <AK/String.h>
 #include <LibGUI/GAbstractButton.h>
 
 class GCheckBox : public GAbstractButton {

@@ -1,10 +1,10 @@
 #include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
+#include <LibDraw/StylePainter.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GActionGroup.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GPainter.h>
-#include <LibDraw/StylePainter.h>
 
 GButton::GButton(GWidget* parent)
     : GAbstractButton(parent)

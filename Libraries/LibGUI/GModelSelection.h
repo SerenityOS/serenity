@@ -50,7 +50,7 @@ public:
 
         for (auto& index : m_indexes)
             selected_indexes.append(index);
-            
+
         return selected_indexes;
     }
 

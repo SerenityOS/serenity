@@ -66,7 +66,6 @@ void GUndoStack::push(NonnullOwnPtr<GCommand>&& command)
     m_stack[0].m_undo_vector.prepend(move(command));
 }
 
-
 void GUndoStack::finalize_current_combo()
 {
     if (m_stack.is_empty())
