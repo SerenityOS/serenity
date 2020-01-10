@@ -9,7 +9,7 @@
 #include <stdio.h>
 #include <unistd.h>
 
-PropertiesDialog::PropertiesDialog(GDirectoryModel& model, String path, bool disable_rename, CObject* parent)
+PropertiesDialog::PropertiesDialog(GFileSystemModel& model, String path, bool disable_rename, CObject* parent)
     : GDialog(parent)
     , m_model(model)
 {
@@ -92,8 +92,8 @@ PropertiesDialog::PropertiesDialog(GDirectoryModel& model, String path, bool dis
     properties.append({ "Size:", String::format("%zu bytes", st.st_size) });
     properties.append({ "Owner:", String::format("%s (%lu)", user_pw->pw_name, static_cast<u32>(user_pw->pw_uid)) });
     properties.append({ "Group:", String::format("%s (%lu)", group_pw->pw_name, static_cast<u32>(group_pw->pw_uid)) });
-    properties.append({ "Created at:", GDirectoryModel::timestamp_string(st.st_ctime) });
-    properties.append({ "Last modified:", GDirectoryModel::timestamp_string(st.st_mtime) });
+    properties.append({ "Created at:", GFileSystemModel::timestamp_string(st.st_ctime) });
+    properties.append({ "Last modified:", GFileSystemModel::timestamp_string(st.st_mtime) });
 
     make_property_value_pairs(properties, general_tab);
 
@@ -127,7 +127,6 @@ PropertiesDialog::~PropertiesDialog() {}
 
 void PropertiesDialog::update()
 {
-    m_model.update();
     m_icon->set_icon(const_cast<GraphicsBitmap*>(m_model.icon_for_file(m_mode, m_name).bitmap_for_size(32)));
     set_title(String::format("Properties of \"%s\"", m_name.characters()));
 }
@@ -146,7 +145,7 @@ void PropertiesDialog::permission_changed(mode_t mask, bool set)
 
 String PropertiesDialog::make_full_path(String name)
 {
-    return String::format("%s/%s", m_model.path().characters(), name.characters());
+    return String::format("%s/%s", m_model.root_path().characters(), name.characters());
 }
 
 bool PropertiesDialog::apply_changes()

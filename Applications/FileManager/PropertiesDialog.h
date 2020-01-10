@@ -4,7 +4,7 @@
 #include <LibCore/CFile.h>
 #include <LibGUI/GButton.h>
 #include <LibGUI/GDialog.h>
-#include <LibGUI/GDirectoryModel.h>
+#include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GTextBox.h>
 
@@ -14,7 +14,7 @@ public:
     virtual ~PropertiesDialog() override;
 
 private:
-    explicit PropertiesDialog(GDirectoryModel&, String, bool disable_rename, CObject* parent = nullptr);
+    PropertiesDialog(GFileSystemModel&, String, bool disable_rename, CObject* parent = nullptr);
 
     struct PropertyValuePair {
         String property;
@@ -58,7 +58,7 @@ private:
     void update();
     String make_full_path(String name);
 
-    GDirectoryModel& m_model;
+    GFileSystemModel& m_model;
     RefPtr<GButton> m_apply_button;
     RefPtr<GTextBox> m_name_box;
     RefPtr<GLabel> m_icon;
