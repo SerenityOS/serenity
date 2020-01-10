@@ -229,6 +229,7 @@ public:
     int sys$futex(const Syscall::SC_futex_params*);
     int sys$set_thread_boost(int tid, int amount);
     int sys$set_process_boost(pid_t, int amount);
+    int sys$chroot(const char* path, size_t path_length);
 
     static void initialize();
 
@@ -309,6 +310,9 @@ public:
 
     u32 priority_boost() const { return m_priority_boost; }
 
+    Custody& root_directory();
+    void set_root_directory(const Custody&);
+
 private:
     friend class MemoryManager;
     friend class Scheduler;
@@ -369,6 +373,7 @@ private:
 
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
+    RefPtr<Custody> m_root_directory;
 
     RefPtr<TTY> m_tty;
 

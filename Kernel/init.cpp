@@ -145,6 +145,8 @@ VFS* vfs;
         hang();
     }
 
+    current->process().set_root_directory(vfs->root_custody());
+
     dbgprintf("Load ksyms\n");
     load_ksyms();
     dbgprintf("Loaded ksyms\n");
