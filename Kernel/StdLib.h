@@ -6,6 +6,10 @@ namespace AK {
 class String;
 }
 
+namespace Syscall {
+struct StringArgument;
+}
+
 AK::String copy_string_from_user(const char*, size_t);
 
 extern "C" {

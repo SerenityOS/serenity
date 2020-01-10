@@ -175,7 +175,7 @@ public:
     int sys$mkdir(const char* pathname, size_t path_length, mode_t mode);
     clock_t sys$times(tms*);
     int sys$utime(const char* pathname, size_t path_length, const struct utimbuf*);
-    int sys$link(const char* old_path, const char* new_path);
+    int sys$link(const Syscall::SC_link_params*);
     int sys$unlink(const char* pathname, size_t path_length);
     int sys$symlink(const char* target, const char* linkpath);
     int sys$rmdir(const char* pathname, size_t path_length);
@@ -262,6 +262,8 @@ public:
     bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
     template<typename DataType, typename SizeType>
     bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
+
+    String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
 
     Custody& current_directory();
     Custody* executable() { return m_executable.ptr(); }
