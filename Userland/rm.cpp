@@ -12,9 +12,8 @@
 int remove(bool recursive, const char* path)
 {
     struct stat path_stat;
-    int s = stat(path, &path_stat);
-    if (s < 0) {
-        perror("stat");
+    if (lstat(path, &path_stat) < 0) {
+        perror("lstat");
         return 1;
     }
 
