@@ -65,7 +65,9 @@ NonnullOwnPtr<Region> Region::clone()
             vaddr().get());
 #endif
         // Create a new region backed by the same VMObject.
-        return Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
+        auto region = Region::create_user_accessible(m_range, m_vmobject, m_offset_in_vmobject, m_name, m_access);
+        region->set_mmap(m_mmap);
+        return region;
     }
 
 #ifdef MM_DEBUG
@@ -87,6 +89,7 @@ NonnullOwnPtr<Region> Region::clone()
         ASSERT(vmobject().is_anonymous());
         clone_region->set_stack(true);
     }
+    clone_region->set_mmap(m_mmap);
     return clone_region;
 }
 
