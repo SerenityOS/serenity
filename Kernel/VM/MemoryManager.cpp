@@ -496,7 +496,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 
     if (should_zero_fill == ShouldZeroFill::Yes) {
         auto* ptr = (u32*)quickmap_page(*page);
-        memset_user(ptr, 0, PAGE_SIZE);
+        memset(ptr, 0, PAGE_SIZE);
         unquickmap_page();
     }
 
