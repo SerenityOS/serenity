@@ -1558,17 +1558,27 @@ int Process::sys$stat(const char* user_path, size_t path_length, stat* user_stat
     return 0;
 }
 
-int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
+template<typename DataType, typename SizeType>
+bool Process::validate(const Syscall::MutableBufferArgument<DataType, SizeType>& buffer)
 {
-    if (size < 0)
-        return -EINVAL;
-    SmapDisabler disabler;
-    if (!validate_read_str(path))
+    return validate_write(buffer.data, buffer.size);
+}
+
+int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
+{
+    if (!validate_read_typed(user_params))
         return -EFAULT;
-    if (!validate_write(buffer, size))
+    Syscall::SC_readlink_params params;
+    copy_from_user(&params, user_params, sizeof(params));
+
+    if (!validate(params.buffer))
         return -EFAULT;
 
-    auto result = VFS::the().open(path, O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory());
+    auto path = get_syscall_path_argument(params.path.characters, params.path.length);
+    if (path.is_error())
+        return path.error();
+
+    auto result = VFS::the().open(path.value(), O_RDONLY | O_NOFOLLOW_NOERROR, 0, current_directory());
     if (result.is_error())
         return result.error();
     auto description = result.value();
@@ -1580,9 +1590,10 @@ int Process::sys$readlink(const char* path, char* buffer, ssize_t size)
     if (!contents)
         return -EIO; // FIXME: Get a more detailed error from VFS.
 
-    copy_to_user(buffer, contents.data(), min(size, (ssize_t)contents.size()));
-    if (contents.size() + 1 < size)
-        buffer[contents.size()] = '\0';
+    auto link_target = String::copy(contents);
+    if (link_target.length() + 1 > params.buffer.size)
+        return -ENAMETOOLONG;
+    copy_to_user(params.buffer.data, link_target.characters(), link_target.length() + 1);
     return 0;
 }
 
