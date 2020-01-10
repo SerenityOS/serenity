@@ -4,8 +4,8 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
-#include <LibGUI/GDirectoryModel.h>
 #include <LibGUI/GFilePicker.h>
+#include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GInputBox.h>
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GMessageBox.h>
@@ -48,7 +48,7 @@ Optional<String> GFilePicker::get_save_filepath(const String& title, const Strin
 
 GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringView& path, CObject* parent)
     : GDialog(parent)
-    , m_model(GDirectoryModel::create())
+    , m_model(GFileSystemModel::create())
     , m_mode(mode)
 {
     set_title(m_mode == Mode::Open ? "Open File" : "Save File");
@@ -80,25 +80,25 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
 
     m_view = GTableView::construct(vertical_container);
     m_view->set_model(GSortingProxyModel::create(*m_model));
-    m_view->set_column_hidden(GDirectoryModel::Column::Owner, true);
-    m_view->set_column_hidden(GDirectoryModel::Column::Group, true);
-    m_view->set_column_hidden(GDirectoryModel::Column::Permissions, true);
-    m_view->set_column_hidden(GDirectoryModel::Column::Inode, true);
-    m_model->open(path);
+    m_view->set_column_hidden(GFileSystemModel::Column::Owner, true);
+    m_view->set_column_hidden(GFileSystemModel::Column::Group, true);
+    m_view->set_column_hidden(GFileSystemModel::Column::Permissions, true);
+    m_view->set_column_hidden(GFileSystemModel::Column::Inode, true);
+    m_model->set_root_path(path);
 
     location_textbox->on_return_pressed = [&] {
-        m_model->open(location_textbox->text());
+        m_model->set_root_path(location_textbox->text());
         clear_preview();
     };
 
     auto open_parent_directory_action = GAction::create("Open parent directory", { Mod_Alt, Key_Up }, GraphicsBitmap::load_from_file("/res/icons/16x16/open-parent-directory.png"), [this](const GAction&) {
-        m_model->open(String::format("%s/..", m_model->path().characters()));
+        m_model->set_root_path(String::format("%s/..", m_model->root_path().characters()));
         clear_preview();
     });
     toolbar->add_action(*open_parent_directory_action);
 
     auto go_home_action = GCommonActions::make_go_home_action([this](auto&) {
-        m_model->open(get_current_user_home_path());
+        m_model->set_root_path(get_current_user_home_path());
     });
     toolbar->add_action(go_home_action);
     toolbar->add_separator();
@@ -107,7 +107,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
         auto input_box = GInputBox::construct("Enter name:", "New directory", this);
         if (input_box->exec() == GInputBox::ExecOK && !input_box->text_value().is_empty()) {
             auto new_dir_path = FileSystemPath(String::format("%s/%s",
-                                                   m_model->path().characters(),
+                                                   m_model->root_path().characters(),
                                                    input_box->text_value().characters()))
                                     .string();
             int rc = mkdir(new_dir_path.characters(), 0777);
@@ -147,13 +147,13 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     m_view->on_selection = [this](auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
-        const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
-        FileSystemPath path(String::format("%s/%s", m_model->path().characters(), entry.name.characters()));
+        const GFileSystemModel::Node& node = m_model->node(local_index);
+        FileSystemPath path { node.full_path(m_model) };
 
         clear_preview();
 
-        if (!entry.is_directory())
-            m_filename_textbox->set_text(entry.name);
+        if (!node.is_directory())
+            m_filename_textbox->set_text(node.name);
         set_preview(path);
     };
 
@@ -183,12 +183,12 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     m_view->on_activation = [this](auto& index) {
         auto& filter_model = (GSortingProxyModel&)*m_view->model();
         auto local_index = filter_model.map_to_target(index);
-        const GDirectoryModel::Entry& entry = m_model->entry(local_index.row());
-        FileSystemPath path(String::format("%s/%s", m_model->path().characters(), entry.name.characters()));
+        const GFileSystemModel::Node& node = m_model->node(local_index);
+        auto path = node.full_path(m_model);
 
-        if (entry.is_directory()) {
-            m_model->open(path.string());
-            // NOTE: 'entry' is invalid from here on
+        if (node.is_directory()) {
+            m_model->set_root_path(path);
+            // NOTE: 'node' is invalid from here on
         } else {
             on_file_return();
         }
@@ -247,7 +247,7 @@ void GFilePicker::clear_preview()
 
 void GFilePicker::on_file_return()
 {
-    FileSystemPath path(String::format("%s/%s", m_model->path().characters(), m_filename_textbox->text().characters()));
+    FileSystemPath path(String::format("%s/%s", m_model->root_path().characters(), m_filename_textbox->text().characters()));
 
     if (GFilePicker::file_exists(path.string()) && m_mode == Mode::Save) {
         auto result = GMessageBox::show("File already exists, overwrite?", "Existing File", GMessageBox::Type::Warning, GMessageBox::InputType::OKCancel);

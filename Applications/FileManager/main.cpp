@@ -70,10 +70,17 @@ int main(int argc, char** argv)
 
     auto splitter = GSplitter::construct(Orientation::Horizontal, widget);
     auto tree_view = GTreeView::construct(splitter);
-    auto file_system_model = GFileSystemModel::create("/", GFileSystemModel::Mode::DirectoriesOnly);
-    tree_view->set_model(file_system_model);
+    auto directories_model = GFileSystemModel::create("/", GFileSystemModel::Mode::DirectoriesOnly);
+    tree_view->set_model(directories_model);
+    tree_view->set_column_hidden(GFileSystemModel::Column::Icon, true);
+    tree_view->set_column_hidden(GFileSystemModel::Column::Size, true);
+    tree_view->set_column_hidden(GFileSystemModel::Column::Owner, true);
+    tree_view->set_column_hidden(GFileSystemModel::Column::Group, true);
+    tree_view->set_column_hidden(GFileSystemModel::Column::Permissions, true);
+    tree_view->set_column_hidden(GFileSystemModel::Column::ModificationTime, true);
+    tree_view->set_column_hidden(GFileSystemModel::Column::Inode, true);
     tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    tree_view->set_preferred_size(200, 0);
+    tree_view->set_preferred_size(150, 0);
     auto directory_view = DirectoryView::construct(splitter);
 
     auto statusbar = GStatusBar::construct(widget);
@@ -91,7 +98,7 @@ int main(int argc, char** argv)
     };
 
     auto refresh_tree_view = [&] {
-        file_system_model->update();
+        directories_model->update();
 
         auto current_path = directory_view->path();
 
@@ -100,17 +107,13 @@ int main(int argc, char** argv)
         while (lstat(current_path.characters(), &st) != 0) {
             directory_view->open_parent_directory();
             current_path = directory_view->path();
-            if (current_path == file_system_model->root_path()) {
+            if (current_path == directories_model->root_path()) {
                 break;
             }
         }
 
-        // not exactly sure why i have to reselect the root node first, but the index() fails if I dont
-        auto root_index = file_system_model->index(file_system_model->root_path());
-        tree_view->selection().set(root_index);
-
-        // reselect the existing folder in the tree
-        auto new_index = file_system_model->index(current_path);
+        // Reselect the existing folder in the tree.
+        auto new_index = directories_model->index(current_path, GFileSystemModel::Column::Name);
         tree_view->selection().set(new_index);
         tree_view->scroll_into_view(new_index, Orientation::Vertical);
         tree_view->update();
@@ -175,7 +178,8 @@ int main(int argc, char** argv)
         auto& view = directory_view->current_view();
         auto& model = *view.model();
         view.selection().for_each_index([&](const GModelIndex& index) {
-            auto name_index = model.index(index.row(), GDirectoryModel::Column::Name);
+            auto parent_index = model.parent_index(index);
+            auto name_index = model.index(index.row(), GFileSystemModel::Column::Name, parent_index);
             auto path = model.data(name_index, GModel::Role::Custom).to_string();
             paths.append(path);
         });
@@ -186,7 +190,7 @@ int main(int argc, char** argv)
         Vector<String> paths;
         auto& view = tree_view;
         view->selection().for_each_index([&](const GModelIndex& index) {
-            paths.append(file_system_model->path(index));
+            paths.append(directories_model->full_path(index));
         });
         return paths;
     };
@@ -254,9 +258,10 @@ int main(int argc, char** argv)
                   path = directory_view->path();
                   selected = selected_file_paths();
               } else {
-                  path = file_system_model->path(tree_view->selection().first());
+                  path = directories_model->full_path(tree_view->selection().first());
                   selected = tree_view_selected_file_paths();
               }
+
               RefPtr<PropertiesDialog> properties;
               if (selected.is_empty()) {
                   properties = PropertiesDialog::construct(model, path, true, window);
@@ -413,7 +418,7 @@ int main(int argc, char** argv)
     directory_view->on_path_change = [&](const String& new_path) {
         window->set_title(String::format("File Manager: %s", new_path.characters()));
         location_textbox->set_text(new_path);
-        auto new_index = file_system_model->index(new_path);
+        auto new_index = directories_model->index(new_path, GFileSystemModel::Column::Name);
         if (new_index.is_valid()) {
             tree_view->selection().set(new_index);
             tree_view->scroll_into_view(new_index, Orientation::Vertical);
@@ -482,20 +487,19 @@ int main(int argc, char** argv)
 
     directory_view->on_context_menu_request = [&](const GAbstractView&, const GModelIndex& index, const GContextMenuEvent& event) {
         if (index.is_valid()) {
-            auto& entry = directory_view->model().entry(index.row());
+            auto& node = directory_view->model().node(index);
 
-            if (entry.is_directory()) {
+            if (node.is_directory())
                 directory_context_menu->popup(event.screen_position());
-            } else {
+            else
                 file_context_menu->popup(event.screen_position());
-            }
         } else {
             directory_view_context_menu->popup(event.screen_position());
         }
     };
 
     tree_view->on_selection_change = [&] {
-        auto path = file_system_model->path(tree_view->selection().first());
+        auto path = directories_model->full_path(tree_view->selection().first());
         if (directory_view->path() == path)
             return;
         directory_view->open(path);

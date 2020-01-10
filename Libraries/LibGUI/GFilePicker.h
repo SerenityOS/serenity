@@ -4,7 +4,7 @@
 #include <LibGUI/GDialog.h>
 #include <LibGUI/GTableView.h>
 
-class GDirectoryModel;
+class GFileSystemModel;
 class GLabel;
 class GTextBox;
 
@@ -44,7 +44,7 @@ private:
     }
 
     RefPtr<GTableView> m_view;
-    NonnullRefPtr<GDirectoryModel> m_model;
+    NonnullRefPtr<GFileSystemModel> m_model;
     FileSystemPath m_selected_file;
 
     RefPtr<GTextBox> m_filename_textbox;

@@ -27,13 +27,13 @@ void DirectoryView::handle_activation(const GModelIndex& index)
     if (!index.is_valid())
         return;
     dbgprintf("on activation: %d,%d, this=%p, m_model=%p\n", index.row(), index.column(), this, m_model.ptr());
-    auto& entry = model().entry(index.row());
-    auto path = canonicalized_path(String::format("%s/%s", model().path().characters(), entry.name.characters()));
-    if (entry.is_directory()) {
+    auto& node = model().node(index);
+    auto path = node.full_path(model());
+    if (node.is_directory()) {
         open(path);
         return;
     }
-    if (entry.is_executable()) {
+    if (node.is_executable()) {
         if (fork() == 0) {
             int rc = execl(path.characters(), path.characters(), nullptr);
             if (rc < 0)
@@ -83,7 +83,7 @@ void DirectoryView::handle_activation(const GModelIndex& index)
 
 DirectoryView::DirectoryView(GWidget* parent)
     : GStackWidget(parent)
-    , m_model(GDirectoryModel::create())
+    , m_model(GFileSystemModel::create())
 {
     set_active_widget(nullptr);
     m_item_view = GItemView::construct(this);
@@ -92,22 +92,25 @@ DirectoryView::DirectoryView(GWidget* parent)
     m_table_view = GTableView::construct(this);
     m_table_view->set_model(GSortingProxyModel::create(m_model));
 
-    m_table_view->model()->set_key_column_and_sort_order(GDirectoryModel::Column::Name, GSortOrder::Ascending);
+    m_table_view->model()->set_key_column_and_sort_order(GFileSystemModel::Column::Name, GSortOrder::Ascending);
 
-    m_item_view->set_model_column(GDirectoryModel::Column::Name);
+    m_item_view->set_model_column(GFileSystemModel::Column::Name);
 
-    m_model->on_path_change = [this] {
+    m_model->on_root_path_change = [this] {
         m_table_view->selection().clear();
         m_item_view->selection().clear();
         if (on_path_change)
-            on_path_change(model().path());
+            on_path_change(model().root_path());
     };
 
     //  NOTE: We're using the on_update hook on the GSortingProxyModel here instead of
-    //        the GDirectoryModel's hook. This is because GSortingProxyModel has already
-    //        installed an on_update hook on the GDirectoryModel internally.
+    //        the GFileSystemModel's hook. This is because GSortingProxyModel has already
+    //        installed an on_update hook on the GFileSystemModel internally.
     // FIXME: This is an unfortunate design. We should come up with something better.
     m_table_view->model()->on_update = [this] {
+        for_each_view_implementation([](auto& view) {
+            view.selection().clear();
+        });
         update_statusbar();
     };
 
@@ -180,7 +183,7 @@ void DirectoryView::add_path_to_history(const StringView& path)
 void DirectoryView::open(const StringView& path)
 {
     add_path_to_history(path);
-    model().open(path);
+    model().set_root_path(path);
 }
 
 void DirectoryView::set_status_message(const StringView& message)
@@ -191,9 +194,9 @@ void DirectoryView::set_status_message(const StringView& message)
 
 void DirectoryView::open_parent_directory()
 {
-    auto path = String::format("%s/..", model().path().characters());
+    auto path = String::format("%s/..", model().root_path().characters());
     add_path_to_history(path);
-    model().open(path);
+    model().set_root_path(path);
 }
 
 void DirectoryView::refresh()
@@ -205,24 +208,25 @@ void DirectoryView::open_previous_directory()
 {
     if (m_path_history_position > 0) {
         m_path_history_position--;
-        model().open(m_path_history[m_path_history_position]);
+        model().set_root_path(m_path_history[m_path_history_position]);
     }
 }
 void DirectoryView::open_next_directory()
 {
     if (m_path_history_position < m_path_history.size() - 1) {
         m_path_history_position++;
-        model().open(m_path_history[m_path_history_position]);
+        model().set_root_path(m_path_history[m_path_history_position]);
     }
 }
 
 void DirectoryView::update_statusbar()
 {
+    size_t total_size = model().node({}).total_size;
     if (current_view().selection().is_empty()) {
         set_status_message(String::format("%d item%s (%s)",
             model().row_count(),
             model().row_count() != 1 ? "s" : "",
-            human_readable_size(model().bytes_in_files()).characters()));
+            human_readable_size(total_size).characters()));
         return;
     }
 
@@ -230,8 +234,9 @@ void DirectoryView::update_statusbar()
     size_t selected_byte_count = 0;
 
     current_view().selection().for_each_index([&](auto& index) {
-        auto size_index = current_view().model()->index(index.row(), GDirectoryModel::Column::Size);
-        auto file_size = current_view().model()->data(size_index).to_int();
+        auto& model = *current_view().model();
+        auto size_index = model.sibling(index.row(), GFileSystemModel::Column::Size, model.parent_index(index));
+        auto file_size = model.data(size_index).to_int();
         selected_byte_count += file_size;
     });
 
