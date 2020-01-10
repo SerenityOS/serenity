@@ -260,6 +260,8 @@ Optional<KBuffer> procfs$pid_vm(InodeIdentifier identifier)
     KBufferBuilder builder;
     JsonArraySerializer array { builder };
     for (auto& region : process.regions()) {
+        if (!region.is_user_accessible() && !current->process().is_superuser())
+            continue;
         auto region_object = array.add_object();
         region_object.add("readable", region.is_readable());
         region_object.add("writable", region.is_writable());
