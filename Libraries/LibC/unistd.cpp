@@ -67,8 +67,8 @@ int execve(const char* filename, char* const argv[], char* const envp[])
     };
 
     Syscall::SC_execve_params params;
-    params.arguments.strings = (Syscall::SyscallString*)alloca(arg_count * sizeof(Syscall::SyscallString));
-    params.environment.strings = (Syscall::SyscallString*)alloca(env_count * sizeof(Syscall::SyscallString));
+    params.arguments.strings = (Syscall::StringArgument*)alloca(arg_count * sizeof(Syscall::StringArgument));
+    params.environment.strings = (Syscall::StringArgument*)alloca(env_count * sizeof(Syscall::StringArgument));
 
     params.path = { filename, strlen(filename) };
     copy_strings(argv, arg_count, params.arguments);
