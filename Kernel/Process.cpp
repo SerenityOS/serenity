@@ -565,6 +565,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
 {
     Thread* child_first_thread = nullptr;
     auto* child = new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
+    child->m_root_directory = m_root_directory;
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
@@ -966,14 +967,20 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
         arguments.append(parts.last());
     }
     RefPtr<Custody> cwd;
+    RefPtr<Custody> root;
     {
         InterruptDisabler disabler;
-        if (auto* parent = Process::from_pid(parent_pid))
+        if (auto* parent = Process::from_pid(parent_pid)) {
             cwd = parent->m_cwd;
+            root = parent->m_root_directory;
+        }
     }
 
     if (!cwd)
         cwd = VFS::the().root_custody();
+
+    if (!root)
+        root = VFS::the().root_custody();
 
     auto* process = new Process(first_thread, parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
 
@@ -2650,6 +2657,7 @@ void Process::finalize()
     m_tty = nullptr;
     m_executable = nullptr;
     m_cwd = nullptr;
+    m_root_directory = nullptr;
     m_elf_loader = nullptr;
 
     disown_all_shared_buffers();
@@ -4126,4 +4134,30 @@ int Process::sys$set_process_boost(pid_t pid, int amount)
         return -EPERM;
     process->m_priority_boost = amount;
     return 0;
+}
+
+int Process::sys$chroot(const char* user_path, size_t path_length)
+{
+    if (!is_superuser())
+        return -EPERM;
+    auto path = get_syscall_path_argument(user_path, path_length);
+    if (path.is_error())
+        return path.error();
+    auto directory_or_error = VFS::the().open_directory(path.value(), current_directory());
+    if (directory_or_error.is_error())
+        return directory_or_error.error();
+    set_root_directory(Custody::create(nullptr, "", directory_or_error.value()->inode()));
+    return 0;
+}
+
+Custody& Process::root_directory()
+{
+    if (!m_root_directory)
+        m_root_directory = VFS::the().root_custody();
+    return *m_root_directory;
+}
+
+void Process::set_root_directory(const Custody& root)
+{
+    m_root_directory = root;
 }

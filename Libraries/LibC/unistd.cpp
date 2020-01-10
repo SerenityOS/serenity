@@ -617,4 +617,14 @@ int get_process_name(char* buffer, int buffer_size)
     int rc = syscall(SC_get_process_name, buffer, buffer_size);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
+
+int chroot(const char* path)
+{
+    if (!path) {
+        errno = EFAULT;
+        return -1;
+    }
+    int rc = syscall(SC_chroot, path, strlen(path));
+    __RETURN_WITH_ERRNO(rc, rc, -1);
+}
 }

@@ -52,7 +52,7 @@ KResult VFS::mount(NonnullRefPtr<FS>&& file_system, Custody& mount_point)
 KResult VFS::mount(NonnullRefPtr<FS>&& file_system, StringView path)
 {
     LOCKER(m_lock);
-    auto result = resolve_path(path, root_custody());
+    auto result = resolve_path(path, current->process().root_directory());
     if (result.is_error()) {
         dbg() << "VFS: mount can't resolve mount point '" << path << "'";
         return result.error();
@@ -667,11 +667,13 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
     auto parts = path.split_view('/', true);
     InodeIdentifier crumb_id;
 
+    auto& current_root = current->process().root_directory();
+
     NonnullRefPtrVector<Custody, 32> custody_chain;
 
     if (path[0] == '/') {
-        custody_chain.append(root_custody());
-        crumb_id = root_inode_id();
+        custody_chain.append(current_root);
+        crumb_id = current_root.inode().identifier();
     } else {
         for (auto* custody = &base; custody; custody = custody->parent()) {
             // FIXME: Prepending here is not efficient! Fix this.
@@ -684,7 +686,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         *parent_custody = custody_chain.last();
 
     for (int i = 0; i < parts.size(); ++i) {
-        bool inode_was_root_at_head_of_loop = crumb_id.is_root_inode();
+        bool inode_was_root_at_head_of_loop = current_root.inode().identifier() == crumb_id;
         auto crumb_inode = get_inode(crumb_id);
         if (!crumb_inode)
             return KResult(-EIO);
@@ -715,7 +717,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         }
         if (auto mount = find_mount_for_host(crumb_id))
             crumb_id = mount->guest();
-        if (inode_was_root_at_head_of_loop && crumb_id.is_root_inode() && !is_vfs_root(crumb_id) && part == "..") {
+        if (inode_was_root_at_head_of_loop && crumb_id.is_root_inode() && crumb_id != current_root.inode().identifier() && part == "..") {
             auto mount = find_mount_for_guest(crumb_id);
             auto dir_inode = get_inode(mount->host());
             ASSERT(dir_inode);
@@ -724,7 +726,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         crumb_inode = get_inode(crumb_id);
         ASSERT(crumb_inode);
 
-        custody_chain.append(Custody::get_or_create(&custody_chain.last(), part, *crumb_inode));
+        custody_chain.append(Custody::create(&custody_chain.last(), part, *crumb_inode));
 
         metadata = crumb_inode->metadata();
         if (metadata.is_directory()) {
