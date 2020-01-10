@@ -1,7 +1,7 @@
 #pragma once
 
 #include <AK/Vector.h>
-#include <LibGUI/GDirectoryModel.h>
+#include <LibGUI/GFileSystemModel.h>
 #include <LibGUI/GItemView.h>
 #include <LibGUI/GStackWidget.h>
 #include <LibGUI/GTableView.h>
@@ -13,7 +13,7 @@ public:
     virtual ~DirectoryView() override;
 
     void open(const StringView& path);
-    String path() const { return model().path(); }
+    String path() const { return model().root_path(); }
     void open_parent_directory();
     void open_previous_directory();
     void open_next_directory();
@@ -55,11 +55,11 @@ public:
         callback(*m_item_view);
     }
 
-    GDirectoryModel& model() { return *m_model; }
+    GFileSystemModel& model() { return *m_model; }
 
 private:
     explicit DirectoryView(GWidget* parent);
-    const GDirectoryModel& model() const { return *m_model; }
+    const GFileSystemModel& model() const { return *m_model; }
 
     void handle_activation(const GModelIndex&);
 
@@ -68,7 +68,7 @@ private:
 
     ViewMode m_view_mode { Invalid };
 
-    NonnullRefPtr<GDirectoryModel> m_model;
+    NonnullRefPtr<GFileSystemModel> m_model;
     int m_path_history_position { 0 };
     Vector<String> m_path_history;
     void add_path_to_history(const StringView& path);
