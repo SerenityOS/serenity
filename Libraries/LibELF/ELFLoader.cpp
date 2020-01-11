@@ -78,7 +78,16 @@ bool ELFLoader::layout()
                 failed = true;
                 return;
             }
-            do_memcpy(program_header.vaddr().as_ptr(), program_header.raw_data(), program_header.size_in_image());
+            // It's not always the case with PIE executables (and very well shouldn't be) that the
+            // virtual address in the program header matches the one we end up giving the process.
+            // In order to copy the data image correctly into memory, we need to copy the data starting at
+            // the right initial page offset into the pages allocated for the elf_alloc-XX section.
+            // FIXME: There's an opportunity to munmap, or at least mprotect, the padding space between
+            //     the .text and .data PT_LOAD sections of the executable.
+            //     Accessing it would definitely be a bug.
+            auto page_offset = program_header.vaddr();
+            page_offset.mask(~PAGE_MASK);
+            do_memcpy((u8*)allocated_section + page_offset.get(), program_header.raw_data(), program_header.size_in_image());
         } else {
             auto* mapped_section = map_section_hook(
                 program_header.vaddr(),
