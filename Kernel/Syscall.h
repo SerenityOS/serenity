@@ -350,6 +350,11 @@ struct SC_symlink_params {
     StringArgument linkpath;
 };
 
+struct SC_rename_params {
+    StringArgument old_path;
+    StringArgument new_path;
+};
+
 void initialize();
 int sync();
 
