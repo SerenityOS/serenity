@@ -599,6 +599,8 @@ pid_t Process::sys$fork(RegisterDump& regs)
     Thread* child_first_thread = nullptr;
     auto* child = new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
     child->m_root_directory = m_root_directory;
+    child->m_promises = m_promises;
+    child->m_execpromises = m_execpromises;
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
