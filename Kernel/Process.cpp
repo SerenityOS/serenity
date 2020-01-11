@@ -53,6 +53,26 @@
 //#define SIGNAL_DEBUG
 //#define SHARED_BUFFER_DEBUG
 
+#define REQUIRE_NO_PROMISES                             \
+    do {                                                \
+        if (has_promises()) {                           \
+            dbg() << *current << " has made a promise"; \
+            cli();                                      \
+            crash(SIGABRT, 0);                          \
+            ASSERT_NOT_REACHED();                       \
+        }                                               \
+    } while (0)
+
+#define REQUIRE_PROMISE(promise)                                  \
+    do {                                                          \
+        if (has_promises() && !has_promised(Pledge::promise)) {   \
+            dbg() << *current << " has not pledged " << #promise; \
+            cli();                                                \
+            crash(SIGABRT, 0);                                    \
+            ASSERT_NOT_REACHED();                                 \
+        }                                                         \
+    } while (0)
+
 static void create_signal_trampolines();
 static void create_kernel_info_page();
 
@@ -212,6 +232,8 @@ Region* Process::region_containing(const Range& range)
 
 int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_params)
 {
+    REQUIRE_PROMISE(stdio);
+
     if (!validate_read_typed(user_params))
         return -EFAULT;
 
@@ -281,6 +303,8 @@ Vector<Region*, 2> Process::split_region_around_range(const Region& source_regio
 
 void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 {
+    REQUIRE_PROMISE(stdio);
+
     if (!validate_read_typed(user_params))
         return (void*)-EFAULT;
 
@@ -383,6 +407,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 
 int Process::sys$munmap(void* addr, size_t size)
 {
+    REQUIRE_PROMISE(stdio);
     Range range_to_unmap { VirtualAddress((u32)addr), size };
     if (auto* whole_region = region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
@@ -419,6 +444,7 @@ int Process::sys$munmap(void* addr, size_t size)
 
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
+    REQUIRE_PROMISE(stdio);
     Range range_to_mprotect = { VirtualAddress((u32)addr), size };
 
     if (auto* whole_region = region_from_range(range_to_mprotect)) {
@@ -481,6 +507,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 
 int Process::sys$madvise(void* address, size_t size, int advice)
 {
+    REQUIRE_PROMISE(stdio);
     auto* region = region_from_range({ VirtualAddress((u32)address), size });
     if (!region)
         return -EINVAL;
@@ -517,6 +544,7 @@ int Process::sys$madvise(void* address, size_t size, int advice)
 
 int Process::sys$purge(int mode)
 {
+    REQUIRE_NO_PROMISES;
     if (!is_superuser())
         return -EPERM;
     int purged_page_count = 0;
@@ -553,6 +581,7 @@ int Process::sys$purge(int mode)
 
 int Process::sys$gethostname(char* buffer, ssize_t size)
 {
+    REQUIRE_PROMISE(stdio);
     if (size < 0)
         return -EINVAL;
     if (!validate_write(buffer, size))
@@ -566,6 +595,7 @@ int Process::sys$gethostname(char* buffer, ssize_t size)
 
 pid_t Process::sys$fork(RegisterDump& regs)
 {
+    REQUIRE_PROMISE(proc);
     Thread* child_first_thread = nullptr;
     auto* child = new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
     child->m_root_directory = m_root_directory;
@@ -747,6 +777,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     m_elf_loader = move(loader);
     m_executable = description->custody();
 
+    m_promises = m_execpromises;
+
     // Copy of the master TLS region that we will clone for new threads
     m_master_tls_region = master_tls_region;
 
@@ -914,6 +946,7 @@ int Process::exec(String path, Vector<String> arguments, Vector<String> environm
 
 int Process::sys$execve(const Syscall::SC_execve_params* user_params)
 {
+    REQUIRE_PROMISE(exec);
     // NOTE: Be extremely careful with allocating any kernel memory in exec().
     //       On success, the kernel stack will be lost.
     Syscall::SC_execve_params params;
@@ -1258,6 +1291,7 @@ int Process::fd_flags(int fd) const
 
 ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
 {
+    REQUIRE_PROMISE(stdio);
     if (size < 0)
         return -EINVAL;
     if (!validate_write(buffer, size))
@@ -1270,6 +1304,7 @@ ssize_t Process::sys$get_dir_entries(int fd, void* buffer, ssize_t size)
 
 int Process::sys$lseek(int fd, off_t offset, int whence)
 {
+    REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
@@ -1278,6 +1313,7 @@ int Process::sys$lseek(int fd, off_t offset, int whence)
 
 int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
 {
+    REQUIRE_PROMISE(tty);
     if (size < 0)
         return -EINVAL;
     if (!validate_write(buffer, size))
@@ -1296,6 +1332,7 @@ int Process::sys$ttyname_r(int fd, char* buffer, ssize_t size)
 
 int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
 {
+    REQUIRE_PROMISE(tty);
     if (size < 0)
         return -EINVAL;
     if (!validate_write(buffer, size))
@@ -1315,6 +1352,7 @@ int Process::sys$ptsname_r(int fd, char* buffer, ssize_t size)
 
 ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
 {
+    REQUIRE_PROMISE(stdio);
     if (iov_count < 0)
         return -EINVAL;
 
@@ -1400,6 +1438,7 @@ ssize_t Process::do_write(FileDescription& description, const u8* data, int data
 
 ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
 {
+    REQUIRE_PROMISE(stdio);
     if (size < 0)
         return -EINVAL;
     if (size == 0)
@@ -1420,6 +1459,7 @@ ssize_t Process::sys$write(int fd, const u8* data, ssize_t size)
 
 ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
 {
+    REQUIRE_PROMISE(stdio);
     if (size < 0)
         return -EINVAL;
     if (size == 0)
@@ -1447,6 +1487,7 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
 
 int Process::sys$close(int fd)
 {
+    REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
 #ifdef DEBUG_IO
     dbgprintf("%s(%u) sys$close(%d) %p\n", name().characters(), pid(), fd, description.ptr());
@@ -1460,6 +1501,7 @@ int Process::sys$close(int fd)
 
 int Process::sys$utime(const char* user_path, size_t path_length, const utimbuf* user_buf)
 {
+    REQUIRE_PROMISE(fattr);
     if (user_buf && !validate_read_typed(user_buf))
         return -EFAULT;
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -1477,6 +1519,7 @@ int Process::sys$utime(const char* user_path, size_t path_length, const utimbuf*
 
 int Process::sys$access(const char* user_path, size_t path_length, int mode)
 {
+    REQUIRE_PROMISE(rpath);
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
@@ -1485,6 +1528,7 @@ int Process::sys$access(const char* user_path, size_t path_length, int mode)
 
 int Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
+    REQUIRE_PROMISE(stdio);
     (void)cmd;
     (void)arg;
     dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
@@ -1522,6 +1566,7 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
 
 int Process::sys$fstat(int fd, stat* statbuf)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(statbuf))
         return -EFAULT;
     auto description = file_description(fd);
@@ -1532,6 +1577,7 @@ int Process::sys$fstat(int fd, stat* statbuf)
 
 int Process::sys$lstat(const char* user_path, size_t path_length, stat* user_statbuf)
 {
+    REQUIRE_PROMISE(rpath);
     if (!validate_write_typed(user_statbuf))
         return -EFAULT;
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -1550,6 +1596,7 @@ int Process::sys$lstat(const char* user_path, size_t path_length, stat* user_sta
 
 int Process::sys$stat(const char* user_path, size_t path_length, stat* user_statbuf)
 {
+    REQUIRE_PROMISE(rpath);
     if (!validate_write_typed(user_statbuf))
         return -EFAULT;
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -1594,6 +1641,7 @@ String Process::validate_and_copy_string_from_user(const Syscall::StringArgument
 
 int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
 {
+    REQUIRE_PROMISE(rpath);
     if (!validate_read_typed(user_params))
         return -EFAULT;
     Syscall::SC_readlink_params params;
@@ -1627,6 +1675,7 @@ int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
 
 int Process::sys$chdir(const char* user_path, size_t path_length)
 {
+    REQUIRE_PROMISE(rpath);
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
@@ -1639,6 +1688,7 @@ int Process::sys$chdir(const char* user_path, size_t path_length)
 
 int Process::sys$fchdir(int fd)
 {
+    REQUIRE_PROMISE(stdio);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
@@ -1655,6 +1705,7 @@ int Process::sys$fchdir(int fd)
 
 int Process::sys$getcwd(char* buffer, ssize_t size)
 {
+    REQUIRE_PROMISE(rpath);
     if (size < 0)
         return -EINVAL;
     if (!validate_write(buffer, size))
@@ -1685,6 +1736,14 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     copy_from_user(&params, user_params, sizeof(params));
     auto options = params.options;
     auto mode = params.mode;
+
+    if ((options & O_RDWR) || (options & O_WRONLY))
+        REQUIRE_PROMISE(wpath);
+    else
+        REQUIRE_PROMISE(rpath);
+
+    if (options & O_CREAT)
+        REQUIRE_PROMISE(cpath);
 
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
@@ -1720,6 +1779,14 @@ int Process::sys$openat(const Syscall::SC_openat_params* user_params)
     int dirfd = params.dirfd;
     int options = params.options;
     u16 mode = params.mode;
+
+    if ((options & O_RDWR) || (options & O_WRONLY))
+        REQUIRE_PROMISE(wpath);
+    else
+        REQUIRE_PROMISE(rpath);
+
+    if (options & O_CREAT)
+        REQUIRE_PROMISE(cpath);
 
     // Ignore everything except permission bits.
     mode &= 04777;
@@ -1773,6 +1840,7 @@ int Process::alloc_fd(int first_candidate_fd)
 
 int Process::sys$pipe(int pipefd[2], int flags)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(pipefd))
         return -EFAULT;
     if (number_of_open_file_descriptors() + 2 > max_open_file_descriptors())
@@ -1799,6 +1867,7 @@ int Process::sys$pipe(int pipefd[2], int flags)
 
 int Process::sys$killpg(int pgrp, int signum)
 {
+    REQUIRE_PROMISE(proc);
     if (signum < 1 || signum >= 32)
         return -EINVAL;
     if (pgrp < 0)
@@ -1810,6 +1879,7 @@ int Process::sys$killpg(int pgrp, int signum)
 
 int Process::sys$setuid(uid_t uid)
 {
+    REQUIRE_PROMISE(id);
     if (uid != m_uid && !is_superuser())
         return -EPERM;
     m_uid = uid;
@@ -1819,6 +1889,7 @@ int Process::sys$setuid(uid_t uid)
 
 int Process::sys$setgid(gid_t gid)
 {
+    REQUIRE_PROMISE(id);
     if (gid != m_gid && !is_superuser())
         return -EPERM;
     m_gid = gid;
@@ -1828,6 +1899,7 @@ int Process::sys$setgid(gid_t gid)
 
 unsigned Process::sys$alarm(unsigned seconds)
 {
+    REQUIRE_PROMISE(stdio);
     unsigned previous_alarm_remaining = 0;
     if (m_alarm_deadline && m_alarm_deadline > g_uptime) {
         previous_alarm_remaining = (m_alarm_deadline - g_uptime) / TICKS_PER_SECOND;
@@ -1842,6 +1914,7 @@ unsigned Process::sys$alarm(unsigned seconds)
 
 int Process::sys$uname(utsname* buf)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(buf))
         return -EFAULT;
     LOCKER(*s_hostname_lock);
@@ -1905,6 +1978,7 @@ KResult Process::do_killpg(pid_t pgrp, int signal)
 
 int Process::sys$kill(pid_t pid, int signal)
 {
+    REQUIRE_PROMISE(proc);
     if (signal < 0 || signal >= 32)
         return -EINVAL;
     if (pid <= 0)
@@ -1931,6 +2005,7 @@ int Process::sys$kill(pid_t pid, int signal)
 
 int Process::sys$usleep(useconds_t usec)
 {
+    REQUIRE_PROMISE(stdio);
     if (!usec)
         return 0;
     u64 wakeup_time = current->sleep(usec / 1000);
@@ -1941,6 +2016,7 @@ int Process::sys$usleep(useconds_t usec)
 
 int Process::sys$sleep(unsigned seconds)
 {
+    REQUIRE_PROMISE(stdio);
     if (!seconds)
         return 0;
     u64 wakeup_time = current->sleep(seconds * TICKS_PER_SECOND);
@@ -1963,6 +2039,7 @@ void kgettimeofday(timeval& tv)
 
 int Process::sys$gettimeofday(timeval* tv)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(tv))
         return -EFAULT;
     *tv = kgettimeofday();
@@ -1971,36 +2048,43 @@ int Process::sys$gettimeofday(timeval* tv)
 
 uid_t Process::sys$getuid()
 {
+    REQUIRE_PROMISE(stdio);
     return m_uid;
 }
 
 gid_t Process::sys$getgid()
 {
+    REQUIRE_PROMISE(stdio);
     return m_gid;
 }
 
 uid_t Process::sys$geteuid()
 {
+    REQUIRE_PROMISE(stdio);
     return m_euid;
 }
 
 gid_t Process::sys$getegid()
 {
+    REQUIRE_PROMISE(stdio);
     return m_egid;
 }
 
 pid_t Process::sys$getpid()
 {
+    REQUIRE_PROMISE(stdio);
     return m_pid;
 }
 
 pid_t Process::sys$getppid()
 {
+    REQUIRE_PROMISE(stdio);
     return m_ppid;
 }
 
 mode_t Process::sys$umask(mode_t mask)
 {
+    REQUIRE_PROMISE(stdio);
     auto old_mask = m_umask;
     m_umask = mask & 0777;
     return old_mask;
@@ -2031,6 +2115,7 @@ int Process::reap(Process& process)
 
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
+    REQUIRE_PROMISE(stdio);
     dbgprintf("sys$waitpid(%d, %p, %d)\n", waitee, wstatus, options);
 
     if (!options) {
@@ -2139,6 +2224,7 @@ bool Process::validate_write(void* address, ssize_t size) const
 
 pid_t Process::sys$getsid(pid_t pid)
 {
+    REQUIRE_PROMISE(stdio);
     if (pid == 0)
         return m_sid;
     InterruptDisabler disabler;
@@ -2152,6 +2238,7 @@ pid_t Process::sys$getsid(pid_t pid)
 
 pid_t Process::sys$setsid()
 {
+    REQUIRE_PROMISE(proc);
     InterruptDisabler disabler;
     bool found_process_with_same_pgid_as_my_pid = false;
     Process::for_each_in_pgrp(pid(), [&](auto&) {
@@ -2167,6 +2254,7 @@ pid_t Process::sys$setsid()
 
 pid_t Process::sys$getpgid(pid_t pid)
 {
+    REQUIRE_PROMISE(stdio);
     if (pid == 0)
         return m_pgid;
     InterruptDisabler disabler; // FIXME: Use a ProcessHandle
@@ -2178,6 +2266,7 @@ pid_t Process::sys$getpgid(pid_t pid)
 
 pid_t Process::sys$getpgrp()
 {
+    REQUIRE_PROMISE(stdio);
     return m_pgid;
 }
 
@@ -2192,6 +2281,7 @@ static pid_t get_sid_from_pgid(pid_t pgid)
 
 int Process::sys$setpgid(pid_t specified_pid, pid_t specified_pgid)
 {
+    REQUIRE_PROMISE(proc);
     InterruptDisabler disabler; // FIXME: Use a ProcessHandle
     pid_t pid = specified_pid ? specified_pid : m_pid;
     if (specified_pgid < 0) {
@@ -2240,11 +2330,13 @@ int Process::sys$ioctl(int fd, unsigned request, unsigned arg)
 
 int Process::sys$getdtablesize()
 {
+    REQUIRE_PROMISE(stdio);
     return m_max_open_file_descriptors;
 }
 
 int Process::sys$dup(int old_fd)
 {
+    REQUIRE_PROMISE(stdio);
     auto description = file_description(old_fd);
     if (!description)
         return -EBADF;
@@ -2257,6 +2349,7 @@ int Process::sys$dup(int old_fd)
 
 int Process::sys$dup2(int old_fd, int new_fd)
 {
+    REQUIRE_PROMISE(stdio);
     auto description = file_description(old_fd);
     if (!description)
         return -EBADF;
@@ -2268,6 +2361,7 @@ int Process::sys$dup2(int old_fd, int new_fd)
 
 int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
 {
+    REQUIRE_PROMISE(stdio);
     if (old_set) {
         if (!validate_write_typed(old_set))
             return -EFAULT;
@@ -2297,6 +2391,7 @@ int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
 
 int Process::sys$sigpending(sigset_t* set)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(set))
         return -EFAULT;
     copy_to_user(set, &current->m_pending_signals, sizeof(current->m_pending_signals));
@@ -2305,6 +2400,7 @@ int Process::sys$sigpending(sigset_t* set)
 
 int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
 {
+    REQUIRE_PROMISE(stdio);
     if (signum < 1 || signum >= 32 || signum == SIGKILL || signum == SIGSTOP)
         return -EINVAL;
     if (!validate_read_typed(act))
@@ -2324,6 +2420,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
 
 int Process::sys$getgroups(ssize_t count, gid_t* gids)
 {
+    REQUIRE_PROMISE(stdio);
     if (count < 0)
         return -EINVAL;
     if (!count)
@@ -2341,6 +2438,7 @@ int Process::sys$getgroups(ssize_t count, gid_t* gids)
 
 int Process::sys$setgroups(ssize_t count, const gid_t* gids)
 {
+    REQUIRE_PROMISE(id);
     if (count < 0)
         return -EINVAL;
     if (!is_superuser())
@@ -2359,6 +2457,7 @@ int Process::sys$setgroups(ssize_t count, const gid_t* gids)
 
 int Process::sys$mkdir(const char* user_path, size_t path_length, mode_t mode)
 {
+    REQUIRE_PROMISE(cpath);
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
@@ -2367,6 +2466,7 @@ int Process::sys$mkdir(const char* user_path, size_t path_length, mode_t mode)
 
 int Process::sys$realpath(const Syscall::SC_realpath_params* user_params)
 {
+    REQUIRE_PROMISE(rpath);
     if (!validate_read_typed(user_params))
         return -EFAULT;
 
@@ -2401,6 +2501,7 @@ int Process::sys$realpath(const Syscall::SC_realpath_params* user_params)
 
 clock_t Process::sys$times(tms* times)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(times))
         return -EFAULT;
     copy_to_user(&times->tms_utime, &m_ticks_in_user, sizeof(m_ticks_in_user));
@@ -2412,6 +2513,7 @@ clock_t Process::sys$times(tms* times)
 
 int Process::sys$select(const Syscall::SC_select_params* params)
 {
+    REQUIRE_PROMISE(stdio);
     // FIXME: Return -EINVAL if timeout is invalid.
     if (!validate_read_typed(params))
         return -EFAULT;
@@ -2498,6 +2600,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
 
 int Process::sys$poll(pollfd* fds, int nfds, int timeout)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_read_typed(fds))
         return -EFAULT;
 
@@ -2567,6 +2670,7 @@ Custody& Process::current_directory()
 
 int Process::sys$link(const Syscall::SC_link_params* user_params)
 {
+    REQUIRE_PROMISE(cpath);
     if (!validate_read_typed(user_params))
         return -EFAULT;
     Syscall::SC_link_params params;
@@ -2580,6 +2684,7 @@ int Process::sys$link(const Syscall::SC_link_params* user_params)
 
 int Process::sys$unlink(const char* user_path, size_t path_length)
 {
+    REQUIRE_PROMISE(cpath);
     if (!validate_read(user_path, path_length))
         return -EFAULT;
     auto path = get_syscall_path_argument(user_path, path_length);
@@ -2590,6 +2695,7 @@ int Process::sys$unlink(const char* user_path, size_t path_length)
 
 int Process::sys$symlink(const Syscall::SC_symlink_params* user_params)
 {
+    REQUIRE_PROMISE(cpath);
     if (!validate_read_typed(user_params))
         return -EFAULT;
     Syscall::SC_symlink_params params;
@@ -2621,6 +2727,7 @@ KResultOr<String> Process::get_syscall_path_argument(const Syscall::StringArgume
 
 int Process::sys$rmdir(const char* user_path, size_t path_length)
 {
+    REQUIRE_PROMISE(cpath);
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
@@ -2629,6 +2736,7 @@ int Process::sys$rmdir(const char* user_path, size_t path_length)
 
 int Process::sys$chmod(const char* user_path, size_t path_length, mode_t mode)
 {
+    REQUIRE_PROMISE(fattr);
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
@@ -2637,6 +2745,7 @@ int Process::sys$chmod(const char* user_path, size_t path_length, mode_t mode)
 
 int Process::sys$fchmod(int fd, mode_t mode)
 {
+    REQUIRE_PROMISE(fattr);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
@@ -2645,6 +2754,7 @@ int Process::sys$fchmod(int fd, mode_t mode)
 
 int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 {
+    REQUIRE_PROMISE(chown);
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
@@ -2653,6 +2763,7 @@ int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 
 int Process::sys$chown(const Syscall::SC_chown_params* user_params)
 {
+    REQUIRE_PROMISE(chown);
     if (!validate_read_typed(user_params))
         return -EFAULT;
     Syscall::SC_chown_params params;
@@ -2790,8 +2901,18 @@ size_t Process::amount_purgeable_nonvolatile() const
     return amount;
 }
 
+#define REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(domain) \
+    do {                                          \
+        if (domain == AF_INET)                    \
+            REQUIRE_PROMISE(inet);                \
+        else if (domain == AF_LOCAL)              \
+            REQUIRE_PROMISE(unix);                \
+    } while (0)
+
 int Process::sys$socket(int domain, int type, int protocol)
 {
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(domain);
+
     if ((type & SOCK_TYPE_MASK) == SOCK_RAW && !is_superuser())
         return -EACCES;
     int fd = alloc_fd();
@@ -2822,6 +2943,7 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     return socket.bind(address, address_length);
 }
 
@@ -2833,6 +2955,7 @@ int Process::sys$listen(int sockfd, int backlog)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     if (socket.is_connected())
         return -EINVAL;
     return socket.listen(backlog);
@@ -2854,6 +2977,7 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     if (!accepting_socket_description->is_socket())
         return -ENOTSOCK;
     auto& socket = *accepting_socket_description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
             if (current->block<Thread::AcceptBlocker>(*accepting_socket_description) != Thread::BlockResult::WokeNormally)
@@ -2893,6 +3017,7 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
         return -ENOTSOCK;
 
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     SmapDisabler disabler;
     return socket.connect(*description, address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
 }
@@ -2920,6 +3045,7 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
         return -ENOTSOCK;
     SmapDisabler disabler;
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     return socket.sendto(*description, params.data.data, params.data.size, flags, addr, addr_length);
 }
 
@@ -2952,6 +3078,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
 
     bool original_blocking = description->is_blocking();
     if (flags & MSG_DONTWAIT)
@@ -2984,6 +3111,7 @@ int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
         return -ENOTSOCK;
 
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     if (!socket.get_local_address(addr, addrlen))
         return -EINVAL; // FIXME: Should this be another error? I'm not sure.
 
@@ -3011,6 +3139,7 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
         return -ENOTSOCK;
 
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
 
     if (socket.setup_state() != Socket::SetupState::Completed)
         return -ENOTCONN;
@@ -3023,6 +3152,7 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
 
 int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
 {
+    REQUIRE_PROMISE(proc);
     if (!validate_read_typed(param))
         return -EFAULT;
 
@@ -3049,6 +3179,7 @@ int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
 
 int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
 {
+    REQUIRE_PROMISE(proc);
     if (!validate_write_typed(param))
         return -EFAULT;
 
@@ -3092,6 +3223,7 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     return socket.getsockopt(*description, level, option, value, value_size);
 }
 
@@ -3116,6 +3248,7 @@ int Process::sys$setsockopt(const Syscall::SC_setsockopt_params* params)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
+    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     return socket.setsockopt(level, option, value, value_size);
 }
 
@@ -3131,6 +3264,7 @@ void Process::disown_all_shared_buffers()
 
 int Process::sys$create_shared_buffer(int size, void** buffer)
 {
+    REQUIRE_PROMISE(shared_buffer);
     if (!size || size < 0)
         return -EINVAL;
     size = PAGE_ROUND_UP(size);
@@ -3159,6 +3293,7 @@ int Process::sys$create_shared_buffer(int size, void** buffer)
 
 int Process::sys$share_buffer_with(int shared_buffer_id, pid_t peer_pid)
 {
+    REQUIRE_PROMISE(shared_buffer);
     if (!peer_pid || peer_pid < 0 || peer_pid == m_pid)
         return -EINVAL;
     LOCKER(shared_buffers().lock());
@@ -3180,6 +3315,7 @@ int Process::sys$share_buffer_with(int shared_buffer_id, pid_t peer_pid)
 
 int Process::sys$share_buffer_globally(int shared_buffer_id)
 {
+    REQUIRE_PROMISE(shared_buffer);
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shared_buffer_id);
     if (it == shared_buffers().resource().end())
@@ -3193,6 +3329,7 @@ int Process::sys$share_buffer_globally(int shared_buffer_id)
 
 int Process::sys$release_shared_buffer(int shared_buffer_id)
 {
+    REQUIRE_PROMISE(shared_buffer);
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shared_buffer_id);
     if (it == shared_buffers().resource().end())
@@ -3209,6 +3346,7 @@ int Process::sys$release_shared_buffer(int shared_buffer_id)
 
 void* Process::sys$get_shared_buffer(int shared_buffer_id)
 {
+    REQUIRE_PROMISE(shared_buffer);
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shared_buffer_id);
     if (it == shared_buffers().resource().end())
@@ -3224,6 +3362,7 @@ void* Process::sys$get_shared_buffer(int shared_buffer_id)
 
 int Process::sys$seal_shared_buffer(int shared_buffer_id)
 {
+    REQUIRE_PROMISE(shared_buffer);
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shared_buffer_id);
     if (it == shared_buffers().resource().end())
@@ -3240,6 +3379,7 @@ int Process::sys$seal_shared_buffer(int shared_buffer_id)
 
 int Process::sys$get_shared_buffer_size(int shared_buffer_id)
 {
+    REQUIRE_PROMISE(shared_buffer);
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shared_buffer_id);
     if (it == shared_buffers().resource().end())
@@ -3255,6 +3395,7 @@ int Process::sys$get_shared_buffer_size(int shared_buffer_id)
 
 int Process::sys$set_shared_buffer_volatile(int shared_buffer_id, bool state)
 {
+    REQUIRE_PROMISE(shared_buffer);
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(shared_buffer_id);
     if (it == shared_buffers().resource().end())
@@ -3296,6 +3437,7 @@ void Process::send_signal(u8 signal, Process* sender)
 
 int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Syscall::SC_create_thread_params* params)
 {
+    REQUIRE_PROMISE(thread);
     if (!validate_read((const void*)entry, sizeof(void*)))
         return -EFAULT;
 
@@ -3357,6 +3499,7 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
 
 void Process::sys$exit_thread(void* exit_value)
 {
+    REQUIRE_PROMISE(thread);
     cli();
     current->m_exit_value = exit_value;
     current->set_should_die();
@@ -3367,6 +3510,7 @@ void Process::sys$exit_thread(void* exit_value)
 
 int Process::sys$detach_thread(int tid)
 {
+    REQUIRE_PROMISE(thread);
     auto* thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
@@ -3380,6 +3524,7 @@ int Process::sys$detach_thread(int tid)
 
 int Process::sys$join_thread(int tid, void** exit_value)
 {
+    REQUIRE_PROMISE(thread);
     if (exit_value && !validate_write_typed(exit_value))
         return -EFAULT;
 
@@ -3425,6 +3570,7 @@ int Process::sys$join_thread(int tid, void** exit_value)
 
 int Process::sys$set_thread_name(int tid, const char* user_name, size_t user_name_length)
 {
+    REQUIRE_PROMISE(thread);
     auto name = validate_and_copy_string_from_user(user_name, user_name_length);
     if (name.is_null())
         return -EFAULT;
@@ -3442,6 +3588,7 @@ int Process::sys$set_thread_name(int tid, const char* user_name, size_t user_nam
 }
 int Process::sys$get_thread_name(int tid, char* buffer, size_t buffer_size)
 {
+    REQUIRE_PROMISE(thread);
     if (buffer_size == 0)
         return -EINVAL;
 
@@ -3461,11 +3608,13 @@ int Process::sys$get_thread_name(int tid, char* buffer, size_t buffer_size)
 
 int Process::sys$gettid()
 {
+    REQUIRE_PROMISE(stdio);
     return current->tid();
 }
 
 int Process::sys$donate(int tid)
 {
+    REQUIRE_PROMISE(stdio);
     if (tid < 0)
         return -EINVAL;
     InterruptDisabler disabler;
@@ -3478,6 +3627,7 @@ int Process::sys$donate(int tid)
 
 int Process::sys$rename(const Syscall::SC_rename_params* user_params)
 {
+    REQUIRE_PROMISE(cpath);
     if (!validate_read_typed(user_params))
         return -EFAULT;
     Syscall::SC_rename_params params;
@@ -3493,6 +3643,7 @@ int Process::sys$rename(const Syscall::SC_rename_params* user_params)
 
 int Process::sys$ftruncate(int fd, off_t length)
 {
+    REQUIRE_PROMISE(stdio);
     if (length < 0)
         return -EINVAL;
     auto description = file_description(fd);
@@ -3505,6 +3656,7 @@ int Process::sys$ftruncate(int fd, off_t length)
 
 int Process::sys$watch_file(const char* user_path, size_t path_length)
 {
+    REQUIRE_PROMISE(rpath);
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
@@ -3530,6 +3682,7 @@ int Process::sys$watch_file(const char* user_path, size_t path_length)
 
 int Process::sys$systrace(pid_t pid)
 {
+    REQUIRE_PROMISE(proc);
     InterruptDisabler disabler;
     auto* peer = Process::from_pid(pid);
     if (!peer)
@@ -3550,6 +3703,8 @@ int Process::sys$halt()
     if (!is_superuser())
         return -EPERM;
 
+    REQUIRE_NO_PROMISES;
+
     dbgprintf("acquiring FS locks...\n");
     FS::lock_all();
     dbgprintf("syncing mounted filesystems...\n");
@@ -3565,6 +3720,8 @@ int Process::sys$reboot()
     if (!is_superuser())
         return -EPERM;
 
+    REQUIRE_NO_PROMISES;
+
     dbgprintf("acquiring FS locks...\n");
     FS::lock_all();
     dbgprintf("syncing mounted filesystems...\n");
@@ -3579,6 +3736,8 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 {
     if (!is_superuser())
         return -EPERM;
+
+    REQUIRE_NO_PROMISES;
 
     if (!validate_read_typed(user_params))
         return -EFAULT;
@@ -3660,6 +3819,8 @@ int Process::sys$umount(const char* user_mountpoint, size_t mountpoint_length)
     if (!is_superuser())
         return -EPERM;
 
+    REQUIRE_NO_PROMISES;
+
     if (!validate_read(user_mountpoint, mountpoint_length))
         return -EFAULT;
 
@@ -3696,6 +3857,7 @@ void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& d, u
 
 int Process::sys$mknod(const Syscall::SC_mknod_params* user_params)
 {
+    REQUIRE_PROMISE(dpath);
     if (!validate_read_typed(user_params))
         return -EFAULT;
     Syscall::SC_mknod_params params;
@@ -3745,6 +3907,7 @@ KBuffer Process::backtrace(ProcessInspectionHandle& handle) const
 
 int Process::sys$set_process_icon(int icon_id)
 {
+    REQUIRE_PROMISE(shared_buffer);
     LOCKER(shared_buffers().lock());
     auto it = shared_buffers().resource().find(icon_id);
     if (it == shared_buffers().resource().end())
@@ -3758,6 +3921,7 @@ int Process::sys$set_process_icon(int icon_id)
 
 int Process::sys$get_process_name(char* buffer, int buffer_size)
 {
+    REQUIRE_PROMISE(stdio);
     if (buffer_size <= 0)
         return -EINVAL;
 
@@ -3791,6 +3955,8 @@ int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* params)
     if (!is_superuser())
         return -EPERM;
 
+    REQUIRE_NO_PROMISES;
+
     if (!validate_read_typed(params))
         return -EFAULT;
 
@@ -3814,6 +3980,7 @@ int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* params)
 
 int Process::sys$clock_gettime(clockid_t clock_id, timespec* ts)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(ts))
         return -EFAULT;
 
@@ -3832,6 +3999,7 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* ts)
 
 int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_params)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_read_typed(user_params))
         return -EFAULT;
     Syscall::SC_clock_nanosleep_params params;
@@ -3881,6 +4049,7 @@ int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_
 
 int Process::sys$sync()
 {
+    REQUIRE_PROMISE(stdio);
     VFS::the().sync();
     return 0;
 }
@@ -3905,6 +4074,8 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
 {
     if (!is_superuser())
         return -EPERM;
+
+    REQUIRE_NO_PROMISES;
 
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
@@ -4024,6 +4195,8 @@ int Process::sys$module_unload(const char* user_name, size_t name_length)
     if (!is_superuser())
         return -EPERM;
 
+    REQUIRE_NO_PROMISES;
+
     auto module_name = validate_and_copy_string_from_user(user_name, name_length);
     if (module_name.is_null())
         return -EFAULT;
@@ -4041,6 +4214,7 @@ int Process::sys$module_unload(const char* user_name, size_t name_length)
 
 int Process::sys$profiling_enable(pid_t pid)
 {
+    REQUIRE_NO_PROMISES;
     InterruptDisabler disabler;
     auto* process = Process::from_pid(pid);
     if (!process)
@@ -4140,6 +4314,7 @@ int Process::sys$futex(const Syscall::SC_futex_params* user_params)
 
 int Process::sys$set_thread_boost(int tid, int amount)
 {
+    REQUIRE_PROMISE(proc);
     if (amount < 0 || amount > 20)
         return -EINVAL;
     InterruptDisabler disabler;
@@ -4156,6 +4331,7 @@ int Process::sys$set_thread_boost(int tid, int amount)
 
 int Process::sys$set_process_boost(pid_t pid, int amount)
 {
+    REQUIRE_PROMISE(proc);
     if (amount < 0 || amount > 20)
         return -EINVAL;
     InterruptDisabler disabler;
@@ -4172,6 +4348,7 @@ int Process::sys$chroot(const char* user_path, size_t path_length)
 {
     if (!is_superuser())
         return -EPERM;
+    REQUIRE_PROMISE(chroot);
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
@@ -4201,4 +4378,69 @@ Custody& Process::root_directory_for_procfs()
 void Process::set_root_directory(const Custody& root)
 {
     m_root_directory = root;
+}
+
+int Process::sys$pledge(const Syscall::SC_pledge_params* user_params)
+{
+    if (!validate_read_typed(user_params))
+        return -EFAULT;
+    Syscall::SC_pledge_params params;
+    copy_from_user(&params, user_params);
+
+    if (params.promises.length > 1024 || params.execpromises.length > 1024)
+        return -E2BIG;
+
+    String promises;
+    if (params.promises.characters) {
+        promises = validate_and_copy_string_from_user(params.promises);
+        if (promises.is_null())
+            return -EFAULT;
+    }
+
+    String execpromises;
+    if (params.execpromises.characters) {
+        execpromises = validate_and_copy_string_from_user(params.execpromises);
+        if (execpromises.is_null())
+            return -EFAULT;
+    }
+
+    auto parse_pledge = [&](auto& pledge_spec, u32& mask) {
+        auto parts = pledge_spec.split_view(' ');
+        for (auto& part : parts) {
+#define __ENUMERATE_PLEDGE_PROMISE(x)   \
+    if (part == #x) {                   \
+        mask |= (1u << (u32)Pledge::x); \
+        continue;                       \
+    }
+            ENUMERATE_PLEDGE_PROMISES
+#undef __ENUMERATE_PLEDGE_PROMISE
+            if (part == "dns") {
+                // "dns" is an alias for "unix" since DNS queries go via LookupServer
+                mask |= (1u << (u32)Pledge::unix);
+                continue;
+            }
+            return false;
+        }
+        return true;
+    };
+
+    if (!promises.is_null()) {
+        u32 new_promises = 0;
+        if (!parse_pledge(promises, new_promises))
+            return -EINVAL;
+        if (m_promises && new_promises & ~m_promises)
+            return -EPERM;
+        m_promises = new_promises;
+    }
+
+    if (!execpromises.is_null()) {
+        u32 new_execpromises = 0;
+        if (!parse_pledge(execpromises, new_execpromises))
+            return -EINVAL;
+        if (m_execpromises && new_execpromises & ~m_execpromises)
+            return -EPERM;
+        m_execpromises = new_execpromises;
+    }
+
+    return 0;
 }

@@ -30,6 +30,30 @@ void kgettimeofday(timeval&);
 
 extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
 
+#define ENUMERATE_PLEDGE_PROMISES      \
+    __ENUMERATE_PLEDGE_PROMISE(stdio)  \
+    __ENUMERATE_PLEDGE_PROMISE(rpath)  \
+    __ENUMERATE_PLEDGE_PROMISE(wpath)  \
+    __ENUMERATE_PLEDGE_PROMISE(cpath)  \
+    __ENUMERATE_PLEDGE_PROMISE(dpath)  \
+    __ENUMERATE_PLEDGE_PROMISE(inet)   \
+    __ENUMERATE_PLEDGE_PROMISE(id)     \
+    __ENUMERATE_PLEDGE_PROMISE(proc)   \
+    __ENUMERATE_PLEDGE_PROMISE(exec)   \
+    __ENUMERATE_PLEDGE_PROMISE(unix)   \
+    __ENUMERATE_PLEDGE_PROMISE(fattr)  \
+    __ENUMERATE_PLEDGE_PROMISE(tty)    \
+    __ENUMERATE_PLEDGE_PROMISE(chown)  \
+    __ENUMERATE_PLEDGE_PROMISE(chroot) \
+    __ENUMERATE_PLEDGE_PROMISE(thread) \
+    __ENUMERATE_PLEDGE_PROMISE(shared_buffer)
+
+enum class Pledge : u32 {
+#define __ENUMERATE_PLEDGE_PROMISE(x) x,
+    ENUMERATE_PLEDGE_PROMISES
+#undef __ENUMERATE_PLEDGE_PROMISE
+};
+
 class Process : public InlineLinkedListNode<Process>
     , public Weakable<Process> {
     friend class InlineLinkedListNode<Process>;
@@ -230,6 +254,7 @@ public:
     int sys$set_thread_boost(int tid, int amount);
     int sys$set_process_boost(pid_t, int amount);
     int sys$chroot(const char* path, size_t path_length);
+    int sys$pledge(const Syscall::SC_pledge_params*);
 
     static void initialize();
 
@@ -315,6 +340,9 @@ public:
     Custody& root_directory();
     Custody& root_directory_for_procfs();
     void set_root_directory(const Custody&);
+
+    bool has_promises() const { return m_promises; }
+    bool has_promised(Pledge pledge) const { return m_promises & (1u << (u32)pledge); }
 
 private:
     friend class MemoryManager;
@@ -406,6 +434,9 @@ private:
     int m_icon_id { -1 };
 
     u32 m_priority_boost { 0 };
+
+    u32 m_promises { 0 };
+    u32 m_execpromises { 0 };
 
     WaitQueue& futex_queue(i32*);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;

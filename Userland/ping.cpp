@@ -26,6 +26,11 @@ uint16_t internet_checksum(const void* ptr, size_t count)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio id inet dns", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         printf("usage: ping <host>\n");
         return 0;
@@ -42,6 +47,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (pledge("stdio inet dns", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     struct timeval timeout {
         1, 0
     };
@@ -54,6 +64,11 @@ int main(int argc, char** argv)
     auto* hostent = gethostbyname(argv[1]);
     if (!hostent) {
         printf("Lookup failed for '%s'\n", argv[1]);
+        return 1;
+    }
+
+    if (pledge("stdio inet", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 
