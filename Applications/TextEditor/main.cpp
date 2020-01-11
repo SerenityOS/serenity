@@ -1,9 +1,20 @@
 #include "TextEditorWidget.h"
 #include <LibDraw/PNGLoader.h>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath cpath wpath shared_buffer unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio rpath cpath wpath shared_buffer unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto window = GWindow::construct();
     window->set_title("Text Editor");
