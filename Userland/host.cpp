@@ -3,9 +3,15 @@
 #include <netinet/in.h>
 #include <stdio.h>
 #include <string.h>
+#include <unistd.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio dns", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc < 2) {
         printf("usage: host <hostname>\n");
         return 0;
