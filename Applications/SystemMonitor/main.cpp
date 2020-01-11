@@ -49,7 +49,17 @@ static NonnullRefPtr<GWidget> build_graphs_tab();
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio shared_buffer rpath unix cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio shared_buffer rpath unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto keeper = GWidget::construct();
     keeper->set_layout(make<GBoxLayout>(Orientation::Vertical));
