@@ -80,17 +80,19 @@ bool IPv4Socket::get_peer_address(sockaddr* address, socklen_t* address_size)
     return true;
 }
 
-KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
+KResult IPv4Socket::bind(const sockaddr* user_address, socklen_t address_size)
 {
     ASSERT(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_in))
         return KResult(-EINVAL);
-    if (address->sa_family != AF_INET)
+
+    sockaddr_in address;
+    copy_from_user(&address, user_address, sizeof(sockaddr_in));
+
+    if (address.sin_family != AF_INET)
         return KResult(-EINVAL);
 
-    auto& ia = *(const sockaddr_in*)address;
-
-    auto requested_local_port = ntohs(ia.sin_port);
+    auto requested_local_port = ntohs(address.sin_port);
     if (!current->process().is_superuser()) {
         if (requested_local_port < 1024) {
             dbg() << current->process() << " (uid " << current->process().uid() << ") attempted to bind " << class_name() << " to port " << requested_local_port;
@@ -98,7 +100,7 @@ KResult IPv4Socket::bind(const sockaddr* address, socklen_t address_size)
         }
     }
 
-    m_local_address = IPv4Address((const u8*)&ia.sin_addr.s_addr);
+    m_local_address = IPv4Address((const u8*)&address.sin_addr.s_addr);
     m_local_port = requested_local_port;
 
 #ifdef IPV4_SOCKET_DEBUG

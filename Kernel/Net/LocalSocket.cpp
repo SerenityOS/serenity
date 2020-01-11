@@ -3,6 +3,7 @@
 #include <Kernel/FileSystem/VirtualFileSystem.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/Process.h>
+#include <Kernel/StdLib.h>
 #include <Kernel/UnixTypes.h>
 #include <LibC/errno_numbers.h>
 
@@ -64,17 +65,19 @@ bool LocalSocket::get_peer_address(sockaddr* address, socklen_t* address_size)
     return get_local_address(address, address_size);
 }
 
-KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
+KResult LocalSocket::bind(const sockaddr* user_address, socklen_t address_size)
 {
     ASSERT(setup_state() == SetupState::Unstarted);
     if (address_size != sizeof(sockaddr_un))
         return KResult(-EINVAL);
-    if (address->sa_family != AF_LOCAL)
+
+    sockaddr_un address;
+    copy_from_user(&address, user_address, sizeof(sockaddr_un));
+
+    if (address.sun_family != AF_LOCAL)
         return KResult(-EINVAL);
 
-    const sockaddr_un& local_address = *reinterpret_cast<const sockaddr_un*>(address);
-    char safe_address[sizeof(local_address.sun_path) + 1] = { 0 };
-    memcpy(safe_address, local_address.sun_path, sizeof(local_address.sun_path));
+    auto path = String(address.sun_path, strnlen(address.sun_path, sizeof(address.sun_path)));
 
 #ifdef DEBUG_LOCAL_SOCKET
     kprintf("%s(%u) LocalSocket{%p} bind(%s)\n", current->process().name().characters(), current->pid(), this, safe_address);
@@ -82,7 +85,7 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 04777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
-    auto result = VFS::the().open( safe_address, O_CREAT | O_EXCL, mode, current->process().current_directory(), owner);
+    auto result = VFS::the().open(path, O_CREAT | O_EXCL, mode, current->process().current_directory(), owner);
     if (result.is_error()) {
         if (result.error() == -EEXIST)
             return KResult(-EADDRINUSE);
@@ -93,7 +96,7 @@ KResult LocalSocket::bind(const sockaddr* address, socklen_t address_size)
     ASSERT(m_file->inode());
     m_file->inode()->bind_socket(*this);
 
-    m_address = local_address;
+    m_address = address;
     m_bound = true;
     return KSuccess;
 }
