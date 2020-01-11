@@ -2808,7 +2808,6 @@ int Process::sys$bind(int sockfd, const sockaddr* address, socklen_t address_len
         return -EBADF;
     if (!description->is_socket())
         return -ENOTSOCK;
-    SmapDisabler disabler;
     auto& socket = *description->socket();
     return socket.bind(address, address_length);
 }
