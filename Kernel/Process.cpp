@@ -653,14 +653,11 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (parts.is_empty())
         return -ENOENT;
 
-    auto result = VFS::the().open(path, 0, 0, current_directory());
+    auto result = VFS::the().open(path, O_EXEC, 0, current_directory());
     if (result.is_error())
         return result.error();
     auto description = result.value();
     auto metadata = description->metadata();
-
-    if (!metadata.may_execute(*this))
-        return -EACCES;
 
     if (!metadata.size)
         return -ENOTIMPL;
