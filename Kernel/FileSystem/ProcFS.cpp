@@ -758,6 +758,17 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
     // Keep this in sync with CProcessStatistics.
     auto build_process = [&](const Process& process) {
         auto process_object = array.add_object();
+
+        StringBuilder pledge_builder;
+#define __ENUMERATE_PLEDGE_PROMISE(promise)      \
+    if (process.has_promised(Pledge::promise)) { \
+        pledge_builder.append(#promise " ");     \
+    }
+        ENUMERATE_PLEDGE_PROMISES
+#undef __ENUMERATE_PLEDGE_PROMISE
+
+        process_object.add("pledge", pledge_builder.to_string());
+
         process_object.add("pid", process.pid());
         process_object.add("pgid", process.tty() ? process.tty()->pgid() : 0);
         process_object.add("pgp", process.pgid());
