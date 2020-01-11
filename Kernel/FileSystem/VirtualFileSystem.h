@@ -15,6 +15,7 @@
 #define O_RDONLY 0
 #define O_WRONLY 1
 #define O_RDWR 2
+#define O_EXEC 4
 #define O_CREAT 0100
 #define O_EXCL 0200
 #define O_NOCTTY 0400
