@@ -6,6 +6,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio tty proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc < 2)
         return -1;
 
