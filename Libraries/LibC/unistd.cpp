@@ -610,9 +610,14 @@ int reboot()
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
-int mount(const char* device, const char* mountpoint, const char* fstype)
+int mount(const char* source, const char* target, const char* fs_type)
 {
-    int rc = syscall(SC_mount, device, mountpoint, fstype);
+    if (!source || !target || !fs_type) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_mount_params params { { source, strlen(source) }, { target, strlen(target) }, { fs_type, strlen(fs_type) } };
+    int rc = syscall(SC_mount, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
