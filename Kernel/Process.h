@@ -183,7 +183,7 @@ public:
     int sys$umount(const char* mountpoint, size_t mountpoint_length);
     int sys$chmod(const char* pathname, size_t path_length, mode_t);
     int sys$fchmod(int fd, mode_t);
-    int sys$chown(const char* pathname, uid_t, gid_t);
+    int sys$chown(const Syscall::SC_chown_params*);
     int sys$fchown(int fd, uid_t, gid_t);
     int sys$socket(int domain, int type, int protocol);
     int sys$bind(int sockfd, const sockaddr* addr, socklen_t);

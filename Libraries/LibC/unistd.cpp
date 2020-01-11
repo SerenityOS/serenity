@@ -27,7 +27,12 @@ int systrace(pid_t pid)
 
 int chown(const char* pathname, uid_t uid, gid_t gid)
 {
-    int rc = syscall(SC_chown, pathname, uid, gid);
+    if (!pathname) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_chown_params params { { pathname, strlen(pathname) }, uid, gid };
+    int rc = syscall(SC_chown, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
