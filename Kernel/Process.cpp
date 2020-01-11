@@ -2936,6 +2936,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     sockaddr* addr = params.addr;
     socklen_t* addr_length = params.addr_length;
 
+    SmapDisabler disabler;
     if (!validate(params.buffer))
         return -EFAULT;
     if (addr_length) {
@@ -2957,7 +2958,6 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     if (flags & MSG_DONTWAIT)
         description->set_blocking(false);
 
-    SmapDisabler disabler;
     auto nrecv = socket.recvfrom(*description, params.buffer.data, params.buffer.size, flags, addr, addr_length);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
