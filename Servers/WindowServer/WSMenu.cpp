@@ -409,11 +409,15 @@ void WSMenu::popup(const Point& position, bool is_submenu)
 
     const int margin = 30;
     Point adjusted_pos = position;
-    if (adjusted_pos.x() + window.width() >= WSScreen::the().width() - margin) {
-        adjusted_pos = adjusted_pos.translated(-window.width(), 0);
-    }
-    if (adjusted_pos.y() + window.height() >= WSScreen::the().height() - margin) {
-        adjusted_pos = adjusted_pos.translated(0, -window.height());
+    if (window.height() >= WSScreen::the().height()) {
+        adjusted_pos.set_y(0);
+    } else {
+        if (adjusted_pos.x() + window.width() >= WSScreen::the().width() - margin) {
+            adjusted_pos = adjusted_pos.translated(-window.width(), 0);
+        }
+        if (adjusted_pos.y() + window.height() >= WSScreen::the().height() - margin) {
+            adjusted_pos = adjusted_pos.translated(0, -window.height());
+        }
     }
 
     window.move_to(adjusted_pos);
