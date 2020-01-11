@@ -149,10 +149,12 @@ void GItemView::mouseup_event(GMouseEvent& event)
         return;
     }
     int item_index = item_at_event_position(event.position());
-    auto index = model()->index(item_index, m_model_column);
-    if ((selection().size() > 1) & m_might_drag) {
-        selection().set(index);
-        m_might_drag = false;
+    if (item_index >= 0) {
+        auto index = model()->index(item_index, m_model_column);
+        if ((selection().size() > 1) & m_might_drag) {
+            selection().set(index);
+            m_might_drag = false;
+        }
     }
     GAbstractView::mouseup_event(event);
 }
