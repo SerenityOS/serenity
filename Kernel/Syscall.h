@@ -355,6 +355,12 @@ struct SC_rename_params {
     StringArgument new_path;
 };
 
+struct SC_mount_params {
+    StringArgument source;
+    StringArgument target;
+    StringArgument fs_type;
+};
+
 void initialize();
 int sync();
 

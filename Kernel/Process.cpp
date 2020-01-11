@@ -3575,28 +3575,35 @@ int Process::sys$reboot()
     return ESUCCESS;
 }
 
-int Process::sys$mount(const char* device_path, const char* mountpoint, const char* fstype)
+int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 {
     if (!is_superuser())
         return -EPERM;
 
-    SmapDisabler disabler;
+    if (!validate_read_typed(user_params))
+        return -EFAULT;
+    Syscall::SC_mount_params params;
+    copy_from_user(&params, user_params);
 
-    if (!validate_read_str(device_path) || !validate_read_str(mountpoint) || !validate_read_str(fstype))
+    auto source = validate_and_copy_string_from_user(params.source);
+    auto target = validate_and_copy_string_from_user(params.target);
+    auto fs_type = validate_and_copy_string_from_user(params.fs_type);
+
+    if (source.is_null() || target.is_null() || fs_type.is_null())
         return -EFAULT;
 
-    dbg() << "mount " << fstype << ": device " << device_path << " @ " << mountpoint;
+    dbg() << "mount " << fs_type << ": source " << source << " @ " << target;
 
-    auto custody_or_error = VFS::the().resolve_path(mountpoint, current_directory());
+    auto custody_or_error = VFS::the().resolve_path(target, current_directory());
     if (custody_or_error.is_error())
         return custody_or_error.error();
 
-    auto& mountpoint_custody = custody_or_error.value();
+    auto& target_custody = custody_or_error.value();
 
-    RefPtr<FS> fs { nullptr };
+    RefPtr<FS> fs;
 
-    if (strcmp(fstype, "ext2") == 0 || strcmp(fstype, "Ext2FS") == 0) {
-        auto metadata_or_error = VFS::the().lookup_metadata(device_path, current_directory());
+    if (fs_type == "ext2" || fs_type == "Ext2FS") {
+        auto metadata_or_error = VFS::the().lookup_metadata(source, current_directory());
         if (metadata_or_error.is_error())
             return metadata_or_error.error();
 
@@ -3616,25 +3623,26 @@ int Process::sys$mount(const char* device_path, const char* mountpoint, const ch
 
         auto& disk_device = static_cast<DiskDevice&>(*device);
 
-        dbg() << "mount: attempting to mount device (" << major << "," << minor << ") on " << mountpoint;
+        dbg() << "mount: attempting to mount device (" << major << "," << minor << ") on " << target;
 
         fs = Ext2FS::create(disk_device);
-    } else if (strcmp(fstype, "proc") == 0 || strcmp(fstype, "ProcFS") == 0)
+    } else if (fs_type == "proc" || fs_type == "ProcFS") {
         fs = ProcFS::create();
-    else if (strcmp(fstype, "devpts") == 0 || strcmp(fstype, "DevPtsFS") == 0)
+    } else if (fs_type == "devpts" || fs_type == "DevPtsFS") {
         fs = DevPtsFS::create();
-    else if (strcmp(fstype, "tmp") == 0 || strcmp(fstype, "TmpFS") == 0)
+    } else if (fs_type == "tmp" || fs_type == "TmpFS") {
         fs = TmpFS::create();
-    else
-        return -ENODEV;
-
-    if (!fs->initialize()) {
-        dbg() << "mount: failed to initialize " << fstype << " filesystem on " << device_path;
+    } else {
         return -ENODEV;
     }
 
-    auto result = VFS::the().mount(fs.release_nonnull(), mountpoint_custody);
-    dbg() << "mount: successfully mounted " << device_path << " on " << mountpoint;
+    if (!fs->initialize()) {
+        dbg() << "mount: failed to initialize " << fs_type << " filesystem on " << source;
+        return -ENODEV;
+    }
+
+    auto result = VFS::the().mount(fs.release_nonnull(), target_custody);
+    dbg() << "mount: successfully mounted " << source << " on " << target;
     return result;
 }
 
