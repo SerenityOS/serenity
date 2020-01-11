@@ -256,7 +256,6 @@ public:
 
     bool validate_read(const void*, ssize_t) const;
     bool validate_write(void*, ssize_t) const;
-    bool validate_read_str(const char* str);
     template<typename T>
     bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T>
