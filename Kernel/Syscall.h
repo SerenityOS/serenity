@@ -339,6 +339,12 @@ struct SC_chown_params {
      u32 gid;
 };
 
+struct SC_mknod_params {
+    StringArgument path;
+    u16 mode;
+    u32 dev;
+};
+
 void initialize();
 int sync();
 
