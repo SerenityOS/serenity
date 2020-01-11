@@ -9,6 +9,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     Vector<int> fds;
     if (argc > 1) {
         for (int i = 1; i < argc; i++) {
@@ -22,6 +27,12 @@ int main(int argc, char** argv)
     } else {
         fds.append(0);
     }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     for (auto& fd : fds) {
         for (;;) {
             char buf[32768];
