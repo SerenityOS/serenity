@@ -537,21 +537,15 @@ int pthread_setspecific(pthread_key_t key, const void* value)
     t_specifics.values[key] = const_cast<void*>(value);
     return 0;
 }
-int pthread_setname_np(pthread_t thread, const char* buffer, int buffer_size)
+int pthread_setname_np(pthread_t thread, const char* name)
 {
-    if (buffer_size < 0) {
-        errno = EINVAL;
-        return -1;
-    }
-    return syscall(SC_set_thread_name, thread, buffer, buffer_size);
+    if (!name)
+        return EFAULT;
+    return syscall(SC_set_thread_name, thread, name, strlen(name));
 }
 
-int pthread_getname_np(pthread_t thread, char* buffer, int buffer_size)
+int pthread_getname_np(pthread_t thread, char* buffer, size_t buffer_size)
 {
-    if (buffer_size < 0) {
-        errno = EINVAL;
-        return -1;
-    }
     return syscall(SC_get_thread_name, thread, buffer, buffer_size);
 }
 
