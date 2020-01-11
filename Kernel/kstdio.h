@@ -18,3 +18,13 @@ int get_serial_debug();
 #ifndef __serenity__
 #define dbgprintf printf
 #endif
+
+#ifdef __cplusplus
+
+template <size_t N>
+inline int dbgputstr(const char (&array)[N])
+{
+    return ::dbgputstr(array, N);
+}
+
+#endif
