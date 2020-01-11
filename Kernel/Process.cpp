@@ -3642,7 +3642,7 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
         return -ENODEV;
     }
 
-    auto result = VFS::the().mount(fs.release_nonnull(), target_custody);
+    auto result = VFS::the().mount(fs.release_nonnull(), target_custody, params.flags);
     dbg() << "mount: successfully mounted " << source << " on " << target;
     return result;
 }
@@ -4170,8 +4170,9 @@ int Process::sys$chroot(const char* user_path, size_t path_length)
     auto directory_or_error = VFS::the().open_directory(path.value(), current_directory());
     if (directory_or_error.is_error())
         return directory_or_error.error();
-    m_root_directory_for_procfs = directory_or_error.value();
-    set_root_directory(Custody::create(nullptr, "", directory_or_error.value()->inode()));
+    auto directory = directory_or_error.value();
+    m_root_directory_for_procfs = directory;
+    set_root_directory(Custody::create(nullptr, "", directory->inode(), directory->mount_flags()));
     return 0;
 }
 

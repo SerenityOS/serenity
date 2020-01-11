@@ -1,12 +1,12 @@
 #pragma once
 
-#include <AK/String.h>
 #include <AK/Badge.h>
 #include <AK/Function.h>
 #include <AK/HashMap.h>
 #include <AK/NonnullOwnPtrVector.h>
 #include <AK/OwnPtr.h>
 #include <AK/RefPtr.h>
+#include <AK/String.h>
 #include <Kernel/FileSystem/FileSystem.h>
 #include <Kernel/FileSystem/InodeIdentifier.h>
 #include <Kernel/FileSystem/InodeMetadata.h>
@@ -41,7 +41,7 @@ class VFS {
 public:
     class Mount {
     public:
-        Mount(FS&, Custody* host_custody);
+        Mount(FS&, Custody* host_custody, int flags);
 
         InodeIdentifier host() const;
         InodeIdentifier guest() const { return m_guest; }
@@ -50,11 +50,14 @@ public:
 
         String absolute_path() const;
 
+        int flags() const { return m_flags; }
+
     private:
         InodeIdentifier m_host;
         InodeIdentifier m_guest;
         NonnullRefPtr<FS> m_guest_fs;
         RefPtr<Custody> m_host_custody;
+        int m_flags;
     };
 
     static VFS& the();
@@ -63,7 +66,7 @@ public:
     ~VFS();
 
     bool mount_root(FS&);
-    KResult mount(FS&, Custody& mount_point);
+    KResult mount(FS&, Custody& mount_point, int flags);
     KResult unmount(InodeIdentifier guest_inode_id);
 
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});

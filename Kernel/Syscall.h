@@ -332,9 +332,9 @@ struct SC_link_params {
 };
 
 struct SC_chown_params {
-     StringArgument path;
-     u32 uid;
-     u32 gid;
+    StringArgument path;
+    u32 uid;
+    u32 gid;
 };
 
 struct SC_mknod_params {
@@ -357,6 +357,7 @@ struct SC_mount_params {
     StringArgument source;
     StringArgument target;
     StringArgument fs_type;
+    int flags;
 };
 
 void initialize();

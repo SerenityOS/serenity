@@ -38,12 +38,12 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-KResult VFS::mount(FS& file_system, Custody& mount_point)
+KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
 {
     auto& inode = mount_point.inode();
-    dbg() << "VFS: Mounting " << file_system.class_name() << " at " << mount_point.absolute_path() << " (inode: " << inode.identifier() << ")";
+    dbg() << "VFS: Mounting " << file_system.class_name() << " at " << mount_point.absolute_path() << " (inode: " << inode.identifier() << ") with flags " << flags;
     // FIXME: check that this is not already a mount point
-    Mount mount { file_system, &mount_point };
+    Mount mount { file_system, &mount_point, flags };
     m_mounts.append(move(mount));
     mount_point.did_mount_on({});
     return KSuccess;
@@ -79,7 +79,7 @@ bool VFS::mount_root(FS& file_system)
         return false;
     }
 
-    Mount mount { file_system, nullptr };
+    Mount mount { file_system, nullptr, 0 };
 
     auto root_inode_id = mount.guest().fs()->root_inode();
     auto root_inode = mount.guest().fs()->get_inode(root_inode_id);
@@ -283,7 +283,7 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
     if (!new_file)
         return KResult(error);
 
-    auto new_custody = Custody::create(&parent_custody, p.basename(), *new_file);
+    auto new_custody = Custody::create(&parent_custody, p.basename(), *new_file, parent_custody.mount_flags());
     return FileDescription::create(*new_custody);
 }
 
@@ -603,10 +603,11 @@ RefPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
     return inode_id.fs()->get_inode(inode_id);
 }
 
-VFS::Mount::Mount(FS& guest_fs, Custody* host_custody)
+VFS::Mount::Mount(FS& guest_fs, Custody* host_custody, int flags)
     : m_guest(guest_fs.root_inode())
     , m_guest_fs(guest_fs)
     , m_host_custody(host_custody)
+    , m_flags(flags)
 {
 }
 
@@ -639,7 +640,7 @@ void VFS::sync()
 Custody& VFS::root_custody()
 {
     if (!m_root_custody)
-        m_root_custody = Custody::create(nullptr, "", *m_root_inode);
+        m_root_custody = Custody::create(nullptr, "", *m_root_inode, 0);
     return *m_root_custody;
 }
 
@@ -674,6 +675,8 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
     if (parent_custody)
         *parent_custody = custody_chain.last();
 
+    int mount_flags = custody_chain.last().mount_flags();
+
     for (int i = 0; i < parts.size(); ++i) {
         bool inode_was_root_at_head_of_loop = current_root.inode().identifier() == crumb_id;
         auto crumb_inode = get_inode(crumb_id);
@@ -704,8 +707,10 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
             }
             return KResult(-ENOENT);
         }
-        if (auto mount = find_mount_for_host(crumb_id))
+        if (auto mount = find_mount_for_host(crumb_id)) {
             crumb_id = mount->guest();
+            mount_flags = mount->flags();
+        }
         if (inode_was_root_at_head_of_loop && crumb_id.is_root_inode() && crumb_id != current_root.inode().identifier() && part == "..") {
             auto mount = find_mount_for_guest(crumb_id);
             auto dir_inode = get_inode(mount->host());
@@ -715,7 +720,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         crumb_inode = get_inode(crumb_id);
         ASSERT(crumb_inode);
 
-        custody_chain.append(Custody::create(&custody_chain.last(), part, *crumb_inode));
+        custody_chain.append(Custody::create(&custody_chain.last(), part, *crumb_inode, mount_flags));
 
         metadata = crumb_inode->metadata();
         if (metadata.is_directory()) {
