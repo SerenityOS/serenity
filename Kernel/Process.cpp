@@ -2103,13 +2103,6 @@ bool Process::validate_read_from_kernel(VirtualAddress vaddr, ssize_t size) cons
     return MM.validate_kernel_read(*this, vaddr, size);
 }
 
-bool Process::validate_read_str(const char* str)
-{
-    if (!validate_read(str, 1))
-        return false;
-    return validate_read(str, strlen(str) + 1);
-}
-
 bool Process::validate_read(const void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
