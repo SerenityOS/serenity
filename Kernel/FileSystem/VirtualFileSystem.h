@@ -28,6 +28,11 @@
 #define O_DIRECT 04000000
 #define O_NOFOLLOW_NOERROR 0x4000000
 
+#define MS_NODEV 1
+#define MS_NOEXEC 2
+#define MS_NOSUID 4
+#define MS_BIND 8
+
 class Custody;
 class Device;
 class FileDescription;

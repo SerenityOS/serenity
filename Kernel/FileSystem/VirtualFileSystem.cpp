@@ -216,11 +216,13 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         should_truncate_file = options & O_TRUNC;
     }
     if (options & O_EXEC) {
-        if (!metadata.may_execute(current->process()))
+        if (!metadata.may_execute(current->process()) || (custody.mount_flags() & MS_NOEXEC))
             return KResult(-EACCES);
     }
 
     if (metadata.is_device()) {
+        if (custody.mount_flags() & MS_NODEV)
+            return KResult(-EACCES);
         auto device = Device::get_device(metadata.major_device, metadata.minor_device);
         if (device == nullptr) {
             return KResult(-ENODEV);
