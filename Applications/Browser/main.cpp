@@ -30,7 +30,17 @@ static const char* home_url = "file:///home/anon/www/welcome.html";
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio dns unix shared_buffer cpath rpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio dns unix shared_buffer rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto window = GWindow::construct();
     window->set_rect(100, 100, 640, 480);
