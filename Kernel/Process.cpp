@@ -750,10 +750,12 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     // Copy of the master TLS region that we will clone for new threads
     m_master_tls_region = master_tls_region;
 
-    if (metadata.is_setuid())
-        m_euid = metadata.uid;
-    if (metadata.is_setgid())
-        m_egid = metadata.gid;
+    if (!(description->custody()->mount_flags() & MS_NOSUID)) {
+        if (metadata.is_setuid())
+            m_euid = metadata.uid;
+        if (metadata.is_setgid())
+            m_egid = metadata.gid;
+    }
 
     current->set_default_signal_dispositions();
     current->m_signal_mask = 0;
