@@ -317,7 +317,7 @@ public:
     size_t amount_purgeable_volatile() const;
     size_t amount_purgeable_nonvolatile() const;
 
-    int exec(String path, Vector<String> arguments, Vector<String> environment);
+    int exec(String path, Vector<String> arguments, Vector<String> environment, int recusion_depth = 0);
 
     bool is_superuser() const { return m_euid == 0; }
 
@@ -364,13 +364,13 @@ private:
 
     Range allocate_range(VirtualAddress, size_t);
 
-    int do_exec(String path, Vector<String> arguments, Vector<String> environment);
+    int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description);
     ssize_t do_write(FileDescription&, const u8*, int data_size);
+
+    KResultOr<NonnullRefPtr<FileDescription>> find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size);
 
     int alloc_fd(int first_candidate_fd = 0);
     void disown_all_shared_buffers();
-
-    KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const String& executable_path);
 
     KResult do_kill(Process&, int signal);
     KResult do_killpg(pid_t pgrp, int signal);
