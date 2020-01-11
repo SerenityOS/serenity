@@ -3814,45 +3814,45 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* ts)
     return 0;
 }
 
-int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* params)
+int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_params)
 {
-    if (!validate_read_typed(params))
+    if (!validate_read_typed(user_params))
+        return -EFAULT;
+    Syscall::SC_clock_nanosleep_params params;
+    copy_from_user(&params, user_params);
+
+    if (params.requested_sleep && !validate_read_typed(params.requested_sleep))
         return -EFAULT;
 
-    stac();
-    int clock_id = params->clock_id;
-    int flags = params->flags;
-    const timespec* requested_sleep = params->requested_sleep;
-    timespec* remaining_sleep = params->remaining_sleep;
-    clac();
+    timespec requested_sleep;
+    copy_from_user(&requested_sleep, params.requested_sleep);
 
-    if (requested_sleep && !validate_read_typed(requested_sleep))
+    if (params.remaining_sleep && !validate_write_typed(params.remaining_sleep))
         return -EFAULT;
 
-    if (remaining_sleep && !validate_write_typed(remaining_sleep))
-        return -EFAULT;
+    bool is_absolute = params.flags & TIMER_ABSTIME;
 
-    bool is_absolute = flags & TIMER_ABSTIME;
-
-    SmapDisabler disabler;
-    switch (clock_id) {
+    switch (params.clock_id) {
     case CLOCK_MONOTONIC: {
         u64 wakeup_time;
         if (is_absolute) {
-            u64 time_to_wake = (requested_sleep->tv_sec * 1000 + requested_sleep->tv_nsec / 1000000);
+            u64 time_to_wake = (requested_sleep.tv_sec * 1000 + requested_sleep.tv_nsec / 1000000);
             wakeup_time = current->sleep_until(time_to_wake);
         } else {
-            u32 ticks_to_sleep = (requested_sleep->tv_sec * 1000 + requested_sleep->tv_nsec / 1000000);
+            u32 ticks_to_sleep = (requested_sleep.tv_sec * 1000 + requested_sleep.tv_nsec / 1000000);
             if (!ticks_to_sleep)
                 return 0;
             wakeup_time = current->sleep(ticks_to_sleep);
         }
         if (wakeup_time > g_uptime) {
             u32 ticks_left = wakeup_time - g_uptime;
-            if (!is_absolute && remaining_sleep) {
-                remaining_sleep->tv_sec = ticks_left / TICKS_PER_SECOND;
-                ticks_left -= remaining_sleep->tv_sec * TICKS_PER_SECOND;
-                remaining_sleep->tv_nsec = ticks_left * 1000000;
+            if (!is_absolute && params.remaining_sleep) {
+                timespec remaining_sleep;
+                memset(&remaining_sleep, 0, sizeof(timespec));
+                remaining_sleep.tv_sec = ticks_left / TICKS_PER_SECOND;
+                ticks_left -= remaining_sleep.tv_sec * TICKS_PER_SECOND;
+                remaining_sleep.tv_nsec = ticks_left * 1000000;
+                copy_to_user(params.remaining_sleep, &remaining_sleep);
             }
             return -EINTR;
         }
