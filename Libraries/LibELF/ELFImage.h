@@ -14,7 +14,7 @@ public:
     bool is_valid() const { return m_valid; }
     bool parse();
 
-    bool is_within_image(const void* address, size_t size)
+    bool is_within_image(const void* address, size_t size) const
     {
         if (address < m_buffer)
             return false;
@@ -173,6 +173,9 @@ public:
     bool is_dynamic() const { return header().e_type == ET_DYN; }
 
     VirtualAddress entry() const { return VirtualAddress(header().e_entry); }
+
+    static bool validate_elf_header(const Elf32_Ehdr& elf_header, size_t file_size);
+    static bool validate_program_headers(const Elf32_Ehdr& elf_header, size_t file_size, u8* buffer, size_t buffer_size, String& interpreter_path);
 
 private:
     bool parse_header();
