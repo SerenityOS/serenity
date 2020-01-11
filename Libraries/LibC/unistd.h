@@ -113,6 +113,7 @@ int halt();
 int reboot();
 int mount(const char* source, const char* target, const char* fs_type, int flags);
 int umount(const char* mountpoint);
+int pledge(const char* promises, const char* execpromises);
 
 enum {
     _PC_NAME_MAX,
