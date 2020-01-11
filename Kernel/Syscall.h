@@ -148,7 +148,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(futex)                      \
     __ENUMERATE_SYSCALL(set_thread_boost)           \
     __ENUMERATE_SYSCALL(set_process_boost)          \
-    __ENUMERATE_SYSCALL(chroot)
+    __ENUMERATE_SYSCALL(chroot)                     \
+    __ENUMERATE_SYSCALL(pledge)
 
 namespace Syscall {
 
@@ -358,6 +359,11 @@ struct SC_mount_params {
     StringArgument target;
     StringArgument fs_type;
     int flags;
+};
+
+struct SC_pledge_params {
+    StringArgument promises;
+    StringArgument execpromises;
 };
 
 void initialize();
