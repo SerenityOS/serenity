@@ -2640,12 +2640,16 @@ int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
     return description->chown(uid, gid);
 }
 
-int Process::sys$chown(const char* pathname, uid_t uid, gid_t gid)
+int Process::sys$chown(const Syscall::SC_chown_params* user_params)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(pathname))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
-    return VFS::the().chown(StringView(pathname), uid, gid, current_directory());
+    Syscall::SC_chown_params params;
+    copy_from_user(&params, user_params, sizeof(params));
+    auto path = get_syscall_path_argument(params.path.characters, params.path.length);
+    if (path.is_error())
+        return path.error();
+    return VFS::the().chown(path.value(), params.uid, params.gid, current_directory());
 }
 
 void Process::finalize()

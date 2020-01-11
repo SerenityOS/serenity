@@ -333,6 +333,12 @@ struct SC_link_params {
     StringArgument new_path;
 };
 
+struct SC_chown_params {
+     StringArgument path;
+     u32 uid;
+     u32 gid;
+};
+
 void initialize();
 int sync();
 
