@@ -1,3 +1,4 @@
+#include <AK/HashMap.h>
 #include <AK/QuickSort.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -31,6 +32,9 @@ static bool flag_reverse_sort = false;
 static size_t terminal_rows = 0;
 static size_t terminal_columns = 0;
 static bool output_is_terminal = false;
+
+static HashMap<uid_t, String> users;
+static HashMap<gid_t, String> groups;
 
 int main(int argc, char** argv)
 {
@@ -74,6 +78,17 @@ int main(int argc, char** argv)
             fprintf(stderr, "usage: ls [-%s] [paths...]\n", valid_option_characters);
             return 1;
         }
+    }
+
+    if (flag_long) {
+        setpwent();
+        for (auto* pwd = getpwent(); pwd; pwd = getpwent())
+            users.set(pwd->pw_uid, pwd->pw_name);
+        endpwent();
+        setgrent();
+        for (auto* grp = getgrent(); grp; grp = getgrent())
+            groups.set(grp->gr_gid, grp->gr_name);
+        endgrent();
     }
 
     auto do_file_system_object = [&](const char* path) {
@@ -196,15 +211,15 @@ bool print_filesystem_object(const String& path, const String& name, const struc
     else
         printf("%c", st.st_mode & S_IXOTH ? 'x' : '-');
 
-    passwd* pwd = getpwuid(st.st_uid);
-    group* grp = getgrgid(st.st_gid);
-    if (!flag_print_numeric && pwd) {
-        printf(" %7s", pwd->pw_name);
+    auto username = users.get(st.st_uid);
+    auto groupname = groups.get(st.st_gid);
+    if (!flag_print_numeric && username.has_value()) {
+        printf(" %7s", username.value().characters());
     } else {
         printf(" %7u", st.st_uid);
     }
-    if (!flag_print_numeric && grp) {
-        printf(" %7s", grp->gr_name);
+    if (!flag_print_numeric && groupname.has_value()) {
+        printf(" %7s", groupname.value().characters());
     } else {
         printf(" %7u", st.st_gid);
     }
