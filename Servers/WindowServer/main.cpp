@@ -10,6 +10,11 @@
 
 int main(int, char**)
 {
+    if (pledge("stdio shared_buffer rpath wpath cpath unix proc fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDWAIT;
@@ -29,6 +34,11 @@ int main(int, char**)
     auto palette = PaletteImpl::create_with_shared_buffer(*theme);
 
     WSEventLoop loop;
+
+    if (pledge("stdio shared_buffer rpath wpath cpath unix proc", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     WSScreen screen(wm_config->read_num_entry("Screen", "Width", 1024),
         wm_config->read_num_entry("Screen", "Height", 768));
