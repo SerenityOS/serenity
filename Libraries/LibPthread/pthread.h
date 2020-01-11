@@ -82,7 +82,7 @@ int pthread_mutexattr_init(pthread_mutexattr_t*);
 int pthread_mutexattr_settype(pthread_mutexattr_t*, int);
 int pthread_mutexattr_destroy(pthread_mutexattr_t*);
 
-int pthread_setname_np(pthread_t, const char*, int);
-int pthread_getname_np(pthread_t, char*, int);
+int pthread_setname_np(pthread_t, const char*);
+int pthread_getname_np(pthread_t, char*, size_t);
 
 __END_DECLS

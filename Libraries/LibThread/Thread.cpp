@@ -33,7 +33,7 @@ void LibThread::Thread::start()
 
     ASSERT(rc == 0);
     if (!m_thread_name.is_empty()) {
-        rc = pthread_setname_np(m_tid, m_thread_name.characters(), m_thread_name.length());
+        rc = pthread_setname_np(m_tid, m_thread_name.characters());
         ASSERT(rc == 0);
     }
     dbg() << "Started a thread, tid = " << m_tid;
