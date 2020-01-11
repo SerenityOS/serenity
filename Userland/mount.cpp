@@ -6,6 +6,27 @@
 #include <stdio.h>
 #include <unistd.h>
 
+int parse_options(const StringView& options)
+{
+    int flags = 0;
+    Vector<StringView> parts = options.split_view(',');
+    for (auto& part : parts) {
+        if (part == "defaults")
+            continue;
+        else if (part == "nodev")
+            flags |= MS_NODEV;
+        else if (part == "noexec")
+            flags |= MS_NOEXEC;
+        else if (part == "nosuid")
+            flags |= MS_NOSUID;
+        else if (part == "bind")
+            flags |= MS_BIND;
+        else
+            fprintf(stderr, "Ignoring invalid option: %s\n", String(part).characters());
+    }
+    return flags;
+}
+
 bool mount_all()
 {
     // Mount all filesystems listed in /etc/fstab.
@@ -37,6 +58,7 @@ bool mount_all()
         const char* devname = parts[0].characters();
         const char* mountpoint = parts[1].characters();
         const char* fstype = parts[2].characters();
+        int flags = parts.size() >= 4 ? parse_options(parts[3]) : 0;
 
         if (strcmp(mountpoint, "/") == 0) {
             dbg() << "Skipping mounting root";
@@ -45,7 +67,7 @@ bool mount_all()
 
         dbg() << "Mounting " << devname << "(" << fstype << ")"
               << " on " << mountpoint;
-        int rc = mount(devname, mountpoint, fstype, 0);
+        int rc = mount(devname, mountpoint, fstype, flags);
         if (rc != 0) {
             fprintf(stderr, "Failed to mount %s (%s) on %s: %s\n", devname, fstype, mountpoint, strerror(errno));
             all_ok = false;
@@ -73,8 +95,26 @@ bool print_mounts()
         auto class_name = fs_object.get("class_name").to_string();
         auto mount_point = fs_object.get("mount_point").to_string();
         auto device = fs_object.get("device").as_string_or(class_name);
+        auto readonly = fs_object.get("readonly").to_bool();
+        auto mount_flags = fs_object.get("mount_flags").to_int();
 
-        printf("%s on %s type %s\n", device.characters(), mount_point.characters(), class_name.characters());
+        printf("%s on %s type %s (", device.characters(), mount_point.characters(), class_name.characters());
+
+        if (readonly)
+            printf("ro");
+        else
+            printf("rw");
+
+        if (mount_flags & MS_NODEV)
+            printf(",nodev");
+        if (mount_flags & MS_NOEXEC)
+            printf(",noexec");
+        if (mount_flags & MS_NOSUID)
+            printf(",nosuid");
+        if (mount_flags & MS_BIND)
+            printf(",bind");
+
+        printf(")\n");
     });
 
     return true;
@@ -86,6 +126,7 @@ int main(int argc, char** argv)
     args_parser.add_arg("devname", "device path");
     args_parser.add_arg("mountpoint", "mount point");
     args_parser.add_arg("t", "fstype", "file system type");
+    args_parser.add_arg("o", "options", "mount options");
     args_parser.add_arg("a", "mount all systems listed in /etc/fstab");
     CArgsParserResult args = args_parser.parse(argc, argv);
 
@@ -100,8 +141,9 @@ int main(int argc, char** argv)
         String devname = args.get_single_values()[0];
         String mountpoint = args.get_single_values()[1];
         String fstype = args.is_present("t") ? args.get("t") : "ext2";
+        int flags = args.is_present("o") ? parse_options(args.get("o")) : 0;
 
-        if (mount(devname.characters(), mountpoint.characters(), fstype.characters(), 0) < 0) {
+        if (mount(devname.characters(), mountpoint.characters(), fstype.characters(), flags) < 0) {
             perror("mount");
             return 1;
         }
