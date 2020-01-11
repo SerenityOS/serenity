@@ -3602,6 +3602,15 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 
     RefPtr<FS> fs;
 
+    if (params.flags & MS_BIND) {
+        // We're doing a bind mount.
+        auto source_or_error = VFS::the().resolve_path(source, current_directory());
+        if (source_or_error.is_error())
+            return source_or_error.error();
+        auto& source_custody = source_or_error.value();
+        return VFS::the().bind_mount(source_custody, target_custody);
+    }
+
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
         auto metadata_or_error = VFS::the().lookup_metadata(source, current_directory());
         if (metadata_or_error.is_error())
