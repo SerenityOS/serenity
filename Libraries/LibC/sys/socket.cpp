@@ -38,7 +38,7 @@ int connect(int sockfd, const sockaddr* addr, socklen_t addrlen)
 
 ssize_t sendto(int sockfd, const void* data, size_t data_length, int flags, const struct sockaddr* addr, socklen_t addr_length)
 {
-    Syscall::SC_sendto_params params { sockfd, data, data_length, flags, addr, addr_length };
+    Syscall::SC_sendto_params params { sockfd, { data, data_length }, flags, addr, addr_length };
     int rc = syscall(SC_sendto, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
@@ -50,7 +50,7 @@ ssize_t send(int sockfd, const void* data, size_t data_length, int flags)
 
 ssize_t recvfrom(int sockfd, void* buffer, size_t buffer_length, int flags, struct sockaddr* addr, socklen_t* addr_length)
 {
-    Syscall::SC_recvfrom_params params { sockfd, buffer, buffer_length, flags, addr, addr_length };
+    Syscall::SC_recvfrom_params params { sockfd, { buffer, buffer_length }, flags, addr, addr_length };
     int rc = syscall(SC_recvfrom, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
