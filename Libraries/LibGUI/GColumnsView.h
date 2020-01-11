@@ -37,4 +37,5 @@ private:
 
     Vector<Column> m_columns;
     int m_model_column;
+    GModelIndex m_last_selected_index;
 };

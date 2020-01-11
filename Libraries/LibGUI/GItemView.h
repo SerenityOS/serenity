@@ -58,4 +58,5 @@ private:
     Point m_rubber_band_origin;
     Point m_rubber_band_current;
     Vector<GModelIndex> m_rubber_band_remembered_selection;
+    GModelIndex m_last_selected_index;
 };

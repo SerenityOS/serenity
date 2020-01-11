@@ -199,16 +199,22 @@ void GColumnsView::mousedown_event(GMouseEvent& event)
     auto index = index_at_event_position(event.position());
     if (!index.is_valid()) {
         selection().clear();
+        m_last_selected_index = GModelIndex();
         return;
     }
 
     if (event.modifiers() & Mod_Ctrl) {
         selection().toggle(index);
+    } else if (event.modifiers() & Mod_Shift) {
+        selection().add(index);
+        if (m_last_selected_index.is_valid())
+            add_to_selection_between(m_last_selected_index, index);
     } else {
         selection().set(index);
         if (model()->row_count(index))
             push_column(index);
     }
+    m_last_selected_index = index;
 }
 
 void GColumnsView::did_update_model()

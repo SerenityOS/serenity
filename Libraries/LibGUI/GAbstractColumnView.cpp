@@ -344,10 +344,16 @@ void GAbstractColumnView::mousedown_event(GMouseEvent& event)
         return;
     }
 
-    if (event.modifiers() & Mod_Ctrl)
+    if (event.modifiers() & Mod_Ctrl) {
         selection().toggle(index);
-    else
+    } else if (event.modifiers() & Mod_Shift) {
+        selection().add(index);
+        if (m_last_selected_index.is_valid())
+            add_to_selection_between(m_last_selected_index, index);
+    } else {
         selection().set(index);
+    }
+    m_last_selected_index = index;
 }
 
 GModelIndex GAbstractColumnView::index_at_event_position(const Point& position, bool& is_toggle) const

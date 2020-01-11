@@ -97,4 +97,5 @@ private:
     int m_pressed_column_header_index { -1 };
     bool m_pressed_column_header_is_pressed { false };
     int m_hovered_column_header_index { -1 };
+    GModelIndex m_last_selected_index;
 };

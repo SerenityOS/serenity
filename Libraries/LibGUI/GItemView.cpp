@@ -126,14 +126,22 @@ void GItemView::mousedown_event(GMouseEvent& event)
             m_rubber_banding = true;
             m_rubber_band_origin = event.position();
             m_rubber_band_current = event.position();
+            m_last_selected_index = GModelIndex();
         } else {
             auto index = model()->index(item_index, m_model_column);
-            if (event.modifiers() & Mod_Ctrl)
+            if (event.modifiers() & Mod_Ctrl) {
                 selection().toggle(index);
-            else if (selection().size() > 1)
+            } else if (event.modifiers() & Mod_Shift) {
+                selection().add(index);
+                if (m_last_selected_index.is_valid())
+                    add_to_selection_between(m_last_selected_index, index);
+            } else if (selection().size() > 1) {
                 m_might_drag = true;
-            else
+            } else {
                 selection().set(index);
+            }
+
+            m_last_selected_index = index;
         }
     }
 
