@@ -78,10 +78,10 @@ enum ProcFileType {
     FI_PID_stack,
     FI_PID_regs,
     FI_PID_fds,
-    FI_PID_exe, // symlink
-    FI_PID_cwd, // symlink
+    FI_PID_exe,  // symlink
+    FI_PID_cwd,  // symlink
     FI_PID_root, // symlink
-    FI_PID_fd,  // directory
+    FI_PID_fd,   // directory
     __FI_PID_End,
 
     FI_MaxStaticFileIndex,
@@ -651,6 +651,7 @@ Optional<KBuffer> procfs$df(InodeIdentifier)
         fs_object.add("mount_point", mount.absolute_path());
         fs_object.add("block_size", fs.block_size());
         fs_object.add("readonly", fs.is_readonly());
+        fs_object.add("mount_flags", mount.flags());
 
         if (fs.is_disk_backed())
             fs_object.add("device", static_cast<const DiskBackedFS&>(fs).device().absolute_path());

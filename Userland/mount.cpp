@@ -45,7 +45,7 @@ bool mount_all()
 
         dbg() << "Mounting " << devname << "(" << fstype << ")"
               << " on " << mountpoint;
-        int rc = mount(devname, mountpoint, fstype);
+        int rc = mount(devname, mountpoint, fstype, 0);
         if (rc != 0) {
             fprintf(stderr, "Failed to mount %s (%s) on %s: %s\n", devname, fstype, mountpoint, strerror(errno));
             all_ok = false;
@@ -101,7 +101,7 @@ int main(int argc, char** argv)
         String mountpoint = args.get_single_values()[1];
         String fstype = args.is_present("t") ? args.get("t") : "ext2";
 
-        if (mount(devname.characters(), mountpoint.characters(), fstype.characters()) < 0) {
+        if (mount(devname.characters(), mountpoint.characters(), fstype.characters(), 0) < 0) {
             perror("mount");
             return 1;
         }
