@@ -361,7 +361,12 @@ int unlink(const char* pathname)
 
 int symlink(const char* target, const char* linkpath)
 {
-    int rc = syscall(SC_symlink, target, linkpath);
+    if (!target || !linkpath) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_symlink_params params { { target, strlen(target) }, { linkpath, strlen(linkpath) } };
+    int rc = syscall(SC_symlink, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

@@ -2587,14 +2587,19 @@ int Process::sys$unlink(const char* user_path, size_t path_length)
     return VFS::the().unlink(path.value(), current_directory());
 }
 
-int Process::sys$symlink(const char* target, const char* linkpath)
+int Process::sys$symlink(const Syscall::SC_symlink_params* user_params)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(target))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
-    if (!validate_read_str(linkpath))
-        return -EFAULT;
-    return VFS::the().symlink(StringView(target), StringView(linkpath), current_directory());
+    Syscall::SC_symlink_params params;
+    copy_from_user(&params, user_params);
+    auto target = get_syscall_path_argument(params.target.characters, params.target.length);
+    if (target.is_error())
+        return target.error();
+    auto linkpath = get_syscall_path_argument(params.linkpath.characters, params.linkpath.length);
+    if (linkpath.is_error())
+        return linkpath.error();
+    return VFS::the().symlink(target.value(), linkpath.value(), current_directory());
 }
 
 KResultOr<String> Process::get_syscall_path_argument(const char* user_path, size_t path_length)
