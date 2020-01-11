@@ -1,4 +1,4 @@
 /dev/hda	/	ext2
-proc	/proc	proc
-devpts	/dev/pts	devpts
-tmp	/tmp	tmp
+proc	/proc	proc	nosuid
+devpts	/dev/pts	devpts	noexec,nosuid
+tmp	/tmp	tmp	nodev,nosuid
