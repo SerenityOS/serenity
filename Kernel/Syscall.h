@@ -184,6 +184,28 @@ inline constexpr const char* to_string(Function function)
 }
 
 #ifdef __serenity__
+struct StringArgument {
+    const char* characters { nullptr };
+    size_t length { 0 };
+};
+
+template<typename DataType, typename SizeType>
+struct MutableBufferArgument {
+    DataType* data { nullptr };
+    SizeType size { 0 };
+};
+
+template<typename DataType, typename SizeType>
+struct ImmutableBufferArgument {
+    const DataType* data { nullptr };
+    SizeType size { 0 };
+};
+
+struct StringListArgument {
+    StringArgument* strings { nullptr };
+    size_t length { 0 };
+};
+
 struct SC_mmap_params {
     uint32_t addr;
     uint32_t size;
@@ -191,21 +213,18 @@ struct SC_mmap_params {
     int32_t flags;
     int32_t fd;
     int32_t offset; // FIXME: 64-bit off_t?
-    const char* name;
-    size_t name_length;
+    StringArgument name;
 };
 
 struct SC_open_params {
-    const char* path;
-    int path_length;
+    StringArgument path;
     int options;
     u16 mode;
 };
 
 struct SC_openat_params {
     int dirfd;
-    const char* path;
-    int path_length;
+    StringArgument path;
     int options;
     u16 mode;
 };
@@ -227,8 +246,7 @@ struct SC_clock_nanosleep_params {
 
 struct SC_sendto_params {
     int sockfd;
-    const void* data;
-    size_t data_length;
+    ImmutableBufferArgument<void, size_t> data;
     int flags;
     const sockaddr* addr;
     socklen_t addr_length;
@@ -236,8 +254,7 @@ struct SC_sendto_params {
 
 struct SC_recvfrom_params {
     int sockfd;
-    void* buffer;
-    size_t buffer_length;
+    MutableBufferArgument<void, size_t> buffer;
     int flags;
     sockaddr* addr;
     socklen_t* addr_length;
@@ -288,39 +305,20 @@ struct SC_create_thread_params {
 };
 
 struct SC_realpath_params {
-    const char* path;
-    size_t path_length;
-    char* buffer;
-    size_t buffer_size;
+    StringArgument path;
+    MutableBufferArgument<char, size_t> buffer;
 };
 
 struct SC_set_mmap_name_params {
     void* addr;
     size_t size;
-    const char* name;
-    size_t name_length;
-};
-
-struct StringArgument {
-    const char* characters { nullptr };
-    size_t length { 0 };
-};
-
-template<typename DataType, typename SizeType>
-struct MutableBufferArgument {
-    DataType* data { nullptr };
-    SizeType size { 0 };
-};
-
-struct SyscallStringList {
-    StringArgument* strings { nullptr };
-    size_t length { 0 };
+    StringArgument name;
 };
 
 struct SC_execve_params {
     StringArgument path;
-    SyscallStringList arguments;
-    SyscallStringList environment;
+    StringListArgument arguments;
+    StringListArgument environment;
 };
 
 struct SC_readlink_params {

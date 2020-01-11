@@ -218,9 +218,9 @@ int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_para
     Syscall::SC_set_mmap_name_params params;
     copy_from_user(&params, user_params, sizeof(params));
 
-    if (!validate_read(params.name, params.name_length))
+    auto name = validate_and_copy_string_from_user(params.name);
+    if (name.is_null())
         return -EFAULT;
-    auto name = copy_string_from_user(params.name, params.name_length);
 
     auto* region = region_from_range({ VirtualAddress((u32)params.addr), params.size });
     if (!region)
@@ -294,9 +294,12 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
     int fd = params.fd;
     int offset = params.offset;
 
-    if (params.name && !validate_read(params.name, params.name_length))
-        return (void*)-EFAULT;
-    auto name = copy_string_from_user(params.name, params.name_length);
+    String name;
+    if (params.name.characters) {
+        name = validate_and_copy_string_from_user(params.name);
+        if (name.is_null())
+            return (void*)-EFAULT;
+    }
 
     if (size == 0)
         return (void*)-EINVAL;
@@ -922,10 +925,11 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return -E2BIG;
 
-    if (!validate_read(params.path.characters, params.path.length))
+    auto path = validate_and_copy_string_from_user(params.path);
+    if (path.is_null())
         return -EFAULT;
 
-    if (params.path.length == 0)
+    if (path.is_empty())
         return -ENOENT;
 
     auto copy_user_strings = [&](const auto& list, auto& output) {
@@ -951,8 +955,6 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
     Vector<String> environment;
     if (!copy_user_strings(params.environment, environment))
         return -EFAULT;
-
-    auto path = copy_string_from_user(params.path.characters, params.path.length);
 
     int rc = exec(move(path), move(arguments), move(environment));
     ASSERT(rc < 0); // We should never continue after a successful exec!
@@ -1448,7 +1450,7 @@ int Process::sys$close(int fd)
 {
     auto description = file_description(fd);
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$close(%d) %p\n", name().characters(), pid(), fd, description);
+    dbgprintf("%s(%u) sys$close(%d) %p\n", name().characters(), pid(), fd, description.ptr());
 #endif
     if (!description)
         return -EBADF;
@@ -1571,13 +1573,24 @@ bool Process::validate(const Syscall::MutableBufferArgument<DataType, SizeType>&
     return validate_write(buffer.data, buffer.size);
 }
 
-String Process::validate_and_copy_string_from_user(const Syscall::StringArgument& string) const
+template<typename DataType, typename SizeType>
+bool Process::validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>& buffer)
 {
-    if (!validate_read(string.characters, string.length))
+    return validate_read(buffer.data, buffer.size);
+}
+
+String Process::validate_and_copy_string_from_user(const char* user_characters, size_t user_length) const
+{
+    if (!validate_read(user_characters, user_length))
         return {};
     SmapDisabler disabler;
-    size_t length = strnlen(string.characters, string.length);
-    return String(string.characters, length);
+    size_t measured_length = strnlen(user_characters, user_length);
+    return String(user_characters, measured_length);
+}
+
+String Process::validate_and_copy_string_from_user(const Syscall::StringArgument& string) const
+{
+    return validate_and_copy_string_from_user(string.characters, string.length);
 }
 
 int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
@@ -1590,7 +1603,7 @@ int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
     if (!validate(params.buffer))
         return -EFAULT;
 
-    auto path = get_syscall_path_argument(params.path.characters, params.path.length);
+    auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
 
@@ -1674,22 +1687,20 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     auto options = params.options;
     auto mode = params.mode;
 
-    if (params.path_length <= 0)
-        return -EINVAL;
-    if (!validate_read(params.path, params.path_length))
-        return -EFAULT;
+    auto path = get_syscall_path_argument(params.path);
+    if (path.is_error())
+        return path.error();
 
     // Ignore everything except permission bits.
     mode &= 04777;
 
-    String path = copy_string_from_user(params.path, params.path_length);
     int fd = alloc_fd();
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$open(\"%s\") -> %d\n", name().characters(), pid(), path, fd);
+    dbgprintf("%s(%u) sys$open(\"%s\") -> %d\n", name().characters(), pid(), path.value().characters(), fd);
 #endif
     if (fd < 0)
         return fd;
-    auto result = VFS::the().open(path, options, mode & ~umask(), current_directory());
+    auto result = VFS::the().open(path.value(), options, mode & ~umask(), current_directory());
     if (result.is_error())
         return result.error();
     auto description = result.value();
@@ -1714,13 +1725,11 @@ int Process::sys$openat(const Syscall::SC_openat_params* user_params)
     // Ignore everything except permission bits.
     mode &= 04777;
 
-    if (params.path_length <= 0)
-        return -EINVAL;
-    if (!validate_read(params.path, params.path_length))
-        return -EFAULT;
-    auto path = copy_string_from_user(params.path, params.path_length);
+    auto path = get_syscall_path_argument(params.path);
+    if (path.is_error())
+        return path.error();
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$openat(%d, \"%s\")\n", dirfd, name().characters(), pid(), path);
+    dbgprintf("%s(%u) sys$openat(%d, \"%s\")\n", dirfd, name().characters(), pid(), path.value().characters());
 #endif
     int fd = alloc_fd();
     if (fd < 0)
@@ -1740,7 +1749,7 @@ int Process::sys$openat(const Syscall::SC_openat_params* user_params)
         base = base_description->custody();
     }
 
-    auto result = VFS::the().open(path, options, mode & ~umask(), *base);
+    auto result = VFS::the().open(path.value(), options, mode & ~umask(), *base);
     if (result.is_error())
         return result.error();
     auto description = result.value();
@@ -2365,10 +2374,10 @@ int Process::sys$realpath(const Syscall::SC_realpath_params* user_params)
     Syscall::SC_realpath_params params;
     copy_from_user(&params, user_params, sizeof(params));
 
-    if (!validate_write(params.buffer, params.buffer_size))
+    if (!validate_write(params.buffer.data, params.buffer.size))
         return -EFAULT;
 
-    auto path = get_syscall_path_argument(params.path, params.path_length);
+    auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
 
@@ -2384,10 +2393,10 @@ int Process::sys$realpath(const Syscall::SC_realpath_params* user_params)
         ASSERT_NOT_REACHED();
     }
 
-    if (canonical_path.string().length() + 1 > params.buffer_size)
+    if (canonical_path.string().length() + 1 > params.buffer.size)
         return -ENAMETOOLONG;
 
-    copy_to_user(params.buffer, canonical_path.string().characters(), canonical_path.string().length() + 1);
+    copy_to_user(params.buffer.data, canonical_path.string().characters(), canonical_path.string().length() + 1);
     return 0;
 };
 
@@ -2586,16 +2595,16 @@ int Process::sys$symlink(const Syscall::SC_symlink_params* user_params)
         return -EFAULT;
     Syscall::SC_symlink_params params;
     copy_from_user(&params, user_params);
-    auto target = get_syscall_path_argument(params.target.characters, params.target.length);
+    auto target = get_syscall_path_argument(params.target);
     if (target.is_error())
         return target.error();
-    auto linkpath = get_syscall_path_argument(params.linkpath.characters, params.linkpath.length);
+    auto linkpath = get_syscall_path_argument(params.linkpath);
     if (linkpath.is_error())
         return linkpath.error();
     return VFS::the().symlink(target.value(), linkpath.value(), current_directory());
 }
 
-KResultOr<String> Process::get_syscall_path_argument(const char* user_path, size_t path_length)
+KResultOr<String> Process::get_syscall_path_argument(const char* user_path, size_t path_length) const
 {
     if (path_length == 0)
         return KResult(-EINVAL);
@@ -2604,6 +2613,11 @@ KResultOr<String> Process::get_syscall_path_argument(const char* user_path, size
     if (!validate_read(user_path, path_length))
         return KResult(-EFAULT);
     return copy_string_from_user(user_path, path_length);
+}
+
+KResultOr<String> Process::get_syscall_path_argument(const Syscall::StringArgument& path) const
+{
+    return get_syscall_path_argument(path.characters, path.length);
 }
 
 int Process::sys$rmdir(const char* user_path, size_t path_length)
@@ -2644,7 +2658,7 @@ int Process::sys$chown(const Syscall::SC_chown_params* user_params)
         return -EFAULT;
     Syscall::SC_chown_params params;
     copy_from_user(&params, user_params, sizeof(params));
-    auto path = get_syscall_path_argument(params.path.characters, params.path.length);
+    auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
     return VFS::the().chown(path.value(), params.uid, params.gid, current_directory());
@@ -2884,47 +2898,45 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
     return socket.connect(*description, address, address_size, description->is_blocking() ? ShouldBlock::Yes : ShouldBlock::No);
 }
 
-ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* params)
+ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
 {
-    if (!validate_read_typed(params))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
 
-    SmapDisabler disabler;
+    Syscall::SC_sendto_params params;
+    copy_from_user(&params, user_params);
 
-    int sockfd = params->sockfd;
-    const void* data = params->data;
-    size_t data_length = params->data_length;
-    int flags = params->flags;
-    const sockaddr* addr = params->addr;
-    socklen_t addr_length = params->addr_length;
+    int flags = params.flags;
+    const sockaddr* addr = params.addr;
+    socklen_t addr_length = params.addr_length;
 
-    if (!validate_read(data, data_length))
+    if (!validate(params.data))
         return -EFAULT;
     if (addr && !validate_read(addr, addr_length))
         return -EFAULT;
-    auto description = file_description(sockfd);
+    auto description = file_description(params.sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
         return -ENOTSOCK;
+    SmapDisabler disabler;
     auto& socket = *description->socket();
-    return socket.sendto(*description, data, data_length, flags, addr, addr_length);
+    return socket.sendto(*description, params.data.data, params.data.size, flags, addr, addr_length);
 }
 
-ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
+ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
 {
-    if (!validate_read_typed(params))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
 
-    SmapDisabler disabler;
-    int sockfd = params->sockfd;
-    void* buffer = params->buffer;
-    size_t buffer_length = params->buffer_length;
-    int flags = params->flags;
-    sockaddr* addr = params->addr;
-    socklen_t* addr_length = params->addr_length;
+    Syscall::SC_recvfrom_params params;
+    copy_from_user(&params, user_params);
 
-    if (!validate_write(buffer, buffer_length))
+    int flags = params.flags;
+    sockaddr* addr = params.addr;
+    socklen_t* addr_length = params.addr_length;
+
+    if (!validate(params.buffer))
         return -EFAULT;
     if (addr_length) {
         if (!validate_write_typed(addr_length))
@@ -2934,7 +2946,7 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     } else if (addr) {
         return -EINVAL;
     }
-    auto description = file_description(sockfd);
+    auto description = file_description(params.sockfd);
     if (!description)
         return -EBADF;
     if (!description->is_socket())
@@ -2945,7 +2957,8 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* params)
     if (flags & MSG_DONTWAIT)
         description->set_blocking(false);
 
-    auto nrecv = socket.recvfrom(*description, buffer, buffer_length, flags, addr, addr_length);
+    SmapDisabler disabler;
+    auto nrecv = socket.recvfrom(*description, params.buffer.data, params.buffer.size, flags, addr, addr_length);
     if (flags & MSG_DONTWAIT)
         description->set_blocking(original_blocking);
 
@@ -3411,15 +3424,11 @@ int Process::sys$join_thread(int tid, void** exit_value)
     return 0;
 }
 
-int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
+int Process::sys$set_thread_name(int tid, const char* user_name, size_t user_name_length)
 {
-    if (buffer_size < 0)
-        return -EINVAL;
-
-    if (!validate_read(buffer, buffer_size))
+    auto name = validate_and_copy_string_from_user(user_name, user_name_length);
+    if (name.is_null())
         return -EFAULT;
-
-    auto name = copy_string_from_user(buffer, buffer_size);
 
     const size_t max_thread_name_size = 64;
     if (name.length() > max_thread_name_size)
@@ -3432,9 +3441,9 @@ int Process::sys$set_thread_name(int tid, const char* buffer, int buffer_size)
     thread->set_name(name);
     return 0;
 }
-int Process::sys$get_thread_name(int tid, char* buffer, int buffer_size)
+int Process::sys$get_thread_name(int tid, char* buffer, size_t buffer_size)
 {
-    if (buffer_size <= 0)
+    if (buffer_size == 0)
         return -EINVAL;
 
     if (!validate_write(buffer, buffer_size))
@@ -3474,10 +3483,10 @@ int Process::sys$rename(const Syscall::SC_rename_params* user_params)
         return -EFAULT;
     Syscall::SC_rename_params params;
     copy_from_user(&params, user_params);
-    auto old_path = get_syscall_path_argument(params.old_path.characters, params.old_path.length);
+    auto old_path = get_syscall_path_argument(params.old_path);
     if (old_path.is_error())
         return old_path.error();
-    auto new_path = get_syscall_path_argument(params.new_path.characters, params.new_path.length);
+    auto new_path = get_syscall_path_argument(params.new_path);
     if (new_path.is_error())
         return new_path.error();
     return VFS::the().rename(old_path.value(), new_path.value(), current_directory());
@@ -3685,7 +3694,7 @@ int Process::sys$mknod(const Syscall::SC_mknod_params* user_params)
     copy_from_user(&params, user_params);
     if (!is_superuser() && !is_regular_file(params.mode) && !is_fifo(params.mode) && !is_socket(params.mode))
         return -EPERM;
-    auto path = get_syscall_path_argument(params.path.characters, params.path.length);
+    auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
     return VFS::the().mknod(path.value(), params.mode & ~umask(), params.dev, current_directory());
@@ -4002,14 +4011,14 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
     return 0;
 }
 
-int Process::sys$module_unload(const char* name, size_t name_length)
+int Process::sys$module_unload(const char* user_name, size_t name_length)
 {
     if (!is_superuser())
         return -EPERM;
-    if (!validate_read(name, name_length))
-        return -EFAULT;
 
-    auto module_name = copy_string_from_user(name, name_length);
+    auto module_name = validate_and_copy_string_from_user(user_name, name_length);
+    if (module_name.is_null())
+        return -EFAULT;
 
     auto it = g_modules->find(module_name);
     if (it == g_modules->end())

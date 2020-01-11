@@ -13,7 +13,7 @@ void* mmap(void* addr, size_t size, int prot, int flags, int fd, off_t offset)
 
 void* mmap_with_name(void* addr, size_t size, int prot, int flags, int fd, off_t offset, const char* name)
 {
-    Syscall::SC_mmap_params params { (u32)addr, size, prot, flags, fd, offset, name, name ? strlen(name) : 0 };
+    Syscall::SC_mmap_params params { (u32)addr, size, prot, flags, fd, offset, { name, name ? strlen(name) : 0 } };
     int rc = syscall(SC_mmap, &params);
     if (rc < 0 && -rc < EMAXERRNO) {
         errno = -rc;
@@ -40,7 +40,7 @@ int set_mmap_name(void* addr, size_t size, const char* name)
         errno = EFAULT;
         return -1;
     }
-    Syscall::SC_set_mmap_name_params params { addr, size, name, strlen(name) };
+    Syscall::SC_set_mmap_name_params params { addr, size, { name, strlen(name) } };
     int rc = syscall(SC_set_mmap_name, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }

@@ -539,11 +539,19 @@ int pthread_setspecific(pthread_key_t key, const void* value)
 }
 int pthread_setname_np(pthread_t thread, const char* buffer, int buffer_size)
 {
+    if (buffer_size < 0) {
+        errno = EINVAL;
+        return -1;
+    }
     return syscall(SC_set_thread_name, thread, buffer, buffer_size);
 }
 
 int pthread_getname_np(pthread_t thread, char* buffer, int buffer_size)
 {
+    if (buffer_size < 0) {
+        errno = EINVAL;
+        return -1;
+    }
     return syscall(SC_get_thread_name, thread, buffer, buffer_size);
 }
 

@@ -202,8 +202,8 @@ public:
     void sys$exit_thread(void*);
     int sys$join_thread(int tid, void** exit_value);
     int sys$detach_thread(int tid);
-    int sys$set_thread_name(int tid, const char* buffer, int buffer_size);
-    int sys$get_thread_name(int tid, char* buffer, int buffer_size);
+    int sys$set_thread_name(int tid, const char* buffer, size_t buffer_size);
+    int sys$get_thread_name(int tid, char* buffer, size_t buffer_size);
     int sys$rename(const Syscall::SC_rename_params*);
     int sys$systrace(pid_t);
     int sys$mknod(const Syscall::SC_mknod_params*);
@@ -262,7 +262,10 @@ public:
     bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
     template<typename DataType, typename SizeType>
     bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
+    template<typename DataType, typename SizeType>
+    bool validate(const Syscall::ImmutableBufferArgument<DataType, SizeType>&);
 
+    String validate_and_copy_string_from_user(const char*, size_t) const;
     String validate_and_copy_string_from_user(const Syscall::StringArgument&) const;
 
     Custody& current_directory();
@@ -334,7 +337,8 @@ private:
     KResult do_kill(Process&, int signal);
     KResult do_killpg(pid_t pgrp, int signal);
 
-    KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length);
+    KResultOr<String> get_syscall_path_argument(const char* user_path, size_t path_length) const;
+    KResultOr<String> get_syscall_path_argument(const Syscall::StringArgument&) const;
 
     RefPtr<PageDirectory> m_page_directory;
 
