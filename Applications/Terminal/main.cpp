@@ -136,7 +136,7 @@ RefPtr<GWindow> create_settings_window(TerminalWidget& terminal, RefPtr<CConfigF
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio tty rpath cpath wpath shared_buffer proc unix fattr", nullptr) < 0) {
+    if (pledge("stdio tty rpath cpath wpath shared_buffer proc exec unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio tty rpath cpath wpath shared_buffer proc unix", nullptr) < 0) {
+    if (pledge("stdio tty rpath cpath wpath shared_buffer proc exec unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
