@@ -345,6 +345,11 @@ struct SC_mknod_params {
     u32 dev;
 };
 
+struct SC_symlink_params {
+    StringArgument target;
+    StringArgument linkpath;
+};
+
 void initialize();
 int sync();
 
