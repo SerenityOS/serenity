@@ -64,8 +64,9 @@ public:
     // FIXME: This should take glyph spacing into account, no?
     int glyph_width() const { return font().glyph_width('x'); }
 
-    bool write_to_file(const StringView& path);
 
+    void insert_at_cursor_or_replace_selection(const StringView&);
+    bool write_to_file(const StringView& path);
     bool has_selection() const { return m_selection.is_valid(); }
     String selected_text() const;
     void set_selection(const GTextRange&);
@@ -156,7 +157,6 @@ private:
     int ruler_width() const;
     Rect ruler_content_rect(size_t line) const;
     void toggle_selection_if_needed_for_event(const GKeyEvent&);
-    void insert_at_cursor_or_replace_selection(const StringView&);
     void delete_selection();
     void did_update_selection();
     int content_x_for_position(const GTextPosition&) const;
