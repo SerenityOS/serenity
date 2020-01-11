@@ -6,7 +6,15 @@
 
 int main(int, char**)
 {
+    if (pledge("stdio inet shared_buffer unix rpath cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
     CEventLoop event_loop;
+    if (pledge("stdio inet shared_buffer unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
     (void)*new HttpProtocol;
     auto server = CLocalServer::construct();
     bool ok = server->take_over_from_system_server();
