@@ -77,6 +77,11 @@ static void mount_all_filesystems()
 
 int main(int, char**)
 {
+    if (pledge("stdio proc exec unix rpath cpath chown fattr id", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     mount_all_filesystems();
 
     struct sigaction sa = {
