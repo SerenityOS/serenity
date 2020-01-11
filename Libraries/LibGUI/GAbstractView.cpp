@@ -107,6 +107,21 @@ void GAbstractView::select_all()
     }
 }
 
+void GAbstractView::add_to_selection_between(const GModelIndex& index_a, const GModelIndex& index_b)
+{
+    ASSERT(model());
+
+    GModelIndex start_index = index_a;
+    GModelIndex end_index = index_b;
+    if (index_a > index_b)
+        swap(start_index, end_index);
+
+    for (int i = start_index.row(); i <= end_index.row(); ++i) {
+        for (int j = start_index.column(); j <= end_index.column(); ++j)
+            selection().add(model()->index(i, j));
+    }
+}
+
 void GAbstractView::activate(const GModelIndex& index)
 {
     if (on_activation)
