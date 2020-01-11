@@ -31,6 +31,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio thread unix shared_buffer cpath rpath wpath fattr proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDWAIT;
