@@ -14,6 +14,10 @@ static bool flag_print_gid_all = false;
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
     static const char* valid_option_characters = "ugGn";
     int opt;
     while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
