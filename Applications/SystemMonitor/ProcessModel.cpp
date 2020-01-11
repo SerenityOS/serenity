@@ -93,6 +93,8 @@ String ProcessModel::column_name(int column) const
         return "File In";
     case Column::FileWriteBytes:
         return "File Out";
+    case Column::Pledge:
+        return "Pledge";
     default:
         ASSERT_NOT_REACHED();
     }
@@ -151,6 +153,8 @@ GModel::ColumnMetadata ProcessModel::column_metadata(int column) const
         return { 60, TextAlignment::CenterRight };
     case Column::IPv4SocketWriteBytes:
         return { 60, TextAlignment::CenterRight };
+    case Column::Pledge:
+        return { 60, TextAlignment::CenterLeft };
     default:
         ASSERT_NOT_REACHED();
     }
@@ -220,6 +224,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return thread.current_state.file_read_bytes;
         case Column::FileWriteBytes:
             return thread.current_state.file_write_bytes;
+        case Column::Pledge:
+            return thread.current_state.pledge;
         }
         ASSERT_NOT_REACHED();
         return {};
@@ -285,6 +291,8 @@ GVariant ProcessModel::data(const GModelIndex& index, Role role) const
             return thread.current_state.file_read_bytes;
         case Column::FileWriteBytes:
             return thread.current_state.file_write_bytes;
+        case Column::Pledge:
+            return thread.current_state.pledge;
         }
     }
 
@@ -306,6 +314,7 @@ void ProcessModel::update()
             ThreadState state;
             state.pid = it.value.pid;
             state.user = it.value.username;
+            state.pledge = it.value.pledge;
             state.syscall_count = thread.syscall_count;
             state.inode_faults = thread.inode_faults;
             state.zero_faults = thread.zero_faults;

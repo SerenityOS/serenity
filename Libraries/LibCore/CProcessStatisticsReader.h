@@ -37,6 +37,7 @@ struct CProcessStatistics {
     unsigned nfds;
     String name;
     String tty;
+    String pledge;
     size_t amount_virtual;
     size_t amount_resident;
     size_t amount_shared;
