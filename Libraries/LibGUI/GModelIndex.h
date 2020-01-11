@@ -29,6 +29,34 @@ public:
         return !(*this == other);
     }
 
+    bool operator>(const GModelIndex& other) const
+    {
+        if (m_row > other.m_row)
+            return true;
+        if (m_row < other.m_row)
+            return false;
+        return m_column > other.m_column;
+    }
+
+    bool operator>=(const GModelIndex& other) const
+    {
+        if (m_row > other.m_row)
+            return true;
+        if (m_row < other.m_row)
+            return false;
+        return m_column >= other.m_column;
+    }
+
+    bool operator<(const GModelIndex& other) const
+    {
+        return !(*this >= other);
+    }
+
+    bool operator<=(const GModelIndex& other) const
+    {
+        return !(*this > other);
+    }
+
 private:
     GModelIndex(const GModel& model, int row, int column, void* internal_data)
         : m_model(&model)
