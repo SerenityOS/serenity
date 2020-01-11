@@ -41,15 +41,30 @@ TextEditorWidget::TextEditorWidget()
             update_title();
     };
 
-    m_find_widget = GWidget::construct(this);
+    m_find_replace_widget = GWidget::construct(this);
+    m_find_replace_widget->set_fill_with_background_color(true);
+    m_find_replace_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_find_replace_widget->set_preferred_size(0, 48);
+    m_find_replace_widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
+    m_find_replace_widget->layout()->set_margins({ 2, 2, 2, 4 });
+    m_find_replace_widget->set_visible(false);
+
+    m_find_widget = GWidget::construct(m_find_replace_widget);
     m_find_widget->set_fill_with_background_color(true);
     m_find_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     m_find_widget->set_preferred_size(0, 22);
     m_find_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
-    m_find_widget->layout()->set_margins({ 2, 2, 2, 2 });
     m_find_widget->set_visible(false);
 
+    m_replace_widget = GWidget::construct(m_find_replace_widget);
+    m_replace_widget->set_fill_with_background_color(true);
+    m_replace_widget->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+    m_replace_widget->set_preferred_size(0, 22);
+    m_replace_widget->set_layout(make<GBoxLayout>(Orientation::Horizontal));
+    m_replace_widget->set_visible(false);
+
     m_find_textbox = GTextBox::construct(m_find_widget);
+    m_replace_textbox = GTextBox::construct(m_replace_widget);
 
     m_find_next_action = GAction::create("Find next", { Mod_Ctrl, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
@@ -69,6 +84,7 @@ TextEditorWidget::TextEditorWidget()
                 GMessageBox::InputType::OK, window());
         }
     });
+
     m_find_previous_action = GAction::create("Find previous", { Mod_Ctrl | Mod_Shift, Key_G }, [&](auto&) {
         auto needle = m_find_textbox->text();
         if (needle.is_empty()) {
@@ -94,14 +110,78 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_previous_button = GButton::construct("Previous", m_find_widget);
+    m_replace_next_action = GAction::create("Replace next", { Mod_Ctrl, Key_F1 }, [&](auto&) {
+        auto needle = m_find_textbox->text();
+        auto substitute = m_replace_textbox->text();
+
+        if (needle.is_empty())
+            return;
+
+        auto selection_start = m_editor->normalized_selection().start();
+        if (!selection_start.is_valid())
+            selection_start = m_editor->normalized_selection().start();
+
+        auto found_range = m_editor->document().find_next(needle, selection_start);
+
+        if (found_range.is_valid()) {
+            m_editor->set_selection(found_range);
+            m_editor->insert_at_cursor_or_replace_selection(substitute);
+        } else {
+            GMessageBox::show(
+                String::format("Not found: \"%s\"", needle.characters()),
+                "Not found",
+                GMessageBox::Type::Information,
+                GMessageBox::InputType::OK, window());
+        }
+    });
+
+    m_replace_previous_action = GAction::create("Replace previous", { Mod_Ctrl | Mod_Shift, Key_F1 }, [&](auto&) {
+        auto needle = m_find_textbox->text();
+        auto substitute = m_replace_textbox->text();
+        if (needle.is_empty())
+            return;
+
+        auto selection_start = m_editor->normalized_selection().start();
+        if (!selection_start.is_valid())
+            selection_start = m_editor->normalized_selection().start();
+
+        auto found_range = m_editor->document().find_previous(needle, selection_start);
+
+        if (found_range.is_valid()) {
+            m_editor->set_selection(found_range);
+            m_editor->insert_at_cursor_or_replace_selection(substitute);
+        } else {
+            GMessageBox::show(
+                String::format("Not found: \"%s\"", needle.characters()),
+                "Not found",
+                GMessageBox::Type::Information,
+                GMessageBox::InputType::OK, window());
+        }
+    });
+
+    m_replace_all_action = GAction::create("Replace all", { Mod_Ctrl, Key_F2 }, [&](auto&) {
+        auto needle = m_find_textbox->text();
+        auto substitute = m_replace_textbox->text();
+        if (needle.is_empty())
+            return;
+
+
+        auto found_range = m_editor->document().find_next(needle);
+        while(found_range.is_valid()) {
+                m_editor->set_selection(found_range);
+                m_editor->insert_at_cursor_or_replace_selection(substitute);
+                found_range = m_editor->document().find_next(needle);
+        }
+    });
+
+    m_find_previous_button = GButton::construct("Find Previous", m_find_widget);
     m_find_previous_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_find_previous_button->set_preferred_size(64, 0);
+    m_find_previous_button->set_preferred_size(150, 0);
     m_find_previous_button->set_action(*m_find_previous_action);
 
-    m_find_next_button = GButton::construct("Next", m_find_widget);
+    m_find_next_button = GButton::construct("Find Next", m_find_widget);
     m_find_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
-    m_find_next_button->set_preferred_size(64, 0);
+    m_find_next_button->set_preferred_size(150, 0);
     m_find_next_button->set_action(*m_find_next_action);
 
     m_find_textbox->on_return_pressed = [this] {
@@ -109,17 +189,43 @@ TextEditorWidget::TextEditorWidget()
     };
 
     m_find_textbox->on_escape_pressed = [this] {
-        m_find_widget->set_visible(false);
+        m_find_replace_widget->set_visible(false);
         m_editor->set_focus(true);
     };
 
-    m_find_action = GAction::create("Find...", { Mod_Ctrl, Key_F }, load_png("/res/icons/16x16/find.png"), [this](auto&) {
+    m_replace_previous_button = GButton::construct("Replace Previous", m_replace_widget);
+    m_replace_previous_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_replace_previous_button->set_preferred_size(100, 0);
+    m_replace_previous_button->set_action(*m_replace_previous_action);
+
+    m_replace_next_button = GButton::construct("Replace Next", m_replace_widget);
+    m_replace_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_replace_next_button->set_preferred_size(100, 0);
+    m_replace_next_button->set_action(*m_replace_next_action);
+
+    m_replace_all_button = GButton::construct("Replace ALl", m_replace_widget);
+    m_replace_all_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
+    m_replace_all_button->set_preferred_size(100, 0);
+    m_replace_all_button->set_action(*m_replace_all_action);
+
+    m_replace_textbox->on_return_pressed = [this] {
+        m_replace_next_button->click();
+    };
+
+    m_replace_textbox->on_escape_pressed = [this] {
+        m_find_replace_widget->set_visible(false);
+        m_editor->set_focus(true);
+    };
+
+    m_find_replace_action = GAction::create("Find/Replace..", { Mod_Ctrl, Key_F }, load_png("/res/icons/16x16/find.png"), [this](auto&) {
+        m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
+        m_replace_widget->set_visible(true);
         m_find_textbox->set_focus(true);
         m_find_textbox->select_all();
     });
 
-    m_editor->add_custom_context_menu_action(*m_find_action);
+    m_editor->add_custom_context_menu_action(*m_find_replace_action);
     m_editor->add_custom_context_menu_action(*m_find_next_action);
     m_editor->add_custom_context_menu_action(*m_find_previous_action);
 
@@ -223,9 +329,12 @@ TextEditorWidget::TextEditorWidget()
     edit_menu->add_action(m_editor->paste_action());
     edit_menu->add_action(m_editor->delete_action());
     edit_menu->add_separator();
-    edit_menu->add_action(*m_find_action);
+    edit_menu->add_action(*m_find_replace_action);
     edit_menu->add_action(*m_find_next_action);
     edit_menu->add_action(*m_find_previous_action);
+    edit_menu->add_action(*m_replace_next_action);
+    edit_menu->add_action(*m_replace_previous_action);
+    edit_menu->add_action(*m_replace_all_action);
     menubar->add_menu(move(edit_menu));
 
     auto font_menu = GMenu::construct("Font");
