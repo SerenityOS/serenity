@@ -26,7 +26,7 @@ Custody* Custody::get_if_cached(Custody* parent, const StringView& name)
     return nullptr;
 }
 
-NonnullRefPtr<Custody> Custody::get_or_create(Custody* parent, const StringView& name, Inode& inode)
+NonnullRefPtr<Custody> Custody::get_or_create(Custody* parent, const StringView& name, Inode& inode, int mount_flags)
 {
     if (RefPtr<Custody> cached_custody = get_if_cached(parent, name)) {
         if (&cached_custody->inode() != &inode) {
@@ -35,13 +35,14 @@ NonnullRefPtr<Custody> Custody::get_or_create(Custody* parent, const StringView&
         ASSERT(&cached_custody->inode() == &inode);
         return *cached_custody;
     }
-    return create(parent, name, inode);
+    return create(parent, name, inode, mount_flags);
 }
 
-Custody::Custody(Custody* parent, const StringView& name, Inode& inode)
+Custody::Custody(Custody* parent, const StringView& name, Inode& inode, int mount_flags)
     : m_parent(parent)
     , m_name(name)
     , m_inode(inode)
+    , m_mount_flags(mount_flags)
 {
     LOCKER(all_custodies().lock());
     all_custodies().resource().append(this);
