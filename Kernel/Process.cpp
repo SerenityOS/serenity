@@ -1,4 +1,5 @@
 #include <AK/FileSystemPath.h>
+#include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
@@ -630,9 +631,10 @@ pid_t Process::sys$fork(RegisterDump& regs)
     return child->pid();
 }
 
-int Process::do_exec(String path, Vector<String> arguments, Vector<String> environment)
+int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description)
 {
     ASSERT(is_ring3());
+    auto path = main_program_description->absolute_path();
 
     dbgprintf("%s(%d) do_exec(%s): thread_count() = %d\n", m_name.characters(), m_pid, path.characters(), thread_count());
     // FIXME(Thread): Kill any threads the moment we commit to the exec().
@@ -662,15 +664,6 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     if (parts.is_empty())
         return -ENOENT;
 
-    auto result = VFS::the().open(path, O_EXEC, 0, current_directory());
-    if (result.is_error())
-        return result.error();
-    auto description = result.value();
-    auto metadata = description->metadata();
-
-    if (!metadata.size)
-        return -ENOTIMPL;
-
     u32 entry_eip = 0;
     // FIXME: Is there a race here?
     auto old_page_directory = move(m_page_directory);
@@ -680,9 +673,37 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
 #endif
     ProcessPagingScope paging_scope(*this);
 
-    ASSERT(description->inode());
-    auto vmobject = InodeVMObject::create_with_inode(*description->inode());
-    auto* region = allocate_region_with_vmobject(VirtualAddress(), metadata.size, vmobject, 0, description->absolute_path(), PROT_READ, false);
+    struct VMObjectAndRegion {
+        NonnullRefPtr<VMObject> vmobject;
+        Region* region;
+    };
+
+    InodeMetadata loader_metadata;
+
+    // FIXME: Hoooo boy this is a hack if I ever saw one.
+    //      This is the 'random' offset we're giving to our ET_DYN exectuables to start as.
+    //      It also happens to be the static Virtual Addresss offset every static exectuable gets :)
+    //      Without this, some assumptions by the ELF loading hooks below are severely broken.
+    //      0x08000000 is a verified random number chosen by random dice roll https://xkcd.com/221/
+    u32 totally_random_offset = interpreter_description ? 0x08000000 : 0;
+
+    auto [vmobject, region] = [&]() {
+        // FIXME: We should be able to load both the PT_INTERP interpreter and the main program... once the RTLD is smart enough
+        if (interpreter_description) {
+            loader_metadata = interpreter_description->metadata();
+            auto vmobject = InodeVMObject::create_with_inode(*interpreter_description->inode());
+            auto region = allocate_region_with_vmobject(VirtualAddress(), loader_metadata.size, vmobject, 0, interpreter_description->absolute_path(), PROT_READ, false);
+            // we don't need the interpreter file desciption after we've loaded (or not) it into memory
+            interpreter_description = nullptr;
+            return VMObjectAndRegion { move(vmobject), region };
+        }
+
+        loader_metadata = main_program_description->metadata();
+        auto vmobject = InodeVMObject::create_with_inode(*main_program_description->inode());
+        auto region = allocate_region_with_vmobject(VirtualAddress(), loader_metadata.size, vmobject, 0, main_program_description->absolute_path(), PROT_READ, false);
+        return VMObjectAndRegion { move(vmobject), region };
+    }();
+
     ASSERT(region);
 
     // NOTE: We yank this out of 'm_regions' since we're about to manipulate the vector
@@ -698,7 +719,22 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
         // Okay, here comes the sleight of hand, pay close attention..
         auto old_regions = move(m_regions);
         m_regions.append(move(executable_region));
-        loader = make<ELFLoader>(region->vaddr().as_ptr(), metadata.size);
+
+        ArmedScopeGuard rollback_regions_guard([&]() {
+            m_page_directory = move(old_page_directory);
+            ASSERT(&current->process() == this);
+            MM.enter_process_paging_scope(*this);
+            executable_region = m_regions.take_first();
+            m_regions = move(old_regions);
+        });
+
+        loader = make<ELFLoader>(region->vaddr().as_ptr(), loader_metadata.size);
+
+        // Load the correct executable -- either interp or main program.
+        // FIXME: Once we actually load both interp and main, we'll need to be more clever about this.
+        //     In that case, both will be ET_DYN objects, so they'll both be completely relocatable.
+        //     That means, we can put them literally anywhere in User VM space (ASLR anyone?).
+        // ALSO FIXME: Reminder to really really fix that 'totally random offset' business.
         loader->map_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, size_t offset_in_image, bool is_readable, bool is_writable, bool is_executable, const String& name) -> u8* {
             ASSERT(size);
             ASSERT(alignment == PAGE_SIZE);
@@ -709,9 +745,9 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            if (!allocate_region_with_vmobject(vaddr, size, vmobject, offset_in_image, String(name), prot))
-                return nullptr;
-            return vaddr.as_ptr();
+            if (auto* region = allocate_region_with_vmobject(vaddr.offset(totally_random_offset), size, vmobject, offset_in_image, String(name), prot))
+                return region->vaddr().as_ptr();
+            return nullptr;
         };
         loader->alloc_section_hook = [&](VirtualAddress vaddr, size_t size, size_t alignment, bool is_readable, bool is_writable, const String& name) -> u8* {
             ASSERT(size);
@@ -721,10 +757,17 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
                 prot |= PROT_READ;
             if (is_writable)
                 prot |= PROT_WRITE;
-            if (!allocate_region(vaddr, size, String(name), prot))
-                return nullptr;
-            return vaddr.as_ptr();
+            if (auto* region = allocate_region(vaddr.offset(totally_random_offset), size, String(name), prot)) 
+                return region->vaddr().as_ptr();
+            return nullptr;
         };
+
+        // FIXME: Move TLS region allocation to userspace: LibC and the dynamic loader.
+        //     LibC if we end up with a statically linked executable, and the
+        //     dynamic loader so that it can create new TLS blocks for each shared libarary
+        //     that gets loaded as part of DT_NEEDED processing, and via dlopen()
+        //     If that doesn't happen quickly, at least pass the location of the TLS region
+        //     some ELF Auxilliary Vector so the loader can use it/create new ones as necessary.
         loader->tls_section_hook = [&](size_t size, size_t alignment) {
             ASSERT(size);
             master_tls_region = allocate_region({}, size, String(), PROT_READ | PROT_WRITE);
@@ -733,19 +776,22 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
             return master_tls_region->vaddr().as_ptr();
         };
         bool success = loader->load();
-        if (!success || !loader->entry().get()) {
-            m_page_directory = move(old_page_directory);
-            // FIXME: RAII this somehow instead.
-            ASSERT(&current->process() == this);
-            MM.enter_process_paging_scope(*this);
-            executable_region = m_regions.take_first();
-            m_regions = move(old_regions);
+        if (!success) {
             kprintf("do_exec: Failure loading %s\n", path.characters());
             return -ENOEXEC;
         }
+        // FIXME: Validate that this virtual address is within executable region,
+        //     instead of just non-null. You could totally have a DSO with entry point of
+        //     the beginning of the text segement.
+        if (!loader->entry().offset(totally_random_offset).get()) {
+            kprintf("do_exec: Failure loading %s, entry pointer is invalid! (%p)",  path.characters(), loader->entry().offset(totally_random_offset).get());
+            return -ENOEXEC;
+        }
+
+        rollback_regions_guard.disarm();
 
         // NOTE: At this point, we've committed to the new executable.
-        entry_eip = loader->entry().get();
+        entry_eip = loader->entry().offset(totally_random_offset).get();
 
 #ifdef EXEC_DEBUG
         kprintf("Memory layout after ELF load:");
@@ -754,18 +800,20 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     }
 
     m_elf_loader = move(loader);
-    m_executable = description->custody();
+    m_executable = main_program_description->custody();
 
     m_promises = m_execpromises;
 
     // Copy of the master TLS region that we will clone for new threads
     m_master_tls_region = master_tls_region;
 
-    if (!(description->custody()->mount_flags() & MS_NOSUID)) {
-        if (metadata.is_setuid())
-            m_euid = metadata.uid;
-        if (metadata.is_setgid())
-            m_egid = metadata.gid;
+    auto main_program_metadata = main_program_description->metadata();
+
+    if (!(main_program_description->custody()->mount_flags() & MS_NOSUID)) {
+        if (main_program_metadata.is_setuid())
+            m_euid = main_program_metadata.uid;
+        if (main_program_metadata.is_setgid())
+            m_egid = main_program_metadata.gid;
     }
 
     current->set_default_signal_dispositions();
@@ -844,25 +892,8 @@ int Process::do_exec(String path, Vector<String> arguments, Vector<String> envir
     return 0;
 }
 
-KResultOr<Vector<String>> Process::find_shebang_interpreter_for_executable(const String& executable_path)
+static KResultOr<Vector<String>> find_shebang_interpreter_for_executable(const char first_page[], int nread)
 {
-    // FIXME: It's a bit sad that we'll open the executable twice (in case there's no shebang)
-    //        Maybe we can find a way to plumb this opened FileDescription to the rest of the
-    //        exec implementation..
-    auto result = VFS::the().open(executable_path, 0, 0, current_directory());
-    if (result.is_error())
-        return result.error();
-    auto description = result.value();
-    auto metadata = description->metadata();
-
-    if (!metadata.may_execute(*this))
-        return KResult(-EACCES);
-
-    if (metadata.size < 3)
-        return KResult(-ENOEXEC);
-
-    char first_page[PAGE_SIZE];
-    int nread = description->read((u8*)&first_page, sizeof(first_page));
     int word_start = 2;
     int word_length = 0;
     if (nread > 2 && first_page[0] == '#' && first_page[1] == '!') {
@@ -896,23 +927,138 @@ KResultOr<Vector<String>> Process::find_shebang_interpreter_for_executable(const
     return KResult(-ENOEXEC);
 }
 
-int Process::exec(String path, Vector<String> arguments, Vector<String> environment)
+KResultOr<NonnullRefPtr<FileDescription>> Process::find_elf_interpreter_for_executable(const String& path, char (&first_page)[PAGE_SIZE], int nread, size_t file_size)
 {
-    auto result = find_shebang_interpreter_for_executable(path);
-    if (!result.is_error()) {
-        Vector<String> new_arguments(result.value());
+    if (nread < (int)sizeof(Elf32_Ehdr))
+        return KResult(-ENOEXEC);
+
+    auto elf_header = (Elf32_Ehdr*)first_page;
+    if (!ELFImage::validate_elf_header(*elf_header, file_size)) {
+        dbgprintf("%s(%d) exec(%s): File has invalid ELF header\n", m_name.characters(), m_pid, path.characters());
+        return KResult(-ENOEXEC);
+    }
+
+    // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
+    String interpreter_path;
+    if (!ELFImage::validate_program_headers(*elf_header, file_size, (u8*)first_page, nread, interpreter_path)) {
+        dbgprintf("%s(%d) exec(%s): File has invalid ELF Program headers\n", m_name.characters(), m_pid, path.characters());
+        return KResult(-ENOEXEC);
+    }
+
+    if (!interpreter_path.is_empty()) {
+        // Programs with an interpreter better be relocatable executables or we don't know what to do...
+        if (elf_header->e_type != ET_DYN)
+            return KResult(-ENOEXEC);
+
+        dbgprintf("%s(%d) exec(%s): Using program interpreter %s\n", m_name.characters(), m_pid, path.characters(), interpreter_path.characters());
+        auto interp_result = VFS::the().open(interpreter_path, O_EXEC, 0, current_directory());
+        if (interp_result.is_error()) {
+            dbgprintf("%s(%d) exec(%s): Unable to open program interpreter %s\n", m_name.characters(), m_pid, path.characters(), interpreter_path.characters());
+            return interp_result.error();
+        }
+        auto interpreter_description = interp_result.value();
+        auto interp_metadata = interpreter_description->metadata();
+
+        ASSERT(interpreter_description->inode());
+
+        // Validate the program interpreter as a valid elf binary.
+        // If your program interpreter is a #! file or something, it's time to stop playing games :)
+        if (interp_metadata.size < (int)sizeof(Elf32_Ehdr))
+            return KResult(-ENOEXEC);
+
+        memset(first_page, 0, sizeof(first_page));
+        nread = interpreter_description->read((u8*)&first_page, sizeof(first_page));
+
+        if (nread < (int)sizeof(Elf32_Ehdr))
+            return KResult(-ENOEXEC);
+
+        elf_header = (Elf32_Ehdr*)first_page;
+        if (!ELFImage::validate_elf_header(*elf_header, interp_metadata.size)) {
+            dbgprintf("%s(%d) exec(%s): Interpreter (%s) has invalid ELF header\n", m_name.characters(), m_pid, path.characters(), interpreter_description->absolute_path().characters());
+            return KResult(-ENOEXEC);
+        }
+
+        // Not using KResultOr here because we'll want to do the same thing in userspace in the RTLD
+        String interpreter_interpreter_path;
+        if (!ELFImage::validate_program_headers(*elf_header, interp_metadata.size, (u8*)first_page, nread, interpreter_interpreter_path)) {
+            dbgprintf("%s(%d) exec(%s): Interpreter (%s) has invalid ELF Program headers\n", m_name.characters(), m_pid, path.characters(), interpreter_description->absolute_path().characters());
+            return KResult(-ENOEXEC);
+        }
+
+        if (!interpreter_interpreter_path.is_empty()) {
+            dbgprintf("%s(%d) exec(%s): Interpreter (%s) has its own interpreter (%s)! No thank you!\n",
+                m_name.characters(), m_pid, path.characters(), interpreter_description->absolute_path().characters(), interpreter_interpreter_path.characters());
+            return KResult(-ELOOP);
+        }
+
+        return interpreter_description;
+    }
+
+    if (elf_header->e_type != ET_EXEC) {
+        // We can't exec an ET_REL, that's just an object file from the compiler
+        // If it's ET_DYN with no PT_INTERP, then we can't load it properly either
+        return KResult(-ENOEXEC);
+    }
+
+    // No interpreter, but, path refers to a valid elf image
+    return KResult(KSuccess);
+}
+
+int Process::exec(String path, Vector<String> arguments, Vector<String> environment, int recursion_depth)
+{
+    if (recursion_depth > 2) {
+        dbgprintf("%s(%d) exec(%s): SHENANIGANS! recursed too far trying to find #! interpreter\n", m_name.characters(), m_pid, path.characters());
+        return -ELOOP;
+    }
+
+    // Open the file to check what kind of binary format it is
+    // Currently supported formats:
+    //    - #! interpreted file
+    //    - ELF32
+    //        * ET_EXEC binary that just gets loaded
+    //        * ET_DYN binary that requires a program interpreter
+    //
+    auto result = VFS::the().open(path, O_EXEC, 0, current_directory());
+    if (result.is_error())
+        return result.error();
+    auto description = result.value();
+    auto metadata = description->metadata();
+
+    // Always gonna need at least 3 bytes. these are for #!X
+    if (metadata.size < 3)
+        return -ENOEXEC;
+
+    ASSERT(description->inode());
+
+    // Read the first page of the program into memory so we can validate the binfmt of it
+    char first_page[PAGE_SIZE];
+    int nread = description->read((u8*)&first_page, sizeof(first_page));
+
+    // 1) #! interpreted file
+    auto shebang_result = find_shebang_interpreter_for_executable(first_page, nread);
+    if (!shebang_result.is_error()) {
+        Vector<String> new_arguments(shebang_result.value());
 
         new_arguments.append(path);
 
         arguments.remove(0);
         new_arguments.append(move(arguments));
 
-        return exec(result.value().first(), move(new_arguments), move(environment));
+        return exec(shebang_result.value().first(), move(new_arguments), move(environment), ++recursion_depth);
     }
+
+    // #2) ELF32 for i386
+    auto elf_result = find_elf_interpreter_for_executable(path, first_page, nread, metadata.size);
+    RefPtr<FileDescription> interpreter_description;
+    // We're getting either an interpreter, an error, or KSuccess (i.e. no interpreter but file checks out)
+    if (!elf_result.is_error())
+        interpreter_description = elf_result.value();
+    else if (elf_result.error().is_error())
+        return elf_result.error();
 
     // The bulk of exec() is done by do_exec(), which ensures that all locals
     // are cleaned up by the time we yield-teleport below.
-    int rc = do_exec(move(path), move(arguments), move(environment));
+    int rc = do_exec(move(description), move(arguments), move(environment), move(interpreter_description));
     if (rc < 0)
         return rc;
 
