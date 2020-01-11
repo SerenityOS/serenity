@@ -266,6 +266,26 @@ RefPtr<GWidget> build_file_systems_tab()
         df_fields.empend("Access", TextAlignment::CenterLeft, [](const JsonObject& object) {
             return object.get("readonly").to_bool() ? "Read-only" : "Read/Write";
         });
+        df_fields.empend("Mount flags", TextAlignment::CenterLeft, [](const JsonObject& object) {
+            int mount_flags = object.get("mount_flags").to_int();
+            StringBuilder builder;
+            bool first = true;
+            auto check = [&](int flag, const char* name) {
+                if (!(mount_flags & flag))
+                    return;
+                if (!first)
+                    builder.append(',');
+                builder.append(name);
+                first = false;
+            };
+            check(MS_NODEV, "nodev");
+            check(MS_NOEXEC, "noexec");
+            check(MS_NOSUID, "nosuid");
+            check(MS_BIND, "bind");
+            if (builder.string_view().is_empty())
+                return String("defaults");
+            return builder.to_string();
+        });
         df_fields.empend("free_block_count", "Free blocks", TextAlignment::CenterRight);
         df_fields.empend("total_block_count", "Total blocks", TextAlignment::CenterRight);
         df_fields.empend("free_inode_count", "Free inodes", TextAlignment::CenterRight);
