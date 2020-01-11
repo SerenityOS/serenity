@@ -3476,14 +3476,19 @@ int Process::sys$donate(int tid)
     return 0;
 }
 
-int Process::sys$rename(const char* oldpath, const char* newpath)
+int Process::sys$rename(const Syscall::SC_rename_params* user_params)
 {
-    SmapDisabler disabler;
-    if (!validate_read_str(oldpath))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
-    if (!validate_read_str(newpath))
-        return -EFAULT;
-    return VFS::the().rename(StringView(oldpath), StringView(newpath), current_directory());
+    Syscall::SC_rename_params params;
+    copy_from_user(&params, user_params);
+    auto old_path = get_syscall_path_argument(params.old_path.characters, params.old_path.length);
+    if (old_path.is_error())
+        return old_path.error();
+    auto new_path = get_syscall_path_argument(params.new_path.characters, params.new_path.length);
+    if (new_path.is_error())
+        return new_path.error();
+    return VFS::the().rename(old_path.value(), new_path.value(), current_directory());
 }
 
 int Process::sys$ftruncate(int fd, off_t length)

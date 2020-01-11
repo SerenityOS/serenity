@@ -510,7 +510,12 @@ int fclose(FILE* stream)
 
 int rename(const char* oldpath, const char* newpath)
 {
-    int rc = syscall(SC_rename, oldpath, newpath);
+    if (!oldpath || !newpath) {
+        errno = EFAULT;
+        return -1;
+    }
+    Syscall::SC_rename_params params { { oldpath, strlen(oldpath) }, { newpath, strlen(newpath) } };
+    int rc = syscall(SC_rename, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
