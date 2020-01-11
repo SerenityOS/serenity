@@ -49,7 +49,17 @@ private:
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio shared_buffer rpath unix cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio shared_buffer rpath unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto window = GWindow::construct();
     window->set_has_alpha_channel(true);

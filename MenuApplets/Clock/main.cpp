@@ -4,6 +4,7 @@
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
+#include <stdio.h>
 #include <time.h>
 
 class ClockWidget final : public GWidget {
@@ -63,7 +64,17 @@ private:
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio shared_buffer rpath unix cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio shared_buffer rpath unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto window = GWindow::construct();
     window->set_window_type(GWindowType::MenuApplet);
