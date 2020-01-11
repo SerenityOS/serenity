@@ -3667,17 +3667,18 @@ void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& d, u
     flags = f;
 }
 
-int Process::sys$mknod(const char* pathname, mode_t mode, dev_t dev)
+int Process::sys$mknod(const Syscall::SC_mknod_params* user_params)
 {
-    if (!validate_read_str(pathname))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
-
-    if (!is_superuser()) {
-        if (!is_regular_file(mode) && !is_fifo(mode) && !is_socket(mode))
-            return -EPERM;
-    }
-
-    return VFS::the().mknod(StringView(pathname), mode & ~umask(), dev, current_directory());
+    Syscall::SC_mknod_params params;
+    copy_from_user(&params, user_params);
+    if (!is_superuser() && !is_regular_file(params.mode) && !is_fifo(params.mode) && !is_socket(params.mode))
+        return -EPERM;
+    auto path = get_syscall_path_argument(params.path.characters, params.path.length);
+    if (path.is_error())
+        return path.error();
+    return VFS::the().mknod(path.value(), params.mode & ~umask(), params.dev, current_directory());
 }
 
 int Process::sys$dump_backtrace()

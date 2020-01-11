@@ -36,3 +36,15 @@ void* memmove(void* dest, const void* src, size_t n);
 inline u16 ntohs(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 inline u16 htons(u16 w) { return (w & 0xff) << 8 | ((w >> 8) & 0xff); }
 }
+
+template<typename T>
+inline void copy_from_user(T* dest, const T* src)
+{
+    copy_from_user(dest, src, sizeof(T));
+}
+
+template<typename T>
+inline void copy_to_user(T* dest, const T* src)
+{
+    copy_to_user(dest, src, sizeof(T));
+}

@@ -206,7 +206,7 @@ public:
     int sys$get_thread_name(int tid, char* buffer, int buffer_size);
     int sys$rename(const char* oldpath, const char* newpath);
     int sys$systrace(pid_t);
-    int sys$mknod(const char* pathname, mode_t, dev_t);
+    int sys$mknod(const Syscall::SC_mknod_params*);
     int sys$create_shared_buffer(int, void** buffer);
     int sys$share_buffer_with(int, pid_t peer_pid);
     int sys$share_buffer_globally(int);
