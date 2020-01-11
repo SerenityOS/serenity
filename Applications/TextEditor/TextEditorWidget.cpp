@@ -222,6 +222,11 @@ TextEditorWidget::TextEditorWidget()
         m_find_widget->set_visible(true);
         m_replace_widget->set_visible(true);
         m_find_textbox->set_focus(true);
+
+        if (m_editor->has_selection()) {
+            auto selected_text = m_editor->document().text_in_range(m_editor->normalized_selection());
+            m_find_textbox->set_text(selected_text);
+        }
         m_find_textbox->select_all();
     });
 
