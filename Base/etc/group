@@ -3,5 +3,6 @@ wheel:x:1:anon
 tty:x:2:
 phys:x:3:anon
 audio:x:4:anon
-lookup:x:10:anon
+lookup:x:10:protocol,anon
+protocol:x:11:anon
 users:x:100:anon
