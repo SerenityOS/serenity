@@ -38,26 +38,15 @@ InodeIdentifier VFS::root_inode_id() const
     return m_root_inode->identifier();
 }
 
-KResult VFS::mount(NonnullRefPtr<FS>&& file_system, Custody& mount_point)
+KResult VFS::mount(FS& file_system, Custody& mount_point)
 {
     auto& inode = mount_point.inode();
-    dbg() << "VFS: Mounting " << file_system->class_name() << " at " << mount_point.absolute_path() << " (inode: " << inode.identifier() << ")";
+    dbg() << "VFS: Mounting " << file_system.class_name() << " at " << mount_point.absolute_path() << " (inode: " << inode.identifier() << ")";
     // FIXME: check that this is not already a mount point
-    auto mount = make<Mount>(mount_point, move(file_system));
+    Mount mount { file_system, &mount_point };
     m_mounts.append(move(mount));
     mount_point.did_mount_on({});
     return KSuccess;
-}
-
-KResult VFS::mount(NonnullRefPtr<FS>&& file_system, StringView path)
-{
-    LOCKER(m_lock);
-    auto result = resolve_path(path, current->process().root_directory());
-    if (result.is_error()) {
-        dbg() << "VFS: mount can't resolve mount point '" << path << "'";
-        return result.error();
-    }
-    return mount(move(file_system), result.value());
 }
 
 KResult VFS::unmount(InodeIdentifier guest_inode_id)
@@ -83,17 +72,17 @@ KResult VFS::unmount(InodeIdentifier guest_inode_id)
     return KResult(-ENODEV);
 }
 
-bool VFS::mount_root(NonnullRefPtr<FS>&& file_system)
+bool VFS::mount_root(FS& file_system)
 {
     if (m_root_inode) {
         kprintf("VFS: mount_root can't mount another root\n");
         return false;
     }
 
-    auto mount = make<Mount>(nullptr, move(file_system));
+    Mount mount { file_system, nullptr };
 
-    auto root_inode_id = mount->guest().fs()->root_inode();
-    auto root_inode = mount->guest().fs()->get_inode(root_inode_id);
+    auto root_inode_id = mount.guest().fs()->root_inode();
+    auto root_inode = mount.guest().fs()->get_inode(root_inode_id);
     if (!root_inode->is_directory()) {
         kprintf("VFS: root inode (%02u:%08u) for / is not a directory :(\n", root_inode_id.fsid(), root_inode_id.index());
         return false;
@@ -614,10 +603,10 @@ RefPtr<Inode> VFS::get_inode(InodeIdentifier inode_id)
     return inode_id.fs()->get_inode(inode_id);
 }
 
-VFS::Mount::Mount(RefPtr<Custody>&& host_custody, NonnullRefPtr<FS>&& guest_fs)
-    : m_guest(guest_fs->root_inode())
-    , m_guest_fs(move(guest_fs))
-    , m_host_custody(move(host_custody))
+VFS::Mount::Mount(FS& guest_fs, Custody* host_custody)
+    : m_guest(guest_fs.root_inode())
+    , m_guest_fs(guest_fs)
+    , m_host_custody(host_custody)
 {
 }
 

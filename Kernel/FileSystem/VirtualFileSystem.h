@@ -41,7 +41,7 @@ class VFS {
 public:
     class Mount {
     public:
-        Mount(RefPtr<Custody>&&, NonnullRefPtr<FS>&&);
+        Mount(FS&, Custody* host_custody);
 
         InodeIdentifier host() const;
         InodeIdentifier guest() const { return m_guest; }
@@ -62,9 +62,8 @@ public:
     VFS();
     ~VFS();
 
-    bool mount_root(NonnullRefPtr<FS>&&);
-    KResult mount(NonnullRefPtr<FS>&&, StringView path);
-    KResult mount(NonnullRefPtr<FS>&&, Custody& mount_point);
+    bool mount_root(FS&);
+    KResult mount(FS&, Custody& mount_point);
     KResult unmount(InodeIdentifier guest_inode_id);
 
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
@@ -110,7 +109,7 @@ private:
     Lock m_lock { "VFSLock" };
 
     RefPtr<Inode> m_root_inode;
-    NonnullOwnPtrVector<Mount> m_mounts;
+    Vector<Mount> m_mounts;
 
     RefPtr<Custody> m_root_custody;
 };
