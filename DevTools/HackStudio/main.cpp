@@ -96,6 +96,11 @@ bool make_is_available();
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio tty rpath cpath wpath shared_buffer proc unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
 
     Function<void()> update_actions;
