@@ -270,12 +270,21 @@ void WSMenuManager::event(CEvent& event)
         }
     }
 
-    if (event.type() == WSEvent::KeyDown) {
-        for_each_active_menubar_menu([&](WSMenu& menu) {
-            if (is_open(menu))
-                menu.dispatch_event(event);
-            return IterationDecision::Continue;
-        });
+    if (static_cast<WSEvent&>(event).is_key_event()) {
+        auto& key_event = static_cast<const WSKeyEvent&>(event);
+
+        if (key_event.type() == WSEvent::KeyUp && key_event.key() == Key_Escape) {
+            close_everyone();
+            return;
+        }
+
+        if (event.type() == WSEvent::KeyDown) {
+            for_each_active_menubar_menu([&](WSMenu& menu) {
+                if (is_open(menu))
+                    menu.dispatch_event(event);
+                return IterationDecision::Continue;
+            });
+        }
     }
 
     return CObject::event(event);

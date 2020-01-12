@@ -949,10 +949,8 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
 
-        if (key_event.type() == WSEvent::KeyUp && key_event.key() == Key_Escape) {
-            auto current_menu = WSMenuManager::the().current_menu();
-            if (current_menu)
-                WSMenuManager::the().close_everyone();
+        if (WSMenuManager::the().current_menu()) {
+            WSMenuManager::the().dispatch_event(event);
             return;
         }
 
@@ -1004,10 +1002,6 @@ void WSWindowManager::event(CEvent& event)
             m_active_window->dispatch_event(event);
             return;
         }
-
-        // FIXME: We should send events to the MenuManager if a window is open
-        // This should take priority over sending to a window.
-        WSMenuManager::the().dispatch_event(event);
     }
 
     CObject::event(event);
