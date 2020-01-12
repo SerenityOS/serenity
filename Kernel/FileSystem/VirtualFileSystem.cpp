@@ -49,11 +49,11 @@ KResult VFS::mount(FS& file_system, Custody& mount_point, int flags)
     return KSuccess;
 }
 
-KResult VFS::bind_mount(Custody& source, Custody& mount_point)
+KResult VFS::bind_mount(Custody& source, Custody& mount_point, int flags)
 {
     dbg() << "VFS: Bind-mounting " << source.absolute_path() << " at " << mount_point.absolute_path();
     // FIXME: check that this is not already a mount point
-    Mount mount { source.inode(), mount_point };
+    Mount mount { source.inode(), mount_point, flags };
     m_mounts.append(move(mount));
     mount_point.did_mount_on({});
     return KSuccess;
@@ -631,11 +631,11 @@ VFS::Mount::Mount(FS& guest_fs, Custody* host_custody, int flags)
 {
 }
 
-VFS::Mount::Mount(Inode& source, Custody& host_custody)
+VFS::Mount::Mount(Inode& source, Custody& host_custody, int flags)
     : m_guest(source.identifier())
     , m_guest_fs(source.fs())
     , m_host_custody(host_custody)
-    , m_flags(MS_BIND)
+    , m_flags(flags)
 {
 }
 
