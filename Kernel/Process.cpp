@@ -4417,7 +4417,7 @@ int Process::sys$pledge(const Syscall::SC_pledge_params* user_params)
         u32 new_promises = 0;
         if (!parse_pledge(promises, new_promises))
             return -EINVAL;
-        if (m_promises && new_promises & ~m_promises)
+        if (m_promises && (!new_promises || new_promises & ~m_promises))
             return -EPERM;
         m_promises = new_promises;
     }
@@ -4426,7 +4426,7 @@ int Process::sys$pledge(const Syscall::SC_pledge_params* user_params)
         u32 new_execpromises = 0;
         if (!parse_pledge(execpromises, new_execpromises))
             return -EINVAL;
-        if (m_execpromises && new_execpromises & ~m_execpromises)
+        if (m_execpromises && (!new_execpromises || new_execpromises & ~m_execpromises))
             return -EPERM;
         m_execpromises = new_execpromises;
     }
