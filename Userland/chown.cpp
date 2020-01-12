@@ -8,6 +8,11 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath chown", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc < 2) {
         printf("usage: chown <uid[:gid]> <path>\n");
         return 0;
