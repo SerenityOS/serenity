@@ -4,8 +4,8 @@ OBJS = \
 
 LIBRARY = libprotocol.a
 
-Download.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h
-../../Servers/ProtocolServer/ProtocolClientEndpoint.h:
+Download.cpp Client.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h ../../Servers/ProtocolServer/ProtocolServerEndpoint.h
+../../Servers/ProtocolServer/ProtocolClientEndpoint.h ../../Servers/ProtocolServer/ProtocolServerEndpoint.h:
 	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
 
 include ../../Makefile.common
