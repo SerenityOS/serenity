@@ -71,6 +71,8 @@ public:
     const File& file() const { return *m_file; }
 
     bool is_device() const;
+    const Device* device() const;
+    Device* device();
 
     bool is_tty() const;
     const TTY* tty() const;
