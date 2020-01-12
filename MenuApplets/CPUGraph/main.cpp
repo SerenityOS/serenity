@@ -79,7 +79,7 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio shared_buffer rpath unix", nullptr) < 0) {
+    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

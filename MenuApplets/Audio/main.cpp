@@ -69,5 +69,11 @@ int main(int argc, char** argv)
     auto widget = AudioWidget::construct();
     window->set_main_widget(widget);
     window->show();
+
+    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     return app.exec();
 }

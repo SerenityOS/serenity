@@ -103,6 +103,11 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
+    if (pledge("stdio tty rpath cpath wpath shared_buffer proc fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     Function<void()> update_actions;
 
     g_window = GWindow::construct();
