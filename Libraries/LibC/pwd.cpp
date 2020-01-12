@@ -151,4 +151,29 @@ next_entry:
     strncpy(__pwdb_entry->shell_buffer, e_shell.characters(), PWDB_STR_MAX_LEN);
     return __pwdb_entry;
 }
+
+int putpwent(const struct passwd* p, FILE* stream)
+{
+    if (!p || !stream || !p->pw_name || !p->pw_dir || !p->pw_gecos || !p->pw_shell) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    auto is_valid_field = [](const char* str) {
+        return str && !strpbrk(str, ":\n");
+    };
+
+    if (!is_valid_field(p->pw_name) || !is_valid_field(p->pw_dir) || !is_valid_field(p->pw_gecos) || !is_valid_field(p->pw_shell)) {
+        errno = EINVAL;
+        return -1;
+    }
+
+    int nwritten = fprintf(stream, "%s:x:%u:%u:%s,,,:%s:%s\n", p->pw_name, p->pw_uid, p->pw_gid, p->pw_gecos, p->pw_dir, p->pw_shell);
+    if (!nwritten || nwritten < 0) {
+        errno = ferror(stream);
+        return -1;
+    }
+
+    return 0;
+}
 }
