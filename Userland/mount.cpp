@@ -48,6 +48,10 @@ bool mount_all()
             line_view = line_view.substring_view(0, line_view.length() - 1);
         String line = line_view;
 
+        // Skip comments and blank lines.
+        if (line.is_empty() || line.starts_with("#"))
+            continue;
+
         Vector<String> parts = line.split('\t');
         if (parts.size() < 3) {
             fprintf(stderr, "Invalid fstab entry: %s\n", line.characters());
