@@ -3419,21 +3419,22 @@ void Process::send_signal(u8 signal, Process* sender)
     thread->send_signal(signal, sender);
 }
 
-int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Syscall::SC_create_thread_params* params)
+int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Syscall::SC_create_thread_params* user_params)
 {
     REQUIRE_PROMISE(thread);
     if (!validate_read((const void*)entry, sizeof(void*)))
         return -EFAULT;
 
-    if (!validate_read_typed(params))
+    if (!validate_read_typed(user_params))
         return -EFAULT;
 
-    stac();
-    unsigned detach_state = params->m_detach_state;
-    int schedule_priority = params->m_schedule_priority;
-    void* stack_location = params->m_stack_location;
-    unsigned stack_size = params->m_stack_size;
-    clac();
+    Syscall::SC_create_thread_params params;
+    copy_from_user(&params, user_params);
+
+    unsigned detach_state = params.m_detach_state;
+    int schedule_priority = params.m_schedule_priority;
+    void* stack_location = params.m_stack_location;
+    unsigned stack_size = params.m_stack_size;
 
     if (!validate_write(stack_location, stack_size))
         return -EFAULT;
