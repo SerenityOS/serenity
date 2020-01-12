@@ -498,6 +498,10 @@ FILE* fopen(const char* pathname, const char* mode)
         flags = O_WRONLY | O_CREAT | O_TRUNC;
     else if (!strcmp(mode, "w+") || !strcmp(mode, "wb+"))
         flags = O_RDWR | O_CREAT | O_TRUNC;
+    else if (!strcmp(mode, "a") || !strcmp(mode, "ab"))
+        flags = O_WRONLY | O_APPEND | O_CREAT;
+    else if (!strcmp(mode, "a+") || !strcmp(mode, "ab+"))
+        flags = O_RDWR | O_APPEND | O_CREAT;
     else {
         fprintf(stderr, "FIXME(LibC): fopen('%s', '%s')\n", pathname, mode);
         ASSERT_NOT_REACHED();
