@@ -1512,7 +1512,9 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
     REQUIRE_PROMISE(stdio);
     (void)cmd;
     (void)arg;
+#ifdef DEBUG_IO
     dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
+#endif
     auto description = file_description(fd);
     if (!description)
         return -EBADF;
