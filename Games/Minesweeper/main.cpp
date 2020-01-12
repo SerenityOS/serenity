@@ -10,10 +10,22 @@
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWindow.h>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath wpath cpath shared_buffer unix fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio rpath wpath cpath shared_buffer", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
 
     auto window = GWindow::construct();
     window->set_resizable(false);
