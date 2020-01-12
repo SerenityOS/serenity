@@ -89,7 +89,7 @@ bool VFS::mount_root(FS& file_system)
         return false;
     }
 
-    Mount mount { file_system, nullptr, 0 };
+    Mount mount { file_system, nullptr, MS_NODEV | MS_NOSUID };
 
     auto root_inode_id = mount.guest().fs()->root_inode();
     auto root_inode = mount.guest().fs()->get_inode(root_inode_id);
@@ -668,7 +668,7 @@ void VFS::sync()
 Custody& VFS::root_custody()
 {
     if (!m_root_custody)
-        m_root_custody = Custody::create(nullptr, "", *m_root_inode, 0);
+        m_root_custody = Custody::create(nullptr, "", *m_root_inode, MS_NODEV | MS_NOSUID);
     return *m_root_custody;
 }
 
