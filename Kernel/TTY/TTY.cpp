@@ -242,6 +242,7 @@ void TTY::set_termios(const termios& t)
 
 int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
+    REQUIRE_PROMISE(tty);
     auto& process = current->process();
     pid_t pgid;
     termios* tp;

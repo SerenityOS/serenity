@@ -98,6 +98,7 @@ void MasterPTY::close()
 
 int MasterPTY::ioctl(FileDescription& description, unsigned request, unsigned arg)
 {
+    REQUIRE_PROMISE(tty);
     if (!m_slave)
         return -EIO;
     if (request == TIOCSWINSZ || request == TIOCGPGRP)
