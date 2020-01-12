@@ -645,11 +645,16 @@ int get_process_name(char* buffer, int buffer_size)
 
 int chroot(const char* path)
 {
+    return chroot_with_mount_flags(path, -1);
+}
+
+int chroot_with_mount_flags(const char* path, int mount_flags)
+{
     if (!path) {
         errno = EFAULT;
         return -1;
     }
-    int rc = syscall(SC_chroot, path, strlen(path));
+    int rc = syscall(SC_chroot, path, strlen(path), mount_flags);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
