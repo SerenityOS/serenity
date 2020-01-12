@@ -435,6 +435,7 @@ KResult IPv4Socket::getsockopt(FileDescription& description, int level, int opti
 
 int IPv4Socket::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
+    REQUIRE_PROMISE(inet);
     auto* ifr = (ifreq*)arg;
     if (!current->process().validate_read_typed(ifr))
         return -EFAULT;
