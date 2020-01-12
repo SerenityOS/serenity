@@ -172,6 +172,20 @@ bool FileDescription::is_device() const
     return m_file->is_device();
 }
 
+const Device* FileDescription::device() const
+{
+    if (!is_device())
+        return nullptr;
+    return static_cast<const Device*>(m_file.ptr());
+}
+
+Device* FileDescription::device()
+{
+    if (!is_device())
+        return nullptr;
+    return static_cast<Device*>(m_file.ptr());
+}
+
 bool FileDescription::is_tty() const
 {
     return m_file->is_tty();
