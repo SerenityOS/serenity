@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <bits/FILE.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
@@ -46,5 +47,6 @@ void setpwent();
 void endpwent();
 struct passwd* getpwnam(const char* name);
 struct passwd* getpwuid(uid_t);
+int putpwent(const struct passwd* p, FILE* stream);
 
 __END_DECLS
