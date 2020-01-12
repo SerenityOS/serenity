@@ -3926,6 +3926,7 @@ int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags 
     if (!validate_write(buffer, buffer_size))
         return -EFAULT;
 
+    SmapDisabler disabler;
     get_good_random_bytes((u8*)buffer, buffer_size);
     return 0;
 }
