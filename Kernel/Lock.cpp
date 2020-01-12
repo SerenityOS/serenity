@@ -18,8 +18,7 @@ void Lock::lock()
                 m_lock.store(false, AK::memory_order_release);
                 return;
             }
-            m_lock.store(false, AK::memory_order_release);
-            current->wait_on(m_queue, m_holder, m_name);
+            current->wait_on(m_queue, &m_lock, m_holder, m_name);
         }
     }
 }
@@ -37,8 +36,7 @@ void Lock::unlock()
                 return;
             }
             m_holder = nullptr;
-            m_queue.wake_one();
-            m_lock.store(false, AK::memory_order_release);
+            m_queue.wake_one(&m_lock);
             return;
         }
         // I don't know *who* is using "m_lock", so just yield.
@@ -66,8 +64,7 @@ bool Lock::unlock_if_locked()
                 return false;
             }
             m_holder = nullptr;
-            m_lock.store(false, AK::memory_order_release);
-            m_queue.wake_one();
+            m_queue.wake_one(&m_lock);
             return true;
         }
         // I don't know *who* is using "m_lock", so just yield.

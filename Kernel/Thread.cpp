@@ -783,10 +783,12 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
     return stream << value.process().name() << "(" << value.pid() << ":" << value.tid() << ")";
 }
 
-void Thread::wait_on(WaitQueue& queue, Thread* beneficiary, const char* reason)
+void Thread::wait_on(WaitQueue& queue, Atomic<bool>* lock, Thread* beneficiary, const char* reason)
 {
     bool did_unlock = unlock_process_if_locked();
     cli();
+    if (lock)
+        *lock = false;
     set_state(State::Queued);
     queue.enqueue(*current);
     // Yield and wait for the queue to wake us up again.
