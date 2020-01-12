@@ -290,7 +290,9 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
     if (!parent_inode.metadata().may_write(current->process()))
         return KResult(-EACCES);
     FileSystemPath p(path);
+#ifdef VFS_DEBUG
     dbg() << "VFS::create: '" << p.basename() << "' in " << parent_inode.identifier();
+#endif
     int error;
 
     uid_t uid = owner.has_value() ? owner.value().uid : current->process().uid();
@@ -319,7 +321,9 @@ KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
         return KResult(-EACCES);
 
     FileSystemPath p(path);
+#ifdef VFS_DEBUG
     dbg() << "VFS::mkdir: '" << p.basename() << "' in " << parent_inode.identifier();
+#endif
     int error;
     auto new_dir = parent_inode.fs().create_directory(parent_inode.identifier(), p.basename(), mode, current->process().uid(), current->process().gid(), error);
     if (new_dir)
