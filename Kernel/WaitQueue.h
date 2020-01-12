@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Atomic.h>
 #include <AK/SinglyLinkedList.h>
 #include <Kernel/Thread.h>
 
@@ -9,7 +10,7 @@ public:
     ~WaitQueue();
 
     void enqueue(Thread&);
-    void wake_one();
+    void wake_one(Atomic<bool>* lock = nullptr);
     void wake_all();
 
 private:

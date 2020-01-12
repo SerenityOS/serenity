@@ -1,5 +1,6 @@
 #pragma once
 
+#include <AK/Atomic.h>
 #include <AK/Function.h>
 #include <AK/IntrusiveList.h>
 #include <AK/OwnPtr.h>
@@ -300,7 +301,7 @@ public:
         return block<ConditionBlocker>(state_string, move(condition));
     }
 
-    void wait_on(WaitQueue& queue, Thread* beneficiary = nullptr, const char* reason = nullptr);
+    void wait_on(WaitQueue& queue, Atomic<bool>* lock = nullptr, Thread* beneficiary = nullptr, const char* reason = nullptr);
     void wake_from_queue();
 
     void unblock();

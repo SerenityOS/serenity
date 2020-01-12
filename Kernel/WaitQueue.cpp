@@ -15,9 +15,11 @@ void WaitQueue::enqueue(Thread& thread)
     m_threads.append(thread);
 }
 
-void WaitQueue::wake_one()
+void WaitQueue::wake_one(Atomic<bool>* lock)
 {
     InterruptDisabler disabler;
+    if (lock)
+        *lock = false;
     if (m_threads.is_empty())
         return;
     if (auto* thread = m_threads.take_first())
