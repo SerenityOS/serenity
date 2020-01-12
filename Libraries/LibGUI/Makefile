@@ -65,8 +65,8 @@ LIBRARY = libgui.a
 
 GWindowServerConnection.cpp: ../../Servers/WindowServer/WindowServerEndpoint.h
 
-../../Servers/WindowServer/WindowServerEndpoint.h:
-	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
+../../Servers/WindowServer/WindowServerEndpoint.h: ../../Servers/WindowServer/WindowServer.ipc | IPCCOMPILER
+	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibGUI/

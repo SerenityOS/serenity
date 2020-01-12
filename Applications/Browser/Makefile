@@ -11,7 +11,8 @@ main.cpp: ../../Libraries/LibHTML/CSS/PropertyID.h
 	@flock ../../Libraries/LibHTML $(MAKE) -C ../../Libraries/LibHTML
 
 main.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h
-../../Servers/ProtocolServer/ProtocolClientEndpoint.h:
-	@flock ../../Servers/ProtocolServer $(MAKE) -C $(dir $(@))
+
+../../Servers/ProtocolServer/ProtocolClientEndpoint.h: ../../Servers/ProtocolServer/ProtocolClient.ipc | IPCCOMPILER
+	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 include ../../Makefile.common

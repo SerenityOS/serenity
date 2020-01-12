@@ -31,13 +31,13 @@ if [ "$(uname -s)" = "OpenBSD" ]; then
 fi
 
 if [ $fast_mode = 1 ]; then
-    $MAKE -C ../ && \
-        $MAKE -C ../ install &&
+    $MAKE -C .. && \
+        $MAKE -C .. install &&
         sudo -E PATH="$PATH" ./build-image-qemu.sh
 else
-    $MAKE -C ../ clean && \
-        $MAKE -C ../ && \
-        $MAKE -C ../ test && \
-        $MAKE -C ../ install &&
+    $MAKE -C .. clean && \
+        $MAKE -C .. && \
+        $MAKE -C .. test && \
+        $MAKE -C .. install &&
         sudo -E PATH="$PATH" ./build-image-qemu.sh
 fi

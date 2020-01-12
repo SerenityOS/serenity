@@ -5,8 +5,9 @@ OBJS = \
 LIBRARY = libaudio.a
 
 AClientConnection.cpp: ../../Servers/AudioServer/AudioClientEndpoint.h
-../../Servers/AudioServer/AudioClientEndpoint.h:
-	@flock $(dir $(@)) $(MAKE) -C $(dir $(@))
+
+../../Servers/AudioServer/AudioClientEndpoint.h: ../../Servers/AudioServer/AudioClient.ipc | IPCCOMPILER
+	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 install:
 	mkdir -p $(SERENITY_BASE_DIR)/Root/usr/include/LibAudio/

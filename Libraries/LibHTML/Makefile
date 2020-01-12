@@ -89,9 +89,13 @@ CSS/PropertyID.cpp: CSS/Properties.json $(GENERATE_CSS_PROPERTYID_CPP)
 	@echo "GENERATE $@"
 	$(QUIET) flock CSS $(GENERATE_CSS_PROPERTYID_CPP) $< > $@
 
-ResourceLoader.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h
-../../Servers/ProtocolServer/ProtocolClientEndpoint.h:
-	@flock ../../Servers/ProtocolServer $(MAKE) -C $(dir $(@))
+ResourceLoader.cpp: ../../Servers/ProtocolServer/ProtocolClientEndpoint.h ../../Servers/ProtocolServer/ProtocolServerEndpoint.h
+
+../../Servers/ProtocolServer/ProtocolClientEndpoint.h: ../../Servers/ProtocolServer/ProtocolClient.ipc | IPCCOMPILER
+	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
+
+../../Servers/ProtocolServer/ProtocolServerEndpoint.h: ../../Servers/ProtocolServer/ProtocolServer.ipc | IPCCOMPILER
+	@echo "IPC $<"; $(IPCCOMPILER) $< > $@
 
 EXTRA_CLEAN = CSS/DefaultStyleSheetSource.cpp CSS/PropertyID.h CSS/PropertyID.cpp
 

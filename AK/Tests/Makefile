@@ -25,11 +25,11 @@ CXXFLAGS = -std=c++17 -Wall -Wextra -ggdb3 -O2 -I../ -I../../
 
 APPS_RUN = $(addsuffix .run,$(APPS))
 test: $(APPS) $(APPS_RUN)
-$(APPS_RUN): %.run:
+$(APPS_RUN): %.run: $(APPS)
 	./$*
 
 $(APPS): %: %$(OBJ_SUFFIX).o $(SHARED_TEST_OBJS)
 	@echo "LINK $@"
 	$(QUIET) $(CXX) -o $@ $< $(SHARED_TEST_OBJS) $(LDFLAGS)
 
-all: | $(APPS) $(APPS_RUN)
+all: | $(APPS_RUN)
