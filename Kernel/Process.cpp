@@ -888,7 +888,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 #endif
 
     new_main_thread->set_state(Thread::State::Skip1SchedulerPass);
-    big_lock().unlock_if_locked();
+    big_lock().force_unlock_if_locked();
     return 0;
 }
 
@@ -3622,7 +3622,7 @@ void Process::sys$exit_thread(void* exit_value)
     cli();
     current->m_exit_value = exit_value;
     current->set_should_die();
-    big_lock().unlock_if_locked();
+    big_lock().force_unlock_if_locked();
     current->die_if_needed();
     ASSERT_NOT_REACHED();
 }

@@ -174,7 +174,7 @@ void Thread::die_if_needed()
     if (!m_should_die)
         return;
 
-    m_process.big_lock().unlock_if_locked();
+    unlock_process_if_locked();
 
     InterruptDisabler disabler;
     set_state(Thread::State::Dying);
@@ -185,15 +185,15 @@ void Thread::die_if_needed()
 
 void Thread::yield_without_holding_big_lock()
 {
-    bool did_unlock = process().big_lock().unlock_if_locked();
+    bool did_unlock = unlock_process_if_locked();
     Scheduler::yield();
     if (did_unlock)
-        process().big_lock().lock();
+        relock_process();
 }
 
 bool Thread::unlock_process_if_locked()
 {
-    return process().big_lock().unlock_if_locked();
+    return process().big_lock().force_unlock_if_locked();
 }
 
 void Thread::relock_process()
@@ -785,8 +785,8 @@ const LogStream& operator<<(const LogStream& stream, const Thread& value)
 
 void Thread::wait_on(WaitQueue& queue, Atomic<bool>* lock, Thread* beneficiary, const char* reason)
 {
-    bool did_unlock = unlock_process_if_locked();
     cli();
+    bool did_unlock = unlock_process_if_locked();
     if (lock)
         *lock = false;
     set_state(State::Queued);
