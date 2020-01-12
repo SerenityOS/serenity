@@ -140,4 +140,6 @@ private:
     bool m_should_append { false };
     bool m_direct { false };
     FIFO::Direction m_fifo_direction { FIFO::Direction::Neither };
+
+    Lock m_lock { "FileDescription" };
 };
