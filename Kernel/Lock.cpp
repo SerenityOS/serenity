@@ -44,30 +44,15 @@ void Lock::unlock()
     }
 }
 
-bool Lock::unlock_if_locked()
+bool Lock::force_unlock_if_locked()
 {
-    for (;;) {
-        bool expected = false;
-        if (m_lock.compare_exchange_strong(expected, true, AK::memory_order_acq_rel)) {
-            if (m_level == 0) {
-                m_lock.store(false, AK::memory_order_release);
-                return false;
-            }
-            if (m_holder != current) {
-                m_lock.store(false, AK::memory_order_release);
-                return false;
-            }
-            ASSERT(m_level);
-            --m_level;
-            if (m_level) {
-                m_lock.store(false, AK::memory_order_release);
-                return false;
-            }
-            m_holder = nullptr;
-            m_queue.wake_one(&m_lock);
-            return true;
-        }
-        // I don't know *who* is using "m_lock", so just yield.
-        Scheduler::yield();
-    }
+    InterruptDisabler disabler;
+    if (m_holder != current)
+        return false;
+    ASSERT(m_level == 1);
+    ASSERT(m_holder == current);
+    m_holder = nullptr;
+    --m_level;
+    m_queue.wake_one();
+    return true;
 }
