@@ -4337,8 +4337,9 @@ int Process::sys$chroot(const char* user_path, size_t path_length)
     if (directory_or_error.is_error())
         return directory_or_error.error();
     auto directory = directory_or_error.value();
-    m_root_directory_for_procfs = directory;
-    set_root_directory(Custody::create(nullptr, "", directory->inode(), directory->mount_flags()));
+    m_root_directory_relative_to_global_root = directory;
+    int chroot_mount_flags = mount_flags == -1 ? directory->mount_flags() : mount_flags;
+    set_root_directory(Custody::create(nullptr, "", directory->inode(), chroot_mount_flags));
     return 0;
 }
 

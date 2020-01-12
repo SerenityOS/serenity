@@ -254,7 +254,7 @@ public:
     int sys$futex(const Syscall::SC_futex_params*);
     int sys$set_thread_boost(int tid, int amount);
     int sys$set_process_boost(pid_t, int amount);
-    int sys$chroot(const char* path, size_t path_length);
+    int sys$chroot(const char* path, size_t path_length, int mount_flags);
     int sys$pledge(const Syscall::SC_pledge_params*);
 
     static void initialize();
