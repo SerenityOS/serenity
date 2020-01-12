@@ -940,7 +940,11 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
 
-        if (key_event.type() == WSEvent::KeyUp && key_event.key() == Key_Logo && !m_switcher.is_visible()) {
+        if (key_event.type() == WSEvent::KeyUp
+            && key_event.key() == Key_Logo
+            && !m_switcher.is_visible()
+            && !m_move_window
+            && !m_resize_window) {
             WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
             return;
         }
