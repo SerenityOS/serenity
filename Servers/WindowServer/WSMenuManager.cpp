@@ -389,8 +389,12 @@ void WSMenuManager::open_menu(WSMenu& menu)
 
 void WSMenuManager::set_current_menu(WSMenu* menu, bool is_submenu)
 {
-    if (!is_submenu)
-        close_everyone();
+    if (!is_submenu) {
+        if (menu)
+            close_everyone_not_in_lineage(*menu);
+        else
+            close_everyone();
+    }
 
     if (!menu) {
         m_current_menu = nullptr;
