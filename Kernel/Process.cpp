@@ -1196,6 +1196,7 @@ void create_kernel_info_page()
 
 int Process::sys$sigreturn(RegisterDump& registers)
 {
+    REQUIRE_PROMISE(stdio);
     SmapDisabler disabler;
 
     //Here, we restore the state pushed by dispatch signal and asm_signal_trampoline.
