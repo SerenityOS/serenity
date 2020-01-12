@@ -577,7 +577,7 @@ Optional<KBuffer> procfs$pid_root(InodeIdentifier identifier)
     auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
     if (!handle)
         return {};
-    return handle->process().root_directory_for_procfs().absolute_path().to_byte_buffer();
+    return handle->process().root_directory_relative_to_global_root().absolute_path().to_byte_buffer();
 }
 
 Optional<KBuffer> procfs$self(InodeIdentifier)

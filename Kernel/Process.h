@@ -339,7 +339,7 @@ public:
     u32 priority_boost() const { return m_priority_boost; }
 
     Custody& root_directory();
-    Custody& root_directory_for_procfs();
+    Custody& root_directory_relative_to_global_root();
     void set_root_directory(const Custody&);
 
     bool has_promises() const { return m_promises; }
@@ -407,7 +407,7 @@ private:
     RefPtr<Custody> m_executable;
     RefPtr<Custody> m_cwd;
     RefPtr<Custody> m_root_directory;
-    RefPtr<Custody> m_root_directory_for_procfs;
+    RefPtr<Custody> m_root_directory_relative_to_global_root;
 
     RefPtr<TTY> m_tty;
 
