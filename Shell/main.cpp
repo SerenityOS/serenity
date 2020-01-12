@@ -769,7 +769,7 @@ static int run_command(const String& cmd)
 #ifdef SH_DEBUG
         dbgprintf("Now we gotta wait on children:\n");
         for (auto& child : children)
-            dbgprintf("  %d\n", child);
+            dbgprintf("  %d (%s)\n", child.pid, child.name.characters());
 #endif
 
         int wstatus = 0;
