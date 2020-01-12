@@ -3923,6 +3923,7 @@ int Process::sys$get_process_name(char* buffer, int buffer_size)
 // do, we should be able of the caveats that Linux has dealt with.
 int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags __attribute__((unused)))
 {
+    REQUIRE_PROMISE(stdio);
     if (buffer_size <= 0)
         return -EINVAL;
 
@@ -4039,6 +4040,7 @@ int Process::sys$sync()
 
 int Process::sys$yield()
 {
+    REQUIRE_PROMISE(stdio);
     current->yield_without_holding_big_lock();
     return 0;
 }
@@ -4224,6 +4226,7 @@ int Process::sys$profiling_disable(pid_t pid)
 
 void* Process::sys$get_kernel_info_page()
 {
+    REQUIRE_PROMISE(stdio);
     return s_info_page_address_for_userspace.as_ptr();
 }
 
