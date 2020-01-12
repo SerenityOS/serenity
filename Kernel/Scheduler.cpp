@@ -322,11 +322,9 @@ bool Scheduler::pick_next()
         if (&thread == current)
             return IterationDecision::Continue;
         // We know how to interrupt blocked processes, but if they are just executing
-        // at some random point in the kernel, let them continue. They'll be in userspace
-        // sooner or later and we can deliver the signal then.
-        // FIXME: Maybe we could check when returning from a syscall if there's a pending
-        //        signal and dispatch it then and there? Would that be doable without the
-        //        syscall effectively being "interrupted" despite having completed?
+        // at some random point in the kernel, let them continue.
+        // Before returning to userspace from a syscall, we will block a thread if it has any
+        // pending unmasked signals, allowing it to be dispatched then.
         if (thread.in_kernel() && !thread.is_blocked() && !thread.is_stopped())
             return IterationDecision::Continue;
         // NOTE: dispatch_one_pending_signal() may unblock the process.

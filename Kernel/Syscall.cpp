@@ -135,4 +135,7 @@ void syscall_handler(RegisterDump regs)
 
     // Check if we're supposed to return to userspace or just die.
     current->die_if_needed();
+
+    if (current->has_unmasked_pending_signals())
+        (void)current->block<Thread::SemiPermanentBlocker>(Thread::SemiPermanentBlocker::Reason::Signal);
 }
