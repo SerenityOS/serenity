@@ -188,6 +188,26 @@ void test_unlink_symlink()
     }
 }
 
+void test_eoverflow()
+{
+    int fd = open("/tmp/x", O_RDWR);
+    ASSERT(fd >= 0);
+
+    int rc = lseek(fd, INT32_MAX, SEEK_SET);
+    ASSERT(rc == INT32_MAX);
+
+    char buffer[16];
+    rc = read(fd, buffer, sizeof(buffer));
+    if (rc >= 0 || errno != EOVERFLOW) {
+        fprintf(stderr, "Expected EOVERFLOW when trying to read past INT32_MAX\n");
+    }
+    rc = write(fd, buffer, sizeof(buffer));
+    if (rc >= 0 || errno != EOVERFLOW) {
+        fprintf(stderr, "Expected EOVERFLOW when trying to write past INT32_MAX\n");
+    }
+    close(fd);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -211,6 +231,7 @@ int main(int, char**)
     test_procfs_read_past_end();
     test_open_create_device();
     test_unlink_symlink();
+    test_eoverflow();
 
     return 0;
 }

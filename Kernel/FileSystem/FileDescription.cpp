@@ -105,6 +105,8 @@ off_t FileDescription::seek(off_t offset, int whence)
 ssize_t FileDescription::read(u8* buffer, ssize_t count)
 {
     LOCKER(m_lock);
+    if ((m_current_offset + count) < 0)
+        return -EOVERFLOW;
     SmapDisabler disabler;
     int nread = m_file->read(*this, buffer, count);
     if (nread > 0 && m_file->is_seekable())
@@ -115,6 +117,8 @@ ssize_t FileDescription::read(u8* buffer, ssize_t count)
 ssize_t FileDescription::write(const u8* data, ssize_t size)
 {
     LOCKER(m_lock);
+    if ((m_current_offset + size) < 0)
+        return -EOVERFLOW;
     SmapDisabler disabler;
     int nwritten = m_file->write(*this, data, size);
     if (nwritten > 0 && m_file->is_seekable())
