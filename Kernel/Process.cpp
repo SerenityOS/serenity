@@ -1130,7 +1130,8 @@ void Process::sys$exit(int status)
     kprintf("sys$exit: %s(%u) exit with status %d\n", name().characters(), pid(), status);
 #endif
 
-    dump_backtrace();
+    if (status != 0)
+        dump_backtrace();
 
     m_termination_status = status;
     m_termination_signal = 0;
