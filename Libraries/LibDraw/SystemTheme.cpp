@@ -28,8 +28,6 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     auto file = CConfigFile::open(path);
     auto buffer = SharedBuffer::create_with_size(sizeof(SystemTheme));
 
-    dbg() << "Created shared buffer with id " << buffer->shared_buffer_id();
-
     auto* data = (SystemTheme*)buffer->data();
 
     auto get_color = [&](auto& name) {
@@ -37,7 +35,6 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
         auto color = Color::from_string(color_string);
         if (!color.has_value())
             return Color(Color::Black);
-        dbg() << "Parsed system theme color '" << name << "' = " << color.value();
         return color.value();
     };
 
