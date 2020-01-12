@@ -30,11 +30,11 @@
 
 #include <limits.h>
 #include <stdarg.h>
+#include <bits/FILE.h>
 #include <sys/cdefs.h>
 #include <sys/types.h>
 
 #define FILENAME_MAX 1024
-#define BUFSIZ 1024
 
 __BEGIN_DECLS
 #ifndef EOF
@@ -50,22 +50,6 @@ __BEGIN_DECLS
 #define _IONBF 2
 
 #define L_tmpnam 256
-
-struct __STDIO_FILE {
-    int fd;
-    int eof;
-    int error;
-    int mode;
-    pid_t popen_child;
-    char* buffer;
-    size_t buffer_size;
-    size_t buffer_index;
-    int have_ungotten;
-    char ungotten;
-    char default_buffer[BUFSIZ];
-};
-
-typedef struct __STDIO_FILE FILE;
 
 extern FILE* stdin;
 extern FILE* stdout;
