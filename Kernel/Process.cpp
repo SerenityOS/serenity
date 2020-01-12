@@ -3008,6 +3008,7 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
 
 ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_read_typed(user_params))
         return -EFAULT;
 
@@ -3029,12 +3030,12 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
         return -ENOTSOCK;
     SmapDisabler disabler;
     auto& socket = *description->socket();
-    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     return socket.sendto(*description, params.data.data, params.data.size, flags, addr, addr_length);
 }
 
 ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
 {
+    REQUIRE_PROMISE(stdio);
     if (!validate_read_typed(user_params))
         return -EFAULT;
 
@@ -3062,7 +3063,6 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
-    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
 
     bool original_blocking = description->is_blocking();
     if (flags & MSG_DONTWAIT)
