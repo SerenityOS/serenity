@@ -12,7 +12,7 @@ int pledge(const char* promises, const char* execpromises);
 
 ## Description
 
-`pledge()` makes a promise to the kernel that from this moment on, it will only use a subset of system functionality.
+`pledge()` makes a promise to the kernel that from this moment on, the calling process will only use a subset of system functionality.
 
 Functionality is divided into a curated set of promises (described below), which can be combined to cover the program's needs. Both arguments are space-separated lists of promises.
 
