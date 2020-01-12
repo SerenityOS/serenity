@@ -253,6 +253,8 @@ private:
     Point m_resize_origin;
     ResizeDirection m_resize_direction { ResizeDirection::None };
 
+    bool m_moved_or_resized_since_logo_keydown { false };
+
     u8 m_keyboard_modifiers { 0 };
 
     WSWindowSwitcher m_switcher;

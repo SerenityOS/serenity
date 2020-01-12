@@ -799,11 +799,13 @@ void WSWindowManager::process_mouse_event(WSMouseEvent& event, WSWindow*& hovere
                 if (!window.is_fullscreen() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Left) {
                     hovered_window = &window;
                     start_window_move(window, event);
+                    m_moved_or_resized_since_logo_keydown = true;
                     return IterationDecision::Break;
                 }
                 if (window.is_resizable() && m_keyboard_modifiers == Mod_Logo && event.type() == WSEvent::MouseDown && event.button() == MouseButton::Right && !window.is_blocked_by_modal_window()) {
                     hovered_window = &window;
                     start_window_resize(window, event);
+                    m_moved_or_resized_since_logo_keydown = true;
                     return IterationDecision::Break;
                 }
             }
@@ -940,12 +942,10 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
 
-        if (key_event.type() == WSEvent::KeyUp
-            && key_event.key() == Key_Logo
-            && !m_switcher.is_visible()
-            && !m_move_window
-            && !m_resize_window) {
-            WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
+        if (key_event.type() == WSEvent::KeyUp && key_event.key() == Key_Logo) {
+            if (!m_moved_or_resized_since_logo_keydown && !m_switcher.is_visible() && !m_move_window && !m_resize_window)
+                WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
+            m_moved_or_resized_since_logo_keydown = false;
             return;
         }
 
