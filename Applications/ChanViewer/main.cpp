@@ -10,10 +10,21 @@
 #include <LibGUI/GStatusBar.h>
 #include <LibGUI/GTableView.h>
 #include <LibGUI/GWindow.h>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio dns inet shared_buffer rpath cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio dns inet shared_buffer rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto window = GWindow::construct();
     window->set_title("ChanViewer");
