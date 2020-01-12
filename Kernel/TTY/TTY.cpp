@@ -225,6 +225,7 @@ void TTY::flush_input()
 void TTY::set_termios(const termios& t)
 {
     m_termios = t;
+#ifdef TTY_DEBUG
     dbg() << tty_name() << " set_termios: "
           << "ECHO=" << should_echo_input()
           << ", ISIG=" << should_generate_signals()
@@ -236,6 +237,7 @@ void TTY::set_termios(const termios& t)
           << ", ICRNL=" << ((m_termios.c_iflag & ICRNL) != 0)
           << ", INLCR=" << ((m_termios.c_iflag & INLCR) != 0)
           << ", IGNCR=" << ((m_termios.c_iflag & IGNCR) != 0);
+#endif
 }
 
 int TTY::ioctl(FileDescription&, unsigned request, unsigned arg)
