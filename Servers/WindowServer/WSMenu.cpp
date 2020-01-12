@@ -207,7 +207,7 @@ void WSMenu::draw()
     }
 }
 
-void WSMenu::redraw_for_new_hovered_item()
+void WSMenu::update_for_new_hovered_item()
 {
     if (m_hovered_item && m_hovered_item->is_submenu()) {
         ASSERT(m_hovered_item == &m_items.at(m_current_index));
@@ -215,6 +215,8 @@ void WSMenu::redraw_for_new_hovered_item()
         m_hovered_item->submenu()->popup(m_hovered_item->rect().top_right().translated(menu_window()->rect().location()), true);
     } else {
         WSMenuManager::the().close_everyone_not_in_lineage(*this);
+        WSMenuManager::the().set_current_menu(this);
+        menu_window()->set_visible(true);
     }
     redraw();
 }
@@ -239,7 +241,7 @@ void WSMenu::decend_into_submenu_at_hovered_item()
     ASSERT(submenu->m_current_index == 0);
     submenu->m_hovered_item = &submenu->m_items.at(0);
     ASSERT(submenu->m_hovered_item->type() != WSMenuItem::Separator);
-    submenu->redraw_for_new_hovered_item();
+    submenu->update_for_new_hovered_item();
     m_in_submenu = true;
 }
 
@@ -259,7 +261,7 @@ void WSMenu::event(CEvent& event)
         }
 
         m_in_submenu = false;
-        redraw_for_new_hovered_item();
+        update_for_new_hovered_item();
         return;
     }
 
@@ -280,7 +282,7 @@ void WSMenu::event(CEvent& event)
         // Default to the first item on key press if one has not been selected yet
         if (!m_hovered_item) {
             m_hovered_item = &m_items.at(0);
-            redraw_for_new_hovered_item();
+            update_for_new_hovered_item();
             return;
         }
 
@@ -309,7 +311,7 @@ void WSMenu::event(CEvent& event)
                 m_hovered_item = &m_items.at(m_current_index);
             } while (m_hovered_item->type() == WSMenuItem::Separator);
 
-            redraw_for_new_hovered_item();
+            update_for_new_hovered_item();
             return;
         }
 
@@ -323,7 +325,7 @@ void WSMenu::event(CEvent& event)
                 m_hovered_item = &m_items.at(m_current_index);
             } while (m_hovered_item->type() == WSMenuItem::Separator);
 
-            redraw_for_new_hovered_item();
+            update_for_new_hovered_item();
             return;
         }
 
