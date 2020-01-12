@@ -578,6 +578,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
     Thread* child_first_thread = nullptr;
     auto* child = new Process(child_first_thread, m_name, m_uid, m_gid, m_pid, m_ring, m_cwd, m_executable, m_tty, this);
     child->m_root_directory = m_root_directory;
+    child->m_root_directory_relative_to_global_root = m_root_directory_relative_to_global_root;
     child->m_promises = m_promises;
     child->m_execpromises = m_execpromises;
 
@@ -2769,6 +2770,7 @@ void Process::finalize()
     m_executable = nullptr;
     m_cwd = nullptr;
     m_root_directory = nullptr;
+    m_root_directory_relative_to_global_root = nullptr;
     m_elf_loader = nullptr;
 
     disown_all_shared_buffers();
@@ -4325,7 +4327,7 @@ int Process::sys$set_process_boost(pid_t pid, int amount)
     return 0;
 }
 
-int Process::sys$chroot(const char* user_path, size_t path_length)
+int Process::sys$chroot(const char* user_path, size_t path_length, int mount_flags)
 {
     if (!is_superuser())
         return -EPERM;
@@ -4350,11 +4352,11 @@ Custody& Process::root_directory()
     return *m_root_directory;
 }
 
-Custody& Process::root_directory_for_procfs()
+Custody& Process::root_directory_relative_to_global_root()
 {
-    if (!m_root_directory_for_procfs)
-        m_root_directory_for_procfs = root_directory();
-    return *m_root_directory_for_procfs;
+    if (!m_root_directory_relative_to_global_root)
+        m_root_directory_relative_to_global_root = root_directory();
+    return *m_root_directory_relative_to_global_root;
 }
 
 void Process::set_root_directory(const Custody& root)
