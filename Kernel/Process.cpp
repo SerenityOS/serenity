@@ -4251,6 +4251,7 @@ WaitQueue& Process::futex_queue(i32* userspace_address)
 
 int Process::sys$futex(const Syscall::SC_futex_params* user_params)
 {
+    REQUIRE_PROMISE(thread);
     if (!validate_read_typed(user_params))
         return -EFAULT;
 
