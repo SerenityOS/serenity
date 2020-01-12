@@ -53,26 +53,6 @@
 //#define SIGNAL_DEBUG
 //#define SHARED_BUFFER_DEBUG
 
-#define REQUIRE_NO_PROMISES                             \
-    do {                                                \
-        if (has_promises()) {                           \
-            dbg() << *current << " has made a promise"; \
-            cli();                                      \
-            crash(SIGABRT, 0);                          \
-            ASSERT_NOT_REACHED();                       \
-        }                                               \
-    } while (0)
-
-#define REQUIRE_PROMISE(promise)                                  \
-    do {                                                          \
-        if (has_promises() && !has_promised(Pledge::promise)) {   \
-            dbg() << *current << " has not pledged " << #promise; \
-            cli();                                                \
-            crash(SIGABRT, 0);                                    \
-            ASSERT_NOT_REACHED();                                 \
-        }                                                         \
-    } while (0)
-
 static void create_signal_trampolines();
 static void create_kernel_info_page();
 
@@ -233,7 +213,6 @@ Region* Process::region_containing(const Range& range)
 int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
-
     if (!validate_read_typed(user_params))
         return -EFAULT;
 

@@ -46,6 +46,7 @@ extern VirtualAddress g_return_to_ring3_from_signal_trampoline;
     __ENUMERATE_PLEDGE_PROMISE(chown)  \
     __ENUMERATE_PLEDGE_PROMISE(chroot) \
     __ENUMERATE_PLEDGE_PROMISE(thread) \
+    __ENUMERATE_PLEDGE_PROMISE(video)  \
     __ENUMERATE_PLEDGE_PROMISE(shared_buffer)
 
 enum class Pledge : u32 {
@@ -567,3 +568,24 @@ inline u32 Thread::effective_priority() const
 {
     return m_priority + m_process.priority_boost() + m_priority_boost + m_extra_priority;
 }
+
+#define REQUIRE_NO_PROMISES                             \
+    do {                                                \
+        if (current->process().has_promises()) {        \
+            dbg() << *current << " has made a promise"; \
+            cli();                                      \
+            current->process().crash(SIGABRT, 0);       \
+            ASSERT_NOT_REACHED();                       \
+        }                                               \
+    } while (0)
+
+#define REQUIRE_PROMISE(promise)                                    \
+    do {                                                            \
+        if (current->process().has_promises()                       \
+            && !current->process().has_promised(Pledge::promise)) { \
+            dbg() << *current << " has not pledged " << #promise;   \
+            cli();                                                  \
+            current->process().crash(SIGABRT, 0);                   \
+            ASSERT_NOT_REACHED();                                   \
+        }                                                           \
+    } while (0)

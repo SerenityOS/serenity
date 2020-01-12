@@ -25,6 +25,7 @@ MBVGADevice::MBVGADevice(PhysicalAddress addr, int pitch, int width, int height)
 
 KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, VirtualAddress preferred_vaddr, size_t offset, size_t size, int prot)
 {
+    REQUIRE_PROMISE(video);
     ASSERT(offset == 0);
     ASSERT(size == framebuffer_size_in_bytes());
     auto vmobject = AnonymousVMObject::create_for_physical_range(m_framebuffer_address, framebuffer_size_in_bytes());
@@ -44,6 +45,7 @@ KResultOr<Region*> MBVGADevice::mmap(Process& process, FileDescription&, Virtual
 
 int MBVGADevice::ioctl(FileDescription&, unsigned request, unsigned arg)
 {
+    REQUIRE_PROMISE(video);
     switch (request) {
     case FB_IOCTL_GET_SIZE_IN_BYTES: {
         auto* out = (size_t*)arg;
