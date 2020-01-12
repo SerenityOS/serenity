@@ -48,7 +48,7 @@ public:
     class Mount {
     public:
         Mount(FS&, Custody* host_custody, int flags);
-        Mount(Inode& source, Custody& host_custody);
+        Mount(Inode& source, Custody& host_custody, int flags);
 
         InodeIdentifier host() const;
         InodeIdentifier guest() const { return m_guest; }
@@ -74,7 +74,7 @@ public:
 
     bool mount_root(FS&);
     KResult mount(FS&, Custody& mount_point, int flags);
-    KResult bind_mount(Custody& source, Custody& mount_point);
+    KResult bind_mount(Custody& source, Custody& mount_point, int flags);
     KResult unmount(InodeIdentifier guest_inode_id);
 
     KResultOr<NonnullRefPtr<FileDescription>> open(StringView path, int options, mode_t mode, Custody& base, Optional<UidAndGid> = {});
