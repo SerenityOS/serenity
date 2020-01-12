@@ -50,6 +50,11 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
+    if (pledge("stdio thread shared_buffer cpath rpath wpath fattr proc exec", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto window = GWindow::construct();
     window->set_title("File Manager");
 

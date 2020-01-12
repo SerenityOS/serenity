@@ -27,6 +27,11 @@ int main(int argc, char** argv)
     auto audio_client = AClientConnection::construct();
     audio_client->handshake();
 
+    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     auto window = GWindow::construct();
     window->set_title("SoundPlayer");
     window->set_resizable(false);

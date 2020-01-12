@@ -11,7 +11,7 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio rpath cpath wpath shared_buffer unix", nullptr) < 0) {
+    if (pledge("stdio rpath cpath wpath shared_buffer", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

@@ -153,7 +153,7 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio tty rpath cpath wpath shared_buffer proc exec unix", nullptr) < 0) {
+    if (pledge("stdio tty rpath cpath wpath shared_buffer proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

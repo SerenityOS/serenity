@@ -12,7 +12,7 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio shared_buffer proc exec rpath unix", nullptr) < 0) {
+    if (pledge("stdio shared_buffer proc exec rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
