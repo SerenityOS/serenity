@@ -698,6 +698,14 @@ String Thread::backtrace(ProcessInspectionHandle&) const
 
 String Thread::backtrace_impl() const
 {
+    u32 start_frame;
+    if (current == this) {
+        asm volatile("movl %%ebp, %%eax"
+                     : "=a"(start_frame));
+    } else {
+        start_frame = frame_ptr();
+    }
+
     SmapDisabler disabler;
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
@@ -706,11 +714,14 @@ String Thread::backtrace_impl() const
         const KSym* ksym;
     };
     StringBuilder builder;
-    Vector<RecognizedSymbol, 64> recognized_symbols;
-    recognized_symbols.append({ tss().eip, ksymbolicate(tss().eip) });
-    for (u32* stack_ptr = (u32*)frame_ptr(); process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2); stack_ptr = (u32*)*stack_ptr) {
+    Vector<RecognizedSymbol, 128> recognized_symbols;
+    if (current != this)
+        recognized_symbols.append({ tss().eip, ksymbolicate(tss().eip) });
+    for (u32* stack_ptr = (u32*)start_frame; process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2); stack_ptr = (u32*)*stack_ptr) {
         u32 retaddr = stack_ptr[1];
         recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
+        if (recognized_symbols.size() == 256)
+            break;
     }
 
     bool mask_kernel_addresses = !current->process().is_superuser();
