@@ -562,6 +562,7 @@ void Scheduler::timer_tick(RegisterDump& regs)
     Process::update_info_page_timestamp(tv);
 
     if (current->process().is_profiling()) {
+        SmapDisabler disabler;
         auto backtrace = current->raw_backtrace(regs.ebp);
         auto& sample = Profiling::next_sample_slot();
         sample.pid = current->pid();
