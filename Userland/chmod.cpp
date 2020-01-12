@@ -48,6 +48,11 @@ Optional<Mask> apply_permission(char access_scope, char permission, char operati
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc < 3) {
         printf("usage: chmod <octal-mode> <path,...>\n"
                "       chmod [[ugoa][+-=][rwx...],...] <path,...>\n");
