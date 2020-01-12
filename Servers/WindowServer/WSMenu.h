@@ -93,7 +93,7 @@ private:
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(WSMenuItem&);
     void open_hovered_item();
-    void redraw_for_new_hovered_item();
+    void update_for_new_hovered_item();
     void decend_into_submenu_at_hovered_item();
 
     WSClientConnection* m_client { nullptr };
