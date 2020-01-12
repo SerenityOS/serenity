@@ -1,4 +1,10 @@
-/dev/hda	/	ext2
+# Root file system. This is a fake entry which gets ignored by `mount -a`;
+# the actual logic for mounting root is in the kernel.
+/dev/hda	/	ext2	nodev,nosuid
+# Remount /bin and /dev while adding the appropriate permissions.
+/dev	/dev	bind	bind,nosuid
+/bin	/bin	bind	bind,nodev
+
 proc	/proc	proc	nosuid
 devpts	/dev/pts	devpts	noexec,nosuid
 tmp	/tmp	tmp	nodev,nosuid
