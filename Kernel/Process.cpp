@@ -3753,7 +3753,7 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
         if (source_or_error.is_error())
             return source_or_error.error();
         auto& source_custody = source_or_error.value();
-        return VFS::the().bind_mount(source_custody, target_custody);
+        return VFS::the().bind_mount(source_custody, target_custody, params.flags);
     }
 
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
