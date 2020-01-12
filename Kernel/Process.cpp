@@ -3757,27 +3757,18 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
     }
 
     if (fs_type == "ext2" || fs_type == "Ext2FS") {
-        auto metadata_or_error = VFS::the().lookup_metadata(source, current_directory());
-        if (metadata_or_error.is_error())
-            return metadata_or_error.error();
+        auto source_or_error = VFS::the().open(source, O_RDWR, 0, current_directory());
+        if (source_or_error.is_error())
+            return source_or_error.error();
 
-        auto major = metadata_or_error.value().major_device;
-        auto minor = metadata_or_error.value().minor_device;
-
-        auto* device = Device::get_device(major, minor);
-        if (!device) {
-            dbg() << "mount: device (" << major << "," << minor << ") not found";
+        auto* device = source_or_error.value()->device();
+        if (!device || !device->is_disk_device()) {
+            dbg() << "mount: this is not a DiskDevice";
             return -ENODEV;
         }
-
-        if (!device->is_disk_device()) {
-            dbg() << "mount: device (" << major << "," << minor << ") is not a DiskDevice";
-            return -ENODEV;
-        }
-
         auto& disk_device = static_cast<DiskDevice&>(*device);
 
-        dbg() << "mount: attempting to mount device (" << major << "," << minor << ") on " << target;
+        dbg() << "mount: attempting to mount " << disk_device.absolute_path() << " on " << target;
 
         fs = Ext2FS::create(disk_device);
     } else if (fs_type == "proc" || fs_type == "ProcFS") {
