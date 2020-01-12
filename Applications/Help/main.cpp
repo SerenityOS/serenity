@@ -20,10 +20,21 @@
 #include <LibHTML/Parser/HTMLParser.h>
 #include <LibMarkdown/MDDocument.h>
 #include <libgen.h>
+#include <stdio.h>
 
 int main(int argc, char* argv[])
 {
+    if (pledge("stdio unix shared_buffer cpath rpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio unix shared_buffer rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto window = GWindow::construct();
     window->set_title("Help");
