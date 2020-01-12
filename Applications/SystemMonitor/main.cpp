@@ -49,14 +49,14 @@ static NonnullRefPtr<GWidget> build_graphs_tab();
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer rpath unix cpath fattr", nullptr) < 0) {
+    if (pledge("stdio proc shared_buffer rpath unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio shared_buffer rpath unix", nullptr) < 0) {
+    if (pledge("stdio proc shared_buffer rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
