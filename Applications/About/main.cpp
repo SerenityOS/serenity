@@ -5,10 +5,21 @@
 #include <LibGUI/GLabel.h>
 #include <LibGUI/GWindow.h>
 #include <sys/utsname.h>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio shared_buffer unix rpath cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio shared_buffer unix rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto window = GWindow::construct();
     window->set_title("About SerenityOS");
