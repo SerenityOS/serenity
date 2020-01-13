@@ -59,6 +59,7 @@ CArgsParserResult CArgsParser::parse(int argc, char** argv)
 
 int CArgsParser::parse_next_param(int index, char** argv, const int params_left, CArgsParserResult& res)
 {
+    ASSERT(params_left >= 0);
     if (params_left == 0)
         return 0;
 
@@ -80,7 +81,7 @@ int CArgsParser::parse_next_param(int index, char** argv, const int params_left,
 
         // If this parameter must be followed by a value, we look for it
         if (!arg->value.value_name.is_null()) {
-            if (params_left < 1) {
+            if (params_left < 2) {
                 printf("Missing value for argument %s\n", arg->value.name.characters());
                 return -1;
             }
