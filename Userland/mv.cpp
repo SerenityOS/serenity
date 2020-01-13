@@ -1,11 +1,16 @@
-#include <AK/String.h>
 #include <AK/FileSystemPath.h>
+#include <AK/String.h>
 #include <stdio.h>
 #include <sys/stat.h>
 #include <unistd.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath wpath cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 3) {
         printf("usage: mv <old-path> <new-path>\n");
         return 1;
