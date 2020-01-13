@@ -49,7 +49,6 @@ LIBC_OBJS = \
        arpa/inet.o \
        netdb.o \
        sched.o \
-       dlfcn.o \
        libgen.o \
        wchar.o \
        serenity.o \
@@ -57,18 +56,12 @@ LIBC_OBJS = \
        cxxabi.o \
        libcinit.o
 
-ELF_OBJS = \
-        ../LibELF/ELFDynamicObject.o \
-        ../LibELF/ELFDynamicLoader.o \
-        ../LibELF/ELFImage.o
-
-OBJS = $(AK_OBJS) $(LIBC_OBJS) $(ELF_OBJS)
+OBJS = $(AK_OBJS) $(LIBC_OBJS)
 
 EXTRA_OBJS = \
         setjmp.ao \
         crti.ao \
-        crtn.ao  \
-        ../LibELF/Arch/i386/plt_trampoline.ao
+        crtn.ao
 
 crt0.o: crt0.cpp
 
@@ -82,6 +75,7 @@ EXTRA_CLEAN = crt0.d crt0.o
 
 DEFINES = -DSERENITY_LIBC_BUILD
 
+SUBPROJECT_CXXFLAGS = -fPIC
 LIBRARY = libc.a
 
 POST_LIBRARY_BUILD = $(QUIET) $(MAKE) install

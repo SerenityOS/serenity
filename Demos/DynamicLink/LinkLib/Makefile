@@ -1,3 +1,5 @@
+VERBOSE=1
+
 include ../../../Makefile.common
 
 DYNLIBRARY = libDynamicLib.so
@@ -12,4 +14,4 @@ DynamicLib.o: DynamicLib.cpp
 
 $(DYNLIBRARY): DynamicLib.o
 	@echo "$(notdir $(CURDIR)): DYLIB $@"
-	$(QUIET) $(CXX) -shared -o $(DYNLIBRARY) $<
+	$(QUIET) $(CXX) -shared -Wl,-soname,libDynamicLib.so -o $(DYNLIBRARY) $<

@@ -153,7 +153,8 @@ cp ../MenuApplets/Clock/Clock.MenuApplet mnt/bin/
 echo "done"
 
 printf "installing dynamic libraries... "
-cp ../Demos/DynamicLink/LinkLib/libDynamicLib.so mnt/usr/lib
+cp ../Demos/DynamicLink/LinkLib/libDynamicLib.so mnt/usr/lib/
+cp ../Libraries/LibELF/ld-elf.so mnt/lib/
 echo "done"
 
 printf "installing shortcuts... "
