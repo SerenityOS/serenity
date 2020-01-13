@@ -12,6 +12,7 @@
 #include <LibHTML/DOM/HTMLHtmlElement.h>
 #include <LibHTML/DOM/HTMLTitleElement.h>
 #include <LibHTML/Frame.h>
+#include <LibHTML/HtmlView.h>
 #include <LibHTML/Layout/LayoutDocument.h>
 #include <LibHTML/Layout/LayoutTreeBuilder.h>
 #include <stdio.h>
@@ -274,4 +275,31 @@ Vector<const Element*> Document::get_elements_by_name(const String& name) const
         return IterationDecision::Continue;
     });
     return elements;
+}
+
+Color Document::link_color() const
+{
+    if (m_link_color.has_value())
+        return m_link_color.value();
+    if (!frame())
+        return Color::Blue;
+    return frame()->html_view()->palette().link();
+}
+
+Color Document::active_link_color() const
+{
+    if (m_active_link_color.has_value())
+        return m_active_link_color.value();
+    if (!frame())
+        return Color::Red;
+    return frame()->html_view()->palette().active_link();
+}
+
+Color Document::visited_link_color() const
+{
+    if (m_visited_link_color.has_value())
+        return m_visited_link_color.value();
+    if (!frame())
+        return Color::Magenta;
+    return frame()->html_view()->palette().visited_link();
 }

@@ -38,6 +38,9 @@ enum class ColorRole {
     SelectionText,
     RubberBandFill,
     RubberBandBorder,
+    Link,
+    ActiveLink,
+    VisitedLink,
 
     __Count,
 

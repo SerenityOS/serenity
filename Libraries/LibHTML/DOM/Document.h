@@ -64,13 +64,13 @@ public:
     Color background_color(const Palette&) const;
     RefPtr<GraphicsBitmap> background_image() const;
 
-    Color link_color() const { return m_link_color; }
+    Color link_color() const;
     void set_link_color(Color);
 
-    Color active_link_color() const { return m_active_link_color; }
+    Color active_link_color() const;
     void set_active_link_color(Color);
 
-    Color visited_link_color() const { return m_visited_link_color; }
+    Color visited_link_color() const;
     void set_visited_link_color(Color);
 
     void layout();
@@ -105,9 +105,9 @@ private:
 
     RefPtr<LayoutDocument> m_layout_root;
 
-    Color m_link_color { Color::Blue };
-    Color m_active_link_color { Color::Red };
-    Color m_visited_link_color { Color::Magenta };
+    Optional<Color> m_link_color;
+    Optional<Color> m_active_link_color;
+    Optional<Color> m_visited_link_color;
 
     RefPtr<CTimer> m_style_update_timer;
 
