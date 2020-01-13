@@ -63,6 +63,10 @@ public:
     Color rubber_band_fill() const { return color(ColorRole::RubberBandFill); }
     Color rubber_band_border() const { return color(ColorRole::RubberBandBorder); }
 
+    Color link() const { return color(ColorRole::Link); }
+    Color active_link() const { return color(ColorRole::ActiveLink); }
+    Color visited_link() const { return color(ColorRole::VisitedLink); }
+
     Color color(ColorRole role) const { return m_impl->color(role); }
 
     void set_color(ColorRole, Color);

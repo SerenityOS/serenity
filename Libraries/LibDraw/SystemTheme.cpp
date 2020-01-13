@@ -74,6 +74,9 @@ RefPtr<SharedBuffer> load_system_theme(const String& path)
     DO_COLOR(MenuSelectionText);
     DO_COLOR(RubberBandFill);
     DO_COLOR(RubberBandBorder);
+    DO_COLOR(Link);
+    DO_COLOR(ActiveLink);
+    DO_COLOR(VisitedLink);
 
     buffer->seal();
     buffer->share_globally();
