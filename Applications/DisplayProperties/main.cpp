@@ -8,10 +8,22 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GWidget.h>
 #include <LibGUI/GWindow.h>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio shared_buffer unix rpath cpath wpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio shared_buffer rpath cpath wpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     DisplayPropertiesWidget instance;
 
     auto window = GWindow::construct();
