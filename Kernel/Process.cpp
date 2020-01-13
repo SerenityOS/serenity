@@ -1489,7 +1489,7 @@ int Process::sys$utime(const char* user_path, size_t path_length, const utimbuf*
         return path.error();
     utimbuf buf;
     if (user_buf) {
-        copy_from_user(&buf, user_buf, sizeof(buf));
+        copy_from_user(&buf, user_buf);
     } else {
         auto now = kgettimeofday();
         buf = { now.tv_sec, now.tv_sec };
@@ -2351,7 +2351,7 @@ int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
         if (!validate_read_typed(set))
             return -EFAULT;
         sigset_t set_value;
-        copy_from_user(&set_value, set, sizeof(set_value));
+        copy_from_user(&set_value, set);
         switch (how) {
         case SIG_BLOCK:
             current->m_signal_mask &= ~set_value;
@@ -2393,7 +2393,7 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
         copy_to_user(&old_act->sa_flags, &action.flags, sizeof(action.flags));
         copy_to_user(&old_act->sa_sigaction, &action.handler_or_sigaction, sizeof(action.handler_or_sigaction));
     }
-    copy_from_user(&action.flags, &act->sa_flags, sizeof(action.flags));
+    copy_from_user(&action.flags, &act->sa_flags);
     copy_from_user(&action.handler_or_sigaction, &act->sa_sigaction, sizeof(action.flags));
     return 0;
 }
@@ -4249,13 +4249,13 @@ int Process::sys$futex(const Syscall::SC_futex_params* user_params)
 
     timespec timeout { 0, 0 };
     if (user_timeout)
-        copy_from_user(&timeout, user_timeout, sizeof(timeout));
+        copy_from_user(&timeout, user_timeout);
 
     i32 user_value;
 
     switch (futex_op) {
     case FUTEX_WAIT:
-        copy_from_user(&user_value, userspace_address, sizeof(user_value));
+        copy_from_user(&user_value, userspace_address);
         if (user_value != value)
             return -EAGAIN;
         // FIXME: This is supposed to be interruptible by a signal, but right now WaitQueue cannot be interrupted.
