@@ -213,11 +213,10 @@ Region* Process::region_containing(const Range& range)
 int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
 
     Syscall::SC_set_mmap_name_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     auto name = validate_and_copy_string_from_user(params.name);
     if (name.is_null())
@@ -284,11 +283,9 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
 
-    if (!validate_read_typed(user_params))
-        return (void*)-EFAULT;
-
     Syscall::SC_mmap_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return (void*)-EFAULT;
 
     void* addr = (void*)params.addr;
     size_t size = params.size;
@@ -932,9 +929,8 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
     // NOTE: Be extremely careful with allocating any kernel memory in exec().
     //       On success, the kernel stack will be lost.
     Syscall::SC_execve_params params;
-    if (!validate_read_typed(user_params))
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
-    copy_from_user(&params, user_params);
 
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return -E2BIG;
@@ -1628,10 +1624,10 @@ String Process::validate_and_copy_string_from_user(const Syscall::StringArgument
 int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
 {
     REQUIRE_PROMISE(rpath);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
+
     Syscall::SC_readlink_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     if (!validate(params.buffer))
         return -EFAULT;
@@ -1715,11 +1711,10 @@ int Process::number_of_open_file_descriptors() const
 
 int Process::sys$open(const Syscall::SC_open_params* user_params)
 {
-    if (!validate_read_typed(user_params))
+    Syscall::SC_open_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
-    Syscall::SC_open_params params;
-    copy_from_user(&params, user_params);
     auto options = params.options;
     auto mode = params.mode;
 
@@ -1757,11 +1752,10 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
 
 int Process::sys$openat(const Syscall::SC_openat_params* user_params)
 {
-    if (!validate_read_typed(user_params))
+    Syscall::SC_openat_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
-    Syscall::SC_openat_params params;
-    copy_from_user(&params, user_params);
     int dirfd = params.dirfd;
     int options = params.options;
     u16 mode = params.mode;
@@ -2453,11 +2447,10 @@ int Process::sys$mkdir(const char* user_path, size_t path_length, mode_t mode)
 int Process::sys$realpath(const Syscall::SC_realpath_params* user_params)
 {
     REQUIRE_PROMISE(rpath);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
 
     Syscall::SC_realpath_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     if (!validate_write(params.buffer.data, params.buffer.size))
         return -EFAULT;
@@ -2657,10 +2650,9 @@ Custody& Process::current_directory()
 int Process::sys$link(const Syscall::SC_link_params* user_params)
 {
     REQUIRE_PROMISE(cpath);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
     Syscall::SC_link_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
     auto old_path = validate_and_copy_string_from_user(params.old_path);
     auto new_path = validate_and_copy_string_from_user(params.new_path);
     if (old_path.is_null() || new_path.is_null())
@@ -2682,10 +2674,9 @@ int Process::sys$unlink(const char* user_path, size_t path_length)
 int Process::sys$symlink(const Syscall::SC_symlink_params* user_params)
 {
     REQUIRE_PROMISE(cpath);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
     Syscall::SC_symlink_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
     auto target = get_syscall_path_argument(params.target);
     if (target.is_error())
         return target.error();
@@ -2750,10 +2741,9 @@ int Process::sys$fchown(int fd, uid_t uid, gid_t gid)
 int Process::sys$chown(const Syscall::SC_chown_params* user_params)
 {
     REQUIRE_PROMISE(chown);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
     Syscall::SC_chown_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
     auto path = get_syscall_path_argument(params.path);
     if (path.is_error())
         return path.error();
@@ -3012,11 +3002,9 @@ int Process::sys$connect(int sockfd, const sockaddr* address, socklen_t address_
 ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
-
     Syscall::SC_sendto_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     int flags = params.flags;
     const sockaddr* addr = params.addr;
@@ -3039,11 +3027,10 @@ ssize_t Process::sys$sendto(const Syscall::SC_sendto_params* user_params)
 ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
 
     Syscall::SC_recvfrom_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     int flags = params.flags;
     sockaddr* addr = params.addr;
@@ -3428,11 +3415,9 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
     if (!validate_read((const void*)entry, sizeof(void*)))
         return -EFAULT;
 
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
-
     Syscall::SC_create_thread_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     unsigned detach_state = params.m_detach_state;
     int schedule_priority = params.m_schedule_priority;
@@ -3616,10 +3601,9 @@ int Process::sys$donate(int tid)
 int Process::sys$rename(const Syscall::SC_rename_params* user_params)
 {
     REQUIRE_PROMISE(cpath);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
     Syscall::SC_rename_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
     auto old_path = get_syscall_path_argument(params.old_path);
     if (old_path.is_error())
         return old_path.error();
@@ -3727,10 +3711,9 @@ int Process::sys$mount(const Syscall::SC_mount_params* user_params)
 
     REQUIRE_NO_PROMISES;
 
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
     Syscall::SC_mount_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     auto source = validate_and_copy_string_from_user(params.source);
     auto target = validate_and_copy_string_from_user(params.target);
@@ -3837,10 +3820,9 @@ void Process::FileDescriptionAndFlags::set(NonnullRefPtr<FileDescription>&& d, u
 int Process::sys$mknod(const Syscall::SC_mknod_params* user_params)
 {
     REQUIRE_PROMISE(dpath);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
     Syscall::SC_mknod_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
     if (!is_superuser() && !is_regular_file(params.mode) && !is_fifo(params.mode) && !is_socket(params.mode))
         return -EPERM;
     auto path = get_syscall_path_argument(params.path);
@@ -3931,20 +3913,20 @@ int Process::sys$getrandom(void* buffer, size_t buffer_size, unsigned int flags 
     return 0;
 }
 
-int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* params)
+int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* user_params)
 {
     if (!is_superuser())
         return -EPERM;
 
     REQUIRE_NO_PROMISES;
-
-    if (!validate_read_typed(params))
+    Syscall::SC_setkeymap_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
-    const char* map = params->map;
-    const char* shift_map = params->shift_map;
-    const char* alt_map = params->alt_map;
-    const char* altgr_map = params->altgr_map;
+    const char* map = params.map;
+    const char* shift_map = params.shift_map;
+    const char* alt_map = params.alt_map;
+    const char* altgr_map = params.altgr_map;
 
     if (!validate_read(map, 0x80))
         return -EFAULT;
@@ -3982,10 +3964,10 @@ int Process::sys$clock_gettime(clockid_t clock_id, timespec* ts)
 int Process::sys$clock_nanosleep(const Syscall::SC_clock_nanosleep_params* user_params)
 {
     REQUIRE_PROMISE(stdio);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
+
     Syscall::SC_clock_nanosleep_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     if (params.requested_sleep && !validate_read_typed(params.requested_sleep))
         return -EFAULT;
@@ -4250,11 +4232,10 @@ WaitQueue& Process::futex_queue(i32* userspace_address)
 int Process::sys$futex(const Syscall::SC_futex_params* user_params)
 {
     REQUIRE_PROMISE(thread);
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
 
     Syscall::SC_futex_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     i32* userspace_address = params.userspace_address;
     int futex_op = params.futex_op;
@@ -4368,10 +4349,9 @@ void Process::set_root_directory(const Custody& root)
 
 int Process::sys$pledge(const Syscall::SC_pledge_params* user_params)
 {
-    if (!validate_read_typed(user_params))
-        return -EFAULT;
     Syscall::SC_pledge_params params;
-    copy_from_user(&params, user_params);
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
 
     if (params.promises.length > 1024 || params.execpromises.length > 1024)
         return -E2BIG;
