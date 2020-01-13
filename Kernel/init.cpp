@@ -79,6 +79,13 @@ VFS* vfs;
         root = "/dev/hda";
     }
 
+    bool dmi_unreliable = KParams::the().has("dmi_unreliable");
+    if (dmi_unreliable) {
+        DMIDecoder::initialize_untrusted();
+    } else {
+        DMIDecoder::initialize();
+    }
+
     if (!root.starts_with("/dev/hda")) {
         kprintf("init_stage2: root filesystem must be on the first IDE hard drive (/dev/hda)\n");
         hang();
@@ -258,16 +265,8 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     bool complete_acpi_disable = KParams::the().has("noacpi");
     bool dynamic_acpi_disable = KParams::the().has("noacpi_aml");
     bool pci_mmio_disable = KParams::the().has("nopci_mmio");
-    bool pci_force_probing = KParams::the().has("pci_nodmi");
-    bool dmi_unreliable = KParams::the().has("dmi_unreliable");
 
     MemoryManager::initialize(physical_address_for_kernel_page_tables);
-
-    if (dmi_unreliable) {
-        DMIDecoder::initialize_untrusted();
-    } else {
-        DMIDecoder::initialize();
-    }
 
     if (complete_acpi_disable) {
         ACPIParser::initialize_limited();
@@ -278,12 +277,6 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
             ACPIStaticParser::initialize_without_rsdp();
         }
     }
-
-    // Sample test to see if the ACPI parser is working...
-    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
-
-    PCI::Initializer::the().test_and_initialize(pci_mmio_disable, pci_force_probing);
-    PCI::Initializer::the().dismiss();
 
     vfs = new VFS;
     dev_debuglog = new DebugLogDevice;
@@ -344,6 +337,12 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
     tty1 = new VirtualConsole(1);
     VirtualConsole::switch_to(0);
+
+    // Sample test to see if the ACPI parser is working...
+    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
+
+    PCI::Initializer::the().test_and_initialize(pci_mmio_disable);
+    PCI::Initializer::the().dismiss();
 
     if (APIC::init())
         APIC::enable(0);
