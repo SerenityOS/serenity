@@ -64,11 +64,11 @@ double pow(double x, double y)
     return exp(y * log(x));
 }
 
-double ldexp(double, int exp)
+double ldexp(double x, int exp)
 {
-    (void)exp;
-    ASSERT_NOT_REACHED();
-    return 0;
+    // FIXME: Please fix me. I am naive.
+    double val = pow(2, exp);
+    return x * val;
 }
 
 double tanh(double x)
@@ -290,12 +290,32 @@ float roundf(float value)
     return (float)(int)(value - 0.5f);
 }
 
+double floor(double value)
+{
+    return (int)value;
+}
+
+double rint(double value)
+{
+    return (int)roundf(value);
+}
+
 float ceilf(float value)
 {
     // FIXME: Please fix me. I am naive.
     int as_int = (int)value;
     if (value == (float)as_int) {
         return (float)as_int;
+    }
+    return as_int + 1;
+}
+
+double ceil(double value)
+{
+    // FIXME: Please fix me. I am naive.
+    int as_int = (int)value;
+    if (value == (double)as_int) {
+        return (double)as_int;
     }
     return as_int + 1;
 }
