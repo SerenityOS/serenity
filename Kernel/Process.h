@@ -285,6 +285,15 @@ public:
     template<typename T>
     bool validate_read_typed(T* value, size_t count = 1) { return validate_read(value, sizeof(T) * count); }
     template<typename T>
+    bool validate_read_and_copy_typed(T* dest, const T* src)
+    {
+        bool validated = validate_read_typed(src);
+        if (validated) {
+            copy_from_user(dest, src);
+        }
+        return validated;
+    }
+    template<typename T>
     bool validate_write_typed(T* value, size_t count = 1) { return validate_write(value, sizeof(T) * count); }
     template<typename DataType, typename SizeType>
     bool validate(const Syscall::MutableBufferArgument<DataType, SizeType>&);
