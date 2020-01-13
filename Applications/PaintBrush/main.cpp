@@ -11,10 +11,21 @@
 #include <LibGUI/GMenuBar.h>
 #include <LibGUI/GMessageBox.h>
 #include <LibGUI/GWindow.h>
+#include <stdio.h>
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio shared_buffer unix rpath wpath cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     GApplication app(argc, argv);
+
+    if (pledge("stdio shared_buffer rpath wpath cpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     auto window = GWindow::construct();
     window->set_title("PaintBrush");
