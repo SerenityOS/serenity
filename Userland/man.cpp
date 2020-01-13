@@ -6,6 +6,11 @@
 
 int main(int argc, char* argv[])
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     String name;
     String section;
 
@@ -55,6 +60,12 @@ int main(int argc, char* argv[])
         perror("Failed to open man page file");
         exit(1);
     }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     dbg() << "Loading man page from " << file->filename();
     auto buffer = file->read_all();
     String source { (const char*)buffer.data(), (size_t)buffer.size() };
