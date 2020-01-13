@@ -38,12 +38,22 @@ static HashMap<gid_t, String> groups;
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath tty", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     struct winsize ws;
     int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
     if (rc == 0) {
         terminal_rows = ws.ws_row;
         terminal_columns = ws.ws_col;
         output_is_terminal = true;
+    }
+
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
     }
 
     static const char* valid_option_characters = "ltraiGnh";
@@ -369,7 +379,7 @@ int do_file_system_object_short(const char* path)
             offset = terminal_columns % longest_name / (terminal_columns / longest_name);
 
         // The offset must be at least 2 because:
-        // - With each file an aditional char is printed e.g. '@','*'.
+        // - With each file an additional char is printed e.g. '@','*'.
         // - Each filename must be separated by a space.
         size_t column_width = longest_name + (offset > 0 ? offset : 2);
         printed_on_row += column_width;
