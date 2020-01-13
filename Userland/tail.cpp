@@ -70,6 +70,11 @@ off_t find_seek_pos(CFile& file, int wanted_lines)
 
 int main(int argc, char* argv[])
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     CArgsParser args_parser("tail");
 
     args_parser.add_arg("f", "follow -- appended data is output as it is written to the file");
@@ -99,6 +104,11 @@ int main(int argc, char* argv[])
     if (!f->open(CIODevice::ReadOnly)) {
         fprintf(stderr, "Error opening file %s: %s\n", f->filename().characters(), strerror(errno));
         exit(1);
+    }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
     }
 
     bool flag_follow = args.is_present("f");
