@@ -3955,6 +3955,7 @@ int Process::sys$setkeymap(const Syscall::SC_setkeymap_params* params)
     if (!validate_read(altgr_map, 0x80))
         return -EFAULT;
 
+    SmapDisabler disabler;
     KeyboardDevice::the().set_maps(map, shift_map, alt_map, altgr_map);
     return 0;
 }
