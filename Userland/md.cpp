@@ -5,6 +5,11 @@
 
 int main(int argc, char* argv[])
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     const char* file_name = nullptr;
     bool html = false;
 
@@ -24,6 +29,11 @@ int main(int argc, char* argv[])
     }
     if (!success) {
         fprintf(stderr, "Error: %s\n", file->error_string());
+        return 1;
+    }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 
