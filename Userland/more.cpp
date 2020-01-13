@@ -19,6 +19,11 @@ int main(int argc, char** argv)
     (void)argc;
     (void)argv;
 
+    if (pledge("stdio rpath tty", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     key_fd = open(ttyname(1), O_RDONLY);
     if (key_fd < 0) {
         perror("open");
@@ -27,6 +32,11 @@ int main(int argc, char** argv)
 
     struct winsize ws;
     ioctl(1, TIOCGWINSZ, &ws);
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     unsigned lines_printed = 0;
     while (!feof(stdin)) {
