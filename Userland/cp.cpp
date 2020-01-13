@@ -15,6 +15,11 @@ bool copy_directory(String, String);
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath wpath cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     CArgsParser args_parser("cp");
     args_parser.add_arg("r", "copy directories recursively");
     args_parser.add_required_single_value("source");
