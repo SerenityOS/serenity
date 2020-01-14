@@ -674,8 +674,6 @@ Custody& VFS::root_custody()
 
 KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* parent_custody, int options, int symlink_recursion_level)
 {
-    // FIXME: resolve_path currently doesn't deal with .. and . . If path is ../. and base is /home/anon, it returns
-    //        /home/anon/../. instead of /home .
     if (symlink_recursion_level >= symlink_recursion_limit)
         return KResult(-ELOOP);
 
@@ -683,7 +681,6 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         return KResult(-EINVAL);
 
     auto parts = path.split_view('/', true);
-    InodeIdentifier crumb_id;
 
     auto& current_root = current->process().root_directory();
 
@@ -691,99 +688,91 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
 
     if (path[0] == '/') {
         custody_chain.append(current_root);
-        crumb_id = current_root.inode().identifier();
     } else {
         for (auto* custody = &base; custody; custody = custody->parent()) {
             // FIXME: Prepending here is not efficient! Fix this.
             custody_chain.prepend(*custody);
         }
-        crumb_id = base.inode().identifier();
     }
 
-    if (parent_custody)
-        *parent_custody = custody_chain.last();
-
-    int mount_flags = custody_chain.last().mount_flags();
-
     for (int i = 0; i < parts.size(); ++i) {
-        bool inode_was_root_at_head_of_loop = current_root.inode().identifier() == crumb_id;
-        auto crumb_inode = get_inode(crumb_id);
-        if (!crumb_inode)
-            return KResult(-EIO);
-        auto metadata = crumb_inode->metadata();
-        if (!metadata.is_directory())
+        auto& current_parent = custody_chain.last();
+        auto parent_metadata = current_parent.inode().metadata();
+        if (!parent_metadata.is_directory())
             return KResult(-ENOTDIR);
-        if (!metadata.may_execute(current->process()))
+        // Ensure the current user is allowed to resolve paths inside this directory.
+        if (!parent_metadata.may_execute(current->process()))
             return KResult(-EACCES);
 
         auto& part = parts[i];
-        if (part.is_empty())
-            continue;
+        bool have_more_parts = i + 1 < parts.size();
 
-        auto& current_parent = custody_chain.last();
-        crumb_id = crumb_inode->lookup(part);
-        if (!crumb_id.is_valid()) {
-            if (i != parts.size() - 1) {
-                // We didn't find the filename we were looking for,
-                // and we didn't even reach the last path part.
-                // (ENOENT with non-null parent_custody) signals to caller that
+        if (part == "..") {
+            // If we encounter a "..", take a step back, but don't go beyond the root.
+            if (custody_chain.size() > 1)
+                custody_chain.take_last();
+            continue;
+        } else if (part == "." || part.is_empty()) {
+            continue;
+        }
+
+        // Okay, let's look up this part.
+        auto child_id = current_parent.inode().lookup(part);
+
+        if (!child_id.is_valid()) {
+            if (parent_custody) {
+                // ENOENT with a non-null parent custody signals to caller that
                 // we found the immediate parent of the file, but the file itself
                 // does not exist yet.
-                // Since this is not the immediate parent, clear parent_custody.
-                if (parent_custody)
-                    *parent_custody = nullptr;
+                *parent_custody = have_more_parts ? nullptr : &current_parent;
             }
             return KResult(-ENOENT);
         }
-        if (auto mount = find_mount_for_host(crumb_id)) {
-            crumb_id = mount->guest();
-            mount_flags = mount->flags();
-        }
-        if (inode_was_root_at_head_of_loop && crumb_id.is_root_inode() && crumb_id != current_root.inode().identifier() && part == "..") {
-            auto mount = find_mount_for_guest(crumb_id);
-            auto dir_inode = get_inode(mount->host());
-            ASSERT(dir_inode);
-            crumb_id = dir_inode->lookup("..");
-        }
-        crumb_inode = get_inode(crumb_id);
-        ASSERT(crumb_inode);
 
-        custody_chain.append(Custody::create(&custody_chain.last(), part, *crumb_inode, mount_flags));
-
-        metadata = crumb_inode->metadata();
-        if (metadata.is_directory()) {
-            if (i != parts.size() - 1) {
-                if (parent_custody)
-                    *parent_custody = custody_chain.last();
-            }
+        int mount_flags_for_child = current_parent.mount_flags();
+        // See if there's something mounted on the child; in that case
+        // we would need to return the guest inode, not the host inode.
+        if (auto mount = find_mount_for_host(child_id)) {
+            child_id = mount->guest();
+            mount_flags_for_child = mount->flags();
         }
-        if (metadata.is_symlink()) {
-            if (i == parts.size() - 1) {
+        auto child_inode = get_inode(child_id);
+        ASSERT(child_inode);
+
+        custody_chain.append(Custody::create(&current_parent, part, *child_inode, mount_flags_for_child));
+
+        if (child_inode->metadata().is_symlink()) {
+            if (!have_more_parts) {
                 if (options & O_NOFOLLOW)
                     return KResult(-ELOOP);
                 if (options & O_NOFOLLOW_NOERROR)
-                    return custody_chain.last();
+                    break;
             }
-            auto symlink_contents = crumb_inode->read_entire();
-            if (!symlink_contents)
+            auto symlink_contents = child_inode->read_entire();
+            if (!symlink_contents) {
+                if (parent_custody)
+                    *parent_custody = nullptr;
                 return KResult(-ENOENT);
+            }
 
             auto symlink_path = StringView(symlink_contents.data(), symlink_contents.size());
             auto symlink_target = resolve_path(symlink_path, current_parent, parent_custody, options, symlink_recursion_level + 1);
 
-            if (symlink_target.is_error())
+            if (symlink_target.is_error() || !have_more_parts)
                 return symlink_target;
 
-            bool have_more_parts = i + 1 < parts.size();
-            if (i + 1 == parts.size() - 1 && parts[i + 1].is_empty())
-                have_more_parts = false;
+            // Now, resolve the remaining path relative to the symlink target.
+            // We prepend a "." to it to ensure that it's not empty and that
+            // any initial slashes it might have get interpreted properly.
+            StringBuilder remaining_path;
+            remaining_path.append('.');
+            remaining_path.append(path.substring_view_starting_after_substring(part));
 
-            if (!have_more_parts)
-                return symlink_target;
-
-            StringView remaining_path = path.substring_view_starting_from_substring(parts[i + 1]);
-            return resolve_path(remaining_path, *symlink_target.value(), parent_custody, options, symlink_recursion_level + 1);
+            return resolve_path(remaining_path.to_string(), *symlink_target.value(), parent_custody, options, symlink_recursion_level + 1);
         }
     }
+
+    if (parent_custody)
+        *parent_custody = custody_chain.last().parent();
     return custody_chain.last();
 }
