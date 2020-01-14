@@ -6,23 +6,26 @@
 
 namespace ACPI_RAW {
 
-struct RSDPDescriptor {
+struct [[gnu::packed]] RSDPDescriptor
+{
     char sig[8];
     u8 checksum;
     char oem_id[6];
     u8 revision;
     u32 rsdt_ptr;
-} __attribute__((__packed__));
+};
 
-struct RSDPDescriptor20 {
+struct [[gnu::packed]] RSDPDescriptor20
+{
     RSDPDescriptor base;
     u32 length;
     u64 xsdt_ptr;
     u8 ext_checksum;
     u8 reserved[3];
-} __attribute__((__packed__));
+};
 
-struct SDTHeader {
+struct [[gnu::packed]] SDTHeader
+{
     char sig[4];
     u32 length;
     u8 revision;
@@ -32,27 +35,31 @@ struct SDTHeader {
     u32 oem_revision;
     u32 creator_id;
     u32 creator_revision;
-} __attribute__((__packed__));
+};
 
-struct RSDT {
+struct [[gnu::packed]] RSDT
+{
     SDTHeader h;
-    u32 table_ptrs[1];
-} __attribute__((__packed__));
+    u32 table_ptrs[];
+};
 
-struct XSDT {
+struct [[gnu::packed]] XSDT
+{
     SDTHeader h;
-    u64 table_ptrs[1];
-} __attribute__((__packed__));
+    u64 table_ptrs[];
+};
 
-struct GenericAddressStructure {
+struct [[gnu::packed]] GenericAddressStructure
+{
     u8 address_space;
     u8 bit_width;
     u8 bit_offset;
     u8 access_size;
     u64 address;
-} __attribute__((__packed__));
+};
 
-struct FADT {
+struct [[gnu::packed]] FADT
+{
     SDTHeader h;
     u32 firmware_ctrl;
     u32 dsdt_ptr;
@@ -109,28 +116,44 @@ struct FADT {
     GenericAddressStructure sleep_control;
     GenericAddressStructure sleep_status;
     u64 hypervisor_vendor_identity;
-
-} __attribute__((__packed__));
-
-struct MADT : public SDTHeader {
 };
 
-struct DSDT : public SDTHeader {
+struct [[gnu::packed]] MADTEntry
+{
+    u8 type;
+    u8 length;
+    char data[];
 };
 
-struct PCI_MMIO_Descriptor {
+struct [[gnu::packed]] MADT
+{
+    SDTHeader h;
+    u32 lapic_address;
+    u32 flags;
+    MADTEntry entries[];
+};
+
+struct [[gnu::packed]] AMLTable
+{
+    SDTHeader h;
+    char aml_code[];
+};
+
+struct [[gnu::packed]] PCI_MMIO_Descriptor
+{
     u64 base_addr;
     u16 seg_group_number;
     u8 start_pci_bus;
     u8 end_pci_bus;
     u32 reserved;
-} __attribute__((__packed__));
+};
 
-struct MCFG {
+struct [[gnu::packed]] MCFG
+{
     SDTHeader header;
     u64 reserved;
     PCI_MMIO_Descriptor descriptors[];
-} __attribute__((__packed__));
+};
 }
 
 class ACPIStaticParser;
