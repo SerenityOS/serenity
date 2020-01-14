@@ -35,8 +35,6 @@ Vector<StringView> StringView::split_view(const char separator, bool keep_empty)
     size_t taillen = length() - substart;
     if (taillen != 0 || keep_empty)
         v.append(substring_view(substart, taillen));
-    if (characters_without_null_termination()[length() - 1] == separator && keep_empty)
-        v.append(String::empty());
     return v;
 }
 
