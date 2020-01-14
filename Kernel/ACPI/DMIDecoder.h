@@ -7,16 +7,18 @@
 #include <Kernel/VM/VirtualAddress.h>
 
 namespace SMBIOS {
-struct LegacyEntryPoint32bit {
+struct [[gnu::packed]] LegacyEntryPoint32bit
+{
     char legacy_sig[5];
     u8 checksum2;
     u16 smboios_table_length;
     u32 smbios_table_ptr;
     u16 smbios_tables_count;
     u8 smbios_bcd_revision;
-} __attribute__((packed));
+};
 
-struct EntryPoint32bit {
+struct [[gnu::packed]] EntryPoint32bit
+{
     char sig[4];
     u8 checksum;
     u8 length;
@@ -26,9 +28,10 @@ struct EntryPoint32bit {
     u8 implementation_revision;
     char formatted_area[5];
     LegacyEntryPoint32bit legacy_structure;
-} __attribute__((packed));
+};
 
-struct EntryPoint64bit {
+struct [[gnu::packed]] EntryPoint64bit
+{
     char sig[5];
     u8 checksum;
     u8 length;
@@ -39,13 +42,14 @@ struct EntryPoint64bit {
     u8 reserved;
     u32 table_maximum_size;
     u64 table_ptr;
-} __attribute__((packed));
+};
 
-struct TableHeader {
+struct [[gnu::packed]] TableHeader
+{
     u8 type;
     u8 length;
     u16 handle;
-} __attribute__((packed));
+};
 
 enum class TableType {
     BIOSInfo = 0,
@@ -93,7 +97,8 @@ enum class TableType {
     EndOfTable = 127
 };
 
-struct BIOSInfo { // Type 0
+struct [[gnu::packed]] BIOSInfo
+{ // Type 0
     TableHeader h;
     u8 bios_vendor_str_number;
     u8 bios_version_str_number;
@@ -102,7 +107,7 @@ struct BIOSInfo { // Type 0
     u8 bios_rom_size;
     u64 bios_characteristics;
     u8 ext_bios_characteristics[];
-} __attribute__((packed));
+};
 
 enum class BIOSCharacteristics {
     Unknown = (1 << 2),
@@ -137,15 +142,17 @@ enum class BIOSCharacteristics {
     nec_pc98 = (1 << 31)
 };
 
-struct ExtBIOSInfo {
+struct [[gnu::packed]] ExtBIOSInfo
+{
     u8 bios_major_release;
     u8 bios_minor_release;
     u8 embedded_controller_firmware_major_release;
     u8 embedded_controller_firmware_minor_release;
     u16 ext_bios_rom_size;
-} __attribute__((packed));
+};
 
-struct SysInfo { // Type 1
+struct [[gnu::packed]] SysInfo
+{ // Type 1
     TableHeader h;
     u8 manufacturer_str_number;
     u8 product_name_str_number;
@@ -155,8 +162,7 @@ struct SysInfo { // Type 1
     u8 wake_up_type;
     u8 sku_str_number;
     u8 family_str_number;
-
-} __attribute__((packed));
+};
 
 enum class WakeUpType {
     Reserved = 0,
@@ -170,7 +176,8 @@ enum class WakeUpType {
     AC_RESTORE = 8,
 };
 
-struct ModuleInfo { // Type 2
+struct [[gnu::packed]] ModuleInfo
+{ // Type 2
     TableHeader h;
     u8 manufacturer_str_number;
     u8 product_name_str_number;
@@ -183,7 +190,7 @@ struct ModuleInfo { // Type 2
     u8 board_type;
     u8 contained_object_handles_count;
     u16 contained_object_handles[];
-} __attribute__((packed));
+};
 
 enum class BoardType {
     Unkown = 0x1,
@@ -201,7 +208,8 @@ enum class BoardType {
     Interconnect_Board = 0xD,
 };
 
-struct SysEnclosure { // Type 3
+struct [[gnu::packed]] SysEnclosure
+{ // Type 3
     TableHeader h;
     u8 manufacturer_str_number;
     u8 type;
@@ -217,11 +225,12 @@ struct SysEnclosure { // Type 3
     u8 power_cords_number;
     u8 contained_element_count;
     u8 contained_element_record_length;
-} __attribute__((packed));
+};
 
-struct ExtSysEnclosure {
+struct [[gnu::packed]] ExtSysEnclosure
+{
     u8 sku_str_number;
-} __attribute__((packed));
+};
 
 enum class SysEnclosureType {
     Other = 0x1,
@@ -279,13 +288,15 @@ enum class SysEnclosureSecurityStatus {
     External_Interface_Enabled = 0x5,
 };
 
-struct SysEnclosureContainedElement {
+struct [[gnu::packed]] SysEnclosureContainedElement
+{
     u8 type;
     u8 min_contained_element_count;
     u8 max_contained_element_count;
-} __attribute__((packed));
+};
 
-struct ProcessorInfo { // Type 4
+struct [[gnu::packed]] ProcessorInfo
+{ // Type 4
     TableHeader h;
     u8 socket_designation_str_number;
     u8 processor_type;
@@ -313,7 +324,7 @@ struct ProcessorInfo { // Type 4
     u16 core_count2;
     u16 core_enabled2;
     u16 thread_count2;
-} __attribute__((packed));
+};
 
 enum class ProcessorType {
     Other = 0x1,
@@ -387,7 +398,8 @@ enum class ProcessorUpgrade {
     Socket_BGA1528 = 0x3C
 };
 
-struct CacheInfo { // Type 7
+struct [[gnu::packed]] CacheInfo
+{ // Type 7
     TableHeader h;
     u8 socket_designation_str_number;
     u16 cache_config;
@@ -401,16 +413,17 @@ struct CacheInfo { // Type 7
     u8 associativity;
     u32 max_cache_size2;
     u32 installed_size2;
-} __attribute__((packed));
+};
 
-struct PortConnectorInfo { // Type 8
+struct [[gnu::packed]] PortConnectorInfo
+{ // Type 8
     TableHeader h;
     u8 internal_reference_designator_str_number;
     u8 internal_connector_type;
     u8 external_reference_designator_str_number;
     u8 external_connector_type;
     u8 port_type;
-} __attribute__((packed));
+};
 
 enum class ConnectorType {
     None = 0x0,
@@ -499,14 +512,16 @@ enum class PortType {
     Other = 0xFF
 };
 
-struct SystemSlotPeerGroup {
+struct [[gnu::packed]] SystemSlotPeerGroup
+{
     u16 segment_group_number;
     u8 bus_number;
     u8 device_function_number;
     u8 data_bus_width;
-} __attribute__((packed));
+};
 
-struct SystemSlots { // Type 9
+struct [[gnu::packed]] SystemSlots
+{ // Type 9
     TableHeader h;
     u8 slot_designation_str_number;
     u8 slot_type;
@@ -522,7 +537,7 @@ struct SystemSlots { // Type 9
     u8 data_bus_width;
     u8 peer_grouping_count;
     SystemSlotPeerGroup peer_groups[];
-} __attribute__((packed));
+};
 
 enum class SlotType {
     Other = 0x1,
@@ -644,32 +659,37 @@ enum class SlotCharacteristics2 {
     Support_Bifurcation = (1 << 3),
 };
 
-struct OEMStrings { // Type 11
+struct [[gnu::packed]] OEMStrings
+{ // Type 11
     TableHeader h;
     u8 strings_count;
-} __attribute__((packed));
+};
 
-struct SysConfigOptions { // Type 12
+struct [[gnu::packed]] SysConfigOptions
+{ // Type 12
     TableHeader h;
     u8 strings_count;
-} __attribute__((packed));
+};
 
-struct BIOSLanguageInfo { // Type 13
+struct [[gnu::packed]] BIOSLanguageInfo
+{ // Type 13
     TableHeader h;
     u8 installable_langs_counts;
     u8 flags;
     u8 reserved[15];
     u8 current_lang_str_number; // String number (one-based) of the currently installed language
-} __attribute__((packed));
+};
 
-struct GroupAssociations { // Type 14
+struct [[gnu::packed]] GroupAssociations
+{ // Type 14
     TableHeader h;
     u8 group_name_str_number;
     u8 item_type;
     u16 item_handle;
-} __attribute__((packed));
+};
 
-struct SysEventLog { // Type 15
+struct [[gnu::packed]] SysEventLog
+{ // Type 15
     TableHeader h;
     u16 log_area_length;
     u16 log_header_start_offset;
@@ -682,9 +702,10 @@ struct SysEventLog { // Type 15
     u8 supported_log_type_descriptors_count;
     u8 log_type_descriptor_length;
     u8 supported_event_log_type_descriptor_list[];
-} __attribute__((packed));
+};
 
-struct PhysicalMemoryArray { // Type 16
+struct [[gnu::packed]] PhysicalMemoryArray
+{ // Type 16
     TableHeader h;
     u8 location;
     u8 use;
@@ -693,7 +714,7 @@ struct PhysicalMemoryArray { // Type 16
     u16 memory_error_info_handle;
     u16 memory_devices_count;
     u64 ext_max_capacity;
-} __attribute__((packed));
+};
 
 enum class MemoryArrayLocation {
     Other = 0x1,
@@ -733,7 +754,8 @@ enum class MemoryArrayErrorCorrectionType {
     CRC = 0x7
 };
 
-struct MemoryDevice { // Type 17
+struct [[gnu::packed]] MemoryDevice
+{ // Type 17
     TableHeader h;
     u16 physical_memory_array_handle;
     u16 memory_error_info_handle;
@@ -770,7 +792,7 @@ struct MemoryDevice { // Type 17
     u64 logical_size;
     u32 ext_speed;
     u32 ext_configured_memory_speed;
-} __attribute__((packed));
+};
 
 enum class MemoryDeviceFormFactor {
     Other = 0x1,
@@ -869,7 +891,7 @@ struct MemoryErrorInfo32Bit { // Type 18
     u32 memory_array_error_address;
     u32 device_error_address;
     u32 error_resolution;
-} __attribute__((packed));
+};
 
 enum class MemoryErrorType {
     Other = 0x1,
@@ -903,7 +925,8 @@ enum class MemoryErrorOperation {
     Partial_Write = 0x5
 };
 
-struct MemoryArrayMappedAddress { // Type 19
+struct [[gnu::packed]] MemoryArrayMappedAddress
+{ // Type 19
     TableHeader h;
     u32 starting_address;
     u32 ending_address;
@@ -911,9 +934,10 @@ struct MemoryArrayMappedAddress { // Type 19
     u8 partition_width;
     u64 ext_starting_address;
     u64 ext_ending_address;
-} __attribute__((packed));
+};
 
-struct MemoryDeviceMappedAddress { // Type 20
+struct [[gnu::packed]] MemoryDeviceMappedAddress
+{ // Type 20
     TableHeader h;
     u32 starting_address;
     u32 ending_address;
@@ -924,15 +948,15 @@ struct MemoryDeviceMappedAddress { // Type 20
     u8 interleaved_data_depth;
     u64 ext_starting_address;
     u64 ext_ending_address;
+};
 
-} __attribute__((packed));
-
-struct BuiltinPointingDevice { // Type 21
+struct [[gnu::packed]] BuiltinPointingDevice
+{ // Type 21
     TableHeader h;
     u8 type;
     u8 interface;
     u8 buttons_count;
-} __attribute__((packed));
+};
 
 enum class PointingDeviceType {
     Other = 0x1,
@@ -960,7 +984,8 @@ enum class PointingDeviceInterface {
     USB = 0xA2
 };
 
-struct PortableBattery { // Type 22
+struct [[gnu::packed]] PortableBattery
+{ // Type 22
     TableHeader h;
     u8 location_str_number;
     u8 manufacturer_str_number;
@@ -977,7 +1002,7 @@ struct PortableBattery { // Type 22
     u8 sbds_device_chemistry_str_number;
     u8 design_capacity_multiplier;
     u32 oem_specific;
-} __attribute__((packed));
+};
 
 enum class PortableBatteryChemistry {
     Other = 0x1,
@@ -990,30 +1015,34 @@ enum class PortableBatteryChemistry {
     Lithium_polymer = 0x8
 };
 
-struct SysReset { // Type 23
+struct [[gnu::packed]] SysReset
+{ // Type 23
     TableHeader h;
     u8 capabilities;
     u16 reset_count;
     u16 reset_limit;
     u16 timer_interval;
     u16 timeout;
-} __attribute__((packed));
+};
 
-struct HardwareSecurity { // Type 24
+struct [[gnu::packed]] HardwareSecurity
+{ // Type 24
     TableHeader h;
     u8 hardware_security_settings;
-} __attribute__((packed));
+};
 
-struct SysPowerControls { // Type 25
+struct [[gnu::packed]] SysPowerControls
+{ // Type 25
     TableHeader h;
     u8 next_scheduled_power_on_month;
     u8 next_scheduled_power_on_day_of_month;
     u8 next_scheduled_power_on_hour;
     u8 next_scheduled_power_on_minute;
     u8 next_scheduled_power_on_second;
-} __attribute__((packed));
+};
 
-struct VoltageProbe { // Type 26
+struct [[gnu::packed]] VoltageProbe
+{ // Type 26
     TableHeader h;
     u8 description_str_number;
     u8 location_and_status;
@@ -1024,9 +1053,10 @@ struct VoltageProbe { // Type 26
     u16 accuracy;
     u32 oem_defined;
     u16 nominal_value;
-} __attribute__((packed));
+};
 
-struct CoolingDevice { // Type 27
+struct [[gnu::packed]] CoolingDevice
+{ // Type 27
     TableHeader h;
     u16 temperature_probe_handle;
     u8 device_type_and_status;
@@ -1034,9 +1064,10 @@ struct CoolingDevice { // Type 27
     u32 oem_defined;
     u16 nominal_speed;
     u8 description_str_number;
-} __attribute__((packed));
+};
 
-struct TemperatureProbe { // Type 28
+struct [[gnu::packed]] TemperatureProbe
+{ // Type 28
     TableHeader h;
     u8 description_str_number;
     u8 location_and_status;
@@ -1047,9 +1078,10 @@ struct TemperatureProbe { // Type 28
     u16 accuracy;
     u32 oem_defined;
     u16 nominal_value;
-} __attribute__((packed));
+};
 
-struct ElectricalCurrentProbe { // Type 29
+struct [[gnu::packed]] ElectricalCurrentProbe
+{ // Type 29
     TableHeader h;
     u8 description_str_number;
     u8 location_and_status;
@@ -1060,21 +1092,24 @@ struct ElectricalCurrentProbe { // Type 29
     u16 accuracy;
     u32 oem_defined;
     u16 nominal_value;
-} __attribute__((packed));
+};
 
-struct OutOfBandRemoteAccess { // Type 30
+struct [[gnu::packed]] OutOfBandRemoteAccess
+{ // Type 30
     TableHeader h;
     u8 manufacturer_name_str_number;
     u8 connections;
-} __attribute__((packed));
+};
 
-struct SystemBootInfo { // Type 32
+struct [[gnu::packed]] SystemBootInfo
+{ // Type 32
     TableHeader h;
     u8 reserved[6];
     u8 boot_status[10];
-} __attribute__((packed));
+};
 
-struct MemoryErrorInfo64Bit { // Type 33
+struct [[gnu::packed]] MemoryErrorInfo64Bit
+{ // Type 33
     TableHeader h;
     u8 error_type;
     u8 error_granularity;
@@ -1083,15 +1118,16 @@ struct MemoryErrorInfo64Bit { // Type 33
     u64 memory_array_error_address;
     u64 device_error_address;
     u32 error_resolution;
-} __attribute__((packed));
+};
 
-struct ManagementDevice { // Type 34
+struct [[gnu::packed]] ManagementDevice
+{ // Type 34
     TableHeader h;
     u8 description_str_number;
     u8 type;
     u32 address;
     u8 address_type;
-} __attribute__((packed));
+};
 
 enum class ManagementDeviceType {
     Other = 0x1,
@@ -1117,15 +1153,17 @@ enum class ManagementDeviceAddressType {
     SMBus = 0x5
 };
 
-struct ManagementDeviceComponent { // Type 35
+struct [[gnu::packed]] ManagementDeviceComponent
+{ // Type 35
     TableHeader h;
     u8 description_str_number;
     u16 management_device_handle;
     u16 component_handle;
     u16 threshold_handle;
-} __attribute__((packed));
+};
 
-struct ManagementDeviceThresholdData { // Type 36
+struct [[gnu::packed]] ManagementDeviceThresholdData
+{ // Type 36
     TableHeader h;
     u16 lower_threshold_non_critical;
     u16 upper_threshold_non_critical;
@@ -1133,19 +1171,21 @@ struct ManagementDeviceThresholdData { // Type 36
     u16 upper_threshold_critical;
     u16 lower_threshold_non_recoverable;
     u16 upper_threshold_non_recoverable;
-} __attribute__((packed));
+};
 
-struct MemoryDeviceDescriptor {
+struct [[gnu::packed]] MemoryDeviceDescriptor
+{
     u8 device_load;
     u16 device_handle;
-} __attribute__((packed));
+};
 
-struct MemoryChannel { // Type 37
+struct [[gnu::packed]] MemoryChannel
+{ // Type 37
     TableHeader h;
     u8 channel_type;
     u8 memory_device_count;
     MemoryDeviceDescriptor memory_devices_descriptors[];
-} __attribute__((packed));
+};
 
 enum class MemroryChannelType {
     Other = 0x1,
@@ -1154,7 +1194,8 @@ enum class MemroryChannelType {
     SyncLink = 0x4
 };
 
-struct IPMIDeviceInfo { // Type 38
+struct [[gnu::packed]] IPMIDeviceInfo
+{ // Type 38
     TableHeader h;
     u8 interface_type;
     u8 ipmi_spec_revision;
@@ -1163,7 +1204,7 @@ struct IPMIDeviceInfo { // Type 38
     u64 base_address;
     u8 base_address_modifier;
     u8 interrupt_number;
-} __attribute__((packed));
+};
 
 enum class IPMIDeviceInfoBMCInterfaceType {
     Unknown = 0x1,
@@ -1173,7 +1214,8 @@ enum class IPMIDeviceInfoBMCInterfaceType {
     SSIF = 0x5  // SSIF: SMBus System Interface
 };
 
-struct SysPowerSupply { // Type 39
+struct [[gnu::packed]] SysPowerSupply
+{ // Type 39
     TableHeader h;
     u8 power_unit_group;
     u8 location_str_number;
@@ -1188,23 +1230,26 @@ struct SysPowerSupply { // Type 39
     u16 input_voltage_probe_handle;
     u16 cooling_device_handle;
     u16 input_current_probe_handle;
-} __attribute__((packed));
+};
 
-struct AdditionalInfoEntry {
+struct [[gnu::packed]] AdditionalInfoEntry
+{
     u8 entry_length;
     u16 referenced_handle;
     u8 referenced_offset;
     u8 string_number;
     u8 value[];
-} __attribute__((packed));
+};
 
-struct AdditionalInfo { // Type 40
+struct [[gnu::packed]] AdditionalInfo
+{ // Type 40
     TableHeader h;
     u8 additional_info_entries_count;
     AdditionalInfoEntry entries[];
-} __attribute__((packed));
+};
 
-struct OnboardDevicesExtendedInfo { // Type 41
+struct [[gnu::packed]] OnboardDevicesExtendedInfo
+{ // Type 41
     TableHeader h;
     u8 reference_designation_str_number;
     u8 device_type;
@@ -1212,7 +1257,7 @@ struct OnboardDevicesExtendedInfo { // Type 41
     u16 segment_group_number;
     u8 bus_number;
     u8 device_function_number;
-} __attribute__((packed));
+};
 
 enum class OnboardDeviceType {
     Other = 0x1,
@@ -1227,23 +1272,26 @@ enum class OnboardDeviceType {
     SAS_Controller = 0xA
 };
 
-struct ManagementControllerHostInterface { // Type 42
+struct [[gnu::packed]] ManagementControllerHostInterface
+{ // Type 42
     TableHeader h;
     u8 interface_type;
     u8 interface_type_specific_data_length;
     u8 interface_type_specific_data[];
-} __attribute__((packed));
+};
 
-struct ProtocolRecordData {
+struct [[gnu::packed]] ProtocolRecordData
+{
     u8 protocol_type;
     u8 protocol_type_specific_data_length;
     u8 protocol_type_specific_data[];
-} __attribute__((packed));
+};
 
-struct ExtManagementControllerHostInterface { // Type 42 Ext
+struct [[gnu::packed]] ExtManagementControllerHostInterface
+{ // Type 42 Ext
     u8 protocol_records_count;
     ProtocolRecordData protocol_records[];
-} __attribute__((packed));
+};
 
 enum class ManagementControllerHostInterfaceProtocolType {
     IPMI = 0x2,
@@ -1251,7 +1299,8 @@ enum class ManagementControllerHostInterfaceProtocolType {
     RedfishOverIP = 0x4
 };
 
-struct TPMDevice { // Type 43
+struct [[gnu::packed]] TPMDevice
+{ // Type 43
     TableHeader h;
     char vendor_id[4];
     u8 major_spec_version;
@@ -1261,7 +1310,7 @@ struct TPMDevice { // Type 43
     u8 description_str_number;
     u64 characteristics;
     u32 oem_defined;
-} __attribute__((packed));
+};
 
 enum class TPMDeviceCharacteristics {
     Characteristics_not_supported = (1 << 2),
@@ -1270,17 +1319,19 @@ enum class TPMDeviceCharacteristics {
     Family_Configurable_3 = (1 << 5), // Family configurable via OEM proprietary mechanism; for example, switching between TPM 1.2 and TPM 2.0.
 };
 
-struct ProcessorSpecificBlock {
+struct [[gnu::packed]] ProcessorSpecificBlock
+{
     u8 block_length;
     u8 processor_type;
     u8 processor_specific_data[];
-} __attribute__((packed));
+};
 
-struct ProcessorAdditionalInfo { // Type 44
+struct [[gnu::packed]] ProcessorAdditionalInfo
+{ // Type 44
     TableHeader h;
     u16 referenced_handle;
     ProcessorSpecificBlock blocks[];
-} __attribute__((packed));
+};
 
 enum class ProcessorArchitectureType {
     IA32 = 0x1,
@@ -1293,13 +1344,15 @@ enum class ProcessorArchitectureType {
     RISC_V_128bit = 0x8
 };
 
-struct Inactive { // Type 126
+struct [[gnu::packed]] Inactive
+{ // Type 126
     TableHeader h;
-} __attribute__((packed));
+};
 
-struct EndOfTable { // Type 127
+struct [[gnu::packed]] EndOfTable
+{ // Type 127
     TableHeader h;
-} __attribute__((packed));
+};
 }
 
 class DMIDecoder {
