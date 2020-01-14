@@ -153,8 +153,6 @@ Vector<StringView> String::split_view(const char separator, bool keep_empty) con
     size_t taillen = length() - substart;
     if (taillen != 0 || keep_empty)
         v.append(substring_view(substart, taillen));
-    if (characters()[length() - 1] == separator && keep_empty)
-        v.append(empty());
     return v;
 }
 
