@@ -26,13 +26,12 @@ If `promises` or `execpromises` is null, the corresponding value is unchanged.
 
 ## Promises
 
-* `stdio`: Basic I/O, memory allocation, information about self, various non-desctructive syscalls
+* `stdio`: Basic I/O, memory allocation, information about self, various non-destructive syscalls
 * `thread`: The POSIX threading API
 * `id`: Ability to change UID/GID
-* `tty`: TTY related functionility
+* `tty`: TTY related functionality
 * `proc`: Process and scheduling related functionality
 * `exec`: The [`exec(2)`](exec.md) syscall
-* `tty`: TTY related functionility
 * `unix`: UNIX local domain sockets
 * `inet`: IPv4 domain sockets
 * `rpath`: "Read" filesystem access
