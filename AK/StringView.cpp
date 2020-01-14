@@ -105,8 +105,6 @@ bool StringView::ends_with(const StringView& str) const
 
 StringView StringView::substring_view(size_t start, size_t length) const
 {
-    if (!length)
-        return {};
     ASSERT(start + length <= m_length);
     return { m_characters + start, length };
 }
