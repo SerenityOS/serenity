@@ -4,6 +4,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
 #include <LibCore/CDirIterator.h>
+#include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
@@ -121,11 +122,28 @@ int main(int argc, char** argv)
     return status;
 }
 
+int print_escaped(const char* name)
+{
+    int printed = 0;
+
+    for (int i = 0; name[i] != '\0'; i++) {
+        if (isprint(name[i])) {
+            putchar(name[i]);
+            printed++;
+        } else {
+            printed += printf("\\%03d", name[i]);
+        }
+    }
+
+    return printed;
+}
+
 int print_name(const struct stat& st, const String& name, const char* path_for_link_resolution = nullptr)
 {
-    int nprinted = name.length();
+    int nprinted = 0;
+
     if (!flag_colorize || !output_is_terminal) {
-        printf("%s", name.characters());
+        nprinted = printf("%s", name.characters());
     } else {
         const char* begin_color = "";
         const char* end_color = "\033[0m";
@@ -144,7 +162,9 @@ int print_name(const struct stat& st, const String& name, const char* path_for_l
             begin_color = "\033[35;1m";
         else if (S_ISCHR(st.st_mode) || S_ISBLK(st.st_mode))
             begin_color = "\033[33;1m";
-        printf("%s%s%s", begin_color, name.characters(), end_color);
+        printf("%s", begin_color);
+        nprinted = print_escaped(name.characters());
+        printf("%s", end_color);
     }
     if (S_ISLNK(st.st_mode)) {
         if (path_for_link_resolution) {
@@ -153,7 +173,7 @@ int print_name(const struct stat& st, const String& name, const char* path_for_l
             if (nread < 0)
                 perror("readlink failed");
             else
-                nprinted += printf(" -> %s", linkbuf);
+                nprinted += printf(" -> ") + print_escaped(linkbuf);
         } else {
             nprinted += printf("@");
         }
