@@ -340,7 +340,7 @@ void TerminalWidget::paint_event(GPaintEvent& event)
             painter.draw_glyph_or_emoji(
                 character_rect.location(),
                 codepoint,
-                attribute.flags & VT::Attribute::Bold ? Font::default_bold_fixed_width_font() : font(),
+                attribute.flags & VT::Attribute::Bold ? bold_font() : font(),
                 lookup_color(should_reverse_fill_for_cursor_or_selection ? attribute.background_color : attribute.foreground_color));
         }
     }
@@ -667,6 +667,15 @@ void TerminalWidget::did_change_font()
 {
     GFrame::did_change_font();
     m_line_height = font().glyph_height() + m_line_spacing;
+
+    // TODO: try to find a bold version of the new font (e.g. CsillaThin7x10 -> CsillaBold7x10)
+    const Font& bold_font = Font::default_bold_fixed_width_font();
+
+    if (bold_font.glyph_height() == font().glyph_height() && bold_font.glyph_width(' ') == font().glyph_width(' '))
+        m_bold_font = &bold_font;
+    else
+        m_bold_font = font();
+
     if (!size().is_empty())
         relayout(size());
 }
