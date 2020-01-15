@@ -32,6 +32,8 @@ public:
 
     void apply_size_increments_to_window(GWindow&);
 
+    const Font& bold_font() const { return *m_bold_font; }
+
     void set_opacity(u8);
     float opacity() { return m_opacity; };
     bool should_beep() { return m_should_beep; }
@@ -119,6 +121,8 @@ private:
     bool m_needs_background_fill { true };
     bool m_cursor_blink_state { true };
     bool m_automatic_size_policy { false };
+
+    RefPtr<Font> m_bold_font;
 
     int m_glyph_width { 0 };
 
