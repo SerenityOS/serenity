@@ -2578,18 +2578,12 @@ int Process::sys$realpath(const Syscall::SC_realpath_params* user_params)
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = custody_or_error.value();
+    auto absolute_path = custody->absolute_path();
 
-    // FIXME: Once resolve_path is fixed to deal with .. and . , remove the use of FileSystemPath::canonical_path.
-    FileSystemPath canonical_path(custody->absolute_path());
-    if (!canonical_path.is_valid()) {
-        dbg() << "FileSystemPath failed to canonicalize " << custody->absolute_path();
-        ASSERT_NOT_REACHED();
-    }
-
-    if (canonical_path.string().length() + 1 > params.buffer.size)
+    if (absolute_path.length() + 1 > params.buffer.size)
         return -ENAMETOOLONG;
 
-    copy_to_user(params.buffer.data, canonical_path.string().characters(), canonical_path.string().length() + 1);
+    copy_to_user(params.buffer.data, absolute_path.characters(), absolute_path.length() + 1);
     return 0;
 };
 
