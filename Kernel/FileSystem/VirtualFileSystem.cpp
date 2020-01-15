@@ -230,6 +230,9 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
             return KResult(-EACCES);
     }
 
+    if (auto preopen_fd = inode.preopen_fd())
+        return *preopen_fd;
+
     if (metadata.is_device()) {
         if (custody.mount_flags() & MS_NODEV)
             return KResult(-EACCES);
