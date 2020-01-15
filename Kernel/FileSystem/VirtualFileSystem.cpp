@@ -521,6 +521,9 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
     if (!parent_inode.metadata().may_write(current->process()))
         return KResult(-EACCES);
 
+    if (old_inode.is_directory())
+        return KResult(-EPERM);
+
     return parent_inode.add_child(old_inode.identifier(), FileSystemPath(new_path).basename(), old_inode.mode());
 }
 
