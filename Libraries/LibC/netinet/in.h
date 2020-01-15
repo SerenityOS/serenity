@@ -10,6 +10,7 @@ in_addr_t inet_addr(const char*);
 
 #define INADDR_ANY ((in_addr_t)0)
 #define INADDR_NONE ((in_addr_t)-1)
+#define INADDR_LOOPBACK 0x7f000001
 
 #define IP_TTL 2
 
