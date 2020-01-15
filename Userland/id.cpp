@@ -41,6 +41,11 @@ int main(int argc, char** argv)
         }
     }
 
+    if (flag_print_name && !(flag_print_uid || flag_print_gid || flag_print_gid_all)) {
+        fprintf(stderr, "cannot print only names or real IDs in default format\n");
+        return 1;
+    }
+
     if (flag_print_uid + flag_print_gid + flag_print_gid_all > 1) {
         fprintf(stderr, "cannot print \"only\" of more than one choice\n");
         return 1;
