@@ -15,6 +15,7 @@ class FileDescription;
 class InodeVMObject;
 class InodeWatcher;
 class LocalSocket;
+class Custody;
 
 class Inode : public RefCounted<Inode>
     , public Weakable<Inode>
@@ -53,6 +54,7 @@ public:
     virtual KResult chmod(mode_t) = 0;
     virtual KResult chown(uid_t, gid_t) = 0;
     virtual KResult truncate(off_t) { return KSuccess; }
+    virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0) const;
 
     LocalSocket* socket() { return m_socket.ptr(); }
     const LocalSocket* socket() const { return m_socket.ptr(); }
