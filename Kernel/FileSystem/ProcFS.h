@@ -81,8 +81,43 @@ private:
     virtual size_t directory_entry_count() const override;
     virtual KResult chmod(mode_t) override;
     virtual KResult chown(uid_t, gid_t) override;
+    virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0) const override;
 
     ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
     const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }
     ProcFSInode(ProcFS&, unsigned index);
+};
+
+class ProcFSProxyInode final : public Inode {
+    friend class ProcFSInode;
+
+public:
+    virtual ~ProcFSProxyInode() override;
+
+private:
+    // ^Inode
+    virtual ssize_t read_bytes(off_t, ssize_t, u8*, FileDescription*) const override { ASSERT_NOT_REACHED(); }
+    virtual InodeMetadata metadata() const override;
+    virtual bool traverse_as_directory(Function<bool(const FS::DirectoryEntry&)>) const override { ASSERT_NOT_REACHED(); }
+    virtual InodeIdentifier lookup(StringView name) override;
+    virtual void flush_metadata() override {};
+    virtual ssize_t write_bytes(off_t, ssize_t, const u8*, FileDescription*) override { ASSERT_NOT_REACHED(); }
+    virtual KResult add_child(InodeIdentifier child_id, const StringView& name, mode_t) override;
+    virtual KResult remove_child(const StringView& name) override;
+    virtual size_t directory_entry_count() const override;
+    virtual KResult chmod(mode_t) override { return KResult(-EINVAL); }
+    virtual KResult chown(uid_t, gid_t) override { return KResult(-EINVAL); }
+    virtual KResultOr<NonnullRefPtr<Custody>> resolve_as_link(Custody&, RefPtr<Custody>*, int, int) const override { ASSERT_NOT_REACHED(); }
+    virtual FileDescription* preopen_fd() override { return m_fd; }
+
+    ProcFS& fs() { return static_cast<ProcFS&>(Inode::fs()); }
+    const ProcFS& fs() const { return static_cast<const ProcFS&>(Inode::fs()); }
+
+    ProcFSProxyInode(ProcFS&, FileDescription&);
+    static NonnullRefPtr<ProcFSProxyInode> create(ProcFS& fs, FileDescription& fd)
+    {
+        return adopt(*new ProcFSProxyInode(fs, fd));
+    }
+
+    NonnullRefPtr<FileDescription> m_fd;
 };

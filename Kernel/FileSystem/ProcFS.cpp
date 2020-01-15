@@ -1366,6 +1366,119 @@ ssize_t ProcFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, F
     return 0;
 }
 
+KResultOr<NonnullRefPtr<Custody>> ProcFSInode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+{
+    if (!is_process_related_file(identifier()))
+        return Inode::resolve_as_link(base, out_parent, options, symlink_recursion_level);
+
+    // FIXME: We should return a custody for FI_PID or FI_PID_fd here
+    //        for correctness. It's impossible to create files in ProcFS,
+    //        so returning null shouldn't break much.
+    if (out_parent)
+        *out_parent = nullptr;
+
+    auto pid = to_pid(identifier());
+    auto proc_file_type = to_proc_file_type(identifier());
+    auto handle = ProcessInspectionHandle::from_pid(pid);
+    if (!handle)
+        return KResult(-ENOENT);
+    auto& process = handle->process();
+
+    if (to_proc_parent_directory(identifier()) == PDI_PID_fd) {
+        if (out_parent)
+            *out_parent = base;
+        int fd = to_fd(identifier());
+        auto description = process.file_description(fd);
+        if (!description)
+            return KResult(-ENOENT);
+        auto proxy_inode = ProcFSProxyInode::create(const_cast<ProcFS&>(fs()), *description);
+        return Custody::create(&base, "", proxy_inode, base.mount_flags());
+    }
+
+    Custody* res = nullptr;
+
+    switch (proc_file_type) {
+    case FI_PID_cwd:
+        res = &process.current_directory();
+        break;
+    case FI_PID_exe:
+        res = process.executable();
+        break;
+    case FI_PID_root:
+        // Note: we open root_directory() here, not
+        // root_directory_relative_to_global_root().
+        // This seems more useful.
+        res = &process.root_directory();
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+    }
+
+    if (!res)
+        return KResult(-ENOENT);
+
+    return *res;
+}
+
+ProcFSProxyInode::ProcFSProxyInode(ProcFS& fs, FileDescription& fd)
+    : Inode(fs, 0)
+    , m_fd(fd)
+{
+}
+
+ProcFSProxyInode::~ProcFSProxyInode()
+{
+}
+
+InodeMetadata ProcFSProxyInode::metadata() const
+{
+    InodeMetadata metadata = m_fd->metadata();
+
+    if (m_fd->is_readable())
+        metadata.mode |= 0444;
+    else
+        metadata.mode &= ~0444;
+
+    if (m_fd->is_writable())
+        metadata.mode |= 0222;
+    else
+        metadata.mode &= ~0222;
+
+    if (!metadata.is_directory())
+        metadata.mode &= ~0111;
+
+    return metadata;
+}
+
+KResult ProcFSProxyInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t mode)
+{
+    if (!m_fd->inode())
+        return KResult(-EINVAL);
+    return m_fd->inode()->add_child(child_id, name, mode);
+}
+
+KResult ProcFSProxyInode::remove_child(const StringView& name)
+{
+    if (!m_fd->inode())
+        return KResult(-EINVAL);
+    return m_fd->inode()->remove_child(name);
+}
+
+InodeIdentifier ProcFSProxyInode::lookup(StringView name)
+{
+    if (!m_fd->inode())
+        return {};
+    return m_fd->inode()->lookup(name);
+}
+
+size_t ProcFSProxyInode::directory_entry_count() const
+{
+    if (!m_fd->inode())
+        return 0;
+    return m_fd->inode()->directory_entry_count();
+}
+
+
 KResult ProcFSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t)
 {
     (void)child_id;
