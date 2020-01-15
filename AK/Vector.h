@@ -278,6 +278,13 @@ public:
         return value;
     }
 
+    void unstable_remove(int index)
+    {
+        ASSERT(index < m_size);
+        swap(at(index), at(m_size - 1));
+        take_last();
+    }
+
     void remove(int index)
     {
         ASSERT(index < m_size);
