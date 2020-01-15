@@ -1,6 +1,7 @@
 #include "MemoryStatsWidget.h"
 #include "GraphWidget.h"
 #include <AK/JsonObject.h>
+#include <LibCore/CFile.h>
 #include <LibDraw/StylePainter.h>
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GLabel.h>
@@ -18,13 +19,10 @@ MemoryStatsWidget* MemoryStatsWidget::the()
 MemoryStatsWidget::MemoryStatsWidget(GraphWidget& graph, GWidget* parent)
     : GWidget(parent)
     , m_graph(graph)
-    , m_proc_memstat(CFile::construct("/proc/memstat"))
 {
     ASSERT(!s_the);
     s_the = this;
 
-    if (!m_proc_memstat->open(CIODevice::OpenMode::ReadOnly))
-        ASSERT_NOT_REACHED();
     set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
     set_preferred_size(0, 72);
 
@@ -69,9 +67,11 @@ static inline size_t bytes_to_kb(size_t bytes)
 
 void MemoryStatsWidget::refresh()
 {
-    m_proc_memstat->seek(0);
+    auto proc_memstat = CFile::construct("/proc/memstat");
+    if (!proc_memstat->open(CIODevice::OpenMode::ReadOnly))
+        ASSERT_NOT_REACHED();
 
-    auto file_contents = m_proc_memstat->read_all();
+    auto file_contents = proc_memstat->read_all();
     auto json = JsonValue::from_string(file_contents).as_object();
 
     unsigned kmalloc_eternal_allocated = json.get("kmalloc_eternal_allocated").to_u32();
@@ -96,9 +96,4 @@ void MemoryStatsWidget::refresh()
 
     m_graph.set_max(page_count_to_kb(user_pages_available));
     m_graph.add_value(page_count_to_kb(user_physical_allocated));
-}
-
-void MemoryStatsWidget::timer_event(CTimerEvent&)
-{
-    refresh();
 }
