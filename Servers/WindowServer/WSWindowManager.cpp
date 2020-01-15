@@ -942,11 +942,14 @@ void WSWindowManager::event(CEvent& event)
             return;
         }
 
-        if (key_event.type() == WSEvent::KeyUp && key_event.key() == Key_Logo) {
-            if (!m_moved_or_resized_since_logo_keydown && !m_switcher.is_visible() && !m_move_window && !m_resize_window)
-                WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
-            m_moved_or_resized_since_logo_keydown = false;
-            return;
+        if (key_event.key() == Key_Logo) {
+            if (key_event.type() == WSEvent::KeyUp) {
+                if (!m_moved_or_resized_since_logo_keydown && !m_switcher.is_visible() && !m_move_window && !m_resize_window)
+                    WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
+                return;
+            } else if (key_event.type() == WSEvent::KeyDown) {
+                m_moved_or_resized_since_logo_keydown = false;
+            }
         }
 
         if (WSMenuManager::the().current_menu()) {
@@ -964,6 +967,7 @@ void WSWindowManager::event(CEvent& event)
         if (m_active_window) {
             if (key_event.type() == WSEvent::KeyDown && key_event.modifiers() == Mod_Logo) {
                 if (key_event.key() == Key_Down) {
+                    m_moved_or_resized_since_logo_keydown = true;
                     if (m_active_window->is_resizable() && m_active_window->is_maximized()) {
                         m_active_window->set_maximized(false);
                         return;
@@ -974,10 +978,12 @@ void WSWindowManager::event(CEvent& event)
                 }
                 if (m_active_window->is_resizable()) {
                     if (key_event.key() == Key_Up) {
+                        m_moved_or_resized_since_logo_keydown = true;
                         m_active_window->set_maximized(!m_active_window->is_maximized());
                         return;
                     }
                     if (key_event.key() == Key_Left) {
+                        m_moved_or_resized_since_logo_keydown = true;
                         if (m_active_window->tiled() != WindowTileType::None) {
                             m_active_window->set_tiled(WindowTileType::None);
                             return;
@@ -988,6 +994,7 @@ void WSWindowManager::event(CEvent& event)
                         return;
                     }
                     if (key_event.key() == Key_Right) {
+                        m_moved_or_resized_since_logo_keydown = true;
                         if (m_active_window->tiled() != WindowTileType::None) {
                             m_active_window->set_tiled(WindowTileType::None);
                             return;
