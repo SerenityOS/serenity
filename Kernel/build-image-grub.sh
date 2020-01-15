@@ -23,7 +23,7 @@ echo "using grub-install at ${grub}"
 
 echo "setting up disk image..."
 dd if=/dev/zero of=_disk_image bs=1M count="${DISK_SIZE:-600}" status=none || die "couldn't create disk image"
-chown 1000:1000 _disk_image || die "couldn't adjust permissions on disk image"
+chown "$SUDO_UID":"$SUDO_GID" _disk_image || die "couldn't adjust permissions on disk image"
 echo "done"
 
 printf "creating loopback device... "
