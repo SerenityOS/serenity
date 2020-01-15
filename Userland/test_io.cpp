@@ -255,5 +255,7 @@ int main(int, char**)
     test_eoverflow();
     test_rmdir_while_inside_dir();
 
+    EXPECT_ERROR_2(EPERM, link, "/", "/home/anon/lolroot");
+
     return 0;
 }
