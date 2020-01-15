@@ -1863,6 +1863,9 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     auto options = params.options;
     auto mode = params.mode;
 
+    if (options & O_NOFOLLOW_NOERROR)
+        return -EINVAL;
+
     if ((options & O_RDWR) || (options & O_WRONLY))
         REQUIRE_PROMISE(wpath);
     else
@@ -1904,6 +1907,9 @@ int Process::sys$openat(const Syscall::SC_openat_params* user_params)
     int dirfd = params.dirfd;
     int options = params.options;
     u16 mode = params.mode;
+
+    if (options & O_NOFOLLOW_NOERROR)
+        return -EINVAL;
 
     if ((options & O_RDWR) || (options & O_WRONLY))
         REQUIRE_PROMISE(wpath);
