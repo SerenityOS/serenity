@@ -675,7 +675,7 @@ Custody& VFS::root_custody()
     return *m_root_custody;
 }
 
-KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* parent_custody, int options, int symlink_recursion_level)
+KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
     if (symlink_recursion_level >= symlink_recursion_limit)
         return KResult(-ELOOP);
@@ -684,23 +684,13 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         return KResult(-EINVAL);
 
     auto parts = path.split_view('/', true);
-
     auto& current_root = current->process().root_directory();
 
-    NonnullRefPtrVector<Custody, 32> custody_chain;
-
-    if (path[0] == '/') {
-        custody_chain.append(current_root);
-    } else {
-        for (auto* custody = &base; custody; custody = custody->parent()) {
-            // FIXME: Prepending here is not efficient! Fix this.
-            custody_chain.prepend(*custody);
-        }
-    }
+    NonnullRefPtr<Custody> custody = path[0] == '/' ? current_root : base;
 
     for (int i = 0; i < parts.size(); ++i) {
-        auto& current_parent = custody_chain.last();
-        auto parent_metadata = current_parent.inode().metadata();
+        Custody& parent = custody;
+        auto parent_metadata = parent.inode().metadata();
         if (!parent_metadata.is_directory())
             return KResult(-ENOTDIR);
         // Ensure the current user is allowed to resolve paths inside this directory.
@@ -712,27 +702,27 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
 
         if (part == "..") {
             // If we encounter a "..", take a step back, but don't go beyond the root.
-            if (custody_chain.size() > 1)
-                custody_chain.take_last();
+            if (custody->parent())
+                custody = *custody->parent();
             continue;
         } else if (part == "." || part.is_empty()) {
             continue;
         }
 
         // Okay, let's look up this part.
-        auto child_id = current_parent.inode().lookup(part);
+        auto child_id = parent.inode().lookup(part);
 
         if (!child_id.is_valid()) {
-            if (parent_custody) {
+            if (out_parent) {
                 // ENOENT with a non-null parent custody signals to caller that
                 // we found the immediate parent of the file, but the file itself
                 // does not exist yet.
-                *parent_custody = have_more_parts ? nullptr : &current_parent;
+                *out_parent = have_more_parts ? nullptr : &parent;
             }
             return KResult(-ENOENT);
         }
 
-        int mount_flags_for_child = current_parent.mount_flags();
+        int mount_flags_for_child = parent.mount_flags();
         // See if there's something mounted on the child; in that case
         // we would need to return the guest inode, not the host inode.
         if (auto mount = find_mount_for_host(child_id)) {
@@ -742,7 +732,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
         auto child_inode = get_inode(child_id);
         ASSERT(child_inode);
 
-        custody_chain.append(Custody::create(&current_parent, part, *child_inode, mount_flags_for_child));
+        custody = Custody::create(&parent, part, *child_inode, mount_flags_for_child);
 
         if (child_inode->metadata().is_symlink()) {
             if (!have_more_parts) {
@@ -753,13 +743,13 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
             }
             auto symlink_contents = child_inode->read_entire();
             if (!symlink_contents) {
-                if (parent_custody)
-                    *parent_custody = nullptr;
+                if (out_parent)
+                    *out_parent = nullptr;
                 return KResult(-ENOENT);
             }
 
             auto symlink_path = StringView(symlink_contents.data(), symlink_contents.size());
-            auto symlink_target = resolve_path(symlink_path, current_parent, parent_custody, options, symlink_recursion_level + 1);
+            auto symlink_target = resolve_path(symlink_path, parent, out_parent, options, symlink_recursion_level + 1);
 
             if (symlink_target.is_error() || !have_more_parts)
                 return symlink_target;
@@ -771,11 +761,11 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
             remaining_path.append('.');
             remaining_path.append(path.substring_view_starting_after_substring(part));
 
-            return resolve_path(remaining_path.to_string(), *symlink_target.value(), parent_custody, options, symlink_recursion_level + 1);
+            return resolve_path(remaining_path.to_string(), *symlink_target.value(), out_parent, options, symlink_recursion_level + 1);
         }
     }
 
-    if (parent_custody)
-        *parent_custody = custody_chain.last().parent();
-    return custody_chain.last();
+    if (out_parent)
+        *out_parent = custody->parent();
+    return custody;
 }
