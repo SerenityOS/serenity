@@ -741,16 +741,7 @@ KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& ba
                 if (options & O_NOFOLLOW_NOERROR)
                     break;
             }
-            auto symlink_contents = child_inode->read_entire();
-            if (!symlink_contents) {
-                if (out_parent)
-                    *out_parent = nullptr;
-                return KResult(-ENOENT);
-            }
-
-            auto symlink_path = StringView(symlink_contents.data(), symlink_contents.size());
-            auto symlink_target = resolve_path(symlink_path, parent, out_parent, options, symlink_recursion_level + 1);
-
+            auto symlink_target = child_inode->resolve_as_link(parent, out_parent, options, symlink_recursion_level + 1);
             if (symlink_target.is_error() || !have_more_parts)
                 return symlink_target;
 

@@ -4,6 +4,8 @@
 #include <Kernel/FileSystem/InodeWatcher.h>
 #include <Kernel/Net/LocalSocket.h>
 #include <Kernel/VM/InodeVMObject.h>
+#include <Kernel/FileSystem/VirtualFileSystem.h>
+#include <Kernel/FileSystem/Custody.h>
 
 InlineLinkedList<Inode>& all_inodes()
 {
@@ -54,6 +56,23 @@ ByteBuffer Inode::read_entire(FileDescription* descriptor) const
     }
 
     return builder.to_byte_buffer();
+}
+
+KResultOr<NonnullRefPtr<Custody>> Inode::resolve_as_link(Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level) const
+{
+    // The default implementation simply treats the stored
+    // contents as a path and resolves that. That is, it
+    // behaves exactly how you would expect a symlink to work.
+    auto contents = read_entire();
+
+    if (!contents) {
+        if (out_parent)
+            *out_parent = nullptr;
+        return KResult(-ENOENT);
+    }
+
+    auto path = StringView(contents.data(), contents.size());
+    return VFS::the().resolve_path(path, base, out_parent, options, symlink_recursion_level);
 }
 
 unsigned Inode::fsid() const
