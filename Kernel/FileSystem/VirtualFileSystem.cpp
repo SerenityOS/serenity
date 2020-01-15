@@ -144,6 +144,7 @@ void VFS::traverse_directory_inode(Inode& dir_inode, Function<bool(const FS::Dir
         else
             resolved_inode = entry.inode;
 
+        // FIXME: This is now broken considering chroot and bind mounts.
         if (dir_inode.identifier().is_root_inode() && !is_vfs_root(dir_inode.identifier()) && !strcmp(entry.name, "..")) {
             auto mount = find_mount_for_guest(entry.inode);
             ASSERT(mount);
