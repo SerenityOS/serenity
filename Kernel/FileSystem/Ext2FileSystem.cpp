@@ -1333,6 +1333,12 @@ RefPtr<Inode> Ext2FS::create_inode(InodeIdentifier parent_id, const String& name
     LOCKER(m_lock);
     ASSERT(parent_id.fsid() == fsid());
     auto parent_inode = get_inode(parent_id);
+    ASSERT(parent_inode);
+
+    if (static_cast<const Ext2FSInode&>(*parent_inode).m_raw_inode.i_links_count == 0) {
+        error = -ENOENT;
+        return nullptr;
+    }
 
 #ifdef EXT2_DEBUG
     dbgprintf("Ext2FS: Adding inode '%s' (mode %o) to parent directory %u:\n", name.characters(), mode, parent_inode->identifier().index());
@@ -1491,7 +1497,7 @@ int Ext2FSInode::decrement_link_count()
         return -EROFS;
     ASSERT(m_raw_inode.i_links_count);
     --m_raw_inode.i_links_count;
-    if (m_raw_inode.i_links_count == 0)
+    if (ref_count() == 1 && m_raw_inode.i_links_count == 0)
         fs().uncache_inode(index());
     set_metadata_dirty(true);
     return 0;

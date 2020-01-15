@@ -3,6 +3,7 @@
 #include <fcntl.h>
 #include <stdio.h>
 #include <sys/mman.h>
+#include <sys/stat.h>
 #include <unistd.h>
 
 #define EXPECT_ERROR_2(err, syscall, arg1, arg2)                                                                                                                          \
@@ -208,6 +209,26 @@ void test_eoverflow()
     close(fd);
 }
 
+void test_rmdir_while_inside_dir()
+{
+    int rc = mkdir("/home/anon/testdir", 0700);
+    ASSERT(rc == 0);
+
+    rc = chdir("/home/anon/testdir");
+    ASSERT(rc == 0);
+
+    rc = rmdir("/home/anon/testdir");
+    ASSERT(rc == 0);
+
+    int fd = open("x", O_CREAT | O_RDWR, 0600);
+    if (fd >= 0 || errno != ENOENT) {
+        fprintf(stderr, "Expected ENOENT when trying to create a file inside a deleted directory. Got %d with errno=%d\n", fd, errno);
+    }
+
+    rc = chdir("/home/anon");
+    ASSERT(rc == 0);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -232,6 +253,7 @@ int main(int, char**)
     test_open_create_device();
     test_unlink_symlink();
     test_eoverflow();
+    test_rmdir_while_inside_dir();
 
     return 0;
 }
