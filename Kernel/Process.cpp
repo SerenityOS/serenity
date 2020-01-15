@@ -1908,8 +1908,14 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     if (result.is_error())
         return result.error();
     auto description = result.value();
-    description->set_rw_mode(options);
-    description->set_file_flags(options);
+    if (description->file_flags()) {
+        // We already have file flags set on this description, so
+        // it must be a preopen description (probably, /proc/pid/fd).
+        // So don't reset its flags and r/w mode.
+    } else {
+        description->set_rw_mode(options);
+        description->set_file_flags(options);
+    }
     u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
     m_fds[fd].set(move(description), fd_flags);
     return fd;
