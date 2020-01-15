@@ -45,6 +45,8 @@ ByteBuffer Inode::read_entire(FileDescription* descriptor) const
             break;
         builder.append((const char*)buffer, nread);
         offset += nread;
+        if (nread < (ssize_t)sizeof(buffer))
+            break;
     }
     if (nread < 0) {
         kprintf("Inode::read_entire: ERROR: %d\n", nread);
