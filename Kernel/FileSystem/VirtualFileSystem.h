@@ -103,7 +103,7 @@ public:
     void sync();
 
     Custody& root_custody();
-    KResultOr<NonnullRefPtr<Custody>> resolve_path(StringView path, Custody& base, RefPtr<Custody>* parent = nullptr, int options = 0, int symlink_recursion_level = 0);
+    KResultOr<NonnullRefPtr<Custody>> resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent = nullptr, int options = 0, int symlink_recursion_level = 0);
 
 private:
     friend class FileDescription;
