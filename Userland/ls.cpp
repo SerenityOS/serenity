@@ -295,7 +295,7 @@ int do_file_system_object_long(const char* path)
                 return 0;
             return 2;
         }
-        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
+        fprintf(stderr, "%s: %s\n", path, di.error_string());
         return 1;
     }
 
@@ -370,7 +370,7 @@ int do_file_system_object_short(const char* path)
                 return 0;
             return 2;
         }
-        fprintf(stderr, "CDirIterator: %s\n", di.error_string());
+        fprintf(stderr, "%s: %s\n", path, di.error_string());
         return 1;
     }
 
