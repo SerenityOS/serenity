@@ -611,6 +611,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     // Symbolic links shorter than 60 characters are store inline inside the i_block array.
     // This avoids wasting an entire block on short links. (Most links are short.)
     if (is_symlink() && size() < max_inline_symlink_length) {
+        ASSERT(offset == 0);
         ssize_t nread = min((off_t)size() - offset, static_cast<off_t>(count));
         memcpy(buffer, ((const u8*)m_raw_inode.i_block) + offset, (size_t)nread);
         return nread;
@@ -722,6 +723,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     Locker fs_locker(fs().m_lock);
 
     if (is_symlink()) {
+        ASSERT(offset == 0);
         if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
 #ifdef EXT2_DEBUG
             dbgprintf("Ext2FSInode: write_bytes poking into i_block array for inline symlink '%s' (%u bytes)\n", String((const char*)data, count).characters(), count);
