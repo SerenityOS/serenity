@@ -99,7 +99,7 @@ void SharedBuffer::deref_for_process(Process& process)
                 dbgprintf("Releasing shared buffer reference on %d of size %d by PID %d\n", m_shared_buffer_id, size(), process.pid());
 #endif
                 process.deallocate_region(*ref.region);
-                m_refs.remove(i);
+                m_refs.unstable_remove(i);
 #ifdef SHARED_BUFFER_DEBUG
                 dbgprintf("Released shared buffer reference on %d of size %d by PID %d\n", m_shared_buffer_id, size(), process.pid());
 #endif
@@ -124,7 +124,7 @@ void SharedBuffer::disown(pid_t pid)
             dbgprintf("Disowning shared buffer %d of size %d by PID %d\n", m_shared_buffer_id, size(), pid);
 #endif
             m_total_refs -= ref.count;
-            m_refs.remove(i);
+            m_refs.unstable_remove(i);
 #ifdef SHARED_BUFFER_DEBUG
             dbgprintf("Disowned shared buffer %d of size %d by PID %d\n", m_shared_buffer_id, size(), pid);
 #endif

@@ -185,7 +185,7 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
-            m_regions.remove(i);
+            m_regions.unstable_remove(i);
             return true;
         }
     }
@@ -757,7 +757,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
                 prot |= PROT_READ;
             if (is_writable)
                 prot |= PROT_WRITE;
-            if (auto* region = allocate_region(vaddr.offset(totally_random_offset), size, String(name), prot)) 
+            if (auto* region = allocate_region(vaddr.offset(totally_random_offset), size, String(name), prot))
                 return region->vaddr().as_ptr();
             return nullptr;
         };
