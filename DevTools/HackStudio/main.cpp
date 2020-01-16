@@ -97,14 +97,14 @@ bool make_is_available();
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio tty rpath cpath wpath shared_buffer proc unix fattr", nullptr) < 0) {
+    if (pledge("stdio tty rpath cpath wpath shared_buffer proc exec unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio tty rpath cpath wpath shared_buffer proc fattr", nullptr) < 0) {
+    if (pledge("stdio tty rpath cpath wpath shared_buffer proc exec fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
