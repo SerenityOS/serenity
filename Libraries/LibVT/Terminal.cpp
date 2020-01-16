@@ -867,6 +867,11 @@ void Terminal::unimplemented_xterm_escape()
 
 void Terminal::set_size(u16 columns, u16 rows)
 {
+    if (!columns)
+        columns = 1;
+    if (!rows)
+        rows = 1;
+
     if (columns == m_columns && rows == m_rows)
         return;
 
