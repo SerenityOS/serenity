@@ -105,7 +105,6 @@ void TerminalWrapper::run_command(const String& command)
         }
 
         setenv("TERM", "xterm", true);
-        setenv("PATH", "/bin:/usr/bin:/usr/local/bin", true);
 
         auto parts = command.split(' ');
         ASSERT(!parts.is_empty());
