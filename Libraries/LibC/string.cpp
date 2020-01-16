@@ -55,6 +55,14 @@ size_t strlen(const char* str)
     return len;
 }
 
+size_t strnlen(const char* str, size_t maxlen)
+{
+    size_t len = 0;
+    for (; len < maxlen && *str; str++)
+        len++;
+    return len;
+}
+
 char* strdup(const char* str)
 {
     size_t len = strlen(str);
