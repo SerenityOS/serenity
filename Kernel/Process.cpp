@@ -4278,11 +4278,11 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
 
     elf_image->for_each_symbol([&](const ELFImage::Symbol& symbol) {
         dbg() << " - " << symbol.type() << " '" << symbol.name() << "' @ " << (void*)symbol.value() << ", size=" << symbol.size();
-        if (!strcmp(symbol.name(), "module_init")) {
+        if (symbol.name() == "module_init") {
             module->module_init = (ModuleInitPtr)(text_base + symbol.value());
-        } else if (!strcmp(symbol.name(), "module_fini")) {
+        } else if (symbol.name() == "module_fini") {
             module->module_fini = (ModuleFiniPtr)(text_base + symbol.value());
-        } else if (!strcmp(symbol.name(), "module_name")) {
+        } else if (symbol.name() == "module_name") {
             const u8* storage = section_storage_by_name.get(symbol.section().name()).value_or(nullptr);
             if (storage)
                 module->name = String((const char*)(storage + symbol.value()));

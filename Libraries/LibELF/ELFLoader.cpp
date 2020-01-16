@@ -113,7 +113,7 @@ char* ELFLoader::symbol_ptr(const char* name)
     m_image.for_each_symbol([&](const ELFImage::Symbol symbol) {
         if (symbol.type() != STT_FUNC)
             return IterationDecision::Continue;
-        if (strcmp(symbol.name(), name))
+        if (symbol.name() == name)
             return IterationDecision::Continue;
         if (m_image.is_executable())
             found_ptr = (char*)(size_t)symbol.value();

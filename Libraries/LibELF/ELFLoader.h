@@ -51,7 +51,7 @@ private:
 
     struct SortedSymbol {
         u32 address;
-        const char* name;
+        StringView name;
     };
 #ifdef KERNEL
     mutable OwnPtr<Region> m_sorted_symbols_region;

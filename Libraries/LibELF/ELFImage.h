@@ -39,7 +39,7 @@ public:
 
         ~Symbol() {}
 
-        const char* name() const { return m_image.table_string(m_sym.st_name); }
+        StringView name() const { return m_image.table_string(m_sym.st_name); }
         unsigned section_index() const { return m_sym.st_shndx; }
         unsigned value() const { return m_sym.st_value; }
         unsigned size() const { return m_sym.st_size; }
@@ -94,7 +94,7 @@ public:
         }
         ~Section() {}
 
-        const char* name() const { return m_image.section_header_table_string(m_section_header.sh_name); }
+        StringView name() const { return m_image.section_header_table_string(m_section_header.sh_name); }
         unsigned type() const { return m_section_header.sh_type; }
         unsigned offset() const { return m_section_header.sh_offset; }
         unsigned size() const { return m_section_header.sh_size; }
@@ -183,9 +183,10 @@ private:
     const Elf32_Ehdr& header() const;
     const Elf32_Shdr& section_header(unsigned) const;
     const Elf32_Phdr& program_header_internal(unsigned) const;
-    const char* table_string(unsigned offset) const;
-    const char* section_header_table_string(unsigned offset) const;
-    const char* section_index_to_string(unsigned index) const;
+    StringView table_string(unsigned offset) const;
+    StringView section_header_table_string(unsigned offset) const;
+    StringView section_index_to_string(unsigned index) const;
+    StringView table_string(unsigned table_index, unsigned offset) const;
 
     const u8* m_buffer { nullptr };
     size_t m_size { 0 };

@@ -8,7 +8,7 @@ struct KSym {
     const char* name;
 };
 
-u32 address_for_kernel_symbol(const char* name);
+u32 address_for_kernel_symbol(const StringView& name);
 const KSym* ksymbolicate(u32 address);
 void load_ksyms();
 
