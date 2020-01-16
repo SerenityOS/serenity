@@ -10,6 +10,7 @@
 #include "TerminalWrapper.h"
 #include "WidgetTool.h"
 #include "WidgetTreeModel.h"
+#include <AK/StringBuilder.h>
 #include <LibCore/CFile.h>
 #include <LibGUI/GAboutDialog.h>
 #include <LibGUI/GAction.h>
@@ -120,6 +121,13 @@ int main(int argc, char** argv)
     widget->set_fill_with_background_color(true);
     widget->set_layout(make<GBoxLayout>(Orientation::Vertical));
     widget->layout()->set_spacing(0);
+
+    StringBuilder path;
+    path.append(getenv("PATH"));
+    if (path.length())
+        path.append(":");
+    path.append("/bin:/usr/bin:/usr/local/bin");
+    setenv("PATH", path.to_string().characters(), true);
 
     if (!make_is_available())
         GMessageBox::show("The 'make' command is not available. You probably want to install the binutils, gcc, and make ports from the root of the Serenity repository.", "Error", GMessageBox::Type::Error, GMessageBox::InputType::OK, g_window);
