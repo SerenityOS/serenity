@@ -20,10 +20,10 @@ static u8 parse_hex_digit(char nibble)
     return 10 + (nibble - 'a');
 }
 
-u32 address_for_kernel_symbol(const char* name)
+u32 address_for_kernel_symbol(const StringView& name)
 {
     for (unsigned i = 0; i < ksym_count; ++i) {
-        if (!strcmp(name, s_ksyms[i].name))
+        if (!strncmp(name.characters_without_null_termination(), s_ksyms[i].name, name.length()))
             return s_ksyms[i].address;
     }
     return 0;

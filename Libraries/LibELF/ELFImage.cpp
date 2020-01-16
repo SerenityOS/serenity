@@ -31,7 +31,7 @@ static const char* object_file_type_to_string(Elf32_Half type)
     }
 }
 
-const char* ELFImage::section_index_to_string(unsigned index) const
+StringView ELFImage::section_index_to_string(unsigned index) const
 {
     if (index == SHN_UNDEF)
         return "Undefined";
@@ -136,20 +136,29 @@ bool ELFImage::parse()
     return true;
 }
 
-const char* ELFImage::section_header_table_string(unsigned offset) const
+StringView ELFImage::table_string(unsigned table_index, unsigned offset) const
 {
-    auto& sh = section_header(header().e_shstrndx);
+    auto& sh = section_header(table_index);
     if (sh.sh_type != SHT_STRTAB)
         return nullptr;
-    return raw_data(sh.sh_offset + offset);
+    size_t computed_offset = sh.sh_offset + offset;
+    if (computed_offset >= m_size) {
+        dbgprintf("SHENANIGANS! ELFImage::table_string() computed offset outside image.\n");
+        return {};
+    }
+    size_t max_length = m_size - computed_offset;
+    size_t length = strnlen(raw_data(sh.sh_offset + offset), max_length);
+    return { raw_data(sh.sh_offset + offset), length };
 }
 
-const char* ELFImage::table_string(unsigned offset) const
+StringView ELFImage::section_header_table_string(unsigned offset) const
 {
-    auto& sh = section_header(m_string_table_section_index);
-    if (sh.sh_type != SHT_STRTAB)
-        return nullptr;
-    return raw_data(sh.sh_offset + offset);
+    return table_string(header().e_shstrndx, offset);
+}
+
+StringView ELFImage::table_string(unsigned offset) const
+{
+    return table_string(m_string_table_section_index, offset);
 }
 
 const char* ELFImage::raw_data(unsigned offset) const
