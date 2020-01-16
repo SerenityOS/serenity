@@ -150,8 +150,8 @@ private:
     int m_scroll_region_top { 0 };
     int m_scroll_region_bottom { 0 };
 
-    u16 m_columns { 0 };
-    u16 m_rows { 0 };
+    u16 m_columns { 1 };
+    u16 m_rows { 1 };
 
     u16 m_cursor_row { 0 };
     u16 m_cursor_column { 0 };
