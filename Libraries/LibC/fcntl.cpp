@@ -33,17 +33,7 @@ int creat_with_path_length(const char* path, size_t path_length, mode_t mode)
 
 int open_with_path_length(const char* path, size_t path_length, int options, mode_t mode)
 {
-    if (!path) {
-        errno = EFAULT;
-        return -1;
-    }
-    if (path_length > INT32_MAX) {
-        errno = EINVAL;
-        return -1;
-    }
-    Syscall::SC_open_params params { { path, path_length }, options, mode };
-    int rc = syscall(SC_open, &params);
-    __RETURN_WITH_ERRNO(rc, rc, -1);
+    return openat_with_path_length(AT_FDCWD, path, path_length, options, mode);
 }
 
 int openat_with_path_length(int dirfd, const char* path, size_t path_length, int options, mode_t mode)
@@ -56,8 +46,8 @@ int openat_with_path_length(int dirfd, const char* path, size_t path_length, int
         errno = EINVAL;
         return -1;
     }
-    Syscall::SC_openat_params params { dirfd, { path, path_length }, options, mode };
-    int rc = syscall(SC_openat, &params);
+    Syscall::SC_open_params params { dirfd, { path, path_length }, options, mode };
+    int rc = syscall(SC_open, &params);
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 

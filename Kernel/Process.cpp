@@ -1862,50 +1862,6 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
-    auto options = params.options;
-    auto mode = params.mode;
-
-    if (options & O_NOFOLLOW_NOERROR)
-        return -EINVAL;
-
-    if ((options & O_RDWR) || (options & O_WRONLY))
-        REQUIRE_PROMISE(wpath);
-    else
-        REQUIRE_PROMISE(rpath);
-
-    if (options & O_CREAT)
-        REQUIRE_PROMISE(cpath);
-
-    auto path = get_syscall_path_argument(params.path);
-    if (path.is_error())
-        return path.error();
-
-    // Ignore everything except permission bits.
-    mode &= 04777;
-
-    int fd = alloc_fd();
-#ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$open(\"%s\") -> %d\n", name().characters(), pid(), path.value().characters(), fd);
-#endif
-    if (fd < 0)
-        return fd;
-    auto result = VFS::the().open(path.value(), options, mode & ~umask(), current_directory());
-    if (result.is_error())
-        return result.error();
-    auto description = result.value();
-    description->set_rw_mode(options);
-    description->set_file_flags(options);
-    u32 fd_flags = (options & O_CLOEXEC) ? FD_CLOEXEC : 0;
-    m_fds[fd].set(move(description), fd_flags);
-    return fd;
-}
-
-int Process::sys$openat(const Syscall::SC_openat_params* user_params)
-{
-    Syscall::SC_openat_params params;
-    if (!validate_read_and_copy_typed(&params, user_params))
-        return -EFAULT;
-
     int dirfd = params.dirfd;
     int options = params.options;
     u16 mode = params.mode;
@@ -1928,7 +1884,7 @@ int Process::sys$openat(const Syscall::SC_openat_params* user_params)
     if (path.is_error())
         return path.error();
 #ifdef DEBUG_IO
-    dbgprintf("%s(%u) sys$openat(%d, \"%s\")\n", dirfd, name().characters(), pid(), path.value().characters());
+    dbgprintf("%s(%u) sys$open(%d, \"%s\")\n", dirfd, name().characters(), pid(), path.value().characters());
 #endif
     int fd = alloc_fd();
     if (fd < 0)
