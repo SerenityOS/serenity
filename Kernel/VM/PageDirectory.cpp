@@ -1,9 +1,11 @@
 #include <Kernel/Process.h>
+#include <Kernel/Random.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 
-static const u32 userspace_range_base = 0x01000000;
+static const u32 userspace_range_base = 0x00800000;
+static const u32 userspace_range_ceiling = 0xbe000000;
 static const u32 kernelspace_range_base = 0xc0800000;
 
 static HashMap<u32, PageDirectory*>& cr3_map()
@@ -26,8 +28,9 @@ extern "C" PageDirectoryEntry boot_pd0[1024];
 extern "C" PageDirectoryEntry boot_pd3[1024];
 
 PageDirectory::PageDirectory()
-    : m_range_allocator(VirtualAddress(0xc0c00000), 0x3f000000)
 {
+    m_range_allocator.initialize_with_range(VirtualAddress(0xc0800000), 0x3f000000);
+
     // Adopt the page tables already set up by boot.S
     PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((u32)boot_pdpt));
     PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((u32)boot_pd0));
@@ -42,8 +45,15 @@ PageDirectory::PageDirectory()
 
 PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_range_allocator)
     : m_process(&process)
-    , m_range_allocator(parent_range_allocator ? RangeAllocator(*parent_range_allocator) : RangeAllocator(VirtualAddress(userspace_range_base), kernelspace_range_base - userspace_range_base))
 {
+    if (parent_range_allocator) {
+        m_range_allocator.initialize_from_parent(*parent_range_allocator);
+    } else {
+        size_t random_offset = (get_good_random<u32>() % 32 * MB) & PAGE_MASK;
+        u32 base = userspace_range_base + random_offset;
+        m_range_allocator.initialize_with_range(VirtualAddress(base), userspace_range_ceiling - base);
+    }
+
     // Set up a userspace page directory
     m_directory_table = MM.allocate_user_physical_page();
     m_directory_pages[0] = MM.allocate_user_physical_page();

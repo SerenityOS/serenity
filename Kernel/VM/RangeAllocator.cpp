@@ -1,11 +1,16 @@
 #include <AK/QuickSort.h>
+#include <Kernel/Random.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/kstdio.h>
 
 //#define VRA_DEBUG
 #define VM_GUARD_PAGES
 
-RangeAllocator::RangeAllocator(VirtualAddress base, size_t size)
+RangeAllocator::RangeAllocator()
+{
+}
+
+void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
 {
     m_available_ranges.append({ base, size });
 #ifdef VRA_DEBUG
@@ -13,9 +18,9 @@ RangeAllocator::RangeAllocator(VirtualAddress base, size_t size)
 #endif
 }
 
-RangeAllocator::RangeAllocator(const RangeAllocator& parent_allocator)
-    : m_available_ranges(parent_allocator.m_available_ranges)
+void RangeAllocator::initialize_from_parent(const RangeAllocator& parent_allocator)
 {
+    m_available_ranges = parent_allocator.m_available_ranges;
 }
 
 RangeAllocator::~RangeAllocator()
