@@ -65,7 +65,8 @@ private:
     WaitQueue m_irq_queue;
 
     PCI::Address m_pci_address;
-    PhysicalRegionDescriptor m_prdt;
+    PhysicalRegionDescriptor& prdt() { return *reinterpret_cast<PhysicalRegionDescriptor*>(m_prdt_page->paddr().offset(0xc0000000).as_ptr()); }
+    RefPtr<PhysicalPage> m_prdt_page;
     RefPtr<PhysicalPage> m_dma_buffer_page;
     u16 m_bus_master_base { 0 };
     Lockable<bool> m_dma_enabled;

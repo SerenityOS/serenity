@@ -20,6 +20,28 @@
 
 #define PAGE_ROUND_UP(x) ((((u32)(x)) + PAGE_SIZE - 1) & (~(PAGE_SIZE - 1)))
 
+template<typename T>
+inline T* low_physical_to_virtual(T* physical)
+{
+    return (T*)(((u8*)physical) + 0xc0000000);
+}
+
+inline u32 low_physical_to_virtual(u32 physical)
+{
+    return physical + 0xc0000000;
+}
+
+template<typename T>
+inline T* virtual_to_low_physical(T* physical)
+{
+    return (T*)(((u8*)physical) - 0xc0000000);
+}
+
+inline u32 virtual_to_low_physical(u32 physical)
+{
+    return physical - 0xc0000000;
+}
+
 class KBuffer;
 class SynthFSInode;
 
@@ -38,7 +60,7 @@ class MemoryManager {
 public:
     static MemoryManager& the();
 
-    static void initialize(u32 physical_address_for_kernel_page_tables);
+    static void initialize();
 
     PageFaultResponse handle_page_fault(const PageFault&);
 
@@ -85,7 +107,7 @@ public:
     static const Region* region_from_vaddr(const Process&, VirtualAddress);
 
 private:
-    MemoryManager(u32 physical_address_for_kernel_page_tables);
+    MemoryManager();
     ~MemoryManager();
 
     enum class AccessSpace { Kernel, User };
@@ -115,6 +137,9 @@ private:
     RefPtr<PhysicalPage> find_free_user_physical_page();
     u8* quickmap_page(PhysicalPage&);
     void unquickmap_page();
+
+    PageDirectoryEntry* quickmap_pd(PageDirectory&, size_t pdpt_index);
+    PageTableEntry* quickmap_pt(PhysicalAddress);
 
     PageDirectory& kernel_page_directory() { return *m_kernel_page_directory; }
 

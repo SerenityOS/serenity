@@ -234,11 +234,14 @@ void E1000NetworkAdapter::initialize_rx_descriptors()
     m_rx_descriptors = (e1000_rx_desc*)ptr;
     for (int i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = m_rx_descriptors[i];
-        descriptor.addr = (u64)kmalloc_eternal(8192 + 16);
+        auto addr = (u32)kmalloc_eternal(8192 + 16);
+        if (addr % 16)
+            addr = (addr + 16) - (addr % 16);
+        descriptor.addr = addr - 0xc0000000;
         descriptor.status = 0;
     }
 
-    out32(REG_RXDESCLO, ptr);
+    out32(REG_RXDESCLO, (u32)ptr - 0xc0000000);
     out32(REG_RXDESCHI, 0);
     out32(REG_RXDESCLEN, number_of_rx_descriptors * sizeof(e1000_rx_desc));
     out32(REG_RXDESCHEAD, 0);
@@ -256,11 +259,14 @@ void E1000NetworkAdapter::initialize_tx_descriptors()
     m_tx_descriptors = (e1000_tx_desc*)ptr;
     for (int i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = m_tx_descriptors[i];
-        descriptor.addr = (u64)kmalloc_eternal(8192 + 16);
+        auto addr = (u32)kmalloc_eternal(8192 + 16);
+        if (addr % 16)
+            addr = (addr + 16) - (addr % 16);
+        descriptor.addr = addr - 0xc0000000;
         descriptor.cmd = 0;
     }
 
-    out32(REG_TXDESCLO, ptr);
+    out32(REG_TXDESCLO, (u32)ptr - 0xc0000000);
     out32(REG_TXDESCHI, 0);
     out32(REG_TXDESCLEN, number_of_tx_descriptors * sizeof(e1000_tx_desc));
     out32(REG_TXDESCHEAD, 0);
@@ -348,7 +354,8 @@ void E1000NetworkAdapter::send_raw(const u8* data, int length)
 #endif
     auto& descriptor = m_tx_descriptors[tx_current];
     ASSERT(length <= 8192);
-    memcpy((void*)descriptor.addr, data, length);
+    auto *vptr = (void*)(descriptor.addr + 0xc0000000);
+    memcpy(vptr, data, length);
     descriptor.length = length;
     descriptor.status = 0;
     descriptor.cmd = CMD_EOP | CMD_IFCS | CMD_RS;
@@ -381,7 +388,7 @@ void E1000NetworkAdapter::receive()
         rx_current = (rx_current + 1) % number_of_rx_descriptors;
         if (!(m_rx_descriptors[rx_current].status & 1))
             break;
-        auto* buffer = (u8*)m_rx_descriptors[rx_current].addr;
+        auto* buffer = (u8*)(m_rx_descriptors[rx_current].addr + 0xc0000000);
         u16 length = m_rx_descriptors[rx_current].length;
 #ifdef E1000_DEBUG
         kprintf("E1000: Received 1 packet @ %p (%u) bytes!\n", buffer, length);

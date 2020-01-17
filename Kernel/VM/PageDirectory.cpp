@@ -4,7 +4,7 @@
 #include <Kernel/VM/PageDirectory.h>
 
 static const u32 userspace_range_base = 0x01000000;
-static const u32 kernelspace_range_base = 0xc0000000;
+static const u32 kernelspace_range_base = 0xc0800000;
 
 static HashMap<u32, PageDirectory*>& cr3_map()
 {
@@ -21,22 +21,23 @@ RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
     return cr3_map().get(cr3).value_or({});
 }
 
-PageDirectory::PageDirectory(PhysicalAddress paddr)
-    : m_range_allocator(VirtualAddress(0xc0000000), 0x3f000000)
+extern "C" u32 boot_pdpt;
+extern "C" u32 boot_pd0;
+extern "C" u32 boot_pd3;
+
+PageDirectory::PageDirectory()
+    : m_range_allocator(VirtualAddress(0xc0c00000), 0x3f000000)
 {
-    m_directory_table = PhysicalPage::create(paddr, true, false);
-    m_directory_pages[0] = PhysicalPage::create(paddr.offset(PAGE_SIZE * 1), true, false);
-    m_directory_pages[1] = PhysicalPage::create(paddr.offset(PAGE_SIZE * 2), true, false);
-    m_directory_pages[2] = PhysicalPage::create(paddr.offset(PAGE_SIZE * 3), true, false);
-    m_directory_pages[3] = PhysicalPage::create(paddr.offset(PAGE_SIZE * 4), true, false);
-
-    table().raw[0] = (u64)m_directory_pages[0]->paddr().as_ptr() | 1;
-    table().raw[1] = (u64)m_directory_pages[1]->paddr().as_ptr() | 1;
-    table().raw[2] = (u64)m_directory_pages[2]->paddr().as_ptr() | 1;
-    table().raw[3] = (u64)m_directory_pages[3]->paddr().as_ptr() | 1;
-
-    InterruptDisabler disabler;
-    cr3_map().set(cr3(), this);
+    // Adopt the page tables already set up by boot.S
+    PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((u32)&boot_pdpt));
+    PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((u32)&boot_pd0));
+    PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((u32)&boot_pd3));
+    kprintf("MM: boot_pdpt @ P%p\n", boot_pdpt_paddr.get());
+    kprintf("MM: boot_pd0 @ P%p\n", boot_pd0_paddr.get());
+    kprintf("MM: boot_pd3 @ P%p\n", boot_pd3_paddr.get());
+    m_directory_table = PhysicalPage::create(boot_pdpt_paddr, true, false);
+    m_directory_pages[0] = PhysicalPage::create(boot_pd0_paddr, true, false);
+    m_directory_pages[3] = PhysicalPage::create(boot_pd3_paddr, true, false);
 }
 
 PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_range_allocator)
@@ -44,7 +45,6 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     , m_range_allocator(parent_range_allocator ? RangeAllocator(*parent_range_allocator) : RangeAllocator(VirtualAddress(userspace_range_base), kernelspace_range_base - userspace_range_base))
 {
     // Set up a userspace page directory
-
     m_directory_table = MM.allocate_supervisor_physical_page();
     m_directory_pages[0] = MM.allocate_supervisor_physical_page();
     m_directory_pages[1] = MM.allocate_supervisor_physical_page();
@@ -58,10 +58,11 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     table().raw[3] = (u64)m_directory_pages[3]->paddr().as_ptr() | 1;
 
     // Clone bottom 8 MB of mappings from kernel_page_directory
-    table().directory(0)[0].copy_from({}, MM.kernel_page_directory().table().directory(0)[0]);
-    table().directory(0)[1].copy_from({}, MM.kernel_page_directory().table().directory(0)[1]);
-    table().directory(0)[2].copy_from({}, MM.kernel_page_directory().table().directory(0)[2]);
-    table().directory(0)[3].copy_from({}, MM.kernel_page_directory().table().directory(0)[3]);
+    PageDirectoryEntry buffer[4];
+    auto* kernel_pd = MM.quickmap_pd(MM.kernel_page_directory(), 0);
+    memcpy(buffer, kernel_pd, sizeof(PageDirectoryEntry) * 4);
+    auto* new_pd = MM.quickmap_pd(*this, 0);
+    memcpy(new_pd, buffer, sizeof(PageDirectoryEntry) * 4);
 
     InterruptDisabler disabler;
     cr3_map().set(cr3(), this);

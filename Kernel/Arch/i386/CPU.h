@@ -95,6 +95,8 @@ public:
         m_raw |= value & 0xfffff000;
     }
 
+    void clear() { m_raw = 0; }
+
     u64 raw() const { return m_raw; }
     void copy_from(Badge<PageDirectory>, const PageDirectoryEntry& other) { m_raw = other.m_raw; }
 
@@ -104,6 +106,7 @@ public:
         UserSupervisor = 1 << 2,
         WriteThrough = 1 << 3,
         CacheDisabled = 1 << 4,
+        Huge = 1 << 7,
         Global = 1 << 8,
         NoExecute = 0x8000000000000000ULL,
     };
@@ -113,6 +116,9 @@ public:
 
     bool is_user_allowed() const { return raw() & UserSupervisor; }
     void set_user_allowed(bool b) { set_bit(UserSupervisor, b); }
+
+    bool is_huge() const { return raw() & Huge; }
+    void set_huge(bool b) { set_bit(Huge, b); }
 
     bool is_writable() const { return raw() & ReadWrite; }
     void set_writable(bool b) { set_bit(ReadWrite, b); }

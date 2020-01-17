@@ -242,7 +242,7 @@ void Region::map_individual_page_impl(size_t page_index)
             pte.set_execute_disabled(!is_executable());
         pte.set_user_allowed(is_user_accessible());
 #ifdef MM_DEBUG
-    dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
+        dbg() << "MM: >> region map (PD=" << m_page_directory->cr3() << ", PTE=" << (void*)pte.raw() << "{" << &pte << "}) " << name() << " " << page_vaddr << " => " << physical_page->paddr() << " (@" << physical_page.ptr() << ")";
 #endif
     }
     MM.flush_tlb(page_vaddr);

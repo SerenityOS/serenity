@@ -21,13 +21,9 @@ MemoryManager& MM
     return *s_the;
 }
 
-MemoryManager::MemoryManager(u32 physical_address_for_kernel_page_tables)
+MemoryManager::MemoryManager()
 {
-    m_kernel_page_directory = PageDirectory::create_at_fixed_address(PhysicalAddress(physical_address_for_kernel_page_tables));
-    for (size_t i = 0; i < 4; ++i) {
-        m_low_page_tables[i] = (PageTableEntry*)(physical_address_for_kernel_page_tables + PAGE_SIZE * (5 + i));
-        memset(m_low_page_tables[i], 0, PAGE_SIZE);
-    }
+    m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
 
     initialize_paging();
 
@@ -49,32 +45,11 @@ void MemoryManager::initialize_paging()
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
 #endif
 
-#ifdef MM_DEBUG
-    dbgprintf("MM: Protect against null dereferences\n");
-#endif
-    // Make null dereferences crash.
-    map_protected(VirtualAddress(0), PAGE_SIZE);
+    // Disable execution from 0MB through 2MB (BIOS data, legacy things, ...)
+    if (g_cpu_supports_nx)
+        quickmap_pd(kernel_page_directory(), 0)[0].set_execute_disabled(true);
 
-#ifdef MM_DEBUG
-    dbgprintf("MM: Identity map bottom 8MB\n");
-#endif
-    // The bottom 8 MB (except for the null page) are identity mapped & supervisor only.
-    // Every process shares these mappings.
-    create_identity_mapping(kernel_page_directory(), VirtualAddress(PAGE_SIZE), (8 * MB) - PAGE_SIZE);
-
-    // Disable execution from 0MB through 1MB (BIOS data, legacy things, ...)
-    if (g_cpu_supports_nx) {
-        for (size_t i = 0; i < (1 * MB); i += PAGE_SIZE) {
-            auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
-            pte.set_execute_disabled(true);
-        }
-        // Disable execution from 2MB through 8MB (kmalloc, kmalloc_eternal, slabs, page tables, ...)
-        for (size_t i = 1; i < 4; ++i) {
-            auto& pte = kernel_page_directory().table().directory(0)[i];
-            pte.set_execute_disabled(true);
-        }
-    }
-
+#if 0
     // Disable writing to the kernel text and rodata segments.
     extern u32 start_of_kernel_text;
     extern u32 start_of_kernel_data;
@@ -91,17 +66,7 @@ void MemoryManager::initialize_paging()
             pte.set_execute_disabled(true);
         }
     }
-
-    // FIXME: We should move everything kernel-related above the 0xc0000000 virtual mark.
-
-    // Basic physical memory map:
-    // 0      -> 1 MB           We're just leaving this alone for now.
-    // 1      -> 2 MB           Kernel image.
-    // (last page before 2MB)   Used by quickmap_page().
-    // 2 MB   -> 4 MB           kmalloc_eternal() space.
-    // 4 MB   -> 7 MB           kmalloc() space.
-    // 7 MB   -> 8 MB           Supervisor physical pages (available for allocation!)
-    // 8 MB   -> MAX            Userspace physical pages (available for allocation!)
+#endif
 
     // Basic virtual memory map:
     // 0 -> 4 KB                Null page (so nullptr dereferences crash!)
@@ -109,15 +74,16 @@ void MemoryManager::initialize_paging()
     // 8 MB -> 3 GB             Available to userspace.
     // 3GB  -> 4 GB             Kernel-only virtual address space (>0xc0000000)
 
+    m_quickmap_addr = VirtualAddress(0xffe00000);
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
 #endif
-    m_quickmap_addr = VirtualAddress((2 * MB) - PAGE_SIZE);
 
     RefPtr<PhysicalRegion> region;
     bool region_is_super = false;
 
-    for (auto* mmap = (multiboot_memory_map_t*)multiboot_info_ptr->mmap_addr; (unsigned long)mmap < multiboot_info_ptr->mmap_addr + multiboot_info_ptr->mmap_length; mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
+    auto* mmap = (multiboot_memory_map_t*)(0xc0000000 + multiboot_info_ptr->mmap_addr);
+    for (; (unsigned long)mmap < (0xc0000000 + multiboot_info_ptr->mmap_addr) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
         kprintf("MM: Multiboot mmap: base_addr = 0x%x%08x, length = 0x%x%08x, type = 0x%x\n",
             (u32)(mmap->addr >> 32),
             (u32)(mmap->addr & 0xffffffff),
@@ -221,6 +187,7 @@ void MemoryManager::initialize_paging()
 
     if (g_cpu_supports_smap) {
         // Turn on CR4.SMAP
+        kprintf("x86: Enabling SMAP\n");
         asm volatile(
             "mov %cr4, %eax\n"
             "orl $0x200000, %eax\n"
@@ -261,18 +228,14 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     u32 page_directory_index = (vaddr.get() >> 21) & 0x1ff;
     u32 page_table_index = (vaddr.get() >> 12) & 0x1ff;
 
-    PageDirectoryEntry& pde = page_directory.table().directory(page_directory_table_index)[page_directory_index];
+    auto* pd = quickmap_pd(page_directory, page_directory_table_index);
+    PageDirectoryEntry& pde = pd[page_directory_index];
     if (!pde.is_present()) {
 #ifdef MM_DEBUG
         dbgprintf("MM: PDE %u not present (requested for V%p), allocating\n", page_directory_index, vaddr.get());
 #endif
-        if (page_directory_table_index == 0 && page_directory_index < 4) {
-            ASSERT(&page_directory == m_kernel_page_directory);
-            pde.set_page_table_base((u32)m_low_page_tables[page_directory_index]);
-            pde.set_user_allowed(false);
-            pde.set_present(true);
-            pde.set_writable(true);
-            pde.set_global(true);
+        if (page_directory_table_index == 3 && page_directory_index < 4) {
+            ASSERT_NOT_REACHED();
         } else {
             auto page_table = allocate_supervisor_physical_page();
 #ifdef MM_DEBUG
@@ -292,7 +255,13 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
             page_directory.m_physical_pages.set(page_directory_index, move(page_table));
         }
     }
-    return pde.page_table_base()[page_table_index];
+
+    //if (&page_directory != &kernel_page_directory() && page_directory_table_index != 3) {
+    return quickmap_pt(PhysicalAddress((u32)pde.page_table_base()))[page_table_index];
+    //}
+
+    auto* phys_ptr = &pde.page_table_base()[page_table_index];
+    return *(PageTableEntry*)((u8*)phys_ptr + 0xc0000000);
 }
 
 void MemoryManager::map_protected(VirtualAddress vaddr, size_t length)
@@ -325,9 +294,9 @@ void MemoryManager::create_identity_mapping(PageDirectory& page_directory, Virtu
     }
 }
 
-void MemoryManager::initialize(u32 physical_address_for_kernel_page_tables)
+void MemoryManager::initialize()
 {
-    s_the = new MemoryManager(physical_address_for_kernel_page_tables);
+    s_the = new MemoryManager;
 }
 
 Region* MemoryManager::kernel_region_from_vaddr(VirtualAddress vaddr)
@@ -349,6 +318,29 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
             return &region;
     }
     dbg() << process << " Couldn't find user region for " << vaddr;
+    if (auto* kreg = kernel_region_from_vaddr(vaddr)) {
+        dbg() << process << "  OTOH, there is a kernel region: " << kreg->range() << ": " << kreg->name();
+    } else {
+        dbg() << process << "  AND no kernel region either";
+    }
+
+    process.dump_regions();
+
+    kprintf("Kernel regions:\n");
+    kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
+    for (auto& region : MM.m_kernel_regions) {
+        kprintf("%08x -- %08x    %08x    %c%c%c%c%c%c    %s\n",
+            region.vaddr().get(),
+            region.vaddr().offset(region.size() - 1).get(),
+            region.size(),
+            region.is_readable() ? 'R' : ' ',
+            region.is_writable() ? 'W' : ' ',
+            region.is_executable() ? 'X' : ' ',
+            region.is_shared() ? 'S' : ' ',
+            region.is_stack() ? 'T' : ' ',
+            region.vmobject().is_purgeable() ? 'P' : ' ',
+            region.name().characters());
+    }
     return nullptr;
 }
 
@@ -567,7 +559,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_supervisor_physical_page()
     dbgprintf("MM: allocate_supervisor_physical_page vending P%p\n", page->paddr().get());
 #endif
 
-    fast_u32_fill((u32*)page->paddr().as_ptr(), 0, PAGE_SIZE / sizeof(u32));
+    fast_u32_fill((u32*)page->paddr().offset(0xc0000000).as_ptr(), 0, PAGE_SIZE / sizeof(u32));
     ++m_super_physical_pages_used;
     return page;
 }
@@ -599,6 +591,37 @@ void MemoryManager::flush_tlb(VirtualAddress vaddr)
                  :
                  : "m"(*(char*)vaddr.get())
                  : "memory");
+}
+
+extern "C" PageTableEntry boot_pd3_pde1023_pt[1024];
+
+PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t pdpt_index)
+{
+    auto& pte = boot_pd3_pde1023_pt[4];
+    auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
+    if (pte.physical_page_base() != pd_paddr.as_ptr()) {
+        //dbgprintf("quickmap_pd: Mapping P%p at 0xffe04000 in pte @ %p\n", directory.m_directory_pages[pdpt_index]->paddr().as_ptr(), &pte);
+        pte.set_physical_page_base(pd_paddr.get());
+        pte.set_present(true);
+        pte.set_writable(true);
+        pte.set_user_allowed(false);
+        flush_tlb(VirtualAddress(0xffe04000));
+    }
+    return (PageDirectoryEntry*)0xffe04000;
+}
+
+PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
+{
+    auto& pte = boot_pd3_pde1023_pt[8];
+    if (pte.physical_page_base() != pt_paddr.as_ptr()) {
+        //dbgprintf("quickmap_pt: Mapping P%p at 0xffe08000 in pte @ %p\n", pt_paddr.as_ptr(), &pte);
+        pte.set_physical_page_base(pt_paddr.get());
+        pte.set_present(true);
+        pte.set_writable(true);
+        pte.set_user_allowed(false);
+        flush_tlb(VirtualAddress(0xffe08000));
+    }
+    return (PageTableEntry*)0xffe08000;
 }
 
 void MemoryManager::map_for_kernel(VirtualAddress vaddr, PhysicalAddress paddr, bool cache_disabled)

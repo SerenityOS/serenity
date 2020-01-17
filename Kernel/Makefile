@@ -123,7 +123,7 @@ SUBPROJECT_CXXFLAGS += -nostdlib -nostdinc -nostdinc++ -g3
 SUBPROJECT_CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.2.0/
 SUBPROJECT_CXXFLAGS += -I../Toolchain/Local/i686-pc-serenity/include/c++/9.2.0/i686-pc-serenity/
 
-LDFLAGS += -Ttext 0x100000 -Wl,-T linker.ld -nostdlib -lgcc -lstdc++ -g3
+LDFLAGS += -Wl,-T linker.ld -nostdlib -lgcc -lstdc++ -g3
 
 all: $(PROGRAM) $(MODULE_OBJS) kernel.map
 

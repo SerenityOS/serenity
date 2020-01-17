@@ -146,7 +146,6 @@ bool init()
     g_apic_base = apic_base.as_ptr();
     
     // copy ap init code to P8000
-    MM.map_for_kernel(VirtualAddress(0x8000), PhysicalAddress(0x8000));
     memcpy(reinterpret_cast<u8*>(0x8000), reinterpret_cast<const u8*>(apic_ap_start), apic_ap_start_size);
     return true;
 }

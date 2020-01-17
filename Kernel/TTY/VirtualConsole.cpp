@@ -32,7 +32,7 @@ void VirtualConsole::flush_vga_cursor()
 
 void VirtualConsole::initialize()
 {
-    s_vga_buffer = (u8*)0xb8000;
+    s_vga_buffer = (u8*)0xc00b8000;
     memset(s_consoles, 0, sizeof(s_consoles));
     s_active_console = -1;
 }
