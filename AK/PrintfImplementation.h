@@ -227,10 +227,10 @@ template<typename PutChFunc>
     return fieldWidth;
 }
 
-template<typename PutChFunc>
+template<typename PutChFunc, size_t (*StrlenFunc)(const char*)>
 [[gnu::always_inline]] inline int print_string(PutChFunc putch, char*& bufptr, const char* str, bool leftPad, u32 fieldWidth)
 {
-    size_t len = strlen(str);
+    size_t len = StrlenFunc(str);
     if (!fieldWidth || fieldWidth < len)
         fieldWidth = len;
     if (!leftPad) {
@@ -259,7 +259,7 @@ template<typename PutChFunc>
     return print_number(putch, bufptr, number, leftPad, zeroPad, fieldWidth);
 }
 
-template<typename PutChFunc>
+template<typename PutChFunc, size_t (*StrlenFunc)(const char*) = strlen>
 [[gnu::always_inline]] inline int printf_internal(PutChFunc putch, char* buffer, const char*& fmt, va_list ap)
 {
     const char* p;
@@ -326,7 +326,7 @@ template<typename PutChFunc>
             switch (*p) {
             case 's': {
                 const char* sp = va_arg(ap, const char*);
-                ret += print_string(putch, bufptr, sp ? sp : "(null)", left_pad, fieldWidth);
+                ret += print_string<PutChFunc, StrlenFunc>(putch, bufptr, sp ? sp : "(null)", left_pad, fieldWidth);
             } break;
 
             case 'd':
