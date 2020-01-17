@@ -62,12 +62,12 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
         MM.unquickmap_page();
     }
 
-    // Clone bottom 8 MB of mappings from kernel_page_directory
-    PageDirectoryEntry buffer[4];
+    // Clone bottom 2 MB of mappings from kernel_page_directory
+    PageDirectoryEntry buffer;
     auto* kernel_pd = MM.quickmap_pd(MM.kernel_page_directory(), 0);
-    memcpy(buffer, kernel_pd, sizeof(PageDirectoryEntry) * 4);
+    memcpy(&buffer, kernel_pd, sizeof(PageDirectoryEntry));
     auto* new_pd = MM.quickmap_pd(*this, 0);
-    memcpy(new_pd, buffer, sizeof(PageDirectoryEntry) * 4);
+    memcpy(new_pd, &buffer, sizeof(PageDirectoryEntry));
 
     InterruptDisabler disabler;
     cr3_map().set(cr3(), this);
