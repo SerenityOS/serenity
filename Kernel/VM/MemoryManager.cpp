@@ -234,34 +234,25 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 #ifdef MM_DEBUG
         dbgprintf("MM: PDE %u not present (requested for V%p), allocating\n", page_directory_index, vaddr.get());
 #endif
-        if (page_directory_table_index == 3 && page_directory_index < 4) {
-            ASSERT_NOT_REACHED();
-        } else {
-            auto page_table = allocate_supervisor_physical_page();
+        auto page_table = allocate_supervisor_physical_page();
 #ifdef MM_DEBUG
-            dbgprintf("MM: PD K%p (%s) at P%p allocated page table #%u (for V%p) at P%p\n",
-                &page_directory,
-                &page_directory == m_kernel_page_directory ? "Kernel" : "User",
-                page_directory.cr3(),
-                page_directory_index,
-                vaddr.get(),
-                page_table->paddr().get());
+        dbgprintf("MM: PD K%p (%s) at P%p allocated page table #%u (for V%p) at P%p\n",
+            &page_directory,
+            &page_directory == m_kernel_page_directory ? "Kernel" : "User",
+            page_directory.cr3(),
+            page_directory_index,
+            vaddr.get(),
+            page_table->paddr().get());
 #endif
-            pde.set_page_table_base(page_table->paddr().get());
-            pde.set_user_allowed(true);
-            pde.set_present(true);
-            pde.set_writable(true);
-            pde.set_global(&page_directory == m_kernel_page_directory.ptr());
-            page_directory.m_physical_pages.set(page_directory_index, move(page_table));
-        }
+        pde.set_page_table_base(page_table->paddr().get());
+        pde.set_user_allowed(true);
+        pde.set_present(true);
+        pde.set_writable(true);
+        pde.set_global(&page_directory == m_kernel_page_directory.ptr());
+        page_directory.m_physical_pages.set(page_directory_index, move(page_table));
     }
 
-    //if (&page_directory != &kernel_page_directory() && page_directory_table_index != 3) {
     return quickmap_pt(PhysicalAddress((u32)pde.page_table_base()))[page_table_index];
-    //}
-
-    auto* phys_ptr = &pde.page_table_base()[page_table_index];
-    return *(PageTableEntry*)((u8*)phys_ptr + 0xc0000000);
 }
 
 void MemoryManager::map_protected(VirtualAddress vaddr, size_t length)
