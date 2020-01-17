@@ -1,8 +1,6 @@
 // HACK ALERT: We make the printf impl here use our strlen instead of the one in libc (which is linked in)
 //     So that we can use it before relocations are done
-#define strlen priv_strlen
 #include <AK/PrintfImplementation.h>
-#undef strlen
 
 #include <LibELF/exec_elf.h>
 #include <Kernel/VM/VirtualAddress.h>
@@ -83,12 +81,13 @@ int priv_dbgprintf(const char* fmt, ...)
 {
     va_list ap;
     va_start(ap, fmt);
-    int ret = printf_internal([](char*&, char ch) { syscall(SC_dbgputch, ch); }, nullptr, fmt, ap);
+    auto print_c_func = [](char*&, char ch) { syscall(SC_dbgputch, ch); };
+    int ret = printf_internal<decltype(print_c_func), priv_strlen>(print_c_func, nullptr, fmt, ap);
     va_end(ap);
     return ret;
 }
 
-int hang_main(int argc, char** argv, char** envp)
+int crash_main(int argc, char** argv, char** envp)
 {
     priv_dbgprintf("ARGC: %d, ARGV: 0x%p, ENVP: 0x%p", argc, argv, envp);
     syscall(SC_dbgputstr, "\nHANG MAIN:\n", 12);
@@ -121,7 +120,7 @@ MainFunction ld_elf_main(Elf32_Addr* stack_ptr, Elf32_Addr self_base_address)
     char** local_environ = (char**)stack_ptr[2];
 
     priv_dbgprintf("environ: %p, main_program_name: %s\n", local_environ, g_main_program_name);
-    return hang_main;
+    return crash_main;
 }
 
 }
