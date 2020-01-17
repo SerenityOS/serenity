@@ -47,9 +47,11 @@ private:
 
 class RangeAllocator {
 public:
-    RangeAllocator(VirtualAddress, size_t);
-    RangeAllocator(const RangeAllocator&);
+    RangeAllocator();
     ~RangeAllocator();
+
+    void initialize_with_range(VirtualAddress, size_t);
+    void initialize_from_parent(const RangeAllocator&);
 
     Range allocate_anywhere(size_t);
     Range allocate_specific(VirtualAddress, size_t);
