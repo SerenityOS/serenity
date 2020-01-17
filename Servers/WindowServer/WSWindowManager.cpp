@@ -944,9 +944,11 @@ void WSWindowManager::event(CEvent& event)
 
         if (key_event.key() == Key_Logo) {
             if (key_event.type() == WSEvent::KeyUp) {
-                if (!m_moved_or_resized_since_logo_keydown && !m_switcher.is_visible() && !m_move_window && !m_resize_window)
-                    WSMenuManager::the().open_menu(WSMenuManager::the().system_menu());
-                return;
+                if (!m_moved_or_resized_since_logo_keydown && !m_switcher.is_visible() && !m_move_window && !m_resize_window) {
+                    WSMenuManager::the().toggle_menu(WSMenuManager::the().system_menu());
+                    return;
+                }
+
             } else if (key_event.type() == WSEvent::KeyDown) {
                 m_moved_or_resized_since_logo_keydown = false;
             }
