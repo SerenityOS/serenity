@@ -45,11 +45,6 @@ void MemoryManager::initialize_paging()
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
 #endif
 
-    m_quickmap_addr = VirtualAddress(0xffe00000);
-#ifdef MM_DEBUG
-    dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
-#endif
-
     parse_memory_map();
 
 #ifdef MM_DEBUG
@@ -146,7 +141,7 @@ void MemoryManager::protect_kernel_image()
 
 void MemoryManager::setup_low_1mb()
 {
-    m_low_page_table = allocate_supervisor_physical_page();
+    m_low_page_table = allocate_user_physical_page(ShouldZeroFill::Yes);
 
     auto* pd_zero = quickmap_pd(kernel_page_directory(), 0);
     pd_zero[1].set_present(false);
@@ -262,7 +257,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
 #ifdef MM_DEBUG
         dbgprintf("MM: PDE %u not present (requested for V%p), allocating\n", page_directory_index, vaddr.get());
 #endif
-        auto page_table = allocate_supervisor_physical_page();
+        auto page_table = allocate_user_physical_page(ShouldZeroFill::Yes);
 #ifdef MM_DEBUG
         dbgprintf("MM: PD K%p (%s) at P%p allocated page table #%u (for V%p) at P%p\n",
             &page_directory,
@@ -395,7 +390,6 @@ PageFaultResponse MemoryManager::handle_page_fault(const PageFault& fault)
 #ifdef PAGE_FAULT_DEBUG
     dbgprintf("MM: handle_page_fault(%w) at V%p\n", fault.code(), fault.vaddr().get());
 #endif
-    ASSERT(fault.vaddr() != m_quickmap_addr);
     auto* region = region_from_vaddr(fault.vaddr());
     if (!region) {
         kprintf("NP(error) fault at invalid address V%p\n", fault.vaddr().get());
@@ -663,36 +657,29 @@ u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(!m_quickmap_in_use);
     m_quickmap_in_use = true;
-    auto page_vaddr = m_quickmap_addr;
-    auto& pte = ensure_pte(kernel_page_directory(), page_vaddr);
-    pte.set_physical_page_base(physical_page.paddr().get());
-    pte.set_present(true);
-    pte.set_writable(true);
-    pte.set_user_allowed(false);
-    flush_tlb(page_vaddr);
-    ASSERT((u32)pte.physical_page_base() == physical_page.paddr().get());
+
+    auto& pte = boot_pd3_pde1023_pt[0];
+    if (pte.physical_page_base() != physical_page.paddr().as_ptr()) {
 #ifdef MM_DEBUG
-    dbg() << "MM: >> quickmap_page " << page_vaddr << " => " << physical_page.paddr() << " @ PTE=" << (void*)pte.raw() << " {" << &pte << "}";
+        dbgprintf("quickmap_page: Mapping P%p at 0xffe00000 in pte @ %p\n", physical_page.paddr().as_ptr(), &pte);
 #endif
-    return page_vaddr.as_ptr();
+        pte.set_physical_page_base(physical_page.paddr().get());
+        pte.set_present(true);
+        pte.set_writable(true);
+        pte.set_user_allowed(false);
+        flush_tlb(VirtualAddress(0xffe00000));
+    }
+    return (u8*)0xffe00000;
 }
 
 void MemoryManager::unquickmap_page()
 {
     ASSERT_INTERRUPTS_DISABLED();
     ASSERT(m_quickmap_in_use);
-    auto page_vaddr = m_quickmap_addr;
-    auto& pte = ensure_pte(kernel_page_directory(), page_vaddr);
-#ifdef MM_DEBUG
-    auto old_physical_address = pte.physical_page_base();
-#endif
+    auto& pte = boot_pd3_pde1023_pt[0];
     pte.set_physical_page_base(0);
     pte.set_present(false);
-    pte.set_writable(false);
-    flush_tlb(page_vaddr);
-#ifdef MM_DEBUG
-    dbg() << "MM: >> unquickmap_page " << page_vaddr << " =/> " << old_physical_address;
-#endif
+    flush_tlb(VirtualAddress(0xffe00000));
     m_quickmap_in_use = false;
 }
 
