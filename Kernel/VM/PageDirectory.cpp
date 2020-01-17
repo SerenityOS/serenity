@@ -21,17 +21,17 @@ RefPtr<PageDirectory> PageDirectory::find_by_cr3(u32 cr3)
     return cr3_map().get(cr3).value_or({});
 }
 
-extern "C" u32 boot_pdpt;
-extern "C" u32 boot_pd0;
-extern "C" u32 boot_pd3;
+extern "C" PageDirectoryEntry* boot_pdpt[4];
+extern "C" PageDirectoryEntry boot_pd0[1024];
+extern "C" PageDirectoryEntry boot_pd3[1024];
 
 PageDirectory::PageDirectory()
     : m_range_allocator(VirtualAddress(0xc0c00000), 0x3f000000)
 {
     // Adopt the page tables already set up by boot.S
-    PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((u32)&boot_pdpt));
-    PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((u32)&boot_pd0));
-    PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((u32)&boot_pd3));
+    PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((u32)boot_pdpt));
+    PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((u32)boot_pd0));
+    PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((u32)boot_pd3));
     kprintf("MM: boot_pdpt @ P%p\n", boot_pdpt_paddr.get());
     kprintf("MM: boot_pd0 @ P%p\n", boot_pd0_paddr.get());
     kprintf("MM: boot_pd3 @ P%p\n", boot_pd3_paddr.get());
