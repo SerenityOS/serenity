@@ -158,6 +158,7 @@ int main(int argc, char* argv[])
     app.set_menubar(move(menubar));
 
     window->set_main_widget(widget);
+    window->set_focused_widget(tree_view);
     window->show();
 
     window->set_icon(load_png("/res/icons/16x16/book.png"));
