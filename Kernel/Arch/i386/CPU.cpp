@@ -570,7 +570,6 @@ void detect_cpu_features()
     g_cpu_supports_umip = (extended_features.ecx() & (1 << 2));
 }
 
-
 void stac()
 {
     if (!g_cpu_supports_smap)
@@ -585,4 +584,80 @@ void clac()
         return;
     asm volatile("clac" ::
                      : "cc");
+}
+
+void x86_enable_pae()
+{
+    // Turn on CR4.PAE
+    asm volatile(
+        "mov %cr4, %eax\n"
+        "orl $0x20, %eax\n"
+        "mov %eax, %cr4\n");
+}
+
+void x86_enable_pge()
+{
+    if (g_cpu_supports_pge) {
+        // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x80, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: PGE support enabled\n");
+    } else {
+        kprintf("x86: PGE support not detected\n");
+    }
+}
+
+void x86_enable_smep()
+{
+    if (g_cpu_supports_smep) {
+        // Turn on CR4.SMEP
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x100000, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: SMEP support enabled\n");
+    } else {
+        kprintf("x86: SMEP support not detected\n");
+    }
+}
+
+void x86_enable_smap()
+{
+    if (g_cpu_supports_smap) {
+        // Turn on CR4.SMAP
+        kprintf("x86: Enabling SMAP\n");
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x200000, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: SMAP support enabled\n");
+    } else {
+        kprintf("x86: SMAP support not detected\n");
+    }
+}
+
+void x86_enable_nx()
+{
+    if (g_cpu_supports_nx) {
+        // Turn on IA32_EFER.NXE
+        asm volatile(
+            "movl $0xc0000080, %ecx\n"
+            "rdmsr\n"
+            "orl $0x800, %eax\n"
+            "wrmsr\n");
+        kprintf("x86: NX support enabled\n");
+    } else {
+        kprintf("x86: NX support not detected\n");
+    }
+}
+
+void x86_enable_wp()
+{
+    asm volatile(
+        "movl %%cr0, %%eax\n"
+        "orl $0x00010000, %%eax\n"
+        "movl %%eax, %%cr0\n" ::
+            : "%eax", "memory");
 }

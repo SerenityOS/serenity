@@ -25,98 +25,23 @@ MemoryManager::MemoryManager()
 {
     m_kernel_page_directory = PageDirectory::create_kernel_page_directory();
 
-    initialize_paging();
+    parse_memory_map();
 
-    kprintf("MM initialized.\n");
+    x86_enable_pae();
+    x86_enable_pge();
+    x86_enable_smep();
+    x86_enable_smap();
+    x86_enable_nx();
+    x86_enable_wp();
+
+    asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
+
+    setup_low_1mb();
+    protect_kernel_image();
 }
 
 MemoryManager::~MemoryManager()
 {
-}
-
-void MemoryManager::initialize_paging()
-{
-    if (!g_cpu_supports_pae) {
-        kprintf("x86: Cannot boot on machines without PAE support.\n");
-        hang();
-    }
-
-#ifdef MM_DEBUG
-    dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
-#endif
-
-    parse_memory_map();
-
-#ifdef MM_DEBUG
-    dbgprintf("MM: Installing page directory\n");
-#endif
-
-    // Turn on CR4.PAE
-    asm volatile(
-        "mov %cr4, %eax\n"
-        "orl $0x20, %eax\n"
-        "mov %eax, %cr4\n");
-
-    if (g_cpu_supports_pge) {
-        // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x80, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: PGE support enabled\n");
-    } else {
-        kprintf("x86: PGE support not detected\n");
-    }
-
-    if (g_cpu_supports_smep) {
-        // Turn on CR4.SMEP
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x100000, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: SMEP support enabled\n");
-    } else {
-        kprintf("x86: SMEP support not detected\n");
-    }
-
-    if (g_cpu_supports_smap) {
-        // Turn on CR4.SMAP
-        kprintf("x86: Enabling SMAP\n");
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x200000, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: SMAP support enabled\n");
-    } else {
-        kprintf("x86: SMAP support not detected\n");
-    }
-
-    if (g_cpu_supports_nx) {
-        // Turn on IA32_EFER.NXE
-        asm volatile(
-            "movl $0xc0000080, %ecx\n"
-            "rdmsr\n"
-            "orl $0x800, %eax\n"
-            "wrmsr\n");
-        kprintf("x86: NX support enabled\n");
-    } else {
-        kprintf("x86: NX support not detected\n");
-    }
-
-    asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
-    asm volatile(
-        "movl %%cr0, %%eax\n"
-        "orl $0x80010001, %%eax\n"
-        "movl %%eax, %%cr0\n" ::
-            : "%eax", "memory");
-
-    setup_low_1mb();
-
-    protect_kernel_image();
-
-#ifdef MM_DEBUG
-    dbgprintf("MM: Paging initialized.\n");
-#endif
 }
 
 void MemoryManager::protect_kernel_image()
