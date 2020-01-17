@@ -820,6 +820,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     current->m_signal_mask = 0;
     current->m_pending_signals = 0;
 
+    m_futex_queues.clear();
+
     for (int i = 0; i < m_fds.size(); ++i) {
         auto& daf = m_fds[i];
         if (daf.description && daf.flags & FD_CLOEXEC) {
