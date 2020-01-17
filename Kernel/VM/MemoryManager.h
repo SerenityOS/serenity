@@ -77,7 +77,7 @@ public:
         Yes
     };
 
-    RefPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill);
+    RefPtr<PhysicalPage> allocate_user_physical_page(ShouldZeroFill = ShouldZeroFill::Yes);
     RefPtr<PhysicalPage> allocate_supervisor_physical_page();
     void deallocate_user_physical_page(PhysicalPage&&);
     void deallocate_supervisor_physical_page(PhysicalPage&&);
@@ -150,8 +150,6 @@ private:
 
     RefPtr<PageDirectory> m_kernel_page_directory;
     RefPtr<PhysicalPage> m_low_page_table;
-
-    VirtualAddress m_quickmap_addr;
 
     unsigned m_user_physical_pages { 0 };
     unsigned m_user_physical_pages_used { 0 };
