@@ -45,10 +45,6 @@ void MemoryManager::initialize_paging()
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
 #endif
 
-    // Disable execution from 0MB through 2MB (BIOS data, legacy things, ...)
-    if (g_cpu_supports_nx)
-        quickmap_pd(kernel_page_directory(), 0)[0].set_execute_disabled(true);
-
 #if 0
     // Disable writing to the kernel text and rodata segments.
     extern u32 start_of_kernel_text;
@@ -138,9 +134,39 @@ void MemoryManager::initialize_paging()
         "movl %%eax, %%cr0\n" ::
             : "%eax", "memory");
 
+    setup_low_1mb();
+
 #ifdef MM_DEBUG
     dbgprintf("MM: Paging initialized.\n");
 #endif
+}
+
+void MemoryManager::setup_low_1mb()
+{
+    m_low_page_table = allocate_supervisor_physical_page();
+
+    auto* pd_zero = quickmap_pd(kernel_page_directory(), 0);
+    pd_zero[1].set_present(false);
+    pd_zero[2].set_present(false);
+    pd_zero[3].set_present(false);
+
+    auto& pde_zero = pd_zero[0];
+    pde_zero.set_page_table_base(m_low_page_table->paddr().get());
+    pde_zero.set_present(true);
+    pde_zero.set_huge(false);
+    pde_zero.set_writable(true);
+    pde_zero.set_user_allowed(false);
+    if (g_cpu_supports_nx)
+        pde_zero.set_execute_disabled(true);
+
+    for (u32 offset = 0; offset < (2 * MB); offset += PAGE_SIZE) {
+        auto& page_table_page = m_low_page_table;
+        auto& pte = quickmap_pt(page_table_page->paddr())[offset / PAGE_SIZE];
+        pte.set_physical_page_base(offset);
+        pte.set_user_allowed(false);
+        pte.set_present(offset != 0);
+        pte.set_writable(offset < (1 * MB));
+    }
 }
 
 void MemoryManager::parse_memory_map()
@@ -218,7 +244,6 @@ void MemoryManager::parse_memory_map()
 
     for (auto& region : m_user_physical_regions)
         m_user_physical_pages += region.finalize_capacity();
-
 }
 
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
@@ -591,7 +616,9 @@ PageDirectoryEntry* MemoryManager::quickmap_pd(PageDirectory& directory, size_t 
     auto& pte = boot_pd3_pde1023_pt[4];
     auto pd_paddr = directory.m_directory_pages[pdpt_index]->paddr();
     if (pte.physical_page_base() != pd_paddr.as_ptr()) {
-        //dbgprintf("quickmap_pd: Mapping P%p at 0xffe04000 in pte @ %p\n", directory.m_directory_pages[pdpt_index]->paddr().as_ptr(), &pte);
+#ifdef MM_DEBUG
+        dbgprintf("quickmap_pd: Mapping P%p at 0xffe04000 in pte @ %p\n", directory.m_directory_pages[pdpt_index]->paddr().as_ptr(), &pte);
+#endif
         pte.set_physical_page_base(pd_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
@@ -605,7 +632,9 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
 {
     auto& pte = boot_pd3_pde1023_pt[8];
     if (pte.physical_page_base() != pt_paddr.as_ptr()) {
-        //dbgprintf("quickmap_pt: Mapping P%p at 0xffe08000 in pte @ %p\n", pt_paddr.as_ptr(), &pte);
+#ifdef MM_DEBUG
+        dbgprintf("quickmap_pt: Mapping P%p at 0xffe08000 in pte @ %p\n", pt_paddr.as_ptr(), &pte);
+#endif
         pte.set_physical_page_base(pt_paddr.get());
         pte.set_present(true);
         pte.set_writable(true);
