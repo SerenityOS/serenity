@@ -122,6 +122,7 @@ private:
 
     void detect_cpu_features();
     void initialize_paging();
+    void setup_low_1mb();
     void parse_memory_map();
     void flush_entire_tlb();
     void flush_tlb(VirtualAddress);
@@ -147,7 +148,7 @@ private:
     PageTableEntry& ensure_pte(PageDirectory&, VirtualAddress);
 
     RefPtr<PageDirectory> m_kernel_page_directory;
-    PageTableEntry* m_low_page_tables[4] { nullptr };
+    RefPtr<PhysicalPage> m_low_page_table;
 
     VirtualAddress m_quickmap_addr;
 
