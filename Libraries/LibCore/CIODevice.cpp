@@ -124,7 +124,7 @@ ByteBuffer CIODevice::read_all()
         m_buffered_data.clear();
     }
 
-    while (can_read_from_fd()) {
+    while (true) {
         char read_buffer[4096];
         int nread = ::read(m_fd, read_buffer, sizeof(read_buffer));
         if (nread < 0) {
