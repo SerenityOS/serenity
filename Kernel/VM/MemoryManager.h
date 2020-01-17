@@ -123,6 +123,7 @@ private:
     void detect_cpu_features();
     void initialize_paging();
     void setup_low_1mb();
+    void protect_kernel_image();
     void parse_memory_map();
     void flush_entire_tlb();
     void flush_tlb(VirtualAddress);

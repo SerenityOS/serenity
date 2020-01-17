@@ -45,25 +45,6 @@ void MemoryManager::initialize_paging()
     dbgprintf("MM: Kernel page directory @ %p\n", kernel_page_directory().cr3());
 #endif
 
-#if 0
-    // Disable writing to the kernel text and rodata segments.
-    extern u32 start_of_kernel_text;
-    extern u32 start_of_kernel_data;
-    for (size_t i = (u32)&start_of_kernel_text; i < (u32)&start_of_kernel_data; i += PAGE_SIZE) {
-        auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
-        pte.set_writable(false);
-    }
-
-    if (g_cpu_supports_nx) {
-        // Disable execution of the kernel data and bss segments.
-        extern u32 end_of_kernel_bss;
-        for (size_t i = (u32)&start_of_kernel_data; i < (u32)&end_of_kernel_bss; i += PAGE_SIZE) {
-            auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
-            pte.set_execute_disabled(true);
-        }
-    }
-#endif
-
     m_quickmap_addr = VirtualAddress(0xffe00000);
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
@@ -136,9 +117,31 @@ void MemoryManager::initialize_paging()
 
     setup_low_1mb();
 
+    protect_kernel_image();
+
 #ifdef MM_DEBUG
     dbgprintf("MM: Paging initialized.\n");
 #endif
+}
+
+void MemoryManager::protect_kernel_image()
+{
+    // Disable writing to the kernel text and rodata segments.
+    extern u32 start_of_kernel_text;
+    extern u32 start_of_kernel_data;
+    for (size_t i = (u32)&start_of_kernel_text; i < (u32)&start_of_kernel_data; i += PAGE_SIZE) {
+        auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
+        pte.set_writable(false);
+    }
+
+    if (g_cpu_supports_nx) {
+        // Disable execution of the kernel data and bss segments.
+        extern u32 end_of_kernel_bss;
+        for (size_t i = (u32)&start_of_kernel_data; i < (u32)&end_of_kernel_bss; i += PAGE_SIZE) {
+            auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
+            pte.set_execute_disabled(true);
+        }
+    }
 }
 
 void MemoryManager::setup_low_1mb()
