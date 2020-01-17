@@ -197,3 +197,44 @@ void CalculatorWidget::update_display()
     else
         m_label->set_text("");
 }
+
+void CalculatorWidget::keydown_event(GKeyEvent& event)
+{
+    //Clear button selection when we are typing
+    m_equals_button->set_focus(true);
+    m_equals_button->set_focus(false);
+
+    if (event.key() == KeyCode::Key_Return) {
+        m_keypad.set_value(m_calculator.finish_operation(m_keypad.value()));
+
+    } else if (event.key() >= KeyCode::Key_0 && event.key() <= KeyCode::Key_9) {
+        m_keypad.type_digit(atoi(event.text().characters()));
+
+    } else {
+        Calculator::Operation operation;
+
+        switch (event.key()) {
+        case KeyCode::Key_Plus:
+            operation = Calculator::Operation::Add;
+            break;
+        case KeyCode::Key_Minus:
+            operation = Calculator::Operation::Subtract;
+            break;
+        case KeyCode::Key_Asterisk:
+            operation = Calculator::Operation::Multiply;
+            break;
+        case KeyCode::Key_Slash:
+            operation = Calculator::Operation::Divide;
+            break;
+        case KeyCode::Key_Percent:
+            operation = Calculator::Operation::Percent;
+            break;
+        default:
+            return;
+        }
+
+        m_keypad.set_value(m_calculator.begin_operation(operation, m_keypad.value()));
+    }
+
+    update_display();
+}
