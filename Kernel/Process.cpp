@@ -3091,6 +3091,7 @@ int Process::sys$listen(int sockfd, int backlog)
 
 int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* address_size)
 {
+    REQUIRE_PROMISE(accept);
     if (!validate_write_typed(address_size))
         return -EFAULT;
     SmapDisabler disabler;
@@ -3105,7 +3106,6 @@ int Process::sys$accept(int accepting_socket_fd, sockaddr* address, socklen_t* a
     if (!accepting_socket_description->is_socket())
         return -ENOTSOCK;
     auto& socket = *accepting_socket_description->socket();
-    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
     if (!socket.can_accept()) {
         if (accepting_socket_description->is_blocking()) {
             if (current->block<Thread::AcceptBlocker>(*accepting_socket_description) != Thread::BlockResult::WokeNormally)
@@ -3348,7 +3348,12 @@ int Process::sys$getsockopt(const Syscall::SC_getsockopt_params* params)
     if (!description->is_socket())
         return -ENOTSOCK;
     auto& socket = *description->socket();
-    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
+
+    if (has_promised(Pledge::accept) && socket.is_local() && level == SOL_SOCKET && option == SO_PEERCRED) {
+        // We make an exception for SOL_SOCKET::SO_PEERCRED on local sockets if you've pledged "accept"
+    } else {
+        REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
+    }
     return socket.getsockopt(*description, level, option, value, value_size);
 }
 

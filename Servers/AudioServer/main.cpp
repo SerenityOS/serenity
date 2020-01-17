@@ -4,12 +4,12 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio thread shared_buffer rpath wpath cpath unix fattr", nullptr) < 0) {
+    if (pledge("stdio thread shared_buffer accept rpath wpath cpath unix fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
     ASEventLoop event_loop;
-    if (pledge("stdio thread shared_buffer rpath wpath unix", nullptr) < 0) {
+    if (pledge("stdio thread shared_buffer accept rpath wpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

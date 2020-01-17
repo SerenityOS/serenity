@@ -7,7 +7,7 @@ int main(int argc, char** argv)
     (void)argc;
     (void)argv;
 
-    if (pledge("stdio unix inet cpath rpath fattr", nullptr) < 0) {
+    if (pledge("stdio accept unix inet cpath rpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -15,7 +15,7 @@ int main(int argc, char** argv)
     CEventLoop event_loop;
     LookupServer server;
 
-    if (pledge("stdio unix inet", nullptr) < 0) {
+    if (pledge("stdio accept inet", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
