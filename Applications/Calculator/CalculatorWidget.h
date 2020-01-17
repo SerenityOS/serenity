@@ -22,6 +22,8 @@ private:
 
     void update_display();
 
+    virtual void keydown_event(GKeyEvent&) override;
+
     Calculator m_calculator;
     Keypad m_keypad;
 
@@ -46,5 +48,4 @@ private:
     RefPtr<GButton> m_inverse_button;
     RefPtr<GButton> m_percent_button;
     RefPtr<GButton> m_equals_button;
-
 };
