@@ -6,12 +6,13 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio inet shared_buffer unix rpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio inet shared_buffer accept unix rpath cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
     CEventLoop event_loop;
-    if (pledge("stdio inet shared_buffer unix", nullptr) < 0) {
+    // FIXME: Establish a connection to LookupServer and then drop "unix"?
+    if (pledge("stdio inet shared_buffer accept unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

@@ -31,7 +31,7 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio thread unix shared_buffer cpath rpath wpath fattr proc exec", nullptr) < 0) {
+    if (pledge("stdio thread shared_buffer accept unix cpath rpath wpath fattr proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -50,7 +50,7 @@ int main(int argc, char** argv)
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio thread shared_buffer cpath rpath wpath fattr proc exec", nullptr) < 0) {
+    if (pledge("stdio thread shared_buffer accept cpath rpath wpath fattr proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

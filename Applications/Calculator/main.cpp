@@ -9,14 +9,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio shared_buffer unix rpath cpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer rpath accept unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer rpath accept", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

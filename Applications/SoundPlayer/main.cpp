@@ -12,14 +12,14 @@
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio unix shared_buffer cpath rpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath unix cpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
 
     GApplication app(argc, argv);
 
-    if (pledge("stdio unix shared_buffer rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath unix", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -27,7 +27,7 @@ int main(int argc, char** argv)
     auto audio_client = AClientConnection::construct();
     audio_client->handshake();
 
-    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

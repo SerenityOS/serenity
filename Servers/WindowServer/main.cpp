@@ -10,7 +10,7 @@
 
 int main(int, char**)
 {
-    if (pledge("stdio video thread shared_buffer rpath wpath cpath unix proc exec fattr", nullptr) < 0) {
+    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath unix proc exec fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -35,7 +35,7 @@ int main(int, char**)
 
     WSEventLoop loop;
 
-    if (pledge("stdio video thread shared_buffer rpath wpath cpath unix proc exec", nullptr) < 0) {
+    if (pledge("stdio video thread shared_buffer accept rpath wpath cpath proc exec", nullptr) < 0) {
         perror("pledge");
         return 1;
     }

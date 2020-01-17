@@ -30,7 +30,7 @@ static const char* home_url = "file:///home/anon/www/welcome.html";
 
 int main(int argc, char** argv)
 {
-    if (pledge("stdio unix shared_buffer cpath rpath fattr", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept unix cpath rpath fattr", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     // Connect to the ProtocolServer immediately so we can drop the "unix" pledge.
     ResourceLoader::the();
 
-    if (pledge("stdio shared_buffer rpath", nullptr) < 0) {
+    if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
         return 1;
     }
