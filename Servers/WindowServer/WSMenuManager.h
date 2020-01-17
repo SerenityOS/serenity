@@ -32,6 +32,7 @@ public:
     WSMenu* current_menu() { return m_current_menu.ptr(); }
     void set_current_menu(WSMenu*, bool is_submenu = false);
     void open_menu(WSMenu&);
+    void toggle_menu(WSMenu&);
 
     WSMenuBar* current_menubar() { return m_current_menubar.ptr(); }
     void set_current_menubar(WSMenuBar*);

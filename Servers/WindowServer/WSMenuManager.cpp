@@ -382,6 +382,15 @@ void WSMenuManager::close_menu_and_descendants(WSMenu& menu)
     close_menus(menus_to_close);
 }
 
+void WSMenuManager::toggle_menu(WSMenu& menu)
+{
+    if (is_open(menu)) {
+        close_menu_and_descendants(menu);
+        return;
+    }
+    open_menu(menu);
+}
+
 void WSMenuManager::open_menu(WSMenu& menu)
 {
     if (is_open(menu))
