@@ -539,8 +539,13 @@ extern bool g_cpu_supports_tsc;
 extern bool g_cpu_supports_umip;
 
 void stac();
-
 void clac();
+void x86_enable_pae();
+void x86_enable_pge();
+void x86_enable_smep();
+void x86_enable_smap();
+void x86_enable_nx();
+void x86_enable_wp();
 
 class SmapDisabler {
 public:
