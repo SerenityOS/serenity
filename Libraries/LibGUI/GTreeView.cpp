@@ -376,30 +376,40 @@ void GTreeView::keydown_event(GKeyEvent& event)
             selection().set(found_index);
         return;
     }
+
+    auto open_tree_node = [&](bool open, MetadataForIndex& metadata) {
+        metadata.open = open;
+        update_column_sizes();
+        update_content_size();
+        update();
+    };
+
     if (event.key() == KeyCode::Key_Left) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
             auto& metadata = ensure_metadata_for_index(cursor_index);
-            if (metadata.open) {
-                metadata.open = false;
-                update_column_sizes();
-                update_content_size();
-                update();
-            }
+            if (metadata.open)
+                open_tree_node(false, metadata);
             return;
         }
     }
+
     if (event.key() == KeyCode::Key_Right) {
         if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
             auto& metadata = ensure_metadata_for_index(cursor_index);
-            if (!metadata.open) {
-                metadata.open = true;
-                update_column_sizes();
-                update_content_size();
-                update();
-            }
+            if (!metadata.open)
+                open_tree_node(true, metadata);
             return;
         }
     }
+
+    if (event.key() == KeyCode::Key_Return) {
+        if (cursor_index.is_valid() && model()->row_count(cursor_index)) {
+            auto& metadata = ensure_metadata_for_index(cursor_index);
+            open_tree_node(!metadata.open, metadata);
+            return;
+        }
+    }
+
 }
 
 int GTreeView::item_count() const
