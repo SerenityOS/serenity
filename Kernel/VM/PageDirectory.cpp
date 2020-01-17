@@ -45,17 +45,22 @@ PageDirectory::PageDirectory(Process& process, const RangeAllocator* parent_rang
     , m_range_allocator(parent_range_allocator ? RangeAllocator(*parent_range_allocator) : RangeAllocator(VirtualAddress(userspace_range_base), kernelspace_range_base - userspace_range_base))
 {
     // Set up a userspace page directory
-    m_directory_table = MM.allocate_supervisor_physical_page();
+    m_directory_table = MM.allocate_user_physical_page();
     m_directory_pages[0] = MM.allocate_user_physical_page();
     m_directory_pages[1] = MM.allocate_user_physical_page();
     m_directory_pages[2] = MM.allocate_user_physical_page();
     // Share the top 1 GB of kernel-only mappings (>=3GB or >=0xc0000000)
     m_directory_pages[3] = MM.kernel_page_directory().m_directory_pages[3];
 
-    table().raw[0] = (u64)m_directory_pages[0]->paddr().as_ptr() | 1;
-    table().raw[1] = (u64)m_directory_pages[1]->paddr().as_ptr() | 1;
-    table().raw[2] = (u64)m_directory_pages[2]->paddr().as_ptr() | 1;
-    table().raw[3] = (u64)m_directory_pages[3]->paddr().as_ptr() | 1;
+    {
+        InterruptDisabler disabler;
+        auto& table = *(PageDirectoryPointerTable*)MM.quickmap_page(*m_directory_table);
+        table.raw[0] = (u64)m_directory_pages[0]->paddr().as_ptr() | 1;
+        table.raw[1] = (u64)m_directory_pages[1]->paddr().as_ptr() | 1;
+        table.raw[2] = (u64)m_directory_pages[2]->paddr().as_ptr() | 1;
+        table.raw[3] = (u64)m_directory_pages[3]->paddr().as_ptr() | 1;
+        MM.unquickmap_page();
+    }
 
     // Clone bottom 8 MB of mappings from kernel_page_directory
     PageDirectoryEntry buffer[4];
