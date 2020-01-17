@@ -229,7 +229,7 @@ extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
 extern u32 __stack_chk_guard;
 u32 __stack_chk_guard;
 
-extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
+extern "C" [[noreturn]] void init()
 {
     // this is only used one time, directly below here. we can't use this part
     // of libc at this point in the boot process, or we'd just pull strstr in
@@ -247,7 +247,8 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     // process on live hardware.
     //
     // note: it must be the first option in the boot cmdline.
-    if (multiboot_info_ptr->cmdline && bad_prefix_check(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline), "serial_debug"))
+    u32 cmdline = low_physical_to_virtual(multiboot_info_ptr->cmdline);
+    if (cmdline && bad_prefix_check(reinterpret_cast<const char*>(cmdline), "serial_debug"))
         set_serial_debug(true);
 
     detect_cpu_features();
@@ -256,14 +257,16 @@ extern "C" [[noreturn]] void init(u32 physical_address_for_kernel_page_tables)
     slab_alloc_init();
 
     // must come after kmalloc_init because we use AK_MAKE_ETERNAL in KParams
-    new KParams(String(reinterpret_cast<const char*>(multiboot_info_ptr->cmdline)));
+    new KParams(String(reinterpret_cast<const char*>(cmdline)));
 
     bool text_debug = KParams::the().has("text_debug");
     bool complete_acpi_disable = KParams::the().has("noacpi");
     bool dynamic_acpi_disable = KParams::the().has("noacpi_aml");
     bool pci_mmio_disable = KParams::the().has("nopci_mmio");
 
-    MemoryManager::initialize(physical_address_for_kernel_page_tables);
+    complete_acpi_disable = true;
+
+    MemoryManager::initialize();
 
     if (complete_acpi_disable) {
         ACPIParser::initialize_limited();

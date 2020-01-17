@@ -146,6 +146,20 @@ static void dump(const RegisterDump& regs)
     kprintf("eax=%08x ebx=%08x ecx=%08x edx=%08x\n", regs.eax, regs.ebx, regs.ecx, regs.edx);
     kprintf("ebp=%08x esp=%08x esi=%08x edi=%08x\n", regs.ebp, esp, regs.esi, regs.edi);
 
+    u32 cr0;
+    asm("movl %%cr0, %%eax"
+        : "=a"(cr0));
+    u32 cr2;
+    asm("movl %%cr2, %%eax"
+        : "=a"(cr2));
+    u32 cr3;
+    asm("movl %%cr3, %%eax"
+        : "=a"(cr3));
+    u32 cr4;
+    asm("movl %%cr4, %%eax"
+        : "=a"(cr4));
+    kprintf("cr0=%08x cr2=%08x cr3=%08x cr4=%08x\n", cr0, cr2, cr3, cr4);
+
     if (current && current->process().validate_read((void*)regs.eip, 8)) {
         SmapDisabler disabler;
         u8* codeptr = (u8*)regs.eip;
@@ -221,7 +235,7 @@ EH_ENTRY(14, page_fault);
 void page_fault_handler(RegisterDump regs)
 {
     clac();
-    ASSERT(current);
+    //ASSERT(current);
 
     u32 fault_address;
     asm("movl %%cr2, %%eax"
@@ -232,12 +246,13 @@ void page_fault_handler(RegisterDump regs)
         : "=a"(fault_page_directory));
 
 #ifdef PAGE_FAULT_DEBUG
-    dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s V%08x\n",
+    dbgprintf("%s(%u): ring%u %s page fault in PD=%x, %s%s V%08x\n",
         current ? current->process().name().characters() : "(none)",
         current ? current->pid() : 0,
         regs.cs & 3,
         regs.exception_code & 1 ? "PV" : "NP",
         fault_page_directory,
+        regs.exception_code & 8 ? "reserved-bit " : "",
         regs.exception_code & 2 ? "write" : "read",
         fault_address);
 #endif

@@ -102,6 +102,8 @@ PATAChannel::PATAChannel(ChannelType type, bool force_pio)
     m_dma_enabled.resource() = true;
     ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
 
+    m_prdt_page = MM.allocate_supervisor_physical_page();
+
     initialize(force_pio);
     detect_disks();
 }
@@ -131,7 +133,7 @@ void PATAChannel::initialize(bool force_pio)
 
     // Let's try to set up DMA transfers.
     PCI::enable_bus_mastering(m_pci_address);
-    m_prdt.end_of_table = 0x8000;
+    prdt().end_of_table = 0x8000;
     m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
     kprintf("PATAChannel: Bus master IDE: I/O @ %x\n", m_bus_master_base);
@@ -253,16 +255,16 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
         current->pid(), lba, count, outbuf);
 #endif
 
-    m_prdt.offset = m_dma_buffer_page->paddr();
-    m_prdt.size = 512 * count;
+    prdt().offset = m_dma_buffer_page->paddr();
+    prdt().size = 512 * count;
 
-    ASSERT(m_prdt.size <= PAGE_SIZE);
+    ASSERT(prdt().size <= PAGE_SIZE);
 
     // Stop bus master
     IO::out8(m_bus_master_base, 0);
 
     // Write the PRDT location
-    IO::out32(m_bus_master_base + 4, (u32)&m_prdt);
+    IO::out32(m_bus_master_base + 4, m_prdt_page->paddr().get());
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
@@ -310,7 +312,7 @@ bool PATAChannel::ata_read_sectors_with_dma(u32 lba, u16 count, u8* outbuf, bool
     if (m_device_error)
         return false;
 
-    memcpy(outbuf, m_dma_buffer_page->paddr().as_ptr(), 512 * count);
+    memcpy(outbuf, m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), 512 * count);
 
     // I read somewhere that this may trigger a cache flush so let's do it.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
@@ -326,18 +328,18 @@ bool PATAChannel::ata_write_sectors_with_dma(u32 lba, u16 count, const u8* inbuf
         current->pid(), lba, count, inbuf);
 #endif
 
-    m_prdt.offset = m_dma_buffer_page->paddr();
-    m_prdt.size = 512 * count;
+    prdt().offset = m_dma_buffer_page->paddr();
+    prdt().size = 512 * count;
 
-    memcpy(m_dma_buffer_page->paddr().as_ptr(), inbuf, 512 * count);
+    memcpy(m_dma_buffer_page->paddr().offset(0xc0000000).as_ptr(), inbuf, 512 * count);
 
-    ASSERT(m_prdt.size <= PAGE_SIZE);
+    ASSERT(prdt().size <= PAGE_SIZE);
 
     // Stop bus master
     IO::out8(m_bus_master_base, 0);
 
     // Write the PRDT location
-    IO::out32(m_bus_master_base + 4, (u32)&m_prdt);
+    IO::out32(m_bus_master_base + 4, m_prdt_page->paddr().get());
 
     // Turn on "Interrupt" and "Error" flag. The error flag should be cleared by hardware.
     IO::out8(m_bus_master_base + 2, IO::in8(m_bus_master_base + 2) | 0x6);
