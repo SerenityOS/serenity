@@ -68,22 +68,88 @@ void MemoryManager::initialize_paging()
     }
 #endif
 
-    // Basic virtual memory map:
-    // 0 -> 4 KB                Null page (so nullptr dereferences crash!)
-    // 4 KB -> 8 MB             Identity mapped.
-    // 8 MB -> 3 GB             Available to userspace.
-    // 3GB  -> 4 GB             Kernel-only virtual address space (>0xc0000000)
-
     m_quickmap_addr = VirtualAddress(0xffe00000);
 #ifdef MM_DEBUG
     dbgprintf("MM: Quickmap will use %p\n", m_quickmap_addr.get());
 #endif
 
+    parse_memory_map();
+
+#ifdef MM_DEBUG
+    dbgprintf("MM: Installing page directory\n");
+#endif
+
+    // Turn on CR4.PAE
+    asm volatile(
+        "mov %cr4, %eax\n"
+        "orl $0x20, %eax\n"
+        "mov %eax, %cr4\n");
+
+    if (g_cpu_supports_pge) {
+        // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x80, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: PGE support enabled\n");
+    } else {
+        kprintf("x86: PGE support not detected\n");
+    }
+
+    if (g_cpu_supports_smep) {
+        // Turn on CR4.SMEP
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x100000, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: SMEP support enabled\n");
+    } else {
+        kprintf("x86: SMEP support not detected\n");
+    }
+
+    if (g_cpu_supports_smap) {
+        // Turn on CR4.SMAP
+        kprintf("x86: Enabling SMAP\n");
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x200000, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: SMAP support enabled\n");
+    } else {
+        kprintf("x86: SMAP support not detected\n");
+    }
+
+    if (g_cpu_supports_nx) {
+        // Turn on IA32_EFER.NXE
+        asm volatile(
+            "movl $0xc0000080, %ecx\n"
+            "rdmsr\n"
+            "orl $0x800, %eax\n"
+            "wrmsr\n");
+        kprintf("x86: NX support enabled\n");
+    } else {
+        kprintf("x86: NX support not detected\n");
+    }
+
+    asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
+    asm volatile(
+        "movl %%cr0, %%eax\n"
+        "orl $0x80010001, %%eax\n"
+        "movl %%eax, %%cr0\n" ::
+            : "%eax", "memory");
+
+#ifdef MM_DEBUG
+    dbgprintf("MM: Paging initialized.\n");
+#endif
+}
+
+void MemoryManager::parse_memory_map()
+{
     RefPtr<PhysicalRegion> region;
     bool region_is_super = false;
 
-    auto* mmap = (multiboot_memory_map_t*)(0xc0000000 + multiboot_info_ptr->mmap_addr);
-    for (; (unsigned long)mmap < (0xc0000000 + multiboot_info_ptr->mmap_addr) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
+    auto* mmap = (multiboot_memory_map_t*)(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
+    for (; (unsigned long)mmap < (low_physical_to_virtual(multiboot_info_ptr->mmap_addr)) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
         kprintf("MM: Multiboot mmap: base_addr = 0x%x%08x, length = 0x%x%08x, type = 0x%x\n",
             (u32)(mmap->addr >> 32),
             (u32)(mmap->addr & 0xffffffff),
@@ -153,72 +219,6 @@ void MemoryManager::initialize_paging()
     for (auto& region : m_user_physical_regions)
         m_user_physical_pages += region.finalize_capacity();
 
-#ifdef MM_DEBUG
-    dbgprintf("MM: Installing page directory\n");
-#endif
-
-    // Turn on CR4.PAE
-    asm volatile(
-        "mov %cr4, %eax\n"
-        "orl $0x20, %eax\n"
-        "mov %eax, %cr4\n");
-
-    if (g_cpu_supports_pge) {
-        // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x80, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: PGE support enabled\n");
-    } else {
-        kprintf("x86: PGE support not detected\n");
-    }
-
-    if (g_cpu_supports_smep) {
-        // Turn on CR4.SMEP
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x100000, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: SMEP support enabled\n");
-    } else {
-        kprintf("x86: SMEP support not detected\n");
-    }
-
-    if (g_cpu_supports_smap) {
-        // Turn on CR4.SMAP
-        kprintf("x86: Enabling SMAP\n");
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x200000, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: SMAP support enabled\n");
-    } else {
-        kprintf("x86: SMAP support not detected\n");
-    }
-
-    if (g_cpu_supports_nx) {
-        // Turn on IA32_EFER.NXE
-        asm volatile(
-            "movl $0xc0000080, %ecx\n"
-            "rdmsr\n"
-            "orl $0x800, %eax\n"
-            "wrmsr\n");
-        kprintf("x86: NX support enabled\n");
-    } else {
-        kprintf("x86: NX support not detected\n");
-    }
-
-    asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
-    asm volatile(
-        "movl %%cr0, %%eax\n"
-        "orl $0x80010001, %%eax\n"
-        "movl %%eax, %%cr0\n" ::
-            : "%eax", "memory");
-
-#ifdef MM_DEBUG
-    dbgprintf("MM: Paging initialized.\n");
-#endif
 }
 
 PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, VirtualAddress vaddr)
