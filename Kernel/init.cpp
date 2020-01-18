@@ -290,8 +290,6 @@ extern "C" [[noreturn]] void init()
     bool dynamic_acpi_disable = KParams::the().has("noacpi_aml");
     bool pci_mmio_disable = KParams::the().has("nopci_mmio");
 
-    complete_acpi_disable = true;
-
     MemoryManager::initialize();
 
     if (complete_acpi_disable) {
