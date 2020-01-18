@@ -25,8 +25,7 @@ returns -1 and sets `errno` to describe the error.
 * `EPERM`: The calling process does not have superuser permissions.
 * `EFAULT`: `path` pointed to memory that was not accessible for the caller.
 * `ENOEXEC`: The specified file could not be parsed as an ELF object.
-* `ENOENT`: One or more symbols referred to by the module could not be resolved.
-* `EINVAL`: The module had no `.text` section, or didn't export a `module_init` function.
+* `EINVAL`: One or more symbols referred to by the module could not be resolved, or the module had no `.text` section, or didn't export a `module_init` function.
 * `EEXIST`: A module with the same name was already loaded.
 
 ## See also
