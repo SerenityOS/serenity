@@ -155,7 +155,7 @@ void WSMenu::draw()
     for (auto& item : m_items) {
         if (item.type() == WSMenuItem::Text) {
             Color text_color = palette.menu_base_text();
-            if (&item == m_hovered_item && item.is_enabled()) {
+            if (&item == hovered_item() && item.is_enabled()) {
                 painter.fill_rect(item.rect(), palette.menu_selection());
                 painter.draw_rect(item.rect(), palette.menu_selection().darkened());
                 text_color = palette.menu_selection_text();
@@ -207,12 +207,18 @@ void WSMenu::draw()
     }
 }
 
+WSMenuItem* WSMenu::hovered_item() const
+{
+    if (m_hovered_item_index == -1)
+        return nullptr;
+    return const_cast<WSMenuItem*>(&item(m_hovered_item_index));
+}
+
 void WSMenu::update_for_new_hovered_item()
 {
-    if (m_hovered_item && m_hovered_item->is_submenu()) {
-        ASSERT(m_hovered_item == &m_items.at(m_current_index));
-        WSMenuManager::the().close_everyone_not_in_lineage(*m_hovered_item->submenu());
-        m_hovered_item->submenu()->popup(m_hovered_item->rect().top_right().translated(menu_window()->rect().location()), true);
+    if (hovered_item() && hovered_item()->is_submenu()) {
+        WSMenuManager::the().close_everyone_not_in_lineage(*hovered_item()->submenu());
+        hovered_item()->submenu()->popup(hovered_item()->rect().top_right().translated(menu_window()->rect().location()), true);
     } else {
         WSMenuManager::the().close_everyone_not_in_lineage(*this);
         WSMenuManager::the().set_current_menu(this);
@@ -225,22 +231,20 @@ void WSMenu::open_hovered_item()
 {
     ASSERT(menu_window());
     ASSERT(menu_window()->is_visible());
-    if (!m_hovered_item)
+    if (!hovered_item())
         return;
-    ASSERT(m_hovered_item == &m_items.at(m_current_index));
-    if (m_hovered_item->is_enabled())
-        did_activate(*m_hovered_item);
+    if (hovered_item()->is_enabled())
+        did_activate(*hovered_item());
     clear_hovered_item();
 }
 
 void WSMenu::decend_into_submenu_at_hovered_item()
 {
-    ASSERT(m_hovered_item);
-    ASSERT(m_hovered_item->is_submenu());
-    auto submenu = m_hovered_item->submenu();
-    ASSERT(submenu->m_current_index == 0);
-    submenu->m_hovered_item = &submenu->m_items.at(0);
-    ASSERT(submenu->m_hovered_item->type() != WSMenuItem::Separator);
+    ASSERT(hovered_item());
+    ASSERT(hovered_item()->is_submenu());
+    auto submenu = hovered_item()->submenu();
+    submenu->m_hovered_item_index = 0;
+    ASSERT(submenu->hovered_item()->type() != WSMenuItem::Separator);
     submenu->update_for_new_hovered_item();
     m_in_submenu = true;
 }
@@ -249,17 +253,12 @@ void WSMenu::event(CEvent& event)
 {
     if (event.type() == WSEvent::MouseMove) {
         ASSERT(menu_window());
-        auto* item = item_at(static_cast<const WSMouseEvent&>(event).position());
-        if (m_hovered_item == item)
+        int index = item_index_at(static_cast<const WSMouseEvent&>(event).position());
+        if (m_hovered_item_index == index)
             return;
-        m_hovered_item = item;
+        m_hovered_item_index = index;
 
-        if (m_hovered_item) {
-            // FIXME: Tell parent menu (if it exists) that it is currently in a submenu
-            m_current_index = m_items.find([&](auto& item) { return item.ptr() == m_hovered_item; }).index();
-            ASSERT(m_current_index != m_items.size());
-        }
-
+        // FIXME: Tell parent menu (if it exists) that it is currently in a submenu
         m_in_submenu = false;
         update_for_new_hovered_item();
         return;
@@ -280,21 +279,21 @@ void WSMenu::event(CEvent& event)
         ASSERT(menu_window()->is_visible());
 
         // Default to the first item on key press if one has not been selected yet
-        if (!m_hovered_item) {
-            m_hovered_item = &m_items.at(0);
+        if (!hovered_item()) {
+            m_hovered_item_index = 0;
             update_for_new_hovered_item();
             return;
         }
 
         // Pass the event for the submenu that we are currently in to handle
         if (m_in_submenu && key != Key_Left) {
-            ASSERT(m_hovered_item->is_submenu());
-            m_hovered_item->submenu()->dispatch_event(event);
+            ASSERT(hovered_item()->is_submenu());
+            hovered_item()->submenu()->dispatch_event(event);
             return;
         }
 
         if (key == Key_Return) {
-            if (m_hovered_item->is_submenu())
+            if (hovered_item()->is_submenu())
                 decend_into_submenu_at_hovered_item();
             else
                 open_hovered_item();
@@ -305,11 +304,10 @@ void WSMenu::event(CEvent& event)
             ASSERT(m_items.at(0).type() != WSMenuItem::Separator);
 
             do {
-                m_current_index--;
-                if (m_current_index < 0)
-                    m_current_index = m_items.size() - 1;
-                m_hovered_item = &m_items.at(m_current_index);
-            } while (m_hovered_item->type() == WSMenuItem::Separator);
+                m_hovered_item_index--;
+                if (m_hovered_item_index < 0)
+                    m_hovered_item_index = m_items.size() - 1;
+            } while (hovered_item()->type() == WSMenuItem::Separator);
 
             update_for_new_hovered_item();
             return;
@@ -319,11 +317,10 @@ void WSMenu::event(CEvent& event)
             ASSERT(m_items.at(0).type() != WSMenuItem::Separator);
 
             do {
-                m_current_index++;
-                if (m_current_index >= m_items.size())
-                    m_current_index = 0;
-                m_hovered_item = &m_items.at(m_current_index);
-            } while (m_hovered_item->type() == WSMenuItem::Separator);
+                m_hovered_item_index++;
+                if (m_hovered_item_index >= m_items.size())
+                    m_hovered_item_index = 0;
+            } while (hovered_item()->type() == WSMenuItem::Separator);
 
             update_for_new_hovered_item();
             return;
@@ -333,15 +330,14 @@ void WSMenu::event(CEvent& event)
             if (!m_in_submenu)
                 return;
 
-            m_hovered_item = &m_items.at(m_current_index);
-            ASSERT(m_hovered_item->is_submenu());
-            m_hovered_item->submenu()->clear_hovered_item();
+            ASSERT(hovered_item()->is_submenu());
+            hovered_item()->submenu()->clear_hovered_item();
             m_in_submenu = false;
             return;
         }
 
         if (key == Key_Right) {
-            if (m_hovered_item->is_submenu())
+            if (hovered_item()->is_submenu())
                 decend_into_submenu_at_hovered_item();
             return;
         }
@@ -351,10 +347,9 @@ void WSMenu::event(CEvent& event)
 
 void WSMenu::clear_hovered_item()
 {
-    if (!m_hovered_item)
+    if (!hovered_item())
         return;
-    m_current_index = 0;
-    m_hovered_item = nullptr;
+    m_hovered_item_index = -1;
     m_in_submenu = false;
     redraw();
 }
@@ -382,13 +377,15 @@ WSMenuItem* WSMenu::item_with_identifier(unsigned identifer)
     return nullptr;
 }
 
-WSMenuItem* WSMenu::item_at(const Point& position)
+int WSMenu::item_index_at(const Point& position)
 {
+    int i = 0;
     for (auto& item : m_items) {
         if (item.rect().contains(position))
-            return &item;
+            return i;
+        ++i;
     }
-    return nullptr;
+    return -1;
 }
 
 void WSMenu::close()
