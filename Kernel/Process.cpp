@@ -30,6 +30,7 @@
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
+#include <AK/Demangle.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Console.h>
@@ -1420,8 +1421,14 @@ void Process::crash(int signal, u32 eip)
     ASSERT(!is_dead());
     ASSERT(&current->process() == this);
 
-    if (m_elf_loader && ksyms_ready)
+    if (eip >= 0xc0000000 && ksyms_ready) {
+        auto* ksym = ksymbolicate(eip);
+        dbgprintf("\033[31;1m%p  %s +%d\033[0m\n", eip, ksym ? demangle(ksym->name).characters() : "(k?)", ksym ? eip - ksym->address : 0);
+    } else if (m_elf_loader) {
         dbgprintf("\033[31;1m%p  %s\033[0m\n", eip, m_elf_loader->symbolicate(eip).characters());
+    } else {
+        dbgprintf("\033[31;1m%p  (?)\033[0m\n", eip);
+    }
     dump_backtrace();
 
     m_termination_signal = signal;
