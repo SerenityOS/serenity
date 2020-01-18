@@ -59,4 +59,18 @@ TEST_CASE(assign_reference)
     EXPECT_EQ(object->ref_count(), 1);
 }
 
+TEST_CASE(assign_owner_of_self)
+{
+    struct Object : public RefCounted<Object> {
+        RefPtr<Object> parent;
+    };
+
+    auto parent = adopt(*new Object);
+    auto child = adopt(*new Object);
+    child->parent = move(parent);
+
+    child = *child->parent;
+    EXPECT_EQ(child->ref_count(), 1);
+}
+
 TEST_MAIN(String)
