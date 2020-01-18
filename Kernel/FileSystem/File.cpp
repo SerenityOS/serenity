@@ -39,6 +39,7 @@ KResultOr<NonnullRefPtr<FileDescription>> File::open(int options)
 {
     auto description = FileDescription::create(*this);
     description->set_rw_mode(options);
+    description->set_file_flags(options);
     return description;
 }
 

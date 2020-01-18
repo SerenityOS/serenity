@@ -66,6 +66,7 @@ KResultOr<NonnullRefPtr<FileDescription>> PTYMultiplexer::open(int options)
 #endif
     auto description = FileDescription::create(move(master));
     description->set_rw_mode(options);
+    description->set_file_flags(options);
     return description;
 }
 
