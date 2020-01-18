@@ -72,27 +72,147 @@
 #include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/VM/MemoryManager.h>
 
-VirtualConsole* tty0;
-VirtualConsole* tty1;
-KeyboardDevice* keyboard;
-PS2MouseDevice* ps2mouse;
-SB16* sb16;
-DebugLogDevice* dev_debuglog;
-NullDevice* dev_null;
-SerialDevice* ttyS0;
-SerialDevice* ttyS1;
-SerialDevice* ttyS2;
-SerialDevice* ttyS3;
-VFS* vfs;
+[[noreturn]] static void init_stage2();
+static void setup_serial_debug();
+static void setup_acpi();
 
-[[noreturn]] static void init_stage2()
+VirtualConsole* tty0;
+
+// Defined in the linker script
+typedef void (*ctor_func_t)();
+extern ctor_func_t start_ctors;
+extern ctor_func_t end_ctors;
+
+extern u32 __stack_chk_guard;
+u32 __stack_chk_guard;
+
+extern "C" [[noreturn]] void init()
+{
+    setup_serial_debug();
+
+    cpu_setup();
+
+    kmalloc_init();
+    slab_alloc_init();
+
+    new KParams(String(reinterpret_cast<const char*>(low_physical_to_virtual(multiboot_info_ptr->cmdline))));
+
+    MemoryManager::initialize();
+
+    bool text_debug = KParams::the().has("text_debug");
+
+    setup_acpi();
+
+    new VFS;
+    new DebugLogDevice;
+
+    new Console;
+
+    kprintf("Starting SerenityOS...\n");
+
+    __stack_chk_guard = get_good_random<u32>();
+
+    RTC::initialize();
+    PIC::initialize();
+    gdt_init();
+    idt_init();
+
+    // call global constructors after gtd and itd init
+    for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
+        (*ctor)();
+
+    new KeyboardDevice;
+    new PS2MouseDevice;
+    new SB16;
+    new NullDevice;
+    if (!get_serial_debug())
+        new SerialDevice(SERIAL_COM1_ADDR, 64);
+    new SerialDevice(SERIAL_COM2_ADDR, 65);
+    new SerialDevice(SERIAL_COM3_ADDR, 66);
+    new SerialDevice(SERIAL_COM4_ADDR, 67);
+
+    VirtualConsole::initialize();
+    tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
+    new VirtualConsole(1);
+    VirtualConsole::switch_to(0);
+
+    // Sample test to see if the ACPI parser is working...
+    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
+
+    PCI::Initializer::the().test_and_initialize(KParams::the().has("nopci_mmio"));
+    PCI::Initializer::the().dismiss();
+
+    if (APIC::init())
+        APIC::enable(0);
+
+    PIT::initialize();
+
+    PCI::enumerate_all([](const PCI::Address& address, PCI::ID id) {
+        kprintf("PCI: device @ %w:%b:%b.%d [%w:%w]\n",
+            address.seg(),
+            address.bus(),
+            address.slot(),
+            address.function(),
+            id.vendor_id,
+            id.device_id);
+    });
+
+    if (text_debug) {
+        dbgprintf("Text mode enabled\n");
+    } else {
+        if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
+            new MBVGADevice(
+                PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
+                multiboot_info_ptr->framebuffer_pitch,
+                multiboot_info_ptr->framebuffer_width,
+                multiboot_info_ptr->framebuffer_height);
+        } else {
+            new BXVGADevice;
+        }
+    }
+
+    LoopbackAdapter::the();
+    auto e1000 = E1000NetworkAdapter::autodetect();
+    auto rtl8139 = RTL8139NetworkAdapter::autodetect();
+
+    Process::initialize();
+    Thread::initialize();
+
+    Thread* init_stage2_thread = nullptr;
+    Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
+
+    Thread* syncd_thread = nullptr;
+    Process::create_kernel_process(syncd_thread, "syncd", [] {
+        for (;;) {
+            VFS::the().sync();
+            current->sleep(1 * TICKS_PER_SECOND);
+        }
+    });
+
+    Process::create_kernel_process(g_finalizer, "Finalizer", [] {
+        current->set_priority(THREAD_PRIORITY_LOW);
+        for (;;) {
+            current->wait_on(*g_finalizer_wait_queue);
+            Thread::finalize_dying_threads();
+        }
+    });
+
+    Scheduler::pick_next();
+
+    sti();
+
+    Scheduler::idle_loop();
+    ASSERT_NOT_REACHED();
+}
+
+void init_stage2()
 {
     Syscall::initialize();
 
-    auto dev_zero = make<ZeroDevice>();
-    auto dev_full = make<FullDevice>();
-    auto dev_random = make<RandomDevice>();
-    auto dev_ptmx = make<PTYMultiplexer>();
+    new ZeroDevice;
+    new FullDevice;
+    new RandomDevice;
+    new PTYMultiplexer;
 
     bool text_debug = KParams::the().has("text_debug");
     bool force_pio = KParams::the().has("force_pio");
@@ -170,12 +290,12 @@ VFS* vfs;
         hang();
     }
 
-    if (!vfs->mount_root(e2fs)) {
+    if (!VFS::the().mount_root(e2fs)) {
         kprintf("VFS::mount_root failed\n");
         hang();
     }
 
-    current->process().set_root_directory(vfs->root_custody());
+    current->process().set_root_directory(VFS::the().root_custody());
 
     dbgprintf("Load ksyms\n");
     load_ksyms();
@@ -232,30 +352,7 @@ VFS* vfs;
     ASSERT_NOT_REACHED();
 }
 
-extern "C" {
-multiboot_info_t* multiboot_info_ptr;
-}
-
-typedef void (*ctor_func_t)();
-
-// Defined in the linker script
-extern ctor_func_t start_ctors;
-extern ctor_func_t end_ctors;
-
-// Define some Itanium C++ ABI methods to stop the linker from complaining
-// If we actually call these something has gone horribly wrong
-void* __dso_handle __attribute__((visibility("hidden")));
-
-extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
-{
-    ASSERT_NOT_REACHED();
-    return 0;
-}
-
-extern u32 __stack_chk_guard;
-u32 __stack_chk_guard;
-
-extern "C" [[noreturn]] void init()
+void setup_serial_debug()
 {
     // this is only used one time, directly below here. we can't use this part
     // of libc at this point in the boot process, or we'd just pull strstr in
@@ -276,22 +373,26 @@ extern "C" [[noreturn]] void init()
     u32 cmdline = low_physical_to_virtual(multiboot_info_ptr->cmdline);
     if (cmdline && bad_prefix_check(reinterpret_cast<const char*>(cmdline), "serial_debug"))
         set_serial_debug(true);
+}
 
-    cpu_setup();
+extern "C" {
+multiboot_info_t* multiboot_info_ptr;
+}
 
-    kmalloc_init();
-    slab_alloc_init();
+// Define some Itanium C++ ABI methods to stop the linker from complaining
+// If we actually call these something has gone horribly wrong
+void* __dso_handle __attribute__((visibility("hidden")));
 
-    // must come after kmalloc_init because we use AK_MAKE_ETERNAL in KParams
-    new KParams(String(reinterpret_cast<const char*>(cmdline)));
+extern "C" int __cxa_atexit(void (*)(void*), void*, void*)
+{
+    ASSERT_NOT_REACHED();
+    return 0;
+}
 
-    bool text_debug = KParams::the().has("text_debug");
+void setup_acpi()
+{
     bool complete_acpi_disable = KParams::the().has("noacpi");
     bool dynamic_acpi_disable = KParams::the().has("noacpi_aml");
-    bool pci_mmio_disable = KParams::the().has("nopci_mmio");
-
-    MemoryManager::initialize();
-
     if (complete_acpi_disable) {
         ACPIParser::initialize_limited();
     } else {
@@ -301,107 +402,4 @@ extern "C" [[noreturn]] void init()
             ACPIStaticParser::initialize_without_rsdp();
         }
     }
-
-    vfs = new VFS;
-    dev_debuglog = new DebugLogDevice;
-
-    auto console = make<Console>();
-
-    kprintf("Starting SerenityOS...\n");
-
-
-
-    __stack_chk_guard = get_good_random<u32>();
-
-    RTC::initialize();
-    PIC::initialize();
-    gdt_init();
-    idt_init();
-
-    // call global constructors after gtd and itd init
-    for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
-        (*ctor)();
-
-    keyboard = new KeyboardDevice;
-    ps2mouse = new PS2MouseDevice;
-    sb16 = new SB16;
-    dev_null = new NullDevice;
-    if (!get_serial_debug())
-        ttyS0 = new SerialDevice(SERIAL_COM1_ADDR, 64);
-    ttyS1 = new SerialDevice(SERIAL_COM2_ADDR, 65);
-    ttyS2 = new SerialDevice(SERIAL_COM3_ADDR, 66);
-    ttyS3 = new SerialDevice(SERIAL_COM4_ADDR, 67);
-
-    VirtualConsole::initialize();
-    tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
-    tty1 = new VirtualConsole(1);
-    VirtualConsole::switch_to(0);
-
-    // Sample test to see if the ACPI parser is working...
-    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
-
-    PCI::Initializer::the().test_and_initialize(pci_mmio_disable);
-    PCI::Initializer::the().dismiss();
-
-    if (APIC::init())
-        APIC::enable(0);
-
-    PIT::initialize();
-
-    PCI::enumerate_all([](const PCI::Address& address, PCI::ID id) {
-        kprintf("PCI: device @ %w:%b:%b.%d [%w:%w]\n",
-            address.seg(),
-            address.bus(),
-            address.slot(),
-            address.function(),
-            id.vendor_id,
-            id.device_id);
-    });
-
-    if (text_debug) {
-        dbgprintf("Text mode enabled\n");
-    } else {
-        if (multiboot_info_ptr->framebuffer_type == 1 || multiboot_info_ptr->framebuffer_type == 2) {
-            new MBVGADevice(
-                PhysicalAddress((u32)(multiboot_info_ptr->framebuffer_addr)),
-                multiboot_info_ptr->framebuffer_pitch,
-                multiboot_info_ptr->framebuffer_width,
-                multiboot_info_ptr->framebuffer_height);
-        } else {
-            new BXVGADevice;
-        }
-    }
-
-    LoopbackAdapter::the();
-    auto e1000 = E1000NetworkAdapter::autodetect();
-    auto rtl8139 = RTL8139NetworkAdapter::autodetect();
-
-    Process::initialize();
-    Thread::initialize();
-
-    Thread* init_stage2_thread = nullptr;
-    Process::create_kernel_process(init_stage2_thread, "init_stage2", init_stage2);
-
-    Thread* syncd_thread = nullptr;
-    Process::create_kernel_process(syncd_thread, "syncd", [] {
-        for (;;) {
-            VFS::the().sync();
-            current->sleep(1 * TICKS_PER_SECOND);
-        }
-    });
-
-    Process::create_kernel_process(g_finalizer, "Finalizer", [] {
-        current->set_priority(THREAD_PRIORITY_LOW);
-        for (;;) {
-            current->wait_on(*g_finalizer_wait_queue);
-            Thread::finalize_dying_threads();
-        }
-    });
-
-    Scheduler::pick_next();
-
-    sti();
-
-    Scheduler::idle_loop();
-    ASSERT_NOT_REACHED();
 }
