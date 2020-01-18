@@ -4222,7 +4222,7 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
     auto path = get_syscall_path_argument(user_path, path_length);
     if (path.is_error())
         return path.error();
-    auto description_or_error = VFS::the().open(path.value(), 0, 0, current_directory());
+    auto description_or_error = VFS::the().open(path.value(), O_RDONLY, 0, current_directory());
     if (description_or_error.is_error())
         return description_or_error.error();
     auto& description = description_or_error.value();
