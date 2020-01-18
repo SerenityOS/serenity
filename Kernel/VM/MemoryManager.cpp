@@ -53,13 +53,6 @@ MemoryManager::MemoryManager()
 
     parse_memory_map();
 
-    x86_enable_pae();
-    x86_enable_pge();
-    x86_enable_smep();
-    x86_enable_smap();
-    x86_enable_nx();
-    x86_enable_wp();
-
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
 
     setup_low_1mb();
