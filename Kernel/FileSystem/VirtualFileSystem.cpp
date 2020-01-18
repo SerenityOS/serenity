@@ -277,7 +277,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
         inode.truncate(0);
         inode.set_mtime(kgettimeofday().tv_sec);
     }
-    return FileDescription::create(custody);
+    auto description = FileDescription::create(custody);
+    description->set_rw_mode(options);
+    description->set_file_flags(options);
+    return description;
 }
 
 KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
@@ -309,8 +312,6 @@ KResult VFS::mknod(StringView path, mode_t mode, dev_t dev, Custody& base)
 
 KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int options, mode_t mode, Custody& parent_custody, Optional<UidAndGid> owner)
 {
-    (void)options;
-
     if (!is_socket(mode) && !is_fifo(mode) && !is_block_device(mode) && !is_character_device(mode)) {
         // Turn it into a regular file. (This feels rather hackish.)
         mode |= 0100000;
@@ -332,7 +333,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::create(StringView path, int optio
         return KResult(error);
 
     auto new_custody = Custody::create(&parent_custody, p.basename(), *new_file, parent_custody.mount_flags());
-    return FileDescription::create(*new_custody);
+    auto description = FileDescription::create(*new_custody);
+    description->set_rw_mode(options);
+    description->set_file_flags(options);
+    return description;
 }
 
 KResult VFS::mkdir(StringView path, mode_t mode, Custody& base)
