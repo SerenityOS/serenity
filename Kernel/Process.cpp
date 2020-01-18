@@ -24,13 +24,13 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/Demangle.h>
 #include <AK/FileSystemPath.h>
 #include <AK/ScopeGuard.h>
 #include <AK/StdLibExtras.h>
 #include <AK/StringBuilder.h>
 #include <AK/Time.h>
 #include <AK/Types.h>
-#include <AK/Demangle.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIT.h>
 #include <Kernel/Console.h>
@@ -301,6 +301,13 @@ static bool validate_inode_mmap_prot(const Process& process, int prot, const Ino
         return false;
     if ((prot & PROT_READ) && !metadata.may_read(process))
         return false;
+    InterruptDisabler disabler;
+    if (inode.vmobject()) {
+        if ((prot & PROT_EXEC) && inode.vmobject()->writable_mappings())
+            return false;
+        if ((prot & PROT_WRITE) && inode.vmobject()->executable_mappings())
+            return false;
+    }
     return true;
 }
 
@@ -708,6 +715,18 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     if (parts.is_empty())
         return -ENOENT;
 
+    RefPtr<InodeVMObject> vmobject;
+    if (interpreter_description) {
+        vmobject = InodeVMObject::create_with_inode(*interpreter_description->inode());
+    } else {
+        vmobject = InodeVMObject::create_with_inode(*main_program_description->inode());
+    }
+
+    if (static_cast<const InodeVMObject&>(*vmobject).writable_mappings()) {
+        dbg() << "Refusing to execute a write-mapped program";
+        return -ETXTBSY;
+    }
+
     u32 entry_eip = 0;
     // FIXME: Is there a race here?
     auto old_page_directory = move(m_page_directory);
@@ -717,10 +736,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 #endif
     ProcessPagingScope paging_scope(*this);
 
-    struct VMObjectAndRegion {
-        NonnullRefPtr<VMObject> vmobject;
-        Region* region;
-    };
+    Region* region { nullptr };
 
     InodeMetadata loader_metadata;
 
@@ -731,22 +747,16 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
     //      0x08000000 is a verified random number chosen by random dice roll https://xkcd.com/221/
     u32 totally_random_offset = interpreter_description ? 0x08000000 : 0;
 
-    auto [vmobject, region] = [&]() {
-        // FIXME: We should be able to load both the PT_INTERP interpreter and the main program... once the RTLD is smart enough
-        if (interpreter_description) {
-            loader_metadata = interpreter_description->metadata();
-            auto vmobject = InodeVMObject::create_with_inode(*interpreter_description->inode());
-            auto region = allocate_region_with_vmobject(VirtualAddress(), loader_metadata.size, vmobject, 0, interpreter_description->absolute_path(), PROT_READ, false);
-            // we don't need the interpreter file desciption after we've loaded (or not) it into memory
-            interpreter_description = nullptr;
-            return VMObjectAndRegion { move(vmobject), region };
-        }
-
+    // FIXME: We should be able to load both the PT_INTERP interpreter and the main program... once the RTLD is smart enough
+    if (interpreter_description) {
+        loader_metadata = interpreter_description->metadata();
+        region = allocate_region_with_vmobject(VirtualAddress(), loader_metadata.size, *vmobject, 0, interpreter_description->absolute_path(), PROT_READ, false);
+        // we don't need the interpreter file desciption after we've loaded (or not) it into memory
+        interpreter_description = nullptr;
+    } else {
         loader_metadata = main_program_description->metadata();
-        auto vmobject = InodeVMObject::create_with_inode(*main_program_description->inode());
-        auto region = allocate_region_with_vmobject(VirtualAddress(), loader_metadata.size, vmobject, 0, main_program_description->absolute_path(), PROT_READ, false);
-        return VMObjectAndRegion { move(vmobject), region };
-    }();
+        region = allocate_region_with_vmobject(VirtualAddress(), loader_metadata.size, *vmobject, 0, main_program_description->absolute_path(), PROT_READ, false);
+    }
 
     ASSERT(region);
 
@@ -789,7 +799,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
                 prot |= PROT_WRITE;
             if (is_executable)
                 prot |= PROT_EXEC;
-            if (auto* region = allocate_region_with_vmobject(vaddr.offset(totally_random_offset), size, vmobject, offset_in_image, String(name), prot))
+            if (auto* region = allocate_region_with_vmobject(vaddr.offset(totally_random_offset), size, *vmobject, offset_in_image, String(name), prot))
                 return region->vaddr().as_ptr();
             return nullptr;
         };
@@ -828,7 +838,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         //     instead of just non-null. You could totally have a DSO with entry point of
         //     the beginning of the text segement.
         if (!loader->entry().offset(totally_random_offset).get()) {
-            kprintf("do_exec: Failure loading %s, entry pointer is invalid! (%p)",  path.characters(), loader->entry().offset(totally_random_offset).get());
+            kprintf("do_exec: Failure loading %s, entry pointer is invalid! (%p)\n", path.characters(), loader->entry().offset(totally_random_offset).get());
             return -ENOEXEC;
         }
 
