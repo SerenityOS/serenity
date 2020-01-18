@@ -81,10 +81,10 @@ static inline T strtol_impl(const char* nptr, char** endptr, int base)
         }
     }
 
-    long cutoff_point = is_negative ? (min_value / base) : (max_value / base);
+    T cutoff_point = is_negative ? (min_value / base) : (max_value / base);
     int max_valid_digit_at_cutoff_point = is_negative ? (min_value % base) : (max_value % base);
 
-    long num = 0;
+    T num = 0;
 
     bool has_overflowed = false;
     unsigned digits_consumed = 0;
