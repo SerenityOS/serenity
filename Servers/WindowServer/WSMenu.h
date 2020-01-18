@@ -71,10 +71,9 @@ public:
     const Font& font() const;
 
     WSMenuItem* item_with_identifier(unsigned);
-    WSMenuItem* item_at(const Point&);
     void redraw();
 
-    const WSMenuItem* hovered_item() const { return m_hovered_item; }
+    WSMenuItem* hovered_item() const;
     void clear_hovered_item();
 
     Function<void(WSMenuItem&)> on_item_activation;
@@ -90,6 +89,7 @@ public:
 private:
     virtual void event(CEvent&) override;
 
+    int item_index_at(const Point&);
     int padding_between_text_and_shortcut() const { return 50; }
     void did_activate(WSMenuItem&);
     void open_hovered_item();
@@ -102,7 +102,6 @@ private:
     Rect m_rect_in_menubar;
     Rect m_text_rect_in_menubar;
     WSMenuBar* m_menubar { nullptr };
-    WSMenuItem* m_hovered_item { nullptr };
     NonnullOwnPtrVector<WSMenuItem> m_items;
     RefPtr<WSWindow> m_menu_window;
 
@@ -110,6 +109,6 @@ private:
     bool m_is_window_menu_open = { false };
 
     int m_theme_index_at_last_paint { -1 };
-    int m_current_index { 0 };
+    int m_hovered_item_index { -1 };
     bool m_in_submenu { false };
 };
