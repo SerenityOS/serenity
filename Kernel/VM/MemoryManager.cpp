@@ -227,29 +227,6 @@ Region* MemoryManager::user_region_from_vaddr(Process& process, VirtualAddress v
             return &region;
     }
     dbg() << process << " Couldn't find user region for " << vaddr;
-    if (auto* kreg = kernel_region_from_vaddr(vaddr)) {
-        dbg() << process << "  OTOH, there is a kernel region: " << kreg->range() << ": " << kreg->name();
-    } else {
-        dbg() << process << "  AND no kernel region either";
-    }
-
-    process.dump_regions();
-
-    kprintf("Kernel regions:\n");
-    kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
-    for (auto& region : MM.m_kernel_regions) {
-        kprintf("%08x -- %08x    %08x    %c%c%c%c%c%c    %s\n",
-            region.vaddr().get(),
-            region.vaddr().offset(region.size() - 1).get(),
-            region.size(),
-            region.is_readable() ? 'R' : ' ',
-            region.is_writable() ? 'W' : ' ',
-            region.is_executable() ? 'X' : ' ',
-            region.is_shared() ? 'S' : ' ',
-            region.is_stack() ? 'T' : ' ',
-            region.vmobject().is_purgeable() ? 'P' : ' ',
-            region.name().characters());
-    }
     return nullptr;
 }
 
@@ -662,6 +639,25 @@ void MemoryManager::unregister_region(Region& region)
         m_kernel_regions.remove(&region);
     else
         m_user_regions.remove(&region);
+}
+
+void MemoryManager::dump_kernel_regions()
+{
+    kprintf("Kernel regions:\n");
+    kprintf("BEGIN       END         SIZE        ACCESS  NAME\n");
+    for (auto& region : MM.m_kernel_regions) {
+        kprintf("%08x -- %08x    %08x    %c%c%c%c%c%c    %s\n",
+            region.vaddr().get(),
+            region.vaddr().offset(region.size() - 1).get(),
+            region.size(),
+            region.is_readable() ? 'R' : ' ',
+            region.is_writable() ? 'W' : ' ',
+            region.is_executable() ? 'X' : ' ',
+            region.is_shared() ? 'S' : ' ',
+            region.is_stack() ? 'T' : ' ',
+            region.vmobject().is_purgeable() ? 'P' : ' ',
+            region.name().characters());
+    }
 }
 
 ProcessPagingScope::ProcessPagingScope(Process& process)
