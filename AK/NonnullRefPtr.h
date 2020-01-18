@@ -28,6 +28,7 @@
 
 #include <AK/Assertions.h>
 #include <AK/LogStream.h>
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -126,69 +127,56 @@ public:
 
     NonnullRefPtr& operator=(const NonnullRefPtr& other)
     {
-        if (m_ptr != other.m_ptr) {
-            deref_if_not_null(m_ptr);
-            m_ptr = const_cast<T*>(other.ptr());
-            m_ptr->ref();
-        }
+        NonnullRefPtr ptr(other);
+        swap(ptr);
         return *this;
     }
 
     template<typename U>
     NonnullRefPtr& operator=(const NonnullRefPtr<U>& other)
     {
-        if (m_ptr != other.ptr()) {
-            deref_if_not_null(m_ptr);
-            m_ptr = const_cast<T*>(static_cast<const T*>(other.ptr()));
-            m_ptr->ref();
-        }
+        NonnullRefPtr ptr(other);
+        swap(ptr);
         return *this;
     }
 
     NonnullRefPtr& operator=(NonnullRefPtr&& other)
     {
-        if (this != &other) {
-            deref_if_not_null(m_ptr);
-            m_ptr = &other.leak_ref();
-        }
+        NonnullRefPtr ptr(move(other));
+        swap(ptr);
         return *this;
     }
 
     template<typename U>
     NonnullRefPtr& operator=(NonnullRefPtr<U>&& other)
     {
-        if (this != static_cast<void*>(&other)) {
-            deref_if_not_null(m_ptr);
-            m_ptr = static_cast<T*>(&other.leak_ref());
-        }
+        NonnullRefPtr ptr(move(other));
+        swap(ptr);
         return *this;
     }
 
     NonnullRefPtr& operator=(const T& object)
     {
-        if (m_ptr != &object) {
-            deref_if_not_null(m_ptr);
-            m_ptr = const_cast<T*>(&object);
-            m_ptr->ref();
-        }
+        NonnullRefPtr ptr(object);
+        swap(ptr);
         return *this;
     }
 
     [[nodiscard]] CALLABLE_WHEN(unconsumed)
-    SET_TYPESTATE(consumed)
-    T& leak_ref()
+        SET_TYPESTATE(consumed)
+            T& leak_ref()
     {
         ASSERT(m_ptr);
         return *exchange(m_ptr, nullptr);
     }
 
-    CALLABLE_WHEN("unconsumed","unknown")
+    CALLABLE_WHEN("unconsumed", "unknown")
     T* ptr()
     {
         ASSERT(m_ptr);
         return m_ptr;
     }
-    CALLABLE_WHEN("unconsumed","unknown")
+    CALLABLE_WHEN("unconsumed", "unknown")
     const T* ptr() const
     {
         ASSERT(m_ptr);
@@ -249,6 +237,17 @@ public:
 
     operator bool() const = delete;
     bool operator!() const = delete;
+
+    void swap(NonnullRefPtr& other)
+    {
+        ::swap(m_ptr, other.m_ptr);
+    }
+
+    template<typename U>
+    void swap(NonnullRefPtr<U>& other)
+    {
+        ::swap(m_ptr, other.m_ptr);
+    }
 
 private:
     NonnullRefPtr() = delete;
