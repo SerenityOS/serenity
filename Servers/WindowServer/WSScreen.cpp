@@ -31,6 +31,7 @@
 #include "WSWindowManager.h"
 #include <Kernel/FB.h>
 #include <fcntl.h>
+#include <stdio.h>
 #include <sys/mman.h>
 #include <unistd.h>
 
@@ -47,7 +48,10 @@ WSScreen::WSScreen(unsigned desired_width, unsigned desired_height)
     ASSERT(!s_the);
     s_the = this;
     m_framebuffer_fd = open("/dev/fb0", O_RDWR | O_CLOEXEC);
-    ASSERT(m_framebuffer_fd >= 0);
+    if (m_framebuffer_fd < 0) {
+        perror("failed to open /dev/fb0");
+        ASSERT_NOT_REACHED();
+    }
 
     if (fb_set_buffer(m_framebuffer_fd, 0) == 0) {
         m_can_set_buffer = true;
