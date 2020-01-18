@@ -245,6 +245,9 @@ int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_para
     if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
 
+    if (params.name.length > PATH_MAX)
+        return -ENAMETOOLONG;
+
     auto name = validate_and_copy_string_from_user(params.name);
     if (name.is_null())
         return -EFAULT;
@@ -323,6 +326,8 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 
     String name;
     if (params.name.characters) {
+        if (params.name.length > PATH_MAX)
+            return (void*)-ENAMETOOLONG;
         name = validate_and_copy_string_from_user(params.name);
         if (name.is_null())
             return (void*)-EFAULT;
