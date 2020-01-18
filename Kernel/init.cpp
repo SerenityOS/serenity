@@ -277,7 +277,7 @@ extern "C" [[noreturn]] void init()
     if (cmdline && bad_prefix_check(reinterpret_cast<const char*>(cmdline), "serial_debug"))
         set_serial_debug(true);
 
-    detect_cpu_features();
+    cpu_setup();
 
     kmalloc_init();
     slab_alloc_init();
@@ -309,32 +309,7 @@ extern "C" [[noreturn]] void init()
 
     kprintf("Starting SerenityOS...\n");
 
-    if (g_cpu_supports_sse) {
-        sse_init();
-        kprintf("x86: SSE support enabled\n");
-    }
 
-    if (g_cpu_supports_umip) {
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x800, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: UMIP support enabled\n");
-    }
-
-    if (g_cpu_supports_tsc) {
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x4, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: RDTSC support restricted\n");
-    }
-
-    if (g_cpu_supports_rdrand) {
-        kprintf("x86: Using RDRAND for good randomness\n");
-    } else {
-        kprintf("x86: No RDRAND support detected. Randomness will be shitty\n");
-    }
 
     __stack_chk_guard = get_good_random<u32>();
 

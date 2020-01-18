@@ -578,7 +578,7 @@ bool g_cpu_supports_sse;
 bool g_cpu_supports_tsc;
 bool g_cpu_supports_umip;
 
-void detect_cpu_features()
+void cpu_detect()
 {
     CPUID processor_info(0x1);
     g_cpu_supports_pae = (processor_info.edx() & (1 << 6));
@@ -612,17 +612,22 @@ void clac()
                      : "cc");
 }
 
-void x86_enable_pae()
+void cpu_setup()
 {
-    // Turn on CR4.PAE
-    asm volatile(
-        "mov %cr4, %eax\n"
-        "orl $0x20, %eax\n"
-        "mov %eax, %cr4\n");
-}
+    cpu_detect();
 
-void x86_enable_pge()
-{
+    if (g_cpu_supports_sse) {
+        sse_init();
+        kprintf("x86: SSE support enabled\n");
+    }
+
+    asm volatile(
+        "movl %%cr0, %%eax\n"
+        "orl $0x00010000, %%eax\n"
+        "movl %%eax, %%cr0\n" ::
+            : "%eax", "memory");
+    kprintf("x86: WP support enabled\n");
+
     if (g_cpu_supports_pge) {
         // Turn on CR4.PGE so the CPU will respect the G bit in page tables.
         asm volatile(
@@ -633,39 +638,7 @@ void x86_enable_pge()
     } else {
         kprintf("x86: PGE support not detected\n");
     }
-}
 
-void x86_enable_smep()
-{
-    if (g_cpu_supports_smep) {
-        // Turn on CR4.SMEP
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x100000, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: SMEP support enabled\n");
-    } else {
-        kprintf("x86: SMEP support not detected\n");
-    }
-}
-
-void x86_enable_smap()
-{
-    if (g_cpu_supports_smap) {
-        // Turn on CR4.SMAP
-        kprintf("x86: Enabling SMAP\n");
-        asm volatile(
-            "mov %cr4, %eax\n"
-            "orl $0x200000, %eax\n"
-            "mov %eax, %cr4\n");
-        kprintf("x86: SMAP support enabled\n");
-    } else {
-        kprintf("x86: SMAP support not detected\n");
-    }
-}
-
-void x86_enable_nx()
-{
     if (g_cpu_supports_nx) {
         // Turn on IA32_EFER.NXE
         asm volatile(
@@ -677,13 +650,49 @@ void x86_enable_nx()
     } else {
         kprintf("x86: NX support not detected\n");
     }
-}
 
-void x86_enable_wp()
-{
-    asm volatile(
-        "movl %%cr0, %%eax\n"
-        "orl $0x00010000, %%eax\n"
-        "movl %%eax, %%cr0\n" ::
-            : "%eax", "memory");
+    if (g_cpu_supports_smep) {
+        // Turn on CR4.SMEP
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x100000, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: SMEP support enabled\n");
+    } else {
+        kprintf("x86: SMEP support not detected\n");
+    }
+
+    if (g_cpu_supports_smap) {
+        // Turn on CR4.SMAP
+        kprintf("x86: Enabling SMAP\n");
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x200000, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: SMAP support enabled\n");
+    } else {
+        kprintf("x86: SMAP support not detected\n");
+    }
+
+    if (g_cpu_supports_umip) {
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x800, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: UMIP support enabled\n");
+    }
+
+    if (g_cpu_supports_tsc) {
+        asm volatile(
+            "mov %cr4, %eax\n"
+            "orl $0x4, %eax\n"
+            "mov %eax, %cr4\n");
+        kprintf("x86: RDTSC support restricted\n");
+    }
+
+    if (g_cpu_supports_rdrand) {
+        kprintf("x86: Using RDRAND for good randomness\n");
+    } else {
+        kprintf("x86: No RDRAND support detected. Randomness will be shitty\n");
+    }
 }
