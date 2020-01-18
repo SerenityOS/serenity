@@ -1114,12 +1114,13 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
     if (params.arguments.length > ARG_MAX || params.environment.length > ARG_MAX)
         return -E2BIG;
 
-    auto path = validate_and_copy_string_from_user(params.path);
-    if (path.is_null())
-        return -EFAULT;
-
-    if (path.is_empty())
-        return -ENOENT;
+    String path;
+    {
+        auto path_arg = get_syscall_path_argument(params.path);
+        if (path_arg.is_error())
+            return path_arg.error();
+        path = path_arg.value();
+    }
 
     auto copy_user_strings = [&](const auto& list, auto& output) {
         if (!list.length)
