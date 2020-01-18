@@ -1266,6 +1266,8 @@ void Process::dump_regions()
             region.vmobject().is_purgeable() ? 'P' : ' ',
             region.name().characters());
     }
+
+    MM.dump_kernel_regions();
 }
 
 void Process::sys$exit(int status)

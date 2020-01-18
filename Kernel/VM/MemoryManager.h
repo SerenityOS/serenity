@@ -106,6 +106,8 @@ public:
     static Region* region_from_vaddr(Process&, VirtualAddress);
     static const Region* region_from_vaddr(const Process&, VirtualAddress);
 
+    void dump_kernel_regions();
+
 private:
     MemoryManager();
     ~MemoryManager();
