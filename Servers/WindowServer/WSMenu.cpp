@@ -1,5 +1,6 @@
 /*
  * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Shannon Booth <shannon.ml.booth@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -37,6 +38,7 @@
 #include <LibDraw/GraphicsBitmap.h>
 #include <LibDraw/Painter.h>
 #include <LibDraw/StylePainter.h>
+#include <LibDraw/Triangle.h>
 #include <WindowServer/WSClientConnection.h>
 #include <WindowServer/WindowClientEndpoint.h>
 
@@ -279,7 +281,23 @@ void WSMenu::event(CEvent& event)
 {
     if (event.type() == WSEvent::MouseMove) {
         ASSERT(menu_window());
-        int index = item_index_at(static_cast<const WSMouseEvent&>(event).position());
+        auto mouse_event = static_cast<const WSMouseEvent&>(event);
+
+        if (hovered_item() && hovered_item()->is_submenu()) {
+
+            auto item = *hovered_item();
+            auto submenu_top_left = item.rect().location() + Point { item.rect().width(), 0 };
+            auto submenu_bottom_left = submenu_top_left + Point { 0, item.submenu()->height() };
+
+            auto safe_hover_triangle = Triangle { m_last_position_in_hover, submenu_top_left, submenu_bottom_left };
+            m_last_position_in_hover = mouse_event.position();
+
+            // Don't update the hovered item if mouse is moving towards a submenu
+            if (safe_hover_triangle.contains(mouse_event.position()))
+                return;
+        }
+
+        int index = item_index_at(mouse_event.position());
         if (m_hovered_item_index == index)
             return;
         m_hovered_item_index = index;
