@@ -47,6 +47,9 @@ public:
 
     int release_all_clean_pages();
 
+    u32 writable_mappings() const;
+    u32 executable_mappings() const;
+
 private:
     explicit InodeVMObject(Inode&, size_t);
     explicit InodeVMObject(const InodeVMObject&);
