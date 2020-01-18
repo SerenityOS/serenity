@@ -464,7 +464,6 @@ void Scheduler::switch_now()
 {
     Descriptor& descriptor = get_gdt_entry(current->selector());
     descriptor.type = 9;
-    flush_gdt();
     asm("sti\n"
         "ljmp *(%%eax)\n" ::"a"(&current->far_ptr()));
 }
@@ -521,7 +520,6 @@ bool Scheduler::context_switch(Thread& thread)
 
     auto& descriptor = get_gdt_entry(thread.selector());
     descriptor.type = 11; // Busy TSS
-    flush_gdt();
     return true;
 }
 
