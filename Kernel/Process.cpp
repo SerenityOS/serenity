@@ -4286,7 +4286,7 @@ int Process::sys$module_load(const char* user_path, size_t path_length)
     });
 
     if (missing_symbols)
-        return -ENOENT;
+        return -EINVAL;
 
     auto* text_base = section_storage_by_name.get(".text").value_or(nullptr);
     if (!text_base) {
