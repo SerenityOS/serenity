@@ -127,10 +127,6 @@ private:
     void flush_entire_tlb();
     void flush_tlb(VirtualAddress);
 
-    void map_protected(VirtualAddress, size_t length);
-
-    void create_identity_mapping(PageDirectory&, VirtualAddress, size_t length);
-
     static Region* user_region_from_vaddr(Process&, VirtualAddress);
     static Region* kernel_region_from_vaddr(VirtualAddress);
 

@@ -203,36 +203,6 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
     return quickmap_pt(PhysicalAddress((u32)pde.page_table_base()))[page_table_index];
 }
 
-void MemoryManager::map_protected(VirtualAddress vaddr, size_t length)
-{
-    InterruptDisabler disabler;
-    ASSERT(vaddr.is_page_aligned());
-    for (u32 offset = 0; offset < length; offset += PAGE_SIZE) {
-        auto pte_address = vaddr.offset(offset);
-        auto& pte = ensure_pte(kernel_page_directory(), pte_address);
-        pte.set_physical_page_base(pte_address.get());
-        pte.set_user_allowed(false);
-        pte.set_present(false);
-        pte.set_writable(false);
-        flush_tlb(pte_address);
-    }
-}
-
-void MemoryManager::create_identity_mapping(PageDirectory& page_directory, VirtualAddress vaddr, size_t size)
-{
-    InterruptDisabler disabler;
-    ASSERT((vaddr.get() & ~PAGE_MASK) == 0);
-    for (u32 offset = 0; offset < size; offset += PAGE_SIZE) {
-        auto pte_address = vaddr.offset(offset);
-        auto& pte = ensure_pte(page_directory, pte_address);
-        pte.set_physical_page_base(pte_address.get());
-        pte.set_user_allowed(false);
-        pte.set_present(true);
-        pte.set_writable(true);
-        flush_tlb(pte_address);
-    }
-}
-
 void MemoryManager::initialize()
 {
     s_the = new MemoryManager;
