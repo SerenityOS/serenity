@@ -157,17 +157,16 @@ RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 irq)
     // we add space to account for overhang from the last packet - the rtl8139
     // can optionally guarantee that packets will be contiguous by
     // purposefully overrunning the rx buffer
-    m_rx_buffer_addr = (u32)kmalloc_aligned(RX_BUFFER_SIZE + PACKET_SIZE_MAX, 16);
+    m_rx_buffer_addr = (u32)virtual_to_low_physical(kmalloc_aligned(RX_BUFFER_SIZE + PACKET_SIZE_MAX, 16));
     kprintf("RTL8139: RX buffer: P%p\n", m_rx_buffer_addr);
 
-    auto tx_buffer_addr = (u32)kmalloc_aligned(TX_BUFFER_SIZE * 4, 16);
+    auto tx_buffer_addr = (u32)virtual_to_low_physical(kmalloc_aligned(TX_BUFFER_SIZE * 4, 16));
     for (int i = 0; i < RTL8139_TX_BUFFER_COUNT; i++) {
         m_tx_buffer_addr[i] = tx_buffer_addr + TX_BUFFER_SIZE * i;
         kprintf("RTL8139: TX buffer %d: P%p\n", i, m_tx_buffer_addr[i]);
     }
 
     m_packet_buffer = (u32)kmalloc(PACKET_SIZE_MAX);
-    kprintf("RTL8139: Packet buffer: P%p\n", m_packet_buffer);
 
     reset();
 
@@ -324,8 +323,8 @@ void RTL8139NetworkAdapter::send_raw(const u8* data, int length)
         m_tx_next_buffer = (hw_buffer + 1) % 4;
     }
 
-    memcpy((void*)(m_tx_buffer_addr[hw_buffer]), data, length);
-    memset((void*)(m_tx_buffer_addr[hw_buffer] + length), 0, TX_BUFFER_SIZE - length);
+    memcpy((void*)low_physical_to_virtual(m_tx_buffer_addr[hw_buffer]), data, length);
+    memset((void*)(low_physical_to_virtual(m_tx_buffer_addr[hw_buffer]) + length), 0, TX_BUFFER_SIZE - length);
 
     // the rtl8139 will not actually emit packets onto the network if they're
     // smaller than 64 bytes. the rtl8139 adds a checksum to the end of each
@@ -343,7 +342,7 @@ void RTL8139NetworkAdapter::send_raw(const u8* data, int length)
 
 void RTL8139NetworkAdapter::receive()
 {
-    auto* start_of_packet = (const u8*)(m_rx_buffer_addr + m_rx_buffer_offset);
+    auto* start_of_packet = (const u8*)(low_physical_to_virtual(m_rx_buffer_addr) + m_rx_buffer_offset);
 
     u16 status = *(const u16*)(start_of_packet + 0);
     u16 length = *(const u16*)(start_of_packet + 2);
