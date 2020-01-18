@@ -1283,7 +1283,7 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
 #endif
             m_fds[i] = fork_parent->m_fds[i];
         }
-    } else {
+    } else if (ring == Ring3) {
         m_fds.resize(m_max_open_file_descriptors);
         auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
         m_fds[0].set(*device_to_use_as_tty.open(O_RDONLY).value());
