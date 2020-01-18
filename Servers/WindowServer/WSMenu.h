@@ -133,7 +133,7 @@ private:
 
     WeakPtr<WSWindow> m_window_menu_of;
     bool m_is_window_menu_open = { false };
-
+    Point m_last_position_in_hover;
     int m_theme_index_at_last_paint { -1 };
     int m_hovered_item_index { -1 };
     bool m_in_submenu { false };
