@@ -194,6 +194,19 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
 
 Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible)
 {
+    size_t end_in_vmobject = offset_in_vmobject + size;
+    if (end_in_vmobject < offset_in_vmobject) {
+        dbgprintf("allocate_region_with_vmobject: Overflow (offset + size)\n");
+        return nullptr;
+    }
+    if (offset_in_vmobject >= vmobject->size()) {
+        dbgprintf("allocate_region_with_vmobject: Attempt to allocate a region with an offset past the end of its VMObject.\n");
+        return nullptr;
+    }
+    if (end_in_vmobject > vmobject->size()) {
+        dbgprintf("allocate_region_with_vmobject: Attempt to allocate a region with an end past the end of its VMObject.\n");
+        return nullptr;
+    }
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
@@ -666,7 +679,6 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 {
     ASSERT(is_ring3());
     auto path = main_program_description->absolute_path();
-
     dbgprintf("%s(%d) do_exec(%s): thread_count() = %d\n", m_name.characters(), m_pid, path.characters(), thread_count());
     // FIXME(Thread): Kill any threads the moment we commit to the exec().
     if (thread_count() != 1) {
