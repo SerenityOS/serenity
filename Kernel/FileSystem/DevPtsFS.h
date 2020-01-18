@@ -42,8 +42,8 @@ public:
     virtual const char* class_name() const override { return "DevPtsFS"; }
 
     virtual InodeIdentifier root_inode() const override;
-    virtual RefPtr<Inode> create_inode(InodeIdentifier parentInode, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t, int& error) override;
-    virtual RefPtr<Inode> create_directory(InodeIdentifier parentInode, const String& name, mode_t, uid_t, gid_t, int& error) override;
+    virtual RefPtr<Inode> create_inode(InodeIdentifier parent_inode, const String& name, mode_t, off_t size, dev_t, uid_t, gid_t, int& error) override;
+    virtual RefPtr<Inode> create_directory(InodeIdentifier parent_inode, const String& name, mode_t, uid_t, gid_t, int& error) override;
     virtual RefPtr<Inode> get_inode(InodeIdentifier) const override;
 
     static void register_slave_pty(SlavePTY&);
