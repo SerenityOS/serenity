@@ -34,9 +34,10 @@
 LineEditor::LineEditor()
 {
     struct winsize ws;
-    int rc = ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws);
-    ASSERT(rc == 0);
-    m_num_columns = ws.ws_col;
+    if (ioctl(STDOUT_FILENO, TIOCGWINSZ, &ws) < 0)
+        m_num_columns = 80;
+    else
+        m_num_columns = ws.ws_col;
 }
 
 LineEditor::~LineEditor()
