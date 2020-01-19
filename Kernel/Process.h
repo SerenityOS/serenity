@@ -390,6 +390,8 @@ private:
 
     Range allocate_range(VirtualAddress, size_t);
 
+    Region& add_region(NonnullOwnPtr<Region>);
+
     int do_exec(NonnullRefPtr<FileDescription> main_program_description, Vector<String> arguments, Vector<String> environment, RefPtr<FileDescription> interpreter_description);
     ssize_t do_write(FileDescription&, const u8*, int data_size);
 

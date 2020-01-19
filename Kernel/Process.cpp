@@ -167,8 +167,7 @@ static unsigned prot_to_region_access_flags(int prot)
 
 Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
 {
-    m_regions.append(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
-    return m_regions.last();
+    return add_region(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
 }
 
 Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, bool commit)
@@ -176,11 +175,11 @@ Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    m_regions.append(Region::create_user_accessible(range, name, prot_to_region_access_flags(prot)));
-    m_regions.last().map(page_directory());
+    auto& region = add_region(Region::create_user_accessible(range, name, prot_to_region_access_flags(prot)));
+    region.map(page_directory());
     if (commit)
-        m_regions.last().commit();
-    return &m_regions.last();
+        region.commit();
+    return &region;
 }
 
 Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, NonnullRefPtr<Inode> inode, const String& name, int prot)
@@ -188,9 +187,9 @@ Region* Process::allocate_file_backed_region(VirtualAddress vaddr, size_t size, 
     auto range = allocate_range(vaddr, size);
     if (!range.is_valid())
         return nullptr;
-    m_regions.append(Region::create_user_accessible(range, inode, name, prot_to_region_access_flags(prot)));
-    m_regions.last().map(page_directory());
-    return &m_regions.last();
+    auto& region = add_region(Region::create_user_accessible(range, inode, name, prot_to_region_access_flags(prot)));
+    region.map(page_directory());
+    return &region;
 }
 
 Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size, NonnullRefPtr<VMObject> vmobject, size_t offset_in_vmobject, const String& name, int prot, bool user_accessible)
@@ -212,12 +211,13 @@ Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size
     if (!range.is_valid())
         return nullptr;
     offset_in_vmobject &= PAGE_MASK;
+    Region* region;
     if (user_accessible)
-        m_regions.append(Region::create_user_accessible(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
+        region = &add_region(Region::create_user_accessible(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
     else
-        m_regions.append(Region::create_kernel_only(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
-    m_regions.last().map(page_directory());
-    return &m_regions.last();
+        region = &add_region(Region::create_kernel_only(range, move(vmobject), offset_in_vmobject, name, prot_to_region_access_flags(prot)));
+    region->map(page_directory());
+    return region;
 }
 
 bool Process::deallocate_region(Region& region)
@@ -225,7 +225,7 @@ bool Process::deallocate_region(Region& region)
     InterruptDisabler disabler;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
-            m_regions.unstable_remove(i);
+            m_regions.remove(i);
             return true;
         }
     }
@@ -640,11 +640,11 @@ pid_t Process::sys$fork(RegisterDump& regs)
 #ifdef FORK_DEBUG
         dbg() << "fork: cloning Region{" << &region << "} '" << region.name() << "' @ " << region.vaddr();
 #endif
-        child->m_regions.append(region.clone());
-        child->m_regions.last().map(child->page_directory());
+        auto& child_region = child->add_region(region.clone());
+        child_region.map(child->page_directory());
 
         if (&region == m_master_tls_region)
-            child->m_master_tls_region = &child->m_regions.last();
+            child->m_master_tls_region = &child_region;
     }
 
     child->m_extra_gids = m_extra_gids;
@@ -4577,4 +4577,11 @@ int Process::sys$pledge(const Syscall::SC_pledge_params* user_params)
     }
 
     return 0;
+}
+
+Region& Process::add_region(NonnullOwnPtr<Region> region)
+{
+    auto* ptr = region.ptr();
+    m_regions.append(move(region));
+    return *ptr;
 }
