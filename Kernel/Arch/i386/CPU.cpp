@@ -208,6 +208,10 @@ void handle_crash(RegisterDump& regs, const char* description, int signal)
         hang();
     }
 
+    // If a process crashed while inspecting another process,
+    // make sure we switch back to the right page tables.
+    MM.enter_process_paging_scope(current->process());
+
     kprintf("\033[31;1mCRASH: %s. %s: %s(%u)\033[0m\n",
         description,
         current->process().is_ring0() ? "Kernel" : "Process",
@@ -547,6 +551,12 @@ void __assertion_failed(const char* msg, const char* file, unsigned line, const 
 {
     asm volatile("cli");
     kprintf("ASSERTION FAILED: %s\n%s:%u in %s\n", msg, file, line, func);
+
+    // Switch back to the current process's page tables if there are any.
+    // Otherwise stack walking will be a disaster.
+    if (current)
+        MM.enter_process_paging_scope(current->process());
+
     dump_backtrace();
     asm volatile("hlt");
     for (;;)
