@@ -682,10 +682,15 @@ void MemoryManager::dump_kernel_regions()
 ProcessPagingScope::ProcessPagingScope(Process& process)
 {
     ASSERT(current);
+    asm("movl %%cr3, %%eax"
+        : "=a"(m_previous_cr3));
     MM.enter_process_paging_scope(process);
 }
 
 ProcessPagingScope::~ProcessPagingScope()
 {
-    MM.enter_process_paging_scope(current->process());
+    InterruptDisabler disabler;
+    current->tss().cr3 = m_previous_cr3;
+    asm volatile("movl %%eax, %%cr3" ::"a"(m_previous_cr3)
+                 : "memory");
 }

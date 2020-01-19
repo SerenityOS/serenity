@@ -734,7 +734,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 #ifdef MM_DEBUG
     dbgprintf("Process %u exec: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif
-    ProcessPagingScope paging_scope(*this);
+
+    MM.enter_process_paging_scope(*this);
 
     Region* region { nullptr };
 
@@ -775,11 +776,10 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         m_regions.append(move(executable_region));
 
         ArmedScopeGuard rollback_regions_guard([&]() {
-            m_page_directory = move(old_page_directory);
             ASSERT(&current->process() == this);
-            MM.enter_process_paging_scope(*this);
-            executable_region = m_regions.take_first();
+            m_page_directory = move(old_page_directory);
             m_regions = move(old_regions);
+            MM.enter_process_paging_scope(*this);
         });
 
         loader = make<ELFLoader>(region->vaddr().as_ptr(), loader_metadata.size);
