@@ -37,6 +37,11 @@ public:
     {
     }
 
+    explicit VirtualAddress(const void* address)
+        : m_address((u32)address)
+    {
+    }
+
     bool is_null() const { return m_address == 0; }
     bool is_page_aligned() const { return (m_address & 0xfff) == 0; }
 

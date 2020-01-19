@@ -1380,8 +1380,11 @@ void create_signal_trampolines()
     u8* trampoline_end = (u8*)asm_signal_trampoline_end;
     size_t trampoline_size = trampoline_end - trampoline;
 
-    u8* code_ptr = (u8*)trampoline_region->vaddr().as_ptr();
-    copy_to_user(code_ptr, trampoline, trampoline_size);
+    {
+        SmapDisabler disabler;
+        u8* code_ptr = (u8*)trampoline_region->vaddr().as_ptr();
+        memcpy(code_ptr, trampoline, trampoline_size);
+    }
 
     trampoline_region->set_writable(false);
     trampoline_region->remap();

@@ -214,3 +214,10 @@ inline bool is_user_address(VirtualAddress vaddr)
 {
     return vaddr.get() < 0xc0000000;
 }
+
+inline bool is_user_range(VirtualAddress vaddr, size_t size)
+{
+    if (vaddr.offset(size) < vaddr)
+        return false;
+    return is_user_address(vaddr) && is_user_address(vaddr.offset(size));
+}
