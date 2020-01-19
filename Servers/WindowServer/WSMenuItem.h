@@ -63,7 +63,7 @@ public:
     void set_shortcut_text(const String& text) { m_shortcut_text = text; }
 
     void set_rect(const Rect& rect) { m_rect = rect; }
-    Rect rect() const { return m_rect; }
+    Rect rect() const;
 
     unsigned identifier() const { return m_identifier; }
 

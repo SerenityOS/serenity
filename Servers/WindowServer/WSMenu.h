@@ -84,8 +84,7 @@ public:
     bool is_window_menu_open() { return m_is_window_menu_open; }
     void set_window_menu_open(bool is_open) { m_is_window_menu_open = is_open; }
 
-    int width() const;
-    int height() const;
+    int content_width() const;
 
     int item_height() const { return 20; }
     int frame_thickness() const { return 3; }
@@ -112,8 +111,14 @@ public:
 
     void redraw_if_theme_changed();
 
+    bool is_scrollable() const { return m_scrollable; }
+    int scroll_offset() const { return m_scroll_offset; }
+
 private:
     virtual void event(CEvent&) override;
+
+    void handle_hover_event(const WSMouseEvent&);
+    int visible_item_count() const;
 
     int item_index_at(const Point&);
     int padding_between_text_and_shortcut() const { return 50; }
@@ -137,4 +142,8 @@ private:
     int m_theme_index_at_last_paint { -1 };
     int m_hovered_item_index { -1 };
     bool m_in_submenu { false };
+
+    bool m_scrollable { false };
+    int m_scroll_offset { 0 };
+    int m_max_scroll_offset { 0 };
 };

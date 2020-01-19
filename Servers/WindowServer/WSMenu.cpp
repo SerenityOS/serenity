@@ -92,7 +92,7 @@ static const int s_item_icon_width = 16;
 static const int s_checkbox_or_icon_padding = 6;
 static const int s_stripe_width = 23;
 
-int WSMenu::width() const
+int WSMenu::content_width() const
 {
     int widest_text = 0;
     int widest_shortcut = 0;
@@ -114,13 +114,6 @@ int WSMenu::width() const
     return max(widest_item, rect_in_menubar().width()) + horizontal_padding() + frame_thickness() * 2;
 }
 
-int WSMenu::height() const
-{
-    if (m_items.is_empty())
-        return 0;
-    return (m_items.last().rect().bottom() + 1) + frame_thickness();
-}
-
 void WSMenu::redraw()
 {
     if (!menu_window())
@@ -131,7 +124,7 @@ void WSMenu::redraw()
 
 WSWindow& WSMenu::ensure_menu_window()
 {
-    int width = this->width();
+    int width = this->content_width();
     if (!m_menu_window) {
         Point next_item_location(frame_thickness(), frame_thickness());
         for (auto& item : m_items) {
@@ -144,12 +137,30 @@ WSWindow& WSMenu::ensure_menu_window()
             next_item_location.move_by(0, height);
         }
 
+        int window_height_available = WSScreen::the().height() - WSMenuManager::the().menubar_rect().height() - frame_thickness() * 2;
+        int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
+        int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
+        int window_height = min(max_window_height, content_height);
+        if (window_height < content_height) {
+            m_scrollable = true;
+            m_max_scroll_offset = item_count() - window_height / item_height() + 2;
+        }
+
         auto window = WSWindow::construct(*this, WSWindowType::Menu);
-        window->set_rect(0, 0, width, height());
+        window->set_rect(0, 0, width, window_height);
         m_menu_window = move(window);
         draw();
     }
     return *m_menu_window;
+}
+
+int WSMenu::visible_item_count() const
+{
+    if (!is_scrollable())
+        return m_items.size();
+    ASSERT(m_menu_window);
+    // Make space for up/down arrow indicators
+    return m_menu_window->height() / item_height() - 2;
 }
 
 void WSMenu::draw()
@@ -164,7 +175,7 @@ void WSMenu::draw()
     Rect rect { {}, menu_window()->size() };
     painter.fill_rect(rect.shrunken(6, 6), palette.menu_base());
     StylePainter::paint_window_frame(painter, rect, palette);
-    int width = this->width();
+    int width = this->content_width();
 
     if (!s_checked_bitmap)
         s_checked_bitmap = &CharacterBitmap::create_from_ascii(s_checked_bitmap_data, s_checked_bitmap_width, s_checked_bitmap_height).leak_ref();
@@ -176,11 +187,23 @@ void WSMenu::draw()
         has_items_with_icon = has_items_with_icon | !!item.icon();
     }
 
-    Rect stripe_rect { frame_thickness(), frame_thickness(), s_stripe_width, height() - frame_thickness() * 2 };
+    Rect stripe_rect { frame_thickness(), frame_thickness(), s_stripe_width, menu_window()->height() - frame_thickness() * 2 };
     painter.fill_rect(stripe_rect, palette.menu_stripe());
     painter.draw_line(stripe_rect.top_right(), stripe_rect.bottom_right(), palette.menu_stripe().darkened());
 
-    for (auto& item : m_items) {
+    int visible_item_count = this->visible_item_count();
+
+    if (is_scrollable()) {
+        bool can_go_up = m_scroll_offset > 0;
+        bool can_go_down = m_scroll_offset < m_max_scroll_offset;
+        Rect up_indicator_rect { frame_thickness(), frame_thickness(), content_width(), item_height() };
+        painter.draw_text(up_indicator_rect, "\xc3\xb6", TextAlignment::Center, can_go_up ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
+        Rect down_indicator_rect { frame_thickness(), menu_window()->height() - item_height() - frame_thickness(), content_width(), item_height() };
+        painter.draw_text(down_indicator_rect, "\xc3\xb7", TextAlignment::Center, can_go_down ? palette.menu_base_text() : palette.color(ColorRole::DisabledText));
+    }
+
+    for (int i = 0; i < visible_item_count; ++i) {
+        auto& item = m_items.at(m_scroll_offset + i);
         if (item.type() == WSMenuItem::Text) {
             Color text_color = palette.menu_base_text();
             if (&item == hovered_item() && item.is_enabled()) {
@@ -277,39 +300,57 @@ void WSMenu::decend_into_submenu_at_hovered_item()
     m_in_submenu = true;
 }
 
+void WSMenu::handle_hover_event(const WSMouseEvent& event)
+{
+    ASSERT(menu_window());
+    auto mouse_event = static_cast<const WSMouseEvent&>(event);
+
+    if (hovered_item() && hovered_item()->is_submenu()) {
+
+        auto item = *hovered_item();
+        auto submenu_top_left = item.rect().location() + Point { item.rect().width(), 0 };
+        auto submenu_bottom_left = submenu_top_left + Point { 0, item.submenu()->menu_window()->height() };
+
+        auto safe_hover_triangle = Triangle { m_last_position_in_hover, submenu_top_left, submenu_bottom_left };
+        m_last_position_in_hover = mouse_event.position();
+
+        // Don't update the hovered item if mouse is moving towards a submenu
+        if (safe_hover_triangle.contains(mouse_event.position()))
+            return;
+    }
+
+    int index = item_index_at(mouse_event.position());
+    if (m_hovered_item_index == index)
+        return;
+    m_hovered_item_index = index;
+
+    // FIXME: Tell parent menu (if it exists) that it is currently in a submenu
+    m_in_submenu = false;
+    update_for_new_hovered_item();
+    return;
+}
+
 void WSMenu::event(CEvent& event)
 {
     if (event.type() == WSEvent::MouseMove) {
-        ASSERT(menu_window());
-        auto mouse_event = static_cast<const WSMouseEvent&>(event);
-
-        if (hovered_item() && hovered_item()->is_submenu()) {
-
-            auto item = *hovered_item();
-            auto submenu_top_left = item.rect().location() + Point { item.rect().width(), 0 };
-            auto submenu_bottom_left = submenu_top_left + Point { 0, item.submenu()->height() };
-
-            auto safe_hover_triangle = Triangle { m_last_position_in_hover, submenu_top_left, submenu_bottom_left };
-            m_last_position_in_hover = mouse_event.position();
-
-            // Don't update the hovered item if mouse is moving towards a submenu
-            if (safe_hover_triangle.contains(mouse_event.position()))
-                return;
-        }
-
-        int index = item_index_at(mouse_event.position());
-        if (m_hovered_item_index == index)
-            return;
-        m_hovered_item_index = index;
-
-        // FIXME: Tell parent menu (if it exists) that it is currently in a submenu
-        m_in_submenu = false;
-        update_for_new_hovered_item();
+        handle_hover_event(static_cast<const WSMouseEvent&>(event));
         return;
     }
 
     if (event.type() == WSEvent::MouseUp) {
         open_hovered_item();
+        return;
+    }
+
+    if (event.type() == WSEvent::MouseWheel && is_scrollable()) {
+        auto& mouse_event = static_cast<const WSMouseEvent&>(event);
+        m_scroll_offset += mouse_event.wheel_delta();
+        if (m_scroll_offset < 0)
+            m_scroll_offset = 0;
+        if (m_scroll_offset >= m_max_scroll_offset)
+            m_scroll_offset = m_max_scroll_offset;
+        handle_hover_event(mouse_event);
+        redraw();
         return;
     }
 
@@ -347,11 +388,17 @@ void WSMenu::event(CEvent& event)
         if (key == Key_Up) {
             ASSERT(m_items.at(0).type() != WSMenuItem::Separator);
 
+            if (is_scrollable() && m_hovered_item_index == 0)
+                return;
+
             do {
                 m_hovered_item_index--;
                 if (m_hovered_item_index < 0)
                     m_hovered_item_index = m_items.size() - 1;
             } while (hovered_item()->type() == WSMenuItem::Separator);
+
+            if (is_scrollable() && m_hovered_item_index < m_scroll_offset)
+                --m_scroll_offset;
 
             update_for_new_hovered_item();
             return;
@@ -360,11 +407,17 @@ void WSMenu::event(CEvent& event)
         if (key == Key_Down) {
             ASSERT(m_items.at(0).type() != WSMenuItem::Separator);
 
+            if (is_scrollable() && m_hovered_item_index == m_items.size() - 1)
+                return;
+
             do {
                 m_hovered_item_index++;
                 if (m_hovered_item_index >= m_items.size())
                     m_hovered_item_index = 0;
             } while (hovered_item()->type() == WSMenuItem::Separator);
+
+            if (is_scrollable() && m_hovered_item_index >= (m_scroll_offset + visible_item_count()))
+                ++m_scroll_offset;
 
             update_for_new_hovered_item();
             return;
@@ -452,16 +505,16 @@ void WSMenu::popup(const Point& position, bool is_submenu)
 
     const int margin = 30;
     Point adjusted_pos = position;
-    if (window.height() >= WSScreen::the().height()) {
-        adjusted_pos.set_y(0);
-    } else {
-        if (adjusted_pos.x() + window.width() >= WSScreen::the().width() - margin) {
-            adjusted_pos = adjusted_pos.translated(-window.width(), 0);
-        }
-        if (adjusted_pos.y() + window.height() >= WSScreen::the().height() - margin) {
-            adjusted_pos = adjusted_pos.translated(0, -window.height());
-        }
+
+    if (adjusted_pos.x() + window.width() >= WSScreen::the().width() - margin) {
+        adjusted_pos = adjusted_pos.translated(-window.width(), 0);
     }
+    if (adjusted_pos.y() + window.height() >= WSScreen::the().height() - margin) {
+        adjusted_pos = adjusted_pos.translated(0, -window.height());
+    }
+
+    if (adjusted_pos.y() < WSMenuManager::the().menubar_rect().height())
+        adjusted_pos.set_y(WSMenuManager::the().menubar_rect().height());
 
     window.move_to(adjusted_pos);
     window.set_visible(true);
