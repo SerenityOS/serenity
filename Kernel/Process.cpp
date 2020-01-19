@@ -223,6 +223,8 @@ Region* Process::allocate_region_with_vmobject(VirtualAddress vaddr, size_t size
 bool Process::deallocate_region(Region& region)
 {
     InterruptDisabler disabler;
+    if (m_region_lookup_cache.region == &region)
+        m_region_lookup_cache.region = nullptr;
     for (int i = 0; i < m_regions.size(); ++i) {
         if (&m_regions[i] == &region) {
             m_regions.remove(i);
@@ -234,10 +236,16 @@ bool Process::deallocate_region(Region& region)
 
 Region* Process::region_from_range(const Range& range)
 {
+    if (m_region_lookup_cache.range == range && m_region_lookup_cache.region)
+        return m_region_lookup_cache.region;
+
     size_t size = PAGE_ROUND_UP(range.size());
     for (auto& region : m_regions) {
-        if (region.vaddr() == range.base() && region.size() == size)
+        if (region.vaddr() == range.base() && region.size() == size) {
+            m_region_lookup_cache.range = range;
+            m_region_lookup_cache.region = &region;
             return &region;
+        }
     }
     return nullptr;
 }
