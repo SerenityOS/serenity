@@ -295,4 +295,22 @@ TEST_CASE(nonnullownptrvector)
     EXPECT_EQ(objects.size(), 2);
 }
 
+TEST_CASE(insert_trivial)
+{
+    Vector<int> ints;
+    ints.append(0);
+    ints.append(10);
+    ints.append(20);
+    ints.append(30);
+    ints.append(40);
+    ints.insert(2, 15);
+    EXPECT_EQ(ints.size(), 6);
+    EXPECT_EQ(ints[0], 0);
+    EXPECT_EQ(ints[1], 10);
+    EXPECT_EQ(ints[2], 15);
+    EXPECT_EQ(ints[3], 20);
+    EXPECT_EQ(ints[4], 30);
+    EXPECT_EQ(ints[5], 40);
+}
+
 TEST_MAIN(Vector)

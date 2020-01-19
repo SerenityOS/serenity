@@ -94,6 +94,8 @@ class TypedTransfer {
 public:
     static void move(T* destination, T* source, size_t count)
     {
+        if (!count)
+            return;
         if constexpr (Traits<T>::is_trivial()) {
             memmove(destination, source, count * sizeof(T));
             return;
@@ -104,6 +106,8 @@ public:
 
     static void copy(T* destination, const T* source, size_t count)
     {
+        if (!count)
+            return;
         if constexpr (Traits<T>::is_trivial()) {
             memmove(destination, source, count * sizeof(T));
             return;
@@ -114,6 +118,9 @@ public:
 
     static bool compare(const T* a, const T* b, size_t count)
     {
+        if (!count)
+            return true;
+
         if constexpr (Traits<T>::is_trivial())
             return !memcmp(a, b, count * sizeof(T));
 
@@ -335,9 +342,13 @@ public:
             return append(move(value));
         grow_capacity(size() + 1);
         ++m_size;
-        for (int i = size() - 1; i > index; --i) {
-            new (slot(i)) T(move(at(i - 1)));
-            at(i - 1).~T();
+        if constexpr (Traits<T>::is_trivial()) {
+            TypedTransfer<T>::move(slot(index + 1), slot(index), m_size - index - 1);
+        } else {
+            for (int i = size() - 1; i > index; --i) {
+                new (slot(i)) T(move(at(i - 1)));
+                at(i - 1).~T();
+            }
         }
         new (slot(index)) T(move(value));
     }
