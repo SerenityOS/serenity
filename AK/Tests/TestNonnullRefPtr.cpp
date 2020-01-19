@@ -73,4 +73,11 @@ TEST_CASE(assign_owner_of_self)
     EXPECT_EQ(child->ref_count(), 1);
 }
 
+TEST_CASE(swap_with_self)
+{
+    auto object = adopt(*new Object);
+    swap(object, object);
+    EXPECT_EQ(object->ref_count(), 1);
+}
+
 TEST_MAIN(String)

@@ -267,6 +267,12 @@ inline const LogStream& operator<<(const LogStream& stream, const NonnullRefPtr<
     return stream << value.ptr();
 }
 
+template<typename T, typename U>
+inline void swap(NonnullRefPtr<T>& a, NonnullRefPtr<U>& b)
+{
+    a.swap(b);
+}
+
 }
 
 using AK::adopt;
