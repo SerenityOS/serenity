@@ -99,7 +99,7 @@ inline constexpr T ceil_div(T a, U b)
 #    pragma clang diagnostic ignored "-Wconsumed"
 #endif
 template<typename T>
-T&& move(T& arg)
+inline T&& move(T& arg)
 {
     return static_cast<T&&>(arg);
 }
@@ -113,13 +113,13 @@ struct Identity {
 };
 
 template<class T>
-constexpr T&& forward(typename Identity<T>::Type& param)
+inline constexpr T&& forward(typename Identity<T>::Type& param)
 {
     return static_cast<T&&>(param);
 }
 
 template<typename T, typename U>
-T exchange(T& a, U&& b)
+inline T exchange(T& a, U&& b)
 {
     T tmp = move(a);
     a = move(b);
@@ -127,7 +127,7 @@ T exchange(T& a, U&& b)
 }
 
 template<typename T, typename U>
-void swap(T& a, U& b)
+inline void swap(T& a, U& b)
 {
     U tmp = move((U&)a);
     a = (T &&) move(b);
