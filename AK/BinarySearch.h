@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include <AK/StdLibExtras.h>
 #include <AK/Types.h>
 
 namespace AK {
@@ -37,7 +38,7 @@ int integral_compare(const T& a, const T& b)
 }
 
 template<typename T, typename Compare>
-T* binary_search(T* haystack, size_t haystack_size, const T& needle, Compare compare = integral_compare)
+T* binary_search(T* haystack, size_t haystack_size, const T& needle, Compare compare = integral_compare, int* nearby_index = nullptr)
 {
     int low = 0;
     int high = haystack_size - 1;
@@ -48,9 +49,15 @@ T* binary_search(T* haystack, size_t haystack_size, const T& needle, Compare com
             high = middle - 1;
         else if (comparison > 0)
             low = middle + 1;
-        else
+        else {
+            if (nearby_index)
+                *nearby_index = middle;
             return &haystack[middle];
+        }
     }
+
+    if (nearby_index)
+        *nearby_index = max(0, min(low, high));
 
     return nullptr;
 }

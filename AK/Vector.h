@@ -359,15 +359,19 @@ public:
     }
 
     template<typename C>
-    void insert_before_matching(T&& value, C callback)
+    void insert_before_matching(T&& value, C callback, int first_index = 0, int* inserted_index = nullptr)
     {
-        for (int i = 0; i < size(); ++i) {
+        for (int i = first_index; i < size(); ++i) {
             if (callback(at(i))) {
                 insert(i, move(value));
+                if (inserted_index)
+                    *inserted_index = i;
                 return;
             }
         }
         append(move(value));
+        if (inserted_index)
+            *inserted_index = size() - 1;
     }
 
     Vector& operator=(const Vector& other)

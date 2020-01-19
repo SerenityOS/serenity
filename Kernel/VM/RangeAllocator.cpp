@@ -24,10 +24,12 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/BinarySearch.h>
 #include <AK/QuickSort.h>
 #include <Kernel/Random.h>
 #include <Kernel/VM/RangeAllocator.h>
 #include <Kernel/kstdio.h>
+#include <Kernel/Thread.h>
 
 //#define VRA_DEBUG
 #define VM_GUARD_PAGES
@@ -38,6 +40,7 @@ RangeAllocator::RangeAllocator()
 
 void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
 {
+    m_total_range = { base, size };
     m_available_ranges.append({ base, size });
 #ifdef VRA_DEBUG
     dump();
@@ -46,6 +49,7 @@ void RangeAllocator::initialize_with_range(VirtualAddress base, size_t size)
 
 void RangeAllocator::initialize_from_parent(const RangeAllocator& parent_allocator)
 {
+    m_total_range = parent_allocator.m_total_range;
     m_available_ranges = parent_allocator.m_available_ranges;
 }
 
@@ -146,42 +150,40 @@ Range RangeAllocator::allocate_specific(VirtualAddress base, size_t size)
 
 void RangeAllocator::deallocate(Range range)
 {
+    ASSERT(m_total_range.contains(range));
+
 #ifdef VRA_DEBUG
     dbgprintf("VRA: Deallocate: %x(%u)\n", range.base().get(), range.size());
     dump();
 #endif
 
-    for (auto& available_range : m_available_ranges) {
-        if (available_range.end() == range.base()) {
-            available_range.m_size += range.size();
-            goto sort_and_merge;
-        }
-    }
-    m_available_ranges.append(range);
+    ASSERT(!m_available_ranges.is_empty());
 
-sort_and_merge:
-    // FIXME: We don't have to sort if we insert at the right position immediately.
-    quick_sort(m_available_ranges.begin(), m_available_ranges.end(), [](auto& a, auto& b) {
-        return a.base() < b.base();
-    });
+    int nearby_index = 0;
+    auto* existing_range = binary_search(m_available_ranges.data(), m_available_ranges.size(), range, [](auto& a, auto& b) {
+        return a.base().get() - b.end().get();
+    }, &nearby_index);
 
-    Vector<Range> merged_ranges;
-    merged_ranges.ensure_capacity(m_available_ranges.size());
-
-    for (auto& range : m_available_ranges) {
-        if (merged_ranges.is_empty()) {
-            merged_ranges.append(range);
-            continue;
-        }
-        if (range.base() == merged_ranges.last().end()) {
-            merged_ranges.last().m_size += range.size();
-            continue;
-        }
-        merged_ranges.append(range);
+    int inserted_index = 0;
+    if (existing_range) {
+        existing_range->m_size += range.size();
+        inserted_index = nearby_index;
+    } else {
+        m_available_ranges.insert_before_matching(Range(range), [&](auto& entry) {
+            return entry.base() < range.end();
+        }, nearby_index, &inserted_index);
     }
 
-    m_available_ranges = move(merged_ranges);
-
+    if (inserted_index < (m_available_ranges.size() - 1)) {
+        // We already merged with previous. Try to merge with next.
+        auto& inserted_range = m_available_ranges[inserted_index];
+        auto& next_range = m_available_ranges[inserted_index + 1];
+        if (inserted_range.end() == next_range.base()) {
+            inserted_range.m_size += next_range.size();
+            m_available_ranges.remove(inserted_index + 1);
+            return;
+        }
+    }
 #ifdef VRA_DEBUG
     dbgprintf("VRA: After deallocate\n");
     dump();
