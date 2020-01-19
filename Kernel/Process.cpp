@@ -2128,7 +2128,11 @@ KResult Process::do_killpg(pid_t pgrp, int signal)
 
 int Process::sys$kill(pid_t pid, int signal)
 {
-    REQUIRE_PROMISE(proc);
+    if (pid == m_pid)
+        REQUIRE_PROMISE(stdio);
+    else
+        REQUIRE_PROMISE(proc);
+
     if (signal < 0 || signal >= 32)
         return -EINVAL;
     if (pid <= 0)
