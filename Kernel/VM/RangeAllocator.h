@@ -27,6 +27,7 @@
 #pragma once
 
 #include <AK/String.h>
+#include <AK/Traits.h>
 #include <AK/Vector.h>
 #include <Kernel/VM/VirtualAddress.h>
 
@@ -89,9 +90,17 @@ private:
     void carve_at_index(int, const Range&);
 
     Vector<Range> m_available_ranges;
+    Range m_total_range;
 };
 
 inline const LogStream& operator<<(const LogStream& stream, const Range& value)
 {
     return stream << String::format("Range(%x-%x)", value.base().get(), value.end().get() - 1);
+}
+
+namespace AK {
+template<>
+struct Traits<Range> : public GenericTraits<Range> {
+    static constexpr bool is_trivial() { return true; }
+};
 }
