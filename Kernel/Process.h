@@ -452,6 +452,11 @@ private:
     Region* region_containing(const Range&);
 
     NonnullOwnPtrVector<Region> m_regions;
+    struct RegionLookupCache {
+        Range range;
+        Region* region { nullptr };
+    };
+    RegionLookupCache m_region_lookup_cache;
 
     pid_t m_ppid { 0 };
     mode_t m_umask { 022 };
