@@ -119,6 +119,14 @@ int handle(RegisterDump& regs, u32 function, u32 arg1, u32 arg2, u32 arg3)
 
 void syscall_handler(RegisterDump regs)
 {
+    // Special handling of the "gettid" syscall since it's extremely hot.
+    // FIXME: Remove this hack once userspace locks stop calling it so damn much.
+    if (regs.eax == SC_gettid) {
+        regs.eax = current->process().sys$gettid();
+        current->did_syscall();
+        return;
+    }
+
     // Make sure SMAP protection is enabled on syscall entry.
     clac();
 
