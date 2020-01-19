@@ -76,3 +76,10 @@ WSMenu* WSMenuItem::submenu()
         return m_menu.client()->find_menu_by_id(m_submenu_id);
     return WSMenuManager::the().find_internal_menu_by_id(m_submenu_id);
 }
+
+Rect WSMenuItem::rect() const
+{
+    if (!m_menu.is_scrollable())
+        return m_rect;
+    return m_rect.translated(0, m_menu.item_height() - (m_menu.scroll_offset() * m_menu.item_height()));
+}
