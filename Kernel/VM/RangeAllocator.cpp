@@ -170,7 +170,7 @@ void RangeAllocator::deallocate(Range range)
         inserted_index = nearby_index;
     } else {
         m_available_ranges.insert_before_matching(Range(range), [&](auto& entry) {
-            return entry.base() < range.end();
+            return entry.base() >= range.end();
         }, nearby_index, &inserted_index);
     }
 
