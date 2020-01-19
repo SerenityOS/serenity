@@ -727,9 +727,8 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
         return -ETXTBSY;
     }
 
-    u32 entry_eip = 0;
-    // FIXME: Is there a race here?
     auto old_page_directory = move(m_page_directory);
+    auto old_regions = move(m_regions);
     m_page_directory = PageDirectory::create_for_userspace(*this);
 #ifdef MM_DEBUG
     dbgprintf("Process %u exec: PD=%x created\n", pid(), m_page_directory.ptr());
@@ -761,20 +760,13 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     ASSERT(region);
 
-    // NOTE: We yank this out of 'm_regions' since we're about to manipulate the vector
-    //       and we don't want it getting lost.
-    auto executable_region = m_regions.take_last();
-
     Region* master_tls_region { nullptr };
     size_t master_tls_size = 0;
     size_t master_tls_alignment = 0;
+    u32 entry_eip = 0;
 
     OwnPtr<ELFLoader> loader;
     {
-        // Okay, here comes the sleight of hand, pay close attention..
-        auto old_regions = move(m_regions);
-        m_regions.append(move(executable_region));
-
         ArmedScopeGuard rollback_regions_guard([&]() {
             ASSERT(&current->process() == this);
             m_page_directory = move(old_page_directory);
