@@ -62,7 +62,7 @@ Profile::Profile(const JsonArray& json)
             continue;
 
         u32 innermost_frame_address = frames_array.at(1).as_object().get("address").to_number<u32>();
-        sample.in_kernel = innermost_frame_address >= 0xc0000000 || innermost_frame_address < (8 * MB);
+        sample.in_kernel = innermost_frame_address >= 0xc0000000;
 
         for (int i = frames_array.size() - 1; i >= 1; --i) {
             auto& frame_value = frames_array.at(i);
