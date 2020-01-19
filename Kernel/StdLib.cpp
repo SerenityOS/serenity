@@ -30,6 +30,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Heap/kmalloc.h>
 #include <Kernel/StdLib.h>
+#include <Kernel/VM/MemoryManager.h>
 
 String copy_string_from_user(const char* user_str, size_t user_str_size)
 {
@@ -40,16 +41,18 @@ String copy_string_from_user(const char* user_str, size_t user_str_size)
 
 extern "C" {
 
-void* copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
+void copy_to_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
+    ASSERT(is_user_range(VirtualAddress(dest_ptr), n));
     SmapDisabler disabler;
-    auto* ptr = memcpy(dest_ptr, src_ptr, n);
-    return ptr;
+    memcpy(dest_ptr, src_ptr, n);
 }
 
-void* copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
+void copy_from_user(void* dest_ptr, const void* src_ptr, size_t n)
 {
-    return copy_to_user(dest_ptr, src_ptr, n);
+    ASSERT(is_user_range(VirtualAddress(src_ptr), n));
+    SmapDisabler disabler;
+    memcpy(dest_ptr, src_ptr, n);
 }
 
 void* memcpy(void* dest_ptr, const void* src_ptr, size_t n)
@@ -105,11 +108,11 @@ char* strncpy(char* dest, const char* src, size_t n)
     return dest;
 }
 
-void* memset_user(void* dest_ptr, int c, size_t n)
+void memset_user(void* dest_ptr, int c, size_t n)
 {
+    ASSERT(is_user_range(VirtualAddress(dest_ptr), n));
     SmapDisabler disabler;
-    auto* ptr = memset(dest_ptr, c, n);
-    return ptr;
+    memset(dest_ptr, c, n);
 }
 
 void* memset(void* dest_ptr, int c, size_t n)
