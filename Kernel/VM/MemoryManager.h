@@ -190,9 +190,13 @@ private:
     bool m_quickmap_in_use { false };
 };
 
-struct ProcessPagingScope {
-    ProcessPagingScope(Process&);
+class ProcessPagingScope {
+public:
+    explicit ProcessPagingScope(Process&);
     ~ProcessPagingScope();
+
+private:
+    u32 m_previous_cr3 { 0 };
 };
 
 template<typename Callback>
