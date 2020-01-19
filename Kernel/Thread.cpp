@@ -29,6 +29,7 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/FileSystem/FileDescription.h>
 #include <Kernel/Process.h>
+#include <Kernel/Profiling.h>
 #include <Kernel/Scheduler.h>
 #include <Kernel/Thread.h>
 #include <Kernel/VM/MemoryManager.h>
@@ -798,11 +799,13 @@ Vector<u32> Thread::raw_backtrace(u32 ebp) const
 {
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
-    Vector<u32> backtrace;
+    Vector<u32, Profiling::max_stack_frame_count> backtrace;
     backtrace.append(ebp);
     for (u32* stack_ptr = (u32*)ebp; process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2); stack_ptr = (u32*)*stack_ptr) {
         u32 retaddr = stack_ptr[1];
         backtrace.append(retaddr);
+        if (backtrace.size() == Profiling::max_stack_frame_count)
+            break;
     }
     return backtrace;
 }
