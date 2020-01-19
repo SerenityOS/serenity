@@ -248,12 +248,14 @@ template<typename PutChFunc>
 }
 
 template<typename PutChFunc>
-[[gnu::always_inline]] inline int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, u32 fieldWidth)
+[[gnu::always_inline]] inline int print_signed_number(PutChFunc putch, char*& bufptr, int number, bool leftPad, bool zeroPad, u32 fieldWidth, bool always_sign)
 {
     if (number < 0) {
         putch(bufptr, '-');
         return print_number(putch, bufptr, 0 - number, leftPad, zeroPad, fieldWidth) + 1;
     }
+    if (always_sign)
+        putch(bufptr, '+');
     return print_number(putch, bufptr, number, leftPad, zeroPad, fieldWidth);
 }
 
@@ -273,6 +275,7 @@ template<typename PutChFunc>
         bool size_qualifier = false;
         (void)size_qualifier;
         bool alternate_form = 0;
+        bool always_sign = false;
         if (*p == '%' && *(p + 1)) {
         one_more:
             ++p;
@@ -281,6 +284,11 @@ template<typename PutChFunc>
                 goto one_more;
             if (*p == '-') {
                 left_pad = true;
+                if (*(p + 1))
+                    goto one_more;
+            }
+            if (*p == '+') {
+                always_sign = true;
                 if (*(p + 1))
                     goto one_more;
             }
@@ -323,7 +331,7 @@ template<typename PutChFunc>
 
             case 'd':
             case 'i':
-                ret += print_signed_number(putch, bufptr, va_arg(ap, int), left_pad, zeroPad, fieldWidth);
+                ret += print_signed_number(putch, bufptr, va_arg(ap, int), left_pad, zeroPad, fieldWidth, always_sign);
                 break;
 
             case 'u':
