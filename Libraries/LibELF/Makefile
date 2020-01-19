@@ -8,7 +8,7 @@ EXTRA_OBJS = Arch/i386/ld_elf_entry.ao \
 
 PROGRAM = ld-elf.so
 
-SUBPROJECT_CXXFLAGS = -fvisibility=hidden -fpic -nostartfiles -ffreestanding -nostdlib -pie -fPIE -fno-stack-protector -mno-80387 -mno-mmx -mno-sse -mno-sse2 -fno-asynchronous-unwind-tables
+SUBPROJECT_CXXFLAGS = -fvisibility=hidden -fPIC -nostartfiles -ffreestanding -nostdlib -pie -fPIE -fno-stack-protector -mno-80387 -mno-mmx -mno-sse -mno-sse2 -fno-asynchronous-unwind-tables
 LDFLAGS= -Wl,-e,_ld_elf_start -pie -shared
 
 include ../../Makefile.common

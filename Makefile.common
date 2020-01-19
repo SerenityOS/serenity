@@ -60,7 +60,7 @@ else
         DEFINES += -DKERNEL
     else
         # everything else gets -lc -lm
-        LIB_DEPS := C M $(LIB_DEPS)
+        LIB_DEPS := $(LIB_DEPS)
     endif
 
     # turn "LIB_DEPS=C Core Thread" into "-lc -lcore -lthread -L.../LibC ..."

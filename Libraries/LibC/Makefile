@@ -54,29 +54,36 @@ LIBC_OBJS = \
        serenity.o \
        syslog.o \
        cxxabi.o \
-       libcinit.o
+       libcinit.o \
+       dlfcn.o
 
 OBJS = $(AK_OBJS) $(LIBC_OBJS)
 
 EXTRA_OBJS = \
-        setjmp.ao \
-        crti.ao \
-        crtn.ao
+        setjmp.ao
 
 crt0.o: crt0.cpp
 
 crtio.o: crti.ao
 	$(QUIET) cp crti.ao crti.o
 
-crtn.o: crtin.ao
+crtn.o: crtn.ao
 	$(QUIET) cp crtn.ao crtn.o
 
 EXTRA_CLEAN = crt0.d crt0.o
 
 DEFINES = -DSERENITY_LIBC_BUILD
 
-SUBPROJECT_CXXFLAGS = -fPIC
-LIBRARY = libc.a
+SHARED ?= 0
+ifeq ($(SHARED),1)
+    OBJS += tls.o
+    SUBPROJECT_CXXFLAGS = -fPIC
+    PROGRAM = libc.so
+    LDFLAGS = -shared
+else
+    EXTRA_OBJS += crti.ao crtn.ao
+    LIBRARY = libc.a
+endif
 
 POST_LIBRARY_BUILD = $(QUIET) $(MAKE) install
 
