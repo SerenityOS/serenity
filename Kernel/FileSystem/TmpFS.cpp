@@ -208,7 +208,15 @@ ssize_t TmpFSInode::write_bytes(off_t offset, ssize_t size, const u8* buffer, Fi
         if (m_content.has_value() && m_content.value().capacity() >= (size_t)new_size) {
             m_content.value().set_size(new_size);
         } else {
-            auto tmp = KBuffer::create_with_size(new_size);
+            // Grow the content buffer 2x the new sizeto accomodate repeating write() calls.
+            // Note that we're not actually committing physical memory to the buffer
+            // until it's needed. We only grow VM here.
+
+            // FIXME: Fix this so that no memcpy() is necessary, and we can just grow the
+            //        KBuffer and it will add physical pages as needed while keeping the
+            //        existing ones.
+            auto tmp = KBuffer::create_with_size(new_size * 2);
+            tmp.set_size(new_size);
             if (m_content.has_value())
                 memcpy(tmp.data(), m_content.value().data(), old_size);
             m_content = move(tmp);
