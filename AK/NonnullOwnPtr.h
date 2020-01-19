@@ -100,11 +100,8 @@ public:
     RETURN_TYPESTATE(unconsumed)
     NonnullOwnPtr& operator=(NonnullOwnPtr&& other)
     {
-        if (this != &other) {
-            delete m_ptr;
-            m_ptr = other.leak_ptr();
-            ASSERT(m_ptr);
-        }
+        NonnullOwnPtr ptr(move(other));
+        swap(ptr);
         return *this;
     }
 
@@ -112,11 +109,8 @@ public:
     RETURN_TYPESTATE(unconsumed)
     NonnullOwnPtr& operator=(NonnullOwnPtr<U>&& other)
     {
-        if (this != static_cast<void*>(&other)) {
-            delete m_ptr;
-            m_ptr = other.leak_ptr();
-            ASSERT(m_ptr);
-        }
+        NonnullOwnPtr ptr(move(other));
+        swap(ptr);
         return *this;
     }
 
@@ -150,6 +144,17 @@ public:
     operator bool() const = delete;
     bool operator!() const = delete;
 
+    void swap(NonnullOwnPtr& other)
+    {
+        ::swap(m_ptr, other.m_ptr);
+    }
+
+    template<typename U>
+    void swap(NonnullOwnPtr<U>& other)
+    {
+        ::swap(m_ptr, other.m_ptr);
+    }
+
 private:
     void clear()
     {
@@ -181,6 +186,12 @@ template<typename T>
 inline const LogStream& operator<<(const LogStream& stream, const NonnullOwnPtr<T>& value)
 {
     return stream << value.ptr();
+}
+
+template<typename T, typename U>
+inline void swap(NonnullOwnPtr<T>& a, NonnullOwnPtr<U>& b)
+{
+    a.swap(b);
 }
 
 }
