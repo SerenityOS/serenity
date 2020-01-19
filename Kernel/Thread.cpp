@@ -722,57 +722,74 @@ String Thread::backtrace(ProcessInspectionHandle&) const
     return backtrace_impl();
 }
 
+struct RecognizedSymbol {
+    u32 address;
+    const KSym* ksym;
+};
+
+static bool symbolicate(const RecognizedSymbol& symbol, const Process& process, StringBuilder& builder)
+{
+    if (!symbol.address)
+        return false;
+
+    bool mask_kernel_addresses = !process.is_superuser();
+    if (!symbol.ksym) {
+        if (!is_user_address(VirtualAddress(symbol.address))) {
+            builder.append("0xdeadc0de\n");
+        } else {
+            if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
+                builder.appendf("%p  %s\n", symbol.address, process.elf_loader()->symbolicate(symbol.address).characters());
+            else
+                builder.appendf("%p\n", symbol.address);
+        }
+        return true;
+    }
+    unsigned offset = symbol.address - symbol.ksym->address;
+    if (symbol.ksym->address == ksym_highest_address && offset > 4096) {
+        builder.appendf("%p\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address);
+    } else {
+        builder.appendf("%p  %s +%u\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address, demangle(symbol.ksym->name).characters(), offset);
+    }
+    return true;
+}
+
 String Thread::backtrace_impl() const
 {
+    Vector<RecognizedSymbol, 128> recognized_symbols;
+
     u32 start_frame;
     if (current == this) {
         asm volatile("movl %%ebp, %%eax"
                      : "=a"(start_frame));
     } else {
         start_frame = frame_ptr();
+        recognized_symbols.append({ tss().eip, ksymbolicate(tss().eip) });
     }
 
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
-    struct RecognizedSymbol {
-        u32 address;
-        const KSym* ksym;
-    };
-    StringBuilder builder;
-    Vector<RecognizedSymbol, 128> recognized_symbols;
-    if (current != this)
-        recognized_symbols.append({ tss().eip, ksymbolicate(tss().eip) });
+
     u32 stack_ptr = start_frame;
     for (;;) {
         if (!process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2))
             break;
         u32 retaddr;
-        copy_from_user(&retaddr, &((u32*)stack_ptr)[1]);
-        recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
-        copy_from_user(&stack_ptr, (u32*)stack_ptr);
+
+        if (is_user_range(VirtualAddress(stack_ptr), sizeof(void*) * 2)) {
+            copy_from_user(&retaddr, &((u32*)stack_ptr)[1]);
+            recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
+            copy_from_user(&stack_ptr, (u32*)stack_ptr);
+        } else {
+            memcpy(&retaddr, &((u32*)stack_ptr)[1], sizeof(void*));
+            recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
+            memcpy(&stack_ptr, (u32*)stack_ptr, sizeof(void*));
+        }
     }
 
-    bool mask_kernel_addresses = !current->process().is_superuser();
+    StringBuilder builder;
     for (auto& symbol : recognized_symbols) {
-        if (!symbol.address)
+        if (!symbolicate(symbol, process, builder))
             break;
-        if (!symbol.ksym) {
-            if (!is_user_address(VirtualAddress(symbol.address))) {
-                builder.append("0xdeadc0de\n");
-            } else {
-                if (!Scheduler::is_active() && process.elf_loader() && process.elf_loader()->has_symbols())
-                    builder.appendf("%p  %s\n", symbol.address, process.elf_loader()->symbolicate(symbol.address).characters());
-                else
-                    builder.appendf("%p\n", symbol.address);
-            }
-            continue;
-        }
-        unsigned offset = symbol.address - symbol.ksym->address;
-        if (symbol.ksym->address == ksym_highest_address && offset > 4096) {
-            builder.appendf("%p\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address);
-        } else {
-            builder.appendf("%p  %s +%u\n", mask_kernel_addresses ? 0xdeadc0de : symbol.address, demangle(symbol.ksym->name).characters(), offset);
-        }
     }
     return builder.to_string();
 }
