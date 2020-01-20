@@ -8,6 +8,7 @@ OBJS = \
     ProcessMemoryMapWidget.o \
     ProcessFileDescriptorMapWidget.o \
     NetworkStatisticsWidget.o \
+    ProcessUnveiledPathsWidget.o \
     main.o
 
 PROGRAM = SystemMonitor

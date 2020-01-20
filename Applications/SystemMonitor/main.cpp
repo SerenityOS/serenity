@@ -33,6 +33,7 @@
 #include "ProcessModel.h"
 #include "ProcessStacksWidget.h"
 #include "ProcessTableView.h"
+#include "ProcessUnveiledPathsWidget.h"
 #include <LibCore/CTimer.h>
 #include <LibDraw/PNGLoader.h>
 #include <LibGUI/GAboutDialog.h>
@@ -213,6 +214,9 @@ int main(int argc, char** argv)
     auto open_files_widget = ProcessFileDescriptorMapWidget::construct(nullptr);
     process_tab_widget->add_widget("Open files", open_files_widget);
 
+    auto unveiled_paths_widget = ProcessUnveiledPathsWidget::construct(nullptr);
+    process_tab_widget->add_widget("Unveiled paths", unveiled_paths_widget);
+
     auto stacks_widget = ProcessStacksWidget::construct(nullptr);
     process_tab_widget->add_widget("Stacks", stacks_widget);
 
@@ -220,6 +224,7 @@ int main(int argc, char** argv)
         open_files_widget->set_pid(pid);
         stacks_widget->set_pid(pid);
         memory_map_widget->set_pid(pid);
+        unveiled_paths_widget->set_pid(pid);
     };
 
     window->show();
