@@ -41,6 +41,34 @@ int main(int, char**)
         return 1;
     }
 
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/tmp", "cw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    // FIXME: WindowServer should obviously not hardcode this.
+    //        Instead, we should have a ConfigServer or similar that allows programs
+    //        to get/set user settings over IPC without giving them access to any files.
+    if (unveil("/home/anon/WindowManager.ini", "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/dev", "rw") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
     struct sigaction act;
     memset(&act, 0, sizeof(act));
     act.sa_flags = SA_NOCLDWAIT;
@@ -71,6 +99,21 @@ int main(int, char**)
     WSCompositor::the();
     auto wm = WSWindowManager::construct(*palette);
     auto mm = WSMenuManager::construct();
+
+    if (unveil("/tmp", "") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/dev", "") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil(nullptr, nullptr) < 0) {
+        perror("unveil");
+        return 1;
+    }
 
     dbgprintf("Entering WindowServer main loop.\n");
     loop.exec();
