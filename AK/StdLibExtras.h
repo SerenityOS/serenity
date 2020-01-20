@@ -84,6 +84,17 @@ inline constexpr T max(const T& a, const T& b)
     return a < b ? b : a;
 }
 
+template<typename T>
+inline constexpr T clamp(const T& value, const T& min, const T& max)
+{
+    ASSERT(max > min);
+    if (value > max)
+        return max;
+    if (value < min)
+        return min;
+    return value;
+}
+
 template<typename T, typename U>
 inline constexpr T ceil_div(T a, U b)
 {
@@ -317,6 +328,7 @@ using AK::forward;
 using AK::IsSame;
 using AK::max;
 using AK::min;
+using AK::clamp;
 using AK::move;
 using AK::RemoveConst;
 using AK::swap;
