@@ -53,6 +53,7 @@
 #define O_CLOEXEC 02000000
 #define O_DIRECT 04000000
 #define O_NOFOLLOW_NOERROR 0x4000000
+#define O_UNLINK_INTERNAL 0x8000000
 
 #define MS_NODEV 1
 #define MS_NOEXEC 2
@@ -62,6 +63,7 @@
 class Custody;
 class Device;
 class FileDescription;
+class UnveiledPath;
 
 struct UidAndGid {
     uid_t uid;
@@ -133,6 +135,9 @@ public:
 
 private:
     friend class FileDescription;
+
+    const UnveiledPath* find_matching_unveiled_path(StringView path);
+    KResult validate_path_against_process_veil(StringView path, int options);
 
     RefPtr<Inode> get_inode(InodeIdentifier);
 

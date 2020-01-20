@@ -174,7 +174,8 @@ typedef u32 socklen_t;
     __ENUMERATE_SYSCALL(set_thread_boost)           \
     __ENUMERATE_SYSCALL(set_process_boost)          \
     __ENUMERATE_SYSCALL(chroot)                     \
-    __ENUMERATE_SYSCALL(pledge)
+    __ENUMERATE_SYSCALL(pledge)                     \
+    __ENUMERATE_SYSCALL(unveil)
 
 namespace Syscall {
 
@@ -383,6 +384,11 @@ struct SC_mount_params {
 struct SC_pledge_params {
     StringArgument promises;
     StringArgument execpromises;
+};
+
+struct SC_unveil_params {
+    StringArgument path;
+    StringArgument permissions;
 };
 
 void initialize();
