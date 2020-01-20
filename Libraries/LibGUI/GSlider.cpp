@@ -50,20 +50,13 @@ void GSlider::set_range(int min, int max)
         return;
     m_min = min;
     m_max = max;
-
-    if (m_value > max)
-        m_value = max;
-    if (m_value < min)
-        m_value = min;
+    m_value = clamp(m_value, m_min, m_max);
     update();
 }
 
 void GSlider::set_value(int value)
 {
-    if (value > m_max)
-        value = m_max;
-    if (value < m_min)
-        value = m_min;
+    value = clamp(value, m_min, m_max);
     if (m_value == value)
         return;
     m_value = value;
