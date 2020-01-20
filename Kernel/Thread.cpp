@@ -597,8 +597,8 @@ void Thread::set_default_signal_dispositions()
 {
     // FIXME: Set up all the right default actions. See signal(7).
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
-    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((uintptr_t)SIG_IGN);
-    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((uintptr_t)SIG_IGN);
+    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress(SIG_IGN);
+    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress(SIG_IGN);
 }
 
 void Thread::push_value_on_stack(u32 value)
@@ -772,7 +772,7 @@ String Thread::backtrace_impl() const
 
     uintptr_t stack_ptr = start_frame;
     for (;;) {
-        if (!process.validate_read_from_kernel(VirtualAddress((uintptr_t)stack_ptr), sizeof(void*) * 2))
+        if (!process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(void*) * 2))
             break;
         uintptr_t retaddr;
 
@@ -801,7 +801,7 @@ Vector<uintptr_t> Thread::raw_backtrace(uintptr_t ebp) const
     ProcessPagingScope paging_scope(process);
     Vector<uintptr_t, Profiling::max_stack_frame_count> backtrace;
     backtrace.append(ebp);
-    for (uintptr_t* stack_ptr = (uintptr_t*)ebp; process.validate_read_from_kernel(VirtualAddress((uintptr_t)stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
+    for (uintptr_t* stack_ptr = (uintptr_t*)ebp; process.validate_read_from_kernel(VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
         uintptr_t retaddr = stack_ptr[1];
         backtrace.append(retaddr);
         if (backtrace.size() == Profiling::max_stack_frame_count)
@@ -818,7 +818,7 @@ void Thread::make_thread_specific_region(Badge<Process>)
     SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment)).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
-    m_thread_specific_data = VirtualAddress((uintptr_t)thread_specific_data);
+    m_thread_specific_data = VirtualAddress(thread_specific_data);
     thread_specific_data->self = thread_specific_data;
     if (process().m_master_tls_size)
         memcpy(thread_local_storage, process().m_master_tls_region->vaddr().as_ptr(), process().m_master_tls_size);

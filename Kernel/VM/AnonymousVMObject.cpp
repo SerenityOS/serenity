@@ -45,7 +45,7 @@ AnonymousVMObject::AnonymousVMObject(size_t size)
 AnonymousVMObject::AnonymousVMObject(PhysicalAddress paddr, size_t size)
     : VMObject(size)
 {
-    ASSERT(paddr.page_base() == paddr.get());
+    ASSERT(paddr.page_base() == paddr);
     for (size_t i = 0; i < page_count(); ++i)
         physical_pages()[i] = PhysicalPage::create(paddr.offset(i * PAGE_SIZE), false, false);
 }

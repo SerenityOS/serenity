@@ -274,7 +274,7 @@ int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_para
     if (name.is_null())
         return -EFAULT;
 
-    auto* region = region_from_range({ VirtualAddress((uintptr_t)params.addr), params.size });
+    auto* region = region_from_range({ VirtualAddress(params.addr), params.size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -390,11 +390,11 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 
     if (map_purgeable) {
         auto vmobject = PurgeableVMObject::create_with_size(size);
-        region = allocate_region_with_vmobject(VirtualAddress((uintptr_t)addr), size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
+        region = allocate_region_with_vmobject(VirtualAddress(addr), size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region_with_vmobject({}, size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
     } else if (map_anonymous) {
-        region = allocate_region(VirtualAddress((uintptr_t)addr), size, !name.is_null() ? name : "mmap", prot, false);
+        region = allocate_region(VirtualAddress(addr), size, !name.is_null() ? name : "mmap", prot, false);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region({}, size, !name.is_null() ? name : "mmap", prot, false);
     } else {
@@ -418,7 +418,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
             if (!validate_inode_mmap_prot(*this, prot, *description->inode()))
                 return (void*)-EACCES;
         }
-        auto region_or_error = description->mmap(*this, VirtualAddress((uintptr_t)addr), static_cast<size_t>(offset), size, prot);
+        auto region_or_error = description->mmap(*this, VirtualAddress(addr), static_cast<size_t>(offset), size, prot);
         if (region_or_error.is_error()) {
             // Fail if MAP_FIXED or address is 0, retry otherwise
             if (map_fixed || addr == 0)
@@ -445,7 +445,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 int Process::sys$munmap(void* addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
-    Range range_to_unmap { VirtualAddress((uintptr_t)addr), size };
+    Range range_to_unmap { VirtualAddress(addr), size };
     if (auto* whole_region = region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return -EPERM;
@@ -482,7 +482,7 @@ int Process::sys$munmap(void* addr, size_t size)
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
-    Range range_to_mprotect = { VirtualAddress((uintptr_t)addr), size };
+    Range range_to_mprotect = { VirtualAddress(addr), size };
 
     if (auto* whole_region = region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
@@ -545,7 +545,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 int Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
-    auto* region = region_from_range({ VirtualAddress((uintptr_t)address), size });
+    auto* region = region_from_range({ VirtualAddress(address), size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())

@@ -457,9 +457,19 @@ inline constexpr uintptr_t page_base_of(uintptr_t address)
     return address & PAGE_MASK;
 }
 
+inline uintptr_t page_base_of(const void* address)
+{
+    return page_base_of((uintptr_t)address);
+}
+
 inline constexpr uintptr_t offset_in_page(uintptr_t address)
 {
     return address & (~PAGE_MASK);
+}
+
+inline uintptr_t offset_in_page(const void* address)
+{
+    return offset_in_page((uintptr_t)address);
 }
 
 class CPUID {
