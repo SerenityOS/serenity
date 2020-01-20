@@ -104,6 +104,7 @@ enum ProcFileType {
     FI_PID_stack,
     FI_PID_regs,
     FI_PID_fds,
+    FI_PID_unveil,
     FI_PID_exe,  // symlink
     FI_PID_cwd,  // symlink
     FI_PID_root, // symlink
@@ -541,6 +542,32 @@ Optional<KBuffer> procfs$pid_vmobjects(InodeIdentifier identifier)
         }
         builder.appendf("\n");
     }
+    return builder.build();
+}
+
+Optional<KBuffer> procfs$pid_unveil(InodeIdentifier identifier)
+{
+    auto handle = ProcessInspectionHandle::from_pid(to_pid(identifier));
+    if (!handle)
+        return {};
+    auto& process = handle->process();
+    KBufferBuilder builder;
+    JsonArraySerializer array { builder };
+    for (auto& unveiled_path : process.unveiled_paths()) {
+        auto obj = array.add_object();
+        obj.add("path", unveiled_path.path);
+        StringBuilder permissions_builder;
+        if (unveiled_path.permissions & UnveiledPath::Access::Read)
+            permissions_builder.append('r');
+        if (unveiled_path.permissions & UnveiledPath::Access::Write)
+            permissions_builder.append('w');
+        if (unveiled_path.permissions & UnveiledPath::Access::Execute)
+            permissions_builder.append('x');
+        if (unveiled_path.permissions & UnveiledPath::Access::CreateOrRemove)
+            permissions_builder.append('c');
+        obj.add("permissions", permissions_builder.to_string());
+    }
+    array.finish();
     return builder.build();
 }
 
@@ -1569,6 +1596,7 @@ ProcFS::ProcFS()
     m_entries[FI_PID_fds] = { "fds", FI_PID_fds, false, procfs$pid_fds };
     m_entries[FI_PID_exe] = { "exe", FI_PID_exe, false, procfs$pid_exe };
     m_entries[FI_PID_cwd] = { "cwd", FI_PID_cwd, false, procfs$pid_cwd };
+    m_entries[FI_PID_unveil] = { "unveil", FI_PID_unveil, false, procfs$pid_unveil };
     m_entries[FI_PID_root] = { "root", FI_PID_root, false, procfs$pid_root };
     m_entries[FI_PID_fd] = { "fd", FI_PID_fd, false };
 }
