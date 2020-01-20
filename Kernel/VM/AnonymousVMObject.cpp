@@ -37,6 +37,13 @@ NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_for_physical_range(Ph
     return adopt(*new AnonymousVMObject(paddr, size));
 }
 
+NonnullRefPtr<AnonymousVMObject> AnonymousVMObject::create_with_physical_page(PhysicalPage& page)
+{
+    auto vmobject = create_with_size(PAGE_SIZE);
+    vmobject->m_physical_pages[0] = page;
+    return vmobject;
+}
+
 AnonymousVMObject::AnonymousVMObject(size_t size)
     : VMObject(size)
 {
