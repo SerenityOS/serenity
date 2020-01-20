@@ -392,9 +392,9 @@ void WSMenu::event(CEvent& event)
                 return;
 
             do {
-                m_hovered_item_index--;
-                if (m_hovered_item_index < 0)
-                    m_hovered_item_index = m_items.size() - 1;
+                if (m_hovered_item_index <= 0)
+                    return;
+                --m_hovered_item_index;
             } while (hovered_item()->type() == WSMenuItem::Separator);
 
             if (is_scrollable() && m_hovered_item_index < m_scroll_offset)
@@ -411,9 +411,9 @@ void WSMenu::event(CEvent& event)
                 return;
 
             do {
-                m_hovered_item_index++;
-                if (m_hovered_item_index >= m_items.size())
-                    m_hovered_item_index = 0;
+                if (m_hovered_item_index >= m_items.size() - 1)
+                    return;
+                ++m_hovered_item_index;
             } while (hovered_item()->type() == WSMenuItem::Separator);
 
             if (is_scrollable() && m_hovered_item_index >= (m_scroll_offset + visible_item_count()))
