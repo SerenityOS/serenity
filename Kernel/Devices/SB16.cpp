@@ -27,6 +27,7 @@
 #include <Kernel/Devices/SB16.h>
 #include <Kernel/IO.h>
 #include <Kernel/Thread.h>
+#include <Kernel/VM/AnonymousVMObject.h>
 #include <Kernel/VM/MemoryManager.h>
 
 //#define SB16_DEBUG
@@ -123,7 +124,7 @@ ssize_t SB16::read(FileDescription&, u8*, ssize_t)
 
 void SB16::dma_start(uint32_t length)
 {
-    const auto addr = m_dma_buffer_page->paddr().get();
+    const auto addr = m_dma_region->vmobject().physical_pages()[0]->paddr().get();
     const u8 channel = 5; // 16-bit samples use DMA channel 5 (on the master DMA controller)
     const u8 mode = 0;
 
@@ -174,8 +175,11 @@ void SB16::wait_for_irq()
 
 ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
 {
-    if (!m_dma_buffer_page)
-        m_dma_buffer_page = MM.allocate_supervisor_physical_page();
+    if (!m_dma_region) {
+        auto page = MM.allocate_supervisor_physical_page();
+        auto vmobject = AnonymousVMObject::create_with_physical_page(*page);
+        m_dma_region = MM.allocate_kernel_region_with_vmobject(*vmobject, PAGE_SIZE, "SB16 DMA buffer", Region::Access::Write);
+    }
 
 #ifdef SB16_DEBUG
     kprintf("SB16: Writing buffer of %d bytes\n", length);
@@ -190,7 +194,7 @@ ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)
 
     const int sample_rate = 44100;
     set_sample_rate(sample_rate);
-    memcpy(m_dma_buffer_page->paddr().as_ptr(), data, length);
+    memcpy(m_dma_region->vaddr().as_ptr(), data, length);
     dma_start(length);
 
     // 16-bit single-cycle output.
