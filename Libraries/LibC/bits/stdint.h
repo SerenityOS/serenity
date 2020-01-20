@@ -69,8 +69,8 @@ typedef __INT_LEAST64_TYPE__ int_least64_t;
 #define __int64_t_defined 1
 #define __uint64_t_defined 1
 
-typedef __PTRDIFF_TYPE__ uintptr_t;
-typedef __PTRDIFF_TYPE__ intptr_t;
+typedef __UINTPTR_TYPE__ uintptr_t;
+typedef __INTPTR_TYPE__ intptr_t;
 
 typedef __UINTMAX_TYPE__ uintmax_t;
 #define UINTMAX_MAX __UINTMAX_MAX__

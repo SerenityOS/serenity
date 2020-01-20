@@ -56,6 +56,9 @@ static_assert(sizeof(ssize_t) == sizeof(i32));
 
 typedef __PTRDIFF_TYPE__ ptrdiff_t;
 
+typedef __INTPTR_TYPE__ intptr_t;
+typedef __UINTPTR_TYPE__ uintptr_t;
+
 typedef u8 uint8_t;
 typedef u16 uint16_t;
 typedef u32 uint32_t;
