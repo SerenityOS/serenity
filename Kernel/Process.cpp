@@ -1741,7 +1741,7 @@ int Process::sys$fcntl(int fd, int cmd, u32 arg)
         if (new_fd < 0)
             return new_fd;
         m_fds[new_fd].set(*description);
-        break;
+        return new_fd;
     }
     case F_GETFD:
         return m_fds[fd].flags;
