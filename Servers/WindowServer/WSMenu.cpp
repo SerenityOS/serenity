@@ -300,11 +300,9 @@ void WSMenu::decend_into_submenu_at_hovered_item()
     m_in_submenu = true;
 }
 
-void WSMenu::handle_hover_event(const WSMouseEvent& event)
+void WSMenu::handle_mouse_move_event(const WSMouseEvent& mouse_event)
 {
     ASSERT(menu_window());
-    auto mouse_event = static_cast<const WSMouseEvent&>(event);
-
     if (hovered_item() && hovered_item()->is_submenu()) {
 
         auto item = *hovered_item();
@@ -333,7 +331,7 @@ void WSMenu::handle_hover_event(const WSMouseEvent& event)
 void WSMenu::event(CEvent& event)
 {
     if (event.type() == WSEvent::MouseMove) {
-        handle_hover_event(static_cast<const WSMouseEvent&>(event));
+        handle_mouse_move_event(static_cast<const WSMouseEvent&>(event));
         return;
     }
 
@@ -343,14 +341,17 @@ void WSMenu::event(CEvent& event)
     }
 
     if (event.type() == WSEvent::MouseWheel && is_scrollable()) {
+        ASSERT(menu_window());
         auto& mouse_event = static_cast<const WSMouseEvent&>(event);
         m_scroll_offset += mouse_event.wheel_delta();
-        if (m_scroll_offset < 0)
-            m_scroll_offset = 0;
-        if (m_scroll_offset >= m_max_scroll_offset)
-            m_scroll_offset = m_max_scroll_offset;
-        handle_hover_event(mouse_event);
-        redraw();
+        m_scroll_offset = clamp(m_scroll_offset, 0, m_max_scroll_offset);
+
+        int index = item_index_at(mouse_event.position());
+        if (m_hovered_item_index == index)
+            return;
+
+        m_hovered_item_index = index;
+        update_for_new_hovered_item();
         return;
     }
 

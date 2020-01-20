@@ -117,7 +117,7 @@ public:
 private:
     virtual void event(CEvent&) override;
 
-    void handle_hover_event(const WSMouseEvent&);
+    void handle_mouse_move_event(const WSMouseEvent&);
     int visible_item_count() const;
 
     int item_index_at(const Point&);
