@@ -63,7 +63,7 @@ private:
     void dsp_write(u8 value);
     u8 dsp_read();
 
-    RefPtr<PhysicalPage> m_dma_buffer_page;
+    OwnPtr<Region> m_dma_region;
     int m_major_version { 0 };
 
     WaitQueue m_irq_queue;
