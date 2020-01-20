@@ -53,10 +53,7 @@ void GProgressBar::set_range(int min, int max)
     ASSERT(min < max);
     m_min = min;
     m_max = max;
-    if (m_value > m_max)
-        m_value = m_max;
-    if (m_value < m_min)
-        m_value = m_min;
+    m_value = clamp(m_value, m_min, m_max);
 }
 
 void GProgressBar::paint_event(GPaintEvent& event)

@@ -59,10 +59,7 @@ GSpinBox::~GSpinBox()
 
 void GSpinBox::set_value(int value)
 {
-    if (value < m_min)
-        value = m_min;
-    if (value > m_max)
-        value = m_max;
+    value = clamp(value, m_min, m_max);
     if (m_value == value)
         return;
     m_value = value;
@@ -82,10 +79,7 @@ void GSpinBox::set_range(int min, int max)
     m_max = max;
 
     int old_value = m_value;
-    if (m_value < m_min)
-        m_value = m_min;
-    if (m_value > m_max)
-        m_value = m_max;
+    m_value = clamp(m_value, m_min, m_max);
     if (on_change && m_value != old_value)
         on_change(m_value);
 
