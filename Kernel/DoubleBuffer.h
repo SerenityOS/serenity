@@ -27,34 +27,38 @@
 #pragma once
 
 #include <AK/Types.h>
-#include <AK/Vector.h>
+#include <Kernel/KBuffer.h>
 #include <Kernel/Lock.h>
 
 class DoubleBuffer {
 public:
-    DoubleBuffer()
-        : m_write_buffer(&m_buffer1)
-        , m_read_buffer(&m_buffer2)
-    {
-    }
+    explicit DoubleBuffer(size_t capacity = 65536);
 
     ssize_t write(const u8*, ssize_t);
     ssize_t read(u8*, ssize_t);
 
     bool is_empty() const { return m_empty; }
 
-    // FIXME: Isn't this racy? What if we get interrupted between getting the buffer pointer and dereferencing it?
-    ssize_t bytes_in_write_buffer() const { return (ssize_t)m_write_buffer->size(); }
+    size_t space_for_writing() const { return m_space_for_writing; }
 
 private:
     void flip();
-    void compute_emptiness();
+    void compute_lockfree_metadata();
 
-    Vector<u8>* m_write_buffer { nullptr };
-    Vector<u8>* m_read_buffer { nullptr };
-    Vector<u8> m_buffer1;
-    Vector<u8> m_buffer2;
-    ssize_t m_read_buffer_index { 0 };
+    struct InnerBuffer {
+        u8* data { nullptr };
+        size_t size;
+    };
+
+    InnerBuffer* m_write_buffer { nullptr };
+    InnerBuffer* m_read_buffer { nullptr };
+    InnerBuffer m_buffer1;
+    InnerBuffer m_buffer2;
+
+    KBuffer m_storage;
+    size_t m_capacity { 0 };
+    size_t m_read_buffer_index { 0 };
+    size_t m_space_for_writing { 0 };
     bool m_empty { true };
-    Lock m_lock { "DoubleBuffer" };
+    mutable Lock m_lock { "DoubleBuffer" };
 };

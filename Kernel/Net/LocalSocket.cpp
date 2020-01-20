@@ -250,9 +250,9 @@ bool LocalSocket::can_write(const FileDescription& description) const
 {
     auto role = this->role(description);
     if (role == Role::Accepted)
-        return !has_attached_peer(description) || m_for_client.bytes_in_write_buffer() < 16384;
+        return !has_attached_peer(description) || m_for_client.space_for_writing();
     if (role == Role::Connected)
-        return !has_attached_peer(description) || m_for_server.bytes_in_write_buffer() < 16384;
+        return !has_attached_peer(description) || m_for_server.space_for_writing();
     return false;
 }
 
