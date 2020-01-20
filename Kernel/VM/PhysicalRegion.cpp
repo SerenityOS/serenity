@@ -101,11 +101,11 @@ void PhysicalRegion::return_page_at(PhysicalAddress addr)
         ASSERT_NOT_REACHED();
     }
 
-    int local_offset = addr.get() - m_lower.get();
+    ptrdiff_t local_offset = addr.get() - m_lower.get();
     ASSERT(local_offset >= 0);
-    ASSERT((u32)local_offset < (u32)(m_pages * PAGE_SIZE));
+    ASSERT((uintptr_t)local_offset < (uintptr_t)(m_pages * PAGE_SIZE));
 
-    auto page = (unsigned)local_offset / PAGE_SIZE;
+    auto page = (uintptr_t)local_offset / PAGE_SIZE;
     if (page < m_last)
         m_last = page;
 

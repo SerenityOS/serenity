@@ -274,7 +274,7 @@ int Process::sys$set_mmap_name(const Syscall::SC_set_mmap_name_params* user_para
     if (name.is_null())
         return -EFAULT;
 
-    auto* region = region_from_range({ VirtualAddress((u32)params.addr), params.size });
+    auto* region = region_from_range({ VirtualAddress((uintptr_t)params.addr), params.size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -364,7 +364,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 
     if (size == 0)
         return (void*)-EINVAL;
-    if ((u32)addr & ~PAGE_MASK)
+    if ((uintptr_t)addr & ~PAGE_MASK)
         return (void*)-EINVAL;
 
     bool map_shared = flags & MAP_SHARED;
@@ -390,11 +390,11 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 
     if (map_purgeable) {
         auto vmobject = PurgeableVMObject::create_with_size(size);
-        region = allocate_region_with_vmobject(VirtualAddress((u32)addr), size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
+        region = allocate_region_with_vmobject(VirtualAddress((uintptr_t)addr), size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region_with_vmobject({}, size, vmobject, 0, !name.is_null() ? name : "mmap (purgeable)", prot);
     } else if (map_anonymous) {
-        region = allocate_region(VirtualAddress((u32)addr), size, !name.is_null() ? name : "mmap", prot, false);
+        region = allocate_region(VirtualAddress((uintptr_t)addr), size, !name.is_null() ? name : "mmap", prot, false);
         if (!region && (!map_fixed && addr != 0))
             region = allocate_region({}, size, !name.is_null() ? name : "mmap", prot, false);
     } else {
@@ -418,7 +418,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
             if (!validate_inode_mmap_prot(*this, prot, *description->inode()))
                 return (void*)-EACCES;
         }
-        auto region_or_error = description->mmap(*this, VirtualAddress((u32)addr), static_cast<size_t>(offset), size, prot);
+        auto region_or_error = description->mmap(*this, VirtualAddress((uintptr_t)addr), static_cast<size_t>(offset), size, prot);
         if (region_or_error.is_error()) {
             // Fail if MAP_FIXED or address is 0, retry otherwise
             if (map_fixed || addr == 0)
@@ -445,7 +445,7 @@ void* Process::sys$mmap(const Syscall::SC_mmap_params* user_params)
 int Process::sys$munmap(void* addr, size_t size)
 {
     REQUIRE_PROMISE(stdio);
-    Range range_to_unmap { VirtualAddress((u32)addr), size };
+    Range range_to_unmap { VirtualAddress((uintptr_t)addr), size };
     if (auto* whole_region = region_from_range(range_to_unmap)) {
         if (!whole_region->is_mmap())
             return -EPERM;
@@ -482,7 +482,7 @@ int Process::sys$munmap(void* addr, size_t size)
 int Process::sys$mprotect(void* addr, size_t size, int prot)
 {
     REQUIRE_PROMISE(stdio);
-    Range range_to_mprotect = { VirtualAddress((u32)addr), size };
+    Range range_to_mprotect = { VirtualAddress((uintptr_t)addr), size };
 
     if (auto* whole_region = region_from_range(range_to_mprotect)) {
         if (!whole_region->is_mmap())
@@ -545,7 +545,7 @@ int Process::sys$mprotect(void* addr, size_t size, int prot)
 int Process::sys$madvise(void* address, size_t size, int advice)
 {
     REQUIRE_PROMISE(stdio);
-    auto* region = region_from_range({ VirtualAddress((u32)address), size });
+    auto* region = region_from_range({ VirtualAddress((uintptr_t)address), size });
     if (!region)
         return -EINVAL;
     if (!region->is_mmap())
@@ -1219,7 +1219,7 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
 Process* Process::create_kernel_process(Thread*& first_thread, String&& name, void (*e)())
 {
     auto* process = new Process(first_thread, move(name), (uid_t)0, (gid_t)0, (pid_t)0, Ring0);
-    first_thread->tss().eip = (u32)e;
+    first_thread->tss().eip = (uintptr_t)e;
 
     if (process->pid() != 0) {
         InterruptDisabler disabler;
@@ -1415,7 +1415,7 @@ int Process::sys$sigreturn(RegisterDump& registers)
     stack_ptr++;
 
     //pop edi, esi, ebp, esp, ebx, edx, ecx and eax
-    memcpy(&registers.edi, stack_ptr, 8 * sizeof(u32));
+    memcpy(&registers.edi, stack_ptr, 8 * sizeof(uintptr_t));
     stack_ptr += 8;
 
     registers.eip = *stack_ptr;
@@ -2356,7 +2356,7 @@ bool Process::validate_read_from_kernel(VirtualAddress vaddr, ssize_t size) cons
 bool Process::validate_read(const void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
-    VirtualAddress first_address((u32)address);
+    VirtualAddress first_address((uintptr_t)address);
     if (is_ring0()) {
         if (is_kmalloc_address(address))
             return true;
@@ -2369,7 +2369,7 @@ bool Process::validate_read(const void* address, ssize_t size) const
 bool Process::validate_write(void* address, ssize_t size) const
 {
     ASSERT(size >= 0);
-    VirtualAddress first_address((u32)address);
+    VirtualAddress first_address((uintptr_t)address);
     if (is_ring0()) {
         if (is_kmalloc_address(address))
             return true;
@@ -3632,13 +3632,13 @@ int Process::sys$create_thread(void* (*entry)(void*), void* argument, const Sysc
     thread->set_joinable(is_thread_joinable);
 
     auto& tss = thread->tss();
-    tss.eip = (u32)entry;
+    tss.eip = (uintptr_t)entry;
     tss.eflags = 0x0202;
     tss.cr3 = page_directory().cr3();
     tss.esp = user_stack_address;
 
     // NOTE: The stack needs to be 16-byte aligned.
-    thread->push_value_on_stack((u32)argument);
+    thread->push_value_on_stack((uintptr_t)argument);
     thread->push_value_on_stack(0);
 
     thread->make_thread_specific_region({});
@@ -4399,7 +4399,7 @@ Thread& Process::any_thread()
 
 WaitQueue& Process::futex_queue(i32* userspace_address)
 {
-    auto& queue = m_futex_queues.ensure((u32)userspace_address);
+    auto& queue = m_futex_queues.ensure((uintptr_t)userspace_address);
     if (!queue)
         queue = make<WaitQueue>();
     return *queue;

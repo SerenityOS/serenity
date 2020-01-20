@@ -30,9 +30,9 @@
 #include <Kernel/VM/MemoryManager.h>
 #include <Kernel/VM/PageDirectory.h>
 
-static const u32 userspace_range_base = 0x00800000;
-static const u32 userspace_range_ceiling = 0xbe000000;
-static const u32 kernelspace_range_base = 0xc0800000;
+static const uintptr_t userspace_range_base = 0x00800000;
+static const uintptr_t userspace_range_ceiling = 0xbe000000;
+static const uintptr_t kernelspace_range_base = 0xc0800000;
 
 static HashMap<u32, PageDirectory*>& cr3_map()
 {
@@ -58,9 +58,9 @@ PageDirectory::PageDirectory()
     m_range_allocator.initialize_with_range(VirtualAddress(0xc0800000), 0x3f000000);
 
     // Adopt the page tables already set up by boot.S
-    PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((u32)boot_pdpt));
-    PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((u32)boot_pd0));
-    PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((u32)boot_pd3));
+    PhysicalAddress boot_pdpt_paddr(virtual_to_low_physical((uintptr_t)boot_pdpt));
+    PhysicalAddress boot_pd0_paddr(virtual_to_low_physical((uintptr_t)boot_pd0));
+    PhysicalAddress boot_pd3_paddr(virtual_to_low_physical((uintptr_t)boot_pd3));
     kprintf("MM: boot_pdpt @ P%p\n", boot_pdpt_paddr.get());
     kprintf("MM: boot_pd0 @ P%p\n", boot_pd0_paddr.get());
     kprintf("MM: boot_pd3 @ P%p\n", boot_pd3_paddr.get());

@@ -63,8 +63,8 @@ ACPI_RAW::SDTHeader* ACPIStaticParser::find_table(const char* sig)
     dbgprintf("ACPI: Calling Find Table method!\n");
 #endif
     for (auto* physical_sdt_ptr : m_main_sdt->get_sdt_pointers()) {
-        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)physical_sdt_ptr)), (PAGE_SIZE * 2), "ACPI Static Parser Tables Finding", Region::Access::Read);
-        ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)region->vaddr().offset(offset_in_page((u32)physical_sdt_ptr)).as_ptr();
+        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((uintptr_t)physical_sdt_ptr)), (PAGE_SIZE * 2), "ACPI Static Parser Tables Finding", Region::Access::Read);
+        ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)region->vaddr().offset(offset_in_page((uintptr_t)physical_sdt_ptr)).as_ptr();
 #ifdef ACPI_DEBUG
         dbgprintf("ACPI: Examining Table @ P 0x%x\n", physical_sdt_ptr);
 #endif
@@ -85,20 +85,20 @@ void ACPIStaticParser::init_fadt()
     ASSERT(find_table("FACP") != nullptr);
     auto* fadt_ptr = find_table("FACP");
 
-    auto checkup_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)(fadt_ptr))), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
+    auto checkup_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((uintptr_t)(fadt_ptr))), (PAGE_SIZE * 2), "ACPI Static Parser", Region::Access::Read);
 #ifdef ACPI_DEBUG
     dbgprintf("ACPI: Checking FADT Length to choose the correct mapping size\n");
 #endif
 
-    ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)checkup_region->vaddr().offset(offset_in_page((u32)(fadt_ptr))).as_ptr();
+    ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)checkup_region->vaddr().offset(offset_in_page((uintptr_t)(fadt_ptr))).as_ptr();
 #ifdef ACPI_DEBUG
     dbgprintf("ACPI: FADT @ V 0x%x, P 0x%x\n", sdt, fadt_ptr);
 #endif
     u32 length = sdt->length;
     kprintf("ACPI: Fixed ACPI data, Revision %u\n", sdt->revision);
 
-    auto fadt_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)(fadt_ptr))), PAGE_ROUND_UP(length) + PAGE_SIZE, "ACPI Static Parser", Region::Access::Read);
-    m_fadt = make<ACPI::FixedACPIData>(*(ACPI_RAW::FADT*)fadt_region->vaddr().offset(offset_in_page((u32)(fadt_ptr))).as_ptr());
+    auto fadt_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((uintptr_t)(fadt_ptr))), PAGE_ROUND_UP(length) + PAGE_SIZE, "ACPI Static Parser", Region::Access::Read);
+    m_fadt = make<ACPI::FixedACPIData>(*(ACPI_RAW::FADT*)fadt_region->vaddr().offset(offset_in_page((uintptr_t)(fadt_ptr))).as_ptr());
 #ifdef ACPI_DEBUG
     dbgprintf("ACPI: Finished to initialize Fixed ACPI data\n");
 #endif
@@ -143,8 +143,8 @@ size_t ACPIStaticParser::get_table_size(ACPI_RAW::SDTHeader& p_header)
 #ifdef ACPI_DEBUG
     dbgprintf("ACPI: Checking SDT Length\n");
 #endif
-    auto region = MM.allocate_kernel_region(PhysicalAddress((u32)&p_header & PAGE_MASK), (PAGE_SIZE * 2), "ACPI get_table_size()", Region::Access::Read);
-    volatile auto* sdt = (ACPI_RAW::SDTHeader*)region->vaddr().offset(offset_in_page((u32)&p_header)).as_ptr();
+    auto region = MM.allocate_kernel_region(PhysicalAddress((uintptr_t)&p_header & PAGE_MASK), (PAGE_SIZE * 2), "ACPI get_table_size()", Region::Access::Read);
+    volatile auto* sdt = (ACPI_RAW::SDTHeader*)region->vaddr().offset(offset_in_page((uintptr_t)&p_header)).as_ptr();
     return sdt->length;
 }
 
@@ -154,8 +154,8 @@ u8 ACPIStaticParser::get_table_revision(ACPI_RAW::SDTHeader& p_header)
 #ifdef ACPI_DEBUG
     dbgprintf("ACPI: Checking SDT Revision\n");
 #endif
-    auto region = MM.allocate_kernel_region(PhysicalAddress((u32)&p_header & PAGE_MASK), (PAGE_SIZE * 2), "ACPI get_table_revision()", Region::Access::Read);
-    volatile auto* sdt = (ACPI_RAW::SDTHeader*)region->vaddr().offset(offset_in_page((u32)&p_header)).as_ptr();
+    auto region = MM.allocate_kernel_region(PhysicalAddress((uintptr_t)&p_header & PAGE_MASK), (PAGE_SIZE * 2), "ACPI get_table_revision()", Region::Access::Read);
+    volatile auto* sdt = (ACPI_RAW::SDTHeader*)region->vaddr().offset(offset_in_page((uintptr_t)&p_header)).as_ptr();
     return sdt->revision;
 }
 
@@ -175,8 +175,8 @@ void ACPIStaticParser::initialize_main_system_description_table()
         revision = get_table_revision(*m_main_system_description_table);
     }
 
-    auto main_sdt_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)m_main_system_description_table)), PAGE_ROUND_UP(length) + PAGE_SIZE, "ACPI Static Parser Initialization", Region::Access::Read, false, true);
-    volatile auto* sdt = (ACPI_RAW::SDTHeader*)main_sdt_region->vaddr().offset(offset_in_page((u32)m_main_system_description_table)).as_ptr();
+    auto main_sdt_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((uintptr_t)m_main_system_description_table)), PAGE_ROUND_UP(length) + PAGE_SIZE, "ACPI Static Parser Initialization", Region::Access::Read, false, true);
+    volatile auto* sdt = (ACPI_RAW::SDTHeader*)main_sdt_region->vaddr().offset(offset_in_page((uintptr_t)m_main_system_description_table)).as_ptr();
     kprintf("ACPI: Main Description Table valid? 0x%x\n", validate_acpi_table(const_cast<ACPI_RAW::SDTHeader&>(*sdt), length));
 
     Vector<ACPI_RAW::SDTHeader*> sdt_pointers;
@@ -236,8 +236,8 @@ void ACPIStaticParser::locate_all_aml_tables()
     kprintf("ACPI: Searching for AML Tables\n");
     m_aml_tables_ptrs.append(m_fadt->get_dsdt());
     for (auto* sdt_ptr : m_main_sdt->get_sdt_pointers()) {
-        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)sdt_ptr)), (PAGE_SIZE * 2), "ACPI Static Parser AML Tables Finding", Region::Access::Read);
-        auto* sdt = (ACPI_RAW::SDTHeader*)region->vaddr().offset(offset_in_page((u32)sdt_ptr)).as_ptr();
+        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((uintptr_t)sdt_ptr)), (PAGE_SIZE * 2), "ACPI Static Parser AML Tables Finding", Region::Access::Read);
+        auto* sdt = (ACPI_RAW::SDTHeader*)region->vaddr().offset(offset_in_page((uintptr_t)sdt_ptr)).as_ptr();
 #ifdef ACPI_DEBUG
         dbgprintf("ACPI: Examining Table @ P 0x%x\n", sdt_ptr);
 #endif
@@ -387,7 +387,7 @@ ACPI::FixedACPIData::FixedACPIData(ACPI_RAW::FADT& fadt)
 
 ACPI_RAW::SDTHeader* ACPI::FixedACPIData::get_dsdt()
 {
-    if (m_x_dsdt_ptr != (u32) nullptr)
+    if (m_x_dsdt_ptr != (uintptr_t) nullptr)
         return (ACPI_RAW::SDTHeader*)m_x_dsdt_ptr;
     else {
         ASSERT((ACPI_RAW::SDTHeader*)m_dsdt_ptr != nullptr);

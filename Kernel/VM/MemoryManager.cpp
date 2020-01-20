@@ -66,17 +66,17 @@ MemoryManager::~MemoryManager()
 void MemoryManager::protect_kernel_image()
 {
     // Disable writing to the kernel text and rodata segments.
-    extern u32 start_of_kernel_text;
-    extern u32 start_of_kernel_data;
-    for (size_t i = (u32)&start_of_kernel_text; i < (u32)&start_of_kernel_data; i += PAGE_SIZE) {
+    extern uintptr_t start_of_kernel_text;
+    extern uintptr_t start_of_kernel_data;
+    for (size_t i = (uintptr_t)&start_of_kernel_text; i < (uintptr_t)&start_of_kernel_data; i += PAGE_SIZE) {
         auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
         pte.set_writable(false);
     }
 
     if (g_cpu_supports_nx) {
         // Disable execution of the kernel data and bss segments.
-        extern u32 end_of_kernel_bss;
-        for (size_t i = (u32)&start_of_kernel_data; i < (u32)&end_of_kernel_bss; i += PAGE_SIZE) {
+        extern uintptr_t end_of_kernel_bss;
+        for (size_t i = (uintptr_t)&start_of_kernel_data; i < (uintptr_t)&end_of_kernel_bss; i += PAGE_SIZE) {
             auto& pte = ensure_pte(kernel_page_directory(), VirtualAddress(i));
             pte.set_execute_disabled(true);
         }
@@ -101,7 +101,7 @@ void MemoryManager::setup_low_1mb()
     if (g_cpu_supports_nx)
         pde_zero.set_execute_disabled(true);
 
-    for (u32 offset = 0; offset < (2 * MB); offset += PAGE_SIZE) {
+    for (uintptr_t offset = 0; offset < (2 * MB); offset += PAGE_SIZE) {
         auto& page_table_page = m_low_page_table;
         auto& pte = quickmap_pt(page_table_page->paddr())[offset / PAGE_SIZE];
         pte.set_physical_page_base(offset);
@@ -119,11 +119,11 @@ void MemoryManager::parse_memory_map()
     auto* mmap = (multiboot_memory_map_t*)(low_physical_to_virtual(multiboot_info_ptr->mmap_addr));
     for (; (unsigned long)mmap < (low_physical_to_virtual(multiboot_info_ptr->mmap_addr)) + (multiboot_info_ptr->mmap_length); mmap = (multiboot_memory_map_t*)((unsigned long)mmap + mmap->size + sizeof(mmap->size))) {
         kprintf("MM: Multiboot mmap: base_addr = 0x%x%08x, length = 0x%x%08x, type = 0x%x\n",
-            (u32)(mmap->addr >> 32),
-            (u32)(mmap->addr & 0xffffffff),
-            (u32)(mmap->len >> 32),
-            (u32)(mmap->len & 0xffffffff),
-            (u32)mmap->type);
+            (uintptr_t)(mmap->addr >> 32),
+            (uintptr_t)(mmap->addr & 0xffffffff),
+            (uintptr_t)(mmap->len >> 32),
+            (uintptr_t)(mmap->len & 0xffffffff),
+            (uintptr_t)mmap->type);
 
         if (mmap->type != MULTIBOOT_MEMORY_AVAILABLE)
             continue;
@@ -135,7 +135,7 @@ void MemoryManager::parse_memory_map()
         if ((mmap->addr + mmap->len) > 0xffffffff)
             continue;
 
-        auto diff = (u32)mmap->addr % PAGE_SIZE;
+        auto diff = (uintptr_t)mmap->addr % PAGE_SIZE;
         if (diff != 0) {
             kprintf("MM: got an unaligned region base from the bootloader; correcting %p by %d bytes\n", mmap->addr, diff);
             diff = PAGE_SIZE - diff;
@@ -153,7 +153,7 @@ void MemoryManager::parse_memory_map()
 
 #ifdef MM_DEBUG
         kprintf("MM: considering memory at %p - %p\n",
-            (u32)mmap->addr, (u32)(mmap->addr + mmap->len));
+            (uintptr_t)mmap->addr, (uintptr_t)(mmap->addr + mmap->len));
 #endif
 
         for (size_t page_base = mmap->addr; page_base < (mmap->addr + mmap->len); page_base += PAGE_SIZE) {
@@ -219,7 +219,7 @@ PageTableEntry& MemoryManager::ensure_pte(PageDirectory& page_directory, Virtual
         page_directory.m_physical_pages.set(page_directory_index, move(page_table));
     }
 
-    return quickmap_pt(PhysicalAddress((u32)pde.page_table_base()))[page_table_index];
+    return quickmap_pt(PhysicalAddress((uintptr_t)pde.page_table_base()))[page_table_index];
 }
 
 void MemoryManager::initialize()
@@ -410,7 +410,7 @@ RefPtr<PhysicalPage> MemoryManager::allocate_user_physical_page(ShouldZeroFill s
 #endif
 
     if (should_zero_fill == ShouldZeroFill::Yes) {
-        auto* ptr = (u32*)quickmap_page(*page);
+        auto* ptr = quickmap_page(*page);
         memset(ptr, 0, PAGE_SIZE);
         unquickmap_page();
     }

@@ -90,10 +90,10 @@ void DMIDecoder::enumerate_smbios_tables()
     u32 table_length = m_table_length;
     SMBIOS::TableHeader* p_table_ptr = m_structure_table;
 
-    PhysicalAddress paddr = PhysicalAddress(page_base_of((u32)p_table_ptr));
+    PhysicalAddress paddr = PhysicalAddress(page_base_of((uintptr_t)p_table_ptr));
     auto region = MM.allocate_kernel_region(paddr, PAGE_ROUND_UP(table_length), "DMI Decoder Enumerating SMBIOS", Region::Access::Read, false, false);
 
-    volatile SMBIOS::TableHeader* v_table_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((u32)p_table_ptr)).as_ptr();
+    volatile SMBIOS::TableHeader* v_table_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((uintptr_t)p_table_ptr)).as_ptr();
 #ifdef SMBIOS_DEBUG
     dbgprintf("DMIDecoder: Total Table length %d\n", m_table_length);
 #endif
@@ -104,7 +104,7 @@ void DMIDecoder::enumerate_smbios_tables()
         dbgprintf("DMIDecoder: Examining table @ P 0x%x V 0x%x\n", p_table_ptr, v_table_ptr);
 #endif
         structures_count++;
-        if (v_table_ptr->type == (u32)SMBIOS::TableType::EndOfTable) {
+        if (v_table_ptr->type == (u8)SMBIOS::TableType::EndOfTable) {
             kprintf("DMIDecoder: Detected table with type 127, End of SMBIOS data.\n");
             break;
         }
@@ -113,8 +113,8 @@ void DMIDecoder::enumerate_smbios_tables()
         table_length -= v_table_ptr->length;
 
         size_t table_size = get_table_size(*p_table_ptr);
-        p_table_ptr = (SMBIOS::TableHeader*)((u32)p_table_ptr + (u32)table_size);
-        v_table_ptr = (SMBIOS::TableHeader*)((u32)v_table_ptr + (u32)table_size);
+        p_table_ptr = (SMBIOS::TableHeader*)((uintptr_t)p_table_ptr + table_size);
+        v_table_ptr = (SMBIOS::TableHeader*)((uintptr_t)v_table_ptr + table_size);
 #ifdef SMBIOS_DEBUG
         dbgprintf("DMIDecoder: Next table @ P 0x%x\n", p_table_ptr);
 #endif
@@ -146,7 +146,7 @@ size_t DMIDecoder::get_table_size(SMBIOS::TableHeader& table)
 
 SMBIOS::TableHeader* DMIDecoder::get_next_physical_table(SMBIOS::TableHeader& p_table)
 {
-    return (SMBIOS::TableHeader*)((u32)&p_table + get_table_size(p_table));
+    return (SMBIOS::TableHeader*)((uintptr_t)&p_table + get_table_size(p_table));
 }
 
 SMBIOS::TableHeader* DMIDecoder::get_smbios_physical_table_by_handle(u16 handle)
@@ -155,8 +155,8 @@ SMBIOS::TableHeader* DMIDecoder::get_smbios_physical_table_by_handle(u16 handle)
     for (auto* table : m_smbios_tables) {
         if (!table)
             continue;
-        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)table)), PAGE_SIZE * 2, "DMI Decoder Finding Table", Region::Access::Read, false, false);
-        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((u32)table)).as_ptr();
+        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((uintptr_t)table)), PAGE_SIZE * 2, "DMI Decoder Finding Table", Region::Access::Read, false, false);
+        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((uintptr_t)table)).as_ptr();
 
         if (table_v_ptr->handle == handle) {
             return table;
@@ -170,8 +170,8 @@ SMBIOS::TableHeader* DMIDecoder::get_smbios_physical_table_by_type(u8 table_type
     for (auto* table : m_smbios_tables) {
         if (!table)
             continue;
-        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)table)), PAGE_ROUND_UP(PAGE_SIZE * 2), "DMI Decoder Finding Table", Region::Access::Read, false, false);
-        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((u32)table)).as_ptr();
+        auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((uintptr_t)table)), PAGE_ROUND_UP(PAGE_SIZE * 2), "DMI Decoder Finding Table", Region::Access::Read, false, false);
+        SMBIOS::TableHeader* table_v_ptr = (SMBIOS::TableHeader*)region->vaddr().offset(offset_in_page((uintptr_t)table)).as_ptr();
         if (table_v_ptr->type == table_type) {
             return table;
         }

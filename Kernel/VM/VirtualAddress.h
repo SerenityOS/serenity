@@ -32,23 +32,23 @@
 class VirtualAddress {
 public:
     VirtualAddress() {}
-    explicit VirtualAddress(u32 address)
+    explicit VirtualAddress(uintptr_t address)
         : m_address(address)
     {
     }
 
     explicit VirtualAddress(const void* address)
-        : m_address((u32)address)
+        : m_address((uintptr_t)address)
     {
     }
 
     bool is_null() const { return m_address == 0; }
     bool is_page_aligned() const { return (m_address & 0xfff) == 0; }
 
-    VirtualAddress offset(u32 o) const { return VirtualAddress(m_address + o); }
-    u32 get() const { return m_address; }
-    void set(u32 address) { m_address = address; }
-    void mask(u32 m) { m_address &= m; }
+    VirtualAddress offset(uintptr_t o) const { return VirtualAddress(m_address + o); }
+    uintptr_t get() const { return m_address; }
+    void set(uintptr_t address) { m_address = address; }
+    void mask(uintptr_t m) { m_address &= m; }
 
     bool operator<=(const VirtualAddress& other) const { return m_address <= other.m_address; }
     bool operator>=(const VirtualAddress& other) const { return m_address >= other.m_address; }
@@ -63,7 +63,7 @@ public:
     VirtualAddress page_base() const { return VirtualAddress(m_address & 0xfffff000); }
 
 private:
-    u32 m_address { 0 };
+    uintptr_t m_address { 0 };
 };
 
 inline VirtualAddress operator-(const VirtualAddress& a, const VirtualAddress& b)

@@ -597,8 +597,8 @@ void Thread::set_default_signal_dispositions()
 {
     // FIXME: Set up all the right default actions. See signal(7).
     memset(&m_signal_action_data, 0, sizeof(m_signal_action_data));
-    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((u32)SIG_IGN);
-    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((u32)SIG_IGN);
+    m_signal_action_data[SIGCHLD].handler_or_sigaction = VirtualAddress((uintptr_t)SIG_IGN);
+    m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress((uintptr_t)SIG_IGN);
 }
 
 void Thread::push_value_on_stack(u32 value)
@@ -657,9 +657,9 @@ u32 Thread::make_userspace_stack_for_main_thread(Vector<String> arguments, Vecto
     };
 
     // NOTE: The stack needs to be 16-byte aligned.
-    push_on_new_stack((u32)env);
-    push_on_new_stack((u32)argv);
-    push_on_new_stack((u32)argc);
+    push_on_new_stack((uintptr_t)env);
+    push_on_new_stack((uintptr_t)argv);
+    push_on_new_stack((uintptr_t)argc);
     push_on_new_stack(0);
     return new_esp;
 }
@@ -770,20 +770,20 @@ String Thread::backtrace_impl() const
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
 
-    u32 stack_ptr = start_frame;
+    uintptr_t stack_ptr = start_frame;
     for (;;) {
-        if (!process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2))
+        if (!process.validate_read_from_kernel(VirtualAddress((uintptr_t)stack_ptr), sizeof(void*) * 2))
             break;
-        u32 retaddr;
+        uintptr_t retaddr;
 
-        if (is_user_range(VirtualAddress(stack_ptr), sizeof(void*) * 2)) {
-            copy_from_user(&retaddr, &((u32*)stack_ptr)[1]);
+        if (is_user_range(VirtualAddress(stack_ptr), sizeof(uintptr_t) * 2)) {
+            copy_from_user(&retaddr, &((uintptr_t*)stack_ptr)[1]);
             recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
-            copy_from_user(&stack_ptr, (u32*)stack_ptr);
+            copy_from_user(&stack_ptr, (uintptr_t*)stack_ptr);
         } else {
-            memcpy(&retaddr, &((u32*)stack_ptr)[1], sizeof(void*));
+            memcpy(&retaddr, &((uintptr_t*)stack_ptr)[1], sizeof(uintptr_t));
             recognized_symbols.append({ retaddr, ksymbolicate(retaddr) });
-            memcpy(&stack_ptr, (u32*)stack_ptr, sizeof(void*));
+            memcpy(&stack_ptr, (uintptr_t*)stack_ptr, sizeof(uintptr_t));
         }
     }
 
@@ -795,14 +795,14 @@ String Thread::backtrace_impl() const
     return builder.to_string();
 }
 
-Vector<u32> Thread::raw_backtrace(u32 ebp) const
+Vector<uintptr_t> Thread::raw_backtrace(uintptr_t ebp) const
 {
     auto& process = const_cast<Process&>(this->process());
     ProcessPagingScope paging_scope(process);
-    Vector<u32, Profiling::max_stack_frame_count> backtrace;
+    Vector<uintptr_t, Profiling::max_stack_frame_count> backtrace;
     backtrace.append(ebp);
-    for (u32* stack_ptr = (u32*)ebp; process.validate_read_from_kernel(VirtualAddress((u32)stack_ptr), sizeof(void*) * 2); stack_ptr = (u32*)*stack_ptr) {
-        u32 retaddr = stack_ptr[1];
+    for (uintptr_t* stack_ptr = (uintptr_t*)ebp; process.validate_read_from_kernel(VirtualAddress((uintptr_t)stack_ptr), sizeof(uintptr_t) * 2); stack_ptr = (uintptr_t*)*stack_ptr) {
+        uintptr_t retaddr = stack_ptr[1];
         backtrace.append(retaddr);
         if (backtrace.size() == Profiling::max_stack_frame_count)
             break;
@@ -818,7 +818,7 @@ void Thread::make_thread_specific_region(Badge<Process>)
     SmapDisabler disabler;
     auto* thread_specific_data = (ThreadSpecificData*)region->vaddr().offset(align_up_to(process().m_master_tls_size, thread_specific_region_alignment)).as_ptr();
     auto* thread_local_storage = (u8*)((u8*)thread_specific_data) - align_up_to(process().m_master_tls_size, process().m_master_tls_alignment);
-    m_thread_specific_data = VirtualAddress((u32)thread_specific_data);
+    m_thread_specific_data = VirtualAddress((uintptr_t)thread_specific_data);
     thread_specific_data->self = thread_specific_data;
     if (process().m_master_tls_size)
         memcpy(thread_local_storage, process().m_master_tls_region->vaddr().as_ptr(), process().m_master_tls_size);
