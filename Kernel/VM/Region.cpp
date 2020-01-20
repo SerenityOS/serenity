@@ -259,7 +259,7 @@ void Region::map_individual_page_impl(size_t page_index)
     } else {
         pte.set_cache_disabled(!m_cacheable);
         pte.set_physical_page_base(physical_page->paddr().get());
-        pte.set_present(is_readable());
+        pte.set_present(true);
         if (should_cow(page_index))
             pte.set_writable(false);
         else
@@ -331,7 +331,7 @@ PageFaultResponse Region::handle_fault(const PageFault& fault)
 {
     auto page_index_in_region = page_index_from_address(fault.vaddr());
     if (fault.type() == PageFault::Type::PageNotPresent) {
-        if (!is_readable()) {
+        if (fault.is_read() && !is_readable()) {
             dbgprintf("NP(non-readable) fault in Region{%p}[%u]\n", this, page_index_in_region);
             return PageFaultResponse::ShouldCrash;
         }
