@@ -201,7 +201,7 @@ struct GenericAddressStructure {
         this->bit_width = other.bit_width;
         this->bit_offset = other.bit_offset;
         this->access_size = other.access_size;
-        this->address = (u32)other.address;
+        this->address = (uintptr_t)other.address;
         return *this;
     }
     GenericAddressStructure& operator=(const ACPI_RAW::GenericAddressStructure& other)
@@ -210,7 +210,7 @@ struct GenericAddressStructure {
         this->bit_width = other.bit_width;
         this->bit_offset = other.bit_offset;
         this->access_size = other.access_size;
-        this->address = (u32)other.address;
+        this->address = (uintptr_t)other.address;
         return *this;
     }
 };

@@ -33,7 +33,7 @@
 #include <Kernel/kstdio.h>
 
 #define PAGE_SIZE 4096
-#define PAGE_MASK 0xfffff000
+#define PAGE_MASK ((uintptr_t)0xfffff000u)
 
 class MemoryManager;
 class PageDirectory;
@@ -452,12 +452,12 @@ struct [[gnu::aligned(16)]] FPUState
     u8 buffer[512];
 };
 
-inline constexpr u32 page_base_of(u32 address)
+inline constexpr uintptr_t page_base_of(uintptr_t address)
 {
     return address & PAGE_MASK;
 }
 
-inline constexpr u32 offset_in_page(u32 address)
+inline constexpr uintptr_t offset_in_page(uintptr_t address)
 {
     return address & (~PAGE_MASK);
 }

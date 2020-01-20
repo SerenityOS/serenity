@@ -253,14 +253,14 @@ bool E1000NetworkAdapter::link_up()
 
 void E1000NetworkAdapter::initialize_rx_descriptors()
 {
-    auto ptr = (u32)kmalloc_eternal(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16);
+    auto ptr = (uintptr_t)kmalloc_eternal(sizeof(e1000_rx_desc) * number_of_rx_descriptors + 16);
     // Make sure it's 16-byte aligned.
     if (ptr % 16)
         ptr = (ptr + 16) - (ptr % 16);
     m_rx_descriptors = (e1000_rx_desc*)ptr;
     for (int i = 0; i < number_of_rx_descriptors; ++i) {
         auto& descriptor = m_rx_descriptors[i];
-        auto addr = (u32)kmalloc_eternal(8192 + 16);
+        auto addr = (uintptr_t)kmalloc_eternal(8192 + 16);
         if (addr % 16)
             addr = (addr + 16) - (addr % 16);
         descriptor.addr = addr - 0xc0000000;
@@ -278,14 +278,14 @@ void E1000NetworkAdapter::initialize_rx_descriptors()
 
 void E1000NetworkAdapter::initialize_tx_descriptors()
 {
-    auto ptr = (u32)kmalloc_eternal(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16);
+    auto ptr = (uintptr_t)kmalloc_eternal(sizeof(e1000_tx_desc) * number_of_tx_descriptors + 16);
     // Make sure it's 16-byte aligned.
     if (ptr % 16)
         ptr = (ptr + 16) - (ptr % 16);
     m_tx_descriptors = (e1000_tx_desc*)ptr;
     for (int i = 0; i < number_of_tx_descriptors; ++i) {
         auto& descriptor = m_tx_descriptors[i];
-        auto addr = (u32)kmalloc_eternal(8192 + 16);
+        auto addr = (uintptr_t)kmalloc_eternal(8192 + 16);
         if (addr % 16)
             addr = (addr + 16) - (addr % 16);
         descriptor.addr = addr - 0xc0000000;

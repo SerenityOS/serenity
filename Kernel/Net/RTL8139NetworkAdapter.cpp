@@ -157,16 +157,16 @@ RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 irq)
     // we add space to account for overhang from the last packet - the rtl8139
     // can optionally guarantee that packets will be contiguous by
     // purposefully overrunning the rx buffer
-    m_rx_buffer_addr = (u32)virtual_to_low_physical(kmalloc_aligned(RX_BUFFER_SIZE + PACKET_SIZE_MAX, 16));
+    m_rx_buffer_addr = (uintptr_t)virtual_to_low_physical(kmalloc_aligned(RX_BUFFER_SIZE + PACKET_SIZE_MAX, 16));
     kprintf("RTL8139: RX buffer: P%p\n", m_rx_buffer_addr);
 
-    auto tx_buffer_addr = (u32)virtual_to_low_physical(kmalloc_aligned(TX_BUFFER_SIZE * 4, 16));
+    auto tx_buffer_addr = (uintptr_t)virtual_to_low_physical(kmalloc_aligned(TX_BUFFER_SIZE * 4, 16));
     for (int i = 0; i < RTL8139_TX_BUFFER_COUNT; i++) {
         m_tx_buffer_addr[i] = tx_buffer_addr + TX_BUFFER_SIZE * i;
         kprintf("RTL8139: TX buffer %d: P%p\n", i, m_tx_buffer_addr[i]);
     }
 
-    m_packet_buffer = (u32)kmalloc(PACKET_SIZE_MAX);
+    m_packet_buffer = (uintptr_t)kmalloc(PACKET_SIZE_MAX);
 
     reset();
 
