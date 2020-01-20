@@ -1783,7 +1783,7 @@ int Process::sys$lstat(const char* user_path, size_t path_length, stat* user_sta
     auto result = metadata_or_error.value().stat(statbuf);
     if (result.is_error())
         return result;
-    copy_to_user(user_statbuf, &statbuf, sizeof(statbuf));
+    copy_to_user(user_statbuf, &statbuf);
     return 0;
 }
 
@@ -1802,7 +1802,7 @@ int Process::sys$stat(const char* user_path, size_t path_length, stat* user_stat
     auto result = metadata_or_error.value().stat(statbuf);
     if (result.is_error())
         return result;
-    copy_to_user(user_statbuf, &statbuf, sizeof(statbuf));
+    copy_to_user(user_statbuf, &statbuf);
     return 0;
 }
 
@@ -2003,12 +2003,12 @@ int Process::sys$pipe(int pipefd[2], int flags)
     int reader_fd = alloc_fd();
     m_fds[reader_fd].set(fifo->open_direction(FIFO::Direction::Reader), fd_flags);
     m_fds[reader_fd].description->set_readable(true);
-    copy_to_user(&pipefd[0], &reader_fd, sizeof(reader_fd));
+    copy_to_user(&pipefd[0], &reader_fd);
 
     int writer_fd = alloc_fd();
     m_fds[writer_fd].set(fifo->open_direction(FIFO::Direction::Writer), fd_flags);
     m_fds[writer_fd].description->set_writable(true);
-    copy_to_user(&pipefd[1], &writer_fd, sizeof(writer_fd));
+    copy_to_user(&pipefd[1], &writer_fd);
 
     return 0;
 }
@@ -2333,7 +2333,7 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     }
 
     if (wstatus)
-        copy_to_user(wstatus, &exit_status, sizeof(exit_status));
+        copy_to_user(wstatus, &exit_status);
     return waitee_pid;
 }
 
@@ -2517,7 +2517,7 @@ int Process::sys$sigprocmask(int how, const sigset_t* set, sigset_t* old_set)
     if (old_set) {
         if (!validate_write_typed(old_set))
             return -EFAULT;
-        copy_to_user(old_set, &current->m_signal_mask, sizeof(current->m_signal_mask));
+        copy_to_user(old_set, &current->m_signal_mask);
     }
     if (set) {
         if (!validate_read_typed(set))
@@ -2546,7 +2546,7 @@ int Process::sys$sigpending(sigset_t* set)
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(set))
         return -EFAULT;
-    copy_to_user(set, &current->m_pending_signals, sizeof(current->m_pending_signals));
+    copy_to_user(set, &current->m_pending_signals);
     return 0;
 }
 
@@ -2562,11 +2562,11 @@ int Process::sys$sigaction(int signum, const sigaction* act, sigaction* old_act)
     if (old_act) {
         if (!validate_write_typed(old_act))
             return -EFAULT;
-        copy_to_user(&old_act->sa_flags, &action.flags, sizeof(action.flags));
+        copy_to_user(&old_act->sa_flags, &action.flags);
         copy_to_user(&old_act->sa_sigaction, &action.handler_or_sigaction, sizeof(action.handler_or_sigaction));
     }
     copy_from_user(&action.flags, &act->sa_flags);
-    copy_from_user(&action.handler_or_sigaction, &act->sa_sigaction, sizeof(action.flags));
+    copy_from_user(&action.handler_or_sigaction, &act->sa_sigaction, sizeof(action.handler_or_sigaction));
     return 0;
 }
 
@@ -2649,10 +2649,10 @@ clock_t Process::sys$times(tms* times)
     REQUIRE_PROMISE(stdio);
     if (!validate_write_typed(times))
         return -EFAULT;
-    copy_to_user(&times->tms_utime, &m_ticks_in_user, sizeof(m_ticks_in_user));
-    copy_to_user(&times->tms_stime, &m_ticks_in_kernel, sizeof(m_ticks_in_kernel));
-    copy_to_user(&times->tms_cutime, &m_ticks_in_user_for_dead_children, sizeof(m_ticks_in_user_for_dead_children));
-    copy_to_user(&times->tms_cstime, &m_ticks_in_kernel_for_dead_children, sizeof(m_ticks_in_kernel_for_dead_children));
+    copy_to_user(&times->tms_utime, &m_ticks_in_user);
+    copy_to_user(&times->tms_stime, &m_ticks_in_kernel);
+    copy_to_user(&times->tms_cutime, &m_ticks_in_user_for_dead_children);
+    copy_to_user(&times->tms_cstime, &m_ticks_in_kernel_for_dead_children);
     return g_uptime & 0x7fffffff;
 }
 
@@ -3297,7 +3297,7 @@ int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
         return -EFAULT;
 
     int desired_priority;
-    copy_from_user(&desired_priority, &param->sched_priority, sizeof(desired_priority));
+    copy_from_user(&desired_priority, &param->sched_priority);
 
     InterruptDisabler disabler;
     auto* peer = this;
@@ -3336,7 +3336,7 @@ int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
 
     // FIXME: This doesn't seem like the way to get the right thread!
     int priority = peer->any_thread().priority();
-    copy_to_user(&param->sched_priority, &priority, sizeof(priority));
+    copy_to_user(&param->sched_priority, &priority);
     return 0;
 }
 
@@ -3708,7 +3708,7 @@ int Process::sys$join_thread(int tid, void** exit_value)
     thread = nullptr;
 
     if (exit_value)
-        copy_to_user(exit_value, &joinee_exit_value, sizeof(joinee_exit_value));
+        copy_to_user(exit_value, &joinee_exit_value);
     return 0;
 }
 

@@ -365,7 +365,7 @@ public:
     FPUState& fpu_state() { return *m_fpu_state; }
 
     void set_default_signal_dispositions();
-    void push_value_on_stack(u32);
+    void push_value_on_stack(uintptr_t);
 
     u32 make_userspace_stack_for_main_thread(Vector<String> arguments, Vector<String> environment);
 

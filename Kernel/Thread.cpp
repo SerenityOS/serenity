@@ -459,7 +459,7 @@ bool Thread::has_signal_handler(u8 signal) const
 static void push_value_on_user_stack(u32* stack, u32 data)
 {
     *stack -= 4;
-    copy_to_user((u32*)*stack, &data, sizeof(u32));
+    copy_to_user((u32*)*stack, &data);
 }
 
 ShouldUnblockThread Thread::dispatch_signal(u8 signal)
@@ -601,11 +601,11 @@ void Thread::set_default_signal_dispositions()
     m_signal_action_data[SIGWINCH].handler_or_sigaction = VirtualAddress(SIG_IGN);
 }
 
-void Thread::push_value_on_stack(u32 value)
+void Thread::push_value_on_stack(uintptr_t value)
 {
     m_tss.esp -= 4;
-    u32* stack_ptr = (u32*)m_tss.esp;
-    copy_to_user(stack_ptr, &value, sizeof(value));
+    uintptr_t* stack_ptr = (uintptr_t*)m_tss.esp;
+    copy_to_user(stack_ptr, &value);
 }
 
 RegisterDump& Thread::get_register_dump_from_stack()
