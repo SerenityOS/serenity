@@ -564,7 +564,7 @@ KResult VFS::link(StringView old_path, StringView new_path, Custody& base)
 KResult VFS::unlink(StringView path, Custody& base)
 {
     RefPtr<Custody> parent_custody;
-    auto custody_or_error = resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR);
+    auto custody_or_error = resolve_path(path, base, &parent_custody, O_NOFOLLOW_NOERROR | O_UNLINK_INTERNAL);
     if (custody_or_error.is_error())
         return custody_or_error.error();
     auto& custody = *custody_or_error.value();
@@ -709,8 +709,70 @@ Custody& VFS::root_custody()
     return *m_root_custody;
 }
 
+const UnveiledPath* VFS::find_matching_unveiled_path(StringView path)
+{
+    for (auto& unveiled_path : current->process().unveiled_paths()) {
+        if (path == unveiled_path.path)
+            return &unveiled_path;
+        if (path.starts_with(unveiled_path.path) && path.length() > unveiled_path.path.length() && path[unveiled_path.path.length()] == '/')
+            return &unveiled_path;
+    }
+    return nullptr;
+}
+
+KResult VFS::validate_path_against_process_veil(StringView path, int options)
+{
+    if (current->process().unveil_state() == UnveilState::None)
+        return KSuccess;
+
+    // FIXME: Figure out a nicer way to do this.
+    if (String(path).contains("/.."))
+        return KResult(-EINVAL);
+
+    auto* unveiled_path = find_matching_unveiled_path(path);
+    if (!unveiled_path) {
+        dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled.";
+        return KResult(-ENOENT);
+    }
+
+    if (options & O_CREAT) {
+        if (!(unveiled_path->permissions & UnveiledPath::Access::CreateOrRemove)) {
+            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'c' permission.";
+            return KResult(-EACCES);
+        }
+    }
+    if (options & O_UNLINK_INTERNAL) {
+        if (!(unveiled_path->permissions & UnveiledPath::Access::CreateOrRemove)) {
+            dbg() << *current << " rejecting path '" << path << "' for unlink since it hasn't been unveiled with 'c' permission.";
+            return KResult(-EACCES);
+        }
+        return KSuccess;
+    }
+    if ((options & O_RDWR) || (options & O_WRONLY)) {
+        if (!(unveiled_path->permissions & UnveiledPath::Access::Write)) {
+            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'w' permission.";
+            return KResult(-EACCES);
+        }
+    } else if (options & O_EXEC) {
+        if (!(unveiled_path->permissions & UnveiledPath::Access::Execute)) {
+            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'x' permission.";
+            return KResult(-EACCES);
+        }
+    } else {
+        if (!(unveiled_path->permissions & UnveiledPath::Access::Read)) {
+            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
+            return KResult(-EACCES);
+        }
+    }
+    return KSuccess;
+}
+
 KResultOr<NonnullRefPtr<Custody>> VFS::resolve_path(StringView path, Custody& base, RefPtr<Custody>* out_parent, int options, int symlink_recursion_level)
 {
+    auto result = validate_path_against_process_veil(path, options);
+    if (result.is_error())
+        return result;
+
     if (symlink_recursion_level >= symlink_recursion_limit)
         return KResult(-ELOOP);
 

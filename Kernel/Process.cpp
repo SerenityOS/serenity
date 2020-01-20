@@ -1820,6 +1820,10 @@ bool Process::validate(const Syscall::ImmutableBufferArgument<DataType, SizeType
 
 String Process::validate_and_copy_string_from_user(const char* user_characters, size_t user_length) const
 {
+    if (!user_characters)
+        return {};
+    if (user_length == 0)
+        return String::empty();
     if (!validate_read(user_characters, user_length))
         return {};
     SmapDisabler disabler;
@@ -1931,6 +1935,9 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     u16 mode = params.mode;
 
     if (options & O_NOFOLLOW_NOERROR)
+        return -EINVAL;
+
+    if (options & O_UNLINK_INTERNAL)
         return -EINVAL;
 
     if ((options & O_RDWR) || (options & O_WRONLY))
@@ -4587,4 +4594,75 @@ Region& Process::add_region(NonnullOwnPtr<Region> region)
     auto* ptr = region.ptr();
     m_regions.append(move(region));
     return *ptr;
+}
+
+int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
+{
+    Syscall::SC_unveil_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
+        return -EFAULT;
+
+    if (!params.path.characters && !params.permissions.characters) {
+        m_unveil_state = UnveilState::VeilLocked;
+        return 0;
+    }
+
+    if (m_unveil_state == UnveilState::VeilLocked)
+        return -EPERM;
+
+    if (!params.path.characters || !params.permissions.characters)
+        return -EINVAL;
+
+    if (params.permissions.length > 4)
+        return -EINVAL;
+
+    auto path = get_syscall_path_argument(params.path);
+    if (path.is_error())
+        return path.error();
+
+    if (path.value().is_empty() || path.value().characters()[0] != '/')
+        return -EINVAL;
+
+    auto permissions = validate_and_copy_string_from_user(params.permissions);
+    if (permissions.is_null())
+        return -EFAULT;
+
+    unsigned new_permissions = 0;
+    for (size_t i = 0; i < permissions.length(); ++i) {
+        switch (permissions[i]) {
+        case 'r':
+            new_permissions |= UnveiledPath::Access::Read;
+            break;
+        case 'w':
+            new_permissions |= UnveiledPath::Access::Write;
+            break;
+        case 'x':
+            new_permissions |= UnveiledPath::Access::Execute;
+            break;
+        case 'c':
+            new_permissions |= UnveiledPath::Access::CreateOrRemove;
+            break;
+        default:
+            return -EINVAL;
+        }
+    }
+
+    for (int i = 0; i < m_unveiled_paths.size(); ++i) {
+        auto& unveiled_path = m_unveiled_paths[i];
+        if (unveiled_path.path == path.value()) {
+            if (new_permissions & ~unveiled_path.permissions)
+                return -EPERM;
+            if (!new_permissions) {
+                m_unveiled_paths.remove(i);
+                return 0;
+            }
+            unveiled_path.permissions = new_permissions;
+            return 0;
+        }
+    }
+
+    m_unveiled_paths.append({ path.value(), new_permissions });
+    ASSERT(m_unveil_state != UnveilState::VeilLocked);
+    m_unveil_state = UnveilState::VeilDropped;
+    return 0;
 }

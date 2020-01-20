@@ -82,6 +82,24 @@ enum class Pledge : u32 {
 #undef __ENUMERATE_PLEDGE_PROMISE
 };
 
+enum class UnveilState {
+    None,
+    VeilDropped,
+    VeilLocked,
+};
+
+struct UnveiledPath {
+    enum Access {
+        Read = 1,
+        Write = 2,
+        Execute = 4,
+        CreateOrRemove = 8,
+    };
+
+    String path;
+    unsigned permissions { 0 };
+};
+
 class Process : public InlineLinkedListNode<Process>
     , public Weakable<Process> {
     friend class InlineLinkedListNode<Process>;
@@ -282,6 +300,7 @@ public:
     int sys$set_process_boost(pid_t, int amount);
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
     int sys$pledge(const Syscall::SC_pledge_params*);
+    int sys$unveil(const Syscall::SC_unveil_params*);
 
     static void initialize();
 
@@ -379,6 +398,9 @@ public:
 
     bool has_promises() const { return m_promises; }
     bool has_promised(Pledge pledge) const { return m_promises & (1u << (u32)pledge); }
+
+    UnveilState unveil_state() const { return m_unveil_state; }
+    const Vector<UnveiledPath>& unveiled_paths() const { return m_unveiled_paths; }
 
 private:
     friend class MemoryManager;
@@ -480,6 +502,9 @@ private:
 
     u32 m_promises { 0 };
     u32 m_execpromises { 0 };
+
+    UnveilState m_unveil_state { UnveilState::None };
+    Vector<UnveiledPath> m_unveiled_paths;
 
     WaitQueue& futex_queue(i32*);
     HashMap<u32, OwnPtr<WaitQueue>> m_futex_queues;

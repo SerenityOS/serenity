@@ -694,5 +694,13 @@ int pledge(const char* promises, const char* execpromises)
     __RETURN_WITH_ERRNO(rc, rc, -1);
 }
 
+int unveil(const char* path, const char* permissions)
+{
+    Syscall::SC_unveil_params params {
+        { path, path ? strlen(path) : 0 },
+        { permissions, permissions ? strlen(permissions) : 0 }
+    };
+    int rc = syscall(SC_unveil, &params);
+    __RETURN_WITH_ERRNO(rc, rc, -1);
 }
-
+}
