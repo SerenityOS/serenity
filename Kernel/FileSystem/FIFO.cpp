@@ -110,7 +110,7 @@ bool FIFO::can_read(const FileDescription&) const
 
 bool FIFO::can_write(const FileDescription&) const
 {
-    return m_buffer.bytes_in_write_buffer() < 4096 || !m_readers;
+    return m_buffer.space_for_writing() || !m_readers;
 }
 
 ssize_t FIFO::read(FileDescription&, u8* buffer, ssize_t size)
