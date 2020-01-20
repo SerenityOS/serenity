@@ -138,7 +138,7 @@ WSWindow& WSMenu::ensure_menu_window()
         }
 
         int window_height_available = WSScreen::the().height() - WSMenuManager::the().menubar_rect().height() - frame_thickness() * 2;
-        int max_window_height = (window_height_available / item_height()) * item_height() + frame_thickness() * 2;
+        int max_window_height = window_height_available + frame_thickness() * 2;
         int content_height = m_items.is_empty() ? 0 : (m_items.last().rect().bottom() + 1) + frame_thickness();
         int window_height = min(max_window_height, content_height);
         if (window_height < content_height) {
