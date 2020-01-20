@@ -43,16 +43,16 @@
 
 class KBufferImpl : public RefCounted<KBufferImpl> {
 public:
-    static NonnullRefPtr<KBufferImpl> create_with_size(size_t size, u8 access)
+    static NonnullRefPtr<KBufferImpl> create_with_size(size_t size, u8 access, const char* name)
     {
-        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), "KBuffer", access, false, false);
+        auto region = MM.allocate_kernel_region(PAGE_ROUND_UP(size), name, access, false, false);
         ASSERT(region);
         return adopt(*new KBufferImpl(region.release_nonnull(), size));
     }
 
-    static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size, u8 access)
+    static NonnullRefPtr<KBufferImpl> copy(const void* data, size_t size, u8 access, const char* name)
     {
-        auto buffer = create_with_size(size, access);
+        auto buffer = create_with_size(size, access, name);
         memcpy(buffer->data(), data, size);
         return buffer;
     }
@@ -81,14 +81,14 @@ private:
 
 class KBuffer {
 public:
-    static KBuffer create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write)
+    static KBuffer create_with_size(size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
     {
-        return KBuffer(KBufferImpl::create_with_size(size, access));
+        return KBuffer(KBufferImpl::create_with_size(size, access, name));
     }
 
-    static KBuffer copy(const void* data, size_t size, u8 access = Region::Access::Read | Region::Access::Write)
+    static KBuffer copy(const void* data, size_t size, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
     {
-        return KBuffer(KBufferImpl::copy(data, size, access));
+        return KBuffer(KBufferImpl::copy(data, size, access, name));
     }
 
     u8* data() { return m_impl->data(); }
@@ -100,8 +100,8 @@ public:
 
     const KBufferImpl& impl() const { return m_impl; }
 
-    KBuffer(const ByteBuffer& buffer, u8 access = Region::Access::Read | Region::Access::Write)
-        : m_impl(KBufferImpl::copy(buffer.data(), buffer.size(), access))
+    KBuffer(const ByteBuffer& buffer, u8 access = Region::Access::Read | Region::Access::Write, const char* name = "KBuffer")
+        : m_impl(KBufferImpl::copy(buffer.data(), buffer.size(), access, name))
     {
     }
 
