@@ -1722,8 +1722,6 @@ int Process::sys$access(const char* user_path, size_t path_length, int mode)
 int Process::sys$fcntl(int fd, int cmd, u32 arg)
 {
     REQUIRE_PROMISE(stdio);
-    (void)cmd;
-    (void)arg;
 #ifdef DEBUG_IO
     dbgprintf("sys$fcntl: fd=%d, cmd=%d, arg=%u\n", fd, cmd, arg);
 #endif
@@ -1981,14 +1979,11 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
 
 int Process::alloc_fd(int first_candidate_fd)
 {
-    int fd = -EMFILE;
     for (int i = first_candidate_fd; i < (int)m_max_open_file_descriptors; ++i) {
-        if (!m_fds[i]) {
-            fd = i;
-            break;
-        }
+        if (!m_fds[i])
+            return i;
     }
-    return fd;
+    return -EMFILE;
 }
 
 int Process::sys$pipe(int pipefd[2], int flags)
@@ -2497,7 +2492,7 @@ int Process::sys$dup(int old_fd)
     auto description = file_description(old_fd);
     if (!description)
         return -EBADF;
-    int new_fd = alloc_fd(0);
+    int new_fd = alloc_fd();
     if (new_fd < 0)
         return new_fd;
     m_fds[new_fd].set(*description);
