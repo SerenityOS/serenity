@@ -212,19 +212,21 @@ void ACPIStaticParser::initialize_main_system_description_table()
 
 void ACPIStaticParser::locate_main_system_description_table()
 {
-    if (m_rsdp->base.revision == 0) {
+    auto rsdp_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)m_rsdp)), (PAGE_SIZE * 2), "ACPI Static Parser Initialization", Region::Access::Read, false, true);
+    volatile auto* rsdp = (ACPI_RAW::RSDPDescriptor20*)rsdp_region->vaddr().offset(offset_in_page((u32)m_rsdp)).as_ptr();
+    if (rsdp->base.revision == 0) {
         m_xsdt_supported = false;
-    } else if (m_rsdp->base.revision >= 2) {
-        if (m_rsdp->xsdt_ptr != (u64) nullptr) {
+    } else if (rsdp->base.revision >= 2) {
+        if (rsdp->xsdt_ptr != (u64) nullptr) {
             m_xsdt_supported = true;
         } else {
             m_xsdt_supported = false;
         }
     }
     if (!m_xsdt_supported) {
-        m_main_system_description_table = (ACPI_RAW::SDTHeader*)m_rsdp->base.rsdt_ptr;
+        m_main_system_description_table = (ACPI_RAW::SDTHeader*)rsdp->base.rsdt_ptr;
     } else {
-        m_main_system_description_table = (ACPI_RAW::SDTHeader*)m_rsdp->xsdt_ptr;
+        m_main_system_description_table = (ACPI_RAW::SDTHeader*)rsdp->xsdt_ptr;
     }
 }
 
@@ -265,30 +267,47 @@ ACPIStaticParser::ACPIStaticParser()
     }
 }
 
+ACPI_RAW::RSDPDescriptor20* ACPIStaticParser::search_rsdp_in_ebda(u16 ebda_segment)
+{
+    auto rsdp_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)(ebda_segment << 4))), PAGE_ROUND_UP(1024), "ACPI Static Parser RSDP Finding #1", Region::Access::Read, false, true);
+    char* p_rsdp_str = (char*)(PhysicalAddress(ebda_segment << 4).as_ptr());
+    for (char* rsdp_str = (char*)rsdp_region->vaddr().offset(offset_in_page((u32)(ebda_segment << 4))).as_ptr(); rsdp_str < (char*)(rsdp_region->vaddr().offset(offset_in_page((u32)(ebda_segment << 4))).get() + 1024); rsdp_str += 16) {
+#ifdef ACPI_DEBUG
+        dbgprintf("ACPI: Looking for RSDP in EBDA @ V0x%x, P0x%x\n", rsdp_str, p_rsdp_str);
+#endif
+        if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
+            return (ACPI_RAW::RSDPDescriptor20*)p_rsdp_str;
+        p_rsdp_str += 16;
+    }
+    return nullptr;
+}
+
+ACPI_RAW::RSDPDescriptor20* ACPIStaticParser::search_rsdp_in_bios_area()
+{
+    auto rsdp_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)0xE0000)), PAGE_ROUND_UP(0xFFFFF - 0xE0000), "ACPI Static Parser RSDP Finding #2", Region::Access::Read, false, true);
+    char* p_rsdp_str = (char*)(PhysicalAddress(0xE0000).as_ptr());
+    for (char* rsdp_str = (char*)rsdp_region->vaddr().offset(offset_in_page((u32)(0xE0000))).as_ptr(); rsdp_str < (char*)(rsdp_region->vaddr().offset(offset_in_page((u32)(0xE0000))).get() + (0xFFFFF - 0xE0000)); rsdp_str += 16) {
+#ifdef ACPI_DEBUG
+        dbgprintf("ACPI: Looking for RSDP in EBDA @ V0x%x, P0x%x\n", rsdp_str, p_rsdp_str);
+#endif
+        if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
+            return (ACPI_RAW::RSDPDescriptor20*)p_rsdp_str;
+        p_rsdp_str += 16;
+    }
+    return nullptr;
+}
+
 ACPI_RAW::RSDPDescriptor20* ACPIStaticParser::search_rsdp()
 {
-    auto region = MM.allocate_kernel_region(PhysicalAddress((uintptr_t)0), PAGE_SIZE, "ACPI Static Parser RSDP Finding", Region::Access::Read);
+    ACPI_RAW::RSDPDescriptor20* rsdp = nullptr;
+    auto region = MM.allocate_kernel_region(PhysicalAddress(0), PAGE_SIZE, "ACPI Static Parser RSDP Finding", Region::Access::Read);
     u16 ebda_seg = (u16) * ((uint16_t*)((region->vaddr().get() & PAGE_MASK) + 0x40e));
     kprintf("ACPI: Probing EBDA, Segment 0x%x\n", ebda_seg);
 
-    // FIXME: Ensure that we always have identity mapping (identity paging) here! Don't rely on existing mapping...
-    for (char* rsdp_str = (char*)(PhysicalAddress(ebda_seg << 4).as_ptr()); rsdp_str < (char*)((ebda_seg << 4) + 1024); rsdp_str += 16) {
-#ifdef ACPI_DEBUG
-        dbgprintf("ACPI: Looking for RSDP in EBDA @ Px%x\n", rsdp_str);
-#endif
-        if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
-            return (ACPI_RAW::RSDPDescriptor20*)rsdp_str;
-    }
-
-    // FIXME: Ensure that we always have identity mapping (identity paging) here! Don't rely on existing mapping...
-    for (char* rsdp_str = (char*)(PhysicalAddress(0xE0000).as_ptr()); rsdp_str < (char*)0xFFFFF; rsdp_str += 16) {
-#ifdef ACPI_DEBUG
-        dbgprintf("ACPI: Looking for RSDP in EBDA @ Px%x\n", rsdp_str);
-#endif
-        if (!strncmp("RSD PTR ", rsdp_str, strlen("RSD PTR ")))
-            return (ACPI_RAW::RSDPDescriptor20*)rsdp_str;
-    }
-    return nullptr;
+    rsdp = search_rsdp_in_ebda(ebda_seg);
+    if (rsdp != nullptr)
+        return rsdp;
+    return search_rsdp_in_bios_area();
 }
 
 ACPIStaticParser::ACPIStaticParser(ACPI_RAW::RSDPDescriptor20& rsdp)
