@@ -82,10 +82,10 @@ enum class Pledge : u32 {
 #undef __ENUMERATE_PLEDGE_PROMISE
 };
 
-enum class UnveilState {
+enum class VeilState {
     None,
-    VeilDropped,
-    VeilLocked,
+    Dropped,
+    Locked,
 };
 
 struct UnveiledPath {
@@ -399,7 +399,7 @@ public:
     bool has_promises() const { return m_promises; }
     bool has_promised(Pledge pledge) const { return m_promises & (1u << (u32)pledge); }
 
-    UnveilState unveil_state() const { return m_unveil_state; }
+    VeilState veil_state() const { return m_veil_state; }
     const Vector<UnveiledPath>& unveiled_paths() const { return m_unveiled_paths; }
 
 private:
@@ -503,7 +503,7 @@ private:
     u32 m_promises { 0 };
     u32 m_execpromises { 0 };
 
-    UnveilState m_unveil_state { UnveilState::None };
+    VeilState m_veil_state { VeilState::None };
     Vector<UnveiledPath> m_unveiled_paths;
 
     WaitQueue& futex_queue(i32*);

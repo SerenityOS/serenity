@@ -822,14 +822,14 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
 
         process_object.add("pledge", pledge_builder.to_string());
 
-        switch (process.unveil_state()) {
-        case UnveilState::None:
+        switch (process.veil_state()) {
+        case VeilState::None:
             process_object.add("veil", "None");
             break;
-        case UnveilState::VeilDropped:
+        case VeilState::Dropped:
             process_object.add("veil", "Dropped");
             break;
-        case UnveilState::VeilLocked:
+        case VeilState::Locked:
             process_object.add("veil", "Locked");
             break;
         }
