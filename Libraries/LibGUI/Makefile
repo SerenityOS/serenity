@@ -10,6 +10,7 @@ OBJS = \
     GWidget.o \
     GLayout.o \
     GBoxLayout.o \
+    GColorPicker.o \
     GMenuBar.o \
     GMenu.o \
     GMenuItem.o \

@@ -30,15 +30,15 @@
 
 class GFrame;
 
-class ColorDialog final : public GDialog {
-    C_OBJECT(ColorDialog)
+class GColorPicker final : public GDialog {
+    C_OBJECT(GColorPicker)
 public:
-    virtual ~ColorDialog() override;
+    virtual ~GColorPicker() override;
 
     Color color() const { return m_color; }
 
 private:
-    explicit ColorDialog(Color, CObject* parent = nullptr);
+    explicit GColorPicker(Color, CObject* parent = nullptr);
 
     void build();
 

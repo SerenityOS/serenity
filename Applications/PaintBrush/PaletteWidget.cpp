@@ -25,9 +25,9 @@
  */
 
 #include "PaletteWidget.h"
-#include "ColorDialog.h"
 #include "PaintableWidget.h"
 #include <LibGUI/GBoxLayout.h>
+#include <LibGUI/GColorPicker.h>
 
 class ColorWidget : public GFrame {
     C_OBJECT(ColorWidget)
@@ -49,7 +49,7 @@ public:
     virtual void mousedown_event(GMouseEvent& event) override
     {
         if (event.modifiers() & KeyModifier::Mod_Ctrl && event.button() == GMouseButton::Left) {
-            auto dialog = ColorDialog::construct(m_color, window());
+            auto dialog = GColorPicker::construct(m_color, window());
             if (dialog->exec() == GDialog::ExecOK) {
                 m_color = dialog->color();
                 auto pal = palette();
