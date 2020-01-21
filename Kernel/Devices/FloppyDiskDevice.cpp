@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
