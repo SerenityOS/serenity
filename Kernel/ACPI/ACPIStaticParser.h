@@ -52,6 +52,8 @@ private:
     size_t get_table_size(ACPI_RAW::SDTHeader&);
     u8 get_table_revision(ACPI_RAW::SDTHeader&);
     void init_fadt();
+    ACPI_RAW::RSDPDescriptor20* search_rsdp_in_ebda(u16 ebda_segment);
+    ACPI_RAW::RSDPDescriptor20* search_rsdp_in_bios_area();
     ACPI_RAW::RSDPDescriptor20* search_rsdp();
 
     // Early pointers that are needed really for initializtion only...
