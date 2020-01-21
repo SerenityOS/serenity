@@ -46,7 +46,7 @@
 #include <termios.h>
 #include <unistd.h>
 
-#define SH_DEBUG
+//#define SH_DEBUG
 
 GlobalState g;
 static LineEditor editor;
@@ -301,8 +301,7 @@ static int sh_pushd(int argc, char** argv)
         g.directory_stack.append(g.cwd.characters());
         if (argv[1][0] == '/') {
             path_builder.append(argv[1]);
-        }
-        else {
+        } else {
             path_builder.appendf("%s/%s", g.cwd.characters(), argv[1]);
         }
     } else if (argc == 3) {
@@ -313,8 +312,7 @@ static int sh_pushd(int argc, char** argv)
             if (arg[0] != '-') {
                 if (arg[0] == '/') {
                     path_builder.append(arg);
-                }
-                else
+                } else
                     path_builder.appendf("%s/%s", g.cwd.characters(), arg);
             }
 
@@ -468,17 +466,21 @@ private:
     Vector<int, 32> m_fds;
 };
 
-struct CommandTimer {
-    CommandTimer()
+class CommandTimer {
+public:
+    explicit CommandTimer(const String& command)
+        : m_command(command)
     {
-        timer.start();
+        m_timer.start();
     }
     ~CommandTimer()
     {
-        dbgprintf("sh: command finished in %d ms\n", timer.elapsed());
+        dbg() << "Command \"" << m_command << "\" finished in " << m_timer.elapsed() << " ms";
     }
 
-    CElapsedTimer timer;
+private:
+    CElapsedTimer m_timer;
+    String m_command;
 };
 
 static bool is_glob(const StringView& s)
@@ -733,7 +735,7 @@ static int run_command(const String& cmd)
 
         Vector<SpawnedProcess> children;
 
-        CommandTimer timer;
+        CommandTimer timer(cmd);
 
         for (int i = 0; i < command.subcommands.size(); ++i) {
             auto& subcommand = command.subcommands[i];
