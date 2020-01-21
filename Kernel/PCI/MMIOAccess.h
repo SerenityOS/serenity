@@ -41,7 +41,7 @@ public:
     virtual void enumerate_all(Function<void(Address, ID)>&) override final;
 
     virtual String get_access_type() override final { return "MMIO-Access"; };
-
+    virtual u32 get_segments_count();
 protected:
     explicit MMIOAccess(ACPI_RAW::MCFG&);
 
@@ -54,16 +54,11 @@ private:
     virtual void write32_field(Address address, u32, u32) override final;
 
     void map_device(Address address);
-    void mmap(VirtualAddress preferred_vaddr, PhysicalAddress paddr, u32);
-    void mmap_region(Region& region, PhysicalAddress paddr);
-
-    virtual u32 get_segments_count();
     virtual u8 get_segment_start_bus(u32);
     virtual u8 get_segment_end_bus(u32);
 
     ACPI_RAW::MCFG& m_mcfg;
     HashMap<u16, MMIOSegment*>& m_segments;
-    RefPtr<VMObject> m_mmio_window;
     OwnPtr<Region> m_mmio_window_region;
     PCI::ChangeableAddress m_mapped_address;
 };

@@ -58,25 +58,23 @@ PCI::MMIOAccess::MMIOAccess(ACPI_RAW::MCFG& raw_mcfg)
     , m_mapped_address(ChangeableAddress(0xFFFF, 0xFF, 0xFF, 0xFF))
 {
     kprintf("PCI: Using MMIO Mechanism for PCI Configuartion Space Access\n");
-    m_mmio_window = *AnonymousVMObject::create_with_size(PAGE_ROUND_UP(PCI_MMIO_CONFIG_SPACE_SIZE));
-    m_mmio_window_region = MM.allocate_kernel_region_with_vmobject(*m_mmio_window, m_mmio_window->size(), "PCI MMIO", Region::Access::Read | Region::Access::Write);
+    m_mmio_window_region = MM.allocate_kernel_region(PAGE_ROUND_UP(PCI_MMIO_CONFIG_SPACE_SIZE), "PCI MMIO", Region::Access::Read | Region::Access::Write);
 
-    auto checkup_region = MM.allocate_kernel_region((PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
+    auto checkup_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&raw_mcfg)),(PAGE_SIZE * 2), "PCI MCFG Checkup", Region::Access::Read | Region::Access::Write);
 #ifdef PCI_DEBUG
     dbgprintf("PCI: Checking MCFG Table length to choose the correct mapping size\n");
 #endif
-    mmap_region(*checkup_region, PhysicalAddress((u32)&raw_mcfg & 0xfffff000));
-    ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)(checkup_region->vaddr().get() + ((u32)&raw_mcfg & 0xfff));
+    
+    ACPI_RAW::SDTHeader* sdt = (ACPI_RAW::SDTHeader*)checkup_region->vaddr().offset(offset_in_page((u32)&raw_mcfg)).as_ptr();
     u32 length = sdt->length;
     u8 revision = sdt->revision;
 
     kprintf("PCI: MCFG, length - %u, revision %d\n", length, revision);
     checkup_region->unmap();
 
-    auto mcfg_region = MM.allocate_kernel_region(PAGE_ROUND_UP(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
-    mmap_region(*mcfg_region, PhysicalAddress((u32)&raw_mcfg & 0xfffff000));
+    auto mcfg_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&raw_mcfg)), PAGE_ROUND_UP(length) + PAGE_SIZE, "PCI Parsing MCFG", Region::Access::Read | Region::Access::Write);
 
-    ACPI_RAW::MCFG& mcfg = *((ACPI_RAW::MCFG*)(mcfg_region->vaddr().get() + ((u32)&raw_mcfg & 0xfff)));
+    auto& mcfg = *(ACPI_RAW::MCFG*)mcfg_region->vaddr().offset(offset_in_page((u32)&raw_mcfg)).as_ptr();
 #ifdef PCI_DEBUG
     dbgprintf("PCI: Checking MCFG @ V 0x%x, P 0x%x\n", &mcfg, &raw_mcfg);
 #endif
@@ -116,7 +114,8 @@ void PCI::MMIOAccess::map_device(Address address)
 #ifdef PCI_DEBUG
     dbgprintf("PCI: Mapping device @ pci (%w:%b:%b.%b), V 0x%x, P 0x%x\n", address.seg(), address.bus(), address.slot(), address.function(), m_mmio_window_region->vaddr().get(), device_physical_mmio_space.get());
 #endif
-    MM.map_for_kernel(m_mmio_window_region->vaddr(), device_physical_mmio_space);
+    m_mmio_window_region->vmobject().physical_pages()[0] = PhysicalPage::create(device_physical_mmio_space,false,false);
+    m_mmio_window_region->remap();
     m_mapped_address = address;
 }
 
@@ -203,33 +202,6 @@ void PCI::MMIOAccess::enumerate_all(Function<void(Address, ID)>& callback)
             enumerate_bus(-1, function, callback);
         }
     }
-}
-
-void PCI::MMIOAccess::mmap(VirtualAddress vaddr, PhysicalAddress paddr, u32 length)
-{
-    unsigned i = 0;
-    while (length >= PAGE_SIZE) {
-        MM.map_for_kernel(VirtualAddress(vaddr.offset(i * PAGE_SIZE).get()), PhysicalAddress(paddr.offset(i * PAGE_SIZE).get()));
-#ifdef PCI_DEBUG
-        dbgprintf("PCI: map - V 0x%x -> P 0x%x\n", vaddr.offset(i * PAGE_SIZE).get(), paddr.offset(i * PAGE_SIZE).get());
-#endif
-        length -= PAGE_SIZE;
-        i++;
-    }
-    if (length > 0) {
-        MM.map_for_kernel(vaddr.offset(i * PAGE_SIZE), paddr.offset(i * PAGE_SIZE), true);
-    }
-#ifdef PCI_DEBUG
-    dbgprintf("PCI: Finished mapping\n");
-#endif
-}
-
-void PCI::MMIOAccess::mmap_region(Region& region, PhysicalAddress paddr)
-{
-#ifdef PCI_DEBUG
-    dbgprintf("PCI: Mapping region, size - %u\n", region.size());
-#endif
-    mmap(region.vaddr(), paddr, region.size());
 }
 
 PCI::MMIOSegment::MMIOSegment(PhysicalAddress segment_base_addr, u8 start_bus, u8 end_bus)
