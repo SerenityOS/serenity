@@ -1401,6 +1401,9 @@ private:
     explicit DMIDecoder(bool trusted);
     void initialize_parser();
 
+    void set_64_bit_entry_initialization_values(SMBIOS::EntryPoint64bit&);
+    void set_32_bit_entry_initialization_values(SMBIOS::EntryPoint32bit&);
+
     SMBIOS::EntryPoint32bit* find_entry32bit_point();
     SMBIOS::EntryPoint64bit* find_entry64bit_point();
 
