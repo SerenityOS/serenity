@@ -719,7 +719,7 @@ const UnveiledPath* VFS::find_matching_unveiled_path(StringView path)
 
 KResult VFS::validate_path_against_process_veil(StringView path, int options)
 {
-    if (current->process().unveil_state() == UnveilState::None)
+    if (current->process().veil_state() == VeilState::None)
         return KSuccess;
 
     // FIXME: Figure out a nicer way to do this.

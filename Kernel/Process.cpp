@@ -639,7 +639,7 @@ pid_t Process::sys$fork(RegisterDump& regs)
     child->m_root_directory_relative_to_global_root = m_root_directory_relative_to_global_root;
     child->m_promises = m_promises;
     child->m_execpromises = m_execpromises;
-    child->m_unveil_state = m_unveil_state;
+    child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths;
 
 #ifdef FORK_DEBUG
@@ -860,7 +860,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_promises = m_execpromises;
 
-    m_unveil_state = UnveilState::None;
+    m_veil_state = VeilState::None;
     m_unveiled_paths.clear();
 
     // Copy of the master TLS region that we will clone for new threads
@@ -4607,11 +4607,11 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
         return -EFAULT;
 
     if (!params.path.characters && !params.permissions.characters) {
-        m_unveil_state = UnveilState::VeilLocked;
+        m_veil_state = VeilState::Locked;
         return 0;
     }
 
-    if (m_unveil_state == UnveilState::VeilLocked)
+    if (m_veil_state == VeilState::Locked)
         return -EPERM;
 
     if (!params.path.characters || !params.permissions.characters)
@@ -4662,7 +4662,7 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
     }
 
     m_unveiled_paths.append({ path.value(), new_permissions });
-    ASSERT(m_unveil_state != UnveilState::VeilLocked);
-    m_unveil_state = UnveilState::VeilDropped;
+    ASSERT(m_veil_state != VeilState::Locked);
+    m_veil_state = VeilState::Dropped;
     return 0;
 }
