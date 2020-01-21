@@ -58,23 +58,40 @@ void DMIDecoder::initialize_untrusted()
     }
 }
 
+void DMIDecoder::set_64_bit_entry_initialization_values(SMBIOS::EntryPoint64bit& entry)
+{
+    kprintf("DMIDecoder: SMBIOS 64bit Entry point @ P 0x%x\n", m_entry64bit_point);
+    m_use_64bit_entry = true;
+
+    auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&entry)), PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder 64 bit Initialization", Region::Access::Read, false, false);
+    auto& entry_ptr = *(SMBIOS::EntryPoint64bit*)region->vaddr().offset(offset_in_page((u32)&entry)).as_ptr();
+    m_structure_table = (SMBIOS::TableHeader*)entry_ptr.table_ptr;
+    m_structures_count = entry_ptr.table_maximum_size;
+    m_table_length = entry_ptr.table_maximum_size;
+}
+
+void DMIDecoder::set_32_bit_entry_initialization_values(SMBIOS::EntryPoint32bit& entry)
+{
+    kprintf("DMIDecoder: SMBIOS 32bit Entry point @ P 0x%x\n", m_entry32bit_point);
+    m_use_64bit_entry = false;
+
+    auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&entry)), PAGE_ROUND_UP(SMBIOS_SEARCH_AREA_SIZE), "DMI Decoder 32 bit Initialization", Region::Access::Read, false, false);
+    auto& entry_ptr = *(SMBIOS::EntryPoint32bit*)region->vaddr().offset(offset_in_page((u32)&entry)).as_ptr();
+
+    m_structure_table = (SMBIOS::TableHeader*)entry_ptr.legacy_structure.smbios_table_ptr;
+    m_structures_count = entry_ptr.legacy_structure.smbios_tables_count;
+    m_table_length = entry_ptr.legacy_structure.smboios_table_length;
+}
+
 void DMIDecoder::initialize_parser()
 {
     if (m_entry32bit_point != nullptr || m_entry64bit_point != nullptr) {
         m_operable = true;
         kprintf("DMI Decoder is enabled\n");
         if (m_entry64bit_point != nullptr) {
-            kprintf("DMIDecoder: SMBIOS 64bit Entry point @ P 0x%x\n", m_entry64bit_point);
-            m_use_64bit_entry = true;
-            m_structure_table = (SMBIOS::TableHeader*)m_entry64bit_point->table_ptr;
-            m_structures_count = m_entry64bit_point->table_maximum_size;
-            m_table_length = m_entry64bit_point->table_maximum_size;
+            set_64_bit_entry_initialization_values(*m_entry64bit_point);
         } else if (m_entry32bit_point != nullptr) {
-            kprintf("DMIDecoder: SMBIOS 32bit Entry point @ P 0x%x\n", m_entry32bit_point);
-            m_use_64bit_entry = false;
-            m_structure_table = (SMBIOS::TableHeader*)m_entry32bit_point->legacy_structure.smbios_table_ptr;
-            m_structures_count = m_entry32bit_point->legacy_structure.smbios_tables_count;
-            m_table_length = m_entry32bit_point->legacy_structure.smboios_table_length;
+            set_32_bit_entry_initialization_values(*m_entry32bit_point);
         }
         kprintf("DMIDecoder: Data table @ P 0x%x\n", m_structure_table);
         enumerate_smbios_tables();
@@ -126,11 +143,12 @@ void DMIDecoder::enumerate_smbios_tables()
 
 size_t DMIDecoder::get_table_size(SMBIOS::TableHeader& table)
 {
-    // FIXME: Make sure we have some mapping here so we don't rely on existing identity mapping...
+    auto region = MM.allocate_kernel_region(PhysicalAddress(page_base_of((u32)&table)), PAGE_ROUND_UP(m_table_length), "DMI Decoder Determining table size", Region::Access::Read, false, false);
+    auto& table_v_ptr = (SMBIOS::TableHeader&)*region->vaddr().offset(offset_in_page((u32)&table)).as_ptr();
 #ifdef SMBIOS_DEBUG
-    dbgprintf("DMIDecoder: table legnth - 0x%x\n", table.length);
+    dbgprintf("DMIDecoder: table legnth - 0x%x\n", table_v_ptr.length);
 #endif
-    const char* strtab = (char*)&table + table.length;
+    const char* strtab = (char*)&table_v_ptr + table_v_ptr.length;
     size_t index = 1;
     while (strtab[index - 1] != '\0' || strtab[index] != '\0') {
         if (index > m_table_length) {
@@ -139,9 +157,9 @@ size_t DMIDecoder::get_table_size(SMBIOS::TableHeader& table)
         index++;
     }
 #ifdef SMBIOS_DEBUG
-    dbgprintf("DMIDecoder: table size - 0x%x\n", table.length + index + 1);
+    dbgprintf("DMIDecoder: table size - 0x%x\n", table_v_ptr.length + index + 1);
 #endif
-    return table.length + index + 1;
+    return table_v_ptr.length + index + 1;
 }
 
 SMBIOS::TableHeader* DMIDecoder::get_next_physical_table(SMBIOS::TableHeader& p_table)
@@ -243,6 +261,7 @@ u64 DMIDecoder::get_bios_characteristics()
     ASSERT(m_operable == true);
     SMBIOS::BIOSInfo* bios_info = (SMBIOS::BIOSInfo*)get_smbios_physical_table_by_type(0);
     ASSERT(bios_info != nullptr);
+
     kprintf("DMIDecoder: BIOS info @ P 0x%x\n", bios_info);
     return bios_info->bios_characteristics;
 }
