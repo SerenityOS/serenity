@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2019-2020, Jesse Buhagiar <jooster669@gmail.com>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,9 +26,7 @@
 
 //
 // Intel 82078 Floppy Disk controller driver
-// Author: Jesse Buhagiar [quaker762]
 // Datasheet: https://wiki.qemu.org/images/f/f0/29047403.pdf
-// Email me at jooster669@gmail.com if you have any questions/suggestions :)
 //
 // The Intel 82078 is a 44-pin package, CHMOS Single Chip Floppy Disk Controller found commonly
 // on later PCs in the mid to late 90s. It supports a multitude of floppy drives found in computers
