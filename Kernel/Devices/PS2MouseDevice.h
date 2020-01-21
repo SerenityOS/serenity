@@ -28,10 +28,10 @@
 
 #include <AK/CircularQueue.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/InterruptHandler.h>
 #include <Kernel/MousePacket.h>
 
-class PS2MouseDevice final : public IRQHandler
+class PS2MouseDevice final : public InterruptHandler
     , public CharacterDevice {
 public:
     PS2MouseDevice();
@@ -47,7 +47,7 @@ public:
 
 private:
     // ^IRQHandler
-    virtual void handle_irq() override;
+    virtual void handle_interrupt() override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "PS2MouseDevice"; }

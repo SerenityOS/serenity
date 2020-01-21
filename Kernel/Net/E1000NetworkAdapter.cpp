@@ -135,24 +135,23 @@ OwnPtr<E1000NetworkAdapter> E1000NetworkAdapter::autodetect()
     return make<E1000NetworkAdapter>(found_address, irq);
 }
 
-E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
-    : IRQHandler(irq)
-    , m_pci_address(pci_address)
+E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 interrupt_vector)
+    : PCI::Device(pci_address, interrupt_vector)
 {
     set_interface_name("e1k");
 
     kprintf("E1000: Found at PCI address @ %w:%b:%b.%b\n", pci_address.seg(), pci_address.bus(), pci_address.slot(), pci_address.function());
 
-    enable_bus_mastering(m_pci_address);
+    enable_bus_mastering(get_pci_address());
 
     size_t mmio_base_size = PCI::get_BAR_Space_Size(pci_address, 0);
-    m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(m_pci_address))), PAGE_ROUND_UP(mmio_base_size), "E1000 MMIO", Region::Access::Read | Region::Access::Write, false, false);
+    m_mmio_region = MM.allocate_kernel_region(PhysicalAddress(page_base_of(PCI::get_BAR0(get_pci_address()))), PAGE_ROUND_UP(mmio_base_size), "E1000 MMIO", Region::Access::Read | Region::Access::Write, false, false);
     m_mmio_base = m_mmio_region->vaddr();
     m_use_mmio = true;
-    m_io_base = PCI::get_BAR1(m_pci_address) & ~1;
-    m_interrupt_line = PCI::get_interrupt_line(m_pci_address);
+    m_io_base = PCI::get_BAR1(get_pci_address()) & ~1;
+    m_interrupt_line = PCI::get_interrupt_line(get_pci_address());
     kprintf("E1000: IO port base: %w\n", m_io_base);
-    kprintf("E1000: MMIO base: P%x\n", PCI::get_BAR0(pci_address) & 0xfffffffc);
+    kprintf("E1000: MMIO base: P%x\n", PCI::get_BAR0(get_pci_address()) & 0xfffffffc);
     kprintf("E1000: MMIO base size: %u bytes\n", mmio_base_size);
     kprintf("E1000: Interrupt line: %u\n", m_interrupt_line);
     detect_eeprom();
@@ -171,14 +170,14 @@ E1000NetworkAdapter::E1000NetworkAdapter(PCI::Address pci_address, u8 irq)
     out32(REG_IMASK, 0xff & ~4);
     in32(0xc0);
 
-    enable_irq();
+    enable_interrupts();
 }
 
 E1000NetworkAdapter::~E1000NetworkAdapter()
 {
 }
 
-void E1000NetworkAdapter::handle_irq()
+void E1000NetworkAdapter::handle_interrupt()
 {
     out32(REG_IMASK, 0x1);
 
@@ -373,14 +372,14 @@ u32 E1000NetworkAdapter::in32(u16 address)
 
 void E1000NetworkAdapter::send_raw(const u8* data, int length)
 {
-    disable_irq();
+    disable_interrupts();
     u32 tx_current = in32(REG_TXDESCTAIL);
 #ifdef E1000_DEBUG
     kprintf("E1000: Sending packet (%d bytes)\n", length);
 #endif
     auto& descriptor = m_tx_descriptors[tx_current];
     ASSERT(length <= 8192);
-    auto *vptr = (void*)(descriptor.addr + 0xc0000000);
+    auto* vptr = (void*)(descriptor.addr + 0xc0000000);
     memcpy(vptr, data, length);
     descriptor.length = length;
     descriptor.status = 0;
@@ -391,7 +390,7 @@ void E1000NetworkAdapter::send_raw(const u8* data, int length)
     tx_current = (tx_current + 1) % number_of_tx_descriptors;
     out32(REG_TXDESCTAIL, tx_current);
     cli();
-    enable_irq();
+    enable_interrupts();
     for (;;) {
         if (descriptor.status) {
             sti();

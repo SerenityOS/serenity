@@ -29,12 +29,12 @@
 #include <AK/RefPtr.h>
 #include <Kernel/ACPI/ACPIStaticParser.h>
 #include <Kernel/Devices/DiskDevice.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/InterruptHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 
-class ACPIDynamicParser final : public IRQHandler
+class ACPIDynamicParser final : public InterruptHandler
     , ACPIStaticParser {
 public:
     static void initialize(ACPI_RAW::RSDPDescriptor20& rsdp);
@@ -53,7 +53,7 @@ protected:
 private:
     void build_namespace();
     // ^IRQHandler
-    virtual void handle_irq() override;
+    virtual void handle_interrupt() override;
 
     OwnPtr<Region> m_acpi_namespace;
 };
