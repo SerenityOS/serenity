@@ -639,6 +639,8 @@ pid_t Process::sys$fork(RegisterDump& regs)
     child->m_root_directory_relative_to_global_root = m_root_directory_relative_to_global_root;
     child->m_promises = m_promises;
     child->m_execpromises = m_execpromises;
+    child->m_unveil_state = m_unveil_state;
+    child->m_unveiled_paths = m_unveiled_paths;
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
