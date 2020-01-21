@@ -822,6 +822,18 @@ Optional<KBuffer> procfs$all(InodeIdentifier)
 
         process_object.add("pledge", pledge_builder.to_string());
 
+        switch (process.unveil_state()) {
+        case UnveilState::None:
+            process_object.add("veil", "None");
+            break;
+        case UnveilState::VeilDropped:
+            process_object.add("veil", "Dropped");
+            break;
+        case UnveilState::VeilLocked:
+            process_object.add("veil", "Locked");
+            break;
+        }
+
         process_object.add("pid", process.pid());
         process_object.add("pgid", process.tty() ? process.tty()->pgid() : 0);
         process_object.add("pgp", process.pgid());
@@ -1530,7 +1542,6 @@ size_t ProcFSProxyInode::directory_entry_count() const
         return 0;
     return m_fd->inode()->directory_entry_count();
 }
-
 
 KResult ProcFSInode::add_child(InodeIdentifier child_id, const StringView& name, mode_t)
 {

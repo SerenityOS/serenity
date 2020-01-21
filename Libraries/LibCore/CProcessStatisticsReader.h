@@ -64,6 +64,7 @@ struct CProcessStatistics {
     String name;
     String tty;
     String pledge;
+    String veil;
     size_t amount_virtual;
     size_t amount_resident;
     size_t amount_shared;
