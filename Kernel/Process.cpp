@@ -697,7 +697,7 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 {
     ASSERT(is_ring3());
     auto path = main_program_description->absolute_path();
-    dbgprintf("%s(%d) do_exec(%s): thread_count() = %d\n", m_name.characters(), m_pid, path.characters(), thread_count());
+    dbg() << "do_exec(" << path << ")";
     // FIXME(Thread): Kill any threads the moment we commit to the exec().
     if (thread_count() != 1) {
         dbgprintf("Gonna die because I have many threads! These are the threads:\n");
@@ -1251,7 +1251,7 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
     , m_tty(tty)
     , m_ppid(ppid)
 {
-    dbgprintf("Process: New process PID=%u with name=%s\n", m_pid, m_name.characters());
+    dbg() << "Created new process " << m_name << "(" << m_pid << ")";
 
     m_page_directory = PageDirectory::create_for_userspace(*this, fork_parent ? &fork_parent->page_directory().range_allocator() : nullptr);
 #ifdef MM_DEBUG
@@ -1305,7 +1305,6 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
 
 Process::~Process()
 {
-    dbgprintf("~Process{%p} name=%s pid=%d, m_fds=%d, m_thread_count=%u\n", this, m_name.characters(), pid(), m_fds.size(), m_thread_count);
     ASSERT(thread_count() == 0);
 }
 
@@ -2269,7 +2268,7 @@ int Process::reap(Process& process)
             }
         }
 
-        dbgprintf("reap: %s(%u)\n", process.name().characters(), process.pid());
+        dbg() << "Reaping process " << process;
         ASSERT(process.is_dead());
         g_processes->remove(&process);
     }
@@ -2280,7 +2279,7 @@ int Process::reap(Process& process)
 pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
 {
     REQUIRE_PROMISE(stdio);
-    dbgprintf("sys$waitpid(%d, %p, %d)\n", waitee, wstatus, options);
+    dbg() << "sys$waitpid(" << waitee << ", " << wstatus << ", " << options << ")";
 
     if (!options) {
         // FIXME: This can't be right.. can it? Figure out how this should actually work.
@@ -2712,7 +2711,7 @@ int Process::sys$select(const Syscall::SC_select_params* params)
         for (int fd = 0; fd < nfds; ++fd) {
             if (FD_ISSET(fd, fds)) {
                 if (!file_description(fd)) {
-                    dbg() << *current << " sys$select: Bad fd number " << fd;
+                    dbg() << "sys$select: Bad fd number " << fd;
                     return -EBADF;
                 }
                 vector.append(fd);
@@ -2931,7 +2930,7 @@ int Process::sys$chown(const Syscall::SC_chown_params* user_params)
 void Process::finalize()
 {
     ASSERT(current == g_finalizer);
-    dbgprintf("Finalizing Process %s(%u)\n", m_name.characters(), m_pid);
+    dbg() << "Finalizing process " << *this;
 
     m_fds.clear();
     m_tty = nullptr;

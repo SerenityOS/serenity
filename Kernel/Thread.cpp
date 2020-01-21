@@ -82,7 +82,7 @@ Thread::Thread(Process& process)
         m_tid = Process::allocate_pid();
     }
     process.m_thread_count++;
-    dbgprintf("Thread{%p}: New thread TID=%u in %s(%u)\n", this, m_tid, process.name().characters(), process.pid());
+    dbg() << "Created new thread " << process.name() << "(" << process.pid() << ":" << m_tid << ")";
     set_default_signal_dispositions();
     m_fpu_state = (FPUState*)kmalloc_aligned(sizeof(FPUState), 16);
     memcpy(m_fpu_state, &s_clean_fpu_state, sizeof(FPUState));
@@ -143,7 +143,6 @@ Thread::Thread(Process& process)
 
 Thread::~Thread()
 {
-    dbgprintf("~Thread{%p}\n", this);
     kfree_aligned(m_fpu_state);
     {
         InterruptDisabler disabler;
@@ -282,7 +281,7 @@ void Thread::finalize()
 {
     ASSERT(current == g_finalizer);
 
-    dbgprintf("Finalizing Thread %u in %s(%u)\n", tid(), m_process.name().characters(), pid());
+    dbg() << "Finalizing thread " << *this;
     set_state(Thread::State::Dead);
 
     if (m_joiner) {
@@ -308,7 +307,6 @@ void Thread::finalize_dying_threads()
             return IterationDecision::Continue;
         });
     }
-    dbgprintf("Finalizing %u dying threads\n", dying_threads.size());
     for (auto* thread : dying_threads) {
         auto& process = thread->process();
         thread->finalize();
@@ -316,7 +314,6 @@ void Thread::finalize_dying_threads()
         if (process.m_thread_count == 0)
             process.finalize();
     }
-    dbgprintf("Done\n");
 }
 
 bool Thread::tick()

@@ -570,7 +570,7 @@ bool MemoryManager::validate_range(const Process& process, VirtualAddress base_v
     VirtualAddress vaddr = base_vaddr.page_base();
     VirtualAddress end_vaddr = base_vaddr.offset(size - 1).page_base();
     if (end_vaddr < vaddr) {
-        dbg() << *current << " Shenanigans! Asked to validate " << base_vaddr << " size=" << size;
+        dbg() << "Shenanigans! Asked to validate " << base_vaddr << " size=" << size;
         return false;
     }
     const Region* region = nullptr;
