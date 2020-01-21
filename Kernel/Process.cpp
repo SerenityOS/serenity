@@ -860,6 +860,9 @@ int Process::do_exec(NonnullRefPtr<FileDescription> main_program_description, Ve
 
     m_promises = m_execpromises;
 
+    m_unveil_state = UnveilState::None;
+    m_unveiled_paths.clear();
+
     // Copy of the master TLS region that we will clone for new threads
     m_master_tls_region = master_tls_region;
 
