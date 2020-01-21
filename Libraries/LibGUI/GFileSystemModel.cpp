@@ -297,6 +297,8 @@ const GFileSystemModel::Node& GFileSystemModel::node(const GModelIndex& index) c
 
 GModelIndex GFileSystemModel::index(int row, int column, const GModelIndex& parent) const
 {
+    if (row < 0 || column < 0)
+        return {};
     auto& node = this->node(parent);
     const_cast<Node&>(node).reify_if_needed(*this);
     if (row >= node.children.size())
