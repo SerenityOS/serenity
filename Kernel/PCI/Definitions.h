@@ -94,6 +94,14 @@ public:
     {
     }
 
+    Address(const Address& address)
+        : m_seg(address.seg())
+        , m_bus(address.bus())
+        , m_slot(address.slot())
+        , m_function(address.function())
+    {
+    }
+
     bool is_null() const { return !m_bus && !m_slot && !m_function; }
     operator bool() const { return !is_null(); }
 
