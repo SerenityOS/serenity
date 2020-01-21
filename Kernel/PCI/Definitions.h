@@ -178,5 +178,6 @@ class Access;
 class MMIOAccess;
 class IOAccess;
 class MMIOSegment;
+class Device;
 
 }
