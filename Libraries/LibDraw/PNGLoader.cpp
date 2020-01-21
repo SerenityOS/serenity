@@ -37,8 +37,6 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-//#define PNG_STOPWATCH_DEBUG
-
 static const u8 png_header[8] = { 0x89, 'P', 'N', 'G', 13, 10, 26, 10 };
 
 struct PNG_IHDR {
@@ -301,86 +299,78 @@ template<bool has_alpha, u8 filter_type>
 
 [[gnu::noinline]] static void unfilter(PNGLoadingContext& context)
 {
-    {
-#ifdef PNG_STOPWATCH_DEBUG
-        Stopwatch sw("load_png_impl: unfilter: unpack");
-#endif
-        // First unpack the scanlines to RGBA:
-        switch (context.color_type) {
-        case 2:
-            if (context.bit_depth == 8) {
-                for (int y = 0; y < context.height; ++y) {
-                    auto* triplets = (Triplet*)context.scanlines[y].data.data();
-                    for (int i = 0; i < context.width; ++i) {
-                        auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                        pixel.r = triplets[i].r;
-                        pixel.g = triplets[i].g;
-                        pixel.b = triplets[i].b;
-                        pixel.a = 0xff;
-                    }
-                }
-            } else if (context.bit_depth == 16) {
-                for (int y = 0; y < context.height; ++y) {
-                    auto* triplets = (Triplet16*)context.scanlines[y].data.data();
-                    for (int i = 0; i < context.width; ++i) {
-                        auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                        pixel.r = triplets[i].r & 0xFF;
-                        pixel.g = triplets[i].g & 0xFF;
-                        pixel.b = triplets[i].b & 0xFF;
-                        pixel.a = 0xff;
-                    }
-                }
-            } else {
-                ASSERT_NOT_REACHED();
-            }
-            break;
-        case 6:
-            if (context.bit_depth == 8) {
-                for (int y = 0; y < context.height; ++y) {
-                    memcpy(context.bitmap->scanline(y), context.scanlines[y].data.data(), context.scanlines[y].data.size());
-                }
-            } else if (context.bit_depth == 16) {
-                for (int y = 0; y < context.height; ++y) {
-                    auto* triplets = (Quad16*)context.scanlines[y].data.data();
-                    for (int i = 0; i < context.width; ++i) {
-                        auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                        pixel.r = triplets[i].r & 0xFF;
-                        pixel.g = triplets[i].g & 0xFF;
-                        pixel.b = triplets[i].b & 0xFF;
-                        pixel.a = triplets[i].a & 0xFF;
-                    }
-                }
-            } else {
-                ASSERT_NOT_REACHED();
-            }
-            break;
-        case 3:
+    // First unpack the scanlines to RGBA:
+    switch (context.color_type) {
+    case 2:
+        if (context.bit_depth == 8) {
             for (int y = 0; y < context.height; ++y) {
-                auto* palette_index = (u8*)context.scanlines[y].data.data();
+                auto* triplets = (Triplet*)context.scanlines[y].data.data();
                 for (int i = 0; i < context.width; ++i) {
                     auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
-                    auto& color = context.palette_data.at((int)palette_index[i]);
-                    auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1
-                        ? (int)context.palette_transparency_data.data()[palette_index[i]]
-                        : 0xFF;
-                    pixel.r = color.r;
-                    pixel.g = color.g;
-                    pixel.b = color.b;
-                    pixel.a = transparency;
+                    pixel.r = triplets[i].r;
+                    pixel.g = triplets[i].g;
+                    pixel.b = triplets[i].b;
+                    pixel.a = 0xff;
                 }
             }
-            break;
-        default:
+        } else if (context.bit_depth == 16) {
+            for (int y = 0; y < context.height; ++y) {
+                auto* triplets = (Triplet16*)context.scanlines[y].data.data();
+                for (int i = 0; i < context.width; ++i) {
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    pixel.r = triplets[i].r & 0xFF;
+                    pixel.g = triplets[i].g & 0xFF;
+                    pixel.b = triplets[i].b & 0xFF;
+                    pixel.a = 0xff;
+                }
+            }
+        } else {
             ASSERT_NOT_REACHED();
-            break;
         }
+        break;
+    case 6:
+        if (context.bit_depth == 8) {
+            for (int y = 0; y < context.height; ++y) {
+                memcpy(context.bitmap->scanline(y), context.scanlines[y].data.data(), context.scanlines[y].data.size());
+            }
+        } else if (context.bit_depth == 16) {
+            for (int y = 0; y < context.height; ++y) {
+                auto* triplets = (Quad16*)context.scanlines[y].data.data();
+                for (int i = 0; i < context.width; ++i) {
+                    auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                    pixel.r = triplets[i].r & 0xFF;
+                    pixel.g = triplets[i].g & 0xFF;
+                    pixel.b = triplets[i].b & 0xFF;
+                    pixel.a = triplets[i].a & 0xFF;
+                }
+            }
+        } else {
+            ASSERT_NOT_REACHED();
+        }
+        break;
+    case 3:
+        for (int y = 0; y < context.height; ++y) {
+            auto* palette_index = (u8*)context.scanlines[y].data.data();
+            for (int i = 0; i < context.width; ++i) {
+                auto& pixel = (Pixel&)context.bitmap->scanline(y)[i];
+                auto& color = context.palette_data.at((int)palette_index[i]);
+                auto transparency = context.palette_transparency_data.size() >= palette_index[i] + 1
+                    ? (int)context.palette_transparency_data.data()[palette_index[i]]
+                    : 0xFF;
+                pixel.r = color.r;
+                pixel.g = color.g;
+                pixel.b = color.b;
+                pixel.a = transparency;
+            }
+        }
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+        break;
     }
 
     auto dummy_scanline = ByteBuffer::create_zeroed(context.width * sizeof(RGBA32));
 
-#ifdef PNG_STOPWATCH_DEBUG
-    Stopwatch sw("load_png_impl: unfilter: process");
-#endif
     for (int y = 0; y < context.height; ++y) {
         auto filter = context.scanlines[y].filter;
         if (filter == 0) {
@@ -501,48 +491,33 @@ static bool decode_png_bitmap(PNGLoadingContext& context)
     if (context.state >= PNGLoadingContext::State::BitmapDecoded)
         return true;
 
-    {
-#ifdef PNG_STOPWATCH_DEBUG
-        Stopwatch sw("load_png_impl: uncompress");
-#endif
-        unsigned long srclen = context.compressed_data.size() - 6;
-        unsigned long destlen = context.decompression_buffer_size;
-        int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
-        if (ret < 0) {
+    unsigned long srclen = context.compressed_data.size() - 6;
+    unsigned long destlen = context.decompression_buffer_size;
+    int ret = puff(context.decompression_buffer, &destlen, context.compressed_data.data() + 2, &srclen);
+    if (ret < 0) {
+        context.state = PNGLoadingContext::State::Error;
+        return false;
+    }
+    context.compressed_data.clear();
+
+    context.scanlines.ensure_capacity(context.height);
+    Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
+    for (int y = 0; y < context.height; ++y) {
+        u8 filter;
+        if (!streamer.read(filter)) {
             context.state = PNGLoadingContext::State::Error;
             return false;
         }
-        context.compressed_data.clear();
-    }
 
-    {
-#ifdef PNG_STOPWATCH_DEBUG
-        Stopwatch sw("load_png_impl: extract scanlines");
-#endif
-        context.scanlines.ensure_capacity(context.height);
-        Streamer streamer(context.decompression_buffer, context.decompression_buffer_size);
-        for (int y = 0; y < context.height; ++y) {
-            u8 filter;
-            if (!streamer.read(filter)) {
-                context.state = PNGLoadingContext::State::Error;
-                return false;
-            }
-
-            context.scanlines.append({ filter });
-            auto& scanline_buffer = context.scanlines.last().data;
-            if (!streamer.wrap_bytes(scanline_buffer, context.width * context.bytes_per_pixel)) {
-                context.state = PNGLoadingContext::State::Error;
-                return false;
-            }
+        context.scanlines.append({ filter });
+        auto& scanline_buffer = context.scanlines.last().data;
+        if (!streamer.wrap_bytes(scanline_buffer, context.width * context.bytes_per_pixel)) {
+            context.state = PNGLoadingContext::State::Error;
+            return false;
         }
     }
 
-    {
-#ifdef PNG_STOPWATCH_DEBUG
-        Stopwatch sw("load_png_impl: create bitmap");
-#endif
-        context.bitmap = GraphicsBitmap::create_purgeable(context.has_alpha() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, { context.width, context.height });
-    }
+    context.bitmap = GraphicsBitmap::create_purgeable(context.has_alpha() ? GraphicsBitmap::Format::RGBA32 : GraphicsBitmap::Format::RGB32, { context.width, context.height });
 
     unfilter(context);
 
