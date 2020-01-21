@@ -62,6 +62,18 @@ int main(int argc, char* argv[])
         return 1;
     }
 
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/usr/share/man", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     auto window = GWindow::construct();
     window->set_title("Help");
     window->set_rect(300, 200, 570, 500);
