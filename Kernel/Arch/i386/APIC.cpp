@@ -156,6 +156,8 @@ extern "C" u16 apic_ap_start_size;
 
 bool init()
 {
+    // FIXME: This code is broken and therefore isn't called. Please map everything correctly before calling this code.
+    ASSERT_NOT_REACHED();
     if (!MSR::have())
         return false;
 
@@ -168,9 +170,8 @@ bool init()
     kprintf("Initializing APIC, base: P%x\n", apic_base);
     set_base(apic_base);
 
-    MM.map_for_kernel(VirtualAddress(apic_base.get()), apic_base, true); // Map memory, disable cache!
     g_apic_base = apic_base.as_ptr();
-    
+
     // copy ap init code to P8000
     memcpy(reinterpret_cast<u8*>(0x8000), reinterpret_cast<const u8*>(apic_ap_start), apic_ap_start_size);
     return true;

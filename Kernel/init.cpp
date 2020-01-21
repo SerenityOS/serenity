@@ -142,9 +142,6 @@ extern "C" [[noreturn]] void init()
     PCI::Initializer::the().test_and_initialize(KParams::the().has("nopci_mmio"));
     PCI::Initializer::the().dismiss();
 
-    if (APIC::init())
-        APIC::enable(0);
-
     PIT::initialize();
 
     PCI::enumerate_all([](const PCI::Address& address, PCI::ID id) {
