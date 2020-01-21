@@ -34,6 +34,7 @@ void enable(u8 number);
 void disable(u8 number);
 void eoi(u8 number);
 void initialize();
+bool is_enabled(u8 number);
 u16 get_isr();
 u16 get_irr();
 

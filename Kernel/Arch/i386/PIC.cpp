@@ -75,6 +75,20 @@ void enable(u8 irq)
     }
 }
 
+bool is_enabled(u8 irq)
+{
+    InterruptDisabler disabler;
+    u8 imr;
+    if (irq & 8) {
+        imr = IO::in8(PIC1_CMD);
+        imr &= (1 << (irq - 8));
+    } else {
+        imr = IO::in8(PIC0_CMD);
+        imr &= (1 << irq);
+    }
+    return (!!imr);
+}
+
 void eoi(u8 irq)
 {
     if (irq & 8)

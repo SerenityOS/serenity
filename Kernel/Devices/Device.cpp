@@ -25,48 +25,32 @@
  */
 
 #include <Kernel/Devices/Device.h>
-#include <Kernel/FileSystem/InodeMetadata.h>
+#include <Kernel/Devices/HardwareEventsManager.h>
 #include <LibC/errno_numbers.h>
-
-static HashMap<u32, Device*>* s_all_devices;
-
-HashMap<u32, Device*>& Device::all_devices()
-{
-    if (s_all_devices == nullptr)
-        s_all_devices = new HashMap<u32, Device*>;
-    return *s_all_devices;
-}
 
 void Device::for_each(Function<void(Device&)> callback)
 {
-    for (auto& entry : all_devices())
-        callback(*entry.value);
+    for (auto* entry : HardwareEventsManager::the().get_devices_list()) {
+        ASSERT(entry != nullptr);
+        callback(*entry);
+    }
 }
 
 Device* Device::get_device(unsigned major, unsigned minor)
 {
-    auto it = all_devices().find(encoded_device(major, minor));
-    if (it == all_devices().end())
-        return nullptr;
-    return it->value;
+    return HardwareEventsManager::the().get_device(major, minor);
 }
 
-Device::Device(unsigned major, unsigned minor)
+Device::Device(unsigned major, unsigned minor, u8 device_type)
     : m_major(major)
     , m_minor(minor)
 {
-    u32 device_id = encoded_device(major, minor);
-    auto it = all_devices().find(device_id);
-    if (it != all_devices().end()) {
-        dbg() << "Already registered " << major << "," << minor << ": " << it->value->class_name();
-    }
-    ASSERT(!all_devices().contains(device_id));
-    all_devices().set(device_id, this);
+    HardwareEventsManager::the().register_device(*this, device_type);
 }
 
 Device::~Device()
 {
-    all_devices().remove(encoded_device(m_major, m_minor));
+    HardwareEventsManager::the().unregister_device(*this);
 }
 
 String Device::absolute_path() const

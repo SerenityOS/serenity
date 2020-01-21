@@ -112,18 +112,25 @@ static Lock& s_lock()
     return *lock;
 };
 
-OwnPtr<PATAChannel> PATAChannel::create(ChannelType type, bool force_pio)
+OwnPtr<PATAChannel> PATAChannel::autodetect(ChannelType type, bool force_pio)
 {
-    return make<PATAChannel>(type, force_pio);
+    PCI::Address found_address;
+    PCI::enumerate_all([&](const PCI::Address& address, PCI::ID id) {
+        if (PCI::get_class(address) == PCI_Mass_Storage_Class && PCI::get_subclass(address) == PCI_IDE_Controller_Subclass) {
+            found_address = address;
+            kprintf("PATAChannel: PATA Controller found! id=%w:%w\n", id.vendor_id, id.device_id);
+        }
+    });
+    return make<PATAChannel>(found_address, type, force_pio);
 }
 
-PATAChannel::PATAChannel(ChannelType type, bool force_pio)
-    : IRQHandler((type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ))
+PATAChannel::PATAChannel(PCI::Address pci_address, ChannelType type, bool force_pio)
+    : PCI::Device(pci_address, (type == ChannelType::Primary ? PATA_PRIMARY_IRQ : PATA_SECONDARY_IRQ))
     , m_channel_number((type == ChannelType::Primary ? 0 : 1))
     , m_io_base((type == ChannelType::Primary ? 0x1F0 : 0x170))
     , m_control_base((type == ChannelType::Primary ? 0x3f6 : 0x376))
 {
-    disable_irq();
+    disable_interrupts();
 
     m_dma_enabled.resource() = true;
     ProcFS::add_sys_bool("ide_dma", m_dma_enabled);
@@ -140,14 +147,8 @@ PATAChannel::~PATAChannel()
 
 void PATAChannel::initialize(bool force_pio)
 {
-    PCI::enumerate_all([this](const PCI::Address& address, PCI::ID id) {
-        if (PCI::get_class(address) == PCI_Mass_Storage_Class && PCI::get_subclass(address) == PCI_IDE_Controller_Subclass) {
-            m_pci_address = address;
-            kprintf("PATAChannel: PATA Controller found! id=%w:%w\n", id.vendor_id, id.device_id);
-        }
-    });
 
-    if (m_pci_address.is_null()) {
+    if (get_pci_address().is_null()) {
         kprintf("PATAChannel: PCI address was null; can not set up DMA\n");
         return;
     }
@@ -158,9 +159,9 @@ void PATAChannel::initialize(bool force_pio)
     }
 
     // Let's try to set up DMA transfers.
-    PCI::enable_bus_mastering(m_pci_address);
+    PCI::enable_bus_mastering(get_pci_address());
     prdt().end_of_table = 0x8000;
-    m_bus_master_base = PCI::get_BAR4(m_pci_address) & 0xfffc;
+    m_bus_master_base = PCI::get_BAR4(get_pci_address()) & 0xfffc;
     m_dma_buffer_page = MM.allocate_supervisor_physical_page();
     kprintf("PATAChannel: Bus master IDE: I/O @ %x\n", m_bus_master_base);
 }
@@ -181,12 +182,11 @@ static void print_ide_status(u8 status)
 void PATAChannel::wait_for_irq()
 {
     cli();
-    enable_irq();
+    InterruptHandler::Enabler enabler(*this);
     current->wait_on(m_irq_queue);
-    disable_irq();
 }
 
-void PATAChannel::handle_irq()
+void PATAChannel::handle_interrupt()
 {
     u8 status = IO::in8(m_io_base + ATA_REG_STATUS);
     if (status & ATA_SR_ERR) {
