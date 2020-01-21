@@ -59,16 +59,8 @@ public:
 
     void set_rw_mode(int options)
     {
-        if (options & O_WRONLY) {
-            set_readable(false);
-            set_writable(true);
-        } else if (options & O_RDWR) {
-            set_readable(true);
-            set_writable(true);
-        } else {
-            set_readable(true);
-            set_writable(false);
-        }
+        set_readable(options & O_RDONLY);
+        set_writable(options & O_WRONLY);
     }
 
     int close();
