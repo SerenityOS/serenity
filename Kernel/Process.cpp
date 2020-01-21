@@ -1945,9 +1945,9 @@ int Process::sys$open(const Syscall::SC_open_params* user_params)
     if (options & O_UNLINK_INTERNAL)
         return -EINVAL;
 
-    if ((options & O_RDWR) || (options & O_WRONLY))
+    if (options & O_WRONLY)
         REQUIRE_PROMISE(wpath);
-    else
+    else if (options & O_RDONLY)
         REQUIRE_PROMISE(rpath);
 
     if (options & O_CREAT)

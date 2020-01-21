@@ -239,13 +239,10 @@ KResultOr<NonnullRefPtr<FileDescription>> VFS::open(StringView path, int options
 
     bool should_truncate_file = false;
 
-    // NOTE: Read permission is a bit weird, since O_RDONLY == 0,
-    //       so we check if (NOT write_only OR read_and_write)
-    if (!(options & O_WRONLY) || (options & O_RDWR)) {
-        if (!metadata.may_read(current->process()))
-            return KResult(-EACCES);
-    }
-    if ((options & O_WRONLY) || (options & O_RDWR)) {
+    if ((options & O_RDONLY) && !metadata.may_read(current->process()))
+        return KResult(-EACCES);
+
+    if (options & O_WRONLY) {
         if (!metadata.may_write(current->process()))
             return KResult(-EACCES);
         if (metadata.is_directory())
@@ -748,19 +745,21 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
         }
         return KSuccess;
     }
-    if ((options & O_RDWR) || (options & O_WRONLY)) {
+    if (options & O_RDONLY) {
+        if (!(unveiled_path->permissions & UnveiledPath::Access::Read)) {
+            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
+            return KResult(-EACCES);
+        }
+    }
+    if (options & O_WRONLY) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::Write)) {
             dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'w' permission.";
             return KResult(-EACCES);
         }
-    } else if (options & O_EXEC) {
+    }
+    if (options & O_EXEC) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::Execute)) {
             dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'x' permission.";
-            return KResult(-EACCES);
-        }
-    } else {
-        if (!(unveiled_path->permissions & UnveiledPath::Access::Read)) {
-            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
             return KResult(-EACCES);
         }
     }

@@ -111,7 +111,7 @@ KResult LocalSocket::bind(const sockaddr* user_address, socklen_t address_size)
 
     mode_t mode = S_IFSOCK | (m_prebind_mode & 04777);
     UidAndGid owner { m_prebind_uid, m_prebind_gid };
-    auto result = VFS::the().open(path, O_RDWR | O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, current->process().current_directory(), owner);
+    auto result = VFS::the().open(path, O_CREAT | O_EXCL | O_NOFOLLOW_NOERROR, mode, current->process().current_directory(), owner);
     if (result.is_error()) {
         if (result.error() == -EEXIST)
             return KResult(-EADDRINUSE);
