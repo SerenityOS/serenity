@@ -61,6 +61,7 @@ public:
         CleanInode,
         PurgeableVolatile,
         PurgeableNonvolatile,
+        Veil,
         Pledge,
         Syscalls,
         InodeFaults,
@@ -100,6 +101,7 @@ private:
         String state;
         String user;
         String pledge;
+        String veil;
         u32 priority;
         u32 effective_priority;
         size_t amount_virtual;

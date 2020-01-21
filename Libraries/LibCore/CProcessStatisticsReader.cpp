@@ -62,6 +62,7 @@ HashMap<pid_t, CProcessStatistics> CProcessStatisticsReader::get_all()
         process.name = process_object.get("name").to_string();
         process.tty = process_object.get("tty").to_string();
         process.pledge = process_object.get("pledge").to_string();
+        process.veil = process_object.get("veil").to_string();
         process.amount_virtual = process_object.get("amount_virtual").to_u32();
         process.amount_resident = process_object.get("amount_resident").to_u32();
         process.amount_shared = process_object.get("amount_shared").to_u32();
