@@ -4657,10 +4657,6 @@ int Process::sys$unveil(const Syscall::SC_unveil_params* user_params)
         if (unveiled_path.path == path.value()) {
             if (new_permissions & ~unveiled_path.permissions)
                 return -EPERM;
-            if (!new_permissions) {
-                m_unveiled_paths.remove(i);
-                return 0;
-            }
             unveiled_path.permissions = new_permissions;
             return 0;
         }
