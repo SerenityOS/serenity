@@ -73,6 +73,7 @@ void GDialog::event(CEvent& event)
         auto& key_event = static_cast<GKeyEvent&>(event);
         if (key_event.key() == KeyCode::Key_Escape) {
             done(ExecCancel);
+            event.accept();
             return;
         }
     }
