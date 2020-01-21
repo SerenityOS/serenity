@@ -109,7 +109,7 @@ const char* FloppyDiskDevice::class_name() const
 }
 
 FloppyDiskDevice::FloppyDiskDevice(FloppyDiskDevice::DriveType type)
-    : IRQHandler(IRQ_FLOPPY_DRIVE)
+    : InterruptHandler(IRQ_FLOPPY_DRIVE)
     , DiskDevice(89, (type == FloppyDiskDevice::DriveType::Master) ? 0 : 1, BYTES_PER_SECTOR)
     , m_io_base_addr((type == FloppyDiskDevice::DriveType::Master) ? 0x3F0 : 0x370)
 {
@@ -167,7 +167,7 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
     //while(start < PIT::seconds_since_boot() + 1)
     //    ;
 
-    disable_irq();
+    disable_interrupts();
 
     IO::out8(0xA, FLOPPY_DMA_CHANNEL | 0x4); // Channel 2 SEL, MASK_ON = 1
     IO::out8(0x0B, 0x56);                    // Begin DMA, Single Transfer, Increment, Auto, FDC -> RAM, Channel 2
@@ -195,7 +195,7 @@ bool FloppyDiskDevice::read_sectors_with_dma(u16 lba, u16 count, u8* outbuf)
         send_byte(0x1b); // GPL3 value. The Datasheet doesn't really specify the values for this properly...
         send_byte(0xff);
 
-        enable_irq();
+        enable_interrupts();
 
         wait_for_irq(); // TODO: See if there was a lockup here via some "timeout counter"
         m_interrupted = false;
@@ -269,7 +269,7 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
     //while(start < PIT::seconds_since_boot() + 1)
     //    ;
 
-    disable_irq();
+    disable_interrupts();
 
     IO::out8(0xA, FLOPPY_DMA_CHANNEL | 0x4); // Channel 2 SEL, MASK_ON = 1
     IO::out8(0x0B, 0x5A);                    // Begin DMA, Single Transfer, Increment, Auto, RAM -> FDC, Channel 2
@@ -295,7 +295,7 @@ bool FloppyDiskDevice::write_sectors_with_dma(u16 lba, u16 count, const u8* inbu
         send_byte(0x1b); // GPL3 value. The Datasheet doesn't really specify the values for this properly...
         send_byte(0xff);
 
-        enable_irq();
+        enable_interrupts();
 
         wait_for_irq(); // TODO: See if there was a lockup here via some "timeout counter"
         m_interrupted = false;
@@ -358,7 +358,7 @@ bool FloppyDiskDevice::wait_for_irq()
     return true;
 }
 
-void FloppyDiskDevice::handle_irq()
+void FloppyDiskDevice::handle_interrupt()
 {
     // The only thing we need to do is acknowledge the IRQ happened
     m_interrupted = true;
@@ -512,7 +512,7 @@ void FloppyDiskDevice::initialize()
     kprintf("fdc: m_io_base = 0x%x IRQn = %d\n", m_io_base_addr, IRQ_FLOPPY_DRIVE);
 #endif
 
-    enable_irq();
+    enable_interrupts();
 
     // Get the version of the Floppy Disk Controller
     send_byte(FloppyCommand::Version);

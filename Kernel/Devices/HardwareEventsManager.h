@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,27 +24,21 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "IRQHandler.h"
-#include <Kernel/Arch/i386/CPU.h>
-#include <Kernel/Arch/i386/PIC.h>
+#pragma once
 
-IRQHandler::IRQHandler(u8 irq)
-    : m_irq_number(irq)
-{
-    register_irq_handler(m_irq_number, *this);
-}
+#include <AK/Types.h>
+#include <Kernel/Devices/Device.h>
 
-IRQHandler::~IRQHandler()
-{
-    unregister_irq_handler(m_irq_number, *this);
-}
+class HardwareEventsManager {
+public:
+    static HardwareEventsManager& the();
+    void register_device(Device&, u8);
+    void unregister_device(Device&);
+    void register_device_event();
+    Device* get_device(unsigned, unsigned);
+    HashTable<Device*>& get_devices_list();
 
-void IRQHandler::enable_irq()
-{
-    PIC::enable(m_irq_number);
-}
-
-void IRQHandler::disable_irq()
-{
-    PIC::disable(m_irq_number);
-}
+private:
+    HashTable<Device*> m_devices;
+    HardwareEventsManager();
+};

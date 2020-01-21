@@ -101,7 +101,7 @@
 
 #include <AK/RefPtr.h>
 #include <Kernel/Devices/DiskDevice.h>
-#include <Kernel/IRQHandler.h>
+#include <Kernel/InterruptHandler.h>
 #include <Kernel/Lock.h>
 #include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
@@ -122,7 +122,7 @@ struct FloppyControllerCommand {
 // uses the Intel 82077A controller. More about this controller can
 // be found here: http://www.buchty.net/casio/files/82077.pdf
 //
-class FloppyDiskDevice final : public IRQHandler
+class FloppyDiskDevice final : public InterruptHandler
     , public DiskDevice {
     AK_MAKE_ETERNAL
 
@@ -178,7 +178,7 @@ protected:
 
 private:
     // ^IRQHandler
-    void handle_irq();
+    void handle_interrupt();
 
     // ^DiskDevice
     virtual const char* class_name() const override;

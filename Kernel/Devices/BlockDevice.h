@@ -34,10 +34,9 @@ public:
 
     size_t block_size() const { return m_block_size; }
     virtual bool is_seekable() const override { return true; }
-
 protected:
     BlockDevice(unsigned major, unsigned minor, size_t block_size = PAGE_SIZE)
-        : Device(major, minor)
+        : Device(major, minor, (u8)DEVICE_TYPE::BLOCK_DEVICE)
         , m_block_size(block_size)
     {
     }

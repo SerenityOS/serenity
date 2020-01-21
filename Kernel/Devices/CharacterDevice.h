@@ -34,7 +34,7 @@ public:
 
 protected:
     CharacterDevice(unsigned major, unsigned minor)
-        : Device(major, minor)
+        : Device(major, minor, (u8)DEVICE_TYPE::CHAR_DEVICE)
     {
     }
 

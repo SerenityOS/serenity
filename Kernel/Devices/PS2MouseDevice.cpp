@@ -54,7 +54,7 @@
 static PS2MouseDevice* s_the;
 
 PS2MouseDevice::PS2MouseDevice()
-    : IRQHandler(IRQ_MOUSE)
+    : InterruptHandler(IRQ_MOUSE)
     , CharacterDevice(10, 1)
 {
     s_the = this;
@@ -70,7 +70,7 @@ PS2MouseDevice& PS2MouseDevice::the()
     return *s_the;
 }
 
-void PS2MouseDevice::handle_irq()
+void PS2MouseDevice::handle_interrupt()
 {
     for (;;) {
         u8 status = IO::in8(I8042_STATUS);
@@ -242,7 +242,7 @@ void PS2MouseDevice::initialize_device()
         kprintf("PS2MouseDevice: No mouse wheel detected!\n");
     }
 
-    enable_irq();
+    enable_interrupts();
 }
 
 void PS2MouseDevice::expect_ack()

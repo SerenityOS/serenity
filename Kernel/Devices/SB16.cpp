@@ -74,7 +74,7 @@ void SB16::set_sample_rate(uint16_t hz)
 static SB16* s_the;
 
 SB16::SB16()
-    : IRQHandler(5)
+    : InterruptHandler(5)
     , CharacterDevice(42, 42) // ### ?
 {
     s_the = this;
@@ -92,7 +92,7 @@ SB16& SB16::the()
 
 void SB16::initialize()
 {
-    disable_irq();
+    disable_interrupts();
 
     IO::out8(0x226, 1);
     IO::delay();
@@ -153,7 +153,7 @@ void SB16::dma_start(uint32_t length)
     IO::out8(0xd4, (channel % 4));
 }
 
-void SB16::handle_irq()
+void SB16::handle_interrupt()
 {
     // Stop sound output ready for the next block.
     dsp_write(0xd5);
@@ -168,9 +168,8 @@ void SB16::handle_irq()
 void SB16::wait_for_irq()
 {
     cli();
-    enable_irq();
+    InterruptHandler::Enabler enabler(*this);
     current->wait_on(m_irq_queue);
-    disable_irq();
 }
 
 ssize_t SB16::write(FileDescription&, const u8* data, ssize_t length)

@@ -101,7 +101,13 @@ extern "C" [[noreturn]] void init()
 
     bool text_debug = KParams::the().has("text_debug");
 
+    gdt_init();
+    idt_init();
+
     setup_acpi();
+
+    // Sample test to see if the ACPI parser is working...
+    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
 
     new VFS;
     new DebugLogDevice;
@@ -114,8 +120,6 @@ extern "C" [[noreturn]] void init()
 
     RTC::initialize();
     PIC::initialize();
-    gdt_init();
-    idt_init();
 
     // call global constructors after gtd and itd init
     for (ctor_func_t* ctor = &start_ctors; ctor < &end_ctors; ctor++)
@@ -135,9 +139,6 @@ extern "C" [[noreturn]] void init()
     tty0 = new VirtualConsole(0, VirtualConsole::AdoptCurrentVGABuffer);
     new VirtualConsole(1);
     VirtualConsole::switch_to(0);
-
-    // Sample test to see if the ACPI parser is working...
-    kprintf("ACPI: HPET table @ P 0x%x\n", ACPIParser::the().find_table("HPET"));
 
     PCI::Initializer::the().test_and_initialize(KParams::the().has("nopci_mmio"));
     PCI::Initializer::the().dismiss();
@@ -171,7 +172,6 @@ extern "C" [[noreturn]] void init()
     LoopbackAdapter::the();
     auto e1000 = E1000NetworkAdapter::autodetect();
     auto rtl8139 = RTL8139NetworkAdapter::autodetect();
-
     Process::initialize();
     Thread::initialize();
 
@@ -231,7 +231,7 @@ void init_stage2()
         hang();
     }
 
-    auto pata0 = PATAChannel::create(PATAChannel::ChannelType::Primary, force_pio);
+    auto pata0 = PATAChannel::autodetect(PATAChannel::ChannelType::Primary, force_pio);
     NonnullRefPtr<DiskDevice> root_dev = *pata0->master_device();
 
     root = root.substring(strlen("/dev/hda"), root.length() - strlen("/dev/hda"));
