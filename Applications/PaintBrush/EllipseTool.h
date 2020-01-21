@@ -28,6 +28,7 @@
 
 #include "Tool.h"
 #include <LibDraw/Point.h>
+#include <LibGUI/GActionGroup.h>
 
 class GMenu;
 class Painter;
@@ -58,5 +59,6 @@ private:
     Point m_ellipse_end_position;
     RefPtr<GMenu> m_context_menu;
     int m_thickness { 1 };
+    GActionGroup m_thickness_actions;
     Mode m_mode { Mode::Outline };
 };

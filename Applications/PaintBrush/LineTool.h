@@ -28,6 +28,7 @@
 
 #include "Tool.h"
 #include <LibDraw/Point.h>
+#include <LibGUI/GActionGroup.h>
 
 class GMenu;
 
@@ -51,6 +52,7 @@ private:
     Point m_line_start_position;
     Point m_line_end_position;
     RefPtr<GMenu> m_context_menu;
+    GActionGroup m_thickness_actions;
     int m_thickness { 1 };
     bool m_constrain_angle { false };
 };
