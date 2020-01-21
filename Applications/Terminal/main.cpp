@@ -300,6 +300,11 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    if (unveil(config->file_name().characters(), "rwc")) {
+        perror("unveil");
+        return 1;
+    }
+
     unveil(nullptr, nullptr);
 
     config->sync();
