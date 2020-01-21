@@ -108,8 +108,6 @@ public:
     void deallocate_user_physical_page(PhysicalPage&&);
     void deallocate_supervisor_physical_page(PhysicalPage&&);
 
-    void map_for_kernel(VirtualAddress, PhysicalAddress, bool cache_disabled = false);
-
     OwnPtr<Region> allocate_kernel_region(size_t, const StringView& name, u8 access, bool user_accessible = false, bool should_commit = true, bool cacheable = true);
     OwnPtr<Region> allocate_kernel_region(PhysicalAddress, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = false);
     OwnPtr<Region> allocate_kernel_region_with_vmobject(VMObject&, size_t, const StringView& name, u8 access, bool user_accessible = false, bool cacheable = false);
@@ -149,7 +147,7 @@ private:
     void unregister_region(Region&);
 
     void detect_cpu_features();
-    void setup_low_1mb();
+    void setup_low_identity_mapping();
     void protect_kernel_image();
     void parse_memory_map();
     void flush_entire_tlb();

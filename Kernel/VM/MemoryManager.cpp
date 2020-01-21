@@ -55,7 +55,7 @@ MemoryManager::MemoryManager()
 
     asm volatile("movl %%eax, %%cr3" ::"a"(kernel_page_directory().cr3()));
 
-    setup_low_1mb();
+    setup_low_identity_mapping();
     protect_kernel_image();
 }
 
@@ -83,7 +83,7 @@ void MemoryManager::protect_kernel_image()
     }
 }
 
-void MemoryManager::setup_low_1mb()
+void MemoryManager::setup_low_identity_mapping()
 {
     m_low_page_table = allocate_user_physical_page(ShouldZeroFill::Yes);
 
@@ -101,7 +101,7 @@ void MemoryManager::setup_low_1mb()
     if (g_cpu_supports_nx)
         pde_zero.set_execute_disabled(true);
 
-    for (uintptr_t offset = 0; offset < (2 * MB); offset += PAGE_SIZE) {
+    for (uintptr_t offset = (1 * MB); offset < (2 * MB); offset += PAGE_SIZE) {
         auto& page_table_page = m_low_page_table;
         auto& pte = quickmap_pt(page_table_page->paddr())[offset / PAGE_SIZE];
         pte.set_physical_page_base(offset);
@@ -530,17 +530,6 @@ PageTableEntry* MemoryManager::quickmap_pt(PhysicalAddress pt_paddr)
         flush_tlb(VirtualAddress(0xffe08000));
     }
     return (PageTableEntry*)0xffe08000;
-}
-
-void MemoryManager::map_for_kernel(VirtualAddress vaddr, PhysicalAddress paddr, bool cache_disabled)
-{
-    auto& pte = ensure_pte(kernel_page_directory(), vaddr);
-    pte.set_physical_page_base(paddr.get());
-    pte.set_present(true);
-    pte.set_writable(true);
-    pte.set_user_allowed(false);
-    pte.set_cache_disabled(cache_disabled);
-    flush_tlb(vaddr);
 }
 
 u8* MemoryManager::quickmap_page(PhysicalPage& physical_page)
