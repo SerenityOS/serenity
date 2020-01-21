@@ -62,5 +62,5 @@ private:
     };
 
     Vector<Column> m_columns;
-    int m_model_column;
+    int m_model_column { 0 };
 };
