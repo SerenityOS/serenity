@@ -444,7 +444,7 @@ PageFaultResponse Region::handle_inode_fault(size_t page_index_in_region)
     cli();
 
 #ifdef PAGE_FAULT_DEBUG
-    dbg() << *current << " inode fault in " << name() << " page index: " << page_index_in_region;
+    dbg() << "Inode fault in " << name() << " page index: " << page_index_in_region;
 #endif
 
     if (!vmobject_physical_page_entry.is_null()) {

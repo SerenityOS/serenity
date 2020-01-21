@@ -728,38 +728,38 @@ KResult VFS::validate_path_against_process_veil(StringView path, int options)
 
     auto* unveiled_path = find_matching_unveiled_path(path);
     if (!unveiled_path) {
-        dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled.";
+        dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled.";
         return KResult(-ENOENT);
     }
 
     if (options & O_CREAT) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::CreateOrRemove)) {
-            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'c' permission.";
+            dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'c' permission.";
             return KResult(-EACCES);
         }
     }
     if (options & O_UNLINK_INTERNAL) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::CreateOrRemove)) {
-            dbg() << *current << " rejecting path '" << path << "' for unlink since it hasn't been unveiled with 'c' permission.";
+            dbg() << "Rejecting path '" << path << "' for unlink since it hasn't been unveiled with 'c' permission.";
             return KResult(-EACCES);
         }
         return KSuccess;
     }
     if (options & O_RDONLY) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::Read)) {
-            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
+            dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'r' permission.";
             return KResult(-EACCES);
         }
     }
     if (options & O_WRONLY) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::Write)) {
-            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'w' permission.";
+            dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'w' permission.";
             return KResult(-EACCES);
         }
     }
     if (options & O_EXEC) {
         if (!(unveiled_path->permissions & UnveiledPath::Access::Execute)) {
-            dbg() << *current << " rejecting path '" << path << "' since it hasn't been unveiled with 'x' permission.";
+            dbg() << "Rejecting path '" << path << "' since it hasn't been unveiled with 'x' permission.";
             return KResult(-EACCES);
         }
     }
