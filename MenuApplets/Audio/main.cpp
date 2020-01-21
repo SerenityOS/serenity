@@ -96,6 +96,13 @@ int main(int argc, char** argv)
     window->set_main_widget(widget);
     window->show();
 
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     if (pledge("stdio shared_buffer accept rpath", nullptr) < 0) {
         perror("pledge");
         return 1;

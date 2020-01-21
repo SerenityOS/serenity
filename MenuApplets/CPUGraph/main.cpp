@@ -117,5 +117,25 @@ int main(int argc, char** argv)
     auto widget = GraphWidget::construct();
     window->set_main_widget(widget);
     window->show();
+
+    if (unveil("/res", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    // FIXME: This is required by CProcessStatisticsReader.
+    //        It would be good if we didn't depend on that.
+    if (unveil("/etc/passwd", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/proc/all", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     return app.exec();
 }
