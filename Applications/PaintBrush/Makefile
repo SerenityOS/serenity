@@ -9,7 +9,6 @@ OBJS = \
     EllipseTool.o \
     EraseTool.o \
     BucketTool.o \
-    ColorDialog.o \
     SprayTool.o \
     PickerTool.o \
     main.o

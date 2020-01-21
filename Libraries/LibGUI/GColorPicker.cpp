@@ -24,14 +24,14 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include "ColorDialog.h"
 #include <LibGUI/GBoxLayout.h>
 #include <LibGUI/GButton.h>
+#include <LibGUI/GColorPicker.h>
 #include <LibGUI/GFrame.h>
 #include <LibGUI/GSpinBox.h>
 #include <LibGUI/GWidget.h>
 
-ColorDialog::ColorDialog(Color color, CObject* parent)
+GColorPicker::GColorPicker(Color color, CObject* parent)
     : GDialog(parent)
     , m_color(color)
 {
@@ -39,11 +39,11 @@ ColorDialog::ColorDialog(Color color, CObject* parent)
     build();
 }
 
-ColorDialog::~ColorDialog()
+GColorPicker::~GColorPicker()
 {
 }
 
-void ColorDialog::build()
+void GColorPicker::build()
 {
     auto horizontal_container = GWidget::construct();
     horizontal_container->set_fill_with_background_color(true);
@@ -58,7 +58,9 @@ void ColorDialog::build()
     right_vertical_container->set_layout(make<GBoxLayout>(Orientation::Vertical));
 
     enum RGBComponent {
-        Red, Green, Blue
+        Red,
+        Green,
+        Blue
     };
 
     m_preview_widget = GFrame::construct(right_vertical_container);
@@ -81,27 +83,27 @@ void ColorDialog::build()
     };
 
     auto make_spinbox = [&](RGBComponent component, int initial_value) {
-         auto spinbox = GSpinBox::construct(left_vertical_container);
-         spinbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
-         spinbox->set_preferred_size(0, 20);
-         spinbox->set_min(0);
-         spinbox->set_max(255);
-         spinbox->set_value(initial_value);
+        auto spinbox = GSpinBox::construct(left_vertical_container);
+        spinbox->set_size_policy(SizePolicy::Fill, SizePolicy::Fixed);
+        spinbox->set_preferred_size(0, 20);
+        spinbox->set_min(0);
+        spinbox->set_max(255);
+        spinbox->set_value(initial_value);
 
-         spinbox->on_change = [this, component](auto value) {
-             if (component == Red)
+        spinbox->on_change = [this, component](auto value) {
+            if (component == Red)
                 m_color.set_red(value);
-             if (component == Green)
+            if (component == Green)
                 m_color.set_green(value);
-             if (component == Blue)
+            if (component == Blue)
                 m_color.set_blue(value);
 
-             auto pal = m_preview_widget->palette();
-             pal.set_color(ColorRole::Background, m_color);
-             m_preview_widget->set_palette(pal);
-             m_preview_widget->update();
-         };
-         return spinbox;
+            auto pal = m_preview_widget->palette();
+            pal.set_color(ColorRole::Background, m_color);
+            m_preview_widget->set_palette(pal);
+            m_preview_widget->update();
+        };
+        return spinbox;
     };
 
     make_spinbox(Red, m_color.red());
