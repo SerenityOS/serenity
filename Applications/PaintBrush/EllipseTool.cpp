@@ -115,18 +115,21 @@ void EllipseTool::on_contextmenu(GContextMenuEvent& event)
             m_mode = Mode::Outline;
         }));
         m_context_menu->add_separator();
-        m_context_menu->add_action(GAction::create("1", [this](auto&) {
-            m_thickness = 1;
-        }));
-        m_context_menu->add_action(GAction::create("2", [this](auto&) {
-            m_thickness = 2;
-        }));
-        m_context_menu->add_action(GAction::create("3", [this](auto&) {
-            m_thickness = 3;
-        }));
-        m_context_menu->add_action(GAction::create("4", [this](auto&) {
-            m_thickness = 4;
-        }));
+        m_thickness_actions.set_exclusive(true);
+        auto insert_action = [&](int size, bool checked = false) {
+            auto action = GAction::create(String::number(size), [this, size](auto& action) {
+                m_thickness = size;
+                action.set_checked(true);
+            });
+            action->set_checkable(true);
+            action->set_checked(checked);
+            m_thickness_actions.add_action(*action);
+            m_context_menu->add_action(move(action));
+        };
+        insert_action(1, true);
+        insert_action(2);
+        insert_action(3);
+        insert_action(4);
     }
     m_context_menu->popup(event.screen_position());
 }

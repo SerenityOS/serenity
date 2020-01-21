@@ -27,8 +27,9 @@
 #pragma once
 
 #include "Tool.h"
-#include <LibGUI/GPainter.h>
 #include <LibCore/CTimer.h>
+#include <LibGUI/GActionGroup.h>
+#include <LibGUI/GPainter.h>
 
 class GMenu;
 
@@ -49,5 +50,6 @@ private:
     Point m_last_pos;
     Color m_color;
     RefPtr<GMenu> m_context_menu;
+    GActionGroup m_thickness_actions;
     int m_thickness { 1 };
 };

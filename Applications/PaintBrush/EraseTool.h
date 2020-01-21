@@ -28,6 +28,7 @@
 
 #include "Tool.h"
 #include <LibDraw/Point.h>
+#include <LibGUI/GActionGroup.h>
 
 class GMenu;
 
@@ -48,4 +49,5 @@ private:
 
     bool m_use_secondary_color { true };
     int m_thickness { 1 };
+    GActionGroup m_thickness_actions;
 };
