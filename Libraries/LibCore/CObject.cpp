@@ -189,6 +189,11 @@ void CObject::dispatch_event(CEvent& e, CObject* stay_within)
     do {
         target->event(e);
         target = target->parent();
+        if (target == stay_within) {
+            // Prevent the event from bubbling any further.
+            e.accept();
+            break;
+        }
     } while (target && target != stay_within && !e.is_accepted());
 }
 
