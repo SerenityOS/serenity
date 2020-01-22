@@ -25,7 +25,11 @@ if [ "$(uname -s)" = "OpenBSD" ]; then
     (echo "e 0"; echo 83; echo n; echo 0; echo "*"; echo "quit") | fdisk -e $VND
     mkfs.ext2 -I 128 -F /dev/${VND}i || die "couldn't create filesystem"
 else
-    mke2fs -q -I 128 _disk_image || die "couldn't create filesystem"
+    if [ -x /sbin/mke2fs ]; then
+        /sbin/mke2fs -q -I 128 _disk_image || die "couldn't create filesystem"
+    else
+        mke2fs -q -I 128 _disk_image || die "couldn't create filesystem"
+    fi
 fi
 echo "done"
 
