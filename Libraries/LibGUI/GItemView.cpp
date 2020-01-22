@@ -115,7 +115,7 @@ Vector<int> GItemView::items_intersecting_rect(const Rect& rect) const
     return item_indexes;
 }
 
-int GItemView::item_at_event_position(const Point& position) const
+GModelIndex GItemView::index_at_event_position(const Point& position) const
 {
     ASSERT(model());
     // FIXME: Since all items are the same size, just compute the clicked item index
@@ -127,21 +127,22 @@ int GItemView::item_at_event_position(const Point& position) const
         Rect item_rect;
         Rect icon_rect;
         Rect text_rect;
-        auto item_text = model()->data(model()->index(item_index, model_column()));
+        auto index = model()->index(item_index, model_column());
+        auto item_text = model()->data(index);
         get_item_rects(item_index, font, item_text, item_rect, icon_rect, text_rect);
         if (icon_rect.contains(adjusted_position) || text_rect.contains(adjusted_position))
-            return item_index;
+            return index;
     }
-    return -1;
+    return {};
 }
 
 void GItemView::mousedown_event(GMouseEvent& event)
 {
-    int item_index = item_at_event_position(event.position());
+    auto index = index_at_event_position(event.position());
 
     if (event.button() == GMouseButton::Left) {
         m_left_mousedown_position = event.position();
-        if (item_index == -1) {
+        if (!index.is_valid()) {
             if (event.modifiers() & Mod_Ctrl) {
                 selection().for_each_index([&](auto& index) {
                     m_rubber_band_remembered_selection.append(index);
@@ -153,7 +154,6 @@ void GItemView::mousedown_event(GMouseEvent& event)
             m_rubber_band_origin = event.position();
             m_rubber_band_current = event.position();
         } else {
-            auto index = model()->index(item_index, m_model_column);
             if (event.modifiers() & Mod_Ctrl)
                 selection().toggle(index);
             else if (selection().size() > 1)
@@ -174,9 +174,8 @@ void GItemView::mouseup_event(GMouseEvent& event)
         update();
         return;
     }
-    int item_index = item_at_event_position(event.position());
-    if (item_index >= 0) {
-        auto index = model()->index(item_index, m_model_column);
+    auto index = index_at_event_position(event.position());
+    if (index.is_valid()) {
         if ((selection().size() > 1) & m_might_drag) {
             selection().set(index);
             m_might_drag = false;
@@ -266,10 +265,8 @@ void GItemView::context_menu_event(GContextMenuEvent& event)
 {
     if (!model())
         return;
-    auto item_index = item_at_event_position(event.position());
-    GModelIndex index;
-    if (item_index != -1) {
-        index = model()->index(item_index, m_model_column);
+    auto index = index_at_event_position(event.position());
+    if (index.is_valid()) {
         if (!selection().contains(index))
             selection().set(index);
     } else {
