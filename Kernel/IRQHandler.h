@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020, Liav A. <liavalb@hotmail.co.il>
+ * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -24,42 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <Kernel/Devices/HardwareEventsManager.h>
+#pragma once
 
-static HardwareEventsManager* s_hardware_events_manager;
+#include <AK/Types.h>
 
-HardwareEventsManager& HardwareEventsManager::the()
-{
-    if (s_hardware_events_manager == nullptr) {
-        s_hardware_events_manager = new HardwareEventsManager();
-    }
-    return *s_hardware_events_manager;
-}
+class IRQHandler {
+public:
+    virtual ~IRQHandler();
+    virtual void handle_irq() = 0;
 
-HashTable<Device*>& HardwareEventsManager::get_devices_list()
-{
-    return m_devices;
-}
+    u8 irq_number() const { return m_irq_number; }
 
-void HardwareEventsManager::unregister_device(Device& device)
-{
-    get_devices_list().remove(&device);
-}
+    void enable_irq();
+    void disable_irq();
 
-HardwareEventsManager::HardwareEventsManager()
-{
-}
+protected:
+    explicit IRQHandler(u8 irq);
 
-Device* HardwareEventsManager::get_device(unsigned major, unsigned minor)
-{
-    for (auto* entry : HardwareEventsManager::get_devices_list()) {
-        ASSERT(entry != nullptr);
-        if (entry->major() == major && entry->minor() == minor)
-            return entry;
-    }
-    return nullptr;
-}
-void HardwareEventsManager::register_device(Device& device, u8)
-{
-    get_devices_list().set(&device);
-}
+private:
+    u8 m_irq_number { 0 };
+};

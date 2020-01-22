@@ -31,7 +31,7 @@
 #pragma once
 
 #include <Kernel/Devices/DiskDevice.h>
-#include <Kernel/InterruptHandler.h>
+#include <Kernel/IRQHandler.h>
 #include <Kernel/Lock.h>
 
 class PATAChannel;

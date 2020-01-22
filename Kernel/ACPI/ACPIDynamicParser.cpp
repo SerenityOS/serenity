@@ -41,20 +41,20 @@ void ACPIDynamicParser::initialize_without_rsdp()
 }
 
 ACPIDynamicParser::ACPIDynamicParser()
-    : InterruptHandler(9)
+    : IRQHandler(9)
     , ACPIStaticParser()
 
 {
     kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
 }
 ACPIDynamicParser::ACPIDynamicParser(ACPI_RAW::RSDPDescriptor20& rsdp)
-    : InterruptHandler(9)
+    : IRQHandler(9)
     , ACPIStaticParser(rsdp)
 {
     kprintf("ACPI: Dynamic Parsing Enabled, Can parse AML\n");
 }
 
-void ACPIDynamicParser::handle_interrupt()
+void ACPIDynamicParser::handle_irq()
 {
     // FIXME: Implement IRQ handling of ACPI signals!
     ASSERT_NOT_REACHED();

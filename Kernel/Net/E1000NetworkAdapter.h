@@ -27,23 +27,23 @@
 #pragma once
 
 #include <AK/OwnPtr.h>
+#include <Kernel/IRQHandler.h>
 #include <Kernel/Net/NetworkAdapter.h>
 #include <Kernel/PCI/Access.h>
-#include <Kernel/PCI/Device.h>
 
 class E1000NetworkAdapter final : public NetworkAdapter
-    , public PCI::Device {
+    , public IRQHandler {
 public:
     static OwnPtr<E1000NetworkAdapter> autodetect();
 
-    E1000NetworkAdapter(PCI::Address, u8 interrupt_vector);
+    E1000NetworkAdapter(PCI::Address, u8 irq);
     virtual ~E1000NetworkAdapter() override;
 
     virtual void send_raw(const u8*, int) override;
     virtual bool link_up() override;
 
 private:
-    virtual void handle_interrupt() override;
+    virtual void handle_irq() override;
     virtual const char* class_name() const override { return "E1000NetworkAdapter"; }
 
     struct [[gnu::packed]] e1000_rx_desc
@@ -86,6 +86,7 @@ private:
 
     void receive();
 
+    PCI::Address m_pci_address;
     u16 m_io_base { 0 };
     VirtualAddress m_mmio_base;
     OwnPtr<Region> m_mmio_region;

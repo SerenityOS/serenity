@@ -15,7 +15,6 @@ OBJS = \
     Arch/i386/PIT.o \
     CMOS.o \
     Console.o \
-    Devices/HardwareEventsManager.o \
     Devices/BXVGADevice.o \
     Devices/BlockDevice.o \
     Devices/CharacterDevice.o \
@@ -55,8 +54,7 @@ OBJS = \
     FileSystem/VirtualFileSystem.o \
     Heap/SlabAllocator.o \
     Heap/kmalloc.o \
-    InterruptHandler.o \
-    SharedInterruptHandler.o \
+    IRQHandler.o \
     KBufferBuilder.o \
     KParams.o \
     KSyms.o \
@@ -76,7 +74,6 @@ OBJS = \
     PCI/IOAccess.o \
     PCI/MMIOAccess.o \
     PCI/Initializer.o \
-    PCI/Device.o \
     Process.o \
     ProcessTracer.o \
     Profiling.o \

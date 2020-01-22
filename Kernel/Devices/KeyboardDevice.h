@@ -26,16 +26,16 @@
 
 #pragma once
 
+#include "IRQHandler.h"
 #include "KeyCode.h"
 #include <AK/CircularQueue.h>
 #include <AK/DoublyLinkedList.h>
 #include <AK/Types.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/InterruptHandler.h>
 
 class KeyboardClient;
 
-class KeyboardDevice final : public InterruptHandler
+class KeyboardDevice final : public IRQHandler
     , public CharacterDevice {
     AK_MAKE_ETERNAL
 public:
@@ -57,7 +57,7 @@ public:
 
 private:
     // ^IRQHandler
-    virtual void handle_interrupt() override;
+    virtual void handle_irq() override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "KeyboardDevice"; }

@@ -28,14 +28,14 @@
 
 #include <AK/CircularQueue.h>
 #include <Kernel/Devices/CharacterDevice.h>
-#include <Kernel/InterruptHandler.h>
+#include <Kernel/IRQHandler.h>
 #include <Kernel/VM/PhysicalAddress.h>
 #include <Kernel/VM/PhysicalPage.h>
 #include <Kernel/WaitQueue.h>
 
 class SB16;
 
-class SB16 final : public InterruptHandler
+class SB16 final : public IRQHandler
     , public CharacterDevice {
 public:
     SB16();
@@ -51,7 +51,7 @@ public:
 
 private:
     // ^IRQHandler
-    virtual void handle_interrupt() override;
+    virtual void handle_irq() override;
 
     // ^CharacterDevice
     virtual const char* class_name() const override { return "SB16"; }
