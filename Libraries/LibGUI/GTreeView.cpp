@@ -435,7 +435,6 @@ void GTreeView::keydown_event(GKeyEvent& event)
             return;
         }
     }
-
 }
 
 int GTreeView::item_count() const
