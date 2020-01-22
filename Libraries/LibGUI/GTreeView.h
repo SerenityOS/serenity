@@ -26,9 +26,9 @@
 
 #pragma once
 
-#include <LibGUI/GAbstractColumnView.h>
+#include <LibGUI/GAbstractTableView.h>
 
-class GTreeView : public GAbstractColumnView {
+class GTreeView : public GAbstractTableView {
     C_OBJECT(GTreeView)
 public:
     virtual ~GTreeView() override;
