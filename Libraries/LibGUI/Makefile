@@ -35,7 +35,7 @@ OBJS = \
     GDesktop.o \
     GProgressBar.o \
     GAbstractView.o \
-    GAbstractColumnView.o \
+    GAbstractTableView.o \
     GItemView.o \
     GIcon.o \
     GFrame.o \

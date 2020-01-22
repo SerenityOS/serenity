@@ -26,7 +26,7 @@
 
 #include <AK/StringBuilder.h>
 #include <LibDraw/Palette.h>
-#include <LibGUI/GAbstractColumnView.h>
+#include <LibGUI/GAbstractTableView.h>
 #include <LibGUI/GAction.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GPainter.h>
@@ -34,7 +34,7 @@
 
 static const int minimum_column_width = 2;
 
-GAbstractColumnView::GAbstractColumnView(GWidget* parent)
+GAbstractTableView::GAbstractTableView(GWidget* parent)
     : GAbstractView(parent)
 {
     set_frame_shape(FrameShape::Container);
@@ -44,11 +44,11 @@ GAbstractColumnView::GAbstractColumnView(GWidget* parent)
     set_should_hide_unnecessary_scrollbars(true);
 }
 
-GAbstractColumnView::~GAbstractColumnView()
+GAbstractTableView::~GAbstractTableView()
 {
 }
 
-void GAbstractColumnView::update_column_sizes()
+void GAbstractTableView::update_column_sizes()
 {
     if (!m_size_columns_to_fit_content)
         return;
@@ -84,7 +84,7 @@ void GAbstractColumnView::update_column_sizes()
     }
 }
 
-void GAbstractColumnView::update_content_size()
+void GAbstractTableView::update_content_size()
 {
     if (!model())
         return set_content_size({});
@@ -101,7 +101,7 @@ void GAbstractColumnView::update_content_size()
     set_size_occupied_by_fixed_elements({ 0, header_height() });
 }
 
-Rect GAbstractColumnView::header_rect(int column_index) const
+Rect GAbstractTableView::header_rect(int column_index) const
 {
     if (!model())
         return {};
@@ -116,7 +116,7 @@ Rect GAbstractColumnView::header_rect(int column_index) const
     return { x_offset, 0, column_width(column_index) + horizontal_padding() * 2, header_height() };
 }
 
-void GAbstractColumnView::set_hovered_header_index(int index)
+void GAbstractTableView::set_hovered_header_index(int index)
 {
     if (m_hovered_column_header_index == index)
         return;
@@ -124,7 +124,7 @@ void GAbstractColumnView::set_hovered_header_index(int index)
     update_headers();
 }
 
-void GAbstractColumnView::paint_headers(GPainter& painter)
+void GAbstractTableView::paint_headers(GPainter& painter)
 {
     if (!headers_visible())
         return;
@@ -164,12 +164,12 @@ void GAbstractColumnView::paint_headers(GPainter& painter)
     }
 }
 
-bool GAbstractColumnView::is_column_hidden(int column) const
+bool GAbstractTableView::is_column_hidden(int column) const
 {
     return !column_data(column).visibility;
 }
 
-void GAbstractColumnView::set_column_hidden(int column, bool hidden)
+void GAbstractTableView::set_column_hidden(int column, bool hidden)
 {
     auto& column_data = this->column_data(column);
     if (column_data.visibility == !hidden)
@@ -179,7 +179,7 @@ void GAbstractColumnView::set_column_hidden(int column, bool hidden)
     update();
 }
 
-GMenu& GAbstractColumnView::ensure_header_context_menu()
+GMenu& GAbstractTableView::ensure_header_context_menu()
 {
     // FIXME: This menu needs to be rebuilt if the model is swapped out,
     //        or if the column count/names change.
@@ -203,31 +203,31 @@ GMenu& GAbstractColumnView::ensure_header_context_menu()
     return *m_header_context_menu;
 }
 
-const Font& GAbstractColumnView::header_font()
+const Font& GAbstractTableView::header_font()
 {
     return Font::default_bold_font();
 }
 
-void GAbstractColumnView::set_cell_painting_delegate(int column, OwnPtr<GTableCellPaintingDelegate>&& delegate)
+void GAbstractTableView::set_cell_painting_delegate(int column, OwnPtr<GTableCellPaintingDelegate>&& delegate)
 {
     column_data(column).cell_painting_delegate = move(delegate);
 }
 
-void GAbstractColumnView::update_headers()
+void GAbstractTableView::update_headers()
 {
     Rect rect { 0, 0, frame_inner_rect().width(), header_height() };
     rect.move_by(frame_thickness(), frame_thickness());
     update(rect);
 }
 
-GAbstractColumnView::ColumnData& GAbstractColumnView::column_data(int column) const
+GAbstractTableView::ColumnData& GAbstractTableView::column_data(int column) const
 {
     if (column >= m_column_data.size())
         m_column_data.resize(column + 1);
     return m_column_data.at(column);
 }
 
-Rect GAbstractColumnView::column_resize_grabbable_rect(int column) const
+Rect GAbstractTableView::column_resize_grabbable_rect(int column) const
 {
     if (!model())
         return {};
@@ -235,7 +235,7 @@ Rect GAbstractColumnView::column_resize_grabbable_rect(int column) const
     return { header_rect.right() - 1, header_rect.top(), 4, header_rect.height() };
 }
 
-int GAbstractColumnView::column_width(int column_index) const
+int GAbstractTableView::column_width(int column_index) const
 {
     if (!model())
         return 0;
@@ -248,7 +248,7 @@ int GAbstractColumnView::column_width(int column_index) const
     return column_data.width;
 }
 
-void GAbstractColumnView::mousemove_event(GMouseEvent& event)
+void GAbstractTableView::mousemove_event(GMouseEvent& event)
 {
     if (!model())
         return GAbstractView::mousemove_event(event);
@@ -305,7 +305,7 @@ void GAbstractColumnView::mousemove_event(GMouseEvent& event)
     GAbstractView::mousemove_event(event);
 }
 
-void GAbstractColumnView::mouseup_event(GMouseEvent& event)
+void GAbstractTableView::mouseup_event(GMouseEvent& event)
 {
     auto adjusted_position = this->adjusted_position(event.position());
     if (event.button() == GMouseButton::Left) {
@@ -335,7 +335,7 @@ void GAbstractColumnView::mouseup_event(GMouseEvent& event)
     GAbstractView::mouseup_event(event);
 }
 
-void GAbstractColumnView::mousedown_event(GMouseEvent& event)
+void GAbstractTableView::mousedown_event(GMouseEvent& event)
 {
     if (!model())
         return GAbstractView::mousedown_event(event);
@@ -376,7 +376,7 @@ void GAbstractColumnView::mousedown_event(GMouseEvent& event)
     GAbstractView::mousedown_event(event);
 }
 
-GModelIndex GAbstractColumnView::index_at_event_position(const Point& position, bool& is_toggle) const
+GModelIndex GAbstractTableView::index_at_event_position(const Point& position, bool& is_toggle) const
 {
     is_toggle = false;
     if (!model())
@@ -396,21 +396,21 @@ GModelIndex GAbstractColumnView::index_at_event_position(const Point& position, 
     return {};
 }
 
-GModelIndex GAbstractColumnView::index_at_event_position(const Point& position) const
+GModelIndex GAbstractTableView::index_at_event_position(const Point& position) const
 {
     bool is_toggle;
     auto index = index_at_event_position(position, is_toggle);
     return is_toggle ? GModelIndex() : index;
 }
 
-int GAbstractColumnView::item_count() const
+int GAbstractTableView::item_count() const
 {
     if (!model())
         return 0;
     return model()->row_count();
 }
 
-void GAbstractColumnView::keydown_event(GKeyEvent& event)
+void GAbstractTableView::keydown_event(GKeyEvent& event)
 {
     if (!model())
         return;
@@ -474,13 +474,13 @@ void GAbstractColumnView::keydown_event(GKeyEvent& event)
     return GWidget::keydown_event(event);
 }
 
-void GAbstractColumnView::scroll_into_view(const GModelIndex& index, Orientation orientation)
+void GAbstractTableView::scroll_into_view(const GModelIndex& index, Orientation orientation)
 {
     auto rect = row_rect(index.row()).translated(0, -header_height());
     GScrollableWidget::scroll_into_view(rect, orientation);
 }
 
-void GAbstractColumnView::doubleclick_event(GMouseEvent& event)
+void GAbstractTableView::doubleclick_event(GMouseEvent& event)
 {
     if (!model())
         return;
@@ -496,7 +496,7 @@ void GAbstractColumnView::doubleclick_event(GMouseEvent& event)
     }
 }
 
-void GAbstractColumnView::context_menu_event(GContextMenuEvent& event)
+void GAbstractTableView::context_menu_event(GContextMenuEvent& event)
 {
     if (!model())
         return;
@@ -517,13 +517,13 @@ void GAbstractColumnView::context_menu_event(GContextMenuEvent& event)
         on_context_menu_request(index, event);
 }
 
-void GAbstractColumnView::leave_event(CEvent&)
+void GAbstractTableView::leave_event(CEvent&)
 {
     window()->set_override_cursor(GStandardCursor::None);
     set_hovered_header_index(-1);
 }
 
-Rect GAbstractColumnView::content_rect(int row, int column) const
+Rect GAbstractTableView::content_rect(int row, int column) const
 {
     auto row_rect = this->row_rect(row);
     int x = 0;
@@ -533,22 +533,22 @@ Rect GAbstractColumnView::content_rect(int row, int column) const
     return { row_rect.x() + x, row_rect.y(), column_width(column) + horizontal_padding() * 2, item_height() };
 }
 
-Rect GAbstractColumnView::content_rect(const GModelIndex& index) const
+Rect GAbstractTableView::content_rect(const GModelIndex& index) const
 {
     return content_rect(index.row(), index.column());
 }
 
-Rect GAbstractColumnView::row_rect(int item_index) const
+Rect GAbstractTableView::row_rect(int item_index) const
 {
     return { 0, header_height() + (item_index * item_height()), max(content_size().width(), width()), item_height() };
 }
 
-Point GAbstractColumnView::adjusted_position(const Point& position) const
+Point GAbstractTableView::adjusted_position(const Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
 
-void GAbstractColumnView::did_update_model()
+void GAbstractTableView::did_update_model()
 {
     GAbstractView::did_update_model();
     update_column_sizes();

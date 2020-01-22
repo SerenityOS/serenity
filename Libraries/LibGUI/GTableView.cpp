@@ -37,7 +37,7 @@
 #include <LibGUI/GWindow.h>
 
 GTableView::GTableView(GWidget* parent)
-    : GAbstractColumnView(parent)
+    : GAbstractTableView(parent)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);

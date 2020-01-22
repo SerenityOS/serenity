@@ -38,7 +38,7 @@ public:
     virtual void paint(GPainter&, const Rect&, const Palette&, const GModel&, const GModelIndex&) = 0;
 };
 
-class GAbstractColumnView : public GAbstractView {
+class GAbstractTableView : public GAbstractView {
 public:
     int item_height() const { return 16; }
 
@@ -72,8 +72,8 @@ public:
     virtual GModelIndex index_at_event_position(const Point&) const override;
 
 protected:
-    virtual ~GAbstractColumnView() override;
-    explicit GAbstractColumnView(GWidget* parent);
+    virtual ~GAbstractTableView() override;
+    explicit GAbstractTableView(GWidget* parent);
 
     virtual void did_update_model() override;
     virtual void mouseup_event(GMouseEvent&) override;

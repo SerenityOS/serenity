@@ -48,7 +48,7 @@ GTreeView::MetadataForIndex& GTreeView::ensure_metadata_for_index(const GModelIn
 }
 
 GTreeView::GTreeView(GWidget* parent)
-    : GAbstractColumnView(parent)
+    : GAbstractTableView(parent)
 {
     set_background_role(ColorRole::Base);
     set_foreground_role(ColorRole::BaseText);
@@ -331,7 +331,7 @@ void GTreeView::scroll_into_view(const GModelIndex& a_index, Orientation orienta
 void GTreeView::did_update_model()
 {
     m_view_metadata.clear();
-    GAbstractColumnView::did_update_model();
+    GAbstractTableView::did_update_model();
 }
 
 void GTreeView::did_update_selection()

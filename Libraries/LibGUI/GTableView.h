@@ -28,10 +28,10 @@
 
 #include <AK/Function.h>
 #include <AK/HashMap.h>
-#include <LibGUI/GAbstractColumnView.h>
+#include <LibGUI/GAbstractTableView.h>
 #include <LibGUI/GModel.h>
 
-class GTableView : public GAbstractColumnView {
+class GTableView : public GAbstractTableView {
     C_OBJECT(GTableView)
 public:
     virtual ~GTableView() override;
