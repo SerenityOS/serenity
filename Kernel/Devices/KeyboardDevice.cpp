@@ -29,8 +29,8 @@
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/Arch/i386/PIC.h>
 #include <Kernel/Devices/KeyboardDevice.h>
-#include <Kernel/TTY/VirtualConsole.h>
 #include <Kernel/IO.h>
+#include <Kernel/TTY/VirtualConsole.h>
 
 //#define KEYBOARD_DEBUG
 
@@ -43,37 +43,201 @@
 #define I8042_MOUSE_BUFFER 0x20
 #define I8042_KEYBOARD_BUFFER 0x00
 
-char *map;
-char *shift_map;
-char *alt_map;
-char *altgr_map;
+char* map;
+char* shift_map;
+char* alt_map;
+char* altgr_map;
 
 static const char en_map[0x80] = {
-    0, '\033', '1', '2', '3', '4', '5', '6', '7', '8', '9', '0', '-', '=', 0x08, '\t',
-    'q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p', '[', ']', '\n', 0,
-    'a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ';', '\'', '`', 0, '\\',
-    'z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/',
-    0, '*', 0, ' ', 0, 0,
+    0,
+    '\033',
+    '1',
+    '2',
+    '3',
+    '4',
+    '5',
+    '6',
+    '7',
+    '8',
+    '9',
+    '0',
+    '-',
+    '=',
+    0x08,
+    '\t',
+    'q',
+    'w',
+    'e',
+    'r',
+    't',
+    'y',
+    'u',
+    'i',
+    'o',
+    'p',
+    '[',
+    ']',
+    '\n',
+    0,
+    'a',
+    's',
+    'd',
+    'f',
+    'g',
+    'h',
+    'j',
+    'k',
+    'l',
+    ';',
+    '\'',
+    '`',
+    0,
+    '\\',
+    'z',
+    'x',
+    'c',
+    'v',
+    'b',
+    'n',
+    'm',
+    ',',
+    '.',
+    '/',
+    0,
+    '*',
+    0,
+    ' ',
+    0,
+    0,
     //60
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     //70
-    0, 0, 0, 0, '-', 0, 0, 0, '+', 0,
+    0,
+    0,
+    0,
+    0,
+    '-',
+    0,
+    0,
+    0,
+    '+',
+    0,
     //80
-    0, 0, 0, 0, 0, 0, '\\', 0, 0, 0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    '\\',
+    0,
+    0,
+    0,
 };
 
 static const char en_shift_map[0x80] = {
-    0, '\033', '!', '@', '#', '$', '%', '^', '&', '*', '(', ')', '_', '+', 0x08, '\t',
-    'Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P', '{', '}', '\n', 0,
-    'A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L', ':', '"', '~', 0, '|',
-    'Z', 'X', 'C', 'V', 'B', 'N', 'M', '<', '>', '?',
-    0, '*', 0, ' ', 0, 0,
+    0,
+    '\033',
+    '!',
+    '@',
+    '#',
+    '$',
+    '%',
+    '^',
+    '&',
+    '*',
+    '(',
+    ')',
+    '_',
+    '+',
+    0x08,
+    '\t',
+    'Q',
+    'W',
+    'E',
+    'R',
+    'T',
+    'Y',
+    'U',
+    'I',
+    'O',
+    'P',
+    '{',
+    '}',
+    '\n',
+    0,
+    'A',
+    'S',
+    'D',
+    'F',
+    'G',
+    'H',
+    'J',
+    'K',
+    'L',
+    ':',
+    '"',
+    '~',
+    0,
+    '|',
+    'Z',
+    'X',
+    'C',
+    'V',
+    'B',
+    'N',
+    'M',
+    '<',
+    '>',
+    '?',
+    0,
+    '*',
+    0,
+    ' ',
+    0,
+    0,
     //60
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
     //70
-    0, 0, 0, 0, '-', 0, 0, 0, '+', 0,
+    0,
+    0,
+    0,
+    0,
+    '-',
+    0,
+    0,
+    0,
+    '+',
+    0,
     //80
-    0, 0, 0, 0, 0, 0, '|', 0, 0, 0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    0,
+    '|',
+    0,
+    0,
+    0,
 };
 
 static const char numpad_map[13] = { '7', '8', '9', 0, '4', '5', '6', 0, '1', '2', '3', '0', ',' };
@@ -135,8 +299,8 @@ static const KeyCode unshifted_key_map[0x80] = {
     Key_Slash,
     Key_RightShift, // 54
     Key_Asterisk,
-    Key_Alt,     // 56
-    Key_Space,   // 57
+    Key_Alt,      // 56
+    Key_Space,    // 57
     Key_CapsLock, // 58
     Key_F1,
     Key_F2,
@@ -231,7 +395,7 @@ static const KeyCode shifted_key_map[0x100] = {
     Key_RightShift, // 54
     Key_Asterisk,
     Key_Alt,
-    Key_Space,   // 57
+    Key_Space,    // 57
     Key_CapsLock, // 58
     Key_F1,
     Key_F2,
@@ -278,24 +442,19 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     if (key == Key_NumLock && pressed)
         m_num_lock_on = !m_num_lock_on;
 
-    if (m_num_lock_on && !m_has_e0_prefix)
-    {
-        if (raw >= 0x47 && raw <= 0x53)
-        {
+    if (m_num_lock_on && !m_has_e0_prefix) {
+        if (raw >= 0x47 && raw <= 0x53) {
             u8 index = raw - 0x47;
             KeyCode newKey = numpad_key_map[index];
 
-            if (newKey != Key_Invalid)
-            {
+            if (newKey != Key_Invalid) {
                 key = newKey;
                 character = numpad_map[index];
             }
         }
-    }
-    else
-    {
-        if(m_has_e0_prefix) {
-            if(key == Key_Slash) {
+    } else {
+        if (m_has_e0_prefix) {
+            if (key == Key_Slash) {
                 character = '/'; // On Turkish-QWERTY Keyboard Key_Slash mapped to '.' char, if e0 prefix is true remap to '/' char
             }
         }
@@ -304,8 +463,7 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     if (key == Key_CapsLock && pressed)
         m_caps_lock_on = !m_caps_lock_on;
 
-    if (m_caps_lock_on && (m_modifiers == 0 || m_modifiers == Mod_Shift))
-    {
+    if (m_caps_lock_on && (m_modifiers == 0 || m_modifiers == Mod_Shift)) {
         if (character >= 'a' && character <= 'z')
             character &= ~0x20;
         else if (character >= 'A' && character <= 'Z')
@@ -449,12 +607,12 @@ void KeyboardDevice::set_maps(const char* n_map, const char* n_shift_map, const 
     kfree(alt_map);
     kfree(altgr_map);
 
-    map = (char*) kmalloc(0x80);
-    shift_map = (char*) kmalloc(0x80);
-    alt_map = (char*) kmalloc(0x80);
-    altgr_map = (char*) kmalloc(0x80);
+    map = (char*)kmalloc(0x80);
+    shift_map = (char*)kmalloc(0x80);
+    alt_map = (char*)kmalloc(0x80);
+    altgr_map = (char*)kmalloc(0x80);
 
-    for(int i=0; i < 0x80; i++) {
+    for (int i = 0; i < 0x80; i++) {
         map[i] = n_map[i];
         shift_map[i] = n_shift_map[i];
         alt_map[i] = n_alt_map[i];
