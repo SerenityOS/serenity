@@ -87,6 +87,11 @@ void GSortingProxyModel::update()
     target().update();
 }
 
+StringView GSortingProxyModel::drag_data_type() const
+{
+    return target().drag_data_type();
+}
+
 void GSortingProxyModel::set_key_column_and_sort_order(int column, GSortOrder sort_order)
 {
     if (column == m_key_column && sort_order == m_sort_order)
