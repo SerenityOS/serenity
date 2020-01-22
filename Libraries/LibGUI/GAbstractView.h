@@ -54,6 +54,7 @@ public:
     virtual void did_update_selection();
 
     virtual Rect content_rect(const GModelIndex&) const { return {}; }
+    virtual GModelIndex index_at_event_position(const Point&) const = 0;
     void begin_editing(const GModelIndex&);
     void stop_editing();
 

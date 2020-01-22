@@ -48,6 +48,8 @@ public:
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
+    virtual GModelIndex index_at_event_position(const Point&) const override;
+
 private:
     explicit GItemView(GWidget* parent);
 
@@ -64,7 +66,6 @@ private:
 
     int item_count() const;
     Rect item_rect(int item_index) const;
-    GModelIndex index_at_event_position(const Point&) const;
     Vector<int> items_intersecting_rect(const Rect&) const;
     void update_content_size();
     void get_item_rects(int item_index, const Font&, const GVariant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const;

@@ -68,6 +68,9 @@ public:
 
     void scroll_into_view(const GModelIndex&, Orientation);
 
+    virtual GModelIndex index_at_event_position(const Point&, bool& is_toggle) const;
+    virtual GModelIndex index_at_event_position(const Point&) const override;
+
 protected:
     virtual ~GAbstractColumnView() override;
     explicit GAbstractColumnView(GWidget* parent);
@@ -81,7 +84,6 @@ protected:
     virtual void leave_event(CEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
 
-    virtual GModelIndex index_at_event_position(const Point&, bool& is_toggle) const;
     virtual void toggle_index(const GModelIndex&) {}
 
     void paint_headers(GPainter&);
