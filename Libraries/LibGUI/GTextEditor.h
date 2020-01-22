@@ -90,7 +90,6 @@ public:
     // FIXME: This should take glyph spacing into account, no?
     int glyph_width() const { return font().glyph_width('x'); }
 
-
     void insert_at_cursor_or_replace_selection(const StringView&);
     bool write_to_file(const StringView& path);
     bool has_selection() const { return m_selection.is_valid(); }
