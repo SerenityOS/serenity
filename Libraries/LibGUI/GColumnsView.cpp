@@ -216,6 +216,8 @@ GModelIndex GColumnsView::index_at_event_position(const Point& a_position) const
 
 void GColumnsView::mousedown_event(GMouseEvent& event)
 {
+    GAbstractView::mousedown_event(event);
+
     if (!model())
         return;
 
@@ -223,15 +225,7 @@ void GColumnsView::mousedown_event(GMouseEvent& event)
         return;
 
     auto index = index_at_event_position(event.position());
-    if (!index.is_valid()) {
-        selection().clear();
-        return;
-    }
-
-    if (event.modifiers() & Mod_Ctrl) {
-        selection().toggle(index);
-    } else {
-        selection().set(index);
+    if (index.is_valid() && !(event.modifiers() & Mod_Ctrl)) {
         if (model()->row_count(index))
             push_column(index);
     }
@@ -248,34 +242,6 @@ void GColumnsView::did_update_model()
 
     update_column_sizes();
     update();
-}
-
-void GColumnsView::doubleclick_event(GMouseEvent& event)
-{
-    if (!model())
-        return;
-
-    if (event.button() != GMouseButton::Left)
-        return;
-
-    mousedown_event(event);
-    activate_selected();
-}
-
-void GColumnsView::context_menu_event(GContextMenuEvent& event)
-{
-    if (!model())
-        return;
-
-    auto index = index_at_event_position(event.position());
-    if (index.is_valid()) {
-        if (!selection().contains(index))
-            selection().set(index);
-    } else {
-        selection().clear();
-    }
-    if (on_context_menu_request)
-        on_context_menu_request(index, event);
 }
 
 void GColumnsView::keydown_event(GKeyEvent& event)

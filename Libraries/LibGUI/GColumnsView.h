@@ -51,8 +51,6 @@ private:
     virtual void did_update_model() override;
     virtual void paint_event(GPaintEvent&) override;
     virtual void mousedown_event(GMouseEvent& event) override;
-    virtual void doubleclick_event(GMouseEvent& event) override;
-    virtual void context_menu_event(GContextMenuEvent& event) override;
     virtual void keydown_event(GKeyEvent& event) override;
 
     struct Column {

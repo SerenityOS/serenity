@@ -102,25 +102,6 @@ Point GListView::adjusted_position(const Point& position) const
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
 
-void GListView::mousedown_event(GMouseEvent& event)
-{
-    if (!model())
-        return;
-
-    if (event.button() != GMouseButton::Left)
-        return;
-
-    auto index = index_at_event_position(event.position());
-    if (index.is_valid()) {
-        if (event.modifiers() & Mod_Ctrl)
-            selection().toggle(index);
-        else
-            selection().set(index);
-    } else {
-        selection().clear();
-    }
-}
-
 void GListView::paint_event(GPaintEvent& event)
 {
     GFrame::paint_event(event);
