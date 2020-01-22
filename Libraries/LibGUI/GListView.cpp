@@ -84,7 +84,20 @@ Rect GListView::content_rect(const GModelIndex& index) const
     return content_rect(index.row());
 }
 
-Point GListView::adjusted_position(const Point& position)
+GModelIndex GListView::index_at_event_position(const Point& point) const
+{
+    ASSERT(model());
+
+    auto adjusted_position = this->adjusted_position(point);
+    for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
+        if (!content_rect(row).contains(adjusted_position))
+            continue;
+        return model()->index(row, m_model_column);
+    }
+    return {};
+}
+
+Point GListView::adjusted_position(const Point& position) const
 {
     return position.translated(horizontal_scrollbar().value() - frame_thickness(), vertical_scrollbar().value() - frame_thickness());
 }
@@ -97,18 +110,15 @@ void GListView::mousedown_event(GMouseEvent& event)
     if (event.button() != GMouseButton::Left)
         return;
 
-    auto adjusted_position = this->adjusted_position(event.position());
-    for (int row = 0, row_count = model()->row_count(); row < row_count; ++row) {
-        if (!content_rect(row).contains(adjusted_position))
-            continue;
-        auto index = model()->index(row, m_model_column);
+    auto index = index_at_event_position(event.position());
+    if (index.is_valid()) {
         if (event.modifiers() & Mod_Ctrl)
             selection().toggle(index);
         else
             selection().set(index);
-        return;
+    } else {
+        selection().clear();
     }
-    selection().clear();
 }
 
 void GListView::paint_event(GPaintEvent& event)
