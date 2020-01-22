@@ -396,6 +396,13 @@ GModelIndex GAbstractColumnView::index_at_event_position(const Point& position, 
     return {};
 }
 
+GModelIndex GAbstractColumnView::index_at_event_position(const Point& position) const
+{
+    bool is_toggle;
+    auto index = index_at_event_position(position, is_toggle);
+    return is_toggle ? GModelIndex() : index;
+}
+
 int GAbstractColumnView::item_count() const
 {
     if (!model())

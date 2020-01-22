@@ -35,11 +35,11 @@ public:
     int model_column() const { return m_model_column; }
     void set_model_column(int column) { m_model_column = column; }
 
+    virtual GModelIndex index_at_event_position(const Point&) const override;
+
 private:
     GColumnsView(GWidget* parent = nullptr);
     virtual ~GColumnsView();
-
-    GModelIndex index_at_event_position(const Point&) const;
     void push_column(GModelIndex& parent_index);
     void update_column_sizes();
 
