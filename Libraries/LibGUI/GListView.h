@@ -49,8 +49,9 @@ public:
 
     void scroll_into_view(const GModelIndex&, Orientation);
 
-    Point adjusted_position(const Point&);
+    Point adjusted_position(const Point&) const;
 
+    GModelIndex index_at_event_position(const Point&) const;
     virtual Rect content_rect(const GModelIndex&) const override;
 
     int model_column() const { return m_model_column; }
