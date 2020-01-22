@@ -483,7 +483,7 @@ void KeyboardDevice::key_state_changed(u8 raw, bool pressed)
     m_has_e0_prefix = false;
 }
 
-void KeyboardDevice::handle_interrupt()
+void KeyboardDevice::handle_irq()
 {
     for (;;) {
         u8 status = IO::in8(I8042_STATUS);
@@ -551,7 +551,7 @@ KeyboardDevice& KeyboardDevice::the()
 }
 
 KeyboardDevice::KeyboardDevice()
-    : InterruptHandler(IRQ_KEYBOARD)
+    : IRQHandler(IRQ_KEYBOARD)
     , CharacterDevice(85, 1)
 {
     s_the = this;
@@ -563,7 +563,7 @@ KeyboardDevice::KeyboardDevice()
     while (IO::in8(I8042_STATUS) & I8042_BUFFER_FULL)
         IO::in8(I8042_BUFFER);
 
-    enable_interrupts();
+    enable_irq();
 }
 
 KeyboardDevice::~KeyboardDevice()

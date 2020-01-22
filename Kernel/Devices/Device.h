@@ -39,11 +39,6 @@
 #include <Kernel/FileSystem/File.h>
 #include <Kernel/UnixTypes.h>
 
-enum class DEVICE_TYPE {
-    BLOCK_DEVICE = 1,
-    CHAR_DEVICE = 2
-};
-
 class Device : public File {
 public:
     virtual ~Device() override;
@@ -60,16 +55,15 @@ public:
     virtual bool is_device() const override { return true; }
     virtual bool is_disk_device() const { return false; }
 
-    virtual bool is_block_device() const override { return false; }
-    virtual bool is_character_device() const override { return true; }
-
     static void for_each(Function<void(Device&)>);
     static Device* get_device(unsigned major, unsigned minor);
 
 protected:
-    Device(unsigned major, unsigned minor, u8 device_type);
+    Device(unsigned major, unsigned minor);
     void set_uid(uid_t uid) { m_uid = uid; }
     void set_gid(gid_t gid) { m_gid = gid; }
+
+    static HashMap<u32, Device*>& all_devices();
 
 private:
     unsigned m_major { 0 };

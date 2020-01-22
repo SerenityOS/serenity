@@ -26,12 +26,12 @@
 
 #include "APIC.h"
 #include "Assertions.h"
+#include "IRQHandler.h"
 #include "PIC.h"
 #include "Process.h"
 #include <AK/Types.h>
 #include <Kernel/Arch/i386/CPU.h>
 #include <Kernel/KSyms.h>
-#include <Kernel/SharedInterruptHandler.h>
 #include <Kernel/VM/MemoryManager.h>
 #include <LibC/mallocdefs.h>
 
@@ -48,7 +48,7 @@ static DescriptorTablePointer s_gdtr;
 static Descriptor s_idt[256];
 static Descriptor s_gdt[256];
 
-static SharedInterruptHandler* s_irq_handler[256];
+static IRQHandler* s_irq_handler[16];
 
 static Vector<u16>* s_gdt_freelist;
 
@@ -435,23 +435,16 @@ static void unimp_trap()
     hang();
 }
 
-void register_shared_interrupt_handler(u8 irq, SharedInterruptHandler& handler)
+void register_irq_handler(u8 irq, IRQHandler& handler)
 {
     ASSERT(!s_irq_handler[irq]);
     s_irq_handler[irq] = &handler;
 }
 
-void unregister_shared_interrupt_handler(u8 irq, SharedInterruptHandler& handler)
+void unregister_irq_handler(u8 irq, IRQHandler& handler)
 {
     ASSERT(s_irq_handler[irq] == &handler);
     s_irq_handler[irq] = nullptr;
-}
-
-SharedInterruptHandler& get_interrupt_handler(u8 number)
-{
-    ASSERT(number < 256);
-    ASSERT(s_irq_handler[number] != nullptr);
-    return *s_irq_handler[number];
 }
 
 void register_interrupt_handler(u8 index, void (*f)())
@@ -531,8 +524,8 @@ void idt_init()
     register_interrupt_handler(0x5e, irq_14_asm_entry);
     register_interrupt_handler(0x5f, irq_15_asm_entry);
 
-    for (u8 i = 0; i < 255; ++i) {
-        SharedInterruptHandler::initialize(i);
+    for (u8 i = 0; i < 16; ++i) {
+        s_irq_handler[i] = nullptr;
     }
 
     flush_idt();
@@ -548,9 +541,8 @@ void handle_irq(RegisterDump regs)
     clac();
     ASSERT(regs.isr_number >= 0x50 && regs.isr_number <= 0x5f);
     u8 irq = (u8)(regs.isr_number - 0x50);
-    ASSERT(s_irq_handler[irq] != nullptr);
-    s_irq_handler[irq]->handle_interrupt();
-    // FIXME: Determine if we use IRQs or MSIs (in the future) to send EOI...
+    if (s_irq_handler[irq])
+        s_irq_handler[irq]->handle_irq();
     PIC::eoi(irq);
 }
 

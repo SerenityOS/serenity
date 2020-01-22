@@ -240,7 +240,7 @@ public:
     u64 raw[4];
 };
 
-class SharedInterruptHandler;
+class IRQHandler;
 struct RegisterDump;
 
 void gdt_init();
@@ -248,9 +248,8 @@ void idt_init();
 void sse_init();
 void register_interrupt_handler(u8 number, void (*f)());
 void register_user_callable_interrupt_handler(u8 number, void (*f)());
-void register_shared_interrupt_handler(u8 number, SharedInterruptHandler&);
-SharedInterruptHandler& get_interrupt_handler(u8 number);
-void unregister_shared_interrupt_handler(u8 number, SharedInterruptHandler&);
+void register_irq_handler(u8 number, IRQHandler&);
+void unregister_irq_handler(u8 number, IRQHandler&);
 void flush_idt();
 void flush_gdt();
 void load_task_register(u16 selector);

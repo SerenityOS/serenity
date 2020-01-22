@@ -139,17 +139,18 @@ OwnPtr<RTL8139NetworkAdapter> RTL8139NetworkAdapter::autodetect()
     return make<RTL8139NetworkAdapter>(found_address, irq);
 }
 
-RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 interrupt_vector)
-    : PCI::Device(pci_address, interrupt_vector)
+RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 irq)
+    : IRQHandler(irq)
+    , m_pci_address(pci_address)
 {
     set_interface_name("rtl8139");
 
     kprintf("RTL8139: Found at PCI address %b:%b:%b\n", pci_address.bus(), pci_address.slot(), pci_address.function());
 
-    enable_bus_mastering(get_pci_address());
+    enable_bus_mastering(m_pci_address);
 
-    m_io_base = PCI::get_BAR0(get_pci_address()) & ~1;
-    m_interrupt_line = PCI::get_interrupt_line(get_pci_address());
+    m_io_base = PCI::get_BAR0(m_pci_address) & ~1;
+    m_interrupt_line = PCI::get_interrupt_line(m_pci_address);
     kprintf("RTL8139: IO port base: %w\n", m_io_base);
     kprintf("RTL8139: Interrupt line: %u\n", m_interrupt_line);
 
@@ -173,14 +174,14 @@ RTL8139NetworkAdapter::RTL8139NetworkAdapter(PCI::Address pci_address, u8 interr
     const auto& mac = mac_address();
     kprintf("RTL8139: MAC address: %s\n", mac.to_string().characters());
 
-    enable_interrupts();
+    enable_irq();
 }
 
 RTL8139NetworkAdapter::~RTL8139NetworkAdapter()
 {
 }
 
-void RTL8139NetworkAdapter::handle_interrupt()
+void RTL8139NetworkAdapter::handle_irq()
 {
     for (;;) {
         int status = in16(REG_ISR);
