@@ -689,6 +689,27 @@ void TerminalWidget::context_menu_event(GContextMenuEvent& event)
     m_context_menu->popup(event.screen_position());
 }
 
+void TerminalWidget::drop_event(GDropEvent& event)
+{
+    if (event.data_type() == "text") {
+        event.accept();
+        write(m_ptm_fd, event.data().characters(), event.data().length());
+    } else if (event.data_type() == "url-list") {
+        event.accept();
+        auto lines = event.data().split('\n');
+        bool first = true;
+        for (auto& line : lines) {
+            if (!first)
+                write(m_ptm_fd, " ", 1);
+            first = false;
+
+            if (line.starts_with("file://"))
+                line = line.substring(7, line.length() - 7);
+            write(m_ptm_fd, line.characters(), line.length());
+        }
+    }
+}
+
 void TerminalWidget::did_change_font()
 {
     GFrame::did_change_font();
