@@ -100,6 +100,7 @@ private:
     virtual void focusin_event(CEvent&) override;
     virtual void focusout_event(CEvent&) override;
     virtual void context_menu_event(GContextMenuEvent&) override;
+    virtual void drop_event(GDropEvent&) override;
     virtual void did_change_font() override;
 
     // ^TerminalClient
