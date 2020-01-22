@@ -51,7 +51,7 @@ public:
 
     Point adjusted_position(const Point&) const;
 
-    GModelIndex index_at_event_position(const Point&) const;
+    virtual GModelIndex index_at_event_position(const Point&) const override;
     virtual Rect content_rect(const GModelIndex&) const override;
 
     int model_column() const { return m_model_column; }
