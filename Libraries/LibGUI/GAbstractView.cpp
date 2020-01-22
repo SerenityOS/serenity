@@ -24,8 +24,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include <AK/StringBuilder.h>
 #include <Kernel/KeyCode.h>
 #include <LibGUI/GAbstractView.h>
+#include <LibGUI/GDragOperation.h>
 #include <LibGUI/GModel.h>
 #include <LibGUI/GModelEditingDelegate.h>
 #include <LibGUI/GPainter.h>
@@ -170,4 +172,152 @@ NonnullRefPtr<Font> GAbstractView::font_for_index(const GModelIndex& index) cons
     if (column_metadata.font)
         return *column_metadata.font;
     return font();
+}
+
+void GAbstractView::mousedown_event(GMouseEvent& event)
+{
+    GScrollableWidget::mousedown_event(event);
+
+    if (!model())
+        return;
+
+    if (event.button() == GMouseButton::Left)
+        m_left_mousedown_position = event.position();
+
+    auto index = index_at_event_position(event.position());
+    m_might_drag = false;
+
+    if (!index.is_valid()) {
+        m_selection.clear();
+    } else if (event.modifiers() & Mod_Ctrl) {
+        m_selection.toggle(index);
+    } else if (event.button() == GMouseButton::Left) {
+        // We might be starting a drag, so don't throw away other selected items yet.
+        m_might_drag = true;
+        m_selection.add(index);
+    } else {
+        m_selection.set(index);
+    }
+
+    update();
+}
+
+void GAbstractView::mousemove_event(GMouseEvent& event)
+{
+    if (!model() || !m_might_drag)
+        return GScrollableWidget::mousemove_event(event);
+
+    if (!(event.buttons() & GMouseButton::Left) || m_selection.is_empty()) {
+        m_might_drag = false;
+        return GScrollableWidget::mousemove_event(event);
+    }
+
+    auto diff = event.position() - m_left_mousedown_position;
+    auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
+    constexpr int drag_distance_threshold = 5;
+
+    if (distance_travelled_squared <= drag_distance_threshold)
+        return GScrollableWidget::mousemove_event(event);
+
+    dbg() << "Initiate drag!";
+    auto drag_operation = GDragOperation::construct();
+
+    RefPtr<GraphicsBitmap> bitmap;
+
+    StringBuilder text_builder;
+    StringBuilder data_builder;
+    bool first = true;
+    m_selection.for_each_index([&](auto& index) {
+        auto text_data = m_model->data(index);
+        if (!first)
+            text_builder.append(", ");
+        text_builder.append(text_data.to_string());
+
+        auto drag_data = m_model->data(index, GModel::Role::DragData);
+        data_builder.append(drag_data.to_string());
+        data_builder.append('\n');
+
+        first = false;
+
+        if (!bitmap) {
+            GVariant icon_data = model()->data(index, GModel::Role::Icon);
+            if (icon_data.is_icon())
+                bitmap = icon_data.as_icon().bitmap_for_size(32);
+        }
+    });
+
+    drag_operation->set_text(text_builder.to_string());
+    drag_operation->set_bitmap(bitmap);
+    drag_operation->set_data("url-list", data_builder.to_string());
+
+    auto outcome = drag_operation->exec();
+
+    switch (outcome) {
+    case GDragOperation::Outcome::Accepted:
+        dbg() << "Drag was accepted!";
+        break;
+    case GDragOperation::Outcome::Cancelled:
+        dbg() << "Drag was cancelled!";
+        break;
+    default:
+        ASSERT_NOT_REACHED();
+        break;
+    }
+}
+
+void GAbstractView::mouseup_event(GMouseEvent& event)
+{
+    GScrollableWidget::mouseup_event(event);
+
+    if (!model())
+        return;
+
+    if (m_might_drag) {
+        // We were unsure about unselecting items other than the current one
+        // in mousedown_event(), because we could be seeing a start of a drag.
+        // Since we're here, it was not that; so fix up the selection now.
+        auto index = index_at_event_position(event.position());
+        if (index.is_valid())
+            m_selection.set(index);
+        else
+            m_selection.clear();
+        m_might_drag = false;
+        update();
+    }
+}
+
+void GAbstractView::doubleclick_event(GMouseEvent& event)
+{
+    if (!model())
+        return;
+
+    if (event.button() != GMouseButton::Left)
+        return;
+
+    m_might_drag = false;
+
+    auto index = index_at_event_position(event.position());
+
+    if (!index.is_valid())
+        m_selection.clear();
+    else if (!m_selection.contains(index))
+        m_selection.set(index);
+
+    activate_selected();
+}
+
+void GAbstractView::context_menu_event(GContextMenuEvent& event)
+{
+    if (!model())
+        return;
+
+    auto index = index_at_event_position(event.position());
+
+    if (index.is_valid())
+        m_selection.add(index);
+    else
+        selection().clear();
+
+    if (on_context_menu_request)
+        on_context_menu_request(index, event);
 }

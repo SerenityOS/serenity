@@ -138,32 +138,32 @@ GModelIndex GItemView::index_at_event_position(const Point& position) const
 
 void GItemView::mousedown_event(GMouseEvent& event)
 {
-    auto index = index_at_event_position(event.position());
+    if (!model())
+        return GAbstractView::mousedown_event(event);
 
-    if (event.button() == GMouseButton::Left) {
-        m_left_mousedown_position = event.position();
-        if (!index.is_valid()) {
-            if (event.modifiers() & Mod_Ctrl) {
-                selection().for_each_index([&](auto& index) {
-                    m_rubber_band_remembered_selection.append(index);
-                });
-            } else {
-                selection().clear();
-            }
-            m_rubber_banding = true;
-            m_rubber_band_origin = event.position();
-            m_rubber_band_current = event.position();
-        } else {
-            if (event.modifiers() & Mod_Ctrl)
-                selection().toggle(index);
-            else if (selection().size() > 1)
-                m_might_drag = true;
-            else
-                selection().set(index);
-        }
+    if (event.button() != GMouseButton::Left)
+        return GAbstractView::mousedown_event(event);
+
+    auto index = index_at_event_position(event.position());
+    if (index.is_valid()) {
+        // We might start dragging this item, but not rubber-banding.
+        return GAbstractView::mousedown_event(event);
     }
 
-    GAbstractView::mousedown_event(event);
+    ASSERT(m_rubber_band_remembered_selection.is_empty());
+
+    if (event.modifiers() & Mod_Ctrl) {
+        selection().for_each_index([&](auto& index) {
+            m_rubber_band_remembered_selection.append(index);
+        });
+    } else {
+        selection().clear();
+    }
+
+    m_might_drag = false;
+    m_rubber_banding = true;
+    m_rubber_band_origin = event.position();
+    m_rubber_band_current = event.position();
 }
 
 void GItemView::mouseup_event(GMouseEvent& event)
@@ -172,14 +172,6 @@ void GItemView::mouseup_event(GMouseEvent& event)
         m_rubber_banding = false;
         m_rubber_band_remembered_selection.clear();
         update();
-        return;
-    }
-    auto index = index_at_event_position(event.position());
-    if (index.is_valid()) {
-        if ((selection().size() > 1) & m_might_drag) {
-            selection().set(index);
-            m_might_drag = false;
-        }
     }
     GAbstractView::mouseup_event(event);
 }
@@ -207,84 +199,7 @@ void GItemView::mousemove_event(GMouseEvent& event)
         }
     }
 
-    if (event.buttons() & GMouseButton::Left && !selection().is_empty()) {
-        auto diff = event.position() - m_left_mousedown_position;
-        auto distance_travelled_squared = diff.x() * diff.x() + diff.y() * diff.y();
-        constexpr int drag_distance_threshold = 5;
-        if (distance_travelled_squared > (drag_distance_threshold)) {
-            dbg() << "Initiate drag!";
-            auto drag_operation = GDragOperation::construct();
-
-            RefPtr<GraphicsBitmap> bitmap;
-
-            StringBuilder text_builder;
-            StringBuilder data_builder;
-            int index_iterations = 0;
-            selection().for_each_index([&](auto& index) {
-                index_iterations++;
-                auto text_data = model()->data(index);
-                if (index_iterations == 0)
-                    text_builder.append(" ");
-                text_builder.append(text_data.to_string());
-                if (!(index_iterations == selection().size()))
-                    text_builder.append(", ");
-
-                auto drag_data = model()->data(index, GModel::Role::DragData);
-                data_builder.append(drag_data.to_string());
-                data_builder.append('\n');
-
-                if (!bitmap) {
-                    GVariant icon_data = model()->data(index, GModel::Role::Icon);
-                    if (icon_data.is_icon())
-                        bitmap = icon_data.as_icon().bitmap_for_size(32);
-                }
-            });
-
-            drag_operation->set_text(text_builder.to_string());
-            drag_operation->set_bitmap(bitmap);
-            drag_operation->set_data("url-list", data_builder.to_string());
-            auto outcome = drag_operation->exec();
-            switch (outcome) {
-            case GDragOperation::Outcome::Accepted:
-                dbg() << "Drag was accepted!";
-                break;
-            case GDragOperation::Outcome::Cancelled:
-                dbg() << "Drag was cancelled!";
-                break;
-            default:
-                ASSERT_NOT_REACHED();
-                break;
-            }
-        }
-    }
-
     GAbstractView::mousemove_event(event);
-}
-
-void GItemView::context_menu_event(GContextMenuEvent& event)
-{
-    if (!model())
-        return;
-    auto index = index_at_event_position(event.position());
-    if (index.is_valid()) {
-        if (!selection().contains(index))
-            selection().set(index);
-    } else {
-        selection().clear();
-    }
-    if (on_context_menu_request)
-        on_context_menu_request(index, event);
-    GAbstractView::context_menu_event(event);
-}
-
-void GItemView::doubleclick_event(GMouseEvent& event)
-{
-    if (!model())
-        return;
-    if (event.button() == GMouseButton::Left) {
-        mousedown_event(event);
-        activate_selected();
-    }
 }
 
 void GItemView::get_item_rects(int item_index, const Font& font, const GVariant& item_text, Rect& item_rect, Rect& icon_rect, Rect& text_rect) const
