@@ -3242,16 +3242,16 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     return nrecv;
 }
 
-int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
+int Process::sys$getsockname(int sockfd, sockaddr* user_addr, socklen_t* user_addrlen)
 {
-    if (!validate_read_typed(addrlen))
+    socklen_t addrlen;
+    if (!validate_read_and_copy_typed(&addrlen, user_addrlen))
         return -EFAULT;
 
-    SmapDisabler disabler;
-    if (*addrlen <= 0)
+    if (addrlen <= 0)
         return -EINVAL;
 
-    if (!validate_write(addr, *addrlen))
+    if (!validate_write(user_addr, addrlen))
         return -EFAULT;
 
     auto description = file_description(sockfd);
@@ -3263,9 +3263,15 @@ int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
 
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    if (!socket.get_local_address(addr, addrlen))
+
+    // NOTE: Create a stack buffer the same size as the largest sockaddr type.
+    char addr_buffer[sizeof(sockaddr_un)];
+
+    if (!socket.get_local_address(reinterpret_cast<sockaddr*>(addr_buffer), &addrlen))
         return -EINVAL; // FIXME: Should this be another error? I'm not sure.
 
+    copy_to_user(user_addr, addr_buffer, addrlen);
+    copy_to_user(user_addrlen, &addrlen);
     return 0;
 }
 
