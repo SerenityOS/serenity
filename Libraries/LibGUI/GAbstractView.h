@@ -76,6 +76,12 @@ protected:
     explicit GAbstractView(GWidget* parent);
     virtual ~GAbstractView() override;
 
+    virtual void mousedown_event(GMouseEvent&) override;
+    virtual void mousemove_event(GMouseEvent&) override;
+    virtual void mouseup_event(GMouseEvent&) override;
+    virtual void doubleclick_event(GMouseEvent&) override;
+    virtual void context_menu_event(GContextMenuEvent&) override;
+
     virtual void did_scroll() override;
     void activate(const GModelIndex&);
     void activate_selected();
@@ -85,6 +91,9 @@ protected:
     GModelIndex m_edit_index;
     RefPtr<GWidget> m_edit_widget;
     Rect m_edit_widget_content_rect;
+
+    Point m_left_mousedown_position;
+    bool m_might_drag { false };
 
 private:
     RefPtr<GModel> m_model;

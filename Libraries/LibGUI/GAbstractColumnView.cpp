@@ -251,7 +251,7 @@ int GAbstractColumnView::column_width(int column_index) const
 void GAbstractColumnView::mousemove_event(GMouseEvent& event)
 {
     if (!model())
-        return;
+        return GAbstractView::mousemove_event(event);
 
     if (m_in_column_resize) {
         auto delta = event.position() - m_column_resize_origin;
@@ -301,6 +301,8 @@ void GAbstractColumnView::mousemove_event(GMouseEvent& event)
             set_hovered_header_index(-1);
     }
     window()->set_override_cursor(GStandardCursor::None);
+
+    GAbstractView::mousemove_event(event);
 }
 
 void GAbstractColumnView::mouseup_event(GMouseEvent& event)
@@ -311,6 +313,7 @@ void GAbstractColumnView::mouseup_event(GMouseEvent& event)
             if (!column_resize_grabbable_rect(m_resizing_column).contains(adjusted_position))
                 window()->set_override_cursor(GStandardCursor::None);
             m_in_column_resize = false;
+            return;
         }
         if (m_pressed_column_header_index != -1) {
             auto header_rect = this->header_rect(m_pressed_column_header_index);
@@ -325,17 +328,20 @@ void GAbstractColumnView::mouseup_event(GMouseEvent& event)
             m_pressed_column_header_index = -1;
             m_pressed_column_header_is_pressed = false;
             update_headers();
+            return;
         }
     }
+
+    GAbstractView::mouseup_event(event);
 }
 
 void GAbstractColumnView::mousedown_event(GMouseEvent& event)
 {
     if (!model())
-        return;
+        return GAbstractView::mousedown_event(event);
 
     if (event.button() != GMouseButton::Left)
-        return;
+        return GAbstractView::mousedown_event(event);
 
     if (event.y() < header_height()) {
         int column_count = model()->column_count();
@@ -361,19 +367,13 @@ void GAbstractColumnView::mousedown_event(GMouseEvent& event)
 
     bool is_toggle;
     auto index = index_at_event_position(event.position(), is_toggle);
-    if (!index.is_valid()) {
-        selection().clear();
-        return;
-    }
-    if (is_toggle && model()->row_count(index)) {
+
+    if (index.is_valid() && is_toggle && model()->row_count(index)) {
         toggle_index(index);
         return;
     }
 
-    if (event.modifiers() & Mod_Ctrl)
-        selection().toggle(index);
-    else
-        selection().set(index);
+    GAbstractView::mousedown_event(event);
 }
 
 GModelIndex GAbstractColumnView::index_at_event_position(const Point& position, bool& is_toggle) const
