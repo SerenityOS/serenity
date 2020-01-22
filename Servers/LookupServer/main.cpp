@@ -46,5 +46,7 @@ int main(int argc, char** argv)
         return 1;
     }
 
+    unveil(nullptr, nullptr);
+
     return event_loop.exec();
 }
