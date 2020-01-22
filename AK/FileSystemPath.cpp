@@ -86,7 +86,7 @@ void FileSystemPath::canonicalize()
 
     m_basename = canonical_parts.last();
     auto name_parts = m_basename.split('.');
-    m_title = name_parts[0];
+    m_title = name_parts.is_empty() ? String() : name_parts[0];
     if (name_parts.size() > 1)
         m_extension = name_parts[1];
 
