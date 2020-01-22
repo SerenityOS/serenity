@@ -117,6 +117,7 @@ public:
     virtual void update() override;
     virtual GModelIndex parent_index(const GModelIndex&) const override;
     virtual GModelIndex index(int row, int column = 0, const GModelIndex& parent = GModelIndex()) const override;
+    virtual StringView drag_data_type() const override { return "url-list"; }
 
     static String timestamp_string(time_t timestamp)
     {
