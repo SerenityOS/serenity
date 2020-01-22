@@ -198,8 +198,8 @@ void GItemView::mousemove_event(GMouseEvent& event)
                 selection().add(model()->index(item_index, model_column()));
             }
             if (event.modifiers() & Mod_Ctrl) {
-                for (auto storeditem : m_rubber_band_remembered_selection) {
-                    selection().add(storeditem);
+                for (auto stored_item : m_rubber_band_remembered_selection) {
+                    selection().add(stored_item);
                 }
             }
             update();
