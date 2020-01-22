@@ -94,6 +94,8 @@ public:
     virtual GSortOrder sort_order() const { return GSortOrder::None; }
     virtual void set_key_column_and_sort_order(int, GSortOrder) {}
 
+    virtual StringView drag_data_type() const { return {}; }
+
     void register_view(Badge<GAbstractView>, GAbstractView&);
     void unregister_view(Badge<GAbstractView>, GAbstractView&);
 

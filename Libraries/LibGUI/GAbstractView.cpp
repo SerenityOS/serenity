@@ -191,7 +191,7 @@ void GAbstractView::mousedown_event(GMouseEvent& event)
         m_selection.clear();
     } else if (event.modifiers() & Mod_Ctrl) {
         m_selection.toggle(index);
-    } else if (event.button() == GMouseButton::Left) {
+    } else if (event.button() == GMouseButton::Left && !m_model->drag_data_type().is_null()) {
         // We might be starting a drag, so don't throw away other selected items yet.
         m_might_drag = true;
         m_selection.add(index);
@@ -218,6 +218,9 @@ void GAbstractView::mousemove_event(GMouseEvent& event)
 
     if (distance_travelled_squared <= drag_distance_threshold)
         return GScrollableWidget::mousemove_event(event);
+
+    auto data_type = m_model->drag_data_type();
+    ASSERT(!data_type.is_null());
 
     dbg() << "Initiate drag!";
     auto drag_operation = GDragOperation::construct();
@@ -248,7 +251,7 @@ void GAbstractView::mousemove_event(GMouseEvent& event)
 
     drag_operation->set_text(text_builder.to_string());
     drag_operation->set_bitmap(bitmap);
-    drag_operation->set_data("url-list", data_builder.to_string());
+    drag_operation->set_data(data_type, data_builder.to_string());
 
     auto outcome = drag_operation->exec();
 
