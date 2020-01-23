@@ -67,20 +67,6 @@ EditorWrapper::EditorWrapper(GWidget* parent)
     m_editor->on_focus = [this] {
         g_current_editor_wrapper = this;
     };
-
-    m_editor->add_custom_context_menu_action(GAction::create(
-        "Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
-            auto input_box = GInputBox::construct("Line:", "Go to line", window());
-            auto result = input_box->exec();
-            if (result == GInputBox::ExecOK) {
-                bool ok;
-                auto line_number = input_box->text_value().to_uint(ok);
-                if (ok) {
-                    m_editor->set_cursor(line_number - 1, 0);
-                }
-            }
-        },
-        m_editor));
 }
 
 EditorWrapper::~EditorWrapper()
