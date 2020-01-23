@@ -33,6 +33,18 @@
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio unix cpath fattr", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/tmp", "rwc") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     if (argc != 2) {
         printf("usage: %s <pid>\n", argv[0]);
         return 0;
@@ -43,6 +55,11 @@ int main(int argc, char** argv)
     int pid = atoi(argv[1]);
 
     auto socket = CLocalSocket::construct();
+
+    if (pledge("stdio unix", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
 
     socket->on_connected = [&] {
         dbg() << "Connected to PID " << pid;
