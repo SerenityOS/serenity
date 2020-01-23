@@ -83,6 +83,18 @@ void GTextEditor::create_actions()
     m_copy_action = GCommonActions::make_copy_action([&](auto&) { copy(); }, this);
     m_paste_action = GCommonActions::make_paste_action([&](auto&) { paste(); }, this);
     m_delete_action = GCommonActions::make_delete_action([&](auto&) { do_delete(); }, this);
+    m_go_to_line_action = GAction::create(
+        "Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
+            auto input_box = GInputBox::construct("Line:", "Go to line", window());
+            auto result = input_box->exec();
+            if (result == GInputBox::ExecOK) {
+                bool ok;
+                auto line_number = input_box->text_value().to_uint(ok);
+                if (ok)
+                    set_cursor(line_number - 1, 0);
+            }
+        },
+        this);
 }
 
 void GTextEditor::set_text(const StringView& text)
@@ -1223,17 +1235,7 @@ void GTextEditor::context_menu_event(GContextMenuEvent& event)
         m_context_menu->add_action(delete_action());
         if (is_multi_line()) {
             m_context_menu->add_separator();
-            m_context_menu->add_action(GAction::create(
-                "Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
-                auto input_box = GInputBox::construct("Line:", "Go to line", window());
-                auto result = input_box->exec();
-                if (result == GInputBox::ExecOK) {
-                    bool ok;
-                    auto line_number = input_box->text_value().to_uint(ok);
-                    if (ok)
-                        set_cursor(line_number - 1, 0);
-                }
-                }));
+            m_context_menu->add_action(go_to_line_action());
         }
         if (!m_custom_context_menu_actions.is_empty()) {
             m_context_menu->add_separator();
