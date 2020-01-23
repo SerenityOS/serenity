@@ -36,6 +36,23 @@ int main(int argc, char** argv)
     UNUSED_PARAM(argc);
     UNUSED_PARAM(argv);
 
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
+    if (unveil("/res/pci.ids", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    if (unveil("/proc/pci", "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
     auto db = PCIDB::Database::open();
     if (!db)
         fprintf(stderr, "Couldn't open PCI ID database\n");
@@ -43,6 +60,11 @@ int main(int argc, char** argv)
     auto proc_pci = CFile::construct("/proc/pci");
     if (!proc_pci->open(CIODevice::ReadOnly)) {
         fprintf(stderr, "Error: %s\n", proc_pci->error_string());
+        return 1;
+    }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 
