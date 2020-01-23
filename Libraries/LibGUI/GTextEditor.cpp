@@ -1152,6 +1152,8 @@ void GTextEditor::paste()
         return;
     auto paste_text = GClipboard::the().data();
     printf("Paste: \"%s\"\n", paste_text.characters());
+
+    TemporaryChange change(m_automatic_indentation_enabled, false);
     insert_at_cursor_or_replace_selection(paste_text);
 }
 
