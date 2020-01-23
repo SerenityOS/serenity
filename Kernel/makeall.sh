@@ -24,7 +24,7 @@ if [ "$(uname -s)" = "OpenBSD" ]; then
 	MAKE=gmake
 fi
 
-if [ $fast_mode = 1 ]; then
+if [ "$fast_mode" = "1" ]; then
     $MAKE -C ../ && \
         $MAKE -C ../ install &&
         sudo -E PATH="$PATH" ./build-image-qemu.sh
