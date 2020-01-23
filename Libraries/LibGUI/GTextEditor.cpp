@@ -363,7 +363,7 @@ void GTextEditor::paint_event(GPaintEvent& event)
                 String::number(i + 1),
                 is_current_line ? Font::default_bold_font() : font(),
                 TextAlignment::TopRight,
-                is_current_line ? widget_background_color.darkened(0.6f) : widget_background_color.darkened(0.7f));
+                is_current_line ? widget_background_color.darkened(0.2f) : widget_background_color.darkened(0.4f));
         }
     }
 
