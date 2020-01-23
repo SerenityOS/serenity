@@ -442,6 +442,8 @@ void TextEditorWidget::open_sesame(const String& path)
     m_document_opening = true;
 
     set_path(FileSystemPath(path));
+
+    m_editor->set_focus(true);
 }
 
 bool TextEditorWidget::request_close()
