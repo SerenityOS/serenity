@@ -124,6 +124,7 @@ public:
     GAction& copy_action() { return *m_copy_action; }
     GAction& paste_action() { return *m_paste_action; }
     GAction& delete_action() { return *m_delete_action; }
+    GAction& go_to_line_action() { return *m_go_to_line_action; }
 
     void add_custom_context_menu_action(GAction&);
 
@@ -230,6 +231,7 @@ private:
     RefPtr<GAction> m_copy_action;
     RefPtr<GAction> m_paste_action;
     RefPtr<GAction> m_delete_action;
+    RefPtr<GAction> m_go_to_line_action;
     CElapsedTimer m_triple_click_timer;
     NonnullRefPtrVector<GAction> m_custom_context_menu_actions;
 
