@@ -50,7 +50,7 @@ void LocalSocket::for_each(Function<void(LocalSocket&)> callback)
         callback(socket);
 }
 
-NonnullRefPtr<LocalSocket> LocalSocket::create(int type)
+KResultOr<NonnullRefPtr<Socket>> LocalSocket::create(int type)
 {
     return adopt(*new LocalSocket(type));
 }

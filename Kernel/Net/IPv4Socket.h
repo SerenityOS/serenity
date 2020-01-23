@@ -41,7 +41,7 @@ class TCPSocket;
 
 class IPv4Socket : public Socket {
 public:
-    static NonnullRefPtr<IPv4Socket> create(int type, int protocol);
+    static KResultOr<NonnullRefPtr<Socket>> create(int type, int protocol);
     virtual ~IPv4Socket() override;
 
     static Lockable<HashTable<IPv4Socket*>>& all_sockets();
