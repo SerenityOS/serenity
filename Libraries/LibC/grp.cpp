@@ -113,7 +113,7 @@ next_entry:
     if (feof(__grdb_stream))
         return nullptr;
     String line(s, Chomp);
-    auto parts = line.split(':');
+    auto parts = line.split(':', true);
     if (parts.size() != 4) {
         fprintf(stderr, "getgrent(): Malformed entry on line %u: '%s' has %u parts\n", __grdb_line_number, line.characters(), parts.size());
         goto next_entry;

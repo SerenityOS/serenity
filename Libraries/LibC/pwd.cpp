@@ -114,7 +114,7 @@ next_entry:
     if (feof(__pwdb_stream))
         return nullptr;
     String line(s, Chomp);
-    auto parts = line.split(':');
+    auto parts = line.split(':', true);
     if (parts.size() != 7) {
         fprintf(stderr, "getpwent(): Malformed entry on line %u\n", __pwdb_line_number);
         goto next_entry;
