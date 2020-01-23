@@ -60,8 +60,10 @@ public:
     bool is_readonly() const { return m_readonly; }
     void set_readonly(bool);
 
-    bool is_automatic_indentation_enabled() const { return m_automatic_indentation_enabled; }
+    virtual bool is_automatic_indentation_enabled() const final { return m_automatic_indentation_enabled; }
     void set_automatic_indentation_enabled(bool enabled) { m_automatic_indentation_enabled = enabled; }
+
+    virtual int soft_tab_width() const final { return m_soft_tab_width; }
 
     bool is_line_wrapping_enabled() const { return m_line_wrapping_enabled; }
     void set_line_wrapping_enabled(bool);
@@ -202,7 +204,7 @@ private:
     inline void execute(Args&&... args)
     {
         auto command = make<T>(*m_document, forward<Args>(args)...);
-        command->redo();
+        command->execute_from(*this);
         m_document->add_to_undo_stack(move(command));
     }
 

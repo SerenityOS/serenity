@@ -40,6 +40,7 @@
 class GTextEditor;
 class GTextDocument;
 class GTextDocumentLine;
+class GTextDocumentUndoCommand;
 
 struct GTextDocumentSpan {
     GTextRange range;
@@ -48,37 +49,6 @@ struct GTextDocumentSpan {
     bool is_skippable { false };
     const Font* font { nullptr };
     void* data { nullptr };
-};
-
-class GTextDocumentUndoCommand : public GCommand {
-public:
-    GTextDocumentUndoCommand(GTextDocument&);
-    virtual ~GTextDocumentUndoCommand();
-
-protected:
-    GTextDocument& m_document;
-};
-
-class InsertTextCommand : public GTextDocumentUndoCommand {
-public:
-    InsertTextCommand(GTextDocument&, const String&, const GTextPosition&);
-    virtual void undo() override;
-    virtual void redo() override;
-
-private:
-    String m_text;
-    GTextRange m_range;
-};
-
-class RemoveTextCommand : public GTextDocumentUndoCommand {
-public:
-    RemoveTextCommand(GTextDocument&, const String&, const GTextRange&);
-    virtual void undo() override;
-    virtual void redo() override;
-
-private:
-    String m_text;
-    GTextRange m_range;
 };
 
 class GTextDocument : public RefCounted<GTextDocument> {
@@ -98,6 +68,9 @@ public:
         virtual void document_did_change() = 0;
         virtual void document_did_set_text() = 0;
         virtual void document_did_set_cursor(const GTextPosition&) = 0;
+
+        virtual bool is_automatic_indentation_enabled() const = 0;
+        virtual int soft_tab_width() const = 0;
     };
 
     static NonnullRefPtr<GTextDocument> create(Client* client = nullptr)
@@ -157,8 +130,8 @@ public:
     void notify_did_change();
     void set_all_cursors(const GTextPosition&);
 
-    GTextPosition insert_at(const GTextPosition&, char);
-    GTextPosition insert_at(const GTextPosition&, const StringView&);
+    GTextPosition insert_at(const GTextPosition&, char, const Client* = nullptr);
+    GTextPosition insert_at(const GTextPosition&, const StringView&, const Client* = nullptr);
     void remove(const GTextRange&);
 
 private:
@@ -200,4 +173,43 @@ public:
 private:
     // NOTE: This vector is null terminated.
     Vector<char> m_text;
+};
+
+class GTextDocumentUndoCommand : public GCommand {
+public:
+    GTextDocumentUndoCommand(GTextDocument&);
+    virtual ~GTextDocumentUndoCommand();
+
+    void execute_from(const GTextDocument::Client& client)
+    {
+        m_client = &client;
+        redo();
+        m_client = nullptr;
+    }
+
+protected:
+    GTextDocument& m_document;
+    const GTextDocument::Client* m_client { nullptr };
+};
+
+class InsertTextCommand : public GTextDocumentUndoCommand {
+public:
+    InsertTextCommand(GTextDocument&, const String&, const GTextPosition&);
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    String m_text;
+    GTextRange m_range;
+};
+
+class RemoveTextCommand : public GTextDocumentUndoCommand {
+public:
+    RemoveTextCommand(GTextDocument&, const String&, const GTextRange&);
+    virtual void undo() override;
+    virtual void redo() override;
+
+private:
+    String m_text;
+    GTextRange m_range;
 };
