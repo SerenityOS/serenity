@@ -1,0 +1,11 @@
+--- byacc-20191125/main.c.orig	Thu Jan 23 16:59:19 2020
++++ byacc-20191125/main.c	Thu Jan 23 16:59:29 2020
+@@ -7,6 +7,8 @@
+ #include <stdlib.h>		/* for _exit() */
+ #endif
+ 
++#include <getopt.h>
++
+ #include "defs.h"
+ 
+ #ifdef HAVE_MKSTEMP
