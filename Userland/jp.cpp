@@ -40,13 +40,37 @@ static void print_indent(int indent)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio rpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         fprintf(stderr, "usage: jp <file>\n");
         return 0;
     }
-    auto file = CFile::construct(argv[1]);
+
+    char* file_path = realpath(argv[1], nullptr);
+    if (file_path == nullptr) {
+        perror("realpath");
+        return 1;
+    }
+
+    if (unveil(file_path, "r") < 0) {
+        perror("unveil");
+        return 1;
+    }
+
+    unveil(nullptr, nullptr);
+
+    auto file = CFile::construct(file_path);
     if (!file->open(CIODevice::ReadOnly)) {
         fprintf(stderr, "Couldn't open %s for reading: %s\n", argv[1], file->error_string());
+        return 1;
+    }
+
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
         return 1;
     }
 
@@ -56,6 +80,7 @@ int main(int argc, char** argv)
     print(json);
     printf("\n");
 
+    free(file_path);
     return 0;
 }
 
