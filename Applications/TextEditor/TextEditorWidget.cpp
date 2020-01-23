@@ -200,12 +200,12 @@ TextEditorWidget::TextEditorWidget()
         }
     });
 
-    m_find_previous_button = GButton::construct("Find Previous", m_find_widget);
+    m_find_previous_button = GButton::construct("Find previous", m_find_widget);
     m_find_previous_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_find_previous_button->set_preferred_size(150, 0);
     m_find_previous_button->set_action(*m_find_previous_action);
 
-    m_find_next_button = GButton::construct("Find Next", m_find_widget);
+    m_find_next_button = GButton::construct("Find next", m_find_widget);
     m_find_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_find_next_button->set_preferred_size(150, 0);
     m_find_next_button->set_action(*m_find_next_action);
@@ -219,17 +219,17 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
-    m_replace_previous_button = GButton::construct("Replace Previous", m_replace_widget);
+    m_replace_previous_button = GButton::construct("Replace previous", m_replace_widget);
     m_replace_previous_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_replace_previous_button->set_preferred_size(100, 0);
     m_replace_previous_button->set_action(*m_replace_previous_action);
 
-    m_replace_next_button = GButton::construct("Replace Next", m_replace_widget);
+    m_replace_next_button = GButton::construct("Replace next", m_replace_widget);
     m_replace_next_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_replace_next_button->set_preferred_size(100, 0);
     m_replace_next_button->set_action(*m_replace_next_action);
 
-    m_replace_all_button = GButton::construct("Replace ALl", m_replace_widget);
+    m_replace_all_button = GButton::construct("Replace all", m_replace_widget);
     m_replace_all_button->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     m_replace_all_button->set_preferred_size(100, 0);
     m_replace_all_button->set_action(*m_replace_all_action);
@@ -243,7 +243,7 @@ TextEditorWidget::TextEditorWidget()
         m_editor->set_focus(true);
     };
 
-    m_find_replace_action = GAction::create("Find/Replace..", { Mod_Ctrl, Key_F }, load_png("/res/icons/16x16/find.png"), [this](auto&) {
+    m_find_replace_action = GAction::create("Find/Replace...", { Mod_Ctrl, Key_F }, load_png("/res/icons/16x16/find.png"), [this](auto&) {
         m_find_replace_widget->set_visible(true);
         m_find_widget->set_visible(true);
         m_replace_widget->set_visible(true);
