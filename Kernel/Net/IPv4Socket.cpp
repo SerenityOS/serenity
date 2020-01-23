@@ -51,13 +51,15 @@ Lockable<HashTable<IPv4Socket*>>& IPv4Socket::all_sockets()
     return *s_table;
 }
 
-NonnullRefPtr<IPv4Socket> IPv4Socket::create(int type, int protocol)
+KResultOr<NonnullRefPtr<Socket>> IPv4Socket::create(int type, int protocol)
 {
     if (type == SOCK_STREAM)
         return TCPSocket::create(protocol);
     if (type == SOCK_DGRAM)
         return UDPSocket::create(protocol);
-    return adopt(*new IPv4Socket(type, protocol));
+    if (type == SOCK_RAW)
+        return adopt(*new IPv4Socket(type, protocol));
+    return KResult(-EINVAL);
 }
 
 IPv4Socket::IPv4Socket(int type, int protocol)

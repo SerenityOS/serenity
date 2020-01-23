@@ -37,7 +37,6 @@
 
 KResultOr<NonnullRefPtr<Socket>> Socket::create(int domain, int type, int protocol)
 {
-    (void)protocol;
     switch (domain) {
     case AF_LOCAL:
         return LocalSocket::create(type & SOCK_TYPE_MASK);

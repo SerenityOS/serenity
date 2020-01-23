@@ -35,7 +35,7 @@ class FileDescription;
 class LocalSocket final : public Socket, public InlineLinkedListNode<LocalSocket> {
     friend class InlineLinkedListNode<LocalSocket>;
 public:
-    static NonnullRefPtr<LocalSocket> create(int type);
+    static KResultOr<NonnullRefPtr<Socket>> create(int type);
     virtual ~LocalSocket() override;
 
     static void for_each(Function<void(LocalSocket&)>);
