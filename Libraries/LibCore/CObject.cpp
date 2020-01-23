@@ -194,7 +194,7 @@ void CObject::dispatch_event(CEvent& e, CObject* stay_within)
             e.accept();
             break;
         }
-    } while (target && target != stay_within && !e.is_accepted());
+    } while (target && !e.is_accepted());
 }
 
 bool CObject::is_visible_for_timer_purposes() const
