@@ -27,6 +27,7 @@
 #include <AK/StringBuilder.h>
 #include <LibCore/CTimer.h>
 #include <LibGUI/GTextDocument.h>
+#include <LibGUI/GTextEditor.h>
 #include <ctype.h>
 
 GTextDocument::GTextDocument(Client* client)
@@ -427,7 +428,7 @@ InsertTextCommand::InsertTextCommand(GTextDocument& document, const String& text
 
 void InsertTextCommand::redo()
 {
-    auto new_cursor = m_document.insert_at(m_range.start(), m_text);
+    auto new_cursor = m_document.insert_at(m_range.start(), m_text, m_client);
     // NOTE: We don't know where the range ends until after doing redo().
     //       This is okay since we always do redo() after adding this to the undo stack.
     m_range.set_end(new_cursor);
@@ -464,26 +465,25 @@ void GTextDocument::update_undo_timer()
     m_undo_stack.finalize_current_combo();
 }
 
-GTextPosition GTextDocument::insert_at(const GTextPosition& position, const StringView& text)
+GTextPosition GTextDocument::insert_at(const GTextPosition& position, const StringView& text, const Client* client)
 {
     GTextPosition cursor = position;
     for (size_t i = 0; i < text.length(); ++i)
-        cursor = insert_at(cursor, text[i]);
+        cursor = insert_at(cursor, text[i], client);
     return cursor;
 }
 
-GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch)
+GTextPosition GTextDocument::insert_at(const GTextPosition& position, char ch, const Client* client)
 {
-    // FIXME: We need these from GTextEditor!
-    bool m_automatic_indentation_enabled = true;
-    size_t m_soft_tab_width = 4;
+    bool automatic_indentation_enabled = client ? client->is_automatic_indentation_enabled() : false;
+    size_t m_soft_tab_width = client ? client->soft_tab_width() : 4;
 
     bool at_head = position.column() == 0;
     bool at_tail = position.column() == line(position.line()).length();
     if (ch == '\n') {
         if (at_tail || at_head) {
             String new_line_contents;
-            if (m_automatic_indentation_enabled && at_tail) {
+            if (automatic_indentation_enabled && at_tail) {
                 size_t leading_spaces = 0;
                 auto& old_line = lines()[position.line()];
                 for (size_t i = 0; i < old_line.length(); ++i) {
