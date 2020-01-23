@@ -31,6 +31,7 @@
 #include <LibGUI/GAction.h>
 #include <LibGUI/GClipboard.h>
 #include <LibGUI/GFontDatabase.h>
+#include <LibGUI/GInputBox.h>
 #include <LibGUI/GMenu.h>
 #include <LibGUI/GPainter.h>
 #include <LibGUI/GScrollBar.h>
@@ -1220,6 +1221,20 @@ void GTextEditor::context_menu_event(GContextMenuEvent& event)
         m_context_menu->add_action(copy_action());
         m_context_menu->add_action(paste_action());
         m_context_menu->add_action(delete_action());
+        if (is_multi_line()) {
+            m_context_menu->add_separator();
+            m_context_menu->add_action(GAction::create(
+                "Go to line...", { Mod_Ctrl, Key_L }, GraphicsBitmap::load_from_file("/res/icons/16x16/go-forward.png"), [this](auto&) {
+                auto input_box = GInputBox::construct("Line:", "Go to line", window());
+                auto result = input_box->exec();
+                if (result == GInputBox::ExecOK) {
+                    bool ok;
+                    auto line_number = input_box->text_value().to_uint(ok);
+                    if (ok)
+                        set_cursor(line_number - 1, 0);
+                }
+                }));
+        }
         if (!m_custom_context_menu_actions.is_empty()) {
             m_context_menu->add_separator();
             for (auto& action : m_custom_context_menu_actions) {
