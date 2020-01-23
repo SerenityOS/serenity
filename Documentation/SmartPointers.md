@@ -35,7 +35,7 @@ Shared ownership is implemented via reference counting.
 
 NonnullRefPtr<T> is a special variant of RefPtr with one additional property: it cannot be null. NonnullRefPtr is suitable as a return type from functions that are guaranteed to never return null, and as an argument type where the argument may not be null. In other words, if RefPtr is "\*", then NonnullRefPtr is "&".
 
-Objects can only be held by RefPtr if they meet certain criteria. Specifically, they need to implement the functions `ref()` and `deref()`.
+Objects can only be held by RefPtr if they meet certain criteria. Specifically, they need to implement the functions `ref()` and `unref()`.
 
 To make a class T reference counted, you can simply make it inherit from RefCounted<T>. This will add all the necessary pieces to T.
 

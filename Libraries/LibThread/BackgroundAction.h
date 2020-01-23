@@ -81,11 +81,11 @@ private:
             if (m_on_complete) {
                 CEventLoop::main().post_event(*this, make<CDeferredInvocationEvent>([this](CObject&) {
                     m_on_complete(m_result.release_value());
-                    this->deref();
+                    this->unref();
                 }));
                 CEventLoop::main().wake();
             } else
-                this->deref();
+                this->unref();
         });
     }
 

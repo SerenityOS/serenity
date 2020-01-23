@@ -176,7 +176,7 @@ void JsonValue::clear()
 {
     switch (m_type) {
     case Type::String:
-        m_value.as_string->deref();
+        m_value.as_string->unref();
         break;
     case Type::Object:
         delete m_value.as_object;

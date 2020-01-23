@@ -87,7 +87,7 @@ protected:
 template<typename T>
 class RefCounted : public RefCountedBase {
 public:
-    void deref()
+    void unref()
     {
         deref_base();
         if (m_ref_count == 0) {

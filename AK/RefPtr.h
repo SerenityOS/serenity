@@ -198,7 +198,7 @@ public:
 
     void clear()
     {
-        deref_if_not_null(m_ptr);
+        unref_if_not_null(m_ptr);
         m_ptr = nullptr;
     }
 

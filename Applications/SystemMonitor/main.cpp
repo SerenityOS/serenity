@@ -105,7 +105,12 @@ int main(int argc, char** argv)
 
     unveil(nullptr, nullptr);
 
+    auto window = GWindow::construct();
+    window->set_title("System Monitor");
+    window->set_rect(20, 200, 680, 400);
+
     auto keeper = GWidget::construct();
+    window->set_main_widget(keeper);
     keeper->set_layout(make<GBoxLayout>(Orientation::Vertical));
     keeper->set_fill_with_background_color(true);
     keeper->layout()->set_margins({ 4, 4, 4, 4 });
@@ -140,7 +145,7 @@ int main(int argc, char** argv)
         process_table_view->refresh();
         if (auto* memory_stats_widget = MemoryStatsWidget::the())
             memory_stats_widget->refresh();
-    });
+    }, window);
 
     auto kill_action = GAction::create("Kill process", { Mod_Ctrl, Key_K }, GraphicsBitmap::load_from_file("/res/icons/kill16.png"), [process_table_view](const GAction&) {
         pid_t pid = process_table_view->selected_pid();
@@ -163,11 +168,6 @@ int main(int argc, char** argv)
     toolbar->add_action(kill_action);
     toolbar->add_action(stop_action);
     toolbar->add_action(continue_action);
-
-    auto window = GWindow::construct();
-    window->set_title("System Monitor");
-    window->set_rect(20, 200, 680, 400);
-    window->set_main_widget(keeper);
 
     auto menubar = make<GMenuBar>();
     auto app_menu = GMenu::construct("System Monitor");

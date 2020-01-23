@@ -48,7 +48,7 @@ public:
         ++m_ref_count;
     }
 
-    void deref()
+    void unref()
     {
         ASSERT(m_ref_count);
         if (!--m_ref_count) {
@@ -60,7 +60,7 @@ public:
             for (auto* child = m_first_child; child; child = next_child) {
                 next_child = child->m_next_sibling;
                 child->m_parent = nullptr;
-                child->deref();
+                child->unref();
             }
             delete static_cast<T*>(this);
         }
@@ -221,7 +221,7 @@ inline NonnullRefPtr<T> TreeNode<T>::remove_child(NonnullRefPtr<T> node, bool ca
     if (call_removed_from)
         node->removed_from(static_cast<T&>(*this));
 
-    node->deref();
+    node->unref();
 
     return node;
 }
