@@ -40,7 +40,7 @@ TEST_CASE(basics)
     EXPECT_EQ(object->ref_count(), 1);
     object->ref();
     EXPECT_EQ(object->ref_count(), 2);
-    object->deref();
+    object->unref();
     EXPECT_EQ(object->ref_count(), 1);
 
     {

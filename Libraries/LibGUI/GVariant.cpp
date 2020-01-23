@@ -61,13 +61,13 @@ void GVariant::clear()
 {
     switch (m_type) {
     case Type::String:
-        AK::deref_if_not_null(m_value.as_string);
+        AK::unref_if_not_null(m_value.as_string);
         break;
     case Type::Bitmap:
-        AK::deref_if_not_null(m_value.as_bitmap);
+        AK::unref_if_not_null(m_value.as_bitmap);
         break;
     case Type::Icon:
-        AK::deref_if_not_null(m_value.as_icon);
+        AK::unref_if_not_null(m_value.as_icon);
         break;
     default:
         break;

@@ -46,7 +46,7 @@ public:
         ++m_retain_count;
     }
 
-    void deref()
+    void unref()
     {
         ASSERT(m_retain_count);
         if (!--m_retain_count) {

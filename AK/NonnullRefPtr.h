@@ -46,10 +46,10 @@ inline void ref_if_not_null(T* ptr)
 }
 
 template<typename T>
-inline void deref_if_not_null(T* ptr)
+inline void unref_if_not_null(T* ptr)
 {
     if (ptr)
-        ptr->deref();
+        ptr->unref();
 }
 
 template<typename T>
@@ -103,7 +103,7 @@ public:
     }
     ~NonnullRefPtr()
     {
-        deref_if_not_null(m_ptr);
+        unref_if_not_null(m_ptr);
         m_ptr = nullptr;
 #ifdef SANITIZE_PTRS
         if constexpr (sizeof(T*) == 8)
