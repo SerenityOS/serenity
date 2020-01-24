@@ -1,7 +1,7 @@
 #!/bin/sh
 
 if [ ! -n "$SERENITY_ROOT" ]
-then echo "Serenety root not set."
+then echo "Serenity root not set. Please set environment variable first. E.g. export SERENITY_ROOT=$(git rev-parse --show-toplevel)"
 fi
 
 cd "$SERENITY_ROOT" || exit 1
