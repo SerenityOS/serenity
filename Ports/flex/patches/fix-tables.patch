@@ -1,0 +1,11 @@
+--- flex-2.6.4/src/tables.c.orig	Thu Jan 23 22:22:14 2020
++++ flex-2.6.4/src/tables.c	Thu Jan 23 22:22:27 2020
+@@ -33,6 +33,8 @@
+  */
+ 
+ 
++#include <arpa/inet.h>
++
+ #include "flexdef.h"
+ #include "tables.h"
+ 
