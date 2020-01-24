@@ -21,8 +21,6 @@ echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
-source "$DIR/UseIt.sh"
-
 pushd "$DIR/Tarballs"
     if [ ! -e "$PYTHON_ARCHIVE" ]; then
         curl -O "$PYTHON_URL"
