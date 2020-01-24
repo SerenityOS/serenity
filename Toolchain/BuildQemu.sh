@@ -22,22 +22,19 @@ echo SYSROOT is "$SYSROOT"
 
 mkdir -p "$DIR/Tarballs"
 
-source "$DIR/UseIt.sh"
-
 pushd "$DIR/Tarballs"
+    if [ ! -e "$QEMU_VERSION.tar.xz" ]; then
+        curl -O "https://download.qemu.org/$QEMU_VERSION.tar.xz"
+    else
+        echo "Skipped downloading $QEMU_VERSION"
+    fi
 
     md5="$(md5sum $QEMU_VERSION.tar.xz | cut -f1 -d' ')"
     echo "qemu md5='$md5'"
-    if [ ! -e "$QEMU_VERSION.tar.xz" ] || [ "$md5" != "$QEMU_MD5SUM" ] ; then
-        rm -f qemu-3.0.0.tar.xz
-        curl -O "https://download.qemu.org/$QEMU_VERSION.tar.xz"
-
-        if  [ "$md5" != "$QEMU_MD5SUM" ] ; then
-            echo "qemu md5 sum mismatching, please run script again."
-            exit 1
-        fi
-    else
-        echo "Skipped downloading $QEMU_VERSION"
+    if  [ "$md5" != "$QEMU_MD5SUM" ] ; then
+        echo "qemu md5 sum mismatching, please run script again."
+        rm $$QEMU_VERSION.tar.xz
+        exit 1
     fi
 
     if [ ! -d "$QEMU_VERSION" ]; then
