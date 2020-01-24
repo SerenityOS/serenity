@@ -91,29 +91,25 @@ public:
 
     OwnPtr& operator=(OwnPtr&& other)
     {
-        if (this != &other) {
-            delete m_ptr;
-            m_ptr = other.leak_ptr();
-        }
+        OwnPtr ptr(move(other));
+        swap(ptr);
         return *this;
     }
 
     template<typename U>
     OwnPtr& operator=(OwnPtr<U>&& other)
     {
-        if (this != static_cast<void*>(&other)) {
-            delete m_ptr;
-            m_ptr = other.leak_ptr();
-        }
+        OwnPtr ptr(move(other));
+        swap(ptr);
         return *this;
     }
 
     template<typename U>
     OwnPtr& operator=(NonnullOwnPtr<U>&& other)
     {
-        ASSERT(m_ptr != other.ptr());
-        delete m_ptr;
-        m_ptr = other.leak_ptr();
+        OwnPtr ptr(move(other));
+        swap(ptr);
+        ASSERT(m_ptr);
         return *this;
     }
 
@@ -184,9 +180,26 @@ public:
 
     operator bool() { return !!m_ptr; }
 
+    void swap(OwnPtr& other)
+    {
+        ::swap(m_ptr, other.m_ptr);
+    }
+
+    template<typename U>
+    void swap(OwnPtr<U>& other)
+    {
+        ::swap(m_ptr, other.m_ptr);
+    }
+
 private:
     T* m_ptr = nullptr;
 };
+
+template<typename T, typename U>
+inline void swap(OwnPtr<T>& a, OwnPtr<U>& b)
+{
+    a.swap(b);
+}
 
 template<typename T>
 struct Traits<OwnPtr<T>> : public GenericTraits<OwnPtr<T>> {
