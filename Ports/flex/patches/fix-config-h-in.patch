@@ -1,0 +1,17 @@
+--- flex-2.6.4/src/config.h.in.orig	Thu Jan 23 22:25:56 2020
++++ flex-2.6.4/src/config.h.in	Thu Jan 23 22:26:30 2020
+@@ -249,14 +249,8 @@
+ /* Define to empty if `const' does not conform to ANSI C. */
+ #undef const
+ 
+-/* Define to rpl_malloc if the replacement function should be used. */
+-#undef malloc
+-
+ /* Define to `int' if <sys/types.h> does not define. */
+ #undef pid_t
+-
+-/* Define to rpl_realloc if the replacement function should be used. */
+-#undef realloc
+ 
+ /* Define to `unsigned int' if <sys/types.h> does not define. */
+ #undef size_t

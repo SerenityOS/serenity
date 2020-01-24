@@ -1,0 +1,10 @@
+--- flex-2.6.4/build-aux/config.sub.orig	Thu Jan 23 22:05:46 2020
++++ flex-2.6.4/build-aux/config.sub	Thu Jan 23 22:05:59 2020
+@@ -1375,6 +1375,7 @@
+ 	# Each alternative MUST END IN A *, to match a version number.
+ 	# -sysv* is not here because it comes later, after sysvr4.
+ 	-gnu* | -bsd* | -mach* | -minix* | -genix* | -ultrix* | -irix* \
++	      | -serenity* \
+ 	      | -*vms* | -sco* | -esix* | -isc* | -aix* | -cnk* | -sunos | -sunos[34]*\
+ 	      | -hpux* | -unos* | -osf* | -luna* | -dgux* | -auroraux* | -solaris* \
+ 	      | -sym* | -kopensolaris* | -plan9* \

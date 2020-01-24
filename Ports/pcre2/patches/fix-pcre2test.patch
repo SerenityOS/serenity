@@ -1,0 +1,11 @@
+--- pcre2-10.34/src/pcre2test.c.orig	Sun Jan 19 18:24:43 2020
++++ pcre2-10.34/src/pcre2test.c	Sun Jan 19 18:24:59 2020
+@@ -8604,7 +8604,7 @@
+   else if (strcmp(arg, "-S") == 0 && argc > 2 &&
+       ((uli = strtoul(argv[op+1], &endptr, 10)), *endptr == 0))
+     {
+-#if defined(_WIN32) || defined(WIN32) || defined(__minix) || defined(NATIVE_ZOS) || defined(__VMS)
++#if defined(_WIN32) || defined(WIN32) || defined(__minix) || defined(NATIVE_ZOS) || defined(__VMS) || defined(__serenity__)
+     fprintf(stderr, "pcre2test: -S is not supported on this OS\n");
+     exit(1);
+ #else
