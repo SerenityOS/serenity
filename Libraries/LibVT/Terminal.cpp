@@ -773,6 +773,18 @@ void Terminal::NEL()
     newline();
 }
 
+void Terminal::IND()
+{
+    // IND - Index (move down)
+    escape$B({});
+}
+
+void Terminal::RI()
+{
+    // RI - Reverse Index (move up)
+    escape$A({});
+}
+
 void Terminal::on_char(u8 ch)
 {
 #ifdef TERMINAL_DEBUG
@@ -789,11 +801,20 @@ void Terminal::on_char(u8 ch)
             m_escape_state = ExpectXtermParameter1;
         } else if (ch == '#') {
             m_escape_state = ExpectHashtagDigit;
+        } else if (ch == 'D') {
+            IND();
+            m_escape_state = Normal;
+            return;
+        } else if (ch == 'M') {
+            RI();
+            m_escape_state = Normal;
+            return;
         } else if (ch == 'E') {
             NEL();
             m_escape_state = Normal;
             return;
         } else {
+            dbg() << "Unexpected character in GotEscape '" << (char)ch << "'";
             m_escape_state = Normal;
         }
         return;
