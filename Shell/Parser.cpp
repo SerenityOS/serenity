@@ -29,9 +29,9 @@
 #include <unistd.h>
 #include <ctype.h>
 
-void Parser::commit_token()
+void Parser::commit_token(AllowEmptyToken allow_empty)
 {
-    if (m_token.is_empty())
+    if (allow_empty == AllowEmptyToken::No && m_token.is_empty())
         return;
     if (m_state == InRedirectionPath) {
         m_redirections.last().path = String::copy(m_token);
@@ -239,7 +239,7 @@ Vector<Command> Parser::parse()
             break;
         case State::InSingleQuotes:
             if (ch == '\'') {
-                commit_token();
+                commit_token(AllowEmptyToken::Yes);
                 m_state = State::Free;
                 break;
             }
@@ -247,7 +247,7 @@ Vector<Command> Parser::parse()
             break;
         case State::InDoubleQuotes:
             if (ch == '\"') {
-                commit_token();
+                commit_token(AllowEmptyToken::Yes);
                 m_state = State::Free;
                 break;
             }
