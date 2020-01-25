@@ -1159,6 +1159,10 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
         strings.resize(list.length);
         copy_from_user(strings.data(), list.strings, list.length * sizeof(Syscall::StringArgument));
         for (size_t i = 0; i < list.length; ++i) {
+            if (strings[i].length == 0) {
+                output.append(String::empty());
+                continue;
+            }
             if (!validate_read(strings[i].characters, strings[i].length))
                 return false;
             output.append(copy_string_from_user(strings[i].characters, strings[i].length));
