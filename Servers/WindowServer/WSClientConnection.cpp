@@ -77,6 +77,8 @@ WSClientConnection::~WSClientConnection()
 {
     WSMenuManager::the().close_all_menus_from_client({}, *this);
     auto windows = move(m_windows);
+    for (auto& window : windows)
+        window.value->detach_client({});
 }
 
 void WSClientConnection::die()

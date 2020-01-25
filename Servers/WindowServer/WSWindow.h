@@ -114,6 +114,9 @@ public:
     WSWindowType type() const { return m_type; }
     int window_id() const { return m_window_id; }
 
+    bool is_internal() const { return m_client_id == -1; }
+    i32 client_id() const { return m_client_id; }
+
     String title() const { return m_title; }
     void set_title(const String&);
 
@@ -219,6 +222,8 @@ public:
     WSWindow* m_next { nullptr };
     WSWindow* m_prev { nullptr };
 
+    void detach_client(Badge<WSClientConnection>) { m_client = nullptr; }
+
 private:
     void handle_mouse_event(const WSMouseEvent&);
     void update_menu_item_text(PopupMenuItem item);
@@ -248,6 +253,7 @@ private:
     RefPtr<GraphicsBitmap> m_backing_store;
     RefPtr<GraphicsBitmap> m_last_backing_store;
     int m_window_id { -1 };
+    i32 m_client_id { -1 };
     float m_opacity { 1 };
     Size m_size_increment;
     Size m_base_size;

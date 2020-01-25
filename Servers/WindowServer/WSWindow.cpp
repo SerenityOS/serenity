@@ -63,6 +63,7 @@ WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int win
     , m_resizable(resizable)
     , m_fullscreen(fullscreen)
     , m_window_id(window_id)
+    , m_client_id(client.client_id())
     , m_icon(default_window_icon())
     , m_frame(*this)
 {
@@ -76,6 +77,10 @@ WSWindow::WSWindow(WSClientConnection& client, WSWindowType window_type, int win
 
 WSWindow::~WSWindow()
 {
+    // Detach from client at the start of teardown since we don't want
+    // to confuse things by trying to send messages to it.
+    m_client = nullptr;
+
     WSWindowManager::the().remove_window(*this);
 }
 
