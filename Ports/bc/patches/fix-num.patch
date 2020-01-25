@@ -1,0 +1,13 @@
+--- bc-2.5.1/include/num.h.orig	Fri Jan 24 19:24:12 2020
++++ bc-2.5.1/include/num.h	Fri Jan 24 19:24:54 2020
+@@ -134,6 +134,10 @@
+ 
+ #define BC_NUM_KARATSUBA_ALLOCS (6)
+ 
++#ifndef SSIZE_MAX
++#define SSIZE_MAX LONG_MAX
++#endif
++
+ #define BC_NUM_CMP_SIGNAL_VAL (~((ssize_t) ((size_t) SSIZE_MAX)))
+ #define BC_NUM_CMP_SIGNAL(cmp) (cmp == BC_NUM_CMP_SIGNAL_VAL)
+ 
