@@ -101,13 +101,21 @@ static void run_command(int ptm_fd, String command)
             perror("ioctl(TIOCSCTTY)");
             exit(1);
         }
-        const char* args[4] = { "/bin/Shell", nullptr, nullptr, nullptr };
+
+        String shell = "/bin/Shell";
+        auto* pw = getpwuid(getuid());
+        if (pw && pw->pw_shell) {
+            shell = pw->pw_shell;
+        }
+        endpwent();
+
+        const char* args[4] = { shell.characters(), nullptr, nullptr, nullptr };
         if (!command.is_empty()) {
             args[1] = "-c";
             args[2] = command.characters();
         }
         const char* envs[] = { "TERM=xterm", "PATH=/bin:/usr/bin:/usr/local/bin", nullptr };
-        rc = execve("/bin/Shell", const_cast<char**>(args), const_cast<char**>(envs));
+        rc = execve(shell.characters(), const_cast<char**>(args), const_cast<char**>(envs));
         if (rc < 0) {
             perror("execve");
             exit(1);
