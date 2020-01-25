@@ -98,6 +98,11 @@ public:
 
     void post_message(const IMessage& message)
     {
+        // NOTE: If this connection is being shut down, but has not yet been destroyed,
+        //       the socket will be closed. Don't try to send more messages.
+        if (!m_socket->is_open())
+            return;
+
         auto buffer = message.encode();
 
         int nwritten = write(m_socket->fd(), buffer.data(), (size_t)buffer.size());
