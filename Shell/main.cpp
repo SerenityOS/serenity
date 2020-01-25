@@ -877,7 +877,6 @@ int main(int argc, char** argv)
     }
 
     g.uid = getuid();
-    g.sid = setsid();
     tcsetpgrp(0, getpgrp());
     tcgetattr(0, &g.default_termios);
     g.termios = g.default_termios;
