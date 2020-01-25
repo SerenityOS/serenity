@@ -108,6 +108,7 @@ private:
     virtual void set_window_title(const StringView&) override;
     virtual void terminal_did_resize(u16 columns, u16 rows) override;
     virtual void terminal_history_changed() override;
+    virtual void emit_char(u8) override;
 
     void set_logical_focus(bool);
 

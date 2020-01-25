@@ -491,6 +491,12 @@ void Terminal::escape$L(const ParamVector& params)
     m_need_full_flush = true;
 }
 
+void Terminal::escape$c(const ParamVector&)
+{
+    // DA - Device Attributes
+    emit_string("\033[?1;0c");
+}
+
 void Terminal::escape$M(const ParamVector& params)
 {
     int count = 1;
@@ -658,6 +664,9 @@ void Terminal::execute_escape_sequence(u8 final)
         break;
     case 'h':
         escape$h_l(false, question_param, params);
+        break;
+    case 'c':
+        escape$c(params);
         break;
     default:
         dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
@@ -865,6 +874,12 @@ void Terminal::inject_string(const StringView& str)
 {
     for (size_t i = 0; i < str.length(); ++i)
         on_char(str[i]);
+}
+
+void Terminal::emit_string(const StringView& str)
+{
+    for (size_t i = 0; i < str.length(); ++i)
+        m_client.emit_char(str[i]);
 }
 
 void Terminal::unimplemented_escape()

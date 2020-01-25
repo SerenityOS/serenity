@@ -679,6 +679,13 @@ void TerminalWidget::beep()
     force_repaint();
 }
 
+void TerminalWidget::emit_char(u8 ch)
+{
+    if (write(m_ptm_fd, &ch, 1) < 0) {
+        perror("emit_char: write");
+    }
+}
+
 void TerminalWidget::context_menu_event(GContextMenuEvent& event)
 {
     if (!m_context_menu) {
