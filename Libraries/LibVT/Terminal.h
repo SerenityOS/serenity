@@ -200,7 +200,7 @@ private:
 
     enum EscapeState {
         Normal,
-        ExpectBracket,
+        GotEscape,
         ExpectParameter,
         ExpectIntermediate,
         ExpectFinal,
