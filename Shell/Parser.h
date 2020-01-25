@@ -67,7 +67,8 @@ public:
     Vector<Command> parse();
 
 private:
-    void commit_token();
+    enum class AllowEmptyToken { No, Yes };
+    void commit_token(AllowEmptyToken = AllowEmptyToken::No);
     void commit_subcommand();
     void commit_command();
     void do_pipe();
