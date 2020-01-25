@@ -641,6 +641,10 @@ pid_t Process::sys$fork(RegisterDump& regs)
     child->m_execpromises = m_execpromises;
     child->m_veil_state = m_veil_state;
     child->m_unveiled_paths = m_unveiled_paths;
+    child->m_fds = m_fds;
+    child->m_sid = m_sid;
+    child->m_pgid = m_pgid;
+    child->m_umask = m_umask;
 
 #ifdef FORK_DEBUG
     dbgprintf("fork: child=%p\n", child);
@@ -1207,6 +1211,11 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
         root = VFS::the().root_custody();
 
     auto* process = new Process(first_thread, parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
+    process->m_fds.resize(m_max_open_file_descriptors);
+    auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
+    process->m_fds[0].set(*device_to_use_as_tty.open(O_RDONLY).value());
+    process->m_fds[1].set(*device_to_use_as_tty.open(O_WRONLY).value());
+    process->m_fds[2].set(*device_to_use_as_tty.open(O_WRONLY).value());
 
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {
@@ -1262,48 +1271,12 @@ Process::Process(Thread*& first_thread, const String& name, uid_t uid, gid_t gid
     dbgprintf("Process %u ctor: PD=%x created\n", pid(), m_page_directory.ptr());
 #endif
 
-    // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the main thread in the new process.
-    if (fork_parent)
+    if (fork_parent) {
+        // NOTE: fork() doesn't clone all threads; the thread that called fork() becomes the only thread in the new process.
         first_thread = current->clone(*this);
-    else
-        first_thread = new Thread(*this);
-
-    //m_gids.set(m_gid);
-
-    if (fork_parent) {
-        m_sid = fork_parent->m_sid;
-        m_pgid = fork_parent->m_pgid;
     } else {
-        // FIXME: Use a ProcessHandle? Presumably we're executing *IN* the parent right now though..
-        InterruptDisabler disabler;
-        if (auto* parent = Process::from_pid(m_ppid)) {
-            m_sid = parent->m_sid;
-            m_pgid = parent->m_pgid;
-        }
-    }
-
-    if (fork_parent) {
-        m_fds.resize(fork_parent->m_fds.size());
-        for (int i = 0; i < fork_parent->m_fds.size(); ++i) {
-            if (!fork_parent->m_fds[i].description)
-                continue;
-#ifdef FORK_DEBUG
-            dbgprintf("fork: cloning fd %u... (%p) istty? %u\n", i, fork_parent->m_fds[i].description.ptr(), fork_parent->m_fds[i].description->is_tty());
-#endif
-            m_fds[i] = fork_parent->m_fds[i];
-        }
-    } else if (ring == Ring3) {
-        m_fds.resize(m_max_open_file_descriptors);
-        auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
-        m_fds[0].set(*device_to_use_as_tty.open(O_RDONLY).value());
-        m_fds[1].set(*device_to_use_as_tty.open(O_WRONLY).value());
-        m_fds[2].set(*device_to_use_as_tty.open(O_WRONLY).value());
-    }
-
-    if (fork_parent) {
-        m_sid = fork_parent->m_sid;
-        m_pgid = fork_parent->m_pgid;
-        m_umask = fork_parent->m_umask;
+        // NOTE: This non-forked code path is only taken when the kernel creates a process "manually" (at boot.)
+        first_thread = new Thread(*this);
     }
 }
 
