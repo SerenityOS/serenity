@@ -306,6 +306,9 @@ void WSWindowFrame::on_mouse_event(const WSMouseEvent& event)
 {
     ASSERT(!m_window.is_fullscreen());
 
+    if (m_window.is_blocked_by_modal_window())
+        return;
+
     auto& wm = WSWindowManager::the();
     if (m_window.type() != WSWindowType::Normal)
         return;
