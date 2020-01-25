@@ -397,7 +397,7 @@ void Terminal::escape$X(const ParamVector& params)
     }
 }
 
-void Terminal::escape$K(const ParamVector& params)
+void Terminal::EL(const ParamVector& params)
 {
     int mode = 0;
     if (params.size() >= 1)
@@ -427,8 +427,9 @@ void Terminal::escape$K(const ParamVector& params)
     }
 }
 
-void Terminal::escape$J(const ParamVector& params)
+void Terminal::ED(const ParamVector& params)
 {
+    // ED - Erase in Display
     int mode = 0;
     if (params.size() >= 1)
         mode = params[0];
@@ -624,10 +625,10 @@ void Terminal::execute_escape_sequence(u8 final)
         escape$H(params);
         break;
     case 'J':
-        escape$J(params);
+        ED(params);
         break;
     case 'K':
-        escape$K(params);
+        EL(params);
         break;
     case 'M':
         escape$M(params);
