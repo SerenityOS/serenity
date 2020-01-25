@@ -249,7 +249,7 @@ public:
     }
 
     // NOTE: Vector::is_null() exists for the benefit of String::copy().
-    bool is_null() const { return is_empty(); }
+    bool is_null() const { return false; }
     bool is_empty() const { return size() == 0; }
     int size() const { return m_size; }
     int capacity() const { return m_capacity; }
