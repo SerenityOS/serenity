@@ -36,7 +36,6 @@ struct GlobalState {
     String home;
     char ttyname[32];
     char hostname[32];
-    pid_t sid;
     uid_t uid;
     struct termios termios;
     struct termios default_termios;
