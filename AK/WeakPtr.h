@@ -88,6 +88,9 @@ private:
 template<typename T>
 inline WeakPtr<T> Weakable<T>::make_weak_ptr()
 {
+#ifdef DEBUG
+    ASSERT(!m_being_destroyed);
+#endif
     if (!m_link)
         m_link = adopt(*new WeakLink<T>(static_cast<T&>(*this)));
     return WeakPtr<T>(m_link);

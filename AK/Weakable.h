@@ -27,8 +27,8 @@
 #pragma once
 
 #include "Assertions.h"
-#include "RefPtr.h"
 #include "RefCounted.h"
+#include "RefPtr.h"
 
 namespace AK {
 
@@ -66,12 +66,18 @@ protected:
 
     ~Weakable()
     {
+#ifdef DEBUG
+        m_being_destroyed = true;
+#endif
         if (m_link)
             m_link->m_ptr = nullptr;
     }
 
 private:
     RefPtr<WeakLink<T>> m_link;
+#ifdef DEBUG
+    bool m_being_destroyed { false };
+#endif
 };
 
 }
