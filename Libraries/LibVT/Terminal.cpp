@@ -750,8 +750,7 @@ void Terminal::set_cursor(unsigned a_row, unsigned a_column)
     invalidate_cursor();
     m_cursor_row = row;
     m_cursor_column = column;
-    if (column != columns() - 1u)
-        m_stomp = false;
+    m_stomp = false;
     invalidate_cursor();
 }
 
