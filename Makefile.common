@@ -1,7 +1,7 @@
 MAKEFILE_PATH := $(abspath $(lastword $(MAKEFILE_LIST)))
 SERENITY_BASE_DIR := $(patsubst %/,%,$(dir $(MAKEFILE_PATH)))
 
-CXX_STANDARD_FLAGS = -std=c++17 -Wno-sized-deallocation -fno-sized-deallocation
+CXX_STANDARD_FLAGS = -std=c++17
 CXX_WARNING_FLAGS = -Werror -Wextra -Wall -Wno-nonnull-compare -Wno-deprecated-copy -Wno-address-of-packed-member -Wundef -Wcast-qual -Wwrite-strings -Wimplicit-fallthrough -Wno-expansion-to-defined
 CXX_FLAVOR_FLAGS = -fno-exceptions -fno-rtti -fstack-protector
 #CXX_SUGGEST_FLAGS = -Wsuggest-final-types -Wsuggest-final-methods -Wsuggest-override #-Wsuggest-attribute=noreturn 
