@@ -1163,13 +1163,10 @@ int Process::sys$execve(const Syscall::SC_execve_params* user_params)
         strings.resize(list.length);
         copy_from_user(strings.data(), list.strings, list.length * sizeof(Syscall::StringArgument));
         for (size_t i = 0; i < list.length; ++i) {
-            if (strings[i].length == 0) {
-                output.append(String::empty());
-                continue;
-            }
-            if (!validate_read(strings[i].characters, strings[i].length))
+            auto string = validate_and_copy_string_from_user(strings[i]);
+            if (string.is_null())
                 return false;
-            output.append(copy_string_from_user(strings[i].characters, strings[i].length));
+            output.append(move(string));
         }
         return true;
     };
@@ -1801,10 +1798,10 @@ bool Process::validate(const Syscall::ImmutableBufferArgument<DataType, SizeType
 
 String Process::validate_and_copy_string_from_user(const char* user_characters, size_t user_length) const
 {
-    if (!user_characters)
-        return {};
     if (user_length == 0)
         return String::empty();
+    if (!user_characters)
+        return {};
     if (!validate_read(user_characters, user_length))
         return {};
     SmapDisabler disabler;
