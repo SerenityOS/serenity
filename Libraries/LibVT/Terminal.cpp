@@ -290,6 +290,18 @@ void Terminal::escape$H(const ParamVector& params)
     set_cursor(row - 1, col - 1);
 }
 
+void Terminal::escape$f(const ParamVector& params)
+{
+    // HVP – Horizontal and Vertical Position
+    unsigned row = 1;
+    unsigned col = 1;
+    if (params.size() >= 1)
+        row = params[0];
+    if (params.size() >= 2)
+        col = params[1];
+    set_cursor(row - 1, col - 1);
+}
+
 void Terminal::escape$A(const ParamVector& params)
 {
     int num = 1;
@@ -667,6 +679,9 @@ void Terminal::execute_escape_sequence(u8 final)
         break;
     case 'c':
         escape$c(params);
+        break;
+    case 'f':
+        escape$f(params);
         break;
     default:
         dbgprintf("Terminal::execute_escape_sequence: Unhandled final '%c'\n", final);
