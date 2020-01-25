@@ -153,6 +153,8 @@ void WSWindow::set_minimized(bool minimized)
         return;
     if (minimized && !m_minimizable)
         return;
+    if (is_blocked_by_modal_window())
+        return;
     m_minimized = minimized;
     update_menu_item_text(PopupMenuItem::Minimize);
     start_minimize_animation();
@@ -192,6 +194,8 @@ void WSWindow::set_maximized(bool maximized)
     if (m_maximized == maximized)
         return;
     if (maximized && !is_resizable())
+        return;
+    if (is_blocked_by_modal_window())
         return;
     set_tiled(WindowTileType::None);
     m_maximized = maximized;
