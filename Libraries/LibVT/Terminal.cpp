@@ -882,7 +882,6 @@ void Terminal::on_char(u8 ch)
     case 8: // Backspace
         if (m_cursor_column) {
             set_cursor(m_cursor_row, m_cursor_column - 1);
-            put_character_at(m_cursor_row, m_cursor_column, ' ');
             return;
         }
         return;
