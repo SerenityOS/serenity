@@ -167,7 +167,13 @@ static unsigned prot_to_region_access_flags(int prot)
 
 Region& Process::allocate_split_region(const Region& source_region, const Range& range, size_t offset_in_vmobject)
 {
-    return add_region(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
+    auto& region = add_region(Region::create_user_accessible(range, source_region.vmobject(), offset_in_vmobject, source_region.name(), source_region.access()));
+    size_t page_offset_in_source_region = (offset_in_vmobject - source_region.offset_in_vmobject()) / PAGE_SIZE;
+    for (size_t i = 0; i < region.page_count(); ++i) {
+        if (source_region.should_cow(page_offset_in_source_region + i))
+            region.set_should_cow(i, true);
+    }
+    return region;
 }
 
 Region* Process::allocate_region(VirtualAddress vaddr, size_t size, const String& name, int prot, bool commit)
