@@ -69,8 +69,9 @@ static void run_command(int ptm_fd, String command)
             exit(1);
         }
 
-        // NOTE: It's okay if this fails.
-        (void)ioctl(0, TIOCNOTTY);
+        if (setsid() < 0) {
+            perror("setsid");
+        }
 
         close(0);
         close(1);
