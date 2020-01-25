@@ -205,13 +205,14 @@ void WSWindowManager::remove_window(WSWindow& window)
     if (m_switcher.is_visible() && window.type() != WSWindowType::WindowSwitcher)
         m_switcher.refresh();
 
+
     recompute_occlusions();
 
     for_each_window_listening_to_wm_events([&window](WSWindow& listener) {
         if (!(listener.wm_event_mask() & WSWMEventMask::WindowRemovals))
             return IterationDecision::Continue;
-        if (window.client())
-            listener.client()->post_message(WindowClient::WM_WindowRemoved(listener.window_id(), window.client()->client_id(), window.window_id()));
+        if (!window.is_internal())
+            listener.client()->post_message(WindowClient::WM_WindowRemoved(listener.window_id(), window.client_id(), window.window_id()));
         return IterationDecision::Continue;
     });
 }
@@ -220,25 +221,25 @@ void WSWindowManager::tell_wm_listener_about_window(WSWindow& listener, WSWindow
 {
     if (!(listener.wm_event_mask() & WSWMEventMask::WindowStateChanges))
         return;
-    if (!window.client())
+    if (window.is_internal())
         return;
-    listener.client()->post_message(WindowClient::WM_WindowStateChanged(listener.window_id(), window.client()->client_id(), window.window_id(), window.is_active(), window.is_minimized(), (i32)window.type(), window.title(), window.rect()));
+    listener.client()->post_message(WindowClient::WM_WindowStateChanged(listener.window_id(), window.client_id(), window.window_id(), window.is_active(), window.is_minimized(), (i32)window.type(), window.title(), window.rect()));
 }
 
 void WSWindowManager::tell_wm_listener_about_window_rect(WSWindow& listener, WSWindow& window)
 {
     if (!(listener.wm_event_mask() & WSWMEventMask::WindowRectChanges))
         return;
-    if (!window.client())
+    if (window.is_internal())
         return;
-    listener.client()->post_message(WindowClient::WM_WindowRectChanged(listener.window_id(), window.client()->client_id(), window.window_id(), window.rect()));
+    listener.client()->post_message(WindowClient::WM_WindowRectChanged(listener.window_id(), window.client_id(), window.window_id(), window.rect()));
 }
 
 void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSWindow& window)
 {
     if (!(listener.wm_event_mask() & WSWMEventMask::WindowIconChanges))
         return;
-    if (!window.client())
+    if (window.is_internal())
         return;
     if (window.icon().shared_buffer_id() == -1)
         return;
@@ -246,7 +247,7 @@ void WSWindowManager::tell_wm_listener_about_window_icon(WSWindow& listener, WSW
     if (share_buffer_with(window.icon().shared_buffer_id(), listener.client()->client_pid()) < 0) {
         ASSERT_NOT_REACHED();
     }
-    listener.client()->post_message(WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client()->client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));
+    listener.client()->post_message(WindowClient::WM_WindowIconBitmapChanged(listener.window_id(), window.client_id(), window.window_id(), window.icon().shared_buffer_id(), window.icon().size()));
 }
 
 void WSWindowManager::tell_wm_listeners_window_state_changed(WSWindow& window)
