@@ -1210,9 +1210,10 @@ Process* Process::create_user_process(Thread*& first_thread, const String& path,
     auto* process = new Process(first_thread, parts.take_last(), uid, gid, parent_pid, Ring3, move(cwd), nullptr, tty);
     process->m_fds.resize(m_max_open_file_descriptors);
     auto& device_to_use_as_tty = tty ? (CharacterDevice&)*tty : NullDevice::the();
-    process->m_fds[0].set(*device_to_use_as_tty.open(O_RDONLY).value());
-    process->m_fds[1].set(*device_to_use_as_tty.open(O_WRONLY).value());
-    process->m_fds[2].set(*device_to_use_as_tty.open(O_WRONLY).value());
+    auto description = device_to_use_as_tty.open(O_RDWR).value();
+    process->m_fds[0].set(*description);
+    process->m_fds[1].set(*description);
+    process->m_fds[2].set(*description);
 
     error = process->exec(path, move(arguments), move(environment));
     if (error != 0) {
