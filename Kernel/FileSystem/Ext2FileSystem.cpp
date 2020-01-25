@@ -472,7 +472,7 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     LOCKER(m_lock);
     ASSERT(inode.m_raw_inode.i_links_count == 0);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: inode %u has no more links, time to delete!\n", inode.index());
+    dbg() << "Ext2FS: Inode " << inode.identifier() << " has no more links, time to delete!";
 #endif
 
     struct timeval now;
@@ -490,7 +490,7 @@ void Ext2FS::free_inode(Ext2FSInode& inode)
     if (inode.is_directory()) {
         auto& bgd = const_cast<ext2_group_desc&>(group_descriptor(group_index_from_inode(inode.index())));
         --bgd.bg_used_dirs_count;
-        dbgprintf("Ext2FS: decremented bg_used_dirs_count %u -> %u\n", bgd.bg_used_dirs_count - 1, bgd.bg_used_dirs_count);
+        dbg() << "Ext2FS: Decremented bg_used_dirs_count to " << bgd.bg_used_dirs_count;
         m_block_group_descriptors_dirty = true;
     }
 }
@@ -586,7 +586,7 @@ void Ext2FSInode::flush_metadata()
 {
     LOCKER(m_lock);
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FSInode: flush_metadata for inode %u\n", index());
+    dbg() << "Ext2FS: flush_metadata for inode " << identifier();
 #endif
     fs().write_ext2_inode(index(), m_raw_inode);
     if (is_directory()) {
@@ -667,8 +667,7 @@ ssize_t Ext2FSInode::read_bytes(off_t offset, ssize_t count, u8* buffer, FileDes
     u8* out = buffer;
 
 #ifdef EXT2_DEBUG
-    kprintf("Ext2FS: Reading up to %u bytes %d bytes into inode %u:%u to %p\n", count, offset, identifier().fsid(), identifier().index(), buffer);
-    //kprintf("ok let's do it, read(%u, %u) -> blocks %u thru %u, oifb: %u\n", offset, count, first_block_logical_index, last_block_logical_index, offset_into_first_block);
+    dbg() << "Ext2FS: Reading up to " << count << " bytes " << offset << " bytes into inode " << identifier() << " to " << (const void*)buffer;
 #endif
 
     u8 block[max_block_size];
@@ -718,9 +717,9 @@ KResult Ext2FSInode::resize(u64 new_size)
         block_list.append(move(new_blocks));
     } else if (blocks_needed_after < blocks_needed_before) {
 #ifdef EXT2_DEBUG
-        dbgprintf("Ext2FSInode::resize(): Shrinking. Old block list is %d entries:\n", block_list.size());
+        dbg() << "Ext2FS: Shrinking inode " << identifier() << ". Old block list is " << block_list.size() << " entries:";
         for (auto block_index : block_list) {
-            dbgprintf("    # %u\n", block_index);
+            dbg() << "    # " << block_index;
         }
 #endif
         while (block_list.size() != blocks_needed_after) {
@@ -752,7 +751,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
         ASSERT(offset == 0);
         if (max((size_t)(offset + count), (size_t)m_raw_inode.i_size) < max_inline_symlink_length) {
 #ifdef EXT2_DEBUG
-            dbgprintf("Ext2FSInode: write_bytes poking into i_block array for inline symlink '%s' (%u bytes)\n", String((const char*)data, count).characters(), count);
+            dbg() << "Ext2FS: write_bytes poking into i_block array for inline symlink '" << StringView(data, count) << " ' (" << count << " bytes)";
 #endif
             memcpy(((u8*)m_raw_inode.i_block) + offset, data, (size_t)count);
             if ((size_t)(offset + count) > (size_t)m_raw_inode.i_size)
@@ -792,7 +791,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     const u8* in = data;
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FSInode::write_bytes: Writing %u bytes %d bytes into inode %u:%u from %p\n", count, offset, fsid(), index(), data);
+    dbg() << "Ext2FS: Writing " << count << " bytes " << offset << " bytes into inode " << identifier() << " from " << (const void*)data;
 #endif
 
     auto buffer_block = ByteBuffer::create_uninitialized(block_size);
@@ -805,7 +804,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
             block = ByteBuffer::create_uninitialized(block_size);
             bool success = fs().read_block(m_block_list[bi], block.data(), description);
             if (!success) {
-                kprintf("Ext2FSInode::write_bytes: read_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
+                dbg() << "Ext2FS: In write_bytes, read_block(" << m_block_list[bi] << ") failed (bi: " << bi << ")";
                 return -EIO;
             }
         } else
@@ -816,16 +815,16 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
             int padding_start = new_size % block_size;
             int padding_bytes = block_size - padding_start;
 #ifdef EXT2_DEBUG
-            dbgprintf("Ext2FSInode::write_bytes padding last block of file with zero x %u (new_size=%u, offset_into_block=%u, num_bytes_to_copy=%u)\n", padding_bytes, new_size, offset_into_block, num_bytes_to_copy);
+            dbg() << "Ext2FS: Padding last block of file with zero x " << padding_bytes << " (new_size=" << new_size << ", offset_into_block=" << offset_into_block << ", num_bytes_to_copy=" << num_bytes_to_copy << ")";
 #endif
             memset(block.data() + padding_start, 0, padding_bytes);
         }
 #ifdef EXT2_DEBUG
-        dbgprintf("Ext2FSInode::write_bytes: writing block %u (offset_into_block: %u)\n", m_block_list[bi], offset_into_block);
+        dbg() << "Ext2FS: Writing block " << m_block_list[bi] << " (offset_into_block: " << offset_into_block << ")";
 #endif
         bool success = fs().write_block(m_block_list[bi], block.data(), description);
         if (!success) {
-            kprintf("Ext2FSInode::write_bytes: write_block(%u) failed (lbi: %u)\n", m_block_list[bi], bi);
+            dbg() << "Ext2FS: write_block(" << m_block_list[bi] << ") failed (bi: " << bi << ")";
             ASSERT_NOT_REACHED();
             return -EIO;
         }
@@ -835,7 +834,7 @@ ssize_t Ext2FSInode::write_bytes(off_t offset, ssize_t count, const u8* data, Fi
     }
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FSInode::write_bytes: after write, i_size=%u, i_blocks=%u (%u blocks in list)\n", m_raw_inode.i_size, m_raw_inode.i_blocks, m_block_list.size());
+    dbg() << "Ext2FS: After write, i_size=" << m_raw_inode.i_size << ", i_blocks=" << m_raw_inode.i_blocks << " (" << m_block_list.size() << " blocks in list)";
 #endif
 
     if (old_size != new_size)
@@ -850,7 +849,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     ASSERT(is_directory());
 
 #ifdef EXT2_DEBUG
-    kprintf("Ext2Inode::traverse_as_directory: inode=%u:\n", index());
+    dbg() << "Ext2FS: Traversing as directory: " << identifier();
 #endif
 
     auto buffer = read_entire();
@@ -860,7 +859,7 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
     while (entry < buffer.end_pointer()) {
         if (entry->inode != 0) {
 #ifdef EXT2_DEBUG
-            kprintf("Ext2Inode::traverse_as_directory: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, String(entry->name, entry->name_len).characters());
+            dbgprintf("Ext2Inode::traverse_as_directory: %u, name_len: %u, rec_len: %u, file_type: %u, name: %s\n", entry->inode, entry->name_len, entry->rec_len, entry->file_type, String(entry->name, entry->name_len).characters());
 #endif
             if (!callback({ entry->name, entry->name_len, { fsid(), entry->inode }, entry->file_type }))
                 break;
@@ -873,15 +872,10 @@ bool Ext2FSInode::traverse_as_directory(Function<bool(const FS::DirectoryEntry&)
 bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
 {
     LOCKER(m_lock);
-#ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: New directory inode %u contents to write:\n", index());
-#endif
 
     int directory_size = 0;
-    for (auto& entry : entries) {
-        //kprintf("  - %08u %s\n", entry.inode.index(), entry.name);
+    for (auto& entry : entries)
         directory_size += EXT2_DIR_REC_LEN(entry.name_length);
-    }
 
     auto block_size = fs().block_size();
 
@@ -889,7 +883,7 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
     int occupied_size = blocks_needed * block_size;
 
 #ifdef EXT2_DEBUG
-    dbgprintf("Ext2FS: directory size: %u (occupied: %u)\n", directory_size, occupied_size);
+    dbg() << "Ext2FS: New directory inode " << identifier() << " contents to write (size " << directory_size << ", occupied " << occupied_size << "):";
 #endif
 
     auto directory_data = ByteBuffer::create_uninitialized(occupied_size);
@@ -903,11 +897,11 @@ bool Ext2FSInode::write_directory(const Vector<FS::DirectoryEntry>& entries)
             record_length += occupied_size - directory_size;
 
 #ifdef EXT2_DEBUG
-        dbgprintf("* inode: %u", entry.inode.index());
-        dbgprintf(", name_len: %u", u16(entry.name_length));
-        dbgprintf(", rec_len: %u", u16(record_length));
-        dbgprintf(", file_type: %u", u8(entry.file_type));
-        dbgprintf(", name: %s\n", entry.name);
+        dbg() << "* Inode: " << entry.inode
+              << ", name_len: " << u16(entry.name_length)
+              << ", rec_len: " << u16(record_length)
+              << ", file_type: " << u8(entry.file_type)
+              << ", name: " << entry.name;
 #endif
 
         stream << u32(entry.inode.index());
