@@ -172,6 +172,7 @@ private:
     void escape$h_l(bool, bool, const ParamVector&);
     void escape$c(const ParamVector&);
     void escape$f(const ParamVector&);
+    void NEL();
 
     TerminalClient& m_client;
 

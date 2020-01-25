@@ -767,6 +767,12 @@ void Terminal::put_character_at(unsigned row, unsigned column, u8 ch)
     m_last_char = ch;
 }
 
+void Terminal::NEL()
+{
+    // NEL - Next Line
+    newline();
+}
+
 void Terminal::on_char(u8 ch)
 {
 #ifdef TERMINAL_DEBUG
@@ -783,6 +789,10 @@ void Terminal::on_char(u8 ch)
             m_escape_state = ExpectXtermParameter1;
         } else if (ch == '#') {
             m_escape_state = ExpectHashtagDigit;
+        } else if (ch == 'E') {
+            NEL();
+            m_escape_state = Normal;
+            return;
         } else {
             m_escape_state = Normal;
         }
