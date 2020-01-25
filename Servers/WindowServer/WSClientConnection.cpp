@@ -81,7 +81,9 @@ WSClientConnection::~WSClientConnection()
 
 void WSClientConnection::die()
 {
-    s_connections->remove(client_id());
+    deferred_invoke([this](auto&) {
+        s_connections->remove(client_id());
+    });
 }
 
 void WSClientConnection::notify_about_new_screen_rect(const Rect& rect)
