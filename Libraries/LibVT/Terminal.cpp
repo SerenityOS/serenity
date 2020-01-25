@@ -779,7 +779,7 @@ void Terminal::on_char(u8 ch)
     dbgprintf("Terminal::on_char: %b (%c), fg=%u, bg=%u\n", ch, ch, m_current_attribute.foreground_color, m_current_attribute.background_color);
 #endif
     switch (m_escape_state) {
-    case ExpectBracket:
+    case GotEscape:
         if (ch == '[') {
             m_escape_state = ExpectParameter;
         } else if (ch == '(') {
@@ -855,7 +855,7 @@ void Terminal::on_char(u8 ch)
     case '\0':
         return;
     case '\033':
-        m_escape_state = ExpectBracket;
+        m_escape_state = GotEscape;
         m_swallow_current = false;
         return;
     case 8: // Backspace
