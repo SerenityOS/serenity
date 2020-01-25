@@ -194,7 +194,9 @@ void TTY::do_backspace()
 {
     if (can_do_backspace()) {
         m_input_buffer.dequeue_end();
-        echo(m_termios.c_cc[VERASE]);
+        echo(8);
+        echo(' ');
+        echo(8);
     }
 }
 
