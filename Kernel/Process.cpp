@@ -2386,6 +2386,7 @@ pid_t Process::sys$setsid()
         return -EPERM;
     m_sid = m_pid;
     m_pgid = m_pid;
+    m_tty = nullptr;
     return m_sid;
 }
 
