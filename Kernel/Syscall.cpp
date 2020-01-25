@@ -48,6 +48,8 @@ asm(
     "    mov %ax, %ds\n"
     "    mov %ax, %es\n"
     "    cld\n"
+    "    xor %esi, %esi\n"
+    "    xor %edi, %edi\n"
     "    call syscall_handler\n"
     "    add $0x4, %esp\n"
     "    popl %gs\n"
