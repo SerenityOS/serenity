@@ -41,6 +41,7 @@ public:
     virtual void set_window_title(const StringView&) = 0;
     virtual void terminal_did_resize(u16 columns, u16 rows) = 0;
     virtual void terminal_history_changed() = 0;
+    virtual void emit_char(u8) = 0;
 };
 
 struct Attribute {
@@ -145,6 +146,8 @@ private:
     void unimplemented_escape();
     void unimplemented_xterm_escape();
 
+    void emit_string(const StringView&);
+
     void escape$A(const ParamVector&);
     void escape$B(const ParamVector&);
     void escape$C(const ParamVector&);
@@ -167,6 +170,7 @@ private:
     void escape$T(const ParamVector&);
     void escape$L(const ParamVector&);
     void escape$h_l(bool, bool, const ParamVector&);
+    void escape$c(const ParamVector&);
 
     TerminalClient& m_client;
 
