@@ -195,6 +195,7 @@ private:
 
     void execute_escape_sequence(u8 final);
     void execute_xterm_command();
+    void execute_hashtag(u8);
 
     enum EscapeState {
         Normal,
@@ -202,7 +203,7 @@ private:
         ExpectParameter,
         ExpectIntermediate,
         ExpectFinal,
-
+        ExpectHashtagDigit,
         ExpectXtermParameter1,
         ExpectXtermParameter2,
         ExpectXtermFinal,
