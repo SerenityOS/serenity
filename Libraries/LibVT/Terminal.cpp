@@ -411,7 +411,7 @@ void Terminal::escape$K(const ParamVector& params)
         break;
     case 1:
         // Clear from cursor to beginning of line.
-        for (int i = 0; i < m_cursor_column; ++i) {
+        for (int i = 0; i <= m_cursor_column; ++i) {
             put_character_at(m_cursor_row, i, ' ');
         }
         break;
@@ -444,8 +444,8 @@ void Terminal::escape$J(const ParamVector& params)
         }
         break;
     case 1:
-        /// Clear from cursor to beginning of screen
-        for (int i = m_cursor_column - 1; i >= 0; --i)
+        // Clear from cursor to beginning of screen.
+        for (int i = m_cursor_column; i >= 0; --i)
             put_character_at(m_cursor_row, i, ' ');
         for (int row = m_cursor_row - 1; row >= 0; --row) {
             for (int column = 0; column < m_columns; ++column) {
