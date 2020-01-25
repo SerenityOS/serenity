@@ -774,16 +774,25 @@ void Terminal::on_char(u8 ch)
 #endif
     switch (m_escape_state) {
     case ExpectBracket:
-        if (ch == '[')
+        if (ch == '[') {
             m_escape_state = ExpectParameter;
-        else if (ch == '(') {
+        } else if (ch == '(') {
             m_swallow_current = true;
             m_escape_state = ExpectParameter;
-        } else if (ch == ']')
+        } else if (ch == ']') {
             m_escape_state = ExpectXtermParameter1;
-        else
+        } else if (ch == '#') {
+            m_escape_state = ExpectHashtagDigit;
+        } else {
             m_escape_state = Normal;
+        }
         return;
+    case ExpectHashtagDigit:
+        if (ch >= '0' && ch <= '9') {
+            execute_hashtag(ch);
+            m_escape_state = Normal;
+        }
+        break;
     case ExpectXtermParameter1:
         if (ch != ';') {
             m_xterm_param1.append(ch);
@@ -967,6 +976,22 @@ void Terminal::set_size(u16 columns, u16 rows)
 void Terminal::invalidate_cursor()
 {
     line(m_cursor_row).dirty = true;
+}
+
+void Terminal::execute_hashtag(u8 hashtag)
+{
+    switch (hashtag) {
+    case '8':
+        // Confidence Test - Fill screen with E's
+        for (size_t row = 0; row < m_rows; ++row) {
+            for (size_t column = 0; column < m_columns; ++column) {
+                put_character_at(row, column, 'E');
+            }
+        }
+        break;
+    default:
+        dbg() << "Unknown hashtag: '" << hashtag << "'";
+    }
 }
 
 }
