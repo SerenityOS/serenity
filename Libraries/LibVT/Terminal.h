@@ -173,6 +173,8 @@ private:
     void escape$c(const ParamVector&);
     void escape$f(const ParamVector&);
     void NEL();
+    void IND();
+    void RI();
 
     TerminalClient& m_client;
 
