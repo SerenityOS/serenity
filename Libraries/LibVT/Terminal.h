@@ -152,7 +152,7 @@ private:
     void CUD(const ParamVector&);
     void CUF(const ParamVector&);
     void CUB(const ParamVector&);
-    void escape$H(const ParamVector&);
+    void CUP(const ParamVector&);
     void ED(const ParamVector&);
     void EL(const ParamVector&);
     void escape$M(const ParamVector&);
