@@ -12,11 +12,16 @@
 #define T_PTR 12
 #define T_MX 15
 
+enum class ShouldRandomizeCase {
+    No = 0,
+    Yes
+};
+
 class DNSRequest {
 public:
     DNSRequest();
 
-    void add_question(const String& name, u16 record_type);
+    void add_question(const String& name, u16 record_type, ShouldRandomizeCase);
 
     const Vector<DNSQuestion>& questions() const { return m_questions; }
 

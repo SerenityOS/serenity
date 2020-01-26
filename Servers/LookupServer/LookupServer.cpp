@@ -161,7 +161,7 @@ void LookupServer::service_client(RefPtr<CLocalSocket> socket)
     }
 }
 
-Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, unsigned short record_type)
+Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, unsigned short record_type, ShouldRandomizeCase should_randomize_case)
 {
     if (auto it = m_lookup_cache.find(hostname); it != m_lookup_cache.end()) {
         auto& cached_lookup = it->value;
@@ -172,7 +172,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
     }
 
     DNSRequest request;
-    request.add_question(hostname, record_type);
+    request.add_question(hostname, record_type, should_randomize_case);
 
     auto buffer = request.to_byte_buffer();
 
@@ -216,6 +216,15 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
         dbgprintf("LookupServer: ID mismatch (%u vs %u) :(\n", response.id(), request.id());
         return {};
     }
+
+    if (response.code() == DNSResponse::Code::REFUSED) {
+        if (should_randomize_case == ShouldRandomizeCase::Yes) {
+            // Retry with 0x20 case randomization turned off.
+            return lookup(hostname, did_timeout, record_type, ShouldRandomizeCase::No);
+        }
+        return {};
+    }
+
     if (response.question_count() != request.question_count()) {
         dbgprintf("LookupServer: Question count (%u vs %u) :(\n", response.question_count(), request.question_count());
         return {};

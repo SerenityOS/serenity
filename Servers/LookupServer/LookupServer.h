@@ -26,6 +26,7 @@
 
 #pragma once
 
+#include "DNSRequest.h"
 #include <AK/HashMap.h>
 #include <AK/RefPtr.h>
 #include <AK/String.h>
@@ -44,7 +45,7 @@ public:
 private:
     void load_etc_hosts();
     void service_client(RefPtr<CLocalSocket>);
-    Vector<String> lookup(const String& hostname, bool& did_timeout, unsigned short record_type);
+    Vector<String> lookup(const String& hostname, bool& did_timeout, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     int make_dns_request_socket(sockaddr_in& dst_addr);
 
