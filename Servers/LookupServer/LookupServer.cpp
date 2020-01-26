@@ -62,7 +62,6 @@ LookupServer::LookupServer()
 
 void LookupServer::load_etc_hosts()
 {
-    dbg() << "Loading hosts from /etc/hosts";
     auto file = CFile::construct("/etc/hosts");
     if (!file->open(CIODevice::ReadOnly))
         return;
@@ -82,7 +81,7 @@ void LookupServer::load_etc_hosts()
         };
 
         auto name = fields[1];
-        m_dns_custom_hostnames.set(name, addr.to_string());
+        m_etc_hosts.set(name, addr.to_string());
 
         IPv4Address reverse_addr {
             (u8)atoi(sections[3].characters()),
@@ -93,7 +92,7 @@ void LookupServer::load_etc_hosts()
         StringBuilder builder;
         builder.append(reverse_addr.to_string());
         builder.append(".in-addr.arpa");
-        m_dns_custom_hostnames.set(builder.to_string(), name);
+        m_etc_hosts.set(builder.to_string(), name);
     }
 }
 
@@ -118,7 +117,7 @@ void LookupServer::service_client(RefPtr<CLocalSocket> socket)
 
     Vector<String> responses;
 
-    if (auto known_host = m_dns_custom_hostnames.get(hostname)) {
+    if (auto known_host = m_etc_hosts.get(hostname)) {
         responses.append(known_host.value());
     } else if (!hostname.is_empty()) {
         bool did_timeout;
