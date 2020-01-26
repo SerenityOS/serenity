@@ -170,7 +170,7 @@ private:
     void escape$T(const ParamVector&);
     void escape$L(const ParamVector&);
     void escape$h_l(bool, bool, const ParamVector&);
-    void escape$c(const ParamVector&);
+    void DA(const ParamVector&);
     void escape$f(const ParamVector&);
     void NEL();
     void IND();

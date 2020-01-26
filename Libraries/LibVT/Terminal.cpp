@@ -510,7 +510,7 @@ void Terminal::escape$L(const ParamVector& params)
     m_need_full_flush = true;
 }
 
-void Terminal::escape$c(const ParamVector&)
+void Terminal::DA(const ParamVector&)
 {
     // DA - Device Attributes
     emit_string("\033[?1;0c");
@@ -685,7 +685,7 @@ void Terminal::execute_escape_sequence(u8 final)
         escape$h_l(false, question_param, params);
         break;
     case 'c':
-        escape$c(params);
+        DA(params);
         break;
     case 'f':
         escape$f(params);
