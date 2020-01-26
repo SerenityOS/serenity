@@ -1658,6 +1658,8 @@ ssize_t Process::sys$read(int fd, u8* buffer, ssize_t size)
         if (!description->can_read()) {
             if (current->block<Thread::ReadBlocker>(*description) != Thread::BlockResult::WokeNormally)
                 return -EINTR;
+            if (!description->can_read())
+                return -EAGAIN;
         }
     }
     return description->read(buffer, size);

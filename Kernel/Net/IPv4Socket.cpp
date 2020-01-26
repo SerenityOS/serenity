@@ -264,8 +264,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
                 return -EAGAIN;
             }
 
-            load_receive_deadline();
-            auto res = current->block<Thread::ReceiveBlocker>(description);
+            auto res = current->block<Thread::ReadBlocker>(description);
 
             LOCKER(lock());
             if (!m_can_read) {
@@ -312,8 +311,7 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
             return 0;
         }
 
-        load_receive_deadline();
-        auto res = current->block<Thread::ReceiveBlocker>(description);
+        auto res = current->block<Thread::ReadBlocker>(description);
 
         LOCKER(lock());
         if (!m_can_read) {

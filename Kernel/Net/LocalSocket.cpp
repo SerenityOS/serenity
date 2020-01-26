@@ -296,7 +296,7 @@ ssize_t LocalSocket::recvfrom(FileDescription& description, void* buffer, size_t
             return -EAGAIN;
         }
     } else if (!can_read(description)) {
-        auto result = current->block<Thread::ReceiveBlocker>(description);
+        auto result = current->block<Thread::ReadBlocker>(description);
         if (result != Thread::BlockResult::WokeNormally)
             return -EINTR;
     }

@@ -167,13 +167,6 @@ public:
         virtual const char* state_string() const override { return "Accepting"; }
     };
 
-    class ReceiveBlocker final : public FileDescriptionBlocker {
-    public:
-        explicit ReceiveBlocker(const FileDescription&);
-        virtual bool should_unblock(Thread&, time_t, long) override;
-        virtual const char* state_string() const override { return "Receiving"; }
-    };
-
     class ConnectBlocker final : public FileDescriptionBlocker {
     public:
         explicit ConnectBlocker(const FileDescription&);
@@ -186,6 +179,8 @@ public:
         explicit WriteBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Writing"; }
+    private:
+        Optional<timeval> m_deadline;
     };
 
     class ReadBlocker final : public FileDescriptionBlocker {
@@ -193,6 +188,8 @@ public:
         explicit ReadBlocker(const FileDescription&);
         virtual bool should_unblock(Thread&, time_t, long) override;
         virtual const char* state_string() const override { return "Reading"; }
+    private:
+        Optional<timeval> m_deadline;
     };
 
     class ConditionBlocker final : public Blocker {

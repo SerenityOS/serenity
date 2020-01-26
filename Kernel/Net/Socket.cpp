@@ -147,24 +147,6 @@ KResult Socket::getsockopt(FileDescription&, int level, int option, void* value,
     }
 }
 
-void Socket::load_receive_deadline()
-{
-    kgettimeofday(m_receive_deadline);
-    m_receive_deadline.tv_sec += m_receive_timeout.tv_sec;
-    m_receive_deadline.tv_usec += m_receive_timeout.tv_usec;
-    m_receive_deadline.tv_sec += (m_send_timeout.tv_usec / 1000000) * 1;
-    m_receive_deadline.tv_usec %= 1000000;
-}
-
-void Socket::load_send_deadline()
-{
-    kgettimeofday(m_send_deadline);
-    m_send_deadline.tv_sec += m_send_timeout.tv_sec;
-    m_send_deadline.tv_usec += m_send_timeout.tv_usec;
-    m_send_deadline.tv_sec += (m_send_timeout.tv_usec / 1000000) * 1;
-    m_send_deadline.tv_usec %= 1000000;
-}
-
 ssize_t Socket::read(FileDescription& description, u8* buffer, ssize_t size)
 {
     return recvfrom(description, buffer, size, 0, nullptr, 0);
