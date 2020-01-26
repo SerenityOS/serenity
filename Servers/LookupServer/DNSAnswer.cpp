@@ -24,28 +24,23 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#pragma once
+#include "DNSAnswer.h"
+#include <time.h>
 
-#include <AK/String.h>
-#include <AK/Types.h>
+DNSAnswer::DNSAnswer(const String& name, u16 type, u16 class_code, u32 ttl, const String& record_data)
+    : m_name(name)
+    , m_type(type)
+    , m_class_code(class_code)
+    , m_ttl(ttl)
+    , m_record_data(record_data)
+{
+    auto now = time(nullptr);
+    m_expiration_time = now + m_ttl;
+    if (m_expiration_time < now)
+        m_expiration_time = 0;
+}
 
-class DNSAnswer {
-public:
-    DNSAnswer(const String& name, u16 type, u16 class_code, u32 ttl, const String& record_data);
-
-    const String& name() const { return m_name; }
-    u16 type() const { return m_type; }
-    u16 class_code() const { return m_class_code; }
-    u32 ttl() const { return m_ttl; }
-    const String& record_data() const { return m_record_data; }
-
-    bool has_expired() const;
-
-private:
-    String m_name;
-    u16 m_type { 0 };
-    u16 m_class_code { 0 };
-    u32 m_ttl { 0 };
-    time_t m_expiration_time { 0 };
-    String m_record_data;
-};
+bool DNSAnswer::has_expired() const
+{
+    return time(nullptr) >= m_expiration_time;
+}
