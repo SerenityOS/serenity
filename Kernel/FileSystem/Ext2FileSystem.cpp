@@ -124,7 +124,7 @@ bool Ext2FS::initialize()
 
     unsigned blocks_to_read = ceil_div(m_block_group_count * (unsigned)sizeof(ext2_group_desc), block_size());
     BlockIndex first_block_of_bgdt = block_size() == 1024 ? 2 : 1;
-    m_cached_group_descriptor_table = KBuffer::create_with_size(block_size() * blocks_to_read);
+    m_cached_group_descriptor_table = KBuffer::create_with_size(block_size() * blocks_to_read, Region::Access::Read | Region::Access::Write, "Ext2FS: Block group descriptors");
     read_blocks(first_block_of_bgdt, blocks_to_read, m_cached_group_descriptor_table.value().data());
 
 #ifdef EXT2_DEBUG
@@ -1285,7 +1285,7 @@ Ext2FS::CachedBitmap& Ext2FS::get_bitmap_block(BlockIndex bitmap_block_index)
             return *cached_bitmap;
     }
 
-    auto block = KBuffer::create_with_size(block_size());
+    auto block = KBuffer::create_with_size(block_size(), Region::Access::Read | Region::Access::Write, "Ext2FS: Cached bitmap block");
     bool success = read_block(bitmap_block_index, block.data());
     ASSERT(success);
     m_cached_bitmaps.append(make<CachedBitmap>(bitmap_block_index, move(block)));
