@@ -149,7 +149,7 @@ private:
     void emit_string(const StringView&);
 
     void CUU(const ParamVector&);
-    void escape$B(const ParamVector&);
+    void CUD(const ParamVector&);
     void escape$C(const ParamVector&);
     void escape$D(const ParamVector&);
     void escape$H(const ParamVector&);

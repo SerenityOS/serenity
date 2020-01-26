@@ -316,8 +316,9 @@ void Terminal::CUU(const ParamVector& params)
     set_cursor(new_row, m_cursor_column);
 }
 
-void Terminal::escape$B(const ParamVector& params)
+void Terminal::CUD(const ParamVector& params)
 {
+    // CUD – Cursor Down
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -614,7 +615,7 @@ void Terminal::execute_escape_sequence(u8 final)
         CUU(params);
         break;
     case 'B':
-        escape$B(params);
+        CUD(params);
         break;
     case 'C':
         escape$C(params);
@@ -778,7 +779,7 @@ void Terminal::NEL()
 void Terminal::IND()
 {
     // IND - Index (move down)
-    escape$B({});
+    CUD({});
 }
 
 void Terminal::RI()
