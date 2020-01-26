@@ -2,13 +2,12 @@
 #include "DNSPacket.h"
 #include <AK/BufferStream.h>
 #include <arpa/inet.h>
+#include <stdlib.h>
 
 #define C_IN 1
 
-static u16 s_next_id = 0;
-
 DNSRequest::DNSRequest()
-    : m_id(s_next_id++)
+    : m_id(arc4random_uniform(UINT16_MAX))
 {
 }
 
