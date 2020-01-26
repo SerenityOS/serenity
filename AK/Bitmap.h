@@ -157,6 +157,46 @@ public:
         return -1;
     }
 
+    int find_longest_range_of_unset_bits(int max_length, int& found_range_size) const
+    {
+        int first_index = find_first_unset();
+        if (first_index == -1)
+            return -1;
+
+        int free_region_start = first_index;
+        int free_region_size = 1;
+
+        int max_region_start = free_region_start;
+        int max_region_size = free_region_size;
+
+        // Let's try and find the best fit possible
+        for (int j = first_index + 1; j < m_size && free_region_size < max_length; j++) {
+            if (!get(j)) {
+                if (free_region_size == 0)
+                    free_region_start = j;
+                free_region_size++;
+            } else {
+                if (max_region_size < free_region_size) {
+                    max_region_size = free_region_size;
+                    max_region_start = free_region_start;
+                }
+                free_region_start = 0;
+                free_region_size = 0;
+            }
+        }
+
+        if (max_region_size < free_region_size) {
+            max_region_size = free_region_size;
+            max_region_start = free_region_start;
+        }
+
+        found_range_size = max_region_size;
+        if (max_region_size > 1)
+            return max_region_start;
+        // if the max free region size is one, then return the earliest one found
+        return first_index;
+    }
+
     explicit Bitmap()
         : m_size(0)
         , m_owned(true)
@@ -181,7 +221,6 @@ public:
     }
 
 private:
-
     int size_in_bytes() const { return ceil_div(m_size, 8); }
 
     u8* m_data { nullptr };
