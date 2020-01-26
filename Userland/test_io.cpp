@@ -28,8 +28,10 @@
 #include <AK/Types.h>
 #include <fcntl.h>
 #include <stdio.h>
+#include <string.h>
 #include <sys/mman.h>
 #include <sys/stat.h>
+#include <sys/uio.h>
 #include <unistd.h>
 
 #define EXPECT_ERROR_2(err, syscall, arg1, arg2)                                                                                                                          \
@@ -255,6 +257,37 @@ void test_rmdir_while_inside_dir()
     ASSERT(rc == 0);
 }
 
+void test_writev()
+{
+    int pipefds[2];
+    pipe(pipefds);
+
+    iovec iov[2];
+    iov[0].iov_base = const_cast<void*>((const void*)"Hello");
+    iov[0].iov_len = 5;
+    iov[1].iov_base = const_cast<void*>((const void*)"Friends");
+    iov[1].iov_len = 7;
+    int nwritten = writev(pipefds[1], iov, 2);
+    if (nwritten < 0) {
+        perror("writev");
+        ASSERT_NOT_REACHED();
+    }
+    if (nwritten != 12) {
+        fprintf(stderr, "Didn't write 12 bytes to pipe with writev\n");
+        ASSERT_NOT_REACHED();
+    }
+
+    char buffer[32];
+    int nread = read(pipefds[0], buffer, sizeof(buffer));
+    if (nread != 12 || memcmp(buffer, "HelloFriends", 12)) {
+        fprintf(stderr, "Didn't read the expected data from pipe after writev\n");
+        ASSERT_NOT_REACHED();
+    }
+
+    close(pipefds[0]);
+    close(pipefds[1]);
+}
+
 int main(int, char**)
 {
     int rc;
@@ -280,6 +313,7 @@ int main(int, char**)
     test_unlink_symlink();
     test_eoverflow();
     test_rmdir_while_inside_dir();
+    test_writev();
 
     EXPECT_ERROR_2(EPERM, link, "/", "/home/anon/lolroot");
 

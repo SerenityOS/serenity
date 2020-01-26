@@ -1539,7 +1539,7 @@ ssize_t Process::sys$writev(int fd, const struct iovec* iov, int iov_count)
 
     u64 total_length = 0;
     Vector<iovec, 32> vecs;
-    vecs.ensure_capacity(iov_count);
+    vecs.resize(iov_count);
     copy_from_user(vecs.data(), iov, iov_count * sizeof(iovec));
     for (auto& vec : vecs) {
         if (!validate_read(vec.iov_base, vec.iov_len))
