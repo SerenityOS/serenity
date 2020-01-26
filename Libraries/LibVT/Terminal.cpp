@@ -275,8 +275,9 @@ void Terminal::escape$t(const ParamVector& params)
     dbgprintf("FIXME: escape$t: Ps: %u (param count: %d)\n", params[0], params.size());
 }
 
-void Terminal::escape$r(const ParamVector& params)
+void Terminal::DECSTBM(const ParamVector& params)
 {
+    // DECSTBM – Set Top and Bottom Margins ("Scrolling Region")
     unsigned top = 1;
     unsigned bottom = m_rows;
     if (params.size() >= 1)
@@ -284,7 +285,7 @@ void Terminal::escape$r(const ParamVector& params)
     if (params.size() >= 2)
         bottom = params[1];
     if ((bottom - top) < 2 || bottom > m_rows) {
-        dbgprintf("Error: escape$r: scrolling region invalid: %u-%u\n", top, bottom);
+        dbgprintf("Error: DECSTBM: scrolling region invalid: %u-%u\n", top, bottom);
         return;
     }
     m_scroll_region_top = top - 1;
@@ -688,7 +689,7 @@ void Terminal::execute_escape_sequence(u8 final)
         escape$t(params);
         break;
     case 'r':
-        escape$r(params);
+        DECSTBM(params);
         break;
     case 'l':
         RM(question_param, params);
