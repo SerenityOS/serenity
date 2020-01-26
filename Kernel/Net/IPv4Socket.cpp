@@ -385,7 +385,7 @@ bool IPv4Socket::did_receive(const IPv4Address& source_address, u16 source_port,
     m_bytes_received += packet_size;
 #ifdef IPV4_SOCKET_DEBUG
     if (buffer_mode() == BufferMode::Bytes)
-        kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, bytes in buffer: %zu\n", this, packet_size, m_bytes_received, m_receive_buffer.bytes_in_write_buffer());
+        kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u\n", this, packet_size, m_bytes_received);
     else
         kprintf("IPv4Socket(%p): did_receive %d bytes, total_received=%u, packets in queue: %zu\n", this, packet_size, m_bytes_received, m_receive_queue.size_slow());
 #endif
