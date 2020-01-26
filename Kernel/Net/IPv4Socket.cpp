@@ -256,7 +256,6 @@ ssize_t IPv4Socket::recvfrom(FileDescription& description, void* buffer, size_t 
 #endif
 
     if (buffer_mode() == BufferMode::Bytes) {
-        LOCKER(lock());
         if (m_receive_buffer.is_empty()) {
             if (protocol_is_disconnected()) {
                 return 0;
