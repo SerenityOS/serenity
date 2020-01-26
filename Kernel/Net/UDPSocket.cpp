@@ -111,6 +111,7 @@ int UDPSocket::protocol_send(const void* data, int data_length)
 KResult UDPSocket::protocol_connect(FileDescription&, ShouldBlock)
 {
     m_role = Role::Connected;
+    set_connected(true);
     return KSuccess;
 }
 
