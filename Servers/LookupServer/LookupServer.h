@@ -27,11 +27,13 @@
 #pragma once
 
 #include "DNSRequest.h"
+#include "DNSResponse.h"
 #include <AK/HashMap.h>
 #include <LibCore/CObject.h>
 
 class CLocalSocket;
 class CLocalServer;
+class DNSAnswer;
 
 class LookupServer final : public CObject {
     C_OBJECT(LookupServer)
@@ -45,9 +47,8 @@ private:
     Vector<String> lookup(const String& hostname, bool& did_timeout, unsigned short record_type, ShouldRandomizeCase = ShouldRandomizeCase::Yes);
 
     struct CachedLookup {
-        time_t timestamp { 0 };
-        unsigned short record_type { 0 };
-        Vector<String> responses;
+        DNSQuestion question;
+        Vector<DNSAnswer> answers;
     };
 
     RefPtr<CLocalServer> m_local_server;

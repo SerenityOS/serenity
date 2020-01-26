@@ -157,8 +157,16 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
 {
     if (auto it = m_lookup_cache.find(hostname); it != m_lookup_cache.end()) {
         auto& cached_lookup = it->value;
-        if (cached_lookup.record_type == record_type && cached_lookup.timestamp < (time(nullptr) + 60)) {
-            return it->value.responses;
+        if (cached_lookup.question.record_type() == record_type) {
+            Vector<String> responses;
+            for (auto& cached_answer : cached_lookup.answers) {
+                dbg() << "Cache hit: " << hostname << " -> " << cached_answer.record_data() << ", expired: " << cached_answer.has_expired();
+                if (!cached_answer.has_expired()) {
+                    responses.append(cached_answer.record_data());
+                }
+            }
+            if (!responses.is_empty())
+                return responses;
         }
         m_lookup_cache.remove(it);
     }
@@ -232,11 +240,13 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
         return {};
     }
 
-    Vector<String> addresses;
+    Vector<String> responses;
     for (auto& answer : response.answers()) {
-        addresses.append(answer.record_data());
+        responses.append(answer.record_data());
     }
 
-    m_lookup_cache.set(hostname, { time(nullptr), record_type, addresses });
-    return addresses;
+    if (m_lookup_cache.size() >= 256)
+        m_lookup_cache.remove(m_lookup_cache.begin());
+    m_lookup_cache.set(hostname, { request.questions()[0], response.answers() });
+    return responses;
 }
