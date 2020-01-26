@@ -7,6 +7,8 @@ OBJS = \
     CLocalServer.o \
     CTCPSocket.o \
     CTCPServer.o \
+    CUdpSocket.o \
+    CUdpServer.o \
     CElapsedTimer.o \
     CNotifier.o \
     CHttpRequest.o \
