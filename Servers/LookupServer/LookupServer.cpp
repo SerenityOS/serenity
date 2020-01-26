@@ -216,10 +216,22 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
         dbgprintf("LookupServer: ID mismatch (%u vs %u) :(\n", response.id(), request.id());
         return {};
     }
-    if (response.question_count() != 1) {
+    if (response.question_count() != request.question_count()) {
         dbgprintf("LookupServer: Question count (%u vs %u) :(\n", response.question_count(), request.question_count());
         return {};
     }
+
+    for (size_t i = 0; i < request.question_count(); ++i) {
+        auto& request_question = request.questions()[i];
+        auto& response_question = response.questions()[i];
+        if (request_question != response_question) {
+            dbg() << "Request and response questions do not match";
+            dbg() << "   Request: {_" << request_question.name() << "_, " << request_question.record_type() << ", " << request_question.class_code() << "}";
+            dbg() << "  Response: {_" << response_question.name() << "_, " << response_question.record_type() << ", " << response_question.class_code() << "}";
+            return {};
+        }
+    }
+
     if (response.answer_count() < 1) {
         dbgprintf("LookupServer: Not enough answers (%u) :(\n", response.answer_count());
         return {};

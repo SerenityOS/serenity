@@ -28,7 +28,6 @@ private:
 
 static_assert(sizeof(DNSRecordWithoutName) == 10);
 
-
 Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t raw_size)
 {
     if (raw_size < sizeof(DNSPacket)) {
@@ -79,7 +78,7 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
             // FIXME: Parse some other record types perhaps?
             dbg() << "  data=(unimplemented record type " << record.type() << ")";
         }
-        dbg() << "Answer   #" << i << ": type=" << record.type() << ", ttl=" << record.ttl() << ", length=" << record.data_length() << ", data=_" << data << "_";
+        dbg() << "Answer   #" << i << ": name=_" << name << "_, type=" << record.type() << ", ttl=" << record.ttl() << ", length=" << record.data_length() << ", data=_" << data << "_";
         response.m_answers.empend(name, record.type(), record.record_class(), record.ttl(), data);
         offset += record.data_length();
     }
