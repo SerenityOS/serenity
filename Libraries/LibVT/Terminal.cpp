@@ -165,7 +165,6 @@ void Terminal::SM(bool question_param, const ParamVector& params)
     alter_mode(false, question_param, params);
 }
 
-
 void Terminal::SGR(const ParamVector& params)
 {
     // SGR – Select Graphic Rendition
