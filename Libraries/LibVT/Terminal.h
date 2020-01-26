@@ -161,7 +161,7 @@ private:
     void escape$X(const ParamVector&);
     void escape$b(const ParamVector&);
     void escape$d(const ParamVector&);
-    void escape$m(const ParamVector&);
+    void SGR(const ParamVector&);
     void escape$s(const ParamVector&);
     void escape$u(const ParamVector&);
     void escape$t(const ParamVector&);

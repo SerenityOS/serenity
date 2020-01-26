@@ -153,8 +153,9 @@ void Terminal::escape$h_l(bool should_set, bool question_param, const ParamVecto
     }
 }
 
-void Terminal::escape$m(const ParamVector& params)
+void Terminal::SGR(const ParamVector& params)
 {
+    // SGR – Select Graphic Rendition
     if (params.is_empty()) {
         m_current_attribute.reset();
         return;
@@ -239,7 +240,7 @@ void Terminal::escape$m(const ParamVector& params)
             m_current_attribute.background_color = Attribute::default_background_color;
             break;
         default:
-            dbgprintf("FIXME: escape$m: p: %u\n", param);
+            dbgprintf("FIXME: SGR: p: %u\n", param);
         }
     }
 }
@@ -663,7 +664,7 @@ void Terminal::execute_escape_sequence(u8 final)
         escape$d(params);
         break;
     case 'm':
-        escape$m(params);
+        SGR(params);
         break;
     case 's':
         escape$s(params);
