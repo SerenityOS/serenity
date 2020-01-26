@@ -44,6 +44,10 @@ Optional<DNSResponse> DNSResponse::from_raw_response(const u8* raw_data, size_t 
 
     DNSResponse response;
     response.m_id = response_header.id();
+    response.m_code = response_header.response_code();
+
+    if (response.code() != DNSResponse::Code::NOERROR)
+        return response;
 
     size_t offset = sizeof(DNSPacket);
 

@@ -13,22 +13,24 @@ DNSRequest::DNSRequest()
 {
 }
 
-void DNSRequest::add_question(const String& name, u16 record_type)
+void DNSRequest::add_question(const String& name, u16 record_type, ShouldRandomizeCase should_randomize_case)
 {
     ASSERT(m_questions.size() <= UINT16_MAX);
 
     if (name.is_empty())
         return;
 
-    // Randomize the 0x20 bit in every ASCII character.
     StringBuilder builder;
     for (size_t i = 0; i < name.length(); ++i) {
         u8 ch = name[i];
-        if (isalpha(ch)) {
-            if (arc4random_uniform(2))
-                ch |= 0x20;
-            else
-                ch &= ~0x20;
+        if (should_randomize_case == ShouldRandomizeCase::Yes) {
+            // Randomize the 0x20 bit in every ASCII character.
+            if (isalpha(ch)) {
+                if (arc4random_uniform(2))
+                    ch |= 0x20;
+                else
+                    ch &= ~0x20;
+            }
         }
         builder.append(ch);
     }

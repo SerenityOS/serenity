@@ -26,10 +26,26 @@ public:
         return m_answers.size();
     }
 
+    enum class Code : u8 {
+        NOERROR = 0,
+        FORMERR = 1,
+        SERVFAIL = 2,
+        NXDOMAIN = 3,
+        NOTIMP = 4,
+        REFUSED = 5,
+        YXDOMAIN = 6,
+        XRRSET = 7,
+        NOTAUTH = 8,
+        NOTZONE = 9,
+    };
+
+    Code code() const { return (Code)m_code; }
+
 private:
     DNSResponse() {}
 
     u16 m_id { 0 };
+    u8 m_code { 0 };
     Vector<DNSQuestion> m_questions;
     Vector<DNSAnswer> m_answers;
 };
