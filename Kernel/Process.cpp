@@ -3283,7 +3283,7 @@ int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
     return 0;
 }
 
-int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
+int Process::sys$sched_setparam(int tid, const struct sched_param* param)
 {
     REQUIRE_PROMISE(proc);
     if (!validate_read_typed(param))
@@ -3293,20 +3293,20 @@ int Process::sys$sched_setparam(pid_t pid, const struct sched_param* param)
     copy_from_user(&desired_priority, &param->sched_priority);
 
     InterruptDisabler disabler;
-    auto* peer = this;
-    if (pid != 0)
-        peer = Process::from_pid(pid);
+    auto* peer = current;
+    if (tid != 0)
+        peer = Thread::from_tid(tid);
 
     if (!peer)
         return -ESRCH;
 
-    if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
+    if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
         return -EPERM;
 
     if (desired_priority < THREAD_PRIORITY_MIN || desired_priority > THREAD_PRIORITY_MAX)
         return -EINVAL;
 
-    peer->any_thread().set_priority((u32)desired_priority);
+    peer->set_priority((u32)desired_priority);
     return 0;
 }
 
@@ -3317,18 +3317,17 @@ int Process::sys$sched_getparam(pid_t pid, struct sched_param* param)
         return -EFAULT;
 
     InterruptDisabler disabler;
-    auto* peer = this;
+    auto* peer = current;
     if (pid != 0)
-        peer = Process::from_pid(pid);
+        peer = Thread::from_tid(pid);
 
     if (!peer)
         return -ESRCH;
 
-    if (!is_superuser() && m_euid != peer->m_uid && m_uid != peer->m_uid)
+    if (!is_superuser() && m_euid != peer->process().m_uid && m_uid != peer->process().m_uid)
         return -EPERM;
 
-    // FIXME: This doesn't seem like the way to get the right thread!
-    int priority = peer->any_thread().priority();
+    int priority = peer->priority();
     copy_to_user(&param->sched_priority, &priority);
     return 0;
 }
