@@ -1,7 +1,9 @@
 #include "DNSRequest.h"
 #include "DNSPacket.h"
 #include <AK/BufferStream.h>
+#include <AK/StringBuilder.h>
 #include <arpa/inet.h>
+#include <ctype.h>
 #include <stdlib.h>
 
 #define C_IN 1
@@ -14,7 +16,27 @@ DNSRequest::DNSRequest()
 void DNSRequest::add_question(const String& name, u16 record_type)
 {
     ASSERT(m_questions.size() <= UINT16_MAX);
-    m_questions.empend(name, record_type, C_IN);
+
+    if (name.is_empty())
+        return;
+
+    // Randomize the 0x20 bit in every ASCII character.
+    StringBuilder builder;
+    for (size_t i = 0; i < name.length(); ++i) {
+        u8 ch = name[i];
+        if (isalpha(ch)) {
+            if (arc4random_uniform(2))
+                ch |= 0x20;
+            else
+                ch &= ~0x20;
+        }
+        builder.append(ch);
+    }
+
+    if (name[name.length() - 1] != '.')
+        builder.append('.');
+
+    m_questions.empend(builder.to_string(), record_type, C_IN);
 }
 
 ByteBuffer DNSRequest::to_byte_buffer() const
