@@ -30,20 +30,13 @@
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
-#include <Kernel/Net/IPv4.h>
 #include <LibCore/CConfigFile.h>
 #include <LibCore/CEventLoop.h>
 #include <LibCore/CFile.h>
 #include <LibCore/CLocalServer.h>
 #include <LibCore/CLocalSocket.h>
-#include <arpa/inet.h>
-#include <netinet/in.h>
+#include <LibCore/CUdpSocket.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <sys/select.h>
-#include <sys/socket.h>
-#include <sys/time.h>
-#include <time.h>
 #include <unistd.h>
 
 LookupServer::LookupServer()
@@ -176,35 +169,29 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
 
     auto buffer = request.to_byte_buffer();
 
-    struct sockaddr_in dst_addr;
+    auto udp_socket = CUdpSocket::construct();
+    udp_socket->set_blocking(true);
 
-    int fd = make_dns_request_socket(dst_addr);
-    if (fd < 0)
-        return {};
+    struct timeval timeout {
+        1, 0
+    };
 
-    int nsent = sendto(fd, buffer.data(), buffer.size(), 0, (const struct sockaddr*)&dst_addr, sizeof(dst_addr));
-    if (nsent < 0) {
-        perror("sendto");
+    int rc = setsockopt(udp_socket->fd(), SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    if (rc < 0) {
+        perror("setsockopt(SOL_SOCKET, SO_RCVTIMEO)");
         return {};
     }
-    ASSERT(nsent == buffer.size());
 
-    struct sockaddr_in src_addr;
-    socklen_t src_addr_len = sizeof(src_addr);
+    if (!udp_socket->connect(m_dns_ip, 53))
+        return {};
+
+    if (!udp_socket->write(buffer))
+        return {};
+
     u8 response_buffer[4096];
-    ssize_t nrecv = recvfrom(fd, response_buffer, sizeof(response_buffer) - 1, 0, (struct sockaddr*)&src_addr, &src_addr_len);
-    if (nrecv < 0) {
-        if (errno == EAGAIN) {
-            did_timeout = true;
-        } else {
-            perror("recvfrom");
-        }
-        close(fd);
+    int nrecv = udp_socket->read(response_buffer, sizeof(response_buffer));
+    if (nrecv == 0)
         return {};
-    }
-    close(fd);
-
-    response_buffer[nrecv] = '\0';
 
     auto o_response = DNSResponse::from_raw_response(response_buffer, nrecv);
     if (!o_response.has_value())
@@ -253,36 +240,4 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
 
     m_lookup_cache.set(hostname, { time(nullptr), record_type, addresses });
     return addresses;
-}
-
-int LookupServer::make_dns_request_socket(sockaddr_in& dst_addr)
-{
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        perror("socket");
-        return {};
-    }
-
-    struct timeval timeout {
-        1, 0
-    };
-    int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    if (rc < 0) {
-        perror("setsockopt(SOL_SOCKET, SO_RCVTIMEO)");
-        close(fd);
-        return {};
-    }
-
-    memset(&dst_addr, 0, sizeof(dst_addr));
-
-    dst_addr.sin_family = AF_INET;
-    dst_addr.sin_port = htons(53);
-    rc = inet_pton(AF_INET, m_dns_ip.characters(), &dst_addr.sin_addr);
-    if (rc < 0) {
-        perror("inet_pton");
-        close(fd);
-        return rc;
-    }
-
-    return fd;
 }
