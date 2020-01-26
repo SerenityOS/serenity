@@ -150,7 +150,7 @@ private:
 
     void CUU(const ParamVector&);
     void CUD(const ParamVector&);
-    void escape$C(const ParamVector&);
+    void CUF(const ParamVector&);
     void escape$D(const ParamVector&);
     void escape$H(const ParamVector&);
     void ED(const ParamVector&);
