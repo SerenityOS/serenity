@@ -91,7 +91,7 @@ private:
 
     bool m_bound { false };
     bool m_accept_side_fd_open { false };
-    sockaddr_un m_address;
+    sockaddr_un m_address { 0, { 0 } };
 
     DoubleBuffer m_for_client;
     DoubleBuffer m_for_server;
