@@ -1080,12 +1080,49 @@ Vector<Ext2FS::BlockIndex> Ext2FS::allocate_blocks(GroupIndex preferred_group_in
     dbg() << "Ext2FS: allocate_blocks:";
 #endif
     blocks.ensure_capacity(count);
-    for (int i = 0; i < count; ++i) {
-        auto block_index = allocate_block(preferred_group_index);
-        blocks.unchecked_append(block_index);
+
+    bool found_a_group = false;
+    GroupIndex group_index = preferred_group_index;
+
+    if (!group_descriptor(preferred_group_index).bg_free_blocks_count) {
+        group_index = 1;
+    }
+
+    while (blocks.size() < count) {
+        if (group_descriptor(group_index).bg_free_blocks_count) {
+            found_a_group = true;
+        } else {
+            if (group_index == preferred_group_index)
+                group_index = 1;
+            for (; group_index < m_block_group_count; ++group_index) {
+                if (group_descriptor(group_index).bg_free_blocks_count) {
+                    found_a_group = true;
+                    break;
+                }
+            }
+        }
+        ASSERT(found_a_group);
+        auto& bgd = group_descriptor(group_index);
+        auto& cached_bitmap = get_bitmap_block(bgd.bg_block_bitmap);
+
+        int blocks_in_group = min(blocks_per_group(), super_block().s_blocks_count);
+        auto block_bitmap = Bitmap::wrap(cached_bitmap.buffer.data(), blocks_in_group);
+
+        BlockIndex first_block_in_group = (group_index - 1) * blocks_per_group() + first_block_index();
+        int free_region_size = 0;
+        int first_unset_bit_index = block_bitmap.find_longest_range_of_unset_bits(count - blocks.size(), free_region_size);
+        ASSERT(first_unset_bit_index != -1);
 #ifdef EXT2_DEBUG
-        dbg() << "  > " << block_index;
+        dbg() << "Ext2FS: allocating free region of size: " << free_region_size << "[" << group_index << "]";
 #endif
+        for (int i = 0; i < free_region_size; ++i) {
+            BlockIndex block_index = (unsigned)(first_unset_bit_index + i) + first_block_in_group;
+            set_block_allocation_state(block_index, true);
+            blocks.unchecked_append(block_index);
+#ifdef EXT2_DEBUG
+            dbg() << "  allocated > " << block_index;
+#endif
+        }
     }
 
     ASSERT(blocks.size() == count);
