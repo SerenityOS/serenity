@@ -43,7 +43,7 @@ LookupServer::LookupServer()
 {
     auto config = CConfigFile::get_for_system("LookupServer");
     dbg() << "Using network config file at " << config->file_name();
-    m_dns_ip = config->read_entry("DNS", "IPAddress", "127.0.0.53");
+    m_nameserver = config->read_entry("DNS", "Nameserver", "1.1.1.1");
 
     load_etc_hosts();
 
@@ -114,7 +114,7 @@ void LookupServer::service_client(RefPtr<CLocalSocket> socket)
         return;
     }
     auto hostname = String((const char*)client_buffer + 1, nrecv - 1, Chomp);
-    dbg() << "Got request for '" << hostname << "' (using IP " << m_dns_ip << ")";
+    dbg() << "Got request for '" << hostname << "' (using IP " << m_nameserver << ")";
 
     Vector<String> responses;
 
@@ -182,7 +182,7 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
         return {};
     }
 
-    if (!udp_socket->connect(m_dns_ip, 53))
+    if (!udp_socket->connect(m_nameserver, 53))
         return {};
 
     if (!udp_socket->write(buffer))

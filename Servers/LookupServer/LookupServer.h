@@ -51,7 +51,7 @@ private:
     };
 
     RefPtr<CLocalServer> m_local_server;
-    String m_dns_ip;
+    String m_nameserver;
     HashMap<String, String> m_dns_custom_hostnames;
     HashMap<String, CachedLookup> m_lookup_cache;
 };
