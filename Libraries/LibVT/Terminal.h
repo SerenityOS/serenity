@@ -148,7 +148,7 @@ private:
 
     void emit_string(const StringView&);
 
-    void escape$A(const ParamVector&);
+    void CUU(const ParamVector&);
     void escape$B(const ParamVector&);
     void escape$C(const ParamVector&);
     void escape$D(const ParamVector&);
