@@ -25,10 +25,8 @@
  */
 
 #include "LookupServer.h"
-#include "DNSPacket.h"
-#include "DNSRecord.h"
-#include <AK/BufferStream.h>
-#include <AK/ByteBuffer.h>
+#include "DNSRequest.h"
+#include "DNSResponse.h"
 #include <AK/HashMap.h>
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
@@ -38,7 +36,6 @@
 #include <LibCore/CFile.h>
 #include <LibCore/CLocalServer.h>
 #include <LibCore/CLocalSocket.h>
-#include <LibCore/CSyscallUtils.h>
 #include <arpa/inet.h>
 #include <netinet/in.h>
 #include <stdio.h>
@@ -48,15 +45,6 @@
 #include <sys/time.h>
 #include <time.h>
 #include <unistd.h>
-
-#define T_A 1
-#define T_NS 2
-#define T_CNAME 5
-#define T_SOA 6
-#define T_PTR 12
-#define T_MX 15
-
-#define C_IN 1
 
 LookupServer::LookupServer()
 {
@@ -72,7 +60,7 @@ LookupServer::LookupServer()
         socket->on_ready_to_read = [this, socket]() {
             service_client(socket);
             RefPtr<CLocalSocket> keeper = socket;
-            const_cast<CLocalSocket&>(*socket).on_ready_to_read = []{};
+            const_cast<CLocalSocket&>(*socket).on_ready_to_read = [] {};
         };
     };
     bool ok = m_local_server->take_over_from_system_server();
@@ -173,29 +161,6 @@ void LookupServer::service_client(RefPtr<CLocalSocket> socket)
     }
 }
 
-String LookupServer::parse_dns_name(const u8* data, int& offset, int max_offset)
-{
-    Vector<char, 128> buf;
-    while (offset < max_offset) {
-        u8 ch = data[offset];
-        if (ch == '\0') {
-            ++offset;
-            break;
-        }
-        if ((ch & 0xc0) == 0xc0) {
-            ASSERT_NOT_REACHED();
-            // FIXME: Parse referential names.
-            offset += 2;
-        }
-        for (int i = 0; i < ch; ++i) {
-            buf.append(data[offset + i + 1]);
-        }
-        buf.append('.');
-        offset += ch + 1;
-    }
-    return String::copy(buf);
-}
-
 Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, unsigned short record_type)
 {
     if (auto it = m_lookup_cache.find(hostname); it != m_lookup_cache.end()) {
@@ -206,52 +171,16 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
         m_lookup_cache.remove(it);
     }
 
-    DNSPacket request_header;
-    request_header.set_id(get_next_id());
-    request_header.set_is_query();
-    request_header.set_opcode(0);
-    request_header.set_truncated(false);
-    request_header.set_recursion_desired(true);
-    request_header.set_question_count(1);
+    DNSRequest request;
+    request.add_question(hostname, record_type);
 
-    auto buffer = ByteBuffer::create_uninitialized(1024);
-    {
-        BufferStream stream(buffer);
-
-        stream << ByteBuffer::wrap(&request_header, sizeof(request_header));
-        auto parts = hostname.split('.');
-        for (auto& part : parts) {
-            stream << (u8)part.length();
-            stream << part;
-        }
-        stream << '\0';
-        stream << htons(record_type);
-        stream << htons(C_IN);
-        stream.snip();
-    }
-
-    int fd = socket(AF_INET, SOCK_DGRAM, 0);
-    if (fd < 0) {
-        perror("socket");
-        return {};
-    }
-
-    struct timeval timeout {
-        1, 0
-    };
-    int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
-    if (rc < 0) {
-        perror("setsockopt");
-        close(fd);
-        return {};
-    }
+    auto buffer = request.to_byte_buffer();
 
     struct sockaddr_in dst_addr;
-    memset(&dst_addr, 0, sizeof(dst_addr));
 
-    dst_addr.sin_family = AF_INET;
-    dst_addr.sin_port = htons(53);
-    rc = inet_pton(AF_INET, m_dns_ip.characters(), &dst_addr.sin_addr);
+    int fd = make_dns_request_socket(dst_addr);
+    if (fd < 0)
+        return {};
 
     int nsent = sendto(fd, buffer.data(), buffer.size(), 0, (const struct sockaddr*)&dst_addr, sizeof(dst_addr));
     if (nsent < 0) {
@@ -277,63 +206,62 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
 
     response_buffer[nrecv] = '\0';
 
-    if (nrecv < (int)sizeof(DNSPacket)) {
-        dbgprintf("LookupServer: Response not big enough (%d) to be a DNS packet :(\n", nrecv);
+    auto o_response = DNSResponse::from_raw_response(response_buffer, nrecv);
+    if (!o_response.has_value())
         return {};
-    }
 
-    auto& response_header = *(DNSPacket*)(response_buffer);
-    dbgprintf("Got response (ID: %u)\n", response_header.id());
-    dbgprintf("  Question count: %u\n", response_header.question_count());
-    dbgprintf("  Answer count: %u\n", response_header.answer_count());
-    dbgprintf(" Authority count: %u\n", response_header.authority_count());
-    dbgprintf("Additional count: %u\n", response_header.additional_count());
+    auto& response = o_response.value();
 
-    if (response_header.id() != request_header.id()) {
-        dbgprintf("LookupServer: ID mismatch (%u vs %u) :(\n", response_header.id(), request_header.id());
+    if (response.id() != request.id()) {
+        dbgprintf("LookupServer: ID mismatch (%u vs %u) :(\n", response.id(), request.id());
         return {};
     }
-    if (response_header.question_count() != 1) {
-        dbgprintf("LookupServer: Question count (%u vs %u) :(\n", response_header.question_count(), request_header.question_count());
+    if (response.question_count() != 1) {
+        dbgprintf("LookupServer: Question count (%u vs %u) :(\n", response.question_count(), request.question_count());
         return {};
     }
-    if (response_header.answer_count() < 1) {
-        dbgprintf("LookupServer: Not enough answers (%u) :(\n", response_header.answer_count());
+    if (response.answer_count() < 1) {
+        dbgprintf("LookupServer: Not enough answers (%u) :(\n", response.answer_count());
         return {};
     }
-
-    int offset = 0;
-    auto question = parse_dns_name((const u8*)response_header.payload(), offset, nrecv);
-    offset += 4;
 
     Vector<String> addresses;
-
-    for (u16 i = 0; i < response_header.answer_count(); ++i) {
-        auto& record = *(const DNSRecord*)(&((const u8*)response_header.payload())[offset]);
-        dbgprintf("LookupServer:     Answer #%u: (question: %s), type=%u, ttl=%u, length=%u, data=",
-            i,
-            question.characters(),
-            record.type(),
-            record.ttl(),
-            record.data_length());
-
-        offset += sizeof(DNSRecord) + record.data_length();
-        if (record.type() == T_PTR) {
-            int dummy = 0;
-            auto name = parse_dns_name((const u8*)record.data(), dummy, record.data_length());
-            dbgprintf("%s\n", name.characters());
-            addresses.append(name);
-        } else if (record.type() == T_A) {
-            auto ipv4_address = IPv4Address((const u8*)record.data());
-            dbgprintf("%s\n", ipv4_address.to_string().characters());
-            addresses.append(ipv4_address.to_string());
-        } else {
-            dbgprintf("(unimplemented)\n");
-            dbgprintf("LookupServer: FIXME: Handle record type %u\n", record.type());
-        }
-        // FIXME: Parse some other record types perhaps?
+    for (auto& answer : response.answers()) {
+        addresses.append(answer.record_data());
     }
 
     m_lookup_cache.set(hostname, { time(nullptr), record_type, addresses });
     return addresses;
+}
+
+int LookupServer::make_dns_request_socket(sockaddr_in& dst_addr)
+{
+    int fd = socket(AF_INET, SOCK_DGRAM, 0);
+    if (fd < 0) {
+        perror("socket");
+        return {};
+    }
+
+    struct timeval timeout {
+        1, 0
+    };
+    int rc = setsockopt(fd, SOL_SOCKET, SO_RCVTIMEO, &timeout, sizeof(timeout));
+    if (rc < 0) {
+        perror("setsockopt(SOL_SOCKET, SO_RCVTIMEO)");
+        close(fd);
+        return {};
+    }
+
+    memset(&dst_addr, 0, sizeof(dst_addr));
+
+    dst_addr.sin_family = AF_INET;
+    dst_addr.sin_port = htons(53);
+    rc = inet_pton(AF_INET, m_dns_ip.characters(), &dst_addr.sin_addr);
+    if (rc < 0) {
+        perror("inet_pton");
+        close(fd);
+        return rc;
+    }
+
+    return fd;
 }

@@ -1,5 +1,7 @@
 OBJS = \
     LookupServer.o \
+    DNSRequest.o \
+    DNSResponse.o \
     main.o
 
 PROGRAM = LookupServer

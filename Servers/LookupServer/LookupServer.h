@@ -30,6 +30,7 @@
 #include <AK/RefPtr.h>
 #include <AK/String.h>
 #include <LibCore/CObject.h>
+#include <netinet/in.h>
 
 class CLocalSocket;
 class CLocalServer;
@@ -43,10 +44,9 @@ public:
 private:
     void load_etc_hosts();
     void service_client(RefPtr<CLocalSocket>);
-    static String parse_dns_name(const u8* data, int& offset, int max_offset);
     Vector<String> lookup(const String& hostname, bool& did_timeout, unsigned short record_type);
 
-    u16 get_next_id() { return ++m_next_id; }
+    int make_dns_request_socket(sockaddr_in& dst_addr);
 
     struct CachedLookup {
         time_t timestamp { 0 };
@@ -55,7 +55,6 @@ private:
     };
 
     RefPtr<CLocalServer> m_local_server;
-    u16 m_next_id { 0 };
     String m_dns_ip;
     HashMap<String, String> m_dns_custom_hostnames;
     HashMap<String, CachedLookup> m_lookup_cache;
