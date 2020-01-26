@@ -344,8 +344,9 @@ void Terminal::CUF(const ParamVector& params)
     set_cursor(m_cursor_row, new_column);
 }
 
-void Terminal::escape$D(const ParamVector& params)
+void Terminal::CUB(const ParamVector& params)
 {
+    // CUB – Cursor Backward
     int num = 1;
     if (params.size() >= 1)
         num = params[0];
@@ -622,7 +623,7 @@ void Terminal::execute_escape_sequence(u8 final)
         CUF(params);
         break;
     case 'D':
-        escape$D(params);
+        CUB(params);
         break;
     case 'H':
         escape$H(params);
