@@ -18,6 +18,8 @@ public:
 
     void add_question(const String& name, u16 record_type);
 
+    const Vector<DNSQuestion>& questions() const { return m_questions; }
+
     u16 question_count() const
     {
         ASSERT(m_questions.size() < UINT16_MAX);
