@@ -240,13 +240,18 @@ Vector<String> LookupServer::lookup(const String& hostname, bool& did_timeout, u
         return {};
     }
 
-    Vector<String> responses;
+    Vector<String, 8> responses;
+    Vector<DNSAnswer, 8> cacheable_answers;
     for (auto& answer : response.answers()) {
         responses.append(answer.record_data());
+        if (!answer.has_expired())
+            cacheable_answers.append(answer);
     }
 
-    if (m_lookup_cache.size() >= 256)
-        m_lookup_cache.remove(m_lookup_cache.begin());
-    m_lookup_cache.set(hostname, { request.questions()[0], response.answers() });
+    if (!cacheable_answers.is_empty()) {
+        if (m_lookup_cache.size() >= 256)
+            m_lookup_cache.remove(m_lookup_cache.begin());
+        m_lookup_cache.set(hostname, { request.questions()[0], move(cacheable_answers) });
+    }
     return responses;
 }
