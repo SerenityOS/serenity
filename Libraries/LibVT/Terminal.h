@@ -167,7 +167,7 @@ private:
     void escape$s(const ParamVector&);
     void escape$u(const ParamVector&);
     void escape$t(const ParamVector&);
-    void escape$r(const ParamVector&);
+    void DECSTBM(const ParamVector&);
     void escape$S(const ParamVector&);
     void escape$T(const ParamVector&);
     void escape$L(const ParamVector&);
