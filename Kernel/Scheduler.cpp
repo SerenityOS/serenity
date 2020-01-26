@@ -118,21 +118,6 @@ bool Thread::AcceptBlocker::should_unblock(Thread&, time_t, long)
     return socket.can_accept();
 }
 
-Thread::ReceiveBlocker::ReceiveBlocker(const FileDescription& description)
-    : FileDescriptionBlocker(description)
-{
-}
-
-bool Thread::ReceiveBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
-{
-    auto& socket = *blocked_description().socket();
-    // FIXME: Block until the amount of data wanted is available.
-    bool timed_out = now_sec > socket.receive_deadline().tv_sec || (now_sec == socket.receive_deadline().tv_sec && now_usec >= socket.receive_deadline().tv_usec);
-    if (timed_out || blocked_description().can_read())
-        return true;
-    return false;
-}
-
 Thread::ConnectBlocker::ConnectBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
@@ -147,21 +132,50 @@ bool Thread::ConnectBlocker::should_unblock(Thread&, time_t, long)
 Thread::WriteBlocker::WriteBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
+    if (description.is_socket()) {
+        auto& socket = *description.socket();
+        if (socket.has_send_timeout()) {
+            timeval deadline = kgettimeofday();
+            deadline.tv_sec += socket.send_timeout().tv_sec;
+            deadline.tv_usec += socket.send_timeout().tv_usec;
+            deadline.tv_sec += (socket.send_timeout().tv_usec / 1000000) * 1;
+            deadline.tv_usec %= 1000000;
+            m_deadline = deadline;
+        }
+    }
 }
 
-bool Thread::WriteBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::WriteBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
 {
+    if (m_deadline.has_value()) {
+        bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
+        return timed_out || blocked_description().can_write();
+    }
     return blocked_description().can_write();
 }
 
 Thread::ReadBlocker::ReadBlocker(const FileDescription& description)
     : FileDescriptionBlocker(description)
 {
+    if (description.is_socket()) {
+        auto& socket = *description.socket();
+        if (socket.has_receive_timeout()) {
+            timeval deadline = kgettimeofday();
+            deadline.tv_sec += socket.receive_timeout().tv_sec;
+            deadline.tv_usec += socket.receive_timeout().tv_usec;
+            deadline.tv_sec += (socket.receive_timeout().tv_usec / 1000000) * 1;
+            deadline.tv_usec %= 1000000;
+            m_deadline = deadline;
+        }
+    }
 }
 
-bool Thread::ReadBlocker::should_unblock(Thread&, time_t, long)
+bool Thread::ReadBlocker::should_unblock(Thread&, time_t now_sec, long now_usec)
 {
-    // FIXME: Block until the amount of data wanted is available.
+    if (m_deadline.has_value()) {
+        bool timed_out = now_sec > m_deadline.value().tv_sec || (now_sec == m_deadline.value().tv_sec && now_usec >= m_deadline.value().tv_usec);
+        return timed_out || blocked_description().can_read();
+    }
     return blocked_description().can_read();
 }
 

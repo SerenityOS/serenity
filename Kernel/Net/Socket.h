@@ -112,9 +112,6 @@ public:
     uid_t acceptor_uid() const { return m_acceptor.uid; }
     gid_t acceptor_gid() const { return m_acceptor.gid; }
 
-    timeval receive_deadline() const { return m_receive_deadline; }
-    timeval send_deadline() const { return m_send_deadline; }
-
     Lock& lock() { return m_lock; }
 
     // ^File
@@ -122,13 +119,17 @@ public:
     virtual ssize_t write(FileDescription&, const u8*, ssize_t) override final;
     virtual String absolute_path(const FileDescription&) const override = 0;
 
+
+    bool has_receive_timeout() const { return m_receive_timeout.tv_sec || m_receive_timeout.tv_usec; }
+    const timeval& receive_timeout() const { return m_receive_timeout; }
+
+    bool has_send_timeout() const { return m_send_timeout.tv_sec || m_send_timeout.tv_usec; }
+    const timeval& send_timeout() const { return m_send_timeout; }
+
 protected:
     Socket(int domain, int type, int protocol);
 
     KResult queue_connection_from(NonnullRefPtr<Socket>);
-
-    void load_receive_deadline();
-    void load_send_deadline();
 
     int backlog() const { return m_backlog; }
     void set_backlog(int backlog) { m_backlog = backlog; }
@@ -155,9 +156,6 @@ private:
 
     timeval m_receive_timeout { 0, 0 };
     timeval m_send_timeout { 0, 0 };
-
-    timeval m_receive_deadline { 0, 0 };
-    timeval m_send_deadline { 0, 0 };
 
     NonnullRefPtrVector<Socket> m_pending;
 };
