@@ -124,7 +124,7 @@ inline bool is_valid_final_character(u8 ch)
     return ch >= 0x40 && ch <= 0x7e;
 }
 
-void Terminal::escape$h_l(bool should_set, bool question_param, const ParamVector& params)
+void Terminal::alter_mode(bool should_set, bool question_param, const ParamVector& params)
 {
     int mode = 2;
     if (params.size() > 0) {
@@ -152,6 +152,19 @@ void Terminal::escape$h_l(bool should_set, bool question_param, const ParamVecto
         }
     }
 }
+
+void Terminal::RM(bool question_param, const ParamVector& params)
+{
+    // RM – Reset Mode
+    alter_mode(true, question_param, params);
+}
+
+void Terminal::SM(bool question_param, const ParamVector& params)
+{
+    // SM – Set Mode
+    alter_mode(false, question_param, params);
+}
+
 
 void Terminal::SGR(const ParamVector& params)
 {
@@ -679,10 +692,10 @@ void Terminal::execute_escape_sequence(u8 final)
         escape$r(params);
         break;
     case 'l':
-        escape$h_l(true, question_param, params);
+        RM(question_param, params);
         break;
     case 'h':
-        escape$h_l(false, question_param, params);
+        SM(question_param, params);
         break;
     case 'c':
         DA(params);
