@@ -279,8 +279,9 @@ void Terminal::escape$r(const ParamVector& params)
     set_cursor(0, 0);
 }
 
-void Terminal::escape$H(const ParamVector& params)
+void Terminal::CUP(const ParamVector& params)
 {
+    // CUP – Cursor Position
     unsigned row = 1;
     unsigned col = 1;
     if (params.size() >= 1)
@@ -626,7 +627,7 @@ void Terminal::execute_escape_sequence(u8 final)
         CUB(params);
         break;
     case 'H':
-        escape$H(params);
+        CUP(params);
         break;
     case 'J':
         ED(params);
