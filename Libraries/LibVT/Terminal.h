@@ -148,7 +148,7 @@ private:
 
     void emit_string(const StringView&);
 
-    void alter_mode(bool, bool, const ParamVector&);
+    void alter_mode(bool should_set, bool question_param, const ParamVector&);
 
     void CUU(const ParamVector&);
     void CUD(const ParamVector&);
@@ -171,8 +171,8 @@ private:
     void escape$S(const ParamVector&);
     void escape$T(const ParamVector&);
     void escape$L(const ParamVector&);
-    void RM(bool, const ParamVector&);
-    void SM(bool, const ParamVector&);
+    void RM(bool question_param, const ParamVector&);
+    void SM(bool question_param, const ParamVector&);
     void DA(const ParamVector&);
     void HVP(const ParamVector&);
     void NEL();
