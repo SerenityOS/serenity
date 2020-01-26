@@ -106,12 +106,17 @@ hostent* gethostbyname(const char* name)
         perror("recv");
         return nullptr;
     }
-    buffer[nrecv] = '\0';
 
     if (!memcmp(buffer, "Not found.", sizeof("Not found.") - 1))
         return nullptr;
 
-    int rc = inet_pton(AF_INET, buffer, &__gethostbyname_address);
+    auto responses = String(buffer, nrecv).split('\n');
+    if (responses.is_empty())
+        return nullptr;
+
+    auto& response = responses[0];
+
+    int rc = inet_pton(AF_INET, response.characters(), &__gethostbyname_address);
     if (rc <= 0)
         return nullptr;
 
@@ -169,16 +174,17 @@ hostent* gethostbyaddr(const void* addr, socklen_t addr_size, int type)
         perror("recv");
         return nullptr;
     }
-    if (nrecv > 1) {
-        // Strip newline.
-        buffer[nrecv - 1] = '\0';
-    }
-    buffer[nrecv] = '\0';
 
     if (!memcmp(buffer, "Not found.", sizeof("Not found.") - 1))
         return nullptr;
 
-    strncpy(__gethostbyaddr_name_buffer, buffer, max(sizeof(__gethostbyaddr_name_buffer), (size_t)nrecv));
+    auto responses = String(buffer, nrecv).split('\n');
+    if (responses.is_empty())
+        return nullptr;
+
+    auto& response = responses[0];
+
+    strncpy(__gethostbyaddr_name_buffer, response.characters(), max(sizeof(__gethostbyaddr_name_buffer), response.length()));
 
     __gethostbyaddr_buffer.h_name = __gethostbyaddr_name_buffer;
     __gethostbyaddr_buffer.h_aliases = nullptr;
