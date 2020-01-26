@@ -1,0 +1,11 @@
+--- mandoc-1.14.5/dbm_map.c.orig	Sat Jan 25 20:09:42 2020
++++ mandoc-1.14.5/dbm_map.c	Sat Jan 25 20:09:49 2020
+@@ -36,7 +36,7 @@
+ #endif
+ #include <errno.h>
+ #include <fcntl.h>
+-#include <regex.h>
++#include <pcre2posix.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+ #include <string.h>

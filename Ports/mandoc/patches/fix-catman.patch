@@ -1,0 +1,11 @@
+--- mandoc-1.14.5/catman.c.orig	Sun Jan 19 23:55:20 2020
++++ mandoc-1.14.5/catman.c	Sun Jan 19 23:55:30 2020
+@@ -113,7 +113,7 @@
+ 		if ((sz = sendmsg(fd, &msg, 0)) != -1 ||
+ 		    errno != EAGAIN)
+ 			break;
+-		nanosleep(&timeout, NULL);
++		sleep(1);
+ 	}
+ 	return sz;
+ }

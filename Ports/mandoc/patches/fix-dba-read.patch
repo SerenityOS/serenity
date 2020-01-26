@@ -1,0 +1,11 @@
+--- mandoc-1.14.5/dba_read.c.orig	Sat Jan 25 20:11:14 2020
++++ mandoc-1.14.5/dba_read.c	Sat Jan 25 20:11:22 2020
+@@ -19,7 +19,7 @@
+  * The interface is defined in "dba.h".
+  * This file is seperate from dba.c because this also uses "dbm.h".
+  */
+-#include <regex.h>
++#include <pcre2posix.h>
+ #include <stdint.h>
+ #include <stdlib.h>
+ #include <stdio.h>
