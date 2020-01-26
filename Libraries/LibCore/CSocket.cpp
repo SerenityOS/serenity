@@ -36,6 +36,8 @@
 #include <sys/socket.h>
 #include <unistd.h>
 
+//#define CSOCKET_DEBUG
+
 CSocket::CSocket(Type type, CObject* parent)
     : CIODevice(parent)
     , m_type(type)
@@ -67,10 +69,10 @@ void CSocket::set_blocking(bool blocking)
     int flags = fcntl(fd(), F_GETFL, 0);
     ASSERT(flags >= 0);
     if (blocking)
-        flags = fcntl(fd(), F_SETFL, flags | O_NONBLOCK);
+        flags = fcntl(fd(), F_SETFL, flags & ~O_NONBLOCK);
     else
-        flags = fcntl(fd(), F_SETFL, flags & O_NONBLOCK);
-    ASSERT(flags >= 0);
+        flags = fcntl(fd(), F_SETFL, flags | O_NONBLOCK);
+    ASSERT(flags == 0);
 }
 
 bool CSocket::connect(const CSocketAddress& address, int port)
