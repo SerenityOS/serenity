@@ -110,6 +110,7 @@ GFilePicker::GFilePicker(Mode mode, const StringView& file_name, const StringVie
     m_view->set_column_hidden(GFileSystemModel::Column::Group, true);
     m_view->set_column_hidden(GFileSystemModel::Column::Permissions, true);
     m_view->set_column_hidden(GFileSystemModel::Column::Inode, true);
+    m_view->set_column_hidden(GFileSystemModel::Column::SymlinkTarget, true);
     m_model->set_root_path(path);
 
     location_textbox->on_return_pressed = [&] {

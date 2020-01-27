@@ -53,6 +53,7 @@ public:
         Permissions,
         ModificationTime,
         Inode,
+        SymlinkTarget,
         __Count,
     };
 
@@ -60,6 +61,7 @@ public:
         ~Node() { close(m_watch_fd); }
 
         String name;
+        String symlink_target;
         size_t size { 0 };
         mode_t mode { 0 };
         uid_t uid { 0 };
