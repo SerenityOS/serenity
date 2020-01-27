@@ -42,6 +42,11 @@ static int usage()
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio dpath", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     // FIXME: When invoked with type "p", no need for major/minor numbers.
     // FIXME: Add some kind of option for specifying the file permissions.
     if (argc != 5)
