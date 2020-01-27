@@ -210,6 +210,11 @@ void test_unlink_symlink()
         perror("symlink");
         ASSERT_NOT_REACHED();
     }
+
+    char buffer[PATH_MAX];
+    rc = readlink("/tmp/linky", buffer, sizeof(buffer));
+    ASSERT(rc == strlen("/proc/2/foo") + 1);
+
     rc = unlink("/tmp/linky");
     if (rc < 0) {
         perror("unlink");

@@ -1854,7 +1854,7 @@ int Process::sys$readlink(const Syscall::SC_readlink_params* user_params)
     if (link_target.length() + 1 > params.buffer.size)
         return -ENAMETOOLONG;
     copy_to_user(params.buffer.data, link_target.characters(), link_target.length() + 1);
-    return 0;
+    return link_target.length() + 1;
 }
 
 int Process::sys$chdir(const char* user_path, size_t path_length)
