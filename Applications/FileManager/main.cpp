@@ -140,7 +140,7 @@ int main(int argc, char** argv)
 
         struct stat st;
         // If the directory no longer exists, we find a parent that does.
-        while (lstat(current_path.characters(), &st) != 0) {
+        while (stat(current_path.characters(), &st) != 0) {
             directory_view->open_parent_directory();
             current_path = directory_view->path();
             if (current_path == directories_model->root_path()) {

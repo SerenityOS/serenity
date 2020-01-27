@@ -55,11 +55,20 @@ void DirectoryView::handle_activation(const GModelIndex& index)
     dbgprintf("on activation: %d,%d, this=%p, m_model=%p\n", index.row(), index.column(), this, m_model.ptr());
     auto& node = model().node(index);
     auto path = node.full_path(model());
-    if (node.is_directory()) {
+
+    struct stat st;
+    if (stat(path.characters(), &st) < 0) {
+        perror("stat");
+        return;
+    }
+
+    if (S_ISDIR(st.st_mode)) {
         open(path);
         return;
     }
-    if (node.is_executable()) {
+
+    // FIXME: This doesn't seem like the right way to fully detect executability.
+    if (st.st_mode & S_IXUSR) {
         if (fork() == 0) {
             int rc = execl(path.characters(), path.characters(), nullptr);
             if (rc < 0)
