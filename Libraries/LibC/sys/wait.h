@@ -32,6 +32,7 @@
 __BEGIN_DECLS
 
 #define WEXITSTATUS(status) (((status)&0xff00) >> 8)
+#define WSTOPSIG(status) WEXITSTATUS(status)
 #define WTERMSIG(status) ((status)&0x7f)
 #define WIFEXITED(status) (WTERMSIG(status) == 0)
 #define WIFSTOPPED(status) (((status) & 0xff) == 0x7f)
