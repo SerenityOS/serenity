@@ -33,7 +33,7 @@
 //#define DBFS_DEBUG
 
 struct CacheEntry {
-    u32 timestamp { 0 };
+    time_t timestamp { 0 };
     u32 block_index { 0 };
     u8* data { nullptr };
     bool has_data { false };

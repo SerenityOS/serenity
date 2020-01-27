@@ -49,7 +49,7 @@ extern char* tzname[2];
 extern int daylight;
 
 typedef uint32_t clock_t;
-typedef uint32_t time_t;
+typedef int64_t time_t;
 
 struct tm* localtime(const time_t*);
 struct tm* gmtime(const time_t*);
