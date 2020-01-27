@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -27,239 +27,295 @@
 #include "CArgsParser.h"
 #include <AK/StringBuilder.h>
 
+#include <getopt.h>
 #include <stdio.h>
 
-bool CArgsParserResult::is_present(const String& arg_name) const
+CArgsParser::CArgsParser()
 {
-    return m_args.contains(arg_name);
+    add_option(m_show_help, "Display this message", "help", 0);
 }
 
-String CArgsParserResult::get(const String& arg_name) const
+void CArgsParser::parse(int argc, char** argv)
 {
-    return m_args.get(arg_name).value_or({});
-}
+    auto print_usage_and_exit = [this, argv] {
+        print_usage(stderr, argv[0]);
+        exit(1);
+    };
+    Vector<option> long_options;
+    StringBuilder short_options_builder;
 
-const Vector<String>& CArgsParserResult::get_single_values() const
-{
-    return m_single_values;
-}
+    int index_of_found_long_option = -1;
 
-CArgsParser::Arg::Arg(const String& name, const String& description, bool required)
-    : name(name)
-    , description(description)
-    , required(required)
-{
-}
+    for (int i = 0; i < m_options.size(); i++) {
+        auto& opt = m_options[i];
+        if (opt.long_name) {
+            option long_opt {
+                opt.long_name,
+                opt.requires_argument ? required_argument : no_argument,
+                &index_of_found_long_option,
+                i
+            };
+            long_options.append(long_opt);
+        }
+        if (opt.short_name) {
+            short_options_builder.append(opt.short_name);
+            if (opt.requires_argument)
+                short_options_builder.append(':');
+        }
+    }
+    long_options.append({ 0, 0, 0, 0 });
 
-CArgsParser::Arg::Arg(const String& name, const String& value_name, const String& description, bool required)
-    : name(name)
-    , description(description)
-    , value_name(value_name)
-    , required(required)
-{
-}
+    String short_options = short_options_builder.build();
 
-CArgsParser::CArgsParser(const String& program_name)
-    : m_program_name(program_name)
-    , m_prefix("-")
-{
-}
-
-CArgsParserResult CArgsParser::parse(int argc, char** argv)
-{
-    CArgsParserResult res;
-
-    // We should have at least one parameter
-    if (argc < 2)
-        return {};
-
-    // We parse the first parameter at the index 1
-    if (parse_next_param(1, argv, argc - 1, res) != 0)
-        return {};
-
-    if (!check_required_args(res))
-        return {};
-
-    return res;
-}
-
-int CArgsParser::parse_next_param(int index, char** argv, const int params_left, CArgsParserResult& res)
-{
-    ASSERT(params_left >= 0);
-    if (params_left == 0)
-        return 0;
-
-    String param = argv[index];
-
-    // We check if the prefix is found at the beginning of the param name
-    if (is_param_valid(param)) {
-        auto prefix_length = m_prefix.length();
-        String param_name = param.substring(prefix_length, param.length() - prefix_length);
-
-        auto arg = m_args.find(param_name);
-        if (arg == m_args.end()) {
-            printf("Unknown arg \"");
-            if (!param_name.is_null())
-                printf("%s", param_name.characters());
-            printf("\"\n");
-            return -1;
+    while (true) {
+        int c = getopt_long(argc, argv, short_options.characters(), long_options.data(), nullptr);
+        if (c == -1) {
+            // We have reached the end.
+            break;
+        } else if (c == '?') {
+            // There was an error, and getopt() has already
+            // printed its error message.
+            print_usage_and_exit();
         }
 
-        // If this parameter must be followed by a value, we look for it
-        if (!arg->value.value_name.is_null()) {
-            if (params_left < 2) {
-                printf("Missing value for argument %s\n", arg->value.name.characters());
-                return -1;
+        // Let's see what option we just found.
+        Option* found_option = nullptr;
+        if (c == 0) {
+            // It was a long option.
+            ASSERT(index_of_found_long_option >= 0);
+            found_option = &m_options[index_of_found_long_option];
+            index_of_found_long_option = -1;
+        } else {
+            // It was a short option, look it up.
+            auto it = m_options.find([c](auto& opt) { return c == opt.short_name; });
+            ASSERT(!it.is_end());
+            found_option = &*it;
+        }
+        ASSERT(found_option);
+
+        const char* arg = found_option->requires_argument ? optarg : nullptr;
+        if (!found_option->accept_value(arg)) {
+            fprintf(stderr, "Invalid value for option %s\n", found_option->name_for_display().characters());
+            print_usage_and_exit();
+        }
+    }
+
+    // We're done processing options, now let's parse positional arguments.
+
+    int values_left = argc - optind;
+    int num_values_for_arg[m_positional_args.size()];
+    int total_values_required = 0;
+    for (int i = 0; i < m_positional_args.size(); i++) {
+        auto& arg = m_positional_args[i];
+        num_values_for_arg[i] = arg.min_values;
+        total_values_required += arg.min_values;
+    }
+
+    if (total_values_required > values_left)
+        print_usage_and_exit();
+    int extra_values_to_distribute = values_left - total_values_required;
+
+    for (int i = 0; i < m_positional_args.size(); i++) {
+        auto& arg = m_positional_args[i];
+        int extra_values_to_this_arg = min(arg.max_values - arg.min_values, extra_values_to_distribute);
+        num_values_for_arg[i] += extra_values_to_this_arg;
+        extra_values_to_distribute -= extra_values_to_this_arg;
+        if (extra_values_to_distribute == 0)
+            break;
+    }
+
+    if (extra_values_to_distribute > 0) {
+        // We still have too many values :(
+        print_usage_and_exit();
+    }
+
+    for (int i = 0; i < m_positional_args.size(); i++) {
+        auto& arg = m_positional_args[i];
+        for (int j = 0; j < num_values_for_arg[i]; j++) {
+            const char* value = argv[optind++];
+            if (!arg.accept_value(value)) {
+                fprintf(stderr, "Invalid value for argument %s\n", arg.name);
+                print_usage_and_exit();
             }
+        }
+    }
 
-            String next = String(argv[index + 1]);
+    // We're done parsing! :)
+    // Now let's show help if requested.
+    if (m_show_help) {
+        print_usage(stdout, argv[0]);
+        exit(0);
+    }
+}
 
-            if (is_param_valid(next)) {
-                printf("Missing value for argument %s\n", arg->value.name.characters());
-                return -1;
+void CArgsParser::print_usage(FILE* file, const char* argv0)
+{
+    fprintf(file, "Usage:\n\t%s", argv0);
+
+    for (auto& opt : m_options) {
+        if (opt.long_name && !strcmp(opt.long_name, "help"))
+            continue;
+        if (opt.requires_argument)
+            fprintf(file, " [%s %s]", opt.name_for_display().characters(), opt.value_name);
+        else
+            fprintf(file, " [%s]", opt.name_for_display().characters());
+    }
+    for (auto& arg : m_positional_args) {
+        bool required = arg.min_values > 0;
+        bool repeated = arg.max_values > 1;
+
+        if (required && repeated)
+            fprintf(file, " <%s...>", arg.name);
+        else if (required && !repeated)
+            fprintf(file, " <%s>", arg.name);
+        else if (!required && repeated)
+            fprintf(file, " [%s...]", arg.name);
+        else if (!required && !repeated)
+            fprintf(file, " [%s]", arg.name);
+    }
+
+    if (!m_options.is_empty())
+        fprintf(file, "\nOptions:\n");
+
+    for (auto& opt : m_options) {
+        auto print_argument = [&]() {
+            if (opt.value_name) {
+                if (opt.requires_argument)
+                    fprintf(file, " %s", opt.value_name);
+                else
+                    fprintf(file, " [%s]", opt.value_name);
             }
-
-            res.m_args.set(arg->value.name, next);
-            return parse_next_param(index + 2, argv, params_left - 2, res);
+        };
+        fprintf(file, "\t");
+        if (opt.short_name) {
+            fprintf(file, "-%c", opt.short_name);
+            print_argument();
+        }
+        if (opt.short_name && opt.long_name)
+            fprintf(file, ", ");
+        if (opt.long_name) {
+            fprintf(file, "--%s", opt.long_name);
+            print_argument();
         }
 
-        // Single argument, not followed by a value
-        res.m_args.set(arg->value.name, "");
-        return parse_next_param(index + 1, argv, params_left - 1, res);
+        if (opt.help_string)
+            fprintf(file, "\t%s", opt.help_string);
+        fprintf(file, "\n");
     }
 
-    // Else, it's a value alone, a file name parameter for example
-    res.m_single_values.append(param);
-    return parse_next_param(index + 1, argv, params_left - 1, res);
+    if (!m_positional_args.is_empty())
+        fprintf(file, "\nArguments:\n");
+
+    for (auto& arg : m_positional_args) {
+        fprintf(file, "\t%s", arg.name);
+        if (arg.help_string)
+            fprintf(file, "\t%s", arg.help_string);
+        fprintf(file, "\n");
+    }
 }
 
-bool CArgsParser::is_param_valid(const String& param_name)
+void CArgsParser::add_option(Option&& option)
 {
-    return param_name.length() >= m_prefix.length() &&
-        param_name.substring(0, m_prefix.length()) == m_prefix;
+    m_options.append(move(option));
 }
 
-bool CArgsParser::check_required_args(const CArgsParserResult& res)
+void CArgsParser::add_option(bool& value, const char* help_string, const char* long_name, char short_name)
 {
-    for (auto& it : m_args) {
-        if (it.value.required) {
-            if (!res.is_present(it.value.name))
-                return false;
+    Option option {
+        false,
+        help_string,
+        long_name,
+        short_name,
+        nullptr,
+        [&value](const char* s) {
+            ASSERT(s == nullptr);
+            value = true;
+            return true;
         }
-    }
+    };
+    add_option(move(option));
+}
 
-    int required_arguments = 0;
-    for (const auto& a : m_single_args) {
-        if (a.required) {
-            required_arguments++;
+void CArgsParser::add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
+{
+    Option option {
+        true,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&value](const char* s) {
+            value = s;
+            return true;
         }
-    }
-
-    if (required_arguments != 0) {
-        if (res.m_single_values.size() < required_arguments)
-            return false;
-    }
-
-    return true;
+    };
+    add_option(move(option));
 }
 
-void CArgsParser::add_required_arg(const String& name, const String& description)
+void CArgsParser::add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name)
 {
-    m_args.set(name, Arg(name, description, true));
-}
-
-void CArgsParser::add_required_arg(const String& name, const String& value_name, const String& description)
-{
-    m_args.set(name, Arg(name, value_name, description, true));
-}
-
-void CArgsParser::add_arg(const String& name, const String& description)
-{
-    m_args.set(name, Arg(name, description, false));
-}
-
-void CArgsParser::add_arg(const String& name, const String& value_name, const String& description)
-{
-    m_args.set(name, Arg(name, value_name, description, false));
-}
-
-void CArgsParser::add_single_value(const String& name)
-{
-    m_single_args.append(SingleArg { name, false });
-}
-
-void CArgsParser::add_required_single_value(const String& name)
-{
-    if (m_single_args.size() != 0) {
-        // adding required arguments after non-required arguments would be nonsensical
-        ASSERT(m_single_args.last().required);
-    }
-    m_single_args.append(SingleArg { name, true });
-}
-
-String CArgsParser::get_usage() const
-{
-    StringBuilder sb;
-
-    sb.append("usage : ");
-    sb.append(m_program_name);
-    sb.append(" ");
-
-    for (auto& it : m_args) {
-        if (it.value.required)
-            sb.append("<");
-        else
-            sb.append("[");
-
-        sb.append(m_prefix);
-        sb.append(it.value.name);
-
-        if (!it.value.value_name.is_null()) {
-            sb.append(" ");
-            sb.append(it.value.value_name);
+    Option option {
+        true,
+        help_string,
+        long_name,
+        short_name,
+        value_name,
+        [&value](const char* s) {
+            bool ok;
+            value = StringView(s).to_int(ok);
+            return ok;
         }
-
-        if (it.value.required)
-            sb.append("> ");
-        else
-            sb.append("] ");
-    }
-
-    for (auto& arg : m_single_args) {
-        if (arg.required)
-            sb.append("<");
-        else
-            sb.append("[");
-
-        sb.append(arg.name);
-
-        if (arg.required)
-            sb.append("> ");
-        else
-            sb.append("] ");
-    }
-
-    sb.append("\n");
-
-    for (auto& it : m_args) {
-        sb.append("    ");
-        sb.append(m_prefix);
-        sb.append(it.value.name);
-
-        if (!it.value.value_name.is_null()) {
-            sb.append(" ");
-            sb.append(it.value.value_name);
-        }
-
-        sb.append(" : ");
-        sb.append(it.value.description);
-        sb.append("\n");
-    }
-
-    return sb.to_string();
+    };
+    add_option(move(option));
 }
 
-void CArgsParser::print_usage() const
+void CArgsParser::add_positional_argument(Arg&& arg)
 {
-    printf("%s\n", get_usage().characters());
+    m_positional_args.append(move(arg));
+}
+
+void CArgsParser::add_positional_argument(const char*& value, const char* help_string, const char* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](const char* s) {
+            value = s;
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
+void CArgsParser::add_positional_argument(int& value, const char* help_string, const char* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        1,
+        [&value](const char* s) {
+            bool ok;
+            value = StringView(s).to_int(ok);
+            return ok;
+        }
+    };
+    add_positional_argument(move(arg));
+}
+
+void CArgsParser::add_positional_argument(Vector<const char*>& values, const char* help_string, const char* name, Required required)
+{
+    Arg arg {
+        help_string,
+        name,
+        required == Required::Yes ? 1 : 0,
+        INT_MAX,
+        [&values](const char* s) {
+            values.append(s);
+            return true;
+        }
+    };
+    add_positional_argument(move(arg));
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018-2020, Andreas Kling <kling@serenityos.org>
+ * Copyright (c) 2020, Sergey Bugaev <bugaevc@serenityos.org>
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -26,70 +26,60 @@
 
 #pragma once
 
+#include <AK/Function.h>
 #include <AK/String.h>
-#include <AK/HashMap.h>
 #include <AK/Vector.h>
-
-/*
-  The class ArgsParser provides a way to parse arguments by using a given list that describes the possible
-  types of arguments (name, description, required or not, must be followed by a value...).
-  Call the add_arg() functions to describe your arguments.
-
-  The class ArgsParserResult is used to manipulate the arguments (checking if an arg has been provided,
-  retrieve its value...). In case of error (missing required argument) an empty structure is returned as result.
-*/
-
-class CArgsParserResult {
-public:
-    bool is_present(const String& arg_name) const;
-    String get(const String& arg_name) const;
-    const Vector<String>& get_single_values() const;
-
-private:
-    HashMap<String, String> m_args;
-    Vector<String> m_single_values;
-
-    friend class CArgsParser;
-};
+#include <stdio.h>
 
 class CArgsParser {
 public:
-    CArgsParser(const String& program_name);
+    CArgsParser();
 
-    CArgsParserResult parse(int argc, char** argv);
+    enum class Required {
+        Yes,
+        No
+    };
 
-    void add_required_arg(const String& name, const String& description);
-    void add_required_arg(const String& name, const String& value_name, const String& description);
-    void add_arg(const String& name, const String& description);
-    void add_arg(const String& name, const String& value_name, const String& description);
-    void add_single_value(const String& name);
-    void add_required_single_value(const String& name);
-    String get_usage() const;
-    void print_usage() const;
+    struct Option {
+        bool requires_argument { true };
+        const char* help_string { nullptr };
+        const char* long_name { nullptr };
+        char short_name { 0 };
+        const char* value_name { nullptr };
+        Function<bool(const char*)> accept_value;
+
+        String name_for_display() const
+        {
+            if (long_name)
+                return String::format("--%s", long_name);
+            return String::format("-%c", short_name);
+        }
+    };
+
+    struct Arg {
+        const char* help_string { nullptr };
+        const char* name { nullptr };
+        int min_values { 0 };
+        int max_values { 1 };
+        Function<bool(const char*)> accept_value;
+    };
+
+    void parse(int argc, char** argv);
+    void print_usage(FILE*, const char* argv0);
+
+    void add_option(Option&&);
+    void add_option(bool& value, const char* help_string, const char* long_name, char short_name);
+    void add_option(const char*& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
+    void add_option(int& value, const char* help_string, const char* long_name, char short_name, const char* value_name);
+
+    void add_positional_argument(Arg&&);
+    void add_positional_argument(const char*& value, const char* help_string, const char* name, Required required = Required::Yes);
+    void add_positional_argument(int& value, const char* help_string, const char* name, Required required = Required::Yes);
+    void add_positional_argument(Vector<const char*>& value, const char* help_string, const char* name, Required required = Required::Yes);
 
 private:
-    struct Arg {
-        inline Arg() {}
-        Arg(const String& name, const String& description, bool required);
-        Arg(const String& name, const String& value_name, const String& description, bool required);
+    Vector<Option> m_options;
+    Vector<Arg> m_positional_args;
 
-        String name;
-        String description;
-        String value_name;
-        bool required;
-    };
-
-    int parse_next_param(int index, char** argv, const int params_left, CArgsParserResult& res);
-    bool is_param_valid(const String& param_name);
-    bool check_required_args(const CArgsParserResult& res);
-
-    String m_program_name;
-    String m_prefix;
-
-    struct SingleArg {
-        String name;
-        bool required;
-    };
-    Vector<SingleArg> m_single_args;
-    HashMap<String, Arg> m_args;
+    bool m_show_help { false };
 };
