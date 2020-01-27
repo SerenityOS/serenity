@@ -2335,37 +2335,21 @@ bool Process::validate_read_from_kernel(VirtualAddress vaddr, ssize_t size) cons
 {
     if (vaddr.is_null())
         return false;
-    // We check extra carefully here since the first 4MB of the address space is identity-mapped.
-    // This code allows access outside of the known used address ranges to get caught.
-    if (is_kmalloc_address(vaddr.as_ptr()))
-        return true;
     return MM.validate_kernel_read(*this, vaddr, size);
 }
 
 bool Process::validate_read(const void* address, ssize_t size) const
 {
-    ASSERT(size >= 0);
-    VirtualAddress first_address((uintptr_t)address);
-    if (is_ring0()) {
-        if (is_kmalloc_address(address))
-            return true;
-    }
     if (!size)
         return false;
-    return MM.validate_user_read(*this, first_address, size);
+    return MM.validate_user_read(*this, VirtualAddress(address), size);
 }
 
 bool Process::validate_write(void* address, ssize_t size) const
 {
-    ASSERT(size >= 0);
-    VirtualAddress first_address((uintptr_t)address);
-    if (is_ring0()) {
-        if (is_kmalloc_address(address))
-            return true;
-    }
     if (!size)
         return false;
-    return MM.validate_user_write(*this, first_address, size);
+    return MM.validate_user_write(*this, VirtualAddress(address), size);
 }
 
 pid_t Process::sys$getsid(pid_t pid)

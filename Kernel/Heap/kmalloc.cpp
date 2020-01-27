@@ -66,13 +66,6 @@ bool g_dump_kmalloc_stacks;
 static u8* s_next_eternal_ptr;
 static u8* s_end_of_eternal_range;
 
-bool is_kmalloc_address(const void* ptr)
-{
-    if (ptr >= (u8*)ETERNAL_BASE_PHYSICAL && ptr < s_next_eternal_ptr)
-        return true;
-    return (size_t)ptr >= BASE_PHYSICAL && (size_t)ptr <= (BASE_PHYSICAL + POOL_SIZE);
-}
-
 void kmalloc_init()
 {
     memset(&alloc_map, 0, sizeof(alloc_map));
