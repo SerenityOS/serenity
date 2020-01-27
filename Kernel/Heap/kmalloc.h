@@ -39,8 +39,6 @@ void* krealloc(void*, size_t);
 void kfree(void*);
 void kfree_aligned(void*);
 
-bool is_kmalloc_address(const void*);
-
 extern volatile size_t sum_alloc;
 extern volatile size_t sum_free;
 extern volatile size_t kmalloc_sum_eternal;
