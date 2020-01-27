@@ -650,7 +650,8 @@ void GTextEditor::keydown_event(GKeyEvent& event)
     }
     if (event.key() == KeyCode::Key_PageUp) {
         if (m_cursor.line() > 0) {
-            size_t new_line = max((size_t)0, m_cursor.line() - (size_t)visible_content_rect().height() / (size_t)line_height());
+            size_t page_step = (size_t)visible_content_rect().height() / (size_t)line_height();
+            size_t new_line = m_cursor.line() < page_step ? 0 : m_cursor.line() - page_step;
             size_t new_column = min(m_cursor.column(), line(new_line).length());
             toggle_selection_if_needed_for_event(event);
             set_cursor(new_line, new_column);
