@@ -3214,19 +3214,23 @@ ssize_t Process::sys$recvfrom(const Syscall::SC_recvfrom_params* user_params)
     return nrecv;
 }
 
-int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
+template<bool sockname, typename Params>
+int Process::get_sock_or_peer_name(const Params& params)
 {
-    if (!validate_read_typed(addrlen))
+    socklen_t addrlen_value;
+    if (!validate_read_and_copy_typed(&addrlen_value, params.addrlen))
         return -EFAULT;
 
-    SmapDisabler disabler;
-    if (*addrlen <= 0)
+    if (addrlen_value <= 0)
         return -EINVAL;
 
-    if (!validate_write(addr, *addrlen))
+    if (!validate_write(params.addr, addrlen_value))
         return -EFAULT;
 
-    auto description = file_description(sockfd);
+    if (!validate_write_typed(params.addrlen))
+        return -EFAULT;
+
+    auto description = file_description(params.sockfd);
     if (!description)
         return -EBADF;
 
@@ -3235,42 +3239,31 @@ int Process::sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen)
 
     auto& socket = *description->socket();
     REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-    if (!socket.get_local_address(addr, addrlen))
-        return -EINVAL; // FIXME: Should this be another error? I'm not sure.
 
+    u8 address_buffer[sizeof(sockaddr_un)];
+    addrlen_value = min(sizeof(sockaddr_un), static_cast<size_t>(addrlen_value));
+
+    if (!socket.get_local_address((sockaddr*)address_buffer, &addrlen_value))
+        return -EINVAL;
+
+    copy_to_user(params.addr, address_buffer, addrlen_value);
     return 0;
 }
 
-int Process::sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen)
+int Process::sys$getsockname(const Syscall::SC_getsockname_params* user_params)
 {
-    if (!validate_read_typed(addrlen))
+    Syscall::SC_getsockname_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
+    return get_sock_or_peer_name<true>(params);
+}
 
-    SmapDisabler disabler;
-
-    if (*addrlen <= 0)
-        return -EINVAL;
-
-    if (!validate_write(addr, *addrlen))
+int Process::sys$getpeername(const Syscall::SC_getpeername_params* user_params)
+{
+    Syscall::SC_getpeername_params params;
+    if (!validate_read_and_copy_typed(&params, user_params))
         return -EFAULT;
-
-    auto description = file_description(sockfd);
-    if (!description)
-        return -EBADF;
-
-    if (!description->is_socket())
-        return -ENOTSOCK;
-
-    auto& socket = *description->socket();
-    REQUIRE_PROMISE_FOR_SOCKET_DOMAIN(socket.domain());
-
-    if (socket.setup_state() != Socket::SetupState::Completed)
-        return -ENOTCONN;
-
-    if (!socket.get_peer_address(addr, addrlen))
-        return -EINVAL; // FIXME: Should this be another error? I'm not sure.
-
-    return 0;
+    return get_sock_or_peer_name<false>(params);
 }
 
 int Process::sys$sched_setparam(int tid, const struct sched_param* param)

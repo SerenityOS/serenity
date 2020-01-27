@@ -263,8 +263,8 @@ public:
     ssize_t sys$recvfrom(const Syscall::SC_recvfrom_params*);
     int sys$getsockopt(const Syscall::SC_getsockopt_params*);
     int sys$setsockopt(const Syscall::SC_setsockopt_params*);
-    int sys$getsockname(int sockfd, sockaddr* addr, socklen_t* addrlen);
-    int sys$getpeername(int sockfd, sockaddr* addr, socklen_t* addrlen);
+    int sys$getsockname(const Syscall::SC_getsockname_params*);
+    int sys$getpeername(const Syscall::SC_getpeername_params*);
     int sys$sched_setparam(pid_t pid, const struct sched_param* param);
     int sys$sched_getparam(pid_t pid, struct sched_param* param);
     int sys$create_thread(void* (*)(void*), void* argument, const Syscall::SC_create_thread_params*);
@@ -301,6 +301,9 @@ public:
     int sys$chroot(const char* path, size_t path_length, int mount_flags);
     int sys$pledge(const Syscall::SC_pledge_params*);
     int sys$unveil(const Syscall::SC_unveil_params*);
+
+    template<bool sockname, typename Params>
+    int get_sock_or_peer_name(const Params&);
 
     static void initialize();
 
