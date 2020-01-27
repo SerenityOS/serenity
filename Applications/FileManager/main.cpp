@@ -115,6 +115,7 @@ int main(int argc, char** argv)
     tree_view->set_column_hidden(GFileSystemModel::Column::Permissions, true);
     tree_view->set_column_hidden(GFileSystemModel::Column::ModificationTime, true);
     tree_view->set_column_hidden(GFileSystemModel::Column::Inode, true);
+    tree_view->set_column_hidden(GFileSystemModel::Column::SymlinkTarget, true);
     tree_view->set_size_policy(SizePolicy::Fixed, SizePolicy::Fill);
     tree_view->set_preferred_size(150, 0);
     auto directory_view = DirectoryView::construct(splitter);

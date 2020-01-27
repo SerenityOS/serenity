@@ -68,6 +68,17 @@ bool GFileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
     gid = st.st_gid;
     inode = st.st_ino;
     mtime = st.st_mtime;
+
+    if (S_ISLNK(mode)) {
+        char buffer[PATH_MAX];
+        int length = readlink(full_path.characters(), buffer, sizeof(buffer));
+        if (length < 0) {
+            perror("readlink");
+        } else {
+            symlink_target = String(buffer, length);
+        }
+    }
+
     return true;
 }
 
@@ -360,6 +371,8 @@ GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
             return node.mtime;
         case Column::Inode:
             return (int)node.inode;
+        case Column::SymlinkTarget:
+            return node.symlink_target;
         }
         ASSERT_NOT_REACHED();
     }
@@ -382,6 +395,8 @@ GVariant GFileSystemModel::data(const GModelIndex& index, Role role) const
             return timestamp_string(node.mtime);
         case Column::Inode:
             return (int)node.inode;
+        case Column::SymlinkTarget:
+            return node.symlink_target;
         }
     }
 
@@ -508,6 +523,8 @@ String GFileSystemModel::column_name(int column) const
         return "Modified";
     case Column::Inode:
         return "Inode";
+    case Column::SymlinkTarget:
+        return "Symlink target";
     }
     ASSERT_NOT_REACHED();
 }
@@ -531,6 +548,8 @@ GModel::ColumnMetadata GFileSystemModel::column_metadata(int column) const
         return { 65, TextAlignment::CenterLeft };
     case Column::Inode:
         return { 60, TextAlignment::CenterRight };
+    case Column::SymlinkTarget:
+        return { 120, TextAlignment::CenterLeft };
     }
     ASSERT_NOT_REACHED();
 }
