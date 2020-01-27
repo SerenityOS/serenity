@@ -114,18 +114,16 @@ Thread::Thread(Process& process)
 
     m_tss.cr3 = m_process.page_directory().cr3();
 
+    m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid), Region::Access::Read | Region::Access::Write, false, true);
+    m_kernel_stack_region->set_stack(true);
+    m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
+    m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
+
     if (m_process.is_ring0()) {
-        m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid), Region::Access::Read | Region::Access::Write, false, true);
-        m_kernel_stack_region->set_stack(true);
-        m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
-        m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
         m_tss.esp = m_kernel_stack_top;
     } else {
-        // Ring3 processes need a separate stack for Ring0.
-        m_kernel_stack_region = MM.allocate_kernel_region(default_kernel_stack_size, String::format("Kernel Stack (Thread %d)", m_tid), Region::Access::Read | Region::Access::Write, false, true);
-        m_kernel_stack_region->set_stack(true);
-        m_kernel_stack_base = m_kernel_stack_region->vaddr().get();
-        m_kernel_stack_top = m_kernel_stack_region->vaddr().offset(default_kernel_stack_size).get() & 0xfffffff8u;
+        // Ring 3 processes get a separate stack for ring 0.
+        // The ring 3 stack will be assigned by exec().
         m_tss.ss0 = 0x10;
         m_tss.esp0 = m_kernel_stack_top;
     }
