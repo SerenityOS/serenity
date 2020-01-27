@@ -29,12 +29,12 @@
 #include <AK/String.h>
 #include <AK/StringBuilder.h>
 #include <AK/Vector.h>
+#include <LibCore/CArgsParser.h>
 #include <LibCore/CDirIterator.h>
 #include <ctype.h>
 #include <dirent.h>
 #include <errno.h>
 #include <fcntl.h>
-#include <getopt.h>
 #include <grp.h>
 #include <pwd.h>
 #include <stdio.h>
@@ -83,39 +83,19 @@ int main(int argc, char** argv)
         return 1;
     }
 
-    static const char* valid_option_characters = "ltraiGnh";
-    int opt;
-    while ((opt = getopt(argc, argv, valid_option_characters)) != -1) {
-        switch (opt) {
-        case 'a':
-            flag_show_dotfiles = true;
-            break;
-        case 'l':
-            flag_long = true;
-            break;
-        case 't':
-            flag_sort_by_timestamp = true;
-            break;
-        case 'r':
-            flag_reverse_sort = true;
-            break;
-        case 'G':
-            flag_colorize = false;
-            break;
-        case 'i':
-            flag_show_inode = true;
-            break;
-        case 'n':
-            flag_print_numeric = true;
-            break;
-        case 'h':
-            flag_human_readable = true;
-            break;
-        default:
-            fprintf(stderr, "usage: ls [-%s] [paths...]\n", valid_option_characters);
-            return 1;
-        }
-    }
+    Vector<const char*> paths;
+
+    CArgsParser args_parser;
+    args_parser.add_option(flag_show_dotfiles, "Show dotfiles", "all", 'a');
+    args_parser.add_option(flag_long, "Display long info", "long", 'l');
+    args_parser.add_option(flag_sort_by_timestamp, "Sort files by timestamp", nullptr, 't');
+    args_parser.add_option(flag_reverse_sort, "Reverse sort order", "reverse", 'r');
+    args_parser.add_option(flag_colorize, "Use pretty colors", nullptr, 'G');
+    args_parser.add_option(flag_show_inode, "Show inode ids", "inode", 'i');
+    args_parser.add_option(flag_print_numeric, "In long format, display numeric UID/GID", "numeric-uid-gid", 'n');
+    args_parser.add_option(flag_human_readable, "Print human-readable sizes", "human-readable", 'h');
+    args_parser.add_positional_argument(paths, "Directory to list", "path", CArgsParser::Required::No);
+    args_parser.parse(argc, argv);
 
     if (flag_long) {
         setpwent();
@@ -135,14 +115,14 @@ int main(int argc, char** argv)
     };
 
     int status = 0;
-    if (optind >= argc) {
+    if (paths.is_empty()) {
         status = do_file_system_object(".");
-    } else if (optind + 1 >= argc) {
-        status = do_file_system_object(argv[optind]);
+    } else if (paths.size() == 1) {
+        status = do_file_system_object(paths[0]);
     } else {
-        for (; optind < argc; ++optind) {
-            printf("%s:\n", argv[optind]);
-            status = do_file_system_object(argv[optind]);
+        for (auto& path : paths) {
+            printf("%s:\n", path);
+            status = do_file_system_object(path);
         }
     }
     return status;

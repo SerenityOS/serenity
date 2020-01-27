@@ -110,7 +110,7 @@ Count get_count(const String& file_name)
 
 Count get_total_count(Vector<Count>& counts)
 {
-    Count total_count{ "total" };
+    Count total_count { "total" };
     for (auto& count : counts) {
         total_count.lines += count.lines;
         total_count.words += count.words;
@@ -122,47 +122,30 @@ Count get_total_count(Vector<Count>& counts)
 
 int main(int argc, char** argv)
 {
-    CArgsParser args_parser("wc");
-    args_parser.add_arg("l", "Output line count");
-    args_parser.add_arg("c", "Output byte count");
-    args_parser.add_arg("m", "Output character count");
-    args_parser.add_arg("w", "Output word count");
-    args_parser.add_arg("h", "Print help message");
-    CArgsParserResult args = args_parser.parse(argc, argv);
-    if (args.is_present("h")) {
-        args_parser.print_usage();
-        return 1;
-    }
-    if (args.is_present("l")) {
-        output_line = true;
-    }
-    if (args.is_present("w")) {
-        output_word = true;
-    }
-    if (args.is_present("m")) {
-        output_character = true;
-    }
-    if (args.is_present("c")) {
-        if (!output_word && !output_line && !output_character)
-            output_word = output_line = true;
-        output_byte = true;
-    }
-    if (!output_line && !output_character && !output_word && !output_byte)
-        output_line = output_character = output_word = true;
+    Vector<const char*> files;
 
-    Vector<String> file_names = args.get_single_values();
+    CArgsParser args_parser;
+    args_parser.add_option(output_line, "Output line count", "lines", 'l');
+    args_parser.add_option(output_byte, "Output byte count", "bytes", 'c');
+    args_parser.add_option(output_word, "Output word count", "words", 'w');
+    args_parser.add_positional_argument(files, "File to process", "file", CArgsParser::Required::No);
+    args_parser.parse(argc, argv);
+
+    if (!output_line && !output_byte && !output_word)
+        output_line = output_byte = output_word = true;
+
     Vector<Count> counts;
-    for (auto& file_name : file_names) {
-        Count count = get_count(file_name);
+    for (auto& file : files) {
+        Count count = get_count(file);
         counts.append(count);
     }
 
-    if (file_names.size() > 1) {
+    if (files.size() > 1) {
         Count total_count = get_total_count(counts);
         counts.append(total_count);
     }
 
-    if (file_names.is_empty()) {
+    if (files.is_empty()) {
         Count count = get_count("-");
         counts.append(count);
     }
