@@ -26,6 +26,7 @@
 
 #include "DirectoryView.h"
 #include <AK/FileSystemPath.h>
+#include <AK/StringBuilder.h>
 #include <LibGUI/GSortingProxyModel.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -295,8 +296,30 @@ void DirectoryView::update_statusbar()
         selected_byte_count += file_size;
     });
 
-    set_status_message(String::format("%d item%s selected (%s)",
-        selected_item_count,
-        selected_item_count != 1 ? "s" : "",
-        human_readable_size(selected_byte_count).characters()));
+    StringBuilder builder;
+    builder.append(String::number(selected_item_count));
+    builder.append(" item");
+    if (selected_item_count != 1)
+        builder.append('s');
+    builder.append(" selected (");
+    builder.append(human_readable_size(selected_byte_count).characters());
+    builder.append(')');
+
+    if (selected_item_count == 1) {
+        auto index = current_view().selection().first();
+
+        // FIXME: This is disgusting. This code should not even be aware that there is a GSortingProxyModel in the table view.
+        if (m_view_mode == ViewMode::List) {
+            auto& filter_model = (GSortingProxyModel&)*m_table_view->model();
+            index = filter_model.map_to_target(index);
+        }
+
+        auto& node = model().node(index);
+        if (!node.symlink_target.is_empty()) {
+            builder.append(" -> ");
+            builder.append(node.symlink_target);
+        }
+    }
+
+    set_status_message(builder.to_string());
 }
