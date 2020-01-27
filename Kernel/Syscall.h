@@ -297,6 +297,18 @@ struct SC_setsockopt_params {
     socklen_t value_size;
 };
 
+struct SC_getsockname_params {
+    int sockfd;
+    sockaddr* addr;
+    socklen_t* addrlen;
+};
+
+struct SC_getpeername_params {
+    int sockfd;
+    sockaddr* addr;
+    socklen_t* addrlen;
+};
+
 struct SC_futex_params {
     i32* userspace_address;
     int futex_op;
