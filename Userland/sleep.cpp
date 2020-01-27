@@ -35,6 +35,11 @@ void handle_sigint(int)
 
 int main(int argc, char** argv)
 {
+    if (pledge("stdio", nullptr) < 0) {
+        perror("pledge");
+        return 1;
+    }
+
     if (argc != 2) {
         printf("usage: sleep <seconds>\n");
         return 1;
