@@ -817,7 +817,7 @@ static int run_command(const String& cmd)
                     if (i == 0)
                         return_value = WEXITSTATUS(wstatus);
                 } else if (WIFSTOPPED(wstatus)) {
-                    printf("Shell: %s(%d) stopped.\n", child.name.characters(), child.pid);
+                    fprintf(stderr, "Shell: %s(%d) %s\n", child.name.characters(), child.pid, strsignal(WSTOPSIG(wstatus)));
                 } else {
                     if (WIFSIGNALED(wstatus)) {
                         printf("Shell: %s(%d) exited due to signal '%s'\n", child.name.characters(), child.pid, strsignal(WTERMSIG(wstatus)));
