@@ -33,7 +33,7 @@ int main(int argc, char** argv)
     time_t now = time(nullptr);
 
     if (argc == 2 && !strcmp(argv[1], "-u")) {
-        printf("%u\n", now);
+        printf("%lld\n", now);
         return 0;
     }
 

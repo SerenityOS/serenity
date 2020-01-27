@@ -294,7 +294,7 @@ struct sigaction {
 #define OFF_T_MAX 2147483647
 
 typedef i32 off_t;
-typedef u32 time_t;
+typedef i64 time_t;
 
 struct utimbuf {
     time_t actime;
