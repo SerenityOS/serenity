@@ -3633,6 +3633,7 @@ void Process::sys$exit_thread(void* exit_value)
 int Process::sys$detach_thread(int tid)
 {
     REQUIRE_PROMISE(thread);
+    InterruptDisabler disabler;
     auto* thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
@@ -3650,6 +3651,7 @@ int Process::sys$join_thread(int tid, void** exit_value)
     if (exit_value && !validate_write_typed(exit_value))
         return -EFAULT;
 
+    InterruptDisabler disabler;
     auto* thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
@@ -3701,6 +3703,7 @@ int Process::sys$set_thread_name(int tid, const char* user_name, size_t user_nam
     if (name.length() > max_thread_name_size)
         return -EINVAL;
 
+    InterruptDisabler disabler;
     auto* thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
@@ -3717,6 +3720,7 @@ int Process::sys$get_thread_name(int tid, char* buffer, size_t buffer_size)
     if (!validate_write(buffer, buffer_size))
         return -EFAULT;
 
+    InterruptDisabler disabler;
     auto* thread = Thread::from_tid(tid);
     if (!thread || thread->pid() != pid())
         return -ESRCH;
