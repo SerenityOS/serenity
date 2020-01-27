@@ -2318,14 +2318,13 @@ pid_t Process::sys$waitpid(pid_t waitee, int* wstatus, int options)
     if (!waitee_process)
         return -ECHILD;
 
-    auto* waitee_thread = Thread::from_tid(waitee_pid);
-    if (!waitee_thread)
-        return -ECHILD;
-
     ASSERT(waitee_process);
     if (waitee_process->is_dead()) {
         exit_status = reap(*waitee_process);
     } else {
+        auto* waitee_thread = Thread::from_tid(waitee_pid);
+        if (!waitee_thread)
+            return -ECHILD;
         ASSERT(waitee_thread->state() == Thread::State::Stopped);
         exit_status = (waitee_thread->m_stop_signal << 8) | 0x7f;
     }
