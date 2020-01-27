@@ -485,6 +485,9 @@ private:
     u32 m_priority { THREAD_PRIORITY_NORMAL };
     u32 m_extra_priority { 0 };
     u32 m_priority_boost { 0 };
+
+    u8 m_stop_signal { 0 };
+
     bool m_dump_backtrace_on_finalization { false };
     bool m_should_die { false };
 

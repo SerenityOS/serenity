@@ -471,6 +471,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     m_pending_signals &= ~(1 << (signal - 1));
 
     if (signal == SIGSTOP) {
+        m_stop_signal = SIGSTOP;
         set_state(Stopped);
         return ShouldUnblockThread::No;
     }
@@ -482,6 +483,7 @@ ShouldUnblockThread Thread::dispatch_signal(u8 signal)
     if (handler_vaddr.is_null()) {
         switch (default_signal_action(signal)) {
         case DefaultSignalAction::Stop:
+            m_stop_signal = signal;
             set_state(Stopped);
             return ShouldUnblockThread::No;
         case DefaultSignalAction::DumpCore:
