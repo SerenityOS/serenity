@@ -30,19 +30,34 @@
 const char* to_string(GVariant::Type type)
 {
     switch (type) {
-    case GVariant::Type::Invalid: return "Invalid";
-    case GVariant::Type::Bool: return "Bool";
-    case GVariant::Type::Int: return "Int";
-    case GVariant::Type::UnsignedInt: return "UnsignedInt";
-    case GVariant::Type::Float: return "Float";
-    case GVariant::Type::String: return "String";
-    case GVariant::Type::Bitmap: return "Bitmap";
-    case GVariant::Type::Color: return "Color";
-    case GVariant::Type::Icon: return "Icon";
-    case GVariant::Type::Point: return "Point";
-    case GVariant::Type::Size: return "Size";
-    case GVariant::Type::Rect: return "Rect";
-    case GVariant::Type::Font: return "Font";
+    case GVariant::Type::Invalid:
+        return "Invalid";
+    case GVariant::Type::Bool:
+        return "Bool";
+    case GVariant::Type::Int32:
+        return "Int32";
+    case GVariant::Type::Int64:
+        return "Int64";
+    case GVariant::Type::UnsignedInt:
+        return "UnsignedInt";
+    case GVariant::Type::Float:
+        return "Float";
+    case GVariant::Type::String:
+        return "String";
+    case GVariant::Type::Bitmap:
+        return "Bitmap";
+    case GVariant::Type::Color:
+        return "Color";
+    case GVariant::Type::Icon:
+        return "Icon";
+    case GVariant::Type::Point:
+        return "Point";
+    case GVariant::Type::Size:
+        return "Size";
+    case GVariant::Type::Rect:
+        return "Rect";
+    case GVariant::Type::Font:
+        return "Font";
     }
     ASSERT_NOT_REACHED();
 }
@@ -76,10 +91,16 @@ void GVariant::clear()
     m_value.as_string = nullptr;
 }
 
-GVariant::GVariant(int value)
-    : m_type(Type::Int)
+GVariant::GVariant(i32 value)
+    : m_type(Type::Int32)
 {
-    m_value.as_int = value;
+    m_value.as_i32 = value;
+}
+
+GVariant::GVariant(i64 value)
+    : m_type(Type::Int64)
+{
+    m_value.as_i64 = value;
 }
 
 GVariant::GVariant(unsigned value)
@@ -120,8 +141,8 @@ GVariant::GVariant(const JsonValue& value)
     }
 
     if (value.is_i32()) {
-        m_type = Type::Int;
-        m_value.as_int = value.as_i32();
+        m_type = Type::Int32;
+        m_value.as_i32 = value.as_i32();
         return;
     }
 
@@ -132,9 +153,8 @@ GVariant::GVariant(const JsonValue& value)
     }
 
     if (value.is_i64()) {
-        // FIXME: GVariant should have a 64-bit internal type.
-        m_type = Type::Int;
-        m_value.as_int = value.to_i32();
+        m_type = Type::Int64;
+        m_value.as_i64 = value.as_i64();
         return;
     }
 
@@ -239,8 +259,11 @@ void GVariant::copy_from(const GVariant& other)
     case Type::Bool:
         m_value.as_bool = other.m_value.as_bool;
         break;
-    case Type::Int:
-        m_value.as_int = other.m_value.as_int;
+    case Type::Int32:
+        m_value.as_i32 = other.m_value.as_i32;
+        break;
+    case Type::Int64:
+        m_value.as_i64 = other.m_value.as_i64;
         break;
     case Type::UnsignedInt:
         m_value.as_uint = other.m_value.as_uint;
@@ -288,8 +311,10 @@ bool GVariant::operator==(const GVariant& other) const
     switch (m_type) {
     case Type::Bool:
         return as_bool() == other.as_bool();
-    case Type::Int:
-        return as_int() == other.as_int();
+    case Type::Int32:
+        return as_i32() == other.as_i32();
+    case Type::Int64:
+        return as_i64() == other.as_i64();
     case Type::UnsignedInt:
         return as_uint() == other.as_uint();
     case Type::Float:
@@ -323,8 +348,10 @@ bool GVariant::operator<(const GVariant& other) const
     switch (m_type) {
     case Type::Bool:
         return as_bool() < other.as_bool();
-    case Type::Int:
-        return as_int() < other.as_int();
+    case Type::Int32:
+        return as_i32() < other.as_i32();
+    case Type::Int64:
+        return as_i64() < other.as_i64();
     case Type::UnsignedInt:
         return as_uint() < other.as_uint();
     case Type::Float:
@@ -356,8 +383,10 @@ String GVariant::to_string() const
     switch (m_type) {
     case Type::Bool:
         return as_bool() ? "true" : "false";
-    case Type::Int:
-        return String::number(as_int());
+    case Type::Int32:
+        return String::number(as_i32());
+    case Type::Int64:
+        return String::number(as_i64());
     case Type::UnsignedInt:
         return String::number(as_uint());
     case Type::Float:

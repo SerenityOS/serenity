@@ -140,10 +140,10 @@ void VBWidget::setup_properties()
 {
     VB_ADD_PROPERTY(CObject, "name", name, set_name, string);
 
-    VB_ADD_PROPERTY(GWidget, "width", width, set_width, int);
-    VB_ADD_PROPERTY(GWidget, "height", height, set_height, int);
-    VB_ADD_PROPERTY(GWidget, "x", x, set_x, int);
-    VB_ADD_PROPERTY(GWidget, "y", y, set_y, int);
+    VB_ADD_PROPERTY(GWidget, "width", width, set_width, i32);
+    VB_ADD_PROPERTY(GWidget, "height", height, set_height, i32);
+    VB_ADD_PROPERTY(GWidget, "x", x, set_x, i32);
+    VB_ADD_PROPERTY(GWidget, "y", y, set_y, i32);
     VB_ADD_PROPERTY(GWidget, "visible", is_visible, set_visible, bool);
     VB_ADD_PROPERTY(GWidget, "enabled", is_enabled, set_enabled, bool);
     VB_ADD_PROPERTY(GWidget, "tooltip", tooltip, set_tooltip, string);
@@ -164,28 +164,28 @@ void VBWidget::setup_properties()
     }
 
     if (m_type == VBWidgetType::GScrollBar) {
-        VB_ADD_PROPERTY(GScrollBar, "min", min, set_min, int);
-        VB_ADD_PROPERTY(GScrollBar, "max", max, set_max, int);
-        VB_ADD_PROPERTY(GScrollBar, "value", value, set_value, int);
-        VB_ADD_PROPERTY(GScrollBar, "step", step, set_step, int);
+        VB_ADD_PROPERTY(GScrollBar, "min", min, set_min, i32);
+        VB_ADD_PROPERTY(GScrollBar, "max", max, set_max, i32);
+        VB_ADD_PROPERTY(GScrollBar, "value", value, set_value, i32);
+        VB_ADD_PROPERTY(GScrollBar, "step", step, set_step, i32);
     }
 
     if (m_type == VBWidgetType::GSpinBox) {
-        VB_ADD_PROPERTY(GSpinBox, "min", min, set_min, int);
-        VB_ADD_PROPERTY(GSpinBox, "max", max, set_max, int);
-        VB_ADD_PROPERTY(GSpinBox, "value", value, set_value, int);
+        VB_ADD_PROPERTY(GSpinBox, "min", min, set_min, i32);
+        VB_ADD_PROPERTY(GSpinBox, "max", max, set_max, i32);
+        VB_ADD_PROPERTY(GSpinBox, "value", value, set_value, i32);
     }
 
     if (m_type == VBWidgetType::GProgressBar) {
-        VB_ADD_PROPERTY(GProgressBar, "min", min, set_min, int);
-        VB_ADD_PROPERTY(GProgressBar, "max", max, set_max, int);
-        VB_ADD_PROPERTY(GProgressBar, "value", value, set_value, int);
+        VB_ADD_PROPERTY(GProgressBar, "min", min, set_min, i32);
+        VB_ADD_PROPERTY(GProgressBar, "max", max, set_max, i32);
+        VB_ADD_PROPERTY(GProgressBar, "value", value, set_value, i32);
     }
 
     if (m_type == VBWidgetType::GSlider) {
-        VB_ADD_PROPERTY(GSlider, "min", min, set_min, int);
-        VB_ADD_PROPERTY(GSlider, "max", max, set_max, int);
-        VB_ADD_PROPERTY(GSlider, "value", value, set_value, int);
+        VB_ADD_PROPERTY(GSlider, "min", min, set_min, i32);
+        VB_ADD_PROPERTY(GSlider, "max", max, set_max, i32);
+        VB_ADD_PROPERTY(GSlider, "value", value, set_value, i32);
     }
 
     if (m_type == VBWidgetType::GTextEditor) {

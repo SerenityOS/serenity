@@ -95,7 +95,7 @@ VBPropertiesWindow::VBPropertiesWindow()
         if (!m_table_view->model())
             return nullptr;
         auto type_index = m_table_view->model()->index(index.row(), VBWidgetPropertyModel::Column::Type);
-        auto type = m_table_view->model()->data(type_index, GModel::Role::Custom).to_int();
+        auto type = m_table_view->model()->data(type_index, GModel::Role::Custom).to_i32();
         switch ((GVariant::Type)type) {
         case GVariant::Type::Bool:
             return make<BoolModelEditingDelegate>();
