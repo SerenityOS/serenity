@@ -49,12 +49,16 @@ GModelIndex GFileSystemModel::Node::index(const GFileSystemModel& model, int col
     ASSERT_NOT_REACHED();
 }
 
-bool GFileSystemModel::Node::fetch_data_using_lstat(const String& full_path)
+bool GFileSystemModel::Node::fetch_data(const String& full_path, bool is_root)
 {
     struct stat st;
-    int rc = lstat(full_path.characters(), &st);
+    int rc;
+    if (is_root)
+        rc = stat(full_path.characters(), &st);
+    else
+        rc = lstat(full_path.characters(), &st);
     if (rc < 0) {
-        perror("lstat");
+        perror("stat/lstat");
         return false;
     }
 
@@ -64,7 +68,6 @@ bool GFileSystemModel::Node::fetch_data_using_lstat(const String& full_path)
     gid = st.st_gid;
     inode = st.st_ino;
     mtime = st.st_mtime;
-
     return true;
 }
 
@@ -86,7 +89,7 @@ void GFileSystemModel::Node::traverse_if_needed(const GFileSystemModel& model)
         String name = di.next_path();
         String child_path = String::format("%s/%s", full_path.characters(), name.characters());
         NonnullOwnPtr<Node> child = make<Node>();
-        bool ok = child->fetch_data_using_lstat(child_path);
+        bool ok = child->fetch_data(child_path, false);
         if (!ok)
             continue;
         if (model.m_mode == DirectoriesOnly && !S_ISDIR(child->mode))
@@ -126,7 +129,7 @@ void GFileSystemModel::Node::reify_if_needed(const GFileSystemModel& model)
     traverse_if_needed(model);
     if (mode != 0)
         return;
-    fetch_data_using_lstat(full_path(model));
+    fetch_data(full_path(model), parent == nullptr);
 }
 
 String GFileSystemModel::Node::full_path(const GFileSystemModel& model) const
